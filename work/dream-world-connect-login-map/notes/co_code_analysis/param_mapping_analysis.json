@@ -1,0 +1,32 @@
+{
+  "param_mappings": {
+    "0x00": "0x00",
+    "0x01": "0x01",
+    "0x02": "0x02",
+    "0x17": "0x10"
+  },
+  "e0_analysis": {
+    "contexts_count": 30,
+    "arg_distribution": {
+      "0": 14,
+      "1": 7,
+      "2": 4,
+      "3": 3,
+      "4": 1,
+      "5": 1
+    },
+    "hypothesis": "可能是 BUILD_MAP 或其他构建指令，参数被编码"
+  },
+  "sbox_search": {
+    "matches_found": 0,
+    "best_matches": []
+  },
+  "key_findings": [
+    "0xB7 = POP_JUMP_IF_FALSE (0x5B) - 已验证",
+    "0xE5 = JUMP_FORWARD (0x57) - 已验证",
+    "0x95 = COMPARE_OP (0x54) - 高置信度",
+    "参数字节也被编码: table[0x17] = 0x10",
+    "OnServerCmd, OnConnectFail, OnError 完全解码",
+    "Connect 函数包含关键登录协议信息"
+  ]
+}

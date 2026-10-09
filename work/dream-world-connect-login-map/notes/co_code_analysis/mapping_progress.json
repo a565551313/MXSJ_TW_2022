@@ -1,0 +1,91 @@
+{
+  "known_mapping": {
+    "0x85": "0x4E",
+    "0x55": "0x3C",
+    "0xC1": "0x62",
+    "0xC4": "0x43",
+    "0x8F": "0x4D"
+  },
+  "known_mapping_detail": {
+    "0x85": {
+      "standard": "0x4E",
+      "name": "LOAD_NAME",
+      "evidence": "known_plaintext_attack"
+    },
+    "0x55": {
+      "standard": "0x3C",
+      "name": "RETURN_VALUE",
+      "evidence": "known_plaintext_attack"
+    },
+    "0xC1": {
+      "standard": "0x62",
+      "name": "LOAD_FAST",
+      "evidence": "known_plaintext_attack"
+    },
+    "0xC4": {
+      "standard": "0x43",
+      "name": "STORE_NAME",
+      "evidence": "known_plaintext_attack"
+    },
+    "0x8F": {
+      "standard": "0x4D",
+      "name": "LOAD_CONST",
+      "evidence": "known_plaintext_attack"
+    }
+  },
+  "unknown_opcodes": {
+    "0x00": 529,
+    "0x41": 70,
+    "0xD9": 61,
+    "0x71": 59,
+    "0xDA": 59,
+    "0x01": 45,
+    "0x05": 30,
+    "0x98": 30,
+    "0xE0": 28,
+    "0xFB": 23,
+    "0xB7": 22,
+    "0x02": 22,
+    "0x06": 16,
+    "0x74": 16,
+    "0x0E": 16,
+    "0x04": 14,
+    "0xA2": 14,
+    "0x0B": 14,
+    "0x08": 12,
+    "0x03": 11,
+    "0x07": 10,
+    "0xC5": 10,
+    "0xE5": 9,
+    "0x58": 9,
+    "0x0A": 9,
+    "0xDE": 9,
+    "0x37": 8,
+    "0x95": 7,
+    "0xD3": 7,
+    "0x40": 7,
+    "0xAA": 7,
+    "0x36": 6,
+    "0x0F": 6,
+    "0xCA": 5,
+    "0x30": 5,
+    "0x0D": 5,
+    "0xE3": 5,
+    "0x0C": 5,
+    "0x11": 5,
+    "0x09": 5,
+    "0x1D": 5,
+    "0xBB": 4,
+    "0x10": 4,
+    "0x3F": 4,
+    "0x91": 4,
+    "0x38": 4,
+    "0xAF": 3,
+    "0x6C": 3,
+    "0x15": 3,
+    "0x24": 3
+  },
+  "total_bytecode": 5214,
+  "known_count": 435,
+  "unknown_count": 1328
+}

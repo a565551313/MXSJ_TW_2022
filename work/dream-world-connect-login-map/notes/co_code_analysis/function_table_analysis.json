@@ -1,0 +1,884 @@
+{
+  "table_a_functions": [
+    "SetPlayerID",
+    "GetPlayerID",
+    "GetErrorAnsMsg",
+    "SetUnEnterServerList",
+    "GetUnEnterServerList",
+    "ClearUnEnterServerList",
+    "IsSelectServerOver",
+    "SetSelectServerOver",
+    "SetConnectedProxy",
+    "GetConnectedProxy",
+    "GetProxy",
+    "GetProxyName",
+    "SetProxyName",
+    "GetServerRoleInfo",
+    "SetLoginServerIPPort",
+    "GetLoginServeIPPort",
+    "GetLoginServer",
+    "C2STransferServer",
+    "__init__",
+    "PacketPrepare",
+    "OnServerCmd",
+    "OnConnectFail",
+    "OnError",
+    "Connect",
+    "OnSocketConnectFail",
+    "OnSocketError",
+    "__init__",
+    "nexttest",
+    "ConnectTestFail",
+    "__init__",
+    "RandomConnect",
+    "NormalReselectServerConnect",
+    "TransferServer",
+    "SetTimeOutCmd",
+    "ReselectServerConnect",
+    "DgwReselectServerConnect",
+    "ModuleReset",
+    "ConnectTestFail",
+    "SetServerRoleInfo",
+    "__init__",
+    "GetProxyNameByProxy",
+    "Connect",
+    "IsConnectTestFail",
+    "GetTestServerList",
+    "Connect",
+    "RefreshServerInfo",
+    "GetTestProxyList",
+    "ProcessServerCmd",
+    "SetProxy",
+    "GetServerInfo",
+    "getMsg",
+    "showlogin"
+  ],
+  "table_b_functions": [
+    "ShowConnectingDlg",
+    "<module>",
+    "CRandomConnectMgr",
+    "CMXNet",
+    "CConnectMgr",
+    "S2CServerRoleInfo",
+    "CReselectConnectMgr"
+  ],
+  "all_functions": [
+    {
+      "name": "SetPlayerID",
+      "length": 10,
+      "total_instr": 4,
+      "known": 4,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "GetPlayerID",
+      "length": 4,
+      "total_instr": 2,
+      "known": 2,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "GetErrorAnsMsg",
+      "length": 4,
+      "total_instr": 2,
+      "known": 2,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "SetUnEnterServerList",
+      "length": 10,
+      "total_instr": 4,
+      "known": 4,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "GetUnEnterServerList",
+      "length": 4,
+      "total_instr": 2,
+      "known": 2,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "ClearUnEnterServerList",
+      "length": 10,
+      "total_instr": 4,
+      "known": 4,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "IsSelectServerOver",
+      "length": 4,
+      "total_instr": 2,
+      "known": 2,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "SetSelectServerOver",
+      "length": 10,
+      "total_instr": 4,
+      "known": 4,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "SetConnectedProxy",
+      "length": 10,
+      "total_instr": 4,
+      "known": 4,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "GetConnectedProxy",
+      "length": 4,
+      "total_instr": 2,
+      "known": 2,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "GetProxy",
+      "length": 25,
+      "total_instr": 11,
+      "known": 11,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "GetProxyName",
+      "length": 4,
+      "total_instr": 2,
+      "known": 2,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "SetProxyName",
+      "length": 10,
+      "total_instr": 4,
+      "known": 4,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "GetServerRoleInfo",
+      "length": 4,
+      "total_instr": 2,
+      "known": 2,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "SetLoginServerIPPort",
+      "length": 16,
+      "total_instr": 6,
+      "known": 6,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "GetLoginServeIPPort",
+      "length": 10,
+      "total_instr": 4,
+      "known": 4,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "GetLoginServer",
+      "length": 4,
+      "total_instr": 2,
+      "known": 2,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "C2STransferServer",
+      "length": 55,
+      "total_instr": 21,
+      "known": 21,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "__init__",
+      "length": 35,
+      "total_instr": 13,
+      "known": 13,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "PacketPrepare",
+      "length": 32,
+      "total_instr": 12,
+      "known": 12,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "OnServerCmd",
+      "length": 43,
+      "total_instr": 17,
+      "known": 17,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "OnConnectFail",
+      "length": 53,
+      "total_instr": 21,
+      "known": 21,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "OnError",
+      "length": 56,
+      "total_instr": 22,
+      "known": 22,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "Connect",
+      "length": 4,
+      "total_instr": 2,
+      "known": 2,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "OnSocketConnectFail",
+      "length": 14,
+      "total_instr": 6,
+      "known": 6,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "OnSocketError",
+      "length": 14,
+      "total_instr": 6,
+      "known": 6,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "__init__",
+      "length": 35,
+      "total_instr": 13,
+      "known": 13,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "nexttest",
+      "length": 14,
+      "total_instr": 6,
+      "known": 6,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "ConnectTestFail",
+      "length": 78,
+      "total_instr": 30,
+      "known": 30,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "__init__",
+      "length": 44,
+      "total_instr": 16,
+      "known": 16,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "RandomConnect",
+      "length": 23,
+      "total_instr": 9,
+      "known": 9,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "NormalReselectServerConnect",
+      "length": 32,
+      "total_instr": 12,
+      "known": 12,
+      "unknown": 0,
+      "unknown_ratio": 0.0,
+      "top_unknown": []
+    },
+    {
+      "name": "TransferServer",
+      "length": 114,
+      "total_instr": 42,
+      "known": 41,
+      "unknown": 1,
+      "unknown_ratio": 0.023809523809523808,
+      "top_unknown": [
+        [
+          "0xE0",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "SetTimeOutCmd",
+      "length": 73,
+      "total_instr": 27,
+      "known": 26,
+      "unknown": 1,
+      "unknown_ratio": 0.037037037037037035,
+      "top_unknown": [
+        [
+          "0xFB",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "ReselectServerConnect",
+      "length": 62,
+      "total_instr": 24,
+      "known": 23,
+      "unknown": 1,
+      "unknown_ratio": 0.041666666666666664,
+      "top_unknown": [
+        [
+          "0xE0",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "DgwReselectServerConnect",
+      "length": 62,
+      "total_instr": 22,
+      "known": 21,
+      "unknown": 1,
+      "unknown_ratio": 0.045454545454545456,
+      "top_unknown": [
+        [
+          "0xE0",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "ModuleReset",
+      "length": 118,
+      "total_instr": 40,
+      "known": 38,
+      "unknown": 2,
+      "unknown_ratio": 0.05,
+      "top_unknown": [
+        [
+          "0xBB",
+          2
+        ]
+      ]
+    },
+    {
+      "name": "ConnectTestFail",
+      "length": 198,
+      "total_instr": 74,
+      "known": 70,
+      "unknown": 4,
+      "unknown_ratio": 0.05405405405405406,
+      "top_unknown": [
+        [
+          "0x00",
+          19
+        ],
+        [
+          "0xE0",
+          3
+        ],
+        [
+          "0x06",
+          2
+        ]
+      ]
+    },
+    {
+      "name": "SetServerRoleInfo",
+      "length": 172,
+      "total_instr": 64,
+      "known": 59,
+      "unknown": 5,
+      "unknown_ratio": 0.078125,
+      "top_unknown": [
+        [
+          "0xE0",
+          2
+        ],
+        [
+          "0xE3",
+          1
+        ],
+        [
+          "0xA2",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "__init__",
+      "length": 71,
+      "total_instr": 25,
+      "known": 23,
+      "unknown": 2,
+      "unknown_ratio": 0.08,
+      "top_unknown": [
+        [
+          "0xE0",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "GetProxyNameByProxy",
+      "length": 188,
+      "total_instr": 73,
+      "known": 67,
+      "unknown": 6,
+      "unknown_ratio": 0.0821917808219178,
+      "top_unknown": [
+        [
+          "0x00",
+          39
+        ],
+        [
+          "0xE0",
+          1
+        ],
+        [
+          "0xD3",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "Connect",
+      "length": 647,
+      "total_instr": 239,
+      "known": 217,
+      "unknown": 22,
+      "unknown_ratio": 0.09205020920502092,
+      "top_unknown": [
+        [
+          "0x00",
+          68
+        ],
+        [
+          "0x08",
+          4
+        ],
+        [
+          "0xE0",
+          2
+        ]
+      ]
+    },
+    {
+      "name": "IsConnectTestFail",
+      "length": 48,
+      "total_instr": 19,
+      "known": 17,
+      "unknown": 2,
+      "unknown_ratio": 0.10526315789473684,
+      "top_unknown": [
+        [
+          "0x00",
+          11
+        ],
+        [
+          "0xD3",
+          1
+        ],
+        [
+          "0x36",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "GetTestServerList",
+      "length": 294,
+      "total_instr": 112,
+      "known": 100,
+      "unknown": 12,
+      "unknown_ratio": 0.10714285714285714,
+      "top_unknown": [
+        [
+          "0x00",
+          23
+        ],
+        [
+          "0xA2",
+          2
+        ],
+        [
+          "0xE0",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "Connect",
+      "length": 689,
+      "total_instr": 257,
+      "known": 224,
+      "unknown": 33,
+      "unknown_ratio": 0.12840466926070038,
+      "top_unknown": [
+        [
+          "0x00",
+          95
+        ],
+        [
+          "0x07",
+          4
+        ],
+        [
+          "0xD3",
+          3
+        ]
+      ]
+    },
+    {
+      "name": "RefreshServerInfo",
+      "length": 264,
+      "total_instr": 98,
+      "known": 84,
+      "unknown": 14,
+      "unknown_ratio": 0.14285714285714285,
+      "top_unknown": [
+        [
+          "0x00",
+          11
+        ],
+        [
+          "0xE0",
+          4
+        ],
+        [
+          "0xE3",
+          2
+        ]
+      ]
+    },
+    {
+      "name": "GetTestProxyList",
+      "length": 203,
+      "total_instr": 75,
+      "known": 64,
+      "unknown": 11,
+      "unknown_ratio": 0.14666666666666667,
+      "top_unknown": [
+        [
+          "0x00",
+          35
+        ],
+        [
+          "0xE0",
+          1
+        ],
+        [
+          "0xE3",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "ProcessServerCmd",
+      "length": 96,
+      "total_instr": 38,
+      "known": 32,
+      "unknown": 6,
+      "unknown_ratio": 0.15789473684210525,
+      "top_unknown": [
+        [
+          "0x00",
+          17
+        ],
+        [
+          "0xA2",
+          3
+        ],
+        [
+          "0xD3",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "SetProxy",
+      "length": 58,
+      "total_instr": 24,
+      "known": 20,
+      "unknown": 4,
+      "unknown_ratio": 0.16666666666666666,
+      "top_unknown": [
+        [
+          "0xE0",
+          1
+        ],
+        [
+          "0xCF",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "GetServerInfo",
+      "length": 88,
+      "total_instr": 34,
+      "known": 28,
+      "unknown": 6,
+      "unknown_ratio": 0.17647058823529413,
+      "top_unknown": [
+        [
+          "0x00",
+          11
+        ],
+        [
+          "0xE0",
+          1
+        ],
+        [
+          "0xD3",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "getMsg",
+      "length": 159,
+      "total_instr": 59,
+      "known": 48,
+      "unknown": 11,
+      "unknown_ratio": 0.1864406779661017,
+      "top_unknown": [
+        [
+          "0x00",
+          16
+        ],
+        [
+          "0xA2",
+          2
+        ],
+        [
+          "0xCF",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "showlogin",
+      "length": 84,
+      "total_instr": 32,
+      "known": 26,
+      "unknown": 6,
+      "unknown_ratio": 0.1875,
+      "top_unknown": []
+    },
+    {
+      "name": "ShowConnectingDlg",
+      "length": 106,
+      "total_instr": 36,
+      "known": 24,
+      "unknown": 12,
+      "unknown_ratio": 0.3333333333333333,
+      "top_unknown": [
+        [
+          "0xE0",
+          5
+        ],
+        [
+          "0xBF",
+          3
+        ],
+        [
+          "0x91",
+          3
+        ]
+      ]
+    },
+    {
+      "name": "<module>",
+      "length": 423,
+      "total_instr": 145,
+      "known": 59,
+      "unknown": 86,
+      "unknown_ratio": 0.593103448275862,
+      "top_unknown": [
+        [
+          "0x98",
+          38
+        ],
+        [
+          "0xFB",
+          35
+        ],
+        [
+          "0xAA",
+          6
+        ]
+      ]
+    },
+    {
+      "name": "CRandomConnectMgr",
+      "length": 77,
+      "total_instr": 26,
+      "known": 8,
+      "unknown": 18,
+      "unknown_ratio": 0.6923076923076923,
+      "top_unknown": [
+        [
+          "0x98",
+          9
+        ],
+        [
+          "0xFB",
+          7
+        ],
+        [
+          "0xAA",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "CMXNet",
+      "length": 59,
+      "total_instr": 20,
+      "known": 6,
+      "unknown": 14,
+      "unknown_ratio": 0.7,
+      "top_unknown": [
+        [
+          "0x98",
+          6
+        ],
+        [
+          "0xFB",
+          5
+        ],
+        [
+          "0xAA",
+          2
+        ]
+      ]
+    },
+    {
+      "name": "CConnectMgr",
+      "length": 62,
+      "total_instr": 21,
+      "known": 6,
+      "unknown": 15,
+      "unknown_ratio": 0.7142857142857143,
+      "top_unknown": [
+        [
+          "0x98",
+          7
+        ],
+        [
+          "0xFB",
+          6
+        ],
+        [
+          "0xAA",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "S2CServerRoleInfo",
+      "length": 98,
+      "total_instr": 34,
+      "known": 9,
+      "unknown": 25,
+      "unknown_ratio": 0.7352941176470589,
+      "top_unknown": [
+        [
+          "0x75",
+          3
+        ],
+        [
+          "0x76",
+          2
+        ],
+        [
+          "0x70",
+          2
+        ]
+      ]
+    },
+    {
+      "name": "CReselectConnectMgr",
+      "length": 26,
+      "total_instr": 9,
+      "known": 2,
+      "unknown": 7,
+      "unknown_ratio": 0.7777777777777778,
+      "top_unknown": [
+        [
+          "0x98",
+          3
+        ],
+        [
+          "0xFB",
+          2
+        ],
+        [
+          "0xAA",
+          1
+        ]
+      ]
+    }
+  ]
+}

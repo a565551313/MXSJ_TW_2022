@@ -1,0 +1,78 @@
+{
+  "mapping": {
+    "0x00": "0x00",
+    "0x01": "0x01",
+    "0x02": "0x02",
+    "0x41": "0x01",
+    "0x55": "0x3C",
+    "0x71": "0x63",
+    "0x85": "0x4E",
+    "0x8F": "0x4D",
+    "0xC1": "0x62",
+    "0xC4": "0x43",
+    "0xCA": "0x50",
+    "0xD9": "0x53",
+    "0xDA": "0x66",
+    "0xDE": "0x4F"
+  },
+  "detail": {
+    "0x00": {
+      "standard": "0x00",
+      "name": "???"
+    },
+    "0x01": {
+      "standard": "0x01",
+      "name": "POP_TOP"
+    },
+    "0x02": {
+      "standard": "0x02",
+      "name": "ROT_TWO"
+    },
+    "0x41": {
+      "standard": "0x01",
+      "name": "POP_TOP"
+    },
+    "0x55": {
+      "standard": "0x3C",
+      "name": "RETURN_VALUE"
+    },
+    "0x71": {
+      "standard": "0x63",
+      "name": "STORE_FAST"
+    },
+    "0x85": {
+      "standard": "0x4E",
+      "name": "LOAD_NAME"
+    },
+    "0x8F": {
+      "standard": "0x4D",
+      "name": "LOAD_CONST"
+    },
+    "0xC1": {
+      "standard": "0x62",
+      "name": "LOAD_FAST"
+    },
+    "0xC4": {
+      "standard": "0x43",
+      "name": "STORE_NAME"
+    },
+    "0xCA": {
+      "standard": "0x50",
+      "name": "BUILD_LIST"
+    },
+    "0xD9": {
+      "standard": "0x53",
+      "name": "LOAD_ATTR"
+    },
+    "0xDA": {
+      "standard": "0x66",
+      "name": "CALL_FUNCTION"
+    },
+    "0xDE": {
+      "standard": "0x4F",
+      "name": "BUILD_TUPLE"
+    }
+  },
+  "count": 14,
+  "new_assumption": "0x71 = 0x63 (STORE_FAST)"
+}

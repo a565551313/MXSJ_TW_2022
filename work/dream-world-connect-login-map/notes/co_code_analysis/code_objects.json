@@ -1,0 +1,2075 @@
+[
+  {
+    "index": 1,
+    "name": "ModuleReset",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 8,
+    "co_code_length": 118,
+    "co_code_hex": "bb0000c40000bb0000c401008f0000c403008f0000c404008f0000c405008f0000c406008f0000c407008f0000c408008f0000c409008f0000c40a008f0000c40b008f0000c40c008f0100c40d00850e00c40f00850e00c410008f0200c41100ca0000c412008f0000c413008f0200c414008f000055",
+    "names": [
+      "g_ServerRoleInfo",
+      "g_NewBieServer",
+      "None",
+      "g_PriorServer",
+      "g_PriorServerInfo",
+      "g_LoginServer",
+      "g_LoginServerID",
+      "g_KFServerID",
+      "g_LoginServerIP",
+      "g_LoginServePort",
+      "g_ConnectMgr",
+      "g_Proxy",
+      "g_LastProxy",
+      "g_ProxyName",
+      "False",
+      "g_AutoProxy",
+      "g_SelectServerOver",
+      "g_RefreshServerListCount",
+      "g_UnEnableServerList",
+      "g_ErrorAnsMsg",
+      "g_iPlayerId"
+    ],
+    "varnames": [],
+    "const_strings": [
+      ""
+    ],
+    "analysis": {
+      "unique_bytes": 27,
+      "standard_opcode_types": 16,
+      "non_standard_opcode_types": 11,
+      "entropy": 2.92,
+      "best_xor_key": 48,
+      "best_xor_ratio": 0.6695
+    }
+  },
+  {
+    "index": 2,
+    "name": "SetPlayerID",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 1,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 33,
+    "co_code_length": 10,
+    "co_code_hex": "c10000c400008f000055",
+    "names": [
+      "g_iPlayerId"
+    ],
+    "varnames": [
+      "iPlayerID"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 5,
+      "standard_opcode_types": 1,
+      "non_standard_opcode_types": 4,
+      "entropy": 1.77,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.7
+    }
+  },
+  {
+    "index": 3,
+    "name": "GetPlayerID",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 38,
+    "co_code_length": 4,
+    "co_code_hex": "85000055",
+    "names": [
+      "g_iPlayerId"
+    ],
+    "varnames": [],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 3,
+      "standard_opcode_types": 1,
+      "non_standard_opcode_types": 2,
+      "entropy": 1.5,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.75
+    }
+  },
+  {
+    "index": 4,
+    "name": "getMsg",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 2,
+    "nlocals": 9,
+    "stacksize": 7,
+    "flags": 83,
+    "firstlineno": 58,
+    "co_code_length": 159,
+    "co_code_hex": "c10100b7940041850000c10000da01008f0100950400b7810041cf6700c10000d901008f0200da01006c0200710200710300bb0000710400c10300d901008f0300da0100710500d33000c1050036af2800710600c10600d901008f04008f0500da02006c0200710700710800c10800c10400c1070005a24e0040c10400c4020040a29b0030850300950a00b7070041414141a29b004110e50100418f000055",
+    "names": [
+      "len",
+      "split",
+      "g_ErrorAnsMsg",
+      "ValueError"
+    ],
+    "varnames": [
+      "data",
+      "flag",
+      "head",
+      "body",
+      "dErrorInfo",
+      "lstErrorInfo",
+      "sInfo",
+      "sServerID",
+      "sErrorInfo"
+    ],
+    "const_strings": [
+      "\r\n\r\n",
+      "\r\n",
+      ":"
+    ],
+    "analysis": {
+      "unique_bytes": 38,
+      "standard_opcode_types": 17,
+      "non_standard_opcode_types": 21,
+      "entropy": 4.1,
+      "best_xor_key": 66,
+      "best_xor_ratio": 0.7296
+    }
+  },
+  {
+    "index": 5,
+    "name": "RefreshServerInfo",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 9,
+    "stacksize": 12,
+    "flags": 67,
+    "firstlineno": 42,
+    "co_code_length": 264,
+    "co_code_hex": "8f01008f0000e000007100008f01008f0000e001007101008f01008f0000e002007102008f01008f0000e00300710300c10000d90400da000015b7950041c10000d90500da000015b7870041cf1f00850600c10100d907008f02008f03008f0400da0300da010071040040e50d004141418f0000710400e5010010c10300d90900da0000710500c104008f0000950800e31e0041c10400c10500950400e3110041c10500c10400238f0c00950400b71d00418f01008f0000e00a00710600c10600d90b008f0000da010041a2d30041e50100418f0700fb0000710700c10100d907008f08008f09008f0a00da0300710800c10200d90c00c108008f0b00c10700da0300418f000055",
+    "names": [
+      "permission",
+      "cfg",
+      "net",
+      "misc",
+      "GetSpecialVersion",
+      "GetOverdoVersion",
+      "float",
+      "GetData",
+      "None",
+      "Time",
+      "selectserver",
+      "Refresh",
+      "CHttpObject"
+    ],
+    "varnames": [
+      "permission",
+      "cfg",
+      "net",
+      "misc",
+      "tm",
+      "now",
+      "selectserver",
+      "getMsg",
+      "web"
+    ],
+    "const_strings": [
+      "mx.ini",
+      "Game",
+      "refreshserver",
+      "update.ini",
+      "Setting",
+      "BulletinURL",
+      "get"
+    ],
+    "analysis": {
+      "unique_bytes": 40,
+      "standard_opcode_types": 20,
+      "non_standard_opcode_types": 20,
+      "entropy": 3.83,
+      "best_xor_key": 20,
+      "best_xor_ratio": 0.7159
+    }
+  },
+  {
+    "index": 6,
+    "name": "GetErrorAnsMsg",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 75,
+    "co_code_length": 4,
+    "co_code_hex": "85000055",
+    "names": [
+      "g_ErrorAnsMsg"
+    ],
+    "varnames": [],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 3,
+      "standard_opcode_types": 1,
+      "non_standard_opcode_types": 2,
+      "entropy": 1.5,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.75
+    }
+  },
+  {
+    "index": 7,
+    "name": "SetUnEnterServerList",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 1,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 79,
+    "co_code_length": 10,
+    "co_code_hex": "c10000c400008f000055",
+    "names": [
+      "g_UnEnableServerList"
+    ],
+    "varnames": [
+      "unEnableServerList"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 5,
+      "standard_opcode_types": 1,
+      "non_standard_opcode_types": 4,
+      "entropy": 1.77,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.7
+    }
+  },
+  {
+    "index": 8,
+    "name": "GetUnEnterServerList",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 84,
+    "co_code_length": 4,
+    "co_code_hex": "85000055",
+    "names": [
+      "g_UnEnableServerList"
+    ],
+    "varnames": [],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 3,
+      "standard_opcode_types": 1,
+      "non_standard_opcode_types": 2,
+      "entropy": 1.5,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.75
+    }
+  },
+  {
+    "index": 9,
+    "name": "ClearUnEnterServerList",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 89,
+    "co_code_length": 10,
+    "co_code_hex": "ca0000c400008f000055",
+    "names": [
+      "g_UnEnableServerList"
+    ],
+    "varnames": [],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 5,
+      "standard_opcode_types": 1,
+      "non_standard_opcode_types": 4,
+      "entropy": 1.77,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.7
+    }
+  },
+  {
+    "index": 10,
+    "name": "IsSelectServerOver",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 94,
+    "co_code_length": 4,
+    "co_code_hex": "85000055",
+    "names": [
+      "g_SelectServerOver"
+    ],
+    "varnames": [],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 3,
+      "standard_opcode_types": 1,
+      "non_standard_opcode_types": 2,
+      "entropy": 1.5,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.75
+    }
+  },
+  {
+    "index": 11,
+    "name": "SetSelectServerOver",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 1,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 98,
+    "co_code_length": 10,
+    "co_code_hex": "c10000c400008f000055",
+    "names": [
+      "g_SelectServerOver"
+    ],
+    "varnames": [
+      "isOver"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 5,
+      "standard_opcode_types": 1,
+      "non_standard_opcode_types": 4,
+      "entropy": 1.77,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.7
+    }
+  },
+  {
+    "index": 12,
+    "name": "SetConnectedProxy",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 1,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 103,
+    "co_code_length": 10,
+    "co_code_hex": "c10000c400008f000055",
+    "names": [
+      "g_LastProxy"
+    ],
+    "varnames": [
+      "proxy"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 5,
+      "standard_opcode_types": 1,
+      "non_standard_opcode_types": 4,
+      "entropy": 1.77,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.7
+    }
+  },
+  {
+    "index": 13,
+    "name": "GetConnectedProxy",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 108,
+    "co_code_length": 4,
+    "co_code_hex": "85000055",
+    "names": [
+      "g_LastProxy"
+    ],
+    "varnames": [],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 3,
+      "standard_opcode_types": 1,
+      "non_standard_opcode_types": 2,
+      "entropy": 1.5,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.75
+    }
+  },
+  {
+    "index": 14,
+    "name": "GetProxy",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 2,
+    "flags": 67,
+    "firstlineno": 112,
+    "co_code_length": 25,
+    "co_code_hex": "8500008f0100950200b708004185010055e501004185000055",
+    "names": [
+      "g_Proxy",
+      "g_LastProxy"
+    ],
+    "varnames": [],
+    "const_strings": [
+      "auto"
+    ],
+    "analysis": {
+      "unique_bytes": 11,
+      "standard_opcode_types": 4,
+      "non_standard_opcode_types": 7,
+      "entropy": 2.96,
+      "best_xor_key": 3,
+      "best_xor_ratio": 0.72
+    }
+  },
+  {
+    "index": 15,
+    "name": "SetProxy",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 2,
+    "stacksize": 9,
+    "flags": 67,
+    "firstlineno": 118,
+    "co_code_length": 58,
+    "co_code_hex": "8f01008f0000e00000710100c10000c40100cf1a00c10100d902008f02008f03008f0400c10000da04004140e50700414141e50100108f000055",
+    "names": [
+      "cfg",
+      "g_Proxy",
+      "SaveData"
+    ],
+    "varnames": [
+      "proxy",
+      "cfg"
+    ],
+    "const_strings": [
+      "mx.ini",
+      "Game",
+      "proxy"
+    ],
+    "analysis": {
+      "unique_bytes": 20,
+      "standard_opcode_types": 10,
+      "non_standard_opcode_types": 10,
+      "entropy": 3.38,
+      "best_xor_key": 17,
+      "best_xor_ratio": 0.7241
+    }
+  },
+  {
+    "index": 16,
+    "name": "GetProxyName",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 128,
+    "co_code_length": 4,
+    "co_code_hex": "85000055",
+    "names": [
+      "g_ProxyName"
+    ],
+    "varnames": [],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 3,
+      "standard_opcode_types": 1,
+      "non_standard_opcode_types": 2,
+      "entropy": 1.5,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.75
+    }
+  },
+  {
+    "index": 17,
+    "name": "SetProxyName",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 1,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 132,
+    "co_code_length": 10,
+    "co_code_hex": "c10000c400008f000055",
+    "names": [
+      "g_ProxyName"
+    ],
+    "varnames": [
+      "proxyName"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 5,
+      "standard_opcode_types": 1,
+      "non_standard_opcode_types": 4,
+      "entropy": 1.77,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.7
+    }
+  },
+  {
+    "index": 18,
+    "name": "GetProxyNameByProxy",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 6,
+    "stacksize": 6,
+    "flags": 67,
+    "firstlineno": 137,
+    "co_code_length": 188,
+    "co_code_hex": "8f01008f0000e00000710100c10100d90100da00006c03007102007102007103008f0200710400d38e00c1030036af8600710500c105008f030058c10000950200b76f0041c105008f0400588f0500950200b70a00418f0600710400e5370041c105008f0400588f0700950200b70a00418f0800710400e51c0041c105008f0400588f0900950200b70a00418f0a00710400e5010041c10400c10500d902008f0b008f0200da02003f710400c1040055a22e0041a22e0040c1040055",
+    "names": [
+      "selectserver",
+      "GetServerInfo",
+      "get"
+    ],
+    "varnames": [
+      "ipPort",
+      "selectserver",
+      "_",
+      "proxyLst",
+      "proxyname",
+      "proxydata"
+    ],
+    "const_strings": [
+      "",
+      "ipPort",
+      "type",
+      "b971ab48",
+      "baf4b371",
+      "b1d0a87cbaf4",
+      "note"
+    ],
+    "analysis": {
+      "unique_bytes": 37,
+      "standard_opcode_types": 20,
+      "non_standard_opcode_types": 17,
+      "entropy": 3.98,
+      "best_xor_key": 29,
+      "best_xor_ratio": 0.7447
+    }
+  },
+  {
+    "index": 19,
+    "name": "SetServerRoleInfo",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 8,
+    "stacksize": 10,
+    "flags": 67,
+    "firstlineno": 154,
+    "co_code_length": 172,
+    "co_code_hex": "8f01008f0000e000007101008f01008f0000e00100710200c10000c40200850300850400d905008f0200da0200b7600041850400d90500d906006c0500710300710400710500710600710700c10700850700da0000950700e30d0041c10700850200950600b7240041850800c10300c10400c10500c10600c107008f0300850900da0501418f000055a2910041e5010041c10100d90a00da000041c10100d90b00850c00da0100418f000055",
+    "names": [
+      "loginin",
+      "selectserver",
+      "g_ServerRoleInfo",
+      "hasattr",
+      "net",
+      "g_Net",
+      "m_ServerInfo",
+      "GetUnEnterServerList",
+      "TransferServer",
+      "True",
+      "OnLogin",
+      "Show",
+      "False"
+    ],
+    "varnames": [
+      "infos",
+      "loginin",
+      "selectserver",
+      "field",
+      "name",
+      "ip",
+      "port",
+      "serverid"
+    ],
+    "const_strings": [
+      "m_ServerInfo",
+      "autoenterselrole"
+    ],
+    "analysis": {
+      "unique_bytes": 33,
+      "standard_opcode_types": 15,
+      "non_standard_opcode_types": 18,
+      "entropy": 3.86,
+      "best_xor_key": 48,
+      "best_xor_ratio": 0.7267
+    }
+  },
+  {
+    "index": 20,
+    "name": "GetServerRoleInfo",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 171,
+    "co_code_length": 4,
+    "co_code_hex": "85000055",
+    "names": [
+      "g_ServerRoleInfo"
+    ],
+    "varnames": [],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 3,
+      "standard_opcode_types": 1,
+      "non_standard_opcode_types": 2,
+      "entropy": 1.5,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.75
+    }
+  },
+  {
+    "index": 21,
+    "name": "SetLoginServerIPPort",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 2,
+    "nlocals": 2,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 175,
+    "co_code_length": 16,
+    "co_code_hex": "c10000c40000c10100c401008f000055",
+    "names": [
+      "g_LoginServerIP",
+      "g_LoginServePort"
+    ],
+    "varnames": [
+      "ip",
+      "port"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 6,
+      "standard_opcode_types": 2,
+      "non_standard_opcode_types": 4,
+      "entropy": 2.12,
+      "best_xor_key": 2,
+      "best_xor_ratio": 0.6875
+    }
+  },
+  {
+    "index": 22,
+    "name": "GetLoginServeIPPort",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 2,
+    "flags": 67,
+    "firstlineno": 181,
+    "co_code_length": 10,
+    "co_code_hex": "850000850100de020055",
+    "names": [
+      "g_LoginServerIP",
+      "g_LoginServePort"
+    ],
+    "varnames": [],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 6,
+      "standard_opcode_types": 3,
+      "non_standard_opcode_types": 3,
+      "entropy": 2.32,
+      "best_xor_key": 3,
+      "best_xor_ratio": 0.7
+    }
+  },
+  {
+    "index": 23,
+    "name": "GetLoginServer",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 186,
+    "co_code_length": 4,
+    "co_code_hex": "85000055",
+    "names": [
+      "g_LoginServer"
+    ],
+    "varnames": [],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 3,
+      "standard_opcode_types": 1,
+      "non_standard_opcode_types": 2,
+      "entropy": 1.5,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.75
+    }
+  },
+  {
+    "index": 24,
+    "name": "TransferServer",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 6,
+    "nlocals": 7,
+    "stacksize": 6,
+    "flags": 67,
+    "firstlineno": 191,
+    "co_code_length": 114,
+    "co_code_hex": "8f0100c10000c10100c10200c10300c10400de0500370b1fc10000c10100de0200c40000c10400c40100850200c10200c10300da0200418f02008f0000e00300710600c10600d90400c10000c10100da020041850500850600da010041850700c10400da010041850800da0000418f000055",
+    "names": [
+      "g_LoginServer",
+      "g_LoginServerID",
+      "SetLoginServerIPPort",
+      "restartsave",
+      "SetLoginServer",
+      "SetSelectServerOver",
+      "True",
+      "C2STransferServer",
+      "ShowConnectingDlg"
+    ],
+    "varnames": [
+      "fieldname",
+      "servername",
+      "server_ip",
+      "port",
+      "serverid",
+      "autoenterselrole",
+      "restartsave"
+    ],
+    "const_strings": [
+      "Transfer!!fieldname=%s servername=%s server_ip=%s port=%d, serverid=%d"
+    ],
+    "analysis": {
+      "unique_bytes": 23,
+      "standard_opcode_types": 11,
+      "non_standard_opcode_types": 12,
+      "entropy": 3.45,
+      "best_xor_key": 19,
+      "best_xor_ratio": 0.7018
+    }
+  },
+  {
+    "index": 25,
+    "name": "showlogin",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 1,
+    "stacksize": 2,
+    "flags": 19,
+    "firstlineno": 209,
+    "co_code_length": 84,
+    "co_code_hex": "8f0000c40100850200c40300720200d90400b7200041720200d90400d90500da000041720200d90600da0000720200c50400e5010041720000d90700850200da010041720100d90700850800da0100418f000055",
+    "names": [
+      "None",
+      "g_ConnectMgr",
+      "False",
+      "g_AutoProxy",
+      "g_Net",
+      "Disconnect",
+      "CFakeNet",
+      "Show",
+      "True"
+    ],
+    "varnames": [
+      "dlg"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 21,
+      "standard_opcode_types": 9,
+      "non_standard_opcode_types": 12,
+      "entropy": 3.45,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.7619
+    }
+  },
+  {
+    "index": 26,
+    "name": "ShowConnectingDlg",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 4,
+    "stacksize": 10,
+    "flags": 3,
+    "firstlineno": 205,
+    "co_code_length": 106,
+    "co_code_hex": "8f01008f0000e00000bf02008f01008f0000e00100bf00008f01008f0000e00200bf0100910000910100910200de03008f0200f200007100008f01008f0000e003007101008f01008f0000e00400710200c10100d905008f03008f0400c10000da03007103008f000055",
+    "names": [
+      "net",
+      "selectserver",
+      "loginin",
+      "commondialog",
+      "netlogin",
+      "ShowMessageBox"
+    ],
+    "varnames": [
+      "showlogin",
+      "commondialog",
+      "netlogin",
+      "msgbox"
+    ],
+    "const_strings": [
+      "a5bfa662b373b1b5aa41b0c8beb9a4a42e2e2e2e",
+      "aaf0a65e"
+    ],
+    "analysis": {
+      "unique_bytes": 17,
+      "standard_opcode_types": 7,
+      "non_standard_opcode_types": 10,
+      "entropy": 2.92,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.7075
+    }
+  },
+  {
+    "index": 27,
+    "name": "S2CServerRoleInfo",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 6,
+    "stacksize": 4,
+    "flags": 67,
+    "firstlineno": 223,
+    "co_code_length": 98,
+    "co_code_hex": "c10000d900008f0100da0100710100bb0000710200a74874f17574b57574ae757442db5a74057774b57474ad7474fb7674ae7574057074b57474ad7474fb7574ae7574057174b57174b57674b5707471d6567434f17674b57674ae757435fb747421",
+    "names": [
+      "UnpackInt",
+      "xrange",
+      "SetServerRoleInfo"
+    ],
+    "varnames": [
+      "netobj",
+      "cnt",
+      "roleinfo",
+      "i",
+      "serverid",
+      "rolenum"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 30,
+      "standard_opcode_types": 13,
+      "non_standard_opcode_types": 17,
+      "entropy": 3.95,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.7347
+    }
+  },
+  {
+    "index": 28,
+    "name": "C2STransferServer",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 2,
+    "stacksize": 3,
+    "flags": 67,
+    "firstlineno": 233,
+    "co_code_length": 55,
+    "co_code_hex": "850000d90100710100c10100d90200850000d90300da010041c10100d90400c100008f0100da020041c10100d90500da0000418f000055",
+    "names": [
+      "net",
+      "g_Net",
+      "PacketPrepare",
+      "C2GS_SELECT_SERVER",
+      "PacketAddI",
+      "PacketSend"
+    ],
+    "varnames": [
+      "serverid",
+      "netobj"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 14,
+      "standard_opcode_types": 8,
+      "non_standard_opcode_types": 6,
+      "entropy": 3.0,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.7091
+    }
+  },
+  {
+    "index": 29,
+    "name": "__init__",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 4,
+    "nlocals": 4,
+    "stacksize": 4,
+    "flags": 67,
+    "firstlineno": 241,
+    "co_code_length": 35,
+    "co_code_hex": "850000d90100d90200c10000c10100c10200da030041c10300c10000c503008f000055",
+    "names": [
+      "net",
+      "CNet",
+      "__init__",
+      "m_NetType"
+    ],
+    "varnames": [
+      "self",
+      "ip",
+      "port",
+      "iType"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 12,
+      "standard_opcode_types": 5,
+      "non_standard_opcode_types": 7,
+      "entropy": 2.82,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.6857
+    }
+  },
+  {
+    "index": 30,
+    "name": "PacketPrepare",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 2,
+    "nlocals": 2,
+    "stacksize": 3,
+    "flags": 67,
+    "firstlineno": 245,
+    "co_code_length": 32,
+    "co_code_hex": "850000d90100d90200c10000c10100da020041c10100c10000c503008f000055",
+    "names": [
+      "net",
+      "CNet",
+      "PacketPrepare",
+      "m_iCmd"
+    ],
+    "varnames": [
+      "self",
+      "icmd"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 12,
+      "standard_opcode_types": 5,
+      "non_standard_opcode_types": 7,
+      "entropy": 2.81,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.6875
+    }
+  },
+  {
+    "index": 31,
+    "name": "OnServerCmd",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 2,
+    "nlocals": 2,
+    "stacksize": 3,
+    "flags": 67,
+    "firstlineno": 249,
+    "co_code_length": 43,
+    "co_code_hex": "850000c100008f0100da0200b7170041850100d90200d90300c10000c10100da020041e50100418f000055",
+    "names": [
+      "hasattr",
+      "net",
+      "CNet",
+      "OnServerCmd"
+    ],
+    "varnames": [
+      "self",
+      "icmd"
+    ],
+    "const_strings": [
+      "m_Hello"
+    ],
+    "analysis": {
+      "unique_bytes": 14,
+      "standard_opcode_types": 6,
+      "non_standard_opcode_types": 8,
+      "entropy": 3.11,
+      "best_xor_key": 18,
+      "best_xor_ratio": 0.6977
+    }
+  },
+  {
+    "index": 32,
+    "name": "OnConnectFail",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 1,
+    "stacksize": 2,
+    "flags": 67,
+    "firstlineno": 253,
+    "co_code_length": 53,
+    "co_code_hex": "850000c10000c50100850200b7110041850200d90300c10000da010041e5110041850400d90500d90600c10000da0100418f000055",
+    "names": [
+      "True",
+      "m_IsFail",
+      "g_ConnectMgr",
+      "OnSocketConnectFail",
+      "net",
+      "CNet",
+      "OnConnectFail"
+    ],
+    "varnames": [
+      "self"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 18,
+      "standard_opcode_types": 8,
+      "non_standard_opcode_types": 10,
+      "entropy": 3.3,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.6981
+    }
+  },
+  {
+    "index": 33,
+    "name": "OnError",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 2,
+    "nlocals": 2,
+    "stacksize": 3,
+    "flags": 67,
+    "firstlineno": 261,
+    "co_code_length": 56,
+    "co_code_hex": "850000c10000c50100850200b7110041850200d90300c10000da010041e5140041850400d90500d90600c10000c10100da0200418f000055",
+    "names": [
+      "True",
+      "m_IsFail",
+      "g_ConnectMgr",
+      "OnSocketError",
+      "net",
+      "CNet",
+      "OnError"
+    ],
+    "varnames": [
+      "self",
+      "msg"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 19,
+      "standard_opcode_types": 9,
+      "non_standard_opcode_types": 10,
+      "entropy": 3.34,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.6964
+    }
+  },
+  {
+    "index": 34,
+    "name": "CMXNet",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 2,
+    "flags": 66,
+    "firstlineno": 240,
+    "co_code_length": 59,
+    "co_code_hex": "aa00009801008f00008f0100fb01009802008f0200fb00009803008f0300fb00009804008f0400fb0000980500aa06008f0500fb01009807003855",
+    "names": [
+      "__name__",
+      "__module__",
+      "__init__",
+      "PacketPrepare",
+      "OnServerCmd",
+      "OnConnectFail",
+      "None",
+      "OnError"
+    ],
+    "varnames": [],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 14,
+      "standard_opcode_types": 7,
+      "non_standard_opcode_types": 7,
+      "entropy": 2.99,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.678
+    }
+  },
+  {
+    "index": 35,
+    "name": "__init__",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 3,
+    "stacksize": 5,
+    "flags": 67,
+    "firstlineno": 271,
+    "co_code_length": 71,
+    "co_code_hex": "850000d90100d90200c100008f0000da020041ca0000c10000c504008f01008f0000e00500710100c10100d90600da00006c0300c10000c50700710200c10000c508008f000055",
+    "names": [
+      "interface",
+      "CBaseObject",
+      "__init__",
+      "None",
+      "m_Nets",
+      "selectserver",
+      "GetServerInfo",
+      "m_ServerInfo",
+      "m_ProxyInfo"
+    ],
+    "varnames": [
+      "self",
+      "selectserver",
+      "_"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 21,
+      "standard_opcode_types": 9,
+      "non_standard_opcode_types": 12,
+      "entropy": 3.16,
+      "best_xor_key": 24,
+      "best_xor_ratio": 0.7183
+    }
+  },
+  {
+    "index": 36,
+    "name": "Connect",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 1,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 277,
+    "co_code_length": 4,
+    "co_code_hex": "8f000055",
+    "names": [],
+    "varnames": [
+      "self"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 3,
+      "standard_opcode_types": 1,
+      "non_standard_opcode_types": 2,
+      "entropy": 1.5,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.75
+    }
+  },
+  {
+    "index": 37,
+    "name": "ConnectTestFail",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 6,
+    "stacksize": 7,
+    "flags": 67,
+    "firstlineno": 280,
+    "co_code_length": 198,
+    "co_code_hex": "8f01008f0000e000007101008f01008f0000e001007102008f01008f0000e00200710300c10000d90300da0000b7910041c10200d90400da0000710400850500b7290041c10400850500950600b70e0041850500c1040058710500a27300418505008f020058710500e50700418f03007105008506008f0400950000b7240041c10100d90700c105008f0500c10300d90800da0300418506008f060043c40600e5110041c10100d90700c105008f0500da020041c10200d90900da000041e50100418f000055",
+    "names": [
+      "commondialog",
+      "loginin",
+      "selectserver",
+      "IsConnectTestFail",
+      "GetSelectServer",
+      "g_ErrorAnsMsg",
+      "g_RefreshServerListCount",
+      "ShowNewMessageBox",
+      "Refresh",
+      "CheckShowRefreshServer"
+    ],
+    "varnames": [
+      "self",
+      "commondialog",
+      "loginin",
+      "selectserver",
+      "sServerName",
+      "msgtxt"
+    ],
+    "const_strings": [
+      "default",
+      "b373b1b5aa41b0c8beb9a5a2b1d1",
+      "bd54a977"
+    ],
+    "analysis": {
+      "unique_bytes": 32,
+      "standard_opcode_types": 15,
+      "non_standard_opcode_types": 17,
+      "entropy": 3.81,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.7222
+    }
+  },
+  {
+    "index": 38,
+    "name": "OnSocketConnectFail",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 2,
+    "nlocals": 2,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 301,
+    "co_code_length": 14,
+    "co_code_hex": "c10000d90000da0000418f000055",
+    "names": [
+      "ConnectTestFail"
+    ],
+    "varnames": [
+      "self",
+      "netobj"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 7,
+      "standard_opcode_types": 2,
+      "non_standard_opcode_types": 5,
+      "entropy": 2.09,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.7143
+    }
+  },
+  {
+    "index": 39,
+    "name": "OnSocketError",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 2,
+    "nlocals": 2,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 304,
+    "co_code_length": 14,
+    "co_code_hex": "c10000d90000da0000418f000055",
+    "names": [
+      "ConnectTestFail"
+    ],
+    "varnames": [
+      "self",
+      "netobj"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 7,
+      "standard_opcode_types": 2,
+      "non_standard_opcode_types": 5,
+      "entropy": 2.09,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.7143
+    }
+  },
+  {
+    "index": 40,
+    "name": "IsConnectTestFail",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 2,
+    "stacksize": 3,
+    "flags": 67,
+    "firstlineno": 307,
+    "co_code_length": 48,
+    "co_code_hex": "d32900c10000d9000036af1e00710100c10100d90100850200950200b708004185020055a20a0041a20a004085030055",
+    "names": [
+      "m_Nets",
+      "m_IsFail",
+      "False",
+      "True"
+    ],
+    "varnames": [
+      "self",
+      "netobj"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 21,
+      "standard_opcode_types": 11,
+      "non_standard_opcode_types": 10,
+      "entropy": 3.7,
+      "best_xor_key": 18,
+      "best_xor_ratio": 0.7292
+    }
+  },
+  {
+    "index": 41,
+    "name": "CConnectMgr",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 1,
+    "flags": 66,
+    "firstlineno": 270,
+    "co_code_length": 62,
+    "co_code_hex": "aa00009801008f0000fb00009802008f0100fb00009803008f0200fb00009804008f0300fb00009805008f0400fb00009806008f0500fb00009807003855",
+    "names": [
+      "__name__",
+      "__module__",
+      "__init__",
+      "Connect",
+      "ConnectTestFail",
+      "OnSocketConnectFail",
+      "OnSocketError",
+      "IsConnectTestFail"
+    ],
+    "varnames": [],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 14,
+      "standard_opcode_types": 7,
+      "non_standard_opcode_types": 7,
+      "entropy": 2.8,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.6774
+    }
+  },
+  {
+    "index": 42,
+    "name": "__init__",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 1,
+    "stacksize": 2,
+    "flags": 67,
+    "firstlineno": 317,
+    "co_code_length": 35,
+    "co_code_hex": "850000d90100c10000da0100418f0100c10000c50200850300c10000c504008f000055",
+    "names": [
+      "CConnectMgr",
+      "__init__",
+      "m_Time",
+      "False",
+      "m_AllTry"
+    ],
+    "varnames": [
+      "self"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 13,
+      "standard_opcode_types": 6,
+      "non_standard_opcode_types": 7,
+      "entropy": 2.86,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.6857
+    }
+  },
+  {
+    "index": 43,
+    "name": "GetServerInfo",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 3,
+    "nlocals": 5,
+    "stacksize": 4,
+    "flags": 67,
+    "firstlineno": 322,
+    "co_code_length": 88,
+    "co_code_hex": "8f01008f0000e00000710300c10000d90100d90200c10100da0100b7350041d33200c10000d90100c101005836af1f00710400c104008f020058c10200950200b7080041c1040055a22d0041a22d0040e50100418f000055",
+    "names": [
+      "selectserver",
+      "m_ServerInfo",
+      "get"
+    ],
+    "varnames": [
+      "self",
+      "district",
+      "name",
+      "selectserver",
+      "serverdata"
+    ],
+    "const_strings": [
+      "name"
+    ],
+    "analysis": {
+      "unique_bytes": 27,
+      "standard_opcode_types": 14,
+      "non_standard_opcode_types": 13,
+      "entropy": 3.75,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.7273
+    }
+  },
+  {
+    "index": 44,
+    "name": "GetTestProxyList",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 7,
+    "stacksize": 5,
+    "flags": 67,
+    "firstlineno": 329,
+    "co_code_length": 203,
+    "co_code_hex": "8f01008f0000e00000710100c10000d90100e3080041ca000055e5010041850200da0000710200850300da0000710300bb0000308f02005a8f030005308f02005a8f040005308f05005a8f060005ca0100710400c103008f0700950300b72c0041bb000030c103005a8f03000530c102005a8f040005308f05005a8f060005ca0100c104003f710400e5070041850400c40500c10400c10000d901003f710500d32400850600c10000d90700da010036af1300710600c10500d908008f0500da010041a2b00040c1050055",
+    "names": [
+      "random",
+      "m_ProxyInfo",
+      "GetProxy",
+      "GetProxyName",
+      "True",
+      "g_AutoProxy",
+      "xrange",
+      "m_Time",
+      "pop"
+    ],
+    "varnames": [
+      "self",
+      "random",
+      "ipPort",
+      "name",
+      "extlist",
+      "proxylist",
+      "t"
+    ],
+    "const_strings": [
+      "",
+      "note",
+      "ipPort",
+      "type",
+      "a6dbb0cabfefbedc"
+    ],
+    "analysis": {
+      "unique_bytes": 37,
+      "standard_opcode_types": 16,
+      "non_standard_opcode_types": 21,
+      "entropy": 4.01,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.7438
+    }
+  },
+  {
+    "index": 45,
+    "name": "GetTestServerList",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 9,
+    "stacksize": 7,
+    "flags": 67,
+    "firstlineno": 348,
+    "co_code_length": 294,
+    "co_code_hex": "8f01008f0000e00000710100c10000d90100e30800418f000055e5010041ca0000710200850300b74c0041cf10008503006c020071030071040040e50b004141418f000055e5010010c10000d90400c10300c10400da0200710500c10500b7110041c10200d90500c10500da010041a2220141e5ac0041ca0000ca00005a710600710700d36500c10000d90100d90600da000036af54006c0200710300710800c10300d907008f0200da01008f0300950500b70e0041c10600c1080043710600a2940041c10300d907008f0400da01008f0300950500b70e0041c10700c1080043710700a2940041a2940040c10100d90800c10600da010041c10100d90800c10700da010041c10200c106008f05000e43710200c10200c107008f06000e43710200c1020055",
+    "names": [
+      "random",
+      "m_ServerInfo",
+      "None",
+      "g_PriorServer",
+      "GetServerInfo",
+      "append",
+      "iteritems",
+      "find",
+      "shuffle"
+    ],
+    "varnames": [
+      "self",
+      "random",
+      "IPs",
+      "district",
+      "name",
+      "sinfo",
+      "dianXinList",
+      "WangTongList",
+      "districtData"
+    ],
+    "const_strings": [
+      "b971ab48",
+      "baf4b371"
+    ],
+    "analysis": {
+      "unique_bytes": 42,
+      "standard_opcode_types": 20,
+      "non_standard_opcode_types": 22,
+      "entropy": 4.08,
+      "best_xor_key": 80,
+      "best_xor_ratio": 0.7381
+    }
+  },
+  {
+    "index": 46,
+    "name": "Connect",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 18,
+    "stacksize": 12,
+    "flags": 67,
+    "firstlineno": 375,
+    "co_code_length": 647,
+    "co_code_hex": "8f01008f0000e000007101008f01008f0000e00100710200c10000d90200da0000710300c10000d90300da0000710400c10300e3150041c10100d904008f0000da0100418f000055e5010041c10400e30800418f000055e5010041c104008f020058710500c105008f030058c10500d906008f0400da01005a710600710700d3b801c1030036afb001710800c108008f050058c108008f060058c108008f070058c108008f080058c108008f090058de05006c0500710900710a00710b00710c00710d008507008f0a00c10900c10c00850800c10600da0100da040041850900c10a00c10b008f0b00c10200d90a00da0201710e00850b00c10e00c50c00850b00c10e00c50d008f0c00c10e00c50e00c10900c10e00c50f00c10d00c10900c10a00c10b00c10c00de0500c10e00c51000c10000d91100d91200c10e00da010041c10600b7de00418513008f0d00c10600c10700da030041c10600d914008f0e00da0100710f00c10600c10e00c51500c10e00d91600c10600c10f000e851700c10600c10f008f0f003f0dda0100da020041c10a00d918008f1000da0100711000d331008519008f1100da010036af2300711100c10e00d91a00851b00851700c11000c1110058da0100da0100da010041a2ae0140c10e00d91a00851b00c10b008f120037da0100851b00c10b008f12003d8f120037da01003f851b00c10b008f13003d8f120037da01003f851b00c10b008f14003d8f120037da01003fda010041a2860041c10e00d91600c10a00c10b00da020041a2860040851c00da000041c1000030d91d008f0f00435ac51d00c10000d91e00da000041c10000d91d008f0f00238f0200950300e3070041851f00b70e0041c10000d91600da000041e50100418f000055",
+    "names": [
+      "selectserver",
+      "loginhello",
+      "GetTestServerList",
+      "GetTestProxyList",
+      "Refresh",
+      "None",
+      "get",
+      "LOG",
+      "bool",
+      "CMXNet",
+      "TEST_HELLO",
+      "False",
+      "m_Hello",
+      "m_IsFail",
+      "m_ProxyName",
+      "m_SvrName",
+      "m_ServerInfo",
+      "m_Nets",
+      "append",
+      "LOG_DEBUG",
+      "find",
+      "m_Proxy",
+      "Connect",
+      "int",
+      "split",
+      "xrange",
+      "NakedSend",
+      "chr",
+      "ShowConnectingDlg",
+      "m_Time",
+      "SetTimeOutCmd",
+      "g_AutoProxy"
+    ],
+    "varnames": [
+      "self",
+      "selectserver",
+      "loginhello",
+      "serverlist",
+      "proxylist",
+      "proxydata",
+      "proxy",
+      "note",
+      "d",
+      "name",
+      "ip",
+      "port",
+      "serverid",
+      "district",
+      "netobj",
+      "p",
+      "iplst",
+      "i"
+    ],
+    "const_strings": [
+      "ipPort",
+      "note",
+      "name",
+      "ip",
+      "port",
+      "serverid",
+      "district",
+      "b9c1b8d5b373b1b5212121",
+      "iType",
+      "",
+      "b373b1b5a54eb27a2121212121",
+      ":",
+      "."
+    ],
+    "analysis": {
+      "unique_bytes": 66,
+      "standard_opcode_types": 41,
+      "non_standard_opcode_types": 25,
+      "entropy": 4.36,
+      "best_xor_key": 81,
+      "best_xor_ratio": 0.7125
+    }
+  },
+  {
+    "index": 47,
+    "name": "nexttest",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 1,
+    "stacksize": 1,
+    "flags": 83,
+    "firstlineno": 418,
+    "co_code_length": 14,
+    "co_code_hex": "c10000d90000da0000418f000055",
+    "names": [
+      "Connect"
+    ],
+    "varnames": [
+      "obj"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 7,
+      "standard_opcode_types": 2,
+      "non_standard_opcode_types": 5,
+      "entropy": 2.09,
+      "best_xor_key": 1,
+      "best_xor_ratio": 0.7143
+    }
+  },
+  {
+    "index": 48,
+    "name": "SetTimeOutCmd",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 2,
+    "stacksize": 4,
+    "flags": 67,
+    "firstlineno": 417,
+    "co_code_length": 73,
+    "co_code_hex": "8f0100fb0000710100850000c100008f02008f0000da0300b7110041c10000d90200d90300da000041e5010041c10000d90400c10000d90500c10100da0200c10000c502008f000055",
+    "names": [
+      "getattr",
+      "None",
+      "m_TimeoutCmd",
+      "Release",
+      "CreatePyCommand",
+      "PROXY_CONNECT_TIMEOUT"
+    ],
+    "varnames": [
+      "self",
+      "nexttest"
+    ],
+    "const_strings": [
+      "m_TimeoutCmd"
+    ],
+    "analysis": {
+      "unique_bytes": 19,
+      "standard_opcode_types": 9,
+      "non_standard_opcode_types": 10,
+      "entropy": 3.1,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.6986
+    }
+  },
+  {
+    "index": 49,
+    "name": "ConnectTestFail",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 1,
+    "stacksize": 2,
+    "flags": 67,
+    "firstlineno": 425,
+    "co_code_length": 78,
+    "co_code_hex": "c10000d90000da0000b7300041c10000d90100850200950200b72000418f0100c10000c50300850400c10000c50100c10000d90500da000041e50e0041850600d90700c10000da0100418f000055",
+    "names": [
+      "IsConnectTestFail",
+      "m_AllTry",
+      "False",
+      "m_Time",
+      "True",
+      "Connect",
+      "CConnectMgr",
+      "ConnectTestFail"
+    ],
+    "varnames": [
+      "self"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 22,
+      "standard_opcode_types": 9,
+      "non_standard_opcode_types": 13,
+      "entropy": 3.29,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.6923
+    }
+  },
+  {
+    "index": 50,
+    "name": "CRandomConnectMgr",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 1,
+    "flags": 66,
+    "firstlineno": 314,
+    "co_code_length": 77,
+    "co_code_hex": "aa00009801008f00009802008f0100fb00009803008f0200fb00009804008f0300fb00009805008f0400fb00009806008f0500fb00009807008f0600fb00009808008f0700fb00009809003855",
+    "names": [
+      "__name__",
+      "__module__",
+      "PROXY_CONNECT_TIMEOUT",
+      "__init__",
+      "GetServerInfo",
+      "GetTestProxyList",
+      "GetTestServerList",
+      "Connect",
+      "SetTimeOutCmd",
+      "ConnectTestFail"
+    ],
+    "varnames": [],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 16,
+      "standard_opcode_types": 8,
+      "non_standard_opcode_types": 8,
+      "entropy": 2.9,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.6753
+    }
+  },
+  {
+    "index": 51,
+    "name": "__init__",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 4,
+    "nlocals": 4,
+    "stacksize": 2,
+    "flags": 67,
+    "firstlineno": 435,
+    "co_code_length": 44,
+    "co_code_hex": "850000d90100c10000da010041c10100c10000c50200c10200c10000c50300c10300c10000c504008f000055",
+    "names": [
+      "CConnectMgr",
+      "__init__",
+      "m_ServerID",
+      "m_Idx",
+      "m_Pwd"
+    ],
+    "varnames": [
+      "self",
+      "serverID",
+      "idx",
+      "pwd"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 13,
+      "standard_opcode_types": 6,
+      "non_standard_opcode_types": 7,
+      "entropy": 2.74,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.6818
+    }
+  },
+  {
+    "index": 52,
+    "name": "Connect",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 1,
+    "nlocals": 19,
+    "stacksize": 14,
+    "flags": 67,
+    "firstlineno": 441,
+    "co_code_length": 689,
+    "co_code_hex": "ca00007101008f01008f0000e000007102008f01008f0000e00100710300c10200d90200da00006c0300710400710500710500d36200c10400d90300da000036af5400710600d34b00c1060036af4300710700c107008f0200588f0300950200b7070041a24d00e5010041c107008f040058c10000d90400950200b7110041c10100d90500c10700da010041a24d0041a24d0040a2400040ca0000c10000c50600d30902c1010036af0102710600c106008f050058c106008f060058c106008f070058c106008f040058c106008f020058de05006c0500710800710900710a00710b00710c008f08000bc108000bc109000bc10a000bc10b000bc10c000b1f850700c10900c10a008f0900c10300d90800da0201710d00850900c10d00c50a00850900c10d00c50b008f0a00c10d00c50c00c10800c10d00c50d00c10c00c10800c10900c10a00c10b00de0500c10d00c50e00c10000d90f00c10000d91000de0200c10d00c51100851200c10c00851300da0200b70d0041c10c00c10d00c51400e5010041851500da0000710e00c10e00b7f400418f0b000bc10e000b1fc10e00d916008f0c00da0100710f00851700da0000711000851200c11000851300da0200b70d0041c11000c10d00c50c00e5010041c10d00d91800c10e00c10f000e851900c10e00c10f008f0d003f0dda0100da020041c10900d91a008f0e00da0100711100d33100851b008f0f00da010036af2300711200c10d00d91c00851d00851900c11100c1120058da0100da0100da010041a2110240c10d00d91c00851d00c10a008f100037da0100851d00c10a008f10003d8f100037da01003f851d00c10a008f11003d8f100037da01003f851d00c10a008f12003d8f100037da01003fda010041e5110041c10d00d91800c10900c10a00da020041c10000d90600d90500c10d00da010041a2a800408f000055",
+    "names": [
+      "selectserver",
+      "loginhello",
+      "GetServerInfo",
+      "values",
+      "m_ServerID",
+      "append",
+      "m_Nets",
+      "CMXNet",
+      "RESELECT_HELLO",
+      "False",
+      "m_Hello",
+      "m_IsFail",
+      "m_ProxyName",
+      "m_SvrName",
+      "m_ServerInfo",
+      "m_Idx",
+      "m_Pwd",
+      "m_PassPort",
+      "isinstance",
+      "str",
+      "m_EntryName",
+      "GetProxy",
+      "find",
+      "GetProxyName",
+      "Connect",
+      "int",
+      "split",
+      "xrange",
+      "NakedSend",
+      "chr"
+    ],
+    "varnames": [
+      "self",
+      "lst",
+      "selectserver",
+      "loginhello",
+      "serverData",
+      "_",
+      "d",
+      "slist",
+      "name",
+      "ip",
+      "port",
+      "serverid",
+      "district",
+      "netobj",
+      "proxy",
+      "p",
+      "proxyName",
+      "iplst",
+      "i"
+    ],
+    "const_strings": [
+      "district",
+      "b1c0aff2b0cf",
+      "serverid",
+      "name",
+      "ip",
+      "port",
+      "b9c1b8d5c2e0aa41b373b1b5212121",
+      "iType",
+      "",
+      "b373b1b5a54eb27a2121212121",
+      ":",
+      "."
+    ],
+    "analysis": {
+      "unique_bytes": 65,
+      "standard_opcode_types": 42,
+      "non_standard_opcode_types": 23,
+      "entropy": 4.43,
+      "best_xor_key": 81,
+      "best_xor_ratio": 0.7228
+    }
+  },
+  {
+    "index": 53,
+    "name": "CReselectConnectMgr",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 1,
+    "flags": 66,
+    "firstlineno": 434,
+    "co_code_length": 26,
+    "co_code_hex": "aa00009801008f0000fb00009802008f0100fb00009803003855",
+    "names": [
+      "__name__",
+      "__module__",
+      "__init__",
+      "Connect"
+    ],
+    "varnames": [],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 10,
+      "standard_opcode_types": 5,
+      "non_standard_opcode_types": 5,
+      "entropy": 2.63,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.6923
+    }
+  },
+  {
+    "index": 54,
+    "name": "RandomConnect",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 1,
+    "flags": 67,
+    "firstlineno": 483,
+    "co_code_length": 23,
+    "co_code_hex": "850000da0000c40100850100d90200da0000418f000055",
+    "names": [
+      "CRandomConnectMgr",
+      "g_ConnectMgr",
+      "Connect"
+    ],
+    "varnames": [],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 10,
+      "standard_opcode_types": 4,
+      "non_standard_opcode_types": 6,
+      "entropy": 2.61,
+      "best_xor_key": 3,
+      "best_xor_ratio": 0.6957
+    }
+  },
+  {
+    "index": 55,
+    "name": "ReselectServerConnect",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 3,
+    "nlocals": 4,
+    "stacksize": 5,
+    "flags": 67,
+    "firstlineno": 489,
+    "co_code_length": 62,
+    "co_code_hex": "8f01008f0000e00000710300c10300d90100b7140041850200c10000c10100c10200da030041e5110041850300c10000c10100c10200da0300418f000055",
+    "names": [
+      "main",
+      "g_IsDgwConnect",
+      "DgwReselectServerConnect",
+      "NormalReselectServerConnect"
+    ],
+    "varnames": [
+      "serverID",
+      "idx",
+      "pwd",
+      "main"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 17,
+      "standard_opcode_types": 8,
+      "non_standard_opcode_types": 9,
+      "entropy": 3.2,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.7097
+    }
+  },
+  {
+    "index": 56,
+    "name": "DgwReselectServerConnect",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 3,
+    "nlocals": 4,
+    "stacksize": 6,
+    "flags": 67,
+    "firstlineno": 497,
+    "co_code_length": 62,
+    "co_code_hex": "8f01008f0000e00000710300c10000c10100c10200de0300c10300c50100c10300d90200c10300d90300c10000c10100c10200de0300da0200418f000055",
+    "names": [
+      "dgwconnecttest",
+      "g_DGWRsLoginInfo",
+      "ConnectTest",
+      "DGW_RESELECTCONNECT"
+    ],
+    "varnames": [
+      "serverID",
+      "idx",
+      "pwd",
+      "dgwconnecttest"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 14,
+      "standard_opcode_types": 6,
+      "non_standard_opcode_types": 8,
+      "entropy": 2.91,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.6935
+    }
+  },
+  {
+    "index": 57,
+    "name": "NormalReselectServerConnect",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 3,
+    "nlocals": 3,
+    "stacksize": 4,
+    "flags": 67,
+    "firstlineno": 503,
+    "co_code_length": 32,
+    "co_code_hex": "850000c10000c10100c10200da0300c40100850100d90200da0000418f000055",
+    "names": [
+      "CReselectConnectMgr",
+      "g_ConnectMgr",
+      "Connect"
+    ],
+    "varnames": [
+      "serverID",
+      "idx",
+      "pwd"
+    ],
+    "const_strings": [],
+    "analysis": {
+      "unique_bytes": 12,
+      "standard_opcode_types": 5,
+      "non_standard_opcode_types": 7,
+      "entropy": 2.85,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.6875
+    }
+  },
+  {
+    "index": 58,
+    "name": "ProcessServerCmd",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 1,
+    "stacksize": 4,
+    "flags": 67,
+    "firstlineno": 509,
+    "co_code_length": 96,
+    "co_code_hex": "850000b7550041d35200850000d9010036af4300710000c10000d90200850300950200b72d0041c10000d90400da000041850500c100008f0100da0200b70f0041c10000d90600b705004147a2540041a2110041a2110040e50100418f000055",
+    "names": [
+      "g_ConnectMgr",
+      "m_Nets",
+      "m_IsFail",
+      "False",
+      "ProcessServerCmd",
+      "hasattr",
+      "m_Hello"
+    ],
+    "varnames": [
+      "netobj"
+    ],
+    "const_strings": [
+      "m_Hello"
+    ],
+    "analysis": {
+      "unique_bytes": 30,
+      "standard_opcode_types": 17,
+      "non_standard_opcode_types": 13,
+      "entropy": 3.74,
+      "best_xor_key": 16,
+      "best_xor_ratio": 0.7188
+    }
+  },
+  {
+    "index": 59,
+    "name": "<module>",
+    "filename": "script\\login\\netserver.py",
+    "argcount": 0,
+    "nlocals": 0,
+    "stacksize": 6,
+    "flags": 64,
+    "firstlineno": 3,
+    "co_code_length": 423,
+    "co_code_hex": "8f00008f0100e000009800008f00008f0100e001009801008f00008f0100e002009802008f0200fb0000980300aa0300da0000418f0300fb00009804008f0400fb00009805008f0500fb00009806008f0600fb00009807008f0700fb00009808008f0800fb00009809008f0900fb0000980a008f0a00fb0000980b008f0b00fb0000980c008f0c00fb0000980d008f0d00fb0000980e008f0e00fb0000980f008f0f00fb00009810008f1000fb00009811008f1100fb00009812008f1200fb00009813008f1300fb00009814008f1400fb00009815008f1500fb00009816008f1600fb00009817008f1700fb0000981800aa19008f1800fb0100981a008f1900fb0000981b008f1a00fb0000981c008f1b00fb0000981d008f1c00aa0100d91e00de01008f1d00fb0000da000042981f008f1e00aa0000d92000de01008f1f00fb0000da0000429821008f2000aa2100de01008f2100fb0000da0000429822008f2200aa2100de01008f2300fb0000da0000429823008f2400fb00009824008f2500fb00009825008f2600fb00009826008f2700fb00009827008f2800fb00009828008f010055",
+    "names": [
+      "interface",
+      "net",
+      "C_sys",
+      "ModuleReset",
+      "SetPlayerID",
+      "GetPlayerID",
+      "RefreshServerInfo",
+      "GetErrorAnsMsg",
+      "SetUnEnterServerList",
+      "GetUnEnterServerList",
+      "ClearUnEnterServerList",
+      "IsSelectServerOver",
+      "SetSelectServerOver",
+      "SetConnectedProxy",
+      "GetConnectedProxy",
+      "GetProxy",
+      "SetProxy",
+      "GetProxyName",
+      "SetProxyName",
+      "GetProxyNameByProxy",
+      "SetServerRoleInfo",
+      "GetServerRoleInfo",
+      "SetLoginServerIPPort",
+      "GetLoginServeIPPort",
+      "GetLoginServer",
+      "False",
+      "TransferServer",
+      "ShowConnectingDlg",
+      "S2CServerRoleInfo",
+      "C2STransferServer",
+      "CNet",
+      "CMXNet",
+      "CBaseObject",
+      "CConnectMgr",
+      "CRandomConnectMgr",
+      "CReselectConnectMgr",
+      "RandomConnect",
+      "ReselectServerConnect",
+      "DgwReselectServerConnect",
+      "NormalReselectServerConnect",
+      "ProcessServerCmd"
+    ],
+    "varnames": [],
+    "const_strings": [
+      "CMXNet",
+      "CConnectMgr",
+      "CRandomConnectMgr",
+      "CReselectConnectMgr"
+    ],
+    "analysis": {
+      "unique_bytes": 52,
+      "standard_opcode_types": 37,
+      "non_standard_opcode_types": 15,
+      "entropy": 3.52,
+      "best_xor_key": 64,
+      "best_xor_ratio": 0.6714
+    }
+  }
+]

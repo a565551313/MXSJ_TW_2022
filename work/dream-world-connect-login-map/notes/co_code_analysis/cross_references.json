@@ -1,0 +1,89 @@
+{
+  "sections": [
+    {
+      "name": ".text",
+      "vma": 4198400,
+      "file_offset": 1024,
+      "size": 2811918
+    },
+    {
+      "name": ".rdata",
+      "vma": 7012352,
+      "file_offset": 2813440,
+      "size": 1224536
+    },
+    {
+      "name": ".data",
+      "vma": 8237056,
+      "file_offset": 4038144,
+      "size": 322560
+    },
+    {
+      "name": "_dyprot0",
+      "vma": 9728000,
+      "file_offset": 4360704,
+      "size": 3237612
+    },
+    {
+      "name": "_dyprot1",
+      "vma": 12967936,
+      "file_offset": 7598592,
+      "size": 1981616
+    }
+  ],
+  "key_strings": {
+    "co_code": "0x6cc28c",
+    "co_argcount": "0x6cc258",
+    "co_consts": "0x6cc294",
+    "co_names": "0x6cc2a0",
+    "co_varnames": "0x6cc2ac",
+    "opcode (err msg)": "0x6c1cd8",
+    "bytecode (err msg)": "0x6c1af2",
+    "script.fls": "0x6b227d",
+    "0SLF magic": "0x6b8a0c"
+  },
+  "references": {
+    "co_code": [],
+    "co_argcount": [],
+    "co_consts": [],
+    "co_names": [],
+    "co_varnames": [],
+    "opcode (err msg)": [],
+    "bytecode (err msg)": [],
+    "script.fls": [],
+    "0SLF magic": [
+      {
+        "vma": "0x48ed87",
+        "instruction": "push 0x006B8A0C",
+        "type": "push"
+      },
+      {
+        "vma": "0x48ef48",
+        "instruction": "push 0x006B8A0C",
+        "type": "push"
+      }
+    ]
+  },
+  "table_access_in_loops": [
+    {
+      "vma": "0x418215",
+      "context": "45d06a030fb650ffe8beebffff8b75d883c410eb2c8b75d83b75c0730c8b45cc"
+    },
+    {
+      "vma": "0x42101d",
+      "context": "4a0300000fb6028d52030fb604388842fd0fb642fe0fb604388842fe0fb642ff"
+    },
+    {
+      "vma": "0x4210dc",
+      "context": "038d49000fb6028d52040fb604388842fc0fb642fd0fb604388842fd0fb642fe"
+    },
+    {
+      "vma": "0x42163d",
+      "context": "044f0fb64401028842030fb64b018d044f0fb64401018842020fb64b018d044f"
+    },
+    {
+      "vma": "0x433145",
+      "context": "8a0f8d520148884aff85c07fee8b5424188b4c24208b44241442458954241847"
+    }
+  ]
+}

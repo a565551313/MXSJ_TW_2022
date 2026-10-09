@@ -1,0 +1,1535 @@
+{
+  "ProcessServerCmd": {
+    "bytecode_hex": "850000b7550041d35200850000d9010036af4300710000c10000d90200850300950200b72d0041c10000d90400da000041850500c100008f0100da0200b70f0041c10000d90600b705004147a2540041a2110041a2110040e50100418f000055",
+    "instructions": [
+      [
+        0,
+        "LOAD_NAME 0 (g_ConnectMgr)"
+      ],
+      [
+        3,
+        "POP_JUMP_IF_FALSE 60"
+      ],
+      [
+        6,
+        "POP_TOP"
+      ],
+      [
+        7,
+        "??? (0xD3)"
+      ],
+      [
+        10,
+        "LOAD_NAME 0 (g_ConnectMgr)"
+      ],
+      [
+        13,
+        "LOAD_ATTR 1 (m_Nets)"
+      ],
+      [
+        16,
+        "??? (0x36)"
+      ],
+      [
+        19,
+        "??? (0x00)"
+      ],
+      [
+        22,
+        "??? (0x00)"
+      ],
+      [
+        25,
+        "??? (0x00)"
+      ],
+      [
+        28,
+        "??? (0x00)"
+      ],
+      [
+        31,
+        "??? (0x00)"
+      ],
+      [
+        34,
+        "??? (0x00)"
+      ],
+      [
+        37,
+        "??? (0x00)"
+      ],
+      [
+        40,
+        "??? (0x00)"
+      ],
+      [
+        43,
+        "DUP_TOP"
+      ],
+      [
+        44,
+        "??? (0x00)"
+      ],
+      [
+        47,
+        "??? (0x00)"
+      ],
+      [
+        50,
+        "ROT_FOUR"
+      ],
+      [
+        51,
+        "??? (0x00)"
+      ],
+      [
+        54,
+        "??? (0x00)"
+      ],
+      [
+        57,
+        "??? (0x00)"
+      ],
+      [
+        60,
+        "??? (0x00)"
+      ],
+      [
+        63,
+        "??? (0x00)"
+      ],
+      [
+        66,
+        "??? (0x00)"
+      ],
+      [
+        69,
+        "??? (0x06)"
+      ],
+      [
+        72,
+        "ROT_FOUR"
+      ],
+      [
+        73,
+        "??? (0x00)"
+      ],
+      [
+        76,
+        "??? (0xA2)"
+      ],
+      [
+        79,
+        "POP_TOP"
+      ],
+      [
+        80,
+        "??? (0xA2)"
+      ],
+      [
+        83,
+        "POP_TOP"
+      ],
+      [
+        84,
+        "??? (0xA2)"
+      ],
+      [
+        87,
+        "POP_BLOCK"
+      ],
+      [
+        88,
+        "JUMP_FORWARD 1"
+      ],
+      [
+        91,
+        "POP_TOP"
+      ],
+      [
+        92,
+        "LOAD_CONST 0 ('m_Hello')"
+      ],
+      [
+        95,
+        "RETURN_VALUE"
+      ]
+    ],
+    "names": [
+      "g_ConnectMgr",
+      "m_Nets",
+      "m_IsFail",
+      "False",
+      "ProcessServerCmd",
+      "hasattr",
+      "m_Hello"
+    ],
+    "varnames": [
+      "netobj"
+    ],
+    "consts": [
+      "m_Hello"
+    ],
+    "unknown_count": 6
+  },
+  "OnServerCmd": {
+    "bytecode_hex": "850000c100008f0100da0200b7170041850100d90200d90300c10000c10100da020041e50100418f000055",
+    "instructions": [
+      [
+        0,
+        "LOAD_NAME 0 (hasattr)"
+      ],
+      [
+        3,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        6,
+        "LOAD_CONST 1"
+      ],
+      [
+        9,
+        "CALL_FUNCTION 2"
+      ],
+      [
+        12,
+        "POP_JUMP_IF_FALSE 23"
+      ],
+      [
+        15,
+        "POP_TOP"
+      ],
+      [
+        16,
+        "LOAD_NAME 1 (net)"
+      ],
+      [
+        19,
+        "LOAD_ATTR 2 (CNet)"
+      ],
+      [
+        22,
+        "LOAD_ATTR 3 (OnServerCmd)"
+      ],
+      [
+        25,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        28,
+        "LOAD_FAST 1 (icmd)"
+      ],
+      [
+        31,
+        "CALL_FUNCTION 2"
+      ],
+      [
+        34,
+        "POP_TOP"
+      ],
+      [
+        35,
+        "JUMP_FORWARD 1"
+      ],
+      [
+        38,
+        "POP_TOP"
+      ],
+      [
+        39,
+        "LOAD_CONST 0 ('m_Hello')"
+      ],
+      [
+        42,
+        "RETURN_VALUE"
+      ]
+    ],
+    "names": [
+      "hasattr",
+      "net",
+      "CNet",
+      "OnServerCmd"
+    ],
+    "varnames": [
+      "self",
+      "icmd"
+    ],
+    "consts": [
+      "m_Hello"
+    ],
+    "unknown_count": 0
+  },
+  "OnConnectFail": {
+    "bytecode_hex": "850000c10000c50100850200b7110041850200d90300c10000da010041e5110041850400d90500d90600c10000da0100418f000055",
+    "instructions": [
+      [
+        0,
+        "LOAD_NAME 0 (True)"
+      ],
+      [
+        3,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        6,
+        "STORE_ATTR 1 (m_IsFail)"
+      ],
+      [
+        9,
+        "LOAD_NAME 2 (g_ConnectMgr)"
+      ],
+      [
+        12,
+        "POP_JUMP_IF_FALSE 17"
+      ],
+      [
+        15,
+        "POP_TOP"
+      ],
+      [
+        16,
+        "LOAD_NAME 2 (g_ConnectMgr)"
+      ],
+      [
+        19,
+        "LOAD_ATTR 3 (OnSocketConnectFail)"
+      ],
+      [
+        22,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        25,
+        "CALL_FUNCTION 1"
+      ],
+      [
+        28,
+        "POP_TOP"
+      ],
+      [
+        29,
+        "JUMP_FORWARD 17"
+      ],
+      [
+        32,
+        "POP_TOP"
+      ],
+      [
+        33,
+        "LOAD_NAME 4 (net)"
+      ],
+      [
+        36,
+        "LOAD_ATTR 5 (CNet)"
+      ],
+      [
+        39,
+        "LOAD_ATTR 6 (OnConnectFail)"
+      ],
+      [
+        42,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        45,
+        "CALL_FUNCTION 1"
+      ],
+      [
+        48,
+        "POP_TOP"
+      ],
+      [
+        49,
+        "LOAD_CONST 0"
+      ],
+      [
+        52,
+        "RETURN_VALUE"
+      ]
+    ],
+    "names": [
+      "True",
+      "m_IsFail",
+      "g_ConnectMgr",
+      "OnSocketConnectFail",
+      "net",
+      "CNet",
+      "OnConnectFail"
+    ],
+    "varnames": [
+      "self"
+    ],
+    "consts": [],
+    "unknown_count": 0
+  },
+  "OnError": {
+    "bytecode_hex": "850000c10000c50100850200b7110041850200d90300c10000da010041e5140041850400d90500d90600c10000c10100da0200418f000055",
+    "instructions": [
+      [
+        0,
+        "LOAD_NAME 0 (True)"
+      ],
+      [
+        3,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        6,
+        "STORE_ATTR 1 (m_IsFail)"
+      ],
+      [
+        9,
+        "LOAD_NAME 2 (g_ConnectMgr)"
+      ],
+      [
+        12,
+        "POP_JUMP_IF_FALSE 17"
+      ],
+      [
+        15,
+        "POP_TOP"
+      ],
+      [
+        16,
+        "LOAD_NAME 2 (g_ConnectMgr)"
+      ],
+      [
+        19,
+        "LOAD_ATTR 3 (OnSocketError)"
+      ],
+      [
+        22,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        25,
+        "CALL_FUNCTION 1"
+      ],
+      [
+        28,
+        "POP_TOP"
+      ],
+      [
+        29,
+        "JUMP_FORWARD 20"
+      ],
+      [
+        32,
+        "POP_TOP"
+      ],
+      [
+        33,
+        "LOAD_NAME 4 (net)"
+      ],
+      [
+        36,
+        "LOAD_ATTR 5 (CNet)"
+      ],
+      [
+        39,
+        "LOAD_ATTR 6 (OnError)"
+      ],
+      [
+        42,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        45,
+        "LOAD_FAST 1 (msg)"
+      ],
+      [
+        48,
+        "CALL_FUNCTION 2"
+      ],
+      [
+        51,
+        "POP_TOP"
+      ],
+      [
+        52,
+        "LOAD_CONST 0"
+      ],
+      [
+        55,
+        "RETURN_VALUE"
+      ]
+    ],
+    "names": [
+      "True",
+      "m_IsFail",
+      "g_ConnectMgr",
+      "OnSocketError",
+      "net",
+      "CNet",
+      "OnError"
+    ],
+    "varnames": [
+      "self",
+      "msg"
+    ],
+    "consts": [],
+    "unknown_count": 0
+  },
+  "CMXNet": {
+    "bytecode_hex": "aa00009801008f00008f0100fb01009802008f0200fb00009803008f0300fb00009804008f0400fb0000980500aa06008f0500fb01009807003855",
+    "instructions": [
+      [
+        0,
+        "??? (0xAA)"
+      ],
+      [
+        3,
+        "??? (0x98)"
+      ],
+      [
+        6,
+        "LOAD_CONST 0"
+      ],
+      [
+        9,
+        "LOAD_CONST 1"
+      ],
+      [
+        12,
+        "??? (0xFB)"
+      ],
+      [
+        15,
+        "??? (0x98)"
+      ],
+      [
+        18,
+        "LOAD_CONST 2"
+      ],
+      [
+        21,
+        "??? (0xFB)"
+      ],
+      [
+        24,
+        "??? (0x98)"
+      ],
+      [
+        27,
+        "LOAD_CONST 3"
+      ],
+      [
+        30,
+        "??? (0xFB)"
+      ],
+      [
+        33,
+        "??? (0x98)"
+      ],
+      [
+        36,
+        "LOAD_CONST 4"
+      ],
+      [
+        39,
+        "??? (0xFB)"
+      ],
+      [
+        42,
+        "??? (0x98)"
+      ],
+      [
+        45,
+        "??? (0xAA)"
+      ],
+      [
+        48,
+        "LOAD_CONST 5"
+      ],
+      [
+        51,
+        "??? (0xFB)"
+      ],
+      [
+        54,
+        "??? (0x98)"
+      ],
+      [
+        57,
+        "??? (0x38)"
+      ]
+    ],
+    "names": [
+      "__name__",
+      "__module__",
+      "__init__",
+      "PacketPrepare",
+      "OnServerCmd",
+      "OnConnectFail",
+      "None",
+      "OnError"
+    ],
+    "varnames": [],
+    "consts": [],
+    "unknown_count": 14
+  },
+  "CConnectMgr": {
+    "bytecode_hex": "aa00009801008f0000fb00009802008f0100fb00009803008f0200fb00009804008f0300fb00009805008f0400fb00009806008f0500fb00009807003855",
+    "instructions": [
+      [
+        0,
+        "??? (0xAA)"
+      ],
+      [
+        3,
+        "??? (0x98)"
+      ],
+      [
+        6,
+        "LOAD_CONST 0"
+      ],
+      [
+        9,
+        "??? (0xFB)"
+      ],
+      [
+        12,
+        "??? (0x98)"
+      ],
+      [
+        15,
+        "LOAD_CONST 1"
+      ],
+      [
+        18,
+        "??? (0xFB)"
+      ],
+      [
+        21,
+        "??? (0x98)"
+      ],
+      [
+        24,
+        "LOAD_CONST 2"
+      ],
+      [
+        27,
+        "??? (0xFB)"
+      ],
+      [
+        30,
+        "??? (0x98)"
+      ],
+      [
+        33,
+        "LOAD_CONST 3"
+      ],
+      [
+        36,
+        "??? (0xFB)"
+      ],
+      [
+        39,
+        "??? (0x98)"
+      ],
+      [
+        42,
+        "LOAD_CONST 4"
+      ],
+      [
+        45,
+        "??? (0xFB)"
+      ],
+      [
+        48,
+        "??? (0x98)"
+      ],
+      [
+        51,
+        "LOAD_CONST 5"
+      ],
+      [
+        54,
+        "??? (0xFB)"
+      ],
+      [
+        57,
+        "??? (0x98)"
+      ],
+      [
+        60,
+        "??? (0x38)"
+      ]
+    ],
+    "names": [
+      "__name__",
+      "__module__",
+      "__init__",
+      "Connect",
+      "ConnectTestFail",
+      "OnSocketConnectFail",
+      "OnSocketError",
+      "IsConnectTestFail"
+    ],
+    "varnames": [],
+    "consts": [],
+    "unknown_count": 15
+  },
+  "ConnectTestFail": {
+    "bytecode_hex": "8f01008f0000e000007101008f01008f0000e001007102008f01008f0000e00200710300c10000d90300da0000b7910041c10200d90400da0000710400850500b7290041c10400850500950600b70e0041850500c1040058710500a27300418505008f020058710500e50700418f03007105008506008f0400950000b7240041c10100d90700c105008f0500c10300d90800da0300418506008f060043c40600e5110041c10100d90700c105008f0500da020041c10200d90900da000041e50100418f000055",
+    "instructions": [
+      [
+        0,
+        "LOAD_CONST 1 ('b373b1b5aa41b0c8beb9a5a2b1d1')"
+      ],
+      [
+        3,
+        "LOAD_CONST 0 ('default')"
+      ],
+      [
+        6,
+        "??? (0xE0)"
+      ],
+      [
+        9,
+        "STORE_FAST 1 (commondialog)"
+      ],
+      [
+        12,
+        "LOAD_CONST 1 ('b373b1b5aa41b0c8beb9a5a2b1d1')"
+      ],
+      [
+        15,
+        "LOAD_CONST 0 ('default')"
+      ],
+      [
+        18,
+        "??? (0xE0)"
+      ],
+      [
+        21,
+        "STORE_FAST 2 (loginin)"
+      ],
+      [
+        24,
+        "LOAD_CONST 1 ('b373b1b5aa41b0c8beb9a5a2b1d1')"
+      ],
+      [
+        27,
+        "LOAD_CONST 0 ('default')"
+      ],
+      [
+        30,
+        "??? (0xE0)"
+      ],
+      [
+        33,
+        "STORE_FAST 3 (selectserver)"
+      ],
+      [
+        36,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        39,
+        "LOAD_ATTR 3 (IsConnectTestFail)"
+      ],
+      [
+        42,
+        "CALL_FUNCTION 0"
+      ],
+      [
+        45,
+        "POP_JUMP_IF_FALSE 145"
+      ],
+      [
+        48,
+        "POP_TOP"
+      ],
+      [
+        49,
+        "LOAD_FAST 2 (loginin)"
+      ],
+      [
+        52,
+        "LOAD_ATTR 4 (GetSelectServer)"
+      ],
+      [
+        55,
+        "CALL_FUNCTION 0"
+      ],
+      [
+        58,
+        "STORE_FAST 4 (sServerName)"
+      ],
+      [
+        61,
+        "LOAD_NAME 5 (g_ErrorAnsMsg)"
+      ],
+      [
+        64,
+        "POP_JUMP_IF_FALSE 41"
+      ],
+      [
+        67,
+        "POP_TOP"
+      ],
+      [
+        68,
+        "LOAD_FAST 4 (sServerName)"
+      ],
+      [
+        71,
+        "LOAD_NAME 5 (g_ErrorAnsMsg)"
+      ],
+      [
+        74,
+        "COMPARE_OP 6 (in)"
+      ],
+      [
+        77,
+        "POP_JUMP_IF_FALSE 14"
+      ],
+      [
+        80,
+        "POP_TOP"
+      ],
+      [
+        81,
+        "LOAD_NAME 5 (g_ErrorAnsMsg)"
+      ],
+      [
+        84,
+        "LOAD_FAST 4 (sServerName)"
+      ],
+      [
+        87,
+        "JUMP_IF_FALSE_OR_POP 1379"
+      ],
+      [
+        90,
+        "??? (0x00)"
+      ],
+      [
+        93,
+        "??? (0x00)"
+      ],
+      [
+        96,
+        "ROT_FOUR"
+      ],
+      [
+        97,
+        "??? (0x00)"
+      ],
+      [
+        100,
+        "??? (0x00)"
+      ],
+      [
+        103,
+        "ROT_FOUR"
+      ],
+      [
+        104,
+        "??? (0x00)"
+      ],
+      [
+        107,
+        "??? (0x00)"
+      ],
+      [
+        110,
+        "ROT_THREE"
+      ],
+      [
+        111,
+        "??? (0x00)"
+      ],
+      [
+        114,
+        "??? (0x00)"
+      ],
+      [
+        117,
+        "??? (0x00)"
+      ],
+      [
+        120,
+        "??? (0x00)"
+      ],
+      [
+        123,
+        "??? (0x00)"
+      ],
+      [
+        126,
+        "??? (0x00)"
+      ],
+      [
+        129,
+        "POP_TOP"
+      ],
+      [
+        130,
+        "??? (0x00)"
+      ],
+      [
+        133,
+        "??? (0x00)"
+      ],
+      [
+        136,
+        "??? (0x00)"
+      ],
+      [
+        139,
+        "??? (0x00)"
+      ],
+      [
+        142,
+        "??? (0x00)"
+      ],
+      [
+        145,
+        "??? (0x00)"
+      ],
+      [
+        148,
+        "??? (0x00)"
+      ],
+      [
+        151,
+        "??? (0x06)"
+      ],
+      [
+        154,
+        "??? (0x06)"
+      ],
+      [
+        157,
+        "STORE_NAME 6 (g_RefreshServerListCount)"
+      ],
+      [
+        160,
+        "JUMP_FORWARD 17"
+      ],
+      [
+        163,
+        "POP_TOP"
+      ],
+      [
+        164,
+        "LOAD_FAST 1 (commondialog)"
+      ],
+      [
+        167,
+        "LOAD_ATTR 7 (ShowNewMessageBox)"
+      ],
+      [
+        170,
+        "LOAD_FAST 5 (msgtxt)"
+      ],
+      [
+        173,
+        "LOAD_CONST 5"
+      ],
+      [
+        176,
+        "CALL_FUNCTION 2"
+      ],
+      [
+        179,
+        "POP_TOP"
+      ],
+      [
+        180,
+        "LOAD_FAST 2 (loginin)"
+      ],
+      [
+        183,
+        "LOAD_ATTR 9 (CheckShowRefreshServer)"
+      ],
+      [
+        186,
+        "CALL_FUNCTION 0"
+      ],
+      [
+        189,
+        "POP_TOP"
+      ],
+      [
+        190,
+        "JUMP_FORWARD 1"
+      ],
+      [
+        193,
+        "POP_TOP"
+      ],
+      [
+        194,
+        "LOAD_CONST 0 ('default')"
+      ],
+      [
+        197,
+        "RETURN_VALUE"
+      ]
+    ],
+    "names": [
+      "commondialog",
+      "loginin",
+      "selectserver",
+      "IsConnectTestFail",
+      "GetSelectServer",
+      "g_ErrorAnsMsg",
+      "g_RefreshServerListCount",
+      "ShowNewMessageBox",
+      "Refresh",
+      "CheckShowRefreshServer"
+    ],
+    "varnames": [
+      "self",
+      "commondialog",
+      "loginin",
+      "selectserver",
+      "sServerName",
+      "msgtxt"
+    ],
+    "consts": [
+      "default",
+      "b373b1b5aa41b0c8beb9a5a2b1d1",
+      "bd54a977"
+    ],
+    "unknown_count": 4
+  },
+  "IsConnectTestFail": {
+    "bytecode_hex": "d32900c10000d9000036af1e00710100c10100d90100850200950200b708004185020055a20a0041a20a004085030055",
+    "instructions": [
+      [
+        0,
+        "??? (0xD3)"
+      ],
+      [
+        3,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        6,
+        "LOAD_ATTR 0 (m_Nets)"
+      ],
+      [
+        9,
+        "??? (0x36)"
+      ],
+      [
+        12,
+        "??? (0x00)"
+      ],
+      [
+        15,
+        "??? (0x00)"
+      ],
+      [
+        18,
+        "??? (0x00)"
+      ],
+      [
+        21,
+        "??? (0x00)"
+      ],
+      [
+        24,
+        "??? (0x00)"
+      ],
+      [
+        27,
+        "??? (0x00)"
+      ],
+      [
+        30,
+        "??? (0x00)"
+      ],
+      [
+        33,
+        "ROT_TWO"
+      ],
+      [
+        34,
+        "??? (0x00)"
+      ],
+      [
+        37,
+        "UNARY_POSITIVE"
+      ],
+      [
+        38,
+        "??? (0x00)"
+      ],
+      [
+        41,
+        "UNARY_POSITIVE"
+      ],
+      [
+        42,
+        "??? (0x00)"
+      ],
+      [
+        45,
+        "ROT_THREE"
+      ],
+      [
+        46,
+        "??? (0x00)"
+      ]
+    ],
+    "names": [
+      "m_Nets",
+      "m_IsFail",
+      "False",
+      "True"
+    ],
+    "varnames": [
+      "self",
+      "netobj"
+    ],
+    "consts": [],
+    "unknown_count": 2
+  },
+  "SetTimeOutCmd": {
+    "bytecode_hex": "8f0100fb0000710100850000c100008f02008f0000da0300b7110041c10000d90200d90300da000041e5010041c10000d90400c10000d90500c10100da0200c10000c502008f000055",
+    "instructions": [
+      [
+        0,
+        "LOAD_CONST 1"
+      ],
+      [
+        3,
+        "??? (0xFB)"
+      ],
+      [
+        6,
+        "STORE_FAST 1 (nexttest)"
+      ],
+      [
+        9,
+        "LOAD_NAME 0 (getattr)"
+      ],
+      [
+        12,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        15,
+        "LOAD_CONST 2"
+      ],
+      [
+        18,
+        "LOAD_CONST 0 ('m_TimeoutCmd')"
+      ],
+      [
+        21,
+        "CALL_FUNCTION 3"
+      ],
+      [
+        24,
+        "POP_JUMP_IF_FALSE 17"
+      ],
+      [
+        27,
+        "POP_TOP"
+      ],
+      [
+        28,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        31,
+        "LOAD_ATTR 2 (m_TimeoutCmd)"
+      ],
+      [
+        34,
+        "LOAD_ATTR 3 (Release)"
+      ],
+      [
+        37,
+        "CALL_FUNCTION 0"
+      ],
+      [
+        40,
+        "POP_TOP"
+      ],
+      [
+        41,
+        "JUMP_FORWARD 1"
+      ],
+      [
+        44,
+        "POP_TOP"
+      ],
+      [
+        45,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        48,
+        "LOAD_ATTR 4 (CreatePyCommand)"
+      ],
+      [
+        51,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        54,
+        "LOAD_ATTR 5 (PROXY_CONNECT_TIMEOUT)"
+      ],
+      [
+        57,
+        "LOAD_FAST 1 (nexttest)"
+      ],
+      [
+        60,
+        "CALL_FUNCTION 2"
+      ],
+      [
+        63,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        66,
+        "STORE_ATTR 2 (m_TimeoutCmd)"
+      ],
+      [
+        69,
+        "LOAD_CONST 0 ('m_TimeoutCmd')"
+      ],
+      [
+        72,
+        "RETURN_VALUE"
+      ]
+    ],
+    "names": [
+      "getattr",
+      "None",
+      "m_TimeoutCmd",
+      "Release",
+      "CreatePyCommand",
+      "PROXY_CONNECT_TIMEOUT"
+    ],
+    "varnames": [
+      "self",
+      "nexttest"
+    ],
+    "consts": [
+      "m_TimeoutCmd"
+    ],
+    "unknown_count": 1
+  },
+  "GetServerInfo": {
+    "bytecode_hex": "8f01008f0000e00000710300c10000d90100d90200c10100da0100b7350041d33200c10000d90100c101005836af1f00710400c104008f020058c10200950200b7080041c1040055a22d0041a22d0040e50100418f000055",
+    "instructions": [
+      [
+        0,
+        "LOAD_CONST 1"
+      ],
+      [
+        3,
+        "LOAD_CONST 0 ('name')"
+      ],
+      [
+        6,
+        "??? (0xE0)"
+      ],
+      [
+        9,
+        "STORE_FAST 3 (selectserver)"
+      ],
+      [
+        12,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        15,
+        "LOAD_ATTR 1 (m_ServerInfo)"
+      ],
+      [
+        18,
+        "LOAD_ATTR 2 (get)"
+      ],
+      [
+        21,
+        "LOAD_FAST 1 (district)"
+      ],
+      [
+        24,
+        "CALL_FUNCTION 1"
+      ],
+      [
+        27,
+        "POP_JUMP_IF_FALSE 53"
+      ],
+      [
+        30,
+        "POP_TOP"
+      ],
+      [
+        31,
+        "??? (0xD3)"
+      ],
+      [
+        34,
+        "LOAD_FAST 0 (self)"
+      ],
+      [
+        37,
+        "LOAD_ATTR 1 (m_ServerInfo)"
+      ],
+      [
+        40,
+        "LOAD_FAST 1 (district)"
+      ],
+      [
+        43,
+        "JUMP_IF_FALSE_OR_POP 44854"
+      ],
+      [
+        46,
+        "??? (0x1F)"
+      ],
+      [
+        49,
+        "DUP_TOP"
+      ],
+      [
+        50,
+        "??? (0x00)"
+      ],
+      [
+        53,
+        "??? (0x00)"
+      ],
+      [
+        56,
+        "??? (0x00)"
+      ],
+      [
+        59,
+        "ROT_TWO"
+      ],
+      [
+        60,
+        "??? (0x00)"
+      ],
+      [
+        63,
+        "??? (0x00)"
+      ],
+      [
+        66,
+        "??? (0x00)"
+      ],
+      [
+        69,
+        "DUP_TOP"
+      ],
+      [
+        70,
+        "??? (0x00)"
+      ],
+      [
+        73,
+        "INPLACE_POWER"
+      ],
+      [
+        74,
+        "??? (0x00)"
+      ],
+      [
+        77,
+        "INPLACE_POWER"
+      ],
+      [
+        78,
+        "??? (0x00)"
+      ],
+      [
+        81,
+        "POP_TOP"
+      ],
+      [
+        82,
+        "??? (0x00)"
+      ],
+      [
+        85,
+        "??? (0x00)"
+      ]
+    ],
+    "names": [
+      "selectserver",
+      "m_ServerInfo",
+      "get"
+    ],
+    "varnames": [
+      "self",
+      "district",
+      "name",
+      "selectserver",
+      "serverdata"
+    ],
+    "consts": [
+      "name"
+    ],
+    "unknown_count": 6
+  },
+  "S2CServerRoleInfo": {
+    "bytecode_hex": "c10000d900008f0100da0100710100bb0000710200a74874f17574b57574ae757442db5a74057774b57474ad7474fb7674ae7574057074b57474ad7474fb7574ae7574057174b57174b57674b5707471d6567434f17674b57674ae757435fb747421",
+    "instructions": [
+      [
+        0,
+        "LOAD_FAST 0 (netobj)"
+      ],
+      [
+        3,
+        "LOAD_ATTR 0 (UnpackInt)"
+      ],
+      [
+        6,
+        "LOAD_CONST 1"
+      ],
+      [
+        9,
+        "CALL_FUNCTION 1"
+      ],
+      [
+        12,
+        "STORE_FAST 1 (cnt)"
+      ],
+      [
+        15,
+        "??? (0xBB)"
+      ],
+      [
+        18,
+        "STORE_FAST 2 (roleinfo)"
+      ],
+      [
+        21,
+        "??? (0xA7)"
+      ],
+      [
+        24,
+        "??? (0xF1)"
+      ],
+      [
+        27,
+        "??? (0xB5)"
+      ],
+      [
+        30,
+        "??? (0xAE)"
+      ],
+      [
+        33,
+        "BUILD_CLASS"
+      ],
+      [
+        34,
+        "??? (0xDB)"
+      ],
+      [
+        37,
+        "ROT_FOUR"
+      ],
+      [
+        38,
+        "??? (0x77)"
+      ],
+      [
+        41,
+        "MAP_ADD 44404"
+      ],
+      [
+        44,
+        "MAP_ADD 64372"
+      ],
+      [
+        47,
+        "??? (0x76)"
+      ],
+      [
+        50,
+        "??? (0x75)"
+      ],
+      [
+        53,
+        "??? (0x70)"
+      ],
+      [
+        56,
+        "MAP_ADD 44404"
+      ],
+      [
+        59,
+        "MAP_ADD 64372"
+      ],
+      [
+        62,
+        "??? (0x75)"
+      ],
+      [
+        65,
+        "??? (0x75)"
+      ],
+      [
+        68,
+        "STORE_FAST 46452"
+      ],
+      [
+        71,
+        "STORE_FAST 46452"
+      ],
+      [
+        74,
+        "??? (0x76)"
+      ],
+      [
+        77,
+        "??? (0x70)"
+      ],
+      [
+        80,
+        "??? (0xD6)"
+      ],
+      [
+        83,
+        "??? (0x34)"
+      ],
+      [
+        86,
+        "MAP_ADD 30389"
+      ],
+      [
+        89,
+        "MAP_ADD 30126"
+      ],
+      [
+        92,
+        "MAP_ADD 64309"
+      ],
+      [
+        95,
+        "MAP_ADD 8564"
+      ]
+    ],
+    "names": [
+      "UnpackInt",
+      "xrange",
+      "SetServerRoleInfo"
+    ],
+    "varnames": [
+      "netobj",
+      "cnt",
+      "roleinfo",
+      "i",
+      "serverid",
+      "rolenum"
+    ],
+    "consts": [],
+    "unknown_count": 25
+  }
+}
