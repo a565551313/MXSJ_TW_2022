@@ -1,0 +1,36 @@
+### E-REA-006
+- title: `script.fls` 含 LOGIN/NETSERVER 脚本候选；原生 `OnServerCmd` 派发已确认，但脚本绑定和登录页切换未恢复
+- severity: info
+- status: observed_static
+- observed_at: 2026-10-09T15:31:00+08:00
+- source_type: read_only_repository_archive_and_binary_analysis
+- repository:
+  - fast-forwarded commit: `eadfe866075ca73812157c44b155ed5e8cd9047a`
+  - file: `data/script.fls`
+  - SHA-256: `8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72`
+  - size: `24,454,082` bytes
+- samples:
+  - `mx.exe` — SHA-256 `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`
+- provider: local read-only FLS extraction; REA-Ghidra / Ghidra 12.1.4
+- evidence_ids:
+  - `ev_b0fc5f803020a60da58e6ccccc96758b21358c6ca04d03a6611cfde382974b51` — function analysis confirms `0x2714` reaches `FUN_004ac030`, reads a 16-bit value and dispatches the value through the generic Python bridge under method name `OnServerCmd`.
+  - `ev_a4a1be55fbc48ac391c92b1f7723f42127e05a3b0e6914e1c42499a00e15eea0` — `mx.exe` contains the string `PY_CODERESOURCE` at VA `0x6c33f4`.
+  - `ev_b0ee0aac4c665ca9333d95fb1be9473455f10487d20ec068ca96d5f68b7a5cac` — Ghidra maps a reference to that string from code address `0x4f0444`.
+  - `ev_30fb71fdb6a011e18bda8ec98fc84d162931071afe60f7b35e52886d613a42ad` — instruction at `0x4f0444` pushes the string address; Ghidra reports the address is not within an identified procedure.
+  - `ev_4c27741eca6162848ce8934e21c095396e3ee7365c7830be6ed9e3f1649021ce` — neighboring bytes show similar string-address pushes, but do not identify a resource loader or decoder.
+  - `ev_192312f604ea046446d062945b27f5295301aa0624fe31036fc58c904aa89f7a` — a Python-exposed `Uncompress` wrapper exists; this does not prove it is used by the `script.fls` loader.
+- observations:
+  - The archive begins with `0SLF`; its header reports 5,002 entries and index offset `0x173eb22`. The fixed-size 16-byte index records occupy the final 80,032 bytes. All 5,002 entries independently passed `zlib.decompress`; total expanded size is 61,940,973 bytes.
+  - Entry index 516, record ID `0x183e0854`, contains `SCRIPT|LOGIN|NETSERVER`. Nearby readable constants include `ReselectServerConnect`, `DgwConnectTest`, `ProcessServerCmd`, `serverid`, and `pwd` (mixed-case strings preserved as found). Entry index 4150, record ID `0xd2c918e9`, contains `NETLOGIN` and `SCRIPT|LOGIN|CHGPWD`.
+  - A case-insensitive exact-string scan of decompressed entry contents did not find `mainpage.dlg`, `multi_selserver5`, `OnServerCmd`, or `LoginAMServer`. This is a bounded string result; names may be generated, encoded, or stored elsewhere.
+  - The native event-to-script bridge establishes `0x2714 -> OnServerCmd(int)` statically, consistent with E-REA-004. It does not establish that entry 516's `ProcessServerCmd` constant is the implementation called by that bridge.
+  - At the 15:31 snapshot, `PY_CODERESOURCE` was known only as a string with a code reference. Later evidence `E-REA-007` resolves this as the embedded Python `imp` module exporting the file/import-type constant `imp.PY_CODERESOURCE == 8`; this is not evidence of a game-resource handler registration or wire opcode. The custom code-resource payload decoder remains unknown.
+  - For sampled records, XOR with the second decompressed byte yields an apparent Python `TYPE_CODE` prefix, but is not a validated full transform. `uncompyle6` reports invalid length on transformed entry 516; untransformed entry 516 is rejected as ill-formed; transformed entry 4150 fails because nested `co_consts` is `None`.
+- interpretation:
+  - The delivered package removes the earlier missing-file blocker and provides a strong candidate LOGIN/NETSERVER script module for continued analysis. The shared names `ProcessServerCmd` and `OnServerCmd` are not enough to prove a call relationship or current UI behavior.
+  - The selected-server action, script binding, actual command value, login-page switch condition, frame payload, and required server response remain unknown. No TCP reply should be guessed from these strings.
+- effects: Requested repository fast-forward and local static/archive inspection only; no game launch, external game-server connection, packet response, or modification of the client binary/archive.
+- limitations: The FLS records were decompressed and readable strings scanned, but the custom code-resource representation and runtime behavior were not recovered.
+- supersedes: The current-worktree-missing-script-package portion of `E-REA-005`; the earlier observation remains accurate as of 14:46.
+- linked_workitems: WI-009
+- next: recover and validate the custom script code-object layout or loader, then establish whether entry 516 binds to the `0x2714` bridge and which condition switches to the account-login UI before implementing any local responder.

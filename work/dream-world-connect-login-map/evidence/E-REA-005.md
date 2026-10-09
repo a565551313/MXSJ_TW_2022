@@ -1,0 +1,37 @@
+### E-REA-005
+- title: 客户端引用 `data\\script.fls`，但当前工作副本只有其他 FLS 资源包，未提供选服 DLG 源
+- severity: info
+- status: observed_static
+- observed_at: 2026-10-09T14:46:00+08:00
+- source_type: read_only_binary_and_archive_analysis
+- samples:
+  - `mx.exe` — SHA-256 `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`
+  - `mxmain.dll` — same SHA-256 as `mx.exe`
+  - `data/data.fls` — SHA-256 `5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c`
+  - `data/effect.fls` — SHA-256 `c1a8f71fa295a24524f89643d9d01aa4f4c9e6b8a695b4708736544db876ae81`
+  - `data/passive.fls` — SHA-256 `f4061aabee7784f884e5dc0f0760118e241220a4296f6b2d4fd28e424288f3f9`
+  - `data/skill.fls` — SHA-256 `3035419e36ea734f211c98e516a2c31c69b5bdcfbc6bfe23fbb9ae2799b03877`
+  - `data/skill2.fls` — SHA-256 `63b18bbc9592c98f50091efa94796df2735c6b78e2bd74885df723940e96f178`
+- provider: Ghidra 12.1.4 through REA-Ghidra MCP, plus local read-only archive/index inspection
+- evidence_ids:
+  - `ev_4b75c6700a96328d021f6719a4910fc98ab7135b36493c379193bcaea8dd51d8` — `mx.exe` contains the string `data\\script.fls` at VA `0x6b2278`.
+  - `ev_da0f7a4d0ed687be638b5ca84ce8655c1654cb87b86b398f8ba42eb2b09237fd` — Ghidra returned no direct references to that string address; a zero direct-xref result does not rule out dynamic or embedded-script use.
+  - `ev_929b9553f3ed0afc45622be6da18c84c5a689dfe48e6be48bd691b79a4c78019` — the Python method-table entry points `ReadFls` to `FUN_00461340`; the wrapper returns an entry-information object rather than file contents.
+  - `ev_d3af819551af012d7e0815d1d3c7e5c7afc948f393d296a478a4e6a0cb3b0593` — `FUN_0048ecf0` opens an archive, requires magic `0SLF`, reads a record count and directory offset, seeks to the directory, and scans fixed 16-byte records for a normalized-name hash.
+  - `ev_5fd5f74e380be0a30ab01662e89082e43bc890aafa5a2713ae5c0ce412642d73` — `FUN_0048f170` decodes the remaining directory fields using the record index.
+  - `ev_db906f72b1ec9a2479a6c56b81a27c025691b9849332a44f621cbbebcf644439` — the name-hash routine uppercases ASCII lowercase and normalizes backslashes to forward slashes before hashing.
+- observations:
+  - Both `mx.exe` and the identical `mxmain.dll` image contain `data\\script.fls`. The current project tree has no `data/script.fls`, no loose `.dlg` files, and no file named `script.fls`.
+  - The available `cef*.pak` files parse as Chromium DataPack v4. Exact searches for `multi_selserver5.dlg`, `login/mainpage.dlg`, and related page identifiers found no matches in the package contents. Extracted text candidates identify Chromium/CEF resources, not the game's named DLG pages.
+  - `data/effect.fls`, `data/passive.fls`, `data/skill.fls`, and `data/skill2.fls` start with `0SLF`; their directory counts are respectively 65, 41, 342, and 454, and each directory exactly occupies the final `count * 16` bytes. Their index stores hashes and transformed metadata, not readable source filenames.
+  - `data/data.fls` instead starts with `FLS\\0` and has a different header (`version=3`, count field `4`). It is not accepted by the specific `ReadFls` parser above; this does not establish that no other reader handles it.
+  - The local binary/package text scan found `data\\script.fls` in the client images but did not find the named DLG pages in a loose resource or readable package string. Compressed/encrypted resources are outside that exact-string result.
+  - `manus-device.list_devices` reports no accessible Windows test device in this session; only the active sandbox is available.
+- interpretation:
+  - The worktree is missing the exact script-package path named by both client images. The game-selection UI callback may be implemented in that package, but this is an inference, not yet proven.
+  - Existing gameplay-named FLS packages and CEF packs do not expose the `multi_selserver5.dlg` source or its page-switch callback through the inspected readable index/text paths. Therefore they do not resolve the S2 -> S3 condition.
+  - The previously established `0x2714 -> OnServerCmd(int)` boundary still does not identify the command value, selected-server action, script behavior, or required server reply.
+- effects: Offline inspection only; no client launch, external network request, response bytes, or original binary/archive modification.
+- limitations: String and resource-name searches do not decrypt or fully enumerate all package payloads. `data/script.fls` absence is established only for the current `/workspace/MXSJ_TW_2022` tree; it may exist in the user's separate Windows installation.
+- linked_workitems: WI-009
+- next: inspect the exact original `data/script.fls` from the client installation (if supplied) and trace the page callback together with the `OnServerCmd` value before constructing any TCP response.

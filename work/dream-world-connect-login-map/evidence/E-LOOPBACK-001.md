@@ -1,0 +1,22 @@
+### E-LOOPBACK-001
+- title: 当前运行止于服务器选择界面；本地 TCP 捕获器未收发应用层数据
+- severity: info
+- status: observed
+- observed_at: 2026-10-09T14:04:00+08:00
+- source_type: operator_observation_and_local_runtime_logs
+- operator_observation: 用户于 2026-10-09 13:55 (+08:00) 明确说明“现在只是到了选服界面，登录界面还进不去”；本条将当前报告状态记为 S2 Server Select，S3 账号凭据登录 UI 未到达。
+- source_files:
+  - `log/game/gamelog_2026-10-09 13-43-49.txt` — 768 bytes; SHA-256 `5cbbf11fa890020b5e7db1828e208ca32155d82abd62c34c0a784e20d54f8196`
+  - `work/dream-world-connect-login-map/tools/captures/server-20261009-134053.log` — 1982 bytes; SHA-256 `d8c91df827ac9ba338486c3914872f27558392bbc42047bff936b5fb1af888e4`
+  - `work/dream-world-connect-login-map/tools/loopback_capture_server.py` — SHA-256 `8d1fbe054b0d59b1051dd64f1501ede6db5a55a0bf113211aa2c6621a29f12cb`
+  - `capture-20261009-134359-560631-1.bin`, `capture-20261009-134417-750474-2.bin`, `capture-20261009-134430-734307-3.bin`, `capture-20261009-134439-191947-4.bin` — each 0 bytes at inspection; SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+- observations:
+  - The latest game log records `login/mainpage.dlg` at `13:43:51`, then `login/multi_selserver5.dlg` at `13:43:57`, and `groupSignal: closegame` at `13:48:59`. It has no account-credential dialog entry. The relevant path strings were decoded from the local game log; no screenshot was available in this record.
+  - The loopback server log records four TCP accepts on `127.0.0.1:3134` at `13:43:59`, `13:44:17`, `13:44:30`, and `13:44:39`. Connections 1–3 closed and each completed capture saved 0 bytes. The log ends immediately after accept 4; it has no close or capture-finished line for connection 4. Its raw file was 0 bytes at inspection, so that fourth capture is not treated as a completed session.
+  - The checked-in capture server binds only `127.0.0.1`, accepts sockets, calls `recv()`, and writes received bytes to files. Its source and runtime log explicitly state that it sends no protocol response; the code has no application-level send operation.
+- interpretation:
+  - The user-reported current UI stage is S2, not the account-login UI. The local listener logs establish TCP accepts only; the first three completed captures establish no client application bytes reached that listener during those connections.
+  - Because the local capture server never replies, this test cannot validate or advance any application protocol transition that requires server data. Missing server response is a plausible contributor to a stalled transition, but the available evidence does not prove it is the sole cause: the exact selection action, event-to-connection correlation, and expected protocol response remain unknown.
+- effects: Historical local logs and captures only; this analysis did not launch the client or connect to an external server. No captured bytes were present to replay.
+- limitations: The fourth connection lacks a close/completion line in the available text log. TCP accept does not prove application handshake, authentication, or entry into the login UI.
+- linked_workitems: WI-003, WI-009

@@ -1,0 +1,34 @@
+### E-REA-007
+- title: `PY_CODERESOURCE=8` 是内嵌 Python `imp` 模块的文件类型常量；不是网络命令
+- severity: info
+- status: observed_static_partial_decode
+- observed_at: 2026-10-09T16:33:00+08:00
+- source_type: read_only_binary_analysis_and_archive_validation
+- samples:
+  - `mx.exe` — SHA-256 `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`
+  - `data/script.fls` — local project copy; 5,002 indexed records
+- provider: Ghidra 12.1.4 through REA-Ghidra MCP; local `objdump`, Python `struct`/`zlib`, and `xdis` validation
+- evidence_ids:
+  - `ev_762e6b954556a435ee0ad035ce1c4c8b3f72595d5ed2cee13d0670cadd4d3099` — the string block beginning at VA `0x6c3388` contains module name `imp` and the ordered names `SEARCH_ERROR`, `PY_SOURCE`, `PY_COMPILED`, `C_EXTENSION`, `PY_RESOURCE`, `PKG_DIRECTORY`, `C_BUILTIN`, `PY_FROZEN`, `PY_CODERESOURCE`, and `IMP_HOOK`.
+  - `ev_5fe48796a23cabf8015ec9d0530d000115ad133c2f8645b2014f3c209d3156eb` — `FUN_004f0e50` obtains the Python integer object for its numeric argument through `FUN_004f5320`, then stores it under the supplied name through `FUN_004dfeb0`.
+  - `ev_2f6f12718d47c9e77a233a481ae60c1003a9de0191fbdb1ae29101ccd164e7ba` — `FUN_004f5320` uses the built-in small-integer object table for values in range.
+  - `ev_9c8a07719227d5833b5fdc2815ae10d110a7d3bd4f8896ab8e20ad348d7ba20c` — `FUN_004dfeb0` creates a Python key object and calls the dictionary insertion helper.
+  - `ev_ec2f8364548b4cc454a58e2a510ac5cf6e2eaf86f31741be8e1c3b5c35772ca3` — `FUN_004e4750` validates a module object and emits literal `PyModule_AddObject()` diagnostics before inserting a named object into its module dictionary.
+  - `ev_12564b18ae2dee44a85cf03a804c5c886880047f6bd9f100fdda2e7ca24e6422` — `FUN_0048f170` reads each 16-byte FLS directory record and applies index-dependent arithmetic/XOR transforms to its last three fields.
+  - `ev_339eb05b7a6edd74870699bbcfda2ce1d6802b3620efa2b58593068f0f08b967` — `FUN_0048ecf0` validates `0SLF`, reads count and directory offset, scans entries by hash, and uses the record decoder.
+  - `ev_408a5ad0d1c6beb0e0688a1e00f7e1b96dc5364e3219762d7ea7fdd57488d0ce` — the `ReadFls` wrapper returns entry metadata through a Python object; it is not itself a file-content reader.
+  - `ev_6babd217e3c99070b9c658723b7fd8da2572edb17c82dc446871992057ab348b` — static references to the `imp` module-name string include the initialization callsite at `0x4f0367`.
+- observations:
+  - At `0x4f0442`, the caller pushes integer `8`; at `0x4f0444`, it pushes the address of the string `PY_CODERESOURCE` (`0x6c33f4`); both are passed to `FUN_004f0e50`. The surrounding string table and module initialization call establish this as an `imp` module constant export. Thus `imp.PY_CODERESOURCE == 8` is a file/import-type identifier, not evidence of a network opcode or server response.
+  - The directory decoder was independently reproduced with 32-bit arithmetic. For zero-based record index `i`, hash `h`, and raw directory words `r1..r3`, the decoded fields are `f1=((i*0x0e7c83d2+h) mod 2^32) XOR r1`, `f2=((r1*h+0x0df25e) mod 2^32) XOR r2`, and `f3=((r2*i*0x00f718fe+0x0d59d16c) mod 2^32) XOR r3`. Treating `f2` as compressed length and `f3` as data offset allowed all 5,002 indexed records to decompress independently with zlib; total expanded bytes were 61,940,973. The meaning of `f1` remains unassigned.
+  - Entry 516 (`id=0x183e0854`) decodes to offset `16,321,274`, compressed length `7,690`, and a zlib-expanded payload of 17,234 bytes. Its raw payload begins `d2 b1 b1 ...`. XORing every byte with the second byte (`0xb1`) yields a plausible Python 2.7 marshal code-object header: `TYPE_CODE`, integer fields `(argcount=0, nlocals=0, stacksize=6, flags=0x40)`, followed by a string object of length 423.
+  - This constant-byte XOR is not a validated complete transform. The candidate buffer does expose readable strings such as `script\login\netserver.pyt`, `selectserver`, `SetPlayerID`, `RefreshServerInfo`, and `SetConnectedProxy`, but those are string clues, not recovered control flow. `xdis`/`uncompyle6`, supplied a Python 2.7 pyc header plus the candidate bytes, fails while reading nested `co_consts` due to a negative string length; the full object and readable script body were not recovered. The header match alone is insufficient to claim successful decoding.
+  - Entry 516 still contains readable `SCRIPT|LOGIN|NETSERVER`, `ProcessServerCmd`, and `ReselectServerConnect` strings from E-REA-006, but no static binding from those strings to native `OnServerCmd(int)` has been established.
+- interpretation:
+  - The value `8` belongs to Python's import/file-type namespace. It does not narrow the server-command value or the wire protocol.
+  - FLS record extraction is now independently validated across the full directory, while the transformation of the Python code-resource payload remains unresolved.
+  - The selected-server action, command binding, account-login page condition, request/response framing, and expected server reply remain unknown. Do not implement a guessed TCP response.
+- effects: Offline read-only analysis only; no client launch, network connection, server response, or modification of the original binary/archive.
+- limitations: Ghidra output is static; no runtime loader behavior was observed. The XOR hypothesis only produces a plausible top-level marshal header and fails complete nested-object parsing.
+- linked_workitems: WI-006, WI-008, WI-009
+- next: locate the actual `PY_CODERESOURCE` load/decode path or recover the complete Python 2 code object; then establish whether entry 516 binds `ProcessServerCmd` to `OnServerCmd(int)`. Only after that should a synchronized client/capture run be used to determine which reply advances the UI.

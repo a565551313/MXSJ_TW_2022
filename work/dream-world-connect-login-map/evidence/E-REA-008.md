@@ -1,0 +1,24 @@
+### E-REA-008
+- title: entry 516 已解析为 Python 2.7 marshal 树；非标准 `co_code` 编码仍阻止控制流恢复
+- severity: info
+- status: reported_static_analysis
+- reported_at: 2026-10-09T18:52:30+08:00
+- source_type: user_provided_investigation_handoff
+- source_ref: 本次任务上下文中用户提供的既有分析更正；本轮仅整理文档，未重新运行解码或二进制分析
+- samples:
+  - `data/script.fls` entry 516 (`id=0x183e0854`; archive SHA-256见 E-REA-006)
+  - `mx.exe` (SHA-256见 E-REA-006/E-REA-007)
+- observations:
+  - 用户提供的更正指出：entry 516 经五层 XOR 变换后可完整解析为 Python 2.7 marshal 对象树，包含 59 个代码对象，其中包括 `CMXNet.OnServerCmd`、`ProcessServerCmd` 与 `C2STransferServer`。此前解析失败源自反编译器调用参数顺序错误，不是该对象树无法解析。
+  - 对象树可解析不等于脚本控制流已恢复：各代码对象的 `co_code` 仍有第二层非标准 opcode 编码。标准 Python 2.7 执行器会按原始 `co_code` 分派；执行前转换层尚未定位，因此具体命令分支、条件与 UI 转移仍未确定。
+  - `PY_CODERESOURCE=8` 仍是 Python `imp` 的文件/导入类型常量，不是网络命令；其常量含义与 E-REA-007 一致。
+  - `render.dll` 的 `Py_Uncompress` 调用 `ResLib.dll` ordinal 13/12 的候选路径与 entry 516 数据头不匹配，尚无证据证明该路径处理此脚本。局部 PE 字节扫描记录了 `ReadFls`、`Uncompress`、`LoadFileExtend` 扩展入口名称，但名称扫描未确认其在该文件上的调用链或解码行为。
+  - `render.dll` 的宽范围 Ghidra 反编译及单函数反编译均超时；随后采用 PE 字节级扫描作为有限补充。原版 `mx.exe` 未修改，也未生成强制进入副本。
+- interpretation:
+  - 此更正取代 E-REA-007 中“entry 516 的 marshal 嵌套对象解析失败”的旧状态；E-REA-007 关于 `PY_CODERESOURCE=8` 的文件类型解释及全量 FLS zlib 验证仍有效。
+  - 树中出现 `CMXNet.OnServerCmd` 和 `ProcessServerCmd` 为脚本结构恢复提供了新线索，但尚未证明具体原生回调绑定、命令值、条件分支或 S2 -> S3 页面切换。
+  - 不应仅凭候选 `Py_Uncompress` 路径、导出名或方法名推断执行路径，也不应构造猜测的 TCP 响应。
+- effects: 按用户交接记录，原版游戏文件保持未修改，未创建强制进入补丁副本；本轮没有执行二进制分析、启动客户端或连接网络。
+- limitations: 本条依据用户提供的既有分析摘要归档，未附该解码步骤的命令记录或独立 REA Evidence ID；本轮没有重新验证。静态对象树不证明运行时执行行为。
+- linked_workitems: WI-006, WI-008, WI-009
+- next: 按用户明确要求暂停；除非用户另行授权，不继续二进制/游戏分析、补丁或运行测试。

@@ -1,0 +1,31 @@
+### E-REA-004
+- title: `0x2714` 服务端事件经 `IMP_ReadUInt16` 派发到 `OnServerCmd`；`dgw.dll` 另含 HTTP special-login 辅助链
+- severity: info
+- status: observed_static
+- observed_at: 2026-10-09T14:32:00+08:00
+- source_type: rea_ghidra_static_analysis_and_local_pe_inspection
+- samples:
+  - `/workspace/MXSJ_TW_2022/mx.exe` — SHA-256 `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`
+  - `/workspace/MXSJ_TW_2022/dgw.dll` — SHA-256 `388ecde2104d5d94b3afa417b19f6b4cc264d70395006dd72186d995b324e00b`
+- provider: Ghidra 12.1.4 through REA-Ghidra MCP; static/read-only
+- evidence_ids:
+  - `ev_7c48a6ff4e5d875bec59f048256d963ddff0c949023b061986a818d83ea7d40a` — `FUN_004ac590`: event `0x2714` dispatches to `FUN_004ac030`; `0x2711` remains the separate `OnConnected` branch.
+  - `ev_ac6c3188f4021a2f1ae23ca59c00cfa0afa26688ca7f6e308c4e5e5b39fc2c06` — `FUN_004ac030`: reads a 16-bit return value, stores the original event argument in object state, and calls `OnServerCmd`.
+  - `ev_e2920d857b663261267d50437cf2d6991936638ee3e95412657fdabcccdf85d6` — direct code reference from the `OnServerCmd` method string to `0x004ac051`.
+  - `ev_2193458c0c8b7bf0c2ac19f79d6845d2d81262961b6415e2ee09b7a41da37507` — generic Python-method dispatcher used by the callback path.
+  - `ev_eae9f35ff09319b5509ce0e11399192920d71f230e3a051dfd72c26d3e4d9f18` and `ev_e7ef0667d9aae501d8badf2f88029cf8b5037736d6d813d6e01b23d0dcdd801d` — `mx.exe` contains `GetTargetServers` and related dynamic API names.
+  - `ev_bc83aeb0118749ee589308b5e90377e36c31bcf567b4313a7244cc7d746dc7ff` — `dgw.dll` `GetTargetServers` implementation reads target-server records from DLL state; direct internal callers were not returned (`ev_80acb589a364e4d0ece3ca0f9ece42a59ec70cb82c3cadb1eaedf44a737a5c09`), consistent with an externally invoked export but not proof of runtime use.
+  - `ev_bb8e36845c2a2ee8c28d7da5850fd9a2454f1c6cd3f0c79e5ea5046cd720be07` — `dgw.dll` `FUN_1004d160` contains the `HttpAssist.cpp` reply path: obtains the effective URL, extracts a final path command (`login`, `delay`, or `feedback`), observes content length, accumulates response data, and passes completed body data to another callback.
+  - `ev_05bd63953ddb219819c770b839d5cad1be40b522fdb415c655e9291c209e31f0` — the HTTP reply parser has two direct wrapper callers in `HttpAssist`/`HttpHelper` paths.
+  - `ev_b25d5446813d1e08b2a071c1233d87e6949b858577ff2b3a64e590d06671c50b` — `dgw.dll` JSON configuration parser reads keys including `client_use`, `server_addr`, `port`, `special_login`, and `servers`.
+- observations:
+  - `mx.exe` disassembly at `0x004ac030` calls through the data slot at `0x006b020c`; the returned AX is zero-extended and passed to `OnServerCmd` using a `"(i)"` argument-format string. It also stores the original argument at `this+0x0c`. The slot's static value is `0x003d81ae`; with PE image base `0x00400000`, this maps to the import-by-name hint immediately preceding `IMP_ReadUInt16` in the `IMProtocol.dll` import-name table. `objdump -p mx.exe` lists `IMP_ReadUInt16` under `IMProtocol.dll`. This supports a statically inferred dynamic-import binding to the 16-bit reader; no runtime invocation was observed.
+  - `dgw.dll` exports `GetTargetServers`, and `mx.exe` contains the matching name plus `dgw.dll` dynamic API names. Static string xrefs do not reveal when the export is called.
+  - The `dgw.dll` special-login evidence is an HTTP-helper response path, not a raw TCP reply handler for the loopback listener on port `3134`. It may still supply configuration/server data; no static UI-transition call chain was established.
+  - A bounded local text/binary search found `multi_selserver5.dlg` in logs/project notes but not as a loose DLG/script or readable string in the scanned client binaries. Packed, protected, or generated resources remain possible.
+- interpretation:
+  - The client-side transition from S2 to S3 is not explained by TCP accept or `OnConnected` alone. A server-command event can reach the script method `OnServerCmd` with one 16-bit-derived integer; the exact command value, packet framing/payload, callback script behavior, and UI transition are still unknown.
+  - Do not construct a TCP response from the `dgw.dll` HTTP/JSON path or from guessed command values.
+- effects: Offline inspection only; no client launch, external network request, server-response bytes, or sample/config modification.
+- limitations: Ghidra pseudocode is analyzer output. The import-slot mapping is static PE evidence and does not prove runtime binding/use. Resource searches do not cover compressed or encrypted contents.
+- linked_workitems: WI-008, WI-009

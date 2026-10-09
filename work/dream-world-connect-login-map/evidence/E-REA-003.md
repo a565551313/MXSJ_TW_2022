@@ -1,0 +1,33 @@
+### E-REA-003
+- title: 主客户端区分连接回调与服务器命令事件；静态结果未证明进入账号登录 UI
+- severity: info
+- status: observed_static
+- observed_at: 2026-10-09T14:02:58+08:00
+- source_type: rea_ghidra_static_analysis
+- sample: `/workspace/MXSJ_TW_2022/mx.exe` (same bytes as `mxmain.dll`)
+- sample_sha256: `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`
+- provider: Ghidra 12.1.4 through REA-Ghidra MCP; static/read-only
+- source_ref: `evidence/rea-ghidra-mx-exe-20261009-1402.json`
+- bundle_sha256: `cd9d6743124a53caf55e23cae2a83e7693e7f76172e054928173cde66180143a`
+- evidence_ids:
+  - `ev_48da889281eaae2f604b3e7ffbf5e3e3bc1f07109e5060316844589a68cbe630` (`FUN_004ac590`, event-code dispatcher)
+  - `ev_0c4248027e8ff7d7e77ba2dd94a2d941ffaf6695e02bd9f6deb5ff81bd1bbede` (`FUN_004ab9a0`, connect-result callback path)
+  - `ev_6285138b635804909c5c4cf7ec09cab70e42250e458dc484bb8175d2ad6c524d` (xref from `OnConnected` string)
+  - `ev_783591cc808ad9b6715aa0b99180e4636e0489ecfc26d03b5f8d8320dda5b683` (xref from `OnConnectFail` string)
+  - `ev_cef2b1a6dfcd7a188825da168b4cb6c557da797d4118fdc4a8aca3836046d012` (`ProcessServerCmd` string search)
+  - `ev_f41d8f32f3733a41a9dded5e26c10adb46687d3a84e53fc0b6db2a9de3fb0329` (no direct xref to `ProcessServerCmd` string)
+  - `ev_eae9f35ff09319b5509ce0e11399192920d71f230e3a051dfd72c26d3e4d9f18` (`GetTargetServers` string search)
+  - `ev_c8cbb4e1bad1d20d2f4dbcd0c5522c0f342482590405c3a39de17d8173beab02`, `ev_1a41ac87459a0fcba477f23567337693f78c255bbf8055ee050be3648a630f00`, `ev_598f332872e51066fae0de47a9c145d280d5ce4d3eab927d11dad3879e0da9c7`, `ev_5d9186c3bf736fdaa4d95d45da3f6ea94b28992a3940386cdf657e35c937cce0` (dialog-path/string searches returned no matches)
+  - `ev_76c9826cdda393aa09b0c1847abf7cb4a02382f7c537578a934951ce7deae784` and `ev_f97b366b041bdba1ddb8ec2fe2244c2ef3507f23dbfb0642b0e866268ae123b2` (`password` string at `0x7a1bec`; no direct xref)
+  - `ev_d84c4fc7b10d158e01d78dc55d18ee18166adc776f16d1d2288d5a03fda2921f` (`account` string search returned no matches)
+- observations:
+  - `FUN_004ac590` switches on an event code. Case `0x2711` invokes the callback named `OnConnected`; case `0x2712` invokes `OnError`; case `0x2714` passes its second argument to `FUN_004ac030`. Case `0x2713` has a separate conditional indirect callback. This is a static event-dispatch mapping, not proof that any event fired in the recorded run.
+  - `FUN_004ab9a0` invokes `OnConnectFail` when a recovered state field equals `6`, and invokes `OnError` when it equals `8`. The meaning of those numeric states is not established by this dossier.
+  - `ProcessServerCmd` is present as a string at `0x6b4c74`, but Ghidra returned no direct xref to it. The `0x2714` destination is therefore recorded as a separate server-command dispatch branch, not identified as `ProcessServerCmd`.
+  - `GetTargetServers` occurs at three string addresses; the queried string addresses had no direct code xrefs. The dialog paths `login/mainpage.dlg` and `login/multi_selserver5.dlg` were not found in the analyzed image's Ghidra string table. `password` had one unreferenced string object; `account` was not found.
+- interpretation:
+  - The binary statically separates a connection-success callback (`0x2711` / `OnConnected`) from a server-command event (`0x2714` / `FUN_004ac030`). Neither mapping alone establishes an account-login screen transition.
+  - Missing dialog-name strings are only a bounded negative result for Ghidra's string objects in this image. UI definitions may reside in external or packed resources, be generated dynamically, or be outside analyzed coverage; no broader absence claim is made.
+- effects: Read-only Ghidra analysis. No client launch, external connection, sample-byte modification, or configuration change in this analysis step.
+- limitations: Decompiled pseudocode is an analyzer representation, not original source. Static callback mappings do not establish runtime invocation or UI behavior.
+- linked_workitems: WI-008, WI-009

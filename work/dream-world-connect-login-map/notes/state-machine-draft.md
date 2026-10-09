@@ -287,4 +287,18 @@ REA-Ghidra/Ghidra 12.1.4 static analysis has now traced `IMProtocol.dll`'s `IMP_
 
 **State-machine impact:** this raises confidence that the DLL contains a TCP connection implementation, but it does not prove the main client calls it, that the selected `server.ini` endpoint is used by this path, or that this connection is the game-login channel rather than an auxiliary service. The main-image IAT xref queries returned no direct code references, and the async completion dispatcher is not yet located. Therefore S0 -> S1 remains a candidate, S2 -> S3 remains unconfirmed, and no login, character/world-ready, or empty-map state is promoted to observed.
 
-**Next offline checks:** resolve the `0x502`/`0x503` message handler; inspect indirect or dynamically resolved main-image call paths into the imported API; then trace any message-writer/send callers and relate them to server selection. No client launch or external connection was performed.
+**Historical next offline checks (superseded by the stop record below):** resolve the `0x502`/`0x503` message handler; inspect indirect or dynamically resolved main-image call paths into the imported API; then trace any message-writer/send callers and relate them to server selection. No client launch or external connection was performed in that analysis phase.
+
+## Current handoff and stop state (2026-10-09; E-USER-001, E-REA-008)
+
+**Observed UI boundary:** the user's earlier report says either selecting a server directly or clicking “Next” opens the “Connecting to server” dialog. This establishes `S2 Server Select -> S2C Connecting Dialog`; it does not establish that the client sent application data, received a server response, or reached the account-credential page (`S3`). The historical loopback capture is not proven to be the same interaction. See [`E-USER-001`](../evidence/E-USER-001.md) and [`E-LOOPBACK-001`](../evidence/E-LOOPBACK-001.md).
+
+**Script-payload correction:** the latest user-provided analysis handoff reports that entry 516 of `data/script.fls` now parses, after five XOR layers, as a complete Python 2.7 marshal tree containing 59 code objects, including `CMXNet.OnServerCmd`, `ProcessServerCmd`, and `C2STransferServer`. The earlier failure came from incorrect decompiler argument order. The tree's `co_code` still uses a second, non-standard opcode encoding; the pre-execution conversion layer, command conditions, and S2 -> S3 transition remain unresolved. The candidate `render.dll` `Py_Uncompress` path through `ResLib.dll` ordinals 13/12 does not match entry 516's data header and is not confirmed as its loader. See [`E-REA-008`](../evidence/E-REA-008.md); this is recorded from the handoff and was not re-run during this documentation-only task.
+
+| Transition | Current evidence status |
+|---|---|
+| S2 -> S2C Connecting Dialog | User-reported observation; recorded in E-USER-001 |
+| S2C -> S3 Account/Credential Login | Unresolved; no exact command condition, required response, or confirmed code-object execution path |
+| S3 -> S4 -> S5 | Unconfirmed, as in the earlier draft |
+
+**Stop boundary:** per the user's explicit instruction, further binary/game analysis and any forced-entry patch or runtime test are paused. The original `mx.exe` was not modified, and no forced-entry copy was created. Resume only after a new explicit user request.
