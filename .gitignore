@@ -4,6 +4,7 @@ data/*
 !data/skill.fls
 !data/effect.fls
 !data/skill2.fls
+!data/script.fls
 
 map/*
 !map/2101.map
