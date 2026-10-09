@@ -1,0 +1,55 @@
+[2026-10-09 21:10:05] INFO response mode: capture-only
+[2026-10-09 21:10:05] INFO listening only on 127.0.0.1:3134
+[2026-10-09 21:10:33] INFO accepted ('127.0.0.1', 61267)
+[2026-10-09 21:10:56] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0001.bin
+[2026-10-09 21:10:56] INFO accepted ('127.0.0.1', 61335)
+[2026-10-09 21:11:45] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0002.bin
+[2026-10-09 21:11:45] INFO accepted ('127.0.0.1', 61475)
+[2026-10-09 21:11:49] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0003.bin
+[2026-10-09 21:11:49] INFO accepted ('127.0.0.1', 61482)
+[2026-10-09 21:13:46] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0004.bin
+[2026-10-09 21:13:51] INFO accepted ('127.0.0.1', 61913)
+[2026-10-09 21:13:54] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0005.bin
+[2026-10-09 21:13:55] INFO accepted ('127.0.0.1', 61915)
+[2026-10-09 21:14:06] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0006.bin
+[2026-10-09 21:14:06] INFO accepted ('127.0.0.1', 61945)
+[2026-10-09 21:14:27] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0007.bin
+[2026-10-09 21:14:47] INFO accepted ('127.0.0.1', 62064)
+[2026-10-09 21:15:55] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0008.bin
+[2026-10-09 21:15:55] INFO accepted ('127.0.0.1', 62266)
+[2026-10-09 21:23:57] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0009.bin
+[2026-10-09 21:23:57] INFO accepted ('127.0.0.1', 63766)
+[2026-10-09 21:24:02] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0010.bin
+[2026-10-09 21:24:02] INFO accepted ('127.0.0.1', 63783)
+[2026-10-09 21:28:43] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0011.bin
+[2026-10-09 21:28:43] INFO accepted ('127.0.0.1', 64595)
+[2026-10-09 23:17:11] INFO response mode: capture-only
+[2026-10-09 23:17:11] INFO listening only on 127.0.0.1:3134
+[2026-10-09 23:17:24] INFO accepted ('127.0.0.1', 53523)
+[2026-10-09 23:17:35] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0012.bin
+[2026-10-09 23:17:35] INFO accepted ('127.0.0.1', 53560)
+[2026-10-09 23:17:47] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0013.bin
+[2026-10-09 23:17:47] INFO accepted ('127.0.0.1', 53581)
+[2026-10-09 23:17:53] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0014.bin
+[2026-10-09 23:17:53] INFO accepted ('127.0.0.1', 53640)
+[2026-10-09 23:18:07] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0015.bin
+[2026-10-09 23:18:07] INFO accepted ('127.0.0.1', 53659)
+[2026-10-09 23:20:03] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0016.bin
+[2026-10-09 23:20:03] INFO accepted ('127.0.0.1', 54008)
+[2026-10-09 23:20:08] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0017.bin
+[2026-10-09 23:20:08] INFO accepted ('127.0.0.1', 54014)
+[2026-10-09 23:22:34] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0018.bin
+[2026-10-09 23:22:34] INFO accepted ('127.0.0.1', 54473)
+[2026-10-09 23:22:48] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0019.bin
+[2026-10-09 23:22:48] INFO accepted ('127.0.0.1', 54514)
+[2026-10-09 23:22:59] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0020.bin
+[2026-10-09 23:22:59] INFO accepted ('127.0.0.1', 54539)
+[2026-10-09 23:23:08] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0021.bin
+[2026-10-09 23:23:08] INFO accepted ('127.0.0.1', 54553)
+[2026-10-09 23:23:13] INFO connection closed; saved 0 byte(s) to D:\Lager\夢想世界\work\dream-world-connect-login-map\notes\protocol-artifacts\stream-0022.bin
+[2026-10-09 23:23:13] INFO accepted ('127.0.0.1', 54574)
+[2026-10-09 23:32:09] INFO response mode: capture-only
+[2026-10-09 23:32:09] INFO initial response mode: send-on-accept, 2 byte(s)
+[2026-10-09 23:32:09] INFO listening only on 127.0.0.1:3134
+[2026-10-09 23:39:03] INFO accepted ('127.0.0.1', 57424)
+[2026-10-09 23:39:03] INFO sent initial response: 00 02

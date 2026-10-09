@@ -1,9 +1,12 @@
 ### E-REA-007
 - title: `PY_CODERESOURCE=8` 是内嵌 Python `imp` 模块的文件类型常量；不是网络命令
 - severity: info
-- status: observed_static_partial_decode
+- status: observed
 - observed_at: 2026-10-09T16:33:00+08:00
 - source_type: read_only_binary_analysis_and_archive_validation
+- content_hash: n/a
+- repro_command: n/a
+- notes: offline static/archive evidence; FLS-wide decompression is independently validated, while entry 516 code-resource decoding remains partial.
 - samples:
   - `mx.exe` — SHA-256 `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`
   - `data/script.fls` — local project copy; 5,002 indexed records

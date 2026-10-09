@@ -1,9 +1,12 @@
 ### E-REA-003
 - title: 主客户端区分连接回调与服务器命令事件；静态结果未证明进入账号登录 UI
 - severity: info
-- status: observed_static
+- status: observed
 - observed_at: 2026-10-09T14:02:58+08:00
 - source_type: rea_ghidra_static_analysis
+- content_hash: n/a
+- repro_command: n/a
+- notes: offline static evidence; the retained Ghidra bundle and sample hash are the reproducibility anchors.
 - sample: `/workspace/MXSJ_TW_2022/mx.exe` (same bytes as `mxmain.dll`)
 - sample_sha256: `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`
 - provider: Ghidra 12.1.4 through REA-Ghidra MCP; static/read-only

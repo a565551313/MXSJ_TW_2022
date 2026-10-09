@@ -1,9 +1,12 @@
 ### E-REA-004
 - title: `0x2714` 服务端事件经 `IMP_ReadUInt16` 派发到 `OnServerCmd`；`dgw.dll` 另含 HTTP special-login 辅助链
 - severity: info
-- status: observed_static
+- status: observed
 - observed_at: 2026-10-09T14:32:00+08:00
 - source_type: rea_ghidra_static_analysis_and_local_pe_inspection
+- content_hash: n/a
+- repro_command: n/a
+- notes: offline static evidence; the retained Ghidra/PE observations are the reproducibility anchors.
 - samples:
   - `/workspace/MXSJ_TW_2022/mx.exe` — SHA-256 `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`
   - `/workspace/MXSJ_TW_2022/dgw.dll` — SHA-256 `388ecde2104d5d94b3afa417b19f6b4cc264d70395006dd72186d995b324e00b`

@@ -4,6 +4,9 @@
 - status: observed
 - observed_at: 2026-10-09T14:04:00+08:00
 - source_type: operator_observation_and_local_runtime_logs
+- content_hash: n/a
+- repro_command: n/a
+- notes: offline historical runtime evidence; the original client run is not rerunnable from this case package alone.
 - operator_observation: 用户于 2026-10-09 13:55 (+08:00) 明确说明“现在只是到了选服界面，登录界面还进不去”；本条将当前报告状态记为 S2 Server Select，S3 账号凭据登录 UI 未到达。
 - source_files:
   - `log/game/gamelog_2026-10-09 13-43-49.txt` — 768 bytes; SHA-256 `5cbbf11fa890020b5e7db1828e208ca32155d82abd62c34c0a784e20d54f8196`

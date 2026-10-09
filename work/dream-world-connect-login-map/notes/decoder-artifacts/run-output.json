@@ -1,0 +1,136 @@
+{
+  "archive": {
+    "path": "D:\\Lager\\夢想世界\\data\\script.fls",
+    "sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "size": 24454082,
+    "magic": "0SLF",
+    "entry_count": 5002,
+    "index_offset": 24374050,
+    "all_entries_zlib_verified": true,
+    "verified_entry_count": 5002,
+    "total_expanded_length": 61940973
+  },
+  "entry": {
+    "index": 516,
+    "id": "0x183e0854",
+    "raw_offset": "0x1740b62",
+    "decoded_field1": "0x00000000",
+    "compressed_length": 7690,
+    "data_offset": 16321274,
+    "data_offset_hex": "0xf90afa",
+    "compressed_sha256": "5c77e3aa1e55c42a32083f27130483b6745870f33d3afc0ee62ebd6ec3f4a3ca",
+    "expanded_length": 17234,
+    "expanded_sha256": "4aa8589ab9e13e7e69b6fd1e498db32c1d0aaf45d2e6a204d6804a743ccc1810"
+  },
+  "xor_segments": [
+    {
+      "start": 0,
+      "end": 3460,
+      "key": "0xb1"
+    },
+    {
+      "start": 3460,
+      "end": 6989,
+      "key": "0x44"
+    },
+    {
+      "start": 6989,
+      "end": 10485,
+      "key": "0x30"
+    },
+    {
+      "start": 10485,
+      "end": 13948,
+      "key": "0x41"
+    },
+    {
+      "start": 13948,
+      "end": 17234,
+      "key": "0x20"
+    }
+  ],
+  "marshal": {
+    "decoded_length": 17234,
+    "decoded_sha256": "956b10875b586d47810315a489c7a43afcaee9f29d0864fbde2354306877b736",
+    "bytes_consumed": 17234,
+    "root_type": "dict",
+    "code_object_count": 59,
+    "code_object_names": [
+      "ModuleReset",
+      "SetPlayerID",
+      "GetPlayerID",
+      "getMsg",
+      "RefreshServerInfo",
+      "GetErrorAnsMsg",
+      "SetUnEnterServerList",
+      "GetUnEnterServerList",
+      "ClearUnEnterServerList",
+      "IsSelectServerOver",
+      "SetSelectServerOver",
+      "SetConnectedProxy",
+      "GetConnectedProxy",
+      "GetProxy",
+      "SetProxy",
+      "GetProxyName",
+      "SetProxyName",
+      "GetProxyNameByProxy",
+      "SetServerRoleInfo",
+      "GetServerRoleInfo",
+      "SetLoginServerIPPort",
+      "GetLoginServeIPPort",
+      "GetLoginServer",
+      "TransferServer",
+      "showlogin",
+      "ShowConnectingDlg",
+      "S2CServerRoleInfo",
+      "C2STransferServer",
+      "__init__",
+      "PacketPrepare",
+      "OnServerCmd",
+      "OnConnectFail",
+      "OnError",
+      "CMXNet",
+      "__init__",
+      "Connect",
+      "ConnectTestFail",
+      "OnSocketConnectFail",
+      "OnSocketError",
+      "IsConnectTestFail",
+      "CConnectMgr",
+      "__init__",
+      "GetServerInfo",
+      "GetTestProxyList",
+      "GetTestServerList",
+      "Connect",
+      "nexttest",
+      "SetTimeOutCmd",
+      "ConnectTestFail",
+      "CRandomConnectMgr",
+      "__init__",
+      "Connect",
+      "CReselectConnectMgr",
+      "RandomConnect",
+      "ReselectServerConnect",
+      "DgwReselectServerConnect",
+      "NormalReselectServerConnect",
+      "ProcessServerCmd",
+      "<module>"
+    ],
+    "key_strings": [
+      "CMXNet",
+      "OnServerCmd",
+      "ProcessServerCmd",
+      "C2STransferServer",
+      "ReselectServerConnect",
+      "S2CServerRoleInfo",
+      "ModuleReset",
+      "RefreshServerInfo",
+      "Connect",
+      "RandomConnect"
+    ]
+  },
+  "outputs": {
+    "expanded": "D:\\Lager\\夢想世界\\work\\dream-world-connect-login-map\\notes\\decoder-artifacts\\entry516-expanded.bin",
+    "decoded": "D:\\Lager\\夢想世界\\work\\dream-world-connect-login-map\\notes\\decoder-artifacts\\entry516-five-xor-marshal.bin"
+  }
+}

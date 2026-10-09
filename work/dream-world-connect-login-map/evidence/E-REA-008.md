@@ -1,9 +1,12 @@
 ### E-REA-008
 - title: entry 516 已解析为 Python 2.7 marshal 树；非标准 `co_code` 编码仍阻止控制流恢复
 - severity: info
-- status: reported_static_analysis
+- status: candidate
 - reported_at: 2026-10-09T18:52:30+08:00
 - source_type: user_provided_investigation_handoff
+- content_hash: n/a
+- repro_command: n/a
+- notes: offline handoff-only evidence; the reported marshal tree and 59-code-object count require independent reproduction.
 - source_ref: 本次任务上下文中用户提供的既有分析更正；本轮仅整理文档，未重新运行解码或二进制分析
 - samples:
   - `data/script.fls` entry 516 (`id=0x183e0854`; archive SHA-256见 E-REA-006)
@@ -21,4 +24,4 @@
 - effects: 按用户交接记录，原版游戏文件保持未修改，未创建强制进入补丁副本；本轮没有执行二进制分析、启动客户端或连接网络。
 - limitations: 本条依据用户提供的既有分析摘要归档，未附该解码步骤的命令记录或独立 REA Evidence ID；本轮没有重新验证。静态对象树不证明运行时执行行为。
 - linked_workitems: WI-006, WI-008, WI-009
-- next: 按用户明确要求暂停；除非用户另行授权，不继续二进制/游戏分析、补丁或运行测试。
+- next: 独立复现五层变换、59 个代码对象和自定义 `co_code` 转换层；在复现前不要把本条升级为已验证脚本控制流或协议结论。

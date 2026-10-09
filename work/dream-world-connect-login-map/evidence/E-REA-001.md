@@ -4,6 +4,7 @@
 - status: observed
 - observed_at: 2026-10-09T12:10:41+08:00
 - source_type: rea_provider_diagnostic
+- content_hash: n/a
 - source_ref: 当前会话 REA MCP `binary_session` 与 `open_binary`
 - repro_command: |
     rea.open_binary({"path":"/workspace/MXSJ_TW_2022/mx.exe","provider_id":"ida"})

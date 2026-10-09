@@ -79,7 +79,7 @@
 - title: Ghidra 确认 `IMProtocol.dll` 内 `ConnectNsServer` 可达 Winsock TCP connect 分支
 - severity: info
 - category: reverse_algo
-- status: observed_static
+- status: validated
 - evidence_ids: [E-REA-002]
 - location: `IMProtocol.dll` VA `0x10003000` -> `0x10001660` -> `0x10005cb0` -> `0x10004920`; Ghidra 12.1.4 bundle `evidence/rea-ghidra-improtocol-20261009-1244.json`
 - impact: 直接地址分支构造 IPv4 sockaddr，将端口交给 `htons` 并调用 `connect`；域名分支采用带 `0x502` 消息的异步解析形态，socket 通知使用 `context+0x503`/`0x3f`。这确认的是 DLL 的静态 TCP 能力，未确认主客户端实际调用点、目标地址/端口运行值、服务角色或任何登录协议。
@@ -95,7 +95,7 @@
 - title: 选服或点击“下一步”会弹出“连接服务器”对话框；账号凭据登录 UI 尚未确认到达
 - severity: info
 - category: other
-- status: observed
+- status: candidate
 - evidence_ids: [E-003, E-LOOPBACK-001, E-USER-001]
 - location: `log/game/gamelog_2026-10-09 13-43-49.txt`; `tools/captures/server-20261009-134053.log`; direct user observation at 2026-10-09 16:12 (+08:00)
 - impact: 用户确认直接选服或点击“下一步”都会打开“连接服务器”对话框，故连接动作已经触发。对话框不等于账号凭据登录 UI、应用层握手、认证成功或地图进入；历史回环捕获只记录 TCP accept，前三条完成的连接未收到客户端应用层字节，且监听器没有发送协议回应。
@@ -110,7 +110,7 @@
 - title: 主客户端静态区分 TCP 连接回调与服务器命令事件
 - severity: info
 - category: reverse_algo
-- status: observed_static
+- status: validated
 - evidence_ids: [E-REA-003]
 - location: `mx.exe` `FUN_004ac590` and `FUN_004ab9a0`; Ghidra bundle `evidence/rea-ghidra-mx-exe-20261009-1402.json`
 - impact: Event `0x2711` dispatches `OnConnected`, while `0x2714` dispatches to `FUN_004ac030`; a separate status path dispatches `OnConnectFail`. A successful transport callback alone does not establish the account-login screen or an authenticated session.
@@ -126,7 +126,7 @@
 - title: `0x2714` 服务端事件通过 `IMP_ReadUInt16` 读取 16 位值后派发到 `OnServerCmd`
 - severity: info
 - category: reverse_algo
-- status: observed_static
+- status: validated
 - evidence_ids: [E-REA-004]
 - location: `mx.exe` `FUN_004ac590` / `FUN_004ac030`; indirect slot `0x006b020c`; Ghidra 12.1.4
 - impact: `OnConnected`（事件 `0x2711`）与服务端命令回调是分离的。`0x2714` 路径将原事件参数保存在对象状态，并将从它读取的 16 位值作为单个整数参数传给脚本 `OnServerCmd`。这把缺口收敛到具体命令和脚本行为，但不等于已经触发账号登录页面。
@@ -137,7 +137,7 @@
 - title: `dgw.dll` 的 special-login 回包路径是 HTTP 辅助处理，不能直接充当 3134/TCP 回包
 - severity: info
 - category: reverse_algo
-- status: observed_static
+- status: validated
 - evidence_ids: [E-REA-004]
 - location: `dgw.dll` `FUN_1004d160` (`HttpAssist.cpp` 路径)、`GetTargetServers` 导出；样本 SHA-256 `388ecde2104d5d94b3afa417b19f6b4cc264d70395006dd72186d995b324e00b`
 - impact: `dgw.dll` 有 HTTP response callback，依据 URL 尾段处理 `login`、`delay`、`feedback`，并有 JSON 配置解析与 `GetTargetServers` 导出；主客户端含对应 API 名称。但静态证据没有给出其被当前选服动作调用的时机，亦没有证明它与账号登录 UI 的直接关系。不要把其 HTTP/JSON 数据误作本地 TCP 游戏协议。
@@ -146,13 +146,13 @@
 
 
 ### F-010
-- title: 14:46 时工作副本缺少客户端引用的 `data\\script.fls`（当前状态由 F-011 更新）
+- title: 历史状态：14:46 工作副本缺少客户端引用的 `data\\script.fls`（已被后续仓库同步取代）
 - severity: info
 - category: reverse_algo
-- status: observed_static
+- status: validated
 - evidence_ids: [E-REA-005]
 - location: `mx.exe` / 同哈希 `mxmain.dll`、`data/*.fls`、CEF DataPack v4 归档
-- impact: 可确认当前项目目录不含 `data/script.fls`、独立 `.dlg` 或可读的 `multi_selserver5.dlg` 资源；现有 `0SLF` FLS 只暴露哈希索引与元数据，CEF 包内未命中游戏 DLG 名称。当前材料仍不能给出选服页的按钮回调、`OnServerCmd` 命令值或 S2 -> S3 条件。
+- impact: 该条只描述 2026-10-09 14:46 的历史工作副本状态，不代表当前文件状态。后续仓库同步已提供 `data/script.fls`，并由 E-REA-006/E-REA-007 完成全量记录解压验证；当前材料仍不能给出选服页的按钮回调、`OnServerCmd` 命令值或 S2 -> S3 条件。
 - confidence: high for files and formats observed in the current worktree; moderate that the missing script package contains the relevant UI implementation
 - repro_steps: |
     1. 核对 `mx.exe` 中 `data\\script.fls` 字符串及 Ghidra 证据 `ev_4b75...`。
@@ -162,24 +162,25 @@
 
 
 ### F-011
-- title: entry 516 的 Python 2.7 marshal 树已恢复；非标准 opcode 编码仍未揭示登录页切换条件
+- title: 报告型结论：entry 516 据交接已恢复 Python 2.7 marshal 树；非标准 opcode 编码仍未揭示登录页切换条件
 - severity: info
 - category: reverse_algo
-- status: reported_static_analysis
+- status: candidate
 - evidence_ids: [E-REA-006, E-REA-007, E-REA-008]
 - location: `data/script.fls` entry 516 (`id=0x183e0854`); `mx.exe` `PY_CODERESOURCE` at VA `0x6c33f4`
 - impact: 在已验证全部 5,002 条 FLS zlib 记录的基础上，本次交接更正称 entry 516 经五层 XOR 变换后可完整解析为含 59 个代码对象的 Python 2.7 marshal 树，其中有 `CMXNet.OnServerCmd`、`ProcessServerCmd` 和 `C2STransferServer`。先前解析失败是反编译器参数顺序错误。代码对象的 `co_code` 仍有第二层非标准 opcode 编码，执行前转换层未定位，因此具体命令控制流、原生回调关系和 S2 -> S3 条件仍未恢复。`PY_CODERESOURCE=8` 仍是 Python `imp` 文件/导入类型常量，不是网络命令。
-- confidence: 高（FLS 归档与常量结论见 E-REA-006/E-REA-007）；marshal 树恢复细节来自用户提供的分析交接，本轮未独立复跑；运行时执行行为未观察。
-- supersedes: E-REA-007 / F-012 中 entry 516 嵌套 marshal 对象解析失败的旧状态；E-REA-007 对 `PY_CODERESOURCE=8` 的解释仍有效。
+- confidence: 高（FLS 归档与常量结论见 E-REA-006/E-REA-007）；marshal 树恢复细节来自用户提供的分析交接，本轮未独立复跑，故该部分仅作 handoff-only/report-only 线索；运行时执行行为未观察。
+- supersedes:
+  - E-REA-007 / F-012 中 entry 516 嵌套 marshal 对象解析失败的旧状态
+  - F-010 关于当前工作副本缺少 `data/script.fls` 的历史状态
 - residual_unknowns: 第二层 `co_code` opcode 转换层、marshal 树与原生 `OnServerCmd(int)` 的实际绑定、具体命令值/分支、连接对话框到账号登录 UI 的条件、帧布局及预期服务端响应均未确认。不可据方法名或常量猜写 TCP 回包。
-- supersedes: F-010 关于当前工作副本缺少 `data/script.fls` 的状态；E-REA-005 仍记录 14:46 时的历史观察。
 
 
 ### F-012
 - title: `PY_CODERESOURCE=8` 是内嵌 Python `imp` 模块的文件类型常量，不是服务器命令
 - severity: info
 - category: reverse_algo
-- status: observed_static
+- status: validated
 - evidence_ids: [E-REA-007]
 - location: `mx.exe` VA `0x4f0442-0x4f044a`, string table `0x6c3388-0x6c3404`; Ghidra 12.1.4
 - impact: 客户端以名称 `PY_CODERESOURCE` 和整数 `8` 初始化 `imp` 模块常量；注册函数创建 Python 整数对象并存入模块字典。因此这个数字不能用作 TCP opcode 或响应码。FLS 索引变换及 5,002 条 zlib 记录的独立验证仍有效；entry 516 的后续 marshal 树恢复结论见 E-REA-008。
@@ -192,12 +193,12 @@
 - residual_unknowns: `PY_CODERESOURCE` 的具体资源读取路径、第二层 opcode 转换、`ProcessServerCmd` 与原生 `OnServerCmd(int)` 的绑定、账号登录 UI 切换条件、TCP 帧与服务端响应均未确认。不要据值 8 猜写回包。
 
 ### F-013
-- title: `render.dll` 的 `Py_Uncompress` / `ResLib.dll` 路径未证实为 entry 516 的脚本加载器
+- title: 报告型候选：`render.dll` 的 `Py_Uncompress` / `ResLib.dll` 路径未证实为 entry 516 的脚本加载器
 - severity: info
 - category: reverse_algo
-- status: reported_static_analysis
+- status: candidate
 - evidence_ids: [E-REA-008]
 - location: `render.dll` `Py_Uncompress` 候选路径；`ResLib.dll` ordinal 13/12；`data/script.fls` entry 516
 - impact: 用户交接记录称该候选路径与 entry 516 数据头不匹配；局部 PE 字节扫描虽定位 `ReadFls`、`Uncompress`、`LoadFileExtend` 扩展入口名称，但没有建立其处理 entry 516 的调用链。`render.dll` 的宽范围和单函数 Ghidra 反编译均超时，后续采用的字节扫描不足以确认实际加载器。
-- confidence: 仅按用户提供的既有分析摘要记录，本轮未重新分析；候选处理路径与脚本加载之间的关系未证实。
-- residual_unknowns: entry 516 实际加载/转换路径及非标准 opcode 的预执行转换机制均未知。依用户明确要求，当前不继续分析。
+- confidence: handoff-only；仅按用户提供的既有分析摘要记录，本轮未重新分析；候选处理路径与脚本加载之间的关系未证实。
+- residual_unknowns: entry 516 实际加载/转换路径及非标准 opcode 的预执行转换机制均未知；下一步由新的独立复现工作项继续处理。

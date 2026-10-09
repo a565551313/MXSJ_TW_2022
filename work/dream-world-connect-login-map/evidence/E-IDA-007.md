@@ -4,6 +4,8 @@
 - status: observed
 - observed_at: 2026-10-09T12:12:53+08:00
 - source_type: pe_import_table
+- content_hash: n/a
+- notes: offline static PE import evidence; sample hashes and the retained import report are the reproducibility anchors.
 - source_ref:
   - `/workspace/MXSJ_TW_2022/mx.exe`
   - `/workspace/MXSJ_TW_2022/IMProtocol.dll`

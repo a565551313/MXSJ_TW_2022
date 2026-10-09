@@ -1,9 +1,12 @@
 ### E-USER-001
 - title: 选服或点击“下一步”都会弹出“连接服务器”对话框
 - severity: info
-- status: observed_user_report
+- status: candidate
 - observed_at: 2026-10-09T16:12:42+08:00
 - source_type: direct_user_observation
+- content_hash: n/a
+- repro_command: n/a
+- notes: offline user-report evidence; no screenshot or correlated runtime artifact is attached.
 - source: 用户在 2026-10-09 16:12 (+08:00) 表示：“直接选服或者点了下一步都会弹出连接服务器的对话框的”。
 - observations:
   - 直接选择服务器会弹出“连接服务器”对话框。

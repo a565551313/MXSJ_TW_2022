@@ -1,9 +1,12 @@
 ### E-REA-006
 - title: `script.fls` 含 LOGIN/NETSERVER 脚本候选；原生 `OnServerCmd` 派发已确认，但脚本绑定和登录页切换未恢复
 - severity: info
-- status: observed_static
+- status: observed
 - observed_at: 2026-10-09T15:31:00+08:00
 - source_type: read_only_repository_archive_and_binary_analysis
+- content_hash: n/a
+- repro_command: n/a
+- notes: offline static/archive evidence; the repository commit, archive hash, sample hash, and retained analysis notes are the reproducibility anchors.
 - repository:
   - fast-forwarded commit: `eadfe866075ca73812157c44b155ed5e8cd9047a`
   - file: `data/script.fls`

@@ -4,6 +4,9 @@
 - status: observed
 - observed_at: 2026-10-09T12:44:00+08:00
 - source_type: rea_ghidra_static_analysis
+- content_hash: n/a
+- repro_command: n/a
+- notes: offline static evidence; the retained Ghidra bundle and sample hashes are the reproducibility anchors.
 - sample: `/workspace/MXSJ_TW_2022/IMProtocol.dll`
 - sample_sha256: `bc356c88a6470d761b8976f8c027056b8c0e0f483ca2f59cf5c42542e112c82c`
 - provider: Ghidra 12.1.4 through REA-Ghidra MCP; static/read-only

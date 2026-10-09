@@ -1,9 +1,12 @@
 ### E-REA-005
-- title: 客户端引用 `data\\script.fls`，但当前工作副本只有其他 FLS 资源包，未提供选服 DLG 源
+- title: 历史状态：客户端引用 `data\\script.fls`，当时工作副本只有其他 FLS 资源包，未提供选服 DLG 源
 - severity: info
-- status: observed_static
+- status: observed
 - observed_at: 2026-10-09T14:46:00+08:00
 - source_type: read_only_binary_and_archive_analysis
+- content_hash: n/a
+- repro_command: n/a
+- notes: offline historical evidence; later repository synchronization supplied data/script.fls, as recorded by E-REA-006.
 - samples:
   - `mx.exe` — SHA-256 `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`
   - `mxmain.dll` — same SHA-256 as `mx.exe`

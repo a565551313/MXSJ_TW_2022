@@ -25,7 +25,7 @@
 - command_or_ref: notes/agent-config-protocol.md; notes/state-machine-draft.md; notes/ida-protocol-interface.md
 - result_summary: parallel notes added; IDA survey completed for IMProtocol.dll and mxmain.dll; IMProtocol exports expose Winsock connection, crypto wrappers, explicit integer/string serialization, and a two-byte network-order length write before send
 - artifacts: [notes/agent-config-protocol.md, notes/state-machine-draft.md, notes/ida-protocol-interface.md]
-- evidence_ids: [E-IDA-001, E-IDA-002, E-IDA-003, E-IDA-004, E-IDA-005, E-IDA-006]
+- evidence_ids: [E-IDA-007]
 - decision_delta: [protocol_layer_confirmed, frame_length_candidate=uint16_network_order, login_opcode=unknown, map_entry=unproven]
 - carry_forward_refs: [scope.md, workitems.md, evidence/E-001-server-list.md, evidence/E-002-last-server.md, evidence/E-003-login-state.md, evidence/E-004-protocol-map-strings.md, evidence/E-005-map-format.md]
 - next: trace IMProtocol callers and main-module command/map xrefs
@@ -106,3 +106,53 @@
 - decision_delta: [marshal_tree_reported_recovered, custom_co_code_opcode_layer_unresolved, candidate_render_loader_unconfirmed, original_mx_exe_unchanged, no_force_entry_copy, further_analysis_paused]
 - carry_forward_refs: [WI-006, WI-008, WI-009, E-REA-008]
 - next: paused at the user's explicit instruction; do not continue binary/game analysis, patching, or runtime tests without a new user request.
+
+## 2026-10-09T19:30:00+08:00 | lead | multi-agent-resume-and-integration
+- action: resume analysis after explicit new user request; parallel native-binding, protocol-frame, and documentation-audit work
+- command_or_ref: notes/agent-native-script-binding.md; notes/agent-protocol-frame.md; notes/agent-doc-audit.md
+- result_summary: IDA/Ghidra independently confirm `0x2714 -> IMP_ReadUInt16 -> OnServerCmd(int)`; protocol agent confirms provisional `uint16_be` send-length behavior and adds a loopback-only responsive harness; audit finds evidence-link/status inconsistencies and confirms E-REA-008 remains handoff-only
+- artifacts: [notes/agent-native-script-binding.md, notes/agent-protocol-frame.md, notes/protocol-artifacts/responsive_loopback_harness.py, notes/agent-doc-audit.md]
+- evidence_ids: [E-REA-002, E-REA-003, E-REA-004, E-REA-008, E-IDA-007, E-LOOPBACK-001, E-USER-001]
+- decision_delta: [pause_released, native_callback_independently_confirmed, frame_rule_remains_provisional, entry516_binding_unproven, no_response_guessed]
+- carry_forward_refs: [WI-006, WI-008, WI-009, E-REA-008]
+- next: repair evidence graph; recover Python receiver/registration and custom opcode transform; then run capture-first responsive loopback test
+
+## 2026-10-09T21:14:47+08:00 | lead | live-loopback-connection-confirmed
+- action: inspect user screenshot, responsive harness log, saved streams, and local TCP table
+- command_or_ref: evidence/E-LOOPBACK-002.md; `Get-NetTCPConnection -LocalPort 3134`; notes/protocol-artifacts/responsive-harness.log
+- result_summary: client visibly remains in `正在连接服务器...`; seven completed local connections saved zero bytes; a new local connection is established and remains open; capture-only harness has sent no application response
+- artifacts: [evidence/E-LOOPBACK-002.md, notes/protocol-artifacts/stream-0001.bin..stream-0007.bin]
+- evidence_ids: [E-LOOPBACK-002]
+- decision_delta: [loopback_endpoint_use_confirmed, client_waits_server_first_or_auxiliary_response, application_frame_unknown]
+- carry_forward_refs: [WI-006, WI-009, E-LOOPBACK-001]
+- next: run a controlled response-first experiment on the already-confirmed local connection, while preserving capture-only baseline
+
+## 2026-10-09T21:58:00+08:00 | lead | ida-dynamic-instrumentation-prepared
+- action: open GUI IDA session, enumerate live modules, attach to client, and set protocol/native bridge breakpoints
+- command_or_ref: evidence/E-IDA-DYN-001.md; IDA GUI session `90170726`
+- result_summary: IDA 9.4 GUI debugging session established; `mx.exe` and `IMProtocol.dll` live bases mapped; key breakpoints accepted; target exited before a breakpoint hit
+- artifacts: [evidence/E-IDA-DYN-001.md]
+- evidence_ids: [E-IDA-DYN-001]
+- decision_delta: [ida_debug_ready, no_runtime_hit_yet, fresh_launch_required]
+- carry_forward_refs: [WI-008, WI-009]
+- next: start a fresh client from IDA with breakpoints already installed, then capture first connect/send/recv and `OnServerCmd` events
+
+## 2026-10-09T23:24:00+08:00 | lead | ida-runtime-bridge-hit
+- action: keep the normal client launch path, attach IDA to PID 13920, continue, and trigger the server-selection action
+- command_or_ref: evidence/E-IDA-DYN-003.md; IDA GUI session `90170726`; breakpoint `0x004576B0`
+- result_summary: runtime execution stopped at the native/Python bridge; registers and a 128-byte stack window were captured; no protocol-library or Winsock frame yet
+- artifacts: [evidence/E-IDA-DYN-003.md, notes/protocol-artifacts/responsive_loopback_harness.py]
+- evidence_ids: [E-IDA-DYN-003]
+- decision_delta: [normal-launch-attach-works, runtime-bridge-confirmed, protocol-frame-still-open]
+- carry_forward_refs: [WI-008, WI-009, E-LOOPBACK-002]
+- next: add post-bridge stepping or API-level breakpoints, then repeat the local connection with the send-on-accept probe
+
+## 2026-10-09T23:41:00+08:00 | lead | server-first-probe-reaches-error-path
+- action: send explicit `00 02` immediately after local TCP accept and observe the attached client
+- command_or_ref: evidence/E-IDA-DYN-004.md; responsive harness `--initial-response-hex 0002`
+- result_summary: client was affected by the server-first bytes and IDA stopped in `KernelBase.dll!RaiseException+0x62`; no login or map state transition
+- artifacts: [evidence/E-IDA-DYN-004.md, notes/protocol-artifacts/responsive-harness.log]
+- evidence_ids: [E-IDA-DYN-004]
+- decision_delta: [server-first-effect-confirmed, empty-frame-probe-rejected, error-chain-next]
+- carry_forward_refs: [WI-006, WI-008, WI-009]
+- next: trace the exception caller and recover the expected initial response structure before constructing another response
