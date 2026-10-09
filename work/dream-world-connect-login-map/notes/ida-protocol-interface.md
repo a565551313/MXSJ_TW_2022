@@ -166,3 +166,40 @@ This is a static candidate path, not a replay recipe. Login opcode, credentials,
 3. In `mxmain.dll`, locate xrefs for `GetTargetServers`, `OnConnected`, `OnConnectFail`, `ProcessServerCmd`, and `%04d.map`.
 4. Recover caller-side arguments to `IMP_ConnectNsServer` and `IMP_RefreshCryptKey`.
 5. Confirm whether `203.70.8.205:3134` is used by the main game channel, the NsServer channel, or both.
+
+
+## Continuation checkpoint: main-image import relation (2026-10-09)
+
+### E-IDA-007: `mx.exe` imports the IMProtocol surface
+
+A read-only local PE import-table check confirmed that the current `mx.exe` import descriptors include `IMProtocol.dll`. The named imports include `IMP_ConnectNsServer`, `IMP_RefreshCryptKey`, `IMP_UnConnectNsServer`, `IMP_NewIMBuffWriter`, `IMP_SendBuffer2NS`, integer/string/binary readers and writers, and encryption/decryption wrappers. The current `mx.exe` and `mxmain.dll` are byte-identical (SHA-256 `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`); `IMProtocol.dll` matches the previously surveyed digest `bc356c88a6470d761b8976f8c027056b8c0e0f483ca2f59cf5c42542e112c82c`. See [`evidence/E-IDA-007.md`](../evidence/E-IDA-007.md).
+
+This raises confidence in a static dependency link between the main client image and the `IMProtocol.dll` API surface. It does **not** establish which functions call the imports, whether they are invoked in a real session, what arguments they receive, or whether the `NsServer` path is the main game-login channel rather than an auxiliary/IM service. No direct call-site xref is recorded from this check.
+
+### Analysis backend status
+
+The REA MCP tools were present, but `open_binary` could not bind the supplied PE to any native provider: Ghidra is not configured, the Hopper launcher is missing, and the IDA MCP configuration is absent. The failed open produced no function analysis; the diagnostic is recorded as [`E-REA-001`](../evidence/E-REA-001.md). Accordingly, the next function-level questions remain open: callers and actual call sites of `IMP_ConnectNsServer` / `IMP_SendBuffer2NS`, the source of endpoint and port values, and the relationship between this API and `Connect` / `PacketPrepare` / `PacketSend` in the main image.
+
+
+## Ghidra continuation: NsServer connection path (2026-10-09)
+
+REA-Ghidra is now available with Ghidra 12.1.4. The earlier `E-REA-001` provider-unavailable note is a historical diagnostic; this continuation supersedes its availability status, not its observation at the time. Detailed raw results and Evidence IDs are in [`E-REA-002`](../evidence/E-REA-002.md) and [`rea-ghidra-improtocol-20261009-1244.json`](../evidence/rea-ghidra-improtocol-20261009-1244.json).
+
+### What the DLL establishes
+
+Ghidra follows `IMP_ConnectNsServer` at `0x10003000` into `FUN_10001660` and `FUN_10005cb0`. The latter initializes a socket object, calls its virtual method at `+0x10` with the parsed host and forwarded connection value, and emits the format string `ConnectNsServer ip:%s, port:%d`.
+
+The callee `FUN_10004920` has two static branches. Its numeric-address branch calls WS2_32 ordinal 11 on the host value, then—when that result is not `-1`—passes the port value to the import slot at `0x1001f188`, constructs an `AF_INET` address (`2`), and calls the import slot at `0x1001f1a0` with a 16-byte address structure. The existing interface survey maps those slots to `htons` and `connect`, respectively. This confirms the DLL's TCP connection plumbing and the port byte-order operation on the direct-address branch; it does **not** identify a client-side caller or prove this is the main game-login channel.
+
+The hostname branch prepares a resolution buffer and passes message `0x502` to WS2_32 ordinal 103. `FUN_10004a60` separately registers async socket notifications using ordinal 101, message base `context+0x503`, and mask `0x3f`. These signatures are consistent with asynchronous hostname resolution and socket-event notification, but the current evidence does not identify the complete message dispatcher or prove the asynchronous resolution completion path.
+
+### Main-image status and next checks
+
+Ghidra address-xref queries against the `mx.exe` IAT slots for `IMP_ConnectNsServer`, `IMP_SendBuffer2NS`, and selected writer APIs returned no direct code references in this analysis. The import descriptors still prove a static dependency. An empty direct-xref result is not proof of no runtime use; indirect dispatch, dynamically resolved paths, or analysis coverage may be involved. Accordingly, the earlier assumption that the API is necessarily called through an obvious direct IAT call remains unverified.
+
+Next offline targets:
+
+1. Locate the handler for messages `0x502` and `0x503` and connect it to the socket object's completion/error callbacks.
+2. Inspect main-image reads/writes and indirect-call paths involving the imported IAT slots; correlate with `server.ini` parsing and endpoint selection without attempting an external connection.
+3. Trace `IMP_NewIMBuffWriter` / `IMP_Write*` / `IMP_SendBuffer2NS` through any resolved caller to distinguish server-list, login, and auxiliary `NsServer` traffic.
+4. Keep login opcode, frame structure, authentication result, character/world state, and map-entry protocol unknown until direct evidence is obtained.

@@ -57,3 +57,36 @@
     4. 候选 OnConnected 或 OnConnectFail/OnError 分支； evidence: E-004
     5. 候选按 %04d.map 读取本地地图； evidence: E-004, E-005
 - residual_risks: 无动态调用、服务端响应、opcode、地图 ID 或角色初始坐标样本。
+
+
+### F-004
+- title: 主客户端映像静态导入 IMProtocol 连接与消息 API
+- severity: info
+- category: reverse_algo
+- status: candidate
+- evidence_ids: [E-IDA-007, E-REA-001]
+- location: `mx.exe` PE import descriptor for `IMProtocol.dll`; sample SHA-256 `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`
+- impact: 确认主客户端映像与 `IMProtocol.dll` 的静态依赖关系，并列出连接、序列化、加解密和发送 API；尚不能据此确定这些接口的实际调用者或其是否承载游戏登录流量。
+- confidence: high for the import relation; unresolved for runtime use and channel role
+- repro_steps: |
+    1. 核对 `mx.exe`、`mxmain.dll` 与 `IMProtocol.dll` 的 SHA-256。
+    2. 对当前离线 `mx.exe` 检查 PE import descriptors (`objdump -p mx.exe`)。
+    3. 将 `IMProtocol.dll` 的导入名与既有 `mx.exe.json` 的导入清单交叉核对。
+- residual_unknowns: REA native provider unavailable in this session; function-level callers, endpoint/port argument source, and `NsServer` versus game-login channel attribution remain unknown.
+
+
+### F-005
+- title: Ghidra 确认 `IMProtocol.dll` 内 `ConnectNsServer` 可达 Winsock TCP connect 分支
+- severity: info
+- category: reverse_algo
+- status: observed_static
+- evidence_ids: [E-REA-002]
+- location: `IMProtocol.dll` VA `0x10003000` -> `0x10001660` -> `0x10005cb0` -> `0x10004920`; Ghidra 12.1.4 bundle `evidence/rea-ghidra-improtocol-20261009-1244.json`
+- impact: 直接地址分支构造 IPv4 sockaddr，将端口交给 `htons` 并调用 `connect`；域名分支采用带 `0x502` 消息的异步解析形态，socket 通知使用 `context+0x503`/`0x3f`。这确认的是 DLL 的静态 TCP 能力，未确认主客户端实际调用点、目标地址/端口运行值、服务角色或任何登录协议。
+- confidence: high for DLL static connection plumbing and numeric-branch port conversion; unresolved for caller, runtime use, async message completion, and game-login attribution
+- repro_steps: |
+    1. 核对 `IMProtocol.dll` SHA-256 `bc356c88a6470d761b8976f8c027056b8c0e0f483ca2f59cf5c42542e112c82c`。
+    2. 读取 `E-REA-002` 中引用的 Ghidra 12.1.4 Evidence IDs 与 bundle。
+    3. 对照 `notes/ida-protocol-interface.md` 中 WS2_32 导入槽映射；主映像 IAT xref 结果见 `evidence/rea-ghidra-mx-exe-20261009-1241.json`。
+- supersedes: F-004 中“当前会话原生 provider 不可用”的当前状态表述；该表述是早前时间点记录，E-REA-001 保留为历史诊断。主客户端调用点及通道角色仍然未决。
+- residual_unknowns: `mx.exe` 的目标 IAT 槽未取得直接代码 xref；不排除间接分发或覆盖不足。`0x502`/`0x503` 消息处理函数、实际 endpoint/port、NsServer 与登录主通道的关系、登录 opcode/响应与角色/地图状态均未确认。仅有静态代码证据，不代表运行时行为。

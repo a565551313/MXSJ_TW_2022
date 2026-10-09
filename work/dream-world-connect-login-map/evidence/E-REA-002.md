@@ -1,0 +1,35 @@
+### E-REA-002
+- title: `IMProtocol.dll` 的 `ConnectNsServer` 静态链路进入 TCP 连接实现；主客户端调用点仍未闭合
+- severity: info
+- status: observed
+- observed_at: 2026-10-09T12:44:00+08:00
+- source_type: rea_ghidra_static_analysis
+- sample: `/workspace/MXSJ_TW_2022/IMProtocol.dll`
+- sample_sha256: `bc356c88a6470d761b8976f8c027056b8c0e0f483ca2f59cf5c42542e112c82c`
+- provider: Ghidra 12.1.4 through REA-Ghidra MCP; static/read-only
+- source_ref: `evidence/rea-ghidra-improtocol-20261009-1244.json`
+- related_main_image_ref: `evidence/rea-ghidra-mx-exe-20261009-1241.json`
+- evidence_ids:
+  - `ev_22d0ec4c2c38a4d1a04899546e9398dc534c72fdc5a73a38508899dd3254d8b3` (`IMP_ConnectNsServer`, 0x10003000)
+  - `ev_5f12a32d2aae3e653c52a090b8b677af0d00b45b31076acbc1d6ee30ef4667bc` (`FUN_10001660`)
+  - `ev_656a2d2aa23811aca5bda8c68effced9d0522c33114c7847a6bb74bc860a2f12` (`FUN_10005cb0`)
+  - `ev_c9e6508cdf6efcde6a47343ee0416c77e2b0349e78e698298071674d40e1a6ec` (`FUN_10004920`)
+  - `ev_7611c5f84292d13fb0440fe450f7e595962f7501726dceb9f7a6ac55e37560c0` (`FUN_10004a30`)
+  - `ev_8923765623ff66a9b61bb65eae8458eaa878d503c518a6a94c9cff730e403341` (`FUN_10004a60`)
+  - `ev_f2d9360f189aeba109d3101d3632586093062498401129b636c4ad3bafc46176` (`FUN_10004aa0`)
+- observation:
+  - Ghidra 的静态链路为 `IMP_ConnectNsServer` -> `FUN_10001660` -> `FUN_10005cb0`。`FUN_10005cb0` 为 socket 对象初始化后，经对象虚表 `+0x10` 调入连接路径，并记录 `ConnectNsServer ip:%s, port:%d`。
+  - `FUN_10004920` 对输入主机值调用 WS2_32 导入序号 11。返回值不为 `-1` 时走数值地址分支：构造 `AF_INET` (`2`) 地址结构，把端口值交给 `0x1001f188`，再以 socket、地址结构和长度 `0x10` 调用 `0x1001f1a0`。既有接口笔记将这两个导入槽分别对应为 `htons` 与 `connect`；该路径支持“连接端口经过网络字节序转换后写入 sockaddr 再执行 TCP connect”的静态结论。
+  - 另一分支准备主机解析缓冲区，将主机、窗口/上下文值及消息 `0x502` 传给 WS2_32 导入序号 103；行为符合异步主机名解析路径。该 ordinal 的符号身份及其完成消息的处理函数尚未由当前证据闭合，故不把异步完成或后续 connect 标为已验证。
+  - `FUN_10004a60` 通过 WS2_32 ordinal 101 注册消息基址 `context+0x503`、事件掩码 `0x3f`；`FUN_10004a30` 则通过 `0x1001f1a0` 调用同一 connect 导入。消息窗口过程/`0x502` 与 `0x503` 的处理逻辑尚未定位。
+  - 对主映像 `mx.exe` 的 Ghidra 查询未取得 `IMP_ConnectNsServer`、`IMP_SendBuffer2NS` 及所查序列化接口 IAT 槽的直接静态代码引用；导入表仍确认这些接口存在。空引用不能证明程序运行时不调用它们，也不能排除间接分发、动态路径或分析覆盖限制。
+- interpretation:
+  - 已确认 `IMProtocol.dll` 内存在可达至 Winsock TCP connect 的 `NsServer` 连接实现，并确认数值地址分支的端口网络字节序转换处理。
+  - 尚未确认调用该 DLL API 的主客户端函数、目标 endpoint/port 的真实运行时值、该通道是否为游戏登录而非辅助/IM 服务，或任何登录/进图协议内容。
+  - 这只证明静态代码结构，不是运行时行为证据；不据此推定服务端可达、认证成功或能进入地图。
+- effects:
+  - 只读静态分析。未启动客户端，未连接任何外部服务器，未修改样本或本地配置。
+- limitations:
+  - Ghidra 伪代码/类型和 ordinal 标注属于分析器视图，不是原始源代码；调用约定与导入 ordinal 名称并非均已恢复。
+  - 当前主映像的 IAT 查询无直接 xref；必须进一步调查间接调用与连接事件分发后，才能归属游戏登录通道。
+- linked_workitems: WI-006, WI-008

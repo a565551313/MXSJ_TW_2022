@@ -1,0 +1,21 @@
+### E-REA-001
+- title: 当前 REA 会话无法绑定 PE 原生分析提供方
+- severity: info
+- status: observed
+- observed_at: 2026-10-09T12:10:41+08:00
+- source_type: rea_provider_diagnostic
+- source_ref: 当前会话 REA MCP `binary_session` 与 `open_binary`
+- repro_command: |
+    rea.open_binary({"path":"/workspace/MXSJ_TW_2022/mx.exe","provider_id":"ida"})
+- observation:
+  - REA MCP 工具目录可用；调用前状态为 `open: false`，没有已绑定目标。
+  - 指定 IDA 提供方打开 `mx.exe` 返回 `provider_unavailable`；REA 报告候选 `ghidra`、`hopper`、`ida` 均无法绑定。
+  - Ghidra：`GHIDRA_INSTALL_DIR` 未设置，headless 与 native decompiler 不可用。
+  - Hopper：启动器 `/opt/hopper/bin/Hopper` 缺失或不可执行。
+  - IDA：`REA_IDA_MCP_CONFIG` 未配置，且未探测已有 live connection。
+- interpretation:
+  - 这是当前会话的分析后端可用性问题，不是目标二进制解析结论。
+  - 本轮没有成功打开 PE 原生分析会话，也没有执行反编译或 REA 调用图分析。
+- effects:
+  - 只读诊断；没有启动客户端、改写样本、安装或配置分析器、连接外部服务器。
+- linked_workitem: WI-008

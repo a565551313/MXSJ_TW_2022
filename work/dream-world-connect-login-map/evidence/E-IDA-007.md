@@ -1,0 +1,30 @@
+### E-IDA-007
+- title: 主客户端 PE 导入 IMProtocol 连接与消息接口
+- severity: info
+- status: observed
+- observed_at: 2026-10-09T12:12:53+08:00
+- source_type: pe_import_table
+- source_ref:
+  - `/workspace/MXSJ_TW_2022/mx.exe`
+  - `/workspace/MXSJ_TW_2022/IMProtocol.dll`
+  - `work/dream-world-connect-login-map/evidence/mx.exe.json`
+- artifact_sha256:
+  - `mx.exe`: `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`
+  - `mxmain.dll`: `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`
+  - `IMProtocol.dll`: `bc356c88a6470d761b8976f8c027056b8c0e0f483ca2f59cf5c42542e112c82c`
+- repro_command: |
+    sha256sum mx.exe mxmain.dll IMProtocol.dll
+    objdump -p mx.exe
+- raw_observations:
+  - `mx.exe` 的 PE 导入描述符包含 `IMProtocol.dll`。
+  - 导入名包括 `IMP_ConnectNsServer`、`IMP_RefreshCryptKey`、`IMP_UnConnectNsServer`、`IMP_NewIMBuffWriter`、`IMP_SendBuffer2NS`、`IMP_Read*`、`IMP_Write*`、`IMP_EncryptBuffer` 和 `IMP_DecryptBuffer`。
+  - 当前 `mx.exe` 与 `mxmain.dll` 的 SHA-256 完全相同；当前 `IMProtocol.dll` 的 SHA-256 与既有 IDA 笔记所记样本一致。
+  - `objdump -p` 对导入表的观察与已有 `mx.exe.json` 中 `imports` 项相符。
+- interpretation:
+  - 高置信度支持主客户端映像对 `IMProtocol.dll` API 的静态导入/链接关系；连接、序列化、加解密和发送能力均在导入表中出现。
+  - 导入表不证明对应接口在某次运行中被调用，也不提供调用函数、参数值、调用顺序或具体服务角色。
+  - `NsServer` 名称与 `IMP_ConnectNsServer` 只能证明命名接口存在；尚不能判定它是主游戏登录连接、IM/辅助服务，或二者之一。
+- limitations:
+  - 本轮 REA 原生分析后端不可用，未获得函数级 xref/反编译证据，见 `E-REA-001`。
+  - 对本地反汇编文本的导入槽引用搜索未得到可验证调用点；该检查不构成完整 xref 分析，也不作为“没有调用者”的证据。
+- linked_workitem: WI-006, WI-008

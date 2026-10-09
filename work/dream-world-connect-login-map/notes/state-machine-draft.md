@@ -279,3 +279,12 @@ S5 --map/object load incomplete--> S4 or F3
 5. 依赖地图和对象资源进入目标场景，空地图是待确认的末端表现。
 
 其中第 1、2 步有直接日志/配置支持；第 3 步有模块字符串和配置上下文支持；第 4、5 步目前主要由字符串和资源命名支持。现有启动日志中的 OpenGL 错误使“完整流程已经跑通”的结论不成立，后续接手者应优先解决状态可观测性和证据登记问题。
+
+
+## Ghidra update: S1 connection implementation (2026-10-09)
+
+REA-Ghidra/Ghidra 12.1.4 static analysis has now traced `IMProtocol.dll`'s `IMP_ConnectNsServer` export through `FUN_10001660` and `FUN_10005cb0` to a socket-object connection method. The direct numeric-address branch constructs an IPv4 socket address, applies `htons` to the port field, and calls the Winsock `connect` import. A hostname branch passes message `0x502` to a WS2_32 ordinal; a separate initializer registers socket notifications at message base `context+0x503` with mask `0x3f`. See [`E-REA-002`](../evidence/E-REA-002.md).
+
+**State-machine impact:** this raises confidence that the DLL contains a TCP connection implementation, but it does not prove the main client calls it, that the selected `server.ini` endpoint is used by this path, or that this connection is the game-login channel rather than an auxiliary service. The main-image IAT xref queries returned no direct code references, and the async completion dispatcher is not yet located. Therefore S0 -> S1 remains a candidate, S2 -> S3 remains unconfirmed, and no login, character/world-ready, or empty-map state is promoted to observed.
+
+**Next offline checks:** resolve the `0x502`/`0x503` message handler; inspect indirect or dynamically resolved main-image call paths into the imported API; then trace any message-writer/send callers and relate them to server selection. No client launch or external connection was performed.
