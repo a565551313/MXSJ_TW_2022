@@ -1,0 +1,32 @@
+
+[09:18.40]---------------------開始打印log-------------------
+[09:18.40]【基礎信息】 isMini: False; MAC:fa163e61e9a6; 腹b本版本:2.27.2.07061810; 引擎版本:(0, 8, 147); 資源版本:(2, 27, 2); 系統版本:(10, 0);
+[09:18.40]重要節點:---------------GameStart開始---------------
+
+[09:18.40]服務器style None
+[09:18.40]本地style 2
+[09:18.40]!!新資源 True 新端 True 新夢想 False
+[09:18.40]過濾style 2
+[09:18.40]開始延時加載
+[09:18.42]iOffsetTime: 1791508722.21
+[09:18.42]滿足新客戶端的判定條件
+[09:18.42]FPS INFO: 2.8 2048 10
+[09:18.42]創建共享內存成功 0
+[09:18.42]重要節點:---------------GameStart結束---------------
+
+[09:18.42]打開 login/mainpage.dlg
+[09:18.42][openglsupport]開始檢查opengl
+[09:18.42][openglsupport]開始檢測opengl並註冊回調
+[09:18.43]ReadMem Start
+[09:18.43][openglsupport]ProcessStart
+[09:18.43]網段初始化完成 未知
+[09:18.53]ReadMem gl.initError=true;split;gl.errorMsg=Can't create gl window
+More info: 
+GLFWError #65545 Happen, WGL: Failed to find a suitable pixel format;split;gl.renderer=;split;gl.version=;split;gl.supports_S3TC=;split;gl.supports_NPOT=
+[09:18.53][openglsupport]SetInitError gl.initError=true;split;gl.errorMsg=Can't create gl window
+More info: 
+GLFWError #65545 Happen, WGL: Failed to find a suitable pixel format;split;gl.renderer=;split;gl.version=;split;gl.supports_S3TC=;split;gl.supports_NPOT=
+[09:18.53][openglsupport]SendResult [None] [None] [('Microsoft Basic Display Adapter', '10.0.19041.3636'), ('GameViewer Virtual Display Adapter', '15.6.5.199')] [op1] [windows 10]  [create gl err:GLFWError #65545 Happen, WGL: Failed to find a suitable pixel format][S3TC None][NPOT None]
+[09:18.55]打開 login/multi_selserver5.dlg
+[09:33.14]groupSignal: closegame
+[09:33.15]清理共享內存

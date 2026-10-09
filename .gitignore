@@ -1,0 +1,13 @@
+data/*
+!data/passive.fls
+!data/data.fls
+!data/skill.fls
+!data/effect.fls
+!data/skill2.fls
+
+map/*
+!map/2101.map
+!map/2112.map
+!map/2111.map
+!map/2303.map
+!map/2122.map
