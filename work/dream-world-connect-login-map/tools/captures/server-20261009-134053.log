@@ -1,0 +1,18 @@
+[2026-10-09 13:40:53] INFO Listening only on 127.0.0.1:3134
+[2026-10-09 13:40:53] INFO Waiting for a client; press Ctrl+C to stop
+[2026-10-09 13:40:53] INFO Received bytes are logged and saved; no protocol response is sent
+[2026-10-09 13:40:53] INFO Text log: D:\Lager\夢想世界\work\dream-world-connect-login-map\tools\captures\server-20261009-134053.log
+[2026-10-09 13:43:59] INFO Accepted TCP connection from ('127.0.0.1', 63404)
+[2026-10-09 13:43:59] INFO Saving raw stream to D:\Lager\夢想世界\work\dream-world-connect-login-map\tools\captures\capture-20261009-134359-560631-1.bin
+[2026-10-09 13:44:17] INFO Client closed the connection
+[2026-10-09 13:44:17] INFO Capture finished: 0 byte(s) saved to D:\Lager\夢想世界\work\dream-world-connect-login-map\tools\captures\capture-20261009-134359-560631-1.bin
+[2026-10-09 13:44:17] INFO Accepted TCP connection from ('127.0.0.1', 63452)
+[2026-10-09 13:44:17] INFO Saving raw stream to D:\Lager\夢想世界\work\dream-world-connect-login-map\tools\captures\capture-20261009-134417-750474-2.bin
+[2026-10-09 13:44:30] INFO Client closed the connection
+[2026-10-09 13:44:30] INFO Capture finished: 0 byte(s) saved to D:\Lager\夢想世界\work\dream-world-connect-login-map\tools\captures\capture-20261009-134417-750474-2.bin
+[2026-10-09 13:44:30] INFO Accepted TCP connection from ('127.0.0.1', 63473)
+[2026-10-09 13:44:30] INFO Saving raw stream to D:\Lager\夢想世界\work\dream-world-connect-login-map\tools\captures\capture-20261009-134430-734307-3.bin
+[2026-10-09 13:44:39] INFO Client closed the connection
+[2026-10-09 13:44:39] INFO Capture finished: 0 byte(s) saved to D:\Lager\夢想世界\work\dream-world-connect-login-map\tools\captures\capture-20261009-134430-734307-3.bin
+[2026-10-09 13:44:39] INFO Accepted TCP connection from ('127.0.0.1', 63518)
+[2026-10-09 13:44:39] INFO Saving raw stream to D:\Lager\夢想世界\work\dream-world-connect-login-map\tools\captures\capture-20261009-134439-191947-4.bin

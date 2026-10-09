@@ -1,0 +1,16 @@
+启动主函数：lpCmdLine=, nCmdShow=1
+CreateMainWnd 800, 600
+初始化MINI设置
+初始化下载器
+Sound初始化开始
+Sound设备名字Generic Software 1
+
+pContext  0
+
+Sound设备获取成功
+Sound初始化完成
+ModuleInit 完成
+创建主窗口成功open a file D:\Lager\夢想世界\log/game\gamelog_2026-10-09 12-41-11.txt
+竲セ腹:(2, 27, 2)
+执行启动函数 result = 0
+退出主函数
