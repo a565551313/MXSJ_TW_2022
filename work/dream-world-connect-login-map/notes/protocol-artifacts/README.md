@@ -10,3 +10,7 @@
 | `responsive_loopback_harness.py` | 未在本次核对中运行 | 默认只捕获；只有显式给 `--response-hex` 才发送响应。 |
 
 **结论**：目前本目录能证明的是“加密算法实现与 S 盒可复现”，不能证明“真实报文可解密”。真实密钥仍未获得（WI-010）。
+
+## 已知问题（2026-10-10，P1 核对）
+- `im_crypto.py` 第 188 行将 `IMP_RefreshCryptKey` 写为 `0x100030d0`。PE 导出表核对：`0x100030d0` 是 `IMP_UnConnectNsServer`，`IMP_RefreshCryptKey` 的正确地址是 `0x10003110`。本文件只记录此问题，**未修改 `im_crypto.py`**。
+- 第 211 行的 `init_crypto = 0x10001770` 只概括了子程序用途。P1 确认 `0x10001770` 的作用是把字符串按 `%02X` 八次解析成 8 字节种子；它不是完整的初始化。
