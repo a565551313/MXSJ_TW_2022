@@ -199,9 +199,9 @@
   - work/dream-world-connect-login-map/evidence/E-VERIFY-001.md（新增）
   - work/dream-world-connect-login-map/notes/protocol-artifacts/README.md（新增）
   - work/dream-world-connect-login-map/notes/decoder-artifacts/README.md（新增）
-  - work/dream-world-connect-login-map/tools/mock-server-logs/mock-server-20261010-094859.log（mock_server 试运行副产物，保留未删）
+  - work/dream-world-connect-login-map/tools/mock-server-logs/mock-server-20261010-094859.log（mock_server 试运行副产物；2026-10-10 经用户确认后删除）
   - HANDOVER-20261010.md、workitems.md、INDEX.md 及其他文档（已修正）
 - evidence_ids: [E-VERIFY-001, E-LOOPBACK-001, E-LOOPBACK-002, E-IDA-DYN-004]
 - decision_delta: [capture_bytes_zero_confirmed, loginhello_sample_missing, cmd_numeric_ids_unverified, server_ini_modified_in_head, catalog_json_partial, mx_exe_equals_mxmain_dll, themida_claim_rejected, wi009_reopened, wi012_partial, repo_history_complete_locally]
 - carry_forward_refs: [WI-002, WI-006, WI-009, WI-010, WI-012, WI-013, WI-014, WI-015, WI-016, WI-017]
-- next: 1) 用户决定是否恢复 server.ini 原始版本；2) 用户已决定：游戏二进制与资源保留在 Git 中，不移出（2026-10-10 指示）；3) WI-010 需 Windows 本地回环抓包后才能推进；4) 在获得真实字节前，不再新增“已确认”类结论。
+- next: 1) 已决定：server.ini 保留 127.0.0.1 回环配置（用户确认）；2) 已决定：游戏二进制与资源保留在 Git 中，不移出；3) 已删除试运行日志；4) WI-010 需 Windows 本地回环抓包后才能推进；4) 在获得真实字节前，不再新增“已确认”类结论。

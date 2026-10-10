@@ -37,7 +37,7 @@
     data_browser/app.py --help: launches web server (timeout)
 - notes: |
     本次核对只读；仅在仓库外生成解码输出（/tmp/verify516）与虚拟环境（/tmp/pevenv，安装 pefile 用于 PE 解析）。
-    在 work/.../tools/mock-server-logs/ 下新增了 mock_server 试运行日志（未删除）。
+    在 work/.../tools/mock-server-logs/ 下新增了 mock_server 试运行日志；经用户确认后已删除（仅删除该日志与其空目录）。
     server.ini 未被修改。
 - effects: 无外部网络连接（仅 git fetch 到 github.com 与 pip 安装 pefile）；无客户端运行；无文件删除/移动。
 - limitations: |
