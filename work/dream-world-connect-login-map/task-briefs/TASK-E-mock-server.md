@@ -1,3 +1,5 @@
+> ⚠️ **2026-10-10 核对**：任务书引用的 `tools/mock_server_v2.py`、`notes/login-flow-complete.md`、`notes/server-list-format.md`、`evidence/E-MOCK-001.md` 均不存在。现有框架为 `work/dream-world-connect-login-map/tools/mock_server.py`（可启动，未联调）。依赖的密钥未获得（WI-010）。
+
 # 任务书 E: 增强模拟服务器，支持完整登录流程
 
 **任务编号**: E

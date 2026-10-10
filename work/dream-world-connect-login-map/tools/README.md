@@ -1,3 +1,5 @@
+> ⚠️ **2026-10-10 核对**：路径以 `work/dream-world-connect-login-map/tools/` 为准；`tools/test-data/` 目录不存在；“工具已测试通过”指 `--help` 与启动检查，**未经真实客户端验证**。`mock_server.py` 运行时会在 `tools/mock-server-logs/` 生成日志。
+
 # 梦想世界 逆向工程工具集
 
 本目录包含三个核心工具，用于梦想世界（MXSJ）台湾版2022客户端的协议分析和模拟。

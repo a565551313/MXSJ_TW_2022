@@ -186,3 +186,50 @@
 - decision_delta: [tools_complete, capture_ready, mock_server_ready, packet_analyzer_ready, next_run_on_windows_capture_real_key]
 - carry_forward_refs: [WI-010, WI-011, WI-012]
 - next: 在Windows环境运行客户端，用增强版捕获工具捕获实际密钥和loginhello数据包；用模拟服务器实现离线登录
+
+## 2026-10-10T09:50:00+08:00 | lead | project-verification-and-doc-correction
+- action: 按用户要求核对项目真实情况并更新文档。范围：仓库历史、游戏文件、脚本解码、加密实现、地图测试、工具可用性、配置文件、文档引用。全程只读，未删除/移动/`git rm` 任何文件，未连接外部服务器，未运行原版客户端。
+- command_or_ref: `git fetch --unshallow origin`；`sha256sum data/script.fls`；`md5sum mx.exe mxmain.dll`；`fls_batch_decoder.py --archive data/script.fls --index 516 --output /tmp/verify516`；`test_maps.py`（11 OK）；`mock_server.py --host 127.0.0.1 --port 3999 --response-type auto`（运行后超时终止）；`git show caa7996:server.ini` 与 `1106434:server.ini` 对比；PE 解析（pefile，安装在 /tmp 虚拟环境）
+- result_summary: |
+    已确认：HEAD=master=ffec3d9；711e6a7 为祖先；script.fls SHA-256 与记录一致；entry 516 重跑 59 个代码对象；映射表 v4.3（43/5/16 组）；IMProtocolCrypto 往返一致；IMProtocol.dll 29 导出；地图测试 11 项通过；mock_server 可在 127.0.0.1 启动。
+    不成立或需更正：仓库中没有任何真实捕获字节（stream-0001..0022 全为 0 字节）；loginhello 明文包文件不存在且来源未记录；C→S 命令字数值无证据；all_scripts_catalog.json 仅 11 条；mx.exe 与 mxmain.dll 字节相同；“Themida”无依据；render.dll 实际在 exe/ 下；server.ini 已被改为回环地址；多个命令示例不可运行（fls_batch_decoder、pymarshal_dis、im_crypto API、data_browser）。
+    WI-009 由 done 改回 in_progress；WI-012 由 done 改为 partial；WI-002/006 表述修正；新增 WI-013 至 WI-017。
+- artifacts:
+  - work/dream-world-connect-login-map/report/verification-20261010.md（新增）
+  - work/dream-world-connect-login-map/evidence/E-VERIFY-001.md（新增）
+  - work/dream-world-connect-login-map/notes/protocol-artifacts/README.md（新增）
+  - work/dream-world-connect-login-map/notes/decoder-artifacts/README.md（新增）
+  - work/dream-world-connect-login-map/tools/mock-server-logs/mock-server-20261010-094859.log（mock_server 试运行副产物；2026-10-10 经用户确认后删除）
+  - HANDOVER-20261010.md、workitems.md、INDEX.md 及其他文档（已修正）
+- evidence_ids: [E-VERIFY-001, E-LOOPBACK-001, E-LOOPBACK-002, E-IDA-DYN-004]
+- decision_delta: [capture_bytes_zero_confirmed, loginhello_sample_missing, cmd_numeric_ids_unverified, server_ini_modified_in_head, catalog_json_partial, mx_exe_equals_mxmain_dll, themida_claim_rejected, wi009_reopened, wi012_partial, repo_history_complete_locally]
+- carry_forward_refs: [WI-002, WI-006, WI-009, WI-010, WI-012, WI-013, WI-014, WI-015, WI-016, WI-017]
+- next: 1) 已决定：server.ini 保留 127.0.0.1 回环配置（用户确认）；2) 已决定：游戏二进制与资源保留在 Git 中，不移出；3) 已删除试运行日志；4) WI-010 需 Windows 本地回环抓包后才能推进；4) 在获得真实字节前，不再新增“已确认”类结论。
+
+## 2026-10-10T18:00:25+08:00 | lead | loopback-test-zero-bytes-again
+- action: 用户报告本地回环测试结果“都是0”（捕获文件 0 字节）。核对仓库：未收到该次测试的新文件；检查已有 10-09 捕获与游戏日志；阅读 Connect 反编译报告中连接后的发包流程。
+- command_or_ref: 读取 tools/captures/*、notes/protocol-artifacts/responsive-harness.log、log/game/*、notes/co_code_analysis/任务A深入-Connect函数破解报告.md
+- result_summary: 结果与 10-09 一致，TCP 可连接，无应用层字节。游戏日志中无连接相关记录。Connect 报告显示连接前有 NakedSend 单字节、超时切换候选，但该报告基于 v4 映射，未复核。形成 H1–H5 假设，写入计划文档。
+- artifacts: [evidence/E-LOOPBACK-003.md, notes/loopback-test-plan-20261010.md]
+- evidence_ids: [E-LOOPBACK-003, E-LOOPBACK-002, E-IDA-DYN-004]
+- decision_delta: [loopback_zero_bytes_reconfirmed_by_user, no_new_capture_artifacts_in_repo, hypotheses_h1_h5_recorded, request_full_test_artifacts_from_user]
+- carry_forward_refs: [WI-009, WI-010]
+- next: 请用户提供：原样 capture 文件与时间戳、harness 完整日志、Get-NetTCPConnection 每 2 秒输出、测试时段的 gamelog/pylog、截图、操作顺序。按 E1→E2→E3 顺序做实验，暂不发送猜测的服务端响应。
+
+## 2026-10-10T19:44:40+08:00 | lead | merge-parallel-p1-p4-and-sync
+- action: 用户确认后合并 PR #6（P1）、#7（P2）、#8（P4）、#9（P3，含 tools/dis_v43，由用户要求保留）到 `arena/febc1561-mxsj-tw-2022`。合并前核对了各 PR 的改动文件、记录要求、关键地址（`IMP_RefreshCryptKey` 0x10003110、`IMP_SendBuffer2NS` 0x10003240、`IMP_UnConnectNsServer` 0x100030d0）和哈希。
+- result_summary: 四个 PR 均 MERGED。本地分支原停在 master 的 ffec3d9，未包含之前的提交；已先备份本地未提交改动（/tmp/local-backup-20261010/，并保留 stash@{0}），再快进到 b32541b。备份与远端内容逐一核对一致。P3 结论：直连分支无连接前 NakedSend；H3 前提不成立，H4 不成立。P1 结论：密钥由字符串解析的 8 字节种子经 S 盒链式变换生成；调用者和种子来源未证实。
+- artifacts: [notes/parallel-20261010/P1-result.md, P2-result.md, P3-result.md, P4-result.md, tools/dis_v43/, notes/loopback-test-plan-20261010.md, notes/protocol-artifacts/README.md]
+- evidence_ids: [E-LOOPBACK-002, E-LOOPBACK-003, E-IDA-DYN-004]
+- decision_delta: [p1_p4_merged, tools_dis_v43_kept_by_user, h3_premise_invalid, h4_invalid, h2_partially_supported_static, im_crypto_address_error_noted_not_edited]
+- carry_forward_refs: [WI-006, WI-009, WI-010]
+- next: 下一次测试同时记录 ws2_32.connect 的目标地址与端口、之后是否有 send，以及客户端走直连还是代理分支。H1 仍待运行时证据。
+
+## 2026-10-10T20:45:00+08:00 | lead | observer-run-1-external-http-deviation
+- action: 接收 Windows agent 的首次观察器运行回报（E-OBS-001）。同步 observe.js 的 Frida 17 修复到仓库草稿（ws2_32 改用 Process.findModuleByName，node --check 通过）。任务书增加“不要点刷新/远程请求按钮”的禁止项。
+- result_summary: 挂载成功，8 个 hook 安装，IMP 函数与 ws2_32.send 均为 0 次。ws2_32.connect 两次，目标为外部 HTTP 80 端口（150.230.97.144、158.101.159.192），发生在点击“刷新列表”之后；未触到 127.0.0.1:3134。执行偏离：点击刷新列表违反任务书禁止项。
+- artifacts: [evidence/E-OBS-001.md, notes/observer-20261010/observe.js, notes/observer-20261010/AGENT-brief-windows.md]
+- evidence_ids: [E-OBS-001]
+- decision_delta: [observer_attach_ok_frida17, imp_functions_not_hit, external_http_contacted_by_client, scope_deviation_recorded, brief_forbids_refresh_clicks]
+- carry_forward_refs: [WI-002, WI-009, WI-010]
+- next: 等待用户决定是否在防火墙阻止外部地址；收到 observe-log.jsonl 原文后核对；如需再次运行，应先确定服务器列表来源，使回环条目可被选中，同时阻止外部请求。
