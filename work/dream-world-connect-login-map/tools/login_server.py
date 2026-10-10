@@ -231,8 +231,13 @@ def handle(conn, peer, args, fp, idx, ks):
                     % (tag, frames, len(body), start, start + len(body) - 1,
                        body.hex(" ")))
 
-                # ---- harvest: 2nd frame is C2GS_ACCOUNT_ENTER
-                if (frames == 2 and args.account and
+                # ---- harvest: the login packet is the first non-empty frame
+                # long enough to hold name+pwd.  Zero-length frames (e.g. the
+                # trailing 0x00 length bytes after ANSWERHELLO) must not count
+                # as a frame index.
+                if not body:
+                    continue
+                if (args.account and
                         len(body) >= KNOWN_OFFSET + KNOWN_LEN and
                         not logged_harvest):
                     plain = (args.account.encode("big5hkscs", "replace")[:NAME_LEN]
