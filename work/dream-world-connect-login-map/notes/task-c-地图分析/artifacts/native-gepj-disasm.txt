@@ -1,0 +1,67 @@
+sample: /home/user/MXSJ_TW_2022/mx.exe
+sha256: 637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d
+first GEPJ bytes at file offset 0xb8155
+first LLEC bytes at file offset 0xb80b9
+first GIRB bytes at file offset 0xb80ce
+-- mx.exe .text at VMA 0x4b8e9d..0x4b8f37 --
+
+/home/user/MXSJ_TW_2022/mx.exe:     file format pei-i386
+
+
+Disassembly of section .text:
+
+004b8e9d <.text+0xb7e9d>:
+  4b8e9d:	8b 75 b0             	mov    esi,DWORD PTR [ebp-0x50]
+  4b8ea0:	8b cb                	mov    ecx,ebx
+  4b8ea2:	6a 1a                	push   0x1a
+  4b8ea4:	8b 46 50             	mov    eax,DWORD PTR [esi+0x50]
+  4b8ea7:	89 45 c0             	mov    DWORD PTR [ebp-0x40],eax
+  4b8eaa:	8d 45 d4             	lea    eax,[ebp-0x2c]
+  4b8ead:	50                   	push   eax
+  4b8eae:	e8 cd 0d 15 00       	call   0x609c80
+  4b8eb3:	0f b7 45 d4          	movzx  eax,WORD PTR [ebp-0x2c]
+  4b8eb7:	50                   	push   eax
+  4b8eb8:	e8 c3 2a f9 ff       	call   0x44b980
+  4b8ebd:	0f b7 4d d4          	movzx  ecx,WORD PTR [ebp-0x2c]
+  4b8ec1:	83 c4 04             	add    esp,0x4
+  4b8ec4:	89 47 6c             	mov    DWORD PTR [edi+0x6c],eax
+  4b8ec7:	51                   	push   ecx
+  4b8ec8:	50                   	push   eax
+  4b8ec9:	8b cb                	mov    ecx,ebx
+  4b8ecb:	e8 b0 0d 15 00       	call   0x609c80
+  4b8ed0:	8b 46 50             	mov    eax,DWORD PTR [esi+0x50]
+  4b8ed3:	be 01 00 00 00       	mov    esi,0x1
+  4b8ed8:	89 47 70             	mov    DWORD PTR [edi+0x70],eax
+  4b8edb:	8d 47 74             	lea    eax,[edi+0x74]
+  4b8ede:	8b ff                	mov    edi,edi
+  4b8ee0:	0f b7 54 75 d4       	movzx  edx,WORD PTR [ebp+esi*2-0x2c]
+  4b8ee5:	8d 40 18             	lea    eax,[eax+0x18]
+  4b8ee8:	03 50 e4             	add    edx,DWORD PTR [eax-0x1c]
+  4b8eeb:	0f b7 4c 75 d6       	movzx  ecx,WORD PTR [ebp+esi*2-0x2a]
+  4b8ef0:	89 50 e8             	mov    DWORD PTR [eax-0x18],edx
+  4b8ef3:	03 d1                	add    edx,ecx
+  4b8ef5:	0f b7 4c 75 d8       	movzx  ecx,WORD PTR [ebp+esi*2-0x28]
+  4b8efa:	89 50 ec             	mov    DWORD PTR [eax-0x14],edx
+  4b8efd:	03 d1                	add    edx,ecx
+  4b8eff:	0f b7 4c 75 da       	movzx  ecx,WORD PTR [ebp+esi*2-0x26]
+  4b8f04:	89 50 f0             	mov    DWORD PTR [eax-0x10],edx
+  4b8f07:	03 d1                	add    edx,ecx
+  4b8f09:	0f b7 4c 75 dc       	movzx  ecx,WORD PTR [ebp+esi*2-0x24]
+  4b8f0e:	89 50 f4             	mov    DWORD PTR [eax-0xc],edx
+  4b8f11:	03 d1                	add    edx,ecx
+  4b8f13:	0f b7 4c 75 de       	movzx  ecx,WORD PTR [ebp+esi*2-0x22]
+  4b8f18:	83 c6 06             	add    esi,0x6
+  4b8f1b:	03 ca                	add    ecx,edx
+  4b8f1d:	89 50 f8             	mov    DWORD PTR [eax-0x8],edx
+  4b8f20:	89 48 fc             	mov    DWORD PTR [eax-0x4],ecx
+  4b8f23:	83 fe 0d             	cmp    esi,0xd
+  4b8f26:	7c b8                	jl     0x4b8ee0
+  4b8f28:	8b 45 a4             	mov    eax,DWORD PTR [ebp-0x5c]
+  4b8f2b:	8b cb                	mov    ecx,ebx
+  4b8f2d:	03 45 c0             	add    eax,DWORD PTR [ebp-0x40]
+  4b8f30:	50                   	push   eax
+  4b8f31:	e8 ea 0c 15 00       	call   0x609c20
+  4b8f36:	8b                   	.byte 0x8b
+
+0x4b8ea2 pushes 0x1a (26 bytes) for GEPJ segment lengths;
+0x4b8ee0..0x4b8f26 accumulates 13 little-endian uint16 into a prefix offset table.
