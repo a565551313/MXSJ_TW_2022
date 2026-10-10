@@ -1,0 +1,23 @@
+
++--------------------------------------------------------------+
+|     任务A完成报告 - netserver.py 反编译                      |
++--------------------------------------------------------------+
+|  破解统计:                                                   |
+|    - 映射数量: 37 个 (含参数字节)                            |
+|    - 完全解码函数: 30+ 个                                    |
+|    - 部分解码函数: 20+ 个                                    |
+|    - 待解码: 7 个类定义函数                                   |
++--------------------------------------------------------------+
+|  关键协议发现:                                               |
+|    [OK] C2STransferServer - 选服命令 C2GS_SELECT_SERVER     |
+|    [OK] 包构造: PacketPrepare -> PacketAddI -> PacketSend   |
+|    [OK] 登录命令: loginhello / TEST_HELLO / RESELECT_HELLO  |
+|    [OK] 错误处理: OnConnectFail / OnError / OnSocketError   |
+|    [OK] 超时处理: SetTimeOutCmd / PROXY_CONNECT_TIMEOUT     |
++--------------------------------------------------------------+
+|  输出文件:                                                   |
+|    - netserver_py_decompiled.md (完整报告)                  |
+|    - netserver_py_pseudocode.py (伪代码)                    |
+|    - mapping_table_a_v2.json (映射表)                       |
+|    - decoded_functions_v2.json (解码结果)                   |
++--------------------------------------------------------------+

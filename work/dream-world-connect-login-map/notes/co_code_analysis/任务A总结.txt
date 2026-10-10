@@ -1,0 +1,29 @@
+
+╔══════════════════════════════════════════════════════════════╗
+║          任务A阶段性成果 - 2026-10-10                        ║
+╠══════════════════════════════════════════════════════════════╣
+║  定位解码函数: 0x420F80 (多态字节替换)                      ║
+║  确认编码方式: 字节替换 (S盒)，参数也被编码                  ║
+║  破解映射: 15+ 个 opcode                                    ║
+║  完全解码: C2STransferServer (选服协议核心!)                 ║
+║  完全解码: 所有简单 getter/setter (20+ 函数)                ║
+║  部分解码: PacketPrepare, OnServerCmd, TransferServer       ║
+║  理解登录流程: showlogin → Connect → C2STransferServer     ║
+║  理解包协议: PacketPrepare → PacketAddI → PacketSend       ║
+╠══════════════════════════════════════════════════════════════╣
+║  破解的关键映射:                                             ║
+║    0x55→RETURN_VALUE  0x85→LOAD_NAME    0x8F→LOAD_CONST     ║
+║    0xC1→LOAD_FAST     0xC4→STORE_NAME   0x71→STORE_FAST     ║
+║    0xD9→LOAD_ATTR     0xDA→CALL_FUNCTION 0x41→POP_TOP       ║
+║    0xC5→STORE_ATTR    0xCA→BUILD_LIST   0xDE→BUILD_TUPLE    ║
+╠══════════════════════════════════════════════════════════════╣
+║  C2STransferServer 解码结果:                                 ║
+║    def C2STransferServer(serverid, netobj):                  ║
+║        netobj = net.g_Net                                    ║
+║        netobj.PacketPrepare(net.C2GS_SELECT_SERVER)         ║
+║        netobj.PacketAddI(serverid)                           ║
+║        netobj.PacketSend()                                   ║
+╠══════════════════════════════════════════════════════════════╣
+║  下一步: 破解更多映射，完整解码 Connect (689字节)            ║
+║  详细报告: notes/co_code_analysis/任务A详细报告.md           ║
+╚══════════════════════════════════════════════════════════════╝

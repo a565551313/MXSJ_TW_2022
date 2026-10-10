@@ -1,0 +1,63 @@
+{
+  "new_mappings": {
+    "0x95": {
+      "name": "COMPARE_OP",
+      "standard": "0x54",
+      "confidence": "high",
+      "evidence": "getMsg: 参数0-5符合比较操作符"
+    },
+    "0x37": {
+      "name": "UNPACK_SEQUENCE",
+      "standard": "0x45",
+      "confidence": "medium",
+      "evidence": "TransferServer: BUILD_TUPLE 5后解包"
+    },
+    "0xE5": {
+      "name": "JUMP_FORWARD",
+      "standard": "0x57",
+      "confidence": "medium",
+      "evidence": "多函数中作为向前跳转"
+    },
+    "0xB7": {
+      "name": "POP_JUMP_IF_FALSE",
+      "standard": "0x5B",
+      "confidence": "medium",
+      "evidence": "OnServerCmd: 条件跳转"
+    },
+    "0xE0": {
+      "name": "UNPACK_SEQUENCE",
+      "standard": "0x45",
+      "confidence": "low",
+      "evidence": "可能，待验证"
+    },
+    "0x98": {
+      "name": "MAKE_FUNCTION",
+      "standard": "0x67",
+      "confidence": "low",
+      "evidence": "CMXNet类定义模式"
+    },
+    "0xFB": {
+      "name": "STORE_NAME",
+      "standard": "0x43",
+      "confidence": "low",
+      "evidence": "CMXNet类定义模式"
+    },
+    "0xAA": {
+      "name": "LOAD_NAME",
+      "standard": "0x4E",
+      "confidence": "low",
+      "evidence": "CMXNet类定义模式"
+    },
+    "0x38": {
+      "name": "BUILD_CLASS",
+      "standard": "0x42",
+      "confidence": "low",
+      "evidence": "CMXNet类定义末尾"
+    }
+  },
+  "analysis_summary": {
+    "jump_analysis": "跳转指令分析完成，0xB7和0xE5可能是跳转",
+    "class_definition": "类定义可能使用不同替换表",
+    "compare_op": "0x95 可能是 COMPARE_OP"
+  }
+}

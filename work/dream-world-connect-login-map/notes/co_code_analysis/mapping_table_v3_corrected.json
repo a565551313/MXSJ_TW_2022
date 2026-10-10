@@ -1,0 +1,174 @@
+{
+  "version": "3.0-corrected",
+  "date": "2026-10-10",
+  "note": "\u4fee\u6b63\u4e86Python 2.7 opcode\u503c\uff08\u4e4b\u524d\u7248\u672c\u6709\u7cfb\u7edf\u6027\u9519\u8bef\uff09",
+  "table_a": {
+    "0x41": {
+      "std": "0x01",
+      "name": "POP_TOP",
+      "size": 1,
+      "confidence": "high"
+    },
+    "0x55": {
+      "std": "0x53",
+      "name": "RETURN_VALUE",
+      "size": 1,
+      "confidence": "high"
+    },
+    "0x71": {
+      "std": "0x7D",
+      "name": "STORE_FAST",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0x85": {
+      "std": "0x65",
+      "name": "LOAD_NAME",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0x8F": {
+      "std": "0x64",
+      "name": "LOAD_CONST",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0x95": {
+      "std": "0x6A",
+      "name": "COMPARE_OP",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0xB7": {
+      "std": "0x72",
+      "name": "POP_JUMP_IF_FALSE",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0xC1": {
+      "std": "0x7C",
+      "name": "LOAD_FAST",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0xC4": {
+      "std": "0x5A",
+      "name": "STORE_NAME",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0xC5": {
+      "std": "0x5E",
+      "name": "STORE_ATTR",
+      "size": 3,
+      "confidence": "medium"
+    },
+    "0xCA": {
+      "std": "0x67",
+      "name": "BUILD_LIST",
+      "size": 3,
+      "confidence": "medium"
+    },
+    "0xD9": {
+      "std": "0x69",
+      "name": "LOAD_ATTR",
+      "size": 3,
+      "confidence": "medium"
+    },
+    "0xDA": {
+      "std": "0x83",
+      "name": "CALL_FUNCTION",
+      "size": 3,
+      "confidence": "medium"
+    },
+    "0xDE": {
+      "std": "0x66",
+      "name": "BUILD_TUPLE",
+      "size": 3,
+      "confidence": "medium"
+    },
+    "0xE0": {
+      "std": "0x68",
+      "name": "BUILD_MAP",
+      "size": 3,
+      "confidence": "medium"
+    },
+    "0xE5": {
+      "std": "0x6E",
+      "name": "JUMP_FORWARD",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0x37": {
+      "std": "0x5C",
+      "name": "UNPACK_SEQUENCE",
+      "size": 3,
+      "confidence": "medium"
+    },
+    "param_0x00": {
+      "std": "0x00",
+      "name": "identity",
+      "confidence": "high"
+    },
+    "param_0x01": {
+      "std": "0x01",
+      "name": "identity",
+      "confidence": "high"
+    },
+    "param_0x02": {
+      "std": "0x02",
+      "name": "identity",
+      "confidence": "high"
+    },
+    "param_0x17": {
+      "std": "0x10",
+      "name": "16",
+      "confidence": "high"
+    }
+  },
+  "table_b": {
+    "0x98": {
+      "std": "0x84",
+      "name": "MAKE_FUNCTION",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0xFB": {
+      "std": "0x5A",
+      "name": "STORE_NAME",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0xAA": {
+      "std": "0x65",
+      "name": "LOAD_NAME",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0xBF": {
+      "std": "0x60",
+      "name": "STORE_GLOBAL",
+      "size": 3,
+      "confidence": "medium-high"
+    },
+    "0x91": {
+      "std": "0x74",
+      "name": "LOAD_GLOBAL",
+      "size": 3,
+      "confidence": "medium-high"
+    },
+    "0x38": {
+      "std": "0x59",
+      "name": "BUILD_CLASS",
+      "size": 1,
+      "confidence": "medium"
+    },
+    "0x42": {
+      "std": "0x01",
+      "name": "POP_TOP",
+      "size": 1,
+      "confidence": "high"
+    }
+  },
+  "total_mappings": 28
+}

@@ -156,3 +156,33 @@
 - decision_delta: [server-first-effect-confirmed, empty-frame-probe-rejected, error-chain-next]
 - carry_forward_refs: [WI-006, WI-008, WI-009]
 - next: trace the exception caller and recover the expected initial response structure before constructing another response
+
+## 2026-10-10T00:00:00+08:00 | lead | crypto-algorithm-cracked
+- action: 深度逆向 IMProtocol.dll 加密算法
+- command_or_ref: objdump 反汇编 + Python S盒提取 + 算法验证
+- result_summary: 完整破解 IMProtocol.dll 的自定义流密码算法。提取了全部10个S盒表（8个密钥派生S盒 + 加密S盒2048字节 + 解密S盒2048字节），验证了ENC/DEC互逆关系。算法为8状态循环流密码，每状态独立S盒，密钥8字节经链式派生扩展。发现关键日志字符串揭示协议流程：C2NSBuffer>>>(发送)、NS2CRawBuffer AskForDecrypt(接收解密)、RefreshCryptKey key:%s(密钥以字符串形式传递)。公司信息：Duoyi Network Inc.（多益网络）。源文件路径：.\IMMain.cpp, .\NsProtocol\NsSession.cpp, .\NsProtocol\NsSocket.cpp。
+- artifacts: [notes/crypto-analysis-complete.md, notes/protocol-artifacts/im_crypto.py, notes/protocol-artifacts/enc_sbox.bin, notes/protocol-artifacts/dec_sbox.bin, notes/protocol-artifacts/key_sbox_0.bin ~ key_sbox_7.bin]
+- evidence_ids: [E-CRYPTO-001]
+- decision_delta: [crypto_algorithm_fully_cracked, sboxes_extracted_and_validated, key_derivation_reversed, protocol_log_strings_recovered, company_info_identified, next_capture_real_key_and_packets]
+- carry_forward_refs: [WI-006, WI-008, WI-009]
+- next: 动态分析捕获 IMP_RefreshCryptKey 实际密钥；抓包解密真实登录数据；解码 entry 516 Python 脚本理解 OnServerCmd 逻辑；实现模拟服务器
+
+## 2026-10-10T01:00:00+08:00 | lead | script-516-decoded-and-analyzed
+- action: 完整解码并分析 entry 516 Python 脚本 (script\login\netserver.py)
+- command_or_ref: python3 work/.../decode_entry516.py + strings 分析
+- result_summary: 成功解码 entry 516 为 Python 2.7 marshal 树（59个代码对象），提取全部字符串和函数名。确认脚本路径为 `script\login\netserver.py`，是登录阶段网络处理模块。发现关键命令字符串：`loginhello`(登录握手)、`TEST_HELLO`(测试握手)、`RESELECT_HELLO`(重选握手)。识别核心类：CMXNet(主网络类，含OnServerCmd/OnConnectFail/OnError)、CConnectMgr/CRandomConnectMgr/CReselectConnectMgr(连接管理器)。发现登录凭证字段：m_Pwd(密码)、m_PassPort(通行端口)。发现DGW(多益网关)代理系统：dgwconnecttest、DGW_RESELECTCONNECT。全局变量包括g_LoginServerIP/Port、g_iPlayerId、g_ServerRoleInfo等。数据包构造流程：PacketPrepare → PacketAdd* → PacketSend/NakedSend。
+- artifacts: [notes/script-analysis-complete.md, notes/decoder-artifacts/entry516-five-xor-marshal.bin, notes/decoder-artifacts/entry516-result.json]
+- evidence_ids: [E-CRYPTO-001, E-SCRIPT-001]
+- decision_delta: [script_516_fully_decoded, login_hello_command_discovered, connect_manager_classes_identified, credential_fields_found, dgw_gateway_system_identified, packet_build_flow_mapped, next_capture_real_packets_and_key]
+- carry_forward_refs: [WI-009, WI-010, WI-011, WI-012]
+- next: 动态捕获 IMP_RefreshCryptKey 实际密钥；抓包捕获 loginhello 数据包；确定命令字具体数值；实现模拟服务器完成登录流程
+
+## 2026-10-10T02:00:00+08:00 | lead | tools-created
+- action: 创建三个核心逆向工程工具
+- command_or_ref: 编写 enhanced_capture_server.py, mock_server.py, packet_analyzer.py
+- result_summary: 创建完整工具集：(1)增强版回环捕获工具 - 自动解密捕获的数据包，支持固定密钥/自动破解模式；(2)模拟服务器框架 - 基于破解的加密算法，能接收连接并响应，支持多种响应类型(login_success/server_role_info/heartbeat/auto)；(3)数据包分析工具 - 解析loginhello字段结构，支持已知明文攻击破解密钥，生成详细分析报告。工具已测试通过，包含测试数据包和使用文档。
+- artifacts: [tools/enhanced_capture_server.py, tools/mock_server.py, tools/packet_analyzer.py, tools/README.md, tools/test-data/]
+- evidence_ids: [E-CRYPTO-001, E-SCRIPT-001, E-TOOLS-001]
+- decision_delta: [tools_complete, capture_ready, mock_server_ready, packet_analyzer_ready, next_run_on_windows_capture_real_key]
+- carry_forward_refs: [WI-010, WI-011, WI-012]
+- next: 在Windows环境运行客户端，用增强版捕获工具捕获实际密钥和loginhello数据包；用模拟服务器实现离线登录

@@ -1,0 +1,1379 @@
+{
+  "opcode_71_contexts": [
+    {
+      "func": "getMsg",
+      "pos": 44,
+      "arg": 2,
+      "prev": "???(0x6C)",
+      "next": "???(0x71)",
+      "names": [
+        "len",
+        "split",
+        "g_ErrorAnsMsg",
+        "ValueError"
+      ],
+      "varnames": [
+        "data",
+        "flag",
+        "head",
+        "body",
+        "dErrorInfo",
+        "lstErrorInfo",
+        "sInfo",
+        "sServerID",
+        "sErrorInfo"
+      ]
+    },
+    {
+      "func": "getMsg",
+      "pos": 47,
+      "arg": 3,
+      "prev": "???(0x71)",
+      "next": "???(0xBB)",
+      "names": [
+        "len",
+        "split",
+        "g_ErrorAnsMsg",
+        "ValueError"
+      ],
+      "varnames": [
+        "data",
+        "flag",
+        "head",
+        "body",
+        "dErrorInfo",
+        "lstErrorInfo",
+        "sInfo",
+        "sServerID",
+        "sErrorInfo"
+      ]
+    },
+    {
+      "func": "getMsg",
+      "pos": 53,
+      "arg": 4,
+      "prev": "???(0xBB)",
+      "next": "LOAD_FAST",
+      "names": [
+        "len",
+        "split",
+        "g_ErrorAnsMsg",
+        "ValueError"
+      ],
+      "varnames": [
+        "data",
+        "flag",
+        "head",
+        "body",
+        "dErrorInfo",
+        "lstErrorInfo",
+        "sInfo",
+        "sServerID",
+        "sErrorInfo"
+      ]
+    },
+    {
+      "func": "getMsg",
+      "pos": 68,
+      "arg": 5,
+      "prev": "CALL_FUNCTION 1",
+      "next": "???(0xD3)",
+      "names": [
+        "len",
+        "split",
+        "g_ErrorAnsMsg",
+        "ValueError"
+      ],
+      "varnames": [
+        "data",
+        "flag",
+        "head",
+        "body",
+        "dErrorInfo",
+        "lstErrorInfo",
+        "sInfo",
+        "sServerID",
+        "sErrorInfo"
+      ]
+    },
+    {
+      "func": "getMsg",
+      "pos": 81,
+      "arg": 6,
+      "prev": "???(0xAF)",
+      "next": "LOAD_FAST",
+      "names": [
+        "len",
+        "split",
+        "g_ErrorAnsMsg",
+        "ValueError"
+      ],
+      "varnames": [
+        "data",
+        "flag",
+        "head",
+        "body",
+        "dErrorInfo",
+        "lstErrorInfo",
+        "sInfo",
+        "sServerID",
+        "sErrorInfo"
+      ]
+    },
+    {
+      "func": "getMsg",
+      "pos": 102,
+      "arg": 7,
+      "prev": "???(0x6C)",
+      "next": "???(0x71)",
+      "names": [
+        "len",
+        "split",
+        "g_ErrorAnsMsg",
+        "ValueError"
+      ],
+      "varnames": [
+        "data",
+        "flag",
+        "head",
+        "body",
+        "dErrorInfo",
+        "lstErrorInfo",
+        "sInfo",
+        "sServerID",
+        "sErrorInfo"
+      ]
+    },
+    {
+      "func": "getMsg",
+      "pos": 105,
+      "arg": 8,
+      "prev": "???(0x71)",
+      "next": "LOAD_FAST",
+      "names": [
+        "len",
+        "split",
+        "g_ErrorAnsMsg",
+        "ValueError"
+      ],
+      "varnames": [
+        "data",
+        "flag",
+        "head",
+        "body",
+        "dErrorInfo",
+        "lstErrorInfo",
+        "sInfo",
+        "sServerID",
+        "sErrorInfo"
+      ]
+    },
+    {
+      "func": "RefreshServerInfo",
+      "pos": 9,
+      "arg": 0,
+      "prev": "???(0xE0)",
+      "next": "LOAD_CONST",
+      "names": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "GetSpecialVersion",
+        "GetOverdoVersion",
+        "float",
+        "GetData",
+        "None",
+        "Time",
+        "selectserver",
+        "Refresh",
+        "CHttpObject"
+      ],
+      "varnames": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "tm",
+        "now",
+        "selectserver",
+        "getMsg",
+        "web"
+      ]
+    },
+    {
+      "func": "RefreshServerInfo",
+      "pos": 21,
+      "arg": 1,
+      "prev": "???(0xE0)",
+      "next": "LOAD_CONST",
+      "names": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "GetSpecialVersion",
+        "GetOverdoVersion",
+        "float",
+        "GetData",
+        "None",
+        "Time",
+        "selectserver",
+        "Refresh",
+        "CHttpObject"
+      ],
+      "varnames": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "tm",
+        "now",
+        "selectserver",
+        "getMsg",
+        "web"
+      ]
+    },
+    {
+      "func": "RefreshServerInfo",
+      "pos": 33,
+      "arg": 2,
+      "prev": "???(0xE0)",
+      "next": "LOAD_CONST",
+      "names": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "GetSpecialVersion",
+        "GetOverdoVersion",
+        "float",
+        "GetData",
+        "None",
+        "Time",
+        "selectserver",
+        "Refresh",
+        "CHttpObject"
+      ],
+      "varnames": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "tm",
+        "now",
+        "selectserver",
+        "getMsg",
+        "web"
+      ]
+    },
+    {
+      "func": "RefreshServerInfo",
+      "pos": 45,
+      "arg": 3,
+      "prev": "???(0xE0)",
+      "next": "LOAD_FAST",
+      "names": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "GetSpecialVersion",
+        "GetOverdoVersion",
+        "float",
+        "GetData",
+        "None",
+        "Time",
+        "selectserver",
+        "Refresh",
+        "CHttpObject"
+      ],
+      "varnames": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "tm",
+        "now",
+        "selectserver",
+        "getMsg",
+        "web"
+      ]
+    },
+    {
+      "func": "RefreshServerInfo",
+      "pos": 103,
+      "arg": 4,
+      "prev": "CALL_FUNCTION 1",
+      "next": "???(0x40)",
+      "names": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "GetSpecialVersion",
+        "GetOverdoVersion",
+        "float",
+        "GetData",
+        "None",
+        "Time",
+        "selectserver",
+        "Refresh",
+        "CHttpObject"
+      ],
+      "varnames": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "tm",
+        "now",
+        "selectserver",
+        "getMsg",
+        "web"
+      ]
+    },
+    {
+      "func": "RefreshServerInfo",
+      "pos": 116,
+      "arg": 4,
+      "prev": "LOAD_CONST 0",
+      "next": "???(0xE5)",
+      "names": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "GetSpecialVersion",
+        "GetOverdoVersion",
+        "float",
+        "GetData",
+        "None",
+        "Time",
+        "selectserver",
+        "Refresh",
+        "CHttpObject"
+      ],
+      "varnames": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "tm",
+        "now",
+        "selectserver",
+        "getMsg",
+        "web"
+      ]
+    },
+    {
+      "func": "RefreshServerInfo",
+      "pos": 132,
+      "arg": 5,
+      "prev": "CALL_FUNCTION 0",
+      "next": "LOAD_FAST",
+      "names": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "GetSpecialVersion",
+        "GetOverdoVersion",
+        "float",
+        "GetData",
+        "None",
+        "Time",
+        "selectserver",
+        "Refresh",
+        "CHttpObject"
+      ],
+      "varnames": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "tm",
+        "now",
+        "selectserver",
+        "getMsg",
+        "web"
+      ]
+    },
+    {
+      "func": "RefreshServerInfo",
+      "pos": 187,
+      "arg": 6,
+      "prev": "???(0xE0)",
+      "next": "LOAD_FAST",
+      "names": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "GetSpecialVersion",
+        "GetOverdoVersion",
+        "float",
+        "GetData",
+        "None",
+        "Time",
+        "selectserver",
+        "Refresh",
+        "CHttpObject"
+      ],
+      "varnames": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "tm",
+        "now",
+        "selectserver",
+        "getMsg",
+        "web"
+      ]
+    },
+    {
+      "func": "RefreshServerInfo",
+      "pos": 217,
+      "arg": 7,
+      "prev": "???(0xFB)",
+      "next": "LOAD_FAST",
+      "names": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "GetSpecialVersion",
+        "GetOverdoVersion",
+        "float",
+        "GetData",
+        "None",
+        "Time",
+        "selectserver",
+        "Refresh",
+        "CHttpObject"
+      ],
+      "varnames": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "tm",
+        "now",
+        "selectserver",
+        "getMsg",
+        "web"
+      ]
+    },
+    {
+      "func": "RefreshServerInfo",
+      "pos": 238,
+      "arg": 8,
+      "prev": "CALL_FUNCTION 3",
+      "next": "LOAD_FAST",
+      "names": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "GetSpecialVersion",
+        "GetOverdoVersion",
+        "float",
+        "GetData",
+        "None",
+        "Time",
+        "selectserver",
+        "Refresh",
+        "CHttpObject"
+      ],
+      "varnames": [
+        "permission",
+        "cfg",
+        "net",
+        "misc",
+        "tm",
+        "now",
+        "selectserver",
+        "getMsg",
+        "web"
+      ]
+    },
+    {
+      "func": "SetProxy",
+      "pos": 9,
+      "arg": 1,
+      "prev": "???(0xE0)",
+      "next": "LOAD_FAST",
+      "names": [
+        "cfg",
+        "g_Proxy",
+        "SaveData"
+      ],
+      "varnames": [
+        "proxy",
+        "cfg"
+      ]
+    },
+    {
+      "func": "GetProxyNameByProxy",
+      "pos": 9,
+      "arg": 1,
+      "prev": "???(0xE0)",
+      "next": "LOAD_FAST",
+      "names": [
+        "selectserver",
+        "GetServerInfo",
+        "get"
+      ],
+      "varnames": [
+        "ipPort",
+        "selectserver",
+        "_",
+        "proxyLst",
+        "proxyname",
+        "proxydata"
+      ]
+    },
+    {
+      "func": "GetProxyNameByProxy",
+      "pos": 24,
+      "arg": 2,
+      "prev": "???(0x6C)",
+      "next": "???(0x71)",
+      "names": [
+        "selectserver",
+        "GetServerInfo",
+        "get"
+      ],
+      "varnames": [
+        "ipPort",
+        "selectserver",
+        "_",
+        "proxyLst",
+        "proxyname",
+        "proxydata"
+      ]
+    },
+    {
+      "func": "GetProxyNameByProxy",
+      "pos": 27,
+      "arg": 2,
+      "prev": "???(0x71)",
+      "next": "???(0x71)",
+      "names": [
+        "selectserver",
+        "GetServerInfo",
+        "get"
+      ],
+      "varnames": [
+        "ipPort",
+        "selectserver",
+        "_",
+        "proxyLst",
+        "proxyname",
+        "proxydata"
+      ]
+    },
+    {
+      "func": "GetProxyNameByProxy",
+      "pos": 30,
+      "arg": 3,
+      "prev": "???(0x71)",
+      "next": "LOAD_CONST",
+      "names": [
+        "selectserver",
+        "GetServerInfo",
+        "get"
+      ],
+      "varnames": [
+        "ipPort",
+        "selectserver",
+        "_",
+        "proxyLst",
+        "proxyname",
+        "proxydata"
+      ]
+    },
+    {
+      "func": "GetProxyNameByProxy",
+      "pos": 36,
+      "arg": 4,
+      "prev": "LOAD_CONST 2",
+      "next": "???(0xD3)",
+      "names": [
+        "selectserver",
+        "GetServerInfo",
+        "get"
+      ],
+      "varnames": [
+        "ipPort",
+        "selectserver",
+        "_",
+        "proxyLst",
+        "proxyname",
+        "proxydata"
+      ]
+    },
+    {
+      "func": "GetProxyNameByProxy",
+      "pos": 49,
+      "arg": 5,
+      "prev": "???(0xAF)",
+      "next": "LOAD_FAST",
+      "names": [
+        "selectserver",
+        "GetServerInfo",
+        "get"
+      ],
+      "varnames": [
+        "ipPort",
+        "selectserver",
+        "_",
+        "proxyLst",
+        "proxyname",
+        "proxydata"
+      ]
+    },
+    {
+      "func": "GetProxyNameByProxy",
+      "pos": 89,
+      "arg": 4,
+      "prev": "LOAD_CONST 6",
+      "next": "???(0xE5)",
+      "names": [
+        "selectserver",
+        "GetServerInfo",
+        "get"
+      ],
+      "varnames": [
+        "ipPort",
+        "selectserver",
+        "_",
+        "proxyLst",
+        "proxyname",
+        "proxydata"
+      ]
+    },
+    {
+      "func": "GetProxyNameByProxy",
+      "pos": 116,
+      "arg": 4,
+      "prev": "LOAD_CONST 8",
+      "next": "???(0xE5)",
+      "names": [
+        "selectserver",
+        "GetServerInfo",
+        "get"
+      ],
+      "varnames": [
+        "ipPort",
+        "selectserver",
+        "_",
+        "proxyLst",
+        "proxyname",
+        "proxydata"
+      ]
+    },
+    {
+      "func": "GetProxyNameByProxy",
+      "pos": 143,
+      "arg": 4,
+      "prev": "LOAD_CONST 10",
+      "next": "???(0xE5)",
+      "names": [
+        "selectserver",
+        "GetServerInfo",
+        "get"
+      ],
+      "varnames": [
+        "ipPort",
+        "selectserver",
+        "_",
+        "proxyLst",
+        "proxyname",
+        "proxydata"
+      ]
+    },
+    {
+      "func": "SetServerRoleInfo",
+      "pos": 9,
+      "arg": 1,
+      "prev": "???(0xE0)",
+      "next": "LOAD_CONST",
+      "names": [
+        "loginin",
+        "selectserver",
+        "g_ServerRoleInfo",
+        "hasattr",
+        "net",
+        "g_Net",
+        "m_ServerInfo",
+        "GetUnEnterServerList",
+        "TransferServer",
+        "True",
+        "OnLogin",
+        "Show",
+        "False"
+      ],
+      "varnames": [
+        "infos",
+        "loginin",
+        "selectserver",
+        "field",
+        "name",
+        "ip",
+        "port",
+        "serverid"
+      ]
+    },
+    {
+      "func": "SetServerRoleInfo",
+      "pos": 21,
+      "arg": 2,
+      "prev": "???(0xE0)",
+      "next": "LOAD_FAST",
+      "names": [
+        "loginin",
+        "selectserver",
+        "g_ServerRoleInfo",
+        "hasattr",
+        "net",
+        "g_Net",
+        "m_ServerInfo",
+        "GetUnEnterServerList",
+        "TransferServer",
+        "True",
+        "OnLogin",
+        "Show",
+        "False"
+      ],
+      "varnames": [
+        "infos",
+        "loginin",
+        "selectserver",
+        "field",
+        "name",
+        "ip",
+        "port",
+        "serverid"
+      ]
+    },
+    {
+      "func": "SetServerRoleInfo",
+      "pos": 61,
+      "arg": 3,
+      "prev": "???(0x6C)",
+      "next": "???(0x71)",
+      "names": [
+        "loginin",
+        "selectserver",
+        "g_ServerRoleInfo",
+        "hasattr",
+        "net",
+        "g_Net",
+        "m_ServerInfo",
+        "GetUnEnterServerList",
+        "TransferServer",
+        "True",
+        "OnLogin",
+        "Show",
+        "False"
+      ],
+      "varnames": [
+        "infos",
+        "loginin",
+        "selectserver",
+        "field",
+        "name",
+        "ip",
+        "port",
+        "serverid"
+      ]
+    },
+    {
+      "func": "SetServerRoleInfo",
+      "pos": 64,
+      "arg": 4,
+      "prev": "???(0x71)",
+      "next": "???(0x71)",
+      "names": [
+        "loginin",
+        "selectserver",
+        "g_ServerRoleInfo",
+        "hasattr",
+        "net",
+        "g_Net",
+        "m_ServerInfo",
+        "GetUnEnterServerList",
+        "TransferServer",
+        "True",
+        "OnLogin",
+        "Show",
+        "False"
+      ],
+      "varnames": [
+        "infos",
+        "loginin",
+        "selectserver",
+        "field",
+        "name",
+        "ip",
+        "port",
+        "serverid"
+      ]
+    },
+    {
+      "func": "SetServerRoleInfo",
+      "pos": 67,
+      "arg": 5,
+      "prev": "???(0x71)",
+      "next": "???(0x71)",
+      "names": [
+        "loginin",
+        "selectserver",
+        "g_ServerRoleInfo",
+        "hasattr",
+        "net",
+        "g_Net",
+        "m_ServerInfo",
+        "GetUnEnterServerList",
+        "TransferServer",
+        "True",
+        "OnLogin",
+        "Show",
+        "False"
+      ],
+      "varnames": [
+        "infos",
+        "loginin",
+        "selectserver",
+        "field",
+        "name",
+        "ip",
+        "port",
+        "serverid"
+      ]
+    },
+    {
+      "func": "SetServerRoleInfo",
+      "pos": 70,
+      "arg": 6,
+      "prev": "???(0x71)",
+      "next": "???(0x71)",
+      "names": [
+        "loginin",
+        "selectserver",
+        "g_ServerRoleInfo",
+        "hasattr",
+        "net",
+        "g_Net",
+        "m_ServerInfo",
+        "GetUnEnterServerList",
+        "TransferServer",
+        "True",
+        "OnLogin",
+        "Show",
+        "False"
+      ],
+      "varnames": [
+        "infos",
+        "loginin",
+        "selectserver",
+        "field",
+        "name",
+        "ip",
+        "port",
+        "serverid"
+      ]
+    },
+    {
+      "func": "SetServerRoleInfo",
+      "pos": 73,
+      "arg": 7,
+      "prev": "???(0x71)",
+      "next": "LOAD_FAST",
+      "names": [
+        "loginin",
+        "selectserver",
+        "g_ServerRoleInfo",
+        "hasattr",
+        "net",
+        "g_Net",
+        "m_ServerInfo",
+        "GetUnEnterServerList",
+        "TransferServer",
+        "True",
+        "OnLogin",
+        "Show",
+        "False"
+      ],
+      "varnames": [
+        "infos",
+        "loginin",
+        "selectserver",
+        "field",
+        "name",
+        "ip",
+        "port",
+        "serverid"
+      ]
+    },
+    {
+      "func": "TransferServer",
+      "pos": 64,
+      "arg": 6,
+      "prev": "???(0xE0)",
+      "next": "LOAD_FAST",
+      "names": [
+        "g_LoginServer",
+        "g_LoginServerID",
+        "SetLoginServerIPPort",
+        "restartsave",
+        "SetLoginServer",
+        "SetSelectServerOver",
+        "True",
+        "C2STransferServer",
+        "ShowConnectingDlg"
+      ],
+      "varnames": [
+        "fieldname",
+        "servername",
+        "server_ip",
+        "port",
+        "serverid",
+        "autoenterselrole",
+        "restartsave"
+      ]
+    },
+    {
+      "func": "ShowConnectingDlg",
+      "pos": 54,
+      "arg": 0,
+      "prev": "???(0xF2)",
+      "next": "LOAD_CONST",
+      "names": [
+        "net",
+        "selectserver",
+        "loginin",
+        "commondialog",
+        "netlogin",
+        "ShowMessageBox"
+      ],
+      "varnames": [
+        "showlogin",
+        "commondialog",
+        "netlogin",
+        "msgbox"
+      ]
+    },
+    {
+      "func": "ShowConnectingDlg",
+      "pos": 66,
+      "arg": 1,
+      "prev": "???(0xE0)",
+      "next": "LOAD_CONST",
+      "names": [
+        "net",
+        "selectserver",
+        "loginin",
+        "commondialog",
+        "netlogin",
+        "ShowMessageBox"
+      ],
+      "varnames": [
+        "showlogin",
+        "commondialog",
+        "netlogin",
+        "msgbox"
+      ]
+    },
+    {
+      "func": "ShowConnectingDlg",
+      "pos": 78,
+      "arg": 2,
+      "prev": "???(0xE0)",
+      "next": "LOAD_FAST",
+      "names": [
+        "net",
+        "selectserver",
+        "loginin",
+        "commondialog",
+        "netlogin",
+        "ShowMessageBox"
+      ],
+      "varnames": [
+        "showlogin",
+        "commondialog",
+        "netlogin",
+        "msgbox"
+      ]
+    },
+    {
+      "func": "ShowConnectingDlg",
+      "pos": 99,
+      "arg": 3,
+      "prev": "CALL_FUNCTION 3",
+      "next": "LOAD_CONST",
+      "names": [
+        "net",
+        "selectserver",
+        "loginin",
+        "commondialog",
+        "netlogin",
+        "ShowMessageBox"
+      ],
+      "varnames": [
+        "showlogin",
+        "commondialog",
+        "netlogin",
+        "msgbox"
+      ]
+    },
+    {
+      "func": "S2CServerRoleInfo",
+      "pos": 12,
+      "arg": 1,
+      "prev": "CALL_FUNCTION 1",
+      "next": "???(0xBB)",
+      "names": [
+        "UnpackInt",
+        "xrange",
+        "SetServerRoleInfo"
+      ],
+      "varnames": [
+        "netobj",
+        "cnt",
+        "roleinfo",
+        "i",
+        "serverid",
+        "rolenum"
+      ]
+    },
+    {
+      "func": "S2CServerRoleInfo",
+      "pos": 18,
+      "arg": 2,
+      "prev": "???(0xBB)",
+      "next": "???(0xA7)",
+      "names": [
+        "UnpackInt",
+        "xrange",
+        "SetServerRoleInfo"
+      ],
+      "varnames": [
+        "netobj",
+        "cnt",
+        "roleinfo",
+        "i",
+        "serverid",
+        "rolenum"
+      ]
+    },
+    {
+      "func": "C2STransferServer",
+      "pos": 6,
+      "arg": 1,
+      "prev": "LOAD_ATTR 1",
+      "next": "LOAD_FAST",
+      "names": [
+        "net",
+        "g_Net",
+        "PacketPrepare",
+        "C2GS_SELECT_SERVER",
+        "PacketAddI",
+        "PacketSend"
+      ],
+      "varnames": [
+        "serverid",
+        "netobj"
+      ]
+    },
+    {
+      "func": "__init__",
+      "pos": 37,
+      "arg": 1,
+      "prev": "???(0xE0)",
+      "next": "LOAD_FAST",
+      "names": [
+        "interface",
+        "CBaseObject",
+        "__init__",
+        "None",
+        "m_Nets",
+        "selectserver",
+        "GetServerInfo",
+        "m_ServerInfo",
+        "m_ProxyInfo"
+      ],
+      "varnames": [
+        "self",
+        "selectserver",
+        "_"
+      ]
+    },
+    {
+      "func": "__init__",
+      "pos": 58,
+      "arg": 2,
+      "prev": "???(0xC5)",
+      "next": "LOAD_FAST",
+      "names": [
+        "interface",
+        "CBaseObject",
+        "__init__",
+        "None",
+        "m_Nets",
+        "selectserver",
+        "GetServerInfo",
+        "m_ServerInfo",
+        "m_ProxyInfo"
+      ],
+      "varnames": [
+        "self",
+        "selectserver",
+        "_"
+      ]
+    },
+    {
+      "func": "ConnectTestFail",
+      "pos": 9,
+      "arg": 1,
+      "prev": "???(0xE0)",
+      "next": "LOAD_CONST",
+      "names": [
+        "commondialog",
+        "loginin",
+        "selectserver",
+        "IsConnectTestFail",
+        "GetSelectServer",
+        "g_ErrorAnsMsg",
+        "g_RefreshServerListCount",
+        "ShowNewMessageBox",
+        "Refresh",
+        "CheckShowRefreshServer"
+      ],
+      "varnames": [
+        "self",
+        "commondialog",
+        "loginin",
+        "selectserver",
+        "sServerName",
+        "msgtxt"
+      ]
+    },
+    {
+      "func": "ConnectTestFail",
+      "pos": 21,
+      "arg": 2,
+      "prev": "???(0xE0)",
+      "next": "LOAD_CONST",
+      "names": [
+        "commondialog",
+        "loginin",
+        "selectserver",
+        "IsConnectTestFail",
+        "GetSelectServer",
+        "g_ErrorAnsMsg",
+        "g_RefreshServerListCount",
+        "ShowNewMessageBox",
+        "Refresh",
+        "CheckShowRefreshServer"
+      ],
+      "varnames": [
+        "self",
+        "commondialog",
+        "loginin",
+        "selectserver",
+        "sServerName",
+        "msgtxt"
+      ]
+    },
+    {
+      "func": "ConnectTestFail",
+      "pos": 33,
+      "arg": 3,
+      "prev": "???(0xE0)",
+      "next": "LOAD_FAST",
+      "names": [
+        "commondialog",
+        "loginin",
+        "selectserver",
+        "IsConnectTestFail",
+        "GetSelectServer",
+        "g_ErrorAnsMsg",
+        "g_RefreshServerListCount",
+        "ShowNewMessageBox",
+        "Refresh",
+        "CheckShowRefreshServer"
+      ],
+      "varnames": [
+        "self",
+        "commondialog",
+        "loginin",
+        "selectserver",
+        "sServerName",
+        "msgtxt"
+      ]
+    },
+    {
+      "func": "ConnectTestFail",
+      "pos": 58,
+      "arg": 4,
+      "prev": "CALL_FUNCTION 0",
+      "next": "LOAD_NAME",
+      "names": [
+        "commondialog",
+        "loginin",
+        "selectserver",
+        "IsConnectTestFail",
+        "GetSelectServer",
+        "g_ErrorAnsMsg",
+        "g_RefreshServerListCount",
+        "ShowNewMessageBox",
+        "Refresh",
+        "CheckShowRefreshServer"
+      ],
+      "varnames": [
+        "self",
+        "commondialog",
+        "loginin",
+        "selectserver",
+        "sServerName",
+        "msgtxt"
+      ]
+    },
+    {
+      "func": "ConnectTestFail",
+      "pos": 112,
+      "arg": 5,
+      "prev": "LOAD_CONST 3",
+      "next": "LOAD_NAME",
+      "names": [
+        "commondialog",
+        "loginin",
+        "selectserver",
+        "IsConnectTestFail",
+        "GetSelectServer",
+        "g_ErrorAnsMsg",
+        "g_RefreshServerListCount",
+        "ShowNewMessageBox",
+        "Refresh",
+        "CheckShowRefreshServer"
+      ],
+      "varnames": [
+        "self",
+        "commondialog",
+        "loginin",
+        "selectserver",
+        "sServerName",
+        "msgtxt"
+      ]
+    },
+    {
+      "func": "IsConnectTestFail",
+      "pos": 13,
+      "arg": 1,
+      "prev": "???(0xAF)",
+      "next": "LOAD_FAST",
+      "names": [
+        "m_Nets",
+        "m_IsFail",
+        "False",
+        "True"
+      ],
+      "varnames": [
+        "self",
+        "netobj"
+      ]
+    }
+  ],
+  "opcode_71_stats": {
+    "total": 103,
+    "arg_distribution": {
+      "1": 15,
+      "3": 14,
+      "2": 13,
+      "4": 13,
+      "5": 8,
+      "6": 7,
+      "7": 6,
+      "8": 5,
+      "0": 3,
+      "9": 2,
+      "10": 2,
+      "11": 2,
+      "12": 2,
+      "13": 2,
+      "14": 2,
+      "15": 2,
+      "16": 2,
+      "17": 2,
+      "18": 1
+    },
+    "prev_instructions": {
+      "???(0xE0)": 25,
+      "???(0x71)": 22,
+      "CALL_FUNCTION": 20,
+      "???(0xAF)": 11,
+      "???(0x6C)": 9,
+      "LOAD_CONST": 6,
+      "BUILD_LIST": 3,
+      "???(0xBB)": 2,
+      "???(0xFB)": 2,
+      "???(0xF2)": 1
+    },
+    "next_instructions": {
+      "LOAD_FAST": 41,
+      "???(0x71)": 20,
+      "LOAD_CONST": 14,
+      "LOAD_NAME": 10,
+      "???(0xD3)": 8,
+      "???(0xE5)": 4,
+      "???(0xBB)": 3,
+      "???(0x40)": 2,
+      "???(0xA7)": 1
+    }
+  },
+  "mapping_analysis": {
+    "0x41->0x01": {
+      "diff": 192,
+      "xor": 64
+    },
+    "0x55->0x3C": {
+      "diff": 231,
+      "xor": 105
+    },
+    "0x85->0x4E": {
+      "diff": 201,
+      "xor": 203
+    },
+    "0x8F->0x4D": {
+      "diff": 190,
+      "xor": 194
+    },
+    "0xC1->0x62": {
+      "diff": 161,
+      "xor": 163
+    },
+    "0xC4->0x43": {
+      "diff": 127,
+      "xor": 135
+    },
+    "0xCA->0x50": {
+      "diff": 134,
+      "xor": 154
+    },
+    "0xD9->0x53": {
+      "diff": 122,
+      "xor": 138
+    },
+    "0xDA->0x66": {
+      "diff": 140,
+      "xor": 188
+    },
+    "0xDE->0x4F": {
+      "diff": 113,
+      "xor": 145
+    }
+  }
+}

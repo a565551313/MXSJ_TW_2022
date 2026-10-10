@@ -1,0 +1,20 @@
+{
+  "filename": "script\\data\\magicid2soznddata.py",
+  "modname": "<module>",
+  "code_count": 2,
+  "func_names": [
+    "MagicID2Sound",
+    "<module>"
+  ],
+  "strings": [
+    "<module>",
+    "MAGIC2SOUND",
+    "MagicID2Sound",
+    "get",
+    "magicID",
+    "magic\\%.4d.snd",
+    "script\\data\\magicid2sounddata.py",
+    "script\\data\\magicid2soznddata.py",
+    "soundID"
+  ]
+}

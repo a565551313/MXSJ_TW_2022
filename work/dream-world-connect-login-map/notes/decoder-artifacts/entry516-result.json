@@ -1,6 +1,6 @@
 {
   "archive": {
-    "path": "D:\\Lager\\夢想世界\\data\\script.fls",
+    "path": "/home/user/MXSJ_TW_2022/data/script.fls",
     "sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
     "size": 24454082,
     "magic": "0SLF",
@@ -130,7 +130,7 @@
     ]
   },
   "outputs": {
-    "expanded": "D:\\Lager\\夢想世界\\work\\dream-world-connect-login-map\\notes\\decoder-artifacts\\entry516-expanded.bin",
-    "decoded": "D:\\Lager\\夢想世界\\work\\dream-world-connect-login-map\\notes\\decoder-artifacts\\entry516-five-xor-marshal.bin"
+    "expanded": "/home/user/MXSJ_TW_2022/work/dream-world-connect-login-map/notes/decoder-artifacts/entry516-expanded.bin",
+    "decoded": "/home/user/MXSJ_TW_2022/work/dream-world-connect-login-map/notes/decoder-artifacts/entry516-five-xor-marshal.bin"
   }
 }
