@@ -40,7 +40,8 @@ function hookImp(name, addr) {
 }
 
 function hookWinsock() {
-  const connectAddr = Module.findExportByName('ws2_32.dll', 'connect');
+  const ws2 = Process.findModuleByName('ws2_32.dll');
+  const connectAddr = ws2 ? ws2.findExportByName('connect') : null;
   if (connectAddr) {
     Interceptor.attach(connectAddr, {
       onEnter(args) {
@@ -57,7 +58,7 @@ function hookWinsock() {
     });
     send({ event: 'hooked', fn: 'ws2_32.connect' });
   }
-  const sendAddr = Module.findExportByName('ws2_32.dll', 'send');
+  const sendAddr = ws2 ? ws2.findExportByName('send') : null;
   if (sendAddr) {
     Interceptor.attach(sendAddr, {
       onEnter(args) {

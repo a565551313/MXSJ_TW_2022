@@ -224,3 +224,12 @@
 - decision_delta: [p1_p4_merged, tools_dis_v43_kept_by_user, h3_premise_invalid, h4_invalid, h2_partially_supported_static, im_crypto_address_error_noted_not_edited]
 - carry_forward_refs: [WI-006, WI-009, WI-010]
 - next: 下一次测试同时记录 ws2_32.connect 的目标地址与端口、之后是否有 send，以及客户端走直连还是代理分支。H1 仍待运行时证据。
+
+## 2026-10-10T20:45:00+08:00 | lead | observer-run-1-external-http-deviation
+- action: 接收 Windows agent 的首次观察器运行回报（E-OBS-001）。同步 observe.js 的 Frida 17 修复到仓库草稿（ws2_32 改用 Process.findModuleByName，node --check 通过）。任务书增加“不要点刷新/远程请求按钮”的禁止项。
+- result_summary: 挂载成功，8 个 hook 安装，IMP 函数与 ws2_32.send 均为 0 次。ws2_32.connect 两次，目标为外部 HTTP 80 端口（150.230.97.144、158.101.159.192），发生在点击“刷新列表”之后；未触到 127.0.0.1:3134。执行偏离：点击刷新列表违反任务书禁止项。
+- artifacts: [evidence/E-OBS-001.md, notes/observer-20261010/observe.js, notes/observer-20261010/AGENT-brief-windows.md]
+- evidence_ids: [E-OBS-001]
+- decision_delta: [observer_attach_ok_frida17, imp_functions_not_hit, external_http_contacted_by_client, scope_deviation_recorded, brief_forbids_refresh_clicks]
+- carry_forward_refs: [WI-002, WI-009, WI-010]
+- next: 等待用户决定是否在防火墙阻止外部地址；收到 observe-log.jsonl 原文后核对；如需再次运行，应先确定服务器列表来源，使回环条目可被选中，同时阻止外部请求。
