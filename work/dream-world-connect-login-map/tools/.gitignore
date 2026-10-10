@@ -1,0 +1,4 @@
+# runtime artifacts of the loopback mock servers (never commit)
+captures/
+keystream.json
+keystream.json.tmp
