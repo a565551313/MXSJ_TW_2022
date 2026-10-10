@@ -1,0 +1,402 @@
+[
+  {
+    "skill_id": 1000,
+    "archive_entry": 0,
+    "data_len": 3905,
+    "class_type": "佛家 (Healer/Support)",
+    "mp_cost": 20,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1001,
+    "archive_entry": 1,
+    "data_len": 3869,
+    "class_type": "儒家 (Buff/Debuff)",
+    "mp_cost": 25,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1002,
+    "archive_entry": 2,
+    "data_len": 3925,
+    "class_type": "道家 (Sealing/Magic)",
+    "mp_cost": 30,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1003,
+    "archive_entry": 3,
+    "data_len": 3627,
+    "class_type": "巫師 (Curse/Drain)",
+    "mp_cost": 35,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1004,
+    "archive_entry": 4,
+    "data_len": 3603,
+    "class_type": "槍法 (Physical Burst)",
+    "mp_cost": 40,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1005,
+    "archive_entry": 5,
+    "data_len": 3897,
+    "class_type": "劍法 (Agile DPS)",
+    "mp_cost": 45,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1006,
+    "archive_entry": 6,
+    "data_len": 3901,
+    "class_type": "刀法 (Cleave DPS)",
+    "mp_cost": 50,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1007,
+    "archive_entry": 7,
+    "data_len": 3885,
+    "class_type": "拳法 (Combo/Control)",
+    "mp_cost": 55,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1008,
+    "archive_entry": 8,
+    "data_len": 3913,
+    "class_type": "筆法 (Pen Utility)",
+    "mp_cost": 60,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1009,
+    "archive_entry": 9,
+    "data_len": 3607,
+    "class_type": "暗器 (Ranged AoE)",
+    "mp_cost": 65,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1010,
+    "archive_entry": 10,
+    "data_len": 3483,
+    "class_type": "陰陽 (Crowd Control)",
+    "mp_cost": 70,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1011,
+    "archive_entry": 11,
+    "data_len": 3913,
+    "class_type": "佛家 (Healer/Support)",
+    "mp_cost": 75,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1012,
+    "archive_entry": 12,
+    "data_len": 3599,
+    "class_type": "儒家 (Buff/Debuff)",
+    "mp_cost": 80,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1013,
+    "archive_entry": 13,
+    "data_len": 3551,
+    "class_type": "道家 (Sealing/Magic)",
+    "mp_cost": 85,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1014,
+    "archive_entry": 14,
+    "data_len": 3893,
+    "class_type": "巫師 (Curse/Drain)",
+    "mp_cost": 90,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1015,
+    "archive_entry": 15,
+    "data_len": 3563,
+    "class_type": "槍法 (Physical Burst)",
+    "mp_cost": 95,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1016,
+    "archive_entry": 16,
+    "data_len": 3828,
+    "class_type": "劍法 (Agile DPS)",
+    "mp_cost": 100,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1017,
+    "archive_entry": 17,
+    "data_len": 3635,
+    "class_type": "刀法 (Cleave DPS)",
+    "mp_cost": 105,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1018,
+    "archive_entry": 18,
+    "data_len": 5680,
+    "class_type": "拳法 (Combo/Control)",
+    "mp_cost": 110,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1019,
+    "archive_entry": 19,
+    "data_len": 3599,
+    "class_type": "筆法 (Pen Utility)",
+    "mp_cost": 115,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1020,
+    "archive_entry": 20,
+    "data_len": 3471,
+    "class_type": "暗器 (Ranged AoE)",
+    "mp_cost": 120,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1021,
+    "archive_entry": 21,
+    "data_len": 3659,
+    "class_type": "陰陽 (Crowd Control)",
+    "mp_cost": 125,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1022,
+    "archive_entry": 22,
+    "data_len": 3949,
+    "class_type": "佛家 (Healer/Support)",
+    "mp_cost": 130,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1023,
+    "archive_entry": 23,
+    "data_len": 3003,
+    "class_type": "儒家 (Buff/Debuff)",
+    "mp_cost": 135,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1024,
+    "archive_entry": 24,
+    "data_len": 3591,
+    "class_type": "道家 (Sealing/Magic)",
+    "mp_cost": 140,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1025,
+    "archive_entry": 25,
+    "data_len": 3961,
+    "class_type": "巫師 (Curse/Drain)",
+    "mp_cost": 145,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1026,
+    "archive_entry": 26,
+    "data_len": 3885,
+    "class_type": "槍法 (Physical Burst)",
+    "mp_cost": 150,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1027,
+    "archive_entry": 27,
+    "data_len": 3861,
+    "class_type": "劍法 (Agile DPS)",
+    "mp_cost": 155,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1028,
+    "archive_entry": 28,
+    "data_len": 3905,
+    "class_type": "刀法 (Cleave DPS)",
+    "mp_cost": 160,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1029,
+    "archive_entry": 29,
+    "data_len": 3898,
+    "class_type": "拳法 (Combo/Control)",
+    "mp_cost": 165,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1030,
+    "archive_entry": 30,
+    "data_len": 3571,
+    "class_type": "筆法 (Pen Utility)",
+    "mp_cost": 20,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1031,
+    "archive_entry": 31,
+    "data_len": 3909,
+    "class_type": "暗器 (Ranged AoE)",
+    "mp_cost": 25,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1032,
+    "archive_entry": 32,
+    "data_len": 3595,
+    "class_type": "陰陽 (Crowd Control)",
+    "mp_cost": 30,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1033,
+    "archive_entry": 33,
+    "data_len": 3957,
+    "class_type": "佛家 (Healer/Support)",
+    "mp_cost": 35,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1034,
+    "archive_entry": 34,
+    "data_len": 3559,
+    "class_type": "儒家 (Buff/Debuff)",
+    "mp_cost": 40,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1035,
+    "archive_entry": 35,
+    "data_len": 3527,
+    "class_type": "道家 (Sealing/Magic)",
+    "mp_cost": 45,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1036,
+    "archive_entry": 36,
+    "data_len": 3889,
+    "class_type": "巫師 (Curse/Drain)",
+    "mp_cost": 50,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1037,
+    "archive_entry": 37,
+    "data_len": 3885,
+    "class_type": "槍法 (Physical Burst)",
+    "mp_cost": 55,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1038,
+    "archive_entry": 38,
+    "data_len": 3551,
+    "class_type": "劍法 (Agile DPS)",
+    "mp_cost": 60,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1039,
+    "archive_entry": 39,
+    "data_len": 4778,
+    "class_type": "刀法 (Cleave DPS)",
+    "mp_cost": 65,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1040,
+    "archive_entry": 40,
+    "data_len": 3643,
+    "class_type": "拳法 (Combo/Control)",
+    "mp_cost": 70,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1041,
+    "archive_entry": 41,
+    "data_len": 3929,
+    "class_type": "筆法 (Pen Utility)",
+    "mp_cost": 75,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1042,
+    "archive_entry": 42,
+    "data_len": 3639,
+    "class_type": "暗器 (Ranged AoE)",
+    "mp_cost": 80,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1043,
+    "archive_entry": 43,
+    "data_len": 3601,
+    "class_type": "陰陽 (Crowd Control)",
+    "mp_cost": 85,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1044,
+    "archive_entry": 44,
+    "data_len": 3659,
+    "class_type": "佛家 (Healer/Support)",
+    "mp_cost": 90,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1045,
+    "archive_entry": 45,
+    "data_len": 3707,
+    "class_type": "儒家 (Buff/Debuff)",
+    "mp_cost": 95,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1046,
+    "archive_entry": 46,
+    "data_len": 3957,
+    "class_type": "道家 (Sealing/Magic)",
+    "mp_cost": 100,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1047,
+    "archive_entry": 47,
+    "data_len": 3937,
+    "class_type": "巫師 (Curse/Drain)",
+    "mp_cost": 105,
+    "target_type": "群體目標 (3-5人)"
+  },
+  {
+    "skill_id": 1048,
+    "archive_entry": 48,
+    "data_len": 3893,
+    "class_type": "槍法 (Physical Burst)",
+    "mp_cost": 110,
+    "target_type": "單體目標"
+  },
+  {
+    "skill_id": 1049,
+    "archive_entry": 49,
+    "data_len": 3901,
+    "class_type": "劍法 (Agile DPS)",
+    "mp_cost": 115,
+    "target_type": "群體目標 (3-5人)"
+  }
+]

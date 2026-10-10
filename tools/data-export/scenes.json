@@ -1,0 +1,287 @@
+[
+  {
+    "scene_id": 1001,
+    "scene_name": "永澤城",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1004,
+    "scene_name": "清溪平原",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1005,
+    "scene_name": "天水平原",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1007,
+    "scene_name": "香葉城",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1008,
+    "scene_name": "芳草鎮",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1012,
+    "scene_name": "螢火森林",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1013,
+    "scene_name": "天蒼城",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1014,
+    "scene_name": "雲雀谷",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1018,
+    "scene_name": "太息林地",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1019,
+    "scene_name": "海底神殿",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1022,
+    "scene_name": "落日海灣",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1023,
+    "scene_name": "幻境海岸",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1025,
+    "scene_name": "清風村",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1026,
+    "scene_name": "黎明鎮",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1027,
+    "scene_name": "夜幕鎮",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1028,
+    "scene_name": "長風島",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1029,
+    "scene_name": "疾風谷",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1032,
+    "scene_name": "碎夢嶺",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1033,
+    "scene_name": "金綠沙洲",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1034,
+    "scene_name": "修羅森林",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1035,
+    "scene_name": "落雪冰原",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1036,
+    "scene_name": "珊瑚迷宮",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1039,
+    "scene_name": "靈石塔一層",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1040,
+    "scene_name": "靈石塔二層",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1041,
+    "scene_name": "靈石塔三層",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1043,
+    "scene_name": "古木祭壇一層",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1044,
+    "scene_name": "古木祭壇二層",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1045,
+    "scene_name": "古木祭壇三層",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1051,
+    "scene_name": "沙漠迷宮",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1052,
+    "scene_name": "兔神殿遺址",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1054,
+    "scene_name": "明月城",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 2302,
+    "scene_name": "南遙戰士師道殿",
+    "category": "師門/副本"
+  },
+  {
+    "scene_id": 1062,
+    "scene_name": "南遙法師師道殿",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1063,
+    "scene_name": "南遙術士師道殿",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1064,
+    "scene_name": "天寧戰士師道殿",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1065,
+    "scene_name": "天寧法師師道殿",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1066,
+    "scene_name": "天寧術士師道殿",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1067,
+    "scene_name": "清嵐戰士師道殿",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1068,
+    "scene_name": "清嵐法師師道殿",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1069,
+    "scene_name": "清嵐術士師道殿",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1070,
+    "scene_name": "加洛戰士師道殿",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1071,
+    "scene_name": "加洛法師師道殿",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1072,
+    "scene_name": "加洛術士師道殿",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1073,
+    "scene_name": "靈風塔一層",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1042,
+    "scene_name": "靈風塔二層",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1047,
+    "scene_name": "靈風塔三層",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1157,
+    "scene_name": "天空要塞",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1158,
+    "scene_name": "初雲峽谷",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1159,
+    "scene_name": "初雲平原",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1176,
+    "scene_name": "魔晶要塞",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1177,
+    "scene_name": "聖痕峽谷",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1194,
+    "scene_name": "梵天古城",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 2121,
+    "scene_name": "冒險家行會一層",
+    "category": "師門/副本"
+  },
+  {
+    "scene_id": 2122,
+    "scene_name": "冒險家行會二層",
+    "category": "師門/副本"
+  },
+  {
+    "scene_id": 1313,
+    "scene_name": "龍淵",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1323,
+    "scene_name": "英靈殿",
+    "category": "城鎮/野外"
+  },
+  {
+    "scene_id": 1053,
+    "scene_name": "兔坦卡門陵墓",
+    "category": "城鎮/野外"
+  }
+]
