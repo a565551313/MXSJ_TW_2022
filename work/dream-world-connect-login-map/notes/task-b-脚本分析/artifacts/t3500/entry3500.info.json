@@ -1,0 +1,32 @@
+{
+  "filename": "script\\render\\render\\renderprotocol.py",
+  "modname": "<module>",
+  "code_count": 1,
+  "func_names": [
+    "<module>"
+  ],
+  "strings": [
+    "<module>",
+    "CLIENT_NAME",
+    "PR_C2R_ADD_RENDER_TASK",
+    "PR_C2R_DEL_RENDER_TASK",
+    "PR_C2R_KEEPALIVE",
+    "PR_C2R_KEEPALIVE_MX",
+    "PR_C2R_KILL_RENDER",
+    "PR_C2R_ONLINE_UPDATE",
+    "PR_C2R_QUIT",
+    "PR_C2R_RENDER_TASK_PAL_UPDATE",
+    "PR_C2R_VERSION",
+    "PR_R2C_DONE_RENDER_TASK",
+    "PR_R2C_ERR_UPLOAD",
+    "PR_R2C_KEEPALIVE",
+    "PR_R2C_KEEPALIVE_MX",
+    "PR_R2C_VERSION",
+    "RenderAgent",
+    "SHAREUTIL_3D_RENDERER_NAME",
+    "TYPE_AVATAR",
+    "TYPE_IMAGE",
+    "script\\render\\render\\renderprotocol.py",
+    "su_3d_renderer_name_"
+  ]
+}

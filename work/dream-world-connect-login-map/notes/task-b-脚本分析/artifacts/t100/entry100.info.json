@@ -1,0 +1,35 @@
+{
+  "filename": "script\\mxgame\\autocheckcolor\\test_combdialog.py",
+  "modname": "<module>",
+  "code_count": 5,
+  "func_names": [
+    "InitCombdailog",
+    "Add2CheckQueue",
+    "SetShow",
+    "Test",
+    "<module>"
+  ],
+  "strings": [
+    "<module>",
+    "Add2CheckQueue",
+    "CCombDialog",
+    "GetCheckMgr",
+    "InitCombdailog",
+    "InitOri",
+    "LOG",
+    "SetShow",
+    "SetShowOri",
+    "StartCheck",
+    "Test",
+    "__init__",
+    "args",
+    "autocheckinterface",
+    "bShow",
+    "combdialog",
+    "hasattr",
+    "oCls",
+    "oMgr",
+    "script\\mxgame\\autocheckcolor\\test_combdialog.py",
+    "self"
+  ]
+}

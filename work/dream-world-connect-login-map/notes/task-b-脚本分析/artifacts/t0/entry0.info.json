@@ -1,0 +1,16 @@
+{
+  "filename": "script\\pub2\\pubvoice\\pubvoiceutil.py",
+  "modname": "<module>",
+  "code_count": 2,
+  "func_names": [
+    "SetToken",
+    "<module>"
+  ],
+  "strings": [
+    "<module>",
+    "SetToken",
+    "pubvoicetranslation",
+    "sToken",
+    "script\\pub2\\pubvoice\\pubvoiceutil.py"
+  ]
+}

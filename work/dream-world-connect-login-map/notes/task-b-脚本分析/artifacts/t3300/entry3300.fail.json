@@ -1,0 +1,14 @@
+{
+  "status": "fail",
+  "method": "greedy-v7-final",
+  "keys": "519c0d790a",
+  "bounds": [
+    32,
+    66,
+    95,
+    145
+  ],
+  "bconf": "22-50:29;66-158:93;67-158:92;96-158:63",
+  "progress": 67,
+  "explen": 159
+}
