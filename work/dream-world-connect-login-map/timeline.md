@@ -204,4 +204,4 @@
 - evidence_ids: [E-VERIFY-001, E-LOOPBACK-001, E-LOOPBACK-002, E-IDA-DYN-004]
 - decision_delta: [capture_bytes_zero_confirmed, loginhello_sample_missing, cmd_numeric_ids_unverified, server_ini_modified_in_head, catalog_json_partial, mx_exe_equals_mxmain_dll, themida_claim_rejected, wi009_reopened, wi012_partial, repo_history_complete_locally]
 - carry_forward_refs: [WI-002, WI-006, WI-009, WI-010, WI-012, WI-013, WI-014, WI-015, WI-016, WI-017]
-- next: 1) 用户决定是否恢复 server.ini 原始版本；2) 用户决定是否将游戏二进制移出 Git 跟踪；3) WI-010 需 Windows 本地回环抓包后才能推进；4) 在获得真实字节前，不再新增“已确认”类结论。
+- next: 1) 用户决定是否恢复 server.ini 原始版本；2) 用户已决定：游戏二进制与资源保留在 Git 中，不移出（2026-10-10 指示）；3) WI-010 需 Windows 本地回环抓包后才能推进；4) 在获得真实字节前，不再新增“已确认”类结论。
