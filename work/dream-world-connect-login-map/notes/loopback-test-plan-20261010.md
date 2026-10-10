@@ -36,3 +36,9 @@
 - 不发送任何猜测的服务端响应（`00 02` 已证明会导致客户端异常）。
 - 不连接 203.70.8.x 外部服务器。
 - 不修改 `server.ini`（保留 127.0.0.1 回环配置）。
+
+## 附：只读观察器（草稿，待 Windows 实测）
+- 位置：`notes/observer-20261010/`（`observe.js`、`observe.py`、`步骤.md`）。
+- 作用：挂到 mx.exe 上，只记录 IMProtocol 的 `IMP_ConnectNsServer` / `IMP_SendBuffer2NS` / `IMP_RefreshCryptKey` 等导出函数，以及 ws2_32 的 `connect` / `send` 的调用与参数，写入 `observe-log.jsonl`。
+- 限制：只记录，不修改参数或返回值；需要 32 位 Python；未在 Windows 上运行验证；Duoyi 保护可能拒绝调试挂载。
+- 范围：离线、本机、自有副本，仅观察。`scope.md` 的 activities 栏为空，用户已口头同意此方式。
