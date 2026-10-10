@@ -2,6 +2,8 @@
 
 **欢迎加入！** 请先阅读本文，了解项目背景和你的任务。
 
+> ⚠️ **2026-10-10 核对更新**：通信密钥未获得，仓库中没有任何真实捕获字节；loginhello 明文包与 C→S 命令字数值未证实。请先读 [`report/verification-20261010.md`](report/verification-20261010.md)。
+>
 > ⭐ **新接手的 agent 请先阅读交接文档**: [`HANDOVER-20261010.md`](HANDOVER-20261010.md)（项目交接文档，含完整进度、文件路径、工具手册）
 
 ---
@@ -38,12 +40,12 @@ mkdir -p work/dream-world-connect-login-map/notes/<任务名>-<你的标识>/art
 ### 4. 开始分析
 ```bash
 # 使用已有工具（详见 HANDOVER-20261010.md 第 6 节 工具使用手册）
-python3 tools/fls_batch_decoder.py --help      # FLS 批量解码器 v7
-python3 tools/pymarshal_dis.py --help           # Python 2 marshal 反汇编
-python3 tools/mock_server.py --help             # 模拟服务器
-python3 tools/packet_analyzer.py --help         # 数据包分析
-python3 tools/map_parser.py --help              # 地图解析器
-python3 tools/data_browser/app.py --help        # 数据浏览器
+python3 tools/fls_batch_decoder.py --help      # FLS 批量解码器 v7（真实参数：--archive/--index/--all/--output）
+# python3 tools/pymarshal_dis.py --help         # ⚠️ 不支持 --help，会被当作文件名报错；直接传 marshal 文件即可
+python3 work/dream-world-connect-login-map/tools/mock_server.py --help        # 模拟服务器（路径在 work/…/tools/）
+python3 work/dream-world-connect-login-map/tools/packet_analyzer.py --help    # 数据包分析
+python3 work/dream-world-connect-login-map/tools/map_parser.py --help         # 地图解析器
+# python3 tools/data_browser/app.py --help    # ⚠️ 会直接启动 Web 服务，不是帮助信息
 ```
 
 ---
@@ -54,18 +56,17 @@ python3 tools/data_browser/app.py --help        # 数据浏览器
 ```python
 import sys
 sys.path.append('work/dream-world-connect-login-map/notes/protocol-artifacts')
-from im_crypto import CryptContext, encrypt, decrypt, derive_key
+from im_crypto import IMProtocolCrypto   # 旧的 CryptContext/encrypt/decrypt 已不存在
 
-ctx = CryptContext()
-ctx.init(b'\xaa\xbb\xcc\xdd\xee\xff\x00\x11')  # 8字节密钥
-encrypted = encrypt(ctx, b'hello world')
-decrypted = decrypt(ctx, encrypted)
+key = bytes.fromhex('aabbccddeeff0011')  # 8字节（占位密钥，不是游戏真实密钥）
+enc, dec = IMProtocolCrypto(key), IMProtocolCrypto(key)
+assert dec.decrypt(enc.encrypt(b'hello world')) == b'hello world'   # 已验证往返一致
 ```
 
 ### FLS脚本解码（已破解 ✅）
 ```bash
 # 批量解码（v7，推荐）
-python3 tools/fls_batch_decoder.py --entry 516 --input data/script.fls
+python3 tools/fls_batch_decoder.py --archive data/script.fls --index 516 --output /tmp/out516   # 已于 2026-10-10 验证
 
 # 全量解码结果已在:
 # work/.../task-b-脚本分析/artifacts/fullrun/decode-results-final.jsonl
@@ -82,12 +83,12 @@ with open('work/dream-world-connect-login-map/notes/co_code_analysis/mapping_tab
 
 > ⚠️ **重要**: v4.3 纠正了 4 处误判（0x98→STORE_NAME, 0xE0→IMPORT_NAME, 0xFB→MAKE_FUNCTION, 0x42→BUILD_CLASS）
 
-### 协议帧格式（已确认 ✅）
+### 协议帧格式（推断，未经真实报文验证 ⚠️）
 ```
 [加密( uint16_be(总长度,含长度字段本身2字节) + uint16_be(命令字) + payload )]
 ```
 
-### 命令字（C→S 已确认 ✅）
+### 命令字（C→S 数值未证实 ⚠️，见 WI-013）
 | 命令字 | 名称 |
 |--------|------|
 | 0x0001 | loginhello (LOGIN_HELLO) |
@@ -107,9 +108,9 @@ with open('work/dream-world-connect-login-map/notes/co_code_analysis/mapping_tab
 | FLS 批量解码器 v7 | `tools/fls_batch_decoder.py` | 解码 script.fls 全部 5002 条目 |
 | Python 2 marshal 反汇编 | `tools/pymarshal_dis.py` | 反汇编 marshal 数据 |
 | 加密/解密 | `notes/protocol-artifacts/im_crypto.py` | IMProtocol 加密算法 |
-| 模拟服务器 | `tools/mock_server.py` | 本地模拟服务器框架 |
-| 数据包分析 | `tools/packet_analyzer.py` | 分析捕获的数据包 |
-| 地图解析器 | `tools/map_parser.py` | 解析 .map 文件 |
+| 模拟服务器 | `work/dream-world-connect-login-map/tools/mock_server.py` | 本地模拟服务器框架（未与真实客户端联调） |
+| 数据包分析 | `work/dream-world-connect-login-map/tools/packet_analyzer.py` | 分析捕获的数据包（当前无有效样本） |
+| 地图解析器 | `work/dream-world-connect-login-map/tools/map_parser.py` | 解析 .map 文件 |
 | 地图查看器 | `tools/map_viewer.py` / `map_gui.py` | 查看地图 |
 | 通用 FLS 工具 | `tools/data-parser/universal_fls_tool.py` | 6 种 FLS 归档解包/重打包 |
 | 数据浏览器 | `tools/data_browser/app.py` | Web 数据浏览器（端口 8080） |

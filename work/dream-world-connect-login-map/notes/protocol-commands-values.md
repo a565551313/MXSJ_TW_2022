@@ -1,7 +1,9 @@
+> ⚠️ **2026-10-10 核对更新**：C→S 数值 0x0001/0x0002/0x0003/0x0010/0x00FF 在仓库中**没有证据来源**：脚本中只出现符号名（如 `LOAD_ATTR 'C2GS_SELECT_SERVER'`）。原表中的“✅ 已确认”已改为“未证实”。loginhello 明文包样本文件不存在。详见 `report/verification-20261010.md` §4 与 WI-013。
+
 # MXSJ 协议命令字数值文档
 
 **日期**: 2026-10-10
-**状态**: C→S 命令已确认 ✅ | S→C 命令待验证 ⏳
+**状态**: C→S 命令名（脚本符号）已确认；**数值未证实** ⚠️ | S→C 命令待验证 ⏳
 **破解方法**: 明文包分析 + 静态分析 + 已知明文攻击
 
 ---
@@ -29,11 +31,11 @@
 
 | 命令字 | 十进制 | 名称 | 用途 | 确认方式 |
 |--------|--------|------|------|---------|
-| **0x0001** | 1 | **loginhello** (LOGIN_HELLO) | 登录握手 | 明文包分析 ✅ |
-| **0x0002** | 2 | **TEST_HELLO** | 测试连接握手 | 前期分析 ✅ |
-| **0x0003** | 3 | **RESELECT_HELLO** | 重选服务器握手 | 前期分析 ✅ |
-| **0x0010** | 16 | **C2GS_SELECT_SERVER** (C2S_TRANSFER_SERVER) | 选择服务器（选服） | 前期分析 ✅ |
-| **0x00FF** | 255 | **HEARTBEAT** | 心跳包 | 前期分析 ✅ |
+| **0x0001** | 1 | **loginhello** (LOGIN_HELLO) | 登录握手 | ⚠️ 明文包证据缺失 |
+| **0x0002** | 2 | **TEST_HELLO** | 测试连接握手 | ⚠️ 未证实（无证据文件） |
+| **0x0003** | 3 | **RESELECT_HELLO** | 重选服务器握手 | ⚠️ 未证实（无证据文件） |
+| **0x0010** | 16 | **C2GS_SELECT_SERVER** (C2S_TRANSFER_SERVER) | 选择服务器（选服） | ⚠️ 未证实（无证据文件） |
+| **0x00FF** | 255 | **HEARTBEAT** | 心跳包 | ⚠️ 未证实（无证据文件） |
 
 ### 命令详情
 
@@ -51,7 +53,7 @@
   - `32 2E 32 37 2E 32` — "2.27.2" (游戏版本号)
   - `6C 6F 67 69 6E 68 65 6C 6C 6F` — "loginhello" (命令名字符串)
   - `6A C9 0A 93` — 附加数据/校验和（待分析）
-- **证据文件**: `tools/test-data/test_loginhello_plain.bin`
+- **证据文件**: `tools/test-data/test_loginhello_plain.bin`（⚠️ 2026-10-10 核对：文件不存在，字节串来源未记录）
 
 #### 0x0002 — TEST_HELLO
 - **用途**: 测试模式握手（CRandomConnectMgr 使用）
@@ -154,7 +156,7 @@ python3 tools/packet_analyzer.py capture.bin --crack --known-plaintext "loginhel
 
 | 文件 | 说明 |
 |-----|------|
-| `tools/test-data/test_loginhello_plain.bin` | loginhello 明文包（确认 0x0001） |
+| `tools/test-data/test_loginhello_plain.bin` | ⚠️ 文件不存在；不能据此确认 0x0001 |
 | `tools/packet_analyzer.py` | 包分析工具（含命令字表） |
 | `tools/mock_server.py` | 模拟服务器（含命令字常量） |
 | `notes/protocol-artifacts/im_crypto.py` | 加密模块（帧格式） |

@@ -1,4 +1,6 @@
-﻿# Case dream-world-connect-login-map
+﻿> 2026-10-10 核对：见 `report/verification-20261010.md`。
+
+# Case dream-world-connect-login-map
 
 1. Scope is ready_for_act=true (auth granted + in_scope set)
 2. Open primary skill: skills/protocol-reverse/SKILL.md

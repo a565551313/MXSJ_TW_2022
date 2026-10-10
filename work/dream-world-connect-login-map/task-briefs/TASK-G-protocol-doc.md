@@ -1,3 +1,5 @@
+> ⚠️ **2026-10-10 核对**：任务书引用的 `docs/` 目录（`MXSJ-Protocol-Specification.md`、`packet-examples.md`、`state-machine.md` 等）、`tools/protocol_parser.py`、`evidence/E-DOC-001.md` 均不存在。可用素材：`notes/task-b-脚本分析/artifacts/protocol-commands-catalog.md`、`mall-protocol-analysis.md`；但 C→S 数值未证实（WI-013），S→C 为推测。
+
 # 任务书 G: 编写完整协议文档
 
 **任务编号**: G

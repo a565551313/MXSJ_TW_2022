@@ -1,8 +1,8 @@
 # 梦想世界(MXSJ)台湾版 2022 客户端逆向 — 文档索引
 
-**最后更新**: 2026-10-10
-**分支**: `arena/6fbb3403-mxsj-tw-2022`
-**最新 commit**: `711e6a7`
+**最后更新**: 2026-10-10（同日完成核对，见 `report/verification-20261010.md`）
+**原工作分支**: `arena/6fbb3403-mxsj-tw-2022`（已合入 master）
+**当前会话分支**: `arena/febc1561-mxsj-tw-2022`（与 master 同一 commit `ffec3d9`；`711e6a7` 为其祖先）
 
 ---
 
@@ -12,6 +12,7 @@
 |------|------|
 | [**HANDOVER-20261010.md**](HANDOVER-20261010.md) | ⭐ **项目交接文档** — 完整进度、文件路径、工具手册、FAQ |
 | [**QUICK_START.md**](QUICK_START.md) | 5 分钟快速上手 |
+| [**report/verification-20261010.md**](report/verification-20261010.md) | ⭐ **2026-10-10 核对报告**：哪些说法已核实、哪些不成立（先读） |
 
 ---
 
@@ -23,8 +24,8 @@
 | B - 脚本全量分析 | ✅ 基本完成 (95%) | `notes/task-b-脚本分析/artifacts/终版统计.md` |
 | C - 地图格式分析 | 🔄 第二轮 (~70%) | `notes/task-c-地图分析/map-format-analysis.md` |
 | D - 游戏数据分析 | ✅ 完成 | `notes/task-d-游戏数据/game-data-analysis.md` |
-| ④ - 命令字数值 | ✅ 完成 | `notes/protocol-commands-values.md` |
-| E - 模拟服务器 | ⏳ 未开始 | `task-briefs/TASK-E-mock-server.md` |
+| ④ - 命令字数值 | ⚠️ 数值未证实 | `notes/protocol-commands-values.md` |
+| E - 模拟服务器 | 🔄 框架已建，未与客户端联调 | `task-briefs/TASK-E-mock-server.md` |
 | G - 协议文档 | ⏳ 可开始 | `task-briefs/TASK-G-protocol-doc.md` |
 | ① - 混淆字典 key | ⏳ 待破解 | — |
 | ② - 参数字节编码 | ⏳ 待破解 | — |
@@ -37,7 +38,8 @@
 ### 报告（按任务）
 ```
 report/
-├── final-summary-20261010.md          # 项目最终总结（任务A）
+├── verification-20261010.md           # ⭐ 2026-10-10 核对报告
+├── final-summary-20261010.md          # 项目最终总结（任务A）（含修正提示）
 ├── analysis.md                        # 综合分析报告
 └── handoff-20261009.md                # 旧交接文档（2026-10-09）
 
@@ -93,8 +95,7 @@ work/.../tools/                        # 工作区工具
 ├── mock_server.py                     # 模拟服务器框架
 ├── packet_analyzer.py                 # 数据包分析
 ├── enhanced_capture_server.py         # 增强捕获（自动破解密钥）
-└── test-data/                         # 测试数据
-    └── test_loginhello_plain.bin      # loginhello明文包（34B）
+└── test-data/                         # ❌ 目录不存在（2026-10-10 核对）；原 loginhello 明文包样本缺失
 ```
 
 ### 证据文件
@@ -109,6 +110,7 @@ work/.../evidence/                     # 工作区证据
 ├── E-REA-*.md                         # 静态分析证据
 ├── E-IDA-*.md                         # IDA分析证据
 ├── E-LOOPBACK-*.md                    # 回环测试证据
+├── E-VERIFY-001.md                    # 2026-10-10 核对证据
 └── ...
 ```
 
@@ -150,6 +152,7 @@ task-briefs/
 | 日期 | 更新内容 |
 |------|---------|
 | 2026-10-10 | 创建 INDEX.md 和 HANDOVER-20261010.md；更新 QUICK_START.md |
+| 2026-10-10 | 全面核对：新增 `report/verification-20261010.md`、`evidence/E-VERIFY-001.md`；修正 HANDOVER、workitems（WI-009 改回 in_progress，WI-012 改为 partial，新增 WI-013–017）、QUICK_START、INDEX；补全浅克隆历史；未删除任何文件 |
 | 2026-10-10 | 合并任务C（PR #3）和任务B收尾（cherry-pick PR #4） |
 | 2026-10-10 | 任务B终版统计：89.6% ok（4484/5002） |
 | 2026-10-09 | 任务A完成、任务D完成、命令字数值确定 |

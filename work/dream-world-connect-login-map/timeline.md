@@ -186,3 +186,22 @@
 - decision_delta: [tools_complete, capture_ready, mock_server_ready, packet_analyzer_ready, next_run_on_windows_capture_real_key]
 - carry_forward_refs: [WI-010, WI-011, WI-012]
 - next: 在Windows环境运行客户端，用增强版捕获工具捕获实际密钥和loginhello数据包；用模拟服务器实现离线登录
+
+## 2026-10-10T09:50:00+08:00 | lead | project-verification-and-doc-correction
+- action: 按用户要求核对项目真实情况并更新文档。范围：仓库历史、游戏文件、脚本解码、加密实现、地图测试、工具可用性、配置文件、文档引用。全程只读，未删除/移动/`git rm` 任何文件，未连接外部服务器，未运行原版客户端。
+- command_or_ref: `git fetch --unshallow origin`；`sha256sum data/script.fls`；`md5sum mx.exe mxmain.dll`；`fls_batch_decoder.py --archive data/script.fls --index 516 --output /tmp/verify516`；`test_maps.py`（11 OK）；`mock_server.py --host 127.0.0.1 --port 3999 --response-type auto`（运行后超时终止）；`git show caa7996:server.ini` 与 `1106434:server.ini` 对比；PE 解析（pefile，安装在 /tmp 虚拟环境）
+- result_summary: |
+    已确认：HEAD=master=ffec3d9；711e6a7 为祖先；script.fls SHA-256 与记录一致；entry 516 重跑 59 个代码对象；映射表 v4.3（43/5/16 组）；IMProtocolCrypto 往返一致；IMProtocol.dll 29 导出；地图测试 11 项通过；mock_server 可在 127.0.0.1 启动。
+    不成立或需更正：仓库中没有任何真实捕获字节（stream-0001..0022 全为 0 字节）；loginhello 明文包文件不存在且来源未记录；C→S 命令字数值无证据；all_scripts_catalog.json 仅 11 条；mx.exe 与 mxmain.dll 字节相同；“Themida”无依据；render.dll 实际在 exe/ 下；server.ini 已被改为回环地址；多个命令示例不可运行（fls_batch_decoder、pymarshal_dis、im_crypto API、data_browser）。
+    WI-009 由 done 改回 in_progress；WI-012 由 done 改为 partial；WI-002/006 表述修正；新增 WI-013 至 WI-017。
+- artifacts:
+  - work/dream-world-connect-login-map/report/verification-20261010.md（新增）
+  - work/dream-world-connect-login-map/evidence/E-VERIFY-001.md（新增）
+  - work/dream-world-connect-login-map/notes/protocol-artifacts/README.md（新增）
+  - work/dream-world-connect-login-map/notes/decoder-artifacts/README.md（新增）
+  - work/dream-world-connect-login-map/tools/mock-server-logs/mock-server-20261010-094859.log（mock_server 试运行副产物，保留未删）
+  - HANDOVER-20261010.md、workitems.md、INDEX.md 及其他文档（已修正）
+- evidence_ids: [E-VERIFY-001, E-LOOPBACK-001, E-LOOPBACK-002, E-IDA-DYN-004]
+- decision_delta: [capture_bytes_zero_confirmed, loginhello_sample_missing, cmd_numeric_ids_unverified, server_ini_modified_in_head, catalog_json_partial, mx_exe_equals_mxmain_dll, themida_claim_rejected, wi009_reopened, wi012_partial, repo_history_complete_locally]
+- carry_forward_refs: [WI-002, WI-006, WI-009, WI-010, WI-012, WI-013, WI-014, WI-015, WI-016, WI-017]
+- next: 1) 用户决定是否恢复 server.ini 原始版本；2) 用户决定是否将游戏二进制移出 Git 跟踪；3) WI-010 需 Windows 本地回环抓包后才能推进；4) 在获得真实字节前，不再新增“已确认”类结论。
