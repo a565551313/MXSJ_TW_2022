@@ -59,7 +59,7 @@ notes/
 │       ├── suspicious-names-review.md # 可疑名复核
 │       ├── unknown-opcode-round4-status.md  # 第四轮未知opcode
 │       ├── fullrun/                   # 全量解码结果
-│       └── script-catalog.csv         # 脚本目录（5007行）
+│       └── script-catalog.csv         # 脚本目录（5002 条数据 + 表头）
 ├── task-c-地图分析/                   # 任务C：地图格式分析
 │   ├── map-format-analysis.md         # ⭐ 地图格式完整报告
 │   ├── README.md

@@ -206,7 +206,7 @@
 - carry_forward_refs: [WI-002, WI-006, WI-009, WI-010, WI-012, WI-013, WI-014, WI-015, WI-016, WI-017]
 - next: 1) 已决定：server.ini 保留 127.0.0.1 回环配置（用户确认）；2) 已决定：游戏二进制与资源保留在 Git 中，不移出；3) 已删除试运行日志；4) WI-010 需 Windows 本地回环抓包后才能推进；4) 在获得真实字节前，不再新增“已确认”类结论。
 
-## 2026-10-10T12:00:00+08:00 | lead | loopback-test-zero-bytes-again
+## 2026-10-10T18:00:25+08:00 | lead | loopback-test-zero-bytes-again
 - action: 用户报告本地回环测试结果“都是0”（捕获文件 0 字节）。核对仓库：未收到该次测试的新文件；检查已有 10-09 捕获与游戏日志；阅读 Connect 反编译报告中连接后的发包流程。
 - command_or_ref: 读取 tools/captures/*、notes/protocol-artifacts/responsive-harness.log、log/game/*、notes/co_code_analysis/任务A深入-Connect函数破解报告.md
 - result_summary: 结果与 10-09 一致，TCP 可连接，无应用层字节。游戏日志中无连接相关记录。Connect 报告显示连接前有 NakedSend 单字节、超时切换候选，但该报告基于 v4 映射，未复核。形成 H1–H5 假设，写入计划文档。
