@@ -1,0 +1,23 @@
+{
+  "process": "mx.exe",
+  "pid": 17884,
+  "image_base": 4194304,
+  "size_of_image": 13344942,
+  "main_module": "mx.exe",
+  "sections": {
+    "_dyprot0": {
+      "rva": 5533696,
+      "size": 3237888,
+      "va": 9728000,
+      "file": "dyprot0.bin",
+      "sha256": "277b4a1003068dd3cc6044810291f36a18cfc57a1552ce8e270dabcd0327e21c"
+    },
+    "_dyprot1": {
+      "rva": 8773632,
+      "size": 1981952,
+      "va": 12967936,
+      "file": "dyprot1.bin",
+      "sha256": "1988c2e7a9149313d5e46b72d9b27c7df6ff4d672f4cfb46c9123bec0ce3babd"
+    }
+  }
+}
