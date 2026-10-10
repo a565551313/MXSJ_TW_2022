@@ -216,7 +216,7 @@
 - carry_forward_refs: [WI-009, WI-010]
 - next: 请用户提供：原样 capture 文件与时间戳、harness 完整日志、Get-NetTCPConnection 每 2 秒输出、测试时段的 gamelog/pylog、截图、操作顺序。按 E1→E2→E3 顺序做实验，暂不发送猜测的服务端响应。
 
-## 2026-10-10T19:30:00+08:00 | lead | merge-parallel-p1-p4-and-sync
+## 2026-10-10T19:44:40+08:00 | lead | merge-parallel-p1-p4-and-sync
 - action: 用户确认后合并 PR #6（P1）、#7（P2）、#8（P4）、#9（P3，含 tools/dis_v43，由用户要求保留）到 `arena/febc1561-mxsj-tw-2022`。合并前核对了各 PR 的改动文件、记录要求、关键地址（`IMP_RefreshCryptKey` 0x10003110、`IMP_SendBuffer2NS` 0x10003240、`IMP_UnConnectNsServer` 0x100030d0）和哈希。
 - result_summary: 四个 PR 均 MERGED。本地分支原停在 master 的 ffec3d9，未包含之前的提交；已先备份本地未提交改动（/tmp/local-backup-20261010/，并保留 stash@{0}），再快进到 b32541b。备份与远端内容逐一核对一致。P3 结论：直连分支无连接前 NakedSend；H3 前提不成立，H4 不成立。P1 结论：密钥由字符串解析的 8 字节种子经 S 盒链式变换生成；调用者和种子来源未证实。
 - artifacts: [notes/parallel-20261010/P1-result.md, P2-result.md, P3-result.md, P4-result.md, tools/dis_v43/, notes/loopback-test-plan-20261010.md, notes/protocol-artifacts/README.md]
