@@ -1,0 +1,198 @@
+{
+  "version": "4.0",
+  "date": "2026-10-10",
+  "note": "\u52a0\u5165Connect\u51fd\u6570\u65b0\u7834\u89e3\u76844\u4e2a\u6620\u5c04\uff0c\u7d2f\u8ba132\u4e2a",
+  "table_a": {
+    "0x41": {
+      "std": 1,
+      "name": "POP_TOP",
+      "size": 1,
+      "confidence": "high"
+    },
+    "0x55": {
+      "std": 83,
+      "name": "RETURN_VALUE",
+      "size": 1,
+      "confidence": "high"
+    },
+    "0x71": {
+      "std": 125,
+      "name": "STORE_FAST",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0x85": {
+      "std": 101,
+      "name": "LOAD_NAME",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0x8F": {
+      "std": 100,
+      "name": "LOAD_CONST",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0x95": {
+      "std": 106,
+      "name": "COMPARE_OP",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0xB7": {
+      "std": 114,
+      "name": "POP_JUMP_IF_FALSE",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0xC1": {
+      "std": 124,
+      "name": "LOAD_FAST",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0xC4": {
+      "std": 90,
+      "name": "STORE_NAME",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0xC5": {
+      "std": 94,
+      "name": "STORE_ATTR",
+      "size": 3,
+      "confidence": "medium"
+    },
+    "0xCA": {
+      "std": 103,
+      "name": "BUILD_LIST",
+      "size": 3,
+      "confidence": "medium"
+    },
+    "0xD9": {
+      "std": 105,
+      "name": "LOAD_ATTR",
+      "size": 3,
+      "confidence": "medium"
+    },
+    "0xDA": {
+      "std": 131,
+      "name": "CALL_FUNCTION",
+      "size": 3,
+      "confidence": "medium"
+    },
+    "0xDE": {
+      "std": 102,
+      "name": "BUILD_TUPLE",
+      "size": 3,
+      "confidence": "medium"
+    },
+    "0xE0": {
+      "std": 104,
+      "name": "BUILD_MAP",
+      "size": 3,
+      "confidence": "medium"
+    },
+    "0xE5": {
+      "std": 110,
+      "name": "JUMP_FORWARD",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0x37": {
+      "std": 92,
+      "name": "UNPACK_SEQUENCE",
+      "size": 3,
+      "confidence": "medium"
+    }
+  },
+  "table_b": {
+    "0x98": {
+      "std": 132,
+      "name": "MAKE_FUNCTION",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0xFB": {
+      "std": 90,
+      "name": "STORE_NAME",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0xAA": {
+      "std": 101,
+      "name": "LOAD_NAME",
+      "size": 3,
+      "confidence": "high"
+    },
+    "0xBF": {
+      "std": 96,
+      "name": "STORE_GLOBAL",
+      "size": 3,
+      "confidence": "medium-high"
+    },
+    "0x91": {
+      "std": 116,
+      "name": "LOAD_GLOBAL",
+      "size": 3,
+      "confidence": "medium-high"
+    },
+    "0x38": {
+      "std": 89,
+      "name": "BUILD_CLASS",
+      "size": 1,
+      "confidence": "medium"
+    },
+    "0x42": {
+      "std": 1,
+      "name": "POP_TOP",
+      "size": 1,
+      "confidence": "high"
+    }
+  },
+  "connect_new": {
+    "0xE3": {
+      "std": 111,
+      "name": "JUMP_IF_FALSE",
+      "size": 3,
+      "confidence": "high",
+      "evidence": "if serverlist: \u6a21\u5f0f\uff0c\u76f8\u5bf9\u8df3\u8f6c"
+    },
+    "0x58": {
+      "std": 25,
+      "name": "BINARY_SUBSCR",
+      "size": 1,
+      "confidence": "high",
+      "evidence": "d['key'] \u5b57\u5178\u53d6\u503c"
+    },
+    "0x6C": {
+      "std": 61,
+      "name": "GET_ITER",
+      "size": 1,
+      "confidence": "medium",
+      "evidence": "for x in ...: \u5faa\u73af\u5f00\u59cb"
+    },
+    "0xD3": {
+      "std": 93,
+      "name": "FOR_ITER",
+      "size": 3,
+      "confidence": "medium",
+      "evidence": "\u5faa\u73af\u8df3\u8f6c\uff0carg\u4e3a\u76f8\u5bf9\u504f\u79fb"
+    }
+  },
+  "total_mappings": 32,
+  "unknown_opcodes_remaining": [
+    "0xA2",
+    "0x40",
+    "0x12",
+    "0x3F",
+    "0x0E",
+    "0x10",
+    "0x11",
+    "0x06",
+    "0x08",
+    "0x1D",
+    "0x36",
+    "0x6C(\u5f85\u786e\u8ba4)"
+  ]
+}
