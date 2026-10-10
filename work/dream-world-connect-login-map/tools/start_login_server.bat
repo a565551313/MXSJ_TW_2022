@@ -1,6 +1,5 @@
 @echo off
 REM Double-click this file to start the local login server.
-REM It asks for the account and password, then starts login_server.py.
 REM Keep this window open while you log in with the game client.
 
 cd /d "%~dp0"
@@ -9,24 +8,37 @@ set PYCMD=python
 where python >nul 2>nul
 if errorlevel 1 set PYCMD=py
 
+REM Fixed test account (must match what you type in the game)
+set ACC=m123456
+set PWD=111222
+
 echo.
 echo ==== Local login server ====
-echo Type the SAME account and password you will type in the game.
+echo Account: %ACC%   Password: %PWD%
 echo.
-set /p ACC=Account (e.g. max123456): 
-set /p PWD=Password (e.g. 12345678): 
+echo Choose a option (type a number, press Enter for 1):
+echo   1 = version 1, fixed name
+echo   2 = version 2, fixed name
+echo   3 = version 3, fixed name
+echo   4 = version 1, length-prefixed name
+echo   5 = version 2, length-prefixed name
+echo   6 = version 3, length-prefixed name
+echo.
+set /p CH=Option [1-6]: 
+if "%CH%"=="" set CH=1
 
-echo.
-echo Version number to send: 1, 2 or 3 (press Enter for 1)
-set /p VID=Version [1]: 
-if "%VID%"=="" set VID=1
-echo Role name format: 1 = fixed 16 bytes, 2 = length-prefixed (press Enter for 1)
-set /p NF=Format [1]: 
+set VID=1
 set EXTRA=
-if "%NF%"=="2" set EXTRA=--name-lenprefix
+if "%CH%"=="2" set VID=2
+if "%CH%"=="3" set VID=3
+if "%CH%"=="4" set EXTRA=--name-lenprefix
+if "%CH%"=="5" set VID=2
+if "%CH%"=="5" set EXTRA=--name-lenprefix
+if "%CH%"=="6" set VID=3
+if "%CH%"=="6" set EXTRA=--name-lenprefix
 
 echo.
-echo Starting server with account [%ACC%] vid=%VID% format=%NF% ...
+echo Starting server: account=%ACC% vid=%VID% option=%CH%
 echo Now start the game client and log in. Watch this window.
 echo.
 
