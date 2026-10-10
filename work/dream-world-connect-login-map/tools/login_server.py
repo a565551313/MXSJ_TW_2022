@@ -184,7 +184,12 @@ def build_player_info(role):
     b += struct.pack("<B", role["iPrepareLoad"])
     b += struct.pack("<i", role["Point"])
     nm = role["Name"].encode("big5hkscs", "replace")[:16]
-    b += nm + b"\x00" * (16 - len(nm))
+    if role.get("NameLenPrefix"):
+        # variant: 1-byte length, then up to 16 bytes (no padding)
+        b += bytes([len(nm)]) + nm
+    else:
+        # default: fixed 16 bytes, zero padded
+        b += nm + b"\x00" * (16 - len(nm))
     return build_frame(bytes(b))
 
 
@@ -292,7 +297,8 @@ def send_login(conn, fp, tag, ks, recv_pos, args):
                                   Desc=args.role_desc, Level=args.role_level,
                                   School=args.role_school, Race=args.role_race,
                                   iPrepareLoad=args.role_prepare,
-                                  Point=args.role_point, Name=args.role_name))
+                                  Point=args.role_point, Name=args.role_name,
+                                  NameLenPrefix=args.name_lenprefix))
 
     need = (len(info) - 1) + (len(role) - 1)
     if not ks.covers(recv_pos, need):
@@ -360,6 +366,8 @@ def main():
     ap.add_argument("--role-prepare", type=int, default=0)
     ap.add_argument("--role-point", type=int, default=0)
     ap.add_argument("--role-name", default="Tester")
+    ap.add_argument("--name-lenprefix", action="store_true",
+                    help="variant: role name is length-prefixed instead of fixed 16 bytes")
 
     ap.add_argument("--logdir", default=os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "captures"))
