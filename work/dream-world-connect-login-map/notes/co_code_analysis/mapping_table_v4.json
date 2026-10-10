@@ -1,198 +1,367 @@
 {
-  "version": "4.0",
-  "date": "2026-10-10",
-  "note": "\u52a0\u5165Connect\u51fd\u6570\u65b0\u7834\u89e3\u76844\u4e2a\u6620\u5c04\uff0c\u7d2f\u8ba132\u4e2a",
-  "table_a": {
-    "0x41": {
-      "std": 1,
-      "name": "POP_TOP",
-      "size": 1,
-      "confidence": "high"
-    },
-    "0x55": {
-      "std": 83,
-      "name": "RETURN_VALUE",
-      "size": 1,
-      "confidence": "high"
-    },
-    "0x71": {
-      "std": 125,
-      "name": "STORE_FAST",
-      "size": 3,
-      "confidence": "high"
-    },
-    "0x85": {
-      "std": 101,
-      "name": "LOAD_NAME",
-      "size": 3,
-      "confidence": "high"
-    },
-    "0x8F": {
-      "std": 100,
-      "name": "LOAD_CONST",
-      "size": 3,
-      "confidence": "high"
-    },
-    "0x95": {
-      "std": 106,
-      "name": "COMPARE_OP",
-      "size": 3,
-      "confidence": "high"
-    },
-    "0xB7": {
-      "std": 114,
-      "name": "POP_JUMP_IF_FALSE",
-      "size": 3,
-      "confidence": "high"
-    },
-    "0xC1": {
-      "std": 124,
-      "name": "LOAD_FAST",
-      "size": 3,
-      "confidence": "high"
-    },
-    "0xC4": {
-      "std": 90,
-      "name": "STORE_NAME",
-      "size": 3,
-      "confidence": "high"
-    },
-    "0xC5": {
-      "std": 94,
-      "name": "STORE_ATTR",
-      "size": 3,
-      "confidence": "medium"
-    },
-    "0xCA": {
-      "std": 103,
-      "name": "BUILD_LIST",
-      "size": 3,
-      "confidence": "medium"
-    },
-    "0xD9": {
-      "std": 105,
-      "name": "LOAD_ATTR",
-      "size": 3,
-      "confidence": "medium"
-    },
-    "0xDA": {
-      "std": 131,
-      "name": "CALL_FUNCTION",
-      "size": 3,
-      "confidence": "medium"
-    },
-    "0xDE": {
-      "std": 102,
-      "name": "BUILD_TUPLE",
-      "size": 3,
-      "confidence": "medium"
-    },
-    "0xE0": {
-      "std": 104,
-      "name": "BUILD_MAP",
-      "size": 3,
-      "confidence": "medium"
-    },
-    "0xE5": {
-      "std": 110,
-      "name": "JUMP_FORWARD",
-      "size": 3,
-      "confidence": "high"
-    },
-    "0x37": {
-      "std": 92,
-      "name": "UNPACK_SEQUENCE",
-      "size": 3,
-      "confidence": "medium"
-    }
+ "date": "2026-10-10",
+ "method": "module-code template mining over 4313 v4-ok decodes (3786 fully parsed end-exact); stack+arg validation; all std numbers = CPython 2.6",
+ "note": "Task-B extension of v3. CORRECTS four v3 table_b assignments (98/e0/fb/42) with 1000-20000x evidence each. NEW: multi-variant S-box (same byte, different size/meaning per code object; proven by 0x6C). 4.1 adds function-code mining (121080 functions, 98311 fully parsed end-exact): A2/JABS, AF/FOR_ITER, D3/SETUP_LOOP, 36/GET_ITER, 58/SUBSCR, 38/LOAD_LOCALS, E3/cond-jump, BINARY-1B class {05,09,15,23,3F}, 43/NOP; jump-base quirk (B7/E3: pos+arg vs A2: absolute vs E5/AF/D3: pos+3+arg). 4.2: BINARY-1B class census (05/09/15/23/3F), (05,30)-terminator pair (11Kx), (43,5A)->STATTR (343/343), EA=LOAD-variant, 23=SUBTRACT.",
+ "table_a": {
+  "0x05": {
+   "std": "0x??",
+   "name": "BINARY_?",
+   "size": 1,
+   "confidence": "medium",
+   "evidence": "feeds STORE/CALL/LOAD (236: LC,5A,LC,05,STORE; 1800+ feeding uses); (05,30)-terminator 11Kx in SAME modules (1027 both) => single semantics; exact op TBD (ADD/MUL suspected)"
   },
-  "table_b": {
-    "0x98": {
-      "std": 132,
-      "name": "MAKE_FUNCTION",
-      "size": 3,
-      "confidence": "high"
-    },
-    "0xFB": {
-      "std": 90,
-      "name": "STORE_NAME",
-      "size": 3,
-      "confidence": "high"
-    },
-    "0xAA": {
-      "std": 101,
-      "name": "LOAD_NAME",
-      "size": 3,
-      "confidence": "high"
-    },
-    "0xBF": {
-      "std": 96,
-      "name": "STORE_GLOBAL",
-      "size": 3,
-      "confidence": "medium-high"
-    },
-    "0x91": {
-      "std": 116,
-      "name": "LOAD_GLOBAL",
-      "size": 3,
-      "confidence": "medium-high"
-    },
-    "0x38": {
-      "std": 89,
-      "name": "BUILD_CLASS",
-      "size": 1,
-      "confidence": "medium"
-    },
-    "0x42": {
-      "std": 1,
-      "name": "POP_TOP",
-      "size": 1,
-      "confidence": "high"
-    }
+  "0x08": {
+   "confidence": "high",
+   "evidence": "60x prev=e0(IMPORT), next=LC/LOAD/JUMP(stmt-start); 2 outliers are post-desync cascades",
+   "name": "IMPORT_STAR",
+   "size": 1,
+   "std": "0x54"
   },
-  "connect_new": {
-    "0xE3": {
-      "std": 111,
-      "name": "JUMP_IF_FALSE",
-      "size": 3,
-      "confidence": "high",
-      "evidence": "if serverlist: \u6a21\u5f0f\uff0c\u76f8\u5bf9\u8df3\u8f6c"
-    },
-    "0x58": {
-      "std": 25,
-      "name": "BINARY_SUBSCR",
-      "size": 1,
-      "confidence": "high",
-      "evidence": "d['key'] \u5b57\u5178\u53d6\u503c"
-    },
-    "0x6C": {
-      "std": 61,
-      "name": "GET_ITER",
-      "size": 1,
-      "confidence": "medium",
-      "evidence": "for x in ...: \u5faa\u73af\u5f00\u59cb"
-    },
-    "0xD3": {
-      "std": 93,
-      "name": "FOR_ITER",
-      "size": 3,
-      "confidence": "medium",
-      "evidence": "\u5faa\u73af\u8df3\u8f6c\uff0carg\u4e3a\u76f8\u5bf9\u504f\u79fb"
-    }
+  "0x30": {
+   "confidence": "medium-high",
+   "evidence": "bb-cluster LC+POP + (05,30) 11314x terminator (after BINARY, before new-expr LOADs) + 15K total; bare-expr-puzzle: 11K discards vs 1.8K feeds (residual: needs stack-sim/runtime)",
+   "name": "POP_TOP",
+   "size": 1,
+   "std": "0x01"
   },
-  "total_mappings": 32,
-  "unknown_opcodes_remaining": [
-    "0xA2",
-    "0x40",
-    "0x12",
-    "0x3F",
-    "0x0E",
-    "0x10",
-    "0x11",
-    "0x06",
-    "0x08",
-    "0x1D",
-    "0x36",
-    "0x6C(\u5f85\u786e\u8ba4)"
-  ]
+  "0x41": {
+   "confidence": "high",
+   "evidence": "from-import tails: ...(AD)(98-STORE), 41 = POP module; entry70 etc.",
+   "name": "POP_TOP",
+   "size": 1,
+   "std": "0x01"
+  },
+  "0x42": {
+   "confidence": "high",
+   "evidence": "8035x, 100% preceded by DA(CALL), 97.6% of DA followed by 42; class-tail only: [name,bases,ns] -> CLASS -> STORE. POP would underflow stack",
+   "name": "BUILD_CLASS",
+   "size": 1,
+   "std": "0x59",
+   "supersedes": "v3 table_b POP_TOP (wrong)"
+  },
+  "0x55": {
+   "confidence": "high",
+   "name": "RETURN_VALUE",
+   "size": 1,
+   "std": "0x53"
+  },
+  "0x5A": {
+   "confidence": "low",
+   "meaning": "stack-neutral 1B (NOP/line-marker?) between LCs; data-idiom with 0x05",
+   "name": "NOP_?",
+   "note": "entry236/entry2926: LC,5A,LC,05,... 5A must be null-effect for 05-binary to combine LCs. 3B-reading gives absurd args",
+   "size": 1,
+   "std": "0x09?"
+  },
+  "0x71": {
+   "confidence": "high",
+   "name": "STORE_FAST",
+   "size": 3,
+   "std": "0x7D"
+  },
+  "0x85": {
+   "confidence": "high",
+   "evidence": "entry245 + module-code: 85 arg=N + D9(LOAD_ATTR); arg < names-len; same as v3 table_a (shared across ctx)",
+   "name": "LOAD_NAME",
+   "size": 3,
+   "std": "0x65"
+  },
+  "0x8F": {
+   "confidence": "high",
+   "name": "LOAD_CONST",
+   "size": 3,
+   "std": "0x64"
+  },
+  "0x95": {
+   "confidence": "high",
+   "name": "COMPARE_OP",
+   "size": 3,
+   "std": "0x6A"
+  },
+  "0x98": {
+   "confidence": "high",
+   "evidence": "sequential import pattern (LC-1,LC-None,E0-N,98-N x13, entry4) + __doc__ store + class-name store; 1000+ modules",
+   "name": "STORE_NAME",
+   "size": 3,
+   "std": "0x5A",
+   "supersedes": "v3 table_b MAKE_FUNCTION (wrong)"
+  },
+  "0xAA": {
+   "confidence": "high",
+   "evidence": "entry4 class-bases: AA 0/10/11/5 + D9 attr; args < names-len",
+   "name": "LOAD_NAME",
+   "size": 3,
+   "std": "0x65"
+  },
+  "0xAD": {
+   "confidence": "high",
+   "evidence": "131x: (E0|98), AD arg=N, 98-STORE arg=N, arg<names-len. from-X-import chains (entry70 x5)",
+   "name": "IMPORT_FROM",
+   "size": 3,
+   "std": "0x6C"
+  },
+  "0xB7": {
+   "confidence": "high",
+   "name": "POP_JUMP_IF_FALSE",
+   "size": 3,
+   "std": "0x72",
+   "note": "SETTLED (4.3): +3-relative (STANDARD). Proof: entry2 lambda `72,LDF0,CMP==,JIF7`: +0 lands on JFWD making false-branch dead (constant-0, absurd); +3 gives `0 if X==ID else 1`. Earlier +0-readings were source-ambiguous (GetDictData-54 HAS else-return-None). Jump-base quirk RETRACTED for B7 (still: A2 absolute, E5/AF/D3 +3 = all standard!)."
+  },
+  "0xBB": {
+   "confidence": "medium",
+   "evidence": "bb-cluster (48 modules, eg 236/170/940): BB 00 00, 30(POP)/C4(STORE)/98(STORE) = LC + consume pattern",
+   "name": "LOAD_CONST",
+   "size": 3,
+   "std": "0x64"
+  },
+  "0xC1": {
+   "confidence": "high",
+   "name": "LOAD_FAST",
+   "size": 3,
+   "std": "0x7C"
+  },
+  "0xC4": {
+   "confidence": "high",
+   "name": "STORE_NAME",
+   "size": 3,
+   "std": "0x5A"
+  },
+  "0xC5": {
+   "confidence": "medium",
+   "name": "STORE_ATTR",
+   "size": 3,
+   "std": "0x5E"
+  },
+  "0xCA": {
+   "confidence": "medium",
+   "name": "BUILD_LIST",
+   "size": 3,
+   "std": "0x67"
+  },
+  "0xD9": {
+   "confidence": "high",
+   "name": "LOAD_ATTR",
+   "size": 3,
+   "std": "0x69"
+  },
+  "0xDA": {
+   "confidence": "high",
+   "evidence": "8228x: 97.6% class-tail (DA,42); rest followed by POP/STORE/LOAD/JUMP/CALL (sane post-call ops)",
+   "name": "CALL_FUNCTION",
+   "size": 3,
+   "std": "0x83"
+  },
+  "0xDE": {
+   "confidence": "high",
+   "evidence": "entry4: DE 04 with exactly 4 base-exprs; BUILD_TUPLE count matches",
+   "name": "BUILD_TUPLE",
+   "size": 3,
+   "std": "0x66"
+  },
+  "0xE0": {
+   "confidence": "high",
+   "evidence": "sequential (LC-1,LC-None,E0-N,98-N) import runs, N=0..12+; v3 arg-dist 0-5 = names idx, not BUILD_MAP counts",
+   "name": "IMPORT_NAME",
+   "size": 3,
+   "std": "0x6B",
+   "supersedes": "v3 table_a BUILD_MAP (wrong)"
+  },
+  "0xE5": {
+   "confidence": "high",
+   "name": "JUMP_FORWARD",
+   "size": 3,
+   "std": "0x6E"
+  },
+  "0xFB": {
+   "confidence": "high",
+   "evidence": "20803x LC<code>,FB-nargs,STORE (def template); nargs dist {0:19483,1:956,2:228,...} = defaults-count",
+   "name": "MAKE_FUNCTION",
+   "size": 3,
+   "std": "0x84",
+   "supersedes": "v3 table_b STORE_NAME (wrong)"
+  },
+  "0xA2": {
+   "std": "0x71",
+   "name": "JUMP_ABSOLUTE",
+   "size": 3,
+   "confidence": "high",
+   "evidence": "9292/9296 absolute-target lands on op-start; CalHP-78->86, GetDictData-68->36(loop-back)"
+  },
+  "0xAF": {
+   "std": "0x5D",
+   "name": "FOR_ITER",
+   "size": 3,
+   "confidence": "medium",
+   "evidence": "GetDictData-36: LOAD,GET_ITER,AF->79(loop-exit, std-relative +3); single-sample + canonical position"
+  },
+  "0xD3": {
+   "std": "0x78",
+   "name": "SETUP_LOOP",
+   "size": 3,
+   "confidence": "medium",
+   "evidence": "GetDictData-29: D3->80 (+3-relative); single-sample + canonical position"
+  },
+  "0x36": {
+   "std": "0x44",
+   "name": "GET_ITER",
+   "size": 1,
+   "confidence": "medium",
+   "evidence": "GetDictData-35: LOAD,36,AF canonical; module ctx 18x TBD"
+  },
+  "0x58": {
+   "std": "0x19",
+   "name": "BINARY_SUBSCR",
+   "size": 1,
+   "confidence": "high",
+   "evidence": "GetDictData-64 state[_key]: 58(1B)+71-STORE_FAST-2(varnames[2]=state); 3B-reading gives absurd arg"
+  },
+  "0x38": {
+   "std": "0x52",
+   "name": "LOAD_LOCALS",
+   "size": 1,
+   "confidence": "high",
+   "evidence": "9224/9224 at codelen-2 followed by RETURN; 9109/9224 in Capitalized (class-body) code; v3 BUILD_CLASS-guess refuted (also: 0x42=BUILD_CLASS)",
+   "supersedes": "v3 table_b BUILD_CLASS (wrong)"
+  },
+  "0xE3": {
+   "std": "0x6F?",
+   "name": "JUMP_IF_TRUE?",
+   "size": 3,
+   "confidence": "medium",
+   "evidence": "9542x after LOAD_ATTR, before POP; +0/+3-relative landing valid (indistinguishable, like B7); TRUE-vs-B7-FALSE pairing suspected, unproven"
+  },
+  "0x3F": {
+   "std": "0x??",
+   "name": "BINARY_?",
+   "size": 1,
+   "confidence": "medium",
+   "evidence": "3557x func-code: [v,c] 3F then STORE/LOAD/CALL; 1B (followers always valid op-starts); exact op TBD"
+  },
+  "0x23": {
+   "std": "0x18?",
+   "name": "BINARY_SUBTRACT?",
+   "size": 1,
+   "confidence": "medium",
+   "evidence": "len(keys)-1 (warturn.SetDictData-69), nx=x2-x1/ny=y2-y1 (magic.GetLine-100/110); 3278x"
+  },
+  "0x15": {
+   "std": "0x??",
+   "name": "BINARY_?",
+   "size": 1,
+   "confidence": "medium",
+   "evidence": "2026x func-code, same shape as 0x3F"
+  },
+  "0x09": {
+   "std": "0x??",
+   "name": "BINARY_?",
+   "size": 1,
+   "confidence": "medium",
+   "evidence": "1175x func-code, same shape as 0x3F; module ctx 10x TBD"
+  },
+  "0x43": {
+   "std": "0x09?/0x??",
+   "name": "BINARY_?|NOP_?",
+   "size": 1,
+   "confidence": "low",
+   "evidence": "feeds STORE_FAST directly 1162x + (43,5A)->STATTR 343/343; BINARY-or-NULL ambiguous"
+  },
+  "0xEA": {
+   "std": "0x65?",
+   "name": "LOAD_?",
+   "size": 3,
+   "confidence": "medium",
+   "evidence": "magic.CNode.__init__-117: EA 1 where LOAD-int expected (names[1]=int); single-sample"
+  },
+  "0x72": {
+   "std": "0x64?",
+   "name": "LOAD_CONST?",
+   "size": 3,
+   "confidence": "medium",
+   "evidence": "entry2 lambda: 72-0,LDF0(ID),CMP== with consts=[0,1],names=[],varnames=[ID]: 72-0 must be const0 (var0 dupes LDF0, names empty)"
+  },
+  "0x37-dual": {
+   "std": "0x5C|0x3C?",
+   "name": "UNPACK_SEQUENCE(3B)|STORE_SUBSCR(1B)?",
+   "size": "3|1",
+   "confidence": "low",
+   "evidence": "v3: BTUP5 then 37 (unpack-position); entry4-InitView@214: 37 then LDF,LDF,LDF,LC (all-valid iff 37=1B; stack [f7,c7,f4]->STORESUB fits). DUAL or v3-wrong."
+  },
+  "0x90": {
+   "std": "0x01?",
+   "name": "POP_TOP?",
+   "size": "3|1",
+   "confidence": "low",
+   "evidence": "3 identical getter-stubs (LC1,90-01-00,LC0,RET) with names=[] (STORE impossible): 90=POP (docstring-discard) with ignored-arg-bytes, or 90=POP-1B+(01,00)-marker-pair"
+  },
+  "0x06": {
+   "std": "0x??",
+   "name": "PUSHER_?",
+   "size": 1,
+   "confidence": "low",
+   "evidence": "OnMessage: [c2,f1],POP,06,CMP<: 06 must push 2nd comparand (LC0=None? names[0]? DUP? all problematic); TBD"
+  }
+ },
+ "table_b": {
+  "0x37": {
+   "confidence": "medium",
+   "name": "UNPACK_SEQUENCE",
+   "note": "v3 carryover; 0x6C is the common UNPACK in logic-code (see dual)",
+   "size": 3,
+   "std": "0x5C"
+  },
+  "0x38": {
+   "confidence": "none",
+   "name": "UNKNOWN",
+   "note": "DEMOTED: v3 said BUILD_CLASS(medium) but ZERO occurrences in 3786 parsed modules. Possibly function-code-only or wrong",
+   "size": null,
+   "std": null
+  },
+  "0x6C-dual": {
+   "confidence": "high",
+   "evidence": "UNPACK-3B: 6x (entry23/233/440/3851/4059/4344, all ok/0-1-garbage): CALL,6C arg=N, N x STORE (N=2,4). BINARY-1B: entry2926 (ok/0-garbage): 6C@248 must be 1B (3B-reading desyncs + misses RET@255); stack needs BINARY combining (LC,LC)->STORE. Both readings end-exact on truth bytes",
+   "name": "UNPACK_SEQUENCE(3B) | BINARY_?(1B)",
+   "note": "PROVES multi-variant S-box: same byte, different size+meaning per code object. Variant selector unknown (co_flags all 0x40; first4 weak: variant-D=8f0000fb?, variant-L=8f00008f/98?). Miner/disassembler must try both sizes with alignment-fit",
+   "size": "3|1",
+   "std": "0x5C|0x??"
+  },
+  "0x91": {
+   "confidence": "medium-high",
+   "name": "LOAD_GLOBAL",
+   "size": 3,
+   "std": "0x74"
+  },
+  "0xBF": {
+   "confidence": "medium-high",
+   "name": "STORE_GLOBAL",
+   "size": 3,
+   "std": "0x60"
+  }
+ },
+ "unknown_hot": {
+  "0x09": "1B BINARY? (LC,LC,09,STORE shape, like 0x3F)",
+  "0x0d/0x0b/0x0e/0x74/0x04/0xa2": "v3-report unknowns; need validated-parse mining",
+  "0x11/0x18/0x4e/df-class": "likely cascade artifacts (appear only post-desync); need arg-validated re-parse",
+  "0x20": "1B? (LOAD_ATTR,20,LC<code>...) POP/PRINT? 10x",
+  "0x36/af": "loop? (CALL,36 af 19,6C...): 36=GET_ITER(1B)? + AF=FOR_ITER(jump)? 18x, need multi-sample",
+  "0x39/0x3d/0x9a/0xc0/cf/d3/fc": "3B mid-expr/statement ops (LOAD/STORE/JUMP variants); need arg+name analysis",
+  "0x3f": "1B BINARY? (LC,LC,3F,STORE shape) 16x",
+  "0x58": "near 5a/05 idiom; deferred until 05/5A resolved",
+  "0x6a": "4x, TBD",
+  "0xb1": "post-08 in 391-desync; TBD",
+  "0x00": "4384x func-code; loop-exit?/pad? TBD (GetDictData-68 was mis-split: actually A2@68; 00-contexts need re-mining)",
+  "0x06": "NEW: after POP in cmp-context; TBD",
+  "0xcf": "1697x but rare-in-parsed (2); arg exceeds all idx-ranges in 1/2 samples -> NOT plain LOAD; TBD",
+  "0x72/0xdb/0x47/0x0b/0x18/0x90/0xf2/0x0e/0x57": "700-1000x each func-code; next mining round",
+  "bare-expr-puzzle": "(05,30) discards BINARY-result 11Kx inHoc (vs 1.8K feeding) in SAME modules; single-semantics proven but statement-shape unexplained (debug-print? custom POP semantics?); needs stack-simulation or runtime trace",
+  "E3-base": "E3 inherits B7-standard (+3) by analogy (unproven; boundary-indistinguishable)"
+ },
+ "version": "4.3-taskB",
+ "v3_corrections": [
+  "0x98: MAKE_FUNCTION -> STORE_NAME",
+  "0xE0: BUILD_MAP -> IMPORT_NAME",
+  "0xFB: STORE_NAME -> MAKE_FUNCTION",
+  "0x42: POP_TOP -> BUILD_CLASS",
+  "0x38: BUILD_CLASS -> UNKNOWN (zero occurrences)",
+  "4.2 adds: A2/JABS, AF/FOR_ITER, D3/SETUP_LOOP, 36/GET_ITER, 58/SUBSCR, 38/LOAD_LOCALS, E3/JIFT?, BINARY-1B class, (05,30)/(43,5A) pairs, EA/LOAD?"
+ ]
 }

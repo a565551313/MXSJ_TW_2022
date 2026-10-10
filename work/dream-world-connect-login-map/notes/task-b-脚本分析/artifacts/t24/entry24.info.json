@@ -1,0 +1,42 @@
+{
+  "filename": "scriptGdata\\checkemaildata.py",
+  "modname": "<module>",
+  "code_count": 1,
+  "func_names": [
+    "<module>"
+  ],
+  "strings": [
+    "027168.com",
+    "126.com",
+    "139.com",
+    "17173.com",
+    "189.cn",
+    "21cn.com",
+    "2980.com",
+    "<module>",
+    "DATA",
+    "PHRASE_DATA",
+    "WHITE_LIST",
+    "aliyun.com",
+    "bccto.me",
+    "cntv.cn",
+    "foxmail.com",
+    "gmail.com",
+    "hotmail.com",
+    "iaoss.com",
+    "icloud.com",
+    "kloap.com",
+    "live.com",
+    "mail.bccto.me",
+    "outlook.com",
+    "qq.com",
+    "scriptGdata\\checkemaildata.py",
+    "sina.cn",
+    "sina.com",
+    "sohu.com",
+    "vip.qq.com",
+    "www.bccto.me",
+    "yahoo.cn",
+    "yahoo.com"
+  ]
+}
