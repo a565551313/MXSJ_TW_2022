@@ -13,6 +13,6 @@ map/*
 !map/2303.map
 !map/2122.map
 
-# Task-B generated decoder artifacts (reproducible via tools/fls_batch_decoder.py)
-work/dream-world-connect-login-map/notes/task-b-*/artifacts/fullrun/entry*
-work/dream-world-connect-login-map/notes/task-b-*/artifacts/fullrun_v7/
+# Python cache
+__pycache__/
+*.pyc

@@ -1,0 +1,162 @@
+source /home/user/MXSJ_TW_2022/mx.exe
+sha256 637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d
+IsWalkable name file offset=0x2b7278 VMA=0x6b8478
+method table name pointer file offset=0x3e22c0, adjacent function VMA=0x488a00
+-- Python binding VMA 0x488a00..0x488a70 --
+
+/home/user/MXSJ_TW_2022/mx.exe:     file format pei-i386
+
+
+Disassembly of section .text:
+
+00488a00 <.text+0x87a00>:
+  488a00:	55                   	push   ebp
+  488a01:	8b ec                	mov    ebp,esp
+  488a03:	83 ec 0c             	sub    esp,0xc
+  488a06:	8d 45 fc             	lea    eax,[ebp-0x4]
+  488a09:	c7 45 fc 01 00 00 00 	mov    DWORD PTR [ebp-0x4],0x1
+  488a10:	50                   	push   eax
+  488a11:	8d 45 f8             	lea    eax,[ebp-0x8]
+  488a14:	50                   	push   eax
+  488a15:	8d 45 f4             	lea    eax,[ebp-0xc]
+  488a18:	50                   	push   eax
+  488a19:	68 14 83 6b 00       	push   0x6b8314
+  488a1e:	ff 75 0c             	push   DWORD PTR [ebp+0xc]
+  488a21:	e8 2a 93 05 00       	call   0x4e1d50
+  488a26:	83 c4 14             	add    esp,0x14
+  488a29:	85 c0                	test   eax,eax
+  488a2b:	75 04                	jne    0x488a31
+  488a2d:	8b e5                	mov    esp,ebp
+  488a2f:	5d                   	pop    ebp
+  488a30:	c3                   	ret
+  488a31:	8b 45 08             	mov    eax,DWORD PTR [ebp+0x8]
+  488a34:	ff 75 fc             	push   DWORD PTR [ebp-0x4]
+  488a37:	ff 75 f8             	push   DWORD PTR [ebp-0x8]
+  488a3a:	8b 48 0c             	mov    ecx,DWORD PTR [eax+0xc]
+  488a3d:	ff 75 f4             	push   DWORD PTR [ebp-0xc]
+  488a40:	8b 49 44             	mov    ecx,DWORD PTR [ecx+0x44]
+  488a43:	8b 89 d4 00 00 00    	mov    ecx,DWORD PTR [ecx+0xd4]
+  488a49:	e8 b2 30 03 00       	call   0x4bbb00
+  488a4e:	84 c0                	test   al,al
+  488a50:	74 0f                	je     0x488a61
+  488a52:	ff 05 bc 17 7f 00    	inc    DWORD PTR ds:0x7f17bc
+  488a58:	b8 bc 17 7f 00       	mov    eax,0x7f17bc
+  488a5d:	8b e5                	mov    esp,ebp
+  488a5f:	5d                   	pop    ebp
+  488a60:	c3                   	ret
+  488a61:	ff 05 b0 17 7f 00    	inc    DWORD PTR ds:0x7f17b0
+  488a67:	b8 b0 17 7f 00       	mov    eax,0x7f17b0
+  488a6c:	8b e5                	mov    esp,ebp
+  488a6e:	5d                   	pop    ebp
+  488a6f:	c3                   	ret
+
+-- pathfinding grid comparison VMA 0x4bbb00..0x4bbb54 --
+
+/home/user/MXSJ_TW_2022/mx.exe:     file format pei-i386
+
+
+Disassembly of section .text:
+
+004bbb00 <.text+0xbab00>:
+  4bbb00:	55                   	push   ebp
+  4bbb01:	8b ec                	mov    ebp,esp
+  4bbb03:	56                   	push   esi
+  4bbb04:	66 8b 75 08          	mov    si,WORD PTR [ebp+0x8]
+  4bbb08:	8b d1                	mov    edx,ecx
+  4bbb0a:	57                   	push   edi
+  4bbb0b:	66 8b 7d 10          	mov    di,WORD PTR [ebp+0x10]
+  4bbb0f:	66 89 7a 04          	mov    WORD PTR [edx+0x4],di
+  4bbb13:	66 85 f6             	test   si,si
+  4bbb16:	78 34                	js     0x4bbb4c
+  4bbb18:	66 8b 45 0c          	mov    ax,WORD PTR [ebp+0xc]
+  4bbb1c:	66 85 c0             	test   ax,ax
+  4bbb1f:	78 2b                	js     0x4bbb4c
+  4bbb21:	0f b7 0a             	movzx  ecx,WORD PTR [edx]
+  4bbb24:	66 3b f1             	cmp    si,cx
+  4bbb27:	7d 23                	jge    0x4bbb4c
+  4bbb29:	66 3b 42 02          	cmp    ax,WORD PTR [edx+0x2]
+  4bbb2d:	7d 1d                	jge    0x4bbb4c
+  4bbb2f:	98                   	cwde
+  4bbb30:	0f bf c9             	movsx  ecx,cx
+  4bbb33:	0f af c8             	imul   ecx,eax
+  4bbb36:	0f bf c6             	movsx  eax,si
+  4bbb39:	03 c8                	add    ecx,eax
+  4bbb3b:	8b 42 08             	mov    eax,DWORD PTR [edx+0x8]
+  4bbb3e:	66 39 3c 48          	cmp    WORD PTR [eax+ecx*2],di
+  4bbb42:	73 08                	jae    0x4bbb4c
+  4bbb44:	5f                   	pop    edi
+  4bbb45:	b0 01                	mov    al,0x1
+  4bbb47:	5e                   	pop    esi
+  4bbb48:	5d                   	pop    ebp
+  4bbb49:	c2 0c 00             	ret    0xc
+  4bbb4c:	5f                   	pop    edi
+  4bbb4d:	32 c0                	xor    al,al
+  4bbb4f:	5e                   	pop    esi
+  4bbb50:	5d                   	pop    ebp
+  4bbb51:	c2 0c 00             	ret    0xc
+
+-- pathfinding coordinate scaling (signed divide by 20) VMA 0x4baebf..0x4baf2a --
+
+/home/user/MXSJ_TW_2022/mx.exe:     file format pei-i386
+
+
+Disassembly of section .text:
+
+004baebf <.text+0xb9ebf>:
+  4baebf:	b8 67 66 66 66       	mov    eax,0x66666667
+  4baec4:	f7 6d 08             	imul   DWORD PTR [ebp+0x8]
+  4baec7:	6a 01                	push   0x1
+  4baec9:	c1 fa 03             	sar    edx,0x3
+  4baecc:	8b c2                	mov    eax,edx
+  4baece:	c1 e8 1f             	shr    eax,0x1f
+  4baed1:	03 c2                	add    eax,edx
+  4baed3:	0f b7 f8             	movzx  edi,ax
+  4baed6:	b8 67 66 66 66       	mov    eax,0x66666667
+  4baedb:	f7 6d 0c             	imul   DWORD PTR [ebp+0xc]
+  4baede:	c1 fa 03             	sar    edx,0x3
+  4baee1:	8b c2                	mov    eax,edx
+  4baee3:	c1 e8 1f             	shr    eax,0x1f
+  4baee6:	03 c2                	add    eax,edx
+  4baee8:	0f b7 f0             	movzx  esi,ax
+  4baeeb:	b8 67 66 66 66       	mov    eax,0x66666667
+  4baef0:	f7 6d 10             	imul   DWORD PTR [ebp+0x10]
+  4baef3:	b8 67 66 66 66       	mov    eax,0x66666667
+  4baef8:	c1 fa 03             	sar    edx,0x3
+  4baefb:	8b ca                	mov    ecx,edx
+  4baefd:	c1 e9 1f             	shr    ecx,0x1f
+  4baf00:	03 ca                	add    ecx,edx
+  4baf02:	f7 6d 14             	imul   DWORD PTR [ebp+0x14]
+  4baf05:	0f b7 c9             	movzx  ecx,cx
+  4baf08:	c1 fa 03             	sar    edx,0x3
+  4baf0b:	8b c2                	mov    eax,edx
+  4baf0d:	89 4d e4             	mov    DWORD PTR [ebp-0x1c],ecx
+  4baf10:	c1 e8 1f             	shr    eax,0x1f
+  4baf13:	03 c2                	add    eax,edx
+  4baf15:	0f b7 c0             	movzx  eax,ax
+  4baf18:	50                   	push   eax
+  4baf19:	51                   	push   ecx
+  4baf1a:	8b 4d f0             	mov    ecx,DWORD PTR [ebp-0x10]
+  4baf1d:	56                   	push   esi
+  4baf1e:	57                   	push   edi
+  4baf1f:	89 45 e0             	mov    DWORD PTR [ebp-0x20],eax
+  4baf22:	e8 39 0c 00 00       	call   0x4bbb60
+  4baf27:	84 c0                	test   al,al
+  4baf29:	0f                   	.byte 0xf
+
+-- LLEC data loading VMA 0x4b8d3c..0x4b8d54 --
+
+/home/user/MXSJ_TW_2022/mx.exe:     file format pei-i386
+
+
+Disassembly of section .text:
+
+004b8d3c <.text+0xb7d3c>:
+  4b8d3c:	8b 45 b0             	mov    eax,DWORD PTR [ebp-0x50]
+  4b8d3f:	8b cb                	mov    ecx,ebx
+  4b8d41:	8b 40 50             	mov    eax,DWORD PTR [eax+0x50]
+  4b8d44:	05 c0 00 00 00       	add    eax,0xc0
+  4b8d49:	50                   	push   eax
+  4b8d4a:	e8 d1 0e 15 00       	call   0x609c20
+  4b8d4f:	e9 4c ff ff ff       	jmp    0x4b8ca0
+
+Observation: binding 0x488a00 calls 0x4bbb00. 0x4bbb00 reads a 16-bit grid element and compares it with a threshold. 0x4baebf..0x4baf27 reduces coordinates to 20-pixel grid cells (signed multiply by 0x66666667, shift right 3). Linkage from raw LLEC bytes to this grid is NOT established by these snippets.

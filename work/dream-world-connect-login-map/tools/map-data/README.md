@@ -1,0 +1,3 @@
+# 原始网格字节导出
+
+五份 JSON 均由 `python3 work/dream-world-connect-login-map/tools/map_parser.py map --output-dir work/dream-world-connect-login-map/tools/map-data` 从根目录 `map/*.map` 离线生成。`sectors[].cells` 是每个 `LLEC` 的原样 192 字节（不做真假/可行走映射）；`image` 描述 `GEPJ` 原始位流偏移、长度、摘要和 13 个 `segment_lengths_u16_le`（共享 JPEG 头 + 12 个独立扫描段）；**PNG 底图见相邻的 `map-textures/`**，不把像素塞进 JSON。`prefix_records[].bounds_px` 是从五个 u32 及 `320×240` 分块交叉引用验证的矩形坐标；`payload_length` 等于记录长度减 20，但载荷内容和对象类型未知，**不是**已识别的 NPC/传送点。SVG 查看器采用 16×12 的网格显示；`--overlay-records` 叠加空间对象边框，`--probe X Y` 查询原始格值。跨五份样本的像素相关性表明逻辑边界内非 0/1 仅有值 2，但**尚未证明这些值的可行走语义**，详见 `../../evidence/E-MAP-003.md`。
