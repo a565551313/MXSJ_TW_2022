@@ -133,7 +133,7 @@
 - `work/dream-world-connect-login-map/evidence/E-VERIFY-001.md`
 - `work/dream-world-connect-login-map/notes/protocol-artifacts/README.md`
 - `work/dream-world-connect-login-map/notes/decoder-artifacts/README.md`
-- `work/dream-world-connect-login-map/tools/mock-server-logs/mock-server-20261010-094859.log`（**`mock_server.py` 试运行产生的日志，保留，未删除。若不需要请由你决定**）
+- ~~`work/dream-world-connect-login-map/tools/mock-server-logs/mock-server-20261010-094859.log`~~（`mock_server.py` 试运行产生的日志，经用户确认后已删除，目录一并移除）
 - 仓库外临时文件：`/tmp/verify516/`、`/tmp/pevenv/`（不在仓库内）
 
 ## 10. 尚未解决、需要你决定的事项
