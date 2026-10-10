@@ -1,0 +1,167 @@
+{
+  "data_files": [
+    {
+      "path": "data/data.fls",
+      "bytes": 354143
+    },
+    {
+      "path": "data/effect.fls",
+      "bytes": 1859560
+    },
+    {
+      "path": "data/passive.fls",
+      "bytes": 105006
+    },
+    {
+      "path": "data/script.fls",
+      "bytes": 24454082
+    },
+    {
+      "path": "data/skill.fls",
+      "bytes": 1298237
+    },
+    {
+      "path": "data/skill2.fls",
+      "bytes": 1886997
+    }
+  ],
+  "data_named_map_or_scene": [],
+  "standalone_map_files": [
+    {
+      "path": "map/2101.map",
+      "bytes": 178738,
+      "sha256": "aa6d9ee318e91eb62bfe454675a9d53289e4a3ba5e97d09ff93db923967a1d78",
+      "first_32_hex": "302e314dd0070000dc050000d8000000910600004a0c000003120000bc170000",
+      "header_u32_le_at_4_8_208_212": [
+        2000,
+        1500,
+        212,
+        0
+      ],
+      "sector_0_offset": 216,
+      "sector_offsets_strictly_increasing": true,
+      "sector_0_prefix_hex": "000000004745504ac304000019014c004c004c004c004c004c004c004c004c004c004c004c00ffd8ffa0ffc000110800",
+      "marker_occurrences": {
+        "GEPJ": 49,
+        "LLEC": 49,
+        "GIRB": 49
+      },
+      "zlib_trials": {
+        "0": "failed: Error -3 while decompressing data: incorrect header check",
+        "4": "failed: Error -3 while decompressing data: incorrect header check",
+        "8": "failed: Error -3 while decompressing data: incorrect header check",
+        "12": "failed: Error -3 while decompressing data: incorrect header check",
+        "216": "failed: Error -3 while decompressing data: unknown compression method"
+      }
+    },
+    {
+      "path": "map/2111.map",
+      "bytes": 216248,
+      "sha256": "7bab45a84f864d91a8f3b9582704776a19925f7575223b5d433478a6cdb46f61",
+      "first_32_hex": "302e314dd0070000dc050000d8000000910600004a0c000003120000bc170000",
+      "header_u32_le_at_4_8_208_212": [
+        2000,
+        1500,
+        212,
+        0
+      ],
+      "sector_0_offset": 216,
+      "sector_offsets_strictly_increasing": true,
+      "sector_0_prefix_hex": "000000004745504ac304000019014c004c004c004c004c004c004c004c004c004c004c004c00ffd8ffa0ffc000110800",
+      "marker_occurrences": {
+        "GEPJ": 49,
+        "LLEC": 49,
+        "GIRB": 49
+      },
+      "zlib_trials": {
+        "0": "failed: Error -3 while decompressing data: incorrect header check",
+        "4": "failed: Error -3 while decompressing data: incorrect header check",
+        "8": "failed: Error -3 while decompressing data: incorrect header check",
+        "12": "failed: Error -3 while decompressing data: incorrect header check",
+        "216": "failed: Error -3 while decompressing data: unknown compression method"
+      }
+    },
+    {
+      "path": "map/2112.map",
+      "bytes": 210562,
+      "sha256": "55505a9bb35ff46c4c261c4399d88e6f26334fc7f1575272d3e8ab6e6da2f627",
+      "first_32_hex": "302e314dd0070000dc050000d8000000910600004a0c000003120000bc170000",
+      "header_u32_le_at_4_8_208_212": [
+        2000,
+        1500,
+        212,
+        0
+      ],
+      "sector_0_offset": 216,
+      "sector_offsets_strictly_increasing": true,
+      "sector_0_prefix_hex": "000000004745504ac304000019014c004c004c004c004c004c004c004c004c004c004c004c00ffd8ffa0ffc000110800",
+      "marker_occurrences": {
+        "GEPJ": 49,
+        "LLEC": 49,
+        "GIRB": 49
+      },
+      "zlib_trials": {
+        "0": "failed: Error -3 while decompressing data: incorrect header check",
+        "4": "failed: Error -3 while decompressing data: incorrect header check",
+        "8": "failed: Error -3 while decompressing data: incorrect header check",
+        "12": "failed: Error -3 while decompressing data: incorrect header check",
+        "216": "failed: Error -3 while decompressing data: unknown compression method"
+      }
+    },
+    {
+      "path": "map/2122.map",
+      "bytes": 260059,
+      "sha256": "84e69dbed80f6daa0e1a9bf63ff850d3146df2860de72b7b3d46a4d6ecffd18f",
+      "first_32_hex": "302e314dd0070000dc050000d8000000910600004a0c000003120000041f0000",
+      "header_u32_le_at_4_8_208_212": [
+        2000,
+        1500,
+        212,
+        0
+      ],
+      "sector_0_offset": 216,
+      "sector_offsets_strictly_increasing": true,
+      "sector_0_prefix_hex": "000000004745504ac304000019014c004c004c004c004c004c004c004c004c004c004c004c00ffd8ffa0ffc000110800",
+      "marker_occurrences": {
+        "GEPJ": 49,
+        "LLEC": 49,
+        "GIRB": 49
+      },
+      "zlib_trials": {
+        "0": "failed: Error -3 while decompressing data: incorrect header check",
+        "4": "failed: Error -3 while decompressing data: incorrect header check",
+        "8": "failed: Error -3 while decompressing data: incorrect header check",
+        "12": "failed: Error -3 while decompressing data: incorrect header check",
+        "216": "failed: Error -3 while decompressing data: unknown compression method"
+      }
+    },
+    {
+      "path": "map/2303.map",
+      "bytes": 228529,
+      "sha256": "8d8a07a35a06712f7153c6562e093f0cdb456e6c57932555ca0b35afc37a96e8",
+      "first_32_hex": "302e314dd0070000dc050000e13e00009a440000534a00000c500000c5550000",
+      "header_u32_le_at_4_8_208_212": [
+        2000,
+        1500,
+        212,
+        32
+      ],
+      "sector_0_offset": 16097,
+      "sector_offsets_strictly_increasing": true,
+      "sector_0_prefix_hex": "000000004745504ac304000019014c004c004c004c004c004c004c004c004c004c004c004c00ffd8ffa0ffc000110800",
+      "marker_occurrences": {
+        "GEPJ": 49,
+        "LLEC": 49,
+        "GIRB": 49
+      },
+      "zlib_trials": {
+        "0": "failed: Error -3 while decompressing data: incorrect header check",
+        "4": "failed: Error -3 while decompressing data: incorrect header check",
+        "8": "failed: Error -3 while decompressing data: incorrect header check",
+        "12": "failed: Error -3 while decompressing data: incorrect header check",
+        "16097": "failed: Error -3 while decompressing data: unknown compression method"
+      }
+    }
+  ],
+  "standalone_image_files": []
+}
