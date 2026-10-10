@@ -1,6 +1,6 @@
 # E-SCRIPT-002: script.fls 全量脚本解码与分析（Task-B）
 
-> 状态: provisional（v7-retry 运行中，344/870；合并后更新终版数字）。
+> 状态: 终版（v4 全量 + v7 二轮重试已合并，见 `终版统计.md`）。
 > 只读约束: 未修改 `data/script.fls`；全部离线，见仓库根约束。
 
 ## 1. 范围与方法
@@ -12,13 +12,12 @@
 
 ## 2. 解码结果（v4 全量，5002/5002）
 
-| 状态 | 数量 |
-|---|---|
-| ok | 4132（82.6%）|
-| fail | 689 |
-| suspect | 181 |
+v4 全量：ok 4132（82.6%）/ fail 689 / suspect 181。
 
-v7-retry（fails+suspects=870）：进行中 344/870，其中 ok 138 / fail 104 / suspect 102（救回率 ~40%）。
+**终版（v7-retry 合并）**：ok **4484（89.6%）** / suspect 246 / fail 272。
+- v7-retry 覆盖 870 条 fail+suspect：fail→ok 287（救回率 41.7%），suspect→ok 65，合计净增 352 ok。
+- 注意：`ok` 仅表示解析完整且 sanity 通过；名字级正确性另见 `suspicious-names-review.md`（可疑名 179 条，抽检显示二轮修复不完全）。
+- 明细见 `终版统计.md`。
 
 ## 3. 关键发现
 
@@ -34,15 +33,20 @@ v7-retry（fails+suspects=870）：进行中 344/870，其中 ok 138 / fail 104 
 
 ## 4. 残留问题
 
-- **16 类**：177 个 ok 含可疑函数名（co_names 损坏，parse+sane+0-garbage 照过）；合并后二轮 v7 重试 + 抽检。
+- **可疑名**：179 个 ok 条目含损坏函数名（sanity 过滤无法识别）。二轮 v7 重解码后，经词表校验仅 55 条确认正确，113 条仍有词表外名字，11 条重解码失败保留 v4。见 `suspicious-names-review.md`。（任务书中的 177 与 `suspicious_name` 字段在数据中不存在，已按规则重新定义。）
 - **entry84**（newpresentdata.py）：五 key 已破 `[eb,db,85,64,f6]`，卡 `'l'`-n 损坏（4B 归档损坏或第 6 微段）；已封存（`artifacts/entry84-parked-notes.md`）。
 - **entry251**（50KB）：病态嵌套曾挂 6 分钟；已加读预算（60K）+ 熔断（8 hits）+ 单条 150s 上限，现 fail-fast（`timeout-s0`）。
 - **bare-expr 之谜**：`(05,30)` 丢弃 BINARY 结果 11K 次（同模块亦有 1.8K 正常使用）；需栈模拟/运行时确认。
-- **未知 opcode**：`00/72/db/06/47/0b/90/f2/0e/57/cf` 等（700~4000x/函数级）待第四轮挖掘；`0x38` 在函数=LOAD_LOCALS（9224/9224 类尾），模块零出现。
+- **未知 opcode**：`00/72/db/06/47/0b/90/f2/0e/57/cf` 等（700~4000x/函数级）待第四轮挖掘；`0x38` 在函数=LOAD_LOCALS（9224/9224 类尾），模块零出现。第四轮（unknown_hot 16 个）本轮**未破解**，见 `unknown-opcode-round4-status.md`。
 
 ## 5. 交付物
 
-- `artifacts/script-catalog.csv`（5002 行，provisional；合并后重出终版）
+- `artifacts/script-catalog.csv`（5002 行，终版，已按 v7 合并结果重出，保留原 prio 列）
+- `artifacts/终版统计.md`（终版数字与明细）
+- `artifacts/suspicious-names.json` / `suspicious-names-review.md` / `suspicious-names-repair-candidates.json`（可疑名二轮）
+- `artifacts/mall-protocol-analysis.md`（商城 C2S/S2C 协议专题）
+- `artifacts/fullrun/decode-results-final.jsonl`（终版逐条结果，带 source 字段）
+- `tools/extract_co_signatures.py`（导出 code object 的 varnames/names/consts）
 - `artifacts/protocol-commands-catalog.md`（1783 行，28 opcode 家族）
 - `artifacts/battle-logic-analysis.md`、`artifacts/quest-item-analysis.md`
 - `tools/fls_batch_decoder.py` (v7)、`tools/pymarshal_dis.py`
@@ -54,6 +58,6 @@ v7-retry（fails+suspects=870）：进行中 344/870，其中 ok 138 / fail 104 
 
 ```bash
 python3 tools/fls_batch_decoder.py --all --output <outdir> --jobs 2        # v4 全量
-python3 tools/fls_batch_decoder.py --all --indices "$(cat /tmp/retry_indices.txt)" --output <outdir> --jobs 2 --resume  # v7 重试
+python3 tools/fls_batch_decoder.py --archive data/script.fls --all --output <outdir>/v7-retry --indices <870 个 fail+suspect 索引> --jobs 2 --resume  # v7 重试（任务书中 --v7-retry/--input 参数不存在）
 python3 tools/pymarshal_dis.py <entryN.marshal.bin> [--code-only F] [--sizes ..]  # 反汇编
 ```
