@@ -1,0 +1,3402 @@
+[
+  {
+    "index": 37,
+    "filename_v4": "script\\mxgame\\consignmentsalecenter\\view\\dlgconsignmallguildsummon.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "OnHotBoxL=ave"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\consignmentsalecenter\\view\\dlgconsignmallguildsummon.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 54,
+    "filename_v4": "script\\mxgame\\goodvoice\\netgoodvoice.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "OnOpenS*!dFlower"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\goodvoice\\netgoodvoice.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 63,
+    "filename_v4": "script\\dialog\\newwarui\\wardecidewinnertime\\dgtwardecidetime.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "EditInitt\u000e\u0000\u0000\u0000InitDecideView(\u0002\u0000\u0000\u0000"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\newwarui\\wardecidewinnertime\\dgtwardecidetime.py",
+    "v7_oov_names": [
+      "EditInitt\u000e\u0000\u0000\u0000InitDecideView(\u0002\u0000\u0000\u0000"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "EditInitt\u000e\u0000\u0000\u0000InitDecideView(\u0002\u0000\u0000\u0000",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 70,
+    "filename_v4": "script\\lib\\simplejson.py",
+    "method_v4": "greedy-v4+X",
+    "v4_bad_names": [
+      "m[_B]@FmQmmake_encoder"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7+X+combo",
+    "v7_filename": "script\\lib\\simplejson.py",
+    "v7_oov_names": [
+      "_imporFmQmmake_encoder"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "_imporFmQmmake_encoder",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 115,
+    "filename_v4": "script\\protocol\\csdailylottery.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "GS2CSelec[}JXN]K"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\protocol\\csdailylottery.py",
+    "v7_oov_names": [
+      "GS2CSJCJLtReward"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GS2CSJCJLtReward",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 142,
+    "filename_v4": "script\\mxgame\\pet\\dlgpetcombinenew.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Q~ws`BwfQs~~Psqy"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\pet\\dlgpetcombinenew.py",
+    "v7_oov_names": [
+      "ClearPetCallPsqy"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "ClearPetCallPsqy",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 212,
+    "filename_v4": "script\\mxgame\\newyeargift\\newyeargifttest.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "gjAS}AEVciftTest"
+    ],
+    "v7_status": "suspect",
+    "v7_method": "greedy-v7+X+tinyseg",
+    "v7_filename": "script\\mxgame\\newyeargift\\newyeargifttest.py",
+    "v7_oov_names": [
+      "CNewYAEVciftTest"
+    ],
+    "class": "C_not_ok_v7_suspect",
+    "repair_candidates": []
+  },
+  {
+    "index": 242,
+    "filename_v4": "script\\mxgame\\newgive\\delegate\\dgtnewgivemain.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "OnSelectO^line"
+    ],
+    "v7_status": "fail",
+    "v7_method": "greedy-v7-final",
+    "v7_filename": "",
+    "v7_oov_names": [],
+    "class": "C_not_ok_v7_fail",
+    "repair_candidates": []
+  },
+  {
+    "index": 249,
+    "filename_v4": "script\\mxgame\\laojianghu\\mdlaojianghu.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "GetPvUnDGKCoZG]X"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\laojianghu\\mdlaojianghu.py",
+    "v7_oov_names": [
+      "GetPvUFlockGroup"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GetPvUFlockGroup",
+        "candidates": [
+          "SetPvUnlockGroup"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 317,
+    "filename_v4": "script\\quickpay.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "BcAb~yKbnx~"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\quickpay.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 321,
+    "filename_v4": "script\\mxgame\\activity\\mengxiang3activity\\model\\mdfashiongift.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "YY\\{irsunGiftModel"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\mengxiang3activity\\model\\mdfashiongift.py",
+    "v7_oov_names": [
+      "CCFairsunGiftModel"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "CCFairsunGiftModel",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 346,
+    "filename_v4": "script\\data\\juben\\task13350.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "GetJubenDat:"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\data\\juben\\task13350.py",
+    "v7_oov_names": [
+      "GetJubenDat:"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GetJubenDat:",
+        "candidates": [
+          "GetJubenData"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 347,
+    "filename_v4": "script\\6;3>=5\\weixingift.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialo5\\weixingift.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 364,
+    "filename_v4": "script\\mxgame\\warprepare\\delegate\\dgtonekeyfumo.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "VGetBtnToPageD5?t"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\warprepare\\delegate\\dgtonekeyfumo.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 374,
+    "filename_v4": "script\\mxgame\\activityreward\\delegate\\dgtbppreview.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "zMNZM[@zM_IrdDesc"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activityreward\\delegate\\dgtbppreview.py",
+    "v7_oov_names": [
+      "RefreshzM_IrdDesc"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "RefreshzM_IrdDesc",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 377,
+    "filename_v4": "script\\mxgame\\newgroup\\groupcontext.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "vTEvC^upDlg"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\newgroup\\groupcontext.py",
+    "v7_oov_names": [
+      "GetGroupDlg"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GetGroupDlg",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 429,
+    "filename_v4": "script\\data\\bombdata.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "GetDaH]"
+    ],
+    "v7_status": "fail",
+    "v7_method": "greedy-v7-final",
+    "v7_filename": "",
+    "v7_oov_names": [],
+    "class": "C_not_ok_v7_fail",
+    "repair_candidates": []
+  },
+  {
+    "index": 470,
+    "filename_v4": "script\\mxgame\\activity\\annualbeauty\\delegate\\beautycontestblog\\dgtrecommandcontent.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "þÜÍïÐÜÎ"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\annualbeauty\\delegate\\beautycontestblog\\dgtrecommandcontent.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 481,
+    "filename_v4": "script\\dialog\\sysopt\\dlgnewsysopt\\dlgnewsysopt.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "CloseKuaFL{MW"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\sysopt\\dlgnewsysopt\\dlgnewsysopt.py",
+    "v7_oov_names": [
+      "CloseKuaFuBMW"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "CloseKuaFuBMW",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 554,
+    "filename_v4": "script\\mxgame\\album\\dlgalbumcharsource.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Conwxc|Use"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\album\\dlgalbumcharsource.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 621,
+    "filename_v4": "script\\mxgame\\activity\\timewheel\\view\\dlgquickweekcard.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "55init__",
+      "55init__",
+      "55init__"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\timewheel\\view\\dlgquickweekcard.py",
+    "v7_oov_names": [
+      "55init__",
+      "55init__",
+      "55init__"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "55init__",
+        "candidates": [
+          "__init__"
+        ]
+      },
+      {
+        "v7_name": "55init__",
+        "candidates": [
+          "__init__"
+        ]
+      },
+      {
+        "v7_name": "55init__",
+        "candidates": [
+          "__init__"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 660,
+    "filename_v4": "script\\mxgame\\warprepare\\netwarprepare.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Q UAAe{fqzWcg{bQsaw"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\warprepare\\netwarprepare.py",
+    "v7_oov_names": [
+      "C2GSSwitchEquibQsaw"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "C2GSSwitchEquibQsaw",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 677,
+    "filename_v4": "script\\protocol\\csuniquedevice.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "GS2CSta][z_C@NKkJYFLJ"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\protocol\\csuniquedevice.py",
+    "v7_oov_names": [
+      "GS2CStNrtUploadDevice"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GS2CStNrtUploadDevice",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 680,
+    "filename_v4": "script\\maze\\netmaze.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "\u000e\u0000aze"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\maze\\netmaze.py",
+    "v7_oov_names": [
+      "\u000e\u0000aze"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "\u000e\u0000aze",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 696,
+    "filename_v4": "script\\mxgame\\activity\\cookfight\\dlgcookfight.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "ËetName",
+      "ËetName"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\cookfight\\dlgcookfight.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 703,
+    "filename_v4": "script\\mxgame\\activity\\mx2018cj\\dlgmx2018cj.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "O@U^GameIntegralDlg"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\mx2018cj\\dlgmx2018cj.py",
+    "v7_oov_names": [
+      "OpenGameIntegralDlg"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OpenGameIntegralDlg",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 707,
+    "filename_v4": "script\\mxgame\\activity\\annualbeauty\\view\\dlgsearacecampaign.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "qSBf_Ud_Q^BtBX",
+      "qSBf_Ud_Q^BtBX"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\annualbeauty\\view\\dlgsearacecampaign.py",
+    "v7_oov_names": [
+      "GetPicRighBtBX",
+      "GetPicRighBtBX"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GetPicRighBtBX",
+        "candidates": []
+      },
+      {
+        "v7_name": "GetPicRighBtBX",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 736,
+    "filename_v4": "script\\mxgame\\warprepare\\delegate\\dgtwarpreparemain.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "RefreshUIS>9w"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\warprepare\\delegate\\dgtwarpreparemain.py",
+    "v7_oov_names": [
+      "RefreshUISh9w"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "RefreshUISh9w",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 796,
+    "filename_v4": "script\\render\\render\\rendertask.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "¶Ç§´"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\render\\render\\rendertask.py",
+    "v7_oov_names": [
+      "C2RAdd"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "C2RAdd",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 830,
+    "filename_v4": "script\\mxgame\\dailyteam\\mddailyteam.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "JhyZhhf]bint"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\dailyteam\\mddailyteam.py",
+    "v7_oov_names": [
+      "GetWeekPbint"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GetWeekPbint",
+        "candidates": [
+          "SetWeekPoint"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 879,
+    "filename_v4": "script\\lib\\platform.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "linux_d$>9?$/89$\"#"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\lib\\platform.py",
+    "v7_oov_names": [
+      "linux_distribution"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "linux_distribution",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 938,
+    "filename_v4": "script\\mxgame\\activity\\mengxiang3activity\\model\\mdbeautycontest2021.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "ModuleR+=+:"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\mengxiang3activity\\model\\mdbeautycontest2021.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 957,
+    "filename_v4": "script\\mxgame\\activity\\countrycontest\\arena\\delegate\\dgtctrycontest1v1gonglei.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "OnS8)\n43Times"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\countrycontest\\arena\\delegate\\dgtctrycontest1v1gonglei.py",
+    "v7_oov_names": [
+      "OnSetW43Times"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OnSetW43Times",
+        "candidates": [
+          "OnSetWinTimes"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 988,
+    "filename_v4": "script\\mxgame\\resloadasync\\resloadasyncserver.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "|[\\AyZTQg\\QPGTaskList"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\resloadasync\\resloadasyncserver.py",
+    "v7_oov_names": [
+      "InitLoadRiQPGTaskList"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "InitLoadRiQPGTaskList",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 999,
+    "filename_v4": "script\\netblock.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "7F'RemoveSkill"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\netblock.py",
+    "v7_oov_names": [
+      "C2SRemoveSkill"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "C2SRemoveSkill",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1006,
+    "filename_v4": "script\\pubscript\\pubdylogin.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "C2IMCanrt}\\d}tiDownload"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\pubscript\\pubdylogin.py",
+    "v7_oov_names": [
+      "C2IMCancelMultiDownload"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "C2IMCancelMultiDownload",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1086,
+    "filename_v4": "script\\mxgame\\sibling\\delegate\\dgtsiblingchat.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "ïÈÏÒ"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\sibling\\delegate\\dgtsiblingchat.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 1092,
+    "filename_v4": "script\\mxgame\\item\\itemmgr.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      ",\t\t$tems",
+      ",\t\t$tems"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\item\\itemmgr.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 1082,
+    "filename_v4": "script\\dialog\\choosespecialbook\\dlgchoosespecialbook.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "`IJXy\\"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\choosespecialbook\\dlgchoosespecialbook.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 1106,
+    "filename_v4": "script\\mxgame\\activity\\motherday\\motherdayinterface.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Open/ewardDlg"
+    ],
+    "v7_status": "suspect",
+    "v7_method": "greedy-v7+X+tinyseg",
+    "v7_filename": "script\\mxgame\\activity\\motherday\\motherdayinterface.py",
+    "v7_oov_names": [],
+    "class": "C_not_ok_v7_suspect",
+    "repair_candidates": []
+  },
+  {
+    "index": 1223,
+    "filename_v4": "script\\commonfriend.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "dAAw@TP@stID2Status"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\commonfriend.py",
+    "v7_oov_names": [
+      "AddRequestID2Status"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "AddRequestID2Status",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1181,
+    "filename_v4": "script\\mxgame\\skill\\skilliconpath.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "GetSummonSkillIUYXfWB^"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\skill\\skilliconpath.py",
+    "v7_oov_names": [
+      "GetSummonSkillIconPath"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GetSummonSkillIconPath",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1312,
+    "filename_v4": "script\\mxgame\\activity\\2021summer\\dgt\\logicshow_dgtsummeractmain.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "£¤¹"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\2021summer\\dgt\\logicshow_dgtsummeractmain.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 1413,
+    "filename_v4": "script\\yard\\yardedit\\yardeditmap\\yardeditmapitembase.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Nl}M`{ljt"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\yard\\yardedit\\yardeditmap\\yardeditmapitembase.py",
+    "v7_oov_names": [
+      "GetDirljt"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GetDirljt",
+        "candidates": [
+          "GetDirect"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 1503,
+    "filename_v4": "script\\yard\\yardplayerhome\\view\\dlgresetyardfengshui.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Sh\\Dw_T"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\yard\\yardplayerhome\\view\\dlgresetyardfengshui.py",
+    "v7_oov_names": [
+      "Sh\\Dw_T"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "Sh\\Dw_T",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1523,
+    "filename_v4": "script\\mxgame\\mail\\model\\mdmail.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "(xumbda>"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\mail\\model\\mdmail.py",
+    "v7_oov_names": [
+      "(xumbda>"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "(xumbda>",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1605,
+    "filename_v4": "script\\mxgame\\serverbattle\\view\\allstart\\allstarinterface.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "OpenA<<starGuessDlg"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\serverbattle\\view\\allstart\\allstarinterface.py",
+    "v7_oov_names": [
+      "OpenAllstarGuessDlg"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OpenAllstarGuessDlg",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1688,
+    "filename_v4": "script\\yard\\yardplayerhome\\view\\cmpyardhome_map_subyard.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "VOpen age"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\yard\\yardplayerhome\\view\\cmpyardhome_map_subyard.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 1753,
+    "filename_v4": "script\\mxgame\\activity\\timewheel\\nettimewheel.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "S2scUDc@USialOpenState"
+    ],
+    "v7_status": "fail",
+    "v7_method": "greedy-v7-final",
+    "v7_filename": "",
+    "v7_oov_names": [],
+    "class": "C_not_ok_v7_fail",
+    "repair_candidates": []
+  },
+  {
+    "index": 1769,
+    "filename_v4": "script\\mxgame\\innercoloreditor\\dlginnercoloreditor.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "m[Jn_LJ|JPm[R[ctWithoutCB"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\innercoloreditor\\dlginnercoloreditor.py",
+    "v7_oov_names": [
+      "SetPartBtnSelectWithoutCB"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "SetPartBtnSelectWithoutCB",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1795,
+    "filename_v4": "script\\mxgame\\newgroup\\view\\pagemanage\\groupxinfasetpriceview.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "//init__"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\newgroup\\view\\pagemanage\\groupxinfasetpriceview.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 1797,
+    "filename_v4": "script\\mxgame\\makeequip\\delegate\\dgtdianhua\\dgtdianhua.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "R\"freshItemsInView"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\makeequip\\delegate\\dgtdianhua\\dgtdianhua.py",
+    "v7_oov_names": [
+      "RefreshItemsInView"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "RefreshItemsInView",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1808,
+    "filename_v4": "script\\dialog\\dlgbbmake.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "V`qQextColor"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\dlgbbmake.py",
+    "v7_oov_names": [
+      "SeqQextColor"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "SeqQextColor",
+        "candidates": [
+          "SetTextColor"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 1838,
+    "filename_v4": "script\\mxgame\\newguide\\netnewplayerguide.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "52SShowXiuLianGuide"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\newguide\\netnewplayerguide.py",
+    "v7_oov_names": [
+      "52SShowXiuLianGuide"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "52SShowXiuLianGuide",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1859,
+    "filename_v4": "script\\mxgame\\activity\\sevendaybonus\\mdsevendaybonus.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "MM{|{fMM"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\sevendaybonus\\mdsevendaybonus.py",
+    "v7_oov_names": [
+      "__inifMM"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "__inifMM",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1864,
+    "filename_v4": "script\\weibo.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "\n,;4itWeiBoName"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\weibo.py",
+    "v7_oov_names": [
+      "Sub4itWeiBoName"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "Sub4itWeiBoName",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1870,
+    "filename_v4": "script\\taiwan\\npcpos_fix.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "D~ChhiIha^ehcEeNpc"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7+combo",
+    "v7_filename": "script\\taiwan\\npcpos_fix.py",
+    "v7_oov_names": [
+      "IsNeedDelSehcEeNpc"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "IsNeedDelSehcEeNpc",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1893,
+    "filename_v4": "script\\dialog\\presentcenter\\delegate\\dgtaccumulatechargeadvance.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "RefreashA,,mulateChargeDlg"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\presentcenter\\delegate\\dgtaccumulatechargeadvance.py",
+    "v7_oov_names": [
+      "RefreashAccmulateChargeDlg"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "RefreashAccmulateChargeDlg",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1895,
+    "filename_v4": "script\\dialog\\dlgdrug.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "bUVBUCX`QgeBtn"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\dlgdrug.py",
+    "v7_oov_names": [
+      "RefreshPQgeBtn"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "RefreshPQgeBtn",
+        "candidates": [
+          "RefreshPageBtn"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 1911,
+    "filename_v4": "script\\mxgame\\autocheckcolor\\normaltext_view.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "CacheT&;7q\u0000+& (Logic"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\autocheckcolor\\normaltext_view.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 1952,
+    "filename_v4": "script\\mxgame\\sale\\model\\mdsethuolisale.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "`VG`XillOpenDir"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\sale\\model\\mdsethuolisale.py",
+    "v7_oov_names": [
+      "SetSXillOpenDir"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "SetSXillOpenDir",
+        "candidates": [
+          "GetSkillOpenDir"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 1960,
+    "filename_v4": "script\\dialog\\dlgusehuoli.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "xY{RVAR"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\dlgusehuoli.py",
+    "v7_oov_names": [
+      "OnLRVAR"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OnLRVAR",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1985,
+    "filename_v4": "script\\dialog\\mubanhao\\delegate\\dgttrickpage.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "GetMagicUhyq^oxLevelUIInfo"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\mubanhao\\delegate\\dgttrickpage.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 2056,
+    "filename_v4": "script\\dialog\\newinfomgr\\newinfomgr.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "SetChangeIn\toTime"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\newinfomgr\\newinfomgr.py",
+    "v7_oov_names": [
+      "SetChangeInfoTime"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "SetChangeInfoTime",
+        "candidates": [
+          "GetChangeInfoTime"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 2062,
+    "filename_v4": "script\\mxgame\\newgroup\\view\\pageapply\\pagegroupapply.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "ôÝÙÎe"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\newgroup\\view\\pageapply\\pagegroupapply.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 2078,
+    "filename_v4": "script\\mxgame\\activity\\ladderrankallstar\\view\\dlgteammember.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "eBEXxMN@IView"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\ladderrankallstar\\view\\dlgteammember.py",
+    "v7_oov_names": [
+      "InitTablIView"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "InitTablIView",
+        "candidates": [
+          "InitTableView"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 2086,
+    "filename_v4": "script\\char\\oldwalkerprocess.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "IsOp[PmN[]W_R"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\char\\oldwalkerprocess.py",
+    "v7_oov_names": [
+      "wMqNenSpecial"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "wMqNenSpecial",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 1947,
+    "filename_v4": "script\\pubscript\\pubskill\\e_preloadresctrl.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "__in}t__"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\pubscript\\pubskill\\e_preloadresctrl.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 2171,
+    "filename_v4": "script\\mxgame\\group\\delegate\\dgtgroupskillstudy.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "(\t&ctiveSkill"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\group\\delegate\\dgtgroupskillstudy.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 2207,
+    "filename_v4": "script\\mxgame\\activity\\2019double12shop\\delegate\\dgt2019double12cart.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "OnTryToRemoveCn}{F{jb"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\2019double12shop\\delegate\\dgt2019double12cart.py",
+    "v7_oov_names": [
+      "OnTryToRemoveCartItjb"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OnTryToRemoveCartItjb",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2227,
+    "filename_v4": "script\\mxgame\\newgroup\\model\\grouptask.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "cUDs_]monTaskState"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\newgroup\\model\\grouptask.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 2251,
+    "filename_v4": "script\\mxgame\\activity\\timewheel\\view\\dlgquickgetweituoreward.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "ShowGetRewardMiniDl^"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\timewheel\\view\\dlgquickgetweituoreward.py",
+    "v7_oov_names": [
+      "ShowGetRewardMiniDl^"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "ShowGetRewardMiniDl^",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2262,
+    "filename_v4": "script\\yard\\yardplayerhome\\view\\cmpyardhome_map_subroom2.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "zMDMI[MjQOldContext"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\yard\\yardplayerhome\\view\\cmpyardhome_map_subroom2.py",
+    "v7_oov_names": [
+      "ReleasMjQOldContext"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "ReleasMjQOldContext",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2268,
+    "filename_v4": "script\\yard\\yardplayfish\\delegate\\yardfishcultureinfo\\dgtyardplayfishmyfishpond.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "]|GbvsfwS~~_kTwwvT{az"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\yard\\yardplayfish\\delegate\\yardfishcultureinfo\\dgtyardplayfishmyfishpond.py",
+    "v7_oov_names": [
+      "OnUpdateAllMyFeedFiaz"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OnUpdateAllMyFeedFiaz",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2265,
+    "filename_v4": "script\\dialog\\qixi\\netqixi\\netqixi.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "C'FFp{qD|m|Tnswer"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\qixi\\netqixi\\netqixi.py",
+    "v7_oov_names": [
+      "C2SSendQixiTnswer"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "C2SSendQixiTnswer",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2287,
+    "filename_v4": "script\\mxgame\\appearance\\model\\mdoutward\\mdappearancechangecolor.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "S+tBuyInfoList"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\appearance\\model\\mdoutward\\mdappearancechangecolor.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 2340,
+    "filename_v4": "script\\lib\\simplejson_ordered_dict.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "__=:it__"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\lib\\simplejson_ordered_dict.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 2343,
+    "filename_v4": "script\\data\\cardgamebuffdata.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "0etBuffInfo"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\data\\cardgamebuffdata.py",
+    "v7_oov_names": [
+      "0etBuffInfo"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "0etBuffInfo",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2408,
+    "filename_v4": "script\\yard\\yardedit\\yardeditui\\dlgyardblockeditor.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "CreateHousePoolIfN  ! !"
+    ],
+    "v7_status": "fail",
+    "v7_method": "timeout-s0",
+    "v7_filename": "",
+    "v7_oov_names": [],
+    "class": "C_not_ok_v7_fail",
+    "repair_candidates": []
+  },
+  {
+    "index": 2415,
+    "filename_v4": "script\\mxgame\\shitu\\view\\dlgstshouyetudi.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Close"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\shitu\\view\\dlgstshouyetudi.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 2478,
+    "filename_v4": "script\\mxgame\\activity\\yearsummary\\model\\mdyearsum.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "[zs]~mmage"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\yearsummary\\model\\mdyearsum.py",
+    "v7_oov_names": [
+      "DelBammage"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "DelBammage",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2495,
+    "filename_v4": "script\\mxgame\\activity\\cardgame\\card_game.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "CM<**8>eBox"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\cardgame\\card_game.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 2512,
+    "filename_v4": "script\\mxgame\\tasktrace\\delegate\\dgttasktracetaskframe.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "|]gR@XgARPeUpdate"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7+combo",
+    "v7_filename": "script\\mxgame\\tasktrace\\delegate\\dgttasktracetaskframe.py",
+    "v7_oov_names": [
+      "OnTasXgARPeUpdate"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OnTasXgARPeUpdate",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2513,
+    "filename_v4": "script\\mxgame\\nethuodong\\activity\\nethdmooncake.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "k\n{{uWonCakeFriendHelp"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\nethuodong\\activity\\nethdmooncake.py",
+    "v7_oov_names": [
+      "S2CCuWonCakeFriendHelp"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "S2CCuWonCakeFriendHelp",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2587,
+    "filename_v4": "script\\pubscript\\mgrscreenshot.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "mA@HGrmShot"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\pubscript\\mgrscreenshot.py",
+    "v7_oov_names": [
+      "ConHGrmShot"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "ConHGrmShot",
+        "candidates": [
+          "ConfirmShot"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 2747,
+    "filename_v4": "script\\timecontrol.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Check.arShield"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\timecontrol.py",
+    "v7_oov_names": [
+      "CheckWarShield"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "CheckWarShield",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2762,
+    "filename_v4": "script\\mxgame\\activity\\countrycontest\\shop\\model\\mdctrycontestshop.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "GetShopMod\u0000\t"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\countrycontest\\shop\\model\\mdctrycontestshop.py",
+    "v7_oov_names": [
+      "GetShopModel"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GetShopModel",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2831,
+    "filename_v4": "script\\mxgame\\activity\\fashionactive\\dgtfashionactive.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "C+.ckDirection"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\fashionactive\\dgtfashionactive.py",
+    "v7_oov_names": [
+      "ClickDirection"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "ClickDirection",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2796,
+    "filename_v4": "script\\protocol\\cshuajing.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "DP1@QfereshSkillInfo"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\protocol\\cshuajing.py",
+    "v7_oov_names": [
+      "GS2CQfereshSkillInfo"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GS2CQfereshSkillInfo",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2849,
+    "filename_v4": "script\\mxgame\\consignmentsalecenter\\delegate\\dgtconsignmallsellsetitemprice.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "TuV~hhz|~Xtu}rim",
+      "TuV~hhz|~Xtu}rim"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\consignmentsalecenter\\delegate\\dgtconsignmallsellsetitemprice.py",
+    "v7_oov_names": [
+      "OnMessageConfrim",
+      "OnMessageConfrim"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OnMessageConfrim",
+        "candidates": []
+      },
+      {
+        "v7_name": "OnMessageConfrim",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2858,
+    "filename_v4": "script\\mxgame\\nethuodong\\activity\\nethdsummergift.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "42COpenLotteryDlg"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\nethuodong\\activity\\nethdsummergift.py",
+    "v7_oov_names": [
+      "42COpenLotteryDlg"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "42COpenLotteryDlg",
+        "candidates": [
+          "S2COpenLotteryDlg",
+          "C2SOpenLotteryDlg"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 2881,
+    "filename_v4": "script\\mxgame\\activity\\groupbbq\\netgroupbbq.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "C2S\r'*=or"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\groupbbq\\netgroupbbq.py",
+    "v7_oov_names": [
+      "C2SFlavor"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "C2SFlavor",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2888,
+    "filename_v4": "script\\mxgame\\activity\\2021duangwu\\helplist\\dlg2021duangwuhelplist.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "CreateI6'm"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\2021duangwu\\helplist\\dlg2021duangwuhelplist.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 2901,
+    "filename_v4": "script\\mxgame\\serverbattle\\view\\dlgteamhistory.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "QQg`gt__",
+      "QQg`gt__"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\serverbattle\\view\\dlgteamhistory.py",
+    "v7_oov_names": [
+      "__ingt__",
+      "__ingt__"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "__ingt__",
+        "candidates": [
+          "__init__"
+        ]
+      },
+      {
+        "v7_name": "__ingt__",
+        "candidates": [
+          "__init__"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 2902,
+    "filename_v4": "script\\mxgame\\activity\\2021springactivity\\view\\dlg2021springhongbao.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "KK}z}t__"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\2021springactivity\\view\\dlg2021springhongbao.py",
+    "v7_oov_names": [
+      "SetActivt"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "SetActivt",
+        "candidates": [
+          "SetActive",
+          "GetActive",
+          "SetAction"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 2911,
+    "filename_v4": "script\\mxgame\\nethuodong\\activity\\nethdbazhentu.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "^/NNxqx~iYtfficult"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\nethuodong\\activity\\nethdbazhentu.py",
+    "v7_oov_names": [
+      "C2SSeleciYtfficult"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "C2SSeleciYtfficult",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2919,
+    "filename_v4": "script\\mxgame\\activity\\insidewar\\insidewarmain\\dlginsidewarmain.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Az}eWcg{bAwffingDlg"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\insidewar\\insidewarmain\\dlginsidewarmain.py",
+    "v7_oov_names": [
+      "ShowEquibAwffingDlg"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "ShowEquibAwffingDlg",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 2969,
+    "filename_v4": "script\\mxgame\\dailyteam\\logicshowdailyteam\\showlogic_dgtdailyteaminfo.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "ÏÐ÷ðí"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\dailyteam\\logicshowdailyteam\\showlogic_dgtdailyteaminfo.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 3000,
+    "filename_v4": "script\\mxgame\\delaywalker\\delegate\\dgtloading.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "uuCDC^u_"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\delaywalker\\delegate\\dgtloading.py",
+    "v7_oov_names": [
+      "__initu_"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "__initu_",
+        "candidates": [
+          "__init__"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 3029,
+    "filename_v4": "script\\mxgame\\furniturestore\\view\\dlgfuritemxianshi.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "DrcQbe^nfo"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\furniturestore\\view\\dlgfuritemxianshi.py",
+    "v7_oov_names": [
+      "SetFurIyqx"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "SetFurIyqx",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3045,
+    "filename_v4": "script\\gamecode\\gamefile.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "@ead"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\gamecode\\gamefile.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 3083,
+    "filename_v4": "script\\yard\\yardplayfish\\delegate\\delegateyardplayfishmain.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "I ':"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\yard\\yardplayfish\\delegate\\delegateyardplayfishmain.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 3094,
+    "filename_v4": "script\\mxgame\\consignmentsalecenter\\model\\mdconsignmallhuoli.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "&etLeftStoreTime"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\consignmentsalecenter\\model\\mdconsignmallhuoli.py",
+    "v7_oov_names": [
+      "GetLeftStoreTime"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GetLeftStoreTime",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3127,
+    "filename_v4": "script\\dialog\\goldshop\\netgoldshop.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "C2SAskS,.5ngShop"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\goldshop\\netgoldshop.py",
+    "v7_oov_names": [
+      "C2SAskSpr5ngShop"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "C2SAskSpr5ngShop",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3140,
+    "filename_v4": "script\\mxgame\\newgroup\\view\\dlggrouptask_new.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "__:=:t__",
+      "@{|d]iP|}tent"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\newgroup\\view\\dlggrouptask_new.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 3146,
+    "filename_v4": "script\\mxgame\\return2020\\dgt2020returnhelp.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "InitDl)"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\return2020\\dgt2020returnhelp.py",
+    "v7_oov_names": [
+      "InitDl)"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "InitDl)",
+        "candidates": [
+          "InitDlg",
+          "InitDgt",
+          "InitDir"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 3179,
+    "filename_v4": "script\\yard\\netyardfurauth.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "C2xrJYOtlN_rJYOcD_x[Yx_J_e"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\yard\\netyardfurauth.py",
+    "v7_oov_names": [
+      "C2SYard_GetYardHotSpYx_J_e"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "C2SYard_GetYardHotSpYx_J_e",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3209,
+    "filename_v4": "script\\data\\shenyuandata.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "øÚtData"
+    ],
+    "v7_status": "suspect",
+    "v7_method": "greedy-v7+X+tinyseg",
+    "v7_filename": "script\\data\\shenyuandata.py",
+    "v7_oov_names": [],
+    "class": "C_not_ok_v7_suspect",
+    "repair_candidates": []
+  },
+  {
+    "index": 3217,
+    "filename_v4": "script\\dialog\\mainmenu\\model\\model_activityicon.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "UpdateActivityIconExtD0%0"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\mainmenu\\model\\model_activityicon.py",
+    "v7_oov_names": [
+      "UpdateActivityIconExtDat0"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "UpdateActivityIconExtDat0",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3232,
+    "filename_v4": "script\\key.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "RegisterS%/HotKey"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\key.py",
+    "v7_oov_names": [
+      "RegisterSysHotKey"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "RegisterSysHotKey",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3244,
+    "filename_v4": "script\\mxgame\\statistic\\statisticsignal.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "GetAllS*$-\"/"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\statistic\\statisticsignal.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 3250,
+    "filename_v4": "script\\dialog\\dlgtianqi.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "¯tUp"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\dlgtianqi.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 3260,
+    "filename_v4": "script\\mxgame\\gongji\\mdgongji.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "GetMy#ata"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\gongji\\mdgongji.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 3274,
+    "filename_v4": "script\\dialog\\skillmagic\\pagexinfa_interface.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Li}xm|ApwfaKaiWuNum"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\skillmagic\\pagexinfa_interface.py",
+    "v7_oov_names": [
+      "UpdateApwfaKaiWuNum"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "UpdateApwfaKaiWuNum",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3280,
+    "filename_v4": "script\\protocol\\csvoicecard.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "bCnB@@and"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\protocol\\csvoicecard.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 3292,
+    "filename_v4": "script\\dialog\\dlgminibuy.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "[mdmk|Edit"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\dlgminibuy.py",
+    "v7_oov_names": [
+      "SelectEdit"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "SelectEdit",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3316,
+    "filename_v4": "script\\mxgame\\activity\\groupbbq\\netnewgroupbbq.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "U$SQuestionStateChange"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\groupbbq\\netnewgroupbbq.py",
+    "v7_oov_names": [
+      "C2SQuestionStateChange"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "C2SQuestionStateChange",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3338,
+    "filename_v4": "script\\pubscript\\pubskill\\e_effect.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "}L[_J[{XX[]Jqbject"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\pubscript\\pubskill\\e_effect.py",
+    "v7_oov_names": [
+      "CreateEffecJqbject"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "CreateEffecJqbject",
+        "candidates": [
+          "CreateEffectObject"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 3390,
+    "filename_v4": "script\\mxgame\\activity\\school\\dlgschooladmission.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "__-*-t__"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\school\\dlgschooladmission.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 3462,
+    "filename_v4": "script\\mxgame\\item\\item.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "~UangeMultiItemPos"
+    ],
+    "v7_status": "fail",
+    "v7_method": "timeout-s0",
+    "v7_filename": "",
+    "v7_oov_names": [],
+    "class": "C_not_ok_v7_fail",
+    "repair_candidates": []
+  },
+  {
+    "index": 3561,
+    "filename_v4": "script\\mxgame\\yearvoice\\model\\mdyearvoice_record.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "__ini\n!_"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\yearvoice\\model\\mdyearvoice_record.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 3572,
+    "filename_v4": "script\\login\\dlgregister.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "EnQis`reCheck"
+    ],
+    "v7_status": "fail",
+    "v7_method": "timeout-s0",
+    "v7_filename": "",
+    "v7_oov_names": [],
+    "class": "C_not_ok_v7_fail",
+    "repair_candidates": []
+  },
+  {
+    "index": 3575,
+    "filename_v4": "script\\exbarrage.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "C.eateChannels"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\exbarrage.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 3598,
+    "filename_v4": "script\\mxgame\\activity\\timewheel\\view\\dlgtimewheelsubspeed.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "U'3ateOpenBtnState"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\timewheel\\view\\dlgtimewheelsubspeed.py",
+    "v7_oov_names": [
+      "Up3ateOpenBtnState"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "Up3ateOpenBtnState",
+        "candidates": [
+          "UpdateOpenBtnState"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 3645,
+    "filename_v4": "script\\mxgame\\sibling\\siblingctrl.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "6W&RefershBadgeLockData"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\sibling\\siblingctrl.py",
+    "v7_oov_names": [
+      "S2CRefershBadgeLockData"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "S2CRefershBadgeLockData",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3646,
+    "filename_v4": "script\\seawarrior.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "V`qAirec"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\seawarrior.py",
+    "v7_oov_names": [
+      "SeqAirec"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "SeqAirec",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3654,
+    "filename_v4": "script\\mxgame\\newgroup\\delegate\\delegategroupinfo\\delegatepagegroup.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Z{VlearSearch_Signal"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\newgroup\\delegate\\delegategroupinfo\\delegatepagegroup.py",
+    "v7_oov_names": [
+      "OnVlearSearch_Signal"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OnVlearSearch_Signal",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3651,
+    "filename_v4": "script\\mxgame\\consignmentsalecenter\\view\\showlogic_consignhuoli.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "´«"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\consignmentsalecenter\\view\\showlogic_consignhuoli.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 3690,
+    "filename_v4": "script\\mxgame\\goodvoice\\delegate\\dgtgoodvoice_others.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "~_a]PHEvent_Stop"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\goodvoice\\delegate\\dgtgoodvoice_others.py",
+    "v7_oov_names": [
+      "OnPlPHEvent_Stop"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OnPlPHEvent_Stop",
+        "candidates": [
+          "OnPlayEvent_Stop"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 3716,
+    "filename_v4": "script\\mxgame\\newgroup\\delegate\\delegatemanage\\dgtgroupbuildnew.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "RefreshOtherU:-8+.e"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\newgroup\\delegate\\delegatemanage\\dgtgroupbuildnew.py",
+    "v7_oov_names": [
+      "RefreshOtherUpgrade"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "RefreshOtherUpgrade",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3788,
+    "filename_v4": "script\\mxgame\\autotreasure\\model\\mdautotreasure.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "lN_x[YB_No^YJbility"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\autotreasure\\model\\mdautotreasure.py",
+    "v7_oov_names": [
+      "GetSpriteDuYJbility"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GetSpriteDuYJbility",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3866,
+    "filename_v4": "script\\mxgame\\marriage\\view\\dlgmarriageregister.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Is\"alidTxt"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\marriage\\view\\dlgmarriageregister.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 3886,
+    "filename_v4": "script\\mxgame\\activity\\timewheel\\net\\nettimewheeldelegate.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "U$QEDsgcsetEntrustData"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\timewheel\\net\\nettimewheeldelegate.py",
+    "v7_oov_names": [
+      "C2QEDsgcsetEntrustData"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "C2QEDsgcsetEntrustData",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3913,
+    "filename_v4": "script\\dialog\\sysopt\\modelnewsysopt\\modeltimingcloseopt.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Ikz]hutDownList"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\sysopt\\modelnewsysopt\\modeltimingcloseopt.py",
+    "v7_oov_names": [
+      "GetShutDownList"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GetShutDownList",
+        "candidates": [
+          "SetShutDownList"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 3992,
+    "filename_v4": "script\\mxgame\\newgroup\\view\\pagewelfare\\groupwelfareshopview.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Show(\rmitTextLabel"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\newgroup\\view\\pagewelfare\\groupwelfareshopview.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 3993,
+    "filename_v4": "script\\protocol\\csonlinelottery.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "@T5DDialogInfo"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\protocol\\csonlinelottery.py",
+    "v7_oov_names": [
+      "GT5DDialogInfo"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GT5DDialogInfo",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 3998,
+    "filename_v4": "script\\mxgame\\activity\\countrycontest\\arena\\view\\dlgctrycontest3v3matchhall.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "bC~earch"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\countrycontest\\arena\\view\\dlgctrycontest3v3matchhall.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 4011,
+    "filename_v4": "script\\dialog\\presentcenter\\model\\mddailylottery.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "RRUpx}h]~eteryMgr"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\presentcenter\\model\\mddailylottery.py",
+    "v7_oov_names": [
+      "CCDailyLoeteryMgr"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "CCDailyLoeteryMgr",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4124,
+    "filename_v4": "script\\dialog\\presentcenter\\view\\dlgfirstchargeadvance.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Z}ztDialog"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\presentcenter\\view\\dlgfirstchargeadvance.py",
+    "v7_oov_names": [
+      "InztDialog"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "InztDialog",
+        "candidates": [
+          "InitDialog"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 4154,
+    "filename_v4": "script\\yard\\yardmap\\mainui\\yardmainviewbase.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Zxi^rsiext"
+    ],
+    "v7_status": "suspect",
+    "v7_method": "greedy-v7+X+tinyseg",
+    "v7_filename": "script\\yard\\yardmap\\mainui\\yardmainviewbase.py",
+    "v7_oov_names": [
+      "GetCrsiext"
+    ],
+    "class": "C_not_ok_v7_suspect",
+    "repair_candidates": []
+  },
+  {
+    "index": 4165,
+    "filename_v4": "script\\mxgame\\activity\\annualbeauty\\view\\beautycontestblog\\dlgdeliver.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Show'electMarkType"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\annualbeauty\\view\\beautycontestblog\\dlgdeliver.py",
+    "v7_oov_names": [
+      "ShowSelectMarkType"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "ShowSelectMarkType",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4175,
+    "filename_v4": "script\\netmazesuit.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "C2SPacket<repare"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\netmazesuit.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 4183,
+    "filename_v4": "script\\mxgame\\nethuodong\\activity\\nethdshengqi.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "S2CBeginR);->d"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\nethuodong\\activity\\nethdshengqi.py",
+    "v7_oov_names": [
+      "S2CBeginReward"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "S2CBeginReward",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4196,
+    "filename_v4": "script\\yard\\yardedit\\yardeditui\\yardeditviewbrush_land.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "ðeave"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\yard\\yardedit\\yardeditui\\yardeditviewbrush_land.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 4204,
+    "filename_v4": "script\\mxgame\\consignmentsalecenter\\view\\dlgconsignmallbuy.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "HiJninDofi`b"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\consignmentsalecenter\\view\\dlgconsignmallbuy.py",
+    "v7_oov_names": [
+      "OnMiniChangb"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OnMiniChangb",
+        "candidates": [
+          "OnMiniChange"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 4223,
+    "filename_v4": "script\\mxgame\\activity\\2019znq\\delegate\\dgt2019znqjianghu.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "jKv@Qw@RDWALKBw@ADot"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\2019znq\\delegate\\dgt2019znqjianghu.py",
+    "v7_oov_names": [
+      "OnSetRewardingReADot"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OnSetRewardingReADot",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4250,
+    "filename_v4": "script\\mxgame\\album\\netalbum.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "DoNe\tDelAlbum"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\album\\netalbum.py",
+    "v7_oov_names": [
+      "DoNetDelAlbum"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "DoNetDelAlbum",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4261,
+    "filename_v4": "script\\dialog\\dlgprotocolprint.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "KK}nit__"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\dlgprotocolprint.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 4270,
+    "filename_v4": "script\\mxgame\\activity\\yearsummary\\netyearsum.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "OnAddCom'/$>"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\yearsummary\\netyearsum.py",
+    "v7_oov_names": [
+      "OnAddComment"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OnAddComment",
+        "candidates": [
+          "OnAddCommand"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 4283,
+    "filename_v4": "script\\mxgame\\activity\\singlematch\\dlgshowreward.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "\u001b<itCB"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\singlematch\\dlgshowreward.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 4291,
+    "filename_v4": "script\\mxgame\\newschedule\\view\\dlglimitactivityitem.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "ResetI<-m"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\newschedule\\view\\dlglimitactivityitem.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 4299,
+    "filename_v4": "QAPipt\\pub2\\pubchangephone\\pubchangephoneinit.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [],
+    "v7_status": "suspect",
+    "v7_method": "greedy-v7+X+tinyseg",
+    "v7_filename": "QAPipt\\pub2\\pubchangephone\\pubchangephoneinit.py",
+    "v7_oov_names": [],
+    "class": "C_not_ok_v7_suspect",
+    "repair_candidates": []
+  },
+  {
+    "index": 4303,
+    "filename_v4": "script\\mxgame\\activity\\annualbeauty\\view\\beautycontestblog\\operationviewbase.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "m[ndBroadcast"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\annualbeauty\\view\\beautycontestblog\\operationviewbase.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 4343,
+    "filename_v4": "script\\mxgame\\activity\\timewheel\\dlgtimewheel.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "~Y^CsR[RPVCR"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\timewheel\\dlgtimewheel.py",
+    "v7_oov_names": [
+      "InitDelRPVCR"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "InitDelRPVCR",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4346,
+    "filename_v4": "script\\mxgame\\activity\\timewheel\\view\\dlgtimewheelgetask.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Clea\r:ditText"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\timewheel\\view\\dlgtimewheelgetask.py",
+    "v7_oov_names": [
+      "ClearEditText"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "ClearEditText",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4371,
+    "filename_v4": "script\\mxgame\\horsespecialcolor\\mdhorsespecialcolor.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Tvg]|d@kinData"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\horsespecialcolor\\mdhorsespecialcolor.py",
+    "v7_oov_names": [
+      "GetNowSkinData"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GetNowSkinData",
+        "candidates": [
+          "SetNowSkinData"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 4388,
+    "filename_v4": "script\\mxgame\\yearvoice\\view\\dlgyearvoicelistitem.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "GetT.4\"hObj"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\yearvoice\\view\\dlgyearvoicelistitem.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 4405,
+    "filename_v4": "script\\reddotsys\\redpointnteMctuu~tidmapdefine.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7+combo",
+    "v7_filename": "script\\reddotsys\\redpointnetMctuu~tidmapdefine.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 4425,
+    "filename_v4": "script\\pubscript\\audioroomprotocal.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "|\rl|W^QXZ~\\\\PJnt"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\pubscript\\audioroomprotocal.py",
+    "v7_oov_names": [
+      "C2SChangeAccPJnt"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "C2SChangeAccPJnt",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4448,
+    "filename_v4": "script\\mxgame\\newguide\\subdailog\\dlgbianqiang.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "CBUQDUrYQ^aYQ^WyDUm"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\newguide\\subdailog\\dlgbianqiang.py",
+    "v7_oov_names": [
+      "CreateBianQianWyDUm"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "CreateBianQianWyDUm",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4482,
+    "filename_v4": "script\\dialog\\presentcenter\\delegate\\dgtdailylottery.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "ª­t"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\presentcenter\\delegate\\dgtdailylottery.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 4508,
+    "filename_v4": "script\\mxgame\\activity\\allserverboss\\netallserverboss.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "OnOpenP)4cessDlg"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\allserverboss\\netallserverboss.py",
+    "v7_oov_names": [
+      "OnOpenPr4cessDlg"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OnOpenPr4cessDlg",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4510,
+    "filename_v4": "script\\mxgame\\schedule\\dlgschedulenew.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "^ebwTips"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\schedule\\dlgschedulenew.py",
+    "v7_oov_names": [
+      "SebwTips"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "SebwTips",
+        "candidates": [
+          "ShowTips"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 4566,
+    "filename_v4": "script\\mxgame\\activity\\insidewar\\insidewarrank\\mdinsidewarrank.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "CServerBPEE]TcankModel"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\insidewar\\insidewarrank\\mdinsidewarrank.py",
+    "v7_oov_names": [
+      "CServerBattlTcankModel"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "CServerBattlTcankModel",
+        "candidates": [
+          "CServerBattleRankModel"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 4573,
+    "filename_v4": "script\\yard\\yardedit\\yardeditui\\yardeditviewbrush.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "A`Wo|dBgMoved_Signal"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\yard\\yardedit\\yardeditui\\yardeditviewbrush.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 4608,
+    "filename_v4": "script\\protocol\\csbestlover.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "BV7FJu`kSignUpDlg"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\protocol\\csbestlover.py",
+    "v7_oov_names": [
+      "GS2COpekSignUpDlg"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GS2COpekSignUpDlg",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4656,
+    "filename_v4": "script\\dialog\\sysopt\\modelnewsysopt\\modelpersondataopt.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "RefreshP).to"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\dialog\\sysopt\\modelnewsysopt\\modelpersondataopt.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 4668,
+    "filename_v4": "script\\mxgame\\serverbattle\\view\\allstart\\dlgallstartmain.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "5nitUIData"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\serverbattle\\view\\allstart\\dlgallstartmain.py",
+    "v7_oov_names": [
+      "5nitUIData"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "5nitUIData",
+        "candidates": [
+          "InitUIData"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 4670,
+    "filename_v4": "script\\yard\\yardedit\\yardeditui\\yardhidemainmenu.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "OnChatMentionF3>,h"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\yard\\yardedit\\yardeditui\\yardhidemainmenu.py",
+    "v7_oov_names": [
+      "OnChatMentionFlash"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OnChatMentionFlash",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4721,
+    "filename_v4": "script\\mxgame\\nethuodong\\activity\\nethdchristmasparty.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "S2jjA[@Z]DHZYH[]Py[FJLZs"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\nethuodong\\activity\\nethdchristmasparty.py",
+    "v7_oov_names": [
+      "S2CChristmaspartyPrFJLZs"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "S2CChristmaspartyPrFJLZs",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4727,
+    "filename_v4": "script\\common\\logicaudio\\logic_playaudio.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "^_init__"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\common\\logicaudio\\logic_playaudio.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 4771,
+    "filename_v4": "script\\debug\\oldresdownload.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "QzwqyV}e|loadIsPause"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\debug\\oldresdownload.py",
+    "v7_oov_names": [
+      "CheckDownloadIsPause"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "CheckDownloadIsPause",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4819,
+    "filename_v4": "script\\mxgame\\newguide\\subdailog\\dlgmiji.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "Mo~GuideItemCache"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\newguide\\subdailog\\dlgmiji.py",
+    "v7_oov_names": [
+      "GetGuideItemCache"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GetGuideItemCache",
+        "candidates": [
+          "SetGuideItemCache"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 4882,
+    "filename_v4": "script\\mxgame\\activity\\qixi\\mdeternallove.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "S7&FriendInfo"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\qixi\\mdeternallove.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 4901,
+    "filename_v4": "script\\mxgame\\nethuodong\\activity\\nethdqiyuan.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "C2SOpe\r!ox"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\nethuodong\\activity\\nethdqiyuan.py",
+    "v7_oov_names": [],
+    "class": "A_verified_all_names_in_vocab",
+    "repair_candidates": []
+  },
+  {
+    "index": 4916,
+    "filename_v4": "script\\mxgame\\activity\\2021duangwu\\materialsource\\dlg2021duangwumaterialsource.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "cBhI@IKMXIy\\HMXIoI@@cJhMXM"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\activity\\2021duangwu\\materialsource\\dlg2021duangwumaterialsource.py",
+    "v7_oov_names": [
+      "OnDelegateUpdateCellcJhMXM"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "OnDelegateUpdateCellcJhMXM",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4927,
+    "filename_v4": "script\\mxgame\\ems\\newemsdlg.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "SetTopShx`C~ps"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\mxgame\\ems\\newemsdlg.py",
+    "v7_oov_names": [
+      "SetTopShowTips"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "SetTopShowTips",
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "index": 4981,
+    "filename_v4": "script\\protocol\\csbigdata.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "^/ZSOpenFrdList"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\protocol\\csbigdata.py",
+    "v7_oov_names": [
+      "C2ZSOpenFrdList"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "C2ZSOpenFrdList",
+        "candidates": [
+          "C2GSOpenFrdList"
+        ]
+      }
+    ]
+  },
+  {
+    "index": 4979,
+    "filename_v4": "script\\debug\\errorchk.py",
+    "method_v4": "greedy-v4",
+    "v4_bad_names": [
+      "hJ[nBTestLog",
+      "GetReapR}qy"
+    ],
+    "v7_status": "ok",
+    "v7_method": "greedy-v7",
+    "v7_filename": "script\\debug\\errorchk.py",
+    "v7_oov_names": [
+      "GetnBTestLog"
+    ],
+    "class": "B_ok_but_out_of_vocab_names",
+    "repair_candidates": [
+      {
+        "v7_name": "GetnBTestLog",
+        "candidates": []
+      }
+    ]
+  }
+]
