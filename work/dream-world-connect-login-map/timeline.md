@@ -205,3 +205,13 @@
 - decision_delta: [capture_bytes_zero_confirmed, loginhello_sample_missing, cmd_numeric_ids_unverified, server_ini_modified_in_head, catalog_json_partial, mx_exe_equals_mxmain_dll, themida_claim_rejected, wi009_reopened, wi012_partial, repo_history_complete_locally]
 - carry_forward_refs: [WI-002, WI-006, WI-009, WI-010, WI-012, WI-013, WI-014, WI-015, WI-016, WI-017]
 - next: 1) 已决定：server.ini 保留 127.0.0.1 回环配置（用户确认）；2) 已决定：游戏二进制与资源保留在 Git 中，不移出；3) 已删除试运行日志；4) WI-010 需 Windows 本地回环抓包后才能推进；4) 在获得真实字节前，不再新增“已确认”类结论。
+
+## 2026-10-10T12:00:00+08:00 | lead | loopback-test-zero-bytes-again
+- action: 用户报告本地回环测试结果“都是0”（捕获文件 0 字节）。核对仓库：未收到该次测试的新文件；检查已有 10-09 捕获与游戏日志；阅读 Connect 反编译报告中连接后的发包流程。
+- command_or_ref: 读取 tools/captures/*、notes/protocol-artifacts/responsive-harness.log、log/game/*、notes/co_code_analysis/任务A深入-Connect函数破解报告.md
+- result_summary: 结果与 10-09 一致，TCP 可连接，无应用层字节。游戏日志中无连接相关记录。Connect 报告显示连接前有 NakedSend 单字节、超时切换候选，但该报告基于 v4 映射，未复核。形成 H1–H5 假设，写入计划文档。
+- artifacts: [evidence/E-LOOPBACK-003.md, notes/loopback-test-plan-20261010.md]
+- evidence_ids: [E-LOOPBACK-003, E-LOOPBACK-002, E-IDA-DYN-004]
+- decision_delta: [loopback_zero_bytes_reconfirmed_by_user, no_new_capture_artifacts_in_repo, hypotheses_h1_h5_recorded, request_full_test_artifacts_from_user]
+- carry_forward_refs: [WI-009, WI-010]
+- next: 请用户提供：原样 capture 文件与时间戳、harness 完整日志、Get-NetTCPConnection 每 2 秒输出、测试时段的 gamelog/pylog、截图、操作顺序。按 E1→E2→E3 顺序做实验，暂不发送猜测的服务端响应。
