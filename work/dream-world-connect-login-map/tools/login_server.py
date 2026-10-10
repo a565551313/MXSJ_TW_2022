@@ -47,6 +47,20 @@ import socket
 import struct
 import threading
 
+# ==========================================================================
+# 在这里填账号密码
+# --------------------------------------------------------------------------
+# 必须和你在游戏登录框里敲的**完全一致**（含大小写）。这两个字符串会被编码成
+# Big5、补零到 32 / 20 字节，再和收到的密文异或出密钥流。填错了收割出来的
+# 52 字节就是垃圾，而且会写进 keystream.json 污染后续运行 —— 出错就删掉
+# tools/keystream.json 重来。
+#
+# 第一次测建议**纯英文/数字**：ASCII 在 Big5 / GBK / UTF-8 下都一样，
+# 不会因为编码问题对不上。中文账号也能用，但要先确认能正常存成 UTF-8。
+# ==========================================================================
+ACCOUNT = ""
+PASSWORD = ""
+
 HOST = "127.0.0.1"
 GS2C_HELLO = 1
 GS2C_LOGIN_ACCOUNT_INFO = 15
@@ -306,8 +320,12 @@ def main():
     ap.add_argument("--cert", type=int, default=0)
     ap.add_argument("--idle", type=int, default=30)
 
-    ap.add_argument("--account", default="", help="exact account string you will type")
-    ap.add_argument("--password", default="", help="exact password you will type")
+    ap.add_argument("--account", default=ACCOUNT,
+                    help="exact account string you will type (default: the ACCOUNT "
+                         "constant near the top of this file)")
+    ap.add_argument("--password", default=PASSWORD,
+                    help="exact password you will type (default: the PASSWORD "
+                         "constant near the top of this file)")
 
     ap.add_argument("--send-login", action="store_true",
                     help="after harvesting, send LOGIN_ACCOUNT_INFO + LOGIN_PLAYER_INFO")
@@ -357,6 +375,10 @@ def main():
     log(fp, "keystream file: %s  (covers: %s)" % (ks.path, ks.ranges()))
     log(fp, "account=%r password=%r known_start=0x%x send_login=%s"
         % (args.account, args.password, args.known_start, args.send_login))
+    if not args.account:
+        log(fp, "WARNING: no account configured -> keystream harvesting will be "
+                "skipped and --send-login will find no keystream. Edit the ACCOUNT "
+                "/ PASSWORD constants near the top of this file, or pass --account.")
     idx = 0
     try:
         while True:
