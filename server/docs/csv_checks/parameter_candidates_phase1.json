@@ -1,0 +1,130 @@
+{
+  "artifact": "client parameter candidates (phase 1, Agent A takeover)",
+  "generated": "2026-10-11",
+  "policy": {
+    "original_key_database_modified": false,
+    "candidates_are_advisory_only": true,
+    "written_to_server_game_data": false,
+    "categories": {
+      "extraction_error_present": "the saved parameter is demonstrably inconsistent with the decoded structure",
+      "cross_table_support": "an independent entry/table (different keys and boundaries) independently agrees with the candidate result",
+      "native_loader_match": "the result has been compared against the native client loader (never achieved here; DuoyiProtect decrypts the loader at runtime, see PR #18 section 2)"
+    },
+    "status_values": ["candidate_supported", "candidate_weak", "refuted"]
+  },
+  "inputs": {
+    "data/script.fls": {"sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72", "size": 24454082},
+    "tools/decompiler/script_fls_keys.json": {"sha256": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"}
+  },
+  "candidates": [
+    {
+      "id": "3205.keys[1]",
+      "entry_index": 3205,
+      "module": "script/data/petskill.py",
+      "field": "keys[1]",
+      "saved_value": 23,
+      "candidate_value": 152,
+      "source": "PR #14 (Agent D) server/docs/csv_checks/AGENT_D.md section 3.1 and 5; reproduced here",
+      "status": "candidate_supported",
+      "categories": {"extraction_error_present": true, "cross_table_support": true, "native_loader_match": false},
+      "evidence": [
+        {"kind": "structure", "detail": "with keys[1]=23 the Duoyi opcode map has 2433 unmapped opcodes in the root co_code span [22,37496); 2432 of them lie inside segment 1 [18043,36122) and the first is exactly at 18043, the segment start", "reproduce": "probe_script_entry_3205.py --set saved"},
+        {"kind": "structure", "detail": "with keys[1]=152 the whole co_code decodes with 0 unmapped opcodes; the standard walk yields 20776 instructions and the module body contains 0 opcodes outside the module-level literal allowlist (0 violations, stack depth max 37)", "reproduce": "probe_script_entry_3205.py --set agent_d"},
+        {"kind": "structure", "detail": "with keys[1]=152 the entry publishes ICON_MAPPING (STORE_GLOBAL, 12 items), DATA (STORE_GLOBAL, 581 records from 590 writes) and AUTOFIGHTLIST / ShieldShortCutSkills (STORE_NAME)"},
+        {"kind": "cross_table", "detail": "AUTOFIGHTLIST (37 ids) and petactiveskilldata.SKILLIDLST (entry 2242, 48 ids) are subsets of the recovered DATA keys; DATA[416]['name']='\u6c34\u64ca' matches SKILLIDLST[16]=416; 64605 is absent from DATA", "reproduce": "probe_script_entry_3205.py (cross_table_links)"},
+        {"kind": "arithmetic", "detail": "segment-1 ciphertext mode byte 0x17 (4552 occurrences) maps to 0x8F (LOAD_CONST) under 152 and to 0xDA under 218; both are in the Duoyi map, which is why an unmapped-opcode score cannot decide this"}
+      ],
+      "counter_evidence": [],
+      "remaining_uncertainty": "Not compared against the native loader. The result is self-consistent and cross-checked by other entries, which is evidence level 4 of PR #18 section 7, not level 6."
+    },
+    {
+      "id": "3205.bounds[1]",
+      "entry_index": 3205,
+      "module": "script/data/petskill.py",
+      "field": "bounds[1]",
+      "saved_value": 36122,
+      "candidate_value": 36123,
+      "source": "PR #14 (Agent D) section 3.1; independent schema check added here",
+      "status": "candidate_supported",
+      "categories": {"extraction_error_present": true, "cross_table_support": false, "native_loader_match": false},
+      "evidence": [
+        {"kind": "structure", "detail": "with bounds[1]=36122 record 6220 ('\u9748\u901a\u5f37\u5316\u2161') has an integer field key 218 instead of b'name', breaking the schema {name,desc,type,fpneed,mpneed,hpneed} that all 581 records otherwise share; with 36123 the schema is uniform", "reproduce": "server/tests/architecture/test_script_entry_3205.py (AgentDParametersTest.test_data_table_structure)"},
+        {"kind": "structure", "detail": "the boundary falls on the high byte of a LOAD_CONST argument at co_code offset 36100; with the wrong key that argument becomes consts[218] instead of consts[33]"}
+      ],
+      "counter_evidence": [],
+      "remaining_uncertainty": "Single record affected; no native-loader confirmation."
+    },
+    {
+      "id": "3205.bounds[2]",
+      "entry_index": 3205,
+      "module": "script/data/petskill.py",
+      "field": "bounds[2]",
+      "saved_value": 54130,
+      "candidate_value": 54155,
+      "source": "PR #14 (Agent D) section 3.1",
+      "status": "candidate_supported",
+      "categories": {"extraction_error_present": true, "cross_table_support": true, "native_loader_match": false},
+      "evidence": [
+        {"kind": "structure", "detail": "the saved boundary stops 25 bytes into the data of string constant consts[591] (header at 54125..54129), so the segment key changes mid-string", "reproduce": "probe_script_entry_3205.py (b3 reverted -> text errors)"},
+        {"kind": "cross_record", "detail": "DATA[719]['desc'] becomes '\u661f\u754c\u5341\u4e8c\u5bae\u661f\u5e1d\u624d\u914d\u4f7f\u7528\u7684\u7981\u6280\uff0c\u767d\u7f8a\u661f\u7684\u7d55\u62db\uff1b...' and matches the shared prefix of the same series in DATA[720], [721], [723]"},
+        {"kind": "limit", "detail": "54156 also decodes to valid CP950 ('...\u4f7f\u7528\u7684\u7cb1\u6280...'), so the choice between 54155 and 54156 rests on cross-record prefix agreement, not on 'it decodes'"}
+      ],
+      "counter_evidence": ["neighbouring offset 54156 also produces strictly decodable CP950 text"],
+      "remaining_uncertainty": "Text-only evidence for the exact offset; the affected record must stay isolated in a review CSV until a native or independent source confirms it."
+    },
+    {
+      "id": "3205.bounds[3]",
+      "entry_index": 3205,
+      "module": "script/data/petskill.py",
+      "field": "bounds[3]",
+      "saved_value": 72108,
+      "candidate_value": 72143,
+      "source": "PR #14 (Agent D) section 3.1",
+      "status": "candidate_supported",
+      "categories": {"extraction_error_present": true, "cross_table_support": false, "native_loader_match": false},
+      "evidence": [
+        {"kind": "structure", "detail": "the saved boundary stops 5 bytes into the data of string constant consts[1275] (header at 72103..72107), so the trailing bytes are decoded with the wrong segment key", "reproduce": "probe_script_entry_3205.py"},
+        {"kind": "cross_record", "detail": "DATA[4406]['desc'] becomes '\u6bcf\u56de\u5408\u6aa2\u67e5\u5834\u4e0a\u662f\u5426\u6709\u5f71\u9b42\u5b58\u5728\uff0c\u5982\u679c\u6709\u5f71\u9b42\uff0c\u5247\u5728\u4e0b\u56de\u5408\u672b\u5438\u6536\u5f71\u9b42', consistent with the neighbouring skills DATA[4405] '\u5f71\u9b42\u53ec\u559a' and DATA[4407] '\u5f71\u9b42\u81ea\u7206'"}
+      ],
+      "counter_evidence": [],
+      "remaining_uncertainty": "Text-only evidence; no native-loader confirmation."
+    },
+    {
+      "id": "2242.bounds[1]",
+      "entry_index": 2242,
+      "module": "script/data/petactiveskilldata.py",
+      "field": "bounds[1]",
+      "saved_value": 262,
+      "candidate_value": 264,
+      "source": "PR #14 (Agent D) section 3.4 and PR #18 section 3.3 (both agree); independently rebuilt here",
+      "status": "candidate_supported",
+      "categories": {"extraction_error_present": true, "cross_table_support": true, "native_loader_match": false},
+      "evidence": [
+        {"kind": "structure", "detail": "rebuilding SKILLIDLST with bounds[1]=264 yields 48 integer ids with no violation and no index problems; SKILLIDLST[16]=416", "reproduce": "server/tests/architecture/test_script_entry_3205.py (AgentDParametersTest.test_entry_2242_skillidlist_links_into_the_master_table)"},
+        {"kind": "cross_table", "detail": "all 48 ids exist in the entry-3205 DATA table recovered with different keys (152 vs 243 for the segment) and different boundaries; 64605 does not exist anywhere in that table"},
+        {"kind": "bytes", "detail": "the saved boundary leaves the two low bytes of the TYPE_INT value decoded with the next segment key (low bytes 0xFC5D=64605); moving to 264 decodes them with the correct key (0x01A0=416)"}
+      ],
+      "counter_evidence": ["64605 vs 416 cannot be separated by record alignment alone (PR #18 section 3.3), only by the independent table"],
+      "remaining_uncertainty": "Not native-verified."
+    },
+    {
+      "id": "3205.keys[1]=218 (PR #18)",
+      "entry_index": 3205,
+      "module": "script/data/petskill.py",
+      "field": "keys[1]",
+      "saved_value": 23,
+      "candidate_value": 218,
+      "source": "PR #18 server/docs/CLIENT_DATA_INDEPENDENT_CHECK.md section 3.5",
+      "status": "refuted",
+      "categories": {"extraction_error_present": false, "cross_table_support": false, "native_loader_match": false},
+      "evidence": [
+        {"kind": "reproduction", "detail": "PR #18's scoring function was reproduced exactly on the saved bounds and interior window: [(0,218),(1,152),(287,143),(288,130),...]", "reproduce": "probe_script_entry_3205.py + the scoring snippet in AGENT_A_TAKEOVER.md"},
+        {"kind": "metric_is_not_discriminating", "detail": "over the whole root co_code both 218 and 152 report 0 unmapped opcodes; the single '1' for 152 is the first scanned byte at 18046, which is 3 bytes past the segment start, i.e. a walk that may start mid-instruction"},
+        {"kind": "refutation", "detail": "with keys[1]=218 the module body contains 2183 BREAK_LOOP, 2009 CONTINUE_LOOP, 2009 LOAD_LOCALS, 1284 BUILD_CLASS and further opcodes that module-level literal code cannot contain; the first violation is at 18021 (BREAK_LOOP) where the correct key yields STORE_SUBSCR, and no DATA assignment is produced"},
+        {"kind": "consequence", "detail": "PR #18's derived conclusions for entry 3205 ('no module-level DATA assignment', 'DATA cannot be recovered from this entry') follow from this wrong key plus a STORE_NAME-only reader, and are both rejected"}
+      ],
+      "counter_evidence": [],
+      "remaining_uncertainty": "none for this field; the refutation is structural and does not depend on any Chinese text"
+    }
+  ]
+}
