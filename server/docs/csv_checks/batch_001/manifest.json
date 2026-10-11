@@ -1,0 +1,1153 @@
+{
+  "batch": "batch_001",
+  "csv_format": {
+    "delimiter": ",",
+    "encoding": "UTF-8 without BOM",
+    "formula_policy": "Opaque text. Spreadsheet users must import text; do not evaluate formulas.",
+    "newline": "LF",
+    "nulls": "No nulls in core CSVs; missing relations are separate rows/files.",
+    "quoting": "all fields",
+    "scope": "Core CSVs only; maps_npcs overrides retained from E staging"
+  },
+  "files": {
+    "items.csv": {
+      "bytes": 2390627,
+      "columns": [
+        {
+          "name": "client_shape_id",
+          "type": "int"
+        },
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "description_raw",
+          "type": "str"
+        },
+        {
+          "name": "category_code_raw",
+          "type": "int"
+        },
+        {
+          "name": "image_id",
+          "type": "int"
+        },
+        {
+          "name": "image_mapping_explicit",
+          "type": "bool"
+        },
+        {
+          "name": "source_entry",
+          "type": "int"
+        },
+        {
+          "name": "source_table",
+          "type": "str"
+        },
+        {
+          "name": "review_status",
+          "type": "str"
+        }
+      ],
+      "notes": "Display catalog, includes test/history entries. Category meanings not normalized. Image fallback mirrors Shape2Image; assets not checked.",
+      "primary_key": [
+        "client_shape_id"
+      ],
+      "rows": 6851,
+      "sha256": "81bba3fdda4da9b1f91e13317c714e04ccde4f696d42dfb5722ff26426765a9b",
+      "source_entry": 1945,
+      "source_table": "DATA+ITEMDATABYTYPE+SHAPETABLE"
+    },
+    "maps_npcs/mapdata_parent_scene.csv": {
+      "bytes": 92,
+      "columns": [
+        {
+          "name": "scene_id",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "parent_scene_id",
+          "type": "int_or_empty"
+        }
+      ],
+      "csv_format": "UTF-8 without BOM; minimal quoting; CRLF; E legacy blank/null convention",
+      "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+      "primary_key": [
+        "scene_id"
+      ],
+      "rows": 6,
+      "schema_document": "../AGENT_E_HANDOVER.md",
+      "sha256": "2f0fe1e3cac955f892df26662095bf39a38e2cfce48c159dd627314d94ebb4d9",
+      "source_entry": 1301,
+      "source_table": "MAP_ASCRIPTION"
+    },
+    "maps_npcs/mapdata_scene_dictionary.csv": {
+      "bytes": 3153,
+      "columns": [
+        {
+          "name": "scene_id",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "w",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "h",
+          "type": "int_or_empty"
+        }
+      ],
+      "csv_format": "UTF-8 without BOM; minimal quoting; CRLF; E legacy blank/null convention",
+      "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+      "primary_key": [
+        "scene_id"
+      ],
+      "rows": 104,
+      "schema_document": "../AGENT_E_HANDOVER.md",
+      "sha256": "34e11d77df6ffeb5910cf1f244de228f2d2e66773ad5196efdd2d288e8f5883a",
+      "source_entry": 1301,
+      "source_table": "DATA"
+    },
+    "maps_npcs/minimapnpcpos_pos_records.csv": {
+      "bytes": 87359,
+      "columns": [
+        {
+          "name": "scene_id",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "scene_display_name",
+          "type": "str"
+        },
+        {
+          "name": "record_index",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "display_name",
+          "type": "str"
+        },
+        {
+          "name": "secondary_name",
+          "type": "str"
+        },
+        {
+          "name": "npcid",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "type",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "x",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "y",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "field5",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "field6",
+          "type": "str"
+        },
+        {
+          "name": "field7_const255",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "shape",
+          "type": "str"
+        },
+        {
+          "name": "field9",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "field10",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "real_name",
+          "type": "str"
+        },
+        {
+          "name": "field12",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "field13",
+          "type": "int_or_empty"
+        }
+      ],
+      "csv_format": "UTF-8 without BOM; minimal quoting; CRLF; E legacy blank/null convention",
+      "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+      "primary_key": [
+        "scene_id",
+        "scene_display_name",
+        "record_index"
+      ],
+      "rows": 1344,
+      "schema_document": "../AGENT_E_HANDOVER.md",
+      "sha256": "5737939da77f66bc2b66c7b6932caef0c15b643b9a189698017fed9ac02501bd",
+      "source_entry": 2804,
+      "source_table": "DATA_POS"
+    },
+    "maps_npcs/minimapnpcpos_wenzi_entries.csv": {
+      "bytes": 10392,
+      "columns": [
+        {
+          "name": "scene_id",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "x",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "y",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "desc",
+          "type": "str"
+        },
+        {
+          "name": "jump_x",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "jump_y",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "npcID",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "npcName",
+          "type": "str"
+        },
+        {
+          "name": "servergrade",
+          "type": "int_or_empty"
+        }
+      ],
+      "csv_format": "UTF-8 without BOM; minimal quoting; CRLF; E legacy blank/null convention",
+      "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+      "primary_key": [
+        "scene_id",
+        "x",
+        "y"
+      ],
+      "rows": 287,
+      "schema_document": "../AGENT_E_HANDOVER.md",
+      "sha256": "54b0d29e87cc2e4004e9d35471804a0affdcd10daa5f2071fc4e73b84ce4d388",
+      "source_entry": 2804,
+      "source_table": "DATA_WENZI"
+    },
+    "maps_npcs/npc_2601_vs_2804_agreement.csv": {
+      "bytes": 23315,
+      "columns": [
+        {
+          "name": "scene_id",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "npcid",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "records_2601",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "records_2804",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "agreement",
+          "type": "str"
+        }
+      ],
+      "csv_format": "UTF-8 without BOM; minimal quoting; CRLF; E legacy blank/null convention",
+      "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+      "primary_key": [
+        "scene_id",
+        "npcid"
+      ],
+      "rows": 677,
+      "schema_document": "../AGENT_E_HANDOVER.md",
+      "sha256": "369ca401f4b729ba8933d98099b90a290f73cc355bca5e8408c8a7a2a933b2f3",
+      "source_entry": [
+        2601,
+        2804
+      ],
+      "source_table": "DATA vs DATA_POS"
+    },
+    "maps_npcs/npcname2realnamedata_alias_to_realname.csv": {
+      "bytes": 1487,
+      "columns": [
+        {
+          "name": "alias",
+          "type": "str"
+        },
+        {
+          "name": "real_name",
+          "type": "str"
+        }
+      ],
+      "csv_format": "UTF-8 without BOM; minimal quoting; CRLF; E legacy blank/null convention",
+      "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+      "primary_key": [
+        "alias"
+      ],
+      "rows": 55,
+      "schema_document": "../AGENT_E_HANDOVER.md",
+      "sha256": "3a5b0072bd0e5b99c1b3c26cd26cf046449a5d5ea20e4c66a1c0d95e6b80696d",
+      "source_entry": 1799,
+      "source_table": "DATA"
+    },
+    "maps_npcs/npcposdata_records.csv": {
+      "bytes": 69604,
+      "columns": [
+        {
+          "name": "scene_id",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "record_index",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "display_name",
+          "type": "str"
+        },
+        {
+          "name": "secondary_name",
+          "type": "str"
+        },
+        {
+          "name": "npcid",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "type",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "x",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "y",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "field5",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "field6",
+          "type": "str"
+        },
+        {
+          "name": "field7_const255",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "shape",
+          "type": "str"
+        },
+        {
+          "name": "field9",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "field10",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "real_name",
+          "type": "str"
+        },
+        {
+          "name": "field12",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "field13",
+          "type": "int_or_empty"
+        }
+      ],
+      "csv_format": "UTF-8 without BOM; minimal quoting; CRLF; E legacy blank/null convention",
+      "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+      "primary_key": [
+        "scene_id",
+        "record_index"
+      ],
+      "rows": 1335,
+      "schema_document": "../AGENT_E_HANDOVER.md",
+      "sha256": "151e99abdbca9f162a5955bcca4ae81b021b57bae3735835dd4c0838963a5a23",
+      "source_entry": 2601,
+      "source_table": "DATA"
+    },
+    "maps_npcs/provenance.json": {
+      "bytes": 759,
+      "sha256": "0aa3538ac0295ff360930442c3010e2a1200280e43fb2881bc43471a5cec05f8"
+    },
+    "maps_npcs/sceneid2name_minimap_scenes.csv": {
+      "bytes": 2116,
+      "columns": [
+        {
+          "name": "scene_id",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "related_id_unresolved",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "size_a",
+          "type": "int_or_empty"
+        },
+        {
+          "name": "size_b",
+          "type": "int_or_empty"
+        }
+      ],
+      "csv_format": "UTF-8 without BOM; minimal quoting; CRLF; E legacy blank/null convention",
+      "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+      "primary_key": [
+        "scene_id"
+      ],
+      "rows": 57,
+      "schema_document": "../AGENT_E_HANDOVER.md",
+      "sha256": "9190ab2cf7cfd698998c9c4138ef721a588abff763feab1f06335228c22b33bf",
+      "source_entry": 400,
+      "source_table": "DATA"
+    },
+    "overwrite_evidence.jsonl": {
+      "bytes": 8670,
+      "sha256": "92153c1c86e3b546045a9209827acf964246752e32709d93926098cae7b23e25"
+    },
+    "pet_aptitude_missing.csv": {
+      "bytes": 459,
+      "columns": [
+        {
+          "name": "client_shape_id",
+          "type": "int"
+        },
+        {
+          "name": "pet_name",
+          "type": "str"
+        },
+        {
+          "name": "reason",
+          "type": "str"
+        },
+        {
+          "name": "source_entry",
+          "type": "int"
+        },
+        {
+          "name": "source_table",
+          "type": "str"
+        },
+        {
+          "name": "review_status",
+          "type": "str"
+        }
+      ],
+      "notes": "Missing records, not zero-valued aptitude records.",
+      "primary_key": [
+        "client_shape_id"
+      ],
+      "rows": 3,
+      "sha256": "fa2832e71d3456341e2305ba87367d2ebd73fb70ae8c3a386353111f8b91d656",
+      "source_entry": 2954,
+      "source_table": "DATA (absence checked against 2027.DATA)"
+    },
+    "pet_aptitudes.csv": {
+      "bytes": 17289,
+      "columns": [
+        {
+          "name": "client_shape_id",
+          "type": "int"
+        },
+        {
+          "name": "法力資質",
+          "type": "int"
+        },
+        {
+          "name": "法力資質最大值",
+          "type": "int"
+        },
+        {
+          "name": "防禦資質",
+          "type": "int"
+        },
+        {
+          "name": "防禦資質最大值",
+          "type": "int"
+        },
+        {
+          "name": "攻擊資質",
+          "type": "int"
+        },
+        {
+          "name": "攻擊資質最大值",
+          "type": "int"
+        },
+        {
+          "name": "速度資質",
+          "type": "int"
+        },
+        {
+          "name": "速度資質最大值",
+          "type": "int"
+        },
+        {
+          "name": "體力資質",
+          "type": "int"
+        },
+        {
+          "name": "體力資質最大值",
+          "type": "int"
+        },
+        {
+          "name": "source_entry",
+          "type": "int"
+        },
+        {
+          "name": "source_table",
+          "type": "str"
+        },
+        {
+          "name": "review_status",
+          "type": "str"
+        }
+      ],
+      "notes": "Original field labels; 2800 withheld. No 1700 substitution or missing-row zero fill.",
+      "primary_key": [
+        "client_shape_id"
+      ],
+      "rows": 131,
+      "sha256": "077f9ac95f9110d862ef97d5f17960e5cabba5ed2dfe781e3e16225fceed2769",
+      "source_entry": 2954,
+      "source_table": "DATA"
+    },
+    "pet_required_skills.csv": {
+      "bytes": 2311,
+      "columns": [
+        {
+          "name": "client_shape_id",
+          "type": "int"
+        },
+        {
+          "name": "skill_name_raw",
+          "type": "str"
+        },
+        {
+          "name": "source_entry",
+          "type": "int"
+        },
+        {
+          "name": "source_table",
+          "type": "str"
+        },
+        {
+          "name": "review_status",
+          "type": "str"
+        }
+      ],
+      "notes": "Only explicitly present source values; absence is not filled.",
+      "primary_key": [
+        "client_shape_id"
+      ],
+      "rows": 26,
+      "sha256": "10bf9523b04de5848744342a2ace2b4ebdce860d50b286295aeebdae899ed1c7",
+      "source_entry": 2027,
+      "source_table": "DATA.mustSkillName"
+    },
+    "pet_skill_candidates.csv": {
+      "bytes": 40786,
+      "columns": [
+        {
+          "name": "client_shape_id",
+          "type": "int"
+        },
+        {
+          "name": "sequence",
+          "type": "int"
+        },
+        {
+          "name": "skill_name_raw",
+          "type": "str"
+        },
+        {
+          "name": "source_entry",
+          "type": "int"
+        },
+        {
+          "name": "source_table",
+          "type": "str"
+        },
+        {
+          "name": "review_status",
+          "type": "str"
+        }
+      ],
+      "notes": "Zero-based source order; not probabilities or guaranteed skills.",
+      "primary_key": [
+        "client_shape_id",
+        "sequence"
+      ],
+      "rows": 458,
+      "sha256": "8d021b7f53eefa29a3dd07a958417d934d2100d192a87dc94b2b5aa0571a2792",
+      "source_entry": 2027,
+      "source_table": "DATA.maySkillLst"
+    },
+    "pet_skill_name_matches.csv": {
+      "bytes": 16452,
+      "columns": [
+        {
+          "name": "skill_name_raw",
+          "type": "str"
+        },
+        {
+          "name": "skill_id",
+          "type": "int"
+        },
+        {
+          "name": "match_count",
+          "type": "int"
+        },
+        {
+          "name": "ambiguous",
+          "type": "bool"
+        },
+        {
+          "name": "source_entry",
+          "type": "int"
+        },
+        {
+          "name": "source_table",
+          "type": "str"
+        },
+        {
+          "name": "review_status",
+          "type": "str"
+        }
+      ],
+      "notes": "All exact-name candidates retained. Do NOT choose first ID for duplicated names; this is evidence, not authoritative mapping.",
+      "primary_key": [
+        "skill_name_raw",
+        "skill_id"
+      ],
+      "rows": 145,
+      "sha256": "8043c73751453ea726e1f40a899096cd88cd11def5646e2e336cf9952f1dc7eb",
+      "source_entry": 3205,
+      "source_table": "DATA.name (references from 2027)"
+    },
+    "pet_skill_overwrites.csv": {
+      "bytes": 1326,
+      "columns": [
+        {
+          "name": "write_order",
+          "type": "int"
+        },
+        {
+          "name": "code_offset",
+          "type": "int"
+        },
+        {
+          "name": "skill_id",
+          "type": "int"
+        },
+        {
+          "name": "old_name",
+          "type": "str"
+        },
+        {
+          "name": "new_name",
+          "type": "str"
+        },
+        {
+          "name": "identical_values",
+          "type": "bool"
+        },
+        {
+          "name": "source_entry",
+          "type": "int"
+        },
+        {
+          "name": "source_table",
+          "type": "str"
+        },
+        {
+          "name": "review_status",
+          "type": "str"
+        }
+      ],
+      "notes": "Write order is zero-based per DATA dict. Full byte values in overwrite_evidence.jsonl.",
+      "primary_key": [
+        "write_order"
+      ],
+      "rows": 9,
+      "sha256": "586bcd8d7e60ed91117e51ce5f0da78a34f577af214bfccbfec2ea8a0fb8ac56",
+      "source_entry": 3205,
+      "source_table": "DATA write history"
+    },
+    "pet_skills.csv": {
+      "bytes": 105631,
+      "columns": [
+        {
+          "name": "skill_id",
+          "type": "int"
+        },
+        {
+          "name": "type_code_raw",
+          "type": "int"
+        },
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "description_raw",
+          "type": "str"
+        },
+        {
+          "name": "fpneed_raw",
+          "type": "str"
+        },
+        {
+          "name": "mpneed_raw",
+          "type": "str"
+        },
+        {
+          "name": "hpneed_raw",
+          "type": "str"
+        },
+        {
+          "name": "source_entry",
+          "type": "int"
+        },
+        {
+          "name": "source_table",
+          "type": "str"
+        },
+        {
+          "name": "review_status",
+          "type": "str"
+        }
+      ],
+      "notes": "581 recovered, weak description rows 719/4406 withheld. Resource formulas are opaque strings: never eval.",
+      "primary_key": [
+        "skill_id"
+      ],
+      "rows": 579,
+      "sha256": "47a775607011002b7e92d364f759bf5c1689ae59862f9949f45443da281f924c",
+      "source_entry": 3205,
+      "source_table": "DATA"
+    },
+    "pets.csv": {
+      "bytes": 17098,
+      "columns": [
+        {
+          "name": "client_shape_id",
+          "type": "int"
+        },
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "liupai_raw",
+          "type": "str"
+        },
+        {
+          "name": "attack_type_raw",
+          "type": "str"
+        },
+        {
+          "name": "carry_grade",
+          "type": "int"
+        },
+        {
+          "name": "maxskillnum_raw",
+          "type": "int"
+        },
+        {
+          "name": "address_raw",
+          "type": "str"
+        },
+        {
+          "name": "source_entry",
+          "type": "int"
+        },
+        {
+          "name": "source_table",
+          "type": "str"
+        },
+        {
+          "name": "review_status",
+          "type": "str"
+        }
+      ],
+      "notes": "Original classifications and maxskillnum semantics retained; not a server progression rule.",
+      "primary_key": [
+        "client_shape_id"
+      ],
+      "rows": 135,
+      "sha256": "9164b170692bfb45b0dfd7876f2db57313f8e210c80579df6c27a69063757823",
+      "source_entry": 2027,
+      "source_table": "DATA"
+    },
+    "quarantine.jsonl": {
+      "bytes": 2570,
+      "sha256": "d2f06ecff593430b72fe13240c48814bfe6e31cb2c9a4b48e0a84fd44e167e01"
+    },
+    "validation.json": {
+      "bytes": 1016,
+      "sha256": "f1110a56552439ce8b1762b2e36f6629300d50dc530d6f365b6a3fca44494bc8"
+    }
+  },
+  "inputs": {
+    "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+  },
+  "limitations": [
+    "Candidate extraction, not native-loader proof or server-authoritative rules.",
+    "Literal assignments only; later client mutations not applied.",
+    "No Simplified/Traditional conversion; rich-text and formulas preserved.",
+    "Maps/NPC retain E column/blank-cell conventions and unresolved coordinate semantics.",
+    "Only selected tables; unmerged B/C/D/F findings are not globally applied."
+  ],
+  "map_npc_profiles": {
+    "1301": {
+      "applied_bounds": [
+        1616,
+        3239,
+        4884,
+        6553
+      ],
+      "applied_keys": [
+        103,
+        65,
+        178,
+        5,
+        215
+      ],
+      "automatic_bytecode_solver_enabled": false,
+      "evidence": "server/docs/csv_checks/agent_e_reproduction.json",
+      "filename": "script\\data\\mapdata.py",
+      "payload_sha256": "a99d4a3d4f4f8536445a83c6477f53414a9b0a56cb8a2cacdf914a1b15345697",
+      "role": "csv_source",
+      "saved_bounds": [
+        1612,
+        3237,
+        4884,
+        6553
+      ]
+    },
+    "1799": {
+      "applied_bounds": [
+        528,
+        1093,
+        1652,
+        2202
+      ],
+      "applied_keys": [
+        92,
+        155,
+        4,
+        210,
+        100
+      ],
+      "automatic_bytecode_solver_enabled": false,
+      "evidence": "server/docs/csv_checks/agent_e_reproduction.json",
+      "filename": "script\\data\\npcname2realnamedata.py",
+      "payload_sha256": "5c940c6665ae3643ba817a26b1665fcaf3c2eea69616d4aad9a59bd25fc84465",
+      "role": "csv_source",
+      "saved_bounds": [
+        528,
+        1096,
+        1655,
+        2207
+      ]
+    },
+    "2601": {
+      "applied_bounds": [
+        18827,
+        37735,
+        56546,
+        75376
+      ],
+      "applied_keys": [
+        81,
+        41,
+        105,
+        238,
+        184
+      ],
+      "automatic_bytecode_solver_enabled": false,
+      "evidence": "server/docs/csv_checks/agent_e_reproduction.json",
+      "filename": "script\\data\\npcposdata.py",
+      "payload_sha256": "6633072d3949a57b80eb0b9686c5ae4cdeb64138b9cf87957acf87eb06ff8444",
+      "role": "csv_source",
+      "saved_bounds": [
+        18821,
+        37733,
+        56546,
+        75375
+      ]
+    },
+    "2804": {
+      "applied_bounds": [
+        26695,
+        53365,
+        79989,
+        106619
+      ],
+      "applied_keys": [
+        65,
+        33,
+        179,
+        28,
+        4
+      ],
+      "automatic_bytecode_solver_enabled": false,
+      "evidence": "server/docs/csv_checks/agent_e_reproduction.json",
+      "filename": "script\\data\\minimapnpcpos.py",
+      "payload_sha256": "3177594a17a1ce0739f4d9a246887336a82af06fab2ef083f43b18526b7ecb17",
+      "role": "csv_source",
+      "saved_bounds": [
+        26695,
+        53365,
+        79988,
+        106627
+      ]
+    },
+    "400": {
+      "applied_bounds": [
+        961,
+        2001,
+        3063,
+        4125
+      ],
+      "applied_keys": [
+        116,
+        171,
+        175,
+        82,
+        162
+      ],
+      "automatic_bytecode_solver_enabled": false,
+      "evidence": "server/docs/csv_checks/agent_e_reproduction.json",
+      "filename": "script\\data\\sceneid2name.py",
+      "payload_sha256": "50faa166129bae986cb678ff1238fe0d9e6fad137ab614d30121b90b604a8a46",
+      "role": "csv_source",
+      "saved_bounds": [
+        961,
+        2001,
+        3063,
+        4125
+      ]
+    },
+    "4897": {
+      "applied_bounds": [
+        26677,
+        53319,
+        79961,
+        106579
+      ],
+      "applied_keys": [
+        18,
+        234,
+        200,
+        190,
+        246
+      ],
+      "automatic_bytecode_solver_enabled": false,
+      "evidence": "server/docs/csv_checks/agent_e_reproduction.json",
+      "filename": "script\\data\\minimapnpcpos_test.py",
+      "payload_sha256": "c46e96afd78ef93222d1e2e1083470b6edfc8c28d9af243dbf3593e6155b2f5e",
+      "role": "supporting_cross_check_only",
+      "saved_bounds": [
+        26677,
+        53319,
+        79959,
+        106579
+      ]
+    }
+  },
+  "native_verified": false,
+  "profiles": {
+    "1945": {
+      "applied_bounds": [
+        259583,
+        519228,
+        778759,
+        1038307
+      ],
+      "applied_keys": [
+        152,
+        94,
+        50,
+        49,
+        104
+      ],
+      "automatic_bytecode_solver_enabled": false,
+      "evidence": "server/docs/CLIENT_DATA_INDEPENDENT_CHECK.md",
+      "filename": "script\\data\\itemdata.py",
+      "note": "Three reviewed text-boundary candidates. Do not install these into the historical key database.",
+      "payload_sha256": "d44d90f64bf573836f5b1cbf210e64b6155b5b00e3f52bc7495f9d6f2c0727ff",
+      "saved_bounds": [
+        259624,
+        519228,
+        778764,
+        1038363
+      ],
+      "saved_keys": [
+        152,
+        94,
+        50,
+        49,
+        104
+      ]
+    },
+    "2027": {
+      "applied_bounds": [
+        5383,
+        10831,
+        16264,
+        21751
+      ],
+      "applied_keys": [
+        220,
+        251,
+        132,
+        12,
+        100
+      ],
+      "automatic_bytecode_solver_enabled": false,
+      "evidence": "server/docs/CLIENT_DATA_INDEPENDENT_CHECK.md",
+      "filename": "script\\data\\petdata.py",
+      "note": "Reviewed candidates for address and skill-name text; no name-to-ID disambiguation assumed.",
+      "payload_sha256": "e979fc6b22d39f3b86ef04dcfeb7aff105f51741e308975861856a6d12f6aa9e",
+      "saved_bounds": [
+        5383,
+        10831,
+        16277,
+        21755
+      ],
+      "saved_keys": [
+        220,
+        251,
+        132,
+        12,
+        100
+      ]
+    },
+    "2954": {
+      "applied_bounds": [
+        3973,
+        7978,
+        11868,
+        15798
+      ],
+      "applied_keys": [
+        113,
+        215,
+        173,
+        43,
+        182
+      ],
+      "automatic_bytecode_solver_enabled": false,
+      "evidence": "server/docs/CSV_READINESS.md",
+      "filename": "script\\data\\petaptitudedata.py",
+      "note": "Saved parameters only. Do NOT apply the unconfirmed 7979/1700 hypothesis; quarantine row 2800.",
+      "payload_sha256": "e697e53ddb71219030c8d9a609ae9a21362255ea173e123af13af1f59ca59b55",
+      "saved_bounds": [
+        3973,
+        7978,
+        11868,
+        15798
+      ],
+      "saved_keys": [
+        113,
+        215,
+        173,
+        43,
+        182
+      ]
+    },
+    "3205": {
+      "applied_bounds": [
+        18043,
+        36123,
+        54155,
+        72143
+      ],
+      "applied_keys": [
+        204,
+        152,
+        122,
+        74,
+        218
+      ],
+      "automatic_bytecode_solver_enabled": false,
+      "evidence": "server/docs/csv_checks/AGENT_A_TAKEOVER.md",
+      "filename": "script\\data\\petskill.py",
+      "note": "Structure-supported parameters. Rows 719 and 4406 remain quarantined because their exact description-boundary evidence is weaker. All nine overwrites are retained.",
+      "payload_sha256": "58b9939d1e84614195bb08006c4a88a2eccc2358e19a60a989ebc3c730e26946",
+      "saved_bounds": [
+        18043,
+        36122,
+        54130,
+        72108
+      ],
+      "saved_keys": [
+        204,
+        23,
+        122,
+        74,
+        218
+      ]
+    }
+  },
+  "schema_version": 1,
+  "source_profile": "server/docs/csv_checks/batch_001_profiles.json",
+  "status": "review_candidate_not_native_verified",
+  "tool_and_evidence_sha256": {
+    "server/docs/csv_checks/agent_e_reproduction.json": "d9c2d3702085040a945fbb1ad662655b587ab960d12ba5be1a964b25fef7d0ce",
+    "server/docs/csv_checks/batch_001_profiles.json": "3908e0ce4296d555cc0fc2b3bcacf7e8c554adc73434e2ef195c1492d9b445a3",
+    "server/tools/export_review_csv.py": "68f84f457cf1a76216afac22036c9e72345b69d23a3322a9ae7a57cabe6b3807",
+    "server/tools/map_npc_reproduction.py": "cc5e9349bfb60ca4b2c432505c1f2476939e4c57d829c75cd6cf252a2edd25ca",
+    "server/tools/review_client_data_boundaries.py": "b7463798b9a8a287504662ac756dc31ce86fcfd78b9fad2823dfd1142767aa6c",
+    "server/tools/script_literal_reader.py": "cc676ff94432753cdaca80ab322c188871ca31493aa81702f2c1469f034232b3",
+    "server/tools/survey_csv_readiness.py": "d4224b47c68dd6f7f073ba4b362f4c6c5d7c0a0b32d53ca5ef4fa67df696c8f5",
+    "server/tools/verify_client_data_boundaries.py": "8b1a117160e1354f1d66ff4f7976669550b43d0231ac520805ea7c6fbbc6eca1",
+    "tools/decompiler/batch_decompile.py": "7490dbab6fe70dc65b905338195bd275697afb15be51bae4ef9f67a14b54551d",
+    "tools/fls_batch_decoder.py": "eaadba011aeb45bd976b25ddf2c234ca20e8ad8dc89c20144a53ef44e6df721f"
+  }
+}
