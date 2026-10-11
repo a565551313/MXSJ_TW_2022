@@ -1,0 +1,114 @@
+--- ORDER store region (2815..2840) ---
+   2817  BUILD_LIST             233
+   2820  STORE_NAME             62 name=b'ORDER'
+   2823  BUILD_MAP              0
+   2826  DUP_TOP                None
+   2827  BUILD_MAP              0
+   2830  DUP_TOP                None
+   2831  LOAD_NAME              58 name=b'None'
+   2834  ROT_TWO                None
+   2835  LOAD_CONST             364 const=b'ani'
+   2838  STORE_SUBSCR           None
+   2839  DUP_TOP                None
+   2840  LOAD_CONST             365 const=160
+   2843  ROT_TWO                None
+   2844  LOAD_CONST             366 const=b'base_cost'
+
+--- DATA build start (after ORDER store) ---
+   2823  BUILD_MAP              0
+   2826  DUP_TOP                None
+   2827  BUILD_MAP              0
+   2830  DUP_TOP                None
+   2831  LOAD_NAME              58 name=b'None'
+   2834  ROT_TWO                None
+   2835  LOAD_CONST             364 const=b'ani'
+   2838  STORE_SUBSCR           None
+   2839  DUP_TOP                None
+   2840  LOAD_CONST             365 const=160
+   2843  ROT_TWO                None
+   2844  LOAD_CONST             366 const=b'base_cost'
+   2847  STORE_SUBSCR           None
+   2848  DUP_TOP                None
+   2849  LOAD_CONST             4 const=4
+   2852  ROT_TWO                None
+   2853  LOAD_CONST             367 const=b'beauty'
+   2856  STORE_SUBSCR           None
+   2857  DUP_TOP                None
+   2858  LOAD_NAME              58 name=b'None'
+   2861  ROT_TWO                None
+   2862  LOAD_CONST             368 const=b'beauty_limit'
+   2865  STORE_SUBSCR           None
+   2866  DUP_TOP                None
+   2867  LOAD_NAME              58 name=b'None'
+   2870  ROT_TWO                None
+   2871  LOAD_CONST             369 const=b'bg_type'
+   2874  STORE_SUBSCR           None
+   2875  DUP_TOP                None
+   2876  LOAD_CONST             370 const=128
+   2879  ROT_TWO                None
+   2880  LOAD_CONST             371 const=b'cost'
+   2883  STORE_SUBSCR           None
+   2884  DUP_TOP                None
+   2885  LOAD_CONST             372 const=b'\xaex\xb0|\xb8\xcb\xb9\xa2\xb9\xcf\xaf\xc8\xa1A\xb0O\xb8\xfc\xb5\xdb3\xaf\xc5\xaex\xb0|\xb8\xcb\xb9\xa2\xbbs\xa7@\xa4\xe8\xaak\xaa\xba\xb9\xcf\xaf\xc8#r\xa1i\xaa`\xb7N\xa1j\xbb\xdd\xadn\xc1\xca\xb6R\xaa\xcc\xa8\xad\xa4W\xc4\xe2\xb1a\xb3\xc3\xa8\xe3\xb9\xcf\xaf\xc8\xa1A\xa4\xe8\xa5i\xbbs\xa7@'
+   2888  ROT_TWO                None
+   2889  LOAD_CONST             373 const=b'desc'
+   2892  STORE_SUBSCR           None
+   2893  DUP_TOP                None
+   2894  LOAD_NAME              58 name=b'None'
+   2897  ROT_TWO                None
+   2898  LOAD_CONST             374 const=b'direct'
+   2901  STORE_SUBSCR           None
+   2902  DUP_TOP                None
+   2903  LOAD_NAME              58 name=b'None'
+   2906  ROT_TWO                None
+   2907  LOAD_CONST             375 const=b'grade'
+   2910  STORE_SUBSCR           None
+   2911  DUP_TOP                None
+   2912  LOAD_NAME              58 name=b'None'
+   2915  ROT_TWO                None
+   2916  LOAD_CONST             376 const=b'layer'
+   2919  STORE_SUBSCR           None
+   2920  DUP_TOP                None
+   2921  LOAD_NAME              58 name=b'None'
+   2924  ROT_TWO                None
+   2925  LOAD_CONST             377 const=b'lianxuplace'
+   2928  STORE_SUBSCR           None
+   2929  DUP_TOP                None
+   2930  LOAD_CONST             378 const=105
+   2933  ROT_TWO                None
+   2934  LOAD_CONST             379 const=b'lv'
+   2937  STORE_SUBSCR           None
+   2938  DUP_TOP                None
+   2939  LOAD_CONST             380 const=b'\xaex\xb0|\xb8\xcb\xb9\xa2\xb9\xcf\xaf\xc8'
+   2942  ROT_TWO                None
+   2943  LOAD_CONST             107 const=b'name'
+   2946  STORE_SUBSCR           None
+   2947  DUP_TOP                None
+   2948  LOAD_NAME              58 name=b'None'
+   2951  ROT_TWO                None
+   2952  LOAD_CONST             381 const=b'pagename'
+   2955  STORE_SUBSCR           None
+   2956  DUP_TOP                None
+   2957  LOAD_NAME              58 name=b'None'
+   2960  ROT_TWO                None
+   2961  LOAD_CONST             142 const=b'pre'
+   2964  STORE_SUBSCR           None
+   2965  DUP_TOP                None
+   2966  LOAD_NAME              58 name=b'None'
+   2969  ROT_TWO                None
+   2970  LOAD_CONST             382 const=b'special'
+   2973  STORE_SUBSCR           None
+   2974  DUP_TOP                None
+   2975  LOAD_NAME              58 name=b'None'
+   2978  ROT_TWO                None
+   2979  LOAD_CONST             383 const=b'stablepath'
+   2982  STORE_SUBSCR           None
+   2983  DUP_TOP                None
+   2984  LOAD_NAME              58 name=b'None'
+   2987  ROT_TWO                None
+   2988  LOAD_CONST             384 const=b'subtype'
+   2991  STORE_SUBSCR           None
+   2992  DUP_TOP                None
+   2993  LOAD_CONST             4 const=4
+   2996  ROT_TWO                None
+   2997  LOAD_CONST             385 const=b'type'
