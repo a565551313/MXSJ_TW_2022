@@ -1,0 +1,281 @@
+{
+  "status": "research_candidates_not_approved_game_data",
+  "offset_units": "zero-based offsets in decompressed XOR payload",
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "key_database_sha256": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+  "baseline": [
+    {
+      "entry_index": 1945,
+      "table": "DATA",
+      "saved_bounds": [
+        259624,
+        519228,
+        778764,
+        1038363
+      ],
+      "filename": "script\\data\\itemdata.py",
+      "count": 6852,
+      "text_errors": [
+        {
+          "path": "DATA[10424][1]",
+          "byte_start": 144,
+          "byte_end": 145,
+          "raw_hex": "b648bc78b5dba5c3b5b2a650a4dfa4a7b74eaabac646aa47a141a6b9c646aa47a46ba9caaab1ae61a8cfa5ceabe1a569a548b16fa8ecba61c541a4a7a5c9a142c1d9b5a3a4a6a142ba58a55db5a5bcfac079a141a86ba9caaab1ae61a8cfa5ceabe1a575afe0b16fa8eca4d6b671a9e8a5ceaaf7a143a15da86ba9caaab1ae61a440a4d1b3cca668a8cfa5ce32add36096621900806c81678762ad6f0c6c7768a76dae750a60ae6e096308f26b156096621900806c816798"
+        },
+        {
+          "path": "DATA[71700][1]",
+          "byte_start": 95,
+          "byte_end": 96,
+          "raw_hex": "a5d1ab5fc049ae61a6e6b77cace3b56faabaa141a8e3a6b3b04fbed0aec9aac5b6c7b065c249aabaaf53aeeda55cafe02372a169a8cfa5cea4e8aa6ba16ab6a4a5eea448bcc6b5a5a9f335a448a141a8cfa5ceaacca8ada5f7acb0b6a4aaf8f818ff3bf08be589e916f3e3e93ef73afd13fd3ffefde589ea1bfc3298bd9b1099e27a2bf830f08b9d84e93ef73af833fe35ffbcfc33eaa0"
+        },
+        {
+          "path": "DATA[72548][0]",
+          "byte_start": 12,
+          "byte_end": 13,
+          "raw_hex": "c2f9a448a7a4c34dc5e9c5e784"
+        }
+      ],
+      "status": "literal_table_extracted_not_semantically_verified"
+    },
+    {
+      "entry_index": 2027,
+      "table": "DATA",
+      "saved_bounds": [
+        5383,
+        10831,
+        16277,
+        21755
+      ],
+      "filename": "script\\data\\petdata.py",
+      "count": 135,
+      "text_errors": [
+        {
+          "path": "DATA[2600][b'address']",
+          "byte_start": 23,
+          "byte_end": 24,
+          "raw_hex": "a558b27ba661c249a1472372a8dfafabb7b5bff2a77d23fa205721d22dec22713b26315b"
+        },
+        {
+          "path": "DATA[4011][b'maySkillLst'][3]",
+          "byte_start": 4,
+          "byte_end": 5,
+          "raw_hex": "b2d7afc5d902cc27"
+        }
+      ],
+      "status": "literal_table_extracted_not_semantically_verified"
+    },
+    {
+      "entry_index": 1115,
+      "table": "DATA",
+      "saved_bounds": [
+        825,
+        1699,
+        2546,
+        3375
+      ],
+      "filename": "script\\data\\mxpetdata.py",
+      "count": 137,
+      "text_errors": [],
+      "status": "literal_table_extracted_not_semantically_verified"
+    },
+    {
+      "entry_index": 2242,
+      "table": "SKILLIDLST",
+      "saved_bounds": [
+        130,
+        262,
+        401,
+        517
+      ],
+      "filename": "script\\data\\petactiveskilldata.py",
+      "count": 48,
+      "text_errors": [],
+      "status": "literal_table_extracted_not_semantically_verified"
+    },
+    {
+      "entry_index": 1698,
+      "table": "DATA",
+      "saved_bounds": [
+        467,
+        1078,
+        1548,
+        2036
+      ],
+      "filename": "script\\data\\itemextdata.py",
+      "count": 27,
+      "text_errors": [
+        {
+          "path": "DATA[10004]",
+          "byte_start": 32,
+          "byte_end": 33,
+          "raw_hex": "a169c0f2b16fb77aaa78a56e2776c3eda266ace0a148aeb5aa65aebec171a2e8a053c5ceb2562772c7eaa7e423732831382ca475c3c0ae762c312ca9faa4ebabb02c36322c38322c3029bb73a740"
+        }
+      ],
+      "status": "literal_table_extracted_not_semantically_verified"
+    },
+    {
+      "entry_index": 3205,
+      "table": "DATA",
+      "saved_bounds": [
+        18043,
+        36122,
+        54130,
+        72108
+      ],
+      "filename": "script\\data\\petskill.py",
+      "status": "unresolved",
+      "error": "ValueError: EXTENDED_ARG before argument-free instruction"
+    }
+  ],
+  "probes": [
+    {
+      "entry_index": 1945,
+      "boundary_index": 0,
+      "saved_offset": 259624,
+      "candidate_offset": 259583,
+      "automatic_bytecode_solver_enabled": true,
+      "record_id_or_list_index": 10424,
+      "status": "candidate_requires_independent_confirmation",
+      "before": [
+        "同心靈果·陰",
+        {
+          "invalid_cp950_hex": "b648bc78b5dba5c3b5b2a650a4dfa4a7b74eaabac646aa47a141a6b9c646aa47a46ba9caaab1ae61a8cfa5ceabe1a569a548b16fa8ecba61c541a4a7a5c9a142c1d9b5a3a4a6a142ba58a55db5a5bcfac079a141a86ba9caaab1ae61a8cfa5ceabe1a575afe0b16fa8eca4d6b671a9e8a5ceaaf7a143a15da86ba9caaab1ae61a440a4d1b3cca668a8cfa5ce32add36096621900806c81678762ad6f0c6c7768a76dae750a60ae6e096308f26b156096621900806c816798",
+          "escaped_preview": "象徵著永結同心之意的靈果，此靈果女性玩家使用後可以得到榮譽之玉、還童丹、旗包等獎勵，男性玩家使用後只能得到少量抵用金。（男性玩家一天最多使用2個`\\x96b\u0019\u0000\\x80l\\x81g\\x87b觔\flwh吮席\n`峪\tc\b爇\u0015`\\x96b\u0019\u0000\\x80l\\x81g\\x98"
+        }
+      ],
+      "after": [
+        "同心靈果·陰",
+        "象徵著永結同心之意的靈果，此靈果女性玩家使用後可以得到榮譽之玉、還童丹、旗包等獎勵，男性玩家使用後只能得到少量抵用金。（男性玩家一天最多使用2個同心靈果，女性玩家則最多使用4個同心靈果）"
+      ],
+      "count_before": 6852,
+      "count_after": 6852,
+      "text_errors_after": [
+        {
+          "path": "DATA[71700][1]",
+          "byte_start": 95,
+          "byte_end": 96,
+          "raw_hex": "a5d1ab5fc049ae61a6e6b77cace3b56faabaa141a8e3a6b3b04fbed0aec9aac5b6c7b065c249aabaaf53aeeda55cafe02372a169a8cfa5cea4e8aa6ba16ab6a4a5eea448bcc6b5a5a9f335a448a141a8cfa5ceaacca8ada5f7acb0b6a4aaf8f818ff3bf08be589e916f3e3e93ef73afd13fd3ffefde589ea1bfc3298bd9b1099e27a2bf830f08b9d84e93ef73af833fe35ffbcfc33eaa0"
+        },
+        {
+          "path": "DATA[72548][0]",
+          "byte_start": 12,
+          "byte_end": 13,
+          "raw_hex": "c2f9a448a7a4c34dc5e9c5e784"
+        }
+      ],
+      "changed_keys": [
+        10424
+      ]
+    },
+    {
+      "entry_index": 1945,
+      "boundary_index": 3,
+      "saved_offset": 1038363,
+      "candidate_offset": 1038307,
+      "automatic_bytecode_solver_enabled": true,
+      "record_id_or_list_index": 71700,
+      "status": "candidate_requires_independent_confirmation",
+      "before": [
+        "時空之輪",
+        {
+          "invalid_cp950_hex": "a5d1ab5fc049ae61a6e6b77cace3b56faabaa141a8e3a6b3b04fbed0aec9aac5b6c7b065c249aabaaf53aeeda55cafe02372a169a8cfa5cea4e8aa6ba16ab6a4a5eea448bcc6b5a5a9f335a448a141a8cfa5ceaacca8ada5f7acb0b6a4aaf8f818ff3bf08be589e916f3e3e93ef73afd13fd3ffefde589ea1bfc3298bd9b1099e27a2bf830f08b9d84e93ef73af833fe35ffbcfc33eaa0",
+          "escaped_preview": "由冒險家行會研發的，具有記憶時空傳送點的特殊功能#r【使用方法】隊伍人數等於5人，使用者身份為隊長\\xf8\u0018\\xff;\\xf0\\x8b\\xe5\\x89\\xe9\u0016鵽\\xe9>\\xf7:\\xfd\u0013\\xfd?\\xfe\\xfd\\xe5\\x89\\xea\u001b\\xfc2\\x98\\xbd\\x9b\u0010\\x99漘+\\xf80\\xf0\\x8b\\x9d\\x84\\xe9>\\xf7:\\xf83\\xfe5\\xff瑩3\\xea\\xa0"
+        }
+      ],
+      "after": [
+        "時空之輪",
+        "由冒險家行會研發的，具有記憶時空傳送點的特殊功能#r【使用方法】隊伍人數等於5人，使用者身份為隊長，在所標記的迷宮入口坐標處右鍵點擊#r【所屬迷宮】吸血古堡"
+      ],
+      "count_before": 6852,
+      "count_after": 6852,
+      "text_errors_after": [
+        {
+          "path": "DATA[10424][1]",
+          "byte_start": 144,
+          "byte_end": 145,
+          "raw_hex": "b648bc78b5dba5c3b5b2a650a4dfa4a7b74eaabac646aa47a141a6b9c646aa47a46ba9caaab1ae61a8cfa5ceabe1a569a548b16fa8ecba61c541a4a7a5c9a142c1d9b5a3a4a6a142ba58a55db5a5bcfac079a141a86ba9caaab1ae61a8cfa5ceabe1a575afe0b16fa8eca4d6b671a9e8a5ceaaf7a143a15da86ba9caaab1ae61a440a4d1b3cca668a8cfa5ce32add36096621900806c81678762ad6f0c6c7768a76dae750a60ae6e096308f26b156096621900806c816798"
+        },
+        {
+          "path": "DATA[72548][0]",
+          "byte_start": 12,
+          "byte_end": 13,
+          "raw_hex": "c2f9a448a7a4c34dc5e9c5e784"
+        }
+      ],
+      "changed_keys": [
+        71700
+      ]
+    },
+    {
+      "entry_index": 1115,
+      "boundary_index": 0,
+      "saved_offset": 825,
+      "candidate_offset": 828,
+      "automatic_bytecode_solver_enabled": false,
+      "record_id_or_list_index": 2910,
+      "status": "candidate_requires_independent_confirmation",
+      "before": 2280,
+      "after": "混沌騎士",
+      "count_before": 137,
+      "count_after": 137,
+      "text_errors_after": [],
+      "changed_keys": [
+        2910
+      ]
+    },
+    {
+      "entry_index": 2242,
+      "boundary_index": 1,
+      "saved_offset": 262,
+      "candidate_offset": 264,
+      "automatic_bytecode_solver_enabled": true,
+      "record_id_or_list_index": 16,
+      "status": "candidate_requires_independent_confirmation",
+      "before": 64605,
+      "after": 416,
+      "count_before": 48,
+      "count_after": 48,
+      "text_errors_after": [],
+      "changed_list_indices": [
+        16
+      ]
+    }
+  ],
+  "mxpetdata_reference_scan": {
+    "needle": "mxpetdata",
+    "scanned": 5002,
+    "matches": [
+      1115
+    ],
+    "errors": [],
+    "limitation": "Uses saved heuristic keys/bounds; dynamic imports and decoding errors may hide references."
+  },
+  "limitations": [
+    "No recovered script execution or live-client comparison.",
+    "The existing transpiler has heuristic repairs; a parsed table is not proof of correctness.",
+    "Candidates are not installed in the saved key database or game_data.",
+    "Valid CP950 is not sufficient evidence of correct text or numeric values.",
+    "This covers selected tables, not the full client."
+  ],
+  "unresolved_item_name": {
+    "entry_index": 1945,
+    "record_id": 72548,
+    "value": {
+      "invalid_cp950_hex": "c2f9a448a7a4c34dc5e9c5e784",
+      "escaped_preview": "雙人坐騎體驗\\x84"
+    },
+    "note": "Invalid final byte is not adjacent to any saved XOR boundary; do not trim or guess."
+  },
+  "pet_table_differences": {
+    "only_in_mxpetdata": [
+      5106,
+      5107
+    ],
+    "shared_id_4024": [
+      "神獸雷吉斯",
+      "仙獸雷吉斯"
+    ],
+    "petdata_2910": "混沌騎士",
+    "note": "Cardinality and naming differences are not necessarily errors; caller semantics still unverified."
+  }
+}

@@ -1,0 +1,1276 @@
+{
+  "schema_version": 1,
+  "scope": "curated work packages; not exhaustive independent gameplay count",
+  "features": [
+    {
+      "feature_id": "account.security",
+      "owner_module": "account",
+      "title": "账号安全、二次密码和异常登录保护",
+      "primary_entries": [
+        4609
+      ],
+      "source_prefixes": [],
+      "proposed_api": "request_protection_change / confirm_protection_change",
+      "notes": "客户端只有安全请求线索，不代表身份验证、申诉或风控规则已还原。",
+      "proposed_independent_module": "account_security",
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "account.login_queue",
+      "owner_module": "account",
+      "title": "登录排队",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/gameloginqueue/"
+      ],
+      "proposed_api": "join_queue / query_queue / cancel_queue",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "account.identity_protection",
+      "owner_module": "account",
+      "title": "短信验证与未成年人保护",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/smsverify/",
+        "script/mxgame/nonageprotect/"
+      ],
+      "proposed_api": "request_verification / verify_challenge / evaluate_login_policy",
+      "notes": "合规策略和外部短信服务需独立配置与安全评审，不能从客户端提示推断法律要求。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "character.achievement",
+      "owner_module": "character",
+      "title": "成就、徽章、推荐目标",
+      "primary_entries": [
+        1976,
+        3616
+      ],
+      "source_prefixes": [],
+      "proposed_api": "list_achievements / claim_achievement_reward / equip_badge",
+      "notes": "",
+      "proposed_independent_module": "achievement",
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "character.title",
+      "owner_module": "character",
+      "title": "称谓和称号表现",
+      "primary_entries": [
+        1665,
+        1979
+      ],
+      "source_prefixes": [],
+      "proposed_api": "list_titles / equip_title",
+      "notes": "表现资源能确定客户端需求，解锁条件仍需服务端规则。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "character.mount",
+      "owner_module": "character",
+      "title": "坐骑成长、技能、形态与多人座位",
+      "primary_entries": [
+        1272
+      ],
+      "source_prefixes": [
+        "script/mxgame/mxride/",
+        "script/mxgame/rideskill/"
+      ],
+      "proposed_api": "list_mounts / train_mount / learn_mount_skill / set_riding_party",
+      "notes": "坐骑不是仅外观，成长归本工作包；染色资源与appearance协作。",
+      "proposed_independent_module": "mount",
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "character.progression",
+      "owner_module": "character",
+      "title": "自动升级、属性与流派成长",
+      "primary_entries": [
+        1608,
+        3092
+      ],
+      "source_prefixes": [
+        "script/mxgame/autoupgrade/",
+        "script/mxgame/attribute/"
+      ],
+      "proposed_api": "allocate_attributes / request_level_up / select_progression_plan",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "character.pretty_number",
+      "owner_module": "character",
+      "title": "角色靓号与标识",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/prettynum/"
+      ],
+      "proposed_api": "query_identifier_offer / claim_identifier",
+      "notes": "交易与付费资格不可由客户端直接声明。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "inventory.warehouse",
+      "owner_module": "inventory",
+      "title": "仓库、保险仓、租赁和续租",
+      "primary_entries": [
+        1201
+      ],
+      "source_prefixes": [],
+      "proposed_api": "list_storage / transfer_storage_item / rent_storage / renew_storage",
+      "notes": "仓库容器与背包共用物品所有权，不能复制物品。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "inventory.warehouse_security",
+      "owner_module": "inventory",
+      "title": "仓库密码、锁定、检索与整理",
+      "primary_entries": [
+        1201
+      ],
+      "source_prefixes": [],
+      "proposed_api": "unlock_storage / change_storage_protection / search_storage / arrange_storage",
+      "notes": "凭据不写日志，整理保持物品实例ID。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "inventory.virtual_bag",
+      "owner_module": "inventory",
+      "title": "临时背包与特殊场景物品",
+      "primary_entries": [
+        3745
+      ],
+      "source_prefixes": [],
+      "proposed_api": "list_temporary_items / use_temporary_item / move_temporary_item",
+      "notes": "区分场景临时资产和永久资产，退出及恢复策略明确。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "inventory.extension",
+      "owner_module": "inventory",
+      "title": "物品扩展属性与快捷栏",
+      "primary_entries": [
+        1108,
+        3745
+      ],
+      "source_prefixes": [],
+      "proposed_api": "query_item_details / set_item_shortcut",
+      "notes": "marshal扩展字段必须白名单解析，不能执行客户端对象。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "crafting.creation",
+      "owner_module": "crafting",
+      "title": "装备打造、打造符与鉴定",
+      "primary_entries": [
+        1203
+      ],
+      "source_prefixes": [],
+      "proposed_api": "preview_craft / craft_equipment / identify_equipment",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "crafting.smelting",
+      "owner_module": "crafting",
+      "title": "装备熔炼与结果确认",
+      "primary_entries": [
+        1,
+        1203
+      ],
+      "source_prefixes": [],
+      "proposed_api": "preview_smelting / perform_smelting / confirm_smelting",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "crafting.gems",
+      "owner_module": "crafting",
+      "title": "宝石合成、镶嵌、拆卸与转换",
+      "primary_entries": [
+        1203
+      ],
+      "source_prefixes": [],
+      "proposed_api": "combine_gems / inlay_gem / remove_gem / transform_gem",
+      "notes": "材料消耗、装备变更和返还同事务。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "crafting.production",
+      "owner_module": "crafting",
+      "title": "生活生产、采集与作物",
+      "primary_entries": [
+        2971,
+        1381,
+        2455
+      ],
+      "source_prefixes": [],
+      "proposed_api": "start_production / gather_resource / harvest_crop",
+      "notes": "netliving混有其他小游戏，不能把该脚本整体视为生产系统。",
+      "proposed_independent_module": "profession",
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "crafting.factory",
+      "owner_module": "crafting",
+      "title": "工厂经营、雇工和产品订单",
+      "primary_entries": [
+        2971,
+        1516
+      ],
+      "source_prefixes": [],
+      "proposed_api": "create_factory / post_job / accept_job / place_product_order",
+      "notes": "工厂资金与商品仍走economy/inventory/trade。",
+      "proposed_independent_module": "profession",
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "world.travel",
+      "owner_module": "world",
+      "title": "飞行旗、传送、寻路与移动",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/flyflag/",
+        "script/autofindpath.py",
+        "script/mapshortcut.py"
+      ],
+      "proposed_api": "use_travel_point / validate_movement / enter_map",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "world.instance",
+      "owner_module": "world",
+      "title": "副本空间与进入离开",
+      "primary_entries": [
+        3110
+      ],
+      "source_prefixes": [],
+      "proposed_api": "create_instance / enter_instance / leave_instance",
+      "notes": "服务端实例生命周期为新设计；客户端FBNpc/FBGoods只是交互线索。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "world.dynamic_entities",
+      "owner_module": "world",
+      "title": "动态NPC、场景物品和副本对象",
+      "primary_entries": [
+        3110
+      ],
+      "source_prefixes": [],
+      "proposed_api": "spawn_world_entity / remove_world_entity / interact_world_entity",
+      "notes": "生成/删除接口内部授权，不能对任意客户端开放。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "npc.dialogue",
+      "owner_module": "npc",
+      "title": "对话、选项、输入与给予",
+      "primary_entries": [
+        731
+      ],
+      "source_prefixes": [],
+      "proposed_api": "open_dialogue / answer_dialogue / submit_dialogue_input / give_items",
+      "notes": "对话会话绑定角色/NPC/距离/过期时间，给予走资产事务。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "battle.actions",
+      "owner_module": "battle",
+      "title": "人物与召唤兽战斗指令",
+      "primary_entries": [
+        1406
+      ],
+      "source_prefixes": [],
+      "proposed_api": "submit_action / replace_action_before_lock",
+      "notes": "攻击、技能、防御、逃跑、道具、召唤、保护、捕捉；是否可改令需验证。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "battle.turns",
+      "owner_module": "battle",
+      "title": "回合推进、托管、掉线与时间窗",
+      "primary_entries": [
+        1406,
+        697
+      ],
+      "source_prefixes": [],
+      "proposed_api": "advance_round / apply_timeout / set_auto_policy / resume_battle",
+      "notes": "前三者是内部状态机接口，不是客户端自由调用接口。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "battle.reporting",
+      "owner_module": "battle",
+      "title": "战报编码、观战与录像",
+      "primary_entries": [
+        1406,
+        697
+      ],
+      "source_prefixes": [
+        "script/recordvideo.py",
+        "script/dialog/watchrecord/",
+        "script/netrecord.py"
+      ],
+      "proposed_api": "subscribe_spectator / query_public_battle_view / read_replay",
+      "notes": "观战与录像权限、隐藏信息、保存期限需明确。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "battle.preparation",
+      "owner_module": "battle",
+      "title": "战前准备、装备方案与附魔方案",
+      "primary_entries": [
+        660
+      ],
+      "source_prefixes": [
+        "script/mxgame/warprepare/"
+      ],
+      "proposed_api": "save_preparation_plan / apply_preparation_plan / snapshot_combatants",
+      "notes": "装备与消耗由inventory/crafting负责，不由战斗直接改表。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "skill.school",
+      "owner_module": "skill",
+      "title": "门派/流派技能与学习",
+      "primary_entries": [
+        454,
+        3255
+      ],
+      "source_prefixes": [],
+      "proposed_api": "list_skill_tree / learn_skill / upgrade_skill",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "skill.effects",
+      "owner_module": "skill",
+      "title": "状态、技能效果与结算顺序",
+      "primary_entries": [
+        1535,
+        4636
+      ],
+      "source_prefixes": [],
+      "proposed_api": "resolve_effect / apply_status / expire_status",
+      "notes": "数据名和描述不等于完整伤害算法；该API应为纯计算接口。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "skill.preview",
+      "owner_module": "skill",
+      "title": "技能预览与推荐",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/skillpreview/",
+        "script/mxgame/skillrecommand/"
+      ],
+      "proposed_api": "preview_skill / recommend_skill_plan",
+      "notes": "动画预览主要属于客户端，服务端只供给必要数据。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "pet.refinement",
+      "owner_module": "pet",
+      "title": "炼妖、合宠、还童与预览",
+      "primary_entries": [
+        1599
+      ],
+      "source_prefixes": [
+        "script/mxgame/pet/lianyao/"
+      ],
+      "proposed_api": "preview_refinement / refine_pet / combine_pet / confirm_pet_result",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "pet.talent",
+      "owner_module": "pet",
+      "title": "召唤兽天赋及方案",
+      "primary_entries": [
+        4345,
+        960
+      ],
+      "source_prefixes": [],
+      "proposed_api": "learn_talent / reset_talent / save_talent_plan / replace_talent_result",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "pet.skills",
+      "owner_module": "pet",
+      "title": "召唤兽技能学习与打书",
+      "primary_entries": [
+        1599,
+        2242
+      ],
+      "source_prefixes": [],
+      "proposed_api": "learn_pet_skill / use_pet_skill_book / unlock_pet_skill_slot",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "pet.bestiary",
+      "owner_module": "pet",
+      "title": "召唤兽图鉴与收藏奖励",
+      "primary_entries": [
+        765,
+        4914
+      ],
+      "source_prefixes": [],
+      "proposed_api": "query_bestiary / claim_collection_reward",
+      "notes": "收藏资格从服务端事件推进，不信任客户端上报。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "pet.equipment_storage",
+      "owner_module": "pet",
+      "title": "召唤兽装备、寄存与出战",
+      "primary_entries": [
+        1599,
+        1201
+      ],
+      "source_prefixes": [],
+      "proposed_api": "equip_pet_item / store_pet / withdraw_pet / set_active_pet",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "children.cultivation",
+      "owner_module": "children",
+      "title": "子女培养与成长",
+      "primary_entries": [
+        3515
+      ],
+      "source_prefixes": [
+        "script/mxgame/newchild/"
+      ],
+      "proposed_api": "query_child_growth / cultivate_child / select_child_training",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "children.combat",
+      "owner_module": "children",
+      "title": "子女技能与参战",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/netchild.py",
+        "script/netchildinfo.py"
+      ],
+      "proposed_api": "assign_child_skill / select_child_for_battle",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "quest.story",
+      "owner_module": "quest",
+      "title": "剧情、任务条件与分支",
+      "primary_entries": [
+        4913,
+        1501,
+        3159
+      ],
+      "source_prefixes": [
+        "script/data/juben/",
+        "script/mxgame/newstory/"
+      ],
+      "proposed_api": "accept_story_task / evaluate_objective / progress_story / claim_story_reward",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "quest.tracking",
+      "owner_module": "quest",
+      "title": "任务追踪、导航与交付",
+      "primary_entries": [
+        4913
+      ],
+      "source_prefixes": [
+        "script/mxgame/tasktrace/"
+      ],
+      "proposed_api": "set_tracking / query_task_targets / submit_task_items",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "quest.onboarding",
+      "owner_module": "quest",
+      "title": "新手引导、变强指引与章节奖励",
+      "primary_entries": [
+        1838
+      ],
+      "source_prefixes": [
+        "script/mxgame/newguide/",
+        "script/mxgame/guide/",
+        "script/mxgame/jobguide/"
+      ],
+      "proposed_api": "query_guide_chapters / advance_guide_objective / claim_chapter_reward",
+      "notes": "",
+      "proposed_independent_module": "onboarding",
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "party.recruitment",
+      "owner_module": "party",
+      "title": "队伍招募、申请、邀请与跟随",
+      "primary_entries": [
+        2889,
+        3636
+      ],
+      "source_prefixes": [],
+      "proposed_api": "publish_recruitment / apply_to_party / approve_application / set_follow",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "party.daily",
+      "owner_module": "party",
+      "title": "日常固定队与队长激励",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/dailyteam/",
+        "script/mxgame/captainbonus/"
+      ],
+      "proposed_api": "query_daily_team / register_daily_team / claim_captain_reward",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "guild.membership",
+      "owner_module": "guild",
+      "title": "成员、职务、申请、公告与权限",
+      "primary_entries": [
+        1028
+      ],
+      "source_prefixes": [],
+      "proposed_api": "apply_membership / review_membership / assign_role / edit_announcement",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "guild.construction",
+      "owner_module": "guild",
+      "title": "帮派建设、资金与升级",
+      "primary_entries": [
+        870,
+        3880
+      ],
+      "source_prefixes": [],
+      "proposed_api": "query_buildings / contribute_resources / upgrade_building",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "guild.merger",
+      "owner_module": "guild",
+      "title": "帮派合并",
+      "primary_entries": [
+        89
+      ],
+      "source_prefixes": [],
+      "proposed_api": "request_guild_merge / approve_guild_merge / execute_guild_merge",
+      "notes": "涉及成员/资金/权限迁移，不能当作修改guild_id的普通更新。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "guild.red_packets",
+      "owner_module": "guild",
+      "title": "帮派红包与领袖成长",
+      "primary_entries": [
+        62,
+        20
+      ],
+      "source_prefixes": [],
+      "proposed_api": "create_guild_red_packet / claim_guild_red_packet / claim_leader_title",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "social.friendship",
+      "owner_module": "social",
+      "title": "好友、黑名单、关系与离线通知",
+      "primary_entries": [
+        4238
+      ],
+      "source_prefixes": [],
+      "proposed_api": "request_friend / accept_friend / block_character / query_relationship",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "social.marriage",
+      "owner_module": "social",
+      "title": "婚姻与配偶玩法",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/marriage/",
+        "script/marriage.py"
+      ],
+      "proposed_api": "request_marriage / confirm_marriage / request_divorce",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "social.mentorship",
+      "owner_module": "social",
+      "title": "师徒关系与师徒任务",
+      "primary_entries": [
+        1308
+      ],
+      "source_prefixes": [
+        "script/mxgame/shitu/"
+      ],
+      "proposed_api": "request_mentorship / confirm_mentorship / graduate_apprentice",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "social.sworn",
+      "owner_module": "social",
+      "title": "结拜及成员关系",
+      "primary_entries": [
+        1407,
+        3902
+      ],
+      "source_prefixes": [
+        "script/mxgame/sibling/"
+      ],
+      "proposed_api": "create_sworn_group / invite_sworn_member / leave_sworn_group",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "social.chat",
+      "owner_module": "social",
+      "title": "频道、私聊、语音与传音",
+      "primary_entries": [
+        3257
+      ],
+      "source_prefixes": [
+        "script/mxgame/chuanyin/",
+        "script/mxgame/chat/"
+      ],
+      "proposed_api": "send_channel_message / send_private_message / publish_voice_reference",
+      "notes": "语音数据服务与聊天授权分开，凭据与存储地址不任意信任。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "social.community",
+      "owner_module": "social",
+      "title": "空间、相册、动态与互动",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/myq/",
+        "script/mxgame/myqnew/",
+        "script/mxgame/album/",
+        "script/netblog.py"
+      ],
+      "proposed_api": "publish_post / list_feed / react_to_post / report_content",
+      "notes": "上传安全、隐私、内容审核属于独立工程要求。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "social.newspaper",
+      "owner_module": "social",
+      "title": "报纸、文章、广告与审核",
+      "primary_entries": [
+        2593
+      ],
+      "source_prefixes": [],
+      "proposed_api": "submit_article / review_article / publish_newspaper / buy_ad_slot",
+      "notes": "netcountry.py的函数主要是报纸操作，不能仅凭文件名归为国家战斗。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "mail.system",
+      "owner_module": "mail",
+      "title": "系统邮件、通知与附件",
+      "primary_entries": [
+        2725
+      ],
+      "source_prefixes": [],
+      "proposed_api": "send_system_mail / list_inbox / claim_attachments",
+      "notes": "发送系统奖励邮件只限内部授权。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "mail.player",
+      "owner_module": "mail",
+      "title": "玩家邮件与离线消息",
+      "primary_entries": [
+        2725
+      ],
+      "source_prefixes": [
+        "script/mxgame/mail/"
+      ],
+      "proposed_api": "send_player_mail / read_mail / delete_mail",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "trade.shop",
+      "owner_module": "trade",
+      "title": "NPC商店、玩家商店与物品定价",
+      "primary_entries": [
+        122,
+        1498,
+        1848
+      ],
+      "source_prefixes": [],
+      "proposed_api": "list_shop_goods / purchase_goods / set_shop_price / deposit_shop_funds",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "trade.consignment",
+      "owner_module": "trade",
+      "title": "寄售、交易中心与订单",
+      "primary_entries": [
+        2020
+      ],
+      "source_prefixes": [
+        "script/mxgame/consignmentsalecenter/",
+        "script/mxgame/tradecenter/"
+      ],
+      "proposed_api": "create_listing / purchase_listing / cancel_listing / claim_sale_proceeds",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "trade.auction",
+      "owner_module": "trade",
+      "title": "竞拍、自动出价与结拍",
+      "primary_entries": [
+        4385,
+        1056
+      ],
+      "source_prefixes": [
+        "script/mxgame/auction/"
+      ],
+      "proposed_api": "place_bid / set_auto_bid / cancel_auto_bid / settle_auction",
+      "notes": "出价托管、被超价返还与结拍必须可靠。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "trade.role_market",
+      "owner_module": "trade",
+      "title": "角色交易与资产展示",
+      "primary_entries": [
+        3384
+      ],
+      "source_prefixes": [
+        "script/dialog/accountmarket/"
+      ],
+      "proposed_api": "query_sale_character / prepare_character_listing / confirm_ownership_transfer",
+      "notes": "资产冻结、账号归属迁移与风控需要专项设计，当前接口不能上线。",
+      "proposed_independent_module": "character_market",
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "housing.editing",
+      "owner_module": "housing",
+      "title": "家具摆放、地块和家园编辑",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/yard/yardedit/",
+        "script/yard/yardmap/"
+      ],
+      "proposed_api": "place_furniture / move_furniture / expand_plot",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "housing.visiting",
+      "owner_module": "housing",
+      "title": "家园访问、家具权限与使用",
+      "primary_entries": [
+        1387,
+        3179
+      ],
+      "source_prefixes": [
+        "script/yard/yardplayerhome/"
+      ],
+      "proposed_api": "visit_house / set_house_permissions / use_furniture",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "housing.plants",
+      "owner_module": "housing",
+      "title": "庭院种植与收获",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/yard/yardplant/"
+      ],
+      "proposed_api": "plant_seed / tend_plant / harvest_plant",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "housing.fish",
+      "owner_module": "housing",
+      "title": "鱼塘、观赏鱼与幸运鱼",
+      "primary_entries": [
+        3057
+      ],
+      "source_prefixes": [
+        "script/yard/yardplayfish/",
+        "script/yard/luckyfish/"
+      ],
+      "proposed_api": "stock_fish / feed_fish / harvest_fish / claim_fish_reward",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "housing.exhibition",
+      "owner_module": "housing",
+      "title": "家园收藏与展示",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/yard/collectshow/"
+      ],
+      "proposed_api": "set_exhibition / query_exhibition",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "activity.calendar",
+      "owner_module": "activity",
+      "title": "活动日历、周历与开放时间",
+      "primary_entries": [
+        1270,
+        1619
+      ],
+      "source_prefixes": [
+        "script/mxgame/calendar/",
+        "script/mxgame/schedule/",
+        "script/mxgame/newschedule/"
+      ],
+      "proposed_api": "list_schedule / evaluate_entry_eligibility / query_instance_schedule",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "activity.ranking",
+      "owner_module": "activity",
+      "title": "排行榜、历史榜与奖励榜",
+      "primary_entries": [
+        2662,
+        3609,
+        694
+      ],
+      "source_prefixes": [],
+      "proposed_api": "query_ranking / query_historical_ranking / finalize_ranking_rewards",
+      "notes": "排名规则、赛季快照和奖励资格必须分开。",
+      "proposed_independent_module": "ranking",
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "activity.ladder",
+      "owner_module": "activity",
+      "title": "天梯房间、匹配、段位与赛季",
+      "primary_entries": [
+        4776
+      ],
+      "source_prefixes": [
+        "script/mxgame/activity/ladderrank/",
+        "script/mxgame/activity/ladderrankallstar/"
+      ],
+      "proposed_api": "create_match_room / join_match_queue / accept_match / claim_season_reward",
+      "notes": "",
+      "proposed_independent_module": "competition",
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "activity.tournaments",
+      "owner_module": "activity",
+      "title": "赛事战队、赛程、报名和观战",
+      "primary_entries": [
+        185,
+        2026,
+        1679
+      ],
+      "source_prefixes": [
+        "script/mxgame/serverbattle/"
+      ],
+      "proposed_api": "register_tournament_team / query_bracket / schedule_match / subscribe_match",
+      "notes": "不能把赛事编排和一场战斗的结算放在同一模块。",
+      "proposed_independent_module": "competition",
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "activity.cross_realm_links",
+      "owner_module": "activity",
+      "title": "跨服物品/宠物链接和来源标识",
+      "primary_entries": [
+        3737,
+        4177
+      ],
+      "source_prefixes": [],
+      "proposed_api": "resolve_cross_realm_reference / verify_reference_scope",
+      "notes": "这些材料主要证明跨服引用，不证明跨服角色迁移或分布式架构已还原。",
+      "proposed_independent_module": "cross_realm",
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "activity.guild_modes",
+      "owner_module": "activity",
+      "title": "帮派Boss、洞窟、烧烤和精英帮战",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/activity/groupboss/",
+        "script/mxgame/activity/guildcavern/",
+        "script/mxgame/activity/groupbbq/",
+        "script/mxgame/activity/eliteorgwar/"
+      ],
+      "proposed_api": "enter_guild_activity / update_activity_objective / settle_guild_activity",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "activity.country_contest",
+      "owner_module": "activity",
+      "title": "国家赛事与阵营活动",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/activity/countrycontest/",
+        "script/mxgame/activity/insidewar/"
+      ],
+      "proposed_api": "enroll_faction_event / query_faction_progress / claim_faction_reward",
+      "notes": "国家管理本身仍需另找资料，不能用报纸模块补齐。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "activity.minigames",
+      "owner_module": "activity",
+      "title": "小游戏公共框架与活动内小游戏",
+      "primary_entries": [
+        2971,
+        4601
+      ],
+      "source_prefixes": [
+        "script/mxgame/minigame/",
+        "script/mxgame/minigametwo/"
+      ],
+      "proposed_api": "start_minigame / submit_minigame_action / finish_minigame",
+      "notes": "只能上报操作，不接受任意客户端分数作权威结果。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "activity.returning",
+      "owner_module": "activity",
+      "title": "回归、召回、回归收集与补偿",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/return/",
+        "script/mxgame/return2020/",
+        "script/mxgame/returncollectcards/",
+        "script/mxgame/rookieback/",
+        "script/mxgame/returnwish/"
+      ],
+      "proposed_api": "query_returning_status / claim_returning_reward / exchange_collection",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "activity.new_server",
+      "owner_module": "activity",
+      "title": "新服、七日目标与签到",
+      "primary_entries": [
+        4857
+      ],
+      "source_prefixes": [
+        "script/mxgame/newserverreward/",
+        "script/mxgame/sevendaytarget/",
+        "script/yearsignin.py"
+      ],
+      "proposed_api": "query_new_server_progress / claim_milestone / sign_in",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "activity.reward_center",
+      "owner_module": "activity",
+      "title": "礼包、奖励中心与赠礼",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/activityreward/",
+        "script/dialog/presentcenter/",
+        "script/mxgame/newgive/",
+        "script/mxgame/givepresent/"
+      ],
+      "proposed_api": "list_reward_entitlements / claim_reward_entitlement / give_present",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "activity.month_card",
+      "owner_module": "activity",
+      "title": "月卡权益、任务与升级",
+      "primary_entries": [
+        2929
+      ],
+      "source_prefixes": [
+        "script/mxgame/monthcard/"
+      ],
+      "proposed_api": "query_card_entitlement / claim_card_task / upgrade_card",
+      "notes": "客户端材料未证明该卡一定由现金购买；购买来源与支付另行核对。",
+      "proposed_independent_module": "entitlements",
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "activity.festivals",
+      "owner_module": "activity",
+      "title": "节日、周年与限时活动",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/activity/2021springactivity/",
+        "script/mxgame/activity/2021duangwu/",
+        "script/mxgame/activity/2019znq/"
+      ],
+      "proposed_api": "join_event_instance / progress_event_objective / claim_event_reward",
+      "notes": "完整活动目录另列，不把所有活动当成同一种万能脚本。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "appearance.cosmetics",
+      "owner_module": "appearance",
+      "title": "外观解锁、穿戴、染色与装饰",
+      "primary_entries": [
+        269,
+        2006
+      ],
+      "source_prefixes": [
+        "script/mxgame/appearance/",
+        "script/mxgame/decorate/"
+      ],
+      "proposed_api": "unlock_appearance / equip_appearance / change_color",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "appearance.wings",
+      "owner_module": "appearance",
+      "title": "翅膀展示与相关养成材料",
+      "primary_entries": [
+        3379
+      ],
+      "source_prefixes": [
+        "script/netnewwing.py",
+        "script/mxgame/ornament/"
+      ],
+      "proposed_api": "query_wing_state / change_wing_appearance",
+      "notes": "若涉及属性养成应与character/skill分清，不一律认作纯外观。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "economy.red_packets",
+      "owner_module": "economy",
+      "title": "世界红包、系统红包与领用",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/systemhongbao/",
+        "script/mxgame/worldhongbao/"
+      ],
+      "proposed_api": "create_red_packet / claim_red_packet / expire_red_packet",
+      "notes": "余额托管、领取唯一键、剩余金额与过期返还。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "administration.payment",
+      "owner_module": "administration",
+      "title": "充值订单、支付验证、补单与对账",
+      "primary_entries": [
+        1265,
+        3552,
+        4456
+      ],
+      "source_prefixes": [
+        "script/mxgame/pay/"
+      ],
+      "proposed_api": "create_payment_order / accept_verified_provider_event / reconcile_payment_order",
+      "notes": "客户端显示成功不能作为到账依据；这里只证明支付UI线索，渠道回调与对账为服务端新增要求。",
+      "proposed_independent_module": "billing",
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "administration.customer_support",
+      "owner_module": "administration",
+      "title": "申诉、举报与客服入口",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/report/",
+        "script/netservice.py"
+      ],
+      "proposed_api": "submit_report / review_case / apply_audited_resolution",
+      "notes": "",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    },
+    {
+      "feature_id": "administration.operations",
+      "owner_module": "administration",
+      "title": "开关、补偿、停服与运营审计",
+      "primary_entries": [],
+      "source_prefixes": [
+        "script/mxgame/stopgamemodule/",
+        "script/mxgame/combinecompensation/",
+        "script/data/switchdata.py"
+      ],
+      "proposed_api": "set_feature_policy / issue_approved_compensation / schedule_maintenance",
+      "notes": "运维权限和审计是服务器要求，不从客户端GM实现照搬。",
+      "proposed_independent_module": null,
+      "implementation_status": "not_implemented",
+      "interface_status": "design_only_not_typed_or_frozen"
+    }
+  ]
+}
