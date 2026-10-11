@@ -22,6 +22,7 @@ Pygame 不属于本项目服务端依赖。技术方向为 asyncio + PostgreSQL�
 6. [分工启动任务](docs/WORK_PACKAGES.md)：各组可以先做什么。
 7. [非玩法基础能力缺口](docs/FOUNDATION_BACKLOG.md)：接入、可靠性、运维与支付等工程要求。
 8. [客户端配置异常复核](docs/CLIENT_DATA_REVIEW.md)：道具/宠物表的边界修复候选、未解决记录和正式CSV的准入条件（非生产配置）。
+9. [CSV可提取性清单](docs/CSV_READINESS.md)：33个脚本、48个表目标的结构/文字/部分关联检查，区分待审候选、异常隔离和未恢复目标。
 
 ## 目录
 

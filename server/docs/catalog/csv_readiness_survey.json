@@ -1,0 +1,1377 @@
+{
+  "status": "selected_literal_tables_only_not_production_approval",
+  "source_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "keys_sha256": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+  "entries_selected": 33,
+  "tables": [
+    {
+      "entry_index": 17,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": 55010,
+          "kind": "control_character",
+          "path": "row[2]",
+          "bytes_hex": "b0f22541233a4e2dc34017275c202b313038"
+        }
+      ],
+      "filename": "script\\data\\equipitemdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 43,
+      "schema_checked": true,
+      "flagged_keys": [
+        55010
+      ],
+      "value_types": {
+        "tuple": 43
+      },
+      "sample": [
+        {
+          "key": 50010,
+          "value": [
+            "短劍",
+            "#r【類型】武器：劍#r【等級】0#r【製造人】系統#r【耐久度】140/140",
+            "基礎屬性$攻擊 +108"
+          ]
+        }
+      ],
+      "flagged_row_count": 1,
+      "not_flagged_by_these_checks": 42
+    },
+    {
+      "entry_index": 1945,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": 10424,
+          "kind": "encoding",
+          "path": "row[1]",
+          "bytes_hex": "b648bc78b5dba5c3b5b2a650a4dfa4a7b74eaabac646aa47a141a6b9c646aa47a46ba9caaab1ae61a8cfa5ceabe1a569a548b16fa8ecba61c541a4a7a5c9a142c1d9b5a3a4a6a142ba58a55db5a5bcfac079a141a86ba9caaab1ae61a8cfa5ceabe1a575afe0b16fa8eca4d6b671a9e8a5ceaaf7a143a15da86ba9caaab1ae61a440a4d1b3cca668a8cfa5ce32add36096621900806c81678762ad6f0c6c7768a76dae750a60ae6e096308f26b156096621900806c816798"
+        },
+        {
+          "key": 71700,
+          "kind": "encoding",
+          "path": "row[1]",
+          "bytes_hex": "a5d1ab5fc049ae61a6e6b77cace3b56faabaa141a8e3a6b3b04fbed0aec9aac5b6c7b065c249aabaaf53aeeda55cafe02372a169a8cfa5cea4e8aa6ba16ab6a4a5eea448bcc6b5a5a9f335a448a141a8cfa5ceaacca8ada5f7acb0b6a4aaf8f818ff3bf08be589e916f3e3e93ef73afd13fd3ffefde589ea1bfc3298bd9b1099e27a2bf830f08b9d84e93ef73af833fe35ffbcfc33eaa0"
+        },
+        {
+          "key": 72548,
+          "kind": "encoding",
+          "path": "row[0]",
+          "bytes_hex": "c2f9a448a7a4c34dc5e9c5e784"
+        }
+      ],
+      "filename": "script\\data\\itemdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 6852,
+      "schema_checked": true,
+      "flagged_keys": [
+        10424,
+        71700,
+        72548
+      ],
+      "value_types": {
+        "tuple": 6852
+      },
+      "sample": [
+        {
+          "key": 11,
+          "value": [
+            "NPC呼叫器",
+            "可以呼叫各種功能NPC以方便測試#r【類型】測試專用物品"
+          ]
+        }
+      ],
+      "flagged_row_count": 3,
+      "not_flagged_by_these_checks": 6849
+    },
+    {
+      "entry_index": 1945,
+      "table": "SHAPETABLE",
+      "issues": [],
+      "filename": "script\\data\\itemdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 4927,
+      "schema_checked": true,
+      "flagged_keys": [],
+      "value_types": {
+        "int": 4927
+      },
+      "sample": [
+        {
+          "key": 12,
+          "value": 21302
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 4927
+    },
+    {
+      "entry_index": 1945,
+      "table": "ITEMDATABYTYPE",
+      "issues": [],
+      "filename": "script\\data\\itemdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 6852,
+      "schema_checked": true,
+      "flagged_keys": [],
+      "value_types": {
+        "int": 6852
+      },
+      "sample": [
+        {
+          "key": 11,
+          "value": 6
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 6852
+    },
+    {
+      "entry_index": 1945,
+      "table": "EQUIPCONDITION",
+      "issues": [],
+      "filename": "script\\data\\itemdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 45,
+      "schema_checked": true,
+      "flagged_keys": [],
+      "value_types": {
+        "list": 45
+      },
+      "sample": [
+        {
+          "key": 50130,
+          "value": [
+            "50級劍法技巧",
+            ""
+          ]
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 45
+    },
+    {
+      "entry_index": 1945,
+      "table": "MULTISHAPETABLE",
+      "issues": [],
+      "filename": "script\\data\\itemdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 3,
+      "schema_checked": false,
+      "flagged_keys": [],
+      "value_types": {
+        "dict": 3
+      },
+      "sample": [
+        {
+          "key": 72991,
+          "value": {
+            "1": 72992,
+            "2": 72992,
+            "3": 72992,
+            "4": 72992
+          }
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 3
+    },
+    {
+      "entry_index": 1945,
+      "table": "FABAOEXPLAIN",
+      "issues": [],
+      "filename": "script\\data\\itemdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 6,
+      "schema_checked": false,
+      "flagged_keys": [],
+      "value_types": {
+        "bytes": 6
+      },
+      "sample": [
+        {
+          "key": 67080,
+          "value": "多個裝備有相同特技，效果以次數最高為準"
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 6
+    },
+    {
+      "entry_index": 2027,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": 2600,
+          "kind": "encoding",
+          "path": "row[b'address']",
+          "bytes_hex": "a558b27ba661c249a1472372a8dfafabb7b5bff2a77d23fa205721d22dec22713b26315b"
+        },
+        {
+          "key": 4011,
+          "kind": "encoding",
+          "path": "row[b'maySkillLst'][3]",
+          "bytes_hex": "b2d7afc5d902cc27"
+        }
+      ],
+      "filename": "script\\data\\petdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 135,
+      "schema_checked": true,
+      "flagged_keys": [
+        2600,
+        4011
+      ],
+      "value_types": {
+        "dict": 135
+      },
+      "sample": [
+        {
+          "key": 2010,
+          "value": {
+            "name": "毛草團",
+            "liupai": "智",
+            "attack_type": "普通",
+            "carry_grade": 0,
+            "maySkillLst": [
+              "連擊",
+              "反擊",
+              "智慧",
+              "幸運"
+            ],
+            "maxskillnum": 4,
+            "address": "出現地點：#r長風島#r珊瑚迷宮"
+          }
+        }
+      ],
+      "flagged_row_count": 2,
+      "not_flagged_by_these_checks": 133
+    },
+    {
+      "entry_index": 2027,
+      "table": "SHAPE2ICON",
+      "issues": [],
+      "filename": "script\\data\\petdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 1,
+      "schema_checked": false,
+      "flagged_keys": [],
+      "value_types": {
+        "int": 1
+      },
+      "sample": [
+        {
+          "key": 3012,
+          "value": 2150
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 1
+    },
+    {
+      "entry_index": 1115,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": 2910,
+          "kind": "schema",
+          "path": "row"
+        }
+      ],
+      "filename": "script\\data\\mxpetdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 137,
+      "schema_checked": true,
+      "flagged_keys": [
+        2910
+      ],
+      "value_types": {
+        "bytes": 136,
+        "int": 1
+      },
+      "sample": [
+        {
+          "key": 2010,
+          "value": "毛草團"
+        }
+      ],
+      "flagged_row_count": 1,
+      "not_flagged_by_these_checks": 136
+    },
+    {
+      "entry_index": 3205,
+      "table": "DATA",
+      "issues": [],
+      "filename": "script\\data\\petskill.py",
+      "status": "not_recovered_by_this_reader",
+      "error": "ValueError: EXTENDED_ARG before argument-free instruction"
+    },
+    {
+      "entry_index": 2242,
+      "table": "SKILLIDLST",
+      "issues": [
+        {
+          "key": 16,
+          "kind": "previously_flagged_boundary_candidate",
+          "value": 64605,
+          "candidate": 416,
+          "approved": false
+        }
+      ],
+      "filename": "script\\data\\petactiveskilldata.py",
+      "status": "literal_assignment_recovered",
+      "count": 48,
+      "schema_checked": false,
+      "flagged_keys": [
+        16
+      ],
+      "value_types": {
+        "int": 48
+      },
+      "sample": [
+        {
+          "key": 0,
+          "value": 109
+        }
+      ],
+      "flagged_row_count": 1,
+      "not_flagged_by_these_checks": 47
+    },
+    {
+      "entry_index": 1698,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": 10004,
+          "kind": "encoding",
+          "path": "row",
+          "bytes_hex": "a169c0f2b16fb77aaa78a56e2776c3eda266ace0a148aeb5aa65aebec171a2e8a053c5ceb2562772c7eaa7e423732831382ca475c3c0ae762c312ca9faa4ebabb02c36322c38322c3029bb73a740"
+        },
+        {
+          "key": 10020,
+          "kind": "control_character",
+          "path": "row",
+          "bytes_hex": "15ddc0f2b16fb37eae7ca16a237223732831382cc3c4a9b1a6d1c1f32c312ca5c3bf41abb02c35352c33382c3029"
+        },
+        {
+          "key": 10026,
+          "kind": "control_character",
+          "path": "row",
+          "bytes_hex": "a169c0f2b16fb37eae7ca16a2372c7e9a569a66223732831382c2d2a475f483f2f1dc2dfc24714a4ebabb02c3234342c36382c3029236eb342c1cab652"
+        }
+      ],
+      "filename": "script\\data\\itemextdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 27,
+      "schema_checked": true,
+      "flagged_keys": [
+        10004,
+        10020,
+        10026
+      ],
+      "value_types": {
+        "bytes": 27
+      },
+      "sample": [
+        {
+          "key": 10001,
+          "value": "【購買途徑】#r#s(18,藥店老闆,1,明月城,244,68,0)"
+        }
+      ],
+      "flagged_row_count": 3,
+      "not_flagged_by_these_checks": 24
+    },
+    {
+      "entry_index": 960,
+      "table": "DATA",
+      "issues": [],
+      "filename": "script\\data\\summontalentdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 76,
+      "schema_checked": true,
+      "flagged_keys": [],
+      "value_types": {
+        "dict": 76
+      },
+      "sample": [
+        {
+          "key": 6101,
+          "value": {
+            "iNeedServerGrade": 0,
+            "iRelatedList": [
+              102,
+              202,
+              302
+            ],
+            "iSort": 1
+          }
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 76
+    },
+    {
+      "entry_index": 3791,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": 10191,
+          "kind": "encoding",
+          "path": "row",
+          "bytes_hex": "60be7660719cbf4ea6d7"
+        },
+        {
+          "key": 25670,
+          "kind": "encoding",
+          "path": "row",
+          "bytes_hex": "c521cea4b16dad69aa47"
+        }
+      ],
+      "filename": "script\\data\\petitemdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 83,
+      "schema_checked": true,
+      "flagged_keys": [
+        10191,
+        25670
+      ],
+      "value_types": {
+        "bytes": 83
+      },
+      "sample": [
+        {
+          "key": 10122,
+          "value": "麻辣元宵"
+        }
+      ],
+      "flagged_row_count": 2,
+      "not_flagged_by_these_checks": 81
+    },
+    {
+      "entry_index": 3791,
+      "table": "CHILD_DATA",
+      "issues": [
+        {
+          "key": 72222,
+          "kind": "name_difference",
+          "value": "神武項圈",
+          "item_name": "武神項圈"
+        }
+      ],
+      "filename": "script\\data\\petitemdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 23,
+      "schema_checked": true,
+      "flagged_keys": [
+        72222
+      ],
+      "value_types": {
+        "bytes": 23
+      },
+      "sample": [
+        {
+          "key": 25501,
+          "value": "碧玉項圈"
+        }
+      ],
+      "flagged_row_count": 1,
+      "not_flagged_by_these_checks": 22
+    },
+    {
+      "entry_index": 2954,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": 2800,
+          "kind": "value_exceeds_named_maximum",
+          "field": "法力資質",
+          "value": 2130,
+          "maximum": 1989
+        }
+      ],
+      "filename": "script\\data\\petaptitudedata.py",
+      "status": "literal_assignment_recovered",
+      "count": 132,
+      "schema_checked": true,
+      "flagged_keys": [
+        2800
+      ],
+      "value_types": {
+        "dict": 132
+      },
+      "sample": [
+        {
+          "key": 2010,
+          "value": {
+            "法力資質": 1610,
+            "法力資質最大值": 1883,
+            "防禦資質": 1560,
+            "防禦資質最大值": 1825,
+            "攻擊資質": 1660,
+            "攻擊資質最大值": 1942,
+            "速度資質": 1610,
+            "速度資質最大值": 1883,
+            "體力資質": 1610,
+            "體力資質最大值": 1883
+          }
+        }
+      ],
+      "flagged_row_count": 1,
+      "not_flagged_by_these_checks": 131
+    },
+    {
+      "entry_index": 1761,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": 2190,
+          "kind": "encoding",
+          "path": "row[b'desc'][0]",
+          "bytes_hex": "a5bcaabeaabaa9c7aaaba141bcc8aec9b54caa6bc0f2aabea5f4a6f3ab48aea72cacefb5dbf15aa5d2aeb3b5dba46aa44da94dacdeb52fd5c5d7a0db13de3ebf26db28bfc6caa4dac4cea5ce2dd48bd5c5c6b0bbb4de3ed7bccbbece99caa4d9ccdb3fdbaed9a4db09db22d09fc1a9d9ccd92fc6b0bbb4db3fc3b4c39bdaaada3dd587d5c5db15db85de27de27c1a5c4decc10d330dad9d2b3d09fd820dbb6bdc1d5c5d2d4d211c3afc8b8dbd8db3f"
+        },
+        {
+          "key": 2600,
+          "kind": "encoding",
+          "path": "row[b'desc'][0]",
+          "bytes_hex": "a5bcaabeaabaa9c7aaaba141bcc8aec9b54caa6bc0f2aabea5f4a6f3ab48aea72ca460c646a4f61dd11fe90572116a1f6217f31d7718f81f441c1f156409e6116a1df97bf01de41d1a000a1dd97fff1e4a000a1df91ccc1dd30ff1181e0ad61d1a15f61e631303064018cf1c1f021818cc1de40ae515f61e631d6a1e1e1dff18f110770ae51e63016a0d570d57137718cf"
+        },
+        {
+          "key": 4015,
+          "kind": "encoding",
+          "path": "row[b'desc'][0]",
+          "bytes_hex": "a5bcaabeaabaa9c7aaaba141bcc8aec9b54caa6bc0f2aabea5f4a6f3ab48aea72ca552baa1c646aef0aabab1f6aae1b3c0a141a57eaaedac58ae7aa141ab6f45844ba05f455e85"
+        }
+      ],
+      "filename": "script\\data\\petgraphdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 134,
+      "schema_checked": false,
+      "flagged_keys": [
+        2190,
+        2600,
+        4015
+      ],
+      "value_types": {
+        "dict": 134
+      },
+      "sample": [
+        {
+          "key": 2010,
+          "value": {
+            "adress": "長風島#r珊瑚迷宮",
+            "desc": [
+              "未知的怪物，暫時無法獲知任何信息,草綠色毛絨絨的小怪物，像躲在草團中的小動物一樣，其實是植物精靈中最低級的一種，長著大大的眼睛，看上去非常可愛"
+            ],
+            "grade": 1,
+            "levelup": [
+              "1,攻資:3,防資:3,體資:3,法資:3,速資:3,1001,",
+              "2,攻資:4,防資:4,體資:4,法資:4,速資:4,1002,",
+              "3,攻資:5,防資:5,體資:5,法資:5,速資:5,1003,",
+              "4,攻資:6,防資:6,體資:6,法資:6,速資:6,1004,",
+              "5,攻資:7,防資:7,體資:7,法資:7,速資:7,1005,"
+            ],
+            "rewardid": 1001
+          }
+        }
+      ],
+      "flagged_row_count": 3,
+      "not_flagged_by_these_checks": 131
+    },
+    {
+      "entry_index": 400,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": 1071,
+          "kind": "not_in_map_catalog"
+        }
+      ],
+      "filename": "script\\data\\sceneid2name.py",
+      "status": "literal_assignment_recovered",
+      "count": 57,
+      "schema_checked": true,
+      "flagged_keys": [
+        1071
+      ],
+      "value_types": {
+        "tuple": 57
+      },
+      "sample": [
+        {
+          "key": 1001,
+          "value": [
+            "永澤城",
+            1001,
+            1800,
+            2400
+          ]
+        }
+      ],
+      "flagged_row_count": 1,
+      "not_flagged_by_these_checks": 56
+    },
+    {
+      "entry_index": 1301,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": "兔坦卡門陵墓",
+          "kind": "schema",
+          "path": "row"
+        }
+      ],
+      "filename": "script\\data\\mapdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 104,
+      "schema_checked": true,
+      "flagged_keys": [
+        "兔坦卡門陵墓"
+      ],
+      "value_types": {
+        "dict": 104
+      },
+      "sample": [
+        {
+          "key": 1001,
+          "value": {
+            "name": "永澤城",
+            "w": 2711,
+            "h": 2020
+          }
+        }
+      ],
+      "flagged_row_count": 1,
+      "not_flagged_by_these_checks": 103
+    },
+    {
+      "entry_index": 1301,
+      "table": "MAP_ASCRIPTION",
+      "issues": [],
+      "filename": "script\\data\\mapdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 6,
+      "schema_checked": false,
+      "flagged_keys": [],
+      "value_types": {
+        "int": 6
+      },
+      "sample": [
+        {
+          "key": 1039,
+          "value": 1039
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 6
+    },
+    {
+      "entry_index": 2601,
+      "table": "DATA",
+      "issues": [],
+      "filename": "script\\data\\npcposdata.py",
+      "status": "not_recovered_by_this_reader",
+      "error": "ValueError: unsupported opcode 101 at 124"
+    },
+    {
+      "entry_index": 2804,
+      "table": "DATA",
+      "issues": [],
+      "filename": "script\\data\\minimapnpcpos.py",
+      "status": "not_recovered_by_this_reader",
+      "error": "ValueError: no supported literal assignment found for DATA"
+    },
+    {
+      "entry_index": 3724,
+      "table": "DATA",
+      "issues": [],
+      "filename": "script\\data\\npcshapedata.py",
+      "status": "literal_assignment_recovered",
+      "count": 50,
+      "schema_checked": true,
+      "flagged_keys": [],
+      "value_types": {
+        "tuple": 50
+      },
+      "sample": [
+        {
+          "key": 1,
+          "value": [
+            2710,
+            "5,5,5,0,2,0"
+          ]
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 50
+    },
+    {
+      "entry_index": 1799,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": "個人心法教師",
+          "kind": "encoding",
+          "path": "row",
+          "bytes_hex": "a4b8c646b9dc3acf"
+        },
+        {
+          "key": {
+            "invalid_cp950_hex": "a4d1bfefa8197c1a",
+            "escaped_preview": "天選\\xa8\u0019|\u001a"
+          },
+          "kind": "encoding",
+          "path": "key",
+          "bytes_hex": "a4d1bfefa8197c1a"
+        }
+      ],
+      "filename": "script\\data\\npcname2realnamedata.py",
+      "status": "literal_assignment_recovered",
+      "count": 55,
+      "schema_checked": false,
+      "flagged_keys": [
+        "個人心法教師",
+        {
+          "invalid_cp950_hex": "a4d1bfefa8197c1a",
+          "escaped_preview": "天選\\xa8\u0019|\u001a"
+        }
+      ],
+      "value_types": {
+        "bytes": 55
+      },
+      "sample": [
+        {
+          "key": "八卦宗師",
+          "value": "天元子"
+        }
+      ],
+      "flagged_row_count": 2,
+      "not_flagged_by_these_checks": 53
+    },
+    {
+      "entry_index": 2409,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": 8,
+          "kind": "schema",
+          "path": "row"
+        },
+        {
+          "key": 7,
+          "kind": "item_reference_not_in_catalog",
+          "value": 72050
+        },
+        {
+          "key": 8,
+          "kind": "item_reference_not_in_catalog",
+          "value": "雙技能英靈護符"
+        },
+        {
+          "key": 9,
+          "kind": "item_reference_not_in_catalog",
+          "value": 9027
+        }
+      ],
+      "filename": "script\\data\\shopdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 14,
+      "schema_checked": true,
+      "flagged_keys": [
+        7,
+        8,
+        9
+      ],
+      "value_types": {
+        "dict": 14
+      },
+      "sample": [
+        {
+          "key": 1,
+          "value": {
+            "discount": "6折",
+            "itemid": 70662,
+            "name": "還童丹",
+            "num": 200,
+            "price": 600,
+            "type": 65
+          }
+        }
+      ],
+      "flagged_row_count": 3,
+      "not_flagged_by_these_checks": 11
+    },
+    {
+      "entry_index": 1381,
+      "table": "DATA",
+      "issues": [],
+      "filename": "script\\data\\cookdata.py",
+      "status": "not_recovered_by_this_reader",
+      "error": "ValueError: unsupported opcode 21 at 4938"
+    },
+    {
+      "entry_index": 2455,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": 25241,
+          "kind": "control_character",
+          "path": "row[b'name']",
+          "bytes_hex": "1464197ea8a4beea"
+        },
+        {
+          "key": 25241,
+          "kind": "name_difference",
+          "value": "\u0014d\u0019~角樽",
+          "item_name": "白芒角樽"
+        }
+      ],
+      "filename": "script\\data\\craftdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 48,
+      "schema_checked": true,
+      "flagged_keys": [
+        25241
+      ],
+      "value_types": {
+        "dict": 48
+      },
+      "sample": [
+        {
+          "key": 25201,
+          "value": {
+            "name": "花卉剪紙",
+            "lv": 5,
+            "cost": 12,
+            "desc": "花卉造型的剪紙工藝非常精美"
+          }
+        }
+      ],
+      "flagged_row_count": 1,
+      "not_flagged_by_these_checks": 47
+    },
+    {
+      "entry_index": 2338,
+      "table": "DATA",
+      "issues": [],
+      "status": "not_recovered_by_this_reader",
+      "error": "ValueError: ValueError: invalid boundary ordering"
+    },
+    {
+      "entry_index": 246,
+      "table": "GEM2EQUIP",
+      "issues": [
+        {
+          "key": 72838,
+          "kind": "name_difference",
+          "value": "寶石附魔",
+          "item_name": "寶石附魔符"
+        }
+      ],
+      "filename": "script\\data\\gem2equipposdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 40,
+      "schema_checked": true,
+      "flagged_keys": [
+        72838
+      ],
+      "value_types": {
+        "dict": 40
+      },
+      "sample": [
+        {
+          "key": 26001,
+          "value": {
+            "Desc": 0,
+            "EquipPos": [
+              4,
+              9
+            ],
+            "Name": "紅寶石"
+          }
+        }
+      ],
+      "flagged_row_count": 1,
+      "not_flagged_by_these_checks": 39
+    },
+    {
+      "entry_index": 293,
+      "table": "DATA",
+      "issues": [],
+      "filename": "scripeMdata\\equipicondata.py",
+      "status": "not_recovered_by_this_reader",
+      "error": "ValueError: EXTENDED_ARG before argument-free instruction"
+    },
+    {
+      "entry_index": 3075,
+      "table": "DATA",
+      "issues": [],
+      "filename": "script\\data\\skillbookdata.py",
+      "status": "not_recovered_by_this_reader",
+      "error": "ValueError: unsupported opcode 70 at 5626"
+    },
+    {
+      "entry_index": 2566,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": 336,
+          "kind": "encoding",
+          "path": "row[0]",
+          "bytes_hex": "b9dab751af75a448a871aca1b0caaabab14dc4ddbad9bfd7a141a6b3a440c2f9b77cbba1b8dcaabaa46ab2b4b7faacfcfb34fe1c7c2dfe36f9ecf19beb9efe356df28cfbb4"
+        },
+        {
+          "key": 877,
+          "kind": "encoding",
+          "path": "row[0]",
+          "bytes_hex": "bcf4aabea655a661b0d3b77ca141baeba9f3b0d3b77eb654a9f6a140a863b75ca754a760adb1c1b1ada2c0c9a9fbc3d6aa71b1d2b67fa650bdecabbba549a8d3aee1c1f3b06eabbbbbd8b9b8a04222732273c1f3a9fbb0f9a4f2a0462273a6b8a7a9c1b1ada2b1d2b67fa6eab9eba4f5b1c9a7b9bdc7a0d8393131a042"
+        }
+      ],
+      "filename": "script\\data\\titledata.py",
+      "status": "literal_assignment_recovered",
+      "count": 812,
+      "schema_checked": false,
+      "flagged_keys": [
+        336,
+        877
+      ],
+      "value_types": {
+        "tuple": 812
+      },
+      "sample": [
+        {
+          "key": 101,
+          "value": [
+            "為夢想世界內測作出貢獻的玩家獲得的稱謂，用來向大家表明你內測取得的榮譽，是內測玩家特有的身份標志",
+            "無"
+          ]
+        }
+      ],
+      "flagged_row_count": 2,
+      "not_flagged_by_these_checks": 810
+    },
+    {
+      "entry_index": 1919,
+      "table": "CHANGESHAPE_PREVIEWDATA",
+      "issues": [
+        {
+          "key": 24,
+          "kind": "encoding",
+          "path": "row",
+          "bytes_hex": "c1cab652b1f8a5f3a147239ad949aa4ca042435d4d472d4931d1d8472dcb9ada49aa563e4e5b5842472dc747bb46055842472d4f4c2ba5cb9adb49aa4610473bcbb1daddd8d8d8cb864da8442158b62c85433fcb9acb9a47bb4fa75349411249afcb9ad949aa45524e504e404db44fa15c432a114ca04f4c2ba543094d814da02baa4d96281a5987dd2aa14ca042432c354122540f4ca72aa1cb9ada49aa2a114ca04f4c2ba554205da44c9852032eae543a4e49"
+        },
+        {
+          "key": 34,
+          "kind": "encoding",
+          "path": "row",
+          "bytes_hex": "c1cab652b773a7a4c34da1472372202020aef8afd3235933303030236ea540acc9b05ec46dabd72372af53a74fbbb0b8ebb056326320b053b8bea853accfa45dbb7aa260a85dd159afe6b658a5bab459b5dfb5d0a5baa268babdd1e3a07e326323b053b8bea853accfa45dbb7ab5d0a5babda1b9f5b45dbbfdbed4b6b5d25ca268babd"
+        }
+      ],
+      "filename": "script\\data\\ridedata.py",
+      "status": "literal_assignment_recovered",
+      "count": 28,
+      "schema_checked": false,
+      "flagged_keys": [
+        24,
+        34
+      ],
+      "value_types": {
+        "bytes": 28
+      },
+      "sample": [
+        {
+          "key": 1,
+          "value": "購買新坐騎：#r   任意#Y2根#n吉光之羽、#Y10個#n榮譽之玉#r切換造型:#r   100個榮譽之玉"
+        }
+      ],
+      "flagged_row_count": 2,
+      "not_flagged_by_these_checks": 26
+    },
+    {
+      "entry_index": 244,
+      "table": "TYPE2NAME",
+      "issues": [],
+      "filename": "script\\data\\newfurnituredata.py",
+      "status": "literal_assignment_recovered",
+      "count": 28,
+      "schema_checked": false,
+      "flagged_keys": [],
+      "value_types": {
+        "bytes": 28
+      },
+      "sample": [
+        {
+          "key": 0,
+          "value": "床"
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 28
+    },
+    {
+      "entry_index": 244,
+      "table": "ORDER",
+      "issues": [],
+      "filename": "script\\data\\newfurnituredata.py",
+      "status": "literal_assignment_recovered",
+      "count": 233,
+      "schema_checked": false,
+      "flagged_keys": [],
+      "value_types": {
+        "int": 233
+      },
+      "sample": [
+        {
+          "key": 0,
+          "value": 29341
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 233
+    },
+    {
+      "entry_index": 244,
+      "table": "DATA",
+      "issues": [],
+      "filename": "script\\data\\newfurnituredata.py",
+      "status": "not_recovered_by_this_reader",
+      "error": "ValueError: EXTENDED_ARG before argument-free instruction"
+    },
+    {
+      "entry_index": 3515,
+      "table": "ROLEDCT",
+      "issues": [],
+      "filename": "script\\data\\childdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 6,
+      "schema_checked": true,
+      "flagged_keys": [],
+      "value_types": {
+        "dict": 6
+      },
+      "sample": [
+        {
+          "key": 4041,
+          "value": {
+            "lpList": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              11
+            ],
+            "name": "逍遙",
+            "sex": 1
+          }
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 6
+    },
+    {
+      "entry_index": 3515,
+      "table": "LUIPAIDCT",
+      "issues": [],
+      "filename": "script\\data\\childdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 12,
+      "schema_checked": false,
+      "flagged_keys": [],
+      "value_types": {
+        "dict": 12
+      },
+      "sample": [
+        {
+          "key": 1,
+          "value": {
+            "name": "劍術",
+            "skillList": [
+              807,
+              817
+            ]
+          }
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 12
+    },
+    {
+      "entry_index": 3515,
+      "table": "SEXLP2SHAPE",
+      "issues": [],
+      "filename": "script\\data\\childdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 24,
+      "schema_checked": true,
+      "flagged_keys": [],
+      "value_types": {
+        "int": 24
+      },
+      "sample": [
+        {
+          "key": [
+            1,
+            1
+          ],
+          "value": 4041
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 24
+    },
+    {
+      "entry_index": 3526,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": 2490,
+          "kind": "encoding",
+          "path": "row[b'lock1']",
+          "bytes_hex": "2020a4f1c1f7a4ebaf54a7f3a46aa7f3bbc5aabaaf54a141ab65aacfa6b3b6b3afbeb8cbb9a2a141a455a8adc1f4c2c3a662b7cfc3faa4a4a141aaf8ecbeecfca03fe2bcee89e3e0ea9bf619ee95e217e286e2f9e8ed"
+        },
+        {
+          "key": 2650,
+          "kind": "encoding",
+          "path": "row[b'lock2']",
+          "bytes_hex": "2363333330304343a5cdaca1b2dfa9caa147236e202023722020a662a175aaecb6b3ae6ca8a6a94daaecb6b3a5adadeca176a8d3a65eb943bfbaaabac636d6d2cab5d388dc9fd195dd3fdd39d4aadf17d33bddb4d838c9dad216ccb3d789c035d08add8cba03dddedc07d3dbbc24df29dc35d5a2ca3bd3c3d5a2ce94dddac680d838dddac035c816ce94dda6dc35d5bacf28d3c3bd26dca2cfccba95ddb7dd9bb98dd838dd39dddadd09dda6c6cac7bdc035b920d3c3d3dbbc24d0abba03cc16dc21d3c3c9d3cebccedcdfcadc10d699c6bdddbfdcdfd4b5"
+        },
+        {
+          "key": 2740,
+          "kind": "encoding",
+          "path": "row[b'lock3']",
+          "bytes_hex": "2363333330304343a5b2b54dc4e2b161a7deafe0a147236e2020b54c23722363333330304343a569afe0c4e2b161a73c4d0243a5c18cc2c224a4519351ac43a0565e5e9843a04d495a1343a027bf4889462d2259"
+        }
+      ],
+      "filename": "script\\data\\monsterdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 143,
+      "schema_checked": false,
+      "flagged_keys": [
+        2490,
+        2650,
+        2740
+      ],
+      "value_types": {
+        "dict": 143
+      },
+      "sample": [
+        {
+          "key": 2010,
+          "value": {
+            "shape": 2010,
+            "name": "毛草團",
+            "type": 10,
+            "showtype": "新",
+            "lock": "未知的怪物，暫時無法獲知任何信息",
+            "lock1": "  草綠色毛絨絨的小怪物，像躲在草團中的小動物一樣，其實是植物精靈中最低級的一種，長著大大的眼睛，看上去非常可愛",
+            "lock2": "#c3300CC生活習性：#n  #r  生長在「長風島」，與小烏龜、小蜜蜂是很要好的夥伴，最喜歡把綠藤編織成花環狀作為帽子整天戴著，據說這是它最新發明的用來迷惑敵人的偽裝術",
+            "lock3": "#c3300CC必然攜帶技能：#n  無#r#c3300CC可能攜帶技能：#n  連擊、反擊、幸運、智慧",
+            "lock4": "#c3300CC完成收集的特殊獎勵：#n#r  攜帶的「綁定」或「專有」的「毛草團」召喚獸資質各+5點",
+            "ornament": 1,
+            "address": "出現地點：#r長風島#r珊瑚迷宮",
+            "channel": "",
+            "variation": 1
+          }
+        }
+      ],
+      "flagged_row_count": 3,
+      "not_flagged_by_these_checks": 140
+    },
+    {
+      "entry_index": 454,
+      "table": "DATA",
+      "issues": [],
+      "filename": "script\\data\\skilldata.py",
+      "status": "not_recovered_by_this_reader",
+      "error": "ValueError: unsupported opcode 83 at 3086"
+    },
+    {
+      "entry_index": 333,
+      "table": "DATA",
+      "issues": [
+        {
+          "key": 277,
+          "kind": "encoding",
+          "path": "row[b'desc']",
+          "bytes_hex": "a4adb750ade9b9dca150a6dea146bb50a4adb750ade91e7b06f7151306e5017206e51c5406e50f0a01f7096e01d401c5096e06e616e9027800fe011d03c7"
+        },
+        {
+          "key": 277,
+          "kind": "encoding",
+          "path": "row[b'effect']",
+          "bytes_hex": "a4adb750ade9b9dca150a6dea146bb50a4adb750ade91e7b06f7151306e5017206e51c5406e50f0a01f7096e01d401c5096e06e616e9027800fe011d03c7"
+        },
+        {
+          "key": 702,
+          "kind": "encoding",
+          "path": "row[b'desc']",
+          "bytes_hex": "bed4b0abadb7a65646a143b0"
+        },
+        {
+          "key": 702,
+          "kind": "encoding",
+          "path": "row[b'effect']",
+          "bytes_hex": "bed4b0abadb7a65646a143b0"
+        }
+      ],
+      "filename": "script\\data\\buffdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 432,
+      "schema_checked": false,
+      "flagged_keys": [
+        277,
+        702
+      ],
+      "value_types": {
+        "dict": 432
+      },
+      "sample": [
+        {
+          "key": 1,
+          "value": {
+            "desc": "狂暴；對敵傷害提高",
+            "effect": "狂暴；對敵傷害提高"
+          }
+        }
+      ],
+      "flagged_row_count": 2,
+      "not_flagged_by_these_checks": 430
+    },
+    {
+      "entry_index": 333,
+      "table": "ICONTABLE",
+      "issues": [],
+      "filename": "script\\data\\buffdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 381,
+      "schema_checked": false,
+      "flagged_keys": [],
+      "value_types": {
+        "int": 381
+      },
+      "sample": [
+        {
+          "key": 1,
+          "value": 105
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 381
+    },
+    {
+      "entry_index": 1535,
+      "table": "ZhaoshiData",
+      "issues": [],
+      "filename": "script\\data\\buffdescdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 31,
+      "schema_checked": false,
+      "flagged_keys": [],
+      "value_types": {
+        "dict": 31
+      },
+      "sample": [
+        {
+          "key": "2114_268",
+          "value": {
+            "AssociationID": "2|16",
+            "BuffID": 268,
+            "BuffName": "金剛咒",
+            "MagicID": 2114,
+            "ZhaoshiName": "金剛咒"
+          }
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 31
+    },
+    {
+      "entry_index": 1535,
+      "table": "BuffData",
+      "issues": [],
+      "filename": "script\\data\\buffdescdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 23,
+      "schema_checked": false,
+      "flagged_keys": [],
+      "value_types": {
+        "dict": 23
+      },
+      "sample": [
+        {
+          "key": 1,
+          "value": {
+            "BuffName": "物封",
+            "desc": "禁止使用普通攻擊"
+          }
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 23
+    },
+    {
+      "entry_index": 1535,
+      "table": "SealData",
+      "issues": [],
+      "filename": "script\\data\\buffdescdata.py",
+      "status": "literal_assignment_recovered",
+      "count": 31,
+      "schema_checked": false,
+      "flagged_keys": [],
+      "value_types": {
+        "dict": 31
+      },
+      "sample": [
+        {
+          "key": "2114_268",
+          "value": {
+            "AssociationID": "2|16",
+            "BuffID": 268,
+            "BuffName": "金剛咒",
+            "MagicID": 2114,
+            "ZhaoshiName": "金剛咒"
+          }
+        }
+      ],
+      "flagged_row_count": 0,
+      "not_flagged_by_these_checks": 31
+    },
+    {
+      "entry_index": 4924,
+      "table": "DATA",
+      "issues": [],
+      "filename": "script\\data\\mxitemdata.py",
+      "status": "not_recovered_by_this_reader",
+      "error": "ValueError: unsupported opcode 75 at 39396"
+    }
+  ],
+  "cross_checks": {
+    "aptitude_pet_ids": {
+      "aptitude_without_pet": [],
+      "pets_without_aptitude": [
+        3010,
+        4021,
+        4022
+      ]
+    },
+    "item_images": {
+      "image_mapping_without_item": 310,
+      "items_without_explicit_mapping": 2235,
+      "note": "Client Shape2Image falls back to shape; missing explicit mapping is not automatically an error."
+    },
+    "item_type_keys_equal_item_keys": true,
+    "children_unresolved_school_refs": [],
+    "children_unresolved_shape_refs": []
+  },
+  "limitations": [
+    "No candidate boundary fixes applied; uses existing heuristic transpiler.",
+    "No native loader comparison; valid text/numbers can still be wrong.",
+    "Only selected literal assignments, not final runtime values after mutations.",
+    "Schema validation exists only for explicitly implemented table shapes.",
+    "Cross-table conflicts require review; neither source is assumed authoritative.",
+    "No CSV data or production configuration is written."
+  ],
+  "tables_requested": 48,
+  "tables_recovered": 38
+}
