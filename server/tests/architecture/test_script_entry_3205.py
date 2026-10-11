@@ -31,7 +31,15 @@ OVERWRITE_OFFSETS = [22409, 22472, 22535, 22598, 22661, 22724, 22787, 22850, 229
 def _load(path, name):
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    # Register before executing: dataclasses in the loaded module resolve
+    # `cls.__module__` through sys.modules (see test_public_reader_contract.py).
+    import sys
+    sys.modules[name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        sys.modules.pop(name, None)
+        raise
     return module
 
 

@@ -144,7 +144,12 @@ class Assignment:
     store_at: int
     value: Any
     writes: tuple
-    verified: bool = True   # False when the module read a violation before this store
+    #: False when the module scan could not read the whole body, i.e. this value was
+    #: published before a shape the reader does not accept.  A partial value must
+    #: never be presented as fully verified.
+    verified: bool = True
+    #: The violations of the scan that produced this assignment (empty when complete).
+    violations: tuple = ()
 
     @property
     def store_kind(self) -> str:
@@ -157,6 +162,10 @@ class Assignment:
     @property
     def duplicate_keys(self) -> tuple:
         return tuple(dict.fromkeys(w.key for w in self.overwrites))
+
+    @property
+    def partial(self) -> bool:
+        return not self.verified
 
 
 @dataclasses.dataclass(frozen=True)
@@ -195,6 +204,11 @@ class ScanResult:
     @property
     def first_violation(self) -> LiteralSyntaxError | None:
         return self.violations[0] if self.violations else None
+
+    @property
+    def complete(self) -> bool:
+        """True only when the whole module body was read without a violation."""
+        return not self.violations
 
 
 def instructions(co) -> Iterator[tuple]:
@@ -353,6 +367,12 @@ def scan_module(co) -> ScanResult:
     if not violations and stack:
         violation(stream[-1][0] if stream else 0, None,
                   f'module ends with {len(stack)} value(s) left on the stack')
+    if violations:
+        # Every assignment here was published before the first violation, so it is
+        # a partial read: keep the values, but say so on the value itself.
+        assignments = [dataclasses.replace(a, verified=False,
+                                           violations=tuple(violations))
+                       for a in assignments]
     return ScanResult(assignments, statements, violations, depth_max)
 
 
@@ -372,17 +392,40 @@ def disallowed_opcode_histogram(co) -> dict:
     return dict(counts)
 
 
-def read_assignment(co, name: bytes, duplicate_policy: str = 'record') -> Assignment | None:
+def read_assignment(co, name: bytes, duplicate_policy: str = 'record',
+                    allow_partial: bool = False) -> Assignment | None:
     """Return the module-level literal assignment `name`, or None when absent.
+
+    Contract (same as `review_client_data_boundaries.extract_table_report`):
+
+    * `allow_partial=False` (default) is strict: if the module body contains a
+      shape this reader cannot accept, the call raises `ValueError` even when
+      `name` was already published, because the value is then unverified.
+    * `allow_partial=True` returns the (possibly partial) assignment; the returned
+      object carries `verified=False` and the full `violations` tuple.
+    * `None` is returned only when the body was read completely and `name` is
+      genuinely absent.  A table that was never published while the body could not
+      be read raises in both modes: there is no partial value to inspect.
 
     `duplicate_policy` is 'record' (keep every write, default) or 'error'
     (raise on the first repeated dictionary key, the historical behaviour).
     """
     if duplicate_policy not in ('record', 'error'):
         raise ValueError(f'unknown duplicate_policy {duplicate_policy!r}')
-    assignment = scan_module(co).by_name(name)
+    scan = scan_module(co)
+    assignment = scan.by_name(name)
     if assignment is None:
+        if scan.violations:
+            # Nothing was published for `name`, so `allow_partial` has nothing to
+            # hand back; `None` stays reserved for "read completely, really absent".
+            raise ValueError(f'module body could not be read completely, table '
+                             f'{name!r} not found; first rejected shape: '
+                             f'{scan.violations[0]}')
         return None
+    if scan.violations and not allow_partial:
+        raise ValueError(f'module body could not be read completely, table {name!r} '
+                         f'is unverified; pass allow_partial=True to inspect the '
+                         f'partial value. First rejected shape: {scan.violations[0]}')
     if duplicate_policy == 'error' and assignment.overwrites:
         first = assignment.overwrites[0]
         raise ValueError(f'duplicate dictionary key {first.key!r} at {first.at}')

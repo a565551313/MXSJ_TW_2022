@@ -7,6 +7,13 @@
 不执行还原出的游戏脚本，不启动 `mock_server.py`。第一阶段的目标是先把可控的小结果钉死：
 条目 3205 的参数冲突、PR #14 与 PR #18 的矛盾、以及公共读取器对“顶层赋值”和“重复字典键”的正确读法。
 
+### 修订记录
+
+| 轮次 | 内容 | 说明 |
+|---|---|---|
+| 第 1 轮 | 第一阶段交付（条目 3205 参数冲突、PR #14/#18 核查、公共读取器修正） | 协调者已复核：581 条技能、9 次重复键覆盖、152 与 218 的区分均可复现 |
+| 第 2 轮 | 复审修复：① 公共接口在全新进程中的模块加载；② 接口明确约定“严格默认 + 显式 `allow_partial`” | 见 §6.1、§6.2、§7.2；**未**重新调查 581 条技能，未改客户端/FLS/密钥库/`server/game_data/`，参数比较、重复键证据与关联检查结果均保持不变 |
+
 ---
 
 ## 0. 开工前确认的 PR 状态
@@ -66,20 +73,39 @@
 ```bash
 # 1) 三方只读复现（原始参数 / PR#14 候选 / PR#18 候选）
 PYTHONDONTWRITEBYTECODE=1 python3 server/tools/probe_script_entry_3205.py --write
-# 2) 回归测试（含本阶段新增 13 项）
+# 2) 回归测试（第一阶段 13 项 + 复审修复 12 项）
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s server/tests/architecture -v
 # 3) 确认公共读取器输出没有变化
 PYTHONDONTWRITEBYTECODE=1 python3 server/tools/review_client_data_boundaries.py > /tmp/review.json
 python3 -c "import json;print(json.load(open('/tmp/review.json'))==json.load(open('server/docs/catalog/client_data_boundary_review.json')))"
+# 4) 复审修复的两条最小复现（全新进程）
+PYTHONDONTWRITEBYTECODE=1 python3 -c '
+import sys; sys.path.insert(0, "server/tools")
+import review_client_data_boundaries as r
+co = {"code": bytes([104,0,0,97,0,0,100,0,0,83]), "names": (b"DATA",), "consts": (None,)}
+print(r.extract_table_report(co)["value"])                      # -> {}
+'
+PYTHONDONTWRITEBYTECODE=1 python3 -c '
+import sys; sys.path.insert(0, "server/tools")
+import review_client_data_boundaries as r
+late = {"code": bytes([104,0,0,97,0,0,131,0,0]), "names": (b"DATA",), "consts": ()}
+try:
+    r.extract_table_report(late)                                # -> ValueError
+except ValueError as exc:
+    print("strict refused")
+print(r.extract_table_report(late, allow_partial=True)["verified"])   # -> False
+'
 ```
 
 实测：
 
 | 命令 | 结果 |
 |---|---|
-| `probe_script_entry_3205.py --write` | 退出码 0，`server/docs/csv_checks/entry_3205_parameter_probe.json` 生成 |
-| `unittest discover -s server/tests/architecture -v` | **44 tests OK**（原 31 项 + 本次新增 13 项），约 2.1 秒 |
+| `probe_script_entry_3205.py --write` | 退出码 0；输出与已提交的 `entry_3205_parameter_probe.json` **逐字节一致** |
+| `unittest discover -s server/tests/architecture -v` | **56 tests OK**（原 31 项 + 第一阶段 13 项 + 复审修复 12 项），约 1.9 秒 |
 | 读取器输出比对 | `True`（与 `server/docs/catalog/client_data_boundary_review.json` JSON 语义完全相同） |
+| 复现 1（全新进程 + `extract_table_report`） | `{}`，`verified=True`，不再抛 `AttributeError` |
+| 复现 2（表后非法指令） | 严格模式抛 `ValueError`；`allow_partial=True` 返回 `verified=False` + 完整 violations |
 
 ---
 
@@ -212,9 +238,54 @@ python3 -c "import json;print(json.load(open('/tmp/review.json'))==json.load(ope
 `evaluate_literals()` / `extract_table()` / `Review().report()` 的行为与输出完全不变
 （已实测报告 JSON 与保存目录逐字节一致）。因此该补丁不会破坏 B–F 的在途工具。
 
+### 6.1 复审修复一：全新进程可以调用公共接口
+
+`_structural_reader()` 原先用 `importlib` 建好模块对象后**直接 `exec_module`，没有先注册到
+`sys.modules`**。`script_literal_reader` 定义 dataclass，而 `dataclasses` 通过
+`sys.modules[cls.__module__]` 解析注解，于是全新进程里只导入
+`review_client_data_boundaries` 再调用 `extract_table_report()` 会直接崩在
+`AttributeError: 'NoneType' object has no attribute '__dict__'`。既有测试在导入前先加载了内部模块，
+因此掩盖了该问题。
+
+修复方式（最小）：
+
+* 加载前先 `sys.modules[name] = module`，失败则回滚该条目；
+* 若同名模块已存在但指向**不同文件**，改用私有名
+  `_review_client_data_boundaries_script_literal_reader`，不覆盖别人的模块；
+* 若磁盘路径相同且已注册（含调用方自己 `import script_literal_reader` 的情形），直接复用同一实例，
+  避免同一份代码被定义两次（否则 `isinstance` 判断会跨不过两个副本）。
+
+契约：调用者**不需要**提前导入任何内部模块。回归测试
+`FreshProcessImportTest.test_fresh_process_call_does_not_need_the_internal_module`
+用 `subprocess` 起真实新进程，并断言调用前 `"script_literal_reader" in sys.modules` 为 `False`、
+调用后为 `True`。
+
+### 6.2 复审修复二：严格默认 + 显式 `allow_partial`
+
+原说明称“模块结构不支持时抛错”，但实际实现里只要 `DATA` 在违规指令之前已经发布，就仍然返回
+该值（连同 `violations`），调用者容易把前缀结果当成完整验证结果。现在统一约定：
+
+| 入口 | 严格模式（默认） | `allow_partial=True` |
+|---|---|---|
+| `review.extract_table_report(co, name, duplicate_policy='record', allow_partial=False)` | `ScanResult.violations` 非空即抛 `ValueError`，消息带表名、发布点、首个违规偏移并提示 `allow_partial=True` | 返回前缀值，且 `verified=False`、`partial=True`、`violations` 为完整元组、`warning` 说明未完成验证 |
+| `script_literal_reader.read_assignment(co, name, duplicate_policy='record', allow_partial=False)` | 同上（消息不同、语义相同） | 返回 `Assignment`，其 `verified=False`、`partial=True`、`violations` 完整随值携带 |
+| `script_literal_reader.scan_module(co)` / `review.top_level_literal_assignments(co)` | **不抛错、不过滤**的底层扫描器；返回值带 `ScanResult.complete`，调用者必须自行检查 | — |
+
+* 目标表**从未发布**（违规指令在它之前，或整份代码里就没有该表）时：严格模式抛
+  `table ... not found ... first rejected shape ...`；`allow_partial=True` 也不会凭空造值，
+  仍抛“未找到”。完整读完但确实没有该表时返回 `None`（`read_assignment`）。
+* “表在违规指令之前发布”的部分结果一律带 `verified=False` 标记：`Assignment` 新增
+  `verified` / `violations` / `partial` 字段，扫描结束时用 `dataclasses.replace` 回填，
+  因此值本身无法伪装成已验证结果。
+* 第一阶段的结果不受影响：3205 在 PR #14 参数下 `violations` 为空，
+  `extract_table_report` 仍返回 `verified=True` 的 581 条 `DATA` 与 9 条覆盖证据
+  （见 `RecoveredEntry3205UnaffectedTest`）。
+
 ---
 
-## 7. 新增回归测试（`server/tests/architecture/test_script_entry_3205.py`，13 项）
+## 7. 新增回归测试（13 + 11 项）
+
+### 7.1 `server/tests/architecture/test_script_entry_3205.py`（第一阶段，13 项）
 
 | 测试 | 抓住什么 |
 |---|---|
@@ -234,6 +305,23 @@ python3 -c "import json;print(json.load(open('/tmp/review.json'))==json.load(ope
 
 测试全部读多写零：只打开 `data/script.fls`、`script_fls_keys.json`，不做任何写入。
 
+### 7.2 `server/tests/architecture/test_public_reader_contract.py`（复审修复，12 项）
+
+| 测试 | 抓住什么 |
+|---|---|
+| `FreshProcessImportTest.test_fresh_process_call_does_not_need_the_internal_module` | **真实 `subprocess` 全新进程**：只导入 `review_client_data_boundaries`，断言调用前内部模块未加载、`extract_table_report` 正常返回 `{}` 且 `verified=True`，并顺带覆盖严格拒绝、`allow_partial`、`read_assignment` 三个入口；断言 `stderr` 为空 |
+| `StrictContractTest.test_complete_module_is_reported_as_verified` | 完整模块：`verified=True`、`partial=False`、`violations=()`、`warning=None` |
+| `…test_unsupported_instruction_after_the_table_is_rejected_by_default` | **复审第二类情况**：表已发布、其后出现非法指令 → 默认抛错，消息含偏移 6 与 `allow_partial=True` |
+| `…test_unsupported_instruction_before_the_table_is_rejected_by_default` | **复审第一类情况**：非法指令在表之前 → 默认抛错且提示 `first rejected shape at 0`；`allow_partial=True` 也不补造表 |
+| `…test_partial_results_require_an_explicit_flag_and_stay_marked` | `allow_partial=True` 才返回前缀值，且 `verified=False`、`partial=True`、violations 完整（偏移 6 / 操作码 131）、warning 明说未完成验证 |
+| `…test_scan_result_exposes_completeness` | `ScanResult.complete` 与 `Assignment.verified/partial/violations` 的取值 |
+| `…test_unknown_duplicate_policy_is_still_rejected` | 参数校验没有因为新增开关而放松 |
+| `ReadAssignmentParityTest.test_complete_module_returns_a_verified_assignment` | 完整模块下 `read_assignment` 返回已验证对象 |
+| `…test_partial_value_needs_allow_partial` | `read_assignment` 与 `extract_table_report` 行为一致，不出现第二个歧义接口 |
+| `…test_absent_table_reports_the_reason` | 未发布 → 报“未找到”（带首个违规）；完整读完但没有该表 → `None`，不误报 |
+| `SharedModuleInstanceTest.test_internal_loader_reuses_an_already_imported_module` | 调用方自己 `import script_literal_reader` 时复用同一模块实例：`Assignment`/`WriteEvent` 类对象一致，不会出现两份类定义导致 `isinstance` 失效 |
+| `RecoveredEntry3205UnaffectedTest.test_entry_3205_still_reports_a_complete_verified_table` | 严格默认没有改变第一阶段结果：3205 仍是 `verified=True` 的 581 条 `DATA` + 9 条覆盖证据 |
+
 ---
 
 ## 8. 交付物
@@ -244,8 +332,9 @@ python3 -c "import json;print(json.load(open('/tmp/review.json'))==json.load(ope
 | `server/tools/probe_script_entry_3205.py` | 三方只读复现工具（`--set saved\|agent_d\|pr18\|all`，`--write`） |
 | `server/docs/csv_checks/entry_3205_parameter_probe.json` | 上述工具写出的机器可读证据 |
 | `server/docs/csv_checks/parameter_candidates_phase1.json` | 独立候选清单（来源 / 原值 / 候选值 / 证据 / 反证 / 置信度 / 原生一致性） |
-| `server/tests/architecture/test_script_entry_3205.py` | 13 项回归测试 |
-| `server/tools/review_client_data_boundaries.py` | 纯增量补丁（两个包装函数） |
+| `server/tests/architecture/test_script_entry_3205.py` | 第一阶段 13 项回归测试 |
+| `server/tests/architecture/test_public_reader_contract.py` | 复审修复 12 项回归测试（含真实全新子进程用例） |
+| `server/tools/review_client_data_boundaries.py` | 纯增量补丁（两个包装函数 + 加载方式与接口约定修复） |
 | `server/docs/csv_checks/AGENT_A_TAKEOVER.md` | 本报告 |
 
 ---
