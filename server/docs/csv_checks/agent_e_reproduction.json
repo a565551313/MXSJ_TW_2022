@@ -1,0 +1,3447 @@
+{
+ "analyses_under_each_parameter_set": {
+  "1301": {
+   "candidate": {
+    "bounds": [
+     1616,
+     3239,
+     4884,
+     6553
+    ],
+    "co_filename": "script\\data\\mapdata.py",
+    "co_name_is_module": true,
+    "decoded_sha256": "a13597ae94dd762a7d3b74e2970dfd6212477e8aa11b91f6aa7a505ff40e80f8",
+    "failed_literal_stores": [
+     {
+      "name": "GetSceneSize",
+      "reason": "unsupported opcode 0xfb (std 132) at 3"
+     },
+     {
+      "name": "GetSceneName",
+      "reason": "unsupported opcode 0xfb (std 132) at 12"
+     },
+     {
+      "name": "GetSceneID",
+      "reason": "unsupported opcode 0xfb (std 132) at 21"
+     },
+     {
+      "name": "GetSceneIDList",
+      "reason": "unsupported opcode 0xfb (std 132) at 30"
+     },
+     {
+      "name": "GetParentMap",
+      "reason": "unsupported opcode 0xfb (std 132) at 39"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "",
+     "ok": true
+    },
+    "nested_code_objects": 5,
+    "nested_code_valid": 5,
+    "payload_sha256": "a99d4a3d4f4f8536445a83c6477f53414a9b0a56cb8a2cacdf914a1b15345697",
+    "status": "decoded",
+    "stranded_consts": 0,
+    "tables": {
+     "DATA": {
+      "key_types": {
+       "int": 104
+      },
+      "n_instructions": 2082,
+      "rows": 104,
+      "store_at": 3792,
+      "store_op": "STORE_GLOBAL"
+     },
+     "MAP_ASCRIPTION": {
+      "key_types": {
+       "int": 6
+      },
+      "n_instructions": 32,
+      "rows": 6,
+      "store_at": 3852,
+      "store_op": "STORE_NAME"
+     }
+    },
+    "walk_consumed": true
+   },
+   "delivered_solver": {
+    "bounds": [
+     1615,
+     3239,
+     4884,
+     6553
+    ],
+    "co_filename": "script\\data\\mapdata.py",
+    "co_name_is_module": true,
+    "decoded_sha256": "039b05a05fa0b808074c208218d040e81f3b7ccc8e3990df891caddfd66e0836",
+    "failed_literal_stores": [
+     {
+      "name": "GetSceneSize",
+      "reason": "unsupported opcode 0xfb (std 132) at 3"
+     },
+     {
+      "name": "GetSceneName",
+      "reason": "unsupported opcode 0xfb (std 132) at 12"
+     },
+     {
+      "name": "GetSceneID",
+      "reason": "unsupported opcode 0xfb (std 132) at 21"
+     },
+     {
+      "name": "GetSceneIDList",
+      "reason": "unsupported opcode 0xfb (std 132) at 30"
+     },
+     {
+      "name": "GetParentMap",
+      "reason": "unsupported opcode 0xfb (std 132) at 39"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "",
+     "ok": true
+    },
+    "nested_code_objects": 5,
+    "nested_code_valid": 5,
+    "payload_sha256": "a99d4a3d4f4f8536445a83c6477f53414a9b0a56cb8a2cacdf914a1b15345697",
+    "status": "decoded",
+    "stranded_consts": 1,
+    "tables": {
+     "DATA": {
+      "key_types": {
+       "bytes": 1,
+       "int": 103
+      },
+      "n_instructions": 2082,
+      "rows": 104,
+      "store_at": 3792,
+      "store_op": "STORE_GLOBAL"
+     },
+     "MAP_ASCRIPTION": {
+      "key_types": {
+       "int": 6
+      },
+      "n_instructions": 32,
+      "rows": 6,
+      "store_at": 3852,
+      "store_op": "STORE_NAME"
+     }
+    },
+    "walk_consumed": true
+   },
+   "saved": {
+    "bounds": [
+     1612,
+     3237,
+     4884,
+     6553
+    ],
+    "co_filename": "script\\data\\mapdata.py",
+    "co_name_is_module": true,
+    "decoded_sha256": "0b68817a560790bb8f58c5afe5596b4808987e2d4ff10a09aa8d2dd044193a03",
+    "failed_literal_stores": [
+     {
+      "name": "GetSceneSize",
+      "reason": "unsupported opcode 0xfb (std 132) at 3"
+     },
+     {
+      "name": "GetSceneName",
+      "reason": "unsupported opcode 0xfb (std 132) at 12"
+     },
+     {
+      "name": "GetSceneID",
+      "reason": "unsupported opcode 0xfb (std 132) at 21"
+     },
+     {
+      "name": "GetSceneIDList",
+      "reason": "unsupported opcode 0xfb (std 132) at 30"
+     },
+     {
+      "name": "GetParentMap",
+      "reason": "unsupported opcode 0xfb (std 132) at 39"
+     },
+     {
+      "name": "DATA",
+      "reason": "unsupported opcode 0x23 (std 24) at 1590"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "unmapped custom opcode 0x7c at 1591",
+     "ok": false
+    },
+    "nested_code_objects": 5,
+    "nested_code_valid": 5,
+    "payload_sha256": "a99d4a3d4f4f8536445a83c6477f53414a9b0a56cb8a2cacdf914a1b15345697",
+    "status": "decoded",
+    "stranded_consts": 1,
+    "tables": {
+     "MAP_ASCRIPTION": {
+      "key_types": {
+       "int": 6
+      },
+      "n_instructions": 32,
+      "rows": 6,
+      "store_at": 3852,
+      "store_op": "STORE_NAME"
+     }
+    },
+    "walk_consumed": true
+   }
+  },
+  "1799": {
+   "candidate": {
+    "bounds": [
+     528,
+     1093,
+     1652,
+     2202
+    ],
+    "co_filename": "script\\data\\npcname2realnamedata.py",
+    "co_name_is_module": true,
+    "decoded_sha256": "76d0469a068b5da7fad834338b0c0a64774ce6479375ec1be7e1390668301105",
+    "failed_literal_stores": [
+     {
+      "name": "GetRealName",
+      "reason": "unsupported opcode 0xfb (std 132) at 3"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "",
+     "ok": true
+    },
+    "nested_code_objects": 1,
+    "nested_code_valid": 1,
+    "payload_sha256": "5c940c6665ae3643ba817a26b1665fcaf3c2eea69616d4aad9a59bd25fc84465",
+    "status": "decoded",
+    "stranded_consts": 0,
+    "tables": {
+     "DATA": {
+      "key_types": {
+       "bytes": 55
+      },
+      "n_instructions": 277,
+      "rows": 55,
+      "store_at": 507,
+      "store_op": "STORE_GLOBAL"
+     }
+    },
+    "walk_consumed": true
+   },
+   "saved": {
+    "bounds": [
+     528,
+     1096,
+     1655,
+     2207
+    ],
+    "co_filename": "script\\data\\npcname2realnamedata.py",
+    "co_name_is_module": false,
+    "decoded_sha256": "51bc5006a90b72b832341781f2806cd30807fea9c184b83b5d0d4c1006bcaa80",
+    "failed_literal_stores": [
+     {
+      "name": "GetRealName",
+      "reason": "unsupported opcode 0xfb (std 132) at 3"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "",
+     "ok": true
+    },
+    "nested_code_objects": 1,
+    "nested_code_valid": 1,
+    "payload_sha256": "5c940c6665ae3643ba817a26b1665fcaf3c2eea69616d4aad9a59bd25fc84465",
+    "status": "decoded",
+    "stranded_consts": 0,
+    "tables": {
+     "DATA": {
+      "key_types": {
+       "bytes": 55
+      },
+      "n_instructions": 277,
+      "rows": 55,
+      "store_at": 507,
+      "store_op": "STORE_GLOBAL",
+      "text_errors": [
+       {
+        "byte_end": 8,
+        "byte_start": 7,
+        "path": "DATA[b'\\xad\\xd3\\xa4H\\xa4\\xdf\\xaak\\xb1\\xd0\\xaev']",
+        "raw_hex": "a4b8c646b9dc3acf"
+       },
+       {
+        "byte_end": 5,
+        "byte_start": 4,
+        "path": "DATA.key(b'\\xa4\\xd1\\xbf\\xef\\xa8\\x19|\\x1a')",
+        "raw_hex": "a4d1bfefa8197c1a"
+       }
+      ]
+     }
+    },
+    "walk_consumed": true
+   }
+  },
+  "1870": {
+   "saved": {
+    "bounds": [
+     276,
+     336,
+     553,
+     766
+    ],
+    "co_filename": "script\\taiwan\\npcpos_fix.py",
+    "co_name_is_module": true,
+    "decoded_sha256": "7d8c9efec81da7ad40d87c3c413f8923c125462ba274f2fa6e1a118c5f05c7d2",
+    "failed_literal_stores": [
+     {
+      "name": "npcposdata",
+      "reason": "unsupported opcode 0xe0 (std 107) at 6"
+     },
+     {
+      "name": "minimapnpcpos",
+      "reason": "unsupported opcode 0xe0 (std 107) at 18"
+     },
+     {
+      "name": "D~ChhiIha^ehcEeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 27"
+     },
+     {
+      "name": "DelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 36"
+     },
+     {
+      "name": "Fix",
+      "reason": "unsupported opcode 0xfb (std 132) at 45"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "",
+     "ok": true
+    },
+    "nested_code_objects": 3,
+    "nested_code_valid": 3,
+    "payload_sha256": "3b22ab2b202b2ceeeb9a2c38183123bfd9b4f29ede8afdae6f4cbec7667e04e9",
+    "status": "decoded",
+    "stranded_consts": 0,
+    "tables": {},
+    "walk_consumed": true
+   }
+  },
+  "2601": {
+   "candidate": {
+    "bounds": [
+     18827,
+     37735,
+     56546,
+     75376
+    ],
+    "co_filename": "script\\data\\npcposdata.py",
+    "co_name_is_module": true,
+    "decoded_sha256": "75fce0d4a15022caea33bffa41ced6896655a93279f32c0878045e6ac92ab687",
+    "failed_literal_stores": [
+     {
+      "name": "permission",
+      "reason": "unsupported opcode 0xe0 (std 107) at 6"
+     },
+     {
+      "name": "InitTestData",
+      "reason": "unsupported opcode 0xfb (std 132) at 48"
+     },
+     {
+      "name": "ver2mask",
+      "reason": "unsupported opcode 0xfb (std 132) at 57"
+     },
+     {
+      "name": "GetData",
+      "reason": "unsupported opcode 0xfb (std 132) at 66"
+     },
+     {
+      "name": "GetMapNpcNames",
+      "reason": "unsupported opcode 0xfb (std 132) at 75"
+     },
+     {
+      "name": "GetNpcPosByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 84"
+     },
+     {
+      "name": "GetNpcNameByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 93"
+     },
+     {
+      "name": "IsNeedDelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 102"
+     },
+     {
+      "name": "DelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 111"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "",
+     "ok": true
+    },
+    "nested_code_objects": 8,
+    "nested_code_valid": 8,
+    "payload_sha256": "6633072d3949a57b80eb0b9686c5ae4cdeb64138b9cf87957acf87eb06ff8444",
+    "status": "decoded",
+    "stranded_consts": 0,
+    "tables": {
+     "DATA": {
+      "key_types": {
+       "int": 430
+      },
+      "n_instructions": 24719,
+      "rows": 430,
+      "store_at": 71691,
+      "store_op": "STORE_GLOBAL"
+     },
+     "VER2MASK": {
+      "key_types": {
+       "int": 3
+      },
+      "n_instructions": 17,
+      "rows": 3,
+      "store_at": 42,
+      "store_op": "STORE_NAME"
+     }
+    },
+    "walk_consumed": true
+   },
+   "saved": {
+    "bounds": [
+     18821,
+     37733,
+     56546,
+     75375
+    ],
+    "co_filename": "script\\data\\npcposdata.py",
+    "co_name_is_module": true,
+    "decoded_sha256": "400af1cea2fa2d6658982be8aab01b310bf4f5ec47ed09cb48f110a07897060b",
+    "failed_literal_stores": [
+     {
+      "name": "permission",
+      "reason": "unsupported opcode 0xe0 (std 107) at 6"
+     },
+     {
+      "name": "InitTestData",
+      "reason": "unsupported opcode 0xfb (std 132) at 48"
+     },
+     {
+      "name": "ver2mask",
+      "reason": "unsupported opcode 0xfb (std 132) at 57"
+     },
+     {
+      "name": "GetData",
+      "reason": "unsupported opcode 0xfb (std 132) at 66"
+     },
+     {
+      "name": "GetMapNpcNames",
+      "reason": "unsupported opcode 0xfb (std 132) at 75"
+     },
+     {
+      "name": "GetNpcPosByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 84"
+     },
+     {
+      "name": "GetNpcNameByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 93"
+     },
+     {
+      "name": "IsNeedDelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 102"
+     },
+     {
+      "name": "DelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 111"
+     },
+     {
+      "name": "DATA",
+      "reason": "unsupported opcode 0xf7 (std None) at 18799"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "unmapped custom opcode 0xf7 at 18799",
+     "ok": false
+    },
+    "nested_code_objects": 8,
+    "nested_code_valid": 8,
+    "payload_sha256": "6633072d3949a57b80eb0b9686c5ae4cdeb64138b9cf87957acf87eb06ff8444",
+    "status": "decoded",
+    "stranded_consts": 0,
+    "tables": {
+     "VER2MASK": {
+      "key_types": {
+       "int": 3
+      },
+      "n_instructions": 17,
+      "rows": 3,
+      "store_at": 42,
+      "store_op": "STORE_NAME"
+     }
+    },
+    "walk_consumed": true
+   },
+   "saved_slot3_only": {
+    "bounds": [
+     18827,
+     37735,
+     56546,
+     75375
+    ],
+    "co_filename": "script\\data\\npcposdata.py",
+    "co_name_is_module": true,
+    "decoded_sha256": "76423e0a5365277be041f1804bb12bc05e72dfe840d282d5650f2a0df76a8e5b",
+    "failed_literal_stores": [
+     {
+      "name": "permission",
+      "reason": "unsupported opcode 0xe0 (std 107) at 6"
+     },
+     {
+      "name": "InitTestData",
+      "reason": "unsupported opcode 0xfb (std 132) at 48"
+     },
+     {
+      "name": "ver2mask",
+      "reason": "unsupported opcode 0xfb (std 132) at 57"
+     },
+     {
+      "name": "GetData",
+      "reason": "unsupported opcode 0xfb (std 132) at 66"
+     },
+     {
+      "name": "GetMapNpcNames",
+      "reason": "unsupported opcode 0xfb (std 132) at 75"
+     },
+     {
+      "name": "GetNpcPosByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 84"
+     },
+     {
+      "name": "GetNpcNameByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 93"
+     },
+     {
+      "name": "IsNeedDelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 102"
+     },
+     {
+      "name": "DelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 111"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "",
+     "ok": true
+    },
+    "nested_code_objects": 8,
+    "nested_code_valid": 8,
+    "payload_sha256": "6633072d3949a57b80eb0b9686c5ae4cdeb64138b9cf87957acf87eb06ff8444",
+    "status": "decoded",
+    "stranded_consts": 0,
+    "tables": {
+     "DATA": {
+      "key_types": {
+       "int": 430
+      },
+      "n_instructions": 24719,
+      "rows": 430,
+      "store_at": 71691,
+      "store_op": "STORE_GLOBAL"
+     },
+     "VER2MASK": {
+      "key_types": {
+       "int": 3
+      },
+      "n_instructions": 17,
+      "rows": 3,
+      "store_at": 42,
+      "store_op": "STORE_NAME"
+     }
+    },
+    "walk_consumed": true
+   }
+  },
+  "2804": {
+   "candidate": {
+    "bounds": [
+     26695,
+     53365,
+     79989,
+     106619
+    ],
+    "co_filename": "script\\data\\minimapnpcpos.py",
+    "co_name_is_module": true,
+    "decoded_sha256": "865f24951b2153bc67257052cc4258188565bb5977f7ef5c5af3451134cc2948",
+    "failed_literal_stores": [
+     {
+      "name": "permission",
+      "reason": "unsupported opcode 0xe0 (std 107) at 6"
+     },
+     {
+      "name": "InitTestData",
+      "reason": "unsupported opcode 0xfb (std 132) at 48"
+     },
+     {
+      "name": "ver2mask",
+      "reason": "unsupported opcode 0xfb (std 132) at 57"
+     },
+     {
+      "name": "GetData",
+      "reason": "unsupported opcode 0xfb (std 132) at 66"
+     },
+     {
+      "name": "GetMapNpcNames",
+      "reason": "unsupported opcode 0xfb (std 132) at 75"
+     },
+     {
+      "name": "GetNpcPosByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 84"
+     },
+     {
+      "name": "GetNpcNameByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 93"
+     },
+     {
+      "name": "IsNeedDelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 102"
+     },
+     {
+      "name": "DelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 111"
+     },
+     {
+      "name": "IsMiniMap",
+      "reason": "unsupported opcode 0xfb (std 132) at 120"
+     },
+     {
+      "name": "GetShidaodianClass",
+      "reason": "unsupported opcode 0xfb (std 132) at 129"
+     },
+     {
+      "name": "GetMiniData",
+      "reason": "unsupported opcode 0xfb (std 132) at 138"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "",
+     "ok": true
+    },
+    "nested_code_objects": 11,
+    "nested_code_valid": 11,
+    "payload_sha256": "3177594a17a1ce0739f4d9a246887336a82af06fab2ef083f43b18526b7ecb17",
+    "status": "decoded",
+    "stranded_consts": 0,
+    "tables": {
+     "DATA_POS": {
+      "key_types": {
+       "int": 434
+      },
+      "n_instructions": 27062,
+      "rows": 434,
+      "store_at": 76119,
+      "store_op": "STORE_GLOBAL"
+     },
+     "DATA_WENZI": {
+      "key_types": {
+       "int": 165
+      },
+      "n_instructions": 12020,
+      "rows": 165,
+      "store_at": 99135,
+      "store_op": "STORE_NAME"
+     },
+     "VER2MASK": {
+      "key_types": {
+       "int": 3
+      },
+      "n_instructions": 17,
+      "rows": 3,
+      "store_at": 42,
+      "store_op": "STORE_NAME"
+     }
+    },
+    "walk_consumed": true
+   },
+   "saved": {
+    "bounds": [
+     26695,
+     53365,
+     79988,
+     106627
+    ],
+    "co_filename": "script\\data\\minimapnpcpos.py",
+    "co_name_is_module": true,
+    "decoded_sha256": "8845b37500d231e16527d2239330a8d3b9b7c45b68fa91596a8b5436d5d1ca1e",
+    "failed_literal_stores": [
+     {
+      "name": "permission",
+      "reason": "unsupported opcode 0xe0 (std 107) at 6"
+     },
+     {
+      "name": "InitTestData",
+      "reason": "unsupported opcode 0xfb (std 132) at 48"
+     },
+     {
+      "name": "ver2mask",
+      "reason": "unsupported opcode 0xfb (std 132) at 57"
+     },
+     {
+      "name": "GetData",
+      "reason": "unsupported opcode 0xfb (std 132) at 66"
+     },
+     {
+      "name": "GetMapNpcNames",
+      "reason": "unsupported opcode 0xfb (std 132) at 75"
+     },
+     {
+      "name": "GetNpcPosByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 84"
+     },
+     {
+      "name": "GetNpcNameByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 93"
+     },
+     {
+      "name": "IsNeedDelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 102"
+     },
+     {
+      "name": "DelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 111"
+     },
+     {
+      "name": "IsMiniMap",
+      "reason": "unsupported opcode 0xfb (std 132) at 120"
+     },
+     {
+      "name": "GetShidaodianClass",
+      "reason": "unsupported opcode 0xfb (std 132) at 129"
+     },
+     {
+      "name": "GetMiniData",
+      "reason": "unsupported opcode 0xfb (std 132) at 138"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "",
+     "ok": true
+    },
+    "nested_code_objects": 11,
+    "nested_code_valid": 11,
+    "payload_sha256": "3177594a17a1ce0739f4d9a246887336a82af06fab2ef083f43b18526b7ecb17",
+    "status": "decoded",
+    "stranded_consts": 0,
+    "tables": {
+     "DATA_POS": {
+      "key_types": {
+       "int": 434
+      },
+      "n_instructions": 27062,
+      "rows": 434,
+      "store_at": 76119,
+      "store_op": "STORE_GLOBAL"
+     },
+     "DATA_WENZI": {
+      "key_types": {
+       "int": 165
+      },
+      "n_instructions": 12020,
+      "rows": 165,
+      "store_at": 99135,
+      "store_op": "STORE_NAME"
+     },
+     "VER2MASK": {
+      "key_types": {
+       "int": 3
+      },
+      "n_instructions": 17,
+      "rows": 3,
+      "store_at": 42,
+      "store_op": "STORE_NAME"
+     }
+    },
+    "walk_consumed": true
+   },
+   "saved_slot2_only": {
+    "bounds": [
+     26695,
+     53365,
+     79988,
+     106619
+    ],
+    "co_filename": "script\\data\\minimapnpcpos.py",
+    "co_name_is_module": true,
+    "decoded_sha256": "ba24bd84d159760b45f7ca0fdd41988eca56c8cae51d3f92f98fad0a17929aa1",
+    "failed_literal_stores": [
+     {
+      "name": "permission",
+      "reason": "unsupported opcode 0xe0 (std 107) at 6"
+     },
+     {
+      "name": "InitTestData",
+      "reason": "unsupported opcode 0xfb (std 132) at 48"
+     },
+     {
+      "name": "ver2mask",
+      "reason": "unsupported opcode 0xfb (std 132) at 57"
+     },
+     {
+      "name": "GetData",
+      "reason": "unsupported opcode 0xfb (std 132) at 66"
+     },
+     {
+      "name": "GetMapNpcNames",
+      "reason": "unsupported opcode 0xfb (std 132) at 75"
+     },
+     {
+      "name": "GetNpcPosByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 84"
+     },
+     {
+      "name": "GetNpcNameByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 93"
+     },
+     {
+      "name": "IsNeedDelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 102"
+     },
+     {
+      "name": "DelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 111"
+     },
+     {
+      "name": "IsMiniMap",
+      "reason": "unsupported opcode 0xfb (std 132) at 120"
+     },
+     {
+      "name": "GetShidaodianClass",
+      "reason": "unsupported opcode 0xfb (std 132) at 129"
+     },
+     {
+      "name": "GetMiniData",
+      "reason": "unsupported opcode 0xfb (std 132) at 138"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "",
+     "ok": true
+    },
+    "nested_code_objects": 11,
+    "nested_code_valid": 11,
+    "payload_sha256": "3177594a17a1ce0739f4d9a246887336a82af06fab2ef083f43b18526b7ecb17",
+    "status": "decoded",
+    "stranded_consts": 0,
+    "tables": {
+     "DATA_POS": {
+      "key_types": {
+       "int": 434
+      },
+      "n_instructions": 27062,
+      "rows": 434,
+      "store_at": 76119,
+      "store_op": "STORE_GLOBAL"
+     },
+     "DATA_WENZI": {
+      "key_types": {
+       "int": 165
+      },
+      "n_instructions": 12020,
+      "rows": 165,
+      "store_at": 99135,
+      "store_op": "STORE_NAME"
+     },
+     "VER2MASK": {
+      "key_types": {
+       "int": 3
+      },
+      "n_instructions": 17,
+      "rows": 3,
+      "store_at": 42,
+      "store_op": "STORE_NAME"
+     }
+    },
+    "walk_consumed": true
+   },
+   "saved_slot3_only": {
+    "bounds": [
+     26695,
+     53365,
+     79989,
+     106627
+    ],
+    "co_filename": "script\\data\\minimapnpcpos.py",
+    "co_name_is_module": true,
+    "decoded_sha256": "e9c546f9f20f4a6616208d6ee5f22c5950ead19b02b96077a915fd2a207b40a7",
+    "failed_literal_stores": [
+     {
+      "name": "permission",
+      "reason": "unsupported opcode 0xe0 (std 107) at 6"
+     },
+     {
+      "name": "InitTestData",
+      "reason": "unsupported opcode 0xfb (std 132) at 48"
+     },
+     {
+      "name": "ver2mask",
+      "reason": "unsupported opcode 0xfb (std 132) at 57"
+     },
+     {
+      "name": "GetData",
+      "reason": "unsupported opcode 0xfb (std 132) at 66"
+     },
+     {
+      "name": "GetMapNpcNames",
+      "reason": "unsupported opcode 0xfb (std 132) at 75"
+     },
+     {
+      "name": "GetNpcPosByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 84"
+     },
+     {
+      "name": "GetNpcNameByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 93"
+     },
+     {
+      "name": "IsNeedDelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 102"
+     },
+     {
+      "name": "DelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 111"
+     },
+     {
+      "name": "IsMiniMap",
+      "reason": "unsupported opcode 0xfb (std 132) at 120"
+     },
+     {
+      "name": "GetShidaodianClass",
+      "reason": "unsupported opcode 0xfb (std 132) at 129"
+     },
+     {
+      "name": "GetMiniData",
+      "reason": "unsupported opcode 0xfb (std 132) at 138"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "",
+     "ok": true
+    },
+    "nested_code_objects": 11,
+    "nested_code_valid": 11,
+    "payload_sha256": "3177594a17a1ce0739f4d9a246887336a82af06fab2ef083f43b18526b7ecb17",
+    "status": "decoded",
+    "stranded_consts": 0,
+    "tables": {
+     "DATA_POS": {
+      "key_types": {
+       "int": 434
+      },
+      "n_instructions": 27062,
+      "rows": 434,
+      "store_at": 76119,
+      "store_op": "STORE_GLOBAL"
+     },
+     "DATA_WENZI": {
+      "key_types": {
+       "int": 165
+      },
+      "n_instructions": 12020,
+      "rows": 165,
+      "store_at": 99135,
+      "store_op": "STORE_NAME"
+     },
+     "VER2MASK": {
+      "key_types": {
+       "int": 3
+      },
+      "n_instructions": 17,
+      "rows": 3,
+      "store_at": 42,
+      "store_op": "STORE_NAME"
+     }
+    },
+    "walk_consumed": true
+   }
+  },
+  "400": {
+   "saved": {
+    "bounds": [
+     961,
+     2001,
+     3063,
+     4125
+    ],
+    "co_filename": "script\\data\\sceneid2name.py",
+    "co_name_is_module": true,
+    "decoded_sha256": "7fb517edfe1f03ab400f65ec5d008fc263b45e0475a8719c0905e9c631bad64a",
+    "failed_literal_stores": [
+     {
+      "name": "IsMiniMap",
+      "reason": "unsupported opcode 0xfb (std 132) at 3"
+     },
+     {
+      "name": "GetShidaodianClass",
+      "reason": "unsupported opcode 0xfb (std 132) at 12"
+     },
+     {
+      "name": "GetSceneIDByName",
+      "reason": "unsupported opcode 0xfb (std 132) at 21"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "",
+     "ok": true
+    },
+    "nested_code_objects": 3,
+    "nested_code_valid": 3,
+    "payload_sha256": "50faa166129bae986cb678ff1238fe0d9e6fad137ab614d30121b90b604a8a46",
+    "status": "decoded",
+    "stranded_consts": 78,
+    "tables": {
+     "DATA": {
+      "key_types": {
+       "int": 57
+      },
+      "n_instructions": 287,
+      "rows": 57,
+      "store_at": 543,
+      "store_op": "STORE_GLOBAL"
+     }
+    },
+    "walk_consumed": true
+   }
+  },
+  "4897": {
+   "candidate": {
+    "bounds": [
+     26677,
+     53319,
+     79961,
+     106579
+    ],
+    "co_filename": "script\\data\\minimapnpcpos_test.py",
+    "co_name_is_module": true,
+    "decoded_sha256": "eeba29187219e9a7ec4c8307b3e6e65b7b7a0da8fd92941a54bb71bd6ec4ea98",
+    "failed_literal_stores": [
+     {
+      "name": "permission",
+      "reason": "unsupported opcode 0xe0 (std 107) at 6"
+     },
+     {
+      "name": "InitTestData",
+      "reason": "unsupported opcode 0xfb (std 132) at 48"
+     },
+     {
+      "name": "ver2mask",
+      "reason": "unsupported opcode 0xfb (std 132) at 57"
+     },
+     {
+      "name": "GetData",
+      "reason": "unsupported opcode 0xfb (std 132) at 66"
+     },
+     {
+      "name": "GetMapNpcNames",
+      "reason": "unsupported opcode 0xfb (std 132) at 75"
+     },
+     {
+      "name": "GetNpcPosByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 84"
+     },
+     {
+      "name": "GetNpcNameByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 93"
+     },
+     {
+      "name": "IsNeedDelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 102"
+     },
+     {
+      "name": "DelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 111"
+     },
+     {
+      "name": "IsMiniMap",
+      "reason": "unsupported opcode 0xfb (std 132) at 120"
+     },
+     {
+      "name": "GetShidaodianClass",
+      "reason": "unsupported opcode 0xfb (std 132) at 129"
+     },
+     {
+      "name": "GetMiniData",
+      "reason": "unsupported opcode 0xfb (std 132) at 138"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "",
+     "ok": true
+    },
+    "nested_code_objects": 11,
+    "nested_code_valid": 11,
+    "payload_sha256": "c46e96afd78ef93222d1e2e1083470b6edfc8c28d9af243dbf3593e6155b2f5e",
+    "status": "decoded",
+    "stranded_consts": 0,
+    "tables": {
+     "DATA_POS": {
+      "key_types": {
+       "int": 433
+      },
+      "n_instructions": 27018,
+      "rows": 433,
+      "store_at": 75999,
+      "store_op": "STORE_GLOBAL"
+     },
+     "DATA_WENZI": {
+      "key_types": {
+       "int": 165
+      },
+      "n_instructions": 12020,
+      "rows": 165,
+      "store_at": 99015,
+      "store_op": "STORE_NAME"
+     },
+     "VER2MASK": {
+      "key_types": {
+       "int": 3
+      },
+      "n_instructions": 17,
+      "rows": 3,
+      "store_at": 42,
+      "store_op": "STORE_NAME"
+     }
+    },
+    "walk_consumed": true
+   },
+   "saved": {
+    "bounds": [
+     26677,
+     53319,
+     79959,
+     106579
+    ],
+    "co_filename": "script\\data\\minimapnpcpos_test.py",
+    "co_name_is_module": true,
+    "decoded_sha256": "f199e1d752ff2e40c6ecf5fbc24d849155fce8bc2e06640b2055f480015f6690",
+    "failed_literal_stores": [
+     {
+      "name": "permission",
+      "reason": "unsupported opcode 0xe0 (std 107) at 6"
+     },
+     {
+      "name": "InitTestData",
+      "reason": "unsupported opcode 0xfb (std 132) at 48"
+     },
+     {
+      "name": "ver2mask",
+      "reason": "unsupported opcode 0xfb (std 132) at 57"
+     },
+     {
+      "name": "GetData",
+      "reason": "unsupported opcode 0xfb (std 132) at 66"
+     },
+     {
+      "name": "GetMapNpcNames",
+      "reason": "unsupported opcode 0xfb (std 132) at 75"
+     },
+     {
+      "name": "GetNpcPosByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 84"
+     },
+     {
+      "name": "GetNpcNameByMapAndName",
+      "reason": "unsupported opcode 0xfb (std 132) at 93"
+     },
+     {
+      "name": "IsNeedDelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 102"
+     },
+     {
+      "name": "DelShenHeNpc",
+      "reason": "unsupported opcode 0xfb (std 132) at 111"
+     },
+     {
+      "name": "IsMiniMap",
+      "reason": "unsupported opcode 0xfb (std 132) at 120"
+     },
+     {
+      "name": "GetShidaodianClass",
+      "reason": "unsupported opcode 0xfb (std 132) at 129"
+     },
+     {
+      "name": "GetMiniData",
+      "reason": "unsupported opcode 0xfb (std 132) at 138"
+     },
+     {
+      "name": "DATA_WENZI",
+      "reason": "unsupported opcode 0x46 (std 63) at 79937"
+     }
+    ],
+    "first_nested_failure": null,
+    "module_code_valid": {
+     "detail": "",
+     "ok": true
+    },
+    "nested_code_objects": 11,
+    "nested_code_valid": 11,
+    "payload_sha256": "c46e96afd78ef93222d1e2e1083470b6edfc8c28d9af243dbf3593e6155b2f5e",
+    "status": "decoded",
+    "stranded_consts": 0,
+    "tables": {
+     "DATA_POS": {
+      "key_types": {
+       "int": 433
+      },
+      "n_instructions": 27018,
+      "rows": 433,
+      "store_at": 75999,
+      "store_op": "STORE_GLOBAL"
+     },
+     "VER2MASK": {
+      "key_types": {
+       "int": 3
+      },
+      "n_instructions": 17,
+      "rows": 3,
+      "store_at": 42,
+      "store_op": "STORE_NAME"
+     }
+    },
+    "walk_consumed": true
+   }
+  }
+ },
+ "consumer_name_reference_scan": {
+  "decode_failures": [
+   36,
+   82,
+   173,
+   383,
+   397,
+   441,
+   508,
+   793,
+   976,
+   1021,
+   1037,
+   1058,
+   1109,
+   1120,
+   1128,
+   1141,
+   1305,
+   1367,
+   1476,
+   1604,
+   1736,
+   1876,
+   2001,
+   2136,
+   2283,
+   2293,
+   2327,
+   2338,
+   2519,
+   2577,
+   2766,
+   2846,
+   2872,
+   2876,
+   2913,
+   3100,
+   3143,
+   3193,
+   3297,
+   3531,
+   3723,
+   4016,
+   4337,
+   4486,
+   4917
+  ],
+  "entries_scanned": 5002,
+  "hits": {
+   "DelShenHeNpc": [
+    1870,
+    2601,
+    2804,
+    4897
+   ],
+   "InitTestData": [
+    1693,
+    2054,
+    2601,
+    2804,
+    4897
+   ],
+   "IsNeedDelShenHeNpc": [
+    2601,
+    2804,
+    4897
+   ],
+   "mapdata": [
+    159,
+    215,
+    290,
+    412,
+    539,
+    633,
+    743,
+    875,
+    891,
+    1023,
+    1227,
+    1301,
+    1863,
+    2080,
+    2241,
+    2341,
+    2512,
+    2838,
+    2931,
+    2965,
+    2999,
+    3285,
+    3381,
+    3393,
+    3610,
+    3753,
+    3771,
+    3938,
+    4059,
+    4144,
+    4164,
+    4225,
+    4589,
+    4673,
+    4676,
+    4837,
+    4852,
+    4957
+   ],
+   "minimapnpcpos": [
+    159,
+    450,
+    518,
+    539,
+    949,
+    1693,
+    1697,
+    1870,
+    2120,
+    2341,
+    2804,
+    2965,
+    4010,
+    4676,
+    4897
+   ],
+   "npcname2realnamedata": [
+    159,
+    1799,
+    2601,
+    2804,
+    4897
+   ],
+   "npcposdata": [
+    1870,
+    2601
+   ],
+   "sceneid2name": [
+    400
+   ]
+  },
+  "limitation": "presence only; not co_names-verified; misframed entries may hide hits",
+  "method": "byte substring over XOR-decoded payload with saved bounds"
+ },
+ "cross_table_witnesses": {
+  "alias_table_vs_minimapnpcpos": {
+   "alias_realname_agreements": 73,
+   "alias_realname_mismatches": [
+    {
+     "alias": "藥店",
+     "alias_table_says": "藥店老闆",
+     "npcid": 1078,
+     "record_says": "裝備店老闆",
+     "scene": 1054
+    }
+   ],
+   "aliases_used": 37,
+   "real_name_set_and_alias_in_1799": 74,
+   "real_name_set_but_alias_not_in_1799": 22,
+   "records_with_alias_in_1799": 178,
+   "records_with_real_name_set": 96
+  },
+  "alias_table_vs_npcposdata": {
+   "alias_realname_agreements": 70,
+   "alias_realname_mismatches": [
+    {
+     "alias": "藥店",
+     "alias_table_says": "藥店老闆",
+     "npcid": 1078,
+     "record_says": "裝備店老闆",
+     "scene": 1054
+    }
+   ],
+   "aliases_used": 36,
+   "real_name_set_and_alias_in_1799": 71,
+   "real_name_set_but_alias_not_in_1799": 22,
+   "records_with_alias_in_1799": 175,
+   "records_with_real_name_set": 93
+  },
+  "fisher_name_attestation": {
+   "const544_of_2804": "打漁老張",
+   "record_2601_1020_4229": [
+    [
+     "打漁老張",
+     null,
+     4229,
+     0,
+     [
+      81,
+      22
+     ],
+     0,
+     null,
+     255,
+     "dylz",
+     0,
+     0,
+     null,
+     null,
+     null
+    ]
+   ],
+   "record_2804_1020_4229": [
+    [
+     "打漁老張",
+     null,
+     4229,
+     0,
+     [
+      81,
+      22
+     ],
+     0,
+     null,
+     255,
+     "dylz",
+     0,
+     0,
+     null,
+     null,
+     null
+    ]
+   ]
+  },
+  "mapdata_vs_sceneid2name": {
+   "data_1071": {
+    "h": 1220,
+    "name": "加洛法師師道殿",
+    "w": 1588
+   },
+   "key_1071_in_mapdata": true,
+   "map_ascription": {
+    "1039": 1039,
+    "1040": 1039,
+    "1041": 1039,
+    "1073": 1073,
+    "1074": 1073,
+    "1075": 1073
+   },
+   "mapdata_keys": 104,
+   "minimap_keys": 57,
+   "minimap_keys_in_mapdata": 57,
+   "name_mismatches": []
+  },
+  "minimapnpcpos_vs_test_sibling": {
+   "pair_join_vs_4897": {
+    "common_pairs": 674,
+    "content_differences": [],
+    "multiset_identical": 674,
+    "only_in_a": [
+     [
+      1327,
+      5030
+     ],
+     [
+      9908,
+      3007
+     ]
+    ],
+    "only_in_b": [],
+    "order_only_differences": [],
+    "pairs_a": 676,
+    "pairs_b": 674,
+    "sequence_identical": 674
+   },
+   "wenzi_identical_scenes": 165,
+   "wenzi_only_in_2804": [],
+   "wenzi_scenes_2804": 165,
+   "wenzi_scenes_4897": 165
+  },
+  "npcposdata_vs_minimapnpcpos": {
+   "common_pairs": 664,
+   "content_difference_detail": [
+    {
+     "minimapnpcpos": [
+      [
+       "粘土礦老闆",
+       null,
+       4137,
+       1,
+       [
+        65,
+        59
+       ],
+       0,
+       null,
+       255,
+       "ntklb",
+       0,
+       0,
+       null,
+       null,
+       null
+      ]
+     ],
+     "npcposdata": [
+      [
+       "粘土礦老闆",
+       null,
+       4137,
+       1,
+       [
+        65,
+        59
+       ],
+       0,
+       null,
+       255,
+       "ntklb",
+       0,
+       0,
+       null,
+       null,
+       null
+      ],
+      [
+       "粘土礦老闆",
+       null,
+       4137,
+       1,
+       [
+        65,
+        59
+       ],
+       0,
+       null,
+       255,
+       "ntklb",
+       0,
+       0,
+       null,
+       null,
+       null
+      ]
+     ],
+     "pair": [
+      1010,
+      4137
+     ]
+    },
+    {
+     "minimapnpcpos": [
+      [
+       "陣營功績",
+       "鎮魔將軍",
+       5011,
+       1,
+       [
+        125,
+        49
+       ],
+       0,
+       null,
+       255,
+       "zyrw",
+       50,
+       45,
+       "鎮魔將軍",
+       null,
+       null
+      ]
+     ],
+     "npcposdata": [
+      [
+       "陣營任務",
+       "鎮魔將軍",
+       5011,
+       1,
+       [
+        125,
+        49
+       ],
+       0,
+       null,
+       255,
+       "zyrw",
+       50,
+       45,
+       "鎮魔將軍",
+       null,
+       null
+      ]
+     ],
+     "pair": [
+      1014,
+      5011
+     ]
+    },
+    {
+     "minimapnpcpos": [
+      [
+       "藏夜翎",
+       null,
+       4313,
+       0,
+       [
+        128,
+        80
+       ],
+       0,
+       null,
+       255,
+       "cyl",
+       0,
+       0,
+       null,
+       null,
+       null
+      ]
+     ],
+     "npcposdata": [
+      [
+       "藏夜翎",
+       null,
+       4313,
+       0,
+       [
+        131,
+        77
+       ],
+       0,
+       null,
+       255,
+       "cyl",
+       0,
+       0,
+       null,
+       null,
+       null
+      ]
+     ],
+     "pair": [
+      1018,
+      4313
+     ]
+    },
+    {
+     "minimapnpcpos": [
+      [
+       "狸花貓",
+       null,
+       4326,
+       0,
+       [
+        40,
+        52
+       ],
+       0,
+       null,
+       255,
+       "lhm",
+       0,
+       0,
+       null,
+       null,
+       null
+      ]
+     ],
+     "npcposdata": [
+      [
+       "狸花貓",
+       null,
+       4326,
+       0,
+       [
+        46,
+        59
+       ],
+       0,
+       null,
+       255,
+       "lhm",
+       0,
+       0,
+       null,
+       null,
+       null
+      ]
+     ],
+     "pair": [
+      1018,
+      4326
+     ]
+    },
+    {
+     "minimapnpcpos": [
+      [
+       "靈風塔守護人",
+       null,
+       4484,
+       1,
+       [
+        135,
+        18
+       ],
+       0,
+       null,
+       255,
+       "lftshr",
+       0,
+       0,
+       null,
+       null,
+       null
+      ]
+     ],
+     "npcposdata": [
+      [
+       "靈風塔守護人",
+       null,
+       4484,
+       1,
+       [
+        135,
+        23
+       ],
+       0,
+       null,
+       255,
+       "lftshr",
+       0,
+       0,
+       null,
+       null,
+       null
+      ]
+     ],
+     "pair": [
+      1018,
+      4484
+     ]
+    },
+    {
+     "minimapnpcpos": [
+      [
+       "老漁夫",
+       null,
+       4975,
+       1,
+       [
+        81,
+        22
+       ],
+       0,
+       null,
+       255,
+       "lyf",
+       0,
+       0,
+       null,
+       null,
+       null
+      ]
+     ],
+     "npcposdata": [
+      [
+       "老漁夫",
+       null,
+       4975,
+       1,
+       [
+        83,
+        29
+       ],
+       0,
+       null,
+       255,
+       "lyf",
+       0,
+       0,
+       null,
+       null,
+       null
+      ]
+     ],
+     "pair": [
+      1018,
+      4975
+     ]
+    },
+    {
+     "minimapnpcpos": [
+      [
+       "倉庫",
+       null,
+       4152,
+       1,
+       [
+        107,
+        80
+       ],
+       0,
+       null,
+       255,
+       "ck",
+       0,
+       0,
+       "倉庫管理員",
+       null,
+       null
+      ]
+     ],
+     "npcposdata": [
+      [
+       "倉庫",
+       null,
+       4152,
+       1,
+       [
+        107,
+        80
+       ],
+       0,
+       null,
+       255,
+       "ck",
+       0,
+       0,
+       null,
+       null,
+       null
+      ]
+     ],
+     "pair": [
+      1025,
+      4152
+     ]
+    },
+    {
+     "minimapnpcpos": [
+      [
+       "倉庫",
+       null,
+       4152,
+       1,
+       [
+        101,
+        27
+       ],
+       0,
+       null,
+       255,
+       "c",
+       0,
+       0,
+       "倉庫管理員",
+       null,
+       null
+      ]
+     ],
+     "npcposdata": [
+      [
+       "倉庫",
+       null,
+       4152,
+       1,
+       [
+        101,
+        27
+       ],
+       0,
+       null,
+       255,
+       "c",
+       0,
+       0,
+       null,
+       null,
+       null
+      ]
+     ],
+     "pair": [
+      1157,
+      4152
+     ]
+    }
+   ],
+   "content_differences": [
+    [
+     1010,
+     4137
+    ],
+    [
+     1014,
+     5011
+    ],
+    [
+     1018,
+     4313
+    ],
+    [
+     1018,
+     4326
+    ],
+    [
+     1018,
+     4484
+    ],
+    [
+     1018,
+     4975
+    ],
+    [
+     1025,
+     4152
+    ],
+    [
+     1157,
+     4152
+    ]
+   ],
+   "multiset_identical": 656,
+   "only_in_a": [
+    [
+     1179,
+     5020
+    ]
+   ],
+   "only_in_b": [
+    [
+     1023,
+     2013
+    ],
+    [
+     1055,
+     5025
+    ],
+    [
+     1179,
+     5019
+    ],
+    [
+     1327,
+     2014
+    ],
+    [
+     1327,
+     5026
+    ],
+    [
+     1327,
+     5027
+    ],
+    [
+     1327,
+     5028
+    ],
+    [
+     1327,
+     5030
+    ],
+    [
+     9515,
+     1002
+    ],
+    [
+     9907,
+     1003
+    ],
+    [
+     9907,
+     1005
+    ],
+    [
+     9908,
+     3007
+    ]
+   ],
+   "order_only_differences": [
+    [
+     1084,
+     4840
+    ],
+    [
+     1085,
+     4840
+    ],
+    [
+     1086,
+     4840
+    ],
+    [
+     1087,
+     4840
+    ],
+    [
+     2202,
+     4425
+    ],
+    [
+     9050,
+     4425
+    ],
+    [
+     9052,
+     4425
+    ],
+    [
+     9199,
+     4425
+    ],
+    [
+     9444,
+     4425
+    ]
+   ],
+   "pairs_a": 665,
+   "pairs_b": 676,
+   "sequence_identical": 647
+  }
+ },
+ "entry_1870": {
+  "bounds_used": [
+   276,
+   336,
+   553,
+   766
+  ],
+  "co_names": [
+   "npcposdata",
+   "minimapnpcpos",
+   "D~ChhiIha^ehcEeNpc",
+   "DelShenHeNpc",
+   "Fix"
+  ],
+  "note": "Framing NOT repaired (two clean placements for slot 0 could not be discriminated). The corrupted co_names entry is displayed as evidence; Fix() binding semantics must not be quoted. Stays unresolved."
+ },
+ "expected_co_filename": {
+  "1301": "script\\data\\mapdata.py",
+  "1799": "script\\data\\npcname2realnamedata.py",
+  "1870": "script\\taiwan\\npcpos_fix.py",
+  "2601": "script\\data\\npcposdata.py",
+  "2804": "script\\data\\minimapnpcpos.py",
+  "400": "script\\data\\sceneid2name.py",
+  "4897": "script\\data\\minimapnpcpos_test.py"
+ },
+ "inputs": {
+  "archive": {
+   "expected_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+   "matches_expected": true,
+   "path": "data/script.fls",
+   "sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72"
+  },
+  "key_database": {
+   "expected_sha256": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+   "matches_expected": true,
+   "path": "tools/decompiler/script_fls_keys.json",
+   "sha256": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+  },
+  "shared_decoder": {
+   "path": "tools/decompiler/batch_decompile.py",
+   "sha256": "7490dbab6fe70dc65b905338195bd275697afb15be51bae4ef9f67a14b54551d",
+   "used_read_only_for": [
+    "PY25_MAP opcode table",
+    "XTABS xor tables"
+   ]
+  }
+ },
+ "limitations": [
+  "candidate framings are static reproductions; the native client loader was never run",
+  "no recovered script executed; no exec/eval/marshal.loads; read-only on client files",
+  "LOAD_NAME support is restricted to the exact placeholder name None",
+  "no ID or name guessed; zero-npcid and duplicate records retained; no table merging"
+ ],
+ "npc_structure": {
+  "minimapnpcpos_2804": {
+   "distinct_pairs": 676,
+   "distinct_shapes": 381,
+   "field7_equals_255_in_all": true,
+   "field_count_histogram": {
+    "14": 1344
+   },
+   "multiplicity_histogram": {
+    "1": 665,
+    "2": 2,
+    "4": 5,
+    "6": 4
+   },
+   "records": 1344,
+   "records_with_npcid_zero": 631,
+   "records_without_xy_position": 69
+  },
+  "npcposdata_2601": {
+   "distinct_pairs": 665,
+   "distinct_shapes": 378,
+   "field7_equals_255_in_all": true,
+   "field_count_histogram": {
+    "14": 1335
+   },
+   "multiplicity_histogram": {
+    "1": 653,
+    "2": 3,
+    "4": 5,
+    "6": 4
+   },
+   "records": 1335,
+   "records_with_npcid_zero": 632,
+   "records_without_xy_position": 69
+  }
+ },
+ "parameter_comparisons": {
+  "1301": {
+   "delivered_solver": {
+    "before_bounds": [
+     1615,
+     3239,
+     4884,
+     6553
+    ],
+    "before_label": "delivered_solver",
+    "before_status": "decoded",
+    "co_name": {
+     "before": "<module>",
+     "candidate": "<module>"
+    },
+    "table_changes": {
+     "DATA": {
+      "added_keys": [
+       {
+        "after": "{\"h\": 1220, \"name\": \"加洛法師師道殿\", \"w\": 1588}",
+        "key": 1071
+       }
+      ],
+      "changed_keys": [],
+      "removed_keys": [
+       {
+        "before": "{\"h\": 1220, \"name\": \"加洛法師師道殿\", \"w\": 1588}",
+        "key": "兔坦卡門陵墓"
+       }
+      ]
+     }
+    }
+   },
+   "saved": {
+    "before_bounds": [
+     1612,
+     3237,
+     4884,
+     6553
+    ],
+    "before_label": "saved",
+    "before_status": "decoded",
+    "co_name": {
+     "before": "<module>",
+     "candidate": "<module>"
+    },
+    "table_changes": {
+     "DATA": "only under candidate parameters"
+    }
+   }
+  },
+  "1799": {
+   "saved": {
+    "before_bounds": [
+     528,
+     1096,
+     1655,
+     2207
+    ],
+    "before_label": "saved",
+    "before_status": "decoded",
+    "co_name": {
+     "before": {
+      "invalid_cp950_hex": "3c6d6f6475dad388"
+     },
+     "candidate": "<module>"
+    },
+    "reference_changes": [
+     {
+      "before": {
+       "invalid_cp950_hex": "a4b8c646b9dc3acf"
+      },
+      "candidate": "元靈遊仙",
+      "const_index": 31
+     },
+     {
+      "before": {
+       "invalid_cp950_hex": "a4d1bfefa8197c1a"
+      },
+      "candidate": "天選使者",
+      "const_index": 74
+     }
+    ],
+    "table_changes": {
+     "DATA": {
+      "added_keys": [
+       {
+        "after": "\"明威\"",
+        "key": "天選使者"
+       }
+      ],
+      "changed_keys": [
+       {
+        "after": "\"元靈遊仙\"",
+        "before": "{\"invalid_cp950_hex\": \"a4b8c646b9dc3acf\"}",
+        "key": "個人心法教師"
+       }
+      ],
+      "removed_keys": [
+       {
+        "before": "\"明威\"",
+        "key": {
+         "invalid_cp950_hex": "a4d1bfefa8197c1a"
+        }
+       }
+      ]
+     }
+    }
+   }
+  },
+  "2601": {
+   "saved": {
+    "before_bounds": [
+     18821,
+     37733,
+     56546,
+     75375
+    ],
+    "before_label": "saved",
+    "before_status": "decoded",
+    "co_name": {
+     "before": "<module>",
+     "candidate": "<module>"
+    },
+    "reference_changes": [
+     {
+      "before": 4810,
+      "candidate": 4764,
+      "const_index": 179
+     }
+    ],
+    "table_changes": {
+     "DATA": "only under candidate parameters"
+    }
+   },
+   "saved_slot3_only": {
+    "before_bounds": [
+     18827,
+     37735,
+     56546,
+     75375
+    ],
+    "before_label": "saved_slot3_only",
+    "before_status": "decoded",
+    "co_name": {
+     "before": "<module>",
+     "candidate": "<module>"
+    },
+    "reference_changes": [
+     {
+      "before": 4810,
+      "candidate": 4764,
+      "const_index": 179
+     }
+    ],
+    "table_changes": {
+     "DATA": {
+      "added_keys": [],
+      "changed_keys": [
+       {
+        "after": "[[\"武器店\", null, 1009, 2, [74, 97], 0, null, 255, \"wqdlb\", 0, 0, null, null, null], [\"裁縫店\", null, 1010, 2, [81, 61], 0, null, 255, \"cfdlb\", 0, 0, null, null, null…",
+        "before": "[[\"武器店\", null, 1009, 2, [74, 97], 0, null, 255, \"wqdlb\", 0, 0, null, null, null], [\"裁縫店\", null, 1010, 2, [81, 61], 0, null, 255, \"cfdlb\", 0, 0, null, null, null…",
+        "key": 1003
+       }
+      ],
+      "removed_keys": []
+     }
+    }
+   }
+  },
+  "2804": {
+   "saved": {
+    "before_bounds": [
+     26695,
+     53365,
+     79988,
+     106627
+    ],
+    "before_label": "saved",
+    "before_status": "decoded",
+    "co_name": {
+     "before": "<module>",
+     "candidate": "<module>"
+    },
+    "reference_changes": [
+     {
+      "before": "蓮７導姒",
+      "candidate": "打漁老張",
+      "const_index": 544
+     }
+    ],
+    "table_changes": {
+     "DATA_POS": {
+      "added_keys": [],
+      "changed_keys": [
+       {
+        "after": "{\"琉璃港\": [[\"裁縫店\", null, 1018, 2, [87, 58], 0, null, 255, \"cfdlb\", 0, 0, null, null, null], [\"倉庫\", null, 4152, 1, [91, 101], 0, null, 255, \"ck\", 0, 0, null, null,…",
+        "before": "{\"琉璃港\": [[\"裁縫店\", null, 1018, 2, [87, 58], 0, null, 255, \"cfdlb\", 0, 0, null, null, null], [\"倉庫\", null, 4152, 1, [91, 101], 0, null, 255, \"ck\", 0, 0, null, null,…",
+        "key": 1020
+       }
+      ],
+      "removed_keys": []
+     },
+     "DATA_WENZI": {
+      "added_keys": [],
+      "changed_keys": [
+       {
+        "after": "{\"[13, 4]\": {\"desc\": \"\", \"jumpPos\": [13, 4], \"name\": \"芳草鎮\", \"npcID\": null, \"npcName\": null, \"servergrade\": 0}, \"[28, 108]\": {\"desc\": \"通往各國首都\", \"jumpPos\": [25, 1…",
+        "before": "{\"[13, 4]\": {\"desc\": \"\", \"jumpPos\": [13, 4], \"name\": \"芳草鎮\", \"npcID\": null, \"npcName\": null, \"servergrade\": 0}, \"[28, 108]\": {\"desc\": \"通往各國首都\", \"jumpPos\": [25, 1…",
+        "key": 1022
+       }
+      ],
+      "removed_keys": []
+     }
+    }
+   },
+   "saved_slot2_only": {
+    "before_bounds": [
+     26695,
+     53365,
+     79988,
+     106619
+    ],
+    "before_label": "saved_slot2_only",
+    "before_status": "decoded",
+    "co_name": {
+     "before": "<module>",
+     "candidate": "<module>"
+    },
+    "reference_changes": [
+     {
+      "before": "打漁老張",
+      "candidate": "打漁老張",
+      "const_index": 544
+     }
+    ],
+    "table_changes": {
+     "DATA_WENZI": {
+      "added_keys": [],
+      "changed_keys": [
+       {
+        "after": "{\"[13, 4]\": {\"desc\": \"\", \"jumpPos\": [13, 4], \"name\": \"芳草鎮\", \"npcID\": null, \"npcName\": null, \"servergrade\": 0}, \"[28, 108]\": {\"desc\": \"通往各國首都\", \"jumpPos\": [25, 1…",
+        "before": "{\"[13, 4]\": {\"desc\": \"\", \"jumpPos\": [13, 4], \"name\": \"芳草鎮\", \"npcID\": null, \"npcName\": null, \"servergrade\": 0}, \"[28, 108]\": {\"desc\": \"通往各國首都\", \"jumpPos\": [25, 1…",
+        "key": 1022
+       }
+      ],
+      "removed_keys": []
+     }
+    }
+   },
+   "saved_slot3_only": {
+    "before_bounds": [
+     26695,
+     53365,
+     79989,
+     106627
+    ],
+    "before_label": "saved_slot3_only",
+    "before_status": "decoded",
+    "co_name": {
+     "before": "<module>",
+     "candidate": "<module>"
+    },
+    "reference_changes": [
+     {
+      "before": "蓮７導姒",
+      "candidate": "打漁老張",
+      "const_index": 544
+     }
+    ],
+    "table_changes": {
+     "DATA_POS": {
+      "added_keys": [],
+      "changed_keys": [
+       {
+        "after": "{\"琉璃港\": [[\"裁縫店\", null, 1018, 2, [87, 58], 0, null, 255, \"cfdlb\", 0, 0, null, null, null], [\"倉庫\", null, 4152, 1, [91, 101], 0, null, 255, \"ck\", 0, 0, null, null,…",
+        "before": "{\"琉璃港\": [[\"裁縫店\", null, 1018, 2, [87, 58], 0, null, 255, \"cfdlb\", 0, 0, null, null, null], [\"倉庫\", null, 4152, 1, [91, 101], 0, null, 255, \"ck\", 0, 0, null, null,…",
+        "key": 1020
+       }
+      ],
+      "removed_keys": []
+     }
+    }
+   }
+  },
+  "4897": {
+   "saved": {
+    "before_bounds": [
+     26677,
+     53319,
+     79959,
+     106579
+    ],
+    "before_label": "saved",
+    "before_status": "decoded",
+    "co_name": {
+     "before": "<module>",
+     "candidate": "<module>"
+    },
+    "table_changes": {
+     "DATA_WENZI": "only under candidate parameters"
+    }
+   }
+  }
+ },
+ "parameter_sets": {
+  "1301": {
+   "candidate": [
+    1616,
+    3239,
+    4884,
+    6553
+   ],
+   "delivered_solver": [
+    1615,
+    3239,
+    4884,
+    6553
+   ],
+   "saved": [
+    1612,
+    3237,
+    4884,
+    6553
+   ]
+  },
+  "1799": {
+   "candidate": [
+    528,
+    1093,
+    1652,
+    2202
+   ],
+   "saved": [
+    528,
+    1096,
+    1655,
+    2207
+   ]
+  },
+  "1870": {
+   "saved": [
+    276,
+    336,
+    553,
+    766
+   ]
+  },
+  "2601": {
+   "candidate": [
+    18827,
+    37735,
+    56546,
+    75376
+   ],
+   "saved": [
+    18821,
+    37733,
+    56546,
+    75375
+   ],
+   "saved_slot3_only": [
+    18827,
+    37735,
+    56546,
+    75375
+   ]
+  },
+  "2804": {
+   "candidate": [
+    26695,
+    53365,
+    79989,
+    106619
+   ],
+   "saved": [
+    26695,
+    53365,
+    79988,
+    106627
+   ],
+   "saved_slot2_only": [
+    26695,
+    53365,
+    79988,
+    106619
+   ],
+   "saved_slot3_only": [
+    26695,
+    53365,
+    79989,
+    106627
+   ]
+  },
+  "400": {
+   "saved": [
+    961,
+    2001,
+    3063,
+    4125
+   ]
+  },
+  "4897": {
+   "candidate": [
+    26677,
+    53319,
+    79961,
+    106579
+   ],
+   "saved": [
+    26677,
+    53319,
+    79959,
+    106579
+   ]
+  }
+ },
+ "runtime_mutation_static_evidence": {
+  "DelShenHeNpc": {
+   "first_constants": [
+    -1,
+    0
+   ],
+   "names": [
+    "IsNeedDelShenHeNpc",
+    "IsShenHe",
+    "append",
+    "hero"
+   ],
+   "reading": "filters the returned record lists when hero.IsShenHe()"
+  },
+  "GetData": {
+   "first_constants": [
+    -1,
+    1054,
+    1055,
+    0
+   ],
+   "names": [
+    "DATA_POS",
+    "DelShenHeNpc",
+    "IsFreshManServer",
+    "has_key",
+    "misc",
+    "values"
+   ],
+   "reading": "rewrites map 1054 -> 1055 on freshman servers, then filters via DelShenHeNpc"
+  },
+  "GetMapNpcNames": {
+   "first_constants": [
+    -1,
+    1054,
+    1055,
+    0
+   ],
+   "names": [
+    "DATA_POS",
+    "GetRealName",
+    "IsNeedDelShenHeNpc",
+    "append",
+    "get",
+    "npcname2realnamedata",
+    "values"
+   ],
+   "reading": "applies the same 1054 -> 1055 freshman-server rewrite"
+  },
+  "InitTestData": {
+   "first_constants": [
+    1054,
+    0,
+    -1,
+    "戰隊使者",
+    33,
+    "無雙",
+    5025,
+    1,
+    30,
+    200,
+    255,
+    "z",
+    [
+     30,
+     200
+    ]
+   ],
+   "names": [
+    "DATA_POS",
+    "None",
+    "enumerate",
+    "insert",
+    "values"
+   ],
+   "reading": "inserts a 14-field record (npcid 5025, 戰隊使者) into DATA_POS[1054]"
+  },
+  "_scope": "Static evidence only: these are nested code objects of entry 2804. Whether and when they run is client behaviour; staged CSVs are the pre-mutation state."
+ },
+ "semantics_recheck": {
+  "coordinate_scale_probe": {
+   "median_map_w_over_max_npc_x": 25.8,
+   "p10": 22.0,
+   "scenes_compared": 50,
+   "status": "no_single_scale_factor_coordinates_live_in_separate_frames"
+  },
+  "npcid_reuse": {
+   "minimapnpcpos": {
+    "distinct_npcids": 343,
+    "examples": [
+     1001,
+     1002,
+     1003,
+     1004,
+     1005,
+     1006,
+     1007,
+     1008,
+     1009,
+     1010,
+     1011,
+     1015
+    ],
+    "npcids_in_multiple_scenes": 107
+   },
+   "npcposdata": {
+    "distinct_npcids": 336,
+    "examples": [
+     1001,
+     1002,
+     1003,
+     1004,
+     1005,
+     1006,
+     1007,
+     1008,
+     1009,
+     1010,
+     1011,
+     1015
+    ],
+    "npcids_in_multiple_scenes": 106
+   }
+  },
+  "sceneid2name_second_column": {
+   "of_those_name_agreements": 40,
+   "related_id_that_is_also_a_catalog_key": 43,
+   "related_values": {
+    "1061": 2302,
+    "1062": 2302,
+    "1063": 2302,
+    "1064": 2302,
+    "1065": 2302,
+    "1066": 2302,
+    "1067": 2302,
+    "1068": 2302,
+    "1069": 2302,
+    "1070": 2302,
+    "1071": 2302,
+    "1072": 2302,
+    "1073": 1041,
+    "1074": 1042,
+    "1075": 1047,
+    "1301": 2121,
+    "1303": 2122
+   },
+   "rows_where_related_id_differs_from_key": 17,
+   "status": "unresolved_meaning_not_established",
+   "those_keys": [
+    1061,
+    1062,
+    1063,
+    1064,
+    1065,
+    1066,
+    1067,
+    1068,
+    1069,
+    1070,
+    1071,
+    1072,
+    1073,
+    1074,
+    1075,
+    1301,
+    1303
+   ]
+  },
+  "size_pair_comparison": {
+   "axis_transposed": [
+    1004,
+    1008,
+    1012,
+    1014,
+    1018,
+    1022,
+    1023,
+    1026,
+    1027,
+    1028,
+    1029,
+    1032,
+    1033,
+    1034,
+    1035,
+    1036,
+    1039,
+    1040,
+    1041,
+    1043,
+    1044,
+    1045,
+    1051,
+    1052,
+    1053,
+    1073,
+    1074,
+    1075,
+    1157,
+    1158,
+    1159,
+    1176,
+    1177,
+    1194,
+    1301,
+    1303,
+    1313,
+    1323
+   ],
+   "different_values": [
+    1001,
+    1005,
+    1007,
+    1013,
+    1019,
+    1025,
+    1054,
+    1061,
+    1062,
+    1063,
+    1064,
+    1065,
+    1066,
+    1067,
+    1068,
+    1069,
+    1070,
+    1071,
+    1072
+   ],
+   "identical": 0,
+   "status": "tables_do_not_share_a_size_semantics_keep_both_columns"
+  }
+ },
+ "tool": {
+  "name": "server/tools/map_npc_reproduction.py",
+  "status": "candidates_reproduced_statically_not_native_loader_verified",
+  "version": "1.0.0"
+ },
+ "verifications": {
+  "1301": {
+   "candidate": {
+    "bounds": [
+     1616,
+     3239,
+     4884,
+     6553
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [],
+      "ok": true
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "",
+      "ok": true
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 5,
+      "total": 5
+     },
+     "target_literals_evaluate": {
+      "failures": [],
+      "ok": true
+     },
+     "witness:catalog": {
+      "detail": "ok",
+      "ok": true
+     }
+    },
+    "entry": 1301,
+    "pass": true,
+    "witness_failures": []
+   },
+   "delivered_solver": {
+    "bounds": [
+     1615,
+     3239,
+     4884,
+     6553
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [],
+      "ok": true
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "",
+      "ok": true
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 5,
+      "total": 5
+     },
+     "target_literals_evaluate": {
+      "failures": [],
+      "ok": true
+     },
+     "witness:catalog": {
+      "detail": "KeyError: 1071",
+      "ok": false
+     }
+    },
+    "entry": 1301,
+    "pass": false,
+    "witness_failures": [
+     "catalog"
+    ]
+   },
+   "saved": {
+    "bounds": [
+     1612,
+     3237,
+     4884,
+     6553
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [],
+      "ok": true
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "unmapped custom opcode 0x7c at 1591",
+      "ok": false
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 5,
+      "total": 5
+     },
+     "target_literals_evaluate": {
+      "failures": [
+       {
+        "name": "DATA",
+        "reason": "unsupported opcode 0x23 (std 24) at 1590"
+       }
+      ],
+      "ok": false
+     },
+     "witness:catalog": {
+      "detail": "KeyError: b'DATA'",
+      "ok": false
+     }
+    },
+    "entry": 1301,
+    "pass": false,
+    "witness_failures": [
+     "catalog"
+    ]
+   }
+  },
+  "1799": {
+   "candidate": {
+    "bounds": [
+     528,
+     1093,
+     1652,
+     2202
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [],
+      "ok": true
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "",
+      "ok": true
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 1,
+      "total": 1
+     },
+     "target_literals_evaluate": {
+      "failures": [],
+      "ok": true
+     },
+     "witness:alias_rows": {
+      "detail": "ok",
+      "ok": true
+     }
+    },
+    "entry": 1799,
+    "pass": true,
+    "witness_failures": []
+   },
+   "saved": {
+    "bounds": [
+     528,
+     1096,
+     1655,
+     2207
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [
+       {
+        "byte_end": 8,
+        "byte_start": 7,
+        "path": "DATA[b'\\xad\\xd3\\xa4H\\xa4\\xdf\\xaak\\xb1\\xd0\\xaev']",
+        "raw_hex": "a4b8c646b9dc3acf"
+       },
+       {
+        "byte_end": 5,
+        "byte_start": 4,
+        "path": "DATA.key(b'\\xa4\\xd1\\xbf\\xef\\xa8\\x19|\\x1a')",
+        "raw_hex": "a4d1bfefa8197c1a"
+       }
+      ],
+      "ok": false
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "",
+      "ok": true
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 1,
+      "total": 1
+     },
+     "target_literals_evaluate": {
+      "failures": [],
+      "ok": true
+     },
+     "witness:alias_rows": {
+      "detail": "個人心法教師 does not map to 元靈遊仙; 天選使者 does not map to 明威; co_name is not <module>; invalid cp950 constants remain",
+      "ok": false
+     }
+    },
+    "entry": 1799,
+    "pass": false,
+    "witness_failures": [
+     "alias_rows"
+    ]
+   }
+  },
+  "1870": {
+   "saved": {
+    "bounds": [
+     276,
+     336,
+     553,
+     766
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [],
+      "ok": true
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "",
+      "ok": true
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 3,
+      "total": 3
+     },
+     "target_literals_evaluate": {
+      "failures": [],
+      "ok": true
+     }
+    },
+    "entry": 1870,
+    "pass": true,
+    "witness_failures": []
+   }
+  },
+  "2601": {
+   "candidate": {
+    "bounds": [
+     18827,
+     37735,
+     56546,
+     75376
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [],
+      "ok": true
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "",
+      "ok": true
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 8,
+      "total": 8
+     },
+     "target_literals_evaluate": {
+      "failures": [],
+      "ok": true
+     },
+     "witness:structure_and_fisherman": {
+      "detail": "ok",
+      "ok": true
+     }
+    },
+    "entry": 2601,
+    "pass": true,
+    "witness_failures": []
+   },
+   "saved": {
+    "bounds": [
+     18821,
+     37733,
+     56546,
+     75375
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [],
+      "ok": true
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "unmapped custom opcode 0xf7 at 18799",
+      "ok": false
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 8,
+      "total": 8
+     },
+     "target_literals_evaluate": {
+      "failures": [
+       {
+        "name": "DATA",
+        "reason": "unsupported opcode 0xf7 (std None) at 18799"
+       }
+      ],
+      "ok": false
+     },
+     "witness:structure_and_fisherman": {
+      "detail": "KeyError: b'DATA'",
+      "ok": false
+     }
+    },
+    "entry": 2601,
+    "pass": false,
+    "witness_failures": [
+     "structure_and_fisherman"
+    ]
+   },
+   "saved_slot3_only": {
+    "bounds": [
+     18827,
+     37735,
+     56546,
+     75375
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [],
+      "ok": true
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "",
+      "ok": true
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 8,
+      "total": 8
+     },
+     "target_literals_evaluate": {
+      "failures": [],
+      "ok": true
+     },
+     "witness:structure_and_fisherman": {
+      "detail": "谷雨鎮商人 npcid 4764 not attested (saw [4752, 4810])",
+      "ok": false
+     }
+    },
+    "entry": 2601,
+    "pass": false,
+    "witness_failures": [
+     "structure_and_fisherman"
+    ]
+   }
+  },
+  "2804": {
+   "candidate": {
+    "bounds": [
+     26695,
+     53365,
+     79989,
+     106619
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [],
+      "ok": true
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "",
+      "ok": true
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 11,
+      "total": 11
+     },
+     "target_literals_evaluate": {
+      "failures": [],
+      "ok": true
+     },
+     "witness:tables_and_constants": {
+      "detail": "ok",
+      "ok": true
+     }
+    },
+    "entry": 2804,
+    "pass": true,
+    "witness_failures": []
+   },
+   "saved": {
+    "bounds": [
+     26695,
+     53365,
+     79988,
+     106627
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [],
+      "ok": true
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "",
+      "ok": true
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 11,
+      "total": 11
+     },
+     "target_literals_evaluate": {
+      "failures": [],
+      "ok": true
+     },
+     "witness:tables_and_constants": {
+      "detail": "const[544] decodes to 蓮７導姒, not 打漁老張; WENZI[1022][(28,108)] npcID is 324, not 2008; DATA_POS does not attest 打漁老張 at (1020, 4229); DATA_WENZI disagrees with the 4897 witness sibling",
+      "ok": false
+     }
+    },
+    "entry": 2804,
+    "pass": false,
+    "witness_failures": [
+     "tables_and_constants"
+    ]
+   },
+   "saved_slot2_only": {
+    "bounds": [
+     26695,
+     53365,
+     79988,
+     106619
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [],
+      "ok": true
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "",
+      "ok": true
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 11,
+      "total": 11
+     },
+     "target_literals_evaluate": {
+      "failures": [],
+      "ok": true
+     },
+     "witness:tables_and_constants": {
+      "detail": "WENZI[1022][(28,108)] npcID is 324, not 2008; DATA_WENZI disagrees with the 4897 witness sibling",
+      "ok": false
+     }
+    },
+    "entry": 2804,
+    "pass": false,
+    "witness_failures": [
+     "tables_and_constants"
+    ]
+   },
+   "saved_slot3_only": {
+    "bounds": [
+     26695,
+     53365,
+     79989,
+     106627
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [],
+      "ok": true
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "",
+      "ok": true
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 11,
+      "total": 11
+     },
+     "target_literals_evaluate": {
+      "failures": [],
+      "ok": true
+     },
+     "witness:tables_and_constants": {
+      "detail": "const[544] decodes to 蓮７導姒, not 打漁老張; DATA_POS does not attest 打漁老張 at (1020, 4229)",
+      "ok": false
+     }
+    },
+    "entry": 2804,
+    "pass": false,
+    "witness_failures": [
+     "tables_and_constants"
+    ]
+   }
+  },
+  "400": {
+   "saved": {
+    "bounds": [
+     961,
+     2001,
+     3063,
+     4125
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [],
+      "ok": true
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "",
+      "ok": true
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 3,
+      "total": 3
+     },
+     "target_literals_evaluate": {
+      "failures": [],
+      "ok": true
+     },
+     "witness:minimap_table": {
+      "detail": "ok",
+      "ok": true
+     }
+    },
+    "entry": 400,
+    "pass": true,
+    "witness_failures": []
+   }
+  },
+  "4897": {
+   "candidate": {
+    "bounds": [
+     26677,
+     53319,
+     79961,
+     106579
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [],
+      "ok": true
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "",
+      "ok": true
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 11,
+      "total": 11
+     },
+     "target_literals_evaluate": {
+      "failures": [],
+      "ok": true
+     },
+     "witness:test_sibling": {
+      "detail": "ok",
+      "ok": true
+     }
+    },
+    "entry": 4897,
+    "pass": true,
+    "witness_failures": []
+   },
+   "saved": {
+    "bounds": [
+     26677,
+     53319,
+     79959,
+     106579
+    ],
+    "checks": {
+     "cp950_clean": {
+      "errors": [],
+      "ok": true
+     },
+     "marshal_walk_consumed": {
+      "ok": true
+     },
+     "module_bytecode": {
+      "detail": "",
+      "ok": true
+     },
+     "nested_bytecode": {
+      "first_failure": null,
+      "ok": true,
+      "ok_count": 11,
+      "total": 11
+     },
+     "target_literals_evaluate": {
+      "failures": [
+       {
+        "name": "DATA_WENZI",
+        "reason": "unsupported opcode 0x46 (std 63) at 79937"
+       }
+      ],
+      "ok": false
+     },
+     "witness:test_sibling": {
+      "detail": "KeyError: b'DATA_WENZI'",
+      "ok": false
+     }
+    },
+    "entry": 4897,
+    "pass": false,
+    "witness_failures": [
+     "test_sibling"
+    ]
+   }
+  }
+ }
+}
