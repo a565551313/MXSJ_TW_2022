@@ -1,0 +1,49 @@
+entry=244 (newfurnituredata.py) — structural/no-solver audit
+solver: disabled; raw opcode stats use Archive.decode; the bounded DATA assignment uses an allowlisted non-executing literal reader
+shared public whole-module reader and review/export inputs are unchanged
+native_loader_confirmed=false; no files under server/game_data are written
+
+saved parameters: raw root co_code=[22,47423) len=47401; Duoyi instructions=22743; unmapped=2361 first=[18283, 18286, 18289, 18297, 18298, 18311, 18321, 18325] ...
+previous candidate (B0=18282): raw root co_code=[22,47423) len=47401; Duoyi instructions=25961; unmapped=2 first=[18282, 18288]
+derived range is per decoded marshal structure; co_consts/co_lnotab are not opcode input
+
+bounded first-boundary scan B0=[18280,18298) (candidate rows are not native verification):
+  18280: opcodes=25961 unmapped=2 positions=[18282, 18288]; boundary=operand byte 1 of instruction at 18279; rejected: ValueError: 2 unmapped code-only opcode(s)
+  18281: opcodes=25961 unmapped=2 positions=[18282, 18288]; boundary=operand byte 2 of instruction at 18279; rejected: ValueError: 2 unmapped code-only opcode(s)
+  18282: opcodes=25961 unmapped=2 positions=[18282, 18288]; boundary=instruction start at 18282; rejected: ValueError: 2 unmapped code-only opcode(s)
+  18283: opcodes=25961 unmapped=3 positions=[18283, 18286, 18289]; boundary=instruction start at 18283; rejected: ValueError: 3 unmapped code-only opcode(s)
+  18284: opcodes=25961 unmapped=2 positions=[18286, 18289]; boundary=operand byte 1 of instruction at 18283; rejected: ValueError: 2 unmapped code-only opcode(s)
+  18285: opcodes=25961 unmapped=2 positions=[18286, 18289]; boundary=operand byte 2 of instruction at 18283; rejected: ValueError: 2 unmapped code-only opcode(s)
+  18286: opcodes=25961 unmapped=2 positions=[18286, 18289]; boundary=instruction start at 18286; rejected: ValueError: 2 unmapped code-only opcode(s)
+  18287: opcodes=25963 unmapped=2 positions=[18287, 18290]; boundary=instruction start at 18287; rejected: ValueError: 2 unmapped code-only opcode(s)
+  18288: opcodes=25963 unmapped=1 positions=[18288]; boundary=instruction start at 18288; rejected: ValueError: 1 unmapped code-only opcode(s)
+  18289: opcodes=25963 unmapped=0 positions=[]; boundary=operand byte 1 of instruction at 18288; target DATA assignment audited
+  18290: opcodes=25963 unmapped=0 positions=[]; boundary=operand byte 2 of instruction at 18288; target DATA assignment audited
+  18291: opcodes=25963 unmapped=0 positions=[]; boundary=instruction start at 18291; rejected: ValueError: invalid constant index at 18266
+  18292: opcodes=25963 unmapped=1 positions=[18291]; boundary=operand byte 1 of instruction at 18291; rejected: ValueError: 1 unmapped code-only opcode(s)
+  18293: opcodes=25963 unmapped=1 positions=[18291]; boundary=operand byte 2 of instruction at 18291; rejected: ValueError: 1 unmapped code-only opcode(s)
+  18294: opcodes=25963 unmapped=1 positions=[18291]; boundary=instruction start at 18294; rejected: ValueError: 1 unmapped code-only opcode(s)
+  18295: opcodes=25961 unmapped=2 positions=[18291, 18294]; boundary=operand byte 1 of instruction at 18294; rejected: ValueError: 2 unmapped code-only opcode(s)
+  18296: opcodes=25961 unmapped=2 positions=[18291, 18294]; boundary=operand byte 2 of instruction at 18294; rejected: ValueError: 2 unmapped code-only opcode(s)
+  18297: opcodes=25961 unmapped=2 positions=[18291, 18294]; boundary=instruction start at 18297; rejected: ValueError: 2 unmapped code-only opcode(s)
+
+candidate B0=18289: bounds=[18289, 36511, 54797, 73114] keys=[233, 11, 132, 105, 246]
+  root co_code=[22,47423) len=47401; instruction_count=25963; unmapped=0
+  bounded DATA assignment: complete=True module_verified=False records=233 root_writes=233 root_overwrites=0 all_dict_overwrites=0 normalized_instructions=25963
+  DATA field audit: rows=233, fields/row=20, bytes=543, CP950 failures=0, controls=0
+  DATA byte-valued fields: desc=164, layer=140, name=233, pre=1, stablepath=5
+  full code-object co_consts byte audit (separate): code_objects=25, byte_constants=539, value-matched-to-DATA=403, additional-pool-values=136, pool issues=0
+  pool classification: DATA-value-matched vs additional pool values is a byte-value multiset comparison, not proof of constant-source provenance. co_code and co_lnotab are not co_consts and are not treated as DATA text.
+
+candidate B0=18290: bounds=[18290, 36511, 54797, 73114] keys=[233, 11, 132, 105, 246]
+  root co_code=[22,47423) len=47401; instruction_count=25963; unmapped=0
+  bounded DATA assignment: complete=True module_verified=False records=233 root_writes=233 root_overwrites=0 all_dict_overwrites=0 normalized_instructions=25963
+  DATA field audit: rows=233, fields/row=20, bytes=542, CP950 failures=0, controls=0
+  DATA byte-valued fields: desc=164, layer=140, name=233, stablepath=5
+  full code-object co_consts byte audit (separate): code_objects=25, byte_constants=539, value-matched-to-DATA=403, additional-pool-values=136, pool issues=0
+  pool classification: DATA-value-matched vs additional pool values is a byte-value multiset comparison, not proof of constant-source provenance. co_code and co_lnotab are not co_consts and are not treated as DATA text.
+
+surviving candidate DATA differences (not auto-resolved):
+  DATA[29251].pre: B0=18289 bytes(len=46, cp950='鶯歌燕舞，曼妙輕靈，令人心神舒暢#r【類型】傢具') <> B0=18290 153
+
+scope/limitations: the bounded scan is not exhaustive; only the DATA literal-assignment segment was evaluated, not the whole module; assignment completeness and CP950 success do not prove native-client behavior.

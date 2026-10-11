@@ -1,0 +1,14 @@
+failing desc found in decoded payload at dec offset 73070 len 119
+segment index: 4
+bytes before string: b'sw\x00\x00\x00'  (tag 's' len 119)
+
+--- decoded payload window [pos-16, pos+len+16] as hex ---
+bf4fc5a2aae1698900000073770000003a4a2732295f357e3ede5dfe5dfe5bf85bf83b38293e2ce525e32a445c672ef03bdf373c35252dd729312dd2b773b74ec4ad2372a169c3feabaca16aae78b07cb8cbb9a2a147b4bac65bb4d3aaab2372a169aaabab7eb5a5afc5a16a312372a169bb73a740bbdda844a16a3730afc5a5a9a64ba4a7b34e7306000000c3f6a473a5d56987000000
+
+--- same window under every key (only bytes whose segment matches) ---
+
+--- raw (still-encrypted) bytes of the same window ---
+  payload[73054:73205] = d626accbc38800e06969691a1e696969ccbcd1c4dfa9c388c828ab08ab08ad0ead0ecdcedfc8da13d315dcb2aa91d806cd29c1cac3d3db21dfc7db24418541b8325bd584579f35085d5a579c588e468a4e3d4f5457b1424c30ad42255c5dd584579f5c5d5d8843535933579cc7d584579f4d8551b64d2b5eb2579cc1c65933535f50bd525145b885f0f6f6f63500528553239f71f6f6f6
+
+--- strict CP950 decode attempts of the raw needle with single-byte corrections ---
+first failure: start=11 end=12 reason=illegal multibyte sequence

@@ -1,0 +1,2169 @@
+{
+  "bookkeeping": {
+    "count": 45,
+    "invalid_saved_boundary_entries": [
+      36,
+      82,
+      173,
+      383,
+      397,
+      441,
+      508,
+      793,
+      976,
+      1021,
+      1037,
+      1058,
+      1109,
+      1120,
+      1128,
+      1141,
+      1305,
+      1367,
+      1476,
+      1604,
+      1736,
+      1876,
+      2001,
+      2136,
+      2283,
+      2293,
+      2327,
+      2338,
+      2519,
+      2577,
+      2766,
+      2846,
+      2872,
+      2876,
+      2913,
+      3100,
+      3143,
+      3193,
+      3297,
+      3531,
+      3723,
+      4016,
+      4337,
+      4486,
+      4917
+    ]
+  },
+  "boundary_candidates": {
+    "1381": [
+      {
+        "bounds": [
+          2524,
+          4963,
+          7372,
+          9864
+        ],
+        "flagged_keys_after": [],
+        "label": "idx0 2521->2524, idx1 4960->4963",
+        "load_status": "OK",
+        "rows": 50,
+        "solver_enabled": false
+      },
+      {
+        "bounds": [
+          2524,
+          4964,
+          7372,
+          9864
+        ],
+        "flagged_keys_after": [],
+        "label": "idx0 2521->2524, idx1 4960->4964",
+        "load_status": "OK",
+        "rows": 50,
+        "solver_enabled": false
+      },
+      {
+        "bounds": [
+          2525,
+          4963,
+          7372,
+          9864
+        ],
+        "flagged_keys_after": [],
+        "label": "idx0 2521->2525, idx1 4960->4963",
+        "load_status": "OK",
+        "rows": 50,
+        "solver_enabled": false
+      },
+      {
+        "bounds": [
+          2525,
+          4964,
+          7372,
+          9864
+        ],
+        "flagged_keys_after": [],
+        "label": "idx0 2521->2525, idx1 4960->4964",
+        "load_status": "OK",
+        "rows": 50,
+        "solver_enabled": false
+      }
+    ],
+    "1381_grid_detail": {
+      "idx0 2521->2524, idx1 4960->4963": {
+        "digest": "7776b4195538f50b",
+        "rows": 50
+      },
+      "idx0 2521->2524, idx1 4960->4964": {
+        "digest": "edd393904607f0fd",
+        "rows": 50,
+        "rows_and_fields_differing_from_first_grid_point": {
+          "count": 1,
+          "detail": {
+            "21445": [
+              "b'feel'"
+            ]
+          },
+          "first_grid_point": "idx0 2521->2524, idx1 4960->4963"
+        }
+      },
+      "idx0 2521->2525, idx1 4960->4963": {
+        "digest": "3ea2ee4ea248ff84",
+        "rows": 50,
+        "rows_and_fields_differing_from_first_grid_point": {
+          "count": 1,
+          "detail": {
+            "21423": [
+              "b'desc'"
+            ]
+          },
+          "first_grid_point": "idx0 2521->2524, idx1 4960->4963"
+        }
+      },
+      "idx0 2521->2525, idx1 4960->4964": {
+        "digest": "b5fb88bea566007d",
+        "rows": 50,
+        "rows_and_fields_differing_from_first_grid_point": {
+          "count": 2,
+          "detail": {
+            "21423": [
+              "b'desc'"
+            ],
+            "21445": [
+              "b'feel'"
+            ]
+          },
+          "first_grid_point": "idx0 2521->2524, idx1 4960->4963"
+        }
+      }
+    },
+    "1698": [
+      {
+        "bounds": [
+          500,
+          1078,
+          1548,
+          2036
+        ],
+        "changed_keys_vs_saved_solver_on": [
+          10004
+        ],
+        "flagged_keys_after": [
+          10020,
+          10026
+        ],
+        "label": "idx0 467->500",
+        "load_status": "OK",
+        "rows": 27,
+        "saved_flagged_keys_solver_on": [
+          10004,
+          10020,
+          10026
+        ],
+        "solver_enabled": false
+      },
+      {
+        "bounds": [
+          467,
+          1078,
+          1550,
+          2036
+        ],
+        "changed_keys_vs_saved_solver_on": [
+          10020
+        ],
+        "flagged_keys_after": [
+          10004,
+          10026
+        ],
+        "label": "idx2 1548->1550",
+        "load_status": "OK",
+        "rows": 27,
+        "saved_flagged_keys_solver_on": [
+          10004,
+          10020,
+          10026
+        ],
+        "solver_enabled": false
+      },
+      {
+        "bounds": [
+          467,
+          1078,
+          1548,
+          2049
+        ],
+        "changed_keys_vs_saved_solver_on": [
+          10026
+        ],
+        "flagged_keys_after": [
+          10004,
+          10020
+        ],
+        "label": "idx3 2036->2049",
+        "load_status": "OK",
+        "rows": 27,
+        "saved_flagged_keys_solver_on": [
+          10004,
+          10020,
+          10026
+        ],
+        "solver_enabled": false
+      },
+      {
+        "bounds": [
+          500,
+          1078,
+          1550,
+          2049
+        ],
+        "changed_keys_vs_saved_solver_on": [
+          10004,
+          10020,
+          10026
+        ],
+        "flagged_keys_after": [],
+        "label": "all three",
+        "load_status": "OK",
+        "rows": 27,
+        "saved_flagged_keys_solver_on": [
+          10004,
+          10020,
+          10026
+        ],
+        "solver_enabled": false
+      }
+    ],
+    "17": [
+      {
+        "bounds": [
+          1959,
+          3924,
+          5980,
+          7998
+        ],
+        "changed_keys_vs_saved_solver_on": [
+          55010
+        ],
+        "flagged_keys_after": [],
+        "label": "idx2 5991->5980",
+        "load_status": "OK",
+        "rows": 43,
+        "saved_flagged_keys_solver_on": [
+          55010
+        ],
+        "solver_enabled": false
+      }
+    ],
+    "1945": [
+      {
+        "bounds": [
+          259583,
+          519228,
+          778764,
+          1038307
+        ],
+        "changed_keys_vs_saved_solver_on": [
+          10424,
+          71700
+        ],
+        "flagged_keys_after": [
+          72548
+        ],
+        "label": "A: idx0 259583 + idx3 1038307",
+        "load_status": "OK",
+        "rows": 6852,
+        "saved_flagged_keys_solver_on": [
+          10424,
+          71700,
+          72548
+        ],
+        "solver_enabled": false
+      },
+      {
+        "bounds": [
+          259624,
+          519228,
+          778759,
+          1038363
+        ],
+        "changed_keys_vs_saved_solver_on": [
+          41052
+        ],
+        "flagged_keys_after": [
+          10424,
+          71700,
+          72548
+        ],
+        "label": "B: idx2 778764->778759",
+        "load_status": "OK",
+        "rows": 6852,
+        "saved_flagged_keys_solver_on": [
+          10424,
+          71700,
+          72548
+        ],
+        "solver_enabled": false
+      },
+      {
+        "bounds": [
+          259583,
+          519228,
+          778759,
+          1038307
+        ],
+        "changed_keys_vs_saved_solver_on": [
+          10424,
+          41052,
+          71700
+        ],
+        "flagged_keys_after": [
+          72548
+        ],
+        "label": "A+B",
+        "load_status": "OK",
+        "rows": 6852,
+        "saved_flagged_keys_solver_on": [
+          10424,
+          71700,
+          72548
+        ],
+        "solver_enabled": false
+      }
+    ],
+    "2455": [
+      {
+        "bounds": [
+          1324,
+          2660,
+          3977,
+          5261
+        ],
+        "error": "IndexError: tuple index out of range",
+        "label": "idx3 5258->5261",
+        "load_status": "FAIL",
+        "solver_enabled": false,
+        "solver_on_with_candidate": {
+          "changed_keys_vs_saved_solver_on": [
+            25241
+          ],
+          "error": null,
+          "flagged_keys_after": [],
+          "load_status": "OK",
+          "rows": 48
+        }
+      },
+      {
+        "bounds": [
+          1324,
+          2660,
+          3977,
+          5262
+        ],
+        "error": "IndexError: tuple index out of range",
+        "label": "idx3 5258->5262",
+        "load_status": "FAIL",
+        "solver_enabled": false,
+        "solver_on_with_candidate": {
+          "changed_keys_vs_saved_solver_on": [
+            25241
+          ],
+          "error": null,
+          "flagged_keys_after": [],
+          "load_status": "OK",
+          "rows": 48
+        }
+      }
+    ],
+    "293": [
+      {
+        "bounds": [
+          1018,
+          2589,
+          3922,
+          5192
+        ],
+        "error": "ValueError: EXTENDED_ARG before argument-free instruction",
+        "label": "idx3 5194->5192",
+        "load_status": "FAIL",
+        "solver_enabled": false,
+        "solver_on_with_candidate": {
+          "error": "ValueError: EXTENDED_ARG before argument-free instruction",
+          "load_status": "FAIL"
+        }
+      }
+    ],
+    "3791": [
+      {
+        "bounds": [
+          654,
+          1397,
+          2138,
+          2811
+        ],
+        "error": "ValueError: unsupported opcode 1 at 632",
+        "label": "idx1 1391->1397",
+        "load_status": "FAIL",
+        "solver_enabled": false,
+        "solver_on_with_candidate": {
+          "changed_keys_vs_saved_solver_on": [
+            10191
+          ],
+          "error": null,
+          "flagged_keys_after": [
+            25670
+          ],
+          "load_status": "OK",
+          "rows": 83
+        }
+      },
+      {
+        "bounds": [
+          654,
+          1391,
+          2142,
+          2811
+        ],
+        "error": "ValueError: unsupported opcode 1 at 632",
+        "label": "idx2 2138->2142",
+        "load_status": "FAIL",
+        "solver_enabled": false,
+        "solver_on_with_candidate": {
+          "changed_keys_vs_saved_solver_on": [
+            25670
+          ],
+          "error": null,
+          "flagged_keys_after": [
+            10191
+          ],
+          "load_status": "OK",
+          "rows": 83
+        }
+      },
+      {
+        "bounds": [
+          654,
+          1397,
+          2142,
+          2811
+        ],
+        "error": "ValueError: unsupported opcode 1 at 632",
+        "label": "both",
+        "load_status": "FAIL",
+        "solver_enabled": false,
+        "solver_on_with_candidate": {
+          "changed_keys_vs_saved_solver_on": [
+            10191,
+            25670
+          ],
+          "error": null,
+          "flagged_keys_after": [],
+          "load_status": "OK",
+          "rows": 83
+        }
+      }
+    ],
+    "4924": [
+      {
+        "bounds": [
+          39419,
+          78762,
+          118145,
+          157482
+        ],
+        "flagged_keys_after": [
+          72420,
+          72548
+        ],
+        "label": "idx0 39418->39419",
+        "load_status": "OK",
+        "rows": 6852,
+        "solver_enabled": false
+      },
+      {
+        "bounds": [
+          39419,
+          78762,
+          118143,
+          157478
+        ],
+        "flagged_keys_after": [
+          72548
+        ],
+        "label": "idx0 39418->39419 + idx2 118145->118143 + idx3 157482->157478",
+        "load_status": "OK",
+        "rows": 6852,
+        "solver_enabled": false
+      }
+    ],
+    "shift_scans_single_boundary": {
+      "1698/DATA/10004": [
+        {
+          "field_length": 78,
+          "field_payload_offset": 461,
+          "valid_single_boundary_shifts": [
+            {
+              "boundary_index": 0,
+              "delta": 27,
+              "text": "【獲得途徑】#r①在其他玩家的攤位又曬混'r②找#s(18,工藝師,1,明月城,62,82,0)製作"
+            },
+            {
+              "boundary_index": 0,
+              "delta": 28,
+              "text": "【獲得途徑】#r①在其他玩家的攤位上曬混'r②找#s(18,工藝師,1,明月城,62,82,0)製作"
+            },
+            {
+              "boundary_index": 0,
+              "delta": 29,
+              "text": "【獲得途徑】#r①在其他玩家的攤位上蹉混'r②找#s(18,工藝師,1,明月城,62,82,0)製作"
+            },
+            {
+              "boundary_index": 0,
+              "delta": 30,
+              "text": "【獲得途徑】#r①在其他玩家的攤位上購混'r②找#s(18,工藝師,1,明月城,62,82,0)製作"
+            },
+            {
+              "boundary_index": 0,
+              "delta": 31,
+              "text": "【獲得途徑】#r①在其他玩家的攤位上購越'r②找#s(18,工藝師,1,明月城,62,82,0)製作"
+            },
+            {
+              "boundary_index": 0,
+              "delta": 32,
+              "text": "【獲得途徑】#r①在其他玩家的攤位上購買'r②找#s(18,工藝師,1,明月城,62,82,0)製作"
+            },
+            {
+              "boundary_index": 0,
+              "delta": 33,
+              "text": "【獲得途徑】#r①在其他玩家的攤位上購買#r②找#s(18,工藝師,1,明月城,62,82,0)製作"
+            },
+            {
+              "boundary_index": 0,
+              "delta": 34,
+              "text": "【獲得途徑】#r①在其他玩家的攤位上購買#v②找#s(18,工藝師,1,明月城,62,82,0)製作"
+            },
+            {
+              "boundary_index": 0,
+              "delta": 35,
+              "text": "【獲得途徑】#r①在其他玩家的攤位上購買#v鏟找#s(18,工藝師,1,明月城,62,82,0)製作"
+            },
+            {
+              "boundary_index": 0,
+              "delta": 36,
+              "text": "【獲得途徑】#r①在其他玩家的攤位上購買#v鏝找#s(18,工藝師,1,明月城,62,82,0)製作"
+            }
+          ]
+        }
+      ],
+      "1698/DATA/10020": [
+        {
+          "field_length": 46,
+          "field_payload_offset": 1548,
+          "valid_single_boundary_shifts": [
+            {
+              "boundary_index": 2,
+              "delta": 1,
+              "text": "≡獲得途徑】#r#s(18,藥店老闆,1,永澤城,55,38,0)"
+            },
+            {
+              "boundary_index": 2,
+              "delta": 2,
+              "text": "【獲得途徑】#r#s(18,藥店老闆,1,永澤城,55,38,0)"
+            },
+            {
+              "boundary_index": 2,
+              "delta": 3,
+              "text": "【t繸o途徑】#r#s(18,藥店老闆,1,永澤城,55,38,0)"
+            },
+            {
+              "boundary_index": 2,
+              "delta": 4,
+              "text": "【tF得途徑】#r#s(18,藥店老闆,1,永澤城,55,38,0)"
+            }
+          ]
+        }
+      ],
+      "1698/DATA/10026": [
+        {
+          "field_length": 61,
+          "field_payload_offset": 2010,
+          "valid_single_boundary_shifts": [
+            {
+              "boundary_index": 3,
+              "delta": 13,
+              "text": "【獲得途徑】#r①可在#s(18,藥店老闆,1,明月城,244,68,0)#n處購買"
+            }
+          ]
+        }
+      ],
+      "17/DATA/55010/attr": [
+        {
+          "field_length": 18,
+          "field_payload_offset": 5978,
+          "valid_single_boundary_shifts": [
+            {
+              "boundary_index": 2,
+              "delta": -11,
+              "text": "基礎屬性$攻擊 +108"
+            },
+            {
+              "boundary_index": 2,
+              "delta": -9,
+              "text": "基%A屬性$攻擊 +108"
+            },
+            {
+              "boundary_index": 2,
+              "delta": -7,
+              "text": "基%A#:性$攻擊 +108"
+            },
+            {
+              "boundary_index": 2,
+              "delta": -5,
+              "text": "基%A#:N-$攻擊 +108"
+            }
+          ]
+        }
+      ],
+      "1945/DATA/10424": [
+        {
+          "field_length": 184,
+          "field_payload_offset": 259440,
+          "valid_single_boundary_shifts": [
+            {
+              "boundary_index": 0,
+              "delta": -41,
+              "text": "象徵著永結同心之意的靈果，此靈果女性玩家使用後可以得到榮譽之玉、還童丹、旗包等獎勵，男性玩家使用後只能得到少量抵用金。（男性玩家一天最多使用2個同心靈果，女性玩家則最多使用4個同心靈果）"
+            },
+            {
+              "boundary_index": 0,
+              "delta": -40,
+              "text": "象徵著永結同心之意的靈果，此靈果女性玩家使用後可以得到榮譽之玉、還童丹、旗包等獎勵，男性玩家使用後只能得到少量抵用金。（男性玩家一天最多使用2個`P心靈果，女性玩家則最多使用4個同心靈果）"
+            }
+          ]
+        }
+      ],
+      "1945/DATA/71700": [
+        {
+          "field_length": 151,
+          "field_payload_offset": 1038212,
+          "valid_single_boundary_shifts": [
+            {
+              "boundary_index": 3,
+              "delta": -63,
+              "text": "由冒險家行會研發的，具有記憶時空傳送點的特殊功能#r【使用方法】隊伍人數等於5人，使用者身幼纈燽鞳，在所標記的迷宮入口坐標處右鍵點擊#r【所屬迷宮】吸血古堡"
+            },
+            {
+              "boundary_index": 3,
+              "delta": -62,
+              "text": "由冒險家行會研發的，具有記憶時空傳送點的特殊功能#r【使用方法】隊伍人數等於5人，使用者身份纈燽鞳，在所標記的迷宮入口坐標處右鍵點擊#r【所屬迷宮】吸血古堡"
+            },
+            {
+              "boundary_index": 3,
+              "delta": -61,
+              "text": "由冒險家行會研發的，具有記憶時空傳送點的特殊功能#r【使用方法】隊伍人數等於5人，使用者身份祇燽鞳，在所標記的迷宮入口坐標處右鍵點擊#r【所屬迷宮】吸血古堡"
+            },
+            {
+              "boundary_index": 3,
+              "delta": -60,
+              "text": "由冒險家行會研發的，具有記憶時空傳送點的特殊功能#r【使用方法】隊伍人數等於5人，使用者身份為燽鞳，在所標記的迷宮入口坐標處右鍵點擊#r【所屬迷宮】吸血古堡"
+            },
+            {
+              "boundary_index": 3,
+              "delta": -59,
+              "text": "由冒險家行會研發的，具有記憶時空傳送點的特殊功能#r【使用方法】隊伍人數等於5人，使用者身份為媽鞳，在所標記的迷宮入口坐標處右鍵點擊#r【所屬迷宮】吸血古堡"
+            },
+            {
+              "boundary_index": 3,
+              "delta": -58,
+              "text": "由冒險家行會研發的，具有記憶時空傳送點的特殊功能#r【使用方法】隊伍人數等於5人，使用者身份為隊鞳，在所標記的迷宮入口坐標處右鍵點擊#r【所屬迷宮】吸血古堡"
+            },
+            {
+              "boundary_index": 3,
+              "delta": -57,
+              "text": "由冒險家行會研發的，具有記憶時空傳送點的特殊功能#r【使用方法】隊伍人數等於5人，使用者身份為隊炕，在所標記的迷宮入口坐標處右鍵點擊#r【所屬迷宮】吸血古堡"
+            },
+            {
+              "boundary_index": 3,
+              "delta": -56,
+              "text": "由冒險家行會研發的，具有記憶時空傳送點的特殊功能#r【使用方法】隊伍人數等於5人，使用者身份為隊長，在所標記的迷宮入口坐標處右鍵點擊#r【所屬迷宮】吸血古堡"
+            },
+            {
+              "boundary_index": 3,
+              "delta": -55,
+              "text": "由冒險家行會研發的，具有記憶時空傳送點的特殊功能#r【使用方法】隊伍人數等於5人，使用者身份為隊長讎在所標記的迷宮入口坐標處右鍵點擊#r【所屬迷宮】吸血古堡"
+            }
+          ]
+        }
+      ],
+      "2455/DATA/25241/name": [
+        {
+          "field_length": 8,
+          "field_payload_offset": 5258,
+          "valid_single_boundary_shifts": [
+            {
+              "boundary_index": 3,
+              "delta": 3,
+              "text": "白芒角樽"
+            },
+            {
+              "boundary_index": 3,
+              "delta": 4,
+              "text": "白使角樽"
+            }
+          ]
+        }
+      ],
+      "3791/DATA/10191/name": [
+        {
+          "field_length": 10,
+          "field_payload_offset": 1391,
+          "valid_single_boundary_shifts": [
+            {
+              "boundary_index": 1,
+              "delta": 6,
+              "text": "蜜香果燒肉"
+            },
+            {
+              "boundary_index": 1,
+              "delta": 7,
+              "text": "蜜香果dN肉"
+            }
+          ]
+        }
+      ],
+      "3791/DATA/25670/name": [
+        {
+          "field_length": 10,
+          "field_payload_offset": 2138,
+          "valid_single_boundary_shifts": [
+            {
+              "boundary_index": 2,
+              "delta": 2,
+              "text": "一峇彩虹果"
+            },
+            {
+              "boundary_index": 2,
+              "delta": 3,
+              "text": "一砟彩虹果"
+            },
+            {
+              "boundary_index": 2,
+              "delta": 4,
+              "text": "一級彩虹果"
+            },
+            {
+              "boundary_index": 2,
+              "delta": 5,
+              "text": "一級苹虹果"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "cross_checks": {
+    "1945_A+B_vs_4924_candidate_names": {
+      "compared": 6852,
+      "differ": [],
+      "equal": 6852,
+      "flagged_keys_1945_A+B": [
+        72548
+      ]
+    },
+    "1945_vs_4924_names_saved_bounds": {
+      "compared": 6852,
+      "status": "FAIL ValueError: unsupported opcode 75 at 39396"
+    },
+    "1945_vs_4924_names_with_candidates": {
+      "compared": 6852,
+      "differ": [
+        41052
+      ],
+      "equal": 6851,
+      "flagged_keys_4924_candidate": [
+        72548
+      ]
+    },
+    "2409_shop_rows": [
+      {
+        "discount_text": "6折",
+        "in_item_table": true,
+        "item_name": "還童丹",
+        "itemid": 70662,
+        "itemid_kind": "int",
+        "num": 200,
+        "price": 600,
+        "row": 1,
+        "shop_name": "還童丹",
+        "type": 65
+      },
+      {
+        "discount_text": "5折",
+        "in_item_table": true,
+        "item_name": "獸魂勛章",
+        "itemid": 70239,
+        "itemid_kind": "int",
+        "num": 100,
+        "price": 500,
+        "row": 2,
+        "shop_name": "獸魂勛章",
+        "type": 65
+      },
+      {
+        "discount_text": "5折",
+        "in_item_table": true,
+        "item_name": "獸魂結晶",
+        "itemid": 70240,
+        "itemid_kind": "int",
+        "num": 20,
+        "price": 500,
+        "row": 3,
+        "shop_name": "獸魂結晶",
+        "type": 65
+      },
+      {
+        "discount_text": "7折",
+        "in_item_table": true,
+        "item_name": "裝備強化石",
+        "itemid": 72264,
+        "itemid_kind": "int",
+        "num": 200,
+        "price": 400,
+        "row": 4,
+        "shop_name": "裝備強化石",
+        "type": 65
+      },
+      {
+        "discount_text": "6折",
+        "in_item_table": true,
+        "item_name": "榮譽之玉",
+        "itemid": 25431,
+        "itemid_kind": "int",
+        "num": 50,
+        "price": 450,
+        "row": 5,
+        "shop_name": "榮譽之玉",
+        "type": 65
+      },
+      {
+        "discount_text": "6折",
+        "in_item_table": true,
+        "item_name": "四級如意寶石包",
+        "itemid": 25732,
+        "itemid_kind": "int",
+        "num": 5,
+        "price": 240,
+        "row": 6,
+        "shop_name": "四級如意寶石包",
+        "type": 65
+      },
+      {
+        "discount_text": "6折",
+        "in_item_table": false,
+        "item_name": null,
+        "itemid": 72050,
+        "itemid_kind": "int",
+        "num": 1,
+        "price": 800,
+        "row": 7,
+        "shop_name": "八級如意寶石包",
+        "type": 65
+      },
+      {
+        "discount_text": null,
+        "in_item_table": false,
+        "item_name": null,
+        "itemid": "雙技能英靈護符",
+        "itemid_kind": "bytes",
+        "num": 1,
+        "price": 250,
+        "row": 8,
+        "shop_name": "隨機終級獸訣",
+        "type": 321
+      },
+      {
+        "discount_text": null,
+        "in_item_table": false,
+        "item_name": null,
+        "itemid": 9027,
+        "itemid_kind": "int",
+        "num": 1,
+        "price": 300,
+        "row": 9,
+        "shop_name": "隨機特殊獸訣",
+        "type": 321
+      },
+      {
+        "discount_text": null,
+        "in_item_table": true,
+        "item_name": "雙技能英靈護符",
+        "itemid": 9114,
+        "itemid_kind": "int",
+        "num": 1,
+        "price": 1000,
+        "row": 10,
+        "shop_name": "雙技能英靈護符",
+        "type": 65
+      },
+      {
+        "discount_text": "6折",
+        "in_item_table": true,
+        "item_name": "裝備精華Ⅹ",
+        "itemid": 70620,
+        "itemid_kind": "int",
+        "num": 1,
+        "price": 630,
+        "row": 11,
+        "shop_name": "裝備重造精華Ⅹ",
+        "type": 65
+      },
+      {
+        "discount_text": "6折",
+        "in_item_table": true,
+        "item_name": "裝備精華Ⅸ",
+        "itemid": 70619,
+        "itemid_kind": "int",
+        "num": 1,
+        "price": 600,
+        "row": 12,
+        "shop_name": "裝備重造精華Ⅸ",
+        "type": 65
+      },
+      {
+        "discount_text": null,
+        "in_item_table": true,
+        "item_name": "周邊禮包",
+        "itemid": 72731,
+        "itemid_kind": "int",
+        "num": 1,
+        "price": 1500,
+        "row": 13,
+        "shop_name": "周邊禮包",
+        "type": 65
+      },
+      {
+        "discount_text": null,
+        "in_item_table": true,
+        "item_name": "十週年紀念禮包",
+        "itemid": 72732,
+        "itemid_kind": "int",
+        "num": 1,
+        "price": 3888,
+        "row": 14,
+        "shop_name": "十週年紀念禮包",
+        "type": 65
+      }
+    ],
+    "2455_craft_vs_1945_items": {
+      "compared": 48,
+      "differ": [
+        [
+          25241,
+          null,
+          "白芒角樽"
+        ]
+      ],
+      "equal": 47
+    },
+    "246_GEM2EQUIP_vs_1945_items": {
+      "compared": 40,
+      "differ": [
+        [
+          72838,
+          "寶石附魔",
+          "寶石附魔符"
+        ]
+      ],
+      "equal": 39
+    },
+    "3791_CHILD_DATA_vs_1945_items": {
+      "compared": 23,
+      "differ": [
+        [
+          72222,
+          "神武項圈",
+          "武神項圈"
+        ]
+      ],
+      "equal": 22
+    },
+    "3791_DATA_vs_1945_items": {
+      "compared": 83,
+      "differ": [
+        [
+          10191,
+          null,
+          "蜜香果燒肉"
+        ],
+        [
+          10192,
+          "至尊烤肉王",
+          "至尊烤肉"
+        ],
+        [
+          25606,
+          "召喚獸飾物Ⅱ",
+          "召喚獸飾物"
+        ],
+        [
+          25607,
+          "召喚獸飾物Ⅲ",
+          "召喚獸飾物"
+        ],
+        [
+          25609,
+          "稀有召喚獸飾物",
+          "稀有召喚獸飾物Ⅰ"
+        ],
+        [
+          25670,
+          null,
+          "一級彩虹果"
+        ],
+        [
+          30487,
+          "召喚獸飾物",
+          "召喚獸飾物Ⅰ"
+        ],
+        [
+          30488,
+          "神獸高級飾物",
+          "神獸飾物Ⅱ"
+        ],
+        [
+          30489,
+          "仙獸高級飾物",
+          "仙獸飾物Ⅱ"
+        ],
+        [
+          70260,
+          "召喚獸高級飾物",
+          "召喚獸飾物Ⅱ"
+        ],
+        [
+          70262,
+          "稀有召喚獸高級飾物",
+          "稀有召喚獸飾物Ⅱ"
+        ],
+        [
+          70263,
+          "召喚獸高級飾物",
+          "召喚獸飾物Ⅱ"
+        ],
+        [
+          70264,
+          "召喚獸高級飾物",
+          "召喚獸飾物Ⅱ"
+        ],
+        [
+          70265,
+          "召喚獸高級飾物",
+          "召喚獸飾物Ⅱ"
+        ],
+        [
+          70472,
+          "召喚獸飾物",
+          "召喚獸飾物Ⅰ"
+        ],
+        [
+          70899,
+          "召喚獸飾物",
+          "召喚獸飾物Ⅰ"
+        ],
+        [
+          72151,
+          "寵物戰鬥糖果",
+          "寵物特訓手冊"
+        ],
+        [
+          72222,
+          "神武項圈",
+          "武神項圈"
+        ]
+      ],
+      "equal": 65
+    },
+    "global_name_presence_entries": {
+      "一級彩虹果": [
+        1182,
+        1945,
+        2930,
+        3752,
+        4924
+      ],
+      "寶石附魔": [
+        77,
+        246,
+        1182,
+        1945,
+        2589,
+        2774,
+        2980,
+        4548,
+        4924
+      ],
+      "寶石附魔符": [
+        1182,
+        1945,
+        2774,
+        4548,
+        4924
+      ],
+      "時空石": [
+        1182,
+        4924
+      ],
+      "晉怖肋": [
+        1945
+      ],
+      "武神項圈": [
+        1182,
+        1945,
+        4924
+      ],
+      "白芒角樽": [
+        1182,
+        1945,
+        2455,
+        4428,
+        4924
+      ],
+      "神武項圈": [
+        3791
+      ],
+      "蜜香果燒肉": [
+        1182,
+        1945,
+        2083,
+        2649,
+        4924
+      ],
+      "隨機特殊獸訣": [
+        2409
+      ],
+      "隨機終級獸訣": [
+        2409,
+        3752
+      ],
+      "雙人坐騎體驗": [
+        1182,
+        1945,
+        4924
+      ],
+      "雙技能英靈護符": [
+        1182,
+        1945,
+        2409,
+        3262,
+        3290,
+        4924
+      ],
+      "飛蝗石": [
+        17,
+        1182,
+        1945,
+        4428,
+        4924
+      ]
+    }
+  },
+  "inputs": {
+    "key_database_sha256": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+    "saved_bounds_and_keys": {
+      "1381": {
+        "bounds": [
+          2521,
+          4960,
+          7372,
+          9864
+        ],
+        "keys": [
+          254,
+          174,
+          150,
+          236,
+          152
+        ]
+      },
+      "1698": {
+        "bounds": [
+          467,
+          1078,
+          1548,
+          2036
+        ],
+        "keys": [
+          12,
+          8,
+          229,
+          81,
+          191
+        ]
+      },
+      "17": {
+        "bounds": [
+          1959,
+          3924,
+          5991,
+          7998
+        ],
+        "keys": [
+          99,
+          29,
+          171,
+          76,
+          148
+        ]
+      },
+      "1945": {
+        "bounds": [
+          259624,
+          519228,
+          778764,
+          1038363
+        ],
+        "keys": [
+          152,
+          94,
+          50,
+          49,
+          104
+        ]
+      },
+      "2338": {
+        "bounds": [
+          295,
+          597,
+          897,
+          1037
+        ],
+        "keys": [
+          126,
+          252,
+          251,
+          149,
+          149
+        ]
+      },
+      "2409": {
+        "bounds": [
+          487,
+          865,
+          1330,
+          1681
+        ],
+        "keys": [
+          15,
+          17,
+          31,
+          164,
+          165
+        ]
+      },
+      "2455": {
+        "bounds": [
+          1324,
+          2660,
+          3977,
+          5258
+        ],
+        "keys": [
+          160,
+          97,
+          68,
+          140,
+          61
+        ]
+      },
+      "246": {
+        "bounds": [
+          1255,
+          2571,
+          3926,
+          5250
+        ],
+        "keys": [
+          228,
+          238,
+          218,
+          185,
+          244
+        ]
+      },
+      "293": {
+        "bounds": [
+          1018,
+          2589,
+          3922,
+          5194
+        ],
+        "keys": [
+          152,
+          23,
+          18,
+          62,
+          47
+        ]
+      },
+      "3791": {
+        "bounds": [
+          654,
+          1391,
+          2138,
+          2811
+        ],
+        "keys": [
+          161,
+          229,
+          62,
+          95,
+          146
+        ]
+      },
+      "4924": {
+        "bounds": [
+          39418,
+          78762,
+          118145,
+          157482
+        ],
+        "keys": [
+          91,
+          106,
+          0,
+          201,
+          110
+        ]
+      }
+    },
+    "script_fls_entry_count": 5002,
+    "script_fls_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72"
+  },
+  "limitations": [
+    "Candidates are not verified against the native loader; they only show local consistency.",
+    "Strict CP950 validity and tidy text do not prove correctness; cross-copy and cross-table agreement is weaker evidence.",
+    "Reader outputs use the repository heuristic solver where noted; solver-off runs are a separate local probe.",
+    "Only the item-related subset of entries is analysed here."
+  ],
+  "opcode_sites": {
+    "1381/co_offset_2499_solver_off": {
+      "entry_index": 1381,
+      "module_co_offset": 2499,
+      "module_co_start_in_payload": 22,
+      "payload_offset": 2521,
+      "per_key_reading": {
+        "seg0_key254": {
+          "custom_code": 5,
+          "std_op": "STORE_SUBSCR"
+        },
+        "seg1_key174": {
+          "custom_code": 85,
+          "std_op": "RETURN_VALUE"
+        },
+        "seg2_key150": {
+          "custom_code": 109,
+          "std_op": "UNMAPPED_FALLBACK_NOP"
+        },
+        "seg3_key236": {
+          "custom_code": 23,
+          "std_op": "UNMAPPED_FALLBACK_NOP"
+        },
+        "seg4_key152": {
+          "custom_code": 99,
+          "std_op": "UNMAPPED_FALLBACK_NOP"
+        }
+      },
+      "raw_byte_hex": "0xfb",
+      "saved_bounds": [
+        2521,
+        4960,
+        7372,
+        9864
+      ],
+      "saved_key": 174,
+      "saved_segment": 1,
+      "solver_enabled": false
+    },
+    "1381/co_offset_4938": {
+      "entry_index": 1381,
+      "module_co_offset": 4938,
+      "module_co_start_in_payload": 22,
+      "payload_offset": 4960,
+      "per_key_reading": {
+        "seg0_key254": {
+          "custom_code": 85,
+          "std_op": "RETURN_VALUE"
+        },
+        "seg1_key174": {
+          "custom_code": 5,
+          "std_op": "STORE_SUBSCR"
+        },
+        "seg2_key150": {
+          "custom_code": 61,
+          "std_op": "BINARY_DIVIDE"
+        },
+        "seg3_key236": {
+          "custom_code": 71,
+          "std_op": "BREAK_LOOP"
+        },
+        "seg4_key152": {
+          "custom_code": 51,
+          "std_op": "INPLACE_DIVIDE"
+        }
+      },
+      "raw_byte_hex": "0xab",
+      "saved_bounds": [
+        2521,
+        4960,
+        7372,
+        9864
+      ],
+      "saved_key": 150,
+      "saved_segment": 2,
+      "solver_enabled": true
+    },
+    "293/co_offset_1000_reader_symptom": {
+      "entry_index": 293,
+      "module_co_offset": 1000,
+      "module_co_start_in_payload": 22,
+      "payload_offset": 1022,
+      "per_key_reading": {
+        "seg0_key152": {
+          "custom_code": 0,
+          "std_op": "NOP"
+        },
+        "seg1_key23": {
+          "custom_code": 143,
+          "std_op": "LOAD_CONST"
+        },
+        "seg2_key18": {
+          "custom_code": 138,
+          "std_op": "UNMAPPED_FALLBACK_NOP"
+        },
+        "seg3_key62": {
+          "custom_code": 166,
+          "std_op": "UNMAPPED_FALLBACK_NOP"
+        },
+        "seg4_key47": {
+          "custom_code": 183,
+          "std_op": "JUMP_IF_FALSE"
+        }
+      },
+      "raw_byte_hex": "0x98",
+      "saved_bounds": [
+        1018,
+        2589,
+        3922,
+        5194
+      ],
+      "saved_key": 23,
+      "saved_segment": 1,
+      "solver_enabled": true
+    },
+    "293/co_offset_1003_unmapped_root": {
+      "entry_index": 293,
+      "module_co_offset": 1003,
+      "module_co_start_in_payload": 22,
+      "payload_offset": 1025,
+      "per_key_reading": {
+        "seg0_key152": {
+          "custom_code": 67,
+          "std_op": "INPLACE_ADD"
+        },
+        "seg1_key23": {
+          "custom_code": 204,
+          "std_op": "UNMAPPED_FALLBACK_NOP"
+        },
+        "seg2_key18": {
+          "custom_code": 201,
+          "std_op": "UNMAPPED_FALLBACK_NOP"
+        },
+        "seg3_key62": {
+          "custom_code": 229,
+          "std_op": "JUMP_FORWARD"
+        },
+        "seg4_key47": {
+          "custom_code": 244,
+          "std_op": "UNMAPPED_FALLBACK_NOP"
+        }
+      },
+      "raw_byte_hex": "0xdb",
+      "saved_bounds": [
+        1018,
+        2589,
+        3922,
+        5194
+      ],
+      "saved_key": 23,
+      "saved_segment": 1,
+      "solver_enabled": true
+    },
+    "4924/co_offset_39396": {
+      "entry_index": 4924,
+      "module_co_offset": 39396,
+      "module_co_start_in_payload": 22,
+      "payload_offset": 39418,
+      "per_key_reading": {
+        "seg0_key91": {
+          "custom_code": 48,
+          "std_op": "DUP_TOP"
+        },
+        "seg1_key106": {
+          "custom_code": 1,
+          "std_op": "INPLACE_LSHIFT"
+        },
+        "seg2_key0": {
+          "custom_code": 107,
+          "std_op": "UNMAPPED_FALLBACK_NOP"
+        },
+        "seg3_key201": {
+          "custom_code": 162,
+          "std_op": "JUMP_ABSOLUTE"
+        },
+        "seg4_key110": {
+          "custom_code": 5,
+          "std_op": "STORE_SUBSCR"
+        }
+      },
+      "raw_byte_hex": "0x6b",
+      "saved_bounds": [
+        39418,
+        78762,
+        118145,
+        157482
+      ],
+      "saved_key": 106,
+      "saved_segment": 1,
+      "solver_enabled": true
+    },
+    "4924/co_offset_39396_solver_off": {
+      "entry_index": 4924,
+      "module_co_offset": 39396,
+      "module_co_start_in_payload": 22,
+      "payload_offset": 39418,
+      "per_key_reading": {
+        "seg0_key91": {
+          "custom_code": 48,
+          "std_op": "DUP_TOP"
+        },
+        "seg1_key106": {
+          "custom_code": 1,
+          "std_op": "INPLACE_LSHIFT"
+        },
+        "seg2_key0": {
+          "custom_code": 107,
+          "std_op": "UNMAPPED_FALLBACK_NOP"
+        },
+        "seg3_key201": {
+          "custom_code": 162,
+          "std_op": "JUMP_ABSOLUTE"
+        },
+        "seg4_key110": {
+          "custom_code": 5,
+          "std_op": "STORE_SUBSCR"
+        }
+      },
+      "raw_byte_hex": "0x6b",
+      "saved_bounds": [
+        39418,
+        78762,
+        118145,
+        157482
+      ],
+      "saved_key": 106,
+      "saved_segment": 1,
+      "solver_enabled": false
+    }
+  },
+  "records": {
+    "1698/DATA/10004": [
+      {
+        "control_chars": false,
+        "cp950_ok": false,
+        "decoded_hex": "a169c0f2b16fb77aaa78a56e2776c3eda266ace0a148aeb5aa65aebec171a2e8a053c5ceb2562772c7eaa7e423732831382ca475c3c0ae762c312ca9faa4ebabb02c36322c38322c3029bb73a740",
+        "field_index": 0,
+        "first_error_index": 32,
+        "first_error_payload_offset": 493,
+        "payload_locations": [
+          {
+            "decoded_hex": "a169c0f2b16fb77aaa78a56e2776c3eda266ace0a148aeb5aa65aebec171a2e8a053c5ceb2562772c7eaa7e423732831382ca475c3c0ae762c312ca9faa4ebabb02c36322c38322c3029bb73a740",
+            "key": 12,
+            "payload_offset": 461,
+            "raw_hex": "ad65ccfebd63bf72a270ad662f7ecbe5aa6ea4e8a940a6bda26da6b6c979aae0a85bcdc6ba5e2f7acfe2afec2b7b20393024ac7dcbc8a67e243924a1f2ace3a3b8243e3a24303a243821b37baf48",
+            "segment": 0
+          }
+        ],
+        "text_if_clean": null
+      }
+    ],
+    "1698/DATA/10020": [
+      {
+        "control_chars": true,
+        "cp950_ok": true,
+        "decoded_hex": "15ddc0f2b16fb37eae7ca16a237223732831382cc3c4a9b1a6d1c1f32c312ca5c3bf41abb02c35352c33382c3029",
+        "field_index": 0,
+        "first_error_index": null,
+        "payload_locations": [
+          {
+            "decoded_hex": "15ddc0f2b16fb37eae7ca16a237223732831382cc3c4a9b1a6d1c1f32c312ca5c3bf41abb02c35352c33382c3029",
+            "key": 81,
+            "payload_offset": 1548,
+            "raw_hex": "448c91a3e03ee22fff2df03b722372227960697d9295f8e0f78090a27d607df492ee10fae17d64647d62697d6178",
+            "segment": 3
+          }
+        ],
+        "text_if_clean": "\u0015暌繸o途徑】#r#s(18,藥店老闆,1,永澤城,55,38,0)"
+      }
+    ],
+    "1698/DATA/10026": [
+      {
+        "control_chars": true,
+        "cp950_ok": true,
+        "decoded_hex": "a169c0f2b16fb37eae7ca16a2372c7e9a569a66223732831382c2d2a475f483f2f1dc2dfc24714a4ebabb02c3234342c36382c3029236eb342c1cab652",
+        "field_index": 0,
+        "first_error_index": null,
+        "payload_locations": [
+          {
+            "decoded_hex": "a169c0f2b16fb37eae7ca16a2372c7e9a569a66223732831382c2d2a475f483f2f1dc2dfc24714a4ebabb02c3234342c36382c3029236eb342c1cab652",
+            "key": 81,
+            "payload_offset": 2010,
+            "raw_hex": "f03891a3e03ee22fff2df03b722396b8f438f73372227960697d9295f8e0f78090a27d607df8ab1b54140f938d8b8b938987938f969cd10cfd7e7509ed",
+            "segment": 3
+          }
+        ],
+        "text_if_clean": "【獲得途徑】#r①可在#s(18,-*G_H?/\u001d軀麋\u0014月城,244,68,0)#n處購買"
+      }
+    ],
+    "17/DATA/55010/attr": {
+      "fields": [
+        {
+          "control_chars": true,
+          "cp950_ok": true,
+          "decoded_hex": "b0f22541233a4e2dc34017275c202b313038",
+          "field_index": 0,
+          "first_error_index": null,
+          "payload_locations": [
+            {
+              "decoded_hex": "b0f22541233a4e2dc34017275c202b313038",
+              "key": 171,
+              "payload_offset": 5978,
+              "raw_hex": "1b598eea8891e58668ebbc8cf76c677d7c74",
+              "segment": 2
+            }
+          ],
+          "text_if_clean": "基%A#:N-鞭\u0017'\\ +108"
+        }
+      ],
+      "top_clean_attr_texts_in_table": [
+        [
+          "基礎屬性$攻擊 +108",
+          11
+        ],
+        [
+          "基礎屬性$防禦 +25",
+          2
+        ],
+        [
+          "基礎屬性$速度 +16",
+          2
+        ]
+      ]
+    },
+    "1945/DATA/10424": [
+      {
+        "control_chars": false,
+        "cp950_ok": true,
+        "decoded_hex": "a650a4dfc646aa47a150b3b1",
+        "field_index": 0,
+        "first_error_index": null,
+        "payload_locations": [
+          {
+            "decoded_hex": "a650a4dfc646aa47a150b3b1",
+            "key": 152,
+            "payload_offset": 259423,
+            "raw_hex": "3ec83c475ede32df39c82b29",
+            "segment": 0
+          }
+        ],
+        "text_if_clean": "同心靈果·陰"
+      },
+      {
+        "control_chars": true,
+        "cp950_ok": false,
+        "decoded_hex": "b648bc78b5dba5c3b5b2a650a4dfa4a7b74eaabac646aa47a141a6b9c646aa47a46ba9caaab1ae61a8cfa5ceabe1a569a548b16fa8ecba61c541a4a7a5c9a142c1d9b5a3a4a6a142ba58a55db5a5bcfac079a141a86ba9caaab1ae61a8cfa5ceabe1a575afe0b16fa8eca4d6b671a9e8a5ceaaf7a143a15da86ba9caaab1ae61a440a4d1b3cca668a8cfa5ce32add36096621900806c81678762ad6f0c6c7768a76dae750a60ae6e096308f26b156096621900806c816798",
+        "field_index": 1,
+        "first_error_index": 144,
+        "first_error_payload_offset": 259584,
+        "payload_locations": [
+          {
+            "decoded_hex": "b648bc78b5dba5c3b5b2a650a4dfa4a7b74eaabac646aa47a141a6b9c646aa47a46ba9caaab1ae61a8cfa5ceabe1a569a548b16fa8ecba61c541a4a7a5c9a142c1d9b5a3a4a6a142ba58a55db5a5bcfac079a141a86ba9caaab1ae61a8cfa5ceabe1a575afe0b16fa8eca4d6b671a9e8a5ceaaf7a143a15da86ba9caaab1ae61a440a4d1b3cca668a8cfa5ce32add36096621900806c81678762ad6f0c6c7768a76dae750a60ae6e096308f26b156096621900806c816798",
+            "key": 152,
+            "payload_offset": 259440,
+            "raw_hex": "2ed024e02d433d5b2d2a3ec83c473c3f2fd632225ede32df39d93e215ede32df3cf33152322936f930573d5633793df13dd029f7307422f95dd93c3f3d5139da59412d3b3c3e39da22c03dc52d3d246258e139d930f33152322936f930573d5633793ded377829f730743c4e2ee931703d56326f39db39c530f33152322936f93cd83c492b543ef030573d56aa354bf80efa819818f419ff1ffa35f794f4eff03ff536ed92f836f691fb906af38df80efa819818f419ff00",
+            "segment": 0
+          }
+        ],
+        "text_if_clean": null
+      }
+    ],
+    "1945/DATA/41052": {
+      "candidate_boundary_evidence": {
+        "boundary_index": 2,
+        "candidate_boundary": 778759,
+        "candidate_bounds": [
+          259624,
+          519228,
+          778759,
+          1038363
+        ],
+        "candidate_name": "時空石",
+        "candidate_name_hex": "aec9aac5a5db",
+        "candidate_name_locations": [
+          {
+            "decoded_hex": "aec9aac5a5db",
+            "key": 50,
+            "payload_offset": 778758,
+            "raw_hex": "9cf89bf494ea",
+            "segment": 2
+          }
+        ],
+        "changed_record_ids_vs_saved_raw_decode": [
+          41052
+        ],
+        "cross_entry_byte_evidence": {
+          "entry_1182_saved_profile": [
+            {
+              "decoded_hex": "aec9aac5a5db",
+              "key": 79,
+              "payload_offset": 863430,
+              "raw_hex": "e186e58aea94",
+              "segment": 3
+            }
+          ],
+          "entry_4924_saved_profile": [
+            {
+              "decoded_hex": "aec9aac5a5db",
+              "key": 201,
+              "payload_offset": 125988,
+              "raw_hex": "6700630c6c12",
+              "segment": 3
+            }
+          ]
+        },
+        "entry_4924_candidate_table_name": "時空石",
+        "native_loader_confirmed": false,
+        "note": "Candidate decode is retained as cross-corroborated evidence only. It is not native-loader confirmation or authorization to change production data.",
+        "saved_boundary": 778764,
+        "status": "cross_corroborated_candidate_not_native_verified",
+        "table_rows": 6852
+      },
+      "copy_1182_name": null,
+      "copy_4924_name_candidate": "時空石",
+      "name_text_at_saved_boundaries": "晉怖肋",
+      "saved_fields": [
+        {
+          "control_chars": false,
+          "cp950_ok": true,
+          "decoded_hex": "aecaa9c6a6d8",
+          "field_index": 0,
+          "first_error_index": null,
+          "payload_locations": [
+            {
+              "decoded_hex": "aecaa9c6a6d8",
+              "key": 50,
+              "payload_offset": 778758,
+              "raw_hex": "9cf89bf494ea",
+              "segment": 2
+            }
+          ],
+          "text_if_clean": "晉怖肋"
+        },
+        {
+          "control_chars": false,
+          "cp950_ok": true,
+          "decoded_hex": "a440b6f4a569a548b371b94ca947bb79b04fbffdbc76b9b3a94dc16eadb5aabaa5dbc0592372a169c3feabaca16aa5f4b0c8b944a8e3",
+          "field_index": 1,
+          "first_error_index": null,
+          "payload_locations": [
+            {
+              "decoded_hex": "a440b6f4a569a548b371b94ca947bb79b04fbffdbc76b9b3a94dc16eadb5aabaa5dbc0592372a169c3feabaca16aa5f4b0c8b944a8e3",
+              "key": 49,
+              "payload_offset": 778769,
+              "raw_hex": "957187c5945894798240887d98768a48817e8ecc8d478882987cf05f9c849b8b94eaf16812439058f2cf9a9d905b94c581f9887599d2",
+              "segment": 3
+            }
+          ],
+          "text_if_clean": "一塊可以通過咒語記錄影像和聲音的石頭#r【類型】任務道具"
+        }
+      ]
+    },
+    "1945/DATA/71700": [
+      {
+        "control_chars": false,
+        "cp950_ok": true,
+        "decoded_hex": "aec9aac5a4a7bdfc",
+        "field_index": 0,
+        "first_error_index": null,
+        "payload_locations": [
+          {
+            "decoded_hex": "aec9aac5a4a7bdfc",
+            "key": 49,
+            "payload_offset": 958321,
+            "raw_hex": "9ff89bf495968ccd",
+            "segment": 3
+          },
+          {
+            "decoded_hex": "aec9aac5a4a7bdfc",
+            "key": 104,
+            "payload_offset": 1047020,
+            "raw_hex": "c6a1c2adcccfd594",
+            "segment": 4
+          },
+          {
+            "decoded_hex": "aec9aac5a4a7bdfc",
+            "key": 104,
+            "payload_offset": 1047123,
+            "raw_hex": "c6a1c2adcccfd594",
+            "segment": 4
+          },
+          {
+            "decoded_hex": "aec9aac5a4a7bdfc",
+            "key": 104,
+            "payload_offset": 1061755,
+            "raw_hex": "c6a1c2adcccfd594",
+            "segment": 4
+          }
+        ],
+        "text_if_clean": "時空之輪"
+      },
+      {
+        "control_chars": true,
+        "cp950_ok": false,
+        "decoded_hex": "a5d1ab5fc049ae61a6e6b77cace3b56faabaa141a8e3a6b3b04fbed0aec9aac5b6c7b065c249aabaaf53aeeda55cafe02372a169a8cfa5cea4e8aa6ba16ab6a4a5eea448bcc6b5a5a9f335a448a141a8cfa5ceaacca8ada5f7acb0b6a4aaf8f818ff3bf08be589e916f3e3e93ef73afd13fd3ffefde589ea1bfc3298bd9b1099e27a2bf830f08b9d84e93ef73af833fe35ffbcfc33eaa0",
+        "field_index": 1,
+        "first_error_index": 95,
+        "first_error_payload_offset": 1038307,
+        "payload_locations": [
+          {
+            "decoded_hex": "a5d1ab5fc049ae61a6e6b77cace3b56faabaa141a8e3a6b3b04fbed0aec9aac5b6c7b065c249aabaaf53aeeda55cafe02372a169a8cfa5cea4e8aa6ba16ab6a4a5eea448bcc6b5a5a9f335a448a141a8cfa5ceaacca8ada5f7acb0b6a4aaf8f818ff3bf08be589e916f3e3e93ef73afd13fd3ffefde589ea1bfc3298bd9b1099e27a2bf830f08b9d84e93ef73af833fe35ffbcfc33eaa0",
+            "key": 49,
+            "payload_offset": 1038212,
+            "raw_hex": "94e09a6ef1789f5097d7864d9dd2845e9b8b907099d29782817e8fe19ff89bf487f68154f3789b8b9e629fdc946d9ed11243905899fe94ff95d99b5a905b879594df95798df7849498c2049579907099fe94ff9bfd999c94c69d8187959bc9c929ce0ac1bad4b8d827c2d2d80fc60bcc22cc0ecfccd4b8db2acd03a98caa21a8d34b1ac901c1baacb5d80fc60bc902cf04ce8dcd02db91",
+            "segment": 3
+          }
+        ],
+        "text_if_clean": null
+      }
+    ],
+    "1945/DATA/72548": [
+      {
+        "control_chars": false,
+        "cp950_ok": false,
+        "decoded_hex": "c2f9a448a7a4c34dc5e9c5e784",
+        "field_index": 0,
+        "first_error_index": 12,
+        "first_error_payload_offset": 1100465,
+        "payload_locations": [
+          {
+            "decoded_hex": "c2f9a448a7a4c34dc5e9c5e784",
+            "key": 104,
+            "payload_offset": 1100453,
+            "raw_hex": "aa91cc20cfccab25ad81ad8fec",
+            "segment": 4
+          }
+        ],
+        "text_if_clean": null
+      },
+      {
+        "control_chars": false,
+        "cp950_ok": true,
+        "decoded_hex": "a8cfa5ceabe1a569a74bb64fc5e9c5e7c2f9a448a7a4c34db961c54ca470d8703135a4d12372a169c0f2b16fb37eae7ca16aa16db9dab751a540acc9a16ec34dbd74a9e2bcfaaca1b0ca2372a169a8cfa5ceb1f8a5f3a16aa448aaabb5a5afc5a1d9313035afc52372a169a8cfa5cea4e8a6a1a16aa56bc1e4c249c0bb",
+        "field_index": 1,
+        "first_error_index": null,
+        "payload_locations": [
+          {
+            "decoded_hex": "a8cfa5ceabe1a569a74bb64fc5e9c5e7c2f9a448a7a4c34db961c54ca470d8703135a4d12372a169c0f2b16fb37eae7ca16aa16db9dab751a540acc9a16ec34dbd74a9e2bcfaaca1b0ca2372a169a8cfa5ceb1f8a5f3a16aa448aaabb5a5afc5a1d9313035afc52372a169a8cfa5cea4e8a6a1a16aa56bc1e4c249c0bb",
+            "key": 104,
+            "payload_offset": 1100471,
+            "raw_hex": "c0a7cda6c389cd01cf23de27ad81ad8faa91cc20cfccab25d109ad24cc18b018595dccb94b1ac901a89ad907db16c614c902c905d1b2df39cd28c4a1c906ab25d51cc18ad492c4c9d8a24b1ac901c0a7cda6d990cd9bc902cc20c2c3ddcdc7adc9b159585dc7ad4b1ac901c0a7cda6cc80cec9c902cd03a98caa21a8d3",
+            "segment": 4
+          }
+        ],
+        "text_if_clean": "使用後可免費體驗雙人坐騎鈴鐺小喵15天#r【獲得途徑】《夢想世界》騎緣抽獎活動#r【使用條件】人物等級≧105級#r【使用方式】右鍵點擊"
+      }
+    ],
+    "1945/DATA/72548/cross_copy_bytes": {
+      "with_trailing_0x84": {
+        "1182": [
+          {
+            "decoded_hex": "c2f9a448a7a4c34dc5e9c5e784",
+            "key": 161,
+            "payload_offset": 1185616,
+            "raw_hex": "635805e9060562ec6448644625",
+            "segment": 4
+          }
+        ],
+        "1945": [
+          {
+            "decoded_hex": "c2f9a448a7a4c34dc5e9c5e784",
+            "key": 104,
+            "payload_offset": 1100453,
+            "raw_hex": "aa91cc20cfccab25ad81ad8fec",
+            "segment": 4
+          }
+        ],
+        "4924": [
+          {
+            "decoded_hex": "c2f9a448a7a4c34dc5e9c5e784",
+            "key": 110,
+            "payload_offset": 159730,
+            "raw_hex": "ac97ca26c9caad23ab87ab89ea",
+            "segment": 4
+          }
+        ]
+      },
+      "without_trailing_byte": {
+        "1182": [
+          {
+            "decoded_hex": "c2f9a448a7a4c34dc5e9c5e7",
+            "key": 161,
+            "payload_offset": 1185616,
+            "raw_hex": "635805e9060562ec64486446",
+            "segment": 4
+          },
+          {
+            "decoded_hex": "c2f9a448a7a4c34dc5e9c5e7",
+            "key": 161,
+            "payload_offset": 1192225,
+            "raw_hex": "635805e9060562ec64486446",
+            "segment": 4
+          },
+          {
+            "decoded_hex": "c2f9a448a7a4c34dc5e9c5e7",
+            "key": 161,
+            "payload_offset": 1192620,
+            "raw_hex": "635805e9060562ec64486446",
+            "segment": 4
+          }
+        ],
+        "1945": [
+          {
+            "decoded_hex": "c2f9a448a7a4c34dc5e9c5e7",
+            "key": 104,
+            "payload_offset": 1100453,
+            "raw_hex": "aa91cc20cfccab25ad81ad8f",
+            "segment": 4
+          },
+          {
+            "decoded_hex": "c2f9a448a7a4c34dc5e9c5e7",
+            "key": 104,
+            "payload_offset": 1107209,
+            "raw_hex": "aa91cc20cfccab25ad81ad8f",
+            "segment": 4
+          },
+          {
+            "decoded_hex": "c2f9a448a7a4c34dc5e9c5e7",
+            "key": 104,
+            "payload_offset": 1107456,
+            "raw_hex": "aa91cc20cfccab25ad81ad8f",
+            "segment": 4
+          }
+        ],
+        "4924": [
+          {
+            "decoded_hex": "c2f9a448a7a4c34dc5e9c5e7",
+            "key": 110,
+            "payload_offset": 159730,
+            "raw_hex": "ac97ca26c9caad23ab87ab89",
+            "segment": 4
+          },
+          {
+            "decoded_hex": "c2f9a448a7a4c34dc5e9c5e7",
+            "key": 110,
+            "payload_offset": 160672,
+            "raw_hex": "ac97ca26c9caad23ab87ab89",
+            "segment": 4
+          }
+        ]
+      }
+    },
+    "2338/DATA/final_boundary_invariance": {
+      "by_b3": {
+        "1036": {
+          "digest": "6d9562c18dde667b",
+          "rows": 40,
+          "status": "OK"
+        },
+        "898": {
+          "digest": "6d9562c18dde667b",
+          "rows": 40,
+          "status": "OK"
+        }
+      },
+      "saved_bounds": [
+        295,
+        597,
+        897,
+        1037
+      ]
+    },
+    "2338/DATA/saved_bounds_load": {
+      "error": "ValueError: invalid boundary ordering",
+      "note": "saved boundary list is not strictly increasing; reader refuses it",
+      "status": "FAIL"
+    },
+    "2409/DATA/8/itemid": [
+      {
+        "control_chars": false,
+        "cp950_ok": true,
+        "decoded_hex": "c2f9a7deafe0ad5ec646c540b2c5",
+        "field_index": 0,
+        "first_error_index": null,
+        "payload_locations": [
+          {
+            "decoded_hex": "c2f9a7deafe0ad5ec646c540b2c5",
+            "key": 164,
+            "payload_offset": 1442,
+            "raw_hex": "665d037a0b4409fa62e261e41661",
+            "segment": 3
+          }
+        ],
+        "text_if_clean": "雙技能英靈護符"
+      }
+    ],
+    "2455/DATA/25241/name": [
+      {
+        "control_chars": true,
+        "cp950_ok": true,
+        "decoded_hex": "1464197ea8a4beea",
+        "field_index": 0,
+        "first_error_index": null,
+        "payload_locations": [
+          {
+            "decoded_hex": "1464197ea8a4beea",
+            "key": 61,
+            "payload_offset": 5258,
+            "raw_hex": "29592443959983d7",
+            "segment": 4
+          }
+        ],
+        "text_if_clean": "\u0014d\u0019~角樽"
+      }
+    ],
+    "246/GEM2EQUIP/72838": {
+      "Desc": 4,
+      "EquipPos": [
+        1,
+        54,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "Name": "寶石附魔"
+    },
+    "246/GEM2EQUIP/EquipPos_value_counts": {
+      "1": 6,
+      "3": 16,
+      "4": 9,
+      "5": 9,
+      "6": 11,
+      "7": 5,
+      "8": 25,
+      "9": 7,
+      "54": 11
+    },
+    "293/filename_copies": {
+      "copy_at_4054_saved_bounds": [
+        "7363726970745c646174615c657175697069636f6e646174612e707974070000",
+        "script\\data\\equipicondata.pyt\u0007\u0000\u0000"
+      ],
+      "copy_at_5187_candidate_idx3_5192": [
+        "7363726970745c646174615c657175697069636f6e646174612e707973080000",
+        "script\\data\\equipicondata.pys\b\u0000\u0000"
+      ],
+      "copy_at_5187_saved_bounds": [
+        "7363726970654d646174615c657175697069636f6e646174612e707973080000",
+        "scripeMdata\\equipicondata.pys\b\u0000\u0000"
+      ]
+    },
+    "3791/CHILD_DATA/72222/name": [
+      {
+        "control_chars": false,
+        "cp950_ok": true,
+        "decoded_hex": "afabaa5ab6b5b0e9",
+        "field_index": 0,
+        "first_error_index": null,
+        "payload_locations": [
+          {
+            "decoded_hex": "afabaa5ab6b5b0e9",
+            "key": 95,
+            "payload_offset": 2564,
+            "raw_hex": "f0f4f505e9eaefb6",
+            "segment": 3
+          }
+        ],
+        "text_if_clean": "神武項圈"
+      }
+    ],
+    "3791/DATA/10191/name": [
+      {
+        "control_chars": false,
+        "cp950_ok": false,
+        "decoded_hex": "60be7660719cbf4ea6d7",
+        "field_index": 0,
+        "first_error_index": 5,
+        "first_error_payload_offset": 1396,
+        "payload_locations": [
+          {
+            "decoded_hex": "60be7660719cbf4ea6d7",
+            "key": 62,
+            "payload_offset": 1391,
+            "raw_hex": "5e80485e4fa2817098e9",
+            "segment": 2
+          }
+        ],
+        "text_if_clean": null
+      }
+    ],
+    "3791/DATA/25670/name": [
+      {
+        "control_chars": false,
+        "cp950_ok": false,
+        "decoded_hex": "c521cea4b16dad69aa47",
+        "field_index": 0,
+        "first_error_index": 0,
+        "first_error_payload_offset": 2138,
+        "payload_locations": [
+          {
+            "decoded_hex": "c521cea4b16dad69aa47",
+            "key": 95,
+            "payload_offset": 2138,
+            "raw_hex": "9a7e91fbee32f236f518",
+            "segment": 3
+          }
+        ],
+        "text_if_clean": null
+      }
+    ]
+  },
+  "status": "agent_b_probe_evidence_only_no_candidate_applied"
+}
