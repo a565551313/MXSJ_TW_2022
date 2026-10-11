@@ -328,10 +328,10 @@ Offset  RawHex  ^k1(243=0xF3)  ^k2(14=0x0E)   說明
 我們針對 Agent C 負責的寵物表 `script/data/petdata.py`（Entry 2027，135 筆寵物）與怪物圖鑑表 `script/data/monsterdata.py`（Entry 3526，143 筆怪物）進行技能名稱到 `petskill.DATA` 的映射驗證：
 
 1. **`petdata.py`（Entry 2027，`maySkillLst` 與 `mustSkillName`）—— 100% 名稱可匹配；技能 ID 尚有歧義**：
-   - 跨全部 135 筆寵物記錄，`maySkillLst` 與 `mustSkillName` 共引用 **144** 個不同的技能名稱。
+   - 按 batch-001 的顯式候選參數（`batch_001_profiles.json`：2027 bounds `[5383,10831,16264,21751]`、3205 keys `[204,152,122,74,218]` / bounds `[18043,36123,54155,72143]`；均關閉 solver），跨全部 135 筆寵物記錄，`maySkillLst` 與 `mustSkillName` 共引用 **143** 個不同的技能名稱。此處統計修正後的原始 bytes 去重集合，不沿用修正前的名稱數。
    - 在基線下，僅 `DATA[4011]['maySkillLst'][3]`（`'仙獸吉祥虎'`）因 Entry 2027 的 `bounds[3] = 21755` 邊界偏移而出現 CP950 亂碼 (`b2d7afc5d902cc27`)；對照 `monsterdata.DATA[4011]['lock3']` 及修正 Entry 2027 `bounds[3] = 21751` 後，該名稱還原為 `'終級強力'`。
-   - 還原後，**全部 144 個技能名稱都能精確匹配 `petskill.DATA[sid]['name']`**，但相同名稱命中多個 ID 時不能自動選一個：
-     - 142 個名稱在 `petskill.DATA` 中只有一個 ID。
+   - 使用上述候選參數後，**全部 143 個技能名稱都能精確匹配 `petskill.DATA[sid]['name']`**，但相同名稱命中多個 ID 時不能自動選一個：
+     - **141** 個名稱在 `petskill.DATA` 中只有一個 ID，另有 **2** 個名稱各命中兩個 ID，因此匹配子表共有 **145** 行。此結果已由 `test_review_csv_export.py` 的去重名稱、匹配行數與歧義測試固定，不代表原生關聯已確認。
      - `高級命中` 必須保留 **229、255**；`終級命中` 必須保留 **329、355**。技能書与 `ICON_MAPPING` 可支持「標準技能／幻化技能」的候選分類，但不構成對寵物候選字段的原生關聯確認，也不授權下游取第一個 ID。
      - batch-001 的 `pet_skill_name_matches.csv` 保留全部匹配，標記 `match_count=2`、`ambiguous=true`。任何正式關聯仍需獨立明確證據；不得把 229/329 靜默當成唯一答案。
 
