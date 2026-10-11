@@ -1,0 +1,117 @@
+string at dec 73070..73189 (len 119), B3=54797
+
+--- boundary experiment: decode [73070, X) with key 105, [X, 73189) with key 246 ---
+
+--- same, key 105 for [X, end) and 246 for [P, X) ---
+
+--- all 256 keys on the whole string ---
+
+--- per-byte analysis: which byte offsets fail ---
+first CP950 failure at string offset 11 (byte 0xfe)
+
+--- record 29760 and neighbours (from the corrected decode) ---
+  29758 -> 
+     ani          None
+     base_cost    96
+     beauty       10
+     beauty_limit 1
+     bg_type      1
+     cost         76
+     desc         '生長於潮濕的環境，因外形酷似珊瑚，故而得名#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】60級巧匠之術'
+     direct       1
+     grade        1
+     layer        '1,1'
+     lianxuplace  1
+     lv           40
+     name         '珊瑚草'
+     pagename     4
+     pre          138
+     special      None
+     stablepath   None
+     subtype      25
+     type         1
+     zoff         None
+  29759 -> 
+     ani          None
+     base_cost    100
+     beauty       10
+     beauty_limit 1
+     bg_type      1
+     cost         80
+     desc         '綠葉簇擁下，花苞挺立而出，瑩白透明，宛如黑夜中的燈籠#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】65級巧匠之術'
+     direct       1
+     grade        1
+     layer        '1,1'
+     lianxuplace  1
+     lv           45
+     name         '燈籠花'
+     pagename     4
+     pre          137
+     special      None
+     stablepath   None
+     subtype      25
+     type         1
+     zoff         None
+  29760 -> 
+     ani          None
+     base_cost    104
+     beauty       10
+     beauty_limit 1
+     bg_type      1
+     cost         83
+     desc         !!CP950-FAIL!! 3a4a2732295f357e3ede5dfe5dfe5bf85bf83b38293e2ce525e32a445c672ef03bdf373c35252dd729312dd2b773b74ec4ad2372a169c3feabaca16aae78b07cb8cbb9a2a147b4bac65bb4d3aaab2372a169aaabab7eb5a5afc5a16a312372a169bb73a740bbdda844a16a3730afc5a5a9a64ba4a7b34e
+     direct       1
+     grade        1
+     layer        '1,1'
+     lianxuplace  1
+     lv           50
+     name         '關山白'
+     pagename     4
+     pre          135
+     special      None
+     stablepath   None
+     subtype      25
+     type         1
+     zoff         None
+  29761 -> 
+     ani          None
+     base_cost    108
+     beauty       20
+     beauty_limit 1
+     bg_type      1
+     cost         86
+     desc         '嫩綠的枝葉，寬大的葉面，綿延的藤蔓充滿了蓬勃的生機#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】75級巧匠之術'
+     direct       1
+     grade        2
+     layer        '1,1'
+     lianxuplace  1
+     lv           60
+     name         '牽機藤'
+     pagename     4
+     pre          131
+     special      None
+     stablepath   None
+     subtype      25
+     type         1
+     zoff         None
+  29762 -> 
+     ani          None
+     base_cost    112
+     beauty       20
+     beauty_limit 1
+     bg_type      1
+     cost         89
+     desc         '因花朵絢麗熱烈之極，花開時可映得滿山皆紅，故而得名#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】80級巧匠之術'
+     direct       1
+     grade        2
+     layer        '1,1'
+     lianxuplace  1
+     lv           70
+     name         '映山紅'
+     pagename     4
+     pre          123
+     special      None
+     stablepath   None
+     subtype      25
+     type         1
+     zoff         None

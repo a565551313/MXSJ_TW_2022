@@ -1,0 +1,29 @@
+Traceback (most recent call last):
+  File "/home/user/MXSJ_TW_2022/server/tools/csv_checks_agent_f/probe50_data_eval.py", line 116, in <module>
+    ins = list(instructions(co))
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/MXSJ_TW_2022/server/tools/review_client_data_boundaries.py", line 46, in instructions
+    raise ValueError('EXTENDED_ARG before argument-free instruction')
+ValueError: EXTENDED_ARG before argument-free instruction
+Traceback (most recent call last):
+  File "/home/user/MXSJ_TW_2022/server/tools/csv_checks_agent_f/probe50_data_eval.py", line 117, in <module>
+    v = evaluate(co, ins, 'DATA')
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/MXSJ_TW_2022/server/tools/csv_checks_agent_f/probe50_data_eval.py", line 103, in evaluate
+    return _eval(co, seg[:-1] + [(at, 90, arg)])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/MXSJ_TW_2022/server/tools/csv_checks_agent_f/probe50_data_eval.py", line 93, in _eval
+    raise ValueError('unsupported opcode %d at %d' % (op, at))
+ValueError: unsupported opcode 9 at 18260
+=== SAVED [18282, 34193, 54797, 73070] [233, 132, 132, 105, 246]
+   FAIL ValueError EXTENDED_ARG before argument-free instruction
+=== FIXED key1=11 [18282, 36511, 54797, 73070] [233, 11, 132, 105, 246]
+   DATA type=dict records=233
+   field set: ['ani', 'base_cost', 'beauty', 'beauty_limit', 'bg_type', 'cost', 'desc', 'direct', 'grade', 'layer', 'lianxuplace', 'lv', 'name', 'pagename', 'pre', 'special', 'stablepath', 'subtype', 'type', 'zoff']
+   first 5 ids: [25798, 25932, 25933, 29000, 29001]
+   last 5 ids: [29856, 29857, 29858, 29998, 29999]
+   desc strings: good=163 bad=1
+   record[25798] keys=['ani', 'base_cost', 'beauty', 'beauty_limit', 'bg_type', 'cost', 'desc', 'direct', 'grade', 'layer', 'lianxuplace', 'lv', 'name', 'pagename', 'pre', 'special', 'stablepath', 'subtype', 'type', 'zoff']
+   record[25798] name=b'\xaex\xb0|\xb8\xcb\xb9\xa2\xb9\xcf\xaf\xc8' desc=b'\xaex\xb0|\xb8\xcb\xb9\xa2\xb9\xcf\xaf\xc8\xa1A\xb0O\xb8\xfc\xb5\xdb3\xaf\xc5\xaex\xb0|\xb8\xcb\xb9\xa2\xbbs\xa7@\xa4\xe8\xaak\xaa\xba\xb9\xcf\xaf\xc8#r\xa1i\xaa`\xb7N\xa1j\xbb\xdd\xadn\xc1\xca\xb6R\xaa\xcc\xa8\xad\xa4W\xc4\xe2\xb1a\xb3\xc3\xa8\xe3\xb9\xcf\xaf\xc8\xa1A\xa4\xe8\xa5i\xbbs\xa7@'
+=== FIXED key1=73 [18282, 36511, 54797, 73070] [233, 73, 132, 105, 246]
+   FAIL ValueError unsupported opcode 9 at 18260

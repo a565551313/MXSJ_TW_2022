@@ -1,0 +1,7 @@
+saved B3=73070 k3=105 k4=246     walk_ok=True strings=665 cjk_good=427 bad=200
+B3=73114 k3=159 k4=246           WALK FAIL tag '\x9f' at 54801
+B3=73114 k3=105 k4=246           walk_ok=True strings=665 cjk_good=428 bad=199
+B3=73070 k3=159 k4=246           WALK FAIL tag '\x9f' at 54801
+B3=73114 k3=105 k4=159           WALK FAIL tag '\x1a' at 73189
+B3=73114 k3=105 k4=105           WALK FAIL tag 'ì' at 73189
+B3=73114 k3=105 k4=0             WALK FAIL tag '\x85' at 73189

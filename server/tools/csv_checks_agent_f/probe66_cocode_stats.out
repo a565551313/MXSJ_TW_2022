@@ -1,0 +1,320 @@
+=== module co_code only: decoded payload [22, 47423) ===
+  saved
+     [    22, 18282) key=233 :    0 unmapped /  9822 instructions  []
+     [ 18282, 18282) key=132 :    0 unmapped /     0 instructions  []
+     [ 18282, 34193) key=132 : 2027 unmapped /  6029 instructions  [18283, 18286, 18289, 18297, 18298]
+     [ 34193, 47423) key=132 :  334 unmapped /  6892 instructions  [34197, 34206, 34209, 34210, 34215]
+     TOTAL unmapped = 2361
+  candidate
+     [    22, 18282) key=233 :    0 unmapped /  9822 instructions  []
+     [ 18282, 18282) key= 11 :    0 unmapped /     0 instructions  []
+     [ 18282, 36511) key= 11 :    2 unmapped / 10125 instructions  [18282, 18288]
+     [ 36511, 47423) key=132 :    0 unmapped /  6014 instructions  []
+     TOTAL unmapped = 2
+
+=== full dump under the candidate segmentation ===
+module-level stores (co_code offset, name):
+      2001  SITE
+      2115  LAYER
+      2820  ORDER
+     46863  DATA
+     47394  SPE_HORSE_DATA
+
+TYPE2NAME:
+   0 -> '床'
+   1 -> '桌'
+   2 -> '凳'
+   3 -> '椅'
+   4 -> '窗帘'
+   5 -> '地毯'
+   6 -> '柜子'
+   7 -> '台飾'
+   8 -> '屏風'
+   9 -> '掛畫'
+   10 -> '植物'
+   11 -> '花瓶'
+   20 -> '水中飾物'
+   21 -> '影壁'
+   22 -> '桌'
+   23 -> '盆景'
+   24 -> '凳'
+   25 -> '景觀植物'
+   26 -> '雜飾'
+   27 -> '路'
+   28 -> '亭'
+   29 -> '院牆'
+   30 -> '門'
+   31 -> '花圃'
+   32 -> '圍欄'
+   33 -> '橋'
+   35 -> '小窩'
+   36 -> '水中飾物'
+
+DIDRANGE:
+   (29000, 29024) -> '床'
+   (29025, 29049) -> '桌'
+   (29050, 29074) -> '凳'
+   (29075, 29099) -> '椅'
+   (29100, 29124) -> '窗帘'
+   (29125, 29149) -> '地毯'
+   (29150, 29174) -> '柜子'
+   (29175, 29199) -> '台飾'
+   (29200, 29224) -> '屏風'
+   (29225, 29249) -> '掛畫'
+   (29500, 29524) -> '水中飾物'
+   (29775, 29799) -> '花圃'
+   (29875, 29899) -> '小窩'
+   (29900, 29924) -> '水中飾物'
+
+LAYER:
+   {b'name': b'\xa6a\xbfj\xb3\xc3\xa8\xe3', b'pre': 0}
+   {b'name': b'\xb4\xb6\xb3q\xb3\xc3\xa8\xe3', b'pre': 1}
+   {b'name': b'\xafS\xae\xc4\xb3\xc3\xa8\xe3', b'pre': 2}
+   {b'name': b'\xa6a\xb4\xe0\xb3\xc3\xa8\xe3', b'pre': 0.5}
+
+SITE:
+   {b'directa': 1, b'directb': 7, b'directc': None, b'directd': None, b'name': b'2\xaf\xc5\xa4\xd1\xb5M\xb7\xc5\xacu', b'playname': None, b'posa': (17, 13), b'posb': (22, 12), b'posc': None, b'posd': None, b'sitstartpos': (460, 130), b'zooma': (17, 13, 3), b'zoomb': (22, 12, 3), b'zoomc': None, b'zoomd': None}
+   {b'directa': 1, b'directb': 7, b'directc': None, b'directd': None, b'name': b'3\xaf\xc5\xa4\xd1\xb5M\xb7\xc5\xacu', b'playname': None, b'posa': (20, 255), b'posb': (25, 16), b'posc': None, b'posd': None, b'sitstartpos': (540, 260), b'zooma': (20, 255, 3), b'zoomb': (25, 16, 3), b'zoomc': None, b'zoomd': None}
+   {b'directa': 1, b'directb': 7, b'directc': None, b'directd': None, b'name': b'4\xaf\xc5\xa4\xd1\xb5M\xb7\xc5\xacu', b'playname': None, b'posa': (20, 255), b'posb': (25, 16), b'posc': None, b'posd': None, b'sitstartpos': (540, 260), b'zooma': (20, 255, 3), b'zoomb': (25, 16, 3), b'zoomc': None, b'zoomd': None}
+   {b'directa': 20, b'directb': 7, b'directc': None, b'directd': None, b'name': b'\xacP\xa8\xb0\xb4\xd1\xbdL', b'playname': 2, b'posa': (-3, 2), b'posb': (3.5, 5), b'posc': None, b'posd': None, b'sitstartpos': None, b'zooma': (-3, 2, 2), b'zoomb': (2, 6, 2), b'zoomc': None, b'zoomd': None}
+   {b'directa': 1, b'directb': 2, b'directc': 2, b'directd': 2, b'name': b'\xbd\xac\xaa\xe1\xb7\xc5\xacu', b'playname': 3, b'posa': (4, 8), b'posb': (6, 6), b'posc': (3, 5), b'posd': (1, 6), b'sitstartpos': None, b'zooma': (4, 8, 5), b'zoomb': (6, 6, 5), b'zoomc': (3, 5, 4), b'zoomd': (1, 6, 5)}
+   {b'directa': 1, b'directb': None, b'directc': None, b'directd': None, b'name': b'\xc2\xfe\xc6H', b'playname': 1, b'posa': (0, 0), b'posb': None, b'posc': None, b'posd': None, b'sitstartpos': None, b'zooma': (1, 5, 2), b'zoomb': None, b'zoomc': None, b'zoomd': None}
+
+ORDER (first 20 of 233): [29341, 29700, 29701, 29702, 29703, 29704, 29200, 29201, 29202, 29203, 29204, 29205, 29206, 29207, 29768, 29725, 29726, 29727, 29225, 29226]
+
+SPE_HORSE_DATA (first 5 of 35): [(0, (200, 150)), (1, (200, 150)), (2, (200, 150)), (3, (200, 150)), (4, (200, 150))]
+
+DATA: 233 records
+25798 | 庭院裝飾圖紙 | type=4 subtype=None lv=105 cost=128 base_cost=160 | 庭院裝飾圖紙，記載著3級庭院裝飾製作方法的圖紙#r【注意】需要購買者身上攜帶傢具圖紙，方可製作
+25932 | 新風格傢具圖紙 | type=4 subtype=None lv=90 cost=128 base_cost=160 | 記載著新風格3級傢具制作方法的圖紙#r【注意】需要購買者身上攜帶傢具圖紙，方可製作
+25933 | 新風格傢具圖紙 | type=4 subtype=None lv=105 cost=128 base_cost=160 | 記載著新風格3級傢具制作方法的圖紙#r【注意】需要購買者身上攜帶傢具圖紙，方可製作
+29000 | 雕花木床 | type=2 subtype=0 lv=5 cost=16 base_cost=20 | 硬木製作的床，雕刻著精美的花紋#r【類型】傢具
+29001 | 紫檀木床 | type=2 subtype=0 lv=55 cost=73 base_cost=92 | 由名貴的紫檀木製作的床，雍容典雅#r【類型】傢具
+29002 | 花梨木床 | type=2 subtype=0 lv=80 cost=89 base_cost=112 | 由名貴的花梨木製作的床，隱隱散發著木香#r【類型】傢具
+29003 | 龍紋虎印榻 | type=2 subtype=0 lv=90 cost=128 base_cost=160 | 被精心雕琢上龍虎裝飾的床，能夠顯示出主人的身份#r【類型】傢具；床#r【物品等級】3
+29004 | 千夜幽夢帳 | type=2 subtype=0 lv=90 cost=128 base_cost=160 | 做工精細的床榻，幔帳幽雅，催人入美妙夢境#r【類型】傢具；床#r【物品等級】3
+29005 | 貓咪甜夢床 | type=2 subtype=0 lv=90 cost=128 base_cost=160 | 貓爪造型的床榻，搭配可愛貓咪裝飾，顯得甜蜜溫馨，催人入甜美夢境#r【類型】傢具；床#r【物品等級】3
+29006 | 龍貓美夢床 | type=2 subtype=0 lv=90 cost=128 base_cost=160 | 龍貓主題的床榻，躺在柔軟而有彈性的龍貓肚皮上，任何人都能快樂的進入夢鄉#r【類型】傢具；床#r【物品等級】3
+29007 | 金玉游龍塌 | type=2 subtype=0 lv=90 cost=128 base_cost=160 | 純金打造的床榻，床頭鑲嵌上好碧玉，龍形裝飾鮮活逼真，好似碧海游龍，豪氣衝天#r【類型】傢具；床#r【物品等級】3
+29025 | 白楊木桌 | type=2 subtype=1 lv=5 cost=16 base_cost=20 | 白楊木做的桌子#r【類型】傢具
+29026 | 紫檀木桌 | type=2 subtype=1 lv=35 cost=60 base_cost=76 | 由名貴的紫檀木做的桌子，價格不菲#r【類型】傢具
+29027 | 桃木桌 | type=2 subtype=1 lv=45 cost=67 base_cost=84 | 由桃木製作的桌子，據說有辟邪保平安的作用#r【類型】傢具
+29028 | 八儀威風案 | type=2 subtype=1 lv=90 cost=128 base_cost=160 | 用料考究，做工精細，盡顯主人威風氣派的高檔傢具#r【類型】傢具；桌#r【物品等級】3
+29029 | 辟邪呈祥幾 | type=2 subtype=1 lv=90 cost=128 base_cost=160 | 據說這件傢具擁有不僅能化凶解險，還有能納祥呈瑞的靈氣#r【類型】傢具；桌#r【物品等級】3
+29032 | 貓咪玲瓏桌 | type=2 subtype=1 lv=90 cost=128 base_cost=160 | 貓咪主題木桌，採用上好木料製成，摸上去有柔和溫馨的感覺#r【類型】傢具；桌#r【物品等級】3
+29033 | 龍貓田園桌 | type=2 subtype=1 lv=90 cost=128 base_cost=160 | 龍貓主題的木桌，採用上好木料製成，摸上去有柔和溫馨的感覺#r【類型】傢具；桌#r【物品等級】3
+29034 | 金玉蓮花桌 | type=2 subtype=1 lv=90 cost=128 base_cost=160 | 純金打造的圓桌，藍色琉璃桌面上繪製金色蓮花圖案，寓意著吉祥富貴#r【類型】傢具；桌#r【物品等級】3
+29050 | 漆花竹凳 | type=2 subtype=2 lv=10 cost=19 base_cost=24 | 由青竹編製，漆以花紋的凳子#r【類型】傢具
+29051 | 香木凳 | type=2 subtype=2 lv=45 cost=67 base_cost=84 | 凳中會不斷的飄散隱香，讓人心安神寧，自在不已#r【類型】傢具
+29052 | 八卦陰陽凳 | type=2 subtype=2 lv=90 cost=128 base_cost=160 | 凳子的飾紋中暗含八卦陰陽之理，據說它含有深邃的秘密，能辟邪倒是其次的了#r【類型】傢具；椅凳#r【物品等級】3
+29053 | 貓咪公主椅 | type=2 subtype=3 lv=90 cost=128 base_cost=160 | 貓咪主題的靠背椅，兼顧了可愛與舒適，深受女孩子的喜愛#r【類型】傢具；椅凳#r【物品等級】3
+29054 | 龍貓靠背椅 | type=2 subtype=3 lv=90 cost=128 base_cost=160 | 龍貓主題的靠背椅，兼顧了俏皮與舒適，坐上去會覺得開心不已#r【類型】傢具；椅凳#r【物品等級】3
+29055 | 金玉福壽椅 | type=2 subtype=3 lv=90 cost=128 base_cost=160 | 純金打造的靠背椅，造型古樸典雅，祥瑞的圖案象徵著福壽延年#r【類型】傢具；椅凳#r【物品等級】3
+29075 | 烏木椅 | type=2 subtype=3 lv=55 cost=73 base_cost=92 | 由烏木製作的椅子，美觀大方實用#r【類型】傢具
+29076 | 騰龍倚天座 | type=2 subtype=3 lv=90 cost=128 base_cost=160 | 靠背上飾有莊嚴的騰龍，傳聞在另一個和這裡差不多的世界裡只有帝王才有權享用龍的威儀#r【類型】傢具；椅凳#r【物品等級】3
+29077 | 貓咪甜蜜椅 | type=2 subtype=3 lv=90 cost=128 base_cost=160 | 貓咪主題的沙發，可愛貓咪和蛋糕甜點的搭配，讓人感到浪漫又甜蜜#r【類型】傢具；椅凳#r【物品等級】3
+29078 | 龍貓歡樂椅 | type=2 subtype=3 lv=90 cost=128 base_cost=160 | 龍貓主題的沙發，搭配表情俏皮搞怪的龍貓裝飾，喜感十足#r【類型】傢具；椅凳#r【物品等級】3
+29079 | 金玉游龍椅 | type=2 subtype=3 lv=90 cost=128 base_cost=160 | 純金打造的座椅，靠背上飾有大塊極品碧玉，配以游龍紋飾，極盡奢華#r【類型】傢具；椅凳#r【物品等級】3
+29100 | 麻布窗帘 | type=2 subtype=4 lv=10 cost=19 base_cost=24 | 由常見的麻布織造而成的窗帘，經久耐用#r【類型】傢具
+29101 | 青松白鶴帘 | type=2 subtype=4 lv=40 cost=64 base_cost=80 | 由細紗製成，上面繡有「青松臨崖白鶴展翅」之圖的窗帘#r【類型】傢具
+29102 | 喜鵲報春帘 | type=2 subtype=4 lv=40 cost=64 base_cost=80 | 由細紗製成，上面繡有「喜鵲飛來報春曉」之圖的窗帘#r【類型】傢具
+29103 | 薄日映暉帘 | type=2 subtype=4 lv=90 cost=128 base_cost=160 | 上等薄絲幔帘，乃是曉暉啟明、夕霞觀日之極品#r【類型】傢具；窗帘#r【物品等級】3
+29104 | 玉珠觀月帘 | type=2 subtype=4 lv=90 cost=128 base_cost=160 | 由上等珍珠串合而成，月光之下，顆顆光華、粒粒剔透，美不勝收#r【類型】傢具；窗帘#r【物品等級】3
+29105 | 貓咪粉緞帘 | type=2 subtype=4 lv=90 cost=128 base_cost=160 | 貓咪主題窗帘，採用粉色綢緞與花邊精心縫製而成#r【類型】傢具；窗帘#r【物品等級】3
+29106 | 龍貓錦邊帘 | type=2 subtype=4 lv=90 cost=128 base_cost=160 | 龍貓主題窗帘，採用藍色綢緞與銀色窗紗精心縫製而成#r【類型】傢具；窗帘#r【物品等級】3
+29107 | 金玉騰龍帘 | type=2 subtype=4 lv=90 cost=128 base_cost=160 | 紅色上等錦緞配上純金打造的騰龍造型橫樑，華麗中透露著威儀#r【類型】傢具；窗帘#r【物品等級】3
+29125 | 精編草蓆 | type=2 subtype=5 lv=15 cost=22 base_cost=28 | 由蘆葦編製而成的草蓆，美觀耐用#r【類型】傢具
+29126 | 虎皮毯 | type=2 subtype=5 lv=70 cost=83 base_cost=104 | 虎皮毯的價值不僅在於其美感，更多是源於征服「百獸之王」的榮譽#r【類型】傢具
+29127 | 彩紋羊毛毯 | type=2 subtype=5 lv=80 cost=89 base_cost=112 | 由異國流傳而來的羊毛毯，上等羊毛不假，但毛色究竟是不是商人所說的產自羊身上的自然色就有待考究了#r【類型】傢具
+29128 | 七彩流雲席 | type=2 subtype=5 lv=90 cost=128 base_cost=160 | 由不明原料製成的地席，不僅形象異美，而且踏上去也有如騰雲駕霧般的感覺#r【類型】傢具；地毯#r【物品等級】3
+29129 | 金絲銀絨毯 | type=2 subtype=5 lv=90 cost=128 base_cost=160 | 華貴的象徵，願將金絲銀絨製成腳下之席的人，其富貴程度不難想見#r【類型】傢具；地毯#r【物品等級】3
+29132 | 貓咪粉絨毯 | type=2 subtype=5 lv=90 cost=128 base_cost=160 | 貓咪主題的地毯，粉色棉絨觸感柔軟，踏上去彷彿心情也會變得溫暖柔軟#r【類型】傢具；地毯#r【物品等級】3
+29133 | 龍貓錦紋毯 | type=2 subtype=5 lv=90 cost=128 base_cost=160 | 龍貓主題的地毯，觸感柔軟，圖案可愛，踏上去彷彿心情也會變得溫暖愉悅#r【類型】傢具；地毯#r【物品等級】3
+29134 | 金玉映日毯 | type=2 subtype=5 lv=90 cost=128 base_cost=160 | 採用金絲銀絨縫製而成，中心繡著一輪蘊含祥瑞花紋的火紅旭日，象徵著步步高陞#r【類型】傢具；地毯#r【物品等級】3
+29150 | 樺木立柜 | type=2 subtype=6 lv=20 cost=25 base_cost=32 | 由樺木製成的尋常立柜，用處廣泛#r【類型】傢具
+29151 | 金絲楠木柜 | type=2 subtype=6 lv=70 cost=83 base_cost=104 | 由名貴的金絲楠木製成的高檔立柜#r【類型】傢具
+29152 | 香枝木立柜 | type=2 subtype=6 lv=100 cost=102 base_cost=128 | 顧名思義，站在柜邊即可聞到微香，使人舒暢#r【類型】傢具
+29153 | 百寶納財箱 | type=2 subtype=6 lv=90 cost=128 base_cost=160 | 裝飾華美，一眼便能認出是件與「財寶」緊密相關的箱子，該箱據說不僅能「裝財」，還能「納財」#r【類型】傢具；柜#r【物品等級】3
+29154 | 龍鳳環舞柜 | type=2 subtype=6 lv=90 cost=128 base_cost=160 | 柜身龍鳳環繞，雕紋精緻細美，讓人覺得都能隱隱看到祥瑞之氣#r【類型】傢具；柜#r【物品等級】3
+29155 | 貓咪相思柜 | type=2 subtype=6 lv=90 cost=128 base_cost=160 | 貓咪主題的儲物柜，採用名貴木料製成，質地堅實，造型別緻精美#r【類型】傢具；柜#r【物品等級】3
+29156 | 龍貓五彩柜 | type=2 subtype=6 lv=90 cost=128 base_cost=160 | 龍貓主題的儲物柜，採用名貴木料製成，質地堅實，造型別緻精美#r【類型】傢具；柜#r【物品等級】3
+29157 | 金玉吉慶柜 | type=2 subtype=6 lv=90 cost=128 base_cost=160 | 純金打造的立柜，柜門採用藍色琉璃製成，雕紋精緻細美，讓人覺得喜慶吉祥#r【類型】傢具；柜#r【物品等級】3
+29175 | 黃銅燭台 | type=2 subtype=7 lv=25 cost=28 base_cost=36 | 由黃銅製成的燭台，可以起到一般的照明作用#r【類型】傢具
+29176 | 水晶燭台 | type=2 subtype=7 lv=95 cost=99 base_cost=124 | 玲瓏剔透的水晶被燭光輝映時可以讓人覺得這件擺飾確實是物有所值的#r【類型】傢具
+29177 | 純銀燭台 | type=2 subtype=7 lv=100 cost=102 base_cost=128 | 銀製的燭台，做工精細，飾紋繁複而清晰，是不可多得的藝術品#r【類型】傢具
+29178 | 五彩琉璃燈 | type=2 subtype=7 lv=90 cost=128 base_cost=160 | 白日裡看著平淡無奇，一到晚上掌燈點火，則映出五彩光輝，讓人嘆為觀止#r【類型】傢具；台飾#r【物品等級】3
+29179 | 日月光華台 | type=2 subtype=7 lv=90 cost=128 base_cost=160 | 能夠發出令人驚訝光輝的燭台，據說晚上即使是放在庭院之中，也能明亮光華照耀得如同白晝#r【類型】傢具；台飾#r【物品等級】3
+29180 | 貓咪美夢燈 | type=2 subtype=7 lv=105 cost=128 base_cost=160 | 貓咪主題的檯燈，柔和的燈光搭配乖巧的貓咪裝飾，令人感到無比的輕鬆寧靜#r【類型】傢具；台飾#r【物品等級】3
+29181 | 龍貓雨夜燈 | type=2 subtype=7 lv=105 cost=128 base_cost=160 | 龍貓主題的檯燈，柔和的燈光搭配龍貓撐傘的造型，彷彿置身雨夜之中，感到無比的寧靜舒心#r【類型】傢具；台飾#r【物品等級】3
+29182 | 金玉明珠宮燈 | type=2 subtype=7 lv=105 cost=128 base_cost=160 | 純金打造的宮燈，內嵌一顆稀世明珠，夜晚能放射出璀璨光華，讓人嘆為觀止#r【類型】傢具；台飾#r【物品等級】3
+29200 | 花鳥屏風 | type=2 subtype=8 lv=25 cost=28 base_cost=36 | 常見的屏風，上面繪有花鳥圖#r【類型】傢具
+29201 | 百鳥朝鳳圖屏風 | type=2 subtype=8 lv=65 cost=80 base_cost=100 | 由名畫師繪以百鳥朝鳳圖的屏風，畫中諸禽神態各異，栩栩如生，站在屏風前彷彿能聽到鳥鳴#r【類型】傢具
+29202 | 江山多嬌圖屏風 | type=2 subtype=8 lv=95 cost=99 base_cost=124 | 繪有江山多嬌圖的屏風，畫中展示盡顯壯麗山河、多嬌美景#r【類型】傢具
+29203 | 雲母金座屏風 | type=2 subtype=8 lv=90 cost=128 base_cost=160 | 由幾乎不加雕琢的天然雲母飾以黃金合而為座的屏風，十分難得#r【類型】傢具；屏風#r【物品等級】3
+29204 | 龍虎靈紋屏風 | type=2 subtype=8 lv=90 cost=128 base_cost=160 | 傳聞屏風上的龍爭虎鬥圖是由一得道高人所做，蘊有靈氣，隱隱生威#r【類型】傢具；屏風#r【物品等級】3
+29205 | 貓咪夢幻屏風 | type=2 subtype=8 lv=90 cost=128 base_cost=160 | 貓咪主題的屏風，美麗可愛的貓咪圖案，帶給人歡樂和夢幻的感覺#r【類型】傢具；屏風#r【物品等級】3
+29206 | 龍貓迎客屏風 | type=2 subtype=8 lv=105 cost=128 base_cost=160 | 龍貓主題的屏風，頑皮的龍貓圖案，總是能讓來客驚嘆和忍俊不禁#r【類型】傢具；屏風#r【物品等級】3
+29207 | 金玉祥瑞屏風 | type=2 subtype=8 lv=105 cost=128 base_cost=160 | 純金打造的屏風，鑲嵌有祥雲造型的名貴翡翠，隱隱感覺有祥瑞靈氣蘊含其中#r【類型】傢具；屏風#r【物品等級】3
+29225 | 青山綠水圖 | type=2 subtype=9 lv=30 cost=32 base_cost=40 | 青山綠水，清雅質樸，令人心曠神怡#r【類型】傢具
+29226 | 鶯歌燕舞圖 | type=2 subtype=9 lv=75 cost=86 base_cost=108 | 鶯歌燕舞，曼妙輕靈，令人心神舒暢#r【類型】傢具
+29227 | 猛虎下山圖 | type=2 subtype=9 lv=85 cost=92 base_cost=116 | 猛虎下山，威風八面，令人心生敬畏#r【類型】傢具；掛畫#r【物品等級】2#r【製作需求】85級巧匠之術
+29228 | 駿馬奔騰圖 | type=2 subtype=9 lv=100 cost=102 base_cost=128 | 駿馬奔騰，風塵滾滾，令人心潮湧動#r【類型】傢具；掛畫#r【物品等級】2#r【製作需求】100級巧匠之術
+29229 | 萬佛朝宗圖 | type=2 subtype=9 lv=90 cost=128 base_cost=160 | 萬佛朝宗，淨土無穢，令人心不染塵#r【類型】傢具；掛畫#r【物品等級】3
+29230 | 素女妙音圖 | type=2 subtype=9 lv=90 cost=128 base_cost=160 | 素女妙音，仙樂飄飄，令人心清神明#r【類型】傢具；掛畫#r【物品等級】3
+29231 | 雙喜貼紙 | type=2 subtype=9 lv=90 cost=128 base_cost=160 | 洞房花燭乃是人生幾大喜事之一，人們通常以此貼紙來表達對新人「喜事成雙」的美好祝願#r【類型】傢具；掛畫#r【物品等級】3
+29232 | 貓咪甜心壁畫 | type=2 subtype=9 lv=105 cost=128 base_cost=160 | 貓咪主題的心型壁畫，配上可愛的緞帶和鈴鐺裝飾，令人感到甜蜜溫馨#r【類型】傢具；掛畫#r【物品等級】3
+29233 | 龍貓嘻哈壁畫 | type=2 subtype=9 lv=105 cost=128 base_cost=160 | 龍貓主題的壁畫，搞怪幽默的龍貓表情，令人感到輕鬆歡樂#r【類型】傢具；掛畫#r【物品等級】3
+29234 | 金玉如意佩 | type=2 subtype=9 lv=105 cost=128 base_cost=160 | 採用世間珍品玉石雕刻而成，並以純金鑲邊，彰顯出主人的富貴財氣#r【類型】傢具；掛畫#r【物品等級】3
+29250 | 青瓷花瓶 | type=2 subtype=11 lv=15 cost=22 base_cost=28 | 由一般工藝燒製的普通花瓶#r【類型】傢具
+29251 | 棕葵 | type=2 subtype=10 lv=20 cost=25 base_cost=32 | 常見的蒲葉盆景植物，美觀易養#r【類型】傢具
+29252 | 金邊蘭 | type=2 subtype=10 lv=30 cost=32 base_cost=40 | 葉片肥厚，兩側邊沿為金黃色，由此得名#r【類型】傢具
+29253 | 水仙花 | type=2 subtype=10 lv=90 cost=96 base_cost=120 | 美麗的水仙通常寓意著清新脫俗，為人們所喜愛#r【類型】傢具
+29254 | 君子蘭 | type=2 subtype=10 lv=90 cost=96 base_cost=120 | 因為其名而受許多人的喜愛，被視為高尚的象徵#r【類型】傢具
+29255 | 觀音蓮 | type=2 subtype=10 lv=95 cost=99 base_cost=124 | 觀音蓮花葉俱美，又易栽培，是盆景的常見之選#r【類型】傢具
+29256 | 白玉玲瓏瓶 | type=2 subtype=11 lv=90 cost=128 base_cost=160 | 罕見的由整塊白玉精雕而成的飾瓶，其精美剔透可謂巧奪天工#r【類型】傢具；室內雜飾#r【物品等級】3
+29257 | 金絲琉璃瓶 | type=2 subtype=11 lv=90 cost=128 base_cost=160 | 由數十道繁複精密的工藝精心製成的飾瓶，琉璃之中有金絲鑲嵌而依舊色彩渾然線明紋晰，是少有的極品#r【類型】傢具；室內雜飾#r【物品等級】3
+29258 | 貓咪玫瑰花瓶 | type=2 subtype=11 lv=105 cost=128 base_cost=160 | 貓咪主題的花瓶，白玉花瓶和鮮紅的玫瑰，讓人感到浪漫而甜蜜的感覺#r【類型】傢具；室內雜飾#r【物品等級】3
+29259 | 龍貓愛戀花瓶 | type=2 subtype=11 lv=105 cost=128 base_cost=160 | 龍貓主題的花瓶，憨態可掬的龍貓手捧鮮花，讓人感到開心而甜蜜的感覺#r【類型】傢具；室內雜飾#r【物品等級】3
+29260 | 金玉富貴花瓶 | type=2 subtype=11 lv=105 cost=128 base_cost=160 | 純金打造的花瓶，配上翡翠包邊，再盛滿雍容華貴的牡丹，真是花開富貴，美不勝收#r【類型】傢具；室內雜飾#r【物品等級】3
+29301 | 小聖誕樹 | type=2 subtype=10 lv=90 cost=128 base_cost=160 | 一棵小小聖誕樹，可以放置在家裡#r【類型】活動道具#r【使用方法】在家裡右鍵單擊使用
+29303 | 鯉魚玉雕水車 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29304 | 翹頭木案 | type=1 subtype=22 lv=None cost=None base_cost=None | None
+29305 | 星辰棋盤 | type=1 subtype=22 lv=None cost=None base_cost=None | None
+29306 | 蓮花溫泉 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29307 | 旺財小屋 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29308 | 花盆 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29310 | 鵝卵石路 | type=1 subtype=36 lv=None cost=None base_cost=None | None
+29311 | 方形木路 | type=1 subtype=36 lv=None cost=None base_cost=None | None
+29312 | 荷花·一 | type=1 subtype=20 lv=None cost=None base_cost=None | None
+29314 | 蝶語鞦韆 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29315 | 雕花石橋 | type=1 subtype=33 lv=None cost=None base_cost=None | None
+29316 | 印花屏風 | type=1 subtype=21 lv=None cost=None base_cost=None | None
+29317 | 貓咪小屋 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29318 | 蓮花小路·一 | type=1 subtype=20 lv=None cost=None base_cost=None | None
+29319 | 白柵欄 | type=1 subtype=32 lv=None cost=None base_cost=None | None
+29320 | 露天庖廚 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29322 | 老君丹爐 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29323 | 稻草人 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29324 | 綠草柵欄 | type=1 subtype=32 lv=None cost=None base_cost=None | None
+29325 | 破舊木路 | type=1 subtype=36 lv=None cost=None base_cost=None | None
+29326 | 岩石圍欄 | type=1 subtype=32 lv=None cost=None base_cost=None | None
+29327 | 花壇圍欄 | type=1 subtype=32 lv=None cost=None base_cost=None | None
+29328 | 神木花架 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29329 | 宮廷圍欄 | type=1 subtype=32 lv=None cost=None base_cost=None | None
+29330 | 許願樹 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29331 | 大理石路 | type=1 subtype=36 lv=None cost=None base_cost=None | None
+29332 | 木質花圍欄 | type=1 subtype=32 lv=None cost=None base_cost=None | None
+29333 | 荷花·二 | type=1 subtype=20 lv=None cost=None base_cost=None | None
+29334 | 荷花·三 | type=1 subtype=20 lv=None cost=None base_cost=None | None
+29335 | 荷花·四 | type=1 subtype=20 lv=None cost=None base_cost=None | None
+29336 | 荷花·五 | type=1 subtype=20 lv=None cost=None base_cost=None | None
+29337 | 荷花·六 | type=1 subtype=20 lv=None cost=None base_cost=None | None
+29338 | 荷花·七 | type=1 subtype=20 lv=None cost=None base_cost=None | None
+29339 | 西瓜盆栽 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29340 | 南瓜盆栽 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29341 | 草莓盆栽 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29342 | 西紅柿盆栽 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29343 | 蓮花小路·二 | type=1 subtype=20 lv=None cost=None base_cost=None | None
+29344 | 蓮花小路·三 | type=1 subtype=20 lv=None cost=None base_cost=None | None
+29345 | 桃花樹·一 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29346 | 桃花樹·二 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29347 | 桃花樹·三 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29348 | 桃花樹·四 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29349 | 桃花樹·五 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29350 | 紅楓樹·一 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29351 | 紅楓樹·二 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29352 | 紅楓樹·三 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29353 | 園林樹·一 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29354 | 園林樹·二 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29355 | 椰子樹 | type=1 subtype=25 lv=None cost=None base_cost=None | None
+29356 | 青龍·玉燈 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29357 | 白虎·晶燈 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29358 | 朱雀·羽燈 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29359 | 玄武·竹燈 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29360 | 青龍·龍威鼎 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29361 | 白虎·伏虎毯 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29362 | 朱雀·祥瑞碑 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29363 | 玄武·地靈碑 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29364 | 青龍·升龍柱 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29365 | 白虎·囚魔柱 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29366 | 朱雀·飛羽柱 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29367 | 玄武·鑄魂爐 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29368 | 青龍·盤龍台 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29369 | 白虎·蒼冥鏡 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29370 | 朱雀·真火幡 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29371 | 玄武·靈氣池 | type=1 subtype=26 lv=None cost=None base_cost=None | None
+29372 | 坐騎展示台 | type=1 subtype=33 lv=None cost=None base_cost=None | None
+29500 | 幽池碧玉水車 | type=1 subtype=20 lv=55 cost=76 base_cost=96 | 白樺木製成的水車支架，在清澈池水的反覆衝刷下如碧玉一般暖人心脾#r【類型】庭院裝飾：水中飾物#r【物品等級】2#r【製作需求】60級巧匠之術
+29501 | 雙壇映月假山 | type=1 subtype=20 lv=70 cost=83 base_cost=104 | 巧匠採集上品蒼嵐玉做成的相映成趣的水壇，每當清水流過，會在玉石的輝映下泛起層層藍色的波光#r【類型】庭院裝飾：水中飾物#r【物品等級】2#r【製作需求】70級巧匠之術
+29502 | 金鱗吐水假山 | type=1 subtype=20 lv=80 cost=89 base_cost=112 | 巧匠採集上品蒼嵐玉做成的假山，假山頂部的金色鯉魚雕刻細膩，神情自然，栩栩如生#r【類型】庭院裝飾：水中飾物#r【物品等級】2#r【製作需求】80級巧匠之術
+29600 | 赤磚藍瓦影壁 | type=1 subtype=21 lv=60 cost=76 base_cost=96 | 工匠選堅硬赤色紅磚，雕漆藍瓦為原料建造而成，造型簡單大方，以結實耐用見長#r【類型】庭院裝飾：影壁#r【物品等級】1#r【製作需求】60級巧匠之術
+29601 | 宏圖青檐影壁 | type=1 subtype=21 lv=90 cost=96 base_cost=120 | 工匠採青木雕為飛檐，用筒瓦鋪就頂層，再於壁面刻出熱情洋溢的浮雕，表達出主人的高遠志向#r【類型】庭院裝飾：影壁#r【物品等級】2#r【製作需求】90級巧匠之術
+29602 | 漢梁畫棟影壁 | type=1 subtype=21 lv=100 cost=102 base_cost=128 | 工匠採優質原木，檀香紅漆輔以高超雕刻之法製造而成，刀功精細，花紋繁複，有棟樑之材的美好寓意#r【類型】庭院裝飾：影壁#r【物品等級】2#r【製作需求】100級巧匠之術
+29603 | 白玉金檐影壁 | type=1 subtype=21 lv=105 cost=128 base_cost=160 | 工匠大師採金色琉璃磚瓦為檐，以純白溫潤玉石為壁，構思巧妙，佈局精致，做工細緻，極盡富麗堂皇之能事#r【類型】庭院裝飾：影壁#r【物品等級】3
+29625 | 五針松盆景 | type=1 subtype=23 lv=55 cost=80 base_cost=100 | 針葉細短，五針成簇，塑造成片狀如層雲湧簇之勢，為樹木盆景之珍貴樹種#r【類型】庭院裝飾：盆景#r【物品等級】2#r【製作需求】65級巧匠之術
+29626 | 銀杏盆景 | type=1 subtype=23 lv=75 cost=86 base_cost=108 | 銀杏盆景夏日遒勁蔥綠，秋季金黃滿枝，給人以峻峭雄奇，華貴典雅之感#r【類型】庭院裝飾：盆景#r【物品等級】2#r【製作需求】75級巧匠之術
+29627 | 金雀盆景 | type=1 subtype=23 lv=90 cost=96 base_cost=120 | 因金黃色花朵形似展翅欲飛之雀而得名，盆景蒼老蔥鬱，極富有生命活力，達到自然和諧的境界#r【類型】庭院裝飾：盆景#r【物品等級】2#r【製作需求】90級巧匠之術
+29628 | 蒼龍盤雲盆景 | type=1 subtype=23 lv=105 cost=128 base_cost=160 | 由多種名貴木種嫁接混栽而成，造型特異，有如雲中蒼龍，浮雲暗湧，盤龍升霄，既似寫意潑墨，又含工筆細描，實是罕有極品#r【類型】庭院裝飾：盆景#r【物品等級】3
+29629 | 飛花六月雪盆景 | type=1 subtype=23 lv=105 cost=128 base_cost=160 | 繁花滿樹，白星點綴，微風拂來，飛花舞漫舞，飄逸靈動之間令人遐想無限，因其形其勢酷似六月飛雪而聞名#r【類型】庭院裝飾：盆景#r【物品等級】3
+29650 | 青石桌 | type=1 subtype=22 lv=45 cost=76 base_cost=96 | 工匠採堅硬的青崗石為原料，仔細研磨而成的青石桌，以經久耐用，簡單樸實見長#r【類型】庭院裝飾：石桌#r【物品等級】1#r【製作需求】60級巧匠之術
+29651 | 雕花石桌 | type=1 subtype=22 lv=95 cost=99 base_cost=124 | 工匠選取玄武岩為原料，精心雕刻各種名貴花卉圖案於其上，雕功精湛，刀刀細膩，刀刀雋永#r【類型】庭院裝飾：石桌#r【物品等級】2#r【製作需求】95級巧匠之術
+29652 | 仙弈白玉桌 | type=1 subtype=22 lv=105 cost=128 base_cost=160 | 巧匠精選靈山之上吸納天地精華之極品白玉為原料，精雕細琢而成，因其富含流淌的仙靈之氣濃郁不散，氤氳不化而著名#r【類型】庭院裝飾：石桌#r【物品等級】3
+29675 | 青石凳 | type=1 subtype=24 lv=30 cost=60 base_cost=76 | 工匠採上品青崗石為原料，仔細研磨而成的青石凳，以經久耐用，樸實無華而見長#r【類型】庭院裝飾：石凳#r【物品等級】1#r【製作需求】35級巧匠之術
+29676 | 鏤雕石凳 | type=1 subtype=24 lv=95 cost=99 base_cost=124 | 工匠採火山岩為原料，用鏤空雕刻法精製而成的石凳，美觀大方，結實耐用#r【類型】庭院裝飾：石凳#r【物品等級】2#r【製作需求】95級巧匠之術
+29677 | 仙弈白玉凳 | type=1 subtype=24 lv=105 cost=128 base_cost=160 | 巧匠精選靈山之上吸納天地精華之極品白玉為原料精製而成，脂白細膩極品玉石使其觸感溫潤，是聞名天下的極品玉石凳，倍受喜愛#r【類型】庭院裝飾：石凳#r【物品等級】3
+29700 | 青石宮燈 | type=1 subtype=26 lv=35 cost=70 base_cost=88 | 匠人選青崗石為原料，依宮廷石燈製造之法雕刻打磨而成，常用於庭院做照明之用#r【類型】庭院裝飾：雜飾#r【物品等級】1#r【製作需求】50級巧匠之術
+29701 | 瀚海定心爐 | type=1 subtype=26 lv=100 cost=102 base_cost=128 | 異族匠師精心雕琢打磨而成的燈爐，基座敦實，頂端托出的瀚海定心珠，有著鎮邪扶正的不凡功效#r【類型】庭院裝飾：雜飾#r【物品等級】2#r【製作需求】100級巧匠之術
+29702 | 天蓬藍田玉雕 | type=1 subtype=26 lv=105 cost=128 base_cost=160 | 西遊族工匠大師採上等藍田美玉，嘔心瀝血雕琢而成的豬悟能雕像，憨態可鞠的表情，栩栩如生的造型似乎在顯示人們對「二師弟」的懷念之情#r【類型】庭院裝飾：雜飾#r【物品等級】3
+29703 | 鏤雕石燈 | type=1 subtype=26 lv=80 cost=89 base_cost=112 | 工匠大師用鏤紋雕刻法，精心製作而成的石燈，美觀大方，夜晚掌燈之後有著金壁輝煌般的奇異效果#r【類型】庭院裝飾：雜飾#r【物品等級】2#r【製作需求】80級巧匠之術
+29704 | 白玉笑獅 | type=1 subtype=26 lv=105 cost=128 base_cost=160 | 由漢白玉雕刻而成白玉笑獅子，炯炯有神的雙眼，鋒利的尖齒使其顯得威風無比，腳下踩著的紅色繡球，可愛的神情又使其顯得憨態可掬#r【類型】庭院裝飾：雜飾#r【物品等級】3
+29725 | 凝暉亭 | type=1 subtype=28 lv=85 cost=92 base_cost=116 | 以褚木藍瓦為原料建造而成，常見於各種山峰之上，在陽光照耀下往往會凝聚成五光十色的美麗光暈#r【類型】庭院裝飾：亭#r【物品等級】2#r【製作需求】85級巧匠之術
+29726 | 積翠亭 | type=1 subtype=28 lv=100 cost=102 base_cost=128 | 巧匠以翠木覆瓦精心構思，巧妙佈局建造而成，外觀樸實文秀，簡約美觀，自然清新的感覺#r【類型】庭院裝飾：亭#r【物品等級】2#r【製作需求】100級巧匠之術
+29727 | 尚陽亭 | type=1 subtype=28 lv=105 cost=128 base_cost=160 | 匠師以金色琉璃瓦、藍木飛禽檐、赤漆紅木柱為主體構建的具有陽剛、堅毅、挺拔的韻味的華麗亭子#r【類型】庭院裝飾：亭#r【物品等級】3
+29750 | 翠雲獨秀竹 | type=1 subtype=25 lv=65 cost=89 base_cost=112 | 珍稀翠竹，枝杆挺拔修長，亭亭玉立，裊娜多姿，四時青翠，凌霜傲雨，一枝獨秀#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】80級巧匠之術
+29751 | 翠雲成雙竹 | type=1 subtype=25 lv=90 cost=96 base_cost=120 | 珍稀翠竹，枝杆挺拔修長，亭亭玉立，裊娜多姿，四時青翠，凌霜傲雨，對影成雙#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】90級巧匠之術
+29752 | 翠雲三紋竹 | type=1 subtype=25 lv=100 cost=102 base_cost=128 | 珍稀翠竹，枝杆挺拔修長，亭亭玉立，裊娜多姿，四時青翠，凌霜傲雨，三支同行#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】100級巧匠之術
+29753 | 山丘棕櫚 | type=1 subtype=25 lv=65 cost=92 base_cost=116 | 矮小的樹幹，扇形的葉鞘呈現出一片蔥蔥鬱郁綠色，是四季常青常綠的觀賞植物#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】85級巧匠之術
+29754 | 龍木棕櫚 | type=1 subtype=25 lv=95 cost=99 base_cost=124 | 樹幹挺拔俏麗，扇形的葉鞘向人們展示著一片翠色蔥蘢之意，是四季常青常綠的觀賞植物#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】95級巧匠之術
+29755 | 榕樹 | type=1 subtype=25 lv=85 cost=92 base_cost=116 | 壯實的軀幹，繁茂枝葉加上鬱鬱蔥蔥覆蓋著的寬敞地面，似乎在向人們昭示其「獨木成林」的特性#r【類型】庭院裝飾：景觀植物#r【物品等級】2#r【製作需求】85級巧匠之術
+29756 | 柏樹 | type=1 subtype=25 lv=95 cost=99 base_cost=124 | 柏樹鬥寒傲霜雪，堅毅挺拔不常見的柏樹，乃百木之長，素為正氣，高尚，長壽，不朽的象徵#r【類型】庭院裝飾：景觀植物#r【物品等級】2#r【製作需求】95級巧匠之術
+29757 | 櫻花樹 | type=1 subtype=25 lv=100 cost=102 base_cost=128 | 櫻花怒放時，絢麗燦爛，遠遠望去，便如一團火雲，流淌著的是生命綻放的激情與芳華#r【類型】庭院裝飾：景觀植物#r【物品等級】2#r【製作需求】100級巧匠之術
+29758 | 珊瑚草 | type=1 subtype=25 lv=40 cost=76 base_cost=96 | 生長於潮濕的環境，因外形酷似珊瑚，故而得名#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】60級巧匠之術
+29759 | 燈籠花 | type=1 subtype=25 lv=45 cost=80 base_cost=100 | 綠葉簇擁下，花苞挺立而出，瑩白透明，宛如黑夜中的燈籠#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】65級巧匠之術
+29760 | 關山白 | type=1 subtype=25 lv=50 cost=83 base_cost=104 | 白葉黃花，朦朦朧朧之間透漏著難得一見的淡雅清新意蘊#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】70級巧匠之術
+29761 | 牽機藤 | type=1 subtype=25 lv=60 cost=86 base_cost=108 | 嫩綠的枝葉，寬大的葉面，綿延的藤蔓充滿了蓬勃的生機#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】75級巧匠之術
+29762 | 映山紅 | type=1 subtype=25 lv=70 cost=89 base_cost=112 | 因花朵絢麗熱烈之極，花開時可映得滿山皆紅，故而得名#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】80級巧匠之術
+29763 | 秋木蕨 | type=1 subtype=25 lv=60 cost=92 base_cost=116 | 表面覆有棕色茸毛，葉片呈輪廓三角狀，為羽狀復葉，多生長於林地、灌叢、荒山草坡等處#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】85級巧匠之術
+29764 | 珍珠梅 | type=1 subtype=25 lv=90 cost=96 base_cost=120 | 習性喜陽光，對環境適應性強，花葉清麗，花期悠長，經常用於裝飾點綴草坪角隅#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】90級巧匠之術
+29765 | 天竺蘭 | type=1 subtype=25 lv=50 cost=86 base_cost=108 | 據說是天竺國傳入的白色蘭花，花開時芬芳迷人，素來是人們裝飾庭院的優良花卉#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】75級巧匠之術
+29766 | 紫金菊 | type=1 subtype=25 lv=60 cost=89 base_cost=112 | 生有罕見的紫瓣白心花朵，綠色的枝葉襯托著神秘典雅的紫色，彷彿蘊含著謎樣的深邃一般#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】80級巧匠之術
+29767 | 七星海 | type=1 subtype=25 lv=70 cost=92 base_cost=116 | 淡藍的花朵長於綠葉之上，如同繁花降臨在綠色的汪洋上，如同星星倒映在海面一般#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】85級巧匠之術
+29768 | 鐵線花 | type=1 subtype=25 lv=75 cost=96 base_cost=120 | 花開至極盛之時，簇簇擁擁，密密麻麻的細小花朵使得只見其花而不見其葉#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】90級巧匠之術
+29769 | 三葉菊 | type=1 subtype=25 lv=80 cost=99 base_cost=124 | 鮮明的奶黃色花朵傲然怒放，矯然出眾，自有一種天然的神韻#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】95級巧匠之術
+29770 | 紅雲桂 | type=1 subtype=25 lv=80 cost=102 base_cost=128 | 花開五瓣，嬌艷欲滴，俏麗美艷，乃是桂中佳品，歷來是裝飾庭院的重要花卉#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】100級巧匠之術
+29771 | 金邊蓮 | type=1 subtype=25 lv=85 cost=102 base_cost=128 | 花莖細長，金色卓然，翹然挺立之間，自有一種華貴典雅之氣#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】100級巧匠之術
+29775 | 篱笆花圃 | type=1 subtype=31 lv=40 cost=70 base_cost=88 | 用青竹扎製成的花圃圍欄，洋溢著的青春活力，田園氣息受到人們喜愛#r【類型】庭院裝飾：花圃#r【物品等級】1#r【製作需求】50級巧匠之術
+29776 | 青石圍欄花圃 | type=1 subtype=31 lv=60 cost=80 base_cost=100 | 青石圍欄做成的花圃，石上鐫刻著規則的圖案紋理，簡練明瞭的風格受到人們喜愛#r【類型】庭院裝飾：花圃#r【物品等級】2#r【製作需求】65級巧匠之術
+29777 | 白玉圍欄花圃 | type=1 subtype=31 lv=75 cost=86 base_cost=108 | 由漢白玉精心雕琢而成的花圃圍欄，光滑潤澤，一塵不染之狀猶如映日冬雪#r【類型】庭院裝飾：花圃#r【物品等級】2#r【製作需求】75級巧匠之術
+29800 | 同心鱗紋路面 | type=1 subtype=36 lv=85 cost=92 base_cost=116 | 花崗石鋪就的結實路面，雕刻著的魚鱗狀花紋形成一個個完整的圓心，有著同心共德的美好寓意#r【類型】庭院裝飾：路磚#r【物品等級】2#r【製作需求】85級巧匠之術#r【使用條件】適用於華宅，豪宅
+29801 | 青石花彫路面 | type=1 subtype=36 lv=90 cost=96 base_cost=120 | 青崗石鋪就的結實路面，雕刻著的各種花卉顯得精緻美觀，自然大方，是人們常用的路面#r【類型】庭院裝飾：路磚#r【物品等級】2#r【製作需求】90級巧匠之術#r【使用條件】適用於華宅，豪宅
+29802 | 伏羲雲紋路面 | type=1 subtype=36 lv=95 cost=99 base_cost=124 | 大理石鋪就的結實路面，雕刻著的伏羲雲紋紋理不僅美觀自然，而且蘊含著深刻的寓意#r【類型】庭院裝飾：路磚#r【物品等級】2#r【製作需求】95級巧匠之術#r【使用條件】適用於華宅，豪宅
+29825 | 白石藍瓦門 | type=1 subtype=30 lv=105 cost=128 base_cost=160 | 工匠採玄武石、藍瓦為主要原料建造而成的石門，以樸實簡單、耐用結實見長#r【類型】庭院裝飾：院門#r【物品等級】1#r【製作需求】85級巧匠之術#r【使用限制】只能用於民宅小院子
+29826 | 青石翠檐門 | type=1 subtype=30 lv=105 cost=128 base_cost=160 | 工匠用青崗石、翠木檐為主要原料建造的石門，以清新自然、簡單美觀獲得人們的喜愛#r【類型】庭院裝飾：院門#r【物品等級】1#r【製作需求】85級巧匠之術#r【使用限制】只能用於民宅小院子
+29827 | 朱漆琉璃門 | type=1 subtype=30 lv=105 cost=128 base_cost=160 | 工匠以朱漆、琉璃瓦為主要原料建造的石門，以熱情、大方獲得人們的喜愛#r【類型】庭院裝飾：院門#r【物品等級】1#r【製作需求】85級巧匠之術#r【使用限制】只能用於民宅小院子
+29828 | 白雕藍瓦門 | type=1 subtype=30 lv=105 cost=128 base_cost=160 | 工匠選大理石、藍瓦為主要原料建造的石門，因流暢自然、樸實大方而受到人們喜愛#r【類型】庭院裝飾：院門#r【物品等級】2#r【製作需求】90級巧匠之術#r【使用限制】只能用於華宅中院子
+29829 | 雲母翠檐門 | type=1 subtype=30 lv=105 cost=128 base_cost=160 | 工匠精選雲母石、飛翠檐為主要原料建造的石門，以獨特的造型、精緻美觀的外觀而受到人們喜愛#r【類型】庭院裝飾：院門#r【物品等級】2#r【製作需求】90級巧匠之術#r【使用限制】只能用於華宅中院子
+29830 | 白玉琉璃門 | type=1 subtype=30 lv=105 cost=128 base_cost=160 | 工匠精選金色琉璃、上品白玉巧妙構思，精功細琢而成，以高貴、典雅、華麗、美觀見長#r【類型】庭院裝飾：院門#r【物品等級】2#r【製作需求】90級巧匠之術#r【使用限制】只能用於華宅中院子
+29831 | 白玉蒼浪門 | type=1 subtype=30 lv=105 cost=128 base_cost=160 | 工匠精選上品白玉、蒼浪屋檐為主體構建而成，以飄逸、洒脫、不惹凡塵而聞名#r【類型】庭院裝飾：院門#r【物品等級】3#r【製作需求】95級巧匠之術#r【使用限制】只能用於豪宅大院子
+29832 | 花彫翠檐門 | type=1 subtype=30 lv=105 cost=128 base_cost=160 | 青翠欲滴的飛檐，配以精緻細膩的花卉圖案、精妙絕倫的佈局，使其成為石門中的精品#r【類型】庭院裝飾：院門#r【物品等級】3#r【製作需求】95級巧匠之術#r【使用限制】只能用於豪宅大院子
+29833 | 雲錦琉璃門 | type=1 subtype=30 lv=105 cost=128 base_cost=160 | 金色琉璃瓦，配以華麗的雲錦石，使其盡顯飄逸華貴之氣，是裝飾庭院的優質石門#r【類型】庭院裝飾：院門#r【物品等級】3#r【使用限制】只能用於豪宅大院子
+29850 | 白石藍瓦牆 | type=1 subtype=29 lv=105 cost=128 base_cost=160 | 以玄武岩、藍色瓦為主構建而成的石牆，因簡單樸實、結實耐用而受到人們喜愛#r【類型】庭院裝飾：院牆#r【物品等級】1#r【製作需求】85級巧匠之術#r【使用限制】只能用於民宅小院子
+29851 | 青石翠檐牆 | type=1 subtype=29 lv=105 cost=128 base_cost=160 | 以青崗石、翠木檐為主構建而成的石牆，因清新自然、美觀大方而受到人們喜愛#r【類型】庭院裝飾：院牆#r【物品等級】1#r【製作需求】85級巧匠之術#r【使用限制】只能用於民宅小院子
+29852 | 朱漆琉璃牆 | type=1 subtype=29 lv=105 cost=128 base_cost=160 | 以朱漆、琉璃瓦為主構建而成的石牆，因熱情、富貴而受到人們喜愛#r【類型】庭院裝飾：院牆#r【物品等級】1#r【製作需求】85級巧匠之術#r【使用限制】只能用於民宅小院子
+29853 | 白雕藍瓦牆 | type=1 subtype=29 lv=105 cost=128 base_cost=160 | 以大理石、藍色瓦為主構建而成的石牆，因線條流暢自然、樸素大方而受到人們喜愛#r【類型】庭院裝飾：院牆#r【物品等級】2#r【製作需求】90級巧匠之術#r【使用限制】只能用於華宅中院子
+29854 | 雲母翠檐牆 | type=1 subtype=29 lv=105 cost=128 base_cost=160 | 以上品雲母石、精緻翡翠檐為主構建而成的石牆，因造型獨特、構思精巧而受到人們喜愛#r【類型】庭院裝飾：院牆#r【物品等級】2#r【製作需求】90級巧匠之術#r【使用限制】只能用於華宅中院子
+29855 | 白玉琉璃牆 | type=1 subtype=29 lv=105 cost=128 base_cost=160 | 以上品白玉、金色琉璃瓦為主構建而成的石牆，溫潤與華麗相輔相成，融洽的結合使其具有不凡的魅力#r【類型】庭院裝飾：院牆#r【物品等級】2#r【製作需求】90級巧匠之術#r【使用限制】只能用於華宅中院子
+29856 | 白玉蒼浪牆 | type=1 subtype=29 lv=105 cost=128 base_cost=160 | 以上品白玉、蒼浪檐為主構建而成的精緻石牆，以飄逸、高雅見長，是人們喜愛的庭院裝飾牆#r【類型】庭院裝飾：院牆#r【物品等級】3#r【製作需求】95級巧匠之術#r【使用限制】只能用於豪宅大院子
+29857 | 花彫翠檐牆 | type=1 subtype=29 lv=105 cost=128 base_cost=160 | 以高超的花彫技藝，充滿活力與生機的飛翠檐為主構建而成的精緻石牆，是庭院裝飾中難得的精品#r【類型】庭院裝飾：院牆#r【物品等級】3#r【製作需求】95級巧匠之術#r【使用限制】只能用於豪宅大院子
+29858 | 雲錦琉璃牆 | type=1 subtype=29 lv=105 cost=128 base_cost=160 | 以縹緲的雲錦圖，富貴別緻的琉璃瓦為主構建而成的精緻石牆，是庭院裝飾中難得的精品#r【類型】庭院裝飾：院牆#r【物品等級】3#r【使用限制】只能用於豪宅大院子
+29998 | 沙地 | type=1 subtype=None lv=None cost=None base_cost=None | None
+29999 | 水地 | type=1 subtype=None lv=None cost=None base_cost=None | None

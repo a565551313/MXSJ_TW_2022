@@ -1,0 +1,107 @@
+--- around end of first inner dict ---
+   2930  LOAD_CONST     378 const=105
+   2933  ROT_TWO        None
+   2934  LOAD_CONST     379 const=b'lv'
+   2937  STORE_SUBSCR   None
+   2938  DUP_TOP        None
+   2939  LOAD_CONST     380 const=b'\xaex\xb0|\xb8\xcb\xb9\xa2\xb9\xcf\xaf\xc8'
+   2942  ROT_TWO        None
+   2943  LOAD_CONST     107 const=b'name'
+   2946  STORE_SUBSCR   None
+   2947  DUP_TOP        None
+   2948  LOAD_NAME      58 name=b'None'
+   2951  ROT_TWO        None
+   2952  LOAD_CONST     381 const=b'pagename'
+   2955  STORE_SUBSCR   None
+   2956  DUP_TOP        None
+   2957  LOAD_NAME      58 name=b'None'
+   2960  ROT_TWO        None
+   2961  LOAD_CONST     142 const=b'pre'
+   2964  STORE_SUBSCR   None
+   2965  DUP_TOP        None
+   2966  LOAD_NAME      58 name=b'None'
+   2969  ROT_TWO        None
+   2970  LOAD_CONST     382 const=b'special'
+   2973  STORE_SUBSCR   None
+   2974  DUP_TOP        None
+   2975  LOAD_NAME      58 name=b'None'
+   2978  ROT_TWO        None
+   2979  LOAD_CONST     383 const=b'stablepath'
+   2982  STORE_SUBSCR   None
+   2983  DUP_TOP        None
+   2984  LOAD_NAME      58 name=b'None'
+   2987  ROT_TWO        None
+   2988  LOAD_CONST     384 const=b'subtype'
+   2991  STORE_SUBSCR   None
+   2992  DUP_TOP        None
+   2993  LOAD_CONST     4 const=4
+   2996  ROT_TWO        None
+   2997  LOAD_CONST     385 const=b'type'
+   3000  STORE_SUBSCR   None
+   3001  DUP_TOP        None
+   3002  LOAD_NAME      58 name=b'None'
+   3005  ROT_TWO        None
+   3006  LOAD_CONST     386 const=b'zoff'
+   3009  STORE_SUBSCR   None
+   3010  ROT_TWO        None
+   3011  LOAD_CONST     271 const=25798
+   3014  STORE_SUBSCR   None
+   3015  DUP_TOP        None
+   3016  BUILD_MAP      0
+   3019  DUP_TOP        None
+   3020  LOAD_NAME      58 name=b'None'
+   3023  ROT_TWO        None
+   3024  LOAD_CONST     364 const=b'ani'
+   3027  STORE_SUBSCR   None
+   3028  DUP_TOP        None
+   3029  LOAD_CONST     365 const=160
+   3032  ROT_TWO        None
+   3033  LOAD_CONST     366 const=b'base_cost'
+   3036  STORE_SUBSCR   None
+   3037  DUP_TOP        None
+   3038  LOAD_CONST     4 const=4
+   3041  ROT_TWO        None
+   3042  LOAD_CONST     367 const=b'beauty'
+   3045  STORE_SUBSCR   None
+   3046  DUP_TOP        None
+   3047  LOAD_NAME      58 name=b'None'
+   3050  ROT_TWO        None
+   3051  LOAD_CONST     368 const=b'beauty_limit'
+   3054  STORE_SUBSCR   None
+   3055  DUP_TOP        None
+   3056  LOAD_NAME      58 name=b'None'
+   3059  ROT_TWO        None
+   3060  LOAD_CONST     369 const=b'bg_type'
+   3063  STORE_SUBSCR   None
+   3064  DUP_TOP        None
+   3065  LOAD_CONST     370 const=128
+   3068  ROT_TWO        None
+   3069  LOAD_CONST     371 const=b'cost'
+   3072  STORE_SUBSCR   None
+   3073  DUP_TOP        None
+   3074  LOAD_CONST     387 const=b'\xb0O\xb8\xfc\xb5\xdb\xb7s\xad\xb7\xae\xe63\xaf\xc5\xb3\xc3\xa8\xe3\xa8\xee\xa7@\xa4\xe8\xaak\xaa\xba\xb9\xcf\xaf\xc8#r\xa1i\xaa`\xb7N\xa1j\xbb\xdd\xadn\xc1\xca\xb6R\xaa\xcc\xa8\xad\xa4W\xc4\xe2\xb1a\xb3\xc3\xa8\xe3\xb9\xcf\xaf\xc8\xa1A\xa4\xe8\xa5i\xbbs\xa7@'
+   3077  ROT_TWO        None
+   3078  LOAD_CONST     373 const=b'desc'
+   3081  STORE_SUBSCR   None
+   3082  DUP_TOP        None
+   3083  LOAD_NAME      58 name=b'None'
+   3086  ROT_TWO        None
+   3087  LOAD_CONST     374 const=b'direct'
+   3090  STORE_SUBSCR   None
+   3091  DUP_TOP        None
+   3092  LOAD_NAME      58 name=b'None'
+   3095  ROT_TWO        None
+   3096  LOAD_CONST     375 const=b'grade'
+   3099  STORE_SUBSCR   None
+   3100  DUP_TOP        None
+   3101  LOAD_NAME      58 name=b'None'
+   3104  ROT_TWO        None
+   3105  LOAD_CONST     376 const=b'layer'
+   3108  STORE_SUBSCR   None
+   3109  DUP_TOP        None
+   3110  LOAD_NAME      58 name=b'None'
+   3113  ROT_TWO        None
+   3114  LOAD_CONST     377 const=b'lianxuplace'
+   3117  STORE_SUBSCR   None
+   3118  DUP_TOP        None
+   3119  LOAD_CONST     388 const=90

@@ -1,0 +1,40 @@
+raw string len 119
+garbage part (45 bytes): 3a4a2732295f357e3ede5dfe5dfe5bf85bf83b38293e2ce525e32a445c672ef03bdf373c35252dd729312dd2b7
+valid tail: 's意蘊#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】70級巧匠之術'
+
+--- alternative start offsets (same length window) ---
+  start -3 -> CP950 fail at 14
+  start -2 -> CP950 fail at 13
+  start -1 -> CP950 fail at 12
+  start +0 -> CP950 fail at 11
+  start +1 -> CP950 fail at 10
+  start +2 -> CP950 fail at 9
+  start +3 -> CP950 fail at 8
+
+--- codecs on the 45 garbage bytes ---
+  cp950      -> fail at 11 (illegal multibyte sequence)
+  big5       -> fail at 11 (illegal multibyte sequence)
+  gbk        -> fail at 11 (illegal multibyte sequence)
+  gb18030    -> fail at 17 (illegal multibyte sequence)
+  utf-8      -> fail at 9 (invalid continuation byte)
+  utf-16-le  -> fail at 8 (illegal encoding)
+  utf-16-be  -> fail at 44 (truncated data)
+  shift_jis  -> fail at 11 (illegal multibyte sequence)
+  euc_jp     -> fail at 9 (illegal multibyte sequence)
+  euc_kr     -> fail at 9 (illegal multibyte sequence)
+  latin-1    -> ":J'2)_5~>Þ]þ]þ[ø[ø;8)>,å%ã*D\\g.ð;ß7<5%-×)1-Ò·"
+
+--- codecs on the whole 119-byte string ---
+  cp950      -> fail at 11
+  big5       -> fail at 11
+  gbk        -> fail at 11
+  gb18030    -> fail at 17
+  utf-8      -> fail at 9
+  utf-16-le  -> fail at 8
+
+--- byte histogram of the garbage ---
+[(37, 2), (39, 1), (41, 3), (42, 1), (44, 1), (45, 2), (46, 1), (49, 1), (50, 1), (53, 2), (55, 1), (56, 1), (58, 1), (59, 2), (60, 1), (62, 2), (68, 1), (74, 1), (91, 2), (92, 1), (93, 2), (95, 1), (103, 1), (126, 1), (183, 1), (210, 1), (215, 1), (222, 1), (223, 1), (227, 1), (229, 1), (240, 1), (248, 2), (254, 2)]
+
+--- is the garbage region XOR of plausible CP950 text with a fixed byte? ---
+neighbour desc len 119: '嫩綠的枝葉，寬大的葉面，綿延的藤蔓充滿了蓬勃的生機#r【類型】庭院裝飾：景觀植物#r【物品等級】1#r【製作需求】75級巧匠之術'
+neighbour hex head: b9e0baf1aabaaa4bb8ada141bc65a46aaabab8adadb1a141baf8a9b5aabac3c3bdafa552baa1a446bdb4ab6baa

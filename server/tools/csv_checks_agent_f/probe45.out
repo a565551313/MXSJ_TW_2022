@@ -1,0 +1,30 @@
+=== SAVED [18282, 34193, 54797, 73070] [233, 132, 132, 105, 246]
+   marshal walk ok: True 
+   strings=665 good=661 bad=24
+   instructions walked: 9845 error: EXTENDED_ARG before argument-free instruction at 18307 (op 32)
+=== B1=34193 key1=11 [18282, 34193, 54797, 73070] [233, 11, 132, 105, 246]
+   marshal walk ok: True 
+   strings=665 good=661 bad=24
+   instructions walked: 18672 error: EXTENDED_ARG before argument-free instruction at 34192 (op 31)
+=== B1=36511 key1=11 [18282, 36511, 54797, 73070] [233, 11, 132, 105, 246]
+   marshal walk ok: True 
+   strings=665 good=661 bad=24
+   instructions walked: 25963 error: None
+   TYPE2NAME        -> dict len=28 first=b'\xa7\xc9'
+   ORDER            -> list len=233
+   DATA             -> FAIL ValueError: unsupported opcode 101 at 2831
+   SITE             -> FAIL ValueError: unsupported opcode 101 at 947
+   LAYER            -> dict len=4 first={b'name': b'\xa6a\xbfj\xb3\xc3\xa8\xe3', b'pre': 0}
+   DIDRANGE         -> dict len=14 first=b'\xa7\xc9'
+   SPE_HORSE_DATA   -> dict len=35 first=(200, 150)
+=== B1=36511 key1=73 [18282, 36511, 54797, 73070] [233, 73, 132, 105, 246]
+   marshal walk ok: True 
+   strings=665 good=661 bad=24
+   instructions walked: 25963 error: None
+   TYPE2NAME        -> dict len=28 first=b'\xa7\xc9'
+   ORDER            -> list len=233
+   DATA             -> FAIL ValueError: unsupported opcode 101 at 2831
+   SITE             -> FAIL ValueError: unsupported opcode 101 at 947
+   LAYER            -> dict len=4 first={b'name': b'\xa6a\xbfj\xb3\xc3\xa8\xe3', b'pre': 0}
+   DIDRANGE         -> dict len=14 first=b'\xa7\xc9'
+   SPE_HORSE_DATA   -> dict len=35 first=(200, 150)

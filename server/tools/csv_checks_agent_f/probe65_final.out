@@ -1,0 +1,29 @@
+=== saved vs candidate ===
+saved    bounds=[18282, 34193, 54797, 73070] keys=[233, 132, 132, 105, 246]
+candidate bounds=[18282, 36511, 54797, 73114] keys=[233, 11, 132, 105, 246]
+
+=== unmapped-Duoyi-opcode audit of the module co_code [22, 47423) ===
+  saved     total_unmapped=7598
+      [0,18282) k=233: 3/9838 unmapped [0, 9, 17]
+      [18282,34193) k=132: 2027/6029 unmapped [18283, 18286, 18289, 18297]
+      [34193,54797) k=132: 1426/11361 unmapped [34197, 34206, 34209, 34210]
+      [54797,73070) k=105: 4142/7771 unmapped [54797, 54801, 54806, 54811]
+  candidate total_unmapped=5249
+      [0,18282) k=233: 3/9838 unmapped [0, 9, 17]
+      [18282,36511) k=11: 2/10125 unmapped [18282, 18288]
+      [36511,54797) k=132: 1092/10483 unmapped [47424, 47428, 47433, 47438]
+      [54797,73114) k=105: 4152/7787 unmapped [54797, 54801, 54806, 54811]
+
+=== end-to-end check ===
+--- saved [18282, 34193, 54797, 73070] [233, 132, 132, 105, 246]
+    instructions() FAILED: ValueError: EXTENDED_ARG before argument-free instruction
+--- candidate [18282, 36511, 54797, 73114] [233, 11, 132, 105, 246]
+    instructions(): 25963 instructions, no error
+    DATA            -> dict len=233
+    ORDER           -> list len=233
+    TYPE2NAME       -> dict len=28
+    SITE            -> dict len=6
+    LAYER           -> dict len=4
+    DIDRANGE        -> dict len=14
+    SPE_HORSE_DATA  -> dict len=35
+    DATA name/desc strings: good=397 bad=0
