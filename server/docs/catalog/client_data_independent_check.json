@@ -1,5 +1,6 @@
 {
   "status": "independent_check_research_evidence_not_approved_game_data",
+  "revision": "rev2-after-coordinator-review",
   "generated_by": "server/tools/verify_client_data_boundaries.py",
   "inputs": {
     "archive": "data/script.fls",
@@ -13,9 +14,31 @@
     "pkgimport_va": "0x00457C20",
     "verified_by": ".rdata string block at VA 0x6B2260 contains \"MyPython.cpp\", \"data\\script.fls\", \"PkgImport\"",
     "static_analysis": "blocked",
-    "reason": "The function body ends in \"jmp 0xA15DB4\", inside the DuoyiProtect _dyprot0/_dyprot1 sections; the code is decrypted at runtime only, so the native 5-segment boundary rule cannot be recovered statically.",
-    "consequence": "Saved bounds are heuristic fits (methods: catalog, ltr*, greedy-v7), not native-derived values."
+    "reason": "The function body ends in \"jmp 0xA15DB4\" inside the DuoyiProtect _dyprot sections; the code is decrypted at runtime only, so the native 5-segment rule cannot be recovered statically.",
+    "consequence": "Saved bounds are heuristic fits (catalog / ltr* / greedy-v7), not native-derived values."
   },
+  "errata": [
+    {
+      "withdrawn": "3205 petskill.py has no module-level DATA store; the pet skill master table is not in this entry.",
+      "cause": "find_stores equivalent only matched STORE_NAME (std 90). PY25_MAP maps Duoyi 0xC4 -> std 97 STORE_GLOBAL, and both ICON_MAPPING and DATA are assigned that way.",
+      "now": "Both opcodes are recognised; DATA rebuilds to 581 unique ids."
+    },
+    {
+      "withdrawn": "3205 keys[1] = 218.",
+      "cause": "Ranked by fewest unmapped Duoyi opcodes, an alignment-only metric. 218 aligns but emits opcode 80 (PRINT_ITEM) inside the DATA literal build, so the table cannot be constructed.",
+      "now": "keys[1] = 152, selected by literal-build feasibility; both metrics are reported side by side."
+    },
+    {
+      "withdrawn": "itemdata needs only DATA[72548] isolated for CSV.",
+      "cause": "Only records failing strict CP950 were reviewed. DATA[41052] decodes cleanly as 晉怖肋 yet is wrong; the corroborated value is 時空石 at bounds[2]=778759.",
+      "now": "A structural detector (strings ending exactly on a saved boundary) is applied to all focus entries, then corroborated."
+    },
+    {
+      "downgraded": "petdata vs mxpetdata difference = legitimate_table_difference",
+      "cause": "Classified legitimate because no counter-example was found.",
+      "now": "unexplained_table_difference_presumed_legitimate"
+    }
+  ],
   "findings": [
     {
       "entry_index": 1945,
@@ -78,7 +101,7 @@
           }
         ]
       },
-      "remaining_uncertainty": "Corroborating entries are themselves decoded with heuristic (fitted) keys; no native-client runtime comparison was performed."
+      "remaining_uncertainty": "Corroborating entries are themselves decoded with heuristically fitted keys; no native-client runtime comparison was performed."
     },
     {
       "entry_index": 1945,
@@ -122,7 +145,7 @@
           }
         ]
       },
-      "remaining_uncertainty": "Corroborating entries are themselves decoded with heuristic (fitted) keys; no native-client runtime comparison was performed."
+      "remaining_uncertainty": "Corroborating entries are themselves decoded with heuristically fitted keys; no native-client runtime comparison was performed."
     },
     {
       "entry_index": 1115,
@@ -156,19 +179,7 @@
             177,
             178
           ],
-          "load_const_indices_contiguous": false,
-          "instructions": [
-            {
-              "offset": 825,
-              "duoyi": "0x8c",
-              "std": null
-            },
-            {
-              "offset": 828,
-              "duoyi": "0xb0",
-              "std": null
-            }
-          ]
+          "load_const_indices_contiguous": false
         },
         "candidate": {
           "boundary": 828,
@@ -184,32 +195,10 @@
             177,
             178
           ],
-          "load_const_indices_contiguous": true,
-          "instructions": [
-            {
-              "offset": 825,
-              "duoyi": "0x5",
-              "std": 60
-            },
-            {
-              "offset": 826,
-              "duoyi": "0x30",
-              "std": 4
-            },
-            {
-              "offset": 827,
-              "duoyi": "0x8f",
-              "std": 100
-            },
-            {
-              "offset": 830,
-              "duoyi": "0x5a",
-              "std": 2
-            }
-          ]
+          "load_const_indices_contiguous": true
         }
       },
-      "remaining_uncertainty": "Confirmed structurally (opcode validity + contiguous LOAD_CONST indices); the resulting name also matches petdata entry 2910, but that match is corroborating, not the basis of the decision."
+      "remaining_uncertainty": "Decided on opcode validity and LOAD_CONST index continuity only; the name matching petdata 2910 is corroborating, not the basis."
     },
     {
       "entry_index": 2242,
@@ -226,52 +215,14 @@
       "classification": "confirmed_extraction_bug",
       "evidence": {
         "method": "independent_source_table_cross_reference",
-        "structural_note": "Both offsets keep the 5-byte TYPE_INT record aligned, so record alignment alone cannot discriminate; the evidence is the independent skill-id table.",
+        "structural_note": "Boundaries 262..266 all keep the 5-byte TYPE_INT record aligned, so alignment alone cannot discriminate.",
         "petskill_entry": 3205,
-        "petskill_AUTOFIGHTLIST": [
-          407,
-          408,
-          409,
-          410,
-          411,
-          413,
-          414,
-          415,
-          416,
-          417,
-          418,
-          419,
-          420,
-          421,
-          422,
-          423,
-          424,
-          425,
-          426,
-          427,
-          428,
-          429,
-          430,
-          557,
-          451,
-          452,
-          454,
-          455,
-          558,
-          559,
-          561,
-          565,
-          566,
-          575,
-          576,
-          580,
-          581
-        ],
-        "autofightlist_contains_416": true,
-        "autofightlist_contains_64605": false,
+        "petskill_DATA_key_count": 581,
+        "candidate_in_petskill_DATA": true,
+        "saved_value_in_petskill_DATA": false,
         "other_entries_containing_int_64605": []
       },
-      "remaining_uncertainty": "AUTOFIGHTLIST comes from entry 3205, which itself needed a key correction; that correction is independently evidenced but not native-verified."
+      "remaining_uncertainty": "Depends on the entry-3205 reconstruction, which itself needs a key correction that is not native-verified."
     },
     {
       "entry_index": 1945,
@@ -368,9 +319,73 @@
             104
           ]
         ],
-        "reasoning": "The identical 18-byte pattern, including the 4-byte marshal length prefix 0d000000, decodes the same way in entries that use different XOR keys and different segment boundaries. A boundary or key error cannot reproduce identical bytes across independent key sets."
+        "reasoning": "The identical 18-byte pattern, including the 4-byte marshal length prefix 0d000000, decodes identically under three different key sets. A boundary or key error cannot do that."
       },
-      "remaining_uncertainty": "The shipped client string really is 13 bytes ending in a lone CP950 lead byte 0x84. Do not trim or guess the missing trail byte. The neighbouring item \"雙人坐騎體驗券\" (14 bytes, a8e9 = 券) exists separately and is NOT the same record."
+      "remaining_uncertainty": "The client string really is 13 bytes ending in a lone CP950 lead byte 0x84. Do not trim or guess. \"雙人坐騎體驗券\" (14 bytes) is a different record."
+    },
+    {
+      "entry_index": 1945,
+      "table": "DATA",
+      "record_id_or_index": 41052,
+      "field_path": "DATA[41052][0]",
+      "source_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "payload_offset": 778758,
+      "original_bytes_hex": "9cf89bf494ea",
+      "old_boundary": 778764,
+      "candidate_boundary": 778759,
+      "old_value": "晉怖肋",
+      "candidate_value": "時空石",
+      "classification": "confirmed_extraction_bug",
+      "evidence": {
+        "method": "boundary_scan_plus_cross_entry_byte_identity",
+        "scanned_window": [
+          778674,
+          778854
+        ],
+        "cp950_clean_solution_count": 181,
+        "distinct_texts": [
+          "借空石",
+          "時空石",
+          "晉怖石",
+          "晉怖肋",
+          "晉怖自",
+          "晉怵石",
+          "晉空石"
+        ],
+        "corroborated_solutions": [
+          {
+            "boundary": 778759,
+            "text": "時空石",
+            "independent_witnesses": [
+              {
+                "entry_index": 1182,
+                "payload_offset": 863430
+              },
+              {
+                "entry_index": 4924,
+                "payload_offset": 125988
+              }
+            ]
+          }
+        ],
+        "corroborated_by_independent_entries": [
+          {
+            "entry_index": 1182,
+            "payload_offset": 863430,
+            "boundary": 778759,
+            "text": "時空石",
+            "xor_segment": 3
+          },
+          {
+            "entry_index": 4924,
+            "payload_offset": 125988,
+            "boundary": 778759,
+            "text": "時空石",
+            "xor_segment": 3
+          }
+        ]
+      },
+      "remaining_uncertainty": "Corroborating entries use heuristically fitted keys; no native-client comparison."
     },
     {
       "entry_index": 2027,
@@ -391,66 +406,26 @@
           16217,
           16337
         ],
-        "cp950_clean_solutions": [
-          {
-            "boundary": 16250,
-            "text": "出現地點＋拮 W'#?=7z/鶣r兔坦卡門陵墓",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 16251,
-            "text": "出現地點：拮 W'#?=7z/鶣r兔坦卡門陵墓",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 16253,
-            "text": "出現地點：#r W'#?=7z/鶣r兔坦卡門陵墓",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 16254,
-            "text": "出現地點：#r汾'#?=7z/鶣r兔坦卡門陵墓",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 16255,
-            "text": "出現地點：#r兔'#?=7z/鶣r兔坦卡門陵墓",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 16257,
-            "text": "出現地點：#r兔神?=7z/鶣r兔坦卡門陵墓",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 16259,
-            "text": "出現地點：#r兔神殿7z/鶣r兔坦卡門陵墓",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 16260,
-            "text": "出現地點：#r兔神殿篩/鶣r兔坦卡門陵墓",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 16261,
-            "text": "出現地點：#r兔神殿遺/鶣r兔坦卡門陵墓",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 16262,
-            "text": "出現地點：#r兔神殿遺李咬兔坦卡門陵墓",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 16263,
-            "text": "出現地點：#r兔神殿遺址咬兔坦卡門陵墓",
-            "cross_entry_hits": []
-          },
+        "cp950_clean_solution_count": 12,
+        "distinct_texts": [
+          "出現地點＋拮 W'#?=7z/鶣r兔坦卡門陵墓",
+          "出現地點：#r W'#?=7z/鶣r兔坦卡門陵墓",
+          "出現地點：#r兔'#?=7z/鶣r兔坦卡門陵墓",
+          "出現地點：#r兔神?=7z/鶣r兔坦卡門陵墓",
+          "出現地點：#r兔神殿7z/鶣r兔坦卡門陵墓",
+          "出現地點：#r兔神殿篩/鶣r兔坦卡門陵墓",
+          "出現地點：#r兔神殿遺/鶣r兔坦卡門陵墓",
+          "出現地點：#r兔神殿遺址#r兔坦卡門陵墓",
+          "出現地點：#r兔神殿遺址咬兔坦卡門陵墓",
+          "出現地點：#r兔神殿遺李咬兔坦卡門陵墓",
+          "出現地點：#r汾'#?=7z/鶣r兔坦卡門陵墓",
+          "出現地點：拮 W'#?=7z/鶣r兔坦卡門陵墓"
+        ],
+        "corroborated_solutions": [
           {
             "boundary": 16264,
             "text": "出現地點：#r兔神殿遺址#r兔坦卡門陵墓",
-            "cross_entry_hits": [
+            "independent_witnesses": [
               {
                 "entry_index": 3526,
                 "payload_offset": 52170
@@ -458,16 +433,13 @@
             ]
           }
         ],
-        "corroborated_solutions": [
+        "corroborated_by_independent_entries": [
           {
+            "entry_index": 3526,
+            "payload_offset": 52170,
             "boundary": 16264,
             "text": "出現地點：#r兔神殿遺址#r兔坦卡門陵墓",
-            "cross_entry_hits": [
-              {
-                "entry_index": 3526,
-                "payload_offset": 52170
-              }
-            ]
+            "xor_segment": 2
           }
         ]
       },
@@ -492,336 +464,20 @@
           21695,
           21815
         ],
-        "cp950_clean_solutions": [
-          {
-            "boundary": 21695,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21696,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21697,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21698,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21699,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21700,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21701,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21702,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21703,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21704,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21705,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21706,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21707,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21708,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21709,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21710,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21711,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21712,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21713,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21714,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21715,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21716,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21717,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21718,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21719,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21720,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21721,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21722,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21723,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21724,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21725,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21726,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21727,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21728,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21729,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21730,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21731,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21732,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21733,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21734,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21735,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21736,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21737,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21738,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21739,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21740,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21741,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21742,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21743,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21744,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21745,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21746,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21747,
-            "text": "睊ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21748,
-            "text": "窒ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21749,
-            "text": "終ン強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21750,
-            "text": "終祗強力",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 21751,
-            "text": "終級強力",
-            "cross_entry_hits": [
-              {
-                "entry_index": 2027,
-                "payload_offset": 15702
-              },
-              {
-                "entry_index": 3075,
-                "payload_offset": 10003
-              },
-              {
-                "entry_index": 3205,
-                "payload_offset": 46519
-              },
-              {
-                "entry_index": 3526,
-                "payload_offset": 59347
-              },
-              {
-                "entry_index": 4220,
-                "payload_offset": 14818
-              },
-              {
-                "entry_index": 4428,
-                "payload_offset": 520258
-              },
-              {
-                "entry_index": 4934,
-                "payload_offset": 5009
-              },
-              {
-                "entry_index": 4942,
-                "payload_offset": 1666
-              }
-            ]
-          },
-          {
-            "boundary": 21752,
-            "text": "終級揂力",
-            "cross_entry_hits": []
-          }
+        "cp950_clean_solution_count": 58,
+        "distinct_texts": [
+          "睊ン強力",
+          "窒ン強力",
+          "終ン強力",
+          "終祗強力",
+          "終級強力",
+          "終級揂力"
         ],
         "corroborated_solutions": [
           {
             "boundary": 21751,
             "text": "終級強力",
-            "cross_entry_hits": [
+            "independent_witnesses": [
               {
                 "entry_index": 2027,
                 "payload_offset": 15702
@@ -855,6 +511,64 @@
                 "payload_offset": 1666
               }
             ]
+          }
+        ],
+        "corroborated_by_independent_entries": [
+          {
+            "entry_index": 2027,
+            "payload_offset": 15702,
+            "boundary": 21751,
+            "text": "終級強力",
+            "xor_segment": 2
+          },
+          {
+            "entry_index": 3075,
+            "payload_offset": 10003,
+            "boundary": 21751,
+            "text": "終級強力",
+            "xor_segment": 3
+          },
+          {
+            "entry_index": 3205,
+            "payload_offset": 46519,
+            "boundary": 21751,
+            "text": "終級強力",
+            "xor_segment": 2
+          },
+          {
+            "entry_index": 3526,
+            "payload_offset": 59347,
+            "boundary": 21751,
+            "text": "終級強力",
+            "xor_segment": 3
+          },
+          {
+            "entry_index": 4220,
+            "payload_offset": 14818,
+            "boundary": 21751,
+            "text": "終級強力",
+            "xor_segment": 3
+          },
+          {
+            "entry_index": 4428,
+            "payload_offset": 520258,
+            "boundary": 21751,
+            "text": "終級強力",
+            "xor_segment": 3
+          },
+          {
+            "entry_index": 4934,
+            "payload_offset": 5009,
+            "boundary": 21751,
+            "text": "終級強力",
+            "xor_segment": 2
+          },
+          {
+            "entry_index": 4942,
+            "payload_offset": 1666,
+            "boundary": 21751,
+            "text": "終級強力",
+            "xor_segment": 0
           }
         ]
       },
@@ -879,189 +593,682 @@
           227,
           707
         ],
-        "cp950_clean_solutions": [
-          {
-            "boundary": 494,
-            "text": "【獲得途徑】#r①在其他玩家的攤位又曬混'r②找#s(18,工藝師,1,明月城,62,82,0)製作",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 495,
-            "text": "【獲得途徑】#r①在其他玩家的攤位上曬混'r②找#s(18,工藝師,1,明月城,62,82,0)製作",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 496,
-            "text": "【獲得途徑】#r①在其他玩家的攤位上蹉混'r②找#s(18,工藝師,1,明月城,62,82,0)製作",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 497,
-            "text": "【獲得途徑】#r①在其他玩家的攤位上購混'r②找#s(18,工藝師,1,明月城,62,82,0)製作",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 498,
-            "text": "【獲得途徑】#r①在其他玩家的攤位上購越'r②找#s(18,工藝師,1,明月城,62,82,0)製作",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 499,
-            "text": "【獲得途徑】#r①在其他玩家的攤位上購買'r②找#s(18,工藝師,1,明月城,62,82,0)製作",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 500,
-            "text": "【獲得途徑】#r①在其他玩家的攤位上購買#r②找#s(18,工藝師,1,明月城,62,82,0)製作",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 501,
-            "text": "【獲得途徑】#r①在其他玩家的攤位上購買#v②找#s(18,工藝師,1,明月城,62,82,0)製作",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 502,
-            "text": "【獲得途徑】#r①在其他玩家的攤位上購買#v鏟找#s(18,工藝師,1,明月城,62,82,0)製作",
-            "cross_entry_hits": []
-          },
-          {
-            "boundary": 503,
-            "text": "【獲得途徑】#r①在其他玩家的攤位上購買#v鏝找#s(18,工藝師,1,明月城,62,82,0)製作",
-            "cross_entry_hits": []
-          }
+        "cp950_clean_solution_count": 10,
+        "distinct_texts": [
+          "【獲得途徑】#r①在其他玩家的攤位上曬混'r②找#s(18,工藝師,1,明月城,62,82,0)製作",
+          "【獲得途徑】#r①在其他玩家的攤位上購混'r②找#s(18,工藝師,1,明月城,62,82,0)製作",
+          "【獲得途徑】#r①在其他玩家的攤位上購買#r②找#s(18,工藝師,1,明月城,62,82,0)製作",
+          "【獲得途徑】#r①在其他玩家的攤位上購買#v②找#s(18,工藝師,1,明月城,62,82,0)製作",
+          "【獲得途徑】#r①在其他玩家的攤位上購買#v鏝找#s(18,工藝師,1,明月城,62,82,0)製作",
+          "【獲得途徑】#r①在其他玩家的攤位上購買#v鏟找#s(18,工藝師,1,明月城,62,82,0)製作",
+          "【獲得途徑】#r①在其他玩家的攤位上購買'r②找#s(18,工藝師,1,明月城,62,82,0)製作",
+          "【獲得途徑】#r①在其他玩家的攤位上購越'r②找#s(18,工藝師,1,明月城,62,82,0)製作",
+          "【獲得途徑】#r①在其他玩家的攤位上蹉混'r②找#s(18,工藝師,1,明月城,62,82,0)製作",
+          "【獲得途徑】#r①在其他玩家的攤位又曬混'r②找#s(18,工藝師,1,明月城,62,82,0)製作"
         ],
-        "corroborated_solutions": []
+        "corroborated_solutions": [],
+        "corroborated_by_independent_entries": []
       },
-      "remaining_uncertainty": "10 offsets decode as valid CP950 and none is independently corroborated; valid CP950 is not sufficient evidence, so no boundary is proposed."
+      "remaining_uncertainty": "10 offsets decode as valid CP950 and none is independently corroborated; valid CP950 is not sufficient, so no boundary is proposed."
     },
     {
       "entry_index": 3205,
       "table": "co_code",
       "record_id_or_index": "<module>",
-      "field_path": "root co_code",
+      "field_path": "root co_code / DATA",
       "source_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
       "payload_offset": 18043,
       "original_bytes_hex": "9da817fd9bc217bb989da817bc98c217",
-      "old_boundary": null,
-      "candidate_boundary": null,
-      "old_value": "key[1]=23",
-      "candidate_value": "key[1]=218",
+      "old_boundary": "keys[1]=23",
+      "candidate_boundary": "keys[1]=152",
+      "old_value": "DATA not reconstructible",
+      "candidate_value": "581 unique skill ids",
       "classification": "confirmed_extraction_bug",
       "evidence": {
-        "method": "unmapped_opcode_density_per_xor_segment",
-        "root_co_code_payload_span": [
-          22,
-          37496
-        ],
-        "unmapped_opcodes_with_saved_key": 2433,
-        "unmapped_opcodes_per_segment": {
-          "1": 2432,
-          "2": 1
-        },
-        "saved_segment_1_bounds": [
-          18043,
-          36122
-        ],
-        "brute_forced_key_candidates": [
+        "variants": [
           {
-            "key": 218,
-            "unmapped": 0
-          },
-          {
-            "key": 152,
-            "unmapped": 1
-          },
-          {
-            "key": 143,
-            "unmapped": 287
-          },
-          {
-            "key": 130,
-            "unmapped": 288
-          }
-        ],
-        "best_key": 218,
-        "best_unmapped": 0,
-        "runner_up": {
-          "key": 152,
-          "unmapped": 1
-        },
-        "unmapped_after_fix": 0,
-        "recovered_module": {
-          "co_filename": "script\\data\\petskill.py",
-          "co_names": [
-            "GetData",
-            "GetShape",
-            "GetSkillID",
-            "GetDataByName",
-            "GetPetSkillNameById",
-            "IsPetSkill",
-            "ICON_MAPPING",
-            "DATA",
-            "AUTOFIGHTLIST",
-            "ShieldShortCutSkills"
-          ],
-          "store_name_targets": [
-            "GetData",
-            "GetShape",
-            "GetSkillID",
-            "GetDataByName",
-            "GetPetSkillNameById",
-            "IsPetSkill",
-            "AUTOFIGHTLIST",
-            "ShieldShortCutSkills"
-          ],
-          "data_is_module_level_store": false,
-          "literal_tables_recovered": {
-            "AUTOFIGHTLIST": [
-              407,
-              408,
-              409,
-              410,
-              411,
-              413,
-              414,
-              415,
-              416,
-              417,
-              418,
-              419,
-              420,
-              421,
-              422,
-              423,
-              424,
-              425,
-              426,
-              427,
-              428,
-              429,
-              430,
-              557,
-              451,
-              452,
-              454,
-              455,
-              558,
-              559,
-              561,
-              565,
-              566,
-              575,
-              576,
-              580,
-              581
+            "label": "saved_key_database",
+            "origin": "tools/decompiler/script_fls_keys.json as committed",
+            "keys": [
+              204,
+              23,
+              122,
+              74,
+              218
             ],
-            "ShieldShortCutSkills": [
-              556
-            ]
+            "bounds": [
+              18043,
+              36122,
+              54130,
+              72108
+            ],
+            "metric_alignment_unmapped_opcodes": 2433,
+            "instruction_alignment": "failed",
+            "error": "EXTENDED_ARG before argument-free instruction at 18032"
+          },
+          {
+            "label": "superseded_218_proposal",
+            "origin": "this tool, previous revision (WITHDRAWN)",
+            "keys": [
+              204,
+              218,
+              122,
+              74,
+              218
+            ],
+            "bounds": [
+              18043,
+              36122,
+              54130,
+              72108
+            ],
+            "metric_alignment_unmapped_opcodes": 0,
+            "instruction_alignment": "clean",
+            "module_level_stores": {
+              "GetData": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 6
+                }
+              ],
+              "GetShape": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 15
+                }
+              ],
+              "GetSkillID": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 24
+                }
+              ],
+              "GetDataByName": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 33
+                }
+              ],
+              "GetPetSkillNameById": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 42
+                }
+              ],
+              "IsPetSkill": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 51
+                }
+              ],
+              "ICON_MAPPING": [
+                {
+                  "opcode": "STORE_GLOBAL",
+                  "std_opcode": 97,
+                  "offset": 165
+                }
+              ],
+              "DATA": [
+                {
+                  "opcode": "STORE_GLOBAL",
+                  "std_opcode": 97,
+                  "offset": 37341
+                }
+              ],
+              "AUTOFIGHTLIST": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 37458
+                }
+              ],
+              "ShieldShortCutSkills": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 37467
+                }
+              ]
+            },
+            "literal_build": "failed",
+            "error": "unsupported opcode 80 at 18021"
+          },
+          {
+            "label": "coordinator_D_candidate",
+            "origin": "coordinator / Agent D",
+            "keys": [
+              204,
+              152,
+              122,
+              74,
+              218
+            ],
+            "bounds": [
+              18043,
+              36123,
+              54155,
+              72143
+            ],
+            "metric_alignment_unmapped_opcodes": 0,
+            "instruction_alignment": "clean",
+            "module_level_stores": {
+              "GetData": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 6
+                }
+              ],
+              "GetShape": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 15
+                }
+              ],
+              "GetSkillID": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 24
+                }
+              ],
+              "GetDataByName": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 33
+                }
+              ],
+              "GetPetSkillNameById": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 42
+                }
+              ],
+              "IsPetSkill": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 51
+                }
+              ],
+              "ICON_MAPPING": [
+                {
+                  "opcode": "STORE_GLOBAL",
+                  "std_opcode": 97,
+                  "offset": 165
+                }
+              ],
+              "DATA": [
+                {
+                  "opcode": "STORE_GLOBAL",
+                  "std_opcode": 97,
+                  "offset": 37341
+                }
+              ],
+              "AUTOFIGHTLIST": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 37458
+                }
+              ],
+              "ShieldShortCutSkills": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 37467
+                }
+              ]
+            },
+            "literal_build": "ok",
+            "store_subscr_count": 4130,
+            "unique_data_keys": 581,
+            "data_key_min": 101,
+            "data_key_max": 45432,
+            "duplicate_key_count": 9,
+            "duplicate_keys": [
+              4236,
+              4573,
+              4574,
+              4575,
+              4576,
+              4577,
+              4578,
+              4579,
+              4581
+            ],
+            "duplicate_detail": [
+              {
+                "key": 4573,
+                "offset": 22409,
+                "store_order": 2470,
+                "records_identical": false,
+                "previous_name": "天魔返生術",
+                "new_name": "地魔返生術"
+              },
+              {
+                "key": 4574,
+                "offset": 22472,
+                "store_order": 2477,
+                "records_identical": true,
+                "previous_name": "酒瘋發作",
+                "new_name": "酒瘋發作"
+              },
+              {
+                "key": 4575,
+                "offset": 22535,
+                "store_order": 2484,
+                "records_identical": true,
+                "previous_name": "視財如命",
+                "new_name": "視財如命"
+              },
+              {
+                "key": 4576,
+                "offset": 22598,
+                "store_order": 2491,
+                "records_identical": true,
+                "previous_name": "形神俱滅第一式·出竅",
+                "new_name": "形神俱滅第一式·出竅"
+              },
+              {
+                "key": 4577,
+                "offset": 22661,
+                "store_order": 2498,
+                "records_identical": true,
+                "previous_name": "形神俱滅第二式·幻滅",
+                "new_name": "形神俱滅第二式·幻滅"
+              },
+              {
+                "key": 4578,
+                "offset": 22724,
+                "store_order": 2505,
+                "records_identical": true,
+                "previous_name": "控心術",
+                "new_name": "控心術"
+              },
+              {
+                "key": 4579,
+                "offset": 22787,
+                "store_order": 2512,
+                "records_identical": true,
+                "previous_name": "多聞天王咒",
+                "new_name": "多聞天王咒"
+              },
+              {
+                "key": 4581,
+                "offset": 22850,
+                "store_order": 2519,
+                "records_identical": true,
+                "previous_name": "戾氣召喚",
+                "new_name": "戾氣召喚"
+              },
+              {
+                "key": 4236,
+                "offset": 22913,
+                "store_order": 2526,
+                "records_identical": true,
+                "previous_name": "順風連斬",
+                "new_name": "順風連斬"
+              }
+            ],
+            "icon_mapping": {
+              "155": 129,
+              "255": 229,
+              "355": 329,
+              "299": 220,
+              "298": 219,
+              "297": 222,
+              "197": 117,
+              "599": 515,
+              "191": 111,
+              "196": 116,
+              "198": 118,
+              "296": 230
+            }
+          },
+          {
+            "label": "D_key_with_saved_bounds",
+            "origin": "control: isolates key vs boundary as the discriminator",
+            "keys": [
+              204,
+              152,
+              122,
+              74,
+              218
+            ],
+            "bounds": [
+              18043,
+              36122,
+              54130,
+              72108
+            ],
+            "metric_alignment_unmapped_opcodes": 0,
+            "instruction_alignment": "clean",
+            "module_level_stores": {
+              "GetData": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 6
+                }
+              ],
+              "GetShape": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 15
+                }
+              ],
+              "GetSkillID": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 24
+                }
+              ],
+              "GetDataByName": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 33
+                }
+              ],
+              "GetPetSkillNameById": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 42
+                }
+              ],
+              "IsPetSkill": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 51
+                }
+              ],
+              "ICON_MAPPING": [
+                {
+                  "opcode": "STORE_GLOBAL",
+                  "std_opcode": 97,
+                  "offset": 165
+                }
+              ],
+              "DATA": [
+                {
+                  "opcode": "STORE_GLOBAL",
+                  "std_opcode": 97,
+                  "offset": 37341
+                }
+              ],
+              "AUTOFIGHTLIST": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 37458
+                }
+              ],
+              "ShieldShortCutSkills": [
+                {
+                  "opcode": "STORE_NAME",
+                  "std_opcode": 90,
+                  "offset": 37467
+                }
+              ]
+            },
+            "literal_build": "ok",
+            "store_subscr_count": 4130,
+            "unique_data_keys": 581,
+            "data_key_min": 101,
+            "data_key_max": 45432,
+            "duplicate_key_count": 9,
+            "duplicate_keys": [
+              4236,
+              4573,
+              4574,
+              4575,
+              4576,
+              4577,
+              4578,
+              4579,
+              4581
+            ],
+            "duplicate_detail": [
+              {
+                "key": 4573,
+                "offset": 22409,
+                "store_order": 2470,
+                "records_identical": false,
+                "previous_name": "天魔返生術",
+                "new_name": "地魔返生術"
+              },
+              {
+                "key": 4574,
+                "offset": 22472,
+                "store_order": 2477,
+                "records_identical": true,
+                "previous_name": "酒瘋發作",
+                "new_name": "酒瘋發作"
+              },
+              {
+                "key": 4575,
+                "offset": 22535,
+                "store_order": 2484,
+                "records_identical": true,
+                "previous_name": "視財如命",
+                "new_name": "視財如命"
+              },
+              {
+                "key": 4576,
+                "offset": 22598,
+                "store_order": 2491,
+                "records_identical": true,
+                "previous_name": "形神俱滅第一式·出竅",
+                "new_name": "形神俱滅第一式·出竅"
+              },
+              {
+                "key": 4577,
+                "offset": 22661,
+                "store_order": 2498,
+                "records_identical": true,
+                "previous_name": "形神俱滅第二式·幻滅",
+                "new_name": "形神俱滅第二式·幻滅"
+              },
+              {
+                "key": 4578,
+                "offset": 22724,
+                "store_order": 2505,
+                "records_identical": true,
+                "previous_name": "控心術",
+                "new_name": "控心術"
+              },
+              {
+                "key": 4579,
+                "offset": 22787,
+                "store_order": 2512,
+                "records_identical": true,
+                "previous_name": "多聞天王咒",
+                "new_name": "多聞天王咒"
+              },
+              {
+                "key": 4581,
+                "offset": 22850,
+                "store_order": 2519,
+                "records_identical": true,
+                "previous_name": "戾氣召喚",
+                "new_name": "戾氣召喚"
+              },
+              {
+                "key": 4236,
+                "offset": 22913,
+                "store_order": 2526,
+                "records_identical": true,
+                "previous_name": "順風連斬",
+                "new_name": "順風連斬"
+              }
+            ],
+            "icon_mapping": {
+              "155": 129,
+              "255": 229,
+              "355": 329,
+              "299": 220,
+              "298": 219,
+              "297": 222,
+              "197": 117,
+              "599": 515,
+              "191": 111,
+              "196": 116,
+              "198": 118,
+              "296": 230
+            }
           }
-        }
+        ],
+        "alignment_metric_winner": {
+          "unmapped_count": 0,
+          "tied_labels": [
+            "D_key_with_saved_bounds",
+            "coordinator_D_candidate",
+            "superseded_218_proposal"
+          ]
+        },
+        "feasibility_winners": [
+          "coordinator_D_candidate",
+          "D_key_with_saved_bounds"
+        ],
+        "feasible_variants_agree_on_table": true,
+        "conclusion": "The alignment metric (fewest unmapped Duoyi opcodes) and the feasibility metric (DATA actually rebuildable) disagree. Alignment prefers a 3-way tie (D_key_with_saved_bounds, coordinator_D_candidate, superseded_218_proposal) and cannot separate them; only coordinator_D_candidate, D_key_with_saved_bounds rebuilds DATA. Alignment is necessary but not sufficient.",
+        "key_vs_bounds": "keys[1]=152 rebuilds DATA with either bounds set and both agree on the same 581 keys and 9 duplicate keys, so for this entry the discriminator is the key byte, not the boundary values.",
+        "method": "literal_build_feasibility_vs_alignment"
       },
-      "remaining_uncertainty": "A whole XOR segment decoding to unmapped opcodes cannot be explained by a boundary error; only a wrong key byte produces it. The corrected key also yields a structurally coherent module. No native-client comparison."
+      "remaining_uncertainty": "Not native-verified. Duplicate keys are recorded, not silently dropped."
     }
   ],
+  "boundary_terminating_string_detector": {
+    "1945": [
+      {
+        "boundary_index": 0,
+        "boundary": 259624,
+        "header_offset": 259435,
+        "data_span": [
+          259440,
+          259624
+        ],
+        "length": 184,
+        "cp950_valid": false,
+        "text": "象徵著永結同心之意的靈果，此靈果女性玩家使用後可以得到榮譽之玉、還童丹、旗包等獎勵，男性玩家使用後只能得到少量抵用金。（男性玩家一天最多使用2個`\\x96b\u0019\u0000\\x80l\\x81g\\x87b觔\flwh吮席\n`峪\tc\b爇\u0015`\\x96b\u0019\u0000\\x80l\\x81g\\x98"
+      },
+      {
+        "boundary_index": 1,
+        "boundary": 519228,
+        "header_offset": 519205,
+        "data_span": [
+          519210,
+          519228
+        ],
+        "length": 18,
+        "cp950_valid": true,
+        "text": "十級強化打造設計圖"
+      },
+      {
+        "boundary_index": 2,
+        "boundary": 778764,
+        "header_offset": 778753,
+        "data_span": [
+          778758,
+          778764
+        ],
+        "length": 6,
+        "cp950_valid": true,
+        "text": "晉怖肋"
+      },
+      {
+        "boundary_index": 3,
+        "boundary": 1038363,
+        "header_offset": 1038207,
+        "data_span": [
+          1038212,
+          1038363
+        ],
+        "length": 151,
+        "cp950_valid": false,
+        "text": "由冒險家行會研發的，具有記憶時空傳送點的特殊功能#r【使用方法】隊伍人數等於5人，使用者身份為隊長\\xf8\u0018\\xff;\\xf0\\x8b\\xe5\\x89\\xe9\u0016鵽\\xe9>\\xf7:\\xfd\u0013\\xfd?\\xfe\\xfd\\xe5\\x89\\xea\u001b\\xfc2\\x98\\xbd\\x9b\u0010\\x99漘+\\xf80\\xf0\\x8b\\x9d\\x84\\xe9>\\xf7:\\xf83\\xfe5\\xff瑩3\\xea\\xa0"
+      }
+    ],
+    "2027": [
+      {
+        "boundary_index": 2,
+        "boundary": 16277,
+        "header_offset": 16236,
+        "data_span": [
+          16241,
+          16277
+        ],
+        "length": 36,
+        "cp950_valid": false,
+        "text": "出現地點：#r兔神殿遺址#\\xfa W!\\xd2-\\xec\"q;&1["
+      },
+      {
+        "boundary_index": 3,
+        "boundary": 21755,
+        "header_offset": 21742,
+        "data_span": [
+          21747,
+          21755
+        ],
+        "length": 8,
+        "cp950_valid": false,
+        "text": "終級\\xd9\u0002\\xcc'"
+      }
+    ],
+    "1115": [],
+    "2242": [],
+    "1698": []
+  },
+  "entry_1698_interior_suspects": [
+    {
+      "boundary_index": 0,
+      "boundary": 467,
+      "header_offset": 456,
+      "length": 78,
+      "cp950_valid": false,
+      "text": "【獲得暘泛叩'v鏜▅眇？挾河挽聳Ｚ\\xa0S曬混'r②找#s(18,工藝師,1,明月城,62,82,0)製作"
+    },
+    {
+      "boundary_index": 1,
+      "boundary": 1078,
+      "header_offset": 966,
+      "length": 110,
+      "cp950_valid": true,
+      "text": "【獲得途徑】#r①在#s(133,其他玩家的攤位,擺攤區,1,明月城,60,80,0)上購買#r②找#s(18,傢具師,1,明月城,79,79,0)Vs作"
+    },
+    {
+      "boundary_index": 3,
+      "boundary": 2036,
+      "header_offset": 2005,
+      "length": 61,
+      "cp950_valid": true,
+      "text": "【獲得途徑】#r①可在#s(18,-*G_H?/\u001d軀麋\u0014月城,244,68,0)#n處購買"
+    }
+  ],
+  "petskill_relations": {
+    "petskill_DATA_unique_ids": 581,
+    "SKILLIDLST_from_2242": 48,
+    "SKILLIDLST_subset_of_petskill_DATA": true,
+    "SKILLIDLST_missing_from_DATA": [],
+    "ICON_MAPPING_entries": 12,
+    "ICON_MAPPING_values_subset_of_DATA": true,
+    "ICON_MAPPING_values_missing": [],
+    "relation_note": "ICON_MAPPING maps icon id -> skill id and every value is a key of DATA; every SKILLIDLST id from petactiveskilldata.py is also a DATA key. The three tables are mutually consistent under keys[1]=152."
+  },
   "pet_table_difference": {
     "petdata_2027_count": 135,
     "mxpetdata_1115_count": 137,
@@ -1074,32 +1281,34 @@
     "id_4024_petdata": "仙獸雷吉斯",
     "id_2910_mxpetdata": "混沌騎士",
     "id_2910_petdata": "混沌騎士",
-    "classification": "legitimate_table_difference",
-    "note": "Cardinality and one naming difference survive every check performed. No evidence supports overwriting one table with the other."
+    "classification": "unexplained_table_difference_presumed_legitimate",
+    "note": "Downgraded from \"legitimate\". The differences survive every check performed, but no positive evidence explains the extra 5106/5107 or the 4024 naming split. Absence of a counter-example is not proof that a difference is intended. Caller semantics remain unverified."
   },
   "csv_admission": {
     "eligible_for_review_csv": [
-      "1945 itemdata DATA - names/descriptions, excluding record 72548 name (isolate) and after applying boundary candidates 259583 and 1038307",
+      "1945 itemdata DATA - after boundary candidates 259583, 778759 and 1038307; isolate DATA[72548][0]",
       "1115 mxpetdata DATA - after boundary candidate 828",
       "2027 petdata DATA - after boundary candidates 16264 and 21751",
       "2242 petactiveskilldata SKILLIDLST - after boundary candidate 264",
-      "3205 petskill AUTOFIGHTLIST and ShieldShortCutSkills - after key[1]=218"
+      "3205 petskill DATA (581 ids), ICON_MAPPING, AUTOFIGHTLIST, ShieldShortCutSkills - after keys[1]=152; record the 9 duplicate keys rather than silently keeping the last value"
     ],
     "must_be_isolated": [
-      "1945 DATA[72548][0] - source value with an invalid CP950 trail byte"
+      "1945 DATA[72548][0] - source value with an invalid CP950 trail byte",
+      "3205 DATA duplicate keys 4236, 4573-4579, 4581 - keep both the overwritten and the surviving record; 4573 differs by name (天魔返生術 -> 地魔返生術)"
     ],
-    "not_recoverable_this_round": [
-      "3205 petskill DATA - not a module-level literal store in this entry; the pet-skill master table needs a different extraction path"
+    "not_admissible_this_round": [
+      "1698 itemext - DATA[10004] boundary undecided (10 CP950-valid offsets, none corroborated) and two further interior suspects",
+      "1945 itemdata records not yet covered by the detector - the detector only flags strings ending exactly on a saved boundary, so records corrupted mid-string are not excluded by it"
     ],
     "missing_server_side_authority": [
-      "petdata skill fields are names, not ids; name->id mapping requires the pet-skill master table, which is still unrecovered"
+      "petdata skill fields are names, not ids; name->id mapping now has a candidate source (3205 DATA) but is not native-verified"
     ]
   },
   "limitations": [
-    "No recovered script was executed; no exec/eval/runtime import of recovered code.",
+    "No recovered script was executed; no exec/eval/runtime import.",
     "data/script.fls and script_fls_keys.json were only read.",
-    "Cross-entry corroboration uses the same heuristic key database for the corroborating entries; it is strong but not native-client proof.",
-    "Valid CP950 is treated as necessary, never as sufficient.",
-    "Nothing here has been written to server/game_data/."
+    "Cross-entry corroboration uses the same heuristic key database for the corroborating entries; strong, but not native-client proof.",
+    "Valid CP950 is treated as necessary, never sufficient.",
+    "Nothing has been written to server/game_data/."
   ]
 }
