@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "archive": "data/script.fls",
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_count": 5002,
+  "current_checks": {
+    "marshal_transpiled_filename_checked": 4979,
+    "unverified": 14,
+    "marshal_transpiled_no_filename": 9
+  },
+  "path_quality": {
+    "structurally_valid": 4942,
+    "needs_review": 60
+  },
+  "path_origin": {
+    "current_archive": 4979,
+    "historical_fallback": 23
+  },
+  "historical_filename_changes": 351,
+  "heuristic_kinds": {
+    "library_or_framework_candidate": 114,
+    "client_model_candidate": 243,
+    "client_presentation_candidate": 1710,
+    "unclassified": 1645,
+    "protocol_candidate": 505,
+    "data_candidate": 785
+  },
+  "meaning": "Full entry coverage only. No full-source decompilation or full gameplay verification.",
+  "other_archives": [
+    {
+      "path": "data/data.fls",
+      "magic": "b'FLS\\x00'",
+      "entry_count": null,
+      "scope": "header only; payload semantics not reviewed in this pass"
+    },
+    {
+      "path": "data/effect.fls",
+      "magic": "b'0SLF'",
+      "entry_count": 65,
+      "scope": "header only; payload semantics not reviewed in this pass"
+    },
+    {
+      "path": "data/passive.fls",
+      "magic": "b'0SLF'",
+      "entry_count": 41,
+      "scope": "header only; payload semantics not reviewed in this pass"
+    },
+    {
+      "path": "data/skill.fls",
+      "magic": "b'0SLF'",
+      "entry_count": 342,
+      "scope": "header only; payload semantics not reviewed in this pass"
+    },
+    {
+      "path": "data/skill2.fls",
+      "magic": "b'0SLF'",
+      "entry_count": 454,
+      "scope": "header only; payload semantics not reviewed in this pass"
+    }
+  ],
+  "data_fls_manifest_entries": 121,
+  "data_fls_python_sources": 121,
+  "script_fls_existing_python_sources": 52,
+  "directory_groups": {
+    "script/": {
+      "subdirectories": 36,
+      "direct_files": 265,
+      "entries": 4952
+    },
+    "script/mxgame/": {
+      "subdirectories": 153,
+      "direct_files": 6,
+      "entries": 2358
+    },
+    "script/mxgame/activity/": {
+      "subdirectories": 70,
+      "direct_files": 0,
+      "entries": 707
+    },
+    "script/yard/": {
+      "subdirectories": 10,
+      "direct_files": 10,
+      "entries": 248
+    },
+    "script/dialog/": {
+      "subdirectories": 27,
+      "direct_files": 378,
+      "entries": 679
+    },
+    "script/data/": {
+      "subdirectories": 4,
+      "direct_files": 447,
+      "entries": 784
+    }
+  }
+}

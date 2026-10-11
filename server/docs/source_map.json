@@ -1,0 +1,2597 @@
+{
+  "schema_version": 1,
+  "generated_on": "2026-10-11",
+  "archive": "data/script.fls",
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "catalog": "work/dream-world-connect-login-map/notes/task-b-脚本分析/artifacts/fullrun/decode-results-final.jsonl",
+  "catalog_semantics": "historical decoder output; not source correctness",
+  "coverage": "curated starting references, NOT exhaustive gameplay classification",
+  "modules": [
+    {
+      "module": "account",
+      "title": "账号与认证",
+      "ownership": "账号认证、封禁、登录票据；不长期持有数据库事务",
+      "excludes": "角色业务、客户端补丁",
+      "catalog_prefixes": [
+        "script/login/"
+      ],
+      "prefix_match_count": 44,
+      "references": [
+        {
+          "entry_index": 4082,
+          "catalog_filename": "script/login/netlogin.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetScriptVersion",
+            "GetCurrAccount",
+            "C2SLoginIn",
+            "C2SLoginPlayerEnter",
+            "C2GSRoleInfoLog",
+            "C2SLoginPlayerAdd",
+            "C2SBindAccount",
+            "C2SReleaseBind",
+            "C2SGetAccountBalance",
+            "C2SChgPwd",
+            "C2SSetLocalPwd",
+            "C2SLocalPwdSuccess",
+            "C2SReEnterAnswer",
+            "C2SExchgGameTime",
+            "C2SExchgGamePoint",
+            "C2SLeaveQueue"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/login/netlogin.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 516,
+          "catalog_filename": "script/login/netserver.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "SetPlayerID",
+            "GetPlayerID",
+            "getMsg",
+            "RefreshServerInfo",
+            "GetErrorAnsMsg",
+            "SetUnEnterServerList",
+            "GetUnEnterServerList",
+            "ClearUnEnterServerList",
+            "IsSelectServerOver",
+            "SetSelectServerOver",
+            "SetConnectedProxy",
+            "GetConnectedProxy",
+            "GetProxy",
+            "SetProxy",
+            "GetProxyName"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/login/netserver.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 1607,
+          "catalog_filename": "script/login/dgwnet.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "OldConnectTest",
+            "IsBanDgwServer",
+            "IsDGWNet",
+            "StartWorking",
+            "GetGoodIP",
+            "StopAndSave",
+            "StartEcho",
+            "StopWorking",
+            "<lambda>",
+            "SaveDGWInfo",
+            "DoLogEvent",
+            "IsCanSendDgwLog",
+            "ServerDGWLog",
+            "ServerDGWError",
+            "__init__"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/login/dgwnet.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 4289,
+          "catalog_filename": "script/login/netcert.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "S2CInstandCert",
+            "S2CCheckCert",
+            "S2CMobileCheck",
+            "S2CShowCertApply",
+            "S2CShowCertAbout",
+            "S2CShowCertMange",
+            "S2CShowCertLook",
+            "S2CCertItemData",
+            "f1",
+            "f2",
+            "S2CNotDYT",
+            "S2CCertAns",
+            "S2CApplyCert",
+            "S2CGHasSendSMS",
+            "S2CBindPhone",
+            "S2CBindAns"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/login/netcert.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 164,
+          "catalog_filename": "script/login/dlgcertabout.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "Show",
+            "ShowCertCance",
+            "ShowCertCancelDlg",
+            "__init__",
+            "CloseWindow",
+            "OnMessage",
+            "CCertAbout",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/login/dlgcertabout.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 337,
+          "catalog_filename": "script/login/mainpage.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "__init__",
+            "LeftDown",
+            "LeftUp",
+            "Enter",
+            "Leave",
+            "SetSelect",
+            "_CBulletinButton",
+            "__init__",
+            "OnButtonEnter",
+            "OnButtonLeave",
+            "_WriteTxtBox",
+            "_docancel",
+            "OnMessage",
+            "CMainPage",
+            "refreshbulletin",
+            "refreshService"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/login/mainpage.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "character",
+      "title": "角色与成长",
+      "ownership": "建角、选角、等级经验、基础属性、修炼、称谓与成就；协调角色生命周期",
+      "excludes": "背包、货币直接写入、战斗临时血量",
+      "catalog_prefixes": [],
+      "prefix_match_count": 0,
+      "references": [
+        {
+          "entry_index": 3038,
+          "catalog_filename": "script/hero.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "GetHeroObject",
+            "__init__",
+            "OnChange",
+            "CHeroPropItem",
+            "__init__",
+            "OnChange",
+            "CHeroSignedPropItem",
+            "__init__",
+            "OnChange",
+            "CHeroPropMultiItemText",
+            "Refresh",
+            "CSPHeroPropMultiItemText",
+            "Refresh",
+            "CNameItem",
+            "Refresh"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/hero.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 826,
+          "catalog_filename": "script/nethero.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "C2SMapMove",
+            "CheckPreLoad",
+            "S2CPropInit",
+            "RecordRoleInfo",
+            "RefreshShenHe",
+            "Recover",
+            "S2CPropResist",
+            "S2CPropPower",
+            "S2CPropChange",
+            "S2CMultiPropChange",
+            "S2CPropChangeInWar",
+            "S2CPropAdvXinfa",
+            "S2CSkillLevel",
+            "S2CDesignAdd",
+            "S2CDesignDel"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/nethero.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "economy",
+      "title": "经济与奖励",
+      "ownership": "货币、资产流水、奖励计划执行与幂等；与 inventory 在同一工作单元完成资产事务",
+      "excludes": "客户端指定奖励、用 Redis 代替权威账本",
+      "catalog_prefixes": [],
+      "prefix_match_count": 0,
+      "references": [
+        {
+          "entry_index": 826,
+          "catalog_filename": "script/nethero.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "C2SMapMove",
+            "CheckPreLoad",
+            "S2CPropInit",
+            "RecordRoleInfo",
+            "RefreshShenHe",
+            "Recover",
+            "S2CPropResist",
+            "S2CPropPower",
+            "S2CPropChange",
+            "S2CMultiPropChange",
+            "S2CPropChangeInWar",
+            "S2CPropAdvXinfa",
+            "S2CSkillLevel",
+            "S2CDesignAdd",
+            "S2CDesignDel"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/nethero.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 1498,
+          "catalog_filename": "script/netitemshop.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "S2CMyShop",
+            "S2CItemList",
+            "S2CRefreshItem",
+            "S2CShopList",
+            "S2CShopIntro",
+            "S2CShopGoods",
+            "S2CShopHistory",
+            "S2CShopName",
+            "S2CShopPrice",
+            "S2CItemShop",
+            "C2SPutItem",
+            "C2SGetItem",
+            "C2SModifyPrice",
+            "C2SGetShopList",
+            "C2SGetShopIntro",
+            "C2SLookShop"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/netitemshop.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 2020,
+          "catalog_filename": "script/mxgame/tradeguild/nettradeguild.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetTGNetObj",
+            "C2SRequestItemList",
+            "C2SBuyItem",
+            "C2SRequestItemInfo",
+            "C2SRequestSaleList",
+            "C2SRequestSaleRecord",
+            "C2SPullItem",
+            "C2SPushItem",
+            "C2SItemCare",
+            "C2SRequestCareList",
+            "C2SResetPrice",
+            "C2SNewRequestItemList",
+            "C2SGetMoney",
+            "S2COpenTGDlg",
+            "S2CUpdateItemList",
+            "S2CUpdateSaleList"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/tradeguild/nettradeguild.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "inventory",
+      "title": "背包与装备实例",
+      "ownership": "物品归属、数量、位置、装备槽、绑定、消耗及持久化；装备实例由本模块写入",
+      "excludes": "打造概率、战斗伤害、其他模块直接改表",
+      "catalog_prefixes": [
+        "script/mxgame/item/"
+      ],
+      "prefix_match_count": 16,
+      "references": [
+        {
+          "entry_index": 3745,
+          "catalog_filename": "script/mxgame/item/netitem.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "GetItemNetObj",
+            "C2SItemGet",
+            "C2SItemDrag",
+            "C2SItemUse",
+            "C2SItemString",
+            "C2SItemFullUse",
+            "C2SAnswerBind",
+            "C2SVirItemUse",
+            "C2SVirItemDrag",
+            "C2SVirItemString",
+            "S2CItemKey",
+            "S2CItemDel",
+            "S2CDelMultiItem",
+            "S2CItemAdd",
+            "S2CAddMultiItem"
+          ],
+          "semantic_review": "selected_functions_reviewed_in_session; not_whole_module",
+          "current_filename": "script/mxgame/item/netitem.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 1766,
+          "catalog_filename": "script/mxgame/item/itemdefine.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetFairyCharIDByItShape",
+            "GetFairyItShapeByCharID",
+            "GetFairyNameByCharID",
+            "GetFairyNameByItShape",
+            "GetHorseSkinItem",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/item/itemdefine.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 1108,
+          "catalog_filename": "script/mxgame/item/netitemextinfo.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "SetExtInfoCallBack",
+            "AddItemLevel",
+            "S2CAddItemLevel",
+            "S2CSetTotalQuantity",
+            "SetHotkeyItem",
+            "S2CSetHotkeyItem",
+            "S2CSetInfoCallBack",
+            "AddItemAlias",
+            "S2CAddItemAlias",
+            "ItemExtName",
+            "S2CItemExtName",
+            "S2CAddEquipMark",
+            "HotkeyAliasAndFlyInfo",
+            "S2CHotkeyAliasAndFlyInfo",
+            "S2CAddItemRecover"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/item/netitemextinfo.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 17,
+          "catalog_filename": "script/data/equipitemdata.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetData",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/data/equipitemdata.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 135,
+          "catalog_filename": "script/mxgame/item/delegate/dgtquicksell.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "Init",
+            "EditInit",
+            "OnOpenPage",
+            "RequestCannotSellItem",
+            "SetCannotSellItem",
+            "<lambda>",
+            "UpdateList",
+            "OnSetItemPrice",
+            "OnSetItemCanSellList",
+            "OnClickLeftItem",
+            "OnClickRightItem",
+            "OnCurNumChange",
+            "OnCheckSelectItem",
+            "SellSelectedItem",
+            "CheckHighValueItem",
+            "CheckDietingItem"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/item/delegate/dgtquicksell.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 519,
+          "catalog_filename": "script/mxgame/item/iteminterface.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetItem",
+            "GetItemTypeName",
+            "GetMaxBagNum",
+            "GetNowBagNum",
+            "PackBagIsFull",
+            "GetEquipPosByShape",
+            "GetEquipTypeByShape",
+            "IsEquipHasAuthenticate",
+            "IsEquipIsMake",
+            "IsEquipHasTJTX",
+            "IsEquipHasTJ",
+            "IsBadEquip",
+            "IsModelEquip",
+            "IsEquipHasTX",
+            "IsEquipHasGem",
+            "IsEquipHasGuaXiang"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/item/iteminterface.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "crafting",
+      "title": "打造与装备加工",
+      "ownership": "配方、鉴定、强化、熔炼等操作规则；组织材料消耗与产物发放的事务",
+      "excludes": "独立复制一份背包、未经核实的成功率",
+      "catalog_prefixes": [
+        "script/mxgame/makeequip/"
+      ],
+      "prefix_match_count": 93,
+      "references": [
+        {
+          "entry_index": 1,
+          "catalog_filename": "script/mxgame/makeequip/model/mdequipsmelting.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "GetEquipSmeltingMgr",
+            "__init__",
+            "SetSelSmeltEquip",
+            "GetSelSmeltEquip",
+            "SetSmeltingInfo",
+            "GetSmeltingInfo",
+            "SetBeSmeltedEquipData",
+            "ClearEquipInfo",
+            "GetBeSmeltedEquip",
+            "EmitUpdateBeSmeltedEquip",
+            "EmitUpdateSmeltingInfo",
+            "CEquipSmeltingMgr",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/makeequip/model/mdequipsmelting.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 1203,
+          "catalog_filename": "script/mxgame/makeequip/netbuild.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetBuildNetObj",
+            "C2SAskMakeSymbolMoney",
+            "C2SMakeSureMakeSymbol",
+            "C2SGiveFriendBuildPaper",
+            "C2SQuickBuyItem",
+            "C2SAskSmeltingInfo",
+            "C2SAskEquipIdentifyMoney",
+            "C2SMakeSureEquipIdentifyWithMoney",
+            "C2SAskMakeTuiJianState",
+            "C2SRequestGemInfo",
+            "C2SMakgeGemNew2",
+            "C2SQuickBuyGem",
+            "C2SQuickSetGem",
+            "C2SNewRemoveGemInfo",
+            "C2SNewConfirmRemoveGem",
+            "C2SNewCancelRemoveGem"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/makeequip/netbuild.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 31,
+          "catalog_filename": "script/mxgame/makeequip/view/widget/makeitemicon.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "__init__",
+            "SetLv",
+            "ShowTick",
+            "SetGrey",
+            "SetHideTips",
+            "AddEnterCB",
+            "AddLeaveCB",
+            "GetObject",
+            "SetNeedTxt",
+            "SetOwnTxt",
+            "SetText",
+            "SetNeedTxtShow",
+            "DelNeedTxt",
+            "SetFreeze",
+            "SetKey",
+            "SetTextFont"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/makeequip/view/widget/makeitemicon.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 52,
+          "catalog_filename": "script/mxgame/makeequip/delegate/delegatebuild/dgtbuildoperation.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetView",
+            "GetMakeEquipMgr",
+            "GetBuildMaterialMgr",
+            "Init",
+            "InitDlg",
+            "ClearFirstItemView",
+            "ClearSecondItemView",
+            "ClearSymbolItemView",
+            "OnClickAddItem",
+            "OnPutDownItem",
+            "OnUpdateCashChange",
+            "OnClickAutoFillUp",
+            "OnClickAutoCashFillUp",
+            "SetMakeInfo",
+            "CheckMakeSymbolBySkill",
+            "OnSetBuildEquipment"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/makeequip/delegate/delegatebuild/dgtbuildoperation.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 69,
+          "catalog_filename": "script/mxgame/makeequip/view/viewdianhua/dlgdianhua.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "__init__",
+            "Hold",
+            "InitData",
+            "InitBtn",
+            "IsCanOpendlg",
+            "InitDelegate",
+            "SwitchSubDialog",
+            "GetOpenDlg",
+            "SetBtnSelect",
+            "OnMessage",
+            "CDianHuaDlg",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/makeequip/view/viewdianhua/dlgdianhua.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 258,
+          "catalog_filename": "script/mxgame/makeequip/delegate/dgtmakegem_get.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "Init",
+            "GetView",
+            "GetModel",
+            "EditInit",
+            "OnClickAItem",
+            "InitDlg",
+            "SetAItem",
+            "CMakeGemGetDelegate",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/makeequip/delegate/dgtmakegem_get.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "world",
+      "title": "地图与世界实例",
+      "ownership": "地图实例、位置、移动校验、可见范围、传送、进入离开和世界对象",
+      "excludes": "战斗回合、角色资产、仅凭客户端坐标直接传送",
+      "catalog_prefixes": [
+        "script/mxgame/map/"
+      ],
+      "prefix_match_count": 15,
+      "references": [
+        {
+          "entry_index": 3110,
+          "catalog_filename": "script/mxgame/map/netmap.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "S2CMapSceneM",
+            "S2CMapAddPlayer",
+            "ChangePlayerTitleColor",
+            "IsChristAddonID",
+            "SetNpcSpecialTitle",
+            "IsShenHeHideNpc",
+            "CheckHideNpcInfo",
+            "IsNeedHideGoodVoiceNpc",
+            "S2CMapAddNpc",
+            "IsNameTop",
+            "S2CMapAddGoods",
+            "S2CMapRefreshNpcSign",
+            "S2CMapDel",
+            "DelObj",
+            "S2CMapTrack"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/map/netmap.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 826,
+          "catalog_filename": "script/nethero.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "C2SMapMove",
+            "CheckPreLoad",
+            "S2CPropInit",
+            "RecordRoleInfo",
+            "RefreshShenHe",
+            "Recover",
+            "S2CPropResist",
+            "S2CPropPower",
+            "S2CPropChange",
+            "S2CMultiPropChange",
+            "S2CPropChangeInWar",
+            "S2CPropAdvXinfa",
+            "S2CSkillLevel",
+            "S2CDesignAdd",
+            "S2CDesignDel"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/nethero.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 1301,
+          "catalog_filename": "script/data/mapdata.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetSceneSize",
+            "GetSceneName",
+            "GetSceneID",
+            "GetSceneIDList",
+            "GetParentMap",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/data/mapdata.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 159,
+          "catalog_filename": "script/mxgame/map/dlgmap.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "SetAutoGoto",
+            "SetTreasureGoto",
+            "RefreshFlyIcon",
+            "GetReplaceDict",
+            "GetMinimapPath",
+            "CutDataFromGrade",
+            "CutDataFromTask",
+            "CutDataFromSerGrade",
+            "GetNpcData",
+            "GetSpecialColorNpc",
+            "SetNotifyBtnShow",
+            "SetHeroPos",
+            "GetHeroPos",
+            "SetMapName",
+            "GetMapName"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/map/dlgmap.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 189,
+          "catalog_filename": "script/mxgame/map/mapevent/mapeventinterface.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ClientPos2ServerPos",
+            "ServerPos2ClientPos",
+            "__init__",
+            "PlayAnimetion",
+            "SetAnimetionStopCB",
+            "OnAnimetionStop",
+            "StopAnime",
+            "CMapSpriteObject",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/map/mapevent/mapeventinterface.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 1430,
+          "catalog_filename": "script/mxgame/map/map1323.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "CreateBridge",
+            "ShowBridge",
+            "__init__",
+            "GetPos",
+            "SetPos",
+            "InitConstant",
+            "CSecondBezier",
+            "__init__",
+            "CreateSummon",
+            "PlayOnce",
+            "PlayOnce",
+            "GetStartPos",
+            "GetEndPos",
+            "GetRandomLine",
+            "move"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/map/map1323.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "npc",
+      "title": "NPC与交互",
+      "ownership": "NPC交互距离、对话会话、选项、服务入口；将交易和任务交给对应模块",
+      "excludes": "直接扣钱发奖、信任客户端选择的任意服务",
+      "catalog_prefixes": [],
+      "prefix_match_count": 0,
+      "references": [
+        {
+          "entry_index": 731,
+          "catalog_filename": "script/netnpc.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "C2SNpcLook",
+            "C2SNpcAnswer",
+            "C2SNpcGive",
+            "C2SNpcGiveExt",
+            "C2SNpcRBClick",
+            "S2CNpcChatExt",
+            "S2CNpcChat",
+            "S2CPlayerChatNoClose",
+            "S2CNpcChatJuQing",
+            "C2SNpcInput",
+            "WordError",
+            "Process",
+            "ChatCheck",
+            "AllCheck",
+            "NoCheck"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/netnpc.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "battle",
+      "title": "战斗运行时与结算协调",
+      "ownership": "战斗生命周期、行动收集、超时、回合推进、状态拥有权、战报、重连视图与结算协调",
+      "excludes": "界面动画、直接发金币、将客户端血量作为权威值",
+      "catalog_prefixes": [
+        "script/core/magicperform/",
+        "script/mxgame/warprepare/"
+      ],
+      "prefix_match_count": 52,
+      "references": [
+        {
+          "entry_index": 1406,
+          "catalog_filename": "script/netwar.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "C2SWarPerform",
+            "C2SWarLook",
+            "C2SWarAttack",
+            "C2SWarDefend",
+            "C2SWarEscape",
+            "C2SWarItem",
+            "C2SWarSummon",
+            "C2SWarProtect",
+            "C2SWarCatch",
+            "C2SChild",
+            "C2STurnEnd",
+            "C2SWarSummAttack",
+            "C2SWarSummPerform",
+            "C2SWarSummGuard",
+            "C2SWarSummEscape"
+          ],
+          "semantic_review": "selected_functions_reviewed_in_session; not_whole_module",
+          "current_filename": "script/netwar.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 697,
+          "catalog_filename": "script/core/war.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "SetReplayWar",
+            "GetReplayWar",
+            "GetWarMgr",
+            "GetHeroID",
+            "GetWarriorList",
+            "__init__",
+            "CCmd",
+            "SetProcess",
+            "Process",
+            "Wait",
+            "StartBout",
+            "ClearUsedCmd",
+            "NextServerCmd",
+            "NextCmd",
+            "CmdIsAction"
+          ],
+          "semantic_review": "selected_functions_reviewed_in_session; not_whole_module",
+          "current_filename": "script/core/war.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 1721,
+          "catalog_filename": "script/mxgame/fakewar/fakewar.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "__init__",
+            "LoadFWR",
+            "LoadFWRByStr",
+            "Start",
+            "Pause",
+            "Clear",
+            "ReleaseCmd",
+            "CreateCmd",
+            "SetWarriorPosDict",
+            "SetMagicOffset",
+            "GetWarriorMgr",
+            "GetMagicMgr",
+            "GetCmdMgr",
+            "GetMagicOffset",
+            "GetWarriorPos",
+            "GetFullScreenPos"
+          ],
+          "semantic_review": "selected_functions_reviewed_in_session; not_whole_module",
+          "current_filename": "script/mxgame/fakewar/fakewar.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 660,
+          "catalog_filename": "script/mxgame/warprepare/netwarprepare.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "OnOpenWarReadyDlg",
+            "OnOpenSwitchEquipDlg",
+            "OnRefreshFight",
+            "OnRefreshUsingCase",
+            "OnRefreshEquipCaseName",
+            "OnRefreshEquipCaseItem",
+            "OnRefreshCase",
+            "OnRefreshChooseEquip",
+            "OnRefreshFumo",
+            "OnRefreshHuanhua",
+            "OnRefreshMagic",
+            "OnOpenShareDlg",
+            "OnAllCaseName",
+            "OnOneKeyFumoHeroEquip",
+            "OnOneKeyFumoSummon",
+            "OnFumoEquipItemRange"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/warprepare/netwarprepare.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 44,
+          "catalog_filename": "script/mxgame/warprepare/delegate/dgtonekeyfumosummon.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetValueStrByPetProp",
+            "GetPetCellFumoStr",
+            "GetPetFumoTips",
+            "__init__",
+            "GetView",
+            "Init",
+            "InitView",
+            "IsEnableOpFumo",
+            "RecordFumoTime",
+            "SelectPet",
+            "RefreshPetDetailByPropChanged",
+            "RealRefreshPetViewByPropChanged",
+            "CalOnePetData",
+            "CalDetailData",
+            "RefreshPetListView",
+            "RefreshOnePetFumoState"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/warprepare/delegate/dgtonekeyfumosummon.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 58,
+          "catalog_filename": "script/mxgame/warprepare/model/mdonekeyhuanhua.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "GetCOneKeyHuanhuaModel",
+            "__init__",
+            "SetSelectCardID",
+            "GetSelectCardID",
+            "UpdateHuanhuaCardInfo",
+            "GetCardData",
+            "GetCurPage",
+            "SaveShowPage",
+            "SaveCard",
+            "GetUseCard",
+            "GetSaveKey",
+            "GetSaveCardKey",
+            "COneKeyHuanhuaModel",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/warprepare/model/mdonekeyhuanhua.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "skill",
+      "title": "技能与状态效果",
+      "ownership": "角色技能学习、技能规则目录、伤害与治疗等效果、Buff、公式及规则版本；纯计算接口另行细化",
+      "excludes": "战斗实例调度、直接访问连接、凭描述补造原版公式",
+      "catalog_prefixes": [
+        "script/data/skill"
+      ],
+      "prefix_match_count": 1,
+      "references": [
+        {
+          "entry_index": 454,
+          "catalog_filename": "script/data/skilldata.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetData",
+            "IsXLskill",
+            "IsInSkillData",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/data/skilldata.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 3255,
+          "catalog_filename": "script/data/charskilldata.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetTxtByType",
+            "GetData",
+            "IsXLskill",
+            "IsInSkillData",
+            "GetAllSkillByType",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/data/charskilldata.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 2242,
+          "catalog_filename": "script/data/petactiveskilldata.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/data/petactiveskilldata.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "pet",
+      "title": "宠物与召唤兽",
+      "ownership": "宠物实例、归属、培养、成长、技能、出战配置；提供参战快照",
+      "excludes": "战斗中复制并写回整份宠物数据库对象",
+      "catalog_prefixes": [
+        "script/mxgame/pet/"
+      ],
+      "prefix_match_count": 46,
+      "references": [
+        {
+          "entry_index": 1599,
+          "catalog_filename": "script/netpet.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "S2CSummonInfo",
+            "S2CSpecialSummonInfo",
+            "UnpackSummonSkill",
+            "S2CSummonSkill",
+            "UnpackSummonEquip",
+            "S2CSummEquip",
+            "S2CSummAllInfo",
+            "S2CSummonDel",
+            "S2CSetFight",
+            "S2CPropView",
+            "S2CPropState",
+            "UnpackSummonKey",
+            "S2CSummonKey",
+            "S2CPetRefine",
+            "S2CLianYao",
+            "S2CRecommendBook"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/netpet.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 1355,
+          "catalog_filename": "script/data/petfightdata.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetPetData",
+            "GetPetZZ",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/data/petfightdata.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 4345,
+          "catalog_filename": "script/mxgame/pet/lianyao/talent/netsummontalent.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetSummonTalentNetobj",
+            "C2GSGetTalentCase",
+            "C2GSLearnTalent",
+            "C2GSResetTalent",
+            "C2GSSaveTalent",
+            "C2GSOpenTalentTarget",
+            "C2GSSetTalentTarget",
+            "C2GSSaveResetTalent",
+            "C2GResetTalentAtResultDlg",
+            "C2GSReplaceTempTalent",
+            "C2GSCloseTalentResultDlg",
+            "C2GSClearTalent",
+            "GS2CTalentInfo",
+            "GS2CTalentResult",
+            "GS2CTalentTargetInfo",
+            "GS2CCloseResultDlg"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/pet/lianyao/talent/netsummontalent.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 142,
+          "catalog_filename": "script/mxgame/pet/dlgpetcombinenew.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "__init__",
+            "GetAnotherCarryGrade",
+            "GetSuitPets",
+            "RefreshPetKey",
+            "OnMessage",
+            "CPetChoose",
+            "__init__",
+            "ShowLinkDlg",
+            "ShowCombineRule",
+            "RightUp",
+            "showzz",
+            "ShowPetInfo",
+            "_ShowPetPhoto",
+            "RefreshSkills",
+            "_ShowPetSkills"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/pet/dlgpetcombinenew.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 584,
+          "catalog_filename": "script/mxgame/pet/lianyao/book/dlgrecommendbook.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetHasLearned",
+            "__init__",
+            "InitDelegate",
+            "GetClassUIHeight",
+            "SetSelectSkillCB",
+            "SetTickSelect",
+            "SetBuyType",
+            "SetTips",
+            "SetLevelUIShow",
+            "GetBaseZZ",
+            "GetTableView",
+            "VGetCellClass",
+            "VGetXinfaItemClass",
+            "isTableTitle",
+            "SettableViewIdentifierOfIndex",
+            "SettableViewDelegateNumberOfCells"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/pet/lianyao/book/dlgrecommendbook.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 765,
+          "catalog_filename": "script/mxgame/pet/monstergraphdefine.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/pet/monstergraphdefine.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "children",
+      "title": "子女系统",
+      "ownership": "子女实例、培养、技能和出战配置；与宠物分开所有权",
+      "excludes": "婚姻关系、默认复用宠物成长公式",
+      "catalog_prefixes": [
+        "script/mxgame/newchild/"
+      ],
+      "prefix_match_count": 25,
+      "references": [
+        {
+          "entry_index": 1059,
+          "catalog_filename": "script/mxgame/newchild/netnewchild.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetNewChildNetObj",
+            "C2SGetTask",
+            "C2SFinishTask",
+            "C2SManGameSuccess",
+            "C2SWomanGameSuccess",
+            "C2SRandomChangeShape",
+            "C2SSelectChangeShape",
+            "C2SSetName",
+            "C2SChildEat",
+            "C2SChildBath",
+            "C2SChildPlay",
+            "C2SChildSleep",
+            "C2SChildSpeedUp",
+            "C2SRefreshProgress",
+            "C2SChooseLiupai",
+            "C2SAddPlan"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/newchild/netnewchild.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 91,
+          "catalog_filename": "script/mxgame/newchild/delegate/dgtnewchildraise.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "__init__",
+            "InitSignal",
+            "InitCheckTimer",
+            "CheckRunning",
+            "RefreshBehavior",
+            "OnChangeSubPage",
+            "OnChangeAction",
+            "OnRefreshRunningPage",
+            "OnRefreshNotRunningPage",
+            "OnCountDownFinish",
+            "OnConfirm",
+            "OnSpeedUp",
+            "GetView",
+            "GetModel",
+            "CChildRaiseDelegate",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/newchild/delegate/dgtnewchildraise.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 237,
+          "catalog_filename": "script/mxgame/newchild/view/dlgnewchildrename.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "Show",
+            "ShowFake",
+            "MsgEnter",
+            "CNameEdit",
+            "__init__",
+            "InitDialog",
+            "GetLastName",
+            "GetChildShape",
+            "GetDefaultName",
+            "SendChildRename",
+            "CloseWindow",
+            "OnConfirm",
+            "OnCloseWindow",
+            "OnSetDefaultName",
+            "OnMessage"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/newchild/view/dlgnewchildrename.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 263,
+          "catalog_filename": "script/mxgame/newchild/newchilddefine.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetBallData",
+            "GetChildZZColor",
+            "GetLimitChildName",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/newchild/newchilddefine.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 316,
+          "catalog_filename": "script/mxgame/newchild/dlgnewchildgetitem.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "Show",
+            "__init__",
+            "OnDagDelItem",
+            "SetChildItem",
+            "OnSelectItem",
+            "OnGetItem",
+            "CloseWindow",
+            "OnMessage",
+            "CChildGetItemDialog",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/newchild/dlgnewchildgetitem.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 363,
+          "catalog_filename": "script/mxgame/newchild/model/mdnewchildchoose.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "GetMgr",
+            "__init__",
+            "SetSelectShape",
+            "GetSelectShape",
+            "GetSelectChildName",
+            "GetLiupaiText",
+            "CChildChooseMgr",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/newchild/model/mdnewchildchoose.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "quest",
+      "title": "任务与剧情",
+      "ownership": "任务状态、条件检查、推进、放弃、完成和奖励领取；管理剧情进度",
+      "excludes": "只凭客户端完成通知发奖、直接写资产表",
+      "catalog_prefixes": [
+        "script/mxgame/task/",
+        "script/mxgame/tasktrace/"
+      ],
+      "prefix_match_count": 25,
+      "references": [
+        {
+          "entry_index": 4913,
+          "catalog_filename": "script/mxgame/task/nettask.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "C2SGetTask",
+            "S2CJuqingStatus",
+            "S2CUnpackClientNpc",
+            "S2CTaskAdd",
+            "IsTaskTracing",
+            "QuickLoginClear",
+            "S2CTaskRemove",
+            "DoRemoveTask",
+            "RemoveTask",
+            "C2SGiveUpTask",
+            "C2STaskTraceAll",
+            "C2STaskTrace",
+            "C2SCancelTrace",
+            "C2STaskGiveOpen",
+            "C2SFinishClientTask"
+          ],
+          "semantic_review": "selected_functions_reviewed_in_session; not_whole_module",
+          "current_filename": "script/mxgame/task/nettask.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 3221,
+          "catalog_filename": "script/data/taskdata.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetData",
+            "GetNianShouTaskID",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/data/taskdata.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 1501,
+          "catalog_filename": "script/data/storytaskdata.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "IsStoryTask",
+            "IsStoryTaskWithName",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/data/storytaskdata.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 1308,
+          "catalog_filename": "script/data/shitutaskdata.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetTaskInfo",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/data/shitutaskdata.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 23,
+          "catalog_filename": "script/mxgame/task/view/dlgtasknew.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "ExpandOnButton",
+            "ExpandOffButton",
+            "IsUseNewTaskTypeData",
+            "DetailButton",
+            "ShowSwitch",
+            "GetTaskDlg",
+            "Show",
+            "SetTask",
+            "TraceAll",
+            "CheckAllTaskDlg",
+            "ResetClear",
+            "Enter",
+            "Leave",
+            "CMyScrollRichText",
+            "__init__"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/task/view/dlgtasknew.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 166,
+          "catalog_filename": "script/mxgame/tasktrace/view/dlgtasktracetaskframe.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "__init__",
+            "ShowBtnAniView",
+            "GetCloseBtnPos",
+            "GetRealSize",
+            "SetTaskFont",
+            "SetAllTaskInfo",
+            "<lambda>",
+            "SetTaskOrderUpdate",
+            "SetOneTaskText",
+            "SetOneTaskPreviewReward",
+            "SetOneTaskGuideTips",
+            "SetOneTaskAutoFindEff",
+            "BeforeChange",
+            "AfterChange",
+            "Hold",
+            "LeftUp"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/tasktrace/view/dlgtasktracetaskframe.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "party",
+      "title": "队伍",
+      "ownership": "组队邀请、申请、队长、成员、跟随和队伍准备快照",
+      "excludes": "地图实体和帮派成员权限",
+      "catalog_prefixes": [
+        "script/mxgame/team/",
+        "script/mxgame/dailyteam/"
+      ],
+      "prefix_match_count": 56,
+      "references": [
+        {
+          "entry_index": 3636,
+          "catalog_filename": "script/mxgame/team/netteam.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "S2CTeamStatus",
+            "S2CTeamList",
+            "S2CRequestJoin",
+            "S2CAutoRequestJoin",
+            "S2CReturnTeam",
+            "S2CAnswerJoin",
+            "S2CClickAddTeam",
+            "mycmp",
+            "S2CRequestList",
+            "S2CTeamInfo",
+            "S2CGPS",
+            "S2CInviteReturn",
+            "S2CTeamSearchInfo",
+            "S2CTeamerInfo",
+            "S2CTeamTarget",
+            "S2CTeamMarkInfo"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/team/netteam.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 2889,
+          "catalog_filename": "script/mxgame/team/teamrecruit/netteamrecruit.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetNetObj",
+            "GetTeamRecruitNetObj",
+            "C2SRelizeTeam",
+            "C2SRelizeMember",
+            "C2SRelizeMember_New",
+            "C2SContactTeam",
+            "C2SContactPlayer",
+            "C2SCancelTeam",
+            "C2SCancelMember",
+            "C2SRequestTeamInfo",
+            "C2SRequestMemberInfo",
+            "C2SChangeTeamGroup",
+            "C2SChangeTeamRequire",
+            "C2SChangeMemberGroup",
+            "C2SRelizeTeam_New",
+            "C2SOpenTeamRecruitDetailDlg"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/team/teamrecruit/netteamrecruit.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 1790,
+          "catalog_filename": "script/mxgame/dailyteam/netdailyteam.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "TranTargetList",
+            "C2GSGetDailyTeamInfo",
+            "C2GSOpenInviteFriendDlg",
+            "C2GSLeaveDailyTeam",
+            "C2SChangeDailyTeamIntro",
+            "C2GSKickMember",
+            "C2GSChangeLeader",
+            "C2GSInviteFriend",
+            "C2GSOneKeyJoinTeam",
+            "C2GSSetBandTitle",
+            "C2GSBandPublishRecruit",
+            "C2GSBandTaskData",
+            "C2GSOpenChangeLeader",
+            "C2GSBandPublishRecomend",
+            "C2GSSimpleInfo",
+            "C2GSAttention"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/dailyteam/netdailyteam.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 296,
+          "catalog_filename": "script/mxgame/team/teamrecruit/teamrecruitinterface.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "RegisterHotBoxEnterLeaveEvent",
+            "OnAddAvatarTipsEnterLeaveCallBack",
+            "CreatePlayerView",
+            "GetMemberRecuit2ShowText",
+            "GetTeamRecuit2ShowText",
+            "IsOpenNewTeamRecruit",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/team/teamrecruit/teamrecruitinterface.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 307,
+          "catalog_filename": "script/mxgame/dailyteam/logicshowdailyteam/showlogic_dgtdailyteamtask.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "__init__",
+            "VInit",
+            "GetModel",
+            "InitSignal",
+            "OnUpdateAllTask_Signal",
+            "VDoDlgRealShowEvent",
+            "VIsOpenSelfConditionShowLock",
+            "CShowLogicDailyTeamTask",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/dailyteam/logicshowdailyteam/showlogic_dgtdailyteamtask.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 503,
+          "catalog_filename": "script/mxgame/team/teamrecruit/dlgrecruitdetailmember.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "ShowDlg",
+            "CloseDlg",
+            "__init__",
+            "SetCloseCallBack",
+            "InitDlg",
+            "OpenPlayerDetail",
+            "CloseDlg",
+            "ConnectPlayer",
+            "Report",
+            "OnMessage",
+            "CDlgRecruitDetailMember",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/team/teamrecruit/dlgrecruitdetailmember.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "guild",
+      "title": "帮派",
+      "ownership": "帮派创建、成员、职务、权限、建设、帮贡规则与帮派玩法入口",
+      "excludes": "角色货币、独立战斗引擎",
+      "catalog_prefixes": [
+        "script/mxgame/newgroup/",
+        "script/mxgame/group/"
+      ],
+      "prefix_match_count": 159,
+      "references": [
+        {
+          "entry_index": 1028,
+          "catalog_filename": "script/netgroup.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "S2CVote",
+            "S2CBuildAdd",
+            "S2CJoin",
+            "S2CGetIntro",
+            "S2CHunterInfo",
+            "S2CHunterAdd",
+            "S2CInfo",
+            "S2CMemberList",
+            "S2CChuShiMember",
+            "S2CRegList",
+            "S2CJoinList",
+            "S2CMemberInfo",
+            "S2CJoinInfo",
+            "S2CTradeLogs",
+            "S2CTradeLogs1"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/netgroup.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 20,
+          "catalog_filename": "script/mxgame/newgroup/delegate/delegategroupinfo/delegategroupleaderupgrade.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetView",
+            "GetModel",
+            "Init",
+            "DataIntegrate",
+            "OnClickGetTitle",
+            "CLeaderUpGradeDgt",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/newgroup/delegate/delegategroupinfo/delegategroupleaderupgrade.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 62,
+          "catalog_filename": "script/mxgame/newgroup/delegate/delegatehongbao/dgtcreategrouphbmain.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "__init__",
+            "InitSignal",
+            "OnSwitchPage",
+            "CCreateGroupHBMainDgt",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/newgroup/delegate/delegatehongbao/dgtcreategrouphbmain.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 89,
+          "catalog_filename": "script/mxgame/newgroup/delegate/delegatemanage/dgtgroupcombine.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "__init__",
+            "GetView",
+            "GetModel",
+            "Init",
+            "InitDlg",
+            "OnListItemClick",
+            "OnInfoDataChange",
+            "OnStateChange",
+            "OnTalkBtnClick",
+            "OnRequestBtnClick",
+            "CCombineDgt",
+            "Init",
+            "OnTipsChange",
+            "OnClickNotify",
+            "CMainTipsDelegate",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/newgroup/delegate/delegatemanage/dgtgroupcombine.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 97,
+          "catalog_filename": "script/mxgame/newgroup/model/groupsignal.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "GetAllSignal",
+            "_Get",
+            "Emit",
+            "Connect",
+            "DisConnect",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/newgroup/model/groupsignal.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 112,
+          "catalog_filename": "script/mxgame/newgroup/delegate/delegatemanage/delegategroupskillresearch.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "__init__",
+            "GetContext",
+            "GetView",
+            "InitSignal",
+            "RequestData",
+            "<lambda>",
+            "OnRefreshSkillInfoList",
+            "GetSkillInfo",
+            "OnSelectSkillItem",
+            "OnClickActiveSkill",
+            "OnActiveSkill",
+            "CDelegateGroupSkillResearch",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/newgroup/delegate/delegatemanage/delegategroupskillresearch.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "social",
+      "title": "聊天与关系",
+      "ownership": "好友、黑名单、频道、私聊、婚姻、师徒和结拜子域；分别保留内部子目录扩展位",
+      "excludes": "邮件附件、未审计的GM任意代码执行",
+      "catalog_prefixes": [
+        "script/mxgame/marriage/",
+        "script/mxgame/shitu/",
+        "script/mxgame/sibling/"
+      ],
+      "prefix_match_count": 65,
+      "references": [
+        {
+          "entry_index": 4238,
+          "catalog_filename": "script/netfriend.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "S2CFindFriend",
+            "S2CFriendAdd",
+            "RefreshCharMenuList",
+            "S2CFriendDel",
+            "S2CAuth",
+            "S2CRequest",
+            "S2CLimit",
+            "S2CBanList",
+            "S2CPermit",
+            "S2CFriendInfo",
+            "S2CPlayerInfo",
+            "S2COnline",
+            "S2COffline",
+            "S2CLastPlayer",
+            "S2CLatelyTeamPlayerByOnce",
+            "S2CLatelyTeamPlayer"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/netfriend.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 3257,
+          "catalog_filename": "script/netchat.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "<lambda>",
+            "ModuleReset",
+            "CheckPaintAndGuessBanWords",
+            "CheckPaintAndGuessBanWordBan",
+            "CheckEmote",
+            "IMEmoteReplaceFunc",
+            "ReplaceIMEmote",
+            "C2SEmoteCount",
+            "C2SPlayerChat",
+            "C2SPlayerPrivate",
+            "C2SPlayerWizard",
+            "RealSendC2SPlayerWizard",
+            "C2SPlayerCmd",
+            "LongToInt",
+            "C2SChgChannelSwitch",
+            "ChatMsgNotify"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/netchat.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 319,
+          "catalog_filename": "script/mxgame/shitu/netshitu1.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "C2SPacketPrepare",
+            "C2SOpenRecruitSetting",
+            "C2SRecruitSetting",
+            "C2SOpenFindMasterSetting",
+            "C2SFindMasterSetting",
+            "C2SSetMaster",
+            "C2SAutoSetMaster",
+            "C2SAgreeRecruit",
+            "C2SOpenRequestFileDlg",
+            "C2SSetNear",
+            "C2SSetRelieve",
+            "C2SOpenShutuListDlg",
+            "C2SImproveRank",
+            "C2SOpenChushiTudiListDlg",
+            "C2SGetChushiReward",
+            "C2SOpenFindMasterDlg"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/shitu/netshitu1.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 2642,
+          "catalog_filename": "script/mxgame/marriage/netmarriageseeking.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "C2SMarriageSeekingList",
+            "C2SRegister",
+            "C2SModify",
+            "C2SCancelRegister",
+            "C2SResonse",
+            "C2SRequestList",
+            "C2SResponseList",
+            "C2SAccept",
+            "C2SRefuse",
+            "C2SDeleteRegisterd",
+            "S2CMarriageSeekingList",
+            "S2CRequestInfoList",
+            "S2CResponseInfoList",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/marriage/netmarriageseeking.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 4397,
+          "catalog_filename": "script/mxgame/sibling/netsibling.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetSiblingNetObj",
+            "C2SOpenSiblingHomeDlg",
+            "C2SLookHistoryDlg",
+            "C2SLookVote",
+            "C2SVote",
+            "C2SAcceptNewVote",
+            "C2SKickOldVote",
+            "C2SSortVote",
+            "C2STitleChgVote",
+            "C2SSelfSortVote",
+            "C2SGetReward",
+            "C2SChangeManifesto",
+            "C2SSetAlubum",
+            "C2SPerpareQuite",
+            "C2SOpenBadge",
+            "C2SSaveAndWearBadge"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/sibling/netsibling.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 106,
+          "catalog_filename": "script/mxgame/shitu/shitutest.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetShituTest",
+            "TestFindMastetDlg",
+            "TestFindMasterSettingDlg",
+            "TestShutuDlg",
+            "TestShoutuSettingDlg",
+            "TestRequestFileDlg",
+            "TestTudiRequestNum",
+            "TestFindMasterRequestState",
+            "TestRelationshipDlg",
+            "TestTudiShouyeDlg",
+            "TestMasterAssessDlg",
+            "TestFriendShituListDlg",
+            "TestFriendShituListDlgEx",
+            "TestShifuShouyeDlg",
+            "TestRefresMasterShouyeInfo",
+            "TestShouyeTipsDlg"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/shitu/shitutest.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "mail",
+      "title": "邮件",
+      "ownership": "系统邮件、玩家邮件、过期、附件领取状态；附件托管与领取原子性",
+      "excludes": "领取成功先回包后落账",
+      "catalog_prefixes": [],
+      "prefix_match_count": 0,
+      "references": [
+        {
+          "entry_index": 2725,
+          "catalog_filename": "script/netmail.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "S2CPlayerMail",
+            "DelayS2CPlayerMailNotify",
+            "S2CPlayerMailNotify",
+            "DelayCall",
+            "S2CStopMailNotify",
+            "S2CSystemMailNotify",
+            "S2CShowAllSystemMail",
+            "S2CRequestNotify",
+            "S2CAddSelfChat",
+            "S2CMail",
+            "S2CSpecialMail",
+            "C2SGetMail",
+            "C2SSendEms",
+            "C2SGetRecvName",
+            "C2SReadMail"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/netmail.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "trade",
+      "title": "商店交易与寄售",
+      "ownership": "NPC商店、玩家交易、摊位/商店、寄售订单、库存、价格、手续费和托管",
+      "excludes": "自己修改背包或货币表、信任客户端价格",
+      "catalog_prefixes": [
+        "script/mxgame/tradecenter/",
+        "script/mxgame/consignmentsalecenter/"
+      ],
+      "prefix_match_count": 61,
+      "references": [
+        {
+          "entry_index": 122,
+          "catalog_filename": "script/nettrade.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "UnpackStr",
+            "S2CDefaultTradeDlg",
+            "S2CGroceryTradeDlg",
+            "S2CGuseeTradeDlg",
+            "S2CSnowmanTableTradeDlg",
+            "S2CPSTradeDlg",
+            "S2CPointTradeDlg",
+            "S2CJingJiTradeDlg",
+            "S2CFestivalTradeDlg",
+            "S2CSpringMall",
+            "ResetClear",
+            "Process",
+            "S2CXianLiuShop",
+            "S2CDark12TradeDlg",
+            "<lambda>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/nettrade.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 1498,
+          "catalog_filename": "script/netitemshop.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "S2CMyShop",
+            "S2CItemList",
+            "S2CRefreshItem",
+            "S2CShopList",
+            "S2CShopIntro",
+            "S2CShopGoods",
+            "S2CShopHistory",
+            "S2CShopName",
+            "S2CShopPrice",
+            "S2CItemShop",
+            "C2SPutItem",
+            "C2SGetItem",
+            "C2SModifyPrice",
+            "C2SGetShopList",
+            "C2SGetShopIntro",
+            "C2SLookShop"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/netitemshop.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 1848,
+          "catalog_filename": "script/netshop.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GS2C_SHOP",
+            "PetTradeCenter",
+            "C2SGetGoodsList",
+            "C2SGetBuyList",
+            "C2SVendue",
+            "C2SChgGoodInfo",
+            "C2SChgShopName",
+            "C2SDelGood",
+            "C2SBuyPet",
+            "C2SSellPet",
+            "C2SPushMoney",
+            "C2SPopMoney",
+            "C2SChgDesc",
+            "C2SChgCountryShop",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/netshop.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 2020,
+          "catalog_filename": "script/mxgame/tradeguild/nettradeguild.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetTGNetObj",
+            "C2SRequestItemList",
+            "C2SBuyItem",
+            "C2SRequestItemInfo",
+            "C2SRequestSaleList",
+            "C2SRequestSaleRecord",
+            "C2SPullItem",
+            "C2SPushItem",
+            "C2SItemCare",
+            "C2SRequestCareList",
+            "C2SResetPrice",
+            "C2SNewRequestItemList",
+            "C2SGetMoney",
+            "S2COpenTGDlg",
+            "S2CUpdateItemList",
+            "S2CUpdateSaleList"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/tradeguild/nettradeguild.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 2777,
+          "catalog_filename": "script/mxgame/consignmentsalecenter/model/netconsignmall.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "C2GSEnterOneShelf",
+            "C2GSBuyGoods",
+            "C2GSAddMyGoods",
+            "C2GSRemoveMyGoods",
+            "C2GSOpenSalePage",
+            "C2GSAddMySummon",
+            "C2GSRemoveMySummon",
+            "C2GSGetGoodsDetail",
+            "C2GSGetSkillInfo",
+            "C2GSGetSummonRealID",
+            "C2GSGetReferencePrice",
+            "C2GSGetShelfItemRefPrice",
+            "C2GSBuyVictualGoods",
+            "C2GSOpenRecord",
+            "C2GSRefreshGoods",
+            "C2GSRefreshTime"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/consignmentsalecenter/model/netconsignmall.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 12,
+          "catalog_filename": "script/mxgame/consignmentsalecenter/view/dlgconsignmall.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ModuleReset",
+            "Show",
+            "ShowConsignmallByType",
+            "ShowSwitch",
+            "IsOpen",
+            "__init__",
+            "InitShowLogic",
+            "SetLastPage",
+            "InitDelegate",
+            "<lambda>",
+            "InitShow",
+            "VOpenPage",
+            "VClose",
+            "CloseWindow",
+            "SetSellBtnRedDot",
+            "OnMessage"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/consignmentsalecenter/view/dlgconsignmall.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "housing",
+      "title": "家园与庭院",
+      "ownership": "家园实例、家具实例归属与摆放、访问权限、种植养殖子域",
+      "excludes": "地图公共移动逻辑、复制背包所有权",
+      "catalog_prefixes": [
+        "script/yard/"
+      ],
+      "prefix_match_count": 248,
+      "references": [
+        {
+          "entry_index": 1387,
+          "catalog_filename": "script/yard/yardplayerhome/netyardvisit.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "C2SEnterYard",
+            "C2SYardRequestYardInfoList",
+            "S2CRefreshFriendLst",
+            "S2CYardVisit_FindResult",
+            "S2CShowYardVisit",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/yard/yardplayerhome/netyardvisit.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 3179,
+          "catalog_filename": "script/yard/netyardfurauth.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "LOG_DEBUG",
+            "S2CYardFurAuth",
+            "S2CYarFurAuth_AllFur",
+            "S2CYarFurAuth_OneFurAuth",
+            "S2CYarFurAuth_Change",
+            "S2CYarFurAuth_GetSelfAuth",
+            "S2CYardFur_HotSpringLog",
+            "S2CYardFur_GetHotSpringUseInfo",
+            "S2CYardFur_Force2Sit",
+            "S2CYardFur_SitSubStateOne",
+            "S2CYardFur_SitSubStateAll",
+            "S2CYardFur_GotoYardResult",
+            "S2CYarFur_HotSprStateInfo",
+            "S2CYardFur_HotSprProcess",
+            "C2SYardFurAuthBase",
+            "C2SYardGetFurAuthByShapeID"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/yard/netyardfurauth.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 3057,
+          "catalog_filename": "script/yard/luckyfish/netyardluckyfish.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetLuckyFishNetObj",
+            "C2SYardLuckyFish_Info",
+            "C2SYardLuckyFish_Feed",
+            "C2SYardLuckyFish_GetReward",
+            "C2SYardLuckyFish_OpenShareDlg",
+            "C2SYardLuckyFish_OpenFeedHisDlg",
+            "C2SYardLuckyFish_ShareBag2Player",
+            "S2CYardLuckyFish_Info",
+            "S2CYardLuckyFish_FeedHis",
+            "S2CYardLuckyFish_ShareReward",
+            "S2CYardLuckFish_RefreshBagNum",
+            "S2CYardLuckyFish",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/yard/luckyfish/netyardluckyfish.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 649,
+          "catalog_filename": "script/yard/yardplayfish/net/netyardplayfish.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetNotHasSever",
+            "__init__",
+            "PacketAddI",
+            "PacketPS",
+            "UnpackInt",
+            "UnpackPS",
+            "PacketSend",
+            "Clear",
+            "CFack",
+            "GetYardPlayFishNetObj",
+            "C2SUseFishFry",
+            "C2SPutInFishFry",
+            "C2SPutInFishFry_Quick",
+            "C2SRequesToFeedFish",
+            "C2SRequestForMarkingFish",
+            "C2SRequestFeedFishInfo"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/yard/yardplayfish/net/netyardplayfish.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 3599,
+          "catalog_filename": "script/yard/netyard.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "LOG",
+            "GetYardS2CFunc",
+            "S2CYardLandData",
+            "S2CYardSceneID2OwnerID",
+            "S2CYardFarmData",
+            "S2CCreateAnimal1",
+            "S2CDelAnimal1",
+            "S2CCreateAnimal2",
+            "S2CDelAnimal2",
+            "S2CFurnitureSelectByTp",
+            "S2CYardNpcPos",
+            "S2CYardRefreshNidePos",
+            "S2CYardEditMode",
+            "S2CYardHouseInfo",
+            "S2CYardFurnitureUpdate",
+            "S2CYardSpeFurnitureExtUpdate"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/yard/netyard.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 4461,
+          "catalog_filename": "script/yard/yardplayerhome/netyardhome.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "S2CYardHomeProcess",
+            "S2CYardHome_BaseInfo",
+            "S2CYardHome_StateInfo",
+            "S2CYardHome_OpenDlg",
+            "S2CYardHome_GetFurnitrueLst",
+            "S2CYardHome_OldYardGarthPlant",
+            "S2CYardHome_OldYardFarmPlant",
+            "S2CYardHome_OldYardAnimalNide",
+            "S2CYardHome_OpenMyRecord",
+            "S2CYardHome_ResetFengShui",
+            "S2CRecordYard",
+            "C2SYardHome_GetInfo",
+            "C2SYardHome_GetState",
+            "C2SYardHome_Yard",
+            "C2SYardHome_Open",
+            "C2SYardHome_Close"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/yard/yardplayerhome/netyardhome.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "activity",
+      "title": "活动与副本编排",
+      "ownership": "活动目录、开放时间、参与资格、进度、奖励资格、副本和小游戏编排；大型活动可在内部拆负责人",
+      "excludes": "另造战斗/背包系统、把所有未知玩法都塞入万能处理器",
+      "catalog_prefixes": [
+        "script/mxgame/activity/",
+        "script/mxgame/activityreward/",
+        "script/mxgame/minigame/",
+        "script/mxgame/serverbattle/"
+      ],
+      "prefix_match_count": 798,
+      "references": [
+        {
+          "entry_index": 7,
+          "catalog_filename": "script/mxgame/activity/2021summerlottery/net2021summerlottery.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "OnOpenSummerMain",
+            "OnOpenSummerReward",
+            "GetModel",
+            "C2GSOpenSummerMainView",
+            "C2GSOpenSummerLotteryView",
+            "C2GSLevelUpSummerAwards",
+            "C2GSGetAward",
+            "C2GSBuySummPoint",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/activity/2021summerlottery/net2021summerlottery.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 47,
+          "catalog_filename": "script/mxgame/activity/2019znq/net2019znq.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "OnRefreshLastTime",
+            "OnCelebrationAllScore",
+            "OnCelebrationSelfScore",
+            "OnCelebrationRewardInfo",
+            "HandleAvatar",
+            "OnCombineList",
+            "GetActiveReward",
+            "OnFriendCombineList",
+            "OnOpenRealItemDlg",
+            "OnOpenShengxiaoDlg",
+            "OnShowShengXiaoRedDot",
+            "OnOpenCombineDlg",
+            "OnRefreshPlayData",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/activity/2019znq/net2019znq.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 75,
+          "catalog_filename": "script/mxgame/activity/mx2019cj/netmx2019cj.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetMx2019CJNetObj",
+            "C2SChooseHD",
+            "C2SChangeLiuPai",
+            "C2SChangeShape",
+            "C2SReqOpenItemDialog",
+            "C2SUseDrug",
+            "S2COpenCJPanel",
+            "S2COpenResetDlg",
+            "S2COpenMiniGame",
+            "S2CWarDrugInfo",
+            "S2CCloseCJPanel",
+            "S2CMX2019CJProcess",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/activity/mx2019cj/netmx2019cj.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 96,
+          "catalog_filename": "script/mxgame/activity/ladderrank/netladderrank.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "S2CLadderRank",
+            "UnpackMyInfo",
+            "UnpackOnlyMyInfo",
+            "UnpackMemberInfo",
+            "UnpackReward",
+            "S2COpenRoomListDlg",
+            "S2CRefreshRoomList",
+            "S2CRefreshTeamMember",
+            "S2CRefreshOneRoom",
+            "S2CMemberOut",
+            "S2CShowLoadingDlg",
+            "S2CAddTeamMember",
+            "S2CLeaveRoom",
+            "S2COpenScheduleDlg",
+            "S2COpenReadyDlg",
+            "S2CAddRequestList"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/activity/ladderrank/netladderrank.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 120,
+          "catalog_filename": "script/mxgame/activity/bestlover/netbestlover.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "OnRefreshMainDlg",
+            "OnGetLoversInfo",
+            "OnOpenSignUpDlg",
+            "OnSendFollwer",
+            "OnOpenBestLoverDlg",
+            "OnGetSearchList",
+            "OnGetMoreList",
+            "C2GSGetLoversInfo",
+            "OnOpenMyTeamDlg",
+            "OnCloseSignDlg",
+            "OnRefreshMemberSignDlg",
+            "OnSignSuccess",
+            "C2GSConfirmSignUp",
+            "C2GSPublicity",
+            "C2GSOpenFollwerDlg",
+            "C2GSChangeDeclaration"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/activity/bestlover/netbestlover.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 185,
+          "catalog_filename": "script/mxgame/serverbattle/netserverbattleallstart.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "GetNetObj",
+            "C2SGetBattleTableTeamInfo",
+            "C2SGetBattleTableBattleInfo",
+            "C2SOpenFinalsBattleTable",
+            "C2SRequestFinalsMatchDetail",
+            "C2SOpsRollDlg",
+            "C2SShowDrawLotsDlg",
+            "C2SDrawLots",
+            "C2SUseDrug",
+            "C2SReqOpenItemDialog",
+            "C2SWatchMatch",
+            "C2SRemindWatch",
+            "C2SCancelRemind",
+            "S2COpenMainDialog",
+            "S2CShowTeamListDlg",
+            "S2CBattleTableGroupInfo"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/serverbattle/netserverbattleallstart.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "appearance",
+      "title": "外观与收藏",
+      "ownership": "外观解锁、穿戴、染色、坐骑外观及收藏进度；消耗走资产事务",
+      "excludes": "通过外观接口修改战斗属性",
+      "catalog_prefixes": [
+        "script/mxgame/appearance/"
+      ],
+      "prefix_match_count": 79,
+      "references": [
+        {
+          "entry_index": 269,
+          "catalog_filename": "script/mxgame/appearance/appearancedefine.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/appearance/appearancedefine.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 1242,
+          "catalog_filename": "script/mxgame/appearance/net/netappearance.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "C2GSAppearanceTGF",
+            "C2GSAppearancePTDye",
+            "C2GSAppearanceChgShape",
+            "C2GSAppearanceConfirmPTDye",
+            "C2GSAppearanceFreeDye",
+            "C2GSAppearanceSaveFreeDye",
+            "C2GSAppearanceDelFreeDye",
+            "C2GSAppearanceDelTmpDye",
+            "C2GSAppearanceChgShapeConfirm",
+            "C2SAppearanceHorseChangeCount",
+            "C2SAppearanceWeaponItemColor",
+            "C2SAppearanceHorseColor",
+            "C2SAppearanceFairyItemColor",
+            "C2SAppearanceHeroFairyColor",
+            "C2SAppearanceCombineFairy",
+            "C2SAppearanceFairyItemAct"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/appearance/net/netappearance.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 2483,
+          "catalog_filename": "script/mxgame/appearance/net/netyanzhiguan.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "OnColorUI",
+            "OnCloseColorUI",
+            "OnFreeColorUI",
+            "OnUpdateFreeColor",
+            "OnReplaceFreeColor",
+            "OnDelTmpFreeColor",
+            "OnColorUINew",
+            "OnFreeColorUINew",
+            "OnChangeShapeUINew1",
+            "OnChangeShapeUINew2",
+            "OnUpdateFreeColorNew",
+            "OnDelTmpFreeColorNew",
+            "OnWeaponItemColor",
+            "OnSpriteItemColor",
+            "OnRideExchangeCnt",
+            "OnPerfomColorCost"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/appearance/net/netyanzhiguan.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 3131,
+          "catalog_filename": "script/mxgame/appearance/net/netfashiondress.py",
+          "historical_decode_status": "suspect",
+          "function_name_samples": [
+            "C2SGetOwnFashionDress",
+            "C2SBuyFashionDress",
+            "C2SWearOrDownFashion",
+            "C2SOpenFashionAttrView",
+            "C2SChangeFashionAttr",
+            "C2SGetCanBuyState",
+            "C2SBuyFashionGift",
+            "C2SExChangeSuit",
+            "<module>"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/appearance/net/netfashiondress.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 28,
+          "catalog_filename": "script/mxgame/appearance/view/pageoutward/appearanceauraview.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "ShowAuraDlg",
+            "ShowFootprintDlg",
+            "__init__",
+            "InitView",
+            "DelegateNewCellOfData",
+            "DelegateUpdateCellOfData",
+            "InitRoleView",
+            "UpdatePartCtrlPos",
+            "SelectItemGrid",
+            "RefreshBtnGive",
+            "OnClickItem",
+            "OnDoubleClick",
+            "OnClick",
+            "OnChangeColorPlan",
+            "OnWear",
+            "OnPreview"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/appearance/view/pageoutward/appearanceauraview.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        },
+        {
+          "entry_index": 105,
+          "catalog_filename": "script/mxgame/appearance/delegate/delegatedecorate/delegateappearancemark.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "__init__",
+            "InitSignal",
+            "AfterInit",
+            "GetModel",
+            "GetRoleModel",
+            "OnOpenPage",
+            "OnClose",
+            "OnHeroDescChange",
+            "OnBuy",
+            "OnUse",
+            "OnDefault",
+            "OnBuyGift",
+            "OnSelect",
+            "OnUpdateData",
+            "UpdateTbView",
+            "CDelegateMark"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/mxgame/appearance/delegate/delegatedecorate/delegateappearancemark.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    },
+    {
+      "module": "administration",
+      "title": "管理与运营",
+      "ownership": "管理命令授权、审计、封禁/补偿用例、操作追踪；只调用业务公开接口",
+      "excludes": "复用客户端GM脚本执行任意代码、直接改在线角色数据",
+      "catalog_prefixes": [],
+      "prefix_match_count": 0,
+      "references": [
+        {
+          "entry_index": 3257,
+          "catalog_filename": "script/netchat.py",
+          "historical_decode_status": "ok",
+          "function_name_samples": [
+            "<lambda>",
+            "ModuleReset",
+            "CheckPaintAndGuessBanWords",
+            "CheckPaintAndGuessBanWordBan",
+            "CheckEmote",
+            "IMEmoteReplaceFunc",
+            "ReplaceIMEmote",
+            "C2SEmoteCount",
+            "C2SPlayerChat",
+            "C2SPlayerPrivate",
+            "C2SPlayerWizard",
+            "RealSendC2SPlayerWizard",
+            "C2SPlayerCmd",
+            "LongToInt",
+            "C2SChgChannelSwitch",
+            "ChatMsgNotify"
+          ],
+          "semantic_review": "not_reviewed",
+          "current_filename": "script/netchat.py",
+          "current_check": "marshal_transpiled_filename_checked"
+        }
+      ]
+    }
+  ]
+}
