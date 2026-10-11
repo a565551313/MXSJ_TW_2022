@@ -96,6 +96,80 @@ def extract_table(co, name=b'DATA'):
     raise ValueError(f'table {name!r} not found')
 
 
+# --------------------------------------------------------------------------
+# Corrected module-level reading (added 2026-10-11; existing results unchanged)
+# --------------------------------------------------------------------------
+# `extract_table()` above keeps its historical behaviour on purpose: only
+# STORE_NAME terminates a statement, and a repeated dictionary key raises.  That
+# behaviour cannot describe entry 3205 (`petskill.py`), which publishes its
+# master table with STORE_GLOBAL and writes 9 skill ids twice.
+#
+# The two helpers below expose the corrected semantics -- both store opcodes,
+# duplicate writes kept as ordered evidence -- without changing any existing
+# result.  They are thin wrappers around `script_literal_reader.py`, which does
+# the structural work (constant/name indices, stack shape, literal grammar).
+_STRUCTURAL_READER = None
+
+
+def _structural_reader():
+    global _STRUCTURAL_READER
+    if _STRUCTURAL_READER is None:
+        import importlib.util
+        path = Path(__file__).resolve().parent / 'script_literal_reader.py'
+        spec = importlib.util.spec_from_file_location('script_literal_reader', path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _STRUCTURAL_READER = module
+    return _STRUCTURAL_READER
+
+
+def top_level_literal_assignments(co):
+    """Read module-level literal assignments, including STORE_GLOBAL tables.
+
+    Returns the `script_literal_reader.ScanResult` (assignments in source order
+    with their ordered dictionary writes, other statements, and every bytecode
+    shape the reader could not accept).
+    """
+    return _structural_reader().scan_module(co)
+
+
+def extract_table_report(co, name=b'DATA', duplicate_policy='record'):
+    """Extract one module-level table plus the evidence of every key write.
+
+    `duplicate_policy`:
+      * 'record' (default) -- keep every write of a repeated key as an ordered
+        entry with position, old value and new value; the table value is the
+        runtime result (last write wins).
+      * 'error' -- raise on the first repeated key, matching the historical
+        `evaluate_literals()` behaviour.
+
+    Raises ValueError when the table is not a module-level literal assignment or
+    when the module body contains a shape the reader could not accept.
+    """
+    scan = top_level_literal_assignments(co)
+    assignment = scan.by_name(name)
+    if assignment is None:
+        detail = ''
+        if scan.violations:
+            detail = f'; first rejected shape: {scan.violations[0]}'
+        raise ValueError(f'table {name!r} not found as a module-level literal '
+                         f'assignment{detail}')
+    if duplicate_policy == 'error' and assignment.overwrites:
+        first = assignment.overwrites[0]
+        raise ValueError(f'duplicate dictionary key {first.key!r} at {first.at}')
+    if duplicate_policy not in ('record', 'error'):
+        raise ValueError(f'unknown duplicate_policy {duplicate_policy!r}')
+    return {
+        'value': assignment.value,
+        'store': assignment.store_kind,
+        'store_at': assignment.store_at,
+        'writes': tuple(assignment.writes),
+        'overwrites': tuple(assignment.overwrites),
+        'duplicate_keys': tuple(assignment.duplicate_keys),
+        'violations': tuple(scan.violations),
+    }
+
+
 def readable(value):
     if isinstance(value, bytes):
         try:
