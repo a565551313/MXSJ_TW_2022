@@ -136,7 +136,7 @@ def unpack_data_fls(fls_path: str, out_dir: str):
     with open(fls_path, "rb") as f:
         arc = f.read()
 
-    pos = 348076
+    pos = struct.unpack_from("<I", arc, len(arc) - 8)[0]
     entries = []
     while pos < len(arc) - 8:
         sig = struct.unpack_from("<I", arc, pos)[0]
@@ -167,7 +167,7 @@ def unpack_data_fls(fls_path: str, out_dir: str):
         except Exception:
             decomp = comp_data
 
-        target_path = os.path.join(out_dir, name)
+        target_path = os.path.join(out_dir, name.replace("\\", os.sep))
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
         with open(target_path, "wb") as f_out:
             f_out.write(decomp)

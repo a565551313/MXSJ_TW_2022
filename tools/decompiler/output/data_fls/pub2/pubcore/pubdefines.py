@@ -1,0 +1,22 @@
+# uncompyle6 version 3.9.3
+# Python bytecode version base 2.7 (62211)
+# Decompiled from: Python 3.11.2 (main, Apr  8 2026, 01:58:00) [GCC 12.2.0]
+# Embedded file name: .\pub2\pubcore\pubdefines.py
+__version__ = '0.0.1'
+CC_PLATFORM_UNKNOWN = 0
+CC_PLATFORM_IOS = 1
+CC_PLATFORM_ANDROID = 2
+CC_PLATFORM_WIN32 = 3
+CC_PLATFORM_MARMALADE = 4
+CC_PLATFORM_LINUX = 5
+CC_PLATFORM_BADA = 6
+CC_PLATFORM_BLACKBERRY = 7
+CC_PLATFORM_MAC = 8
+CC_PLATFORM_NACL = 9
+CC_PLATFORM_EMSCRIPTEN = 10
+CC_PLATFORM_TIZEN = 11
+CC_PLATFORM_QT5 = 12
+CC_PLATFORM_WP8 = 13
+CC_PLATFORM_WINRT = 14
+WARNING_STR = '***Warning***\n'
+ERROR_STR = '***Error***\n'
