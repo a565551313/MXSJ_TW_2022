@@ -206,14 +206,19 @@ class TestViewModel(TmpCase):
         self.vm = EditorViewModel(config=Config())
 
     def test_scan_then_list_rows_with_real_dimensions(self) -> None:
+        import math
         self.vm.set_client_root(SAMPLES)
         rows = self.vm.rows
-        self.assertEqual(len(rows), 5)
+        on_disk = len(list(SAMPLES.glob("*.map")))
+        self.assertEqual(len(rows), on_disk)
         for r in rows:
-            self.assertEqual((r.width, r.height), (2000, 1500))
-            self.assertEqual(r.sectors, 49)
             self.assertFalse(r.broken, r.error)
-        self.assertIn("5 张地图", self.vm.status_line())
+            self.assertGreater(r.width, 0)
+            # Sector count must equal ceil(w/320)*ceil(h/240) for every size.
+            self.assertEqual(r.sectors,
+                             math.ceil(r.width / 320) * math.ceil(r.height / 240),
+                             f"{r.key}: {r.width}x{r.height}")
+        self.assertIn(f"{on_disk} 张地图", self.vm.status_line())
 
     def test_open_map_updates_state_and_locate(self) -> None:
         self.vm.set_client_root(SAMPLES)

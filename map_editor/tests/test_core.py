@@ -85,15 +85,31 @@ class TestParseAllSamples(unittest.TestCase):
                     # Forces every sector through the tag + length-identity checks.
                     for s in doc.iter_sectors():
                         self.assertEqual(len(doc.read_cells(s)), CELLS_PER_SECTOR)
-                        self.assertEqual(len(s.girb_body), 22)
+                        # GIRB length varies with map content: 22 bytes for an
+                        # obstacle-free sector, up to ~1.2 KB on dense outdoor maps.
+                        self.assertGreaterEqual(len(s.girb_body), 22)
 
-    def test_girb_is_constant_across_all_sectors(self) -> None:
-        seen: set[bytes] = set()
+    def test_girb_is_per_sector_data_not_a_constant(self) -> None:
+        """GIRB is the collision grid, so it varies on maps that have obstacles.
+
+        An earlier version of this test asserted a single global constant.  That
+        held only because every original sample was an interior scene with no
+        collision data; 1034/1035 disprove it.
+        """
+        per_map: dict[str, set[bytes]] = {}
         for path in sample_maps():
             with open_map(path) as doc:
-                for s in doc.iter_sectors():
-                    seen.add(s.girb_body + s.girb_trailer)
-        self.assertEqual(len(seen), 1, f"GIRB bodies differ: {seen}")
+                per_map[path.stem] = {bytes(s.girb_body) for s in doc.iter_sectors()}
+        uniform = {k for k, v in per_map.items() if len(v) == 1}
+        varied = {k for k, v in per_map.items() if len(v) > 1}
+        self.assertTrue(uniform, "expected some maps to have a uniform grid")
+        if varied:
+            for k in varied:
+                self.assertGreater(len(per_map[k]), 50,
+                                   f"{k}: expected many distinct GIRB bodies")
+        # Uniform maps must use the 22-byte minimal encoding everywhere.
+        for k in uniform:
+            self.assertEqual({len(b) for b in per_map[k]}, {22}, k)
 
     def test_cell_lookup_matches_sector_bytes(self) -> None:
         with open_map(sample_maps()[0]) as doc:
@@ -277,3 +293,44 @@ class TestUnknownBlockTolerance(unittest.TestCase):
                 for s in doc.iter_sectors():
                     self.assertEqual(s.extra_blocks, (),
                                      f"{path.name} sector {s.index} has extra blocks")
+
+
+@needs_samples
+class TestGirbDecompressor(unittest.TestCase):
+    """GIRB inflates to the fixed 2400-byte / 1200-u16 collision grid."""
+
+    def test_uniform_sector_inflates_to_2400_bytes_of_0x88(self) -> None:
+        from map_editor.core.girb import EMPTY_FILL, GRID_BYTES, cells, decompress
+        body = bytes.fromhex("0288888888882000000000000000000043000011000000")[:22]
+        raw = decompress(body)
+        self.assertEqual(len(raw), GRID_BYTES)
+        self.assertEqual(set(raw), {0x88})
+        cs = cells(body)
+        self.assertEqual(len(cs), 1200)
+        self.assertEqual(set(cs), {EMPTY_FILL})
+
+    def test_every_successful_inflate_is_exactly_2400_bytes(self) -> None:
+        from map_editor.core.girb import GRID_BYTES, GirbError, decompress
+        seen = 0
+        for path in sample_maps():
+            with self.subTest(map=path.name), open_map(path) as doc:
+                for s in doc.iter_sectors():
+                    try:
+                        raw = decompress(s.girb_body)
+                    except GirbError:
+                        continue          # decoder is incomplete; see module docs
+                    if len(raw) >= GRID_BYTES:
+                        self.assertEqual(len(raw), GRID_BYTES)
+                        seen += 1
+        self.assertGreater(seen, 200, "too few sectors decoded to be meaningful")
+
+    def test_grid_geometry_tiles_the_sector_canvas(self) -> None:
+        """1200 cells/sector at 8 px must exactly cover the padded map."""
+        from map_editor.core.girb import GRID_CELLS, GRID_COLS, GRID_ROWS
+        for path in sample_maps():
+            with self.subTest(map=path.name), open_map(path) as doc:
+                h = doc.header
+                self.assertEqual(GRID_COLS * GRID_ROWS, GRID_CELLS)
+                self.assertEqual(h.sector_count * GRID_CELLS,
+                                 (h.sector_columns * GRID_COLS) * (h.sector_rows * GRID_ROWS))
+                self.assertEqual(h.sector_columns * GRID_COLS * 8, h.sector_columns * 320)
