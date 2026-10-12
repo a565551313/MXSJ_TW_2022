@@ -1,0 +1,144 @@
+{
+  "kind": "agent_handoff_recheck",
+  "date": "2026-10-12",
+  "timezone": "Asia/Shanghai",
+  "code_baseline_commit": "2b913f5c120a508056914861376dee75dd690c4c",
+  "branch": "arena/b53b33e6-mxsj-tw-2022",
+  "checks": [
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/client_patches -q",
+      "passed": 90,
+      "exit_code": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s server/tests/architecture -q",
+      "passed": 161,
+      "exit_code": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 server/tools/verify_source_map.py",
+      "verified": 96,
+      "total": 96,
+      "exit_code": 0,
+      "scope": "filename mapping, not gameplay"
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 server/tools/export_review_csv.py --check",
+      "files_verified": 22,
+      "csv_files": 17,
+      "exit_code": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 tools/client_patches/audit_visual_runtime.py --python25 /home/user/.cache/v3-ui-fix/cpython-2.5.6/python --report /home/user/artifacts/handoff-checks/runtime-audit.json",
+      "passed": 22,
+      "exit_code": 0,
+      "matches_committed_report": "tools/client_patches/V3_3_RUNTIME_AUDIT.json"
+    }
+  ],
+  "runtime_audit": {
+    "python25_runtime_output": [
+      "PASS: independent CPython 2.5 marshal load of BOTH entries; full game modules NOT executed",
+      "PASS: shipped v3 operands reproduce TypeError before overlay initialization",
+      "PASS: corrected actual None operands initialize overlay in module namespace",
+      "PASS: compiled homepage caption runs with fake native text button",
+      "PASS: compiled agreement body is byte strings; target-before-hide reject ordering",
+      "PASS: compiled form creates fields and inherits separate Next/Info dispatch",
+      "PASS: actual CClickBox constructor reproduces old coordinate bug; corrected info is transparent and positioned",
+      "PASS: complete replacement buttons hide old labels and arrow, with explicit caption Z",
+      "PASS: new action and info hit areas preserve Next/Info message dispatch",
+      "PASS: actual CEdit Active/Flash/MsgTab: all three dark carets blink, switch focus and wrap",
+      "PASS: actual CEdit focus loss stops caret command; pointer-event delivery still native-unverified",
+      "PASS: missing/empty caption image retains old label and logs failure",
+      "PASS: failed reject target does not hide current agreement",
+      "PASS: actual homepage bytecode has zero imports: ok",
+      "PASS: actual homepage bytecode has zero imports: missing-image",
+      "PASS: actual homepage bytecode has zero imports: empty-image",
+      "PASS: actual homepage bytecode has zero imports: ambiguous",
+      "PASS: actual homepage bytecode has zero imports: not-text",
+      "PASS: actual click-only import keeps home on failure: ok",
+      "PASS: actual click-only import keeps home on failure: import-error",
+      "PASS: actual click-only import keeps home on failure: actual-bad-overlay",
+      "PASS: actual click-only import keeps home on failure: constructor-error",
+      "PASS: 22 independent CPython 2.5 audit cases; NO native Windows acceptance"
+    ],
+    "candidate_fls_sha256": "6ef84a13c23ca0abfaa7a9febf8ba49b4df569a9cf65286c4b1844f9df63cddb",
+    "candidate_fls_bytes": 24556254,
+    "shipped_v3_fls_sha256": null,
+    "native_windows_client_tested": false,
+    "scope": "authored startup/UI fragments plus selected CClickBox/CEdit methods from entry 3854; fake rendering/input/scheduler boundaries",
+    "candidate_kind": "registration_visual_preview_v3_3_candidate"
+  },
+  "csv_check": {
+    "mode": "check",
+    "output": "/home/user/MXSJ_TW_2022/server/docs/csv_checks/batch_001",
+    "file_count": 22,
+    "tables": {
+      "1945": {
+        "source_records": 6852,
+        "review_csv_records": 6851,
+        "quarantined_records": 1
+      },
+      "2027": {
+        "source_records": 135,
+        "review_csv_records": 135,
+        "quarantined_records": 0
+      },
+      "2954": {
+        "source_records": 132,
+        "review_csv_records": 131,
+        "quarantined_records": 1
+      },
+      "3205": {
+        "source_records": 581,
+        "review_csv_records": 579,
+        "quarantined_records": 2
+      }
+    },
+    "skill_write_count": 590,
+    "skill_unique_count": 581,
+    "skill_overwrite_count": 9,
+    "quarantined_record_count": 4,
+    "missing_aptitude_count": 3,
+    "pet_skill_names": 143,
+    "ambiguous_pet_skill_names": {
+      "終級命中": [
+        329,
+        355
+      ],
+      "高級命中": [
+        229,
+        255
+      ]
+    },
+    "checks": {
+      "item_category_key_set": "pass",
+      "pet_aptitude_foreign_keys": "pass",
+      "pet_skill_names_have_candidates": "pass",
+      "csv_round_trip": "pass",
+      "map_npc_evidence_and_staging_match": "pass"
+    }
+  },
+  "input_and_delivery_files": {
+    "original_fls": {
+      "path": "data/script.fls",
+      "bytes": 24454082,
+      "sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72"
+    },
+    "key_database": {
+      "path": "tools/decompiler/script_fls_keys.json",
+      "bytes": 426359,
+      "sha256": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+    },
+    "delivered_v3_3_zip": {
+      "path": "/home/user/artifacts/MXSJ_registration_preview_v3.3_controls.zip",
+      "bytes": 24399852,
+      "sha256": "717fed1f22c3e6c1c9ceeccca190078268ac0797a0823f6db06c053373a156aa"
+    }
+  },
+  "native_windows_tested_by_agent": false,
+  "user_v3_3_feedback_received": false,
+  "hij_browser_api_suite_rerun_this_turn": false,
+  "handoff_scope": "documentation only; no new UI version or delivery upload; no master merge or production-data publication",
+  "raw_output_directory": "/home/user/artifacts/handoff-checks",
+  "temporary_paths_may_disappear": true
+}
