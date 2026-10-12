@@ -319,6 +319,7 @@ class MapDocument:
             self._fh.close()
             raise
         self._sectors: dict[int, Sector] = {}
+        self._collision: dict[int, list[int] | None] = {}
 
     # -- lifecycle ---------------------------------------------------------
     def close(self) -> None:
@@ -359,6 +360,52 @@ class MapDocument:
         if len(cells) != CELLS_PER_SECTOR:
             raise MapFormatError(f"sector {sector.index}: truncated LLEC cells")
         return cells
+
+    # -- collision grid (GIRB) -------------------------------------------
+    def collision_cells(self, sector: Sector) -> list[int] | None:
+        """The 1200 u16 collision cells of one sector, or None if undecodable.
+
+        ``None`` is a normal outcome, not an error: the GIRB inflater is still
+        incomplete for sectors that carry real obstacles.  Callers must render
+        around it rather than fail.
+        """
+        if sector.index not in self._collision:
+            from .girb import GirbError, cells
+            try:
+                self._collision[sector.index] = cells(sector.girb_body)
+            except GirbError:
+                self._collision[sector.index] = None
+        return self._collision[sector.index]
+
+    def collision_at(self, x: int, y: int) -> int | None:
+        """Collision value for a pixel coordinate, on the 8 px GIRB grid."""
+        from .girb import CELL_PX as CPX, GRID_COLS, GRID_ROWS
+        cx, cy = x // CPX, y // CPX
+        sc, sr = cx // GRID_COLS, cy // GRID_ROWS
+        if not 0 <= sc < self.header.sector_columns or not 0 <= sr < self.header.sector_rows:
+            return None
+        index = sr * self.header.sector_columns + sc
+        if index >= self.header.sector_count:
+            return None
+        values = self.collision_cells(self.sector(index))
+        if values is None:
+            return None
+        return values[(cy % GRID_ROWS) * GRID_COLS + (cx % GRID_COLS)]
+
+    def collision_stats(self) -> dict:
+        """How many sectors decoded, and the distinct cell values seen."""
+        decoded = failed = 0
+        seen: set[int] = set()
+        for s in self.iter_sectors():
+            values = self.collision_cells(s)
+            if values is None:
+                failed += 1
+            else:
+                decoded += 1
+                seen.update(values)
+        return {"sectors": self.header.sector_count, "decoded": decoded,
+                "failed": failed, "distinct_values": len(seen),
+                "uniform": len(seen) <= 1}
 
     def cell_at(self, x: int, y: int) -> int | None:
         """Raw LLEC byte for a pixel coordinate, or None outside the sector grid."""

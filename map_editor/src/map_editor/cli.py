@@ -33,6 +33,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="导出某张地图的结构 JSON，如 2101:out.json")
     p.add_argument("--export-png", metavar="KEY:PATH",
                    help="导出某张地图的整图 PNG，如 2101:out.png")
+    p.add_argument("--girb-report", action="store_true",
+                   help="报告每张地图的 GIRB（碰撞网格）解压成功率，供排查用")
     return p
 
 
@@ -90,6 +92,31 @@ def run_cli(vm: EditorViewModel, root: str, export_json: str | None,
     return 0
 
 
+def _print_girb_report(vm: EditorViewModel) -> None:
+    print(f"{'编号':<8}{'名称':<20}{'尺寸':<14}{'扇区':>6}{'解出':>6}{'失败':>6}"
+          f"{'取值':>6}  GIRB字节")
+    print("-" * 78)
+    bad: list[str] = []
+    for r in vm.girb_report():
+        if r.get("error"):
+            print(f"{r['key']:<8}{(r.get('name') or '—'):<20}解析失败: {r['error']}")
+            bad.append(r["key"])
+            continue
+        flag = "" if r["failed"] == 0 else "  ← 有失败"
+        print(f"{r['key']:<8}{(r['name'] or '—'):<20}{r['size']:<14}"
+              f"{r['sectors']:>6}{r['decoded']:>6}{r['failed']:>6}"
+              f"{r['distinct_values']:>6}  {r['girb_len_min']}~{r['girb_len_max']}{flag}")
+        if r["failed"]:
+            bad.append(r["key"])
+    print()
+    if bad:
+        print(f"[!] 以下地图的 GIRB 尚未完全解出，把这些编号发回来即可定位："
+              f"{' '.join(bad)}")
+    else:
+        print("[ok] 全部地图的 GIRB 均完整解出。")
+    print("    说明：解出的扇区一律是 2400 字节 = 1200 个 u16 = 40x30 格（8x8 像素/格）。")
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     config = Config.load()
@@ -109,7 +136,11 @@ def main(argv: list[str] | None = None) -> int:
     if not root:
         print("[错误] 需要 --scan 或已记住的客户端目录（--client-root）", file=sys.stderr)
         return 2
-    return run_cli(vm, root, args.export_json, args.export_png)
+    code = run_cli(vm, root, args.export_json, args.export_png)
+    if args.girb_report:
+        print()
+        _print_girb_report(vm)
+    return code
 
 
 if __name__ == "__main__":

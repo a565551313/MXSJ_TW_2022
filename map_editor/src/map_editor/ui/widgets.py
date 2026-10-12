@@ -29,15 +29,18 @@ from PySide6.QtWidgets import (
 
 from ..client.config import Config
 from ..client.discovery import DiscoveryError
+from ..core.girb import EMPTY_FILL
 from ..core.mapfile import CELL_PX, SECTOR_PX_H, SECTOR_PX_W, MapFormatError
 from .viewmodel import LAYERS, EditorViewModel
 
 TILE_CACHE_SIZE = 96
 LAYER_LABELS = {
     "texture": "底图 (GEPJ)",
-    "grid": "LLEC 网格 (20px)",
+    "grid": "LLEC 网格 (20px，语义未定)",
     "records": "空间记录框",
     "sector_bounds": "扇区边界 (320x240)",
+    "collision": "碰撞网格 (GIRB, 8px)",
+    "collision_grid": "碰撞网格线 (8px)",
 }
 COLUMNS = ("编号", "名称", "尺寸", "扇区", "记录", "文件大小", "状态")
 MAX_VIEW_DIMENSION = 20000      # Qt will not rasterise a widget larger than this
@@ -153,12 +156,62 @@ class MapCanvas(QWidget):
             for rec in doc.records:
                 painter.drawRect(rec.x, rec.y, rec.width, rec.height)
 
+        if self.vm.layer("collision") or self.vm.layer("collision_grid"):
+            self._paint_collision(painter, visible, width, height)
+
         cursor = self.vm.state.cursor
         if cursor:
             painter.setPen(QPen(QColor(0, 255, 120, 230), max(1.0, 2.0 / self.zoom)))
             painter.drawRect(cursor[0] // CELL_PX * CELL_PX,
                              cursor[1] // CELL_PX * CELL_PX, CELL_PX, CELL_PX)
         painter.end()
+
+    # -- collision overlay -------------------------------------------------
+    def _paint_collision(self, painter: QPainter, visible: QRect,
+                         width: int, height: int) -> None:
+        """Paint the 8 px GIRB grid over the visible region.
+
+        Three states, and only three, because that is all the format currently
+        tells us: cells equal to the empty-fill value, cells that differ, and
+        cells in a sector the inflater could not decode.  No walkable/blocked
+        labelling — the u8-to-u16 transform is still unknown.
+        """
+        from ..core.girb import CELL_PX as CPX
+        doc = self.vm.document
+        if doc is None:
+            return
+        x0 = max(0, visible.x() // CPX * CPX)
+        y0 = max(0, visible.y() // CPX * CPX)
+        x1 = min(width, visible.right() + CPX)
+        y1 = min(height, visible.bottom() + CPX)
+        if x1 <= x0 or y1 <= y0:
+            return
+        try:
+            region = self.vm.collision_region(x0, y0, x1, y1)
+        except (MapFormatError, OSError):
+            return
+        cols, cp = region["cols"], region["cell_px"]
+        filled = QColor(255, 110, 40, 120)      # differs from the empty fill
+        unknown = QColor(120, 120, 130, 70)     # sector could not be inflated
+        painter.setPen(Qt.NoPen)
+        for k, value in enumerate(region["values"]):
+            r, c = divmod(k, cols)
+            px = (region["origin_cell"][0] + c) * cp
+            py = (region["origin_cell"][1] + r) * cp
+            if value is None:
+                painter.setBrush(unknown)
+            elif value != EMPTY_FILL:
+                painter.setBrush(filled)
+            else:
+                continue
+            painter.drawRect(px, py, cp, cp)
+        if self.vm.layer("collision_grid"):
+            painter.setBrush(Qt.NoBrush)
+            painter.setPen(QPen(QColor(255, 200, 0, 110), max(1.0, 1.0 / self.zoom)))
+            for c in range(0, width, cp):
+                painter.drawLine(c, 0, c, height)
+            for r in range(0, height, cp):
+                painter.drawLine(0, r, width, r)
 
     # -- interaction ------------------------------------------------------
     def mouseMoveEvent(self, event) -> None:     # noqa: N802
@@ -368,6 +421,19 @@ class EditorWindow(QMainWindow):
             f"{self.vm.state.current_key} {self.vm.state.current_name} "
             f"{w}x{h} — 夢想世界 地图编辑器 (只读)")
         self.lbl_status.setText(self.vm.status_line())
+        try:
+            st = self.vm.collision_stats()
+        except Exception:
+            st = None
+        if st:
+            if st["failed"]:
+                self.lbl_cursor.setText(
+                    f"碰撞网格 {st['decoded']}/{st['sectors']} 扇区解出，"
+                    f"{st['failed']} 个未解出（灰色）")
+            else:
+                self.lbl_cursor.setText(
+                    f"碰撞网格 {st['decoded']}/{st['sectors']} 扇区全部解出"
+                    + ("（整图一致，无障碍数据）" if st["uniform"] else ""))
 
     def toggle_layer(self, name: str, on: bool) -> None:
         self.vm.set_layer(name, on)

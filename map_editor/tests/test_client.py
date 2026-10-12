@@ -287,3 +287,81 @@ class TestViewModel(TmpCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+@needs_samples
+class TestCollisionLayer(TmpCase):
+    """The confirmed part of GIRB: geometry, region query, and failure reporting."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        os.environ["MAP_EDITOR_HOME"] = str(self.tmp / "cfg")
+        self.addCleanup(os.environ.pop, "MAP_EDITOR_HOME", None)
+        self.vm = EditorViewModel(config=Config())
+        self.vm.set_client_root(SAMPLES)
+
+    def test_region_geometry_is_8px_cells(self) -> None:
+        self.vm.open_map("2101")
+        reg = self.vm.collision_region(0, 0, 320, 240)
+        self.assertEqual((reg["cols"], reg["rows"]), (40, 30))
+        self.assertEqual(reg["cell_px"], 8)
+        self.assertEqual(len(reg["values"]), 1200)
+        self.vm.close_map()
+
+    def test_region_spanning_four_sectors(self) -> None:
+        # 300..340 px -> cells 37..42 (crosses the 40-cell sector boundary);
+        # 220..260 px -> cells 27..32 (crosses the 30-cell boundary).  So the
+        # region touches a 2x2 block of sectors.
+        self.vm.open_map("2101")
+        reg = self.vm.collision_region(300, 220, 340, 260)
+        self.assertEqual((reg["cols"], reg["rows"]), (6, 6))
+        self.assertEqual(len(reg["values"]), 36)
+        self.assertEqual(reg["decoded"], 4)
+        self.assertEqual(reg["failed"], 0)
+        self.vm.close_map()
+
+    def test_undecodable_sector_yields_none_not_an_error(self) -> None:
+        self.vm.open_map("1034")
+        st = self.vm.collision_stats()
+        if st["failed"] == 0:
+            self.skipTest("decoder now handles 1034; nothing to check")
+        reg = self.vm.collision_region(0, 0, 320, 240)
+        self.assertTrue(any(v is None for v in reg["values"]) or reg["failed"] == 0)
+        self.vm.close_map()
+
+    def test_collision_at_outside_map_is_none(self) -> None:
+        self.vm.open_map("2101")
+        doc = self.vm.document
+        self.assertIsNone(doc.collision_at(-1, 0))
+        self.assertIsNone(doc.collision_at(999999, 0))
+        self.vm.close_map()
+
+    def test_girb_report_covers_every_map(self) -> None:
+        report = self.vm.girb_report()
+        keys = {r["key"] for r in report}
+        self.assertEqual(keys, {r.key for r in self.vm.rows})
+        for r in report:
+            if not r.get("error"):
+                self.assertEqual(r["decoded"] + r["failed"], r["sectors"])
+
+    def test_new_layers_are_registered_and_persisted(self) -> None:
+        for name in ("collision", "collision_grid"):
+            self.assertIn(name, LAYERS)
+            self.vm.set_layer(name, True)
+            self.assertTrue(self.vm.layer(name))
+        self.vm.save_config()
+        again = Config.load()
+        self.assertTrue(again.show_collision)
+        self.assertTrue(again.show_collision_grid)
+
+    def test_cli_girb_report_runs(self) -> None:
+        import io
+        from contextlib import redirect_stdout
+        from map_editor.cli import main
+        out = io.StringIO()
+        with redirect_stdout(out):
+            code = main(["--scan", str(SAMPLES), "--girb-report"])
+        self.assertEqual(code, 0)
+        text = out.getvalue()
+        self.assertIn("GIRB字节", text)
+        self.assertIn("40x30", text)

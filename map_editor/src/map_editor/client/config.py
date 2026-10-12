@@ -43,6 +43,8 @@ class Config:
     show_grid: bool = False
     show_records: bool = True
     show_sector_bounds: bool = True
+    show_collision: bool = False
+    show_collision_grid: bool = False
     # Value used to decide "walkable" in the LLEC grid.  0/1 are the only values
     # whose meaning is supported by evidence; everything else is unclassified,
     # so the threshold stays conservative until the format is understood.

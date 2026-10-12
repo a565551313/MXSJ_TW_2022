@@ -19,7 +19,7 @@ from ..client.scene_table import SceneTable
 from ..core import MapDocument, MapFormatError, open_map, render_region
 from ..core.mapfile import CELL_PX
 
-LAYERS = ("texture", "grid", "records", "sector_bounds")
+LAYERS = ("texture", "grid", "records", "sector_bounds", "collision", "collision_grid")
 Progress = Callable[[str], None]
 
 
@@ -74,6 +74,8 @@ class EditorViewModel:
             "grid": self.config.show_grid,
             "records": self.config.show_records,
             "sector_bounds": self.config.show_sector_bounds,
+            "collision": self.config.show_collision,
+            "collision_grid": self.config.show_collision_grid,
         })
         self._doc: MapDocument | None = None
         self._rows: list[MapRow] = []
@@ -185,6 +187,70 @@ class EditorViewModel:
         return info
 
     # -- rendering --------------------------------------------------------
+    # -- collision (GIRB) -------------------------------------------------
+    def collision_region(self, x0: int, y0: int, x1: int, y1: int) -> dict:
+        """Collision-grid cells covering a pixel region.
+
+        Returns row-major values plus geometry, with ``None`` for cells whose
+        sector could not be inflated.  Pure data, so the Qt layer only paints.
+        """
+        from ..core.girb import CELL_PX, GRID_COLS, GRID_ROWS
+        doc = self._require_doc()
+        h = doc.header
+        cx0, cy0 = x0 // CELL_PX, y0 // CELL_PX
+        cx1 = min(-(-(x1) // CELL_PX), h.sector_columns * GRID_COLS)
+        cy1 = min(-(-(y1) // CELL_PX), h.sector_rows * GRID_ROWS)
+        cx0, cy0 = max(0, cx0), max(0, cy0)
+        if cx1 <= cx0 or cy1 <= cy0:
+            return {"cols": 0, "rows": 0, "cell_px": CELL_PX, "values": [],
+                    "decoded": 0, "failed": 0}
+        values: list[int | None] = []
+        decoded = failed = 0
+        touched: set[int] = set()
+        for cy in range(cy0, cy1):
+            for cx in range(cx0, cx1):
+                sc, sr = cx // GRID_COLS, cy // GRID_ROWS
+                index = sr * h.sector_columns + sc
+                if index >= h.sector_count:
+                    values.append(None)
+                    continue
+                vals = doc.collision_cells(doc.sector(index))
+                if index not in touched:
+                    touched.add(index)
+                    if vals is None:
+                        failed += 1
+                    else:
+                        decoded += 1
+                values.append(None if vals is None
+                              else vals[(cy % GRID_ROWS) * GRID_COLS + (cx % GRID_COLS)])
+        return {"origin_cell": (cx0, cy0), "cols": cx1 - cx0, "rows": cy1 - cy0,
+                "cell_px": CELL_PX, "values": values,
+                "decoded": decoded, "failed": failed}
+
+    def collision_stats(self) -> dict:
+        return self._require_doc().collision_stats()
+
+    def girb_report(self) -> list[dict]:
+        """Per-map GIRB decode report — what to send back when a map misbehaves."""
+        out: list[dict] = []
+        for r in self.rows:
+            if r.broken:
+                out.append({"key": r.key, "name": r.name, "error": r.error})
+                continue
+            try:
+                self.open_map(r)
+                st = self.collision_stats()
+                lengths = sorted({len(s.girb_body) for s in self._require_doc().iter_sectors()})
+                st.update({"key": r.key, "name": r.name,
+                           "size": f"{r.width}x{r.height}",
+                           "girb_len_min": lengths[0], "girb_len_max": lengths[-1]})
+                out.append(st)
+                self.close_map()
+            except Exception as exc:
+                out.append({"key": r.key, "name": r.name, "error": str(exc)})
+                self.close_map()
+        return out
+
     def render(self, x0: int, y0: int, x1: int, y1: int):
         doc = self._require_doc()
         return render_region(doc, x0, y0, x1, y1)
@@ -221,6 +287,7 @@ class EditorViewModel:
                 }
                 for s in doc.iter_sectors()
             ],
+            "collision": doc.collision_stats(),
             "prefix_records": [
                 {"index": r.index, "x": r.x, "y": r.y, "w": r.width, "h": r.height,
                  "payload_length": r.payload_length,
