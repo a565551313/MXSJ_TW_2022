@@ -1,0 +1,39 @@
+{
+  "name": "mxsj-review-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "MXSJ batch_001 read-only static-data review browser (frontend only, no editing or publishing).",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "vite",
+    "dev:fixture": "VITE_REVIEW_DATA_MODE=fixture VITE_API_PROXY_TARGET=http://127.0.0.1:8788 vite",
+    "fixture:all": "node fixtures/serve-fixture-api.mjs & VITE_REVIEW_DATA_MODE=fixture VITE_API_PROXY_TARGET=http://127.0.0.1:8788 vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "fixture:api": "node fixtures/serve-fixture-api.mjs",
+    "fixtures:rebuild": "python3 fixtures/build_fixture_sample.py"
+  },
+  "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.7",
+    "vitest": "^3.2.7"
+  }
+}
