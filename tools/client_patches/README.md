@@ -1,8 +1,12 @@
 # 客户端局部测试补丁：注册流程预览
 
-最新：[v2.2 本地校验预览](REGISTRATION_VALIDATION_PREVIEW_V2_2.md)，58 项离线检查通过，v2.2 原生实测待反馈。
-用户已确认 v2.1 资料页、本地提示及返回流程；本轮把下一步校验与说明入口分开。
-`--stage form-validate` 生成 v2.2；`form-basic` / `form` / 默认 `terms` 保留历史 v2.1 / v2 / v1。
+最新：[v3 原生界面预览](REGISTRATION_VISUAL_PREVIEW_V3.md)，68 项离线检查通过，v3 Windows 验收待反馈。
+协议页采用现有 `login/service.dlg`，注册页仅复用登录布局/底图，首页消息 2 改简体「注册账号」。
+v3 使用独立构建器 `build_visual_preview.py`，安装需同时复制 FLS 和 `photo/registration_preview_v3` 图片。
+原生效果未在本环境运行；不能把 PNG 底图或假控件测试当作客户端截图。
+
+历史：[v2.2 本地校验](REGISTRATION_VALIDATION_PREVIEW_V2_2.md)、[v2.1 基础表单](REGISTRATION_BASIC_FORM_PREVIEW_V2_1.md)。
+旧 `build_registration_preview.py` 的 `form-validate` / `form-basic` / `form` / 默认 `terms` 仍可重建旧版本。
 
 ## v1 第一页预览（历史交付）
 

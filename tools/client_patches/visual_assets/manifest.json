@@ -1,0 +1,17 @@
+{
+  "compiler": "CPython 2.5.6",
+  "compiler_source": "https://github.com/python/cpython/tree/v2.5.6",
+  "source_sha256": "aef09ffb935c3fb701f55a601fd15607624ddfdcf1820bc1387cddd568269149",
+  "compiled_sha256": "e71e069643223933af6a7cd2597ce5c994cb5bf826f5d3b5ad045d1e6fcb48eb",
+  "font_sha256": "dea41f7b9fc5480f1311cf4331cb48d98b8f73b37fa773782bf31260775edae4",
+  "assets": {
+    "agree.png": "a10a4978539b7c5d931e3fd51603e47f826d523582d978fa40517c40617b00a9",
+    "back.png": "1f3316abc1ba0f2cec324c804d64ac008b7f16d3a1cb0dc2208c54d4ccf29496",
+    "form_card.png": "6c3886e369dd1d466b17268d31c4afa17f8fad1a774bc19aca97aa201f13538a",
+    "home_register.png": "9470531d39b28d373a38afdf770b1f602476cbaa84269d9df42a3f28a3513144",
+    "info.png": "701d80aa66fc0958b3009db107f92d6a7458d3f53bb74ee15fa803e570d566bf",
+    "register.png": "10c73ca548b56d90d20afa1df237b514c0d949f9d6bdcad4cfa977e94aca3dea",
+    "reject.png": "03b06a1e9727c386e89e4fcc435648337040f916d7b528bbd27def9b734f2bfb",
+    "terms_title.png": "6a4ee87c281421d4bb1a3c267dbc637b775904cb984ae2e5d874425c2d260192"
+  }
+}
