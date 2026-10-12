@@ -417,6 +417,7 @@ class TestGirbNeverLeaksIndexError(unittest.TestCase):
             except IndexError as exc:     # pragma: no cover - the regression
                 self.fail(f"IndexError escaped for body {body.hex()}: {exc}")
 
+    @needs_samples
     def test_truncated_real_body_fails_cleanly(self) -> None:
         from map_editor.core.girb import GirbError, decompress
         with open_map(SAMPLE_2101) as doc:
