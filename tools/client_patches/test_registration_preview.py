@@ -25,6 +25,9 @@ class RegistrationPreviewTests(unittest.TestCase):
     def functions(self, rows, index):
         return dict(patch.objects(patch.tree(self.plain(rows, index))))
 
+    def test_v1_published_binary_is_unchanged(self):
+        self.assertEqual(patch.sha(self.output), '345918e9ac2eef95ea98140fdbb70606a493dc682fce11f4c24ce178d86291eb')
+
     def test_wrong_archive_refused(self):
         with self.assertRaisesRegex(ValueError, 'unsupported source'):
             patch.build(self.source[:-1] + bytes([self.source[-1] ^ 1]), self.keys)
@@ -114,6 +117,124 @@ class RegistrationPreviewTests(unittest.TestCase):
     def test_report_does_not_claim_native_acceptance(self):
         self.assertFalse(self.report['native_windows_client_tested'])
         self.assertFalse(self.report['recovered_code_executed'])
+
+
+class RegistrationFormPreviewTests(unittest.TestCase):
+    """v2 enables input widgets, never old registration submission."""
+    @classmethod
+    def setUpClass(cls):
+        cls.source = (patch.ROOT / 'data/script.fls').read_bytes()
+        cls.keys = (patch.ROOT / 'tools/decompiler/script_fls_keys.json').read_bytes()
+        cls.metadata = json.loads(cls.keys)
+        cls.output, cls.report = patch.build(cls.source, cls.keys, stage='form')
+        cls.rows = patch.entries(cls.source)[1]
+        cls.new_rows = patch.entries(cls.output)[1]
+
+    plain = RegistrationPreviewTests.plain
+    functions = RegistrationPreviewTests.functions
+
+    def test_unknown_stage_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, 'unsupported preview stage'):
+            patch.build(self.source, self.keys, stage='online')
+
+    def test_only_two_entries_change_and_build_is_deterministic(self):
+        changed = [i for i, (a, b) in enumerate(zip(self.rows, self.new_rows)) if a != b]
+        self.assertEqual(changed, [337, 4007])
+        output, report = patch.build(self.source, self.keys, stage='form')
+        self.assertEqual(output, self.output)
+        self.assertEqual(report, self.report)
+        self.assertEqual(patch.sha(output), '50e678f8e485691b0cc5d378d5cad255ff076aaba18c1e12ab9a6c277f9b057f')
+
+    def test_first_page_agree_keeps_step_one_and_skips_telemetry(self):
+        before = self.functions(self.rows, 4007)['CRegPanel1/OnMessage']
+        after = self.functions(self.new_rows, 4007)['CRegPanel1/OnMessage']
+        self.assertEqual(after['code'][13:23], before['code'][13:23])
+        self.assertEqual(after['code'][13:23], patch.assemble((116, after['names'].index(b'Step')),
+                         (100, after['consts'].index(1)), (131, 1), (1, None)))
+        self.assertEqual(after['code'][23:26], patch.assemble((113, 336)))
+        self.assertEqual(after['code'][336:], patch.assemble((100, after['consts'].index(None)), (83, None)))
+
+    def test_reject_retains_v1_return_home_path(self):
+        before = self.functions(self.rows, 4007)['CRegPanel1/OnMessage']
+        after = self.functions(self.new_rows, 4007)['CRegPanel1/OnMessage']
+        self.assertEqual(after['code'][184:194], before['code'][184:194])
+        self.assertEqual(after['code'][194:197], patch.assemble((113, 259)))
+        self.assertEqual(after['code'][259:], before['code'][259:])
+
+    def test_form_back_keeps_step_zero_but_save_is_disabled(self):
+        functions = self.functions(self.new_rows, 4007)
+        before = self.functions(self.rows, 4007)['CRegPanel2/OnMessage']
+        after = functions['CRegPanel2/OnMessage']
+        self.assertEqual(after['code'][:104], before['code'][:104])
+        self.assertIn((26, 100, after['consts'].index(0)), patch.normalized(after['code']))
+        co = functions['CRegPanel2/Save']
+        self.assertEqual(co['code'], patch.assemble((100, co['consts'].index(None)), (83, None))
+                         + patch.assemble((9, None)) * (len(co['code']) - 4))
+
+    def test_next_only_shows_local_offline_dialog(self):
+        co = self.functions(self.new_rows, 4007)['CRegPanel2/DoNext']
+        seq = patch.normalized(co['code'])
+        names_used = [co['names'][arg] for _, op, arg in seq if op in {105, 107, 116}]
+        self.assertEqual(names_used, [b'commondialog', b'ShowNewMessageBox'])
+        self.assertEqual([arg for _, op, arg in seq if op == 131], [2])
+        self.assertIn((10), [arg for _, op, arg in seq if op == 100])
+        self.assertEqual(co['consts'][10].decode('cp950').strip(), '離線預覽，未送出。')
+        # No GetText/Save/DoCheck/device/MD5/HTTP call; no store to any global.
+        self.assertNotIn(97, [op for _, op, _ in seq])
+        ret = next(i for i, (_, op, _) in enumerate(seq) if op == 83)
+        self.assertTrue(all(op == 9 for _, op, _ in seq[ret + 1:]))
+
+    def test_all_other_network_callers_and_alternate_registration_are_disabled(self):
+        functions = self.functions(self.new_rows, 4007)
+        for path in (patch.NETWORK_PATHS - {'CRegPanel2/DoNext'}) | {'Register2980'}:
+            co = functions[path]
+            seq = patch.normalized(co['code'])
+            self.assertEqual(seq[:2], [(0, 100, co['consts'].index(None)), (3, 83, None)])
+            self.assertTrue(all(op == 9 for _, op, _ in seq[2:]), path)
+
+    def test_old_email_registration_link_is_local_preview_notice(self):
+        functions = self.functions(self.new_rows, 4007)
+        co = functions['CRegPanel2/OnMessage']
+        self.assertEqual(co['code'][117:120], patch.assemble((113, 90)))
+        self.assertIn((93, 105, co['names'].index(b'DoNext')), patch.normalized(co['code']))
+        self.assertTrue(all(op == 9 for _, op, _ in patch.normalized(co['code'][120:192])))
+        self.assertEqual(functions['CRegPanel2/__init__']['consts'][4].decode('cp950').strip(), '離線預覽說明')
+
+    def test_field_construction_validation_and_password_masking_are_unchanged(self):
+        before = self.functions(self.rows, 4007)
+        after = self.functions(self.new_rows, 4007)
+        for path in ('CRegPanel2/__init__', 'CRegPanel2/CreateEdits', 'CRegPanel2/DoCheck',
+                     'CRegPanel2/OnEditChange', 'CRegPanel2/OnActive'):
+            self.assertEqual(before[path]['code'], after[path]['code'])
+        self.assertIn(b'm_IsPassword', after['CRegPanel2/CreateEdits']['names'])
+        for path in ('CRegPanel2/__init__', 'CRegPanel2/CreateEdits'):
+            self.assertFalse({b'CHttpObject', b'OpenUrl', b'RequestNewCode', b'DoNext', b'Register2980',
+                              b'LoginLog'} & set(after[path]['names']))
+
+    def test_only_two_fixed_width_literals_are_changed(self):
+        before = self.functions(self.rows, 4007)
+        after = self.functions(self.new_rows, 4007)
+        changes = []
+        for path in before:
+            for i, (a, b) in enumerate(zip(before[path]['consts'], after[path]['consts'])):
+                if not isinstance(a, dict) and a != b:
+                    changes.append((path, i))
+                    self.assertEqual(len(a), len(b))
+                    b.decode('cp950')
+        self.assertEqual(set(changes), {('CRegPanel2/__init__', 4), ('CRegPanel2/DoNext', 10)})
+        self.assertEqual(len(self.plain(self.rows, 4007)), len(self.plain(self.new_rows, 4007)))
+
+    def test_file_installation_guard_still_requires_original_not_v1(self):
+        previous, _ = patch.build(self.source, self.keys)
+        with self.assertRaisesRegex(ValueError, 'unsupported source'):
+            patch.build(previous, self.keys, stage='form')
+
+    def test_no_native_or_live_registration_claim(self):
+        self.assertEqual(self.report['kind'], 'registration_form_offline_preview_only')
+        self.assertFalse(self.report['native_windows_client_tested'])
+        self.assertFalse(self.report['recovered_code_executed'])
+        self.assertEqual((patch.ROOT / 'data/script.fls').read_bytes(), self.source)
+        self.assertEqual((patch.ROOT / 'tools/decompiler/script_fls_keys.json').read_bytes(), self.keys)
 
 
 if __name__ == '__main__':
