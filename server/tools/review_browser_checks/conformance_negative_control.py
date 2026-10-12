@@ -113,6 +113,14 @@ class State:
                 rules['rows'] = keep
             self.tables[name] = rules
 
+    def ready(self) -> bool:
+        """The double reports ready unless a defect makes it serve damaged data.
+
+        ``serve_corrupt`` deliberately stays ready: the point of that fault is a
+        service that keeps answering HTTP 200 with a damaged catalogue.
+        """
+        return True
+
     def integrity_error(self, table: str) -> str | None:
         if not self.require_hash or {'ignore_integrity', 'serve_corrupt'} & self.defects:
             return None
@@ -201,6 +209,8 @@ class Handler(BaseHTTPRequestHandler):
         if table == 'save':
             return self._send(200, {'saved': True})
         if table is None:
+            if parsed.path.rstrip('/') in ('/api/v1/review/health', '/health'):
+                return self._health()
             if parsed.path.rstrip('/') in ('/api/v1/review', ''):
                 return self._page()
             if 'traversal_allowed' in self.state.defects and 'passwd' in urllib.parse.unquote(self.path):
@@ -247,6 +257,16 @@ class Handler(BaseHTTPRequestHandler):
         window = rows[(page - 1) * page_size: (page - 1) * page_size + page_size]
         self._send(200, {'rows': self.state.serialize(table, window), 'total': total,
                          'page': page, 'page_size': page_size})
+
+    def _health(self):
+        """Readiness endpoint the emitted map declares (the harness needs it)."""
+        healthy = self.state.ready()
+        self._send(200 if healthy else 503, {
+            'status': 'ready' if healthy else 'degraded',
+            'batch': 'batch_001',
+            'datasets_count': len(self.state.tables),
+            'note': 'self-check double, NOT the product API',
+        })
 
     def _page(self):
         script = '<script src="app.js"></script>'

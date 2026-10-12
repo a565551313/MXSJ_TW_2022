@@ -69,7 +69,8 @@ class ProbeAgainstInjectedFaults(unittest.TestCase):
                 raise AssertionError(f'the self-check double did not start (defects={defects})')
             out = cls.scratch / f'report-{defects}.json'
             _, _, log = run_json([sys.executable, str(PROBE), '--base-url', f'http://127.0.0.1:{port}',
-                                  '--map', str(cls.map_path), '--out', str(out)], timeout=600)
+                                  '--map', str(cls.map_path), '--web-url', f'http://127.0.0.1:{port}',
+                                  '--out', str(out)], timeout=600)
             if not out.exists():
                 raise AssertionError(f'probe produced no report (defects={defects}):\n{log}')
             return json.loads(out.read_text())
@@ -109,65 +110,140 @@ class IntegrityCheckAgainstCorruptedCopies(unittest.TestCase):
         subprocess.run([sys.executable, str(DOUBLE), '--emit-map', str(cls.map_path)],
                        check=True, capture_output=True)
 
-    def _run(self, extra: list[str]) -> dict:
+    def _run(self, extra: list[str], scenarios: str) -> dict:
         out = self.scratch / ('report-' + '-'.join(extra).replace('--', '') + '.json')
         command = f'{sys.executable} {DOUBLE} --port {{port}} ' + ' '.join(extra)
         _, _, log = run_json([sys.executable, str(PROBE), '--start', '--map', str(self.map_path),
                               '--dataset-root-env', 'REVIEW_BATCH_DIR', '--command', command,
-                              '--out', str(out)], timeout=600)
+                              '--integrity-scenarios', scenarios, '--out', str(out)], timeout=600)
         self.assertTrue(out.exists(), log)
         report = json.loads(out.read_text())
         return {item['check']: item for item in report['checks']}
 
+    # The double can only speak to the CSV/hash scenarios; the evidence-file and
+    # manifest-coverage scenarios are properties of Agent H's loader (covered by
+    # test_catalog_loader_acceptance.py against the real loader).
+    SCENARIO = 'csv_hash_corruption,csv_type_corruption'
+
     def test_integrity_enforced_passes(self):
-        checks = self._run(['--defects', 'none', '--require-hash'])
+        checks = self._run(['--defects', 'none', '--require-hash'], self.SCENARIO)
         self.assertEqual(checks['API-05']['status'], 'pass', checks['API-05']['detail'])
 
     def test_integrity_ignored_fails(self):
-        checks = self._run(['--defects', 'serve_corrupt'])
+        checks = self._run(['--defects', 'serve_corrupt'], self.SCENARIO)
         self.assertEqual(checks['API-05']['status'], 'fail', checks['API-05']['detail'])
 
 
 class PageScannerSelfCheck(unittest.TestCase):
-    """The static page scanner must flag the faults it claims to detect."""
+    """The static page scanner must flag real sinks and ignore documentation.
 
-    def _scan(self, root: Path) -> dict:
+    Both directions matter: a scanner that fails a legitimate Vite proxy config,
+    a guard comment or a negative test would force Agent I to delete safety
+    documentation to satisfy the tool.
+    """
+
+    def _scan(self, root: Path, *, api: bool = False) -> dict:
         script = (
             'import json,sys;from pathlib import Path;sys.path.insert(0, %r);'
             'from scan_review_web import scan;'
-            'print(json.dumps(scan(frontend_roots=(Path(%r),), backend_roots=(Path(%r),))))'
-            % (str(ROOT / 'server/tools/review_browser_checks'), str(root), str(root))
+            'print(json.dumps(scan(app_root=Path(%r), api_roots=(Path(%r),) if %r else ())));'
+            % (str(ROOT / 'server/tools/review_browser_checks'), str(root), str(root), api)
         )
         completed = subprocess.run([sys.executable, '-c', script], capture_output=True, text=True,
                                    timeout=120, cwd=str(ROOT))
         self.assertEqual(completed.returncode, 0, completed.stderr)
         return json.loads(completed.stdout)
 
-    def test_noncompliant_page_is_rejected(self):
-        root = tempdir('mxsj-webscan-bad-')
-        (root / 'index.html').write_text(
-            '<!doctype html><script>fetch("http://127.0.0.1:8100/api/v1/review/datasets/items");</script>')
-        (root / 'app.js').write_text(
-            'const FALLBACK = [{id: 1}];\nconst total = 6851;\nif (err) { render(FALLBACK); }\n'
-            'el.innerHTML = row.name;\n')
-        report = self._scan(root)
-        statuses = {item['check']: item['status'] for item in report['checks']}
-        for check_id in ('W-01', 'W-02', 'W-03', 'W-04', 'W-05', 'W-06'):
-            with self.subTest(check=check_id):
-                self.assertEqual(statuses[check_id], 'fail')
+    @staticmethod
+    def _status(report: dict) -> dict:
+        return {item['check']: item['status'] for item in report['checks']}
 
-    def test_compliant_page_passes(self):
-        root = tempdir('mxsj-webscan-good-')
-        (root / 'index.html').write_text('<!doctype html><div id="app"></div>')
-        (root / 'app.js').write_text(
-            'fetch("/api/v1/review/datasets/items").then(r => r.json()).then(rows => {\n'
-            '  if (!rows.length) { app.textContent = "無資料"; return; }\n'
-            '  app.textContent = rows.map(row => row.name).join("");\n'
-            '}).catch(() => { app.textContent = "連線失敗，請重試"; });\n')
+    def test_legitimate_config_comments_tests_and_proxies_are_not_violations(self):
+        root = tempdir('mxsj-webscan-positive-')
+        (root / 'src').mkdir(parents=True)
+        (root / 'fixtures').mkdir()
+        (root / 'vite.config.ts').write_text(
+            "import { defineConfig } from 'vite'\n"
+            "export default defineConfig({\n"
+            "  server: { host: '0.0.0.0', port: 5173, allowedHosts: true,\n"
+            "    proxy: { '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true } } },\n"
+            "})\n")
+        (root / 'fixtures/serve-fixture-api.mjs').write_text(
+            "// local fixture server; NOT real data, NOT integration evidence\n"
+            "server.listen(8788, '127.0.0.1')\n")
+        (root / 'src/main.tsx').write_text(
+            "/**\n"
+            " * We never use dangerouslySetInnerHTML, and there is deliberately no\n"
+            " * fixture/fallback branch here: if the request fails the UI shows an error.\n"
+            " */\n"
+            "export function View() {\n"
+            "  const rows = useApiResource(() => fetch('/api/v1/review/datasets/items/records'))\n"
+            "  if (rows.loading) return <p>loading</p>\n"
+            "  if (!rows.data || rows.data.records.length === 0) return <p>empty</p>\n"
+            "  if (rows.error) return <p>連線失敗，請重試</p>\n"
+            "  return <div><span>{rows.data.total === 6851 ? 'all' : String(rows.data.total)}</span>\n"
+            "    <pre className=\"raw-fallback\">{JSON.stringify(rows.data, null, 2)}</pre></div>\n"
+            "}\n")
+        (root / 'src/guards.test.ts').write_text(
+            "import { expect, it } from 'vitest'\n"
+            "it('never injects raw HTML', () => {\n"
+            "  const text = read('src/main.tsx')\n"
+            "  expect(text).not.toContain('dangerouslySetInnerHTML')\n"
+            "  expect(text).not.toMatch(/\\.innerHTML\\s*=/)\n"
+            "  expect(text).not.toMatch(/https?:\\/\\/(localhost|127\\.0\\.0\\.1)/)\n"
+            "  expect(6851).toBe(6851)\n"
+            "})\n")
+        (root / 'src/test').mkdir()
+        (root / 'src/test/fakeApi.ts').write_text(
+            "export const FALLBACK_ROWS = [{ id: 1 }]\n")
+        (root / 'index.html').write_text('<!doctype html><div id="root"></div>')
         report = self._scan(root)
-        statuses = {item['check']: item['status'] for item in report['checks']}
-        self.assertEqual([c for c in ('W-01', 'W-02', 'W-03', 'W-04', 'W-05', 'W-06')
-                          if statuses[c] != 'pass'], [])
+        statuses = self._status(report)
+        failures = {key: item for key, item in statuses.items() if item == 'fail'}
+        self.assertEqual(failures, {},
+                         f'legitimate files were flagged as violations: '
+                         f'{[c for c in report["checks"] if c["status"] == "fail"]}')
+        self.assertIn(statuses['W-01'], ('pass', 'review'))
+        self.assertIn(statuses['W-02'], ('pass', 'review'))
+        self.assertIn(statuses['W-04'], ('pass', 'review'))
+
+    def test_real_data_fallback_and_hardcoded_count_are_violations(self):
+        root = tempdir('mxsj-webscan-negative-')
+        (root / 'src').mkdir(parents=True)
+        (root / 'src/app.tsx').write_text(
+            "import { SAMPLE_ROWS } from '../fixtures/sample'\n"
+            "export function App() {\n"
+            "  useApiResource(() => fetch('/api/v1/review/datasets/items/records'), [])\n"
+            "  catch (error) { setRows(SAMPLE_ROWS) }\n"
+            "  return <div>{rows}</div>\n"
+            "}\n")
+        (root / 'src/legacy.js').write_text(
+            "const total = 6851\n"  # no fetch in this file -> written-in total
+            "document.getElementById('out').innerHTML = name\n")
+        (root / 'src/live.js').write_text(
+            "const base = 'http://127.0.0.1:8000/api/v1/review'\n"
+            "fetch(base + '/datasets/items/records')\n")
+        (root / 'index.html').write_text('<!doctype html><div id="root"></div>')
+        report = self._scan(root)
+        statuses = self._status(report)
+        self.assertEqual(statuses['W-01'], 'fail', 'absolute sandbox request in product code must fail')
+        self.assertEqual(statuses['W-02'], 'fail', 'fixture import/fallback must fail')
+        self.assertEqual(statuses['W-03'], 'fail', 'written-in total without a data path must fail')
+        self.assertIn(statuses['W-04'], ('fail', 'review'), 'innerHTML assignment must be reported')
+
+    def test_mutating_route_is_a_violation_but_cors_is_not(self):
+        root = tempdir('mxsj-webscan-api-')
+        (root / 'src').mkdir(parents=True)
+        (root / 'src/api.py').write_text(
+            "app.add_middleware(CORSMiddleware, allow_methods=['GET', 'OPTIONS', 'HEAD'])\n"
+            "@app.get('/api/v1/review/health')\ndef health(): ...\n")
+        report = self._scan(root, api=True)
+        statuses = self._status(report)
+        self.assertEqual(statuses['H-01'], 'pass', 'CORS allow_methods is not a route declaration')
+        (root / 'src/api.py').write_text(
+            "@app.post('/api/v1/review/save')\ndef save(): ...\n")
+        report = self._scan(root, api=True)
+        self.assertEqual(self._status(report)['H-01'], 'fail', 'a real POST route must fail')
 
 
 if __name__ == '__main__':

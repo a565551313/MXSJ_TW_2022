@@ -37,6 +37,7 @@ import argparse
 import collections
 import copy
 import hashlib
+import io
 import json
 import os
 import random
@@ -92,7 +93,7 @@ class Contract:
                 stripped = line.strip().lstrip('$ ').strip()
                 if re.match(r'^(python3?|uvicorn|flask|gunicorn|node|npm)\b', stripped):
                     self.startup_commands.append(stripped)
-        for method, path in re.findall(r'\b(GET|POST|PUT|PATCH|DELETE)\s+`?([^\s`|]+)', self.text, re.I):
+        for method, path in re.findall(r'\b(GET|POST|PUT|PATCH|DELETE)\s+`?(/[^\s`|,)]*)', self.text, re.I):
             self.endpoints.append((method.upper(), path))
         port = re.search(r'(?:--port[= ]|PORT=)(\d{2,5})', self.text)
         if port:
@@ -100,6 +101,27 @@ class Contract:
         env = re.search(r'\b([A-Z][A-Z0-9_]*(?:ROOT|DIR|DATA|BATCH|CSV)[A-Z0-9_]*)\b', self.text)
         if env:
             self.dataset_root_env = env.group(1)
+
+    NEGATION_MARKERS = ('无', '無', '没有', '不', 'not ', "n't", 'never', 'forbid', '禁止',
+                        'no ', 'only', '只能是', 'read-only', 'readonly')
+
+    def mutating_route_declarations(self) -> list[tuple[str, str]]:
+        """Mutating endpoints the contract *declares* as available.
+
+        A line that forbids writes ("无任何 POST / PUT / PATCH / DELETE 变更接口",
+        "must not implement POST ...") documents the absence of write routes; it
+        is not a declaration. Only a real path-shaped method + path pair on a
+        non-negated line counts.
+        """
+        declarations = []
+        for line in self.text.splitlines():
+            stripped = line.strip()
+            if any(marker in stripped.lower() for marker in self.NEGATION_MARKERS):
+                continue
+            for method, path in re.findall(r'\b(POST|PUT|PATCH|DELETE)\b\s*`?(/[A-Za-z0-9_{}/.\-]*)',
+                                           stripped):
+                declarations.append((method.upper(), path))
+        return declarations
 
     def summary(self) -> dict:
         return {
@@ -177,14 +199,16 @@ class Probe:
     """Runs the acceptance checks against one running instance."""
 
     def __init__(self, client: Client, mapping: dict, fixture: Path, contract: Contract,
-                 integrity_runner=None):
+                 integrity_runner=None, out_dir: Path | None = None):
         self.client = client
+        self.out_dir = Path(out_dir) if out_dir else Path(tempfile.gettempdir()) / 'mxsj-review-probe'
         self.mapping = mapping or {}
         self.fixture = Path(fixture)
         self.batch = Batch(self.fixture)
         self.contract = contract
         self.integrity_runner = integrity_runner
         self.integrity_skip_reason: str | None = None
+        self.web_url: str | None = (mapping or {}).get('web_url')
         self.results: list[dict] = []
 
     # -- helpers ---------------------------------------------------------
@@ -213,51 +237,88 @@ class Probe:
         return template.format(dataset=spec.get('api_name', name), key=key)
 
     def list_params(self) -> dict:
-        return self.mapping.get('list_params') or {'page': 'page', 'page_size': 'page_size', 'q': 'q'}
+        """Pagination parameter names as declared by the mapping.
+
+        Offset-style (`offset`/`limit`, used by the delivered API) and
+        page-style (`page`/`page_size`) are both supported; the mapping decides.
+        """
+        params = self.mapping.get('list_params') or {}
+        if 'offset' in params or 'limit' in params:
+            return {'style': 'offset', 'offset': params.get('offset', 'offset'),
+                    'limit': params.get('limit', 'limit'), 'q': params.get('q', 'q')}
+        return {'style': 'page', 'page': params.get('page', 'page'),
+                'page_size': params.get('page_size', 'page_size'), 'q': params.get('q', 'q')}
+
+    def limit_param(self) -> str:
+        params = self.list_params()
+        return params['limit'] if params['style'] == 'offset' else params['page_size']
+
+    def page_query(self, index: int, size: int, extra: dict | None = None) -> dict:
+        """Build the pagination query for page `index` (1-based) with `size` rows."""
+        params = self.list_params()
+        if params['style'] == 'offset':
+            query = {params['offset']: (index - 1) * size, params['limit']: size}
+        else:
+            query = {params['page']: index, params['page_size']: size}
+        query.update(extra or {})
+        return query
 
     def response_keys(self) -> dict:
         spec = self.mapping.get('list_response') or {}
-        return {'rows': spec.get('rows', 'rows'), 'total': spec.get('total', 'total')}
+        return {'rows': spec.get('rows', 'records'), 'total': spec.get('total', 'total')}
 
-    @staticmethod
-    def rows_of(payload):
+    def rows_of(self, payload):
         if isinstance(payload, list):
             return payload
         if isinstance(payload, dict):
-            for key in ('rows', 'items', 'records', 'data', 'results'):
+            preferred = self.response_keys()['rows']
+            if isinstance(payload.get(preferred), list):
+                return payload[preferred]
+            for key in ('records', 'rows', 'items', 'data', 'results'):
                 value = payload.get(key)
                 if isinstance(value, list):
                     return value
         return None
 
-    def fetch_all(self, name: str, page_size: int = 200, extra: dict | None = None) -> tuple[list, list]:
-        """Walk every page of a list endpoint; returns (rows, per_page_counts)."""
+    def total_of(self, payload):
+        if isinstance(payload, dict):
+            value = payload.get(self.response_keys()['total'])
+            if isinstance(value, int):
+                return value
+        return None
+
+    def page_size_for_walk(self) -> int:
+        declared = (self.mapping.get('pagination') or {}).get('page_size')
+        return int(declared) if declared else 200
+
+    def fetch_all(self, name: str, page_size: int | None = None,
+                  extra: dict | None = None) -> tuple[list, list]:
+        """Walk the whole list endpoint; returns (row identifiers, per-page counts)."""
         url = self.list_url(name)
         if not url:
             raise LookupError(f'no list endpoint mapped for dataset {name!r}')
-        params = self.list_params()
+        page_size = page_size or self.page_size_for_walk()
         id_field = (self.dataset(name) or {}).get('id', 'id')
         rows: list = []
         counts: list[int] = []
-        for page in range(1, 200):
-            query = {params['page']: page, params['page_size']: page_size, **(extra or {})}
-            response = self.client.get(url, params=query)
+        max_pages = 500
+        for index in range(1, max_pages + 1):
+            response = self.client.get(url, params=self.page_query(index, page_size, extra))
             if response.status != 200:
-                raise LookupError(f'{url} page {page} returned HTTP {response.status}')
+                raise LookupError(f'{url} page {index} returned HTTP {response.status}')
             payload = response.json()
             page_rows = self.rows_of(payload)
             if page_rows is None:
-                # Some servers return the plain list without the documented envelope.
-                if isinstance(payload, list):
-                    page_rows = payload
-                else:
-                    raise LookupError(f'{url} page {page} did not return a row list')
+                raise LookupError(f'{url} page {index} did not return a row list')
             counts.append(len(page_rows))
             for row in page_rows:
                 if id_field not in row:
                     raise LookupError(f'{url}: row is missing id field {id_field!r}')
                 rows.append(norm(row[id_field]))
+            total = self.total_of(payload)
             if len(page_rows) < page_size:
+                break
+            if total is not None and len(rows) >= total:
                 break
         return rows, counts
 
@@ -305,7 +366,8 @@ class Probe:
             if first != second:
                 problems.append('order is not stable between two identical walks')
             self.record(f'{check_id}.{name}', title, FAIL if problems else PASS,
-                        problems or {'rows': len(first), 'pages': len(counts), 'page_size_used': 200},
+                        problems or {'rows': len(first), 'pages': len(counts),
+                                     'page_size_used': self.page_size_for_walk()},
                         requirement=self.REQUIRED)
 
     def check_search_and_exact_filter(self):
@@ -320,7 +382,7 @@ class Probe:
                 continue
             url = self.list_url(name)
             response = self.client.get(url, params={spec['search_param']: term,
-                                                    self.list_params()['page_size']: 50})
+                                                    self.limit_param(): 50})
             if response.status != 200:
                 problems.append(f'{name}: search HTTP {response.status}')
                 continue
@@ -331,7 +393,7 @@ class Probe:
             if wanted is not None and got != sorted(norm(item) for item in wanted):
                 problems.append(f'{name}: search {term!r} returned {got}, expected {sorted(wanted)}')
             empty = self.client.get(url, params={spec['search_param']: spec.get('search_miss', 'zzz-no-such-name'),
-                                                 self.list_params()['page_size']: 50})
+                                                 self.limit_param(): 50})
             if empty.status == 200:
                 rows = self.rows_of(empty.json()) or []
                 if rows:
@@ -348,22 +410,39 @@ class Probe:
         if not datasets:
             return self.not_executed(check_id, title, 'no dataset mapping supplied (contract not delivered)')
         params = self.list_params()
-        cases = [
-            {params['page']: 'abc'},
-            {params['page']: '-1'},
-            {params['page']: '0'},
-            {params['page_size']: '0'},
-            {params['page_size']: 'abc'},
-            {params['page_size']: str(10 ** 7)},
-        ]
+        max_size = int((self.mapping.get('pagination') or {}).get('limit_max', 500))
+        if params['style'] == 'offset':
+            pos, size = params['offset'], params['limit']
+            cases = [
+                {pos: '-1'},
+                {pos: 'abc'},
+                {size: '0'},
+                {size: 'abc'},
+                {size: str(max_size + 1)},
+                {size: str(10 ** 7)},
+            ]
+        else:
+            pos, size = params['page'], params['page_size']
+            cases = [
+                {pos: 'abc'},
+                {pos: '-1'},
+                {pos: '0'},
+                {size: '0'},
+                {size: 'abc'},
+                {size: str(10 ** 7)},
+            ]
         problems, details = [], {}
         for name in list(datasets)[:2]:
             url = self.list_url(name)
-            baseline = self.client.get(url, params={params['page_size']: 5})
+            baseline = self.client.get(url, params={size: 5})
             if baseline.status != 200:
                 problems.append(f'{name}: baseline request HTTP {baseline.status}')
                 continue
-            for case in cases:
+            extra_cases = []
+            if self.mapping.get('reject_invalid_sort_order'):
+                extra_cases.append({'sort_by': self.mapping.get('sort_field', 'client_shape_id'),
+                                    'order': 'sideways'})
+            for case in cases + extra_cases:
                 response = self.client.get(url, params=case)
                 key = f'{name}:{case}'
                 details[key] = response.status
@@ -377,7 +456,30 @@ class Probe:
                                         f'({len(rows)} rows, no explanation in the body)')
                 elif response.status >= 500:
                     problems.append(f'{name}: {case} produced a server error HTTP {response.status}')
+        # Fixed-shape endpoints: a misspelled parameter must not be silently ignored.
+        for endpoint in self.mapping.get('fixed_shape_endpoints') or []:
+            path = endpoint['path']
+            for misspelled, _expected in (endpoint.get('must_reject') or {}).items():
+                response = self.client.get(path, params={misspelled: endpoint.get('valid_value', '1')})
+                details[f'{path}?{misspelled}'] = response.status
+                if response.status < 400:
+                    payload = response.json()
+                    served = self.rows_of(payload)
+                    problems.append(f'{path}?{misspelled}=... was accepted with HTTP {response.status} '
+                                    f'({len(served) if served is not None else "?"} rows) — a misspelled '
+                                    f'filter must not be ignored silently')
+                elif response.status >= 500:
+                    problems.append(f'{path}?{misspelled}=... produced HTTP {response.status}')
         self.record(check_id, title, FAIL if problems else PASS, problems or details, requirement=self.REQUIRED)
+
+    def csv_row_by_pk(self, source: str, pk: str) -> dict | None:
+        """The reviewed CSV row whose manifest primary key equals `pk`."""
+        keys = self.batch.manifest()['files'][source].get('primary_key') or []
+        for row in self.batch.rows(source):
+            candidate = ':'.join(norm(row[key]) for key in keys)
+            if candidate == norm(pk):
+                return row
+        return None
 
     def check_literal_values(self):
         check_id, title = 'API-04', '"false", empty text and missing values are not coerced'
@@ -388,11 +490,13 @@ class Probe:
                 'a boolean false, an empty string and an absent field)')
         problems, details = [], {}
         for probe in self.mapping['literal_probes']:
-            url = self.detail_url(probe['dataset'], probe['key'])
+            name = probe['dataset']
+            spec = self.dataset(name) or {}
+            label = f'{name}/{probe["key"]}.{probe["path"]}'
+            url = self.detail_url(name, probe['key'])
             response = self.client.get(url)
-            details[f'{probe["dataset"]}/{probe["key"]}'] = response.status
             if response.status != 200:
-                problems.append(f'{probe["dataset"]}/{probe["key"]}: HTTP {response.status}')
+                problems.append(f'{label}: HTTP {response.status}')
                 continue
             payload = response.json()
             value = payload
@@ -403,44 +507,106 @@ class Probe:
                     value = '<absent>'
                     break
             if value == '<absent>':
-                problems.append(f'{probe["dataset"]}/{probe["key"]}: field {probe["path"]} is missing')
+                problems.append(f'{label}: field is missing from the API payload')
                 continue
-            if probe.get('expect') == 'false_bool' and value is not False:
-                problems.append(f'{probe["dataset"]}/{probe["key"]}: {probe["path"]}={value!r} is not JSON false')
-            if probe.get('expect') == 'empty_str' and value != '':
-                problems.append(f'{probe["dataset"]}/{probe["key"]}: {probe["path"]}={value!r} is not an empty string')
-            if probe.get('expect') == 'null' and value is not None:
-                problems.append(f'{probe["dataset"]}/{probe["key"]}: {probe["path"]}={value!r} is not null/absent')
-            details[probe['path']] = value
+            column_type = next((c['type'] for c in self.batch.columns(spec['source'])
+                                if c['name'] == probe['path']), None) if spec.get('source') else None
+            csv_row = self.csv_row_by_pk(spec['source'], probe['key']) if spec.get('source') else None
+            if csv_row is None:
+                problems.append(f'{label}: probe key does not exist in {spec.get("source")}')
+                continue
+            raw_csv = csv_row[probe['path']]
+            expected = self.batch._convert(spec['source'], probe['path'], column_type, raw_csv) \
+                if column_type else raw_csv
+            details[label] = {'api': value, 'csv': expected, 'csv_raw': raw_csv, 'type': column_type}
+            if raw_csv == 'false':
+                if value is not False:
+                    problems.append(f'{label}: CSV "false" is exposed as {value!r} ({type(value).__name__})')
+            elif raw_csv == '':
+                if value not in ('', None):
+                    problems.append(f'{label}: empty CSV cell is exposed as {value!r}')
+                if column_type == 'str' and value != '':
+                    problems.append(f'{label}: empty string column must stay "" (got {value!r})')
+                if column_type == 'int_or_empty' and value is not None:
+                    problems.append(f'{label}: empty int_or_empty cell must be null (got {value!r})')
+            elif column_type == 'int':
+                if not isinstance(value, int) or isinstance(value, bool):
+                    problems.append(f'{label}: int column exposed as {value!r} ({type(value).__name__})')
+                elif value != expected:
+                    problems.append(f'{label}: API {value!r} != CSV {expected!r}')
+            elif column_type == 'str':
+                if not isinstance(value, str):
+                    problems.append(f'{label}: str column exposed as {type(value).__name__}')
+                elif value != expected:
+                    problems.append(f'{label}: API {value!r} != CSV {expected!r}')
         self.record(check_id, title, FAIL if problems else PASS, problems or details, requirement=self.REQUIRED)
 
     def check_integrity_failure(self):
-        check_id, title = 'API-05', 'hash/type validation failure does not keep serving a normal catalogue'
+        check_id, title = 'API-05', ('damaged or tampered batch copies never yield a pseudo-normal catalogue '
+                                     '(hash, type, missing or tampered evidence files, manifest shrinkage)')
         datasets = self.mapping.get('integrity_datasets')
         if not datasets:
             return self.not_executed(check_id, title, 'no integrity_datasets mapping (contract not delivered)')
         if self.integrity_runner is None:
             return self.not_executed(check_id, title, self.integrity_skip_reason or (
                 'launch-based check: needs --start with a startup command so the harness can restart the '
-                'server on a corrupted copy of the batch (an external --base-url cannot be corrupted safely)'))
-        observations = self.integrity_runner(datasets)
+                'server on a damaged copy of the batch'))
+        scenarios = self.mapping.get('integrity_scenarios')
+        observations = self.integrity_runner(datasets, scenarios) if scenarios else \
+            self.integrity_runner()
         problems, details = [], observations
-        for name, variants in observations.items():
-            spec = self.dataset(name) or {}
-            expected = len(self.batch.rows(spec['source'])) if spec.get('source') else None
-            for kind, result in variants.items():
-                status = result.get('status')
-                rows = result.get('rows')
-                message = json.dumps(result.get('payload'), ensure_ascii=False)[:200]
-                if status is None and not result.get('refused'):
-                    problems.append(f'{name}/{kind}: server did not become reachable on the corrupted copy')
-                elif status < 400:
-                    if rows == expected:
-                        problems.append(f'{name}/{kind}: corrupted {spec.get("source")} still served all '
-                                        f'{rows} rows with HTTP {status} (pseudo-normal catalogue)')
-                    elif not re.search(r'error|invalid|integrity|hash|mismatch|refus', message, re.I):
-                        problems.append(f'{name}/{kind}: HTTP {status} without an explicit error message '
-                                        f'({message})')
+        control = observations.get('_control_valid_copy') or {}
+        control_ok = control.get('outcome') == 'served'
+        if not control_ok:
+            # Without a working control every "refusal" below would be meaningless.
+            problems.append('control (undamaged copy) did not answer a normal read '
+                            f'(outcome={control.get("outcome")}, health={control.get("health_status")}, '
+                            f'data_status={control.get("data_status")}) — the harness cannot tell a '
+                            'refusal of damaged data from a broken request, so no scenario may pass')
+        for name, record in observations.items():
+            if name.startswith('_control'):
+                continue
+            outcome = record.get('outcome')
+            health_status = record.get('health_status')
+            if outcome == 'refused_start':
+                log = (record.get('log_tail') or '').lower()
+                if not any(word in log for word in ('integrity', 'hash', 'sha256', 'size mismatch',
+                                                    'mismatch', 'expects', 'missing', 'tamper')):
+                    problems.append(f'{name}: refused to start but the reason is unclear: '
+                                    f'{(record.get("log_tail") or "")[-160:]!r}')
+            elif outcome == 'not_ready':
+                pass
+            elif outcome == 'refused_data' and name.startswith('manifest_drops'):
+                # The shrunken manifest must be refused when it is loaded, not when a
+                # missing dataset happens to be requested later.
+                problems.append(f'{name}: service stayed ready with {record.get("datasets")} datasets '
+                                f'(health={health_status}) instead of refusing the shrunken manifest')
+            elif outcome in ('refused_data', 'served'):
+                if name.startswith('manifest_drops'):
+                    # A shrunken manifest must be refused while loading, not only when
+                    # the now-missing dataset happens to be requested.
+                    problems.append(f'{name}: service stayed ready with {record.get("datasets")} datasets '
+                                    f'(health={health_status}) instead of refusing the shrunken manifest')
+                elif outcome == 'refused_data' and control_ok:
+                    pass  # readiness is green but reading the damaged table is refused: compliant
+                elif outcome == 'served' and not control_ok:
+                    continue  # the harness control already failed; not the product's fault
+                elif name.startswith('missing_') or name.startswith('tampered_'):
+                    problems.append(f'{name}: service reported ready (health={health_status}, '
+                                    f'quarantine_entries={record.get("quarantine")}) — the missing or '
+                                    f'tampered evidence file was silently accepted')
+                elif record.get('quarantine_has_1700_for_2800'):
+                    problems.append(f'{name}: the tampered 2800 value was served as normal data')
+                else:
+                    problems.append(f'{name}: service answered HTTP 200 with a normal catalogue '
+                                    f'(health={health_status}) instead of refusing the damaged data')
+            else:
+                problems.append(f'{name}: scenario produced no usable observation')
+        for name, record in observations.items():
+            details[name] = {'outcome': record.get('outcome'), 'description': record.get('description'),
+                             'health_status': record.get('health_status'),
+                             'data_status': record.get('data_status'),
+                             'datasets': record.get('datasets'), 'quarantine': record.get('quarantine')}
         self.record(check_id, title, FAIL if problems else PASS, problems or details, requirement=self.REQUIRED)
 
     def check_quarantine_isolation(self):
@@ -539,12 +705,13 @@ class Probe:
             spec = self.dataset(dataset)
             search_param = spec.get('search_param') or self.list_params().get('q')
             url = self.list_url(dataset)
-            response = self.client.get(url, params={search_param: name, self.list_params()['page_size']: 50})
+            response = self.client.get(url, params={search_param: name, self.limit_param(): 50})
             if response.status != 200:
                 self.record(check_id, title, FAIL, f'HTTP {response.status} for search {name!r}')
                 continue
             rows = self.rows_of(response.json()) or []
-            got = sorted(norm(row.get(spec.get('id'))) for row in rows)
+            value_field = spec.get('compare_id') or spec.get('id', 'id')
+            got = sorted(norm(row.get(value_field)) for row in rows)
             expected = sorted(norm(item) for item in ids)
             problems = []
             if got != expected:
@@ -603,20 +770,23 @@ class Probe:
         if not self.mapping.get('datasets'):
             return self.not_executed(check_id, title, 'no dataset mapping supplied (contract not delivered)')
         name = next(iter(self.mapping['datasets']))
+        # Paths and parameter names only: a synthetic *file-path* value on a
+        # filtered endpoint is a different contract question (the documented
+        # endpoints take exact-column filters, not file names) and would fail a
+        # correct implementation with 400 instead of 404.
         probes = [
             ('../' * 6 + 'etc/passwd', {}),
             ('..%2f' * 6 + 'etc%2fpasswd', {}),
             ('../../data/script.fls', {}),
             ('%2e%2e%2f%2e%2e%2fdata%2fscript.fls', {}),
-            (name, {'file': '/etc/passwd'}),
-            (name, {'path': '../../data/script.fls'}),
             (name, {'dataset': '../../data/script.fls'}),
+            (name, {'dataset_path': '/etc/passwd'}),
         ]
         problems, details = [], {}
         for dataset, extra in probes:
             url = self.list_url(name).replace(
                 (self.dataset(name) or {}).get('api_name', name), urllib.parse.quote(str(dataset), safe=''))
-            response = self.client.get(url, params={self.list_params()['page_size']: 5, **extra})
+            response = self.client.get(url, params={self.limit_param(): 5, **extra})
             details[str(dataset) + str(extra)] = response.status
             body = response.body
             if response.status < 400:
@@ -653,9 +823,18 @@ class Probe:
         check_id, title = 'API-14', 'no edit/save/upload/publish endpoints exist'
         if not self.mapping.get('datasets'):
             return self.not_executed(check_id, title, 'no dataset mapping supplied (contract not delivered)')
+        problems, details = [], {}
+        # 1) Authoritative: the routes the server actually exposes (OpenAPI).
+        routes = self.fetch_openapi_routes()
+        details['openapi_routes'] = routes or 'unavailable'
+        if routes:
+            mutating = sorted(name for name, methods in routes.items()
+                              if {m.upper() for m in methods} & {'POST', 'PUT', 'PATCH', 'DELETE'})
+            if mutating:
+                problems.append(f'the running server exposes mutating routes: {mutating}')
+        # 2) Empirical: probe mutation-shaped paths with a real request.
         suspicious = ['save', 'edit', 'update', 'upload', 'publish', 'import', 'commit', 'write',
                       'delete', 'delete_row', 'create', 'reload', 'refresh', 'rebuild', 'export']
-        problems, details = [], {}
         for name in suspicious:
             for url in (f'{self.contract.base_path.rstrip("/")}/{name}',
                         f'{self.list_url(next(iter(self.mapping["datasets"])))}/{name}'):
@@ -664,20 +843,41 @@ class Probe:
                 details[f'POST {url}'] = response.status
                 if response.status < 400:
                     problems.append(f'POST {url} accepted with HTTP {response.status}')
-        documented = [entry for entry in self.contract.endpoints
-                      if entry[0] in ('POST', 'PUT', 'PATCH', 'DELETE')]
+        # 3) Documented routes: only real path-shaped entries count. Prose that
+        #    *forbids* writes ("无任何 POST / PUT / PATCH / DELETE 变更接口") is not
+        #    a route declaration.
+        documented = [entry for entry in self.contract.mutating_route_declarations()]
+        details['contract_mutating_routes'] = documented
         if documented:
-            problems.append(f'the contract itself documents mutating endpoints: {documented}')
+            problems.append(f'the contract declares mutating endpoints: {documented}')
         scanned = self.scan_source_for_mutating_routes()
         details['static_routes'] = scanned
         if scanned.get('mutating_routes'):
             problems.append(f'mutating routes found in the implementation source: {scanned["mutating_routes"]}')
         self.record(check_id, title, FAIL if problems else PASS, problems or details, requirement=self.REQUIRED)
 
+    def fetch_openapi_routes(self) -> dict | None:
+        """Real route table from the running service (FastAPI et al.), if any."""
+        for path in self.mapping.get('openapi_paths', ['/openapi.json', 'openapi.json']):
+            response = self.client.get(path)
+            if response.status != 200:
+                continue
+            payload = response.json()
+            if isinstance(payload, dict) and isinstance(payload.get('paths'), dict):
+                return {name: sorted(methods) for name, methods in payload['paths'].items()}
+        return None
+
+    SKIP_DIRS = ('node_modules', '.git', 'dist', 'build', '__pycache__', '.venv')
+
     def scan_source_for_mutating_routes(self) -> dict:
-        """Best-effort static scan of Agent H's implementation for mutating routes."""
+        """Best-effort static scan of Agent H's implementation for mutating routes.
+
+        Third-party and generated trees are skipped: a route declaration only
+        counts inside the delivered product source.
+        """
         roots = [path for path in (
             repo_root() / 'server/apps', repo_root() / 'server/src/review', repo_root() / 'server/src/review_api',
+            repo_root() / 'server/src/mxsj_catalog',
         ) if path.exists()]
         pattern = re.compile(
             r'(\.(?:post|put|patch|delete)\s*\(|methods\s*=\s*\[[^\]]*[\'"](?:POST|PUT|PATCH|DELETE)|'
@@ -686,6 +886,8 @@ class Probe:
         files = 0
         for root in roots:
             for path in sorted(root.rglob('*.py')) + sorted(root.rglob('*.js')) + sorted(root.rglob('*.ts')):
+                if not path.is_file() or any(part in self.SKIP_DIRS for part in path.parts):
+                    continue
                 files += 1
                 for number, line in enumerate(path.read_text(encoding='utf-8', errors='replace').splitlines(), 1):
                     if pattern.search(line):
@@ -695,13 +897,22 @@ class Probe:
                 'mutating_routes': hits}
 
     def check_proxy_safety(self):
-        check_id, title = 'API-15', 'page works behind the preview proxy and never targets sandbox localhost'
-        page = self.mapping.get('page_url') or self.contract.base_path
+        check_id, title = 'API-15', ('pages and API work through the preview proxy: relative URLs only, '
+                                     'no sandbox host in the browser payload')
+        web_url = self.mapping.get('web_url') or self.web_url
+        if not web_url:
+            return self.not_executed(
+                check_id, title,
+                'no --web-url supplied and the operation map declares none: the browser-side origin '
+                '(Vite dev server / preview) was not exercised')
+        web = Client(web_url, timeout=self.client.timeout)
+        page = self.mapping.get('page_url') or '/'
         problems, details = [], {}
-        response = self.client.get(page)
+        response = web.get(page)
         details['page_status'] = response.status
+        details['content_type'] = response.headers.get('Content-Type')
         if response.status != 200:
-            problems.append(f'page {page} returned HTTP {response.status}')
+            problems.append(f'page {web_url}{page} returned HTTP {response.status}')
         body = response.text
         for needle in ('localhost', '127.0.0.1', '0.0.0.0'):
             if needle in body:
@@ -711,18 +922,87 @@ class Probe:
         for asset in assets:
             if re.match(r'^https?://(localhost|127\.0\.0\.1|0\.0\.0\.0)', asset):
                 problems.append(f'absolute sandbox URL in page asset: {asset}')
+        details['assets'] = assets[:10]
+        # The proxied API call the page itself makes must work through this origin.
+        api_path = self.mapping.get('list_path', '').format(dataset='items')
+        proxied = web.get(api_path, params={self.limit_param(): 1})
+        details['proxied_api_status'] = proxied.status
+        if proxied.status != 200:
+            problems.append(f'the web origin does not proxy {api_path} (HTTP {proxied.status}); the page '
+                            'would receive no data')
+        else:
+            payload = proxied.json()
+            if not isinstance(payload, dict) or self.rows_of(payload) is None:
+                problems.append(f'{api_path} through the web origin did not return the documented envelope')
+            elif len(self.rows_of(payload)) != 1:
+                problems.append(f'{api_path}?limit=1 through the proxy returned '
+                                f'{len(self.rows_of(payload))} rows')
+        # Preview proxies forward a foreign Host/Origin; the app must not reject it.
         if response.status == 200:
-            proxied = self.client.get(page, headers={
-                'Host': 'review-preview.example.invalid',
+            host_override = web.get(page, headers={
+                'Host': 'review-preview.e2b.app',
                 'Origin': 'https://review-preview.e2b.app',
                 'X-Forwarded-Proto': 'https',
             })
-            details['host_override_status'] = proxied.status
-            if proxied.status >= 400:
-                problems.append(f'the app rejects a proxied Host/Origin with HTTP {proxied.status}')
-        self.record(check_id, title, FAIL if problems else PASS, problems or details, requirement=self.REQUIRED)
+            details['host_override_status'] = host_override.status
+            if host_override.status >= 400:
+                problems.append(f'the web origin rejects a proxied Host/Origin with HTTP '
+                                f'{host_override.status}')
+
+        # HTTP 200 on the HTML is not "the page works". Ask the front end itself
+        # which endpoints it requests (src/api/contract.ts) and call them through
+        # the same origin. Findings here are *front-end* defects: they are reported
+        # as W-12/W-13/W-14 in the web stage, and repeated only as evidence — the
+        # verdict of API-15 stays about proxy safety and page reachability, so a
+        # front-end contract mismatch is never filed as an API defect.
+        app_dir = Path(self.mapping.get('web_app_dir', 'server/apps/review_web'))
+        if not app_dir.is_absolute():
+            app_dir = repo_root() / app_dir
+        node_probe = Path(__file__).with_name('web_origin_probe.mjs')
+        if app_dir.is_dir() and node_probe.is_file():
+            command = ['node', '--experimental-strip-types', str(node_probe),
+                       '--app-dir', str(app_dir), '--origin', web_url,
+                       '--out', str(self.out_dir / 'web_origin_probe.json')]
+            try:
+                completed = subprocess.run(command, capture_output=True, text=True, timeout=300)
+                details['frontend_probe_returncode'] = completed.returncode
+                details['frontend_probe_report'] = str(self.out_dir / 'web_origin_probe.json')
+                if completed.returncode != 0:
+                    payload = json.loads((self.out_dir / 'web_origin_probe.json').read_text(encoding='utf-8'))
+                    details['frontend_contract_problems'] = [
+                        {'check': c['check'], 'detail': str(c['detail'])[:400]}
+                        for c in payload['checks'] if c['status'] == 'fail']
+                    details['frontend_problems_note'] = (
+                        'these are front-end (Agent I) contract mismatches; they are reported as '
+                        'W-12/W-13/W-14 in phase3_web_runtime, and are listed here as evidence only')
+                else:
+                    payload = json.loads((self.out_dir / 'web_origin_probe.json').read_text(encoding='utf-8'))
+                    details['frontend_checks'] = {c['check']: c['status'] for c in payload['checks']}
+            except Exception as exc:  # noqa: BLE001 - acceptance report
+                problems.append(f'the front-end contract probe could not be run: {exc}')
+        else:
+            details['frontend_probe'] = 'not available (front end or node probe missing)'
+        self.record(check_id, title, FAIL if problems else PASS, problems or details,
+                    requirement=self.REQUIRED)
 
     # -- driver ----------------------------------------------------------
+    CHECK_IDS = {
+        'check_pagination': 'API-01',
+        'check_search_and_exact_filter': 'API-02',
+        'check_invalid_parameters': 'API-03',
+        'check_literal_values': 'API-04',
+        'check_integrity_failure': 'API-05',
+        'check_quarantine_isolation': 'API-06',
+        'check_2800_not_1700': 'API-07',
+        'check_missing_aptitudes': 'API-08',
+        'check_ambiguous_names': 'API-09/API-10',
+        'check_npc_keys': 'API-11',
+        'check_traversal': 'API-12',
+        'check_read_only': 'API-13',
+        'check_no_mutation_endpoints': 'API-14',
+        'check_proxy_safety': 'API-15',
+    }
+
     def run(self) -> dict:
         for check in (self.check_pagination,
                       self.check_search_and_exact_filter,
@@ -741,9 +1021,11 @@ class Probe:
             try:
                 check()
             except ConnectionError as exc:
-                self.record(check.__name__, check.__name__, NOT_EXECUTED, f'server unreachable: {exc}')
+                self.record(self.CHECK_IDS.get(check.__name__, check.__name__), check.__name__,
+                            NOT_EXECUTED, f'server unreachable: {exc}')
             except Exception as exc:  # noqa: BLE001 - acceptance report
-                self.record(check.__name__, check.__name__, FAIL, f'{type(exc).__name__}: {exc}')
+                self.record(self.CHECK_IDS.get(check.__name__, check.__name__), check.__name__,
+                            FAIL, f'acceptance harness error: {type(exc).__name__}: {exc}')
         failed = [r for r in self.results if r['status'] == FAIL]
         executed = [r for r in self.results if r['status'] in (PASS, FAIL)]
         missing = [r for r in self.results if r['status'] == NOT_EXECUTED]
@@ -828,17 +1110,101 @@ class StartedServer:
 
 
 # --------------------------------------------------------------------------
-class IntegrityRunner:
-    """Restart the candidate server on deliberately corrupted copies of the batch.
+class IntegrityScenario:
+    """One corrupted/missing-file scenario to run against the delivered service."""
 
-    Variants: a single byte flip inside the CSV (hash mismatch) and a type
-    corruption in the id column (type/contract mismatch). Both copies are
-    scratch copies; the committed batch is never touched.
+    def __init__(self, name: str, description: str, *, remove: str | None = None,
+                 corrupt: str | None = None, target: str | None = None,
+                 manifest_drop: str | None = None):
+        self.name = name
+        self.description = description
+        self.remove = remove
+        self.corrupt = corrupt
+        self.target = target
+        self.manifest_drop = manifest_drop
+
+    def apply(self, batch_dir: Path) -> None:
+        import csv as _csv
+        if self.remove:
+            (batch_dir / self.remove).unlink()
+        if self.corrupt and self.target:
+            path = batch_dir / self.target
+            data = bytearray(path.read_bytes())
+            if self.corrupt == 'flip_byte':
+                index = data.find(b',') + 1
+                while index < len(data) and data[index:index + 1] in (b'"', b' '):
+                    index += 1
+                data[index] = ord('X') if data[index] != ord('X') else ord('Y')
+            elif self.corrupt == 'bad_int':
+                text = data.decode('utf-8')
+                lines = text.split('\n')
+                fields = next(_csv.reader(io.StringIO(lines[1])))
+                fields[0] = 'not-an-integer'
+                lines[1] = '"' + '","'.join(fields) + '"'
+                data = bytearray('\n'.join(lines).encode('utf-8'))
+            elif self.corrupt == 'tamper_quarantine':
+                lines = data.decode('utf-8').splitlines()
+                tampered = []
+                for line in lines:
+                    item = json.loads(line)
+                    if item.get('record_key') == 2800:
+                        value = item['value_under_applied_profile']
+                        pairs = value['dict']
+                        for pair in pairs:
+                            key = pair[0]
+                            if 'bytes_hex' in key and bytes.fromhex(key['bytes_hex']).decode('cp950') == '法力資質':
+                                pair[1] = 1700
+                        item['reasons'] = ['tampered_by_acceptance_harness']
+                    tampered.append(json.dumps(item, ensure_ascii=False, sort_keys=True))
+                data = bytearray(('\n'.join(tampered) + '\n').encode('utf-8'))
+            else:
+                raise ValueError(f'unknown corruption {self.corrupt!r}')
+            path.write_bytes(bytes(data))
+        if self.manifest_drop:
+            manifest_path = batch_dir / 'manifest.json'
+            manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+            manifest['files'].pop(self.manifest_drop, None)
+            manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True),
+                                     encoding='utf-8')
+
+
+DEFAULT_INTEGRITY_SCENARIOS = (
+    IntegrityScenario('csv_hash_corruption', 'one byte changed in items.csv (size and sha256 break)',
+                      corrupt='flip_byte', target='items.csv'),
+    IntegrityScenario('csv_type_corruption', 'a non-numeric value in the int column client_shape_id',
+                      corrupt='bad_int', target='items.csv'),
+    IntegrityScenario('missing_quarantine_file', 'quarantine.jsonl deleted',
+                      remove='quarantine.jsonl'),
+    IntegrityScenario('missing_validation_file', 'validation.json deleted', remove='validation.json'),
+    IntegrityScenario('missing_overwrite_evidence', 'overwrite_evidence.jsonl deleted',
+                      remove='overwrite_evidence.jsonl'),
+    IntegrityScenario('missing_provenance_file', 'maps_npcs/provenance.json deleted',
+                      remove='maps_npcs/provenance.json'),
+    IntegrityScenario('tampered_quarantine_no_hash_update',
+                      'quarantine.jsonl content changed without updating manifest hashes',
+                      corrupt='tamper_quarantine', target='quarantine.jsonl'),
+    IntegrityScenario('manifest_drops_items_dataset',
+                      'manifest.json no longer declares items.csv (16 datasets left)',
+                      manifest_drop='items.csv'),
+)
+
+
+class IntegrityRunner:
+    """Restart the candidate service on scratch copies that are damaged.
+
+    Every scenario works on a throwaway copy; the committed batch is never
+    touched. Outcomes are classified as:
+
+    * ``refused_start``  - the process exits with an integrity/type error
+    * ``not_ready``      - the service answers, but readiness reports a failure
+    * ``refused_data``   - readiness is green but the damaged table is refused with
+      an explicit error status when it is actually read
+    * ``served``         - the service answers HTTP 200 with a normal catalogue
     """
 
     def __init__(self, command: str, env: dict, dataset_root_env: str, base_path: str,
                  mapping: dict, scratch: Path, ready_path: str, source_dir: Path,
-                 timeout: float = 30.0):
+                 timeout: float = 45.0):
         self.command = command
         self.env = env
         self.dataset_root_env = dataset_root_env
@@ -849,68 +1215,113 @@ class IntegrityRunner:
         self.source_dir = Path(source_dir)
         self.timeout = timeout
 
-    def _corrupt(self, target: Path, source: str, kind: str) -> Path:
-        destination = target / kind
-        copy = write_temp_batch(destination, self.source_dir)
-        path = copy / source
-        data = bytearray(path.read_bytes())
-        if kind == 'hash':
-            index = data.find(b',') + 1
-            while index < len(data) and data[index:index + 1] in (b'"', b' '):
-                index += 1
-            data[index] = ord('X') if data[index] != ord('X') else ord('Y')
-        else:
-            text = data.decode('utf-8')
-            lines = text.split('\n')
-            fields = next(_csv_split(lines[1])) if len(lines) > 1 else []
-            if fields:
-                fields[0] = 'not-an-integer'
-                lines[1] = '"' + '","'.join(fields) + '"'
-            data = bytearray('\n'.join(lines).encode('utf-8'))
-        path.write_bytes(bytes(data))
-        return copy
+    # -- helpers ---------------------------------------------------------
+    def _query_params(self) -> dict:
+        """One small page, using the pagination style this mapping declares.
 
-    def __call__(self, datasets: list[str]) -> dict:
+        Getting this wrong would make every data request 400 and could be
+        mistaken for "the damaged data was refused", so it reads the same
+        `list_params` / `pagination` keys the rest of the probe uses.
+        """
+        spec = self.mapping.get('list_params') or {}
+        if 'offset' in spec or 'limit' in spec:
+            return {spec.get('offset', 'offset'): 0, spec.get('limit', 'limit'): 5}
+        if 'page' in spec or 'page_size' in spec:
+            return {spec.get('page', 'page'): 1, spec.get('page_size', 'page_size'): 5}
+        pagination = self.mapping.get('pagination') or {}
+        return {pagination.get('limit_param', 'limit'): 5}
+
+    def _healthy_probe(self, port: int) -> dict:
+        """Ask the running instance what it thinks its state is."""
+        client = Client(f'http://127.0.0.1:{port}')
+        result = {'health': None, 'health_status': None, 'datasets': None, 'quarantine': None}
+        try:
+            health = client.get(f'/{self.base_path}/health')
+            result['health_status'] = health.status
+            result['health'] = health.json()
+        except ConnectionError as exc:
+            return {'refused': True, 'reason': f'connection refused: {exc}'}
+        try:
+            listing = client.get(f'/{self.base_path}/datasets')
+            payload = listing.json()
+            if isinstance(payload, dict) and isinstance(payload.get('datasets'), list):
+                result['datasets'] = len(payload['datasets'])
+        except ConnectionError:
+            pass
+        datasets = self.mapping.get('datasets') or {}
+        if datasets:
+            name, spec = next(iter(datasets.items()))
+            template = self.mapping.get('list_path') or ''
+            if template:
+                try:
+                    data = client.get(template.format(dataset=spec.get('api_name', name)),
+                                      params=self._query_params())
+                    result['data_status'] = data.status
+                    result['data_url'] = template.format(dataset=spec.get('api_name', name))
+                except ConnectionError:
+                    pass
+        try:
+            quarantine = client.get(f'/{self.base_path}/quarantine')
+            payload = quarantine.json()
+            if isinstance(payload, dict) and isinstance(payload.get('records'), list):
+                result['quarantine'] = len(payload['records'])
+                values = json.dumps(payload, ensure_ascii=False)
+                result['quarantine_has_1700_for_2800'] = '"record_key": 2800' in values and '"1700"' in values
+        except ConnectionError:
+            pass
+        ready = isinstance(result['health'], dict) and str(result['health'].get('status')) == 'ready'
+        result['ready'] = ready
+        return result
+
+    def __call__(self, datasets: list[str] | None = None,
+                 scenario_names: list[str] | None = None) -> dict:
+        # `datasets` is informational (which datasets the caller cares about);
+        # `scenario_names` selects the damage scenarios to run.
+        _ = datasets
+        scenarios = [sc for sc in DEFAULT_INTEGRITY_SCENARIOS
+                     if not scenario_names or sc.name in scenario_names]
         observations: dict[str, dict] = {}
-        for name in datasets:
-            spec = self.mapping['datasets'].get(name) or {}
-            observations[name] = {}
-            if not spec.get('source'):
-                continue
-            for kind in ('hash', 'type'):
-                copy = self._corrupt(self.scratch / f'{name}-{kind}', spec['source'], kind)
-                env = dict(self.env)
-                env[self.dataset_root_env] = str(copy)
-                port = free_port()
-                command = [part.replace('{port}', str(port)) for part in self.command.split()]
-                env['PORT'] = str(port)
-                with StartedServer(command, port, env, self.scratch / f'corrupt-{kind}.log') as server:
-                    ready = server.wait(self.ready_path, timeout=self.timeout)
-                    result = {'status': None, 'rows': None, 'payload': None}
-                    if ready:
-                        client = Client(f'http://127.0.0.1:{port}')
-                        url = (spec.get('list_path') or self.mapping.get('list_path')).format(
-                            dataset=spec.get('api_name', name))
-                        try:
-                            response = client.get(url, params={'page_size': 5})
-                        except ConnectionError as exc:
-                            # Refusing to answer also prevents a pseudo-normal catalogue.
-                            observations[name][kind] = {'status': None, 'rows': 0, 'payload': str(exc),
-                                                        'refused': True}
-                            continue
-                        payload = response.json()
-                        rows = None
-                        if isinstance(payload, dict) and isinstance(payload.get('rows'), list):
-                            rows = len(payload['rows'])
-                        result = {'status': response.status, 'rows': rows, 'payload': payload}
-                    observations[name][kind] = result
+        # Control: the same data request against an *undamaged* copy. Without it a
+        # wrongly-formed request (e.g. a wrong pagination parameter) would look
+        # like "the damaged data was refused" and mask a real defect.
+        observations['_control_valid_copy'] = self._observe('_control_valid_copy', None)
+        for scenario in scenarios:
+            batch_dir = self.scratch / f'scenario-{scenario.name}' / 'batch'
+            write_temp_batch(batch_dir, self.source_dir)
+            scenario.apply(batch_dir)
+            observations[scenario.name] = self._observe(scenario.name, scenario, batch_dir)
         return observations
 
-
-def _csv_split(line: str):
-    import csv as _csv
-    import io as _io
-    return _csv.reader(_io.StringIO(line))
+    def _observe(self, name: str, scenario, batch_dir: Path | None = None) -> dict:
+        port = free_port()
+        if batch_dir is None:
+            batch_dir = self.scratch / 'control' / 'batch'
+            write_temp_batch(batch_dir, self.source_dir)
+        env = dict(self.env)
+        env[self.dataset_root_env] = str(batch_dir)
+        env['REVIEW_BATCH_DIR'] = str(batch_dir)
+        env['PORT'] = str(port)
+        command = [part.replace('{port}', str(port)).replace('{batch_dir}', str(batch_dir))
+                   for part in self.command.split()]
+        log_path = self.scratch / f'scenario-{name}.log'
+        with StartedServer(command, port, env, log_path) as server:
+            ready = server.wait(self.ready_path, timeout=self.timeout)
+            record = {'description': getattr(scenario, 'description', 'undamaged copy (control)'),
+                      'started': ready}
+            if not ready:
+                record['outcome'] = 'refused_start'
+                record['log_tail'] = log_path.read_text(errors='replace')[-600:]
+            else:
+                probe = self._healthy_probe(port)
+                record.update(probe)
+                data_status = probe.get('data_status')
+                if not probe.get('ready'):
+                    record['outcome'] = 'not_ready'
+                elif isinstance(data_status, int) and data_status >= 400:
+                    record['outcome'] = 'refused_data'
+                else:
+                    record['outcome'] = 'served'
+            return record
 
 
 def main(argv=None) -> int:
@@ -926,6 +1337,10 @@ def main(argv=None) -> int:
     parser.add_argument('--map', type=Path, default=None, help='operation map JSON')
     parser.add_argument('--contract', type=Path, default=CONTRACT_PATH)
     parser.add_argument('--health-path', default=None, help='readiness probe path')
+    parser.add_argument('--integrity-scenarios', default=None,
+                        help='comma-separated subset of integrity scenarios to run (default: all)')
+    parser.add_argument('--web-url', default=None,
+                        help='browser-facing origin (Vite dev server / preview) for the page checks')
     parser.add_argument('--out', type=Path, default=None)
     args = parser.parse_args(argv)
 
@@ -933,6 +1348,7 @@ def main(argv=None) -> int:
     mapping = json.loads(args.map.read_text(encoding='utf-8')) if args.map else {}
 
     scratch = None
+    keep_scratch = False
     if args.start:
         scratch = Path(tempfile.mkdtemp(prefix='mxsj-review-fixture-'))
         fixture = write_temp_batch(scratch / 'batch', args.data_dir or default_batch_dir())
@@ -945,18 +1361,23 @@ def main(argv=None) -> int:
     integrity_skip_reason = None
     try:
         if args.start:
-            command = args.command or (contract.startup_commands[0] if contract.startup_commands else None)
+            # Priority: explicit CLI > operation map (acceptor-owned) > contract document.
+            command = args.command or mapping.get('startup_command') or (
+                contract.startup_commands[0] if contract.startup_commands else None)
             if not command:
                 print(json.dumps({'status': NOT_EXECUTED,
-                                  'reason': 'no startup command: pass --command or deliver API_CONTRACT.md'},
+                                  'reason': 'no startup command: pass --command, or declare startup_command '
+                                            'in the operation map / API_CONTRACT.md'},
                                  ensure_ascii=False))
                 return 3
             port = args.port or contract.port_hint or free_port()
-            command_template = command  # keeps the {port} placeholder for restart-based checks
-            command = command.replace('{port}', str(port))
+            command_template = command  # keeps {port}/{batch_dir} for restart-based checks
+            command = command.replace('{port}', str(port)).replace('{batch_dir}', str(fixture))
             env = dict(os.environ)
             env['PORT'] = str(port)
-            root_env = args.dataset_root_env or contract.dataset_root_env
+            env['REVIEW_BATCH_DIR'] = str(fixture)
+            root_env = (args.dataset_root_env or mapping.get('dataset_root_env')
+                        or contract.dataset_root_env or 'REVIEW_BATCH_DIR')
             if root_env:
                 env[root_env] = str(fixture)
             started = StartedServer(command.split(), port, env, scratch / 'server.log')
@@ -964,13 +1385,22 @@ def main(argv=None) -> int:
             health = args.health_path or (mapping.get('health_path') or 'health')
             ready_path = f'/{contract.base_path.strip("/")}/{str(health).strip("/")}'
             if not started.wait(ready_path):
+                tail = ''
+                try:
+                    tail = Path(started.log_path).read_text(errors='replace')[-1500:]
+                except OSError:
+                    pass
+                keep_scratch = True
                 print(json.dumps({'status': NOT_EXECUTED,
-                                  'reason': f'server did not become ready; see {started.log_path}',
-                                  'command': command}, ensure_ascii=False))
+                                  'reason': 'server did not become ready on a VALID batch copy; '
+                                            'the delivered startup command is not usable as documented',
+                                  'command': command,
+                                  'batch_dir_used': str(fixture),
+                                  'log_tail': tail}, ensure_ascii=False, indent=2))
                 return 4
             base_url = f'http://127.0.0.1:{port}'
             if mapping.get('integrity_datasets'):
-                if root_env:
+                if root_env or '{batch_dir}' in command_template:
                     integrity_runner = IntegrityRunner(command_template, dict(env), root_env,
                                                        contract.base_path, mapping, scratch, ready_path,
                                                        fixture)
@@ -986,13 +1416,20 @@ def main(argv=None) -> int:
                       'summary': {'total': 0, 'pass': 0, 'fail': 0, 'not_executed': 0, 'executed': 0},
                       'reason': 'no --base-url and no --start: nothing was executed'}
         else:
-            probe = Probe(Client(base_url), mapping, fixture, contract, integrity_runner=integrity_runner)
+            if args.integrity_scenarios:
+                mapping = dict(mapping)
+                mapping['integrity_scenarios'] = [name.strip() for name in
+                                                  args.integrity_scenarios.split(',') if name.strip()]
+            probe = Probe(Client(base_url), mapping, fixture, contract, integrity_runner=integrity_runner,
+                          out_dir=args.out.parent if args.out else None)
             probe.integrity_skip_reason = integrity_skip_reason
+            if args.web_url:
+                probe.web_url = args.web_url
             report = probe.run()
     finally:
         if started:
             started.__exit__(None, None, None)
-        if scratch and args.data_dir is None:
+        if scratch and args.data_dir is None and not keep_scratch:
             shutil.rmtree(scratch, ignore_errors=True)
 
     text = json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True)

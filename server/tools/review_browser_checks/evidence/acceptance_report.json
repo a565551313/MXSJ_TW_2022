@@ -1,147 +1,28 @@
 {
-  "generated_utc": "2026-10-12T01:37:20Z",
+  "environment": {
+    "browser_engine": "none available (only npm/pypi/GitHub are reachable, so no browser build can be installed)",
+    "interpreter_used": "/tmp/reviewvenv/bin/python",
+    "node": "v22.22.3",
+    "python": "3.11.2"
+  },
+  "generated_utc": "2026-10-12T03:25:49Z",
+  "note": "Generated in the integration clone where H PR#22 9f6ab439 and I PR#24 97d317e3 are merged into arena/d5a478f8-mxsj-tw-2022. Absolute /tmp paths in session/commands are the throwaway clone paths; the SHAs are the authoritative identifiers. web_origin_probe.json / web_ui_smoke.json / live_api_report.json / live_api_with_web_origin.json hold the raw evidence.",
   "outstanding_not_executed": {
-    "api": [
+    "api": [],
+    "web_runtime": [
       {
-        "check": "API-01",
-        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-        "requirement": "分页无遗漏、无意外重复、排序稳定",
-        "status": "not_executed"
-      },
-      {
-        "check": "API-02",
-        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-        "requirement": "搜索与精确过滤符合契约",
-        "status": "not_executed"
-      },
-      {
-        "check": "API-03",
-        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-        "requirement": "非法参数有明确错误，不悄悄替换",
-        "status": "not_executed"
-      },
-      {
-        "check": "API-04",
-        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-        "requirement": "\"false\"/空文本/缺失值不被错误转换",
-        "status": "not_executed"
-      },
-      {
-        "check": "API-05",
-        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-        "requirement": "哈希或类型校验失败不得继续提供伪正常目录",
-        "status": "not_executed"
-      },
-      {
-        "check": "API-06",
-        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-        "requirement": "隔离记录不进入正常列表",
-        "status": "not_executed"
-      },
-      {
-        "check": "API-07",
-        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-        "requirement": "2800 不被改成未经批准的 1700",
-        "status": "not_executed"
-      },
-      {
-        "check": "API-08",
-        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-        "requirement": "3010/4021/4022 缺失资质不补零",
-        "status": "not_executed"
-      },
-      {
-        "check": "API-09",
-        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-        "requirement": "高級命中保留 229/255",
-        "status": "not_executed"
-      },
-      {
-        "check": "API-10",
-        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-        "requirement": "終級命中保留 329/355",
-        "status": "not_executed"
-      },
-      {
-        "check": "API-11",
-        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-        "requirement": "NPC 不按 (scene_id, npcid) 误去重",
-        "status": "not_executed"
-      },
-      {
-        "check": "API-12",
-        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-        "requirement": "非法数据集/路径穿越/任意文件读取被拒绝",
-        "status": "not_executed"
-      },
-      {
-        "check": "API-13",
-        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-        "requirement": "调用方不能修改底层目录数据",
-        "status": "not_executed"
-      },
-      {
-        "check": "API-14",
-        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-        "requirement": "不存在编辑/保存/上传/发布接口",
-        "status": "not_executed"
-      },
-      {
-        "check": "API-15",
-        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-        "requirement": "预览代理安全、页面不指向沙箱 localhost",
-        "status": "not_executed"
+        "check": "U-05",
+        "detail": "layout/visual white-screen detection, screenshot evidence and a real browser console need Chrome or Firefox; this sandbox has no browser binary and only npm/pypi/GitHub are reachable, so no browser build can be downloaded",
+        "status": "not_executed",
+        "title": "real-browser-only checks"
       }
     ],
-    "web": [
-      {
-        "check": "H-01",
-        "reason": "server/apps/review_web not delivered",
-        "requirement": "API 源码不含变更类路由",
-        "status": "not_executed"
-      },
-      {
-        "check": "W-01",
-        "reason": "server/apps/review_web not delivered",
-        "requirement": "浏览器不请求沙箱 localhost/127.0.0.1",
-        "status": "not_executed"
-      },
-      {
-        "check": "W-02",
-        "reason": "server/apps/review_web not delivered",
-        "requirement": "API 不可用时不自动切换假数据",
-        "status": "not_executed"
-      },
-      {
-        "check": "W-03",
-        "reason": "server/apps/review_web not delivered",
-        "requirement": "前端不得写死固定计数",
-        "status": "not_executed"
-      },
-      {
-        "check": "W-04",
-        "reason": "server/apps/review_web not delivered",
-        "requirement": "特殊文本只展示不执行（静态半边）",
-        "status": "not_executed"
-      },
-      {
-        "check": "W-05",
-        "reason": "server/apps/review_web not delivered",
-        "requirement": "加载中/空结果/断连/错误状态（源码半边）",
-        "status": "not_executed"
-      },
-      {
-        "check": "W-06",
-        "reason": "server/apps/review_web not delivered",
-        "requirement": "网络调用使用相对 URL",
-        "status": "not_executed"
-      }
-    ]
+    "web_static": []
   },
   "repository": {
-    "branch": "arena/d5a478f8-mxsj-tw-2022",
-    "head": "5f2369066c638297cce51f73adb961e011652c52",
-    "status_short": "?? server/docs/review_browser/\n?? server/tests/review_browser_acceptance/\n?? server/tools/review_browser_checks/"
+    "branch": "integration",
+    "head": "7035708b6ad038d94283de24f7b029831103f582",
+    "status_short": "M server/tests/review_browser_acceptance/test_delivery_gate.py\n M server/tests/review_browser_acceptance/test_harness_self_check.py\n M server/tools/review_browser_checks/acceptance_runner.py\n M server/tools/review_browser_checks/conformance_negative_control.py\n M server/tools/review_browser_checks/evidence/acceptance_report.json\n M server/tools/review_browser_checks/probe_live_api.py\n M server/tools/review_browser_checks/scan_review_web.py\n?? server/tests/review_browser_acceptance/probe_live_api.py\n?? server/tests/review_browser_acceptance/test_catalog_loader_acceptance.py\n?? server/tools/review_browser_checks/evidence/live_api_report.json\n?? server/tools/review_browser_checks/evidence/live_api_with_web_origin.json\n?? server/tools/review_browser_checks/evidence/web_origin_probe.json\n?? server/tools/review_browser_checks/ops_review_api.json\n?? server/tools/review_browser_checks/review_api_launch.py\n?? server/tools/review_browser_checks/web_origin_probe.mjs\n?? server/tools/review_browser_checks/web_ui_smoke.mjs"
   },
   "required_check_inventory": {
     "api": [
@@ -206,7 +87,57 @@
         "requirement": "预览代理安全、页面不指向沙箱 localhost"
       }
     ],
-    "web": [
+    "web_runtime": [
+      {
+        "check": "U-01",
+        "requirement": "交付的前端可用自身工具链成功构建"
+      },
+      {
+        "check": "U-02",
+        "requirement": "挂载后的应用渲染出可见内容（不是白屏）"
+      },
+      {
+        "check": "U-03",
+        "requirement": "应用发出的每个请求都成功"
+      },
+      {
+        "check": "U-04",
+        "requirement": "应用加载期间没有 console 错误"
+      },
+      {
+        "check": "U-05",
+        "requirement": "仅真实浏览器可做的检查（如实标注未执行）"
+      },
+      {
+        "check": "W-10",
+        "requirement": "入口页面由 web origin 提供且资源为相对路径"
+      },
+      {
+        "check": "W-11",
+        "requirement": "入口模块可加载且不含沙箱主机"
+      },
+      {
+        "check": "W-12",
+        "requirement": "列表页拿到自己解析的 {items,total,page,page_size} 信封"
+      },
+      {
+        "check": "W-13",
+        "requirement": "概览/异常/NPC/地图页面的端点存在"
+      },
+      {
+        "check": "W-14",
+        "requirement": "详情页能取到单条记录"
+      },
+      {
+        "check": "W-15",
+        "requirement": "web origin 能把 /api 代理到复核 API"
+      },
+      {
+        "check": "W-16",
+        "requirement": "web origin 接受转发后的 Host/Origin 头"
+      }
+    ],
+    "web_static": [
       {
         "check": "H-01",
         "requirement": "API 源码不含变更类路由"
@@ -239,6 +170,31 @@
   },
   "stage": "review_tool_acceptance_ledger",
   "stages": {
+    "csv_exporter_check": {
+      "command": "/usr/bin/python3 server/tools/export_review_csv.py --check",
+      "exit_code": 0,
+      "status": "pass",
+      "summary": "",
+      "tail": [
+        "    \"pet_skill_names_have_candidates\": \"pass\",",
+        "    \"csv_round_trip\": \"pass\",",
+        "    \"map_npc_evidence_and_staging_match\": \"pass\"",
+        "  }",
+        "}"
+      ]
+    },
+    "original_architecture_suite": {
+      "command": "/usr/bin/python3 -m unittest discover -s server/tests/architecture -q",
+      "exit_code": 0,
+      "status": "pass",
+      "summary": "Ran 161 tests in 33.028s",
+      "tail": [
+        "----------------------------------------------------------------------",
+        "Ran 161 tests in 33.028s",
+        "",
+        "OK"
+      ]
+    },
     "phase1_data_baseline": {
       "checks": [
         {
@@ -564,107 +520,953 @@
       "fail": 0,
       "not_executed": 0,
       "pass": 30,
+      "review": 0,
       "status": "pass"
     },
     "phase2_live_api": {
-      "checks": [],
-      "fail": 0,
+      "checks": [
+        {
+          "check": "API-01.items",
+          "detail": {
+            "page_size_used": 250,
+            "pages": 28,
+            "rows": 6851
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "pagination is complete, duplicate-free and stably ordered"
+        },
+        {
+          "check": "API-01.pet_skills",
+          "detail": {
+            "page_size_used": 250,
+            "pages": 3,
+            "rows": 579
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "pagination is complete, duplicate-free and stably ordered"
+        },
+        {
+          "check": "API-01.pet_aptitudes",
+          "detail": {
+            "page_size_used": 250,
+            "pages": 1,
+            "rows": 131
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "pagination is complete, duplicate-free and stably ordered"
+        },
+        {
+          "check": "API-01.pet_skill_candidates",
+          "detail": {
+            "page_size_used": 250,
+            "pages": 2,
+            "rows": 458
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "pagination is complete, duplicate-free and stably ordered"
+        },
+        {
+          "check": "API-01.npcposdata_records",
+          "detail": {
+            "page_size_used": 250,
+            "pages": 6,
+            "rows": 1335
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "pagination is complete, duplicate-free and stably ordered"
+        },
+        {
+          "check": "API-01.minimapnpcpos_pos_records",
+          "detail": {
+            "page_size_used": 250,
+            "pages": 6,
+            "rows": 1344
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "pagination is complete, duplicate-free and stably ordered"
+        },
+        {
+          "check": "API-02",
+          "detail": {
+            "items": {
+              "ids": [
+                "41052"
+              ],
+              "term": "時空石"
+            }
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "search and exact filters follow the contract"
+        },
+        {
+          "check": "API-03",
+          "detail": [
+            "items: {'sort_by': 'client_shape_id', 'order': 'sideways'} accepted silently with HTTP 200 (50 rows, no explanation in the body)",
+            "pets: {'sort_by': 'client_shape_id', 'order': 'sideways'} accepted silently with HTTP 200 (50 rows, no explanation in the body)",
+            "/api/v1/review/quarantine?entry_indexx=... was accepted with HTTP 200 (4 rows) — a misspelled filter must not be ignored silently",
+            "/api/v1/review/quarantine?key=... was accepted with HTTP 200 (4 rows) — a misspelled filter must not be ignored silently",
+            "/api/v1/review/overwrites?keyy=... was accepted with HTTP 200 (9 rows) — a misspelled filter must not be ignored silently",
+            "/api/v1/review/overwrites?sort_by=... was accepted with HTTP 200 (9 rows) — a misspelled filter must not be ignored silently",
+            "/api/v1/review/batch?batch=... was accepted with HTTP 200 (? rows) — a misspelled filter must not be ignored silently",
+            "/api/v1/review/missing-aptitudes?limit=... was accepted with HTTP 200 (3 rows) — a misspelled filter must not be ignored silently",
+            "/api/v1/review/missing-aptitudes?offset=... was accepted with HTTP 200 (3 rows) — a misspelled filter must not be ignored silently"
+          ],
+          "requirement": "required",
+          "status": "fail",
+          "title": "invalid parameters produce explicit errors, never silent substitution"
+        },
+        {
+          "check": "API-04",
+          "detail": {
+            "items/11.image_mapping_explicit": {
+              "api": false,
+              "csv": false,
+              "csv_raw": "false",
+              "type": "bool"
+            },
+            "items/41052.image_mapping_explicit": {
+              "api": true,
+              "csv": true,
+              "csv_raw": "true",
+              "type": "bool"
+            },
+            "npcposdata_records/1001:0.field12": {
+              "api": null,
+              "csv": null,
+              "csv_raw": "",
+              "type": "int_or_empty"
+            },
+            "npcposdata_records/1001:0.npcid": {
+              "api": 1083,
+              "csv": 1083,
+              "csv_raw": "1083",
+              "type": "int_or_empty"
+            },
+            "npcposdata_records/1001:0.secondary_name": {
+              "api": "",
+              "csv": "",
+              "csv_raw": "",
+              "type": "str"
+            },
+            "pet_skills/101.fpneed_raw": {
+              "api": "0",
+              "csv": "0",
+              "csv_raw": "0",
+              "type": "str"
+            },
+            "pet_skills/101.skill_id": {
+              "api": 101,
+              "csv": 101,
+              "csv_raw": "101",
+              "type": "int"
+            }
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "\"false\", empty text and missing values are not coerced"
+        },
+        {
+          "check": "API-05",
+          "detail": [
+            "missing_quarantine_file: service reported ready (health=200, quarantine_entries=0) — the missing or tampered evidence file was silently accepted",
+            "missing_validation_file: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
+            "missing_overwrite_evidence: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
+            "missing_provenance_file: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
+            "tampered_quarantine_no_hash_update: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
+            "manifest_drops_items_dataset: service stayed ready with 16 datasets (health=200) instead of refusing the shrunken manifest"
+          ],
+          "requirement": "required",
+          "status": "fail",
+          "title": "damaged or tampered batch copies never yield a pseudo-normal catalogue (hash, type, missing or tampered evidence files, manifest shrinkage)"
+        },
+        {
+          "check": "API-06",
+          "detail": {
+            "items": {
+              "rows": 6851
+            },
+            "minimapnpcpos_pos_records": {
+              "rows": 1344
+            },
+            "npc_2601_vs_2804_agreement": {
+              "rows": 677
+            },
+            "npcposdata_records": {
+              "rows": 1335
+            },
+            "pet_aptitude_missing": {
+              "rows": 3
+            },
+            "pet_aptitudes": {
+              "rows": 131
+            },
+            "pet_required_skills": {
+              "rows": 26
+            },
+            "pet_skill_candidates": {
+              "rows": 458
+            },
+            "pet_skill_name_matches": {
+              "rows": 145
+            },
+            "pet_skill_overwrites": {
+              "rows": 9
+            },
+            "pet_skills": {
+              "rows": 579
+            },
+            "pets": {
+              "rows": 135
+            }
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "quarantined records never enter the normal lists"
+        },
+        {
+          "check": "API-07",
+          "detail": {
+            "detail_2800": 404
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "aptitude 2800 is never rewritten to the unapproved 1700"
+        },
+        {
+          "check": "API-08",
+          "detail": {
+            "pet_aptitudes": {
+              "rows": 131
+            }
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "missing aptitudes (3010/4021/4022) are not zero-filled"
+        },
+        {
+          "check": "API-09",
+          "detail": {
+            "ids": [
+              "229",
+              "255"
+            ]
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "same-name skill 高級命中 keeps every candidate id [229, 255]"
+        },
+        {
+          "check": "API-10",
+          "detail": {
+            "ids": [
+              "329",
+              "355"
+            ]
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "same-name skill 終級命中 keeps every candidate id [329, 355]"
+        },
+        {
+          "check": "API-11",
+          "detail": {
+            "maps_npcs/minimapnpcpos_pos_records.csv": {
+              "csv_rows": 1344,
+              "duplicate_groups": 130,
+              "pages": 6,
+              "rows": 1344,
+              "zero_id_rows": 631
+            },
+            "maps_npcs/npcposdata_records.csv": {
+              "csv_rows": 1335,
+              "duplicate_groups": 131,
+              "pages": 6,
+              "rows": 1335,
+              "zero_id_rows": 632
+            }
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "NPC records are not deduplicated by (scene_id, npcid)"
+        },
+        {
+          "check": "API-12",
+          "detail": {
+            "%2e%2e%2f%2e%2e%2fdata%2fscript.fls{}": 404,
+            "..%2f..%2f..%2f..%2f..%2f..%2fetc%2fpasswd{}": 404,
+            "../../../../../../etc/passwd{}": 404,
+            "../../data/script.fls{}": 404,
+            "items{'dataset': '../../data/script.fls'}": 400,
+            "items{'dataset_path': '/etc/passwd'}": 400
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "illegal datasets, path traversal and arbitrary file reads are refused"
+        },
+        {
+          "check": "API-13",
+          "detail": {
+            "DELETE /api/v1/review/datasets/items/records": 405,
+            "DELETE /api/v1/review/datasets/items/records/11": 405,
+            "PATCH /api/v1/review/datasets/items/records": 405,
+            "PATCH /api/v1/review/datasets/items/records/11": 405,
+            "POST /api/v1/review/datasets/items/records": 405,
+            "POST /api/v1/review/datasets/items/records/11": 405,
+            "PUT /api/v1/review/datasets/items/records": 405,
+            "PUT /api/v1/review/datasets/items/records/11": 405
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "callers cannot modify the underlying catalogue"
+        },
+        {
+          "check": "API-14",
+          "detail": {
+            "POST /api/v1/review/commit": 404,
+            "POST /api/v1/review/create": 404,
+            "POST /api/v1/review/datasets/items/records/commit": 405,
+            "POST /api/v1/review/datasets/items/records/create": 405,
+            "POST /api/v1/review/datasets/items/records/delete": 405,
+            "POST /api/v1/review/datasets/items/records/delete_row": 405,
+            "POST /api/v1/review/datasets/items/records/edit": 405,
+            "POST /api/v1/review/datasets/items/records/export": 405,
+            "POST /api/v1/review/datasets/items/records/import": 405,
+            "POST /api/v1/review/datasets/items/records/publish": 405,
+            "POST /api/v1/review/datasets/items/records/rebuild": 405,
+            "POST /api/v1/review/datasets/items/records/refresh": 405,
+            "POST /api/v1/review/datasets/items/records/reload": 405,
+            "POST /api/v1/review/datasets/items/records/save": 405,
+            "POST /api/v1/review/datasets/items/records/update": 405,
+            "POST /api/v1/review/datasets/items/records/upload": 405,
+            "POST /api/v1/review/datasets/items/records/write": 405,
+            "POST /api/v1/review/delete": 404,
+            "POST /api/v1/review/delete_row": 404,
+            "POST /api/v1/review/edit": 404,
+            "POST /api/v1/review/export": 404,
+            "POST /api/v1/review/import": 404,
+            "POST /api/v1/review/publish": 404,
+            "POST /api/v1/review/rebuild": 404,
+            "POST /api/v1/review/refresh": 404,
+            "POST /api/v1/review/reload": 404,
+            "POST /api/v1/review/save": 404,
+            "POST /api/v1/review/update": 404,
+            "POST /api/v1/review/upload": 404,
+            "POST /api/v1/review/write": 404,
+            "contract_mutating_routes": [],
+            "openapi_routes": {
+              "/api/v1/review/ambiguous-skills": [
+                "get"
+              ],
+              "/api/v1/review/batch": [
+                "get"
+              ],
+              "/api/v1/review/datasets": [
+                "get"
+              ],
+              "/api/v1/review/datasets/{dataset_id}": [
+                "get"
+              ],
+              "/api/v1/review/datasets/{dataset_id}/records": [
+                "get"
+              ],
+              "/api/v1/review/datasets/{dataset_id}/records/{record_id}": [
+                "get"
+              ],
+              "/api/v1/review/health": [
+                "get"
+              ],
+              "/api/v1/review/missing-aptitudes": [
+                "get"
+              ],
+              "/api/v1/review/overwrites": [
+                "get"
+              ],
+              "/api/v1/review/quarantine": [
+                "get"
+              ]
+            },
+            "static_routes": {
+              "files": 29,
+              "mutating_routes": [],
+              "roots": [
+                "server/apps",
+                "server/src/mxsj_catalog"
+              ]
+            }
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "no edit/save/upload/publish endpoints exist"
+        },
+        {
+          "check": "API-15",
+          "detail": {
+            "assets": [
+              "/@vite/client",
+              "/src/main.tsx"
+            ],
+            "content_type": "text/html",
+            "frontend_contract_problems": [
+              {
+                "check": "W-12",
+                "detail": "['items (/api/v1/review/items?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])', 'pets (/api/v1/review/pets?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])', 'skills (/api/v1/review/skills?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])']"
+              },
+              {
+                "check": "W-13",
+                "detail": "['anomalies (/api/v1/review/anomalies): HTTP 404', 'mapDatasets (/api/v1/review/maps/datasets): HTTP 404', 'npcs (/api/v1/review/npcs?source=2601&page=1&page_size=25): HTTP 404', 'npcAgreement (/api/v1/review/npcs/agreement?page=1&page_size=25): HTTP 404']"
+              },
+              {
+                "check": "W-14",
+                "detail": "['item detail (/api/v1/review/items/11): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])', 'pet detail (/api/v1/review/pets/1010): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])', 'skill detail (/api/v1/review/skills/101): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])']"
+              }
+            ],
+            "frontend_probe_report": "/tmp/integ/server/tools/review_browser_checks/evidence/web_origin_probe.json",
+            "frontend_probe_returncode": 1,
+            "frontend_problems_note": "these are front-end (Agent I) contract mismatches; they are reported as W-12/W-13/W-14 in phase3_web_runtime, and are listed here as evidence only",
+            "host_override_status": 200,
+            "page_status": 200,
+            "proxied_api_status": 200
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "pages and API work through the preview proxy: relative URLs only, no sandbox host in the browser payload"
+        }
+      ],
+      "fail": 2,
       "not_executed": 0,
-      "pass": 0,
-      "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
-      "status": "not_executed"
+      "pass": 18,
+      "reason": null,
+      "review": 0,
+      "status": "fail"
     },
     "phase3_static_page": {
       "checks": [
         {
           "check": "W-00",
-          "detail": "no browser-facing file found under ['server/apps/review_web']",
-          "status": "not_executed",
+          "detail": {
+            "by_kind": {
+              "config": 1,
+              "fixture": 2,
+              "product": 29,
+              "test": 15
+            },
+            "classified": {
+              "server/apps/review_web/fixtures/contractHandler.mjs": "fixture",
+              "server/apps/review_web/fixtures/serve-fixture-api.mjs": "fixture",
+              "server/apps/review_web/index.html": "product",
+              "server/apps/review_web/src/App.test.tsx": "test",
+              "server/apps/review_web/src/App.tsx": "product",
+              "server/apps/review_web/src/api/client.test.ts": "test",
+              "server/apps/review_web/src/api/client.ts": "product",
+              "server/apps/review_web/src/api/contract.ts": "product",
+              "server/apps/review_web/src/api/types.ts": "product",
+              "server/apps/review_web/src/components/AsyncSection.tsx": "product",
+              "server/apps/review_web/src/components/Badges.tsx": "product",
+              "server/apps/review_web/src/components/ByteHexView.tsx": "product",
+              "server/apps/review_web/src/components/Controls.tsx": "product",
+              "server/apps/review_web/src/components/DataTable.tsx": "product",
+              "server/apps/review_web/src/components/InvariantCheck.tsx": "product",
+              "server/apps/review_web/src/components/KeyValue.tsx": "product",
+              "server/apps/review_web/src/components/Notices.tsx": "product",
+              "server/apps/review_web/src/components/RawJsonView.tsx": "product",
+              "server/apps/review_web/src/components/SafeText.test.tsx": "test",
+              "server/apps/review_web/src/components/SafeText.tsx": "product",
+              "server/apps/review_web/src/hooks/useApiResource.ts": "product",
+              "server/apps/review_web/src/hooks/useDebouncedValue.ts": "product",
+              "server/apps/review_web/src/lib/display.ts": "product",
+              "server/apps/review_web/src/lib/hex.test.ts": "test",
+              "server/apps/review_web/src/lib/hex.ts": "product",
+              "server/apps/review_web/src/lib/invariants.test.ts": "test",
+              "server/apps/review_web/src/lib/invariants.ts": "product",
+              "server/apps/review_web/src/lib/router.ts": "product",
+              "server/apps/review_web/src/lib/runtimeMode.ts": "product",
+              "server/apps/review_web/src/main.tsx": "product",
+              "server/apps/review_web/src/pages/AnomaliesPage.test.tsx": "test",
+              "server/apps/review_web/src/pages/AnomaliesPage.tsx": "product",
+              "server/apps/review_web/src/pages/ItemsPage.test.tsx": "test",
+              "server/apps/review_web/src/pages/ItemsPage.tsx": "product",
+              "server/apps/review_web/src/pages/MapsNpcsPage.test.tsx": "test",
+              "server/apps/review_web/src/pages/MapsNpcsPage.tsx": "product",
+              "server/apps/review_web/src/pages/OverviewPage.test.tsx": "test",
+              "server/apps/review_web/src/pages/OverviewPage.tsx": "product",
+              "server/apps/review_web/src/pages/PetsPage.test.tsx": "test",
+              "server/apps/review_web/src/pages/PetsPage.tsx": "product"
+            },
+            "files": 47
+          },
+          "status": "pass",
           "title": "review web application delivered"
         },
         {
           "check": "W-01",
-          "detail": "web application not delivered",
-          "status": "not_executed",
-          "title": "no sandbox localhost references"
+          "detail": {
+            "leads": [],
+            "server/apps/review_web/index.html": "scanned",
+            "server/apps/review_web/src/App.tsx": "scanned",
+            "server/apps/review_web/src/api/client.ts": "scanned",
+            "server/apps/review_web/src/api/contract.ts": "scanned",
+            "server/apps/review_web/src/api/types.ts": "scanned",
+            "server/apps/review_web/src/components/AsyncSection.tsx": "scanned",
+            "server/apps/review_web/src/components/Badges.tsx": "scanned",
+            "server/apps/review_web/src/components/ByteHexView.tsx": "scanned",
+            "server/apps/review_web/src/components/Controls.tsx": "scanned",
+            "server/apps/review_web/src/components/DataTable.tsx": "scanned",
+            "server/apps/review_web/src/components/InvariantCheck.tsx": "scanned",
+            "server/apps/review_web/src/components/KeyValue.tsx": "scanned",
+            "server/apps/review_web/src/components/Notices.tsx": "scanned",
+            "server/apps/review_web/src/components/RawJsonView.tsx": "scanned",
+            "server/apps/review_web/src/components/SafeText.tsx": "scanned",
+            "server/apps/review_web/src/hooks/useApiResource.ts": "scanned",
+            "server/apps/review_web/src/hooks/useDebouncedValue.ts": "scanned",
+            "server/apps/review_web/src/lib/display.ts": "scanned",
+            "server/apps/review_web/src/lib/hex.ts": "scanned",
+            "server/apps/review_web/src/lib/invariants.ts": "scanned",
+            "server/apps/review_web/src/lib/router.ts": "scanned",
+            "server/apps/review_web/src/lib/runtimeMode.ts": "scanned",
+            "server/apps/review_web/src/main.tsx": "scanned",
+            "server/apps/review_web/src/pages/AnomaliesPage.tsx": "scanned",
+            "server/apps/review_web/src/pages/ItemsPage.tsx": "scanned",
+            "server/apps/review_web/src/pages/MapsNpcsPage.tsx": "scanned",
+            "server/apps/review_web/src/pages/OverviewPage.tsx": "scanned",
+            "server/apps/review_web/src/pages/PetsPage.tsx": "scanned",
+            "server/apps/review_web/src/pages/SkillsPage.tsx": "scanned",
+            "violations": []
+          },
+          "status": "pass",
+          "title": "no browser request to a sandbox host (server proxy config is not a violation)"
         },
         {
           "check": "W-02",
-          "detail": "web application not delivered",
-          "status": "not_executed",
-          "title": "no mock/fake data fallback"
+          "detail": {
+            "leads": [],
+            "note": "fixture mode gated by an explicit build-time flag is allowed; a data fallback after a failed request is a violation",
+            "opt_in_fixture_mode": true,
+            "product_files": 29,
+            "violations": []
+          },
+          "status": "pass",
+          "title": "no fixture/fallback data path in product code (tests and opt-in fixture mode excluded)"
         },
         {
           "check": "W-03",
-          "detail": "web application not delivered",
-          "status": "not_executed",
-          "title": "baseline counts are not hardcoded"
+          "detail": {
+            "counts_watched": [
+              "131",
+              "135",
+              "141",
+              "143",
+              "145",
+              "458",
+              "579",
+              "6851"
+            ],
+            "leads": [],
+            "product_files": 29,
+            "violations": []
+          },
+          "status": "pass",
+          "title": "frozen baseline counts are not hardcoded in product code (tests excluded)"
         },
         {
           "check": "W-04",
-          "detail": "web application not delivered",
-          "status": "not_executed",
-          "title": "no unescaped HTML injection sink"
+          "detail": {
+            "leads": [],
+            "sinks_watched": [
+              "react_raw_html",
+              "inner_html_assignment",
+              "outer_html_assignment",
+              "insert_adjacent_html",
+              "document_write",
+              "eval",
+              "function_constructor",
+              "string_timeout",
+              "vue_v_html"
+            ],
+            "violations": []
+          },
+          "status": "pass",
+          "title": "no unsafe HTML/script sink in product code (guard comments and negative tests excluded)"
         },
         {
           "check": "W-05",
-          "detail": "web application not delivered",
-          "status": "not_executed",
-          "title": "loading/empty/error states handled"
+          "detail": {
+            "leads": [],
+            "missing_keywords": [
+              "offline",
+              "連線",
+              "錯誤"
+            ],
+            "product_files": 29,
+            "violations": []
+          },
+          "status": "pass",
+          "title": "loading/empty/error states represented in product code"
         },
         {
           "check": "W-06",
-          "detail": "web application not delivered",
-          "status": "not_executed",
-          "title": "relative API URLs"
+          "detail": {
+            "leads": [],
+            "product_files": 29,
+            "violations": []
+          },
+          "status": "pass",
+          "title": "relative API URLs only in browser-facing code"
+        },
+        {
+          "check": "H-01",
+          "detail": {
+            "api_files": 11,
+            "leads": [],
+            "routes_checked_live": "API-14 probes the running service via OpenAPI and real requests",
+            "violations": []
+          },
+          "status": "pass",
+          "title": "API source declares no mutating routes"
         }
       ],
       "fail": 0,
-      "not_executed": 7,
-      "pass": 0,
-      "status": "not_executed"
+      "not_executed": 0,
+      "pass": 8,
+      "result_meaning": "no violation and no lead",
+      "review": 0,
+      "status": "pass"
+    },
+    "phase3_web_runtime": {
+      "api15": {
+        "check": "API-15",
+        "detail": {
+          "assets": [
+            "/@vite/client",
+            "/src/main.tsx"
+          ],
+          "content_type": "text/html",
+          "frontend_contract_problems": [
+            {
+              "check": "W-12",
+              "detail": "['items (/api/v1/review/items?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])', 'pets (/api/v1/review/pets?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])', 'skills (/api/v1/review/skills?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])']"
+            },
+            {
+              "check": "W-13",
+              "detail": "['anomalies (/api/v1/review/anomalies): HTTP 404', 'mapDatasets (/api/v1/review/maps/datasets): HTTP 404', 'npcs (/api/v1/review/npcs?source=2601&page=1&page_size=25): HTTP 404', 'npcAgreement (/api/v1/review/npcs/agreement?page=1&page_size=25): HTTP 404']"
+            },
+            {
+              "check": "W-14",
+              "detail": "['item detail (/api/v1/review/items/11): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])', 'pet detail (/api/v1/review/pets/1010): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])', 'skill detail (/api/v1/review/skills/101): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])']"
+            }
+          ],
+          "frontend_probe_report": "/tmp/integ/server/tools/review_browser_checks/evidence/web_origin_probe.json",
+          "frontend_probe_returncode": 1,
+          "frontend_problems_note": "these are front-end (Agent I) contract mismatches; they are reported as W-12/W-13/W-14 in phase3_web_runtime, and are listed here as evidence only",
+          "host_override_status": 200,
+          "page_status": 200,
+          "proxied_api_status": 200
+        },
+        "requirement": "required",
+        "status": "pass",
+        "title": "pages and API work through the preview proxy: relative URLs only, no sandbox host in the browser payload"
+      },
+      "checks": [
+        {
+          "check": "W-10",
+          "detail": {
+            "links": [],
+            "problems": [],
+            "scripts": [
+              "/@vite/client",
+              "/src/main.tsx"
+            ],
+            "status": 200
+          },
+          "status": "pass",
+          "title": "entry page is served by the web origin with relative assets"
+        },
+        {
+          "check": "W-11",
+          "detail": {
+            "modules": [
+              {
+                "bytes": 178934,
+                "kind": "dev-server",
+                "src": "/@vite/client",
+                "status": 200
+              },
+              {
+                "bytes": 2276,
+                "kind": "application",
+                "src": "/src/main.tsx",
+                "status": 200
+              }
+            ],
+            "problems": []
+          },
+          "status": "pass",
+          "title": "the page entry module loads and holds no sandbox host"
+        },
+        {
+          "check": "W-12",
+          "detail": [
+            "items (/api/v1/review/items?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])",
+            "pets (/api/v1/review/pets?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])",
+            "skills (/api/v1/review/skills?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])"
+          ],
+          "status": "fail",
+          "title": "the list pages get the {items,total,page,page_size} envelope they parse"
+        },
+        {
+          "check": "W-13",
+          "detail": [
+            "anomalies (/api/v1/review/anomalies): HTTP 404",
+            "mapDatasets (/api/v1/review/maps/datasets): HTTP 404",
+            "npcs (/api/v1/review/npcs?source=2601&page=1&page_size=25): HTTP 404",
+            "npcAgreement (/api/v1/review/npcs/agreement?page=1&page_size=25): HTTP 404"
+          ],
+          "status": "fail",
+          "title": "the overview/anomaly/npc/map pages get their endpoints"
+        },
+        {
+          "check": "W-14",
+          "detail": [
+            "item detail (/api/v1/review/items/11): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])",
+            "pet detail (/api/v1/review/pets/1010): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])",
+            "skill detail (/api/v1/review/skills/101): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])"
+          ],
+          "status": "fail",
+          "title": "detail pages resolve a single record"
+        },
+        {
+          "check": "W-15",
+          "detail": {
+            "problems": [],
+            "status": 200
+          },
+          "status": "pass",
+          "title": "the web origin proxies /api to the review API"
+        },
+        {
+          "check": "W-16",
+          "detail": {
+            "status": 200
+          },
+          "status": "pass",
+          "title": "the web origin tolerates a proxied Host/Origin header"
+        },
+        {
+          "check": "U-01",
+          "detail": {
+            "files": [
+              "app.js",
+              "index.html"
+            ],
+            "outDir": "/tmp/mxsj-ui-smoke-dist-h2cLCF"
+          },
+          "status": "pass",
+          "title": "the delivered front end builds with its own toolchain"
+        },
+        {
+          "check": "U-02",
+          "detail": {
+            "hint": "the bundle executed and mounted, but painted nothing (white screen)",
+            "html": "",
+            "text": ""
+          },
+          "status": "fail",
+          "title": "the mounted application renders visible content"
+        },
+        {
+          "check": "U-03",
+          "detail": {
+            "requests": [
+              {
+                "body_preview": "{\"batch\":\"batch_001\",\"native_loader_confirmed\":false,\"manifest_files_count\":21,\"csv_format\":{\"delimiter\":\",\",\"encoding\":\"UTF-8 without BOM\",\"formula_policy\":\"Op",
+                "content_type": "application/json",
+                "method": "GET",
+                "status": 200,
+                "url": "http://127.0.0.1:35807/api/v1/review/batch"
+              }
+            ]
+          },
+          "status": "pass",
+          "title": "every request the application issues succeeds"
+        },
+        {
+          "check": "U-04",
+          "detail": [
+            {
+              "level": "uncaught",
+              "message": "TypeError: Cannot read properties of undefined (reading 'length')\n    at OverviewPage (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:16132:36)\n    at renderWithHooks (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:4222:25)\n    at updateFunctionComponent (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:5856:19)\n    at beginWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:6565:18)\n    at performUnitOfWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9989:18)\n    at workLoopSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9887:41)\n    at renderRootSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9871:11)\n    at performWorkOnRoot (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9551:44)\n    at performWorkOnRootViaSchedulerTask (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:10590:7)\n    at performWorkUntilDeadline (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:592:50)"
+            },
+            {
+              "level": "error",
+              "message": "{}"
+            }
+          ],
+          "status": "fail",
+          "title": "the application reports no console error while loading"
+        },
+        {
+          "check": "U-05",
+          "detail": "layout/visual white-screen detection, screenshot evidence and a real browser console need Chrome or Firefox; this sandbox has no browser binary and only npm/pypi/GitHub are reachable, so no browser build can be downloaded",
+          "status": "not_executed",
+          "title": "real-browser-only checks"
+        }
+      ],
+      "commands": [
+        {
+          "api_start": "/tmp/reviewvenv/bin/python server/tools/review_browser_checks/review_api_launch.py --batch-dir <tmp copy> --host 0.0.0.0 --port 52183",
+          "page_start": "cd server/apps/review_web && VITE_API_PROXY_TARGET=http://127.0.0.1:52183 PORT=35807 npm run dev"
+        },
+        {
+          "page_contract": "node --experimental-strip-types server/tools/review_browser_checks/web_origin_probe.mjs --app-dir server/apps/review_web --origin http://127.0.0.1:35807"
+        },
+        {
+          "page_render": "node --experimental-strip-types server/tools/review_browser_checks/web_ui_smoke.mjs --app-dir server/apps/review_web --origin http://127.0.0.1:35807"
+        }
+      ],
+      "fail": 5,
+      "not_executed": 1,
+      "pass": 6,
+      "reason": null,
+      "review": 0,
+      "session": {
+        "api_port": 52183,
+        "batch_dir": "/tmp/mxsj-web-runtime-s13vcd12/batch",
+        "console": [
+          {
+            "level": "uncaught",
+            "message": "TypeError: Cannot read properties of undefined (reading 'length')\n    at OverviewPage (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:16132:36)\n    at renderWithHooks (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:4222:25)\n    at updateFunctionComponent (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:5856:19)\n    at beginWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:6565:18)\n    at performUnitOfWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9989:18)\n    at workLoopSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9887:41)\n    at renderRootSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9871:11)\n    at performWorkOnRoot (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9551:44)\n    at performWorkOnRootViaSchedulerTask (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:10590:7)\n    at performWorkUntilDeadline (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:592:50)"
+          },
+          {
+            "level": "error",
+            "message": "{}"
+          }
+        ],
+        "frontend_contract": {
+          "API_PATHS": {
+            "anomalies": "/api/v1/review/anomalies",
+            "batch": "/api/v1/review/batch",
+            "items": "/api/v1/review/items",
+            "mapDatasets": "/api/v1/review/maps/datasets",
+            "npcAgreement": "/api/v1/review/npcs/agreement",
+            "npcs": "/api/v1/review/npcs",
+            "pets": "/api/v1/review/pets",
+            "skills": "/api/v1/review/skills"
+          },
+          "DEFAULT_PAGE_SIZE": 25
+        },
+        "node": "v22.22.3",
+        "origin": "http://127.0.0.1:35807",
+        "rendered": {
+          "html": "",
+          "text": ""
+        },
+        "reprobe_status": "fail",
+        "reprobe_summary": {
+          "executed": 19,
+          "fail": 1,
+          "not_executed": 1,
+          "pass": 18,
+          "total": 20
+        },
+        "requests": [
+          {
+            "body_preview": "{\"batch\":\"batch_001\",\"native_loader_confirmed\":false,\"manifest_files_count\":21,\"csv_format\":{\"delimiter\":\",\",\"encoding\":\"UTF-8 without BOM\",\"formula_policy\":\"Op",
+            "content_type": "application/json",
+            "method": "GET",
+            "status": 200,
+            "url": "http://127.0.0.1:35807/api/v1/review/batch"
+          }
+        ],
+        "web_port": 35807,
+        "workdir": "/tmp/mxsj-web-runtime-s13vcd12"
+      },
+      "status": "fail"
     },
     "unittest_suite": {
-      "exit_code": 0,
-      "status": "pass",
+      "exit_code": 1,
+      "failure_count": 15,
+      "failures": [
+        "FAIL: test_embedded_newlines_are_preserved (test_catalog_loader_acceptance.CsvFidelityTests.test_embedded_newlines_are_preserved) (case='LF')",
+        "FAIL: test_embedded_newlines_are_preserved (test_catalog_loader_acceptance.CsvFidelityTests.test_embedded_newlines_are_preserved) (case='CRLF')",
+        "FAIL: test_embedded_newlines_are_preserved (test_catalog_loader_acceptance.CsvFidelityTests.test_embedded_newlines_are_preserved) (case='CR')",
+        "FAIL: test_evidence_row_counts_are_checked (test_catalog_loader_acceptance.EvidenceFileTests.test_evidence_row_counts_are_checked)",
+        "FAIL: test_missing_evidence_file_is_refused (test_catalog_loader_acceptance.EvidenceFileTests.test_missing_evidence_file_is_refused) (file='quarantine.jsonl')",
+        "FAIL: test_missing_evidence_file_is_refused (test_catalog_loader_acceptance.EvidenceFileTests.test_missing_evidence_file_is_refused) (file='overwrite_evidence.jsonl')",
+        "FAIL: test_missing_evidence_file_is_refused (test_catalog_loader_acceptance.EvidenceFileTests.test_missing_evidence_file_is_refused) (file='validation.json')",
+        "FAIL: test_missing_evidence_file_is_refused (test_catalog_loader_acceptance.EvidenceFileTests.test_missing_evidence_file_is_refused) (file='maps_npcs/provenance.json')",
+        "FAIL: test_tampered_evidence_without_hash_update_is_refused (test_catalog_loader_acceptance.EvidenceFileTests.test_tampered_evidence_without_hash_update_is_refused)",
+        "FAIL: test_dataset_schema_fields_are_immutable (test_catalog_loader_acceptance.ImmutabilityTests.test_dataset_schema_fields_are_immutable)",
+        "FAIL: test_manifest_shrink_is_refused (test_catalog_loader_acceptance.ManifestCoverageTests.test_manifest_shrink_is_refused)",
+        "FAIL: test_invalid_order_is_rejected (test_catalog_loader_acceptance.ParameterValidationTests.test_invalid_order_is_rejected)",
+        "FAIL: test_live_api_conformance (test_delivery_gate.ApiDeliveryGate.test_live_api_conformance)",
+        "FAIL: test_page_is_reachable_through_a_proxy_safe_server (test_delivery_gate.WebDeliveryGate.test_page_is_reachable_through_a_proxy_safe_server)",
+        "FAIL: test_page_renders_application_code (test_delivery_gate.WebDeliveryGate.test_page_renders_application_code)"
+      ],
+      "ran": "Ran 67 tests in 27.962s",
+      "skipped_count": 0,
+      "skipped_reasons": [],
+      "status": "fail",
       "tail": [
-        "----------------------------------------------------------------------",
-        "Ran 44 tests in 5.069s",
+        "{'check': 'U-02', 'title': 'the mounted application renders visible content', 'status': 'fail', 'detail': {'text': '', 'html': '', 'hint': 'the bundle executed and mounted, but painted nothing (white screen)'}}",
         "",
-        "OK (skipped=5)"
+        "Diff is 3036 characters long. Set self.maxDiff to None to see it. : the delivered front end does not render against the real API: [{\"U-02\": {\"text\": \"\", \"html\": \"\", \"hint\": \"the bundle executed and mounted, but painted nothing (white screen)\"}}, {\"U-04\": [{\"level\": \"uncaught\", \"message\": \"TypeError: Cannot read properties of undefined (reading 'length')\\n    at OverviewPage (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:16132:36)\\n    at renderWithHooks (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:4222:25)\\n    at updateFunctionComponent (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:5856:19)\\n    at beginWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:6565:18)\\n    at performUnitOfWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9989:18)\\n    at workLoopSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9887:41)\\n    at renderRootSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9871:11)\\n    at performWorkOnRoot (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9551:44)\\n    at performWorkOnRootViaSchedulerTask (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:10590:7)\\n    at performWorkUntilDeadline (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:592:50)\"}, {\"level\": \"error\", \"message\": \"{}\"}]}]",
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 67 tests in 27.962s",
+        "",
+        "FAILED (failures=15)"
       ]
     }
   },
   "summary": {
+    "csv_exporter_check": "pass",
     "integration_acceptance_complete": false,
+    "new_acceptance_suite": "fail",
     "not_executed_required_checks": [],
-    "outstanding_api_checks": 15,
-    "outstanding_web_checks": 7,
+    "original_architecture_suite": "pass",
+    "outstanding_api_checks": 0,
+    "outstanding_web_runtime_checks": 1,
+    "outstanding_web_static_checks": 0,
     "phase1": "pass",
-    "phase2_live_api": "not_executed",
-    "phase3_static_page": "not_executed",
-    "unittest_suite": "pass"
+    "phase2_live_api": "fail",
+    "phase3_static_page": "pass",
+    "phase3_web_runtime": "fail",
+    "test_counts": {
+      "new_acceptance_suite": "Ran 67 tests in 27.962s",
+      "note": "the new acceptance suite is deliberately counted separately from the original architecture tests",
+      "original_architecture_tests": "Ran 161 tests in 33.028s"
+    }
   },
   "tested_deliverables": {
     "api_application": {
-      "last_commit": null,
+      "last_commit": "9f6ab439a2ecdee37b59b99ddf95e77691490a0f",
       "path": "server/apps/review_api",
-      "present": false
+      "present": true,
+      "tested_sha": "9f6ab439"
     },
     "api_contract": {
-      "last_commit": null,
+      "last_commit": "dc2144b4f04dbb644dc6eb2d2abb55599aeee0d1",
       "path": "server/docs/review_browser/API_CONTRACT.md",
-      "present": false
+      "present": true,
+      "reviewed_remote_ref": "9f6ab439a2ecdee37b59b99ddf95e77691490a0f"
     },
-    "api_source": {
-      "last_commit": null,
-      "path": "server/src/review",
-      "present": false
+    "loader_source": {
+      "last_commit": "9f6ab439a2ecdee37b59b99ddf95e77691490a0f",
+      "path": "server/src/mxsj_catalog",
+      "present": true
     },
     "web_page": {
-      "last_commit": null,
+      "last_commit": "97d317e3acba1809c52a6b25a5cfda2cc66f866b",
       "path": "server/apps/review_web",
-      "present": false
+      "present": true,
+      "reviewed_remote_ref": "97d317e3acba1809c52a6b25a5cfda2cc66f866b",
+      "tested_sha": "97d317e3"
     }
   }
 }

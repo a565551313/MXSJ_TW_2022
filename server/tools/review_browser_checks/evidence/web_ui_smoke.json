@@ -1,0 +1,97 @@
+{
+  "stage": "phase3_web_ui_smoke",
+  "engine": "jsdom executing the application own Vite build (no browser engine in this sandbox)",
+  "origin": "http://127.0.0.1:35807",
+  "console": [
+    {
+      "level": "uncaught",
+      "message": "TypeError: Cannot read properties of undefined (reading 'length')\n    at OverviewPage (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:16132:36)\n    at renderWithHooks (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:4222:25)\n    at updateFunctionComponent (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:5856:19)\n    at beginWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:6565:18)\n    at performUnitOfWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9989:18)\n    at workLoopSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9887:41)\n    at renderRootSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9871:11)\n    at performWorkOnRoot (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9551:44)\n    at performWorkOnRootViaSchedulerTask (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:10590:7)\n    at performWorkUntilDeadline (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:592:50)"
+    },
+    {
+      "level": "error",
+      "message": "{}"
+    }
+  ],
+  "requests": [
+    {
+      "url": "http://127.0.0.1:35807/api/v1/review/batch",
+      "method": "GET",
+      "status": 200,
+      "content_type": "application/json",
+      "body_preview": "{\"batch\":\"batch_001\",\"native_loader_confirmed\":false,\"manifest_files_count\":21,\"csv_format\":{\"delimiter\":\",\",\"encoding\":\"UTF-8 without BOM\",\"formula_policy\":\"Op"
+    }
+  ],
+  "checks": [
+    {
+      "check": "U-01",
+      "title": "the delivered front end builds with its own toolchain",
+      "status": "pass",
+      "detail": {
+        "outDir": "/tmp/mxsj-ui-smoke-dist-h2cLCF",
+        "files": [
+          "app.js",
+          "index.html"
+        ]
+      }
+    },
+    {
+      "check": "U-02",
+      "title": "the mounted application renders visible content",
+      "status": "fail",
+      "detail": {
+        "text": "",
+        "html": "",
+        "hint": "the bundle executed and mounted, but painted nothing (white screen)"
+      }
+    },
+    {
+      "check": "U-03",
+      "title": "every request the application issues succeeds",
+      "status": "pass",
+      "detail": {
+        "requests": [
+          {
+            "url": "http://127.0.0.1:35807/api/v1/review/batch",
+            "method": "GET",
+            "status": 200,
+            "content_type": "application/json",
+            "body_preview": "{\"batch\":\"batch_001\",\"native_loader_confirmed\":false,\"manifest_files_count\":21,\"csv_format\":{\"delimiter\":\",\",\"encoding\":\"UTF-8 without BOM\",\"formula_policy\":\"Op"
+          }
+        ]
+      }
+    },
+    {
+      "check": "U-04",
+      "title": "the application reports no console error while loading",
+      "status": "fail",
+      "detail": [
+        {
+          "level": "uncaught",
+          "message": "TypeError: Cannot read properties of undefined (reading 'length')\n    at OverviewPage (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:16132:36)\n    at renderWithHooks (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:4222:25)\n    at updateFunctionComponent (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:5856:19)\n    at beginWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:6565:18)\n    at performUnitOfWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9989:18)\n    at workLoopSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9887:41)\n    at renderRootSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9871:11)\n    at performWorkOnRoot (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9551:44)\n    at performWorkOnRootViaSchedulerTask (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:10590:7)\n    at performWorkUntilDeadline (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:592:50)"
+        },
+        {
+          "level": "error",
+          "message": "{}"
+        }
+      ]
+    },
+    {
+      "check": "U-05",
+      "title": "real-browser-only checks",
+      "status": "not_executed",
+      "detail": "layout/visual white-screen detection, screenshot evidence and a real browser console need Chrome or Firefox; this sandbox has no browser binary and only npm/pypi/GitHub are reachable, so no browser build can be downloaded"
+    }
+  ],
+  "status": "fail",
+  "rendered": {
+    "text": "",
+    "html": ""
+  },
+  "summary": {
+    "pass": 2,
+    "fail": 2,
+    "not_executed": 1,
+    "console_messages": 2,
+    "requests": 1
+  }
+}
