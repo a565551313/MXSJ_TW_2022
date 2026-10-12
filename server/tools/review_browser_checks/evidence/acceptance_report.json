@@ -1,0 +1,670 @@
+{
+  "generated_utc": "2026-10-12T01:37:20Z",
+  "outstanding_not_executed": {
+    "api": [
+      {
+        "check": "API-01",
+        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+        "requirement": "分页无遗漏、无意外重复、排序稳定",
+        "status": "not_executed"
+      },
+      {
+        "check": "API-02",
+        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+        "requirement": "搜索与精确过滤符合契约",
+        "status": "not_executed"
+      },
+      {
+        "check": "API-03",
+        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+        "requirement": "非法参数有明确错误，不悄悄替换",
+        "status": "not_executed"
+      },
+      {
+        "check": "API-04",
+        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+        "requirement": "\"false\"/空文本/缺失值不被错误转换",
+        "status": "not_executed"
+      },
+      {
+        "check": "API-05",
+        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+        "requirement": "哈希或类型校验失败不得继续提供伪正常目录",
+        "status": "not_executed"
+      },
+      {
+        "check": "API-06",
+        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+        "requirement": "隔离记录不进入正常列表",
+        "status": "not_executed"
+      },
+      {
+        "check": "API-07",
+        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+        "requirement": "2800 不被改成未经批准的 1700",
+        "status": "not_executed"
+      },
+      {
+        "check": "API-08",
+        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+        "requirement": "3010/4021/4022 缺失资质不补零",
+        "status": "not_executed"
+      },
+      {
+        "check": "API-09",
+        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+        "requirement": "高級命中保留 229/255",
+        "status": "not_executed"
+      },
+      {
+        "check": "API-10",
+        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+        "requirement": "終級命中保留 329/355",
+        "status": "not_executed"
+      },
+      {
+        "check": "API-11",
+        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+        "requirement": "NPC 不按 (scene_id, npcid) 误去重",
+        "status": "not_executed"
+      },
+      {
+        "check": "API-12",
+        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+        "requirement": "非法数据集/路径穿越/任意文件读取被拒绝",
+        "status": "not_executed"
+      },
+      {
+        "check": "API-13",
+        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+        "requirement": "调用方不能修改底层目录数据",
+        "status": "not_executed"
+      },
+      {
+        "check": "API-14",
+        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+        "requirement": "不存在编辑/保存/上传/发布接口",
+        "status": "not_executed"
+      },
+      {
+        "check": "API-15",
+        "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+        "requirement": "预览代理安全、页面不指向沙箱 localhost",
+        "status": "not_executed"
+      }
+    ],
+    "web": [
+      {
+        "check": "H-01",
+        "reason": "server/apps/review_web not delivered",
+        "requirement": "API 源码不含变更类路由",
+        "status": "not_executed"
+      },
+      {
+        "check": "W-01",
+        "reason": "server/apps/review_web not delivered",
+        "requirement": "浏览器不请求沙箱 localhost/127.0.0.1",
+        "status": "not_executed"
+      },
+      {
+        "check": "W-02",
+        "reason": "server/apps/review_web not delivered",
+        "requirement": "API 不可用时不自动切换假数据",
+        "status": "not_executed"
+      },
+      {
+        "check": "W-03",
+        "reason": "server/apps/review_web not delivered",
+        "requirement": "前端不得写死固定计数",
+        "status": "not_executed"
+      },
+      {
+        "check": "W-04",
+        "reason": "server/apps/review_web not delivered",
+        "requirement": "特殊文本只展示不执行（静态半边）",
+        "status": "not_executed"
+      },
+      {
+        "check": "W-05",
+        "reason": "server/apps/review_web not delivered",
+        "requirement": "加载中/空结果/断连/错误状态（源码半边）",
+        "status": "not_executed"
+      },
+      {
+        "check": "W-06",
+        "reason": "server/apps/review_web not delivered",
+        "requirement": "网络调用使用相对 URL",
+        "status": "not_executed"
+      }
+    ]
+  },
+  "repository": {
+    "branch": "arena/d5a478f8-mxsj-tw-2022",
+    "head": "5f2369066c638297cce51f73adb961e011652c52",
+    "status_short": "?? server/docs/review_browser/\n?? server/tests/review_browser_acceptance/\n?? server/tools/review_browser_checks/"
+  },
+  "required_check_inventory": {
+    "api": [
+      {
+        "check": "API-01",
+        "requirement": "分页无遗漏、无意外重复、排序稳定"
+      },
+      {
+        "check": "API-02",
+        "requirement": "搜索与精确过滤符合契约"
+      },
+      {
+        "check": "API-03",
+        "requirement": "非法参数有明确错误，不悄悄替换"
+      },
+      {
+        "check": "API-04",
+        "requirement": "\"false\"/空文本/缺失值不被错误转换"
+      },
+      {
+        "check": "API-05",
+        "requirement": "哈希或类型校验失败不得继续提供伪正常目录"
+      },
+      {
+        "check": "API-06",
+        "requirement": "隔离记录不进入正常列表"
+      },
+      {
+        "check": "API-07",
+        "requirement": "2800 不被改成未经批准的 1700"
+      },
+      {
+        "check": "API-08",
+        "requirement": "3010/4021/4022 缺失资质不补零"
+      },
+      {
+        "check": "API-09",
+        "requirement": "高級命中保留 229/255"
+      },
+      {
+        "check": "API-10",
+        "requirement": "終級命中保留 329/355"
+      },
+      {
+        "check": "API-11",
+        "requirement": "NPC 不按 (scene_id, npcid) 误去重"
+      },
+      {
+        "check": "API-12",
+        "requirement": "非法数据集/路径穿越/任意文件读取被拒绝"
+      },
+      {
+        "check": "API-13",
+        "requirement": "调用方不能修改底层目录数据"
+      },
+      {
+        "check": "API-14",
+        "requirement": "不存在编辑/保存/上传/发布接口"
+      },
+      {
+        "check": "API-15",
+        "requirement": "预览代理安全、页面不指向沙箱 localhost"
+      }
+    ],
+    "web": [
+      {
+        "check": "H-01",
+        "requirement": "API 源码不含变更类路由"
+      },
+      {
+        "check": "W-01",
+        "requirement": "浏览器不请求沙箱 localhost/127.0.0.1"
+      },
+      {
+        "check": "W-02",
+        "requirement": "API 不可用时不自动切换假数据"
+      },
+      {
+        "check": "W-03",
+        "requirement": "前端不得写死固定计数"
+      },
+      {
+        "check": "W-04",
+        "requirement": "特殊文本只展示不执行（静态半边）"
+      },
+      {
+        "check": "W-05",
+        "requirement": "加载中/空结果/断连/错误状态（源码半边）"
+      },
+      {
+        "check": "W-06",
+        "requirement": "网络调用使用相对 URL"
+      }
+    ]
+  },
+  "stage": "review_tool_acceptance_ledger",
+  "stages": {
+    "phase1_data_baseline": {
+      "checks": [
+        {
+          "check": "data.files.inventory",
+          "detail": {
+            "files": 22
+          },
+          "status": "pass",
+          "title": "manifest file set equals the committed file set"
+        },
+        {
+          "check": "data.files.integrity",
+          "detail": {
+            "hashed": 21
+          },
+          "status": "pass",
+          "title": "bytes and sha256 of every artefact match the manifest"
+        },
+        {
+          "check": "data.inputs.hashes",
+          "detail": {
+            "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+            "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+          },
+          "status": "pass",
+          "title": "pinned archive and key database hashes still match"
+        },
+        {
+          "check": "data.files.tool_hashes",
+          "detail": {
+            "verified": 10
+          },
+          "status": "pass",
+          "title": "tool/evidence hashes recorded by the manifest still match"
+        },
+        {
+          "check": "data.csv_format.core",
+          "detail": {
+            "files": 9
+          },
+          "status": "pass",
+          "title": "core CSVs are UTF-8/LF/all-quoted and re-encode byte-identically"
+        },
+        {
+          "check": "data.csv_format.maps_npc",
+          "detail": {
+            "files": 8
+          },
+          "status": "pass",
+          "title": "maps_npcs CSVs keep E staging format (minimal quoting, CRLF)"
+        },
+        {
+          "check": "data.declared_shape",
+          "detail": {
+            "csv_files": 17
+          },
+          "status": "pass",
+          "title": "declared rows/columns/primary keys match the actual files"
+        },
+        {
+          "check": "data.primary_keys.unique",
+          "detail": {
+            "items.csv": 6851,
+            "maps_npcs/mapdata_parent_scene.csv": 6,
+            "maps_npcs/mapdata_scene_dictionary.csv": 104,
+            "maps_npcs/minimapnpcpos_pos_records.csv": 1344,
+            "maps_npcs/minimapnpcpos_wenzi_entries.csv": 287,
+            "maps_npcs/npc_2601_vs_2804_agreement.csv": 677,
+            "maps_npcs/npcname2realnamedata_alias_to_realname.csv": 55,
+            "maps_npcs/npcposdata_records.csv": 1335,
+            "maps_npcs/sceneid2name_minimap_scenes.csv": 57,
+            "pet_aptitude_missing.csv": 3,
+            "pet_aptitudes.csv": 131,
+            "pet_required_skills.csv": 26,
+            "pet_skill_candidates.csv": 458,
+            "pet_skill_name_matches.csv": 145,
+            "pet_skill_overwrites.csv": 9,
+            "pet_skills.csv": 579,
+            "pets.csv": 135
+          },
+          "status": "pass",
+          "title": "manifest primary keys are unique in every file"
+        },
+        {
+          "check": "data.counts.fixed",
+          "detail": {
+            "items_rows": 6851,
+            "missing_aptitude_rows": 3,
+            "pet_aptitudes_rows": 131,
+            "pet_required_skills_rows": 26,
+            "pet_skill_candidates_rows": 458,
+            "pet_skill_name_match_rows": 145,
+            "pet_skills_rows": 579,
+            "pets_rows": 135,
+            "quarantined_records": 4,
+            "referenced_skill_names": 143,
+            "single_id_skill_names": 141,
+            "skill_overwrite_rows": 9
+          },
+          "status": "pass",
+          "title": "frozen review counts (17 CSV / 22 files input)"
+        },
+        {
+          "check": "data.rows.accounting",
+          "detail": {
+            "tables": {
+              "1945": 6852,
+              "2027": 135,
+              "2954": 132,
+              "3205": 581
+            }
+          },
+          "status": "pass",
+          "title": "source = review + quarantined rows for every source entry"
+        },
+        {
+          "check": "data.validation.json",
+          "detail": {
+            "csv_round_trip": "pass",
+            "item_category_key_set": "pass",
+            "map_npc_evidence_and_staging_match": "pass",
+            "pet_aptitude_foreign_keys": "pass",
+            "pet_skill_names_have_candidates": "pass"
+          },
+          "status": "pass",
+          "title": "validation.json agrees with the recomputed values"
+        },
+        {
+          "check": "data.pets_skills.foreign_keys",
+          "detail": {
+            "aptitudes": 131,
+            "missing": 3,
+            "pets": 135
+          },
+          "status": "pass",
+          "title": "reviewed child tables only reference reviewed parents"
+        },
+        {
+          "check": "data.pet_skill_candidates.order",
+          "detail": {
+            "pets_with_candidates": 132,
+            "pets_with_repeated_names": 0
+          },
+          "status": "pass",
+          "title": "candidate sub-tables keep source order, duplicates and sequence 0..n-1"
+        },
+        {
+          "check": "data.pet_required_skills.presence_only",
+          "detail": {
+            "pets_with_required_skills": 26
+          },
+          "status": "pass",
+          "title": "required skills only list fields the source actually has"
+        },
+        {
+          "check": "data.pet_skill_name_matches.ambiguity",
+          "detail": {
+            "ambiguous": {
+              "終級命中": [
+                329,
+                355
+              ],
+              "高級命中": [
+                229,
+                255
+              ]
+            },
+            "names": 143
+          },
+          "status": "pass",
+          "title": "same-name skill matches keep every candidate ID"
+        },
+        {
+          "check": "data.pet_skills.quarantine_excluded",
+          "detail": {
+            "skill_ids": 579
+          },
+          "status": "pass",
+          "title": "quarantined skill rows are not in the normal skill table"
+        },
+        {
+          "check": "data.skill_overwrites.order",
+          "detail": {
+            "overwrites": 9,
+            "value_changing": 1
+          },
+          "status": "pass",
+          "title": "dictionary overwrites keep both values and the write order"
+        },
+        {
+          "check": "data.review_status.labels",
+          "detail": {
+            "files_checked": 17
+          },
+          "status": "pass",
+          "title": "source entry, source table and review status are explicit on every row"
+        },
+        {
+          "check": "data.quarantine.records",
+          "detail": {
+            "records": 4
+          },
+          "status": "pass",
+          "title": "the four quarantined records are preserved with reasons"
+        },
+        {
+          "check": "data.quarantine.2800_not_1700",
+          "detail": {
+            "applied_bounds": [
+              3973,
+              7978,
+              11868,
+              15798
+            ],
+            "法力資質": 2130,
+            "法力資質最大值": 1989
+          },
+          "status": "pass",
+          "title": "aptitude 2800 keeps the saved 2130/1989 and is not rewritten to 1700"
+        },
+        {
+          "check": "data.quarantine.item_72548",
+          "detail": {
+            "bytes_hex": "c2f9a448a7a4c34dc5e9c5e784"
+          },
+          "status": "pass",
+          "title": "item 72548 keeps the original invalid CP950 bytes and stays out of items.csv"
+        },
+        {
+          "check": "data.quarantine.skill_rows",
+          "detail": {
+            "rows": [
+              719,
+              4406
+            ]
+          },
+          "status": "pass",
+          "title": "quarantined skill rows keep the six source fields"
+        },
+        {
+          "check": "data.missing_aptitudes.not_zero_filled",
+          "detail": {
+            "missing": [
+              3010,
+              4021,
+              4022
+            ]
+          },
+          "status": "pass",
+          "title": "missing aptitude rows are declared missing, never zero-filled"
+        },
+        {
+          "check": "data.maps.rows_and_zero_ids",
+          "detail": {
+            "2601": 1335,
+            "2804": 1344,
+            "zero_ids": {
+              "minimapnpcpos_pos": 631,
+              "npcposdata": 632
+            }
+          },
+          "status": "pass",
+          "title": "map/NPC record counts and NPC ID 0 records are preserved"
+        },
+        {
+          "check": "data.maps.no_pair_dedup",
+          "detail": {
+            "2601": {
+              "duplicate_groups": 12,
+              "max_group": 6
+            },
+            "2804": {
+              "duplicate_groups": 11,
+              "max_group": 6
+            }
+          },
+          "status": "pass",
+          "title": "(scene_id, npcid) is not a unique key and duplicates are retained"
+        },
+        {
+          "check": "data.maps.order_preserved",
+          "detail": {
+            "scenes_checked": 864
+          },
+          "status": "pass",
+          "title": "record_index keeps original order per scene for both NPC sources"
+        },
+        {
+          "check": "data.maps.source_separation",
+          "detail": {
+            "staging_files": 8
+          },
+          "status": "pass",
+          "title": "E staging sources stay separate and byte-identical to the batch copies"
+        },
+        {
+          "check": "data.profiles.parameters_approved",
+          "detail": {
+            "profiles": 10
+          },
+          "status": "pass",
+          "title": "no automatic solver and no unapproved parameter substitution"
+        },
+        {
+          "check": "data.text.no_simplified_conversion",
+          "detail": {
+            "forbidden": 7,
+            "required": 6
+          },
+          "status": "pass",
+          "title": "traditional text is preserved and no simplified rewrite leaked in"
+        },
+        {
+          "check": "data.text.opaque_formulas",
+          "detail": {
+            "items_with_equals_or_dollar": 42,
+            "items_with_rich_text": 6485
+          },
+          "status": "pass",
+          "title": "resource formulas and rich-text markers stay opaque source text"
+        }
+      ],
+      "fail": 0,
+      "not_executed": 0,
+      "pass": 30,
+      "status": "pass"
+    },
+    "phase2_live_api": {
+      "checks": [],
+      "fail": 0,
+      "not_executed": 0,
+      "pass": 0,
+      "reason": "server/docs/review_browser/API_CONTRACT.md not delivered",
+      "status": "not_executed"
+    },
+    "phase3_static_page": {
+      "checks": [
+        {
+          "check": "W-00",
+          "detail": "no browser-facing file found under ['server/apps/review_web']",
+          "status": "not_executed",
+          "title": "review web application delivered"
+        },
+        {
+          "check": "W-01",
+          "detail": "web application not delivered",
+          "status": "not_executed",
+          "title": "no sandbox localhost references"
+        },
+        {
+          "check": "W-02",
+          "detail": "web application not delivered",
+          "status": "not_executed",
+          "title": "no mock/fake data fallback"
+        },
+        {
+          "check": "W-03",
+          "detail": "web application not delivered",
+          "status": "not_executed",
+          "title": "baseline counts are not hardcoded"
+        },
+        {
+          "check": "W-04",
+          "detail": "web application not delivered",
+          "status": "not_executed",
+          "title": "no unescaped HTML injection sink"
+        },
+        {
+          "check": "W-05",
+          "detail": "web application not delivered",
+          "status": "not_executed",
+          "title": "loading/empty/error states handled"
+        },
+        {
+          "check": "W-06",
+          "detail": "web application not delivered",
+          "status": "not_executed",
+          "title": "relative API URLs"
+        }
+      ],
+      "fail": 0,
+      "not_executed": 7,
+      "pass": 0,
+      "status": "not_executed"
+    },
+    "unittest_suite": {
+      "exit_code": 0,
+      "status": "pass",
+      "tail": [
+        "----------------------------------------------------------------------",
+        "Ran 44 tests in 5.069s",
+        "",
+        "OK (skipped=5)"
+      ]
+    }
+  },
+  "summary": {
+    "integration_acceptance_complete": false,
+    "not_executed_required_checks": [],
+    "outstanding_api_checks": 15,
+    "outstanding_web_checks": 7,
+    "phase1": "pass",
+    "phase2_live_api": "not_executed",
+    "phase3_static_page": "not_executed",
+    "unittest_suite": "pass"
+  },
+  "tested_deliverables": {
+    "api_application": {
+      "last_commit": null,
+      "path": "server/apps/review_api",
+      "present": false
+    },
+    "api_contract": {
+      "last_commit": null,
+      "path": "server/docs/review_browser/API_CONTRACT.md",
+      "present": false
+    },
+    "api_source": {
+      "last_commit": null,
+      "path": "server/src/review",
+      "present": false
+    },
+    "web_page": {
+      "last_commit": null,
+      "path": "server/apps/review_web",
+      "present": false
+    }
+  }
+}
