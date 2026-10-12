@@ -430,3 +430,46 @@ class TestGirbNeverLeaksIndexError(unittest.TestCase):
                 pass
             except IndexError as exc:     # pragma: no cover
                 self.fail(f"IndexError on body[:{cut}]: {exc}")
+
+
+class TestGirbGoldenVectors(unittest.TestCase):
+    """Real GIRB bodies captured from the client with --girb-dump.
+
+    These are the vectors that broke the decoder.  The first two are the same
+    22-byte structure with a different fill byte; the old code read the
+    trailing-literal count from buf[i-2] at an arbitrary point in the stream,
+    so 0x88 (& 3 == 0) decoded and 0x77 (& 3 == 3) did not.
+    """
+
+    VECTORS = {
+        "2303_0x88_22": "02888888888820000000000000000000430000110000",
+        "2302_0x77_22": "02777777777720000000000000000000430000110000",
+        "2302_s42_26":  "0277777777772000003401008820000000000000ec0000110000",
+        "2123_s42_27":  "027777777777200000000000002001008820000000010000110000",
+        "2302_s6_39":   "0277777777778100883b0000880490003b990088880490002000"
+                        "00000000000000ed9c00110000",
+        "2505_s16_40":  "0277777777773c01008860003c8800940379048884013c10002000"
+                        "00000000000000d49c00110000",
+        "2302_s48_45":  "0277777777778100883b0000880490003b990088880490002000"
+                        "de9c003cf40720000000000000cf7400110000",
+    }
+
+    def test_every_captured_body_inflates_to_exactly_2400_bytes(self) -> None:
+        from map_editor.core.girb import GRID_BYTES, decompress
+        for name, hexbody in self.VECTORS.items():
+            with self.subTest(body=name):
+                out = decompress(bytes.fromhex(hexbody))
+                self.assertEqual(len(out), GRID_BYTES)
+
+    def test_uniform_fills_decode_to_their_own_value(self) -> None:
+        from map_editor.core.girb import cells
+        self.assertEqual(set(cells(bytes.fromhex(self.VECTORS["2303_0x88_22"]))),
+                         {0x8888})
+        self.assertEqual(set(cells(bytes.fromhex(self.VECTORS["2302_0x77_22"]))),
+                         {0x7777})
+
+    def test_mixed_sectors_carry_more_than_one_cell_value(self) -> None:
+        from map_editor.core.girb import cells
+        vals = set(cells(bytes.fromhex(self.VECTORS["2302_s42_26"])))
+        self.assertEqual(vals, {0x7777, 0x8888})
+        self.assertEqual(len(cells(bytes.fromhex(self.VECTORS["2505_s16_40"]))), 1200)

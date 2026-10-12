@@ -73,6 +73,14 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
             raise GirbError(f"token reads past the {len(buf)}-byte buffer at {k}")
         return buf[k] | (buf[k + 1] << 8)
 
+    # Trailing-literal count.  Every match class reserves 2 spare low bits in
+    # its operand -- offset = 1 + (off16 >> 2) only consumes 14 of the 16 -- and
+    # those 2 bits are how many literal bytes follow the match.  It MUST be
+    # captured by the match itself: reading buf[i-2] later picks up whatever
+    # byte happens to sit there (a literal data byte after a literal run),
+    # which is why 0x88-filled sectors decoded and 0x77-filled ones did not.
+    trail = 0
+
     def token() -> int:
         """Next token byte, bounds-checked against the real payload.
 
@@ -121,42 +129,45 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
         i += 1
         return total
 
-    def match_after_trail(t: int) -> bool:
+    def match_after_trail(t: int) -> bool:   # noqa: C901 - mirrors the asm
         """Token read right after trailing literals (0x60ecad -> 0x60eb67).
 
         This jump is unconditional, so t < 0x10 falls through 0x60eba8 and
         0x60ebda to 0x60ec73 — a *different* short-match class than 0x60eb29:
         offset ``1 + (nb<<2) + (t>>2)`` and length 2, versus 0x801-based and 3.
         """
-        nonlocal i
+        nonlocal i, trail
         if t >= 0x10:
             return match_hi(t)
-        nb = buf[i]
-        i += 1
+        nb = token()
         copy_match(1 + (nb << 2) + (t >> 2), 2)
+        trail = t & 3
         return True
 
     def match_hi(t: int) -> bool:
         """Handle token >= 0x10.  Returns False at end of stream."""
-        nonlocal i
+        nonlocal i, trail
         if t >= 0x40:
             # 0x60eb85 pre-decrements before the 2-byte head copy, so this class
             # is one byte shorter than the 0x60ec2d classes.
             length = (t >> 5) + 1
             offset = 1 + ((t >> 2) & 7) + (buf[i] << 3)
             i += 1
+            trail = t & 3                    # bits 0-1 of t are the spare ones
         elif t >= 0x20:
             length = t & 0x1F
             length = run_length(length, 0x1F) if length == 0 else length
             off16 = u16(i)
             i += 2
             offset = 1 + (off16 >> 2)
+            trail = off16 & 3
             length += 2
         else:                                   # 0x10..0x1f
             length = t & 7
             length = run_length(length, 7) if length == 0 else length
             off16 = u16(i)
             i += 2
+            trail = off16 & 3
             total_off = ((t & 8) << 11) + (off16 >> 2)
             if total_off == 0:
                 return False                    # end-of-stream marker
@@ -198,10 +209,12 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
 
     def short_match_token() -> bool:
         """Token read at 0x60eb29: t < 0x10 means a 3-BYTE MATCH here."""
+        nonlocal trail
         t = token()
         if t < 0x10:
             nb = token()
             copy_match(0x801 + (nb << 2) + (t >> 2), 3)
+            trail = t & 3
             return True
         return match_hi(t)
 
@@ -225,14 +238,13 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
 
     # ---- alternating: match -> trailing literals -> literal run -> match ... ----
     after_literal_run = False
+    trail = 0                    # the leading literal run has no match before it
     while True:
-        trail = buf[i - 2] & 3                  # 0x60ec90
         while trail:
             literal(trail)
             t = token()
             if not match_after_trail(t):
                 return bytes(out[:limit])
-            trail = buf[i - 2] & 3
         if after_literal_run:
             if not short_match_token():         # 0x60eb29
                 break
