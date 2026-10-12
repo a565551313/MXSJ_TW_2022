@@ -1,0 +1,82 @@
+# 注册资料页兼容预览 v2.1
+
+2026-10-12。40 项离线补丁检查通过。**v2.1 尚未在 Windows 原生客户端验证**。
+
+## 日志定位
+
+用户粘贴了 2026-10-12 13:25 本次运行日志中的重复异常，关键链路为：
+
+```text
+register.py:193   CRegPanel1.OnMessage
+register.py:1286  Step
+register.py:303   CRegPanel2.__init__
+register.py:328   CRegPanel2.CreateEdits
+combmacro.py:52   CreateEdit
+AttributeError: 'NoneType' object has no attribute 'GetSize'
+```
+
+不是同意按钮没触发，也不是注册网络请求失败。入口已经走到资料页构造。
+根据当前锁定的原始 script.fls entry 4007 的 `firstlineno/lnotab`，
+**原始第 328 行对应 co_code 241–276**，其中偏移 250 加载字符串 `email2`，
+268 调用 `combmacro.CEDIT(CMailEdit, 'email2', self, ...)`。
+entry 3564 的 CreateEdit 则先取 `parent.GetObject(objname)`，随后在原始第 52 行对结果调用 GetSize。
+因此该次失败是 **email2 二次确认邮箱占位控件没有取到**，不是 pwd2 确认密码控件。
+
+原始行号不能直接用历史反编译 .py 的文本行号代替。对应原始行表/指令已加入回归测试。
+用户尚未提供本机 FLS 哈希；该定位基于日志与锁定归档的对应关系，不宣称已核验用户安装字节。
+三个基础编辑框的创建调用已在出错点之前执行，但不代表其视觉效果/交互全部验收。
+
+没有证据证明验证码控件也缺失，也不能将此异常扩大为整个 reg2.dlg 文件丢失。
+原始页面资源的具体版本/控件清单仍未完整验证。
+
+## 有界处理
+
+新增 `--stage form-basic`，仍从未修改的原包构建；`terms` / `form` 保持旧 v1/v2 二进制可重现。
+与 v2 相比只有两个函数体进一步改变，没有改 UI 资源文件或 combmacro 全局行为：
+
+1. `CRegPanel2.CreateEdits`：保留 `[0,241)`，即密码、确认密码、主邮箱的创建、密码遮罩与原限制。
+   `[241,377)` 改为跳至 377，跳过二次邮箱及其背景/标签的初始化和 m_EditChange 设置。
+   保留 `[377,434)` 的三字段焦点循环。
+   `[434,650)` 改为跳至 650，跳过二次邮箱焦点设置，以及本次完全不使用的验证码输入/标签/刷新链接。
+   两处跳转位于原语句间空栈边界，使用已有返回指令，不增加异常捕获。
+2. `CRegPanel2.OnEditChange` 早退，避免 QQ / VIP-QQ 邮箱触发对已省略二次邮箱控件的访问。
+
+这是将离线预览限定为三个基础输入框，不是吞异常，也不是修复/补齐旧运营商资源包。
+验证码初始化被有意省略，是因本轮验证码功能始终禁用，不是已经确认其资源缺失。
+旧的字段校验逻辑并未变成生产可用的表单校验；下一步仍只显示「離線預覽，未送出。」。
+不保存注册字段、不发旧注册请求、不打开旧邮箱注册页面、不模拟成功。
+其他装饰、提示文本、页面控件仍需 Windows 测试，不保证一定没有下一处资源不匹配。
+
+## 构建及验证
+
+```bash
+python3 -m unittest discover -s tools/client_patches -v
+python3 tools/client_patches/build_registration_preview.py --stage form-basic \
+  --output-dir /home/user/artifacts/mxsj-registration-preview-v2.1
+```
+
+40 项检查包括 v1/v2 的 26 项及 v2.1 的 14 项：日志原始行号映射、基础字段和焦点循环保留、
+可达指令不访问二次邮箱/验证码、邮箱联动禁用、仅两函数区别于 v2、无关条目不变、确定性和旧版本重建，
+以及同意/拒绝/返回/本地提示/网络阻断的回归。
+仅分析指令及跳转，不运行恢复的客户端代码；这不代替原生 UI 验收。
+
+- 交付 ZIP SHA-256：`d854afabc06335e4382015a7df7344d1b7113097c80c596146f6acaed2b8cd1d`
+- v2.1 FLS：24,558,001 bytes。
+- v2.1 FLS SHA-256：`ed40cbade80a42b6924b9a99edffefbaa4100dbf624ebd653a789d8b7283c0ba`
+- 原包 SHA-256：`8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72`
+- v1 FLS SHA-256：`345918e9ac2eef95ea98140fdbb70606a493dc682fce11f4c24ce178d86291eb`
+- v2 FLS SHA-256：`50e678f8e485691b0cc5d378d5cad255ff076aaba18c1e12ab9a6c277f9b057f`
+
+仍仅替换 337/4007 两条归档记录，其余 5000 条目录记录与压缩载荷字节一致。
+原包、密钥库、master 和生产数据不变。二进制保存在仓库外。
+
+## 用户验证
+
+退出游戏/更新器，在完整测试客户端副本中备份当前 FLS 并替换；不要覆盖原包或 v1/v2 的备份。
+核对本次 v2.1 哈希后重新启动，避免旧失败构造留下的临时窗口状态。
+先仅测试“申請會員 → 我同意”，回传资料页截图。
+若再次失败，提供这次的新错误段，不要继续重复点击或输入。
+
+页面能打开后，再用 `preview@example.invalid` / `Preview123` 测试基础字段、密码遮罩、下一步离线提示、
+离线说明链接、返回条款和拒绝回首页。不用真实个人信息，不连接旧官网，不做真实注册。
+这是局部注册离线预览，不是整个客户端的网络隔离；仍建议断网测试。

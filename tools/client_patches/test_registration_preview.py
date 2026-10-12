@@ -237,5 +237,131 @@ class RegistrationFormPreviewTests(unittest.TestCase):
         self.assertEqual((patch.ROOT / 'tools/decompiler/script_fls_keys.json').read_bytes(), self.keys)
 
 
+class RegistrationBasicFormPreviewTests(unittest.TestCase):
+    """Regression for user traceback: missing secondary-email UI placeholder."""
+    @classmethod
+    def setUpClass(cls):
+        cls.source = (patch.ROOT / 'data/script.fls').read_bytes()
+        cls.keys = (patch.ROOT / 'tools/decompiler/script_fls_keys.json').read_bytes()
+        cls.metadata = json.loads(cls.keys)
+        cls.output, cls.report = patch.build(cls.source, cls.keys, stage='form-basic')
+        cls.rows = patch.entries(cls.source)[1]
+        cls.new_rows = patch.entries(cls.output)[1]
+        cls.v2, _ = patch.build(cls.source, cls.keys, stage='form')
+        cls.v2_rows = patch.entries(cls.v2)[1]
+
+    plain = RegistrationPreviewTests.plain
+    functions = RegistrationPreviewTests.functions
+    test_agree_step_one = RegistrationFormPreviewTests.test_first_page_agree_keeps_step_one_and_skips_telemetry
+    test_reject_returns_home = RegistrationFormPreviewTests.test_reject_retains_v1_return_home_path
+    test_back_and_no_save = RegistrationFormPreviewTests.test_form_back_keeps_step_zero_but_save_is_disabled
+    test_next_only_local_notice = RegistrationFormPreviewTests.test_next_only_shows_local_offline_dialog
+    test_other_old_network_paths_disabled = RegistrationFormPreviewTests.test_all_other_network_callers_and_alternate_registration_are_disabled
+    test_old_email_link_is_local_notice = RegistrationFormPreviewTests.test_old_email_registration_link_is_local_preview_notice
+
+    @staticmethod
+    def linear_path(co):
+        # Inspect instruction addresses only; never execute recovered code or UI.
+        # CreateEdits has no original conditional branches. Only v2.1 forward
+        # jumps and the return are accepted, so NOP padding is unreachable.
+        seq = {at: (op, arg) for at, op, arg in patch.normalized(co['code'])}
+        result = []
+        at = 0
+        while True:
+            op, arg = seq[at]
+            result.append((at, op, arg))
+            if op == 83:
+                return result
+            if op == 113:
+                if arg <= at:
+                    raise AssertionError('unexpected loop')
+                at = arg
+            else:
+                if op in {93, 110, 111, 112, 119, 120, 121, 122}:
+                    raise AssertionError('unexpected branch')
+                at += 3 if op >= 90 else 1
+
+    def test_raw_line_328_is_email2_not_password_confirmation(self):
+        co = self.functions(self.rows, 4007)['CRegPanel2/CreateEdits']
+        line = co['firstlineno']
+        offset = 0
+        positions = [(0, line)]
+        for delta, increment in zip(co['lnotab'][::2], co['lnotab'][1::2]):
+            offset += delta
+            line += increment
+            positions.append((offset, line))
+        self.assertEqual([at for at, ln in positions if ln == 328], [241])
+        self.assertEqual(next(ln for at, ln in reversed(positions) if at <= 268), 328)
+        self.assertIn((250, 100, co['consts'].index(b'email2')), patch.normalized(co['code']))
+        helper = self.functions(self.rows, 3564)['CreateEdit']
+        self.assertIn((15, 105, helper['names'].index(b'GetObject')), patch.normalized(helper['code']))
+        self.assertIn((51, 105, helper['names'].index(b'GetSize')), patch.normalized(helper['code']))
+
+    def test_three_primary_controls_and_focus_cycle_are_unchanged(self):
+        before = self.functions(self.rows, 4007)['CRegPanel2/CreateEdits']
+        after = self.functions(self.new_rows, 4007)['CRegPanel2/CreateEdits']
+        self.assertEqual(before['code'][:241], after['code'][:241])
+        self.assertEqual(before['code'][377:434], after['code'][377:434])
+        seq = self.linear_path(after)
+        slots = []
+        for i, (_, op, arg) in enumerate(seq):
+            if op == 105 and after['names'][arg] == b'CEDIT':
+                _, next_op, constant = seq[i + 2]
+                self.assertEqual(next_op, 100)
+                slots.append(after['consts'][constant])
+        self.assertEqual(slots, [b'pwd', b'pwd2', b'email'])
+        self.assertEqual(sum(op == 105 and after['names'][arg] == b'SetNextEdit'
+                             for _, op, arg in seq), 3)
+
+    def test_no_reachable_secondary_email_or_captcha_access(self):
+        co = self.functions(self.new_rows, 4007)['CRegPanel2/CreateEdits']
+        seq = self.linear_path(co)
+        attrs = {co['names'][arg] for _, op, arg in seq if op in {95, 105, 116}}
+        literals = {co['consts'][arg] for _, op, arg in seq if op == 100}
+        self.assertFalse(attrs & {b'm_EmailEdit2', b'm_EditChange', b'm_CodeEdit', b'm_RefershCode'})
+        self.assertFalse(literals & {b'email2', b'txt_Mail2', b'img_Mail2Bg', b'edt_Code',
+                                    b'txt_Code', b'txt_CodeBg', b'txt_RefershCode'})
+        self.assertIn((241, 113, 377), seq)
+        self.assertIn((434, 113, 650), seq)
+        self.assertEqual(seq[-2:], [(650, 100, co['consts'].index(None)), (653, 83, None)])
+
+    def test_email_change_callback_cannot_touch_missing_widgets(self):
+        co = self.functions(self.new_rows, 4007)['CRegPanel2/OnEditChange']
+        seq = patch.normalized(co['code'])
+        self.assertEqual(seq[:2], [(0, 100, co['consts'].index(None)), (3, 83, None)])
+        self.assertTrue(all(op == 9 for _, op, _ in seq[2:]))
+
+    def test_only_two_functions_differ_from_v2(self):
+        before = self.functions(self.v2_rows, 4007)
+        after = self.functions(self.new_rows, 4007)
+        changed = {path for path in before if before[path]['code'] != after[path]['code']}
+        self.assertEqual(changed, {'CRegPanel2/CreateEdits', 'CRegPanel2/OnEditChange'})
+        for path in before:
+            for a, b in zip(before[path]['consts'], after[path]['consts']):
+                if not isinstance(a, dict):
+                    self.assertEqual(a, b)
+        self.assertEqual(self.v2_rows[337], self.new_rows[337])
+        self.assertEqual(len(self.plain(self.v2_rows, 4007)), len(self.plain(self.new_rows, 4007)))
+
+    def test_only_target_entries_change_and_originals_remain(self):
+        self.assertEqual([i for i, (a, b) in enumerate(zip(self.rows, self.new_rows)) if a != b], [337, 4007])
+        self.assertEqual(self.output[12:len(self.source)], self.source[12:])
+        self.assertEqual((patch.ROOT / 'data/script.fls').read_bytes(), self.source)
+        self.assertEqual((patch.ROOT / 'tools/decompiler/script_fls_keys.json').read_bytes(), self.keys)
+
+    def test_basic_build_is_deterministic_and_keeps_v2_reproducible(self):
+        output, report = patch.build(self.source, self.keys, stage='form-basic')
+        self.assertEqual(output, self.output)
+        self.assertEqual(report, self.report)
+        self.assertEqual(patch.sha(output), 'ed40cbade80a42b6924b9a99edffefbaa4100dbf624ebd653a789d8b7283c0ba')
+        self.assertEqual(patch.sha(self.v2), '50e678f8e485691b0cc5d378d5cad255ff076aaba18c1e12ab9a6c277f9b057f')
+
+    def test_report_does_not_claim_native_fix_verified(self):
+        self.assertFalse(self.report['native_windows_client_tested'])
+        self.assertFalse(self.report['recovered_code_executed'])
+        self.assertEqual(self.report['kind'], 'registration_basic_form_offline_preview_only')
+        self.assertTrue(any('email2' in item for item in self.report['limits']))
+
+
 if __name__ == '__main__':
     unittest.main()

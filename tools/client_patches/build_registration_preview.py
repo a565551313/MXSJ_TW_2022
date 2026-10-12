@@ -25,7 +25,7 @@ BASE_SHA256 = '8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72'
 KEYS_SHA256 = '43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb'
 INV = {value: key for key, value in PY25_MAP.items()}
 TARGET_ENTRIES = {337, 4007}
-STAGES = ('terms', 'form')
+STAGES = ('terms', 'form', 'form-basic')
 NETWORK_PATHS = {
     'CCheckCodeBox/RequestNewCode', 'CRegPanel2/DoNext',
     'CRegPanel2_2980/RequestPhoneValid', 'CRegPanel2_2980/RequestPhoneCode',
@@ -213,7 +213,7 @@ def patch_payload(index, plain, metadata, stage='terms'):
         # Keep the entire code span the same length, filling unreachable bytes with NOP.
         for path in sorted(NETWORK_PATHS):
             co = co_by_path[path]
-            if stage == 'form' and path == 'CRegPanel2/DoNext':
+            if stage in ('form', 'form-basic') and path == 'CRegPanel2/DoNext':
                 # Local dialog only: no validation/submission, credential read,
                 # device lookup, telemetry or success state is performed.
                 body = assemble(
@@ -229,7 +229,7 @@ def patch_payload(index, plain, metadata, stage='terms'):
             else:
                 replace(path, 0, None, assemble((100, co['consts'].index(None)), (83, None)),
                         length=len(co['code']))
-        if stage == 'form':
+        if stage in ('form', 'form-basic'):
             # Back retains Step(0), but Save() cannot retain typed credentials.
             # Disable the alternate old email-registration flow as well.
             for path in ('CRegPanel2/Save', 'Register2980'):
@@ -244,6 +244,26 @@ def patch_payload(index, plain, metadata, stage='terms'):
                     'form preview callback fingerprint changed')
             replace(path, 117, None, assemble((113, 90)), length=75)
             replace_constant('CRegPanel2/__init__', 4, '點擊註冊2980郵箱', '離線預覽說明')
+        if stage == 'form-basic':
+            # User traceback maps original line 328 to CEDIT(..., 'email2', ...).
+            # Only the secondary email slot is confirmed missing. Basic preview
+            # deliberately needs neither that slot nor the unverified CAPTCHA UI.
+            path = 'CRegPanel2/CreateEdits'
+            co = co_by_path[path]
+            require(co['code'][241:253] == assemble((116, co['names'].index(b'combmacro')),
+                    (105, co['names'].index(b'CEDIT')), (116, co['names'].index(b'CMailEdit')),
+                    (100, co['consts'].index(b'email2'))), 'secondary-email fingerprint changed')
+            require(co['code'][650:] == assemble((100, co['consts'].index(None)), (83, None)),
+                    'CreateEdits return fingerprint changed')
+            # Keep primary construction [0,241) and the three-field focus cycle
+            # [377,434). Both jumps occur with an empty evaluation stack.
+            replace(path, 241, None, assemble((113, 377)), length=136)
+            replace(path, 434, None, assemble((113, 650)), length=216)
+            # No QQ/VIP-QQ change callback may touch the omitted email2 widgets.
+            path = 'CRegPanel2/OnEditChange'
+            co = co_by_path[path]
+            replace(path, 0, None, assemble((100, co['consts'].index(None)), (83, None)),
+                    length=len(co['code']))
     else:
         raise ValueError('unexpected patch entry')
 
@@ -328,7 +348,7 @@ def build(archive, key_bytes, stage='terms'):
                          'Direct CHttpObject/OpenUrl callers in register.py are disabled.',
                          'Not a working account-registration service or a client-wide network block.',
                          'Unchanged original code/resources may have pre-existing defects.']}
-    if stage == 'form':
+    if stage in ('form', 'form-basic'):
         report['kind'] = 'registration_form_offline_preview_only'
         report['limits'] = [
             'Agree opens the old form; Reject returns home; form Back returns to terms.',
@@ -337,6 +357,15 @@ def build(archive, key_bytes, stage='terms'):
             'Form Save and Register2980 are disabled; all direct registration HTTP/browser callers are blocked.',
             'Only two fixed-width CP950 UI literals were changed; old input constraints and artwork remain.',
             'Not a client-wide network block. No native Windows v2 test has been performed.']
+    if stage == 'form-basic':
+        report['kind'] = 'registration_basic_form_offline_preview_only'
+        report['limits'][-1] = 'Not a client-wide network block. No native Windows v2.1 test has been performed.'
+        report['limits'].extend([
+            'User v2 traceback identified missing email2 placeholder at original register.py line 328.',
+            'Only password, password confirmation and primary email edits are initialized.',
+            'Secondary-email and CAPTCHA setup are omitted; primary focus cycle is retained.',
+            'Email-change callback is disabled to avoid accessing omitted widgets.',
+            'Other form resources still require native verification; this does not repair the resource archive.'])
     return result, report
 
 
@@ -346,7 +375,7 @@ def main():
     parser.add_argument('--keys', type=Path, default=ROOT / 'tools/decompiler/script_fls_keys.json')
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--stage', choices=STAGES, default='terms',
-                        help='terms: reproducible v1; form: offline data-entry preview v2')
+                        help='terms: v1; form: v2; form-basic: v2.1 without secondary-email/CAPTCHA widgets')
     args = parser.parse_args()
     out = args.output_dir.resolve()
     require(not out.is_relative_to(ROOT), 'write test artifacts outside the repository')
