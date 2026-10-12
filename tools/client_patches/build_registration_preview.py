@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Build an out-of-place, version-pinned registration-UI smoke-test archive.
 
-No recovered code is executed. Only fixed-width co_code spans are changed;
-v2 also replaces two pinned literals without resizing them. Marshal layout, XOR
-boundaries and every unrelated entry are retained.
+No recovered code is executed by the builder. Patches use fixed-width co_code,
+literal and scalar edits; v2.2 explicitly changes one function argument count.
+Marshal layout, XOR boundaries and every unrelated entry are retained.
 This is NOT a working registration client or a network sandbox.
 """
 from __future__ import annotations
@@ -25,7 +25,7 @@ BASE_SHA256 = '8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72'
 KEYS_SHA256 = '43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb'
 INV = {value: key for key, value in PY25_MAP.items()}
 TARGET_ENTRIES = {337, 4007}
-STAGES = ('terms', 'form', 'form-basic')
+STAGES = ('terms', 'form', 'form-basic', 'form-validate')
 NETWORK_PATHS = {
     'CCheckCodeBox/RequestNewCode', 'CRegPanel2/DoNext',
     'CRegPanel2_2980/RequestPhoneValid', 'CRegPanel2_2980/RequestPhoneCode',
@@ -93,6 +93,28 @@ def assemble(*instructions):
     return bytes(result)
 
 
+def assemble_labeled(instructions):
+    """Resolve explicit labels in newly authored Python-2.5 instructions."""
+    labels = {}
+    at = 0
+    for op, arg in instructions:
+        if op == 'label':
+            require(arg not in labels, 'duplicate label')
+            labels[arg] = at
+        else:
+            at += 3 if op >= 90 else 1
+    output = bytearray()
+    for op, arg in instructions:
+        if op == 'label':
+            continue
+        if isinstance(arg, str):
+            require(op in (113, 111, 112), 'unsupported labelled jump')
+            arg = labels[arg] if op == 113 else labels[arg] - len(output) - 3
+            require(arg >= 0, 'negative relative jump')
+        output.extend(assemble((op, arg)))
+    return bytes(output)
+
+
 def normalized(code):
     result = []
     at = 0
@@ -120,6 +142,82 @@ def valid_code(co, code):
             require(at + 3 + arg in starts, f'unaligned relative jump at {at}')
 
 
+# Basic ASCII profile, not an ownership check or a complete RFC mailbox parser.
+# Exact 37-byte replacement for the old regexp; no trailing space padding.
+EMAIL_PATTERN = r'(?i)^[\w.-]+@[a-z\d-]+(\.[a-z\d-]+)+$'
+
+
+def validation_check(co):
+    n = lambda name: co['names'].index(name.encode('ascii'))
+    code = []
+    def emit(*items):
+        code.extend(items)
+    def require_true(label, error):
+        emit((112, label), (1, None), (100, error), (83, None), ('label', label), (1, None))
+    # locals: self, pwd, email, email2 (reused as pwd confirmation), code (max email length).
+    for attr, local in (('m_PwdEdit', 1), ('m_PwdEdit2', 3), ('m_EmailEdit', 2)):
+        emit((124, 0), (105, n(attr)), (105, n('GetText')), (131, 0))
+        if local == 2:
+            emit((105, n('strip')), (131, 0))
+        emit((125, local))
+    for local in (1, 3, 2):
+        emit((124, local), (105, n('strip')), (131, 0))
+        require_true('required' + str(local), 5)
+    for comparison, index, label in ((5, 1, 'pwd_min'), (1, 7, 'pwd_max')):
+        emit((116, n('len')), (124, 1), (131, 1), (100, index), (106, comparison))
+        require_true(label, 2)
+    emit((124, 1), (124, 3), (106, 2))
+    require_true('same_password', 3)
+    emit((100, 7), (100, 7), (23, None), (125, 4))  # 16 + 16 = 32, stack <= 2
+    emit((116, n('len')), (124, 2), (131, 1), (124, 4), (106, 1))
+    require_true('email_max', 8)
+    emit((124, 0), (105, n('CheckEmail')), (124, 2), (131, 1))
+    require_true('email_syntax', 4)
+    emit((100, 0), (83, None))
+    return assemble_labeled(code)
+
+
+def validation_email(co):
+    n = lambda name: co['names'].index(name.encode('ascii'))
+    code = []
+    for comparison, idx, label in ((5, 1, 'min'), (1, 2, 'max')):
+        code.extend([(116, n('len')), (124, 1), (131, 1), (100, idx), (106, comparison),
+                     (112, label), (1, None), (116, n('False')), (83, None), ('label', label), (1, None)])
+    code.extend([(100, 3), (100, 0), (107, n('re')), (125, 2),
+                 (124, 2), (105, n('compile')), (100, 4), (131, 1),
+                 (105, n('match')), (124, 1), (131, 1), (100, 0), (106, 9), (83, None)])
+    return assemble_labeled(code)
+
+
+def validation_next(co):
+    n = lambda name: co['names'].index(name.encode('ascii'))
+    # arg 1 is the validation flag; its old local slot 'msg' is then reused for the message.
+    return assemble_labeled([
+        (124, 1), (111, 'offline'), (1, None),
+        (124, 0), (105, n('DoCheck')), (131, 0), (125, 1),
+        (124, 1), (100, 0), (106, 8), (111, 'dialog'),
+        ('label', 'offline'), (1, None), (100, 10), (125, 1), (113, 'show'),
+        ('label', 'dialog'), (1, None),
+        ('label', 'show'), (100, 1), (100, 0), (107, n('commondialog')), (125, 4),
+        (124, 4), (105, n('ShowNewMessageBox')), (124, 1), (100, 2), (131, 2), (1, None),
+        (100, 0), (83, None)])
+
+
+def validation_messages(co):
+    n = lambda name: co['names'].index(name.encode('ascii'))
+    code = []
+    # Keep Back -> Step(0). For Next pass true, for Info pass false. Other IDs do nothing.
+    for idx, flag, label in ((1, None, 'next'), (4, 1, 'info'), (5, 2, 'end')):
+        code.extend([(124, 1), (100, idx), (106, 2), (111, label), (1, None)])
+        if flag is None:
+            code.extend([(116, n('Step')), (100, 2), (131, 1), (1, None)])
+        else:
+            code.extend([(124, 0), (105, n('DoNext')), (100, flag), (131, 1), (1, None)])
+        code.extend([(100, 0), (83, None), ('label', label), (1, None)])
+    code.extend([(100, 0), (83, None)])
+    return assemble_labeled(code)
+
+
 def patch_payload(index, plain, metadata, stage='terms'):
     require(stage in STAGES, 'unsupported preview stage')
     co_by_path = dict(objects(tree(plain)))
@@ -127,6 +225,7 @@ def patch_payload(index, plain, metadata, stage='terms'):
     changes = []
     allowed = set()
     changed_constants = {}
+    changed_metadata = {}
 
     def replace(path, offset, expected_ops, replacement, length=None):
         co = co_by_path[path]
@@ -177,6 +276,28 @@ def patch_payload(index, plain, metadata, stage='terms'):
                         'payload_offset': start, 'span_bytes': len(old),
                         'before_sha256': sha(old), 'after_sha256': sha(value)})
 
+    def record_scalar(path, start, old, value, kind, **extra):
+        require(plain[start:start + 4] == struct.pack('<i', old), 'scalar fingerprint mismatch')
+        require(not any(start <= b < start + 4 for b in metadata['bounds']), 'scalar crosses XOR boundary')
+        encoded = struct.pack('<i', value)
+        changed[start:start + 4] = encoded
+        allowed.update(range(start, start + 4))
+        changes.append({'function': path, 'kind': kind, 'payload_offset': start,
+                        'span_bytes': 4, 'before_sha256': sha(plain[start:start + 4]),
+                        'after_sha256': sha(encoded), **extra})
+
+    def replace_integer(path, idx, old, value):
+        co = co_by_path[path]
+        require(type(co['consts'][idx]) is int and co['consts'][idx] == old, 'integer constant mismatch')
+        # Search only this leaf function, then verify the complete tree diff.
+        start = co['offset'] + 22 + len(co['code'])
+        end = min((c['offset'] for c in co_by_path.values() if c['offset'] > co['offset']), default=len(plain))
+        token = b'i' + struct.pack('<i', old)
+        require(plain[start:end].count(token) == 1, 'ambiguous integer constant')
+        location = plain.index(token, start, end) + 1
+        record_scalar(path, location, old, value, 'integer_constant', constant_index=idx)
+        changed_constants[(path, idx)] = value
+
     if index == 337:
         co = co_by_path['CMainPage/OnMessage']
         # Replace only the TW predicate's load/attribute/call with False + NOPs.
@@ -213,7 +334,7 @@ def patch_payload(index, plain, metadata, stage='terms'):
         # Keep the entire code span the same length, filling unreachable bytes with NOP.
         for path in sorted(NETWORK_PATHS):
             co = co_by_path[path]
-            if stage in ('form', 'form-basic') and path == 'CRegPanel2/DoNext':
+            if stage in ('form', 'form-basic', 'form-validate') and path == 'CRegPanel2/DoNext':
                 # Local dialog only: no validation/submission, credential read,
                 # device lookup, telemetry or success state is performed.
                 body = assemble(
@@ -224,12 +345,16 @@ def patch_payload(index, plain, metadata, stage='terms'):
                     (105, co['names'].index(b'ShowNewMessageBox')),
                     (100, 10), (100, co['consts'].index('確定'.encode('cp950'))),
                     (131, 2), (1, None), (100, co['consts'].index(None)), (83, None))
+                if stage == 'form-validate':
+                    body = validation_next(co)
+                    record_scalar(path, co['offset'] + 1, 1, 2, 'argcount')
+                    changed_metadata[(path, 'argcount')] = 2
                 replace(path, 0, None, body, length=len(co['code']))
                 replace_constant(path, 10, '正在註冊，請等待...', '離線預覽，未送出。')
             else:
                 replace(path, 0, None, assemble((100, co['consts'].index(None)), (83, None)),
                         length=len(co['code']))
-        if stage in ('form', 'form-basic'):
+        if stage in ('form', 'form-basic', 'form-validate'):
             # Back retains Step(0), but Save() cannot retain typed credentials.
             # Disable the alternate old email-registration flow as well.
             for path in ('CRegPanel2/Save', 'Register2980'):
@@ -242,9 +367,12 @@ def patch_payload(index, plain, metadata, stage='terms'):
             require(co['code'][90:100] == assemble((124, co['varnames'].index(b'self')),
                     (105, co['names'].index(b'DoNext')), (131, 0), (1, None)),
                     'form preview callback fingerprint changed')
-            replace(path, 117, None, assemble((113, 90)), length=75)
+            if stage == 'form-validate':
+                replace(path, 0, None, validation_messages(co), length=len(co['code']))
+            else:
+                replace(path, 117, None, assemble((113, 90)), length=75)
             replace_constant('CRegPanel2/__init__', 4, '點擊註冊2980郵箱', '離線預覽說明')
-        if stage == 'form-basic':
+        if stage in ('form-basic', 'form-validate'):
             # User traceback maps original line 328 to CEDIT(..., 'email2', ...).
             # Only the secondary email slot is confirmed missing. Basic preview
             # deliberately needs neither that slot nor the unverified CAPTCHA UI.
@@ -264,6 +392,19 @@ def patch_payload(index, plain, metadata, stage='terms'):
             co = co_by_path[path]
             replace(path, 0, None, assemble((100, co['consts'].index(None)), (83, None)),
                     length=len(co['code']))
+        if stage == 'form-validate':
+            path = 'CRegPanel2/DoCheck'
+            co = co_by_path[path]
+            replace(path, 0, None, validation_check(co), length=len(co['code']))
+            replace_integer(path, 7, 4, 16)
+            replace_constant(path, 2, '請輸入正確格式的密碼', '密碼需6至16位')
+            replace_constant(path, 5, '兩次輸入的郵箱不一致，請核對正確後再提交', '請填寫郵箱、密碼及確認密碼')
+            replace_constant(path, 8, '請輸入正確的驗証碼', '郵箱最長32字元')
+            path = 'CRegPanel2/CheckEmail'
+            co = co_by_path[path]
+            replace(path, 0, None, validation_email(co), length=len(co['code']))
+            replace_integer(path, 2, 50, 32)
+            replace_constant(path, 4, co['consts'][4].decode('cp950'), EMAIL_PATTERN)
     else:
         raise ValueError('unexpected patch entry')
 
@@ -278,7 +419,8 @@ def patch_payload(index, plain, metadata, stage='terms'):
         # Compare local metadata without recursively comparing child code bodies.
         for key in ('offset', 'argcount', 'nlocals', 'stacksize', 'flags', 'names', 'varnames',
                     'freevars', 'cellvars', 'filename', 'name', 'firstlineno', 'lnotab'):
-            require(original[key] == current[key], f'{path}: metadata changed: {key}')
+            require(changed_metadata.get((path, key), original[key]) == current[key],
+                    f'{path}: unexpected metadata change: {key}')
         require(len(original['consts']) == len(current['consts']), 'constant count changed')
         for constant_index, (before_value, after_value) in enumerate(zip(original['consts'], current['consts'])):
             if not isinstance(before_value, dict):
@@ -348,7 +490,7 @@ def build(archive, key_bytes, stage='terms'):
                          'Direct CHttpObject/OpenUrl callers in register.py are disabled.',
                          'Not a working account-registration service or a client-wide network block.',
                          'Unchanged original code/resources may have pre-existing defects.']}
-    if stage in ('form', 'form-basic'):
+    if stage in ('form', 'form-basic', 'form-validate'):
         report['kind'] = 'registration_form_offline_preview_only'
         report['limits'] = [
             'Agree opens the old form; Reject returns home; form Back returns to terms.',
@@ -357,7 +499,7 @@ def build(archive, key_bytes, stage='terms'):
             'Form Save and Register2980 are disabled; all direct registration HTTP/browser callers are blocked.',
             'Only two fixed-width CP950 UI literals were changed; old input constraints and artwork remain.',
             'Not a client-wide network block. No native Windows v2 test has been performed.']
-    if stage == 'form-basic':
+    if stage in ('form-basic', 'form-validate'):
         report['kind'] = 'registration_basic_form_offline_preview_only'
         report['limits'][-1] = 'Not a client-wide network block. No native Windows v2.1 test has been performed.'
         report['limits'].extend([
@@ -366,6 +508,17 @@ def build(archive, key_bytes, stage='terms'):
             'Secondary-email and CAPTCHA setup are omitted; primary focus cycle is retained.',
             'Email-change callback is disabled to avoid accessing omitted widgets.',
             'Other form resources still require native verification; this does not repair the resource archive.'])
+    if stage == 'form-validate':
+        report['kind'] = 'registration_locally_validated_offline_preview_only'
+        report['limits'] = [
+            'Next requires all three fields, password length 6-16 and an exact password confirmation match.',
+            'Email is trimmed, limited to 32 ASCII characters, and checked for basic local@domain.tld syntax.',
+            'Email syntax is not complete RFC validation and does not prove ownership or deliverability.',
+            'Preview-info bypasses validation and always shows the offline notice.',
+            'Next shows the offline notice only after validation. No success simulation, Save or registration request.',
+            'Secondary-email and CAPTCHA widgets stay omitted. Old registration network calls stay blocked.',
+            'DoNext now explicitly takes a validation flag; both OnMessage call sites pass it.',
+            'Not a client-wide network block. Native Windows v2.2 acceptance is pending.']
     return result, report
 
 
@@ -375,7 +528,7 @@ def main():
     parser.add_argument('--keys', type=Path, default=ROOT / 'tools/decompiler/script_fls_keys.json')
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--stage', choices=STAGES, default='terms',
-                        help='terms: v1; form: v2; form-basic: v2.1 without secondary-email/CAPTCHA widgets')
+                        help='terms: v1; form: v2; form-basic: v2.1; form-validate: v2.2 local checks')
     args = parser.parse_args()
     out = args.output_dir.resolve()
     require(not out.is_relative_to(ROOT), 'write test artifacts outside the repository')

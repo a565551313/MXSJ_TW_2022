@@ -1,8 +1,8 @@
 # 客户端局部测试补丁：注册流程预览
 
-最新：[v2.1 基础资料页兼容预览](REGISTRATION_BASIC_FORM_PREVIEW_V2_1.md)，40 项离线检查通过；用户截图确认资料页与本地离线提示已显示，返回等交互仍待确认。
-用户 v2 日志已定位到缺失的 `email2` 占位控件；v2.1 省略二次邮箱及未启用的验证码初始化/联动。
-构建参数 `--stage form-basic` 生成 v2.1；`--stage form` 保留历史 v2，缺省 `--stage terms` 仍逐字节重现 v1。
+最新：[v2.2 本地校验预览](REGISTRATION_VALIDATION_PREVIEW_V2_2.md)，58 项离线检查通过，v2.2 原生实测待反馈。
+用户已确认 v2.1 资料页、本地提示及返回流程；本轮把下一步校验与说明入口分开。
+`--stage form-validate` 生成 v2.2；`form-basic` / `form` / 默认 `terms` 保留历史 v2.1 / v2 / v1。
 
 ## v1 第一页预览（历史交付）
 
