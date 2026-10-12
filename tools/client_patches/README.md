@@ -1,6 +1,7 @@
 # 客户端局部测试补丁：注册流程预览
 
-最新：[v3 原生界面预览](REGISTRATION_VISUAL_PREVIEW_V3.md)，68 项离线检查通过，v3 Windows 验收待反馈。
+**v3 已知启动失败，暂停使用：用户报告替换后窗口黑屏。** 先恢复已确认可用的 v2.1 或原包，等待新日志定位。
+[v3 原生界面预览及故障记录](REGISTRATION_VISUAL_PREVIEW_V3.md)：68 项历史离线检查不能代替原生验收。
 协议页采用现有 `login/service.dlg`，注册页仅复用登录布局/底图，首页消息 2 改简体「注册账号」。
 v3 使用独立构建器 `build_visual_preview.py`，安装需同时复制 FLS 和 `photo/registration_preview_v3` 图片。
 原生效果未在本环境运行；不能把 PNG 底图或假控件测试当作客户端截图。
