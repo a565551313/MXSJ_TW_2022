@@ -21,15 +21,27 @@ from .config import API_PREFIX, DEFAULT_BATCH_DIR
 from .routes import router
 
 
-def create_app(catalog: ReviewCatalog | None = None) -> FastAPI:
+def create_app(
+    catalog: ReviewCatalog | None = None,
+    batch_dir: str | Path | None = None,
+) -> FastAPI:
     """Create and configure FastAPI application."""
 
-    if catalog is None:
-        catalog = ReviewCatalog.load(DEFAULT_BATCH_DIR)
+    target_batch_dir = Path(batch_dir).resolve() if batch_dir else DEFAULT_BATCH_DIR
+    loaded_catalog: ReviewCatalog | None = None
+
+    if catalog is not None:
+        loaded_catalog = catalog
+    else:
+        try:
+            loaded_catalog = ReviewCatalog.load(target_batch_dir)
+        except CatalogError:
+            # Catalog failed to initialize due to corruptions or missing files
+            loaded_catalog = None
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        app.state.catalog = catalog
+        app.state.catalog = loaded_catalog
         yield
 
     app = FastAPI(
@@ -38,7 +50,7 @@ def create_app(catalog: ReviewCatalog | None = None) -> FastAPI:
         description="Read-only catalog loading layer and query API for batch_001 review data.",
         lifespan=lifespan,
     )
-    app.state.catalog = catalog
+    app.state.catalog = loaded_catalog
 
     # Allow CORS for development and frontend browser access
     app.add_middleware(
@@ -99,7 +111,6 @@ def create_app(catalog: ReviewCatalog | None = None) -> FastAPI:
             },
         )
 
-    # Exception handlers adhering to API contract error format
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
         detail = exc.detail
@@ -115,6 +126,8 @@ def create_app(catalog: ReviewCatalog | None = None) -> FastAPI:
             code = "INVALID_PARAMETER"
         elif exc.status_code == 405:
             code = "METHOD_NOT_ALLOWED"
+        elif exc.status_code == 503:
+            code = "CATALOG_NOT_READY"
         return JSONResponse(
             status_code=exc.status_code,
             content={
@@ -175,7 +188,6 @@ def create_app(catalog: ReviewCatalog | None = None) -> FastAPI:
 
     @app.exception_handler(Exception)
     async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-        # Do not expose internal server paths or stack trace in response
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={

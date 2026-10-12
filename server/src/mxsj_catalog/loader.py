@@ -2,6 +2,7 @@
 
 import csv
 import hashlib
+import io
 import json
 from pathlib import Path
 from types import MappingProxyType
@@ -20,6 +21,42 @@ from .models import (
     OverwriteEvidence,
     QuarantineRecord,
 )
+
+REQUIRED_CSV_FILES: frozenset[str] = frozenset({
+    "items.csv",
+    "pets.csv",
+    "pet_skill_candidates.csv",
+    "pet_required_skills.csv",
+    "pet_aptitudes.csv",
+    "pet_aptitude_missing.csv",
+    "pet_skills.csv",
+    "pet_skill_overwrites.csv",
+    "pet_skill_name_matches.csv",
+    "maps_npcs/mapdata_parent_scene.csv",
+    "maps_npcs/mapdata_scene_dictionary.csv",
+    "maps_npcs/minimapnpcpos_pos_records.csv",
+    "maps_npcs/minimapnpcpos_wenzi_entries.csv",
+    "maps_npcs/npc_2601_vs_2804_agreement.csv",
+    "maps_npcs/npcname2realnamedata_alias_to_realname.csv",
+    "maps_npcs/npcposdata_records.csv",
+    "maps_npcs/sceneid2name_minimap_scenes.csv",
+})
+
+REQUIRED_EVIDENCE_FILES: frozenset[str] = frozenset({
+    "quarantine.jsonl",
+    "overwrite_evidence.jsonl",
+    "validation.json",
+    "maps_npcs/provenance.json",
+})
+
+ALL_REQUIRED_FILES: frozenset[str] = REQUIRED_CSV_FILES | REQUIRED_EVIDENCE_FILES
+
+SUPPORTED_COLUMN_TYPES: frozenset[str] = frozenset({
+    "int",
+    "int_or_empty",
+    "bool",
+    "str",
+})
 
 SHORT_NAME_MAP: dict[str, str] = {
     "items": "items.csv",
@@ -41,7 +78,6 @@ SHORT_NAME_MAP: dict[str, str] = {
     "sceneid2name_minimap_scenes": "maps_npcs/sceneid2name_minimap_scenes.csv",
 }
 
-# Reverse lookup from file path to short id
 FILE_TO_SHORT_ID: dict[str, str] = {v: k for k, v in SHORT_NAME_MAP.items()}
 
 
@@ -54,13 +90,10 @@ def normalize_dataset_id(dataset_id: str) -> str:
         base = raw[:-4]
         if base in SHORT_NAME_MAP:
             return SHORT_NAME_MAP[base]
-    # Check if raw is already a manifest filename
     if raw in FILE_TO_SHORT_ID:
         return raw
-    # Check if stripping .csv matches a manifest filename
     if not raw.endswith(".csv") and (raw + ".csv") in FILE_TO_SHORT_ID:
         return raw + ".csv"
-    # Check if base name matches
     base_name = Path(raw).name
     if base_name in SHORT_NAME_MAP:
         return SHORT_NAME_MAP[base_name]
@@ -109,8 +142,46 @@ def convert_value(val: str, col_type: str, col_name: str, row_idx: int) -> Any:
     elif col_type == "str":
         return str(val)
     else:
-        # Fallback to string for unhandled types
-        return str(val)
+        raise CatalogValueError(
+            f"Row {row_idx}: Unsupported column type '{col_type}' for column '{col_name}'"
+        )
+
+
+def verify_file_integrity(file_rel_path: str, meta: dict[str, Any], base_dir: Path) -> bytes:
+    """Verify file existence, path containment, byte length, and SHA-256 hash."""
+    resolved_base = base_dir.resolve()
+    target_path = (base_dir / file_rel_path).resolve()
+
+    try:
+        target_path.relative_to(resolved_base)
+    except ValueError:
+        raise CatalogIntegrityError(
+            f"Path traversal detected: '{file_rel_path}' is outside batch directory"
+        )
+
+    if not target_path.is_file():
+        raise CatalogIntegrityError(f"Missing required file: {file_rel_path}")
+
+    data = target_path.read_bytes()
+
+    expected_bytes = meta.get("bytes")
+    if expected_bytes is None:
+        raise CatalogIntegrityError(f"Missing 'bytes' specification in manifest for {file_rel_path}")
+    if len(data) != expected_bytes:
+        raise CatalogIntegrityError(
+            f"File size mismatch for {file_rel_path}: expected {expected_bytes}, got {len(data)}"
+        )
+
+    expected_sha256 = meta.get("sha256")
+    if expected_sha256 is None:
+        raise CatalogIntegrityError(f"Missing 'sha256' specification in manifest for {file_rel_path}")
+    actual_sha256 = hashlib.sha256(data).hexdigest()
+    if actual_sha256 != expected_sha256:
+        raise CatalogIntegrityError(
+            f"SHA256 mismatch for {file_rel_path}: expected {expected_sha256}, got {actual_sha256}"
+        )
+
+    return data
 
 
 def load_raw_dataset(
@@ -119,38 +190,44 @@ def load_raw_dataset(
     base_dir: Path,
 ) -> Dataset:
     """Load, validate, and index a single CSV dataset according to manifest."""
-    csv_path = base_dir / file_rel_path
-    if not csv_path.is_file():
-        raise CatalogIntegrityError(f"Missing CSV file: {csv_path}")
+    # Verify file integrity and path containment
+    data = verify_file_integrity(file_rel_path, meta, base_dir)
 
-    # Read bytes and verify integrity
-    with open(csv_path, "rb") as f:
-        data = f.read()
+    columns_meta = meta.get("columns")
+    if columns_meta is None or not isinstance(columns_meta, list):
+        raise CatalogSchemaError(f"Missing or invalid 'columns' metadata for {file_rel_path}")
 
-    expected_bytes = meta.get("bytes")
-    if expected_bytes is not None and len(data) != expected_bytes:
-        raise CatalogIntegrityError(
-            f"File size mismatch for {file_rel_path}: expected {expected_bytes}, got {len(data)}"
-        )
-
-    expected_sha256 = meta.get("sha256")
-    if expected_sha256 is not None:
-        actual_sha256 = hashlib.sha256(data).hexdigest()
-        if actual_sha256 != expected_sha256:
-            raise CatalogIntegrityError(
-                f"SHA256 mismatch for {file_rel_path}: expected {expected_sha256}, got {actual_sha256}"
+    # Validate column types
+    for c in columns_meta:
+        ctype = c.get("type")
+        cname = c.get("name")
+        if not cname:
+            raise CatalogSchemaError(f"Unnamed column in {file_rel_path}")
+        if ctype not in SUPPORTED_COLUMN_TYPES:
+            raise CatalogSchemaError(
+                f"Unsupported column type '{ctype}' for column '{cname}' in {file_rel_path}"
             )
 
-    columns_meta = meta.get("columns", [])
     col_defs = tuple(ColumnDef(name=c["name"], type=c["type"]) for c in columns_meta)
     col_names = [c.name for c in col_defs]
     col_types = {c.name: c.type for c in col_defs}
-    primary_keys = tuple(meta.get("primary_key", []))
 
-    # Read CSV
+    raw_pk = meta.get("primary_key")
+    if raw_pk is None or not isinstance(raw_pk, list):
+        raise CatalogSchemaError(f"Missing or invalid 'primary_key' for {file_rel_path}")
+
+    # Check all primary_key columns exist in columns
+    for pk_col in raw_pk:
+        if pk_col not in col_types:
+            raise CatalogSchemaError(
+                f"Primary key column '{pk_col}' not found in declared columns of {file_rel_path}"
+            )
+
+    primary_keys = tuple(raw_pk)
+
+    # Read CSV using io.StringIO to preserve multiline fields (CR, LF, CRLF inside quotes)
     text_content = data.decode("utf-8")
-    lines = text_content.splitlines()
-    reader = csv.reader(lines)
+    reader = csv.reader(io.StringIO(text_content))
 
     header = next(reader, None)
     if header is None:
@@ -179,10 +256,6 @@ def load_raw_dataset(
         if primary_keys:
             pk_values = []
             for pk_col in primary_keys:
-                if pk_col not in row_dict:
-                    raise CatalogKeyError(
-                        f"Primary key column '{pk_col}' missing from row {row_idx} in {file_rel_path}"
-                    )
                 val = row_dict[pk_col]
                 pk_values.append(str(val) if val is not None else "")
             pk_str = ":".join(pk_values)
@@ -200,12 +273,19 @@ def load_raw_dataset(
         pk_map[pk_str] = frozen_row
 
     expected_rows = meta.get("rows")
-    if expected_rows is not None and len(records) != expected_rows:
+    if expected_rows is None or len(records) != expected_rows:
         raise CatalogIntegrityError(
             f"Row count mismatch in {file_rel_path}: expected {expected_rows}, got {len(records)}"
         )
 
     short_id = FILE_TO_SHORT_ID.get(file_rel_path, Path(file_rel_path).stem)
+
+    raw_source_entry = meta.get("source_entry")
+    if isinstance(raw_source_entry, list):
+        source_entry = tuple(raw_source_entry)
+    else:
+        source_entry = raw_source_entry
+
     schema = DatasetSchema(
         id=short_id,
         filename=file_rel_path,
@@ -213,7 +293,7 @@ def load_raw_dataset(
         primary_key=primary_keys,
         columns=col_defs,
         notes=meta.get("notes", ""),
-        source_entry=meta.get("source_entry"),
+        source_entry=source_entry,
         source_table=meta.get("source_table"),
         csv_format=meta.get("csv_format", ""),
         schema_document=meta.get("schema_document", ""),

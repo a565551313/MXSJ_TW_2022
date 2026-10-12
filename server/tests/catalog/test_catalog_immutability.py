@@ -42,6 +42,41 @@ class TestCatalogImmutability(unittest.TestCase):
         ds = self.catalog.get_dataset("pets")
         self.assertEqual(ds.records[0]["name"], original_name)
 
+    def test_batch_info_nested_mutation_does_not_affect_catalog(self):
+        # Reproduce coordinator's mutation test
+        info1 = self.catalog.get_batch_info()
+        orig_check = info1["validation_summary"]["checks"]["csv_round_trip"]
+        orig_1945_count = info1["tables_summary"]["1945"]["review_csv_records"]
+
+        # Mutate nested dictionaries
+        info1["validation_summary"]["checks"]["csv_round_trip"] = "CALLER_CHANGED"
+        info1["tables_summary"]["1945"]["review_csv_records"] = -999
+
+        # Verify fresh fetch is completely unaffected
+        info2 = self.catalog.get_batch_info()
+        self.assertEqual(info2["validation_summary"]["checks"]["csv_round_trip"], orig_check)
+        self.assertEqual(info2["tables_summary"]["1945"]["review_csv_records"], orig_1945_count)
+
+    def test_schema_source_entry_cannot_be_mutated(self):
+        # Ensure schema.source_entry is an immutable tuple (or int) and cannot be appended to
+        ds = self.catalog.get_dataset("npc_2601_vs_2804_agreement")
+        source_entry = ds.schema.source_entry
+        self.assertIsInstance(source_entry, tuple)
+        self.assertEqual(source_entry, (2601, 2804))
+
+        with self.assertRaises(AttributeError):
+            source_entry.append(999)
+
+    def test_list_datasets_mutation_does_not_affect_catalog(self):
+        datasets = self.catalog.list_datasets()
+        datasets[0]["id"] = "tampered_id"
+        datasets[0]["columns"].append({"name": "extra", "type": "str"})
+
+        # Subsequent call is fresh
+        fresh = self.catalog.list_datasets()
+        self.assertNotEqual(fresh[0]["id"], "tampered_id")
+        self.assertNotIn("extra", [c["name"] for c in fresh[0]["columns"]])
+
 
 if __name__ == "__main__":
     unittest.main()

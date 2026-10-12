@@ -21,7 +21,7 @@ class DatasetSchema:
     primary_key: tuple[str, ...]
     columns: tuple[ColumnDef, ...]
     notes: str = ""
-    source_entry: int | list[int] | tuple[int, ...] | None = None
+    source_entry: tuple[int, ...] | int | None = None
     source_table: str | None = None
     csv_format: str = ""
     schema_document: str = ""

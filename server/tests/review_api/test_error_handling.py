@@ -1,6 +1,8 @@
 """Integration tests for Review API error handling and input validation."""
 
+import shutil
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -52,6 +54,42 @@ class TestErrorHandling(unittest.TestCase):
         self.assertEqual(r3.status_code, 400)
         self.assertEqual(r3.json()["error"]["code"], "INVALID_PARAMETER")
 
+    def test_invalid_order_parameter_returns_400(self):
+        # Reproduce coordinator's test: ?order=wrong
+        r = self.client.get("/api/v1/review/datasets/items/records?order=wrong")
+        self.assertEqual(r.status_code, 400)
+        err = r.json()["error"]
+        self.assertEqual(err["code"], "INVALID_PARAMETER")
+        self.assertIn("order", err["message"].lower())
+
+    def test_typo_in_quarantine_parameter_returns_400(self):
+        # Reproduce coordinator's test: ?record_kee=72548
+        r = self.client.get("/api/v1/review/quarantine?record_kee=72548")
+        self.assertEqual(r.status_code, 400)
+        err = r.json()["error"]
+        self.assertEqual(err["code"], "INVALID_PARAMETER")
+        self.assertIn("record_kee", err["message"])
+
+    def test_unknown_overwrites_parameter_returns_400(self):
+        r = self.client.get("/api/v1/review/overwrites?invalid_param=1")
+        self.assertEqual(r.status_code, 400)
+        err = r.json()["error"]
+        self.assertEqual(err["code"], "INVALID_PARAMETER")
+        self.assertIn("invalid_param", err["message"])
+
+    def test_unexpected_param_on_zero_arg_endpoints_returns_400(self):
+        r1 = self.client.get("/api/v1/review/health?foo=bar")
+        self.assertEqual(r1.status_code, 400)
+        self.assertEqual(r1.json()["error"]["code"], "INVALID_PARAMETER")
+
+        r2 = self.client.get("/api/v1/review/batch?foo=bar")
+        self.assertEqual(r2.status_code, 400)
+        self.assertEqual(r2.json()["error"]["code"], "INVALID_PARAMETER")
+
+        r3 = self.client.get("/api/v1/review/datasets?foo=bar")
+        self.assertEqual(r3.status_code, 400)
+        self.assertEqual(r3.json()["error"]["code"], "INVALID_PARAMETER")
+
     def test_unknown_filter_column_returns_400(self):
         r = self.client.get("/api/v1/review/datasets/items/records?invalid_column=123")
         self.assertEqual(r.status_code, 400)
@@ -78,14 +116,18 @@ class TestErrorHandling(unittest.TestCase):
         err = r.json()["error"]
         self.assertEqual(err["code"], "NOT_FOUND")
 
-    def test_catalog_not_ready_returns_503(self):
-        app = create_app()
-        app.state.catalog = None
-        client = TestClient(app)
-        r = client.get("/api/v1/review/health")
-        self.assertEqual(r.status_code, 503)
-        err = r.json()["error"]
-        self.assertEqual(err["code"], "CATALOG_NOT_READY")
+    def test_corrupted_batch_dir_returns_503_catalog_not_ready(self):
+        # When creating app with a non-existent or corrupted batch_dir
+        temp_empty_dir = tempfile.mkdtemp()
+        try:
+            broken_app = create_app(batch_dir=temp_empty_dir)
+            broken_client = TestClient(broken_app)
+            r = broken_client.get("/api/v1/review/health")
+            self.assertEqual(r.status_code, 503)
+            err = r.json()["error"]
+            self.assertEqual(err["code"], "CATALOG_NOT_READY")
+        finally:
+            shutil.rmtree(temp_empty_dir)
 
 
 if __name__ == "__main__":

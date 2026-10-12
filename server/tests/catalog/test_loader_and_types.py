@@ -1,6 +1,10 @@
 """Tests for catalog loading and strict type conversions."""
 
+import hashlib
+import json
+import shutil
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -10,7 +14,7 @@ if str(SRC_DIR) not in sys.path:
 
 from mxsj_catalog.catalog import ReviewCatalog
 from mxsj_catalog.errors import CatalogValueError
-from mxsj_catalog.loader import convert_value
+from mxsj_catalog.loader import convert_value, load_raw_dataset
 
 
 class TestCatalogLoaderAndTypes(unittest.TestCase):
@@ -99,6 +103,44 @@ class TestCatalogLoaderAndTypes(unittest.TestCase):
             self.assertIsInstance(r["fpneed_raw"], str)
             self.assertIsInstance(r["mpneed_raw"], str)
             self.assertIsInstance(r["hpneed_raw"], str)
+
+    def test_csv_text_streaming_multiline_and_special_characters(self):
+        # Test that embedded newlines (\n, \r\n, \r), quotes, commas, and formula prefixes
+        # are preserved faithfully without being mangled by premature splitlines().
+        temp_dir = tempfile.mkdtemp()
+        try:
+            base_path = Path(temp_dir)
+            expected_text = "first\nsecond\r\nthird\rfourth"
+            formula_text = "=SUM(1, 2) + @test - 100"
+            csv_content = (
+                '"id","desc","formula"\n'
+                f'"1","{expected_text}","{formula_text}"\n'
+            )
+            raw_bytes = csv_content.encode("utf-8")
+            (base_path / "test.csv").write_bytes(raw_bytes)
+
+            meta = {
+                "bytes": len(raw_bytes),
+                "sha256": hashlib.sha256(raw_bytes).hexdigest(),
+                "rows": 1,
+                "primary_key": ["id"],
+                "columns": [
+                    {"name": "id", "type": "int"},
+                    {"name": "desc", "type": "str"},
+                    {"name": "formula", "type": "str"},
+                ],
+            }
+
+            dataset = load_raw_dataset("test.csv", meta, base_path)
+            self.assertEqual(len(dataset.records), 1)
+            record = dataset.records[0]
+            # Ensure newlines were not squashed or stripped
+            self.assertEqual(record["desc"], expected_text)
+            self.assertEqual(record["formula"], formula_text)
+            # Ensure not evaluated
+            self.assertIsInstance(record["formula"], str)
+        finally:
+            shutil.rmtree(temp_dir)
 
 
 if __name__ == "__main__":

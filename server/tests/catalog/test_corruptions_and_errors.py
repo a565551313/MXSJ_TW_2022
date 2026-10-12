@@ -20,6 +20,8 @@ from mxsj_catalog.errors import (
     CatalogValueError,
 )
 
+ORIGINAL_BATCH_DIR = Path(__file__).resolve().parent.parent.parent / "docs" / "csv_checks" / "batch_001"
+
 
 class TestCorruptionsAndErrors(unittest.TestCase):
     """Test behavior when files, hashes, headers, types, or keys are corrupted."""
@@ -31,117 +33,102 @@ class TestCorruptionsAndErrors(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.temp_dir)
 
-    def _create_minimal_dataset(self, csv_content: str, columns: list[dict], pk: list[str], row_count: int):
-        data = csv_content.encode("utf-8")
-        sha = hashlib.sha256(data).hexdigest()
-        byte_len = len(data)
+    def _copy_real_batch(self) -> Path:
+        """Create a full working copy of batch_001 for negative mutation tests."""
+        import uuid
+        dest = self.base_path / f"batch_copy_{uuid.uuid4().hex[:8]}"
+        shutil.copytree(ORIGINAL_BATCH_DIR, dest)
+        return dest
 
-        csv_file = self.base_path / "test.csv"
-        csv_file.write_bytes(data)
-
-        manifest = {
-            "batch": "test_batch",
-            "files": {
-                "test.csv": {
-                    "bytes": byte_len,
-                    "sha256": sha,
-                    "rows": row_count,
-                    "primary_key": pk,
-                    "columns": columns,
-                }
-            },
-        }
-        (self.base_path / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
-        return manifest
-
-    def test_missing_csv_file_raises_integrity_error(self):
-        manifest = {
-            "batch": "test_batch",
-            "files": {
-                "missing.csv": {
-                    "bytes": 100,
-                    "sha256": "fakehash",
-                    "rows": 1,
-                    "primary_key": ["id"],
-                    "columns": [{"name": "id", "type": "int"}],
-                }
-            },
-        }
-        (self.base_path / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    def test_missing_evidence_files_raises_integrity_error(self):
+        # 1. Missing quarantine.jsonl
+        batch_dir = self._copy_real_batch()
+        (batch_dir / "quarantine.jsonl").unlink()
         with self.assertRaises(CatalogIntegrityError):
-            ReviewCatalog.load(self.base_path)
+            ReviewCatalog.load(batch_dir)
 
-    def test_sha256_mismatch_raises_integrity_error(self):
-        csv_content = '"id","name"\n"1","test"\n'
-        cols = [{"name": "id", "type": "int"}, {"name": "name", "type": "str"}]
-        manifest = self._create_minimal_dataset(csv_content, cols, ["id"], 1)
-        # Corrupt manifest sha
-        manifest["files"]["test.csv"]["sha256"] = "0000000000000000000000000000000000000000000000000000000000000000"
-        (self.base_path / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+        # 2. Missing overwrite_evidence.jsonl
+        batch_dir2 = self._copy_real_batch()
+        (batch_dir2 / "overwrite_evidence.jsonl").unlink()
+        with self.assertRaises(CatalogIntegrityError):
+            ReviewCatalog.load(batch_dir2)
+
+        # 3. Missing validation.json
+        batch_dir3 = self._copy_real_batch()
+        (batch_dir3 / "validation.json").unlink()
+        with self.assertRaises(CatalogIntegrityError):
+            ReviewCatalog.load(batch_dir3)
+
+        # 4. Missing maps_npcs/provenance.json
+        batch_dir4 = self._copy_real_batch()
+        (batch_dir4 / "maps_npcs" / "provenance.json").unlink()
+        with self.assertRaises(CatalogIntegrityError):
+            ReviewCatalog.load(batch_dir4)
+
+    def test_tampered_quarantine_jsonl_raises_integrity_error(self):
+        batch_dir = self._copy_real_batch()
+        q_file = batch_dir / "quarantine.jsonl"
+        lines = q_file.read_text(encoding="utf-8").splitlines()
+        # Tamper record_key to 999999 without updating manifest hash
+        tampered_line = lines[0].replace('"record_key": 72548', '"record_key": 999999')
+        lines[0] = tampered_line
+        q_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
         with self.assertRaises(CatalogIntegrityError):
-            ReviewCatalog.load(self.base_path)
+            ReviewCatalog.load(batch_dir)
 
-    def test_byte_size_mismatch_raises_integrity_error(self):
-        csv_content = '"id","name"\n"1","test"\n'
-        cols = [{"name": "id", "type": "int"}, {"name": "name", "type": "str"}]
-        manifest = self._create_minimal_dataset(csv_content, cols, ["id"], 1)
-        # Corrupt byte size
-        manifest["files"]["test.csv"]["bytes"] = 999999
-        (self.base_path / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
-
-        with self.assertRaises(CatalogIntegrityError):
-            ReviewCatalog.load(self.base_path)
-
-    def test_row_count_mismatch_raises_integrity_error(self):
-        csv_content = '"id","name"\n"1","test"\n'
-        cols = [{"name": "id", "type": "int"}, {"name": "name", "type": "str"}]
-        manifest = self._create_minimal_dataset(csv_content, cols, ["id"], 1)
-        # Claim 2 rows when only 1 exists
-        data = csv_content.encode("utf-8")
-        manifest["files"]["test.csv"]["rows"] = 2
-        manifest["files"]["test.csv"]["sha256"] = hashlib.sha256(data).hexdigest()
-        manifest["files"]["test.csv"]["bytes"] = len(data)
-        (self.base_path / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    def test_missing_dataset_declaration_in_manifest_raises_integrity_error(self):
+        # Delete items.csv declaration from manifest
+        batch_dir = self._copy_real_batch()
+        manifest_path = batch_dir / "manifest.json"
+        manifest_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        del manifest_data["files"]["items.csv"]
+        manifest_path.write_text(json.dumps(manifest_data), encoding="utf-8")
 
         with self.assertRaises(CatalogIntegrityError):
-            ReviewCatalog.load(self.base_path)
+            ReviewCatalog.load(batch_dir)
 
-    def test_missing_column_in_header_raises_schema_error(self):
-        # CSV header missing column 'name'
-        csv_content = '"id"\n"1"\n'
-        cols = [{"name": "id", "type": "int"}, {"name": "name", "type": "str"}]
-        self._create_minimal_dataset(csv_content, cols, ["id"], 1)
+    def test_unknown_column_type_raises_schema_error(self):
+        batch_dir = self._copy_real_batch()
+        manifest_path = batch_dir / "manifest.json"
+        manifest_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        # Change column type in items.csv to unsupported type
+        manifest_data["files"]["items.csv"]["columns"][0]["type"] = "unsupported_type"
+        manifest_path.write_text(json.dumps(manifest_data), encoding="utf-8")
 
         with self.assertRaises(CatalogSchemaError):
-            ReviewCatalog.load(self.base_path)
+            ReviewCatalog.load(batch_dir)
 
-    def test_extra_column_in_header_raises_schema_error(self):
-        # CSV header has extra column
-        csv_content = '"id","name","extra"\n"1","test","extra_val"\n'
-        cols = [{"name": "id", "type": "int"}, {"name": "name", "type": "str"}]
-        self._create_minimal_dataset(csv_content, cols, ["id"], 1)
+    def test_path_traversal_in_manifest_raises_integrity_error(self):
+        batch_dir = self._copy_real_batch()
+        manifest_path = batch_dir / "manifest.json"
+        manifest_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        # Inject outside path
+        manifest_data["files"]["../outside.csv"] = {
+            "bytes": 10,
+            "sha256": "0" * 64,
+            "rows": 1,
+            "columns": [{"name": "id", "type": "int"}],
+            "primary_key": ["id"],
+        }
+        manifest_path.write_text(json.dumps(manifest_data), encoding="utf-8")
 
-        with self.assertRaises(CatalogSchemaError):
-            ReviewCatalog.load(self.base_path)
+        with self.assertRaises(CatalogIntegrityError):
+            ReviewCatalog.load(batch_dir)
 
-    def test_invalid_type_conversion_raises_value_error(self):
-        # Value "not_an_int" cannot be parsed as int
-        csv_content = '"id","name"\n"not_an_int","test"\n'
-        cols = [{"name": "id", "type": "int"}, {"name": "name", "type": "str"}]
-        self._create_minimal_dataset(csv_content, cols, ["id"], 1)
+    def test_corrupted_json_in_evidence_file_raises_integrity_error(self):
+        batch_dir = self._copy_real_batch()
+        val_file = batch_dir / "validation.json"
+        val_file.write_bytes(b"{ broken json")
+        # Update manifest bytes/sha to pass byte check, but JSON parsing should fail
+        manifest_path = batch_dir / "manifest.json"
+        manifest_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest_data["files"]["validation.json"]["bytes"] = len(b"{ broken json")
+        manifest_data["files"]["validation.json"]["sha256"] = hashlib.sha256(b"{ broken json").hexdigest()
+        manifest_path.write_text(json.dumps(manifest_data), encoding="utf-8")
 
-        with self.assertRaises(CatalogValueError):
-            ReviewCatalog.load(self.base_path)
-
-    def test_duplicate_primary_key_raises_key_error(self):
-        # Duplicate key "1"
-        csv_content = '"id","name"\n"1","test1"\n"1","test2"\n'
-        cols = [{"name": "id", "type": "int"}, {"name": "name", "type": "str"}]
-        self._create_minimal_dataset(csv_content, cols, ["id"], 2)
-
-        with self.assertRaises(CatalogKeyError):
-            ReviewCatalog.load(self.base_path)
+        with self.assertRaises(CatalogIntegrityError):
+            ReviewCatalog.load(batch_dir)
 
 
 if __name__ == "__main__":

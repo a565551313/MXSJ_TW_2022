@@ -27,10 +27,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="MXSJ Review Browser Query API Server")
     parser.add_argument("--host", default=DEFAULT_HOST, help="Host to bind (default: 0.0.0.0)")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Port to bind (default: 8000)")
+    parser.add_argument("--batch-dir", default=None, help="Path to batch directory (default: batch_001)")
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload")
     args = parser.parse_args()
 
-    app = create_app()
+    app = create_app(batch_dir=args.batch_dir)
     print(f"Starting MXSJ Review API on {args.host}:{args.port} (prefix /api/v1/review)...")
     uvicorn.run(app, host=args.host, port=args.port)
 
