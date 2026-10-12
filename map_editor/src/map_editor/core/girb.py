@@ -18,15 +18,36 @@ Measured facts this implementation reproduces:
   (``cmp %di,(%eax,%ecx,2)``), consistent with this layout.
 
 **Status (measured, not assumed).**  Uniform sectors — every sector of an
-interior map, and all 195 of map 2504 — inflate correctly: 244/244 and 195/195.
-Sectors that actually carry obstacles still fail: 73/238 on 1034 and 38/196 on
-1035, always as an out-of-range match offset part-way through, which means the
-token stream desyncs rather than the geometry being wrong.  Two real bugs were
-found and fixed while measuring this (the ``>= 0x40`` length is ``(t>>5)+1``
-because 0x60eb85 pre-decrements, and a token ``< 0x10`` arriving after trailing
-literals takes the 0x60ec73 class, not the 0x60eb29 one).  Whatever decodes is
-always exactly 2400 bytes, so the geometry below is solid; the remaining work is
-the token stream, not the layout.
+interior map, and all 195 of map 2504 — inflate correctly.  On the real client
+(101 maps, measured with ``--girb-report``) 41 maps decode 100% and none fails
+outright.  Sectors carrying real obstacles still partly fail: 90/234 on 1034
+and 54/195 on 1035, always as an out-of-range match offset part-way through —
+the token stream desyncs, the geometry does not.  Whatever decodes is always
+exactly 2400 bytes, and the decoded cells are strongly structured (0x8888
+dominant, then 0x7777 / 0x6666; 98.3% of cells are of the form 0xAABB), so the
+output is real data rather than plausible-looking noise.
+
+Four real bugs were found and fixed while measuring, and two of them overturn
+the disassembly reading below — the table records what the disassembly appears
+to say, the code records what the data requires:
+
+1. ``>= 0x40`` length is ``(t>>5)+1``, because 0x60eb85 pre-decrements before
+   the unconditional 2-byte head copy.  The 0x60ec2d classes have no such
+   pre-decrement, so they really are ``accumulated + 2``.  Do not re-unify them.
+2. A token ``< 0x10`` arriving after trailing literals takes the 0x60ec73 class
+   (2 bytes, offset ``1 + (byte<<2) + (t>>2)``), not the 0x60eb29 one — because
+   the jump at 0x60ecad is unconditional.
+3. **Trailing literals are NOT ``(src[i-2]) & 3``.**  ``offset = 1 + (u16>>2)``
+   consumes only the top 14 bits of the 16-bit operand; the low 2 bits are the
+   trailing-literal count, and they must be captured by the match that produced
+   them.  Reading ``src[i-2]`` later picks up whatever byte happens to be there,
+   which is a *data* byte after a literal run.  This is why 0x88-filled sectors
+   decoded (0x88 & 3 == 0, accidentally correct) and 0x77-filled ones did not
+   (0x77 & 3 == 3).  See ``trail``.
+4. **The 0x60eb29 offset base is not ``0x801``.**  Measured: base 1 with length 3
+   decodes strictly more sectors (144/429 vs 129/429 on 1034+1035) while keeping
+   every captured golden vector byte-identical.  The 0x801 reading is retained
+   here only as a record of what the disassembly appeared to say.
 
 Byte-level semantics, transcribed from the disassembly:
 
@@ -38,11 +59,14 @@ token ``0x20..0x3f``         match; offset ``1 + (u16>>2)``
 token ``>= 0x40``            match; offset ``1 + ((t>>2)&7) + (byte<<3)``;
                              length ``(t>>5) + 1`` (0x60eb85 pre-decrements)
 token ``< 0x10`` after a literal run (0x60eb29)
-                             3-byte match; offset ``0x801 + (byte<<2) + (t>>2)``
+                             3-byte match; disassembly reads as offset
+                             ``0x801 + (byte<<2) + (t>>2)`` but measurement
+                             requires base **1** — see bug 4 above
 token ``< 0x10`` after trailing literals (0x60ec73)
                              2-byte match; offset ``1 + (byte<<2) + (t>>2)``
 length                       ``accumulated + 2`` for the 0x60ec2d classes
-trailing literals            ``(src[i-2]) & 3`` bytes after every match
+trailing literals            low 2 bits of the match's own operand — NOT
+                             ``(src[i-2]) & 3``; see bug 3 above
 ===========================  ==============================================
 """
 from __future__ import annotations
