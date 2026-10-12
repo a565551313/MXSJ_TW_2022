@@ -1,0 +1,463 @@
+{
+  "checks": [
+    {
+      "check": "API-01.items",
+      "detail": {
+        "page_size_used": 250,
+        "pages": 28,
+        "rows": 6851
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "pagination is complete, duplicate-free and stably ordered"
+    },
+    {
+      "check": "API-01.pet_skills",
+      "detail": {
+        "page_size_used": 250,
+        "pages": 3,
+        "rows": 579
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "pagination is complete, duplicate-free and stably ordered"
+    },
+    {
+      "check": "API-01.pet_aptitudes",
+      "detail": {
+        "page_size_used": 250,
+        "pages": 1,
+        "rows": 131
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "pagination is complete, duplicate-free and stably ordered"
+    },
+    {
+      "check": "API-01.pet_skill_candidates",
+      "detail": {
+        "page_size_used": 250,
+        "pages": 2,
+        "rows": 458
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "pagination is complete, duplicate-free and stably ordered"
+    },
+    {
+      "check": "API-01.npcposdata_records",
+      "detail": {
+        "page_size_used": 250,
+        "pages": 6,
+        "rows": 1335
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "pagination is complete, duplicate-free and stably ordered"
+    },
+    {
+      "check": "API-01.minimapnpcpos_pos_records",
+      "detail": {
+        "page_size_used": 250,
+        "pages": 6,
+        "rows": 1344
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "pagination is complete, duplicate-free and stably ordered"
+    },
+    {
+      "check": "API-02",
+      "detail": {
+        "items": {
+          "ids": [
+            "41052"
+          ],
+          "term": "時空石"
+        }
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "search and exact filters follow the contract"
+    },
+    {
+      "check": "API-03",
+      "detail": [
+        "items: {'sort_by': 'client_shape_id', 'order': 'sideways'} accepted silently with HTTP 200 (50 rows, no explanation in the body)",
+        "pets: {'sort_by': 'client_shape_id', 'order': 'sideways'} accepted silently with HTTP 200 (50 rows, no explanation in the body)",
+        "/api/v1/review/quarantine?entry_indexx=... was accepted with HTTP 200 (4 rows) — a misspelled filter must not be ignored silently",
+        "/api/v1/review/quarantine?key=... was accepted with HTTP 200 (4 rows) — a misspelled filter must not be ignored silently",
+        "/api/v1/review/overwrites?keyy=... was accepted with HTTP 200 (9 rows) — a misspelled filter must not be ignored silently",
+        "/api/v1/review/overwrites?sort_by=... was accepted with HTTP 200 (9 rows) — a misspelled filter must not be ignored silently",
+        "/api/v1/review/batch?batch=... was accepted with HTTP 200 (? rows) — a misspelled filter must not be ignored silently",
+        "/api/v1/review/missing-aptitudes?limit=... was accepted with HTTP 200 (3 rows) — a misspelled filter must not be ignored silently",
+        "/api/v1/review/missing-aptitudes?offset=... was accepted with HTTP 200 (3 rows) — a misspelled filter must not be ignored silently"
+      ],
+      "requirement": "required",
+      "status": "fail",
+      "title": "invalid parameters produce explicit errors, never silent substitution"
+    },
+    {
+      "check": "API-04",
+      "detail": {
+        "items/11.image_mapping_explicit": {
+          "api": false,
+          "csv": false,
+          "csv_raw": "false",
+          "type": "bool"
+        },
+        "items/41052.image_mapping_explicit": {
+          "api": true,
+          "csv": true,
+          "csv_raw": "true",
+          "type": "bool"
+        },
+        "npcposdata_records/1001:0.field12": {
+          "api": null,
+          "csv": null,
+          "csv_raw": "",
+          "type": "int_or_empty"
+        },
+        "npcposdata_records/1001:0.npcid": {
+          "api": 1083,
+          "csv": 1083,
+          "csv_raw": "1083",
+          "type": "int_or_empty"
+        },
+        "npcposdata_records/1001:0.secondary_name": {
+          "api": "",
+          "csv": "",
+          "csv_raw": "",
+          "type": "str"
+        },
+        "pet_skills/101.fpneed_raw": {
+          "api": "0",
+          "csv": "0",
+          "csv_raw": "0",
+          "type": "str"
+        },
+        "pet_skills/101.skill_id": {
+          "api": 101,
+          "csv": 101,
+          "csv_raw": "101",
+          "type": "int"
+        }
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "\"false\", empty text and missing values are not coerced"
+    },
+    {
+      "check": "API-05",
+      "detail": [
+        "missing_quarantine_file: service reported ready (health=200, quarantine_entries=0) — the missing or tampered evidence file was silently accepted",
+        "missing_validation_file: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
+        "missing_overwrite_evidence: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
+        "missing_provenance_file: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
+        "tampered_quarantine_no_hash_update: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
+        "manifest_drops_items_dataset: service stayed ready with 16 datasets (health=200) instead of refusing the shrunken manifest"
+      ],
+      "requirement": "required",
+      "status": "fail",
+      "title": "damaged or tampered batch copies never yield a pseudo-normal catalogue (hash, type, missing or tampered evidence files, manifest shrinkage)"
+    },
+    {
+      "check": "API-06",
+      "detail": {
+        "items": {
+          "rows": 6851
+        },
+        "minimapnpcpos_pos_records": {
+          "rows": 1344
+        },
+        "npc_2601_vs_2804_agreement": {
+          "rows": 677
+        },
+        "npcposdata_records": {
+          "rows": 1335
+        },
+        "pet_aptitude_missing": {
+          "rows": 3
+        },
+        "pet_aptitudes": {
+          "rows": 131
+        },
+        "pet_required_skills": {
+          "rows": 26
+        },
+        "pet_skill_candidates": {
+          "rows": 458
+        },
+        "pet_skill_name_matches": {
+          "rows": 145
+        },
+        "pet_skill_overwrites": {
+          "rows": 9
+        },
+        "pet_skills": {
+          "rows": 579
+        },
+        "pets": {
+          "rows": 135
+        }
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "quarantined records never enter the normal lists"
+    },
+    {
+      "check": "API-07",
+      "detail": {
+        "detail_2800": 404
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "aptitude 2800 is never rewritten to the unapproved 1700"
+    },
+    {
+      "check": "API-08",
+      "detail": {
+        "pet_aptitudes": {
+          "rows": 131
+        }
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "missing aptitudes (3010/4021/4022) are not zero-filled"
+    },
+    {
+      "check": "API-09",
+      "detail": {
+        "ids": [
+          "229",
+          "255"
+        ]
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "same-name skill 高級命中 keeps every candidate id [229, 255]"
+    },
+    {
+      "check": "API-10",
+      "detail": {
+        "ids": [
+          "329",
+          "355"
+        ]
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "same-name skill 終級命中 keeps every candidate id [329, 355]"
+    },
+    {
+      "check": "API-11",
+      "detail": {
+        "maps_npcs/minimapnpcpos_pos_records.csv": {
+          "csv_rows": 1344,
+          "duplicate_groups": 130,
+          "pages": 6,
+          "rows": 1344,
+          "zero_id_rows": 631
+        },
+        "maps_npcs/npcposdata_records.csv": {
+          "csv_rows": 1335,
+          "duplicate_groups": 131,
+          "pages": 6,
+          "rows": 1335,
+          "zero_id_rows": 632
+        }
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "NPC records are not deduplicated by (scene_id, npcid)"
+    },
+    {
+      "check": "API-12",
+      "detail": {
+        "%2e%2e%2f%2e%2e%2fdata%2fscript.fls{}": 404,
+        "..%2f..%2f..%2f..%2f..%2f..%2fetc%2fpasswd{}": 404,
+        "../../../../../../etc/passwd{}": 404,
+        "../../data/script.fls{}": 404,
+        "items{'dataset': '../../data/script.fls'}": 400,
+        "items{'dataset_path': '/etc/passwd'}": 400
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "illegal datasets, path traversal and arbitrary file reads are refused"
+    },
+    {
+      "check": "API-13",
+      "detail": {
+        "DELETE /api/v1/review/datasets/items/records": 405,
+        "DELETE /api/v1/review/datasets/items/records/11": 405,
+        "PATCH /api/v1/review/datasets/items/records": 405,
+        "PATCH /api/v1/review/datasets/items/records/11": 405,
+        "POST /api/v1/review/datasets/items/records": 405,
+        "POST /api/v1/review/datasets/items/records/11": 405,
+        "PUT /api/v1/review/datasets/items/records": 405,
+        "PUT /api/v1/review/datasets/items/records/11": 405
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "callers cannot modify the underlying catalogue"
+    },
+    {
+      "check": "API-14",
+      "detail": {
+        "POST /api/v1/review/commit": 404,
+        "POST /api/v1/review/create": 404,
+        "POST /api/v1/review/datasets/items/records/commit": 405,
+        "POST /api/v1/review/datasets/items/records/create": 405,
+        "POST /api/v1/review/datasets/items/records/delete": 405,
+        "POST /api/v1/review/datasets/items/records/delete_row": 405,
+        "POST /api/v1/review/datasets/items/records/edit": 405,
+        "POST /api/v1/review/datasets/items/records/export": 405,
+        "POST /api/v1/review/datasets/items/records/import": 405,
+        "POST /api/v1/review/datasets/items/records/publish": 405,
+        "POST /api/v1/review/datasets/items/records/rebuild": 405,
+        "POST /api/v1/review/datasets/items/records/refresh": 405,
+        "POST /api/v1/review/datasets/items/records/reload": 405,
+        "POST /api/v1/review/datasets/items/records/save": 405,
+        "POST /api/v1/review/datasets/items/records/update": 405,
+        "POST /api/v1/review/datasets/items/records/upload": 405,
+        "POST /api/v1/review/datasets/items/records/write": 405,
+        "POST /api/v1/review/delete": 404,
+        "POST /api/v1/review/delete_row": 404,
+        "POST /api/v1/review/edit": 404,
+        "POST /api/v1/review/export": 404,
+        "POST /api/v1/review/import": 404,
+        "POST /api/v1/review/publish": 404,
+        "POST /api/v1/review/rebuild": 404,
+        "POST /api/v1/review/refresh": 404,
+        "POST /api/v1/review/reload": 404,
+        "POST /api/v1/review/save": 404,
+        "POST /api/v1/review/update": 404,
+        "POST /api/v1/review/upload": 404,
+        "POST /api/v1/review/write": 404,
+        "contract_mutating_routes": [],
+        "openapi_routes": {
+          "/api/v1/review/ambiguous-skills": [
+            "get"
+          ],
+          "/api/v1/review/batch": [
+            "get"
+          ],
+          "/api/v1/review/datasets": [
+            "get"
+          ],
+          "/api/v1/review/datasets/{dataset_id}": [
+            "get"
+          ],
+          "/api/v1/review/datasets/{dataset_id}/records": [
+            "get"
+          ],
+          "/api/v1/review/datasets/{dataset_id}/records/{record_id}": [
+            "get"
+          ],
+          "/api/v1/review/health": [
+            "get"
+          ],
+          "/api/v1/review/missing-aptitudes": [
+            "get"
+          ],
+          "/api/v1/review/overwrites": [
+            "get"
+          ],
+          "/api/v1/review/quarantine": [
+            "get"
+          ]
+        },
+        "static_routes": {
+          "files": 29,
+          "mutating_routes": [],
+          "roots": [
+            "server/apps",
+            "server/src/mxsj_catalog"
+          ]
+        }
+      },
+      "requirement": "required",
+      "status": "pass",
+      "title": "no edit/save/upload/publish endpoints exist"
+    },
+    {
+      "check": "API-15",
+      "detail": "no --web-url supplied and the operation map declares none: the browser-side origin (Vite dev server / preview) was not exercised",
+      "requirement": "",
+      "status": "not_executed",
+      "title": "pages and API work through the preview proxy: relative URLs only, no sandbox host in the browser payload"
+    }
+  ],
+  "contract": {
+    "available": true,
+    "base_path": "/api/v1/review",
+    "dataset_root_env_hint": "ITEMDATABYTYPE",
+    "documented_endpoints": [
+      [
+        "POST",
+        "/"
+      ],
+      [
+        "PUT",
+        "/"
+      ],
+      [
+        "PATCH",
+        "/"
+      ],
+      [
+        "GET",
+        "/api/v1/review/health"
+      ],
+      [
+        "GET",
+        "/api/v1/review/batch"
+      ],
+      [
+        "GET",
+        "/api/v1/review/datasets"
+      ],
+      [
+        "GET",
+        "/api/v1/review/datasets/{dataset_id}"
+      ],
+      [
+        "GET",
+        "/api/v1/review/datasets/{dataset_id}/records"
+      ],
+      [
+        "GET",
+        "/api/v1/review/datasets/{dataset_id}/records/{record_id}"
+      ],
+      [
+        "GET",
+        "/api/v1/review/quarantine"
+      ],
+      [
+        "GET",
+        "/api/v1/review/overwrites"
+      ],
+      [
+        "GET",
+        "/api/v1/review/missing-aptitudes"
+      ],
+      [
+        "GET",
+        "/api/v1/review/ambiguous-skills"
+      ]
+    ],
+    "path": "server/docs/review_browser/API_CONTRACT.md",
+    "port_hint": null,
+    "startup_commands": []
+  },
+  "stage": "phase2_phase3_api_and_page",
+  "status": "fail",
+  "status_meaning": "at least one required check failed",
+  "summary": {
+    "executed": 19,
+    "fail": 2,
+    "not_executed": 1,
+    "pass": 17,
+    "total": 20
+  }
+}

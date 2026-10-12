@@ -1,0 +1,268 @@
+{
+  "stage": "phase3_web_origin_contract",
+  "origin": "http://127.0.0.1:35807",
+  "frontend_contract": {
+    "API_PATHS": {
+      "batch": "/api/v1/review/batch",
+      "items": "/api/v1/review/items",
+      "pets": "/api/v1/review/pets",
+      "skills": "/api/v1/review/skills",
+      "mapDatasets": "/api/v1/review/maps/datasets",
+      "npcs": "/api/v1/review/npcs",
+      "npcAgreement": "/api/v1/review/npcs/agreement",
+      "anomalies": "/api/v1/review/anomalies"
+    },
+    "DEFAULT_PAGE_SIZE": 25
+  },
+  "checks": [
+    {
+      "check": "W-10",
+      "title": "entry page is served by the web origin with relative assets",
+      "status": "pass",
+      "detail": {
+        "status": 200,
+        "scripts": [
+          "/@vite/client",
+          "/src/main.tsx"
+        ],
+        "links": [],
+        "problems": []
+      }
+    },
+    {
+      "check": "W-11",
+      "title": "the page entry module loads and holds no sandbox host",
+      "status": "pass",
+      "detail": {
+        "modules": [
+          {
+            "src": "/@vite/client",
+            "status": 200,
+            "bytes": 178934,
+            "kind": "dev-server"
+          },
+          {
+            "src": "/src/main.tsx",
+            "status": 200,
+            "bytes": 2276,
+            "kind": "application"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "check": "W-12",
+      "title": "the list pages get the {items,total,page,page_size} envelope they parse",
+      "status": "fail",
+      "detail": [
+        "items (/api/v1/review/items?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])",
+        "pets (/api/v1/review/pets?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])",
+        "skills (/api/v1/review/skills?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])"
+      ]
+    },
+    {
+      "check": "W-13",
+      "title": "the overview/anomaly/npc/map pages get their endpoints",
+      "status": "fail",
+      "detail": [
+        "anomalies (/api/v1/review/anomalies): HTTP 404",
+        "mapDatasets (/api/v1/review/maps/datasets): HTTP 404",
+        "npcs (/api/v1/review/npcs?source=2601&page=1&page_size=25): HTTP 404",
+        "npcAgreement (/api/v1/review/npcs/agreement?page=1&page_size=25): HTTP 404"
+      ]
+    },
+    {
+      "check": "W-14",
+      "title": "detail pages resolve a single record",
+      "status": "fail",
+      "detail": [
+        "item detail (/api/v1/review/items/11): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])",
+        "pet detail (/api/v1/review/pets/1010): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])",
+        "skill detail (/api/v1/review/skills/101): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])"
+      ]
+    },
+    {
+      "check": "W-15",
+      "title": "the web origin proxies /api to the review API",
+      "status": "pass",
+      "detail": {
+        "status": 200,
+        "problems": []
+      }
+    },
+    {
+      "check": "W-16",
+      "title": "the web origin tolerates a proxied Host/Origin header",
+      "status": "pass",
+      "detail": {
+        "status": 200
+      }
+    }
+  ],
+  "requests": [
+    {
+      "label": "items",
+      "path": "/api/v1/review/items?page=1&page_size=25",
+      "status": 404,
+      "parsed": true,
+      "keys": [
+        "error"
+      ],
+      "problems": [
+        "HTTP 404",
+        "missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])"
+      ]
+    },
+    {
+      "label": "pets",
+      "path": "/api/v1/review/pets?page=1&page_size=25",
+      "status": 404,
+      "parsed": true,
+      "keys": [
+        "error"
+      ],
+      "problems": [
+        "HTTP 404",
+        "missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])"
+      ]
+    },
+    {
+      "label": "skills",
+      "path": "/api/v1/review/skills?page=1&page_size=25",
+      "status": 404,
+      "parsed": true,
+      "keys": [
+        "error"
+      ],
+      "problems": [
+        "HTTP 404",
+        "missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])"
+      ]
+    },
+    {
+      "label": "batch",
+      "path": "/api/v1/review/batch",
+      "status": 200,
+      "parsed": true,
+      "keys": [
+        "batch",
+        "native_loader_confirmed",
+        "manifest_files_count",
+        "csv_format",
+        "tables_summary",
+        "validation_summary"
+      ],
+      "problems": []
+    },
+    {
+      "label": "anomalies",
+      "path": "/api/v1/review/anomalies",
+      "status": 404,
+      "parsed": true,
+      "keys": [
+        "error"
+      ],
+      "problems": [
+        "HTTP 404"
+      ]
+    },
+    {
+      "label": "mapDatasets",
+      "path": "/api/v1/review/maps/datasets",
+      "status": 404,
+      "parsed": true,
+      "keys": [
+        "error"
+      ],
+      "problems": [
+        "HTTP 404"
+      ]
+    },
+    {
+      "label": "npcs",
+      "path": "/api/v1/review/npcs?source=2601&page=1&page_size=25",
+      "status": 404,
+      "parsed": true,
+      "keys": [
+        "error"
+      ],
+      "problems": [
+        "HTTP 404"
+      ]
+    },
+    {
+      "label": "npcAgreement",
+      "path": "/api/v1/review/npcs/agreement?page=1&page_size=25",
+      "status": 404,
+      "parsed": true,
+      "keys": [
+        "error"
+      ],
+      "problems": [
+        "HTTP 404"
+      ]
+    },
+    {
+      "label": "item detail",
+      "path": "/api/v1/review/items/11",
+      "status": 404,
+      "parsed": true,
+      "keys": [
+        "error"
+      ],
+      "problems": [
+        "HTTP 404",
+        "missing keys [\"_pk\"] (got [\"error\"])"
+      ]
+    },
+    {
+      "label": "pet detail",
+      "path": "/api/v1/review/pets/1010",
+      "status": 404,
+      "parsed": true,
+      "keys": [
+        "error"
+      ],
+      "problems": [
+        "HTTP 404",
+        "missing keys [\"_pk\"] (got [\"error\"])"
+      ]
+    },
+    {
+      "label": "skill detail",
+      "path": "/api/v1/review/skills/101",
+      "status": 404,
+      "parsed": true,
+      "keys": [
+        "error"
+      ],
+      "problems": [
+        "HTTP 404",
+        "missing keys [\"_pk\"] (got [\"error\"])"
+      ]
+    },
+    {
+      "label": "api-through-proxy",
+      "path": "/api/v1/review/datasets/items/records?offset=0&limit=1",
+      "status": 200,
+      "parsed": true,
+      "keys": [
+        "dataset",
+        "total",
+        "offset",
+        "limit",
+        "count",
+        "records"
+      ],
+      "problems": []
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "pass": 4,
+    "fail": 3
+  },
+  "status": "fail",
+  "status_meaning": "the entry page is served, but the application cannot load its data"
+}
