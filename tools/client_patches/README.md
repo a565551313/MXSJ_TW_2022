@@ -1,6 +1,6 @@
 # 客户端局部测试补丁：注册流程预览
 
-最新：[v2 资料页离线预览](REGISTRATION_FORM_PREVIEW_V2.md)，26 项离线检查通过，v2 原生实测待反馈。
+最新：[v2 资料页离线预览](REGISTRATION_FORM_PREVIEW_V2.md)，26 项离线检查通过；用户报告 v2 点击“我同意”无反应，正待运行日志定位。
 构建参数 `--stage form` 生成 v2；缺省 `--stage terms` 仍逐字节重现 v1。
 
 ## v1 第一页预览（历史交付）
