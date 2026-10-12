@@ -165,7 +165,7 @@ class VisualPreviewTests(unittest.TestCase):
             panel = namespace['CRegPanel1'](None)
             panel.OnMessage(1)
             panel.OnMessage(2)
-        self.assertEqual(events, [('step',1), ('show',False), ('home',True)])
+        self.assertEqual(events, [('step',1), ('home',True), ('show',False)])
 
     def test_form_loads_only_login_art_and_creates_three_fields(self):
         namespace, _, _ = self.environment()
@@ -193,6 +193,37 @@ class VisualPreviewTests(unittest.TestCase):
         panel.OnMessage(3)
         self.assertFalse(panel.validation_flag)
         self.assertEqual(panel.m_PreviewInfo.m_MsgID, 3)
+
+    def test_missing_caption_image_does_not_erase_existing_label(self):
+        namespace, _, _ = self.environment()
+        home = Panel(None, 'login_new/newlogin_800.dlg')
+        def unavailable(*args):
+            raise RuntimeError('simulated missing PNG')
+        namespace['ui'].CImage = unavailable
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output): namespace['GetData'](home)
+        self.assertEqual(home.m_Frames['next'].text, 'old caption')
+        self.assertFalse(hasattr(home.m_Frames['next'], 'm_PreviewCaption'))
+        self.assertIn('NOT installed', output.getvalue())
+
+    def test_empty_caption_image_does_not_erase_existing_label(self):
+        namespace, _, _ = self.environment()
+        home = Panel(None, 'login_new/newlogin_800.dlg')
+        namespace['ui'].CImage = lambda *args: Node(size=(0, 0))
+        with contextlib.redirect_stdout(io.StringIO()): namespace['GetData'](home)
+        self.assertEqual(home.m_Frames['next'].text, 'old caption')
+        self.assertFalse(hasattr(home.m_Frames['next'], 'm_PreviewCaption'))
+
+    def test_failed_home_creation_does_not_hide_current_agreement(self):
+        namespace, modules, events = self.environment()
+        def unavailable(flag):
+            raise RuntimeError('simulated homepage error')
+        modules['mainpage'].Show = unavailable
+        with mock_patch.dict(sys.modules, modules), contextlib.redirect_stdout(io.StringIO()):
+            panel = namespace['CRegPanel1'](None)
+            with self.assertRaisesRegex(RuntimeError, 'homepage error'):
+                panel.OnMessage(2)
+        self.assertEqual(events, [])
 
     def test_original_files_unchanged(self):
         self.assertEqual((base.ROOT / 'data/script.fls').read_bytes(), self.source)

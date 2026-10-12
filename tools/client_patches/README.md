@@ -1,6 +1,8 @@
 # 客户端局部测试补丁：注册流程预览
 
-**v3 已知启动失败，暂停使用：用户报告替换后窗口黑屏。** 先恢复已确认可用的 v2.1 或原包，等待新日志定位。
+**已交付 v3 停用。自查已确认其 EXEC 命名空间参数错误，并复现 TypeError。**
+修正代码为 v3.1 候选，79 项单元检查、14 项独立 CPython 2.5 执行审计通过；尚未 Windows 原生验收。
+详见 [v3 黑屏自查与修正](V3_STARTUP_SELF_AUDIT.md)。不要继续使用旧 v3 ZIP。
 [v3 原生界面预览及故障记录](REGISTRATION_VISUAL_PREVIEW_V3.md)：68 项历史离线检查不能代替原生验收。
 协议页采用现有 `login/service.dlg`，注册页仅复用登录布局/底图，首页消息 2 改简体「注册账号」。
 v3 使用独立构建器 `build_visual_preview.py`，安装需同时复制 FLS 和 `photo/registration_preview_v3` 图片。

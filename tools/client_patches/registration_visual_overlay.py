@@ -11,6 +11,9 @@ _PREVIEW_TEXT = u'''介面預覽說明\n\n這是註冊介面的離線測試版�
 
 def _picture(parent, name, x, y):
     obj = ui.CImage(parent, _VISUAL_PREFIX + name + '.png', _VISUAL_PATH)
+    width, height = obj.GetSize()
+    if width <= 0 or height <= 0:
+        raise RuntimeError('preview image has no dimensions: ' + name)
     obj.SetPos(x, y)
     return obj
 
@@ -28,9 +31,11 @@ def _caption(button, name, size):
     # avoiding the TW byte-string font path for simplified Chinese captions.
     if not hasattr(button, 'SetText'):
         raise RuntimeError('preview caption needs a text button')
-    button.SetText('')
     w, h = button.GetSize()
-    button.m_PreviewCaption = _picture(button, name, (w-size[0])//2, (h-size[1])//2)
+    # Load first. If the image fails, retain the existing clickable caption.
+    caption = _picture(button, name, (w-size[0])//2, (h-size[1])//2)
+    button.SetText('')
+    button.m_PreviewCaption = caption
 
 
 def GetData(home):
@@ -76,9 +81,9 @@ class CRegPanel1(combdialog.CCombPanel):
         if msgid == 1:
             Step(1)
         elif msgid in (2, 3):
-            Show(False)
             import mainpage
             mainpage.Show(True)
+            Show(False)
 
 
 class CRegPanel2(_ValidatedForm):

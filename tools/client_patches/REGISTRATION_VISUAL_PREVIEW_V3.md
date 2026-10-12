@@ -7,12 +7,16 @@
 68 项离线检查通过的历史结果不能覆盖该失败。当前尚未收到本次运行日志、安装哈希或恢复结果。
 不把新生成的控件底图当成实际客户端截图；界面效果、资源加载、字体、遮挡、点击及滚动都待用户验证。
 
-## 原生失败记录与处置
+后续自查已复现明确代码错误并修正为 v3.1 候选，见 [自查报告](V3_STARTUP_SELF_AUDIT.md)。
+以下 v3 方案与初始排查内容是历史记录；旧 ZIP 保持不变，继续停用。
+
+## 初次原生失败记录与处置（历史）
 
 用户原文：“不行啊替换了直接黑屏游戏窗口黑屏”。
 已要求退出游戏/更新器，恢复此前用户确认可用的 v2.1 或原包，先恢复可启动状态。
 新增 photo 子目录可以先保留，不应删除整个 photo 或把旧图片目录误当作根因。
-交付 ZIP/冻结产物保留为历史证据，本轮没有改写、重打包或宣称修复。
+当时保留了交付 ZIP/冻结产物，没有重打包或宣称修复。
+后续自查更新了仓库中的冻结产物；原交付 ZIP 仍保持不变。
 
 代码复核发现 v3 在 CMainPage.__init__ 中提前 import register，再调用 GetData。
 GetData 内的异常处理只覆盖按钮定位和图片添加，不能保护此前发生的模块解码/导入/overlay 初始化异常。
@@ -54,7 +58,8 @@ GetData 内的异常处理只覆盖按钮定位和图片添加，不能保护此
    import register; register.GetData(self)。版本显示、此前首页初始化和末尾返回均保留。
    **预览版不再读取/展示 tg.id 推广标识**，并非无副作用的字符串替换。
 2. register entry 4007：删除已禁用的 CRegPanel2_2980 类代码常量，在该槽放置新编译的界面代码对象。
-   原模块 488–512 的旧类构造块变为 EXEC_STMT(code, None, None)，在当前模块命名空间执行已编译对象。
+   原模块 488–512 的旧类构造块设计上应为 EXEC_STMT(code, None, None)。
+   **自查发现已交付 v3 实际错用了常量 0（-1），成为 EXEC_STMT(code, -1, -1)，导致 TypeError。**
    没有动态执行 .py 源文件，没有 execfile/eval/网络代码下载，也不依赖客户端自带编译器。
    覆盖两个页面类；新表单继承原 v2.2 已校验类。保留无害 CRegPanel2_2980 类型供旧 isinstance 检查。
 3. 原 register 树的其他函数及常量语义逐项保持；重新生成 intern 表，重排后的 marshal 填充到原 44,362 字节。
@@ -73,8 +78,9 @@ GetData 内的异常处理只覆盖按钮定位和图片添加，不能保护此
 仅从已锁定的原始 FLS 构建，不对用户已修改包做差分：
 
 ```bash
-# 普通重建只使用冻结产物，不要求本机安装 Python 2.5 或 Pillow。
-python3 tools/client_patches/build_visual_preview.py \
+# 当前脚本输出 v3.1 未验收候选，不再重建历史 v3；须显式选择候选。
+# 只使用冻结产物，不要求本机安装 Python 2.5 或 Pillow。
+python3 tools/client_patches/build_visual_preview.py --allow-unverified-candidate \
   --output-dir /home/user/artifacts/NEW_VISUAL_OUTPUT
 python3 -m unittest discover -s tools/client_patches -v
 

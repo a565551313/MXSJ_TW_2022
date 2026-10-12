@@ -1,8 +1,8 @@
 {
   "compiler": "CPython 2.5.6",
   "compiler_source": "https://github.com/python/cpython/tree/v2.5.6",
-  "source_sha256": "aef09ffb935c3fb701f55a601fd15607624ddfdcf1820bc1387cddd568269149",
-  "compiled_sha256": "e71e069643223933af6a7cd2597ce5c994cb5bf826f5d3b5ad045d1e6fcb48eb",
+  "source_sha256": "6171a7cd9fa9fefca0362b6ec0cd66fba3d946f129c8bff175fd97e53a304957",
+  "compiled_sha256": "dc2a6decf4d63297e2dce6983ea37f8729e97ef44fca91c90625651ccec0ac07",
   "font_sha256": "dea41f7b9fc5480f1311cf4331cb48d98b8f73b37fa773782bf31260775edae4",
   "assets": {
     "agree.png": "a10a4978539b7c5d931e3fd51603e47f826d523582d978fa40517c40617b00a9",

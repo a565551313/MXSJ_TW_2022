@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build v3 native UI preview from the pinned archive, without source execution.
+"""Build the v3.1 candidate (shipped v3 failed startup), without source execution.
 
 Requires the small frozen CPython-2.5 overlay plus its source hash manifest.
 The register entry is semantically reserialized to make room for a new compiled
@@ -108,6 +108,50 @@ def load_overlay():
     return prepare_overlay(raw), manifest
 
 
+def overlay_invocation(root, index=41):
+    """Never assume module constant zero is None (it is -1 in this archive)."""
+    none_indices = [i for i, value in enumerate(root['consts']) if value is None]
+    base.require(len(none_indices) == 1, 'module needs exactly one None constant')
+    none_index = none_indices[0]
+    base.require(isinstance(root['consts'][index], dict), 'overlay slot is not code')
+    return base.assemble((100, index), (100, none_index), (100, none_index), (85, None))
+
+
+def homepage_hook(co):
+    """Bounded, logged exception guard around BOTH import and caption setup.
+
+    The original try-block footprint is 426..570. Preserve its relative handler
+    target 552 and return at 571, but consume/log every Python exception instead
+    of only IOError. The returned fragment contains no recovered instructions.
+    """
+    body = base.assemble((100, co['consts'].index(-1)), (100, co['consts'].index(None)),
+                         (107, co['names'].index(b'register')), (125, co['varnames'].index(b'register')),
+                         (124, co['varnames'].index(b'register')), (105, co['names'].index(b'GetData')),
+                         (124, co['varnames'].index(b'self')), (131, 1), (1, None))
+    handler = base.assemble((1, None),  # exception type; leave value and traceback
+                            (100, co['consts'].index(b'login/mainpage.dlg')),
+                            (71, None), (71, None), (72, None),  # prefix, exception value, newline
+                            (1, None), (110, 8))  # traceback; resume original return
+    base.require(len(handler) == 11, 'unexpected guard handler width')
+    fragment = (base.assemble((121, 123)) + body
+                + base.assemble((9, None)) * (119-len(body))
+                + base.assemble((87, None), (110, 19))
+                + handler + base.assemble((9, None)) * 8)
+    base.require(len(fragment) == 145, 'unexpected startup hook width')
+    return fragment
+
+
+def registration_transition(co):
+    """Construct the registration UI before discarding the existing homepage."""
+    old = co['code']
+    base.require(old[215:225] == base.assemble((116, co['names'].index(b'Show')),
+                 (116, co['names'].index(b'False')), (131, 1), (1, None)), 'home hide fingerprint changed')
+    base.require(old[225:238] == base.assemble((124, co['varnames'].index(b'register')),
+                 (105, co['names'].index(b'Show')), (116, co['names'].index(b'True')),
+                 (131, 1), (1, None)), 'registration show fingerprint changed')
+    return old[225:238] + old[215:225]
+
+
 def build(archive, keys):
     baseline, prior_report = base.build(archive, keys, stage='form-validate')
     metadata = json.loads(keys)
@@ -124,17 +168,22 @@ def build(archive, keys):
             co = dict(base.objects(original))['CMainPage/__init__']
             base.require(len(co['code']) == 575, 'homepage constructor size changed')
             base.require((426, 121, 123) in base.normalized(co['code']), 'homepage hook fingerprint changed')
-            body = base.assemble((100, co['consts'].index(-1)), (100, co['consts'].index(None)),
-                                 (107, co['names'].index(b'register')), (125, co['varnames'].index(b'register')),
-                                 (124, co['varnames'].index(b'register')), (105, co['names'].index(b'GetData')),
-                                 (124, co['varnames'].index(b'self')), (131, 1), (1, None))
+            body = homepage_hook(co)
             start = co['offset'] + 22 + 426
             end = co['offset'] + 22 + 571
             base.require(not any(start <= b < end for b in metadata[str(index)]['bounds']), 'hook crosses XOR boundary')
-            patched = plain[:start] + body + base.assemble((9, None)) * (end-start-len(body)) + plain[end:]
+            patched = plain[:start] + body + plain[end:]
             after = dict(base.objects(base.tree(patched)))['CMainPage/__init__']
             base.valid_code(after, after['code'])
-            details['homepage'] = 'registration message 2 caption; optional tg.id display replaced by UI hook'
+            transition = dict(base.objects(original))['CMainPage/OnMessage']
+            at = transition['offset'] + 22 + 215
+            replacement = registration_transition(transition)
+            base.require(not any(at <= b < at + len(replacement) for b in metadata[str(index)]['bounds']),
+                         'registration transition crosses XOR boundary')
+            patched = patched[:at] + replacement + patched[at + len(replacement):]
+            after = dict(base.objects(base.tree(patched)))['CMainPage/OnMessage']
+            base.valid_code(after, after['code'])
+            details['homepage'] = 'guarded registration caption hook; create target before hiding home'
         else:
             root = copy.deepcopy(original)
             base.require(root['consts'][41]['name'] == b'CRegPanel2_2980', 'obsolete class slot changed')
@@ -147,7 +196,7 @@ def build(archive, keys):
             consts[41] = overlay
             # Execute already-compiled CODE in the current register namespace.
             # There is no execfile, eval, network code loading, or native compiler.
-            invoke = base.assemble((100, 41), (100, 0), (100, 0), (85, None))
+            invoke = overlay_invocation(root)
             root['code'] = root['code'][:488] + invoke + base.assemble((9, None)) * (25-len(invoke)) + root['code'][513:]
             root['consts'] = tuple(consts + [b''])
             size = len(Writer().write(root))
@@ -181,10 +230,14 @@ def build(archive, keys):
     source_rows = base.entries(archive)[1]
     output_rows = base.entries(result)[1]
     base.require([i for i, (a,b) in enumerate(zip(source_rows, output_rows)) if a != b] == [337, 4007], 'archive scope changed')
-    report = {'kind': 'registration_visual_preview_v3', 'source_sha256': base.sha(archive),
+    report = {'kind': 'registration_visual_preview_v3_1_candidate', 'source_sha256': base.sha(archive),
               'output_sha256': base.sha(result), 'output_bytes': len(result), 'changed_entries': [337, 4007],
               'untouched_entries_byte_identical': 5000, 'native_windows_client_tested': False,
               'source_executed_during_build': False, 'details': details, 'asset_sha256': manifest['assets'],
+              'startup_changes': ['EXEC globals/locals use the actual None constant, not -1.',
+                                  'Homepage guard covers import and caption call, logging exceptions and returning.',
+                                  'Caption image is loaded and checked before removing the old caption.',
+                                  'Registration/reject transitions create the target page before hiding the current one.'],
               'limits': ['New compiled overlay and marshal reserialization require Windows native validation.',
                          'Original selected-realm service dialog and login controller are not modified or instantiated.',
                          'Preview only: inherited v2.2 validation, no registration request or saved credentials.',
@@ -197,7 +250,11 @@ def build(archive, keys):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output-dir', type=Path, required=True)
+    parser.add_argument('--allow-unverified-candidate', action='store_true',
+                        help='explicit opt-in: v3.1 has no native Windows acceptance yet')
     args = parser.parse_args()
+    base.require(args.allow_unverified_candidate,
+                 'explicit opt-in required: v3.1 is an unverified candidate; shipped v3 must not be reused')
     out = args.output_dir.resolve()
     base.require(not out.is_relative_to(base.ROOT), 'write outside repository')
     base.require(not (out / 'data/script.fls').exists(), 'refusing overwrite')
