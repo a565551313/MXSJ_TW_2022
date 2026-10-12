@@ -21,7 +21,32 @@ pip install -r requirements.txt
 python run.py --gui --client-root "D:/Games/MXSJ"     # 图形界面
 python run.py --scan "D:/Games/MXSJ"                  # 终端列出全部地图（不需要 Qt）
 python run.py --scan . --export-json 2101:out/2101.json
+python runGUI.py                                       # 无论传不传参数，一律直接打开图形界面
+python runGUI.py --client-root "D:/Games/MXSJ"         # 同上，顺便记住客户端目录
 ```
+
+> **`run.py` 与 `runGUI.py` 的区别**：`run.py` 默认是命令行模式，只有加
+> `--gui`（或者打包成无控制台窗口的 EXE 后不带任何参数双击启动，2026-10-12
+> 起支持）才会打开图形界面；而 `runGUI.py` 不管加不加 `--gui`、加没加
+> `--scan`/`--export-json` 等任何其它参数，**始终**打开图形界面——相当于
+> 内部自动补上 `--gui` 再转发给同一套 `map_editor.cli.main()`，其余参数
+> （`--client-root`、`--scene-table` 等）照常生效。适合只想要"双击就进图形
+> 界面"这一种用法、不想记各种命令行参数的场景。它同样需要 Qt（PySide6），
+> 没装 Qt 时会直接报 `ImportError`，不像 `run.py` 那样有纯命令行的降级路径。
+
+### 画布鼠标/滚轮操作（2026-10-12 新增拖动平移、Ctrl+滚轮缩放、适应窗口）
+
+- **按住鼠标左键拖动**：平移地图（原来只能靠滚动条，经常大地图找不到东西）。
+  松开左键结束拖动；光标在"可拖动"和"正在拖动"之间切换成张开手/握拳手形状提示。
+- **Ctrl + 鼠标滚轮**：以当前缩放步进（每格 ±15%）调整缩放，和顶部缩放输入框
+  是同一套状态，两边会同步；不按 Ctrl 的普通滚轮仍然是数值输入框旁边
+  `QScrollArea` 的默认垂直/水平滚动，行为不变。
+- 悬停时状态栏显示的像素/格/扇区坐标信息不受拖动影响，拖动过程中仍会实时更新。
+- 工具栏新增"适应窗口"按钮：打开地图后点一下，自动把缩放设成刚好让整张地图
+  填满画布可视区域，不用手算缩放比例；拖动/缩放之后想"看全图"一键回到整体视角。
+- 这几个手势/按钮只在 `ui/widgets.py`（唯一允许导入 Qt 的模块）里实现，不影响
+  `--scan`/`--export-*` 等纯命令行路径；本仓库沙箱没有 `libGL.so.1`，无法
+  实际起一个窗口做可视化回归，这部分请在有桌面环境的机器上验收。
 
 ### 打包成 EXE（在 Windows 上执行）
 
@@ -43,7 +68,8 @@ build.bat
 
 ```
 map_editor/
-├── run.py                     入口（薄壳，转发给 map_editor.cli）
+├── run.py                     入口（薄壳，转发给 map_editor.cli；默认命令行，--gui 才开窗口）
+├── runGUI.py                  纯 GUI 入口（薄壳，强制补 --gui 再转发给 map_editor.cli；无论传什么参数都直接开窗口）
 ├── build.bat                  Windows 打包脚本
 ├── map_editor.spec            PyInstaller 配置（含数据文件打包）
 ├── data/

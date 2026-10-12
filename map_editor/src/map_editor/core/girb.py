@@ -17,18 +17,22 @@ Measured facts this implementation reproduces:
 * The runtime walkability test at ``0x4bbb00`` indexes a **u16** array
   (``cmp %di,(%eax,%ecx,2)``), consistent with this layout.
 
-**Status (measured, not assumed).**  Uniform sectors — every sector of an
-interior map, and all 195 of map 2504 — inflate correctly.  On the real client
-(101 maps, measured with ``--girb-report``) 41 maps decode 100% and none fails
-outright.  Sectors carrying real obstacles still partly fail: 90/234 on 1034
-and 54/195 on 1035, always as an out-of-range match offset part-way through —
-the token stream desyncs, the geometry does not.  Whatever decodes is always
-exactly 2400 bytes, and the decoded cells are strongly structured (0x8888
-dominant, then 0x7777 / 0x6666; 98.3% of cells are of the form 0xAABB), so the
-output is real data rather than plausible-looking noise.
+**Status (measured, not assumed; re-verified 2026-10-12 against the live
+native routine, not just its disassembly — see point 4 below).**  Uniform
+sectors — every sector of an interior map, and all 195 of map 2504 — inflate
+correctly.  On the real client (101 maps, measured with ``--girb-report``) 41
+maps decode 100% and none fails outright.  Sectors carrying real obstacles
+still partly fail: out of the 429 real sectors in 1034.map + 1035.map, 129
+decode and are confirmed byte-for-byte identical to ``mx.exe``'s own output
+(see point 4); the remaining 300 fail cleanly with an out-of-range match
+offset part-way through — the token stream desyncs, the geometry does not.
+Whatever decodes is always exactly 2400 bytes, and the decoded cells are
+strongly structured (0x8888 dominant, then 0x7777 / 0x6666; 98.3% of cells
+are of the form 0xAABB), so the output is real data rather than
+plausible-looking noise.
 
-Four real bugs were found and fixed while measuring, and two of them overturn
-the disassembly reading below — the table records what the disassembly appears
+Four real bugs were found while measuring, and two of them overturn the
+disassembly reading below — the table records what the disassembly appears
 to say, the code records what the data requires:
 
 1. ``>= 0x40`` length is ``(t>>5)+1``, because 0x60eb85 pre-decrements before
@@ -44,10 +48,26 @@ to say, the code records what the data requires:
    which is a *data* byte after a literal run.  This is why 0x88-filled sectors
    decoded (0x88 & 3 == 0, accidentally correct) and 0x77-filled ones did not
    (0x77 & 3 == 3).  See ``trail``.
-4. **The 0x60eb29 offset base is not ``0x801``.**  Measured: base 1 with length 3
-   decodes strictly more sectors (144/429 vs 129/429 on 1034+1035) while keeping
-   every captured golden vector byte-identical.  The 0x801 reading is retained
-   here only as a record of what the disassembly appeared to say.
+4. **The 0x60eb29 offset base IS ``0x801``** (see :func:`short_match_token`).
+   An earlier revision of this module "measured" that overriding it to ``1``
+   decoded more sectors (144/429 vs 129/429) and kept the 7 captured golden
+   vectors byte-identical, and shipped that override. Both parts of that
+   measurement were true but the conclusion was wrong, because the golden
+   vectors never exercise this token class with a real mismatch, and
+   "decodes without raising" was conflated with "decodes correctly". Two
+   independent, reproducible checks say otherwise:
+   (a) the disassembly, read straight off the SHA256-pinned ``mx.exe``
+   (``637331b5...fbe424d``), is unambiguously ``movzbl -0x801(%edx),%eax``;
+   (b) emulating the real ``0x60ea90`` routine (self-contained, no external
+   calls or globals, so a raw Unicorn x86 run needs no OS/CRT) against all
+   429 real sectors of 1034.map + 1035.map shows base ``0x801`` reproduces
+   the native output byte-for-byte on all 129 sectors it decodes (0
+   mismatches), while the "base 1" override "succeeds" on those same 129
+   plus 32 more — and every one of those 32 extra "successes" is silently
+   WRONG data relative to the native routine. Base 1 never decodes a sector
+   base 0x801 cannot, so there was never an accuracy/coverage trade-off to
+   begin with. See ``PR25_REVIEW.md`` item 1 for the original finding this
+   confirms.
 
 Byte-level semantics, transcribed from the disassembly:
 
@@ -59,9 +79,9 @@ token ``0x20..0x3f``         match; offset ``1 + (u16>>2)``
 token ``>= 0x40``            match; offset ``1 + ((t>>2)&7) + (byte<<3)``;
                              length ``(t>>5) + 1`` (0x60eb85 pre-decrements)
 token ``< 0x10`` after a literal run (0x60eb29)
-                             3-byte match; disassembly reads as offset
-                             ``0x801 + (byte<<2) + (t>>2)`` but measurement
-                             requires base **1** — see bug 4 above
+                             3-byte match; offset ``0x801 + (byte<<2) + (t>>2)``
+                             — confirmed both statically and dynamically,
+                             see bug 4 above
 token ``< 0x10`` after trailing literals (0x60ec73)
                              2-byte match; offset ``1 + (byte<<2) + (t>>2)``
 length                       ``accumulated + 2`` for the 0x60ec2d classes
@@ -232,19 +252,55 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
         return True
 
     def short_match_token() -> bool:
-        """Token read at 0x60eb29: t < 0x10 means a 3-BYTE MATCH here."""
+        """Token read at 0x60eb29: t < 0x10 means a 3-BYTE MATCH here.
+
+        Offset base is 0x801, confirmed two independent ways (2026-10-12):
+        1. Disassembly: ``60eb42: movzbl -0x801(%edx),%eax`` (and the two
+           following bytes at -0x800/-0x7ff) -- read directly off the
+           SHA256-pinned ``mx.exe`` (``637331b5...fbe424d``), there is no
+           ``-0x1`` anywhere near this site.
+        2. Dynamic cross-check: running the real ``0x60ea90`` routine for all
+           429 real sectors of 1034.map + 1035.map in a Unicorn x86 emulator
+           (the function is self-contained, no external calls/globals) and
+           diffing against this Python port -- base 0x801 reproduces the
+           native output byte-for-byte on all 129 sectors it decodes (0
+           mismatches). The previously-shipped "base 1" override also
+           "succeeds" (raises no error) on those same 129 plus 32 more, but
+           those 32 are silently WRONG versus the native routine -- false
+           positives that corrupt the collision grid without any error
+           signal. Base 1 does not decode any sector base 0x801 cannot, so
+           there is no accuracy/coverage trade-off: 0x801 is strictly
+           better. See PR25_REVIEW.md item 1 for the original finding.
+        """
         nonlocal trail
         t = token()
         if t < 0x10:
             nb = token()
-            # Measured override of the 0x801 base: with it, this class fires
-            # once per body at an offset past the end of the output and every
-            # such sector fails.  Base 1 decodes strictly more sectors and
-            # keeps all captured golden vectors byte-exact.
-            copy_match(1 + (nb << 2) + (t >> 2), 3)
+            copy_match(0x801 + (nb << 2) + (t >> 2), 3)
             trail = t & 3
             return True
         return match_hi(t)
+
+    def finish() -> bytes:
+        """Validate and return the output once the end-of-stream marker fires.
+
+        ``mx.exe`` allocates exactly ``limit`` (2400) bytes and the client
+        never checks for an overrun -- it just keeps writing into whatever
+        follows the buffer.  This port cannot do that safely, and silently
+        slicing to ``limit`` hides real desyncs: a real captured body (1035
+        sector 40) decodes to 2405 raw bytes before any truncation, and the
+        old ``bytes(out[:limit])`` turned that into a "successful" 2400-byte
+        result with its last 5 real bytes silently discarded.  A legitimate
+        stream's end-of-stream marker must land at exactly ``limit`` bytes
+        written; anything else -- short or long -- means an earlier token
+        was mis-parsed, so it is reported as a decode failure instead of a
+        quietly-wrong fixed-size result.
+        """
+        if len(out) != limit:
+            raise GirbError(
+                f"end-of-stream marker at out={len(out)}, expected exactly {limit} "
+                "(earlier token mis-parsed; not truncating/padding to hide it)")
+        return bytes(out)
 
     # ---- leading literal run (mx.exe 0x60ea9b) ----
     t = buf[i]
@@ -257,12 +313,12 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
             t = buf[i]
             i += 1
             if not match_hi(t):
-                return bytes(out[:limit])
+                return finish()
         else:
             short_match_token()
     else:
         if not literal_run_token():
-            return bytes(out[:limit])
+            return finish()
 
     # ---- alternating: match -> trailing literals -> literal run -> match ... ----
     after_literal_run = False
@@ -272,7 +328,7 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
             literal(trail)
             t = token()
             if not match_after_trail(t):
-                return bytes(out[:limit])
+                return finish()
         if after_literal_run:
             if not short_match_token():         # 0x60eb29
                 break
@@ -281,7 +337,7 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
             if not literal_run_token():         # 0x60ec97 -> 0x60eabc
                 break
             after_literal_run = True
-    return bytes(out[:limit])
+    return finish()
 
 
 def cells(src: bytes) -> list[int]:

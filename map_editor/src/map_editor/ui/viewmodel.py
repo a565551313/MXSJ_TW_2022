@@ -9,6 +9,7 @@ risky logic verifiable on machines that cannot import ``QtWidgets`` at all.
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Iterable
@@ -21,6 +22,40 @@ from ..core.mapfile import CELL_PX
 
 LAYERS = ("texture", "grid", "records", "sector_bounds", "collision", "collision_grid")
 Progress = Callable[[str], None]
+
+
+class ExportBlockedError(RuntimeError):
+    """Raised when an export target would overwrite a client source file.
+
+    The editor is read-only by product decision (see README section 7). A
+    bare ``Path.write_text``/``Image.save`` does not know that, and PR #25's
+    review found it will happily truncate-overwrite the very ``.map`` file
+    it just read if the caller passes the same path back in. This check is
+    the only thing standing between "export" and "corrupt the client
+    install", so it deliberately errs on the side of refusing: it compares
+    the *resolved* target against every discovered map (not just the
+    currently open one), using ``os.path.samefile`` when both sides exist
+    (catches hardlinks/symlinks a plain string compare would miss) and a
+    case-normalised resolved-path string otherwise (catches the common
+    Windows case-insensitive-filesystem mismatch before the file exists).
+    """
+
+
+def _normalized_path(path: Path) -> str:
+    try:
+        resolved = path.resolve(strict=False)
+    except OSError:
+        resolved = path.absolute()
+    return os.path.normcase(str(resolved))
+
+
+def _same_file_or_path(a: Path, b: Path) -> bool:
+    try:
+        if a.exists() and b.exists():
+            return os.path.samefile(a, b)
+    except OSError:
+        pass
+    return _normalized_path(a) == _normalized_path(b)
 
 
 @dataclass(slots=True)
@@ -256,7 +291,32 @@ class EditorViewModel:
         return render_region(doc, x0, y0, x1, y1)
 
     # -- export -----------------------------------------------------------
+    def _protected_source_paths(self) -> list[Path]:
+        """Every path the exporter must refuse to write over.
+
+        Includes the currently open document plus every map the last
+        ``set_client_root`` scan discovered -- not just the open one, since
+        the CLI/GUI can export to an arbitrary path while a *different* map
+        than the export target happens to be open.
+        """
+        paths: list[Path] = []
+        if self._doc is not None:
+            paths.append(Path(self._doc.path))
+        if self.layout is not None:
+            paths.extend(Path(m.path) for m in self.layout.maps)
+        return paths
+
+    def _guard_export_target(self, dest: str | Path) -> Path:
+        dest = Path(dest)
+        for protected in self._protected_source_paths():
+            if _same_file_or_path(dest, protected):
+                raise ExportBlockedError(
+                    f"拒绝导出到 {dest}：与客户端源地图 {protected} 相同或等价"
+                    "（只读编辑器不允许覆盖源资源）。")
+        return dest
+
     def export_json(self, dest: str | Path, *, include_cells: bool = False) -> Path:
+        dest = self._guard_export_target(dest)
         doc = self._require_doc()
         h = doc.header
         payload: dict = {
@@ -300,7 +360,7 @@ class EditorViewModel:
                 {"sector": s.index, "values": list(doc.read_cells(s))}
                 for s in doc.iter_sectors()
             ]
-        p = Path(dest)
+        p = dest  # already a Path, already guarded above
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
         return p
@@ -308,10 +368,10 @@ class EditorViewModel:
     def export_png(self, dest: str | Path, region: tuple[int, int, int, int] | None = None) -> Path:
         """Write a PNG.  Pillow writes the file, so no external tool is needed."""
         from PIL import Image
+        p = self._guard_export_target(dest)
         doc = self._require_doc()
         box = region or (0, 0, doc.header.width, doc.header.height)
         img = render_region(doc, *box)
-        p = Path(dest)
         p.parent.mkdir(parents=True, exist_ok=True)
         Image.frombytes("RGB", (img.width, img.height), img.data).save(p)
         return p

@@ -54,8 +54,15 @@ class MapCanvas(QWidget):
         self.vm = vm
         self.zoom = 1.0
         self._cache: "OrderedDict[tuple[int, int], QImage]" = OrderedDict()
+        # Set by EditorWindow right after construction: panning scrolls this
+        # QScrollArea's bars rather than moving the canvas itself.
+        self.scroll_area: QScrollArea | None = None
+        self._dragging = False
+        self._drag_anchor = QPoint()
         self.setMinimumSize(1, 1)
         self.setMouseTracking(True)
+        self.setCursor(Qt.OpenHandCursor)
+        self.setToolTip("按住左键拖动平移 · Ctrl + 滚轮缩放")
 
     # -- geometry ---------------------------------------------------------
     def map_size(self) -> QSize:
@@ -214,7 +221,28 @@ class MapCanvas(QWidget):
                 painter.drawLine(0, r, width, r)
 
     # -- interaction ------------------------------------------------------
+    def mousePressEvent(self, event) -> None:    # noqa: N802
+        """Left-button press starts a drag-to-pan; see ``mouseMoveEvent``."""
+        if event.button() == Qt.LeftButton and self.scroll_area is not None:
+            self._dragging = True
+            self._drag_anchor = event.globalPosition().toPoint()
+            self.setCursor(Qt.ClosedHandCursor)
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
     def mouseMoveEvent(self, event) -> None:     # noqa: N802
+        if self._dragging and self.scroll_area is not None:
+            # Scroll by the screen-pixel delta, not a widget-local delta:
+            # the canvas itself is repositioned by the scroll area on every
+            # step, so a local-coordinate delta would double-count the move.
+            current = event.globalPosition().toPoint()
+            delta = current - self._drag_anchor
+            self._drag_anchor = current
+            hbar = self.scroll_area.horizontalScrollBar()
+            vbar = self.scroll_area.verticalScrollBar()
+            hbar.setValue(hbar.value() - delta.x())
+            vbar.setValue(vbar.value() - delta.y())
         doc = self.vm.document
         if doc is not None:
             x = int(event.position().x() / self.zoom)
@@ -229,6 +257,32 @@ class MapCanvas(QWidget):
                 window.set_cursor_status(self.vm.state.status)
             self.update()
         super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:  # noqa: N802
+        if event.button() == Qt.LeftButton and self._dragging:
+            self._dragging = False
+            self.setCursor(Qt.OpenHandCursor)
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
+    def wheelEvent(self, event) -> None:         # noqa: N802
+        """Ctrl+wheel zooms (plain wheel keeps the normal scroll behaviour).
+
+        This mirrors the drag-to-pan addition: once you can drag the map
+        around with the mouse, zooming without reaching for the spin box is
+        the natural next step the same gesture set is missing.
+        """
+        if event.modifiers() & Qt.ControlModifier:
+            window = self.window()
+            if isinstance(window, EditorWindow):
+                steps = event.angleDelta().y() / 120.0  # one wheel "click"
+                factor = 1.15 ** steps
+                window.spin_zoom.setValue(
+                    max(0.05, min(8.0, self.zoom * factor)))
+            event.accept()
+            return
+        super().wheelEvent(event)
 
 
 class EditorWindow(QMainWindow):
@@ -251,9 +305,12 @@ class EditorWindow(QMainWindow):
         toolbar.addSeparator()
         self.act_rescan = toolbar.addAction("重新扫描", self.rescan)
         toolbar.addSeparator()
+        self.act_fit = toolbar.addAction("适应窗口", self.fit_to_window)
+        self.act_fit.setToolTip("缩放到整张地图刚好填满画布可视区域")
+        toolbar.addSeparator()
         self.act_png = toolbar.addAction("导出 PNG…", self.export_png)
         self.act_json = toolbar.addAction("导出 JSON…", self.export_json)
-        for act in (self.act_rescan, self.act_png, self.act_json):
+        for act in (self.act_rescan, self.act_fit, self.act_png, self.act_json):
             act.setEnabled(False)
 
         # left panel ------------------------------------------------------
@@ -334,6 +391,7 @@ class EditorWindow(QMainWindow):
         self.scroll = QScrollArea()
         self.scroll.setWidget(self.canvas)
         self.scroll.setWidgetResizable(False)
+        self.canvas.scroll_area = self.scroll
         outer.addWidget(self.scroll, 1)
 
         self.status = self.statusBar()
@@ -415,6 +473,7 @@ class EditorWindow(QMainWindow):
         self.spin_x.setRange(0, max(0, w - 1))
         self.spin_y.setRange(0, max(0, h - 1))
         self.canvas.invalidate()
+        self.act_fit.setEnabled(True)
         self.act_png.setEnabled(True)
         self.act_json.setEnabled(True)
         self.setWindowTitle(
@@ -442,6 +501,24 @@ class EditorWindow(QMainWindow):
 
     def set_zoom(self, value: float) -> None:
         self.canvas.set_zoom(float(value))
+
+    def fit_to_window(self) -> None:
+        """Zoom so the whole map fits the scroll area's visible area.
+
+        Pairs with drag-to-pan/Ctrl+wheel zoom: after zooming in or dragging
+        around, this is the "get back to seeing the whole map" one-click
+        reset instead of guessing a zoom value by hand.
+        """
+        if self.vm.document is None:
+            return
+        w, h = self.vm.state.current_size
+        if not w or not h:
+            return
+        viewport = self.scroll.viewport().size()
+        if viewport.width() <= 0 or viewport.height() <= 0:
+            return
+        zoom = min(viewport.width() / w, viewport.height() / h)
+        self.spin_zoom.setValue(max(0.05, min(8.0, zoom)))
 
     def do_locate(self) -> None:
         if self.vm.document is None:
