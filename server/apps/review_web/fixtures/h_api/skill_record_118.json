@@ -1,0 +1,13 @@
+{
+ "skill_id": 118,
+ "type_code_raw": 0,
+ "name": "強壯",
+ "description_raw": "提高氣血上限：自身等級×2+40",
+ "fpneed_raw": "0",
+ "mpneed_raw": "0",
+ "hpneed_raw": "0",
+ "source_entry": 3205,
+ "source_table": "DATA",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "118"
+}

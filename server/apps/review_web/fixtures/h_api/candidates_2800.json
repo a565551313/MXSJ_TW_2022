@@ -1,0 +1,36 @@
+{
+ "dataset": "pet_skill_candidates",
+ "total": 3,
+ "offset": 0,
+ "limit": 50,
+ "count": 3,
+ "records": [
+  {
+   "client_shape_id": 2800,
+   "sequence": 0,
+   "skill_name_raw": "英勇對決",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2800:0"
+  },
+  {
+   "client_shape_id": 2800,
+   "sequence": 1,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2800:1"
+  },
+  {
+   "client_shape_id": 2800,
+   "sequence": 2,
+   "skill_name_raw": "神跡",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2800:2"
+  }
+ ]
+}

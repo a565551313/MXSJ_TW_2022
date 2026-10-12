@@ -1,0 +1,13 @@
+{
+ "skill_id": 557,
+ "type_code_raw": 1,
+ "name": "新月獠牙",
+ "description_raw": "普通系別的物理主動技能，對氣血≧30%的目標造成140%的物理傷害；對氣血＜30%的目標傷害為100%（可綁定技能），消耗力道20+LV/2.5",
+ "fpneed_raw": "FP-(20+LV/2.5)*Percent",
+ "mpneed_raw": "0",
+ "hpneed_raw": "0",
+ "source_entry": 3205,
+ "source_table": "DATA",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "557"
+}

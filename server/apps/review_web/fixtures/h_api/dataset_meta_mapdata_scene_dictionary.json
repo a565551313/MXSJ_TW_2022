@@ -1,0 +1,29 @@
+{
+ "id": "mapdata_scene_dictionary",
+ "filename": "maps_npcs/mapdata_scene_dictionary.csv",
+ "rows": 104,
+ "primary_key": [
+  "scene_id"
+ ],
+ "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+ "source_entry": 1301,
+ "source_table": "DATA",
+ "columns": [
+  {
+   "name": "scene_id",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "name",
+   "type": "str"
+  },
+  {
+   "name": "w",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "h",
+   "type": "int_or_empty"
+  }
+ ]
+}

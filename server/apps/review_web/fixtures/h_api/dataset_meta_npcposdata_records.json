@@ -1,0 +1,82 @@
+{
+ "id": "npcposdata_records",
+ "filename": "maps_npcs/npcposdata_records.csv",
+ "rows": 1335,
+ "primary_key": [
+  "scene_id",
+  "record_index"
+ ],
+ "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+ "source_entry": 2601,
+ "source_table": "DATA",
+ "columns": [
+  {
+   "name": "scene_id",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "record_index",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "display_name",
+   "type": "str"
+  },
+  {
+   "name": "secondary_name",
+   "type": "str"
+  },
+  {
+   "name": "npcid",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "type",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "x",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "y",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "field5",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "field6",
+   "type": "str"
+  },
+  {
+   "name": "field7_const255",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "shape",
+   "type": "str"
+  },
+  {
+   "name": "field9",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "field10",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "real_name",
+   "type": "str"
+  },
+  {
+   "name": "field12",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "field13",
+   "type": "int_or_empty"
+  }
+ ]
+}

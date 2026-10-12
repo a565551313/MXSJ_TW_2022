@@ -1,0 +1,18 @@
+{
+ "dataset": "pet_aptitude_missing",
+ "total": 1,
+ "offset": 0,
+ "limit": 50,
+ "count": 1,
+ "records": [
+  {
+   "client_shape_id": 3010,
+   "pet_name": "未定",
+   "reason": "no_record_in_2954",
+   "source_entry": 2954,
+   "source_table": "DATA (absence checked against 2027.DATA)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "3010"
+  }
+ ]
+}

@@ -1,0 +1,1425 @@
+{
+ "dataset": "npc_2601_vs_2804_agreement",
+ "total": 677,
+ "offset": 500,
+ "limit": 500,
+ "count": 177,
+ "records": [
+  {
+   "scene_id": 1326,
+   "npcid": 1003,
+   "records_2601": 2,
+   "records_2804": 2,
+   "agreement": "identical_sequence",
+   "_pk": "1326:1003"
+  },
+  {
+   "scene_id": 1327,
+   "npcid": 2014,
+   "records_2601": 0,
+   "records_2804": 1,
+   "agreement": "only_in_minimapnpcpos_2804",
+   "_pk": "1327:2014"
+  },
+  {
+   "scene_id": 1327,
+   "npcid": 5026,
+   "records_2601": 0,
+   "records_2804": 1,
+   "agreement": "only_in_minimapnpcpos_2804",
+   "_pk": "1327:5026"
+  },
+  {
+   "scene_id": 1327,
+   "npcid": 5027,
+   "records_2601": 0,
+   "records_2804": 1,
+   "agreement": "only_in_minimapnpcpos_2804",
+   "_pk": "1327:5027"
+  },
+  {
+   "scene_id": 1327,
+   "npcid": 5028,
+   "records_2601": 0,
+   "records_2804": 1,
+   "agreement": "only_in_minimapnpcpos_2804",
+   "_pk": "1327:5028"
+  },
+  {
+   "scene_id": 1327,
+   "npcid": 5030,
+   "records_2601": 0,
+   "records_2804": 1,
+   "agreement": "only_in_minimapnpcpos_2804",
+   "_pk": "1327:5030"
+  },
+  {
+   "scene_id": 1413,
+   "npcid": 1004,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1413:1004"
+  },
+  {
+   "scene_id": 1417,
+   "npcid": 1005,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1417:1005"
+  },
+  {
+   "scene_id": 1423,
+   "npcid": 1004,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1423:1004"
+  },
+  {
+   "scene_id": 1427,
+   "npcid": 1005,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1427:1005"
+  },
+  {
+   "scene_id": 1433,
+   "npcid": 1004,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1433:1004"
+  },
+  {
+   "scene_id": 1437,
+   "npcid": 1005,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1437:1005"
+  },
+  {
+   "scene_id": 1443,
+   "npcid": 1004,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1443:1004"
+  },
+  {
+   "scene_id": 1447,
+   "npcid": 1005,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1447:1005"
+  },
+  {
+   "scene_id": 1453,
+   "npcid": 1004,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1453:1004"
+  },
+  {
+   "scene_id": 1457,
+   "npcid": 1005,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1457:1005"
+  },
+  {
+   "scene_id": 2201,
+   "npcid": 4664,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2201:4664"
+  },
+  {
+   "scene_id": 2201,
+   "npcid": 4665,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2201:4665"
+  },
+  {
+   "scene_id": 2201,
+   "npcid": 4666,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2201:4666"
+  },
+  {
+   "scene_id": 2201,
+   "npcid": 4667,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2201:4667"
+  },
+  {
+   "scene_id": 2201,
+   "npcid": 4668,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2201:4668"
+  },
+  {
+   "scene_id": 2201,
+   "npcid": 4669,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2201:4669"
+  },
+  {
+   "scene_id": 2201,
+   "npcid": 4670,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2201:4670"
+  },
+  {
+   "scene_id": 2201,
+   "npcid": 4671,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2201:4671"
+  },
+  {
+   "scene_id": 2201,
+   "npcid": 4672,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2201:4672"
+  },
+  {
+   "scene_id": 2201,
+   "npcid": 4673,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2201:4673"
+  },
+  {
+   "scene_id": 2201,
+   "npcid": 4980,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2201:4980"
+  },
+  {
+   "scene_id": 2202,
+   "npcid": 4425,
+   "records_2601": 4,
+   "records_2804": 4,
+   "agreement": "identical_multiset_different_order",
+   "_pk": "2202:4425"
+  },
+  {
+   "scene_id": 2203,
+   "npcid": 4664,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2203:4664"
+  },
+  {
+   "scene_id": 2203,
+   "npcid": 4666,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2203:4666"
+  },
+  {
+   "scene_id": 2203,
+   "npcid": 4667,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2203:4667"
+  },
+  {
+   "scene_id": 2203,
+   "npcid": 4668,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2203:4668"
+  },
+  {
+   "scene_id": 2203,
+   "npcid": 4670,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2203:4670"
+  },
+  {
+   "scene_id": 2203,
+   "npcid": 4671,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2203:4671"
+  },
+  {
+   "scene_id": 2203,
+   "npcid": 4672,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2203:4672"
+  },
+  {
+   "scene_id": 2203,
+   "npcid": 4673,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2203:4673"
+  },
+  {
+   "scene_id": 2203,
+   "npcid": 4980,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2203:4980"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 1104,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:1104"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 1107,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:1107"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4101,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4101"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4102,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4102"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4103,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4103"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4104,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4104"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4140,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4140"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4152,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4152"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4183,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4183"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4191,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4191"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4422,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4422"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4435,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4435"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4442,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4442"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4451,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4451"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4460,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4460"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4473,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4473"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4509,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4509"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4561,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4561"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4563,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4563"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4810,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4810"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4842,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4842"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4852,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4852"
+  },
+  {
+   "scene_id": 2301,
+   "npcid": 4968,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "2301:4968"
+  },
+  {
+   "scene_id": 9020,
+   "npcid": 1001,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9020:1001"
+  },
+  {
+   "scene_id": 9049,
+   "npcid": 4855,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9049:4855"
+  },
+  {
+   "scene_id": 9050,
+   "npcid": 4425,
+   "records_2601": 4,
+   "records_2804": 4,
+   "agreement": "identical_multiset_different_order",
+   "_pk": "9050:4425"
+  },
+  {
+   "scene_id": 9052,
+   "npcid": 4425,
+   "records_2601": 4,
+   "records_2804": 4,
+   "agreement": "identical_multiset_different_order",
+   "_pk": "9052:4425"
+  },
+  {
+   "scene_id": 9199,
+   "npcid": 4425,
+   "records_2601": 4,
+   "records_2804": 4,
+   "agreement": "identical_multiset_different_order",
+   "_pk": "9199:4425"
+  },
+  {
+   "scene_id": 9337,
+   "npcid": 4394,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9337:4394"
+  },
+  {
+   "scene_id": 9337,
+   "npcid": 4401,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9337:4401"
+  },
+  {
+   "scene_id": 9337,
+   "npcid": 4402,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9337:4402"
+  },
+  {
+   "scene_id": 9345,
+   "npcid": 3006,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9345:3006"
+  },
+  {
+   "scene_id": 9349,
+   "npcid": 4977,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9349:4977"
+  },
+  {
+   "scene_id": 9350,
+   "npcid": 1002,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9350:1002"
+  },
+  {
+   "scene_id": 9351,
+   "npcid": 1104,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9351:1104"
+  },
+  {
+   "scene_id": 9380,
+   "npcid": 1042,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9380:1042"
+  },
+  {
+   "scene_id": 9380,
+   "npcid": 1043,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9380:1043"
+  },
+  {
+   "scene_id": 9380,
+   "npcid": 1044,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9380:1044"
+  },
+  {
+   "scene_id": 9381,
+   "npcid": 2002,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9381:2002"
+  },
+  {
+   "scene_id": 9382,
+   "npcid": 2011,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9382:2011"
+  },
+  {
+   "scene_id": 9382,
+   "npcid": 2012,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9382:2012"
+  },
+  {
+   "scene_id": 9409,
+   "npcid": 1003,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9409:1003"
+  },
+  {
+   "scene_id": 9410,
+   "npcid": 1003,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9410:1003"
+  },
+  {
+   "scene_id": 9411,
+   "npcid": 1003,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9411:1003"
+  },
+  {
+   "scene_id": 9433,
+   "npcid": 1015,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9433:1015"
+  },
+  {
+   "scene_id": 9434,
+   "npcid": 1015,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9434:1015"
+  },
+  {
+   "scene_id": 9435,
+   "npcid": 1015,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9435:1015"
+  },
+  {
+   "scene_id": 9436,
+   "npcid": 1015,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9436:1015"
+  },
+  {
+   "scene_id": 9437,
+   "npcid": 1015,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9437:1015"
+  },
+  {
+   "scene_id": 9438,
+   "npcid": 1015,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9438:1015"
+  },
+  {
+   "scene_id": 9439,
+   "npcid": 1015,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9439:1015"
+  },
+  {
+   "scene_id": 9440,
+   "npcid": 1015,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9440:1015"
+  },
+  {
+   "scene_id": 9441,
+   "npcid": 1015,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9441:1015"
+  },
+  {
+   "scene_id": 9442,
+   "npcid": 1015,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9442:1015"
+  },
+  {
+   "scene_id": 9443,
+   "npcid": 1015,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9443:1015"
+  },
+  {
+   "scene_id": 9444,
+   "npcid": 4425,
+   "records_2601": 4,
+   "records_2804": 4,
+   "agreement": "identical_multiset_different_order",
+   "_pk": "9444:4425"
+  },
+  {
+   "scene_id": 9445,
+   "npcid": 1015,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9445:1015"
+  },
+  {
+   "scene_id": 9473,
+   "npcid": 1001,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9473:1001"
+  },
+  {
+   "scene_id": 9474,
+   "npcid": 1002,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9474:1002"
+  },
+  {
+   "scene_id": 9474,
+   "npcid": 1006,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9474:1006"
+  },
+  {
+   "scene_id": 9474,
+   "npcid": 2001,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9474:2001"
+  },
+  {
+   "scene_id": 9475,
+   "npcid": 1007,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9475:1007"
+  },
+  {
+   "scene_id": 9475,
+   "npcid": 1009,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9475:1009"
+  },
+  {
+   "scene_id": 9475,
+   "npcid": 1010,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9475:1010"
+  },
+  {
+   "scene_id": 9475,
+   "npcid": 1011,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9475:1011"
+  },
+  {
+   "scene_id": 9475,
+   "npcid": 3001,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9475:3001"
+  },
+  {
+   "scene_id": 9476,
+   "npcid": 1017,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9476:1017"
+  },
+  {
+   "scene_id": 9476,
+   "npcid": 4001,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9476:4001"
+  },
+  {
+   "scene_id": 9477,
+   "npcid": 1001,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9477:1001"
+  },
+  {
+   "scene_id": 9484,
+   "npcid": 5001,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9484:5001"
+  },
+  {
+   "scene_id": 9484,
+   "npcid": 5002,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9484:5002"
+  },
+  {
+   "scene_id": 9484,
+   "npcid": 5003,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9484:5003"
+  },
+  {
+   "scene_id": 9484,
+   "npcid": 5004,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9484:5004"
+  },
+  {
+   "scene_id": 9484,
+   "npcid": 5005,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9484:5005"
+  },
+  {
+   "scene_id": 9484,
+   "npcid": 5006,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9484:5006"
+  },
+  {
+   "scene_id": 9484,
+   "npcid": 5007,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9484:5007"
+  },
+  {
+   "scene_id": 9484,
+   "npcid": 5008,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9484:5008"
+  },
+  {
+   "scene_id": 9484,
+   "npcid": 5009,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9484:5009"
+  },
+  {
+   "scene_id": 9484,
+   "npcid": 5010,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9484:5010"
+  },
+  {
+   "scene_id": 9485,
+   "npcid": 5001,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9485:5001"
+  },
+  {
+   "scene_id": 9485,
+   "npcid": 5002,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9485:5002"
+  },
+  {
+   "scene_id": 9485,
+   "npcid": 5003,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9485:5003"
+  },
+  {
+   "scene_id": 9485,
+   "npcid": 5004,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9485:5004"
+  },
+  {
+   "scene_id": 9485,
+   "npcid": 5005,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9485:5005"
+  },
+  {
+   "scene_id": 9485,
+   "npcid": 5006,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9485:5006"
+  },
+  {
+   "scene_id": 9485,
+   "npcid": 5007,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9485:5007"
+  },
+  {
+   "scene_id": 9485,
+   "npcid": 5008,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9485:5008"
+  },
+  {
+   "scene_id": 9485,
+   "npcid": 5009,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9485:5009"
+  },
+  {
+   "scene_id": 9485,
+   "npcid": 5010,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9485:5010"
+  },
+  {
+   "scene_id": 9486,
+   "npcid": 5001,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9486:5001"
+  },
+  {
+   "scene_id": 9486,
+   "npcid": 5002,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9486:5002"
+  },
+  {
+   "scene_id": 9486,
+   "npcid": 5003,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9486:5003"
+  },
+  {
+   "scene_id": 9486,
+   "npcid": 5004,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9486:5004"
+  },
+  {
+   "scene_id": 9486,
+   "npcid": 5005,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9486:5005"
+  },
+  {
+   "scene_id": 9486,
+   "npcid": 5006,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9486:5006"
+  },
+  {
+   "scene_id": 9486,
+   "npcid": 5007,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9486:5007"
+  },
+  {
+   "scene_id": 9486,
+   "npcid": 5008,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9486:5008"
+  },
+  {
+   "scene_id": 9486,
+   "npcid": 5009,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9486:5009"
+  },
+  {
+   "scene_id": 9486,
+   "npcid": 5010,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9486:5010"
+  },
+  {
+   "scene_id": 9487,
+   "npcid": 5001,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9487:5001"
+  },
+  {
+   "scene_id": 9487,
+   "npcid": 5002,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9487:5002"
+  },
+  {
+   "scene_id": 9487,
+   "npcid": 5003,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9487:5003"
+  },
+  {
+   "scene_id": 9487,
+   "npcid": 5004,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9487:5004"
+  },
+  {
+   "scene_id": 9487,
+   "npcid": 5005,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9487:5005"
+  },
+  {
+   "scene_id": 9487,
+   "npcid": 5006,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9487:5006"
+  },
+  {
+   "scene_id": 9489,
+   "npcid": 1001,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9489:1001"
+  },
+  {
+   "scene_id": 9500,
+   "npcid": 4103,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9500:4103"
+  },
+  {
+   "scene_id": 9501,
+   "npcid": 4103,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9501:4103"
+  },
+  {
+   "scene_id": 9502,
+   "npcid": 4103,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9502:4103"
+  },
+  {
+   "scene_id": 9503,
+   "npcid": 1001,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9503:1001"
+  },
+  {
+   "scene_id": 9503,
+   "npcid": 1002,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9503:1002"
+  },
+  {
+   "scene_id": 9503,
+   "npcid": 1003,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9503:1003"
+  },
+  {
+   "scene_id": 9503,
+   "npcid": 1004,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9503:1004"
+  },
+  {
+   "scene_id": 9503,
+   "npcid": 1005,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9503:1005"
+  },
+  {
+   "scene_id": 9503,
+   "npcid": 1006,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9503:1006"
+  },
+  {
+   "scene_id": 9503,
+   "npcid": 1007,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9503:1007"
+  },
+  {
+   "scene_id": 9503,
+   "npcid": 4103,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9503:4103"
+  },
+  {
+   "scene_id": 9504,
+   "npcid": 2001,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9504:2001"
+  },
+  {
+   "scene_id": 9504,
+   "npcid": 2002,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9504:2002"
+  },
+  {
+   "scene_id": 9504,
+   "npcid": 4103,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9504:4103"
+  },
+  {
+   "scene_id": 9505,
+   "npcid": 4103,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9505:4103"
+  },
+  {
+   "scene_id": 9506,
+   "npcid": 4103,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9506:4103"
+  },
+  {
+   "scene_id": 9507,
+   "npcid": 4103,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9507:4103"
+  },
+  {
+   "scene_id": 9508,
+   "npcid": 4103,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9508:4103"
+  },
+  {
+   "scene_id": 9509,
+   "npcid": 1001,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9509:1001"
+  },
+  {
+   "scene_id": 9509,
+   "npcid": 4103,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9509:4103"
+  },
+  {
+   "scene_id": 9510,
+   "npcid": 7002,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9510:7002"
+  },
+  {
+   "scene_id": 9511,
+   "npcid": 7003,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9511:7003"
+  },
+  {
+   "scene_id": 9513,
+   "npcid": 1001,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9513:1001"
+  },
+  {
+   "scene_id": 9515,
+   "npcid": 1002,
+   "records_2601": 0,
+   "records_2804": 1,
+   "agreement": "only_in_minimapnpcpos_2804",
+   "_pk": "9515:1002"
+  },
+  {
+   "scene_id": 9901,
+   "npcid": 1003,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9901:1003"
+  },
+  {
+   "scene_id": 9902,
+   "npcid": 1003,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9902:1003"
+  },
+  {
+   "scene_id": 9906,
+   "npcid": 1003,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9906:1003"
+  },
+  {
+   "scene_id": 9907,
+   "npcid": 1003,
+   "records_2601": 0,
+   "records_2804": 1,
+   "agreement": "only_in_minimapnpcpos_2804",
+   "_pk": "9907:1003"
+  },
+  {
+   "scene_id": 9907,
+   "npcid": 1005,
+   "records_2601": 0,
+   "records_2804": 1,
+   "agreement": "only_in_minimapnpcpos_2804",
+   "_pk": "9907:1005"
+  },
+  {
+   "scene_id": 9908,
+   "npcid": 3007,
+   "records_2601": 0,
+   "records_2804": 1,
+   "agreement": "only_in_minimapnpcpos_2804",
+   "_pk": "9908:3007"
+  },
+  {
+   "scene_id": 9942,
+   "npcid": 4103,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9942:4103"
+  },
+  {
+   "scene_id": 9950,
+   "npcid": 1013,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9950:1013"
+  },
+  {
+   "scene_id": 9950,
+   "npcid": 1014,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9950:1014"
+  },
+  {
+   "scene_id": 9950,
+   "npcid": 1015,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "9950:1015"
+  }
+ ]
+}

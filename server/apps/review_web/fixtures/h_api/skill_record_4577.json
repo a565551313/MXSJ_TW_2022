@@ -1,0 +1,13 @@
+{
+ "skill_id": 4577,
+ "type_code_raw": 1,
+ "name": "形神俱滅第二式·幻滅",
+ "description_raw": "對中了形神俱滅第一式·出竅的目標使用，使用之後則目標立刻魂飛魄散",
+ "fpneed_raw": "0",
+ "mpneed_raw": "0",
+ "hpneed_raw": "0",
+ "source_entry": 3205,
+ "source_table": "DATA",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "4577"
+}

@@ -1,0 +1,55 @@
+{
+ "id": "minimapnpcpos_wenzi_entries",
+ "filename": "maps_npcs/minimapnpcpos_wenzi_entries.csv",
+ "rows": 287,
+ "primary_key": [
+  "scene_id",
+  "x",
+  "y"
+ ],
+ "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+ "source_entry": 2804,
+ "source_table": "DATA_WENZI",
+ "columns": [
+  {
+   "name": "scene_id",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "x",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "y",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "name",
+   "type": "str"
+  },
+  {
+   "name": "desc",
+   "type": "str"
+  },
+  {
+   "name": "jump_x",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "jump_y",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "npcID",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "npcName",
+   "type": "str"
+  },
+  {
+   "name": "servergrade",
+   "type": "int_or_empty"
+  }
+ ]
+}

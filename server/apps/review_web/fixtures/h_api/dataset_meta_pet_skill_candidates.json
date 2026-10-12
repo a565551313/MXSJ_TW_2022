@@ -1,0 +1,38 @@
+{
+ "id": "pet_skill_candidates",
+ "filename": "pet_skill_candidates.csv",
+ "rows": 458,
+ "primary_key": [
+  "client_shape_id",
+  "sequence"
+ ],
+ "notes": "Zero-based source order; not probabilities or guaranteed skills.",
+ "source_entry": 2027,
+ "source_table": "DATA.maySkillLst",
+ "columns": [
+  {
+   "name": "client_shape_id",
+   "type": "int"
+  },
+  {
+   "name": "sequence",
+   "type": "int"
+  },
+  {
+   "name": "skill_name_raw",
+   "type": "str"
+  },
+  {
+   "name": "source_entry",
+   "type": "int"
+  },
+  {
+   "name": "source_table",
+   "type": "str"
+  },
+  {
+   "name": "review_status",
+   "type": "str"
+  }
+ ]
+}

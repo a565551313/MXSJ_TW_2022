@@ -1,0 +1,49 @@
+{
+ "id": "pet_skill_overwrites",
+ "filename": "pet_skill_overwrites.csv",
+ "rows": 9,
+ "primary_key": [
+  "write_order"
+ ],
+ "notes": "Write order is zero-based per DATA dict. Full byte values in overwrite_evidence.jsonl.",
+ "source_entry": 3205,
+ "source_table": "DATA write history",
+ "columns": [
+  {
+   "name": "write_order",
+   "type": "int"
+  },
+  {
+   "name": "code_offset",
+   "type": "int"
+  },
+  {
+   "name": "skill_id",
+   "type": "int"
+  },
+  {
+   "name": "old_name",
+   "type": "str"
+  },
+  {
+   "name": "new_name",
+   "type": "str"
+  },
+  {
+   "name": "identical_values",
+   "type": "bool"
+  },
+  {
+   "name": "source_entry",
+   "type": "int"
+  },
+  {
+   "name": "source_table",
+   "type": "str"
+  },
+  {
+   "name": "review_status",
+   "type": "str"
+  }
+ ]
+}

@@ -1,0 +1,69 @@
+{
+ "id": "pet_aptitudes",
+ "filename": "pet_aptitudes.csv",
+ "rows": 131,
+ "primary_key": [
+  "client_shape_id"
+ ],
+ "notes": "Original field labels; 2800 withheld. No 1700 substitution or missing-row zero fill.",
+ "source_entry": 2954,
+ "source_table": "DATA",
+ "columns": [
+  {
+   "name": "client_shape_id",
+   "type": "int"
+  },
+  {
+   "name": "法力資質",
+   "type": "int"
+  },
+  {
+   "name": "法力資質最大值",
+   "type": "int"
+  },
+  {
+   "name": "防禦資質",
+   "type": "int"
+  },
+  {
+   "name": "防禦資質最大值",
+   "type": "int"
+  },
+  {
+   "name": "攻擊資質",
+   "type": "int"
+  },
+  {
+   "name": "攻擊資質最大值",
+   "type": "int"
+  },
+  {
+   "name": "速度資質",
+   "type": "int"
+  },
+  {
+   "name": "速度資質最大值",
+   "type": "int"
+  },
+  {
+   "name": "體力資質",
+   "type": "int"
+  },
+  {
+   "name": "體力資質最大值",
+   "type": "int"
+  },
+  {
+   "name": "source_entry",
+   "type": "int"
+  },
+  {
+   "name": "source_table",
+   "type": "str"
+  },
+  {
+   "name": "review_status",
+   "type": "str"
+  }
+ ]
+}

@@ -1,0 +1,51 @@
+{
+ "dataset": "minimapnpcpos_pos_records",
+ "total": 2,
+ "offset": 0,
+ "limit": 100,
+ "count": 2,
+ "records": [
+  {
+   "scene_id": 1005,
+   "scene_display_name": "天水平原",
+   "record_index": 0,
+   "display_name": "愛蘿俠士",
+   "secondary_name": "",
+   "npcid": 0,
+   "type": 1,
+   "x": 16,
+   "y": 65,
+   "field5": 0,
+   "field6": "",
+   "field7_const255": 255,
+   "shape": "alxs",
+   "field9": 0,
+   "field10": 0,
+   "real_name": "",
+   "field12": null,
+   "field13": null,
+   "_pk": "1005:天水平原:0"
+  },
+  {
+   "scene_id": 1005,
+   "scene_display_name": "天水平原",
+   "record_index": 1,
+   "display_name": "月夜先生",
+   "secondary_name": "",
+   "npcid": 0,
+   "type": 1,
+   "x": 111,
+   "y": 106,
+   "field5": 0,
+   "field6": "",
+   "field7_const255": 255,
+   "shape": "yyxs",
+   "field9": 0,
+   "field10": 0,
+   "real_name": "",
+   "field12": null,
+   "field13": null,
+   "_pk": "1005:天水平原:1"
+  }
+ ]
+}

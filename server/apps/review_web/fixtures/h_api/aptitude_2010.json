@@ -1,0 +1,26 @@
+{
+ "dataset": "pet_aptitudes",
+ "total": 1,
+ "offset": 0,
+ "limit": 50,
+ "count": 1,
+ "records": [
+  {
+   "client_shape_id": 2010,
+   "法力資質": 1610,
+   "法力資質最大值": 1883,
+   "防禦資質": 1560,
+   "防禦資質最大值": 1825,
+   "攻擊資質": 1660,
+   "攻擊資質最大值": 1942,
+   "速度資質": 1610,
+   "速度資質最大值": 1883,
+   "體力資質": 1610,
+   "體力資質最大值": 1883,
+   "source_entry": 2954,
+   "source_table": "DATA",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2010"
+  }
+ ]
+}

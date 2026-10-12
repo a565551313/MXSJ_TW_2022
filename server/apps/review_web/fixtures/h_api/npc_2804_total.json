@@ -1,0 +1,30 @@
+{
+ "dataset": "minimapnpcpos_pos_records",
+ "total": 1344,
+ "offset": 0,
+ "limit": 1,
+ "count": 1,
+ "records": [
+  {
+   "scene_id": 1001,
+   "scene_display_name": "永澤城",
+   "record_index": 0,
+   "display_name": "擺攤區傳送人",
+   "secondary_name": "",
+   "npcid": 4992,
+   "type": 1,
+   "x": 67,
+   "y": 81,
+   "field5": 0,
+   "field6": "",
+   "field7_const255": 255,
+   "shape": "btqcsr",
+   "field9": 0,
+   "field10": 0,
+   "real_name": "",
+   "field12": null,
+   "field13": null,
+   "_pk": "1001:永澤城:0"
+  }
+ ]
+}

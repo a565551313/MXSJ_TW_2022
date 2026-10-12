@@ -1,0 +1,79 @@
+{
+ "total": 1,
+ "records": [
+  {
+   "entry_index": 2954,
+   "table": "DATA",
+   "record_key": 2800,
+   "reasons": [
+    "aptitude_value_exceeds_named_maximum_unresolved",
+    "value_exceeds_named_maximum:法力資質"
+   ],
+   "native_verified": false,
+   "value_under_applied_profile": {
+    "dict": [
+     [
+      {
+       "bytes_hex": "aa6ba44fb8eabde8"
+      },
+      2130
+     ],
+     [
+      {
+       "bytes_hex": "aa6ba44fb8eabde8b3cca46aadc8"
+      },
+      1989
+     ],
+     [
+      {
+       "bytes_hex": "a8bebf6db8eabde8"
+      },
+      1760
+     ],
+     [
+      {
+       "bytes_hex": "a8bebf6db8eabde8b3cca46aadc8"
+      },
+      2059
+     ],
+     [
+      {
+       "bytes_hex": "a7f0c0bbb8eabde8"
+      },
+      2120
+     ],
+     [
+      {
+       "bytes_hex": "a7f0c0bbb8eabde8b3cca46aadc8"
+      },
+      2480
+     ],
+     [
+      {
+       "bytes_hex": "b374abd7b8eabde8"
+      },
+      1850
+     ],
+     [
+      {
+       "bytes_hex": "b374abd7b8eabde8b3cca46aadc8"
+      },
+      2164
+     ],
+     [
+      {
+       "bytes_hex": "c5e9a44fb8eabde8"
+      },
+      1850
+     ],
+     [
+      {
+       "bytes_hex": "c5e9a44fb8eabde8b3cca46aadc8"
+      },
+      2164
+     ]
+    ]
+   }
+  }
+ ]
+}

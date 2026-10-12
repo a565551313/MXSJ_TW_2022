@@ -1,0 +1,53 @@
+{
+ "id": "pet_skills",
+ "filename": "pet_skills.csv",
+ "rows": 579,
+ "primary_key": [
+  "skill_id"
+ ],
+ "notes": "581 recovered, weak description rows 719/4406 withheld. Resource formulas are opaque strings: never eval.",
+ "source_entry": 3205,
+ "source_table": "DATA",
+ "columns": [
+  {
+   "name": "skill_id",
+   "type": "int"
+  },
+  {
+   "name": "type_code_raw",
+   "type": "int"
+  },
+  {
+   "name": "name",
+   "type": "str"
+  },
+  {
+   "name": "description_raw",
+   "type": "str"
+  },
+  {
+   "name": "fpneed_raw",
+   "type": "str"
+  },
+  {
+   "name": "mpneed_raw",
+   "type": "str"
+  },
+  {
+   "name": "hpneed_raw",
+   "type": "str"
+  },
+  {
+   "name": "source_entry",
+   "type": "int"
+  },
+  {
+   "name": "source_table",
+   "type": "str"
+  },
+  {
+   "name": "review_status",
+   "type": "str"
+  }
+ ]
+}

@@ -1,0 +1,1532 @@
+{
+ "_capture": {
+  "produced_by": "fixtures/capture_h_api.py",
+  "backend": "server/apps/review_api (Agent H)",
+  "provenance": "Agent H review API, PR #22 head 9f6ab439a2ecdee37b59b99ddf95e77691490a0f",
+  "contract": "server/docs/review_browser/API_CONTRACT.md v1.0.0",
+  "note": "Real HTTP responses committed as test evidence. Records arrays for large datasets are the first N rows (limit shown in the query); 'total' is the real dataset total. Bodies are byte-stable: re-running --check against the same backend commit must match.",
+  "capture_count": 152
+ },
+ "captures": [
+  {
+   "id": "dataset_meta_items",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/items",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_items.json",
+   "sha256": "474b924056fd43ae760e291b6006aa9374d8571faefb3298d2beb3540b42d14e",
+   "bytes": 832
+  },
+  {
+   "id": "dataset_meta_pets",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pets",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_pets.json",
+   "sha256": "b2d7854eb07ad81b7a0e958f42df9a6b8112890080aba3bc6111bda361b44251",
+   "bytes": 797
+  },
+  {
+   "id": "dataset_meta_pet_skill_candidates",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_candidates",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_pet_skill_candidates.json",
+   "sha256": "8fc6d873796f456b48147f05a03a6b3f67f79ab52a646de41ec50da76b1936a7",
+   "bytes": 620
+  },
+  {
+   "id": "dataset_meta_pet_required_skills",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_required_skills",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_pet_required_skills.json",
+   "sha256": "44665224c40d5e2b65f129239727277bf3990598217fd85475123d2751704498",
+   "bytes": 553
+  },
+  {
+   "id": "dataset_meta_pet_aptitudes",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_aptitudes",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_pet_aptitudes.json",
+   "sha256": "bcd34297bd53370d0a793fc9eb6047bd738ffc01979c018ba57be12b98c516ce",
+   "bytes": 1071
+  },
+  {
+   "id": "dataset_meta_pet_aptitude_missing",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_aptitude_missing",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_pet_aptitude_missing.json",
+   "sha256": "402a5d87c425099cf685f91314c82ffcaf31bd8e86362b3fdff43dafe75e8510",
+   "bytes": 606
+  },
+  {
+   "id": "dataset_meta_pet_skills",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_pet_skills.json",
+   "sha256": "d42977b213d6807b77972e18a4eaab9111e36c414f46e9abe156c1bf947d3a86",
+   "bytes": 805
+  },
+  {
+   "id": "dataset_meta_pet_skill_overwrites",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_overwrites",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_pet_skill_overwrites.json",
+   "sha256": "2293545774a7833705ac22a9397d048641afec5301bd0f4f9737bf5444a59dfe",
+   "bytes": 773
+  },
+  {
+   "id": "dataset_meta_pet_skill_name_matches",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_pet_skill_name_matches.json",
+   "sha256": "0327c42be9c9738837fcd96b5e0217569ce3d8bdc17173be4d108463ad6bf01e",
+   "bytes": 747
+  },
+  {
+   "id": "dataset_meta_mapdata_parent_scene",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/mapdata_parent_scene",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_mapdata_parent_scene.json",
+   "sha256": "e41b0dffc8771ead6fb447bba9c09a387640dcc40b60eb8286d5aafaadc4b593",
+   "bytes": 543
+  },
+  {
+   "id": "dataset_meta_mapdata_scene_dictionary",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/mapdata_scene_dictionary",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_mapdata_scene_dictionary.json",
+   "sha256": "d6595088b3ae98bf655734c17660204cecacda6038bb3e7cf45aad18e7f2a756",
+   "bytes": 625
+  },
+  {
+   "id": "dataset_meta_minimapnpcpos_pos_records",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/minimapnpcpos_pos_records",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_minimapnpcpos_pos_records.json",
+   "sha256": "505b39caac814e503b2ebb55387632e03c2a3819685b0e48a862f6a12e3a2056",
+   "bytes": 1458
+  },
+  {
+   "id": "dataset_meta_minimapnpcpos_wenzi_entries",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/minimapnpcpos_wenzi_entries",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_minimapnpcpos_wenzi_entries.json",
+   "sha256": "ee6e850420d4011d061267f86c3d29120d9a630a90356b65d8dffbbc18d46617",
+   "bytes": 972
+  },
+  {
+   "id": "dataset_meta_npc_2601_vs_2804_agreement",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/npc_2601_vs_2804_agreement",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_npc_2601_vs_2804_agreement.json",
+   "sha256": "b584b0e068faa6872c98ffed3767676aa9c4087c6c594ae4a4b2c2eff711ed1a",
+   "bytes": 749
+  },
+  {
+   "id": "dataset_meta_npcname2realnamedata_alias_to_realname",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/npcname2realnamedata_alias_to_realname",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_npcname2realnamedata_alias_to_realname.json",
+   "sha256": "7bf5f0f9f863a7826b6e79944294ceadc633dacfc7fd7d13a31ae208d5890deb",
+   "bytes": 540
+  },
+  {
+   "id": "dataset_meta_npcposdata_records",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/npcposdata_records",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_npcposdata_records.json",
+   "sha256": "4ec7805a9e37ea2044961f9229de4826962528bba1c5220a7786a5318c70b0ae",
+   "bytes": 1357
+  },
+  {
+   "id": "dataset_meta_sceneid2name_minimap_scenes",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/sceneid2name_minimap_scenes",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_sceneid2name_minimap_scenes.json",
+   "sha256": "40bd9ac73ca8c4dbb90045fc8caf7200a5ba963c401499162b486607ed72e221",
+   "bytes": 710
+  },
+  {
+   "id": "records_items_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/items/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_items_limit500.json",
+   "sha256": "f03d6b3e03b7254709af987a146438d88d83a2fb18c1b650081ac5e805cd386b",
+   "bytes": 259514
+  },
+  {
+   "id": "records_pets_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pets/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_pets_limit500.json",
+   "sha256": "0b79f74e10d272dadceb96f27217fe520d4b7a333aa991027cc6d6504cc2a365",
+   "bytes": 46209
+  },
+  {
+   "id": "records_pet_skill_candidates_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_candidates/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_pet_skill_candidates_limit500.json",
+   "sha256": "f9a82af91f74d0129e78ca34147892f29f910c9df303190f95cb8474ea081377",
+   "bytes": 106761
+  },
+  {
+   "id": "records_pet_required_skills_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_required_skills/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_pet_required_skills_limit500.json",
+   "sha256": "f3e846a0b2e2f8f3bbfc277ca09d871981fd6027c4708b6fd2e381d72d163ddb",
+   "bytes": 5670
+  },
+  {
+   "id": "records_pet_aptitudes_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_aptitudes/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_pet_aptitudes_limit500.json",
+   "sha256": "6c848906934fb05aa5809ca89c3643d24b3a71ddb2f406c876cf7fa0993d36c9",
+   "bytes": 60499
+  },
+  {
+   "id": "records_pet_aptitude_missing_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_aptitude_missing/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_pet_aptitude_missing_limit500.json",
+   "sha256": "8de603904665854d5dd78726eb6ce08b300104c3a67ee96bcaa54973415738f4",
+   "bytes": 894
+  },
+  {
+   "id": "records_pet_skills_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_pet_skills_limit500.json",
+   "sha256": "26e2b5655b60778f3fbde9e37334e062ff6bec726e91b1f8603b58e63f440558",
+   "bytes": 195364
+  },
+  {
+   "id": "records_pet_skill_overwrites_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_overwrites/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_pet_skill_overwrites_limit500.json",
+   "sha256": "15c842c252f7ceacaa22f45826930d5acdcfe931f02ef039907d309bb821faa2",
+   "bytes": 2985
+  },
+  {
+   "id": "records_pet_skill_name_matches_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_pet_skill_name_matches_limit500.json",
+   "sha256": "3ccbe5a1e2cef99bc69ebe99b647bbb01273f0ed697135c13e6952982c7188de",
+   "bytes": 40220
+  },
+  {
+   "id": "records_mapdata_parent_scene_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/mapdata_parent_scene/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_mapdata_parent_scene_limit500.json",
+   "sha256": "40f788fbb3e848a8ecfbb4bbb2caee20e982ad08355445b294e4ae0c30b575ae",
+   "bytes": 561
+  },
+  {
+   "id": "records_mapdata_scene_dictionary_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/mapdata_scene_dictionary/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_mapdata_scene_dictionary_limit500.json",
+   "sha256": "95ebb6faa0db9b46a8838fba33a77a3d7ca9d638055957e4e8eedbb281f00d41",
+   "bytes": 10845
+  },
+  {
+   "id": "records_minimapnpcpos_pos_records_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/minimapnpcpos_pos_records/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_minimapnpcpos_pos_records_limit500.json",
+   "sha256": "07325b8f441f17d738477a8a0d831bcda4ba5aa85af480fc8496a4214d7efbd7",
+   "bytes": 206813
+  },
+  {
+   "id": "records_minimapnpcpos_wenzi_entries_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/minimapnpcpos_wenzi_entries/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_minimapnpcpos_wenzi_entries_limit500.json",
+   "sha256": "f2ae3d5c1bbe18066472b4f2cf0c9ad175ad04480c31788704d2afe15cdc043b",
+   "bytes": 60312
+  },
+  {
+   "id": "records_npcname2realnamedata_alias_to_realname_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/npcname2realnamedata_alias_to_realname/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_npcname2realnamedata_alias_to_realname_limit500.json",
+   "sha256": "db58c7e4fd06e03d3060179b5cd19f1e4e7585672b9badaf983bcc499d8768fc",
+   "bytes": 5313
+  },
+  {
+   "id": "records_npcposdata_records_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/npcposdata_records/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_npcposdata_records_limit500.json",
+   "sha256": "1588c5b00ab8852c05088b7c0e9b9e36208e2b7020eb1544a436ffdcd9fb65bf",
+   "bytes": 181151
+  },
+  {
+   "id": "records_sceneid2name_minimap_scenes_limit500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/sceneid2name_minimap_scenes/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_sceneid2name_minimap_scenes_limit500.json",
+   "sha256": "b04b0d77d9352b5d417d1ad1525b72f6b97587859578eb60584613b1af7bf2fd",
+   "bytes": 8569
+  },
+  {
+   "id": "records_npc_2601_vs_2804_agreement_offset0",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/npc_2601_vs_2804_agreement/records",
+   "query": "limit=500&offset=0",
+   "status": 200,
+   "file": "records_npc_2601_vs_2804_agreement_offset0.json",
+   "sha256": "c333599cabaea9a1c503783babe6128a372b965e958fa80baf2e221d1d43ff12",
+   "bytes": 76214
+  },
+  {
+   "id": "records_npc_2601_vs_2804_agreement_offset500",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/npc_2601_vs_2804_agreement/records",
+   "query": "limit=500&offset=500",
+   "status": 200,
+   "file": "records_npc_2601_vs_2804_agreement_offset500.json",
+   "sha256": "c513114883605aa55e1641f20eaa81df9ff1c031f454e24ee76293e55a35ce88",
+   "bytes": 27179
+  },
+  {
+   "id": "skill_record_101",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/101",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_101.json",
+   "sha256": "e73d99a4d2b9ed4cc5388bebb82ec0c0926470c08a50f423a5d7878c975b1506",
+   "bytes": 365
+  },
+  {
+   "id": "overwrites_key_101",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=101",
+   "status": 200,
+   "file": "overwrites_key_101.json",
+   "sha256": "a2bbbbd5642348d26bf64196c382196545a9fd974aae817d8d6ca989a701e81a",
+   "bytes": 32
+  },
+  {
+   "id": "name_matches_by_skill_101",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=101",
+   "status": 200,
+   "file": "name_matches_by_skill_101.json",
+   "sha256": "61043d1c642e072d37af0abec863dbdc26ed46fb0780d2ec7d55ec54924acb5e",
+   "bytes": 379
+  },
+  {
+   "id": "skill_record_108",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/108",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_108.json",
+   "sha256": "b09aad88ece941c7deb31791bd8e6af31ba3a628d20789525d29ba65e586e197",
+   "bytes": 317
+  },
+  {
+   "id": "overwrites_key_108",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=108",
+   "status": 200,
+   "file": "overwrites_key_108.json",
+   "sha256": "a2bbbbd5642348d26bf64196c382196545a9fd974aae817d8d6ca989a701e81a",
+   "bytes": 32
+  },
+  {
+   "id": "name_matches_by_skill_108",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=108",
+   "status": 200,
+   "file": "name_matches_by_skill_108.json",
+   "sha256": "bc4bd4bcbed9097124726f6c86151d53c5bcbc4d223e555448592ae1dbe70c40",
+   "bytes": 379
+  },
+  {
+   "id": "skill_record_118",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/118",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_118.json",
+   "sha256": "f06d902dad1c72eb772aa02c3c157ecba931f2d427e7b5535207838a7c719394",
+   "bytes": 305
+  },
+  {
+   "id": "overwrites_key_118",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=118",
+   "status": 200,
+   "file": "overwrites_key_118.json",
+   "sha256": "a2bbbbd5642348d26bf64196c382196545a9fd974aae817d8d6ca989a701e81a",
+   "bytes": 32
+  },
+  {
+   "id": "name_matches_by_skill_118",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=118",
+   "status": 200,
+   "file": "name_matches_by_skill_118.json",
+   "sha256": "cde8c51b7368fa6e9ad38b3bc6337adce4361bab93f6ac0b4dffa6bcb324152f",
+   "bytes": 379
+  },
+  {
+   "id": "skill_record_229",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/229",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_229.json",
+   "sha256": "e9d938523b9e121dfe3bd0b9e13b432c461800cb057c9d8fe362c6fb7e8973b9",
+   "bytes": 386
+  },
+  {
+   "id": "overwrites_key_229",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=229",
+   "status": 200,
+   "file": "overwrites_key_229.json",
+   "sha256": "a2bbbbd5642348d26bf64196c382196545a9fd974aae817d8d6ca989a701e81a",
+   "bytes": 32
+  },
+  {
+   "id": "name_matches_by_skill_229",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=229",
+   "status": 200,
+   "file": "name_matches_by_skill_229.json",
+   "sha256": "cf0989221bfc28773c8bec2bd12e13308d2007754b6881f21eb74592e92096cf",
+   "bytes": 390
+  },
+  {
+   "id": "skill_record_308",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/308",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_308.json",
+   "sha256": "45171ec11ea927ced9d510510a85535ca9be6e585516cee06758132430b0266e",
+   "bytes": 408
+  },
+  {
+   "id": "overwrites_key_308",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=308",
+   "status": 200,
+   "file": "overwrites_key_308.json",
+   "sha256": "a2bbbbd5642348d26bf64196c382196545a9fd974aae817d8d6ca989a701e81a",
+   "bytes": 32
+  },
+  {
+   "id": "name_matches_by_skill_308",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=308",
+   "status": 200,
+   "file": "name_matches_by_skill_308.json",
+   "sha256": "47c0ca5f1c86cf2b515596e1c069ebc1db7e321dabaccafd118e2f2de57e9388",
+   "bytes": 391
+  },
+  {
+   "id": "skill_record_319",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/319",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_319.json",
+   "sha256": "39108e8eb8e82e0eed7e6744b61e5e458fc931430a1b0b853345a6683a2a799e",
+   "bytes": 356
+  },
+  {
+   "id": "overwrites_key_319",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=319",
+   "status": 200,
+   "file": "overwrites_key_319.json",
+   "sha256": "a2bbbbd5642348d26bf64196c382196545a9fd974aae817d8d6ca989a701e81a",
+   "bytes": 32
+  },
+  {
+   "id": "name_matches_by_skill_319",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=319",
+   "status": 200,
+   "file": "name_matches_by_skill_319.json",
+   "sha256": "f89d8efe25e3838a13761c596c3f5174453ab983ee81799f2a96a2af8ce1f4fe",
+   "bytes": 391
+  },
+  {
+   "id": "skill_record_329",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/329",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_329.json",
+   "sha256": "9ee5deea9c01bfacc6fde5bee0d6f18bfcf809822c17a9808691fed89c25a433",
+   "bytes": 386
+  },
+  {
+   "id": "overwrites_key_329",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=329",
+   "status": 200,
+   "file": "overwrites_key_329.json",
+   "sha256": "a2bbbbd5642348d26bf64196c382196545a9fd974aae817d8d6ca989a701e81a",
+   "bytes": 32
+  },
+  {
+   "id": "name_matches_by_skill_329",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=329",
+   "status": 200,
+   "file": "name_matches_by_skill_329.json",
+   "sha256": "12a1d23bf1f1adb1b39a93ec48695a0a376aede6c2901a510668063c309ca652",
+   "bytes": 390
+  },
+  {
+   "id": "skill_record_355",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/355",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_355.json",
+   "sha256": "e10307293926b5a87dce006ee58223e23ef22e38c0195dec1a342ca10a98560d",
+   "bytes": 314
+  },
+  {
+   "id": "overwrites_key_355",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=355",
+   "status": 200,
+   "file": "overwrites_key_355.json",
+   "sha256": "a2bbbbd5642348d26bf64196c382196545a9fd974aae817d8d6ca989a701e81a",
+   "bytes": 32
+  },
+  {
+   "id": "name_matches_by_skill_355",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=355",
+   "status": 200,
+   "file": "name_matches_by_skill_355.json",
+   "sha256": "a5de1e8cfb848eff7e9d533b5f0fc60eaeb7b199824f53609821a2cf4b3eab1e",
+   "bytes": 390
+  },
+  {
+   "id": "skill_record_557",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/557",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_557.json",
+   "sha256": "065a7d1dbb96043cd4c33f753e5812f5389033a71df01fcc3bb4bf30b6f8a1cc",
+   "bytes": 463
+  },
+  {
+   "id": "overwrites_key_557",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=557",
+   "status": 200,
+   "file": "overwrites_key_557.json",
+   "sha256": "a2bbbbd5642348d26bf64196c382196545a9fd974aae817d8d6ca989a701e81a",
+   "bytes": 32
+  },
+  {
+   "id": "name_matches_by_skill_557",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=557",
+   "status": 200,
+   "file": "name_matches_by_skill_557.json",
+   "sha256": "e1fab3032f5a6e8b5da1e4757d7bf564d8deeaa91f1864f5af79d4527c8b29d7",
+   "bytes": 391
+  },
+  {
+   "id": "skill_record_562",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/562",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_562.json",
+   "sha256": "0b2a3fca0240c936124d65349e4d6c9c506806e8be2fa4cc1971bcfeaadd3c23",
+   "bytes": 486
+  },
+  {
+   "id": "overwrites_key_562",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=562",
+   "status": 200,
+   "file": "overwrites_key_562.json",
+   "sha256": "a2bbbbd5642348d26bf64196c382196545a9fd974aae817d8d6ca989a701e81a",
+   "bytes": 32
+  },
+  {
+   "id": "name_matches_by_skill_562",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=562",
+   "status": 200,
+   "file": "name_matches_by_skill_562.json",
+   "sha256": "21cecb03f88b9c1db921e55acde3dc90fa8033314bbac843486c5546f02bd0b6",
+   "bytes": 391
+  },
+  {
+   "id": "skill_record_4236",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/4236",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_4236.json",
+   "sha256": "e8db0781f69d243f67885a4c5066a12e582a419000d0d5346b80f477f0a9003c",
+   "bytes": 376
+  },
+  {
+   "id": "overwrites_key_4236",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=4236",
+   "status": 200,
+   "file": "overwrites_key_4236.json",
+   "sha256": "4dbc24753fc751772f0826ee239a7270b6c73e435e45574be352c8f1485c3e78",
+   "bytes": 1731
+  },
+  {
+   "id": "name_matches_by_skill_4236",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=4236",
+   "status": 200,
+   "file": "name_matches_by_skill_4236.json",
+   "sha256": "c3c84b4b4fb2073ecfa75f1d1a5f624618149d8283dd5d1c441334a3b4d9bcb5",
+   "bytes": 111
+  },
+  {
+   "id": "skill_record_4573",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/4573",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_4573.json",
+   "sha256": "428bd3241a87c5f58f1349ce6ae8637da4c0fd595f80a875bdfabf1da47b7367",
+   "bytes": 337
+  },
+  {
+   "id": "overwrites_key_4573",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=4573",
+   "status": 200,
+   "file": "overwrites_key_4573.json",
+   "sha256": "7d5fcd207765f13600ad2f781aaaa28299a0bfd148957afdf7089acfc17f7167",
+   "bytes": 1627
+  },
+  {
+   "id": "name_matches_by_skill_4573",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=4573",
+   "status": 200,
+   "file": "name_matches_by_skill_4573.json",
+   "sha256": "c3c84b4b4fb2073ecfa75f1d1a5f624618149d8283dd5d1c441334a3b4d9bcb5",
+   "bytes": 111
+  },
+  {
+   "id": "skill_record_4574",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/4574",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_4574.json",
+   "sha256": "e135c243f2ab0141fdbd4f86f99af48eb595dee7bfc3b802cb7fe99649f50b24",
+   "bytes": 364
+  },
+  {
+   "id": "overwrites_key_4574",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=4574",
+   "status": 200,
+   "file": "overwrites_key_4574.json",
+   "sha256": "95ff4edcf534e72f1c7f8e5983b1a939421bc33d2f3a0bc7575350b6e27e333a",
+   "bytes": 1699
+  },
+  {
+   "id": "name_matches_by_skill_4574",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=4574",
+   "status": 200,
+   "file": "name_matches_by_skill_4574.json",
+   "sha256": "c3c84b4b4fb2073ecfa75f1d1a5f624618149d8283dd5d1c441334a3b4d9bcb5",
+   "bytes": 111
+  },
+  {
+   "id": "skill_record_4575",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/4575",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_4575.json",
+   "sha256": "fb1b0ba29a20caf045ff6d06928948ad139866d9c7e3d86a48d1b45ee27ea5e6",
+   "bytes": 328
+  },
+  {
+   "id": "overwrites_key_4575",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=4575",
+   "status": 200,
+   "file": "overwrites_key_4575.json",
+   "sha256": "3e5116dfe45daac8e60c32e11f6fdeaf50aee201a80638c45db8d099ea2358a1",
+   "bytes": 1603
+  },
+  {
+   "id": "name_matches_by_skill_4575",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=4575",
+   "status": 200,
+   "file": "name_matches_by_skill_4575.json",
+   "sha256": "c3c84b4b4fb2073ecfa75f1d1a5f624618149d8283dd5d1c441334a3b4d9bcb5",
+   "bytes": 111
+  },
+  {
+   "id": "skill_record_4576",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/4576",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_4576.json",
+   "sha256": "db1ccfdb1917ceffe0bfb8382086b29e473ccde42e446399156c50a108cdc1c5",
+   "bytes": 381
+  },
+  {
+   "id": "overwrites_key_4576",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=4576",
+   "status": 200,
+   "file": "overwrites_key_4576.json",
+   "sha256": "8a881127dc1433894f09f4ed80c06d369ee5eb4e6f2b8ae4a0f4755777a26797",
+   "bytes": 1747
+  },
+  {
+   "id": "name_matches_by_skill_4576",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=4576",
+   "status": 200,
+   "file": "name_matches_by_skill_4576.json",
+   "sha256": "c3c84b4b4fb2073ecfa75f1d1a5f624618149d8283dd5d1c441334a3b4d9bcb5",
+   "bytes": 111
+  },
+  {
+   "id": "skill_record_4577",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/4577",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_4577.json",
+   "sha256": "93f9d1368598ee920510ba1855687764e8eae9ad41eb0c37ed3dd4b2f7eee97f",
+   "bytes": 386
+  },
+  {
+   "id": "overwrites_key_4577",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=4577",
+   "status": 200,
+   "file": "overwrites_key_4577.json",
+   "sha256": "ea5838af8840cc3b91c37656c8ad6a1af166c14275499c566ed37a4f68cf38d4",
+   "bytes": 1763
+  },
+  {
+   "id": "name_matches_by_skill_4577",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=4577",
+   "status": 200,
+   "file": "name_matches_by_skill_4577.json",
+   "sha256": "c3c84b4b4fb2073ecfa75f1d1a5f624618149d8283dd5d1c441334a3b4d9bcb5",
+   "bytes": 111
+  },
+  {
+   "id": "skill_record_4578",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/4578",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_4578.json",
+   "sha256": "ddda4849e81f44b873c4bff18063553860a8ba37975d452392f348364b39790f",
+   "bytes": 304
+  },
+  {
+   "id": "overwrites_key_4578",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=4578",
+   "status": 200,
+   "file": "overwrites_key_4578.json",
+   "sha256": "9e600813f54ef3b7071407cdbe9465a9c8a545982d3ca41c0d6073d70a0a150f",
+   "bytes": 1539
+  },
+  {
+   "id": "name_matches_by_skill_4578",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=4578",
+   "status": 200,
+   "file": "name_matches_by_skill_4578.json",
+   "sha256": "c3c84b4b4fb2073ecfa75f1d1a5f624618149d8283dd5d1c441334a3b4d9bcb5",
+   "bytes": 111
+  },
+  {
+   "id": "skill_record_4579",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/4579",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_4579.json",
+   "sha256": "9cc722e7f238216c33d9ef9ccc76ff77640cbaf30111bc337b811db318d85149",
+   "bytes": 388
+  },
+  {
+   "id": "overwrites_key_4579",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=4579",
+   "status": 200,
+   "file": "overwrites_key_4579.json",
+   "sha256": "e4740450198f7b237068a6921b39ec834a02e946dabce8b46eae8e95febf3e1f",
+   "bytes": 1763
+  },
+  {
+   "id": "name_matches_by_skill_4579",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=4579",
+   "status": 200,
+   "file": "name_matches_by_skill_4579.json",
+   "sha256": "c3c84b4b4fb2073ecfa75f1d1a5f624618149d8283dd5d1c441334a3b4d9bcb5",
+   "bytes": 111
+  },
+  {
+   "id": "skill_record_4581",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records/4581",
+   "query": "",
+   "status": 200,
+   "file": "skill_record_4581.json",
+   "sha256": "a27030127e99b1fe62d73c71961206dbca4c5ef0729b9c632dae02eb53418687",
+   "bytes": 319
+  },
+  {
+   "id": "overwrites_key_4581",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=4581",
+   "status": 200,
+   "file": "overwrites_key_4581.json",
+   "sha256": "152d28e12a8063c024abea7eea9c8adb375e54eebe6f9ac38d8441f3f9b0be6d",
+   "bytes": 1579
+  },
+  {
+   "id": "name_matches_by_skill_4581",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_id=4581",
+   "status": 200,
+   "file": "name_matches_by_skill_4581.json",
+   "sha256": "c3c84b4b4fb2073ecfa75f1d1a5f624618149d8283dd5d1c441334a3b4d9bcb5",
+   "bytes": 111
+  },
+  {
+   "id": "health",
+   "method": "GET",
+   "path": "/api/v1/review/health",
+   "query": "",
+   "status": 200,
+   "file": "health.json",
+   "sha256": "c8d45ab847b5073ee8f73778160b9e43107a8f12c7be022541685c8224fd8bc7",
+   "bytes": 127
+  },
+  {
+   "id": "batch",
+   "method": "GET",
+   "path": "/api/v1/review/batch",
+   "query": "",
+   "status": 200,
+   "file": "batch.json",
+   "sha256": "0440d677f051c90a81f727b4f24a16b0031a57a1974df112ebf8b81e68a0881b",
+   "bytes": 1885
+  },
+  {
+   "id": "datasets",
+   "method": "GET",
+   "path": "/api/v1/review/datasets",
+   "query": "",
+   "status": 200,
+   "file": "datasets.json",
+   "sha256": "c90bdda1a9b29234a85cb31772186f2bf2eb85ff0bc3984f26fbba4f29587ae3",
+   "bytes": 15386
+  },
+  {
+   "id": "dataset_meta_items",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/items",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_items.json",
+   "sha256": "474b924056fd43ae760e291b6006aa9374d8571faefb3298d2beb3540b42d14e",
+   "bytes": 832
+  },
+  {
+   "id": "dataset_meta_pet_aptitudes",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_aptitudes",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_pet_aptitudes.json",
+   "sha256": "bcd34297bd53370d0a793fc9eb6047bd738ffc01979c018ba57be12b98c516ce",
+   "bytes": 1071
+  },
+  {
+   "id": "dataset_meta_npcposdata_records",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/npcposdata_records",
+   "query": "",
+   "status": 200,
+   "file": "dataset_meta_npcposdata_records.json",
+   "sha256": "4ec7805a9e37ea2044961f9229de4826962528bba1c5220a7786a5318c70b0ae",
+   "bytes": 1357
+  },
+  {
+   "id": "item_11",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/items/records/11",
+   "query": "",
+   "status": 200,
+   "file": "item_11.json",
+   "sha256": "1e8cb89b9a05cdbccd53132f965254a6f83b499ce3f4d89a27619d537aedb62f",
+   "bytes": 372
+  },
+  {
+   "id": "item_12",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/items/records/12",
+   "query": "",
+   "status": 200,
+   "file": "item_12.json",
+   "sha256": "44e556ace802e68a320b6814547505937e235f18fde8edd47e6789d0bf7b1b9f",
+   "bytes": 457
+  },
+  {
+   "id": "item_41052",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/items/records/41052",
+   "query": "",
+   "status": 200,
+   "file": "item_41052.json",
+   "sha256": "14deeff0fa2a7f1551c9a3815cc93bea40877199415fb66fc9f170520d27c0a5",
+   "bytes": 383
+  },
+  {
+   "id": "items_q_lurong",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/items/records",
+   "query": "q=%E9%B9%BF%E8%8C%B8",
+   "status": 200,
+   "file": "items_q_lurong.json",
+   "sha256": "8219e5374ec1bdd53317632599a58fec177fa96d0e7de84b32bbd4455328efc7",
+   "bytes": 1066
+  },
+  {
+   "id": "pet_2010",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pets/records/2010",
+   "query": "",
+   "status": 200,
+   "file": "pet_2010.json",
+   "sha256": "225366ab682731c8de2c34f7f9c7fdd7b89fd703b0e8949f52abd1fd76667c7d",
+   "bytes": 327
+  },
+  {
+   "id": "pet_2800",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pets/records/2800",
+   "query": "",
+   "status": 200,
+   "file": "pet_2800.json",
+   "sha256": "feecd58f16159dbf2435ee71be4f39e22646931c5ed89aa14063d23b7ed936b1",
+   "bytes": 357
+  },
+  {
+   "id": "pet_3010",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pets/records/3010",
+   "query": "",
+   "status": 200,
+   "file": "pet_3010.json",
+   "sha256": "c2b03c50277626745fe9404c885c972030983d49373a055ac0bae61263adcf72",
+   "bytes": 275
+  },
+  {
+   "id": "pet_4011",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pets/records/4011",
+   "query": "",
+   "status": 200,
+   "file": "pet_4011.json",
+   "sha256": "6f8515f3d3f524fde0925ddc077ef43d89dc946f9ba904a1cb81235fda9f1f3d",
+   "bytes": 293
+  },
+  {
+   "id": "pets_q_maocaotuan",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pets/records",
+   "query": "q=%E6%AF%9B%E8%8D%89%E5%9C%98",
+   "status": 200,
+   "file": "pets_q_maocaotuan.json",
+   "sha256": "ca9d5f23294de6ca361269536b412607fc409db9f7c4836e81be02a787a53a8d",
+   "bytes": 448
+  },
+  {
+   "id": "aptitude_2010",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_aptitudes/records",
+   "query": "client_shape_id=2010",
+   "status": 200,
+   "file": "aptitude_2010.json",
+   "sha256": "9135cdb1881e886f759308708fd168b416c0e7e8bdfb408aee3c93f9518ae612",
+   "bytes": 564
+  },
+  {
+   "id": "aptitude_2800",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_aptitudes/records",
+   "query": "client_shape_id=2800",
+   "status": 200,
+   "file": "aptitude_2800.json",
+   "sha256": "83ed5ad8f371da97d851f093ebca3c935fe7fc6c378001bf752dc8f8a10fae5b",
+   "bytes": 102
+  },
+  {
+   "id": "aptitude_4011",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_aptitudes/records",
+   "query": "client_shape_id=4011",
+   "status": 200,
+   "file": "aptitude_4011.json",
+   "sha256": "e0f74d9431ae4bc3547c0f849f7f9377615a6b38741e13934ec24887d51394bd",
+   "bytes": 564
+  },
+  {
+   "id": "aptitude_missing_3010",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_aptitude_missing/records",
+   "query": "client_shape_id=3010",
+   "status": 200,
+   "file": "aptitude_missing_3010.json",
+   "sha256": "293ac79ee4e6a9aefe8cd993a1815c8bff3ffaf645dc5d836a6fe258400ef627",
+   "bytes": 371
+  },
+  {
+   "id": "candidates_4011",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_candidates/records",
+   "query": "client_shape_id=4011&order=asc&sort_by=sequence",
+   "status": 200,
+   "file": "candidates_4011.json",
+   "sha256": "8afcf648688689bc7b1e71dad2bd4d5bb99e3814c2385c6750fd97e2dc9adabf",
+   "bytes": 1050
+  },
+  {
+   "id": "candidates_2010",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_candidates/records",
+   "query": "client_shape_id=2010&order=asc&sort_by=sequence",
+   "status": 200,
+   "file": "candidates_2010.json",
+   "sha256": "e440f72f8460f2840d982644ca3b3e1bfce2ed83e8b59aa0c6271116ed3db522",
+   "bytes": 1026
+  },
+  {
+   "id": "candidates_2790",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_candidates/records",
+   "query": "client_shape_id=2790&order=asc&sort_by=sequence",
+   "status": 200,
+   "file": "candidates_2790.json",
+   "sha256": "ee7833461f41dc150662760b91971eaf999e7e6568f2b3fa21075a7f0ed13ad0",
+   "bytes": 809
+  },
+  {
+   "id": "candidates_2800",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_candidates/records",
+   "query": "client_shape_id=2800&order=asc&sort_by=sequence",
+   "status": 200,
+   "file": "candidates_2800.json",
+   "sha256": "afad164dbce8be28538fb63847305fbb4a63d44d90a93a531b026034815fb0ec",
+   "bytes": 803
+  },
+  {
+   "id": "candidates_3010",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_candidates/records",
+   "query": "client_shape_id=3010&order=asc&sort_by=sequence",
+   "status": 200,
+   "file": "candidates_3010.json",
+   "sha256": "92151d6d423f311a547eee1b53d525dcfdd68f9c4686bf8d0d8a69a37dd7694b",
+   "bytes": 109
+  },
+  {
+   "id": "aptitude_3010",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_aptitudes/records",
+   "query": "client_shape_id=3010",
+   "status": 200,
+   "file": "aptitude_3010.json",
+   "sha256": "83ed5ad8f371da97d851f093ebca3c935fe7fc6c378001bf752dc8f8a10fae5b",
+   "bytes": 102
+  },
+  {
+   "id": "aptitude_missing_2800",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_aptitude_missing/records",
+   "query": "client_shape_id=2800",
+   "status": 200,
+   "file": "aptitude_missing_2800.json",
+   "sha256": "a5d99192a23c0f02dbcd03a88f5df5e6b96063525c72719477dda97e70e3c256",
+   "bytes": 109
+  },
+  {
+   "id": "aptitude_missing_4011",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_aptitude_missing/records",
+   "query": "client_shape_id=4011",
+   "status": 200,
+   "file": "aptitude_missing_4011.json",
+   "sha256": "a5d99192a23c0f02dbcd03a88f5df5e6b96063525c72719477dda97e70e3c256",
+   "bytes": 109
+  },
+  {
+   "id": "required_2800",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_required_skills/records",
+   "query": "client_shape_id=2800",
+   "status": 200,
+   "file": "required_2800.json",
+   "sha256": "dec032b99cd1f4bb7d7c74dd8f75d5830a45036ba04dfa520cb0392bf6073bd0",
+   "bytes": 108
+  },
+  {
+   "id": "required_3010",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_required_skills/records",
+   "query": "client_shape_id=3010",
+   "status": 200,
+   "file": "required_3010.json",
+   "sha256": "dec032b99cd1f4bb7d7c74dd8f75d5830a45036ba04dfa520cb0392bf6073bd0",
+   "bytes": 108
+  },
+  {
+   "id": "required_4011",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_required_skills/records",
+   "query": "client_shape_id=4011",
+   "status": 200,
+   "file": "required_4011.json",
+   "sha256": "dec032b99cd1f4bb7d7c74dd8f75d5830a45036ba04dfa520cb0392bf6073bd0",
+   "bytes": 108
+  },
+  {
+   "id": "required_2030",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_required_skills/records",
+   "query": "client_shape_id=2030",
+   "status": 200,
+   "file": "required_2030.json",
+   "sha256": "bb83e6d7a1c9032f1a3a96586e287d7fd2033fb3a612f3f6f22bd92d635be515",
+   "bytes": 320
+  },
+  {
+   "id": "required_2010_empty",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_required_skills/records",
+   "query": "client_shape_id=2010",
+   "status": 200,
+   "file": "required_2010_empty.json",
+   "sha256": "dec032b99cd1f4bb7d7c74dd8f75d5830a45036ba04dfa520cb0392bf6073bd0",
+   "bytes": 108
+  },
+  {
+   "id": "skills_q_hit",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skills/records",
+   "query": "q=%E9%AB%98%E7%B4%9A%E5%91%BD%E4%B8%AD",
+   "status": 200,
+   "file": "skills_q_hit.json",
+   "sha256": "a0718b99bef9bbad30d9b36ea554b1d6a280ae265d0c8a8b2f0fc250e364dff9",
+   "bytes": 854
+  },
+  {
+   "id": "name_matches_gaoji",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_name_raw=%E9%AB%98%E7%B4%9A%E5%91%BD%E4%B8%AD",
+   "status": 200,
+   "file": "name_matches_gaoji.json",
+   "sha256": "488896cfc3997fdefa0b4c13d0b8a4447c49aef3ccaa2ca6e058839f40f3f983",
+   "bytes": 668
+  },
+  {
+   "id": "name_matches_zhongji",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/pet_skill_name_matches/records",
+   "query": "skill_name_raw=%E7%B5%82%E7%B4%9A%E5%91%BD%E4%B8%AD",
+   "status": 200,
+   "file": "name_matches_zhongji.json",
+   "sha256": "14d64d7914c2eda08a2379eaa372efe7a453d163668c144d7f69ed741edb77f4",
+   "bytes": 668
+  },
+  {
+   "id": "quarantine_all",
+   "method": "GET",
+   "path": "/api/v1/review/quarantine",
+   "query": "",
+   "status": 200,
+   "file": "quarantine_all.json",
+   "sha256": "53586f97110572c440c9b025a17ecf07e1dc131eefaa520e119c0beb68c799af",
+   "bytes": 3851
+  },
+  {
+   "id": "quarantine_2954",
+   "method": "GET",
+   "path": "/api/v1/review/quarantine",
+   "query": "entry_index=2954",
+   "status": 200,
+   "file": "quarantine_2954.json",
+   "sha256": "e484374294eefff39d7fe4c2fc5cfa186f329d80823c2f3fdd671c16d698fb3a",
+   "bytes": 1202
+  },
+  {
+   "id": "quarantine_2954_2800",
+   "method": "GET",
+   "path": "/api/v1/review/quarantine",
+   "query": "entry_index=2954&record_key=2800",
+   "status": 200,
+   "file": "quarantine_2954_2800.json",
+   "sha256": "e484374294eefff39d7fe4c2fc5cfa186f329d80823c2f3fdd671c16d698fb3a",
+   "bytes": 1202
+  },
+  {
+   "id": "quarantine_2954_3010",
+   "method": "GET",
+   "path": "/api/v1/review/quarantine",
+   "query": "entry_index=2954&record_key=3010",
+   "status": 200,
+   "file": "quarantine_2954_3010.json",
+   "sha256": "a2bbbbd5642348d26bf64196c382196545a9fd974aae817d8d6ca989a701e81a",
+   "bytes": 32
+  },
+  {
+   "id": "quarantine_2954_4011",
+   "method": "GET",
+   "path": "/api/v1/review/quarantine",
+   "query": "entry_index=2954&record_key=4011",
+   "status": 200,
+   "file": "quarantine_2954_4011.json",
+   "sha256": "a2bbbbd5642348d26bf64196c382196545a9fd974aae817d8d6ca989a701e81a",
+   "bytes": 32
+  },
+  {
+   "id": "overwrites_all",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "",
+   "status": 200,
+   "file": "overwrites_all.json",
+   "sha256": "b3a058f19e94d3408ab1dc71712ec408436fdf30bb17c3b44a5df9ee283996bf",
+   "bytes": 14787
+  },
+  {
+   "id": "overwrites_key_4573",
+   "method": "GET",
+   "path": "/api/v1/review/overwrites",
+   "query": "key=4573",
+   "status": 200,
+   "file": "overwrites_key_4573.json",
+   "sha256": "7d5fcd207765f13600ad2f781aaaa28299a0bfd148957afdf7089acfc17f7167",
+   "bytes": 1627
+  },
+  {
+   "id": "missing_aptitudes",
+   "method": "GET",
+   "path": "/api/v1/review/missing-aptitudes",
+   "query": "",
+   "status": 200,
+   "file": "missing_aptitudes.json",
+   "sha256": "db6f9e37fe7c802c5a9a75c53d921c1ecbbc5f0fc487b339cee8b983651469d4",
+   "bytes": 759
+  },
+  {
+   "id": "ambiguous_skills",
+   "method": "GET",
+   "path": "/api/v1/review/ambiguous-skills",
+   "query": "",
+   "status": 200,
+   "file": "ambiguous_skills.json",
+   "sha256": "62d5eb02c2860f233c80448ccba4734158e1045ae68014955bb2a8dc96bc5818",
+   "bytes": 1075
+  },
+  {
+   "id": "npc_2601_zero_count",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/npcposdata_records/records",
+   "query": "limit=1&npcid=0",
+   "status": 200,
+   "file": "npc_2601_zero_count.json",
+   "sha256": "d98d99433a04b5da55e7d594b69143c531868a7e1b478251b5b590ee7a9f2417",
+   "bytes": 471
+  },
+  {
+   "id": "npc_2601_total",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/npcposdata_records/records",
+   "query": "limit=1",
+   "status": 200,
+   "file": "npc_2601_total.json",
+   "sha256": "a411782abc0d16c85a6f321afdd623ed8f545879fe728ee76e0190251e825714",
+   "bytes": 483
+  },
+  {
+   "id": "npc_2601_scene_1005",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/npcposdata_records/records",
+   "query": "limit=100&scene_id=1005",
+   "status": 200,
+   "file": "npc_2601_scene_1005.json",
+   "sha256": "b95a7eb61743f89685f28066467493521f9edc2a4551f3deb75ce4d9d745af66",
+   "bytes": 825
+  },
+  {
+   "id": "npc_2804_zero_count",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/minimapnpcpos_pos_records/records",
+   "query": "limit=1&npcid=0",
+   "status": 200,
+   "file": "npc_2804_zero_count.json",
+   "sha256": "40cdac6a4b2d74c5cb2ebbb6559e4d49feb6a2124e18a75c55de1b116f970804",
+   "bytes": 524
+  },
+  {
+   "id": "npc_2804_total",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/minimapnpcpos_pos_records/records",
+   "query": "limit=1",
+   "status": 200,
+   "file": "npc_2804_total.json",
+   "sha256": "8f14fdbd4b4bda9a9614e889d8b283546c5b26202e63bc3302ed3aac6d35d6e0",
+   "bytes": 533
+  },
+  {
+   "id": "npc_2601_scene_1001",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/npcposdata_records/records",
+   "query": "scene_id=1001",
+   "status": 200,
+   "file": "npc_2601_scene_1001.json",
+   "sha256": "e6164b06e5358d8f34ac7327342844b74ee4cf755ea95d892f468c198a914066",
+   "bytes": 4467
+  },
+  {
+   "id": "npc_2601_q_chefu",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/npcposdata_records/records",
+   "query": "q=%E8%BB%8A%E4%BC%95",
+   "status": 200,
+   "file": "npc_2601_q_chefu.json",
+   "sha256": "a54724f48dcc69c351afdcc2bb3698ae3dc643b5b4375b35f537798f127c9261",
+   "bytes": 9639
+  },
+  {
+   "id": "npc_2804_scene_1001",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/minimapnpcpos_pos_records/records",
+   "query": "scene_id=1001",
+   "status": 200,
+   "file": "npc_2804_scene_1001.json",
+   "sha256": "2d2671c64150fac9a9af6c8971c28c39bfd9622b55ffbce5534b873157e7ef5b",
+   "bytes": 5050
+  },
+  {
+   "id": "npc_2804_q_chefu",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/minimapnpcpos_pos_records/records",
+   "query": "q=%E8%BB%8A%E4%BC%95",
+   "status": 200,
+   "file": "npc_2804_q_chefu.json",
+   "sha256": "f3cd104f420ea97fa3b26549d7ebe1b0967de95fe11d2d87867040f1477945da",
+   "bytes": 11078
+  },
+  {
+   "id": "npc_2804_scene_1005",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/minimapnpcpos_pos_records/records",
+   "query": "limit=100&scene_id=1005",
+   "status": 200,
+   "file": "npc_2804_scene_1005.json",
+   "sha256": "d5069e101e49e517f37296655ab7b887fa79ac39a343ff47e47568b734d85479",
+   "bytes": 940
+  },
+  {
+   "id": "agreement_page_1",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/npc_2601_vs_2804_agreement/records",
+   "query": "limit=25&offset=0",
+   "status": 200,
+   "file": "agreement_page_1.json",
+   "sha256": "8033b4c7c467773fb0a1b5f3a1009f53eb763ec0e28fe53568b28203b6c136ec",
+   "bytes": 3919
+  },
+  {
+   "id": "agreement_scene_1001",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/npc_2601_vs_2804_agreement/records",
+   "query": "limit=25&scene_id=1001",
+   "status": 200,
+   "file": "agreement_scene_1001.json",
+   "sha256": "08ae9919f3367ccd7f8192fe7932d893a9e9d2359edfe84bc9a75ab51cc841e1",
+   "bytes": 1790
+  },
+  {
+   "id": "error_dataset_not_found",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/unknown_table",
+   "query": "",
+   "status": 404,
+   "file": "error_dataset_not_found.json",
+   "sha256": "dc42052875fb729c444ed0edcc771184f400a5ba4e7fb30007f4f3df36e26553",
+   "bytes": 158
+  },
+  {
+   "id": "error_record_not_found",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/items/records/999999",
+   "query": "",
+   "status": 404,
+   "file": "error_record_not_found.json",
+   "sha256": "9638f5fa68057129c29fa78eb9d72ccf0e24ee328b742905af0a65267e613739",
+   "bytes": 189
+  },
+  {
+   "id": "error_invalid_parameter",
+   "method": "GET",
+   "path": "/api/v1/review/datasets/items/records",
+   "query": "limit=0",
+   "status": 400,
+   "file": "error_invalid_parameter.json",
+   "sha256": "b7e7405b3b2f1070f8c8e83159b77813fdf4422df38f2a75d7e65dbca07d351e",
+   "bytes": 401
+  },
+  {
+   "id": "error_method_not_allowed",
+   "method": "POST",
+   "path": "/api/v1/review/batch",
+   "query": "",
+   "status": 405,
+   "file": "error_method_not_allowed.json",
+   "sha256": "5c99c4f4da9d7393197c6e00aac8319dc7d4a9c80d5dff8f73e6faa926279231",
+   "bytes": 135
+  }
+ ]
+}

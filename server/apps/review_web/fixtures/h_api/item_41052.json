@@ -1,0 +1,12 @@
+{
+ "client_shape_id": 41052,
+ "name": "時空石",
+ "description_raw": "一塊可以通過咒語記錄影像和聲音的石頭#r【類型】任務道具",
+ "category_code_raw": 6,
+ "image_id": 25218,
+ "image_mapping_explicit": true,
+ "source_entry": 1945,
+ "source_table": "DATA+ITEMDATABYTYPE+SHAPETABLE",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "41052"
+}

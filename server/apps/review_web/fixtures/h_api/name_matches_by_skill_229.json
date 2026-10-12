@@ -1,0 +1,19 @@
+{
+ "dataset": "pet_skill_name_matches",
+ "total": 1,
+ "offset": 0,
+ "limit": 50,
+ "count": 1,
+ "records": [
+  {
+   "skill_name_raw": "高級命中",
+   "skill_id": 229,
+   "match_count": 2,
+   "ambiguous": true,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級命中:229"
+  }
+ ]
+}

@@ -1,0 +1,13 @@
+{
+ "client_shape_id": 2010,
+ "name": "毛草團",
+ "liupai_raw": "智",
+ "attack_type_raw": "普通",
+ "carry_grade": 0,
+ "maxskillnum_raw": 4,
+ "address_raw": "出現地點：#r長風島#r珊瑚迷宮",
+ "source_entry": 2027,
+ "source_table": "DATA",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "2010"
+}
