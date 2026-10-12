@@ -82,19 +82,31 @@
     },
     {
       "check": "API-03",
-      "detail": [
-        "items: {'sort_by': 'client_shape_id', 'order': 'sideways'} accepted silently with HTTP 200 (50 rows, no explanation in the body)",
-        "pets: {'sort_by': 'client_shape_id', 'order': 'sideways'} accepted silently with HTTP 200 (50 rows, no explanation in the body)",
-        "/api/v1/review/quarantine?entry_indexx=... was accepted with HTTP 200 (4 rows) — a misspelled filter must not be ignored silently",
-        "/api/v1/review/quarantine?key=... was accepted with HTTP 200 (4 rows) — a misspelled filter must not be ignored silently",
-        "/api/v1/review/overwrites?keyy=... was accepted with HTTP 200 (9 rows) — a misspelled filter must not be ignored silently",
-        "/api/v1/review/overwrites?sort_by=... was accepted with HTTP 200 (9 rows) — a misspelled filter must not be ignored silently",
-        "/api/v1/review/batch?batch=... was accepted with HTTP 200 (? rows) — a misspelled filter must not be ignored silently",
-        "/api/v1/review/missing-aptitudes?limit=... was accepted with HTTP 200 (3 rows) — a misspelled filter must not be ignored silently",
-        "/api/v1/review/missing-aptitudes?offset=... was accepted with HTTP 200 (3 rows) — a misspelled filter must not be ignored silently"
-      ],
+      "detail": {
+        "/api/v1/review/batch?batch": 400,
+        "/api/v1/review/missing-aptitudes?limit": 400,
+        "/api/v1/review/missing-aptitudes?offset": 400,
+        "/api/v1/review/overwrites?keyy": 400,
+        "/api/v1/review/overwrites?sort_by": 400,
+        "/api/v1/review/quarantine?entry_indexx": 400,
+        "/api/v1/review/quarantine?key": 400,
+        "items:{'limit': '0'}": 400,
+        "items:{'limit': '10000000'}": 400,
+        "items:{'limit': '501'}": 400,
+        "items:{'limit': 'abc'}": 400,
+        "items:{'offset': '-1'}": 400,
+        "items:{'offset': 'abc'}": 400,
+        "items:{'sort_by': 'client_shape_id', 'order': 'sideways'}": 400,
+        "pets:{'limit': '0'}": 400,
+        "pets:{'limit': '10000000'}": 400,
+        "pets:{'limit': '501'}": 400,
+        "pets:{'limit': 'abc'}": 400,
+        "pets:{'offset': '-1'}": 400,
+        "pets:{'offset': 'abc'}": 400,
+        "pets:{'sort_by': 'client_shape_id', 'order': 'sideways'}": 400
+      },
       "requirement": "required",
-      "status": "fail",
+      "status": "pass",
       "title": "invalid parameters produce explicit errors, never silent substitution"
     },
     {
@@ -149,16 +161,82 @@
     },
     {
       "check": "API-05",
-      "detail": [
-        "missing_quarantine_file: service reported ready (health=200, quarantine_entries=0) — the missing or tampered evidence file was silently accepted",
-        "missing_validation_file: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
-        "missing_overwrite_evidence: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
-        "missing_provenance_file: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
-        "tampered_quarantine_no_hash_update: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
-        "manifest_drops_items_dataset: service stayed ready with 16 datasets (health=200) instead of refusing the shrunken manifest"
-      ],
+      "detail": {
+        "_control_valid_copy": {
+          "data_status": 200,
+          "datasets": 17,
+          "description": "undamaged copy (control)",
+          "health_status": 200,
+          "outcome": "served",
+          "quarantine": 4
+        },
+        "csv_hash_corruption": {
+          "data_status": null,
+          "datasets": null,
+          "description": "one byte changed in items.csv (size and sha256 break)",
+          "health_status": null,
+          "outcome": "refused_start",
+          "quarantine": null
+        },
+        "csv_type_corruption": {
+          "data_status": null,
+          "datasets": null,
+          "description": "a non-numeric value in the int column client_shape_id",
+          "health_status": null,
+          "outcome": "refused_start",
+          "quarantine": null
+        },
+        "manifest_drops_items_dataset": {
+          "data_status": null,
+          "datasets": null,
+          "description": "manifest.json no longer declares items.csv (16 datasets left)",
+          "health_status": null,
+          "outcome": "refused_start",
+          "quarantine": null
+        },
+        "missing_overwrite_evidence": {
+          "data_status": null,
+          "datasets": null,
+          "description": "overwrite_evidence.jsonl deleted",
+          "health_status": null,
+          "outcome": "refused_start",
+          "quarantine": null
+        },
+        "missing_provenance_file": {
+          "data_status": null,
+          "datasets": null,
+          "description": "maps_npcs/provenance.json deleted",
+          "health_status": null,
+          "outcome": "refused_start",
+          "quarantine": null
+        },
+        "missing_quarantine_file": {
+          "data_status": null,
+          "datasets": null,
+          "description": "quarantine.jsonl deleted",
+          "health_status": null,
+          "outcome": "refused_start",
+          "quarantine": null
+        },
+        "missing_validation_file": {
+          "data_status": null,
+          "datasets": null,
+          "description": "validation.json deleted",
+          "health_status": null,
+          "outcome": "refused_start",
+          "quarantine": null
+        },
+        "tampered_quarantine_no_hash_update": {
+          "data_status": null,
+          "datasets": null,
+          "description": "quarantine.jsonl content changed without updating manifest hashes",
+          "health_status": null,
+          "outcome": "refused_start",
+          "quarantine": null
+        }
+      },
       "requirement": "required",
-      "status": "fail",
+      "status": "pass",
       "title": "damaged or tampered batch copies never yield a pseudo-normal catalogue (hash, type, missing or tampered evidence files, manifest shrinkage)"
     },
     {
@@ -368,7 +446,7 @@
           ]
         },
         "static_routes": {
-          "files": 29,
+          "files": 37,
           "mutating_routes": [],
           "roots": [
             "server/apps",
@@ -451,13 +529,13 @@
     "startup_commands": []
   },
   "stage": "phase2_phase3_api_and_page",
-  "status": "fail",
-  "status_meaning": "at least one required check failed",
+  "status": "incomplete",
+  "status_meaning": "no failure, but some required checks could not be executed",
   "summary": {
     "executed": 19,
-    "fail": 2,
+    "fail": 0,
     "not_executed": 1,
-    "pass": 17,
+    "pass": 19,
     "total": 20
   }
 }

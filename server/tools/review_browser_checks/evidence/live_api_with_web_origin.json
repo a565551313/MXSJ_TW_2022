@@ -82,19 +82,31 @@
     },
     {
       "check": "API-03",
-      "detail": [
-        "items: {'sort_by': 'client_shape_id', 'order': 'sideways'} accepted silently with HTTP 200 (50 rows, no explanation in the body)",
-        "pets: {'sort_by': 'client_shape_id', 'order': 'sideways'} accepted silently with HTTP 200 (50 rows, no explanation in the body)",
-        "/api/v1/review/quarantine?entry_indexx=... was accepted with HTTP 200 (4 rows) — a misspelled filter must not be ignored silently",
-        "/api/v1/review/quarantine?key=... was accepted with HTTP 200 (4 rows) — a misspelled filter must not be ignored silently",
-        "/api/v1/review/overwrites?keyy=... was accepted with HTTP 200 (9 rows) — a misspelled filter must not be ignored silently",
-        "/api/v1/review/overwrites?sort_by=... was accepted with HTTP 200 (9 rows) — a misspelled filter must not be ignored silently",
-        "/api/v1/review/batch?batch=... was accepted with HTTP 200 (? rows) — a misspelled filter must not be ignored silently",
-        "/api/v1/review/missing-aptitudes?limit=... was accepted with HTTP 200 (3 rows) — a misspelled filter must not be ignored silently",
-        "/api/v1/review/missing-aptitudes?offset=... was accepted with HTTP 200 (3 rows) — a misspelled filter must not be ignored silently"
-      ],
+      "detail": {
+        "/api/v1/review/batch?batch": 400,
+        "/api/v1/review/missing-aptitudes?limit": 400,
+        "/api/v1/review/missing-aptitudes?offset": 400,
+        "/api/v1/review/overwrites?keyy": 400,
+        "/api/v1/review/overwrites?sort_by": 400,
+        "/api/v1/review/quarantine?entry_indexx": 400,
+        "/api/v1/review/quarantine?key": 400,
+        "items:{'limit': '0'}": 400,
+        "items:{'limit': '10000000'}": 400,
+        "items:{'limit': '501'}": 400,
+        "items:{'limit': 'abc'}": 400,
+        "items:{'offset': '-1'}": 400,
+        "items:{'offset': 'abc'}": 400,
+        "items:{'sort_by': 'client_shape_id', 'order': 'sideways'}": 400,
+        "pets:{'limit': '0'}": 400,
+        "pets:{'limit': '10000000'}": 400,
+        "pets:{'limit': '501'}": 400,
+        "pets:{'limit': 'abc'}": 400,
+        "pets:{'offset': '-1'}": 400,
+        "pets:{'offset': 'abc'}": 400,
+        "pets:{'sort_by': 'client_shape_id', 'order': 'sideways'}": 400
+      },
       "requirement": "required",
-      "status": "fail",
+      "status": "pass",
       "title": "invalid parameters produce explicit errors, never silent substitution"
     },
     {
@@ -361,7 +373,7 @@
           ]
         },
         "static_routes": {
-          "files": 29,
+          "files": 37,
           "mutating_routes": [],
           "roots": [
             "server/apps",
@@ -381,23 +393,17 @@
           "/src/main.tsx"
         ],
         "content_type": "text/html",
-        "frontend_contract_problems": [
-          {
-            "check": "W-12",
-            "detail": "['items (/api/v1/review/items?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])', 'pets (/api/v1/review/pets?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])', 'skills (/api/v1/review/skills?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])']"
-          },
-          {
-            "check": "W-13",
-            "detail": "['anomalies (/api/v1/review/anomalies): HTTP 404', 'mapDatasets (/api/v1/review/maps/datasets): HTTP 404', 'npcs (/api/v1/review/npcs?source=2601&page=1&page_size=25): HTTP 404', 'npcAgreement (/api/v1/review/npcs/agreement?page=1&page_size=25): HTTP 404']"
-          },
-          {
-            "check": "W-14",
-            "detail": "['item detail (/api/v1/review/items/11): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])', 'pet detail (/api/v1/review/pets/1010): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])', 'skill detail (/api/v1/review/skills/101): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])']"
-          }
-        ],
-        "frontend_probe_report": "/tmp/integ/server/tools/review_browser_checks/evidence/web_origin_probe.json",
-        "frontend_probe_returncode": 1,
-        "frontend_problems_note": "these are front-end (Agent I) contract mismatches; they are reported as W-12/W-13/W-14 in phase3_web_runtime, and are listed here as evidence only",
+        "frontend_checks": {
+          "W-10": "pass",
+          "W-11": "pass",
+          "W-12": "pass",
+          "W-13": "pass",
+          "W-14": "pass",
+          "W-15": "pass",
+          "W-16": "pass"
+        },
+        "frontend_probe_report": "/home/user/MXSJ_TW_2022/server/tools/review_browser_checks/evidence/web_origin_probe.json",
+        "frontend_probe_returncode": 0,
         "host_override_status": 200,
         "page_status": 200,
         "proxied_api_status": 200
@@ -470,13 +476,13 @@
     "startup_commands": []
   },
   "stage": "phase2_phase3_api_and_page",
-  "status": "fail",
-  "status_meaning": "at least one required check failed",
+  "status": "incomplete",
+  "status_meaning": "no failure, but some required checks could not be executed",
   "summary": {
     "executed": 19,
-    "fail": 1,
+    "fail": 0,
     "not_executed": 1,
-    "pass": 18,
+    "pass": 19,
     "total": 20
   }
 }

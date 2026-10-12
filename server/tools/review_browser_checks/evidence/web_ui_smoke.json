@@ -1,24 +1,29 @@
 {
   "stage": "phase3_web_ui_smoke",
   "engine": "jsdom executing the application own Vite build (no browser engine in this sandbox)",
-  "origin": "http://127.0.0.1:35807",
-  "console": [
-    {
-      "level": "uncaught",
-      "message": "TypeError: Cannot read properties of undefined (reading 'length')\n    at OverviewPage (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:16132:36)\n    at renderWithHooks (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:4222:25)\n    at updateFunctionComponent (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:5856:19)\n    at beginWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:6565:18)\n    at performUnitOfWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9989:18)\n    at workLoopSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9887:41)\n    at renderRootSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9871:11)\n    at performWorkOnRoot (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9551:44)\n    at performWorkOnRootViaSchedulerTask (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:10590:7)\n    at performWorkUntilDeadline (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:592:50)"
-    },
-    {
-      "level": "error",
-      "message": "{}"
-    }
-  ],
+  "origin": "http://127.0.0.1:60595",
+  "console": [],
   "requests": [
     {
-      "url": "http://127.0.0.1:35807/api/v1/review/batch",
+      "url": "http://127.0.0.1:60595/api/v1/review/batch",
       "method": "GET",
       "status": 200,
       "content_type": "application/json",
       "body_preview": "{\"batch\":\"batch_001\",\"native_loader_confirmed\":false,\"manifest_files_count\":21,\"csv_format\":{\"delimiter\":\",\",\"encoding\":\"UTF-8 without BOM\",\"formula_policy\":\"Op"
+    },
+    {
+      "url": "http://127.0.0.1:60595/api/v1/review/health",
+      "method": "GET",
+      "status": 200,
+      "content_type": "application/json",
+      "body_preview": "{\"status\":\"ready\",\"batch\":\"batch_001\",\"loaded_files_count\":22,\"datasets_count\":17,\"total_records_count\":12202}"
+    },
+    {
+      "url": "http://127.0.0.1:60595/api/v1/review/datasets",
+      "method": "GET",
+      "status": 200,
+      "content_type": "application/json",
+      "body_preview": "{\"total\":17,\"datasets\":[{\"id\":\"items\",\"filename\":\"items.csv\",\"rows\":6851,\"primary_key\":[\"client_shape_id\"],\"notes\":\"Display catalog, includes test/history entri"
     }
   ],
   "checks": [
@@ -27,7 +32,7 @@
       "title": "the delivered front end builds with its own toolchain",
       "status": "pass",
       "detail": {
-        "outDir": "/tmp/mxsj-ui-smoke-dist-h2cLCF",
+        "outDir": "/tmp/mxsj-ui-smoke-dist-LjbY2o",
         "files": [
           "app.js",
           "index.html"
@@ -37,11 +42,9 @@
     {
       "check": "U-02",
       "title": "the mounted application renders visible content",
-      "status": "fail",
+      "status": "pass",
       "detail": {
-        "text": "",
-        "html": "",
-        "hint": "the bundle executed and mounted, but painted nothing (white screen)"
+        "text": "MXSJ 静态数据复核浏览器只读浏览 batch_001 复核材料 · 前端不读取仓库 CSV · 数据由 /api/v1/review 提供批次概览道具宠物技能地图 / NPC异常与证据复核候选，非正式规则本页展示的 batch_001 行是静态候选解码结果：可用于人工复核与目录浏览，不是原生加载器验证结果，也不是正式服务端规则表。未做简繁转换；名称、描述、颜色标记与资源公式均按源文本原样展示，不解释、不计算。隔离记录、缺失资质与同名技能多 ID 候选继续保留：不补零、不自动择一、不折叠重复记录。页面不提供任何编辑、删除、导入或发布动作。批次概览计数、校验状态与隔离/缺失数量全部来自复核 A"
       }
     },
     {
@@ -51,11 +54,25 @@
       "detail": {
         "requests": [
           {
-            "url": "http://127.0.0.1:35807/api/v1/review/batch",
+            "url": "http://127.0.0.1:60595/api/v1/review/batch",
             "method": "GET",
             "status": 200,
             "content_type": "application/json",
             "body_preview": "{\"batch\":\"batch_001\",\"native_loader_confirmed\":false,\"manifest_files_count\":21,\"csv_format\":{\"delimiter\":\",\",\"encoding\":\"UTF-8 without BOM\",\"formula_policy\":\"Op"
+          },
+          {
+            "url": "http://127.0.0.1:60595/api/v1/review/health",
+            "method": "GET",
+            "status": 200,
+            "content_type": "application/json",
+            "body_preview": "{\"status\":\"ready\",\"batch\":\"batch_001\",\"loaded_files_count\":22,\"datasets_count\":17,\"total_records_count\":12202}"
+          },
+          {
+            "url": "http://127.0.0.1:60595/api/v1/review/datasets",
+            "method": "GET",
+            "status": 200,
+            "content_type": "application/json",
+            "body_preview": "{\"total\":17,\"datasets\":[{\"id\":\"items\",\"filename\":\"items.csv\",\"rows\":6851,\"primary_key\":[\"client_shape_id\"],\"notes\":\"Display catalog, includes test/history entri"
           }
         ]
       }
@@ -63,35 +80,26 @@
     {
       "check": "U-04",
       "title": "the application reports no console error while loading",
-      "status": "fail",
-      "detail": [
-        {
-          "level": "uncaught",
-          "message": "TypeError: Cannot read properties of undefined (reading 'length')\n    at OverviewPage (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:16132:36)\n    at renderWithHooks (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:4222:25)\n    at updateFunctionComponent (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:5856:19)\n    at beginWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:6565:18)\n    at performUnitOfWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9989:18)\n    at workLoopSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9887:41)\n    at renderRootSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9871:11)\n    at performWorkOnRoot (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9551:44)\n    at performWorkOnRootViaSchedulerTask (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:10590:7)\n    at performWorkUntilDeadline (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:592:50)"
-        },
-        {
-          "level": "error",
-          "message": "{}"
-        }
-      ]
+      "status": "pass",
+      "detail": []
     },
     {
       "check": "U-05",
       "title": "real-browser-only checks",
       "status": "not_executed",
-      "detail": "layout/visual white-screen detection, screenshot evidence and a real browser console need Chrome or Firefox; this sandbox has no browser binary and only npm/pypi/GitHub are reachable, so no browser build can be downloaded"
+      "detail": "jsdom does not execute real-browser checks; set REVIEW_BROWSER_TOOLS for the separate Chromium probe"
     }
   ],
-  "status": "fail",
+  "status": "pass",
   "rendered": {
-    "text": "",
-    "html": ""
+    "text": "MXSJ 静态数据复核浏览器只读浏览 batch_001 复核材料 · 前端不读取仓库 CSV · 数据由 /api/v1/review 提供批次概览道具宠物技能地图 / NPC异常与证据复核候选，非正式规则本页展示的 batch_001 行是静态候选解码结果：可用于人工复核与目录浏览，不是原生加载器验证结果，也不是正式服务端规则表。未做简繁转换；名称、描述、颜色标记与资源公式均按源文本原样展示，不解释、不计算。隔离记录、缺失资质与同名技能多 ID 候选继续保留：不补零、不自动择一、不折叠重复记录。页面不提供任何编辑、删除、导入或发布动作。批次概览计数、校验状态与隔离/缺失数量全部来自复核 API（/batch、/datasets、/health），不在前端写死。若数值与 CSV 不一致，以接口返回为准并核对导出器。批次信息批次batch_001原生加载器确认native_loader_confirmed = false 未确认数据集清单 17 个 · manifest 文件 21 个 · 已加载 22 个文件、12,202 条记录CSV 格式约定（来自 manifest）delimiter,encodingUTF-8 without BOMformula_policyOpaque text. Spreadsheet users must import text; do not e",
+    "html": "<div class=\"app\"><header class=\"app__header\"><div><h1 class=\"app__title\">MXSJ 静态数据复核浏览器</h1><p class=\"app__subtitle\">只读浏览 batch_001 复核材料 · 前端不读取仓库 CSV · 数据由 <code>/api/v1/review</code> 提供</p></div></header><nav class=\"app__nav\" aria-label=\"主导航\"><a class=\"nav-tab nav-tab--active\" href=\"/\" title=\"批次、计数、校验、隔离与缺失\" aria-current=\"page\">批次概览</a><a class=\"nav-tab\" href=\"/items\" title=\"按 ID / 名称搜索\">道具</a><a class=\"nav-tab\" href=\"/pets\" title=\"主表、资质、候选与必带技能\">宠物</a><a class=\"nav-tab\" href=\"/skills\" title=\"描述、公式、重复覆盖\">技能</a><a class=\"nav-tab\" href=\"/maps\" title=\"按来源分开，不合成唯一表\">地图 / NPC</a><a class=\"nav-tab\" href=\"/anomalies\" title=\"隔离、缺失、歧义与原始字节\">异常与证据</a></nav><section class=\"notice notice--review\" role=\"note\" data-testid=\"review-notice\"><h2>复核候选，非正式规则</h2><p>本页展示的 batch_001 行是<strong>静态候选解码</strong>结果：可用于人工复核与目录浏览，<strong>不是</strong>原生加载器验证结果，也<strong>不是</strong>正式服务端规则表。</p><ul><li>未做简繁转换；名称、描述、颜色标记与资源公式均按源文本原样展示，不解释、不计算。</li><li>隔离记录、缺失资质与同名技能多 ID 候选继续保留：不补零、不自动择一、不折叠重复记录。</li><li>页面不提供任何编辑、删除、导入或发布动作。</li></ul><p class=\"notice__meta\"></p></section><main class=\"app__main\" aria-label=\"批次概览\"><section class=\"page\" data-testid=\"page-overview\"><h1>批次概览</h1><p class=\"page__lede\">计数、校验状态与隔离/缺失数量全部来自复核 API（<code>/batch</code>、<code>/datasets</code>、<code>/health</code>），不在前端写死。若数值与 CSV 不一致，以接口返回为准并核对导出器。</p><div class=\"panel\"><h2>批次信息</h2><dl class=\"keyvalue\"><div class=\"keyvalue__row\"><dt>批次</dt><dd><code>batch_001</code></dd></div><div class=\"keyvalue__row\"><dt>原生加载器确认</dt><dd><code>native_loader_confirmed = false</code> <span class=\"badge badge--warn\">未确认</span></dd></div><div class=\"keyvalue__row\"><dt>数据集</dt><dd>清单 17 个 · manifest 文件 21 个 · 已加载 22 个文件、12,202 条记录</dd></div></dl><details><summary>CSV 格式约定（来自 manifest）</summary><dl class=\"keyvalue\"><div class=\"keyvalue__row\"><dt>delimiter</dt><dd><code>,</code></dd></div><div class=\"keyvalue__row\"><dt>encoding</dt><dd><code>UTF-8 without BOM</code></dd></div><div class=\"keyvalue__row\"><dt>formula_policy</dt><dd><code>Opaque text. Spreadsheet users must import text; do not evaluate formulas.</code></dd></div><div class=\"keyvalue__row\"><dt>newline</dt><dd><code>LF</code></dd></div><div class=\"keyvalue__row\"><dt>nulls</dt><dd><code>No nulls in core CSVs; missing relations are separate rows/files.</code></dd></div><div class=\"keyvalue__row\"><dt>quoting</dt><dd><code>all fields</code></dd></div><div class=\"keyvalue__row\"><dt>scope</dt><dd><code>Core CSVs only; maps_npcs overrides retained from E staging</code></dd></div></dl></details></div><div class=\"panel\"><h2>各表数量与隔离</h2><div class=\"table-scroll\"><table class=\"data-table\" data-testid=\"batch-tables\"><thead><tr><th scope=\"col\">源条目</th><th scope=\"col\">复核数据集</th><th scope=\"col\" class=\"is-numeric\">数据集行数</th><th scope=\"col\" class=\"is-numeric\">源记录数</th><th scope=\"col\" class=\"is-numeric\">复核行数</th><th scope=\"col\" class=\"is-numeric\">隔离</th><th scope=\"col\">源表</th></tr></thead><tbody><tr><td data-label=\"源条目\"><code>1945</code></td><td data-label=\"复核数据集\"><code data-testid=\"table-dataset\">items</code></td><td data-label=\"数据集行数\" class=\"is-numeric\">6,851</td><td data-label=\"源记录数\" class=\"is-numeric\">6,852</td><td data-label=\"复核行数\" class=\"is-numeric\">6,851</td><td data-label=\"隔离\" class=\"is-numeric\"><span class=\"badge badge--danger\">1</span></td><td data-label=\"源表\"><code>DATA+ITEMDATABYTYPE+SHAPETABLE</code></td></tr><tr><td data-label=\"源条目\"><code>2027</code></td><td data-label=\"复核数据集\"><code data-testid=\"table-dataset\">pets</code></td><td data-label=\"数据集行数\" class=\"is-numeric\">135</td><td data-label=\"源记录数\" class=\"is-numeric\">135</td><td data-label=\"复核行数\" class=\"is-numeric\">135</td><td data-label=\"隔离\" class=\"is-numeric\"><span>0</span></td><td data-label=\"源表\"><code>DATA</code></td></tr><tr><td data-label=\"源条目\"><code>2954</code></td><td data-label=\"复核数据集\"><code data-testid=\"table-dataset\">pet_aptitudes</code></td><td data-label=\"数据集行数\" class=\"is-numeric\">131</td><td data-label=\"源记录数\" class=\"is-numeric\">132</td><td data-label=\"复核行数\" class=\"is-numeric\">131</td><td dat"
   },
   "summary": {
-    "pass": 2,
-    "fail": 2,
+    "pass": 4,
+    "fail": 0,
     "not_executed": 1,
-    "console_messages": 2,
-    "requests": 1
+    "console_messages": 0,
+    "requests": 3
   }
 }

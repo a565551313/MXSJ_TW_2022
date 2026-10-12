@@ -1,6 +1,6 @@
 # review_browser_checks — Agent J 的独立验收工具
 
-本目录是「静态数据复核工具」的**独立验收与回归**工具集，只依赖 Python 标准库，
+本目录是「静态数据复核工具」的**独立验收与回归**工具集；独立数据复算只依赖 Python 标准库，
 **不导入** `server/tools/export_review_csv.py`（生产者）或 Agent H 的加载器代码，
 所以这里算出的数字来自已提交的 CSV/JSON 制品本身，而不是生产者自报。
 
@@ -71,12 +71,16 @@ PYTHONDONTWRITEBYTECODE=1 python3 server/tools/review_browser_checks/conformance
 
 ## 依赖与配置
 
-* 仅标准库；无 pip 安装步骤。
+* 数据基线复算仅需标准库；完整联调需安装 API requirements、前端 npm 依赖并激活 Python venv。
 * 异常用例使用 `batch_fixture.write_temp_batch()` 生成**临时副本**，从不写入
   `server/docs/csv_checks/batch_001/`。
 * 需要 Agent H 的 `API_CONTRACT.md`（API 前缀、启动命令、数据根环境变量）与验收方
   编写的 `ops_*.json` 操作映射；两者齐备前，动态检查一律记为 `not_executed`。
 * `web_origin_probe.mjs` / `web_ui_smoke.mjs` 需要 `node >= 22.6`
   （`--experimental-strip-types`）以及 `server/apps/review_web/node_modules` 已安装。
-* 真实浏览器渲染/截图需要 Chromium 或 Firefox；本轮环境没有，故 `U-05` 明确记为
-  `not_executed`，不用替代手段冒充。
+* 真实 Chromium 驱动为 `chromium_smoke.mjs`：
+  `npm install --prefix /tmp/mxsj-browser-tools puppeteer-core@25.13.0 @sparticuz/chromium@153.0.0`，
+  设置 `REVIEW_BROWSER_TOOLS=/tmp/mxsj-browser-tools` 后运行 runner。依赖不写进产品目录。
+* 未配置浏览器工具时 U-05 明确为 `not_executed`；runner 仅完整通过返回 0，否则返回 1。
+* `web_app_dir` 显式启用真实前端契约探针；synthetic 自检映射不启用它，但代理安全负向检查仍运行。
+* 静态策略检查仅扫描作者源码，排除 dist/build/node_modules 等第三方构建产物；运行时另行构建验证。

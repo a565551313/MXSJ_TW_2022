@@ -1,14 +1,15 @@
 # 只读数据复核网页 — 前端交接（Agent I）
 
 - 日期：2026-10-12（UTC）
-- 工作分支：`arena/5ac000bd-mxsj-tw-2022`（PR #24，未合并）
+- 集成分支：`arena/b53b33e6-mxsj-tw-2022`（PR #24 已合并，最终实测修复 `d9721d8`）
 - 前端目录：[`server/apps/review_web/`](../../apps/review_web/)
-- 已接入的后端：Agent H 的 `server/apps/review_api`，**PR #22 head `9f6ab439a2ecdee37b59b99ddf95e77691490a0f`**
+- 已接入的后端：Agent H 的 `server/apps/review_api`，**PR #22 head `01e2adb465fb8bb67f872184e805f2ab6549cae8` + 集成修复**
 - 后端契约：[`API_CONTRACT.md`](./API_CONTRACT.md)（v1.0.0，随 PR #22 合入；已按它改写前端，不再使用自拟契约）
 
 > **结论先说：前端已完成与 H 真实接口的适配，并用 H 的真实响应（152 份在线捕获）验证过。**
 > 上一版文档写的「H 后端不存在 / 待接口联调」已不成立，本轮已按真实端点改写并在文档中给出可复现命令。
-> 尚未完成的只有浏览器自动化（本沙箱无法下载 Chromium，见 §6.3），其余项目均已执行并记录结果。
+> 收尾已完成真实 Chromium 的 16 个场景，最终结论与证据见 [ACCEPTANCE.md](./ACCEPTANCE.md)。
+> `fetchAllRecords` 已补齐提前空页、total 漂移、重复身份和分页不一致的拒绝逻辑，不再静默返回部分结果。
 
 ---
 
@@ -80,7 +81,7 @@ uvicorn app.main:app --app-dir server/apps/review_api --host 0.0.0.0 --port 8000
 | 命令 | 作用 |
 |---|---|
 | `npm run dev` | 开发服务器（0.0.0.0:5173，`/api` 代理到 Python 后端） |
-| `npm test` | Vitest + Testing Library（103 项通过 + 9 项在线联调默认跳过） |
+| `npm test` | Vitest + Testing Library（112 项通过 + 9 项在线联调默认跳过） |
 | `REVIEW_API_BASE=http://127.0.0.1:8000 npx vitest run src/api/liveBackend.test.ts` | **在线联调**：对真实后端发真实 HTTP（12 项） |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run build` / `npm run preview` | 生产构建 / 预览构建产物（同样代理 `/api`） |
@@ -153,7 +154,7 @@ manifest 记录 method/path/query/status/sha256/字节数，`_capture.provenance
 
 ```bash
 cd server/apps/review_web
-npm test          # 15 个文件：103 passed | 9 skipped（在线联调默认跳过）
+npm test          # 17 个文件：112 passed | 9 skipped（在线联调默认跳过）
 npm run typecheck # 无输出
 npm run build     # dist/index.html 0.64 kB，css 10.54 kB (gzip 2.83)，js 316.35 kB (gzip 95.92)
 python3 fixtures/capture_h_api.py --base http://127.0.0.1:8000 --check
@@ -178,15 +179,12 @@ python3 fixtures/capture_h_api.py --base http://127.0.0.1:8000 --check
 | 后端不可用时的行为（组件层） | `installNetworkFailure()` 用例 | 错误面板「无法连接复核 API」，表格不渲染，**不回退夹具** |
 | 后端不可用时的行为（真实 HTTP） | 另起一个把 `/api` 代理指向死地址的 Vite（`VITE_API_PROXY_TARGET=http://127.0.0.1:9`，端口 5199） | `/api/v1/review/health` → **HTTP 500**（非 JSON），`/` 仍返回 200：应用外壳不受影响，只有数据区显示错误 |
 
-### 6.3 明确「未执行」的项目
+### 6.3 浏览器验证与仍未执行的项目
 
-- **真实浏览器（Chromium/Playwright）端到端点击与截图：未执行**。本沙箱没有浏览器，且
-  `cdn.playwright.dev` / `playwright.azureedge.net` / `storage.googleapis.com` 等下载域名不可达，
-  无法安装。替代证据：jsdom 组件测试（103 项）、真实 HTTP 联调（12 项）、经 Vite 代理的 curl 探针，
-  以及可直接交互的实时预览（Vite 已绑定 `0.0.0.0:5173`，预览域 `Host` 已验证 200）。
-  **HTTP 200 本身不算通过**，因此上面的 12 项在线检查断言到字段级。
-- **窄屏视觉回归截图：未执行**（仅 `data-label` 结构断言）。
-- **屏幕阅读器 / 无障碍审计：未执行**。
+- **真实 Chromium 已执行**：使用从 npm 安装的 `@sparticuz/chromium` 与 `puppeteer-core`，
+  六页、四详情、翻页/搜索、NPC 来源、错误路径共 16 个场景通过，证据见 ACCEPTANCE.md。
+- **390×844 窄屏异常页截图已留档**；不等同于跨设备像素级视觉回归。
+- **屏幕阅读器 / 无障碍审计、完整跨浏览器兼容性审计：未执行**。
 - **原生加载器对照：未执行**（超出本页职责范围）。
 
 ## 7. 与其它目录的边界
@@ -216,8 +214,7 @@ python3 fixtures/capture_h_api.py --base http://127.0.0.1:8000 --check
 
 ## 9. 待办（未完成，明确记录）
 
-1. **浏览器级端到端点击/截图**：本沙箱无法安装浏览器（§6.3）；需要有人在实际环境里跑一次
-   Playwright/Cypress 走查，或直接使用本次启动的实时预览点击确认。
+1. **浏览器级端到端点击/截图已完成本轮 smoke**：后续可扩充跨浏览器覆盖，见 §6.3。
 2. **宠物列表的资质状态来源**：目前每次列表请求固定拉 3 个批量端点（其中 `pet_aptitudes` 是全表 131 行）。
    数据量增长后建议 H 提供一个“按 id 集合查询”的批量端点；当前行为已在文档与测试中固定。
 3. **场景筛选下拉**：页面用文本框输入 `scene_id`，没有“场景清单”端点可用于下拉枚举；
@@ -225,6 +222,6 @@ python3 fixtures/capture_h_api.py --base http://127.0.0.1:8000 --check
 4. **`dev:fixture` 的覆盖范围**：回放只覆盖已捕获的请求组合；未捕获的组合会显示
    `FIXTURE_CAPTURE_MISSING` 错误（这是有意为之，避免把回放当成数据源）。扩展方法是补捕获后重跑
    `fixtures/capture_h_api.py`。
-5. **窄屏视觉回归与无障碍审计**：未执行（§6.3）。
+5. **像素级视觉回归与无障碍审计**：未执行；本轮仅完成窄屏 smoke 截图（§6.3）。
 6. **`/batch` 的 `input_hashes`、`limitations`**：H 的 `/batch` 当前不返回这两个字段（旧前端曾假设存在）。
    前端只在接口返回时显示，否则显示「（API 未提供）」；若 H 后续补充，页面无需改动。

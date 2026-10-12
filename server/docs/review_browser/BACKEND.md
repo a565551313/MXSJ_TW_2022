@@ -65,6 +65,8 @@ server/
 - **目录隔离安全**：对 manifest 中声明的文件相对路径强制执行路径穿越防护校验，禁止引用批次根目录以外的任何文件。
 - CSV 表头列名与顺序必须与 manifest `columns` 声明完全一致，否则抛出 `CatalogSchemaError`。
 - 实际记录行数必须与 manifest `rows` 完全一致，否则抛出 `CatalogIntegrityError`。
+- 证据 JSONL 必需字段与非空 typed envelope 必须完整；隔离总数/各来源数量与 validation 一致，
+  覆盖证据的身份、offset、数量和相同值标记与 CSV 摘要一致。同步更新哈希也不能绕过这些跨文件检查。
 - 一次性加载入内存，避免运行期每个 HTTP 请求重复解码或解析。
 
 ### 3.2 CSV 文本流保真与严格类型转换

@@ -1,0 +1,79 @@
+{
+  "check": "U-05",
+  "title": "actual Chromium routes, interactions and failure paths",
+  "status": "pass",
+  "detail": {
+    "cases": [
+      {
+        "label": "/",
+        "status": "pass"
+      },
+      {
+        "label": "/items",
+        "status": "pass"
+      },
+      {
+        "label": "/pets",
+        "status": "pass"
+      },
+      {
+        "label": "/skills",
+        "status": "pass"
+      },
+      {
+        "label": "/maps",
+        "status": "pass"
+      },
+      {
+        "label": "/anomalies",
+        "status": "pass"
+      },
+      {
+        "label": "/items/41052",
+        "status": "pass"
+      },
+      {
+        "label": "/pets/2800",
+        "status": "pass"
+      },
+      {
+        "label": "/pets/3010",
+        "status": "pass"
+      },
+      {
+        "label": "/skills/4573",
+        "status": "pass"
+      },
+      {
+        "label": "items next page",
+        "status": "pass"
+      },
+      {
+        "label": "search 時空石 returns one row 41052",
+        "status": "pass"
+      },
+      {
+        "label": "NPC sources remain separate",
+        "status": "pass"
+      },
+      {
+        "label": "early empty page rejects partial success",
+        "status": "pass",
+        "result": {
+          "code": "INCOMPLETE_RESULT_SET",
+          "message": "关联查询未能取得一致的完整结果：尚未达到 total 就提前返回空页。不会将部分记录作为完整列表显示。"
+        }
+      },
+      {
+        "label": "mobile anomalies",
+        "status": "pass"
+      },
+      {
+        "label": "invalid 200 payload shows schema error, not white screen",
+        "status": "pass"
+      }
+    ],
+    "browser": "HeadlessChrome/153.0.8010.0",
+    "screenshot": "/tmp/mxsj-web-runtime-6eo07pgu/chromium-mobile-anomalies.png"
+  }
+}

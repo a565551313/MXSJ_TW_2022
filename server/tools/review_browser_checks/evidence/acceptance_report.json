@@ -1,28 +1,20 @@
 {
   "environment": {
-    "browser_engine": "none available (only npm/pypi/GitHub are reachable, so no browser build can be installed)",
-    "interpreter_used": "/tmp/reviewvenv/bin/python",
+    "browser_engine": "jsdom plus optional Chromium (actual U-05 result in runtime checks)",
+    "interpreter_used": "/home/user/review-hij-r2/.venv/bin/python",
     "node": "v22.22.3",
     "python": "3.11.2"
   },
-  "generated_utc": "2026-10-12T03:25:49Z",
-  "note": "Generated in the integration clone where H PR#22 9f6ab439 and I PR#24 97d317e3 are merged into arena/d5a478f8-mxsj-tw-2022. Absolute /tmp paths in session/commands are the throwaway clone paths; the SHAs are the authoritative identifiers. web_origin_probe.json / web_ui_smoke.json / live_api_report.json / live_api_with_web_origin.json hold the raw evidence.",
+  "generated_utc": "2026-10-12T03:52:20Z",
   "outstanding_not_executed": {
     "api": [],
-    "web_runtime": [
-      {
-        "check": "U-05",
-        "detail": "layout/visual white-screen detection, screenshot evidence and a real browser console need Chrome or Firefox; this sandbox has no browser binary and only npm/pypi/GitHub are reachable, so no browser build can be downloaded",
-        "status": "not_executed",
-        "title": "real-browser-only checks"
-      }
-    ],
+    "web_runtime": [],
     "web_static": []
   },
   "repository": {
-    "branch": "integration",
-    "head": "7035708b6ad038d94283de24f7b029831103f582",
-    "status_short": "M server/tests/review_browser_acceptance/test_delivery_gate.py\n M server/tests/review_browser_acceptance/test_harness_self_check.py\n M server/tools/review_browser_checks/acceptance_runner.py\n M server/tools/review_browser_checks/conformance_negative_control.py\n M server/tools/review_browser_checks/evidence/acceptance_report.json\n M server/tools/review_browser_checks/probe_live_api.py\n M server/tools/review_browser_checks/scan_review_web.py\n?? server/tests/review_browser_acceptance/probe_live_api.py\n?? server/tests/review_browser_acceptance/test_catalog_loader_acceptance.py\n?? server/tools/review_browser_checks/evidence/live_api_report.json\n?? server/tools/review_browser_checks/evidence/live_api_with_web_origin.json\n?? server/tools/review_browser_checks/evidence/web_origin_probe.json\n?? server/tools/review_browser_checks/ops_review_api.json\n?? server/tools/review_browser_checks/review_api_launch.py\n?? server/tools/review_browser_checks/web_origin_probe.mjs\n?? server/tools/review_browser_checks/web_ui_smoke.mjs"
+    "branch": "arena/b53b33e6-mxsj-tw-2022",
+    "head": "d9721d8df758d905830ac9519df09853bd5b6b38",
+    "status_short": "M server/tools/review_browser_checks/evidence/live_api_report.json\n M server/tools/review_browser_checks/evidence/live_api_with_web_origin.json\n M server/tools/review_browser_checks/evidence/web_origin_probe.json"
   },
   "required_check_inventory": {
     "api": [
@@ -106,7 +98,7 @@
       },
       {
         "check": "U-05",
-        "requirement": "仅真实浏览器可做的检查（如实标注未执行）"
+        "requirement": "真实 Chromium 页面、交互与错误路径（未安装时明确未执行）"
       },
       {
         "check": "W-10",
@@ -118,7 +110,7 @@
       },
       {
         "check": "W-12",
-        "requirement": "列表页拿到自己解析的 {items,total,page,page_size} 信封"
+        "requirement": "列表页拿到自己解析的 {dataset,total,offset,limit,count,records} 信封"
       },
       {
         "check": "W-13",
@@ -171,7 +163,7 @@
   "stage": "review_tool_acceptance_ledger",
   "stages": {
     "csv_exporter_check": {
-      "command": "/usr/bin/python3 server/tools/export_review_csv.py --check",
+      "command": "/home/user/review-hij-r2/.venv/bin/python server/tools/export_review_csv.py --check",
       "exit_code": 0,
       "status": "pass",
       "summary": "",
@@ -184,13 +176,13 @@
       ]
     },
     "original_architecture_suite": {
-      "command": "/usr/bin/python3 -m unittest discover -s server/tests/architecture -q",
+      "command": "/home/user/review-hij-r2/.venv/bin/python -m unittest discover -s server/tests/architecture -q",
       "exit_code": 0,
       "status": "pass",
-      "summary": "Ran 161 tests in 33.028s",
+      "summary": "Ran 161 tests in 30.718s",
       "tail": [
         "----------------------------------------------------------------------",
-        "Ran 161 tests in 33.028s",
+        "Ran 161 tests in 30.718s",
         "",
         "OK"
       ]
@@ -607,19 +599,31 @@
         },
         {
           "check": "API-03",
-          "detail": [
-            "items: {'sort_by': 'client_shape_id', 'order': 'sideways'} accepted silently with HTTP 200 (50 rows, no explanation in the body)",
-            "pets: {'sort_by': 'client_shape_id', 'order': 'sideways'} accepted silently with HTTP 200 (50 rows, no explanation in the body)",
-            "/api/v1/review/quarantine?entry_indexx=... was accepted with HTTP 200 (4 rows) — a misspelled filter must not be ignored silently",
-            "/api/v1/review/quarantine?key=... was accepted with HTTP 200 (4 rows) — a misspelled filter must not be ignored silently",
-            "/api/v1/review/overwrites?keyy=... was accepted with HTTP 200 (9 rows) — a misspelled filter must not be ignored silently",
-            "/api/v1/review/overwrites?sort_by=... was accepted with HTTP 200 (9 rows) — a misspelled filter must not be ignored silently",
-            "/api/v1/review/batch?batch=... was accepted with HTTP 200 (? rows) — a misspelled filter must not be ignored silently",
-            "/api/v1/review/missing-aptitudes?limit=... was accepted with HTTP 200 (3 rows) — a misspelled filter must not be ignored silently",
-            "/api/v1/review/missing-aptitudes?offset=... was accepted with HTTP 200 (3 rows) — a misspelled filter must not be ignored silently"
-          ],
+          "detail": {
+            "/api/v1/review/batch?batch": 400,
+            "/api/v1/review/missing-aptitudes?limit": 400,
+            "/api/v1/review/missing-aptitudes?offset": 400,
+            "/api/v1/review/overwrites?keyy": 400,
+            "/api/v1/review/overwrites?sort_by": 400,
+            "/api/v1/review/quarantine?entry_indexx": 400,
+            "/api/v1/review/quarantine?key": 400,
+            "items:{'limit': '0'}": 400,
+            "items:{'limit': '10000000'}": 400,
+            "items:{'limit': '501'}": 400,
+            "items:{'limit': 'abc'}": 400,
+            "items:{'offset': '-1'}": 400,
+            "items:{'offset': 'abc'}": 400,
+            "items:{'sort_by': 'client_shape_id', 'order': 'sideways'}": 400,
+            "pets:{'limit': '0'}": 400,
+            "pets:{'limit': '10000000'}": 400,
+            "pets:{'limit': '501'}": 400,
+            "pets:{'limit': 'abc'}": 400,
+            "pets:{'offset': '-1'}": 400,
+            "pets:{'offset': 'abc'}": 400,
+            "pets:{'sort_by': 'client_shape_id', 'order': 'sideways'}": 400
+          },
           "requirement": "required",
-          "status": "fail",
+          "status": "pass",
           "title": "invalid parameters produce explicit errors, never silent substitution"
         },
         {
@@ -674,16 +678,82 @@
         },
         {
           "check": "API-05",
-          "detail": [
-            "missing_quarantine_file: service reported ready (health=200, quarantine_entries=0) — the missing or tampered evidence file was silently accepted",
-            "missing_validation_file: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
-            "missing_overwrite_evidence: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
-            "missing_provenance_file: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
-            "tampered_quarantine_no_hash_update: service reported ready (health=200, quarantine_entries=4) — the missing or tampered evidence file was silently accepted",
-            "manifest_drops_items_dataset: service stayed ready with 16 datasets (health=200) instead of refusing the shrunken manifest"
-          ],
+          "detail": {
+            "_control_valid_copy": {
+              "data_status": 200,
+              "datasets": 17,
+              "description": "undamaged copy (control)",
+              "health_status": 200,
+              "outcome": "served",
+              "quarantine": 4
+            },
+            "csv_hash_corruption": {
+              "data_status": null,
+              "datasets": null,
+              "description": "one byte changed in items.csv (size and sha256 break)",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            },
+            "csv_type_corruption": {
+              "data_status": null,
+              "datasets": null,
+              "description": "a non-numeric value in the int column client_shape_id",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            },
+            "manifest_drops_items_dataset": {
+              "data_status": null,
+              "datasets": null,
+              "description": "manifest.json no longer declares items.csv (16 datasets left)",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            },
+            "missing_overwrite_evidence": {
+              "data_status": null,
+              "datasets": null,
+              "description": "overwrite_evidence.jsonl deleted",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            },
+            "missing_provenance_file": {
+              "data_status": null,
+              "datasets": null,
+              "description": "maps_npcs/provenance.json deleted",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            },
+            "missing_quarantine_file": {
+              "data_status": null,
+              "datasets": null,
+              "description": "quarantine.jsonl deleted",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            },
+            "missing_validation_file": {
+              "data_status": null,
+              "datasets": null,
+              "description": "validation.json deleted",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            },
+            "tampered_quarantine_no_hash_update": {
+              "data_status": null,
+              "datasets": null,
+              "description": "quarantine.jsonl content changed without updating manifest hashes",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            }
+          },
           "requirement": "required",
-          "status": "fail",
+          "status": "pass",
           "title": "damaged or tampered batch copies never yield a pseudo-normal catalogue (hash, type, missing or tampered evidence files, manifest shrinkage)"
         },
         {
@@ -893,7 +963,7 @@
               ]
             },
             "static_routes": {
-              "files": 29,
+              "files": 37,
               "mutating_routes": [],
               "roots": [
                 "server/apps",
@@ -913,23 +983,17 @@
               "/src/main.tsx"
             ],
             "content_type": "text/html",
-            "frontend_contract_problems": [
-              {
-                "check": "W-12",
-                "detail": "['items (/api/v1/review/items?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])', 'pets (/api/v1/review/pets?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])', 'skills (/api/v1/review/skills?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])']"
-              },
-              {
-                "check": "W-13",
-                "detail": "['anomalies (/api/v1/review/anomalies): HTTP 404', 'mapDatasets (/api/v1/review/maps/datasets): HTTP 404', 'npcs (/api/v1/review/npcs?source=2601&page=1&page_size=25): HTTP 404', 'npcAgreement (/api/v1/review/npcs/agreement?page=1&page_size=25): HTTP 404']"
-              },
-              {
-                "check": "W-14",
-                "detail": "['item detail (/api/v1/review/items/11): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])', 'pet detail (/api/v1/review/pets/1010): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])', 'skill detail (/api/v1/review/skills/101): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])']"
-              }
-            ],
-            "frontend_probe_report": "/tmp/integ/server/tools/review_browser_checks/evidence/web_origin_probe.json",
-            "frontend_probe_returncode": 1,
-            "frontend_problems_note": "these are front-end (Agent I) contract mismatches; they are reported as W-12/W-13/W-14 in phase3_web_runtime, and are listed here as evidence only",
+            "frontend_checks": {
+              "W-10": "pass",
+              "W-11": "pass",
+              "W-12": "pass",
+              "W-13": "pass",
+              "W-14": "pass",
+              "W-15": "pass",
+              "W-16": "pass"
+            },
+            "frontend_probe_report": "/home/user/MXSJ_TW_2022/server/tools/review_browser_checks/evidence/web_origin_probe.json",
+            "frontend_probe_returncode": 0,
             "host_override_status": 200,
             "page_status": 200,
             "proxied_api_status": 200
@@ -939,12 +1003,12 @@
           "title": "pages and API work through the preview proxy: relative URLs only, no sandbox host in the browser payload"
         }
       ],
-      "fail": 2,
+      "fail": 0,
       "not_executed": 0,
-      "pass": 18,
+      "pass": 20,
       "reason": null,
       "review": 0,
-      "status": "fail"
+      "status": "pass"
     },
     "phase3_static_page": {
       "checks": [
@@ -954,24 +1018,33 @@
             "by_kind": {
               "config": 1,
               "fixture": 2,
-              "product": 29,
-              "test": 15
+              "product": 33,
+              "test": 20
             },
             "classified": {
-              "server/apps/review_web/fixtures/contractHandler.mjs": "fixture",
+              "server/apps/review_web/fixtures/h_api/replay.mjs": "fixture",
               "server/apps/review_web/fixtures/serve-fixture-api.mjs": "fixture",
               "server/apps/review_web/index.html": "product",
+              "server/apps/review_web/src/App.errorBoundary.test.tsx": "test",
               "server/apps/review_web/src/App.test.tsx": "test",
               "server/apps/review_web/src/App.tsx": "product",
               "server/apps/review_web/src/api/client.test.ts": "test",
               "server/apps/review_web/src/api/client.ts": "product",
+              "server/apps/review_web/src/api/contract.test.ts": "test",
               "server/apps/review_web/src/api/contract.ts": "product",
-              "server/apps/review_web/src/api/types.ts": "product",
+              "server/apps/review_web/src/api/liveBackend.test.ts": "test",
+              "server/apps/review_web/src/api/paginationIntegrity.test.ts": "test",
+              "server/apps/review_web/src/api/parsers.ts": "product",
+              "server/apps/review_web/src/api/rawJson.ts": "product",
+              "server/apps/review_web/src/api/reviewApi.test.ts": "test",
+              "server/apps/review_web/src/api/reviewApi.ts": "product",
+              "server/apps/review_web/src/api/schema.ts": "product",
               "server/apps/review_web/src/components/AsyncSection.tsx": "product",
               "server/apps/review_web/src/components/Badges.tsx": "product",
               "server/apps/review_web/src/components/ByteHexView.tsx": "product",
               "server/apps/review_web/src/components/Controls.tsx": "product",
               "server/apps/review_web/src/components/DataTable.tsx": "product",
+              "server/apps/review_web/src/components/ErrorBoundary.tsx": "product",
               "server/apps/review_web/src/components/InvariantCheck.tsx": "product",
               "server/apps/review_web/src/components/KeyValue.tsx": "product",
               "server/apps/review_web/src/components/Notices.tsx": "product",
@@ -988,18 +1061,9 @@
               "server/apps/review_web/src/lib/router.ts": "product",
               "server/apps/review_web/src/lib/runtimeMode.ts": "product",
               "server/apps/review_web/src/main.tsx": "product",
-              "server/apps/review_web/src/pages/AnomaliesPage.test.tsx": "test",
-              "server/apps/review_web/src/pages/AnomaliesPage.tsx": "product",
-              "server/apps/review_web/src/pages/ItemsPage.test.tsx": "test",
-              "server/apps/review_web/src/pages/ItemsPage.tsx": "product",
-              "server/apps/review_web/src/pages/MapsNpcsPage.test.tsx": "test",
-              "server/apps/review_web/src/pages/MapsNpcsPage.tsx": "product",
-              "server/apps/review_web/src/pages/OverviewPage.test.tsx": "test",
-              "server/apps/review_web/src/pages/OverviewPage.tsx": "product",
-              "server/apps/review_web/src/pages/PetsPage.test.tsx": "test",
-              "server/apps/review_web/src/pages/PetsPage.tsx": "product"
+              "server/apps/review_web/src/pages/AnomaliesPage.test.tsx": "test"
             },
-            "files": 47
+            "files": 56
           },
           "status": "pass",
           "title": "review web application delivered"
@@ -1012,12 +1076,16 @@
             "server/apps/review_web/src/App.tsx": "scanned",
             "server/apps/review_web/src/api/client.ts": "scanned",
             "server/apps/review_web/src/api/contract.ts": "scanned",
-            "server/apps/review_web/src/api/types.ts": "scanned",
+            "server/apps/review_web/src/api/parsers.ts": "scanned",
+            "server/apps/review_web/src/api/rawJson.ts": "scanned",
+            "server/apps/review_web/src/api/reviewApi.ts": "scanned",
+            "server/apps/review_web/src/api/schema.ts": "scanned",
             "server/apps/review_web/src/components/AsyncSection.tsx": "scanned",
             "server/apps/review_web/src/components/Badges.tsx": "scanned",
             "server/apps/review_web/src/components/ByteHexView.tsx": "scanned",
             "server/apps/review_web/src/components/Controls.tsx": "scanned",
             "server/apps/review_web/src/components/DataTable.tsx": "scanned",
+            "server/apps/review_web/src/components/ErrorBoundary.tsx": "scanned",
             "server/apps/review_web/src/components/InvariantCheck.tsx": "scanned",
             "server/apps/review_web/src/components/KeyValue.tsx": "scanned",
             "server/apps/review_web/src/components/Notices.tsx": "scanned",
@@ -1048,7 +1116,7 @@
             "leads": [],
             "note": "fixture mode gated by an explicit build-time flag is allowed; a data fallback after a failed request is a violation",
             "opt_in_fixture_mode": true,
-            "product_files": 29,
+            "product_files": 33,
             "violations": []
           },
           "status": "pass",
@@ -1068,7 +1136,7 @@
               "6851"
             ],
             "leads": [],
-            "product_files": 29,
+            "product_files": 33,
             "violations": []
           },
           "status": "pass",
@@ -1103,7 +1171,7 @@
               "連線",
               "錯誤"
             ],
-            "product_files": 29,
+            "product_files": 33,
             "violations": []
           },
           "status": "pass",
@@ -1113,7 +1181,7 @@
           "check": "W-06",
           "detail": {
             "leads": [],
-            "product_files": 29,
+            "product_files": 33,
             "violations": []
           },
           "status": "pass",
@@ -1122,7 +1190,7 @@
         {
           "check": "H-01",
           "detail": {
-            "api_files": 11,
+            "api_files": 12,
             "leads": [],
             "routes_checked_live": "API-14 probes the running service via OpenAPI and real requests",
             "violations": []
@@ -1147,23 +1215,17 @@
             "/src/main.tsx"
           ],
           "content_type": "text/html",
-          "frontend_contract_problems": [
-            {
-              "check": "W-12",
-              "detail": "['items (/api/v1/review/items?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])', 'pets (/api/v1/review/pets?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])', 'skills (/api/v1/review/skills?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])']"
-            },
-            {
-              "check": "W-13",
-              "detail": "['anomalies (/api/v1/review/anomalies): HTTP 404', 'mapDatasets (/api/v1/review/maps/datasets): HTTP 404', 'npcs (/api/v1/review/npcs?source=2601&page=1&page_size=25): HTTP 404', 'npcAgreement (/api/v1/review/npcs/agreement?page=1&page_size=25): HTTP 404']"
-            },
-            {
-              "check": "W-14",
-              "detail": "['item detail (/api/v1/review/items/11): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])', 'pet detail (/api/v1/review/pets/1010): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])', 'skill detail (/api/v1/review/skills/101): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])']"
-            }
-          ],
-          "frontend_probe_report": "/tmp/integ/server/tools/review_browser_checks/evidence/web_origin_probe.json",
-          "frontend_probe_returncode": 1,
-          "frontend_problems_note": "these are front-end (Agent I) contract mismatches; they are reported as W-12/W-13/W-14 in phase3_web_runtime, and are listed here as evidence only",
+          "frontend_checks": {
+            "W-10": "pass",
+            "W-11": "pass",
+            "W-12": "pass",
+            "W-13": "pass",
+            "W-14": "pass",
+            "W-15": "pass",
+            "W-16": "pass"
+          },
+          "frontend_probe_report": "/home/user/MXSJ_TW_2022/server/tools/review_browser_checks/evidence/web_origin_probe.json",
+          "frontend_probe_returncode": 0,
           "host_override_status": 200,
           "page_status": 200,
           "proxied_api_status": 200
@@ -1185,60 +1247,39 @@
             "status": 200
           },
           "status": "pass",
-          "title": "entry page is served by the web origin with relative assets"
+          "title": "entry page uses relative assets"
         },
         {
           "check": "W-11",
           "detail": {
-            "modules": [
-              {
-                "bytes": 178934,
-                "kind": "dev-server",
-                "src": "/@vite/client",
-                "status": 200
-              },
-              {
-                "bytes": 2276,
-                "kind": "application",
-                "src": "/src/main.tsx",
-                "status": 200
-              }
-            ],
             "problems": []
           },
           "status": "pass",
-          "title": "the page entry module loads and holds no sandbox host"
+          "title": "application entry modules are reachable"
         },
         {
           "check": "W-12",
-          "detail": [
-            "items (/api/v1/review/items?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])",
-            "pets (/api/v1/review/pets?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])",
-            "skills (/api/v1/review/skills?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])"
-          ],
-          "status": "fail",
-          "title": "the list pages get the {items,total,page,page_size} envelope they parse"
+          "detail": {
+            "problems": []
+          },
+          "status": "pass",
+          "title": "dataset lists use records/total/offset/limit envelopes"
         },
         {
           "check": "W-13",
-          "detail": [
-            "anomalies (/api/v1/review/anomalies): HTTP 404",
-            "mapDatasets (/api/v1/review/maps/datasets): HTTP 404",
-            "npcs (/api/v1/review/npcs?source=2601&page=1&page_size=25): HTTP 404",
-            "npcAgreement (/api/v1/review/npcs/agreement?page=1&page_size=25): HTTP 404"
-          ],
-          "status": "fail",
-          "title": "the overview/anomaly/npc/map pages get their endpoints"
+          "detail": {
+            "problems": []
+          },
+          "status": "pass",
+          "title": "batch and evidence endpoints agree with current contract"
         },
         {
           "check": "W-14",
-          "detail": [
-            "item detail (/api/v1/review/items/11): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])",
-            "pet detail (/api/v1/review/pets/1010): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])",
-            "skill detail (/api/v1/review/skills/101): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])"
-          ],
-          "status": "fail",
-          "title": "detail pages resolve a single record"
+          "detail": {
+            "problems": []
+          },
+          "status": "pass",
+          "title": "single-record details are reachable"
         },
         {
           "check": "W-15",
@@ -1247,15 +1288,15 @@
             "status": 200
           },
           "status": "pass",
-          "title": "the web origin proxies /api to the review API"
+          "title": "web origin proxies the real API"
         },
         {
           "check": "W-16",
           "detail": {
-            "status": 200
+            "problems": []
           },
           "status": "pass",
-          "title": "the web origin tolerates a proxied Host/Origin header"
+          "title": "preview Host/Origin headers accepted"
         },
         {
           "check": "U-01",
@@ -1264,7 +1305,7 @@
               "app.js",
               "index.html"
             ],
-            "outDir": "/tmp/mxsj-ui-smoke-dist-h2cLCF"
+            "outDir": "/tmp/mxsj-ui-smoke-dist-LjbY2o"
           },
           "status": "pass",
           "title": "the delivered front end builds with its own toolchain"
@@ -1272,11 +1313,9 @@
         {
           "check": "U-02",
           "detail": {
-            "hint": "the bundle executed and mounted, but painted nothing (white screen)",
-            "html": "",
-            "text": ""
+            "text": "MXSJ 静态数据复核浏览器只读浏览 batch_001 复核材料 · 前端不读取仓库 CSV · 数据由 /api/v1/review 提供批次概览道具宠物技能地图 / NPC异常与证据复核候选，非正式规则本页展示的 batch_001 行是静态候选解码结果：可用于人工复核与目录浏览，不是原生加载器验证结果，也不是正式服务端规则表。未做简繁转换；名称、描述、颜色标记与资源公式均按源文本原样展示，不解释、不计算。隔离记录、缺失资质与同名技能多 ID 候选继续保留：不补零、不自动择一、不折叠重复记录。页面不提供任何编辑、删除、导入或发布动作。批次概览计数、校验状态与隔离/缺失数量全部来自复核 A"
           },
-          "status": "fail",
+          "status": "pass",
           "title": "the mounted application renders visible content"
         },
         {
@@ -1288,7 +1327,21 @@
                 "content_type": "application/json",
                 "method": "GET",
                 "status": 200,
-                "url": "http://127.0.0.1:35807/api/v1/review/batch"
+                "url": "http://127.0.0.1:60595/api/v1/review/batch"
+              },
+              {
+                "body_preview": "{\"status\":\"ready\",\"batch\":\"batch_001\",\"loaded_files_count\":22,\"datasets_count\":17,\"total_records_count\":12202}",
+                "content_type": "application/json",
+                "method": "GET",
+                "status": 200,
+                "url": "http://127.0.0.1:60595/api/v1/review/health"
+              },
+              {
+                "body_preview": "{\"total\":17,\"datasets\":[{\"id\":\"items\",\"filename\":\"items.csv\",\"rows\":6851,\"primary_key\":[\"client_shape_id\"],\"notes\":\"Display catalog, includes test/history entri",
+                "content_type": "application/json",
+                "method": "GET",
+                "status": 200,
+                "url": "http://127.0.0.1:60595/api/v1/review/datasets"
               }
             ]
           },
@@ -1297,81 +1350,145 @@
         },
         {
           "check": "U-04",
-          "detail": [
-            {
-              "level": "uncaught",
-              "message": "TypeError: Cannot read properties of undefined (reading 'length')\n    at OverviewPage (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:16132:36)\n    at renderWithHooks (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:4222:25)\n    at updateFunctionComponent (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:5856:19)\n    at beginWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:6565:18)\n    at performUnitOfWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9989:18)\n    at workLoopSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9887:41)\n    at renderRootSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9871:11)\n    at performWorkOnRoot (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9551:44)\n    at performWorkOnRootViaSchedulerTask (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:10590:7)\n    at performWorkUntilDeadline (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:592:50)"
-            },
-            {
-              "level": "error",
-              "message": "{}"
-            }
-          ],
-          "status": "fail",
+          "detail": [],
+          "status": "pass",
           "title": "the application reports no console error while loading"
         },
         {
           "check": "U-05",
-          "detail": "layout/visual white-screen detection, screenshot evidence and a real browser console need Chrome or Firefox; this sandbox has no browser binary and only npm/pypi/GitHub are reachable, so no browser build can be downloaded",
-          "status": "not_executed",
-          "title": "real-browser-only checks"
+          "detail": {
+            "browser": "HeadlessChrome/153.0.8010.0",
+            "cases": [
+              {
+                "label": "/",
+                "status": "pass"
+              },
+              {
+                "label": "/items",
+                "status": "pass"
+              },
+              {
+                "label": "/pets",
+                "status": "pass"
+              },
+              {
+                "label": "/skills",
+                "status": "pass"
+              },
+              {
+                "label": "/maps",
+                "status": "pass"
+              },
+              {
+                "label": "/anomalies",
+                "status": "pass"
+              },
+              {
+                "label": "/items/41052",
+                "status": "pass"
+              },
+              {
+                "label": "/pets/2800",
+                "status": "pass"
+              },
+              {
+                "label": "/pets/3010",
+                "status": "pass"
+              },
+              {
+                "label": "/skills/4573",
+                "status": "pass"
+              },
+              {
+                "label": "items next page",
+                "status": "pass"
+              },
+              {
+                "label": "search 時空石 returns one row 41052",
+                "status": "pass"
+              },
+              {
+                "label": "NPC sources remain separate",
+                "status": "pass"
+              },
+              {
+                "label": "early empty page rejects partial success",
+                "result": {
+                  "code": "INCOMPLETE_RESULT_SET",
+                  "message": "关联查询未能取得一致的完整结果：尚未达到 total 就提前返回空页。不会将部分记录作为完整列表显示。"
+                },
+                "status": "pass"
+              },
+              {
+                "label": "mobile anomalies",
+                "status": "pass"
+              },
+              {
+                "label": "invalid 200 payload shows schema error, not white screen",
+                "status": "pass"
+              }
+            ],
+            "screenshot": "/tmp/mxsj-web-runtime-6eo07pgu/chromium-mobile-anomalies.png"
+          },
+          "status": "pass",
+          "title": "actual Chromium routes, interactions and failure paths"
         }
       ],
       "commands": [
         {
-          "api_start": "/tmp/reviewvenv/bin/python server/tools/review_browser_checks/review_api_launch.py --batch-dir <tmp copy> --host 0.0.0.0 --port 52183",
-          "page_start": "cd server/apps/review_web && VITE_API_PROXY_TARGET=http://127.0.0.1:52183 PORT=35807 npm run dev"
+          "api_start": "/home/user/review-hij-r2/.venv/bin/python server/tools/review_browser_checks/review_api_launch.py --batch-dir <tmp copy> --host 0.0.0.0 --port 56461",
+          "page_start": "cd server/apps/review_web && VITE_API_PROXY_TARGET=http://127.0.0.1:56461 PORT=60595 npm run dev"
         },
         {
-          "page_contract": "node --experimental-strip-types server/tools/review_browser_checks/web_origin_probe.mjs --app-dir server/apps/review_web --origin http://127.0.0.1:35807"
+          "page_contract": "node --experimental-strip-types server/tools/review_browser_checks/web_origin_probe.mjs --app-dir server/apps/review_web --origin http://127.0.0.1:60595"
         },
         {
-          "page_render": "node --experimental-strip-types server/tools/review_browser_checks/web_ui_smoke.mjs --app-dir server/apps/review_web --origin http://127.0.0.1:35807"
+          "page_render": "node --experimental-strip-types server/tools/review_browser_checks/web_ui_smoke.mjs --app-dir server/apps/review_web --origin http://127.0.0.1:60595"
         }
       ],
-      "fail": 5,
-      "not_executed": 1,
-      "pass": 6,
+      "fail": 0,
+      "not_executed": 0,
+      "pass": 12,
       "reason": null,
       "review": 0,
       "session": {
-        "api_port": 52183,
-        "batch_dir": "/tmp/mxsj-web-runtime-s13vcd12/batch",
-        "console": [
-          {
-            "level": "uncaught",
-            "message": "TypeError: Cannot read properties of undefined (reading 'length')\n    at OverviewPage (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:16132:36)\n    at renderWithHooks (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:4222:25)\n    at updateFunctionComponent (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:5856:19)\n    at beginWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:6565:18)\n    at performUnitOfWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9989:18)\n    at workLoopSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9887:41)\n    at renderRootSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9871:11)\n    at performWorkOnRoot (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9551:44)\n    at performWorkOnRootViaSchedulerTask (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:10590:7)\n    at performWorkUntilDeadline (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:592:50)"
-          },
-          {
-            "level": "error",
-            "message": "{}"
-          }
-        ],
+        "api_port": 56461,
+        "batch_dir": "/tmp/mxsj-web-runtime-6eo07pgu/batch",
+        "console": [],
         "frontend_contract": {
-          "API_PATHS": {
-            "anomalies": "/api/v1/review/anomalies",
-            "batch": "/api/v1/review/batch",
-            "items": "/api/v1/review/items",
-            "mapDatasets": "/api/v1/review/maps/datasets",
-            "npcAgreement": "/api/v1/review/npcs/agreement",
-            "npcs": "/api/v1/review/npcs",
-            "pets": "/api/v1/review/pets",
-            "skills": "/api/v1/review/skills"
+          "datasets": {
+            "items": "items",
+            "mapdataParentScene": "mapdata_parent_scene",
+            "mapdataSceneDictionary": "mapdata_scene_dictionary",
+            "minimapNpcPosRecords": "minimapnpcpos_pos_records",
+            "minimapNpcPosWenzi": "minimapnpcpos_wenzi_entries",
+            "npcAgreement": "npc_2601_vs_2804_agreement",
+            "npcAliasToRealname": "npcname2realnamedata_alias_to_realname",
+            "npcPosRecords": "npcposdata_records",
+            "petAptitudeMissing": "pet_aptitude_missing",
+            "petAptitudes": "pet_aptitudes",
+            "petRequiredSkills": "pet_required_skills",
+            "petSkillCandidates": "pet_skill_candidates",
+            "petSkillNameMatches": "pet_skill_name_matches",
+            "petSkillOverwrites": "pet_skill_overwrites",
+            "petSkills": "pet_skills",
+            "pets": "pets",
+            "sceneId2Name": "sceneid2name_minimap_scenes"
           },
-          "DEFAULT_PAGE_SIZE": 25
+          "page_size": 25
         },
         "node": "v22.22.3",
-        "origin": "http://127.0.0.1:35807",
+        "origin": "http://127.0.0.1:60595",
         "rendered": {
-          "html": "",
-          "text": ""
+          "html": "<div class=\"app\"><header class=\"app__header\"><div><h1 class=\"app__title\">MXSJ 静态数据复核浏览器</h1><p class=\"app__subtitle\">只读浏览 batch_001 复核材料 · 前端不读取仓库 CSV · 数据由 <code>/api/v1/review</code> 提供</p></div></header><nav class=\"app__nav\" aria-label=\"主导航\"><a class=\"nav-tab nav-tab--active\" href=\"/\" title=\"批次、计数、校验、隔离与缺失\" aria-current=\"page\">批次概览</a><a class=\"nav-tab\" href=\"/items\" title=\"按 ID / 名称搜索\">道具</a><a class=\"nav-tab\" href=\"/pets\" title=\"主表、资质、候选与必带技能\">宠物</a><a class=\"nav-tab\" href=\"/skills\" title=\"描述、公式、重复覆盖\">技能</a><a class=\"nav-tab\" href=\"/maps\" title=\"按来源分开，不合成唯一表\">地图 / NPC</a><a class=\"nav-tab\" href=\"/anomalies\" title=\"隔离、缺失、歧义与原始字节\">异常与证据</a></nav><section class=\"notice notice--review\" role=\"note\" data-testid=\"review-notice\"><h2>复核候选，非正式规则</h2><p>本页展示的 batch_001 行是<strong>静态候选解码</strong>结果：可用于人工复核与目录浏览，<strong>不是</strong>原生加载器验证结果，也<strong>不是</strong>正式服务端规则表。</p><ul><li>未做简繁转换；名称、描述、颜色标记与资源公式均按源文本原样展示，不解释、不计算。</li><li>隔离记录、缺失资质与同名技能多 ID 候选继续保留：不补零、不自动择一、不折叠重复记录。</li><li>页面不提供任何编辑、删除、导入或发布动作。</li></ul><p class=\"notice__meta\"></p></section><main class=\"app__main\" aria-label=\"批次概览\"><section class=\"page\" data-testid=\"page-overview\"><h1>批次概览</h1><p class=\"page__lede\">计数、校验状态与隔离/缺失数量全部来自复核 API（<code>/batch</code>、<code>/datasets</code>、<code>/health</code>），不在前端写死。若数值与 CSV 不一致，以接口返回为准并核对导出器。</p><div class=\"panel\"><h2>批次信息</h2><dl class=\"keyvalue\"><div class=\"keyvalue__row\"><dt>批次</dt><dd><code>batch_001</code></dd></div><div class=\"keyvalue__row\"><dt>原生加载器确认</dt><dd><code>native_loader_confirmed = false</code> <span class=\"badge badge--warn\">未确认</span></dd></div><div class=\"keyvalue__row\"><dt>数据集</dt><dd>清单 17 个 · manifest 文件 21 个 · 已加载 22 个文件、12,202 条记录</dd></div></dl><details><summary>CSV 格式约定（来自 manifest）</summary><dl class=\"keyvalue\"><div class=\"keyvalue__row\"><dt>delimiter</dt><dd><code>,</code></dd></div><div class=\"keyvalue__row\"><dt>encoding</dt><dd><code>UTF-8 without BOM</code></dd></div><div class=\"keyvalue__row\"><dt>formula_policy</dt><dd><code>Opaque text. Spreadsheet users must import text; do not evaluate formulas.</code></dd></div><div class=\"keyvalue__row\"><dt>newline</dt><dd><code>LF</code></dd></div><div class=\"keyvalue__row\"><dt>nulls</dt><dd><code>No nulls in core CSVs; missing relations are separate rows/files.</code></dd></div><div class=\"keyvalue__row\"><dt>quoting</dt><dd><code>all fields</code></dd></div><div class=\"keyvalue__row\"><dt>scope</dt><dd><code>Core CSVs only; maps_npcs overrides retained from E staging</code></dd></div></dl></details></div><div class=\"panel\"><h2>各表数量与隔离</h2><div class=\"table-scroll\"><table class=\"data-table\" data-testid=\"batch-tables\"><thead><tr><th scope=\"col\">源条目</th><th scope=\"col\">复核数据集</th><th scope=\"col\" class=\"is-numeric\">数据集行数</th><th scope=\"col\" class=\"is-numeric\">源记录数</th><th scope=\"col\" class=\"is-numeric\">复核行数</th><th scope=\"col\" class=\"is-numeric\">隔离</th><th scope=\"col\">源表</th></tr></thead><tbody><tr><td data-label=\"源条目\"><code>1945</code></td><td data-label=\"复核数据集\"><code data-testid=\"table-dataset\">items</code></td><td data-label=\"数据集行数\" class=\"is-numeric\">6,851</td><td data-label=\"源记录数\" class=\"is-numeric\">6,852</td><td data-label=\"复核行数\" class=\"is-numeric\">6,851</td><td data-label=\"隔离\" class=\"is-numeric\"><span class=\"badge badge--danger\">1</span></td><td data-label=\"源表\"><code>DATA+ITEMDATABYTYPE+SHAPETABLE</code></td></tr><tr><td data-label=\"源条目\"><code>2027</code></td><td data-label=\"复核数据集\"><code data-testid=\"table-dataset\">pets</code></td><td data-label=\"数据集行数\" class=\"is-numeric\">135</td><td data-label=\"源记录数\" class=\"is-numeric\">135</td><td data-label=\"复核行数\" class=\"is-numeric\">135</td><td data-label=\"隔离\" class=\"is-numeric\"><span>0</span></td><td data-label=\"源表\"><code>DATA</code></td></tr><tr><td data-label=\"源条目\"><code>2954</code></td><td data-label=\"复核数据集\"><code data-testid=\"table-dataset\">pet_aptitudes</code></td><td data-label=\"数据集行数\" class=\"is-numeric\">131</td><td data-label=\"源记录数\" class=\"is-numeric\">132</td><td data-label=\"复核行数\" class=\"is-numeric\">131</td><td dat",
+          "text": "MXSJ 静态数据复核浏览器只读浏览 batch_001 复核材料 · 前端不读取仓库 CSV · 数据由 /api/v1/review 提供批次概览道具宠物技能地图 / NPC异常与证据复核候选，非正式规则本页展示的 batch_001 行是静态候选解码结果：可用于人工复核与目录浏览，不是原生加载器验证结果，也不是正式服务端规则表。未做简繁转换；名称、描述、颜色标记与资源公式均按源文本原样展示，不解释、不计算。隔离记录、缺失资质与同名技能多 ID 候选继续保留：不补零、不自动择一、不折叠重复记录。页面不提供任何编辑、删除、导入或发布动作。批次概览计数、校验状态与隔离/缺失数量全部来自复核 API（/batch、/datasets、/health），不在前端写死。若数值与 CSV 不一致，以接口返回为准并核对导出器。批次信息批次batch_001原生加载器确认native_loader_confirmed = false 未确认数据集清单 17 个 · manifest 文件 21 个 · 已加载 22 个文件、12,202 条记录CSV 格式约定（来自 manifest）delimiter,encodingUTF-8 without BOMformula_policyOpaque text. Spreadsheet users must import text; do not e"
         },
-        "reprobe_status": "fail",
+        "reprobe_status": "incomplete",
         "reprobe_summary": {
           "executed": 19,
-          "fail": 1,
+          "fail": 0,
           "not_executed": 1,
-          "pass": 18,
+          "pass": 19,
           "total": 20
         },
         "requests": [
@@ -1380,93 +1497,91 @@
             "content_type": "application/json",
             "method": "GET",
             "status": 200,
-            "url": "http://127.0.0.1:35807/api/v1/review/batch"
+            "url": "http://127.0.0.1:60595/api/v1/review/batch"
+          },
+          {
+            "body_preview": "{\"status\":\"ready\",\"batch\":\"batch_001\",\"loaded_files_count\":22,\"datasets_count\":17,\"total_records_count\":12202}",
+            "content_type": "application/json",
+            "method": "GET",
+            "status": 200,
+            "url": "http://127.0.0.1:60595/api/v1/review/health"
+          },
+          {
+            "body_preview": "{\"total\":17,\"datasets\":[{\"id\":\"items\",\"filename\":\"items.csv\",\"rows\":6851,\"primary_key\":[\"client_shape_id\"],\"notes\":\"Display catalog, includes test/history entri",
+            "content_type": "application/json",
+            "method": "GET",
+            "status": 200,
+            "url": "http://127.0.0.1:60595/api/v1/review/datasets"
           }
         ],
-        "web_port": 35807,
-        "workdir": "/tmp/mxsj-web-runtime-s13vcd12"
+        "web_port": 60595,
+        "workdir": "/tmp/mxsj-web-runtime-6eo07pgu"
       },
-      "status": "fail"
+      "status": "pass"
     },
     "unittest_suite": {
-      "exit_code": 1,
-      "failure_count": 15,
-      "failures": [
-        "FAIL: test_embedded_newlines_are_preserved (test_catalog_loader_acceptance.CsvFidelityTests.test_embedded_newlines_are_preserved) (case='LF')",
-        "FAIL: test_embedded_newlines_are_preserved (test_catalog_loader_acceptance.CsvFidelityTests.test_embedded_newlines_are_preserved) (case='CRLF')",
-        "FAIL: test_embedded_newlines_are_preserved (test_catalog_loader_acceptance.CsvFidelityTests.test_embedded_newlines_are_preserved) (case='CR')",
-        "FAIL: test_evidence_row_counts_are_checked (test_catalog_loader_acceptance.EvidenceFileTests.test_evidence_row_counts_are_checked)",
-        "FAIL: test_missing_evidence_file_is_refused (test_catalog_loader_acceptance.EvidenceFileTests.test_missing_evidence_file_is_refused) (file='quarantine.jsonl')",
-        "FAIL: test_missing_evidence_file_is_refused (test_catalog_loader_acceptance.EvidenceFileTests.test_missing_evidence_file_is_refused) (file='overwrite_evidence.jsonl')",
-        "FAIL: test_missing_evidence_file_is_refused (test_catalog_loader_acceptance.EvidenceFileTests.test_missing_evidence_file_is_refused) (file='validation.json')",
-        "FAIL: test_missing_evidence_file_is_refused (test_catalog_loader_acceptance.EvidenceFileTests.test_missing_evidence_file_is_refused) (file='maps_npcs/provenance.json')",
-        "FAIL: test_tampered_evidence_without_hash_update_is_refused (test_catalog_loader_acceptance.EvidenceFileTests.test_tampered_evidence_without_hash_update_is_refused)",
-        "FAIL: test_dataset_schema_fields_are_immutable (test_catalog_loader_acceptance.ImmutabilityTests.test_dataset_schema_fields_are_immutable)",
-        "FAIL: test_manifest_shrink_is_refused (test_catalog_loader_acceptance.ManifestCoverageTests.test_manifest_shrink_is_refused)",
-        "FAIL: test_invalid_order_is_rejected (test_catalog_loader_acceptance.ParameterValidationTests.test_invalid_order_is_rejected)",
-        "FAIL: test_live_api_conformance (test_delivery_gate.ApiDeliveryGate.test_live_api_conformance)",
-        "FAIL: test_page_is_reachable_through_a_proxy_safe_server (test_delivery_gate.WebDeliveryGate.test_page_is_reachable_through_a_proxy_safe_server)",
-        "FAIL: test_page_renders_application_code (test_delivery_gate.WebDeliveryGate.test_page_renders_application_code)"
-      ],
-      "ran": "Ran 67 tests in 27.962s",
+      "exit_code": 0,
+      "failure_count": 0,
+      "failures": [],
+      "ran": "Ran 68 tests in 18.248s",
       "skipped_count": 0,
       "skipped_reasons": [],
-      "status": "fail",
+      "status": "pass",
       "tail": [
-        "{'check': 'U-02', 'title': 'the mounted application renders visible content', 'status': 'fail', 'detail': {'text': '', 'html': '', 'hint': 'the bundle executed and mounted, but painted nothing (white screen)'}}",
-        "",
-        "Diff is 3036 characters long. Set self.maxDiff to None to see it. : the delivered front end does not render against the real API: [{\"U-02\": {\"text\": \"\", \"html\": \"\", \"hint\": \"the bundle executed and mounted, but painted nothing (white screen)\"}}, {\"U-04\": [{\"level\": \"uncaught\", \"message\": \"TypeError: Cannot read properties of undefined (reading 'length')\\n    at OverviewPage (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:16132:36)\\n    at renderWithHooks (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:4222:25)\\n    at updateFunctionComponent (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:5856:19)\\n    at beginWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:6565:18)\\n    at performUnitOfWork (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9989:18)\\n    at workLoopSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9887:41)\\n    at renderRootSync (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9871:11)\\n    at performWorkOnRoot (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:9551:44)\\n    at performWorkOnRootViaSchedulerTask (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:10590:7)\\n    at performWorkUntilDeadline (eval at <anonymous> (file:///tmp/integ/server/tools/review_browser_checks/web_ui_smoke.mjs:205:10), <anonymous>:592:50)\"}, {\"level\": \"error\", \"message\": \"{}\"}]}]",
+        "test_real_data_fallback_and_hardcoded_count_are_violations (test_harness_self_check.PageScannerSelfCheck.test_real_data_fallback_and_hardcoded_count_are_violations) ... ok",
+        "test_negative_control_reports_failures (test_harness_self_check.ProbeAgainstInjectedFaults.test_negative_control_reports_failures) ... ok",
+        "test_positive_control_passes_every_executed_check (test_harness_self_check.ProbeAgainstInjectedFaults.test_positive_control_passes_every_executed_check) ... ok",
         "",
         "----------------------------------------------------------------------",
-        "Ran 67 tests in 27.962s",
+        "Ran 68 tests in 18.248s",
         "",
-        "FAILED (failures=15)"
+        "OK"
       ]
     }
   },
   "summary": {
     "csv_exporter_check": "pass",
-    "integration_acceptance_complete": false,
-    "new_acceptance_suite": "fail",
+    "integration_acceptance_complete": true,
+    "new_acceptance_suite": "pass",
     "not_executed_required_checks": [],
     "original_architecture_suite": "pass",
     "outstanding_api_checks": 0,
-    "outstanding_web_runtime_checks": 1,
+    "outstanding_web_runtime_checks": 0,
     "outstanding_web_static_checks": 0,
     "phase1": "pass",
-    "phase2_live_api": "fail",
+    "phase2_live_api": "pass",
     "phase3_static_page": "pass",
-    "phase3_web_runtime": "fail",
+    "phase3_web_runtime": "pass",
     "test_counts": {
-      "new_acceptance_suite": "Ran 67 tests in 27.962s",
+      "new_acceptance_suite": "Ran 68 tests in 18.248s",
       "note": "the new acceptance suite is deliberately counted separately from the original architecture tests",
-      "original_architecture_tests": "Ran 161 tests in 33.028s"
+      "original_architecture_tests": "Ran 161 tests in 30.718s"
     }
   },
   "tested_deliverables": {
     "api_application": {
-      "last_commit": "9f6ab439a2ecdee37b59b99ddf95e77691490a0f",
+      "last_commit": "01e2adb465fb8bb67f872184e805f2ab6549cae8",
       "path": "server/apps/review_api",
       "present": true,
-      "tested_sha": "9f6ab439"
+      "tested_sha": "01e2adb465fb8bb67f872184e805f2ab6549cae8"
     },
     "api_contract": {
-      "last_commit": "dc2144b4f04dbb644dc6eb2d2abb55599aeee0d1",
+      "last_commit": "5ae8a3820b4db62ed4f16498d7eb422897a80b6d",
       "path": "server/docs/review_browser/API_CONTRACT.md",
       "present": true,
-      "reviewed_remote_ref": "9f6ab439a2ecdee37b59b99ddf95e77691490a0f"
+      "reviewed_remote_ref": "origin/pr-22"
     },
     "loader_source": {
-      "last_commit": "9f6ab439a2ecdee37b59b99ddf95e77691490a0f",
+      "last_commit": "d9721d8df758d905830ac9519df09853bd5b6b38",
       "path": "server/src/mxsj_catalog",
       "present": true
     },
     "web_page": {
-      "last_commit": "97d317e3acba1809c52a6b25a5cfda2cc66f866b",
+      "last_commit": "d9721d8df758d905830ac9519df09853bd5b6b38",
       "path": "server/apps/review_web",
       "present": true,
-      "reviewed_remote_ref": "97d317e3acba1809c52a6b25a5cfda2cc66f866b",
-      "tested_sha": "97d317e3"
+      "reviewed_remote_ref": "origin/pr-24",
+      "tested_sha": "4bef44fcdbbff228b67831cff7395e373532ffcb"
     }
   }
 }

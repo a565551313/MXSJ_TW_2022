@@ -1,23 +1,10 @@
 {
   "stage": "phase3_web_origin_contract",
-  "origin": "http://127.0.0.1:35807",
-  "frontend_contract": {
-    "API_PATHS": {
-      "batch": "/api/v1/review/batch",
-      "items": "/api/v1/review/items",
-      "pets": "/api/v1/review/pets",
-      "skills": "/api/v1/review/skills",
-      "mapDatasets": "/api/v1/review/maps/datasets",
-      "npcs": "/api/v1/review/npcs",
-      "npcAgreement": "/api/v1/review/npcs/agreement",
-      "anomalies": "/api/v1/review/anomalies"
-    },
-    "DEFAULT_PAGE_SIZE": 25
-  },
+  "origin": "http://127.0.0.1:60595",
   "checks": [
     {
       "check": "W-10",
-      "title": "entry page is served by the web origin with relative assets",
+      "title": "entry page uses relative assets",
       "status": "pass",
       "detail": {
         "status": 200,
@@ -31,60 +18,39 @@
     },
     {
       "check": "W-11",
-      "title": "the page entry module loads and holds no sandbox host",
+      "title": "application entry modules are reachable",
       "status": "pass",
       "detail": {
-        "modules": [
-          {
-            "src": "/@vite/client",
-            "status": 200,
-            "bytes": 178934,
-            "kind": "dev-server"
-          },
-          {
-            "src": "/src/main.tsx",
-            "status": 200,
-            "bytes": 2276,
-            "kind": "application"
-          }
-        ],
         "problems": []
       }
     },
     {
       "check": "W-12",
-      "title": "the list pages get the {items,total,page,page_size} envelope they parse",
-      "status": "fail",
-      "detail": [
-        "items (/api/v1/review/items?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])",
-        "pets (/api/v1/review/pets?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])",
-        "skills (/api/v1/review/skills?page=1&page_size=25): HTTP 404; missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])"
-      ]
+      "title": "dataset lists use records/total/offset/limit envelopes",
+      "status": "pass",
+      "detail": {
+        "problems": []
+      }
     },
     {
       "check": "W-13",
-      "title": "the overview/anomaly/npc/map pages get their endpoints",
-      "status": "fail",
-      "detail": [
-        "anomalies (/api/v1/review/anomalies): HTTP 404",
-        "mapDatasets (/api/v1/review/maps/datasets): HTTP 404",
-        "npcs (/api/v1/review/npcs?source=2601&page=1&page_size=25): HTTP 404",
-        "npcAgreement (/api/v1/review/npcs/agreement?page=1&page_size=25): HTTP 404"
-      ]
+      "title": "batch and evidence endpoints agree with current contract",
+      "status": "pass",
+      "detail": {
+        "problems": []
+      }
     },
     {
       "check": "W-14",
-      "title": "detail pages resolve a single record",
-      "status": "fail",
-      "detail": [
-        "item detail (/api/v1/review/items/11): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])",
-        "pet detail (/api/v1/review/pets/1010): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])",
-        "skill detail (/api/v1/review/skills/101): HTTP 404; missing keys [\"_pk\"] (got [\"error\"])"
-      ]
+      "title": "single-record details are reachable",
+      "status": "pass",
+      "detail": {
+        "problems": []
+      }
     },
     {
       "check": "W-15",
-      "title": "the web origin proxies /api to the review API",
+      "title": "web origin proxies the real API",
       "status": "pass",
       "detail": {
         "status": 200,
@@ -93,176 +59,209 @@
     },
     {
       "check": "W-16",
-      "title": "the web origin tolerates a proxied Host/Origin header",
+      "title": "preview Host/Origin headers accepted",
       "status": "pass",
       "detail": {
-        "status": 200
+        "problems": []
       }
     }
   ],
   "requests": [
     {
       "label": "items",
-      "path": "/api/v1/review/items?page=1&page_size=25",
-      "status": 404,
-      "parsed": true,
-      "keys": [
-        "error"
-      ],
-      "problems": [
-        "HTTP 404",
-        "missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])"
-      ]
+      "path": "/api/v1/review/datasets/items/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
     },
     {
       "label": "pets",
-      "path": "/api/v1/review/pets?page=1&page_size=25",
-      "status": 404,
-      "parsed": true,
-      "keys": [
-        "error"
-      ],
-      "problems": [
-        "HTTP 404",
-        "missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])"
-      ]
+      "path": "/api/v1/review/datasets/pets/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
     },
     {
-      "label": "skills",
-      "path": "/api/v1/review/skills?page=1&page_size=25",
-      "status": 404,
-      "parsed": true,
-      "keys": [
-        "error"
-      ],
-      "problems": [
-        "HTTP 404",
-        "missing keys [\"items\",\"total\",\"page\",\"page_size\"] (got [\"error\"])"
-      ]
+      "label": "pet_skill_candidates",
+      "path": "/api/v1/review/datasets/pet_skill_candidates/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pet_required_skills",
+      "path": "/api/v1/review/datasets/pet_required_skills/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pet_aptitudes",
+      "path": "/api/v1/review/datasets/pet_aptitudes/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pet_aptitude_missing",
+      "path": "/api/v1/review/datasets/pet_aptitude_missing/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pet_skills",
+      "path": "/api/v1/review/datasets/pet_skills/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pet_skill_overwrites",
+      "path": "/api/v1/review/datasets/pet_skill_overwrites/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pet_skill_name_matches",
+      "path": "/api/v1/review/datasets/pet_skill_name_matches/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "mapdata_parent_scene",
+      "path": "/api/v1/review/datasets/mapdata_parent_scene/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "mapdata_scene_dictionary",
+      "path": "/api/v1/review/datasets/mapdata_scene_dictionary/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "minimapnpcpos_pos_records",
+      "path": "/api/v1/review/datasets/minimapnpcpos_pos_records/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "minimapnpcpos_wenzi_entries",
+      "path": "/api/v1/review/datasets/minimapnpcpos_wenzi_entries/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "npc_2601_vs_2804_agreement",
+      "path": "/api/v1/review/datasets/npc_2601_vs_2804_agreement/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "npcname2realnamedata_alias_to_realname",
+      "path": "/api/v1/review/datasets/npcname2realnamedata_alias_to_realname/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "npcposdata_records",
+      "path": "/api/v1/review/datasets/npcposdata_records/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "sceneid2name_minimap_scenes",
+      "path": "/api/v1/review/datasets/sceneid2name_minimap_scenes/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "health",
+      "path": "/api/v1/review/health",
+      "status": 200,
+      "problems": []
     },
     {
       "label": "batch",
       "path": "/api/v1/review/batch",
       "status": 200,
-      "parsed": true,
-      "keys": [
-        "batch",
-        "native_loader_confirmed",
-        "manifest_files_count",
-        "csv_format",
-        "tables_summary",
-        "validation_summary"
-      ],
       "problems": []
     },
     {
-      "label": "anomalies",
-      "path": "/api/v1/review/anomalies",
-      "status": 404,
-      "parsed": true,
-      "keys": [
-        "error"
-      ],
-      "problems": [
-        "HTTP 404"
-      ]
+      "label": "datasets",
+      "path": "/api/v1/review/datasets",
+      "status": 200,
+      "problems": []
     },
     {
-      "label": "mapDatasets",
-      "path": "/api/v1/review/maps/datasets",
-      "status": 404,
-      "parsed": true,
-      "keys": [
-        "error"
-      ],
-      "problems": [
-        "HTTP 404"
-      ]
+      "label": "quarantine",
+      "path": "/api/v1/review/quarantine",
+      "status": 200,
+      "problems": []
     },
     {
-      "label": "npcs",
-      "path": "/api/v1/review/npcs?source=2601&page=1&page_size=25",
-      "status": 404,
-      "parsed": true,
-      "keys": [
-        "error"
-      ],
-      "problems": [
-        "HTTP 404"
-      ]
+      "label": "overwrites",
+      "path": "/api/v1/review/overwrites",
+      "status": 200,
+      "problems": []
     },
     {
-      "label": "npcAgreement",
-      "path": "/api/v1/review/npcs/agreement?page=1&page_size=25",
-      "status": 404,
-      "parsed": true,
-      "keys": [
-        "error"
-      ],
-      "problems": [
-        "HTTP 404"
-      ]
+      "label": "missingAptitudes",
+      "path": "/api/v1/review/missing-aptitudes",
+      "status": 200,
+      "problems": []
     },
     {
-      "label": "item detail",
-      "path": "/api/v1/review/items/11",
-      "status": 404,
-      "parsed": true,
-      "keys": [
-        "error"
-      ],
-      "problems": [
-        "HTTP 404",
-        "missing keys [\"_pk\"] (got [\"error\"])"
-      ]
+      "label": "ambiguousSkills",
+      "path": "/api/v1/review/ambiguous-skills",
+      "status": 200,
+      "problems": []
     },
     {
-      "label": "pet detail",
-      "path": "/api/v1/review/pets/1010",
-      "status": 404,
-      "parsed": true,
-      "keys": [
-        "error"
-      ],
-      "problems": [
-        "HTTP 404",
-        "missing keys [\"_pk\"] (got [\"error\"])"
-      ]
+      "label": "items detail",
+      "path": "/api/v1/review/datasets/items/records/11",
+      "status": 200,
+      "problems": []
     },
     {
-      "label": "skill detail",
-      "path": "/api/v1/review/skills/101",
-      "status": 404,
-      "parsed": true,
-      "keys": [
-        "error"
-      ],
-      "problems": [
-        "HTTP 404",
-        "missing keys [\"_pk\"] (got [\"error\"])"
-      ]
+      "label": "pets detail",
+      "path": "/api/v1/review/datasets/pets/records/2010",
+      "status": 200,
+      "problems": []
     },
     {
-      "label": "api-through-proxy",
+      "label": "pet_skills detail",
+      "path": "/api/v1/review/datasets/pet_skills/records/101",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "proxy",
       "path": "/api/v1/review/datasets/items/records?offset=0&limit=1",
       "status": 200,
-      "parsed": true,
-      "keys": [
-        "dataset",
-        "total",
-        "offset",
-        "limit",
-        "count",
-        "records"
-      ],
       "problems": []
     }
   ],
+  "frontend_contract": {
+    "datasets": {
+      "items": "items",
+      "pets": "pets",
+      "petSkillCandidates": "pet_skill_candidates",
+      "petRequiredSkills": "pet_required_skills",
+      "petAptitudes": "pet_aptitudes",
+      "petAptitudeMissing": "pet_aptitude_missing",
+      "petSkills": "pet_skills",
+      "petSkillOverwrites": "pet_skill_overwrites",
+      "petSkillNameMatches": "pet_skill_name_matches",
+      "mapdataParentScene": "mapdata_parent_scene",
+      "mapdataSceneDictionary": "mapdata_scene_dictionary",
+      "minimapNpcPosRecords": "minimapnpcpos_pos_records",
+      "minimapNpcPosWenzi": "minimapnpcpos_wenzi_entries",
+      "npcAgreement": "npc_2601_vs_2804_agreement",
+      "npcAliasToRealname": "npcname2realnamedata_alias_to_realname",
+      "npcPosRecords": "npcposdata_records",
+      "sceneId2Name": "sceneid2name_minimap_scenes"
+    },
+    "page_size": 25
+  },
   "summary": {
     "total": 7,
-    "pass": 4,
-    "fail": 3
+    "pass": 7,
+    "fail": 0
   },
-  "status": "fail",
-  "status_meaning": "the entry page is served, but the application cannot load its data"
+  "status": "pass"
 }

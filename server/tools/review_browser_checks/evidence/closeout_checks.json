@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-12",
+  "tested_code_commit": "d9721d8df758d905830ac9519df09853bd5b6b38",
+  "catalog": {
+    "command": "python -m unittest discover -s server/tests/catalog -q",
+    "passed": 34
+  },
+  "api": {
+    "command": "python -m unittest discover -s server/tests/review_api -q",
+    "passed": 27
+  },
+  "frontend": {
+    "command": "npm test",
+    "passed": 112,
+    "skipped": 9,
+    "test_files": 17,
+    "typecheck": "pass",
+    "production_build": "pass"
+  },
+  "live_frontend": {
+    "command": "REVIEW_API_BASE=http://127.0.0.1:18000 npx vitest run src/api/liveBackend.test.ts",
+    "passed": 12,
+    "skipped": 0,
+    "note": "includes the 9 opt-in cases skipped by npm test; do not add counts as distinct tests"
+  },
+  "protected_paths": {
+    "baseline": "5f2369066c638297cce51f73adb961e011652c52",
+    "paths": [
+      "server/docs/csv_checks",
+      "server/game_data",
+      "server/tools/export_review_csv.py",
+      "data",
+      "tools",
+      "work"
+    ],
+    "changed_files": []
+  },
+  "scope": "read-only review tool; no master merge or game_data publication"
+}
