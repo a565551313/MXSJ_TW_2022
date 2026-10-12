@@ -155,3 +155,39 @@ class TestCliEndToEnd(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+@needs_samples
+class TestGirbDump(unittest.TestCase):
+    """--girb-dump is the low-bandwidth channel: hex text instead of map files."""
+
+    def test_dump_lists_hex_bodies_of_failing_sectors(self) -> None:
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        with redirect_stdout(out):
+            code = main(["--scan", str(SAMPLES), "--girb-dump", "1034:2"])
+        self.assertEqual(code, 0)
+        text = out.getvalue()
+        self.assertIn("### 1034", text)
+        lines = [l for l in text.splitlines() if l.startswith("s") and " len=" in l]
+        self.assertEqual(len(lines), 2)
+        hexes = [l for l in text.splitlines()
+                 if l and all(c in "0123456789abcdef" for c in l)]
+        self.assertEqual(len(hexes), 2)
+        for hdr, body in zip(lines, hexes):
+            declared = int(hdr.split("len=")[1])
+            self.assertEqual(len(body), declared * 2)   # 2 hex chars per byte
+
+    def test_dump_on_a_fully_decoded_map_says_so(self) -> None:
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        with redirect_stdout(out):
+            code = main(["--scan", str(SAMPLES), "--girb-dump", "2101"])
+        self.assertEqual(code, 0)
+        self.assertIn("没有需要排查的扇区", out.getvalue())
+
+    def test_dump_rejects_a_non_integer_limit(self) -> None:
+        code = main(["--scan", str(SAMPLES), "--girb-dump", "2101:abc"])
+        self.assertEqual(code, 2)

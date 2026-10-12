@@ -66,7 +66,28 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
     i = 0
 
     def u16(k: int) -> int:
+        # Reading past the buffer used to surface as a bare IndexError, which
+        # escaped collision_cells() and aborted the whole map.  It means an
+        # earlier token was mis-parsed, so report it as a decode failure.
+        if k < 0 or k + 1 >= len(buf):
+            raise GirbError(f"token reads past the {len(buf)}-byte buffer at {k}")
         return buf[k] | (buf[k + 1] << 8)
+
+    def token() -> int:
+        """Next token byte, bounds-checked against the real payload.
+
+        ``buf`` is deliberately padded well past the payload, so a desynced
+        stream can walk off the end of the real data and keep going until it
+        hits the end of the padding -- which surfaced to callers as a bare
+        ``IndexError`` and aborted the entire map.  Running past the payload
+        is a decode failure; report it as one.
+        """
+        nonlocal i
+        if i >= payload:
+            raise GirbError(f"token stream ran past the {payload}-byte payload at {i}")
+        v = buf[i]
+        i += 1
+        return v
 
     def copy_match(offset: int, length: int) -> None:
         if offset <= 0 or offset > len(out):
@@ -177,12 +198,9 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
 
     def short_match_token() -> bool:
         """Token read at 0x60eb29: t < 0x10 means a 3-BYTE MATCH here."""
-        nonlocal i
-        t = buf[i]
-        i += 1
+        t = token()
         if t < 0x10:
-            nb = buf[i]
-            i += 1
+            nb = token()
             copy_match(0x801 + (nb << 2) + (t >> 2), 3)
             return True
         return match_hi(t)
@@ -211,8 +229,7 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
         trail = buf[i - 2] & 3                  # 0x60ec90
         while trail:
             literal(trail)
-            t = buf[i]
-            i += 1
+            t = token()
             if not match_after_trail(t):
                 return bytes(out[:limit])
             trail = buf[i - 2] & 3

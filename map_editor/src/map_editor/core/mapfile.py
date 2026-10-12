@@ -288,11 +288,15 @@ def read_prefix_records(fh: BinaryIO, header: MapHeader) -> tuple[PrefixRecord, 
     out: list[PrefixRecord] = []
     for i, off in enumerate(header.record_offsets):
         fh.seek(off)
-        x, y, w, h, plen = struct.unpack("<5I", fh.read(20))
-        if not 0 <= x and not 0 <= y:
-            raise MapFormatError(f"record {i}: negative origin")
-        if x + w > header.width or y + h > header.height:
-            raise MapFormatError(f"record {i}: rect {x},{y} {w}x{h} outside map")
+        # Origin is SIGNED.  Shipped maps really do store small negative
+        # offsets (0xFFFFFFEA = -22 on 1326, 0xFFFFFFFE = -2 on 2153), and
+        # rects may overhang the map edge.  Reading them as u32 and rejecting
+        # the result made 7 perfectly good maps unopenable.
+        x, y, w, h, plen = struct.unpack("<2i3I", fh.read(20))
+        if not 0 < w <= header.width * 4 or not 0 < h <= header.height * 4:
+            raise MapFormatError(f"record {i}: implausible size {w}x{h}")
+        if plen > 1 << 24:
+            raise MapFormatError(f"record {i}: implausible payload {plen}")
         payload = fh.read(plen)
         if len(payload) != plen:
             raise MapFormatError(f"record {i}: truncated payload")
@@ -373,9 +377,22 @@ class MapDocument:
             from .girb import GirbError, cells
             try:
                 self._collision[sector.index] = cells(sector.girb_body)
-            except GirbError:
+            except (GirbError, IndexError):
+                # IndexError is belt-and-braces: decompress() is meant to
+                # raise GirbError for every bad stream, but a missed guard
+                # must degrade one sector, never abort the map.
                 self._collision[sector.index] = None
         return self._collision[sector.index]
+
+    def out_of_bounds_records(self) -> list[PrefixRecord]:
+        """Records whose rect starts off-map or overhangs an edge.
+
+        Legal in shipped maps; surfaced so the UI can flag rather than hide it.
+        """
+        h = self.header
+        return [r for r in self.records
+                if r.x < 0 or r.y < 0
+                or r.x + r.width > h.width or r.y + r.height > h.height]
 
     def collision_at(self, x: int, y: int) -> int | None:
         """Collision value for a pixel coordinate, on the 8 px GIRB grid."""

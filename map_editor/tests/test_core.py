@@ -334,3 +334,98 @@ class TestGirbDecompressor(unittest.TestCase):
                 self.assertEqual(h.sector_count * GRID_CELLS,
                                  (h.sector_columns * GRID_COLS) * (h.sector_rows * GRID_ROWS))
                 self.assertEqual(h.sector_columns * GRID_COLS * 8, h.sector_columns * 320)
+
+
+def _build_map_with_records(sectors: list[bytes], width: int, height: int,
+                            recs: list[tuple[int, int, int, int, bytes]]) -> bytes:
+    """A map whose prefix records carry caller-chosen (possibly negative) origins."""
+    import struct as _s
+    n = len(sectors)
+    first = 12 + 4 * n + 8 + 4 * len(recs)
+    blobs = [b"".join([_s.pack("<2i3I", x, y, w, h, len(p)), p]) for x, y, w, h, p in recs]
+    head = bytearray(b"0.1M" + _s.pack("<II", width, height))
+    pos = first
+    for sec in sectors:
+        head += _s.pack("<I", pos)
+        pos += len(sec)
+    head += _s.pack("<I", 12 + 4 * n + 4)
+    head += _s.pack("<I", len(recs))
+    for b in blobs:
+        head += _s.pack("<I", pos)
+        pos += len(b)
+    return bytes(head) + b"".join(sectors) + b"".join(blobs)
+
+
+class TestPrefixRecordOrigins(unittest.TestCase):
+    """Shipped maps store negative and overhanging record rects; both are legal.
+
+    Reading the origin as u32 and rejecting out-of-map rects made 7 of the 101
+    maps in the real client unopenable (1052, 1157, 1326, 2153, new_1018,
+    test_new2_1054 and one more).
+    """
+
+    def _open(self, recs, w=640, h=480):
+        data = _build_map_with_records([_build_sector()] * 4, w, h, recs)
+        path = Path(tempfile.mkdtemp()) / "rec.map"
+        path.write_bytes(data)
+        self.addCleanup(shutil.rmtree, path.parent, True)
+        return open_map(path)
+
+    def test_negative_origin_is_read_as_signed(self) -> None:
+        with self._open([(-22, 2260, 96, 214, b"\x00" * 8)]) as doc:
+            self.assertEqual(len(doc.records), 1)
+            self.assertEqual(doc.records[0].x, -22)      # 0xFFFFFFEA
+            self.assertEqual([r.index for r in doc.out_of_bounds_records()], [0])
+
+    def test_rect_overhanging_the_map_edge_is_accepted(self) -> None:
+        with self._open([(600, 400, 81, 604, b"\x01" * 8)]) as doc:
+            self.assertEqual(doc.records[0].width, 81)
+            self.assertEqual(len(doc.out_of_bounds_records()), 1)
+
+    def test_in_bounds_record_is_not_flagged(self) -> None:
+        with self._open([(10, 10, 40, 40, b"\x02" * 8)]) as doc:
+            self.assertEqual(doc.out_of_bounds_records(), [])
+
+    def test_implausible_size_is_still_rejected(self) -> None:
+        with self.assertRaises(MapFormatError):
+            with self._open([(0, 0, 0, 0, b"")]):
+                pass
+
+
+SAMPLE_2101 = Path(__file__).resolve().parents[2] / "map" / "2101.map"
+
+
+class TestGirbNeverLeaksIndexError(unittest.TestCase):
+    """The inflater must fail as GirbError, never as a bare IndexError.
+
+    A desynced token stream used to walk ``i`` past the padded buffer and
+    raise IndexError, which escaped collision_cells() and aborted whole maps
+    (1012, 1018, 1050, 1323, 2203, new2_1013, new2_1054, test_new2_1025 in
+    the real client all died this way).
+    """
+
+    def test_random_bodies_raise_only_girberror(self) -> None:
+        import random
+        from map_editor.core.girb import GirbError, decompress
+        rng = random.Random(20261012)
+        for _ in range(400):
+            body = bytes(rng.randrange(256) for _ in range(rng.randrange(1, 80)))
+            try:
+                decompress(body)
+            except GirbError:
+                pass                      # the expected failure mode
+            except IndexError as exc:     # pragma: no cover - the regression
+                self.fail(f"IndexError escaped for body {body.hex()}: {exc}")
+
+    def test_truncated_real_body_fails_cleanly(self) -> None:
+        from map_editor.core.girb import GirbError, decompress
+        with open_map(SAMPLE_2101) as doc:
+            body = doc.sector(0).girb_body
+        self.assertEqual(len(decompress(body)), 2400)
+        for cut in range(1, len(body)):
+            try:
+                decompress(body[:cut])
+            except GirbError:
+                pass
+            except IndexError as exc:     # pragma: no cover
+                self.fail(f"IndexError on body[:{cut}]: {exc}")

@@ -35,6 +35,10 @@ def build_parser() -> argparse.ArgumentParser:
                    help="导出某张地图的整图 PNG，如 2101:out.png")
     p.add_argument("--girb-report", action="store_true",
                    help="报告每张地图的 GIRB（碰撞网格）解压成功率，供排查用")
+    p.add_argument("--girb-dump", metavar="KEY[:N]",
+                   help="导出某张地图解不出的扇区的 GIRB 原始字节（十六进制），"
+                        "N 为最多输出几个不同的压缩体，默认 12。"
+                        "输出是纯文本、几 KB，可直接贴回来，不必上传地图文件")
     return p
 
 
@@ -117,6 +121,53 @@ def _print_girb_report(vm: EditorViewModel) -> None:
     print("    说明：解出的扇区一律是 2400 字节 = 1200 个 u16 = 40x30 格（8x8 像素/格）。")
 
 
+def _girb_dump(vm: EditorViewModel, spec: str) -> int:
+    """Print the raw GIRB bodies that fail to inflate, deduplicated.
+
+    The whole point: a failing body is 22-1500 bytes, so a handful of them is
+    a few KB of hex that can be pasted into chat.  That beats transferring a
+    255 MB client dump just to look at nine sectors.
+    """
+    key, _, tail = spec.partition(":")
+    limit = 12
+    if tail:
+        try:
+            limit = max(1, int(tail))
+        except ValueError:
+            print(f"[错误] --girb-dump 的 N 必须是整数，收到 {tail!r}", file=sys.stderr)
+            return 2
+    try:
+        vm.open_map(key)
+    except Exception as exc:
+        print(f"[错误] 打不开 {key}: {exc}", file=sys.stderr)
+        return 1
+    doc = vm.document
+    assert doc is not None
+    st = doc.collision_stats()
+    print(f"### {key}  {doc.header.width}x{doc.header.height}  "
+          f"{st['sectors']}扇区  解出{st['decoded']}  失败{st['failed']}")
+    if st["failed"] == 0:
+        print("# 这张图全部解出，没有需要排查的扇区。")
+        return 0
+
+    seen: dict[bytes, int] = {}
+    order: list[bytes] = []
+    for sec in doc.iter_sectors():
+        if doc.collision_cells(sec) is not None:
+            continue
+        body = sec.girb_body
+        if body not in seen:
+            seen[body] = sec.index
+            order.append(body)
+    print(f"# 失败扇区共 {st['failed']} 个，压缩体去重后 {len(order)} 种；"
+          f"下面列出前 {min(limit, len(order))} 种")
+    print("# 格式：s<首个扇区号> len=<字节数>")
+    for body in order[:limit]:
+        print(f"s{seen[body]} len={len(body)}")
+        print(body.hex())
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     config = Config.load()
@@ -140,6 +191,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.girb_report:
         print()
         _print_girb_report(vm)
+    if args.girb_dump:
+        print()
+        code = _girb_dump(vm, args.girb_dump) or code
     return code
 
 
