@@ -8,3 +8,7 @@
 - 协议映射交给 protocol，身份/会话/归属交给 runtime；不处理玩法、资产或战斗结算。
 - socket/StreamWriter 和 connection_id 不进入业务 DTO 或持久化快照。
 - 回送失败不撤销已提交业务，旧连接关闭不能清除新会话绑定。
+
+多功能扩展见 [GATEWAY_SECURITY_GM.md](../../../docs/GATEWAY_SECURITY_GM.md)。
+游戏监听与 GM 私有监听/内部服务入口隔离；GM 默认关闭，不能在玩家 opcode 表注册管理员命令。
+负责有界帧解析、多维限流所需可信来源、慢连接/重连保护；上游 DDoS 防护与业务反作弊另有负责人。

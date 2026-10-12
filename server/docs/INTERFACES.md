@@ -148,3 +148,17 @@ RewardTxn.stage_grant(uow, server_reward_plan, claim_key) -> provisional_reward_
 - 业务回执不等于 TCP ACK，推送失败不回滚已提交结果；断线重连通过授权快照/版本恢复。
 - GATEWAY.md 中的 SessionAuthority、OwnerDirectory、CommandDispatcher、ClientDelivery 是待实现端口，
   尚未加入本文件 §4 的已声明 Python Protocol 清单，不得误认为已经能部署。
+
+## 10. 多功能网关的管理与安全上下文
+
+设计见 [GATEWAY_SECURITY_GM.md](GATEWAY_SECURITY_GM.md)，当前未实现。
+
+- 公网游戏、私有 GM、内部服务使用不同入口、受众和消息白名单；不把管理员身份编码成玩家特殊账号。
+- source=admin 只是来源枚举，不能授予管理权限。现有 RequestContext 不含完整员工身份/审批信息，
+  在 AdminIdentity / AdminActionContext 与签名版本化评审完成前，不开放管理写接口。
+- 网关权限初检之后，administration 仍须检查实时权限、区服/对象/额度与审批；业务端校验规则和事务。
+- 每类 GM 命令独立 typed DTO；禁止通用 method_name + dict、SQL、shell 或任意脚本。
+- 高风险审批绑定不可变计划与目标范围，申请者不得自批；执行时重新验证，参数变更使审批失效。
+- 管理接受回执仅代表持久化任务已接受，执行/部分成功/未知结果单独表示；不把超时当安全重试依据。
+- 业务提交与相应审计/outbox 同事务；高风险操作无法可靠记录意图/审计时拒绝新操作。
+- 防封包修改/频率异常是接入校验，资源、战斗行动和资产幂等仍由业务拥有者负责，不能下放给客户端或网关猜测。
