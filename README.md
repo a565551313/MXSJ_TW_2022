@@ -260,7 +260,11 @@ python server/tools/review_browser_checks/verify_data_baseline.py
 - `core/`：地图容器、GEPJ 图像、GIRB 解码；不依赖 Qt。
 - `client/`：客户端目录发现、配置、场景名表与 FLS 读取。
 - `ui/viewmodel.py`：可无头测试的状态与导出逻辑。
-- `ui/widgets.py`：PySide6 图形绑定。
+- `ui/widgets.py`：PySide6 图形绑定；画布支持按住鼠标左键拖动平移、
+  `Ctrl`+滚轮缩放（与顶部缩放输入框同步状态）、工具栏"适应窗口"一键缩放
+  到整图，2026-10-12 新增，细节见 [编辑器 README](map_editor/README.md) 的
+  "画布鼠标/滚轮操作"一节——本仓库沙箱没有 `libGL.so.1`，无法起 Qt 窗口做
+  可视化回归，只做了代码走查，需要在有桌面环境的机器上验收。
 - `run.py`：命令行/GUI 合一入口，默认命令行，`--gui` 才开图形界面；打包成
   无控制台 EXE 后不带参数双击启动时（`sys.frozen` 且 argv 为空）也会自动
   打开图形界面（2026-10-12 修复，见 7.3）。
