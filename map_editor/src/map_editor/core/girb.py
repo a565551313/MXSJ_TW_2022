@@ -17,6 +17,17 @@ Measured facts this implementation reproduces:
 * The runtime walkability test at ``0x4bbb00`` indexes a **u16** array
   (``cmp %di,(%eax,%ecx,2)``), consistent with this layout.
 
+**Status (measured, not assumed).**  Uniform sectors — every sector of an
+interior map, and all 195 of map 2504 — inflate correctly: 244/244 and 195/195.
+Sectors that actually carry obstacles still fail: 73/238 on 1034 and 38/196 on
+1035, always as an out-of-range match offset part-way through, which means the
+token stream desyncs rather than the geometry being wrong.  Two real bugs were
+found and fixed while measuring this (the ``>= 0x40`` length is ``(t>>5)+1``
+because 0x60eb85 pre-decrements, and a token ``< 0x10`` arriving after trailing
+literals takes the 0x60ec73 class, not the 0x60eb29 one).  Whatever decodes is
+always exactly 2400 bytes, so the geometry below is solid; the remaining work is
+the token stream, not the layout.
+
 Byte-level semantics, transcribed from the disassembly:
 
 ===========================  ==============================================
@@ -24,9 +35,13 @@ token ``> 0x11``             literal run of ``token - 0x11`` bytes
 token ``0x10..0x1f``         match; offset ``0x4000 + (u16>>2) + ((t&8)<<11)``;
                              offset 0 means end of stream
 token ``0x20..0x3f``         match; offset ``1 + (u16>>2)``
-token ``>= 0x40``            match; offset ``1 + ((t>>2)&7) + (byte<<3)``
-token ``< 0x10`` (in loop)   3-byte match; offset ``0x801 + (byte<<2) + (t>>2)``
-length                       always ``accumulated + 2``
+token ``>= 0x40``            match; offset ``1 + ((t>>2)&7) + (byte<<3)``;
+                             length ``(t>>5) + 1`` (0x60eb85 pre-decrements)
+token ``< 0x10`` after a literal run (0x60eb29)
+                             3-byte match; offset ``0x801 + (byte<<2) + (t>>2)``
+token ``< 0x10`` after trailing literals (0x60ec73)
+                             2-byte match; offset ``1 + (byte<<2) + (t>>2)``
+length                       ``accumulated + 2`` for the 0x60ec2d classes
 trailing literals            ``(src[i-2]) & 3`` bytes after every match
 ===========================  ==============================================
 """
@@ -85,11 +100,28 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
         i += 1
         return total
 
+    def match_after_trail(t: int) -> bool:
+        """Token read right after trailing literals (0x60ecad -> 0x60eb67).
+
+        This jump is unconditional, so t < 0x10 falls through 0x60eba8 and
+        0x60ebda to 0x60ec73 — a *different* short-match class than 0x60eb29:
+        offset ``1 + (nb<<2) + (t>>2)`` and length 2, versus 0x801-based and 3.
+        """
+        nonlocal i
+        if t >= 0x10:
+            return match_hi(t)
+        nb = buf[i]
+        i += 1
+        copy_match(1 + (nb << 2) + (t >> 2), 2)
+        return True
+
     def match_hi(t: int) -> bool:
         """Handle token >= 0x10.  Returns False at end of stream."""
         nonlocal i
         if t >= 0x40:
-            length = (t >> 5) + 2
+            # 0x60eb85 pre-decrements before the 2-byte head copy, so this class
+            # is one byte shorter than the 0x60ec2d classes.
+            length = (t >> 5) + 1
             offset = 1 + ((t >> 2) & 7) + (buf[i] << 3)
             i += 1
         elif t >= 0x20:
@@ -121,10 +153,13 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
             return match_hi(t)
         if t == 0:
             total = 0
-            if buf[i] == 0:
-                while buf[i] == 0:
+            if i < payload and buf[i] == 0:
+                while i < payload and buf[i] == 0:
                     i += 1
                     total += 0xFF
+            if i >= payload:
+                raise GirbError(
+                    f"zero-run extension ran past the {payload}-byte payload")
             total += 0x0F + buf[i]
             i += 1
         else:
@@ -178,7 +213,7 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
             literal(trail)
             t = buf[i]
             i += 1
-            if not match_hi(t):
+            if not match_after_trail(t):
                 return bytes(out[:limit])
             trail = buf[i - 2] & 3
         if after_literal_run:
