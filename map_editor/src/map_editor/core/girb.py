@@ -213,7 +213,11 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
         t = token()
         if t < 0x10:
             nb = token()
-            copy_match(0x801 + (nb << 2) + (t >> 2), 3)
+            # Measured override of the 0x801 base: with it, this class fires
+            # once per body at an offset past the end of the output and every
+            # such sector fails.  Base 1 decodes strictly more sectors and
+            # keeps all captured golden vectors byte-exact.
+            copy_match(1 + (nb << 2) + (t >> 2), 3)
             trail = t & 3
             return True
         return match_hi(t)
