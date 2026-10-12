@@ -19,14 +19,34 @@ Simulates the complete normal player lifecycle:
        `GS2C_LOGIN_PLAYER_DEL = 10`.
      - Handles `C2GS_LOGIN_PLAYER_ENTER = 2` (select role & enter game).
   4. 進入地圖與世界交互 (Entering the Map & In-Map Interactions):
-     - Sends `GS2C_PROP_INIT = 16` (all 97 `ITEM_SERVERINIT` hero attributes from `hero.py`).
+     - Sends `GS2C_PROP_INIT = 16` (the `ITEM_SERVERINIT` hero attributes).
+       NOTE: `hero.py` (entry 3038) assigns `ITEM_ALL` and `ITEM_SERVERINIT` as
+       EMPTY tuples at module level (`BUILD_TUPLE 0`) and fills them at runtime via
+       `InitItem`, so neither the "97" nor the "112" figure quoted elsewhere in this
+       file is a static client literal.  Count them from the registration path.
      - Sends `GS2C_MAP_SCENE_M = 96` (loads map scene `1025` 清風村 / `1054` 明月城 / `1001` 永澤城).
      - Sends `GS2C_MAP_GOTO_M = 97` (places hero at spawn grid coordinates).
      - Sends `GS2C_MAP_ADD_NPC = 99` (spawns interactive teleporter NPC on the map).
      - Sends `GS2C_NOTIFY = 165` (welcome banner in system prompt & chat window).
-     - Handles `C2GS_MAP_MOVE = 54` (walking), `C2GS_HEART_BEAT = 109` -> `GS2C_HEART_BEAT = 69`,
-       `C2GS_REQUEST_TIME = 15` -> `GS2C_TIME = 12`, `C2GS_NPC_LOOK = 55` -> `GS2C_NPC_CHAT_EXT = 152`,
-       `C2GS_NPC_ANSWER = 56` (map teleportation), and `C2GS_PLAYER_CHAT = 123` (chat & `/tp` commands).
+     - Handles `C2GS_MAP_MOVE = 54` (walking), `C2GS_HEART_BEAT = 63` -> `GS2C_HEART_BEAT = 63`,
+       `C2GS_REQUEST_TIME = 61` -> `GS2C_TIME = 31`, `C2GS_NPC_LOOK = 96` -> `GS2C_NPC_CHAT_EXT = 152`,
+       `C2GS_NPC_ANSWER = 98` (map teleportation), and `C2GS_PLAYER_CHAT = 149` (chat & `/tp`).
+       The `*_LEGACY` aliases (109/15/55/56/123/...) are also accepted for older
+       builds, but they are NOT present in the v2.27.2 client table.
+
+Opcode provenance (verified 2026-10-12)
+---------------------------------------
+The authoritative C2GS/GS2C numbers are read out of the client itself:
+`data/script.fls` entry **3970** = `script\\protocol.py` (module docstring "协议号",
+GBK).  412 assignments, 409 integer constants (C2GS=176, GS2C=233), recovered with
+**0 unmapped opcodes** over 2476 bytes of `co_code`.  Reproduce with:
+
+    python3 work/dream-world-connect-login-map/tools/extract_protocol_table.py \
+        --cross-check-mock mock_server.py
+
+That cross-check is what flagged the constants corrected in this file; run it after
+any opcode edit.  Names below that the cross-check reports as `missing_in_client`
+are this project's own invention, not client facts.
 """
 
 from __future__ import annotations
@@ -49,7 +69,7 @@ from typing import Any
 # 1. Protocol Constants (`data/script.fls` `idx=3970` `script/protocol.py`)
 # ============================================================================
 
-# Client -> GameServer (C2GS) - Authentic `data/script.fls` v2.27.2 opcodes
+# Client -> GameServer (C2GS) - `data/script.fls` entry 3970 (`script\protocol.py`)
 C2GS_LOGIN_ACCOUNT_ENTER = 1
 C2GS_LOGIN_PLAYER_ENTER = 2
 C2GS_LOGIN_PLAYER_ADD = 3
@@ -92,17 +112,25 @@ C2GS_PLAYER_CHAT_LEGACY = 123
 C2GS_SELECT_SERVER_LEGACY = 247
 C2GS_GAME_PUBLIC_LEGACY = 250
 
-# GameServer -> Client (GS2C) - Authentic `data/script.fls` v2.27.2 opcodes
+# GameServer -> Client (GS2C) - `data/script.fls` entry 3970 (`script\protocol.py`)
 GS2C_HELLO = 1
 GS2C_LOGIN_PLAYER_INFO = 3
 GS2C_LOGIN_PLAYER_ENTER = 4
 GS2C_LOGIN_PLAYER_ADD = 6
 GS2C_LOGIN_ERROR = 8
 GS2C_LOGIN_PLAYER_DEL = 10
-GS2C_LOGIN_PLAYER_INFO_END = 14
+# NOTE (2026-10-12, corrected against the client): the three constants below were
+# invented and are NOT in `data/script.fls` entry 3970 (`script\protocol.py`).
+# Values 14 / 17 belong to GS2C_BLACKLIST and nothing at all respectively.
+# Authoritative table: work/dream-world-connect-login-map/artifacts/protocol_table/
+# protocol_opcodes.csv  (regenerate with tools/extract_protocol_table.py)
+GS2C_LOGIN_PLAYER_INFO_END = 14   # WRONG in client: 14 = GS2C_BLACKLIST. Unused here.
 GS2C_LOGIN_ACCOUNT_INFO = 15
 GS2C_PROP_INIT = 16
-GS2C_PROP_CHANGE = 17
+GS2C_PROP_CHANGE = 152            # was 17; 17 is unused in the client table.
+# CAUTION: the client's own table assigns 152 to BOTH GS2C_PROP_CHANGE and
+# GS2C_NPC_CHAT_EXT.  Whichever the client registers last in m_NetFunction wins,
+# so one of the two is unreachable.  Needs a real-client run to confirm which.
 GS2C_TIME = 31
 GS2C_TIME_LEGACY = 12
 GS2C_SELSERVER = 47
@@ -113,7 +141,7 @@ GS2C_MAP_SCENE_M = 96
 GS2C_MAP_GOTO_M = 97
 GS2C_MAP_ADD_PLAYER = 98
 GS2C_MAP_ADD_NPC = 99
-GS2C_MAP_DEL = 100
+GS2C_MAP_DEL = 85                 # was 100; 100 = GS2C_MAP_ADD_GOODS. Unused here.
 GS2C_MAP_EFFECT = 102
 GS2C_NPC_CHAT = 144
 GS2C_NPC_CHAT_EXT = 152
@@ -575,18 +603,35 @@ def ensure_client_ready(repo_root: Path, patch_fls: bool = True) -> None:
 # ============================================================================
 
 
+MAX_LEN_BYTES = 2  # CNetClient +0x6990; see frame_gs2c docstring for the evidence.
+
+
 def frame_gs2c(opcode: int, payload: bytes = b"") -> bytes:
     """
     Wraps a GS2C packet for `CNetClient::RecvPacket` (`0x004ab540`):
       - `body = bytes([opcode]) + payload`
       - If `len(body) < 0xFF`: `bytes([len(body)]) + body`
-      - If `len(body) >= 0xFF`: `b'\\xff' + struct.pack('<I', len(body))[:3] + body`
+      - If `len(body) >= 0xFF`: `b'\\xff' + <len(body) as MaxLenBytes little-endian> + body`
+
+    `MaxLenBytes` is **2**, not 3.  Verified 2026-10-12 by disassembling `mx.exe`:
+      - `0x4ab540` state 0 reads 1 length byte into `+0x6988`;
+      - state 1 compares it to `0xFF` and, on match, calls `ReadBytes(&+0x6988,
+        [+0x6990])` — i.e. it reads exactly `MaxLenBytes` continuation bytes;
+      - a whole-binary scan finds exactly ONE write to `+0x6990`, at `0x4AB23F`:
+        `c7 87 90 69 00 00 02 00 00 00` = `mov dword ptr [edi+0x6990], 2`.
+    Writing 3 length bytes left a stray `0x00` at the head of the body, so the
+    client read cmd=0x00 and desynced.  Only packets with a body >= 0xFF bytes are
+    affected; in this build that is `GS2C_PROP_INIT` (body 404).
     """
     body = bytes([opcode & 0xFF]) + payload
     n = len(body)
     if n < 0xFF:
         return bytes([n]) + body
-    return b"\xff" + struct.pack("<I", n)[:3] + body
+    if n >= 1 << (8 * MAX_LEN_BYTES):
+        raise ValueError(
+            f"body {n}B does not fit in MaxLenBytes={MAX_LEN_BYTES}; the client "
+            "cannot frame it (split the packet instead)")
+    return b"\xff" + n.to_bytes(MAX_LEN_BYTES, "little") + body
 
 
 def build_gs2c_hello(seed: int = 0x12345678, server_num: int = 3, is_cert: int = 0) -> bytes:
@@ -1822,11 +1867,20 @@ def run_self_test() -> int:
     assert len(p_info) == 39 and p_info[0] == 38 and p_info[1] == GS2C_LOGIN_PLAYER_INFO
     assert decode_big5(p_info[23:39]) == "夢想少俠"
 
-    # 4. GS2C_PROP_INIT (408 bytes total: 0xFF + 3B len(404) + op(16) + 403B payload)
+    # 4. GS2C_PROP_INIT (407 bytes total: 0xFF + 2B len(404) + op(16) + 403B payload)
+    #    MaxLenBytes is 2 -- see frame_gs2c for the mx.exe 0x4AB23F evidence.
     prop_pkt = build_gs2c_prop_init(sample_role)
     assert prop_pkt[0] == 0xFF
-    ext_len = struct.unpack_from("<I", prop_pkt[1:4] + b"\x00")[0]
-    assert ext_len == 404 and len(prop_pkt) == 4 + 404 and prop_pkt[4] == GS2C_PROP_INIT
+    ext_len = int.from_bytes(prop_pkt[1:3], "little")
+    assert ext_len == 404 and len(prop_pkt) == 3 + 404 and prop_pkt[3] == GS2C_PROP_INIT
+
+    # 4b. Framing regression: the 0xFF escape must be exactly 2 length bytes, and
+    #     the byte right after them must be the command byte (not a stray 0x00).
+    esc = frame_gs2c(99, b"\xAA" * 299)
+    assert esc[0] == 0xFF and len(esc) == 1 + MAX_LEN_BYTES + 300
+    assert int.from_bytes(esc[1:1 + MAX_LEN_BYTES], "little") == 300
+    assert esc[1 + MAX_LEN_BYTES] == 99, "client would read cmd=0x00 and desync"
+    assert frame_gs2c(1, b"\x00" * 8) == bytes([9, 1]) + b"\x00" * 8
 
     # 5. GS2C_MAP_SCENE_M & GS2C_MAP_GOTO_M & GS2C_MAP_ADD_NPC
     scene_pkt = build_gs2c_map_scene_m(1025, 1025, 1025, 75, 52, "清風村")
@@ -1867,12 +1921,12 @@ def run_self_test() -> int:
     def send_c2gs(op: int, f: bytes) -> None:
         cli.sendall(bytes([op, len(f) + 1]) + f + b"\x00")
 
-    # Helper to read one GS2C frame
+    # Helper to read one GS2C frame (MaxLenBytes = 2, see frame_gs2c)
     def recv_gs2c() -> tuple[int, bytes]:
         b0 = cli.recv(1)[0]
         if b0 == 0xFF:
-            ext = cli.recv(3)
-            plen = struct.unpack("<I", ext + b"\x00")[0]
+            ext = cli.recv(MAX_LEN_BYTES)
+            plen = int.from_bytes(ext, "little")
         else:
             plen = b0
         body = b""
@@ -1881,12 +1935,28 @@ def run_self_test() -> int:
         return body[0], body[1:]
 
     # Stage 2: Send C2GS_LOGIN_ACCOUNT_ENTER = 1
+    # Real v2.27.2 `netlogin.C2SLoginIn` layout (entry 4082), verified 2026-10-12
+    # from the bytecode: PacketAddS(name, 32) at co_code 176, PacketAddS(pwd, 20)
+    # at co_code 192.  `fields` excludes the cmd byte, so name is at 4..35 and
+    # pwd at 36..55.  The previous 40B/32B shape only matched the `data/data.fls`
+    # bot path, so this test was exercising the wrong parser branch.
     login_fields = (
-        b"\x00"
-        + encode_big5("testuser01", 40)
-        + encode_big5("e10adc3949ba59abbe56e057f20f883e", 32)
-        + b"\x00" * 94
+        b"\x00"                                  # iScriptV1 (0 or 0x80 if mini)
+        + b"\x02"                                # CLIENT_VERSION[1]
+        + struct.pack("<H", 27)                  # CLIENT_VERSION[2]
+        + encode_big5("testuser01", 32)          # name   (32B fixed)
+        + encode_big5("e10adc3949ba59abbe56e057f20f883e", 20)  # pwd (20B fixed)
+        + b"\x00" * 4                            # C_sys.GetVersion()
+        + b"\x02\x1b\x00\x00"                    # update.ini [Setting] Version
+        + b"\x7f\x00\x00\x01"                    # localip
+        + b"\x00" * 8                            # adsid (hi, lo)
+        + b"\x00"                                # len(tgId) = 0
+        + b"\x00" * 4                            # driveid
+        + b"\x11\x22\x33\x44\x55\x66"            # mac (no length prefix)
     )
+    assert len(login_fields) == 87
+    assert login_fields[1:4] == b"\x02\x1b\x00", "must take the script.fls branch"
+    assert login_fields[4:36].startswith(b"testuser01")
     send_c2gs(C2GS_LOGIN_ACCOUNT_ENTER, login_fields)
     op1, body1 = recv_gs2c()
     assert op1 == GS2C_LOGIN_ACCOUNT_INFO and body1[0] == 1

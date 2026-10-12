@@ -1,5 +1,12 @@
 # 梦想世界(MXSJ)台湾版 2022 客户端逆向 — 文档索引
 
+> ⛔ **2026-10-12 客户端侧现状以 [`report/client-status-20261012.md`](report/client-status-20261012.md) 为准。**
+> 本索引中与该文冲突的内容已过期，至少包括：`tools/mock_server.py` 已被**仓库根目录**的
+> `mock_server.py` 取代；命令字 0x0001/0x0002/0x0003/0x0010/0x00FF 不成立（命令字是单字节 1..242，
+> 权威表见 `artifacts/protocol_table/protocol_opcodes.csv`）；帧格式不是 `uint16_be 总长 + 命令字`，
+> 而是 `[1 字节长度 L][L 字节包体]`，`L==0xFF` 时续读 **2** 字节小端长度；
+> `packet_analyzer.py` / `enhanced_capture_server.py` / `im_crypto.py` 的帧模型已过期。
+
 **最后更新**: 2026-10-10（同日完成核对，见 `report/verification-20261010.md`）
 **原工作分支**: `arena/6fbb3403-mxsj-tw-2022`（已合入 master）
 **当前会话分支**: `arena/febc1561-mxsj-tw-2022`（与 master 同一 commit `ffec3d9`；`711e6a7` 为其祖先）
