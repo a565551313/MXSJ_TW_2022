@@ -130,8 +130,8 @@ export function queryDatasetRecords(
  * Fetches every page of a filtered query.
  *
  * Used where a first page is provably not the whole answer: pet candidate
- * skills, name matches and overwrite evidence. Stops early if the record count
- * stops growing, and refuses to silently truncate: exceeding the safety cap
+ * skills, name matches and overwrite evidence. Rejects early empty pages, total
+ * drift and repeated record identities instead of silently truncating. Exceeding the safety cap
  * raises an ApiError instead of returning a partial list that would look like
  * "the pet has fewer skills".
  */
@@ -140,21 +140,32 @@ export async function fetchAllRecords(
   query: Omit<RecordsQuery, 'offset' | 'limit'>,
   options: RequestOptions = {},
 ): Promise<{ records: ApiRecord[]; total: number; pages: number; truncated: boolean }> {
-  const limit = 500
+  const limit = MAX_LIMIT
   let offset = 0
   let total: number | null = null
   const records: ApiRecord[] = []
+  const seen = new Set<string>()
   let pages = 0
+
+  const incomplete = (reason: string): never => {
+    throw new ApiError({
+      kind: 'schema',
+      url: `${datasetId}(offset=${offset})`,
+      code: 'INCOMPLETE_RESULT_SET',
+      message: `关联查询未能取得一致的完整结果：${reason}。不会将部分记录作为完整列表显示。`,
+    })
+  }
 
   while (true) {
     const envelope = await fetchRecords(datasetId, { ...query, offset, limit }, options)
     pages += 1
     if (total === null) total = envelope.total
-    records.push(...envelope.records)
-    if (envelope.records.length === 0) break
-    offset += envelope.records.length
-    if (total !== null && records.length >= total) break
-    if (records.length >= MAX_FETCH_ALL_RECORDS) {
+    if (envelope.total !== total) incomplete('分页过程中 total 发生变化')
+    if (envelope.offset !== offset) incomplete('返回的 offset 与请求不一致')
+    if (envelope.count !== envelope.records.length || envelope.count > envelope.limit) {
+      incomplete('count、limit 与记录数量不一致')
+    }
+    if (total > MAX_FETCH_ALL_RECORDS) {
       throw new ApiError({
         kind: 'unknown',
         url: `${datasetId}(offset=${offset})`,
@@ -162,9 +173,21 @@ export async function fetchAllRecords(
         message: `关联查询结果超过 ${MAX_FETCH_ALL_RECORDS} 条，已停止以免返回不完整列表（total=${total}）。`,
       })
     }
+    if (records.length + envelope.records.length > total) incomplete('记录数量超过 total')
+    for (const record of envelope.records) {
+      const key = record._pk
+      if (typeof key !== 'string' || key.length === 0 || seen.has(key)) {
+        incomplete('记录身份缺失或分页中出现重复 _pk')
+      }
+      seen.add(key as string)
+    }
+    records.push(...envelope.records)
+    if (records.length === total) break
+    if (envelope.records.length === 0) incomplete('尚未达到 total 就提前返回空页')
+    offset = records.length
   }
 
-  return { records, total: total ?? records.length, pages, truncated: false }
+  return { records, total, pages, truncated: false }
 }
 
 /** Counts records matching a filter without downloading them. */

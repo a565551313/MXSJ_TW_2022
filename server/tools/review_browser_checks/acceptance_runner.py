@@ -50,7 +50,7 @@ WEB_PROBE = TOOLS / 'web_origin_probe.mjs'
 UI_SMOKE = TOOLS / 'web_ui_smoke.mjs'
 CONTRACT = repo_root() / 'server/docs/review_browser/API_CONTRACT.md'
 WEB_APP = repo_root() / 'server/apps/review_web'
-PYTHON = '/tmp/reviewvenv/bin/python' if Path('/tmp/reviewvenv/bin/python').exists() else sys.executable
+PYTHON = sys.executable
 
 
 REQUIRED_API_CHECKS = {
@@ -83,7 +83,7 @@ REQUIRED_WEB_CHECKS = {
 REQUIRED_WEB_RUNTIME_CHECKS = {
     'W-10': '入口页面由 web origin 提供且资源为相对路径',
     'W-11': '入口模块可加载且不含沙箱主机',
-    'W-12': '列表页拿到自己解析的 {items,total,page,page_size} 信封',
+    'W-12': '列表页拿到自己解析的 {dataset,total,offset,limit,count,records} 信封',
     'W-13': '概览/异常/NPC/地图页面的端点存在',
     'W-14': '详情页能取到单条记录',
     'W-15': 'web origin 能把 /api 代理到复核 API',
@@ -92,7 +92,7 @@ REQUIRED_WEB_RUNTIME_CHECKS = {
     'U-02': '挂载后的应用渲染出可见内容（不是白屏）',
     'U-03': '应用发出的每个请求都成功',
     'U-04': '应用加载期间没有 console 错误',
-    'U-05': '仅真实浏览器可做的检查（如实标注未执行）',
+    'U-05': '真实 Chromium 页面、交互与错误路径（未安装时明确未执行）',
 }
 
 
@@ -310,7 +310,7 @@ def run_web_runtime() -> dict:
         else:
             for check_id in ('W-10', 'W-11', 'W-12', 'W-13', 'W-14', 'W-15', 'W-16'):
                 stage['checks'].append({'check': check_id, 'status': 'not_executed',
-                                        'title': REQUIRED_WEB_CHECKS[check_id],
+                                        'title': REQUIRED_WEB_RUNTIME_CHECKS[check_id],
                                         'detail': 'web_origin_probe.mjs produced no report'})
 
         # 2. the built application, executed against the real API
@@ -330,8 +330,19 @@ def run_web_runtime() -> dict:
         else:
             for check_id in ('U-01', 'U-02', 'U-03', 'U-04', 'U-05'):
                 stage['checks'].append({'check': check_id, 'status': 'not_executed',
-                                        'title': REQUIRED_WEB_CHECKS[check_id],
+                                        'title': REQUIRED_WEB_RUNTIME_CHECKS[check_id],
                                         'detail': 'web_ui_smoke.mjs produced no report'})
+
+        # Optional real browser, using the same running API/web source as this session.
+        if os.environ.get('REVIEW_BROWSER_TOOLS'):
+            browser_out = workdir / 'chromium_smoke.json'
+            completed = subprocess.run(['node', str(TOOLS / 'chromium_smoke.mjs'),
+                '--origin', origin, '--out', str(browser_out)], capture_output=True,
+                text=True, timeout=180)
+            result = (json.loads(browser_out.read_text()) if browser_out.exists() else {
+                'check': 'U-05', 'status': 'fail', 'title': 'actual Chromium smoke',
+                'detail': completed.stderr[-2000:]})
+            stage['checks'] = [c for c in stage['checks'] if c['check'] != 'U-05'] + [result]
 
         # 3. API-15 against this real page origin (the probe needs a web origin to run it)
         if mapping:
@@ -461,8 +472,7 @@ def main(argv=None) -> int:
         'environment': {'python': sys.version.split()[0], 'interpreter_used': PYTHON,
                         'node': subprocess.run(['node', '--version'], capture_output=True,
                                                text=True).stdout.strip() or None,
-                        'browser_engine': 'none available (only npm/pypi/GitHub are reachable, so no '
-                                          'browser build can be installed)'},
+                        'browser_engine': 'jsdom plus optional Chromium (actual U-05 result in runtime checks)'},
         'tested_deliverables': deliverable_commits(args.api_sha, args.web_sha),
         'stages': {
             'phase1_data_baseline': {'status': baseline['status'], **counts(baseline),
@@ -517,7 +527,9 @@ def main(argv=None) -> int:
                                 'original architecture tests'},
         'integration_acceptance_complete': bool(
             baseline['status'] == 'pass' and api['status'] == 'pass' and web['status'] == 'pass'
-            and runtime.get('status') == 'pass' and units['status'] == 'pass'
+            and runtime.get('status') == 'pass'
+            and not report['outstanding_not_executed']['web_runtime']
+            and units['status'] == 'pass'
             and architecture['status'] == 'pass' and csv_check['status'] == 'pass'),
         'not_executed_required_checks': required_missing,
         'outstanding_api_checks': len(report['outstanding_not_executed']['api']),
@@ -533,7 +545,7 @@ def main(argv=None) -> int:
     except ValueError:
         shown = args.out
     print(f'report: {shown}')
-    return 0
+    return 0 if report['summary']['integration_acceptance_complete'] else 1
 
 
 if __name__ == '__main__':

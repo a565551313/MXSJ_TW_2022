@@ -22,6 +22,7 @@ from .loader import (
     normalize_dataset_id,
     verify_file_integrity,
 )
+from .evidence import evidence_record, validate_consistency
 from .models import (
     Dataset,
     DatasetSchema,
@@ -138,7 +139,7 @@ class ReviewCatalog:
                 if not line:
                     continue
                 try:
-                    item = json.loads(line)
+                    item = evidence_record(json.loads(line), "quarantine")
                 except json.JSONDecodeError as e:
                     raise CatalogIntegrityError(
                         f"Corrupted JSON in quarantine.jsonl line {line_no}"
@@ -165,7 +166,7 @@ class ReviewCatalog:
                 if not line:
                     continue
                 try:
-                    item = json.loads(line)
+                    item = evidence_record(json.loads(line), "overwrites")
                 except json.JSONDecodeError as e:
                     raise CatalogIntegrityError(
                         f"Corrupted JSON in overwrite_evidence.jsonl line {line_no}"
@@ -197,6 +198,9 @@ class ReviewCatalog:
                 provenance_data = json.load(f)
         except json.JSONDecodeError as e:
             raise CatalogIntegrityError(f"Corrupted JSON in provenance.json: {e}") from e
+
+        validate_consistency(quarantine_list, overwrites_list, validation_data,
+                             datasets["pet_skill_overwrites"])
 
         # Total loaded files = verified files in manifest + manifest.json itself
         total_loaded_files = len(files_meta) + 1

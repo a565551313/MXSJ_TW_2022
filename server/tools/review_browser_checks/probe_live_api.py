@@ -955,11 +955,13 @@ class Probe:
         # as W-12/W-13/W-14 in the web stage, and repeated only as evidence — the
         # verdict of API-15 stays about proxy safety and page reachability, so a
         # front-end contract mismatch is never filed as an API defect.
+        # Real-app probing is opt-in; synthetic conformance controls must not
+        # accidentally import whatever product frontend happens to be installed.
         app_dir = Path(self.mapping.get('web_app_dir', 'server/apps/review_web'))
         if not app_dir.is_absolute():
             app_dir = repo_root() / app_dir
         node_probe = Path(__file__).with_name('web_origin_probe.mjs')
-        if app_dir.is_dir() and node_probe.is_file():
+        if self.mapping.get('web_app_dir') and app_dir.is_dir() and node_probe.is_file():
             command = ['node', '--experimental-strip-types', str(node_probe),
                        '--app-dir', str(app_dir), '--origin', web_url,
                        '--out', str(self.out_dir / 'web_origin_probe.json')]

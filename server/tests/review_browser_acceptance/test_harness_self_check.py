@@ -142,6 +142,17 @@ class PageScannerSelfCheck(unittest.TestCase):
     documentation to satisfy the tool.
     """
 
+    def test_generated_dependency_bundles_are_not_authored_product_source(self):
+        root = tempdir('mxsj-generated-bundle-')
+        (root / 'src').mkdir()
+        (root / 'src/app.ts').write_text('fetch("/api/v1/review/health")')
+        (root / 'dist/assets').mkdir(parents=True)
+        (root / 'dist/assets/vendor.js').write_text(
+            'element.innerHTML = html; fetch("http://localhost:9999/api"); const total = 6851;')
+        checks = {c['check']: c for c in self._scan(root)['checks']}
+        for key in ('W-03', 'W-04', 'W-06'):
+            self.assertEqual(checks[key]['status'], 'pass', checks[key])
+
     def _scan(self, root: Path, *, api: bool = False) -> dict:
         script = (
             'import json,sys;from pathlib import Path;sys.path.insert(0, %r);'

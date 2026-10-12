@@ -103,7 +103,9 @@ def iter_files(roots, suffixes):
         for path in sorted(root.rglob('*')):
             if not path.is_file() or path.suffix.lower() not in suffixes:
                 continue
-            if 'node_modules' in path.parts or path.name.startswith('.'):
+            # Generated bundles contain third-party React internals; scan authored
+            # source, not dependency HTML sinks/error-code constants.
+            if {'node_modules', 'dist', 'build', 'coverage', '.git'} & set(path.relative_to(root).parts) or path.name.startswith('.'):
                 continue
             yield path
 

@@ -244,9 +244,7 @@ record('U-04', 'the application reports no console error while loading',
   appConsoleErrors.length ? 'fail' : 'pass', appConsoleErrors.slice(0, 12))
 
 record('U-05', 'real-browser-only checks', 'not_executed',
-  'layout/visual white-screen detection, screenshot evidence and a real browser console need '
-  + 'Chrome or Firefox; this sandbox has no browser binary and only npm/pypi/GitHub are reachable, '
-  + 'so no browser build can be downloaded')
+  'jsdom does not execute real-browser checks; set REVIEW_BROWSER_TOOLS for the separate Chromium probe')
 
 dom.window.close()
 finish()

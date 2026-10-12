@@ -168,12 +168,15 @@ class ParameterValidationTests(LoaderContractCase):
         self.catalog = self.load(default_batch_dir())
 
     def test_invalid_order_is_rejected(self):
-        rows = self.catalog.query_records('items', offset=0, limit=5, sort_by='client_shape_id',
-                                          order='ascending-wrong')
-        with self.assertRaises(ValueError):
-            # Documented values are exactly 'asc' and 'desc'.
-            self.catalog.query_records('items', offset=0, limit=5, sort_by='client_shape_id',
-                                       order='x')
+        for order in ('ascending-wrong', 'x'):
+            with self.subTest(order=order), self.assertRaises(ValueError):
+                self.catalog.query_records('items', offset=0, limit=5,
+                                           sort_by='client_shape_id', order=order)
+        for order in ('asc', 'desc'):
+            rows, total = self.catalog.query_records('items', offset=0, limit=5,
+                                                    sort_by='client_shape_id', order=order)
+            self.assertEqual(len(rows), 5)
+            self.assertGreaterEqual(total, len(rows))
 
     def test_unknown_filter_column_is_rejected(self):
         with self.assertRaises(ValueError):
