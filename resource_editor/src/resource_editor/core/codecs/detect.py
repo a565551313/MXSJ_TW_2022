@@ -1,0 +1,63 @@
+"""条目内容嗅探：根据魔数/结构把条目内容分类，供 GUI 选择预览器。"""
+from __future__ import annotations
+
+import json
+import zlib
+from enum import Enum
+
+from .sprite import SPRITE_MAGICS
+
+
+class EntryKind(Enum):
+    """条目内容类型。"""
+
+    SPRITE = "sprite"          # I0/T0/I1 精灵
+    PNG = "png"                # PNG 图片
+    JSON = "json"              # JSON 文本（magicres5 配置/图集）
+    TEXT = "text"              # 纯文本（含 IG 重定向记录）
+    SCRIPT = "script"          # zlib 包装的脚本数据（内层仍含 XOR，不解碼）
+    BINARY = "binary"          # 未识别二进制（含 effect 未破译条目）
+
+
+KIND_LABELS = {
+    EntryKind.SPRITE: "精灵",
+    EntryKind.PNG: "PNG图片",
+    EntryKind.JSON: "JSON",
+    EntryKind.TEXT: "文本",
+    EntryKind.SCRIPT: "脚本数据",
+    EntryKind.BINARY: "二进制",
+}
+
+
+def sniff(content: bytes) -> EntryKind:
+    """判断条目内容类型。content 应为"内容视图"字节。"""
+    if len(content) >= 2 and content[:2] in SPRITE_MAGICS:
+        return EntryKind.SPRITE
+    if content[:4] == b"\x89PNG":
+        return EntryKind.PNG
+    is_zlib = (len(content) >= 2 and content[0] == 0x78
+               and (content[0] * 256 + content[1]) % 31 == 0)
+    if is_zlib:
+        # zlib 头校验通过即可判型，避免对大包逐条全量解压
+        try:
+            zlib.decompressobj().decompress(content[:64])
+            return EntryKind.SCRIPT
+        except zlib.error:
+            pass
+    stripped = content.strip()
+    if stripped[:1] in (b"{", b"["):
+        try:
+            json.loads(stripped.decode("utf-8"))
+            return EntryKind.JSON
+        except (ValueError, UnicodeDecodeError):
+            pass
+    if content and _looks_textual(content):
+        return EntryKind.TEXT
+    return EntryKind.BINARY
+
+
+def _looks_textual(content: bytes) -> bool:
+    """粗判是否为可读文本：可打印字节占绝对多数。"""
+    sample = content[:512]
+    printable = sum(1 for b in sample if b in (9, 10, 13) or 0x20 <= b < 0x7F)
+    return printable >= int(len(sample) * 0.95)
