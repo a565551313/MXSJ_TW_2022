@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Independently replay authored v3/v3.2 startup fragments with CPython 2.5.6.
+"""Independently replay authored v3/v3.3 startup fragments with CPython 2.5.6.
 
 Never execute a recovered game module. Only the authored overlay, the changed
-startup hook, and click-only registration entry run, against fake UI/modules.
+startup hook, click-only entry, and selected native control methods run against
+fake engine boundaries. No complete recovered module is executed.
 The target client's native engine/crypto/image loading are NOT tested here.
 """
 import argparse
@@ -71,7 +72,14 @@ def fixtures(source, key_bytes, shipped=None):
     hook = inline_case(init, report['details']['homepage']['caption_span'], 'independent-homepage-caption')
     message = home['CMainPage/OnMessage']
     click = inline_case(message, report['details']['homepage']['click_span'], 'lazy-registration-click')
-    return {'bad': bad, 'good': good, 'hook': hook, 'click': click}, candidate, report
+    cases = {'bad': bad, 'good': good, 'hook': hook, 'click': click}
+    controls = dict(base.objects(extract(source, keys, 3854)))
+    for key, path in {'click-init': 'CClickBox/__init__', 'edit-init': 'CEdit/__init__',
+                      'edit-active': 'CEdit/Active', 'edit-tab': 'CEdit/MsgTab',
+                      'edit-next': 'CEdit/SetNextEdit', 'edit-color': 'CEdit/GetLineColor',
+                      'edit-isactive': 'CEdit/IsActived'}.items():
+        cases['native-' + key] = canonical(controls[path])
+    return cases, candidate, report
 
 
 def run(python25, shipped_zip=None):
@@ -99,7 +107,7 @@ def run(python25, shipped_zip=None):
             'candidate_fls_sha256': base.sha(candidate), 'candidate_fls_bytes': len(candidate),
             'shipped_v3_fls_sha256': base.sha(shipped) if shipped is not None else None,
             'native_windows_client_tested': False,
-            'scope': 'authored compiled startup/UI code and modified call fragments only; fake engine boundaries',
+            'scope': 'authored startup/UI fragments plus selected CClickBox/CEdit methods from entry 3854; fake rendering/input/scheduler boundaries',
             'candidate_kind': report['kind']}
 
 

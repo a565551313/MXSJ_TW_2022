@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the v3.2 candidate (shipped v3 failed startup), without source execution.
+"""Build the v3.3 candidate (shipped v3 failed startup), without source execution.
 
 Requires frozen CPython-2.5 UI/entry fragments plus their source hash manifest.
 Homepage and register entries are both reserialized; only a click loads register.
@@ -305,10 +305,14 @@ def build(archive, keys):
     source_rows = base.entries(archive)[1]
     output_rows = base.entries(result)[1]
     base.require([i for i, (a,b) in enumerate(zip(source_rows, output_rows)) if a != b] == [337, 4007], 'archive scope changed')
-    report = {'kind': 'registration_visual_preview_v3_2_candidate', 'source_sha256': base.sha(archive),
+    report = {'kind': 'registration_visual_preview_v3_3_candidate', 'source_sha256': base.sha(archive),
               'output_sha256': base.sha(result), 'output_bytes': len(result), 'changed_entries': [337, 4007],
               'untouched_entries_byte_identical': 5000, 'native_windows_client_tested': False,
               'source_executed_during_build': False, 'details': details, 'asset_sha256': manifest['assets'],
+              'control_fixes': ['CClickBox uses color/alpha=0, SetPos sets coordinates.',
+                                'Complete new gold actions replace and disable old terms/login/back controls.',
+                                'Caption Z=1; edit Z=2 above card, explicit dark caret linecolor and Z=1.',
+                                'Native CEdit focus/Flash/Tab logic retained; no custom blink timer.'],
               'startup_changes': ['EXEC globals/locals use the actual None constant, not -1.',
                                   'Homepage caption is independent: no registration import during homepage initialization.',
                                   'Caption image is loaded and checked before removing the old caption.',
@@ -326,10 +330,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--allow-unverified-candidate', action='store_true',
-                        help='explicit opt-in: v3.2 has no native Windows acceptance yet')
+                        help='explicit opt-in: v3.3 has no native Windows acceptance yet')
     args = parser.parse_args()
     base.require(args.allow_unverified_candidate,
-                 'explicit opt-in required: v3.2 is an unverified candidate; shipped v3 must not be reused')
+                 'explicit opt-in required: v3.3 is an unverified candidate; shipped v3 must not be reused')
     out = args.output_dir.resolve()
     base.require(not out.is_relative_to(base.ROOT), 'write outside repository')
     base.require(not (out / 'data/script.fls').exists(), 'refusing overwrite')

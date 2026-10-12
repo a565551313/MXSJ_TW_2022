@@ -35,11 +35,21 @@ def center(draw, box, text, size, fill):
 
 def images():
     OUT.mkdir(exist_ok=True)
-    for name, text, width, color in [('home_register', '注册账号', 80, '#474e9a'),
-                                    ('agree', '同意', 64, '#8e561d'), ('reject', '拒绝', 64, '#8e561d'),
-                                    ('back', '上一步', 80, '#8e561d'), ('register', '注册账号', 80, '#8e561d')]:
-        image = Image.new('RGBA', (width, 24))
-        center(ImageDraw.Draw(image), (0, 0, width, 24), text, 15, color)
+    image = Image.new('RGBA', (80, 24))
+    center(ImageDraw.Draw(image), (0, 0, 80, 24), '注册账号', 15, '#474e9a')
+    image.save(OUT / 'home_register.png')
+    # Whole gold buttons, including captions; no dependence on old login art.
+    for name, text in [('agree', '同意'), ('reject', '拒绝'),
+                       ('back', '上一步'), ('register', '注册账号')]:
+        image = Image.new('RGBA', (112, 34))
+        draw = ImageDraw.Draw(image)
+        draw.rounded_rectangle((0, 0, 111, 33), radius=4, fill='#b99748')
+        for y in range(2, 32):
+            t = float(y-2)/29
+            color = tuple(int(a+(b-a)*t) for a,b in zip((255,240,170),(226,191,86)))
+            draw.line((2, y, 109, y), fill=color)
+        draw.rounded_rectangle((2, 2, 109, 31), radius=3, outline='#fff0bd')
+        center(draw, (0, 0, 112, 34), text, 16, '#805522')
         image.save(OUT / (name + '.png'))
     image = Image.new('RGBA', (240, 34), '#eeedf9')
     center(ImageDraw.Draw(image), (0, 0, 240, 34), '注册协议', 18, '#6657bb')

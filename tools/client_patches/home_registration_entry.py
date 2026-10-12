@@ -17,6 +17,7 @@ def install_caption(self):
         if iw <= 0 or ih <= 0:
             raise RuntimeError('empty registration caption')
         picture.SetPos((w - 80)//2, (h - 24)//2)
+        picture.SetZ(1)
         button.SetText('')
         button.m_PreviewCaption = picture
     except Exception, error:

@@ -169,7 +169,7 @@ class StartupGuardTests(unittest.TestCase):
             self.assertFalse(output.exists())
 
     def test_report_calls_this_a_candidate_not_native_success(self):
-        self.assertEqual(self.report['kind'], 'registration_visual_preview_v3_2_candidate')
+        self.assertEqual(self.report['kind'], 'registration_visual_preview_v3_3_candidate')
         self.assertFalse(self.report['native_windows_client_tested'])
         self.assertEqual(len(self.report['startup_changes']), 4)
 

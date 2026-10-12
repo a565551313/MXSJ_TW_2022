@@ -27,6 +27,8 @@ class Node:
     def GetPos(self): return self.pos
     def SetPos(self, x, y): self.pos = (x, y)
     def SetShow(self, value): self.shown = value
+    def SetZ(self, z): self.z = z
+    def Enable(self, enabled): self.enabled = enabled
     def Topmost(self): pass
     def SetText(self, text): self.text = text
     def SetLimit(self, value): self.limit = value
@@ -52,13 +54,17 @@ class Panel(Node):
 
 
 class Edit(Node):
-    def __init__(self, parent, color, font, x, y, w, h):
+    def __init__(self, parent, color, font, x, y, w, h, linecolor=0):
         Node.__init__(self, parent, pos=(x, y), size=(w, h))
+        self.linecolor = linecolor
+        self.m_Line = Node(self)
 
 
 class ClickBox(Node):
-    def __init__(self, parent, w, h, x, y, msgid):
-        Node.__init__(self, parent, msgid, (x, y), (w, h))
+    def __init__(self, parent, w, h, color, alpha, msgid):
+        Node.__init__(self, parent, msgid, (0, 0), (w, h))
+        self.color, self.alpha = color, alpha
+    def OnMessage(self, msgid): self.parent.OnMessage(msgid)
 
 
 class Picture(Node):
@@ -224,6 +230,63 @@ class VisualPreviewTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'homepage error'):
                 panel.OnMessage(2)
         self.assertEqual(events, [])
+
+    def test_terms_use_two_new_complete_gold_buttons(self):
+        ns, modules, events = self.environment()
+        with mock_patch.dict(sys.modules, modules), contextlib.redirect_stdout(io.StringIO()):
+            panel = ns['CRegPanel1'](None)
+            for msgid, oldname, asset in ((1, 'back', 'agree'), (2, 'next', 'reject')):
+                old = panel.m_Frames[oldname]
+                new = panel.m_PreviewActions[msgid]
+                self.assertFalse(old.shown)
+                self.assertFalse(old.enabled)
+                self.assertEqual(new.size, (112, 34))
+                self.assertEqual(new.alpha, 0)
+                self.assertEqual(new.m_PreviewCaption.z, 1)
+                self.assertTrue(new.m_PreviewCaption.path.endswith('/'+asset+'.png'))
+                new.OnMessage(msgid)
+        self.assertEqual(events, [('step', 1), ('home', True), ('show', False)])
+
+    def test_form_hides_old_login_and_arrow_instead_of_recaptioning(self):
+        ns, _, _ = self.environment()
+        with contextlib.redirect_stdout(io.StringIO()): panel = ns['CRegPanel2'](None)
+        for name in ('back', 'next'):
+            self.assertFalse(panel.m_Frames[name].shown)
+            self.assertFalse(panel.m_Frames[name].enabled)
+        for msgid, x, asset in ((1, 270, 'back'), (2, 430, 'register')):
+            new = panel.m_PreviewActions[msgid]
+            self.assertEqual(new.pos, (x, 468))
+            self.assertEqual(new.size, (112, 34))
+            self.assertEqual(new.alpha, 0)
+            self.assertTrue(new.m_PreviewCaption.path.endswith('/'+asset+'.png'))
+        self.assertEqual(panel.m_PreviewInfo.pos, (300, 394))
+        self.assertEqual(panel.m_PreviewInfo.color, 0)
+        self.assertEqual(panel.m_PreviewInfo.alpha, 0)
+        panel.m_PreviewInfo.OnMessage(3)
+        self.assertFalse(panel.validation_flag)
+
+    def test_three_edits_have_contrasting_caret_above_card(self):
+        ns, _, _ = self.environment()
+        with contextlib.redirect_stdout(io.StringIO()): panel = ns['CRegPanel2'](None)
+        for edit in (panel.m_EmailEdit, panel.m_PwdEdit, panel.m_PwdEdit2):
+            self.assertEqual(edit.linecolor, 0x805B45)
+            self.assertGreater(edit.z, panel.m_PreviewCard.z)
+            self.assertEqual(edit.m_Line.z, 1)
+        self.assertTrue(panel.m_EmailEdit.active)
+
+    def test_action_assets_include_background_and_caption_in_same_size(self):
+        for name in ('agree', 'reject', 'back', 'register'):
+            data = (visual.HERE / 'visual_assets' / (name+'.png')).read_bytes()
+            self.assertEqual(struct.unpack('>II', data[16:24]), (112, 34))
+
+    def test_test_double_signature_matches_archive_not_old_guess(self):
+        import inspect
+        from audit_visual_runtime import extract
+        methods = dict(base.objects(extract(self.source, json.loads(self.keys), 3854)))
+        actual = methods['CClickBox/__init__']
+        self.assertEqual(tuple(inspect.signature(ClickBox.__init__).parameters),
+                         tuple(x.decode() for x in actual['varnames'][:actual['argcount']]))
+        self.assertEqual(methods['CEdit/__init__']['varnames'][8], b'linecolor')
 
     def test_original_files_unchanged(self):
         self.assertEqual((base.ROOT / 'data/script.fls').read_bytes(), self.source)
