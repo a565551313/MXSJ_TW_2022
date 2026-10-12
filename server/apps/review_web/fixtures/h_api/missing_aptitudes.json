@@ -1,0 +1,29 @@
+[
+ {
+  "client_shape_id": 3010,
+  "pet_name": "未定",
+  "reason": "no_record_in_2954",
+  "source_entry": 2954,
+  "source_table": "DATA (absence checked against 2027.DATA)",
+  "review_status": "review_candidate_not_native_verified",
+  "_pk": "3010"
+ },
+ {
+  "client_shape_id": 4021,
+  "pet_name": "年獸",
+  "reason": "no_record_in_2954",
+  "source_entry": 2954,
+  "source_table": "DATA (absence checked against 2027.DATA)",
+  "review_status": "review_candidate_not_native_verified",
+  "_pk": "4021"
+ },
+ {
+  "client_shape_id": 4022,
+  "pet_name": "爆竹",
+  "reason": "no_record_in_2954",
+  "source_entry": 2954,
+  "source_table": "DATA (absence checked against 2027.DATA)",
+  "review_status": "review_candidate_not_native_verified",
+  "_pk": "4022"
+ }
+]

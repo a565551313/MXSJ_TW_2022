@@ -1,0 +1,97 @@
+{
+ "dataset": "npc_2601_vs_2804_agreement",
+ "total": 11,
+ "offset": 0,
+ "limit": 25,
+ "count": 11,
+ "records": [
+  {
+   "scene_id": 1001,
+   "npcid": 1015,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1001:1015"
+  },
+  {
+   "scene_id": 1001,
+   "npcid": 1016,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1001:1016"
+  },
+  {
+   "scene_id": 1001,
+   "npcid": 1083,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1001:1083"
+  },
+  {
+   "scene_id": 1001,
+   "npcid": 2004,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1001:2004"
+  },
+  {
+   "scene_id": 1001,
+   "npcid": 4152,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1001:4152"
+  },
+  {
+   "scene_id": 1001,
+   "npcid": 4216,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1001:4216"
+  },
+  {
+   "scene_id": 1001,
+   "npcid": 4218,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1001:4218"
+  },
+  {
+   "scene_id": 1001,
+   "npcid": 4228,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1001:4228"
+  },
+  {
+   "scene_id": 1001,
+   "npcid": 4280,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1001:4280"
+  },
+  {
+   "scene_id": 1001,
+   "npcid": 4405,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1001:4405"
+  },
+  {
+   "scene_id": 1001,
+   "npcid": 4992,
+   "records_2601": 1,
+   "records_2804": 1,
+   "agreement": "identical_sequence",
+   "_pk": "1001:4992"
+  }
+ ]
+}

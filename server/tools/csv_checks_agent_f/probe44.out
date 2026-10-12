@@ -1,0 +1,13 @@
+total_unmapped=2 B1=36511 (k11: 2/10125, k132: 0/6014)
+total_unmapped=2 B1=36512 (k11: 2/10125, k132: 0/6013)
+total_unmapped=2 B1=36513 (k11: 2/10125, k132: 0/6012)
+total_unmapped=3 B1=36508 (k11: 2/10124, k132: 1/6015)
+total_unmapped=3 B1=36509 (k11: 2/10124, k132: 1/6014)
+total_unmapped=3 B1=36510 (k11: 2/10124, k132: 1/6013)
+total_unmapped=3 B1=36514 (k11: 3/10126, k132: 0/6013)
+total_unmapped=3 B1=36515 (k11: 3/10126, k132: 0/6012)
+total_unmapped=3 B1=36516 (k11: 3/10126, k132: 0/6011)
+total_unmapped=4 B1=36494 (k11: 2/10116, k132: 2/6019)
+
+unmapped for [18282,47423) with key 11 alone: (14279, 1602)
+unmapped for [18282,47423) with key 132 alone: (12921, 2361)

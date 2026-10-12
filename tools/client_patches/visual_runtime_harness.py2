@@ -1,0 +1,329 @@
+# -*- coding: ascii -*-
+# CPython 2.5.6: owned fragments and selected control methods; never full game modules.
+import __builtin__
+import marshal
+import os
+import sys
+import types
+from StringIO import StringIO
+
+assert sys.version_info[:3] == (2, 5, 6)
+directory = sys.argv[1]
+cases = []
+
+def load(name):
+    return marshal.loads(open(os.path.join(directory, name + '.marshal'), 'rb').read())
+
+def passed(name):
+    cases.append(name)
+
+class Node(object):
+    def __init__(self, parent=None, msgid=None, pos=(0, 0), size=(100, 28)):
+        self.parent, self.m_MsgID, self.pos, self.size = parent, msgid, pos, size
+        self.shown, self.text = True, 'old caption'
+    def GetSize(self): return self.size
+    def GetPos(self): return self.pos
+    def SetPos(self, x, y): self.pos = (x, y)
+    def SetShow(self, flag): self.shown = flag
+    def SetText(self, text): self.text = text
+    def SetZ(self, z): self.z = z
+    def Enable(self, enabled): self.enabled = enabled
+    def Topmost(self): pass
+    def SetLimit(self, value): self.limit = value
+    def SetNextEdit(self, edit): self.next_edit = edit
+    def Active(self, flag): self.active = flag
+
+class Panel(Node):
+    def __init__(self, parent, layout):
+        Node.__init__(self, parent)
+        self.layout = layout
+        self.m_Frames = {'back': Node(self, 1), 'next': Node(self, 2)}
+        if layout == 'login/service.dlg':
+            self.m_Frames['loc_msg'] = Node(self, size=(520, 290), pos=(140, 140))
+        elif layout == 'login_new/newlogin_800.dlg':
+            for name, msg in [('close', 3), ('web', 10), ('forgot', 23), ('music', 71)]:
+                self.m_Frames[name] = Node(self, msg)
+            for name in ('edt_Name', 'edt_Pwd', 'chk_protect', 'chk_agree', 'box_URL', 'btn_Protect', 'btn_Music'):
+                self.m_Frames[name] = Node(self)
+        else:
+            raise AssertionError('unexpected layout')
+    def GetObject(self, name): return self.m_Frames.get(name)
+
+class ValidatedForm(Panel):
+    def DoNext(self, validate): self.validate = validate
+    def OnMessage(self, msgid):
+        if msgid in (2, 3): self.DoNext(msgid == 2)
+
+class Picture(Node):
+    def __init__(self, parent, path, folder):
+        Node.__init__(self, parent)
+        self.path, self.folder = path, folder
+
+class EmptyPicture(Picture):
+    def __init__(self, *args):
+        Picture.__init__(self, *args)
+        self.size = (0, 0)
+
+class Box(Node):
+    def __init__(self, parent, w, h, color, alpha=255):
+        Node.__init__(self, parent, size=(w, h))
+        self.color, self.alpha = color, alpha
+    def SetIMEPos(self): pass
+
+class ClickObject(object):
+    def __init__(self, msgid): self.m_MsgID = msgid
+
+# Run actual archive constructor, with only native C++ box/click primitives fake.
+class ClickBox(Box, ClickObject):
+    __init__ = types.FunctionType(load('native-click-init'),
+        {'CBoxObject': Box, 'CClickObject': ClickObject})
+    def OnMessage(self, msgid): self.parent.OnMessage(msgid)
+
+class Shadow(object):
+    def __init__(self, obj): self.obj = obj
+    def Get(self): return self.obj
+
+class Command(object):
+    def __init__(self, obj, interval, callback, state):
+        self.obj, self.interval, self.callback, self.state = obj, interval, callback, state
+        self.released = False
+    def Release(self): self.released = True
+    def tick(self):
+        assert not self.released
+        result = self.callback(self.obj, self.state)
+        if result is None: self.Release()
+        else: self.state = result[0]
+
+
+def native_edit_class():
+    class Edit(Box):
+        def MessageProcess(self): pass
+        def SetTextClass(self, flag): pass
+        def Clear(self): pass
+        def CancelSelected(self): pass
+        def OnLostFocus(self): pass
+        def CreatePyCommand(self, interval, callback, state):
+            return Command(self, interval, callback, state)
+    env = {'__builtins__': __builtin__.__dict__, 'CBoxObject': Box, 'CCaret': Box, 'CShadowObject': Shadow,
+           'g_FontSize': {14: 14}, 'IsNewStyle': lambda: True, 'COLOR_5': 0xffffff,
+           'g_ActiveEdit': None, 'g_DefaultEdit': None,
+           'C_sys': module('C_sys', GetTime=lambda: 0, EnableIME=lambda flag: None)}
+    for method, fixture, defaults in [('__init__', 'edit-init', (0, False)),
+            ('Active', 'edit-active', None), ('MsgTab', 'edit-tab', None),
+            ('SetNextEdit', 'edit-next', None), ('GetLineColor', 'edit-color', None),
+            ('IsActived', 'edit-isactive', None)]:
+        setattr(Edit, method, types.FunctionType(load('native-'+fixture), env, method, defaults))
+    return Edit
+
+class Output(Node):
+    def __init__(self, parent, w, h, x, y, lines, **kwargs):
+        Node.__init__(self, parent, pos=(x, y), size=(w, h))
+        self.lines = lines
+    def SetChatCursor(self, value): pass
+    def ResetFromCursor(self): pass
+    def ScrollTo(self, value): self.cursor = value
+
+
+def module(name, **attrs):
+    obj = types.ModuleType(name)
+    obj.__dict__.update(attrs)
+    return obj
+
+
+def environment():
+    events = []
+    Edit = native_edit_class()
+    ns = {'__name__': 'authored_audit_register', 'CRegPanel2': ValidatedForm,
+          'CRegEdit': Edit, 'CMailEdit': Edit,
+          'combdialog': module('fake_combdialog', CCombPanel=Panel),
+          'interface': module('fake_interface', FontLT14_3=14, COLOR_1=1, CClickBox=ClickBox),
+          'ui': module('fake_ui', CImage=Picture),
+          'Step': lambda n: events.append(('step', n)),
+          'Show': lambda flag: events.append(('show', flag))}
+    sys.modules['chatoutput'] = module('chatoutput', COutput=Output)
+    sys.modules['mainpage'] = module('mainpage', Show=lambda flag: events.append(('home', flag)))
+    return ns, events
+
+saved_stdout = sys.stdout
+captured = StringIO()
+sys.stdout = captured
+try:
+    # Independent reader only: mapped native bytecode must NOT be executed here.
+    parsed = load('parse-only')
+    assert isinstance(parsed, types.CodeType)
+    assert isinstance(load('parse-home-only'), types.CodeType)
+    passed('independent CPython 2.5 marshal load of BOTH entries; full game modules NOT executed')
+
+    ns, events = environment()
+    try:
+        exec load('bad') in ns, ns
+    except TypeError, error:
+        assert str(error) == 'exec: arg 2 must be a dictionary or None'
+    else:
+        raise AssertionError('shipped bad operands did not fail')
+    assert 'GetData' not in ns
+    passed('shipped v3 operands reproduce TypeError before overlay initialization')
+
+    exec load('good') in ns, ns
+    assert ns['_ValidatedForm'] is ValidatedForm
+    assert ns['GetData'].func_globals is ns
+    passed('corrected actual None operands initialize overlay in module namespace')
+
+    home = Panel(None, 'login_new/newlogin_800.dlg')
+    ns['GetData'](home)
+    assert home.m_Frames['next'].text == ''
+    assert home.m_Frames['next'].m_PreviewCaption.path.endswith('home_register.png')
+    passed('compiled homepage caption runs with fake native text button')
+
+    terms = ns['CRegPanel1'](None)
+    assert terms.layout == 'login/service.dlg'
+    assert all(isinstance(line, str) and line.endswith('#r') for line in terms.m_PublicTxtBox.lines)
+    terms.OnMessage(1)
+    terms.OnMessage(2)
+    assert events == [('step', 1), ('home', True), ('show', False)]
+    passed('compiled agreement body is byte strings; target-before-hide reject ordering')
+
+    form = ns['CRegPanel2'](None)
+    assert form.m_PwdEdit.m_IsPassword and form.m_PwdEdit2.m_IsPassword
+    assert form.m_EmailEdit.m_NextEdit.Get() is form.m_PwdEdit
+    assert form.m_PwdEdit2.m_NextEdit.Get() is form.m_EmailEdit
+    form.OnMessage(2)
+    assert form.validate is True
+    form.OnMessage(3)
+    assert form.validate is False
+    passed('compiled form creates fields and inherits separate Next/Info dispatch')
+
+    # Signature regression: the old (300,394) pair colors a box at (0,0).
+    old_info = ClickBox(form, 200, 28, 300, 394, 3)
+    assert old_info.pos == (0, 0) and old_info.color == 300 and old_info.alpha == 394
+    assert form.m_PreviewInfo.pos == (300, 394)
+    assert form.m_PreviewInfo.alpha == 0 and form.m_PreviewInfo.color == 0
+    passed('actual CClickBox constructor reproduces old coordinate bug; corrected info is transparent and positioned')
+
+    for panel in (terms, form):
+        for name in ('back', 'next'):
+            assert not panel.m_Frames[name].shown and not panel.m_Frames[name].enabled
+        for msgid in (1, 2):
+            button = panel.m_PreviewActions[msgid]
+            assert button.GetSize() == (112, 34) and button.alpha == 0
+            assert button.m_PreviewCaption.z == 1 and button.z == 2
+    passed('complete replacement buttons hide old labels and arrow, with explicit caption Z')
+    form.m_PreviewActions[2].OnMessage(2)
+    assert form.validate is True
+    form.m_PreviewInfo.OnMessage(3)
+    assert form.validate is False
+    passed('new action and info hit areas preserve Next/Info message dispatch')
+
+    edits = (form.m_EmailEdit, form.m_PwdEdit, form.m_PwdEdit2)
+    for i, edit in enumerate(edits):
+        assert edit.IsActived()
+        assert edit.m_Line.color == 0x805B45 and edit.m_Line.z == 1 and edit.z > form.m_PreviewCard.z
+        command = edit.m_FlashCommand
+        assert command.interval == 20
+        assert edit.m_Line.shown
+        command.tick()
+        assert not edit.m_Line.shown
+        command.tick()
+        assert edit.m_Line.shown
+        edit.MsgTab()
+        assert not edit.IsActived() and edits[(i+1)%3].IsActived()
+        assert not edit.m_Line.shown
+        command.tick()
+        assert command.released
+    passed('actual CEdit Active/Flash/MsgTab: all three dark carets blink, switch focus and wrap')
+    # Pointer focus ultimately calls Active(True); the native OS click dispatch is not run.
+    form.m_PwdEdit.Active(True)
+    assert not form.m_EmailEdit.IsActived() and form.m_PwdEdit.IsActived()
+    form.m_PwdEdit.Active(False)
+    form.m_PwdEdit.m_FlashCommand.tick()
+    assert not form.m_PwdEdit.m_Line.shown
+    passed('actual CEdit focus loss stops caret command; pointer-event delivery still native-unverified')
+
+    def fail_image(*args): raise RuntimeError('simulated missing PNG')
+    for factory in (fail_image, EmptyPicture):
+        ns['ui'].CImage = factory
+        home = Panel(None, 'login_new/newlogin_800.dlg')
+        start = captured.tell()
+        ns['GetData'](home)
+        assert home.m_Frames['next'].text == 'old caption'
+        assert not hasattr(home.m_Frames['next'], 'm_PreviewCaption')
+        assert 'NOT installed' in captured.getvalue()[start:]
+    passed('missing/empty caption image retains old label and logs failure')
+
+    def fail_home(flag): raise RuntimeError('simulated homepage construction failure')
+    sys.modules['mainpage'].Show = fail_home
+    events[:] = []
+    try: terms.OnMessage(2)
+    except RuntimeError: pass
+    else: raise AssertionError('expected homepage error')
+    assert events == []
+    passed('failed reject target does not hide current agreement')
+
+    # Run the actual inlined homepage bytes, not the now-unused register.GetData.
+    for mode in ('ok', 'missing-image', 'empty-image', 'ambiguous', 'not-text'):
+        imports = []
+        def forbidden_import(name, *args):
+            imports.append(name)
+            raise AssertionError('homepage attempted import: ' + name)
+        builtins = __builtin__.__dict__.copy()
+        builtins['__import__'] = forbidden_import
+        ui = module('ui', CImage=Picture)
+        if mode == 'missing-image': ui.CImage = fail_image
+        if mode == 'empty-image': ui.CImage = EmptyPicture
+        home = Panel(None, 'login_new/newlogin_800.dlg')
+        if mode == 'ambiguous': home.m_Frames['duplicate'] = Node(home, 2)
+        if mode == 'not-text':
+            home.m_Frames['next'] = module('non-text', m_MsgID=2, text='old caption')
+        hook = types.FunctionType(load('hook'), {'__builtins__': builtins, 'ui': ui})
+        start = captured.tell()
+        assert hook(home, None) is None
+        assert imports == []
+        if mode == 'ok':
+            assert home.m_Frames['next'].text == ''
+            assert home.m_Frames['next'].m_PreviewCaption.path.endswith('home_register.png')
+            # A second fresh homepage also must not import registration.
+            assert hook(Panel(None, 'login_new/newlogin_800.dlg'), None) is None
+        else:
+            assert home.m_Frames['next'].text == 'old caption'
+            assert 'NOT installed' in captured.getvalue()[start:]
+        passed('actual homepage bytecode has zero imports: ' + mode)
+
+    for mode in ('ok', 'import-error', 'actual-bad-overlay', 'constructor-error'):
+        calls = []
+        def show_registration(flag):
+            calls.append(('register', flag))
+            if mode == 'constructor-error': raise RuntimeError('simulated constructor failure')
+        def import_stub(name, *args):
+            calls.append(('import', name))
+            if name == 'sound': return module('sound', Play=lambda path: calls.append(('sound', path)))
+            assert name == 'register'
+            if mode == 'import-error': raise ImportError('simulated registration import failure')
+            if mode == 'actual-bad-overlay':
+                local_ns, ignored = environment()
+                exec load('bad') in local_ns, local_ns
+            return module('register', Show=show_registration)
+        builtins = __builtin__.__dict__.copy()
+        builtins['__import__'] = import_stub
+        click = types.FunctionType(load('click'), {'__builtins__': builtins,
+            'Show': lambda flag: calls.append(('home', flag))})
+        start = captured.tell()
+        assert calls == []
+        assert click(None, None) is None
+        if mode == 'ok':
+            assert calls == [('import', 'register'), ('register', True), ('home', False),
+                             ('import', 'sound'), ('sound', 'action/button.wav')]
+            # Retry/revisit remains a normal lazy call (module cache owned by Python).
+            assert click(None, None) is None
+            assert len(calls) == 10
+        else:
+            assert calls == ([('import', 'register'), ('register', True)] if mode == 'constructor-error'
+                             else [('import', 'register')])
+            assert 'cannot open registration' in captured.getvalue()[start:]
+        passed('actual click-only import keeps home on failure: ' + mode)
+
+finally:
+    sys.stdout = saved_stdout
+
+for name in cases:
+    print 'PASS: ' + name
+print 'PASS: %d independent CPython 2.5 audit cases; NO native Windows acceptance' % len(cases)

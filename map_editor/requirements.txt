@@ -1,0 +1,4 @@
+# Runtime dependencies.  Pillow replaces the ImageMagick subprocess used by the
+# older tools/gepj_decoder.py so the packaged EXE has no external binary.
+Pillow>=10.0
+PySide6>=6.6

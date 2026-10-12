@@ -1,0 +1,13 @@
+{
+ "client_shape_id": 4011,
+ "name": "仙獸吉祥虎",
+ "liupai_raw": "念",
+ "attack_type_raw": "力敵",
+ "carry_grade": 0,
+ "maxskillnum_raw": 4,
+ "address_raw": "",
+ "source_entry": 2027,
+ "source_table": "DATA",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "4011"
+}

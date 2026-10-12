@@ -1,0 +1,216 @@
+{
+  "label": "Agent H review API (PR #22) bound to the acceptance checks",
+  "contract": "server/docs/review_browser/API_CONTRACT.md",
+  "contract_version": "1.0.0",
+  "base_path": "/api/v1/review",
+  "health_path": "health",
+  "openapi_paths": [
+    "/openapi.json"
+  ],
+  "page_url": "/",
+  "list_path": "/api/v1/review/datasets/{dataset}/records",
+  "detail_path": "/api/v1/review/datasets/{dataset}/records/{key}",
+  "list_params": {
+    "offset": "offset",
+    "limit": "limit",
+    "q": "q"
+  },
+  "list_response": {
+    "rows": "records",
+    "total": "total"
+  },
+  "pagination": {
+    "style": "offset_limit",
+    "page_size": 250,
+    "limit_max": 500
+  },
+  "endpoints": {
+    "batch": "/api/v1/review/batch",
+    "datasets": "/api/v1/review/datasets",
+    "quarantine": "/api/v1/review/quarantine",
+    "overwrites": "/api/v1/review/overwrites",
+    "missing_aptitudes": "/api/v1/review/missing-aptitudes",
+    "ambiguous_skills": "/api/v1/review/ambiguous-skills"
+  },
+  "quarantine_params": {
+    "entry_index": "entry_index",
+    "record_key": "record_key"
+  },
+  "datasets": {
+    "items": {
+      "source": "items.csv",
+      "id": "client_shape_id",
+      "api_name": "items",
+      "search_term": "時空石",
+      "search_param": "q",
+      "search_miss": "zzz-no-such-item-name",
+      "search_expect_ids": [
+        41052
+      ]
+    },
+    "pets": {
+      "source": "pets.csv",
+      "id": "client_shape_id",
+      "api_name": "pets"
+    },
+    "pet_aptitudes": {
+      "source": "pet_aptitudes.csv",
+      "id": "client_shape_id",
+      "api_name": "pet_aptitudes"
+    },
+    "pet_aptitude_missing": {
+      "source": "pet_aptitude_missing.csv",
+      "id": "client_shape_id",
+      "api_name": "pet_aptitude_missing"
+    },
+    "pet_skills": {
+      "source": "pet_skills.csv",
+      "id": "skill_id",
+      "api_name": "pet_skills"
+    },
+    "pet_skill_candidates": {
+      "source": "pet_skill_candidates.csv",
+      "id": "_pk",
+      "api_name": "pet_skill_candidates"
+    },
+    "pet_required_skills": {
+      "source": "pet_required_skills.csv",
+      "id": "client_shape_id",
+      "api_name": "pet_required_skills"
+    },
+    "pet_skill_name_matches": {
+      "source": "pet_skill_name_matches.csv",
+      "id": "_pk",
+      "api_name": "pet_skill_name_matches",
+      "search_param": "q",
+      "compare_id": "skill_id"
+    },
+    "pet_skill_overwrites": {
+      "source": "pet_skill_overwrites.csv",
+      "id": "write_order",
+      "api_name": "pet_skill_overwrites"
+    },
+    "npcposdata_records": {
+      "source": "maps_npcs/npcposdata_records.csv",
+      "id": "_pk",
+      "api_name": "npcposdata_records"
+    },
+    "minimapnpcpos_pos_records": {
+      "source": "maps_npcs/minimapnpcpos_pos_records.csv",
+      "id": "_pk",
+      "api_name": "minimapnpcpos_pos_records"
+    },
+    "npc_2601_vs_2804_agreement": {
+      "source": "maps_npcs/npc_2601_vs_2804_agreement.csv",
+      "id": "_pk",
+      "api_name": "npc_2601_vs_2804_agreement"
+    }
+  },
+  "pagination_datasets": [
+    "items",
+    "pet_skills",
+    "pet_aptitudes",
+    "pet_skill_candidates",
+    "npcposdata_records",
+    "minimapnpcpos_pos_records"
+  ],
+  "literal_probes": [
+    {
+      "dataset": "items",
+      "key": 11,
+      "path": "image_mapping_explicit",
+      "expect": "csv"
+    },
+    {
+      "dataset": "items",
+      "key": 41052,
+      "path": "image_mapping_explicit",
+      "expect": "csv"
+    },
+    {
+      "dataset": "npcposdata_records",
+      "key": "1001:0",
+      "path": "secondary_name",
+      "expect": "csv"
+    },
+    {
+      "dataset": "npcposdata_records",
+      "key": "1001:0",
+      "path": "field12",
+      "expect": "csv"
+    },
+    {
+      "dataset": "npcposdata_records",
+      "key": "1001:0",
+      "path": "npcid",
+      "expect": "csv"
+    },
+    {
+      "dataset": "pet_skills",
+      "key": 101,
+      "path": "fpneed_raw",
+      "expect": "csv"
+    },
+    {
+      "dataset": "pet_skills",
+      "key": 101,
+      "path": "skill_id",
+      "expect": "csv"
+    }
+  ],
+  "integrity_datasets": [
+    "items"
+  ],
+  "required_auxiliary_files": [
+    "quarantine.jsonl",
+    "overwrite_evidence.jsonl",
+    "validation.json",
+    "maps_npcs/provenance.json"
+  ],
+  "startup_command": "python3 server/tools/review_browser_checks/review_api_launch.py --batch-dir {batch_dir} --host 0.0.0.0 --port {port}",
+  "startup_command_note": "Acceptance launcher that calls Agent H's official create_app(ReviewCatalog.load(dir)) factory; it does not modify product source. Replace 'python3' with an interpreter that has server/apps/review_api/requirements.txt installed.",
+  "dataset_root_env": "REVIEW_BATCH_DIR",
+  "dataset_root_env_note": "Optional: only if the delivered service reads a batch-root environment variable.",
+  "notes": [
+    "Pagination is offset/limit (contract §4.5), not page/page_size.",
+    "Every record carries the API-generated `_pk`; composite keys are joined with ':'.",
+    "Unknown query parameters are treated as exact-field filters and rejected with 400 when the column does not exist."
+  ],
+  "web_url_note": "页面阶段由 acceptance_runner.py 的 phase3_web_runtime 会话执行：先用本文件的 startup_command 启动 API，再用 I 的 dev server（VITE_API_PROXY_TARGET 指向该 API）起页面，然后跑 web_origin_probe.mjs（按 src/api/contract.ts 真实声明的端点逐条请求）与 web_ui_smoke.mjs（用 I 自己的 vite build 产物在 jsdom 里执行应用）。单独运行 probe_live_api.py --web-url <origin> 可执行 API-15（页面可达 + 代理 + Host/Origin 转发）。",
+  "reject_invalid_sort_order": true,
+  "sort_field": "client_shape_id",
+  "fixed_shape_endpoints": [
+    {
+      "path": "/api/v1/review/quarantine",
+      "valid_value": "2954",
+      "must_reject": {
+        "entry_indexx": 2954,
+        "key": 4573
+      }
+    },
+    {
+      "path": "/api/v1/review/overwrites",
+      "valid_value": "4573",
+      "must_reject": {
+        "keyy": 4573,
+        "sort_by": "order"
+      }
+    },
+    {
+      "path": "/api/v1/review/batch",
+      "valid_value": "1",
+      "must_reject": {
+        "batch": "batch_002"
+      }
+    },
+    {
+      "path": "/api/v1/review/missing-aptitudes",
+      "valid_value": "1",
+      "must_reject": {
+        "limit": "1",
+        "offset": "1"
+      }
+    }
+  ],
+  "web_app_dir": "server/apps/review_web"
+}

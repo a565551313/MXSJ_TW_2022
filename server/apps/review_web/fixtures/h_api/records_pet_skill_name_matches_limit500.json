@@ -1,0 +1,1459 @@
+{
+ "dataset": "pet_skill_name_matches",
+ "total": 145,
+ "offset": 0,
+ "limit": 500,
+ "count": 145,
+ "records": [
+  {
+   "skill_name_raw": "一箭鐘情",
+   "skill_id": 460,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "一箭鐘情:460"
+  },
+  {
+   "skill_name_raw": "乘勝追擊",
+   "skill_id": 564,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "乘勝追擊:564"
+  },
+  {
+   "skill_name_raw": "亂舞衝擊",
+   "skill_id": 415,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "亂舞衝擊:415"
+  },
+  {
+   "skill_name_raw": "亡靈氣箭",
+   "skill_id": 422,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "亡靈氣箭:422"
+  },
+  {
+   "skill_name_raw": "仙神性質",
+   "skill_id": 503,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "仙神性質:503"
+  },
+  {
+   "skill_name_raw": "仙系弱點",
+   "skill_id": 521,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "仙系弱點:521"
+  },
+  {
+   "skill_name_raw": "仙系抵抗",
+   "skill_id": 510,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "仙系抵抗:510"
+  },
+  {
+   "skill_name_raw": "保命",
+   "skill_id": 156,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "保命:156"
+  },
+  {
+   "skill_name_raw": "偵察",
+   "skill_id": 402,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "偵察:402"
+  },
+  {
+   "skill_name_raw": "偷襲",
+   "skill_id": 125,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "偷襲:125"
+  },
+  {
+   "skill_name_raw": "再生",
+   "skill_id": 114,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "再生:114"
+  },
+  {
+   "skill_name_raw": "刺甲",
+   "skill_id": 121,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "刺甲:121"
+  },
+  {
+   "skill_name_raw": "劍氣四射",
+   "skill_id": 414,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "劍氣四射:414"
+  },
+  {
+   "skill_name_raw": "力敵弱點",
+   "skill_id": 517,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "力敵弱點:517"
+  },
+  {
+   "skill_name_raw": "力敵抵抗",
+   "skill_id": 506,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "力敵抵抗:506"
+  },
+  {
+   "skill_name_raw": "力道侵蝕",
+   "skill_id": 128,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "力道侵蝕:128"
+  },
+  {
+   "skill_name_raw": "勇敢",
+   "skill_id": 501,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "勇敢:501"
+  },
+  {
+   "skill_name_raw": "協同攻擊",
+   "skill_id": 555,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "協同攻擊:555"
+  },
+  {
+   "skill_name_raw": "反擊",
+   "skill_id": 101,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "反擊:101"
+  },
+  {
+   "skill_name_raw": "吸血攻擊",
+   "skill_id": 411,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "吸血攻擊:411"
+  },
+  {
+   "skill_name_raw": "命中",
+   "skill_id": 129,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "命中:129"
+  },
+  {
+   "skill_name_raw": "善惡有報",
+   "skill_id": 565,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "善惡有報:565"
+  },
+  {
+   "skill_name_raw": "報復",
+   "skill_id": 157,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "報復:157"
+  },
+  {
+   "skill_name_raw": "天之怒吼",
+   "skill_id": 576,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "天之怒吼:576"
+  },
+  {
+   "skill_name_raw": "天雷地火",
+   "skill_id": 427,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "天雷地火:427"
+  },
+  {
+   "skill_name_raw": "妖氣纏繞",
+   "skill_id": 424,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "妖氣纏繞:424"
+  },
+  {
+   "skill_name_raw": "妖系弱點",
+   "skill_id": 522,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "妖系弱點:522"
+  },
+  {
+   "skill_name_raw": "妖系抵抗",
+   "skill_id": 511,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "妖系抵抗:511"
+  },
+  {
+   "skill_name_raw": "媚笑",
+   "skill_id": 403,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "媚笑:403"
+  },
+  {
+   "skill_name_raw": "寒冰屏障",
+   "skill_id": 577,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "寒冰屏障:577"
+  },
+  {
+   "skill_name_raw": "專注連擊",
+   "skill_id": 451,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "專注連擊:451"
+  },
+  {
+   "skill_name_raw": "幸運",
+   "skill_id": 113,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "幸運:113"
+  },
+  {
+   "skill_name_raw": "幽冥鬼判",
+   "skill_id": 429,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "幽冥鬼判:429"
+  },
+  {
+   "skill_name_raw": "強力",
+   "skill_id": 119,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "強力:119"
+  },
+  {
+   "skill_name_raw": "強壯",
+   "skill_id": 118,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "強壯:118"
+  },
+  {
+   "skill_name_raw": "必殺",
+   "skill_id": 112,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "必殺:112"
+  },
+  {
+   "skill_name_raw": "念力飛彈",
+   "skill_id": 420,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "念力飛彈:420"
+  },
+  {
+   "skill_name_raw": "念系弱點",
+   "skill_id": 525,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "念系弱點:525"
+  },
+  {
+   "skill_name_raw": "恐怖",
+   "skill_id": 505,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "恐怖:505"
+  },
+  {
+   "skill_name_raw": "意念無常",
+   "skill_id": 428,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "意念無常:428"
+  },
+  {
+   "skill_name_raw": "感知",
+   "skill_id": 110,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "感知:110"
+  },
+  {
+   "skill_name_raw": "慧根",
+   "skill_id": 130,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "慧根:130"
+  },
+  {
+   "skill_name_raw": "捕獲之網",
+   "skill_id": 404,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "捕獲之網:404"
+  },
+  {
+   "skill_name_raw": "捨身一搏",
+   "skill_id": 454,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "捨身一搏:454"
+  },
+  {
+   "skill_name_raw": "新月獠牙",
+   "skill_id": 557,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "新月獠牙:557"
+  },
+  {
+   "skill_name_raw": "普通弱點",
+   "skill_id": 520,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "普通弱點:520"
+  },
+  {
+   "skill_name_raw": "智慧",
+   "skill_id": 115,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "智慧:115"
+  },
+  {
+   "skill_name_raw": "智系抵抗",
+   "skill_id": 513,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "智系抵抗:513"
+  },
+  {
+   "skill_name_raw": "毒性芳香",
+   "skill_id": 408,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "毒性芳香:408"
+  },
+  {
+   "skill_name_raw": "毒牙撕咬",
+   "skill_id": 407,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "毒牙撕咬:407"
+  },
+  {
+   "skill_name_raw": "水擊",
+   "skill_id": 416,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "水擊:416"
+  },
+  {
+   "skill_name_raw": "污染",
+   "skill_id": 455,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "污染:455"
+  },
+  {
+   "skill_name_raw": "法術必殺",
+   "skill_id": 153,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "法術必殺:153"
+  },
+  {
+   "skill_name_raw": "法術連擊",
+   "skill_id": 106,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "法術連擊:106"
+  },
+  {
+   "skill_name_raw": "火攻",
+   "skill_id": 417,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "火攻:417"
+  },
+  {
+   "skill_name_raw": "烈炎爆破",
+   "skill_id": 426,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "烈炎爆破:426"
+  },
+  {
+   "skill_name_raw": "獸王令",
+   "skill_id": 556,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "獸王令:556"
+  },
+  {
+   "skill_name_raw": "生命吸取",
+   "skill_id": 559,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "生命吸取:559"
+  },
+  {
+   "skill_name_raw": "破防攻擊",
+   "skill_id": 452,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "破防攻擊:452"
+  },
+  {
+   "skill_name_raw": "破魔",
+   "skill_id": 105,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "破魔:105"
+  },
+  {
+   "skill_name_raw": "神之夙敵",
+   "skill_id": 154,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "神之夙敵:154"
+  },
+  {
+   "skill_name_raw": "神祐",
+   "skill_id": 131,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "神祐:131"
+  },
+  {
+   "skill_name_raw": "神罰",
+   "skill_id": 418,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "神罰:418"
+  },
+  {
+   "skill_name_raw": "神跡",
+   "skill_id": 108,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "神跡:108"
+  },
+  {
+   "skill_name_raw": "神龍擺尾",
+   "skill_id": 566,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "神龍擺尾:566"
+  },
+  {
+   "skill_name_raw": "精神打擊",
+   "skill_id": 421,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "精神打擊:421"
+  },
+  {
+   "skill_name_raw": "終級偷襲",
+   "skill_id": 325,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級偷襲:325"
+  },
+  {
+   "skill_name_raw": "終級反擊",
+   "skill_id": 301,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級反擊:301"
+  },
+  {
+   "skill_name_raw": "終級命中",
+   "skill_id": 329,
+   "match_count": 2,
+   "ambiguous": true,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級命中:329"
+  },
+  {
+   "skill_name_raw": "終級命中",
+   "skill_id": 355,
+   "match_count": 2,
+   "ambiguous": true,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級命中:355"
+  },
+  {
+   "skill_name_raw": "終級報復",
+   "skill_id": 357,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級報復:357"
+  },
+  {
+   "skill_name_raw": "終級幸運",
+   "skill_id": 313,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級幸運:313"
+  },
+  {
+   "skill_name_raw": "終級強力",
+   "skill_id": 319,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級強力:319"
+  },
+  {
+   "skill_name_raw": "終級強壯",
+   "skill_id": 318,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級強壯:318"
+  },
+  {
+   "skill_name_raw": "終級必殺",
+   "skill_id": 312,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級必殺:312"
+  },
+  {
+   "skill_name_raw": "終級慧根",
+   "skill_id": 330,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級慧根:330"
+  },
+  {
+   "skill_name_raw": "終級法術狂暴",
+   "skill_id": 358,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級法術狂暴:358"
+  },
+  {
+   "skill_name_raw": "終級法術連擊",
+   "skill_id": 306,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級法術連擊:306"
+  },
+  {
+   "skill_name_raw": "終級神跡",
+   "skill_id": 308,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級神跡:308"
+  },
+  {
+   "skill_name_raw": "終級衝擊",
+   "skill_id": 311,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級衝擊:311"
+  },
+  {
+   "skill_name_raw": "終級迅捷",
+   "skill_id": 317,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級迅捷:317"
+  },
+  {
+   "skill_name_raw": "終級防禦",
+   "skill_id": 320,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級防禦:320"
+  },
+  {
+   "skill_name_raw": "終級靈敏",
+   "skill_id": 316,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級靈敏:316"
+  },
+  {
+   "skill_name_raw": "終級靈通術",
+   "skill_id": 322,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級靈通術:322"
+  },
+  {
+   "skill_name_raw": "終級魔法反擊",
+   "skill_id": 303,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級魔法反擊:303"
+  },
+  {
+   "skill_name_raw": "終級魔法天份",
+   "skill_id": 326,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "終級魔法天份:326"
+  },
+  {
+   "skill_name_raw": "群攻弱點",
+   "skill_id": 519,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "群攻弱點:519"
+  },
+  {
+   "skill_name_raw": "群攻抵抗",
+   "skill_id": 508,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "群攻抵抗:508"
+  },
+  {
+   "skill_name_raw": "肉食習性",
+   "skill_id": 515,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "肉食習性:515"
+  },
+  {
+   "skill_name_raw": "能量波動",
+   "skill_id": 554,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "能量波動:554"
+  },
+  {
+   "skill_name_raw": "英勇對決",
+   "skill_id": 562,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "英勇對決:562"
+  },
+  {
+   "skill_name_raw": "落雷",
+   "skill_id": 419,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "落雷:419"
+  },
+  {
+   "skill_name_raw": "葉落風回",
+   "skill_id": 558,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "葉落風回:558"
+  },
+  {
+   "skill_name_raw": "衝擊",
+   "skill_id": 111,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "衝擊:111"
+  },
+  {
+   "skill_name_raw": "詛咒之刃",
+   "skill_id": 561,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "詛咒之刃:561"
+  },
+  {
+   "skill_name_raw": "護主",
+   "skill_id": 579,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "護主:579"
+  },
+  {
+   "skill_name_raw": "迅捷",
+   "skill_id": 117,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "迅捷:117"
+  },
+  {
+   "skill_name_raw": "追擊",
+   "skill_id": 504,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "追擊:504"
+  },
+  {
+   "skill_name_raw": "連擊",
+   "skill_id": 102,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "連擊:102"
+  },
+  {
+   "skill_name_raw": "鎮魂",
+   "skill_id": 412,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "鎮魂:412"
+  },
+  {
+   "skill_name_raw": "閃擊",
+   "skill_id": 124,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "閃擊:124"
+  },
+  {
+   "skill_name_raw": "防禦",
+   "skill_id": 120,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "防禦:120"
+  },
+  {
+   "skill_name_raw": "隔山打牛",
+   "skill_id": 450,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "隔山打牛:450"
+  },
+  {
+   "skill_name_raw": "雙月舞",
+   "skill_id": 581,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "雙月舞:581"
+  },
+  {
+   "skill_name_raw": "雷霆一擊",
+   "skill_id": 580,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "雷霆一擊:580"
+  },
+  {
+   "skill_name_raw": "靈巧抵抗",
+   "skill_id": 507,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "靈巧抵抗:507"
+  },
+  {
+   "skill_name_raw": "靈敏",
+   "skill_id": 116,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "靈敏:116"
+  },
+  {
+   "skill_name_raw": "靈通術",
+   "skill_id": 122,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "靈通術:122"
+  },
+  {
+   "skill_name_raw": "飛星亂舞",
+   "skill_id": 413,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "飛星亂舞:413"
+  },
+  {
+   "skill_name_raw": "飛行",
+   "skill_id": 123,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "飛行:123"
+  },
+  {
+   "skill_name_raw": "驅鬼術",
+   "skill_id": 107,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "驅鬼術:107"
+  },
+  {
+   "skill_name_raw": "高級保命",
+   "skill_id": 256,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級保命:256"
+  },
+  {
+   "skill_name_raw": "高級偷襲",
+   "skill_id": 225,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級偷襲:225"
+  },
+  {
+   "skill_name_raw": "高級再生",
+   "skill_id": 214,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級再生:214"
+  },
+  {
+   "skill_name_raw": "高級力道侵蝕",
+   "skill_id": 228,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級力道侵蝕:228"
+  },
+  {
+   "skill_name_raw": "高級反擊",
+   "skill_id": 201,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級反擊:201"
+  },
+  {
+   "skill_name_raw": "高級命中",
+   "skill_id": 229,
+   "match_count": 2,
+   "ambiguous": true,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級命中:229"
+  },
+  {
+   "skill_name_raw": "高級命中",
+   "skill_id": 255,
+   "match_count": 2,
+   "ambiguous": true,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級命中:255"
+  },
+  {
+   "skill_name_raw": "高級幸運",
+   "skill_id": 213,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級幸運:213"
+  },
+  {
+   "skill_name_raw": "高級強力",
+   "skill_id": 219,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級強力:219"
+  },
+  {
+   "skill_name_raw": "高級強壯",
+   "skill_id": 218,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級強壯:218"
+  },
+  {
+   "skill_name_raw": "高級必殺",
+   "skill_id": 212,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級必殺:212"
+  },
+  {
+   "skill_name_raw": "高級感知",
+   "skill_id": 210,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級感知:210"
+  },
+  {
+   "skill_name_raw": "高級慧根",
+   "skill_id": 230,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級慧根:230"
+  },
+  {
+   "skill_name_raw": "高級智慧",
+   "skill_id": 215,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級智慧:215"
+  },
+  {
+   "skill_name_raw": "高級法術狂暴",
+   "skill_id": 258,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級法術狂暴:258"
+  },
+  {
+   "skill_name_raw": "高級法術連擊",
+   "skill_id": 206,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級法術連擊:206"
+  },
+  {
+   "skill_name_raw": "高級神祐",
+   "skill_id": 231,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級神祐:231"
+  },
+  {
+   "skill_name_raw": "高級神跡",
+   "skill_id": 208,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級神跡:208"
+  },
+  {
+   "skill_name_raw": "高級衝擊",
+   "skill_id": 211,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級衝擊:211"
+  },
+  {
+   "skill_name_raw": "高級迅捷",
+   "skill_id": 217,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級迅捷:217"
+  },
+  {
+   "skill_name_raw": "高級連擊",
+   "skill_id": 202,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級連擊:202"
+  },
+  {
+   "skill_name_raw": "高級閃擊",
+   "skill_id": 224,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級閃擊:224"
+  },
+  {
+   "skill_name_raw": "高級防禦",
+   "skill_id": 220,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級防禦:220"
+  },
+  {
+   "skill_name_raw": "高級靈通術",
+   "skill_id": 222,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級靈通術:222"
+  },
+  {
+   "skill_name_raw": "高級飛行",
+   "skill_id": 223,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級飛行:223"
+  },
+  {
+   "skill_name_raw": "高級魔法天份",
+   "skill_id": 226,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "高級魔法天份:226"
+  },
+  {
+   "skill_name_raw": "鬼爪飛擊",
+   "skill_id": 423,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "鬼爪飛擊:423"
+  },
+  {
+   "skill_name_raw": "鬼系抵抗",
+   "skill_id": 512,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "鬼系抵抗:512"
+  },
+  {
+   "skill_name_raw": "鬼魂性質",
+   "skill_id": 502,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "鬼魂性質:502"
+  },
+  {
+   "skill_name_raw": "魔動冰晶",
+   "skill_id": 575,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "魔動冰晶:575"
+  },
+  {
+   "skill_name_raw": "魔法反擊",
+   "skill_id": 103,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "魔法反擊:103"
+  },
+  {
+   "skill_name_raw": "魔法回擊",
+   "skill_id": 104,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "魔法回擊:104"
+  },
+  {
+   "skill_name_raw": "魔法天份",
+   "skill_id": 126,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "魔法天份:126"
+  },
+  {
+   "skill_name_raw": "魔法毒咒",
+   "skill_id": 409,
+   "match_count": 1,
+   "ambiguous": false,
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "魔法毒咒:409"
+  }
+ ]
+}

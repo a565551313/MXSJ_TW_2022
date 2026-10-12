@@ -1,0 +1,1587 @@
+{
+  "environment": {
+    "browser_engine": "jsdom plus optional Chromium (actual U-05 result in runtime checks)",
+    "interpreter_used": "/home/user/review-hij-r2/.venv/bin/python",
+    "node": "v22.22.3",
+    "python": "3.11.2"
+  },
+  "generated_utc": "2026-10-12T03:52:20Z",
+  "outstanding_not_executed": {
+    "api": [],
+    "web_runtime": [],
+    "web_static": []
+  },
+  "repository": {
+    "branch": "arena/b53b33e6-mxsj-tw-2022",
+    "head": "d9721d8df758d905830ac9519df09853bd5b6b38",
+    "status_short": "M server/tools/review_browser_checks/evidence/live_api_report.json\n M server/tools/review_browser_checks/evidence/live_api_with_web_origin.json\n M server/tools/review_browser_checks/evidence/web_origin_probe.json"
+  },
+  "required_check_inventory": {
+    "api": [
+      {
+        "check": "API-01",
+        "requirement": "分页无遗漏、无意外重复、排序稳定"
+      },
+      {
+        "check": "API-02",
+        "requirement": "搜索与精确过滤符合契约"
+      },
+      {
+        "check": "API-03",
+        "requirement": "非法参数有明确错误，不悄悄替换"
+      },
+      {
+        "check": "API-04",
+        "requirement": "\"false\"/空文本/缺失值不被错误转换"
+      },
+      {
+        "check": "API-05",
+        "requirement": "哈希或类型校验失败不得继续提供伪正常目录"
+      },
+      {
+        "check": "API-06",
+        "requirement": "隔离记录不进入正常列表"
+      },
+      {
+        "check": "API-07",
+        "requirement": "2800 不被改成未经批准的 1700"
+      },
+      {
+        "check": "API-08",
+        "requirement": "3010/4021/4022 缺失资质不补零"
+      },
+      {
+        "check": "API-09",
+        "requirement": "高級命中保留 229/255"
+      },
+      {
+        "check": "API-10",
+        "requirement": "終級命中保留 329/355"
+      },
+      {
+        "check": "API-11",
+        "requirement": "NPC 不按 (scene_id, npcid) 误去重"
+      },
+      {
+        "check": "API-12",
+        "requirement": "非法数据集/路径穿越/任意文件读取被拒绝"
+      },
+      {
+        "check": "API-13",
+        "requirement": "调用方不能修改底层目录数据"
+      },
+      {
+        "check": "API-14",
+        "requirement": "不存在编辑/保存/上传/发布接口"
+      },
+      {
+        "check": "API-15",
+        "requirement": "预览代理安全、页面不指向沙箱 localhost"
+      }
+    ],
+    "web_runtime": [
+      {
+        "check": "U-01",
+        "requirement": "交付的前端可用自身工具链成功构建"
+      },
+      {
+        "check": "U-02",
+        "requirement": "挂载后的应用渲染出可见内容（不是白屏）"
+      },
+      {
+        "check": "U-03",
+        "requirement": "应用发出的每个请求都成功"
+      },
+      {
+        "check": "U-04",
+        "requirement": "应用加载期间没有 console 错误"
+      },
+      {
+        "check": "U-05",
+        "requirement": "真实 Chromium 页面、交互与错误路径（未安装时明确未执行）"
+      },
+      {
+        "check": "W-10",
+        "requirement": "入口页面由 web origin 提供且资源为相对路径"
+      },
+      {
+        "check": "W-11",
+        "requirement": "入口模块可加载且不含沙箱主机"
+      },
+      {
+        "check": "W-12",
+        "requirement": "列表页拿到自己解析的 {dataset,total,offset,limit,count,records} 信封"
+      },
+      {
+        "check": "W-13",
+        "requirement": "概览/异常/NPC/地图页面的端点存在"
+      },
+      {
+        "check": "W-14",
+        "requirement": "详情页能取到单条记录"
+      },
+      {
+        "check": "W-15",
+        "requirement": "web origin 能把 /api 代理到复核 API"
+      },
+      {
+        "check": "W-16",
+        "requirement": "web origin 接受转发后的 Host/Origin 头"
+      }
+    ],
+    "web_static": [
+      {
+        "check": "H-01",
+        "requirement": "API 源码不含变更类路由"
+      },
+      {
+        "check": "W-01",
+        "requirement": "浏览器不请求沙箱 localhost/127.0.0.1"
+      },
+      {
+        "check": "W-02",
+        "requirement": "API 不可用时不自动切换假数据"
+      },
+      {
+        "check": "W-03",
+        "requirement": "前端不得写死固定计数"
+      },
+      {
+        "check": "W-04",
+        "requirement": "特殊文本只展示不执行（静态半边）"
+      },
+      {
+        "check": "W-05",
+        "requirement": "加载中/空结果/断连/错误状态（源码半边）"
+      },
+      {
+        "check": "W-06",
+        "requirement": "网络调用使用相对 URL"
+      }
+    ]
+  },
+  "stage": "review_tool_acceptance_ledger",
+  "stages": {
+    "csv_exporter_check": {
+      "command": "/home/user/review-hij-r2/.venv/bin/python server/tools/export_review_csv.py --check",
+      "exit_code": 0,
+      "status": "pass",
+      "summary": "",
+      "tail": [
+        "    \"pet_skill_names_have_candidates\": \"pass\",",
+        "    \"csv_round_trip\": \"pass\",",
+        "    \"map_npc_evidence_and_staging_match\": \"pass\"",
+        "  }",
+        "}"
+      ]
+    },
+    "original_architecture_suite": {
+      "command": "/home/user/review-hij-r2/.venv/bin/python -m unittest discover -s server/tests/architecture -q",
+      "exit_code": 0,
+      "status": "pass",
+      "summary": "Ran 161 tests in 30.718s",
+      "tail": [
+        "----------------------------------------------------------------------",
+        "Ran 161 tests in 30.718s",
+        "",
+        "OK"
+      ]
+    },
+    "phase1_data_baseline": {
+      "checks": [
+        {
+          "check": "data.files.inventory",
+          "detail": {
+            "files": 22
+          },
+          "status": "pass",
+          "title": "manifest file set equals the committed file set"
+        },
+        {
+          "check": "data.files.integrity",
+          "detail": {
+            "hashed": 21
+          },
+          "status": "pass",
+          "title": "bytes and sha256 of every artefact match the manifest"
+        },
+        {
+          "check": "data.inputs.hashes",
+          "detail": {
+            "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+            "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+          },
+          "status": "pass",
+          "title": "pinned archive and key database hashes still match"
+        },
+        {
+          "check": "data.files.tool_hashes",
+          "detail": {
+            "verified": 10
+          },
+          "status": "pass",
+          "title": "tool/evidence hashes recorded by the manifest still match"
+        },
+        {
+          "check": "data.csv_format.core",
+          "detail": {
+            "files": 9
+          },
+          "status": "pass",
+          "title": "core CSVs are UTF-8/LF/all-quoted and re-encode byte-identically"
+        },
+        {
+          "check": "data.csv_format.maps_npc",
+          "detail": {
+            "files": 8
+          },
+          "status": "pass",
+          "title": "maps_npcs CSVs keep E staging format (minimal quoting, CRLF)"
+        },
+        {
+          "check": "data.declared_shape",
+          "detail": {
+            "csv_files": 17
+          },
+          "status": "pass",
+          "title": "declared rows/columns/primary keys match the actual files"
+        },
+        {
+          "check": "data.primary_keys.unique",
+          "detail": {
+            "items.csv": 6851,
+            "maps_npcs/mapdata_parent_scene.csv": 6,
+            "maps_npcs/mapdata_scene_dictionary.csv": 104,
+            "maps_npcs/minimapnpcpos_pos_records.csv": 1344,
+            "maps_npcs/minimapnpcpos_wenzi_entries.csv": 287,
+            "maps_npcs/npc_2601_vs_2804_agreement.csv": 677,
+            "maps_npcs/npcname2realnamedata_alias_to_realname.csv": 55,
+            "maps_npcs/npcposdata_records.csv": 1335,
+            "maps_npcs/sceneid2name_minimap_scenes.csv": 57,
+            "pet_aptitude_missing.csv": 3,
+            "pet_aptitudes.csv": 131,
+            "pet_required_skills.csv": 26,
+            "pet_skill_candidates.csv": 458,
+            "pet_skill_name_matches.csv": 145,
+            "pet_skill_overwrites.csv": 9,
+            "pet_skills.csv": 579,
+            "pets.csv": 135
+          },
+          "status": "pass",
+          "title": "manifest primary keys are unique in every file"
+        },
+        {
+          "check": "data.counts.fixed",
+          "detail": {
+            "items_rows": 6851,
+            "missing_aptitude_rows": 3,
+            "pet_aptitudes_rows": 131,
+            "pet_required_skills_rows": 26,
+            "pet_skill_candidates_rows": 458,
+            "pet_skill_name_match_rows": 145,
+            "pet_skills_rows": 579,
+            "pets_rows": 135,
+            "quarantined_records": 4,
+            "referenced_skill_names": 143,
+            "single_id_skill_names": 141,
+            "skill_overwrite_rows": 9
+          },
+          "status": "pass",
+          "title": "frozen review counts (17 CSV / 22 files input)"
+        },
+        {
+          "check": "data.rows.accounting",
+          "detail": {
+            "tables": {
+              "1945": 6852,
+              "2027": 135,
+              "2954": 132,
+              "3205": 581
+            }
+          },
+          "status": "pass",
+          "title": "source = review + quarantined rows for every source entry"
+        },
+        {
+          "check": "data.validation.json",
+          "detail": {
+            "csv_round_trip": "pass",
+            "item_category_key_set": "pass",
+            "map_npc_evidence_and_staging_match": "pass",
+            "pet_aptitude_foreign_keys": "pass",
+            "pet_skill_names_have_candidates": "pass"
+          },
+          "status": "pass",
+          "title": "validation.json agrees with the recomputed values"
+        },
+        {
+          "check": "data.pets_skills.foreign_keys",
+          "detail": {
+            "aptitudes": 131,
+            "missing": 3,
+            "pets": 135
+          },
+          "status": "pass",
+          "title": "reviewed child tables only reference reviewed parents"
+        },
+        {
+          "check": "data.pet_skill_candidates.order",
+          "detail": {
+            "pets_with_candidates": 132,
+            "pets_with_repeated_names": 0
+          },
+          "status": "pass",
+          "title": "candidate sub-tables keep source order, duplicates and sequence 0..n-1"
+        },
+        {
+          "check": "data.pet_required_skills.presence_only",
+          "detail": {
+            "pets_with_required_skills": 26
+          },
+          "status": "pass",
+          "title": "required skills only list fields the source actually has"
+        },
+        {
+          "check": "data.pet_skill_name_matches.ambiguity",
+          "detail": {
+            "ambiguous": {
+              "終級命中": [
+                329,
+                355
+              ],
+              "高級命中": [
+                229,
+                255
+              ]
+            },
+            "names": 143
+          },
+          "status": "pass",
+          "title": "same-name skill matches keep every candidate ID"
+        },
+        {
+          "check": "data.pet_skills.quarantine_excluded",
+          "detail": {
+            "skill_ids": 579
+          },
+          "status": "pass",
+          "title": "quarantined skill rows are not in the normal skill table"
+        },
+        {
+          "check": "data.skill_overwrites.order",
+          "detail": {
+            "overwrites": 9,
+            "value_changing": 1
+          },
+          "status": "pass",
+          "title": "dictionary overwrites keep both values and the write order"
+        },
+        {
+          "check": "data.review_status.labels",
+          "detail": {
+            "files_checked": 17
+          },
+          "status": "pass",
+          "title": "source entry, source table and review status are explicit on every row"
+        },
+        {
+          "check": "data.quarantine.records",
+          "detail": {
+            "records": 4
+          },
+          "status": "pass",
+          "title": "the four quarantined records are preserved with reasons"
+        },
+        {
+          "check": "data.quarantine.2800_not_1700",
+          "detail": {
+            "applied_bounds": [
+              3973,
+              7978,
+              11868,
+              15798
+            ],
+            "法力資質": 2130,
+            "法力資質最大值": 1989
+          },
+          "status": "pass",
+          "title": "aptitude 2800 keeps the saved 2130/1989 and is not rewritten to 1700"
+        },
+        {
+          "check": "data.quarantine.item_72548",
+          "detail": {
+            "bytes_hex": "c2f9a448a7a4c34dc5e9c5e784"
+          },
+          "status": "pass",
+          "title": "item 72548 keeps the original invalid CP950 bytes and stays out of items.csv"
+        },
+        {
+          "check": "data.quarantine.skill_rows",
+          "detail": {
+            "rows": [
+              719,
+              4406
+            ]
+          },
+          "status": "pass",
+          "title": "quarantined skill rows keep the six source fields"
+        },
+        {
+          "check": "data.missing_aptitudes.not_zero_filled",
+          "detail": {
+            "missing": [
+              3010,
+              4021,
+              4022
+            ]
+          },
+          "status": "pass",
+          "title": "missing aptitude rows are declared missing, never zero-filled"
+        },
+        {
+          "check": "data.maps.rows_and_zero_ids",
+          "detail": {
+            "2601": 1335,
+            "2804": 1344,
+            "zero_ids": {
+              "minimapnpcpos_pos": 631,
+              "npcposdata": 632
+            }
+          },
+          "status": "pass",
+          "title": "map/NPC record counts and NPC ID 0 records are preserved"
+        },
+        {
+          "check": "data.maps.no_pair_dedup",
+          "detail": {
+            "2601": {
+              "duplicate_groups": 12,
+              "max_group": 6
+            },
+            "2804": {
+              "duplicate_groups": 11,
+              "max_group": 6
+            }
+          },
+          "status": "pass",
+          "title": "(scene_id, npcid) is not a unique key and duplicates are retained"
+        },
+        {
+          "check": "data.maps.order_preserved",
+          "detail": {
+            "scenes_checked": 864
+          },
+          "status": "pass",
+          "title": "record_index keeps original order per scene for both NPC sources"
+        },
+        {
+          "check": "data.maps.source_separation",
+          "detail": {
+            "staging_files": 8
+          },
+          "status": "pass",
+          "title": "E staging sources stay separate and byte-identical to the batch copies"
+        },
+        {
+          "check": "data.profiles.parameters_approved",
+          "detail": {
+            "profiles": 10
+          },
+          "status": "pass",
+          "title": "no automatic solver and no unapproved parameter substitution"
+        },
+        {
+          "check": "data.text.no_simplified_conversion",
+          "detail": {
+            "forbidden": 7,
+            "required": 6
+          },
+          "status": "pass",
+          "title": "traditional text is preserved and no simplified rewrite leaked in"
+        },
+        {
+          "check": "data.text.opaque_formulas",
+          "detail": {
+            "items_with_equals_or_dollar": 42,
+            "items_with_rich_text": 6485
+          },
+          "status": "pass",
+          "title": "resource formulas and rich-text markers stay opaque source text"
+        }
+      ],
+      "fail": 0,
+      "not_executed": 0,
+      "pass": 30,
+      "review": 0,
+      "status": "pass"
+    },
+    "phase2_live_api": {
+      "checks": [
+        {
+          "check": "API-01.items",
+          "detail": {
+            "page_size_used": 250,
+            "pages": 28,
+            "rows": 6851
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "pagination is complete, duplicate-free and stably ordered"
+        },
+        {
+          "check": "API-01.pet_skills",
+          "detail": {
+            "page_size_used": 250,
+            "pages": 3,
+            "rows": 579
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "pagination is complete, duplicate-free and stably ordered"
+        },
+        {
+          "check": "API-01.pet_aptitudes",
+          "detail": {
+            "page_size_used": 250,
+            "pages": 1,
+            "rows": 131
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "pagination is complete, duplicate-free and stably ordered"
+        },
+        {
+          "check": "API-01.pet_skill_candidates",
+          "detail": {
+            "page_size_used": 250,
+            "pages": 2,
+            "rows": 458
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "pagination is complete, duplicate-free and stably ordered"
+        },
+        {
+          "check": "API-01.npcposdata_records",
+          "detail": {
+            "page_size_used": 250,
+            "pages": 6,
+            "rows": 1335
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "pagination is complete, duplicate-free and stably ordered"
+        },
+        {
+          "check": "API-01.minimapnpcpos_pos_records",
+          "detail": {
+            "page_size_used": 250,
+            "pages": 6,
+            "rows": 1344
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "pagination is complete, duplicate-free and stably ordered"
+        },
+        {
+          "check": "API-02",
+          "detail": {
+            "items": {
+              "ids": [
+                "41052"
+              ],
+              "term": "時空石"
+            }
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "search and exact filters follow the contract"
+        },
+        {
+          "check": "API-03",
+          "detail": {
+            "/api/v1/review/batch?batch": 400,
+            "/api/v1/review/missing-aptitudes?limit": 400,
+            "/api/v1/review/missing-aptitudes?offset": 400,
+            "/api/v1/review/overwrites?keyy": 400,
+            "/api/v1/review/overwrites?sort_by": 400,
+            "/api/v1/review/quarantine?entry_indexx": 400,
+            "/api/v1/review/quarantine?key": 400,
+            "items:{'limit': '0'}": 400,
+            "items:{'limit': '10000000'}": 400,
+            "items:{'limit': '501'}": 400,
+            "items:{'limit': 'abc'}": 400,
+            "items:{'offset': '-1'}": 400,
+            "items:{'offset': 'abc'}": 400,
+            "items:{'sort_by': 'client_shape_id', 'order': 'sideways'}": 400,
+            "pets:{'limit': '0'}": 400,
+            "pets:{'limit': '10000000'}": 400,
+            "pets:{'limit': '501'}": 400,
+            "pets:{'limit': 'abc'}": 400,
+            "pets:{'offset': '-1'}": 400,
+            "pets:{'offset': 'abc'}": 400,
+            "pets:{'sort_by': 'client_shape_id', 'order': 'sideways'}": 400
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "invalid parameters produce explicit errors, never silent substitution"
+        },
+        {
+          "check": "API-04",
+          "detail": {
+            "items/11.image_mapping_explicit": {
+              "api": false,
+              "csv": false,
+              "csv_raw": "false",
+              "type": "bool"
+            },
+            "items/41052.image_mapping_explicit": {
+              "api": true,
+              "csv": true,
+              "csv_raw": "true",
+              "type": "bool"
+            },
+            "npcposdata_records/1001:0.field12": {
+              "api": null,
+              "csv": null,
+              "csv_raw": "",
+              "type": "int_or_empty"
+            },
+            "npcposdata_records/1001:0.npcid": {
+              "api": 1083,
+              "csv": 1083,
+              "csv_raw": "1083",
+              "type": "int_or_empty"
+            },
+            "npcposdata_records/1001:0.secondary_name": {
+              "api": "",
+              "csv": "",
+              "csv_raw": "",
+              "type": "str"
+            },
+            "pet_skills/101.fpneed_raw": {
+              "api": "0",
+              "csv": "0",
+              "csv_raw": "0",
+              "type": "str"
+            },
+            "pet_skills/101.skill_id": {
+              "api": 101,
+              "csv": 101,
+              "csv_raw": "101",
+              "type": "int"
+            }
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "\"false\", empty text and missing values are not coerced"
+        },
+        {
+          "check": "API-05",
+          "detail": {
+            "_control_valid_copy": {
+              "data_status": 200,
+              "datasets": 17,
+              "description": "undamaged copy (control)",
+              "health_status": 200,
+              "outcome": "served",
+              "quarantine": 4
+            },
+            "csv_hash_corruption": {
+              "data_status": null,
+              "datasets": null,
+              "description": "one byte changed in items.csv (size and sha256 break)",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            },
+            "csv_type_corruption": {
+              "data_status": null,
+              "datasets": null,
+              "description": "a non-numeric value in the int column client_shape_id",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            },
+            "manifest_drops_items_dataset": {
+              "data_status": null,
+              "datasets": null,
+              "description": "manifest.json no longer declares items.csv (16 datasets left)",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            },
+            "missing_overwrite_evidence": {
+              "data_status": null,
+              "datasets": null,
+              "description": "overwrite_evidence.jsonl deleted",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            },
+            "missing_provenance_file": {
+              "data_status": null,
+              "datasets": null,
+              "description": "maps_npcs/provenance.json deleted",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            },
+            "missing_quarantine_file": {
+              "data_status": null,
+              "datasets": null,
+              "description": "quarantine.jsonl deleted",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            },
+            "missing_validation_file": {
+              "data_status": null,
+              "datasets": null,
+              "description": "validation.json deleted",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            },
+            "tampered_quarantine_no_hash_update": {
+              "data_status": null,
+              "datasets": null,
+              "description": "quarantine.jsonl content changed without updating manifest hashes",
+              "health_status": null,
+              "outcome": "refused_start",
+              "quarantine": null
+            }
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "damaged or tampered batch copies never yield a pseudo-normal catalogue (hash, type, missing or tampered evidence files, manifest shrinkage)"
+        },
+        {
+          "check": "API-06",
+          "detail": {
+            "items": {
+              "rows": 6851
+            },
+            "minimapnpcpos_pos_records": {
+              "rows": 1344
+            },
+            "npc_2601_vs_2804_agreement": {
+              "rows": 677
+            },
+            "npcposdata_records": {
+              "rows": 1335
+            },
+            "pet_aptitude_missing": {
+              "rows": 3
+            },
+            "pet_aptitudes": {
+              "rows": 131
+            },
+            "pet_required_skills": {
+              "rows": 26
+            },
+            "pet_skill_candidates": {
+              "rows": 458
+            },
+            "pet_skill_name_matches": {
+              "rows": 145
+            },
+            "pet_skill_overwrites": {
+              "rows": 9
+            },
+            "pet_skills": {
+              "rows": 579
+            },
+            "pets": {
+              "rows": 135
+            }
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "quarantined records never enter the normal lists"
+        },
+        {
+          "check": "API-07",
+          "detail": {
+            "detail_2800": 404
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "aptitude 2800 is never rewritten to the unapproved 1700"
+        },
+        {
+          "check": "API-08",
+          "detail": {
+            "pet_aptitudes": {
+              "rows": 131
+            }
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "missing aptitudes (3010/4021/4022) are not zero-filled"
+        },
+        {
+          "check": "API-09",
+          "detail": {
+            "ids": [
+              "229",
+              "255"
+            ]
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "same-name skill 高級命中 keeps every candidate id [229, 255]"
+        },
+        {
+          "check": "API-10",
+          "detail": {
+            "ids": [
+              "329",
+              "355"
+            ]
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "same-name skill 終級命中 keeps every candidate id [329, 355]"
+        },
+        {
+          "check": "API-11",
+          "detail": {
+            "maps_npcs/minimapnpcpos_pos_records.csv": {
+              "csv_rows": 1344,
+              "duplicate_groups": 130,
+              "pages": 6,
+              "rows": 1344,
+              "zero_id_rows": 631
+            },
+            "maps_npcs/npcposdata_records.csv": {
+              "csv_rows": 1335,
+              "duplicate_groups": 131,
+              "pages": 6,
+              "rows": 1335,
+              "zero_id_rows": 632
+            }
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "NPC records are not deduplicated by (scene_id, npcid)"
+        },
+        {
+          "check": "API-12",
+          "detail": {
+            "%2e%2e%2f%2e%2e%2fdata%2fscript.fls{}": 404,
+            "..%2f..%2f..%2f..%2f..%2f..%2fetc%2fpasswd{}": 404,
+            "../../../../../../etc/passwd{}": 404,
+            "../../data/script.fls{}": 404,
+            "items{'dataset': '../../data/script.fls'}": 400,
+            "items{'dataset_path': '/etc/passwd'}": 400
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "illegal datasets, path traversal and arbitrary file reads are refused"
+        },
+        {
+          "check": "API-13",
+          "detail": {
+            "DELETE /api/v1/review/datasets/items/records": 405,
+            "DELETE /api/v1/review/datasets/items/records/11": 405,
+            "PATCH /api/v1/review/datasets/items/records": 405,
+            "PATCH /api/v1/review/datasets/items/records/11": 405,
+            "POST /api/v1/review/datasets/items/records": 405,
+            "POST /api/v1/review/datasets/items/records/11": 405,
+            "PUT /api/v1/review/datasets/items/records": 405,
+            "PUT /api/v1/review/datasets/items/records/11": 405
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "callers cannot modify the underlying catalogue"
+        },
+        {
+          "check": "API-14",
+          "detail": {
+            "POST /api/v1/review/commit": 404,
+            "POST /api/v1/review/create": 404,
+            "POST /api/v1/review/datasets/items/records/commit": 405,
+            "POST /api/v1/review/datasets/items/records/create": 405,
+            "POST /api/v1/review/datasets/items/records/delete": 405,
+            "POST /api/v1/review/datasets/items/records/delete_row": 405,
+            "POST /api/v1/review/datasets/items/records/edit": 405,
+            "POST /api/v1/review/datasets/items/records/export": 405,
+            "POST /api/v1/review/datasets/items/records/import": 405,
+            "POST /api/v1/review/datasets/items/records/publish": 405,
+            "POST /api/v1/review/datasets/items/records/rebuild": 405,
+            "POST /api/v1/review/datasets/items/records/refresh": 405,
+            "POST /api/v1/review/datasets/items/records/reload": 405,
+            "POST /api/v1/review/datasets/items/records/save": 405,
+            "POST /api/v1/review/datasets/items/records/update": 405,
+            "POST /api/v1/review/datasets/items/records/upload": 405,
+            "POST /api/v1/review/datasets/items/records/write": 405,
+            "POST /api/v1/review/delete": 404,
+            "POST /api/v1/review/delete_row": 404,
+            "POST /api/v1/review/edit": 404,
+            "POST /api/v1/review/export": 404,
+            "POST /api/v1/review/import": 404,
+            "POST /api/v1/review/publish": 404,
+            "POST /api/v1/review/rebuild": 404,
+            "POST /api/v1/review/refresh": 404,
+            "POST /api/v1/review/reload": 404,
+            "POST /api/v1/review/save": 404,
+            "POST /api/v1/review/update": 404,
+            "POST /api/v1/review/upload": 404,
+            "POST /api/v1/review/write": 404,
+            "contract_mutating_routes": [],
+            "openapi_routes": {
+              "/api/v1/review/ambiguous-skills": [
+                "get"
+              ],
+              "/api/v1/review/batch": [
+                "get"
+              ],
+              "/api/v1/review/datasets": [
+                "get"
+              ],
+              "/api/v1/review/datasets/{dataset_id}": [
+                "get"
+              ],
+              "/api/v1/review/datasets/{dataset_id}/records": [
+                "get"
+              ],
+              "/api/v1/review/datasets/{dataset_id}/records/{record_id}": [
+                "get"
+              ],
+              "/api/v1/review/health": [
+                "get"
+              ],
+              "/api/v1/review/missing-aptitudes": [
+                "get"
+              ],
+              "/api/v1/review/overwrites": [
+                "get"
+              ],
+              "/api/v1/review/quarantine": [
+                "get"
+              ]
+            },
+            "static_routes": {
+              "files": 37,
+              "mutating_routes": [],
+              "roots": [
+                "server/apps",
+                "server/src/mxsj_catalog"
+              ]
+            }
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "no edit/save/upload/publish endpoints exist"
+        },
+        {
+          "check": "API-15",
+          "detail": {
+            "assets": [
+              "/@vite/client",
+              "/src/main.tsx"
+            ],
+            "content_type": "text/html",
+            "frontend_checks": {
+              "W-10": "pass",
+              "W-11": "pass",
+              "W-12": "pass",
+              "W-13": "pass",
+              "W-14": "pass",
+              "W-15": "pass",
+              "W-16": "pass"
+            },
+            "frontend_probe_report": "/home/user/MXSJ_TW_2022/server/tools/review_browser_checks/evidence/web_origin_probe.json",
+            "frontend_probe_returncode": 0,
+            "host_override_status": 200,
+            "page_status": 200,
+            "proxied_api_status": 200
+          },
+          "requirement": "required",
+          "status": "pass",
+          "title": "pages and API work through the preview proxy: relative URLs only, no sandbox host in the browser payload"
+        }
+      ],
+      "fail": 0,
+      "not_executed": 0,
+      "pass": 20,
+      "reason": null,
+      "review": 0,
+      "status": "pass"
+    },
+    "phase3_static_page": {
+      "checks": [
+        {
+          "check": "W-00",
+          "detail": {
+            "by_kind": {
+              "config": 1,
+              "fixture": 2,
+              "product": 33,
+              "test": 20
+            },
+            "classified": {
+              "server/apps/review_web/fixtures/h_api/replay.mjs": "fixture",
+              "server/apps/review_web/fixtures/serve-fixture-api.mjs": "fixture",
+              "server/apps/review_web/index.html": "product",
+              "server/apps/review_web/src/App.errorBoundary.test.tsx": "test",
+              "server/apps/review_web/src/App.test.tsx": "test",
+              "server/apps/review_web/src/App.tsx": "product",
+              "server/apps/review_web/src/api/client.test.ts": "test",
+              "server/apps/review_web/src/api/client.ts": "product",
+              "server/apps/review_web/src/api/contract.test.ts": "test",
+              "server/apps/review_web/src/api/contract.ts": "product",
+              "server/apps/review_web/src/api/liveBackend.test.ts": "test",
+              "server/apps/review_web/src/api/paginationIntegrity.test.ts": "test",
+              "server/apps/review_web/src/api/parsers.ts": "product",
+              "server/apps/review_web/src/api/rawJson.ts": "product",
+              "server/apps/review_web/src/api/reviewApi.test.ts": "test",
+              "server/apps/review_web/src/api/reviewApi.ts": "product",
+              "server/apps/review_web/src/api/schema.ts": "product",
+              "server/apps/review_web/src/components/AsyncSection.tsx": "product",
+              "server/apps/review_web/src/components/Badges.tsx": "product",
+              "server/apps/review_web/src/components/ByteHexView.tsx": "product",
+              "server/apps/review_web/src/components/Controls.tsx": "product",
+              "server/apps/review_web/src/components/DataTable.tsx": "product",
+              "server/apps/review_web/src/components/ErrorBoundary.tsx": "product",
+              "server/apps/review_web/src/components/InvariantCheck.tsx": "product",
+              "server/apps/review_web/src/components/KeyValue.tsx": "product",
+              "server/apps/review_web/src/components/Notices.tsx": "product",
+              "server/apps/review_web/src/components/RawJsonView.tsx": "product",
+              "server/apps/review_web/src/components/SafeText.test.tsx": "test",
+              "server/apps/review_web/src/components/SafeText.tsx": "product",
+              "server/apps/review_web/src/hooks/useApiResource.ts": "product",
+              "server/apps/review_web/src/hooks/useDebouncedValue.ts": "product",
+              "server/apps/review_web/src/lib/display.ts": "product",
+              "server/apps/review_web/src/lib/hex.test.ts": "test",
+              "server/apps/review_web/src/lib/hex.ts": "product",
+              "server/apps/review_web/src/lib/invariants.test.ts": "test",
+              "server/apps/review_web/src/lib/invariants.ts": "product",
+              "server/apps/review_web/src/lib/router.ts": "product",
+              "server/apps/review_web/src/lib/runtimeMode.ts": "product",
+              "server/apps/review_web/src/main.tsx": "product",
+              "server/apps/review_web/src/pages/AnomaliesPage.test.tsx": "test"
+            },
+            "files": 56
+          },
+          "status": "pass",
+          "title": "review web application delivered"
+        },
+        {
+          "check": "W-01",
+          "detail": {
+            "leads": [],
+            "server/apps/review_web/index.html": "scanned",
+            "server/apps/review_web/src/App.tsx": "scanned",
+            "server/apps/review_web/src/api/client.ts": "scanned",
+            "server/apps/review_web/src/api/contract.ts": "scanned",
+            "server/apps/review_web/src/api/parsers.ts": "scanned",
+            "server/apps/review_web/src/api/rawJson.ts": "scanned",
+            "server/apps/review_web/src/api/reviewApi.ts": "scanned",
+            "server/apps/review_web/src/api/schema.ts": "scanned",
+            "server/apps/review_web/src/components/AsyncSection.tsx": "scanned",
+            "server/apps/review_web/src/components/Badges.tsx": "scanned",
+            "server/apps/review_web/src/components/ByteHexView.tsx": "scanned",
+            "server/apps/review_web/src/components/Controls.tsx": "scanned",
+            "server/apps/review_web/src/components/DataTable.tsx": "scanned",
+            "server/apps/review_web/src/components/ErrorBoundary.tsx": "scanned",
+            "server/apps/review_web/src/components/InvariantCheck.tsx": "scanned",
+            "server/apps/review_web/src/components/KeyValue.tsx": "scanned",
+            "server/apps/review_web/src/components/Notices.tsx": "scanned",
+            "server/apps/review_web/src/components/RawJsonView.tsx": "scanned",
+            "server/apps/review_web/src/components/SafeText.tsx": "scanned",
+            "server/apps/review_web/src/hooks/useApiResource.ts": "scanned",
+            "server/apps/review_web/src/hooks/useDebouncedValue.ts": "scanned",
+            "server/apps/review_web/src/lib/display.ts": "scanned",
+            "server/apps/review_web/src/lib/hex.ts": "scanned",
+            "server/apps/review_web/src/lib/invariants.ts": "scanned",
+            "server/apps/review_web/src/lib/router.ts": "scanned",
+            "server/apps/review_web/src/lib/runtimeMode.ts": "scanned",
+            "server/apps/review_web/src/main.tsx": "scanned",
+            "server/apps/review_web/src/pages/AnomaliesPage.tsx": "scanned",
+            "server/apps/review_web/src/pages/ItemsPage.tsx": "scanned",
+            "server/apps/review_web/src/pages/MapsNpcsPage.tsx": "scanned",
+            "server/apps/review_web/src/pages/OverviewPage.tsx": "scanned",
+            "server/apps/review_web/src/pages/PetsPage.tsx": "scanned",
+            "server/apps/review_web/src/pages/SkillsPage.tsx": "scanned",
+            "violations": []
+          },
+          "status": "pass",
+          "title": "no browser request to a sandbox host (server proxy config is not a violation)"
+        },
+        {
+          "check": "W-02",
+          "detail": {
+            "leads": [],
+            "note": "fixture mode gated by an explicit build-time flag is allowed; a data fallback after a failed request is a violation",
+            "opt_in_fixture_mode": true,
+            "product_files": 33,
+            "violations": []
+          },
+          "status": "pass",
+          "title": "no fixture/fallback data path in product code (tests and opt-in fixture mode excluded)"
+        },
+        {
+          "check": "W-03",
+          "detail": {
+            "counts_watched": [
+              "131",
+              "135",
+              "141",
+              "143",
+              "145",
+              "458",
+              "579",
+              "6851"
+            ],
+            "leads": [],
+            "product_files": 33,
+            "violations": []
+          },
+          "status": "pass",
+          "title": "frozen baseline counts are not hardcoded in product code (tests excluded)"
+        },
+        {
+          "check": "W-04",
+          "detail": {
+            "leads": [],
+            "sinks_watched": [
+              "react_raw_html",
+              "inner_html_assignment",
+              "outer_html_assignment",
+              "insert_adjacent_html",
+              "document_write",
+              "eval",
+              "function_constructor",
+              "string_timeout",
+              "vue_v_html"
+            ],
+            "violations": []
+          },
+          "status": "pass",
+          "title": "no unsafe HTML/script sink in product code (guard comments and negative tests excluded)"
+        },
+        {
+          "check": "W-05",
+          "detail": {
+            "leads": [],
+            "missing_keywords": [
+              "offline",
+              "連線",
+              "錯誤"
+            ],
+            "product_files": 33,
+            "violations": []
+          },
+          "status": "pass",
+          "title": "loading/empty/error states represented in product code"
+        },
+        {
+          "check": "W-06",
+          "detail": {
+            "leads": [],
+            "product_files": 33,
+            "violations": []
+          },
+          "status": "pass",
+          "title": "relative API URLs only in browser-facing code"
+        },
+        {
+          "check": "H-01",
+          "detail": {
+            "api_files": 12,
+            "leads": [],
+            "routes_checked_live": "API-14 probes the running service via OpenAPI and real requests",
+            "violations": []
+          },
+          "status": "pass",
+          "title": "API source declares no mutating routes"
+        }
+      ],
+      "fail": 0,
+      "not_executed": 0,
+      "pass": 8,
+      "result_meaning": "no violation and no lead",
+      "review": 0,
+      "status": "pass"
+    },
+    "phase3_web_runtime": {
+      "api15": {
+        "check": "API-15",
+        "detail": {
+          "assets": [
+            "/@vite/client",
+            "/src/main.tsx"
+          ],
+          "content_type": "text/html",
+          "frontend_checks": {
+            "W-10": "pass",
+            "W-11": "pass",
+            "W-12": "pass",
+            "W-13": "pass",
+            "W-14": "pass",
+            "W-15": "pass",
+            "W-16": "pass"
+          },
+          "frontend_probe_report": "/home/user/MXSJ_TW_2022/server/tools/review_browser_checks/evidence/web_origin_probe.json",
+          "frontend_probe_returncode": 0,
+          "host_override_status": 200,
+          "page_status": 200,
+          "proxied_api_status": 200
+        },
+        "requirement": "required",
+        "status": "pass",
+        "title": "pages and API work through the preview proxy: relative URLs only, no sandbox host in the browser payload"
+      },
+      "checks": [
+        {
+          "check": "W-10",
+          "detail": {
+            "links": [],
+            "problems": [],
+            "scripts": [
+              "/@vite/client",
+              "/src/main.tsx"
+            ],
+            "status": 200
+          },
+          "status": "pass",
+          "title": "entry page uses relative assets"
+        },
+        {
+          "check": "W-11",
+          "detail": {
+            "problems": []
+          },
+          "status": "pass",
+          "title": "application entry modules are reachable"
+        },
+        {
+          "check": "W-12",
+          "detail": {
+            "problems": []
+          },
+          "status": "pass",
+          "title": "dataset lists use records/total/offset/limit envelopes"
+        },
+        {
+          "check": "W-13",
+          "detail": {
+            "problems": []
+          },
+          "status": "pass",
+          "title": "batch and evidence endpoints agree with current contract"
+        },
+        {
+          "check": "W-14",
+          "detail": {
+            "problems": []
+          },
+          "status": "pass",
+          "title": "single-record details are reachable"
+        },
+        {
+          "check": "W-15",
+          "detail": {
+            "problems": [],
+            "status": 200
+          },
+          "status": "pass",
+          "title": "web origin proxies the real API"
+        },
+        {
+          "check": "W-16",
+          "detail": {
+            "problems": []
+          },
+          "status": "pass",
+          "title": "preview Host/Origin headers accepted"
+        },
+        {
+          "check": "U-01",
+          "detail": {
+            "files": [
+              "app.js",
+              "index.html"
+            ],
+            "outDir": "/tmp/mxsj-ui-smoke-dist-LjbY2o"
+          },
+          "status": "pass",
+          "title": "the delivered front end builds with its own toolchain"
+        },
+        {
+          "check": "U-02",
+          "detail": {
+            "text": "MXSJ 静态数据复核浏览器只读浏览 batch_001 复核材料 · 前端不读取仓库 CSV · 数据由 /api/v1/review 提供批次概览道具宠物技能地图 / NPC异常与证据复核候选，非正式规则本页展示的 batch_001 行是静态候选解码结果：可用于人工复核与目录浏览，不是原生加载器验证结果，也不是正式服务端规则表。未做简繁转换；名称、描述、颜色标记与资源公式均按源文本原样展示，不解释、不计算。隔离记录、缺失资质与同名技能多 ID 候选继续保留：不补零、不自动择一、不折叠重复记录。页面不提供任何编辑、删除、导入或发布动作。批次概览计数、校验状态与隔离/缺失数量全部来自复核 A"
+          },
+          "status": "pass",
+          "title": "the mounted application renders visible content"
+        },
+        {
+          "check": "U-03",
+          "detail": {
+            "requests": [
+              {
+                "body_preview": "{\"batch\":\"batch_001\",\"native_loader_confirmed\":false,\"manifest_files_count\":21,\"csv_format\":{\"delimiter\":\",\",\"encoding\":\"UTF-8 without BOM\",\"formula_policy\":\"Op",
+                "content_type": "application/json",
+                "method": "GET",
+                "status": 200,
+                "url": "http://127.0.0.1:60595/api/v1/review/batch"
+              },
+              {
+                "body_preview": "{\"status\":\"ready\",\"batch\":\"batch_001\",\"loaded_files_count\":22,\"datasets_count\":17,\"total_records_count\":12202}",
+                "content_type": "application/json",
+                "method": "GET",
+                "status": 200,
+                "url": "http://127.0.0.1:60595/api/v1/review/health"
+              },
+              {
+                "body_preview": "{\"total\":17,\"datasets\":[{\"id\":\"items\",\"filename\":\"items.csv\",\"rows\":6851,\"primary_key\":[\"client_shape_id\"],\"notes\":\"Display catalog, includes test/history entri",
+                "content_type": "application/json",
+                "method": "GET",
+                "status": 200,
+                "url": "http://127.0.0.1:60595/api/v1/review/datasets"
+              }
+            ]
+          },
+          "status": "pass",
+          "title": "every request the application issues succeeds"
+        },
+        {
+          "check": "U-04",
+          "detail": [],
+          "status": "pass",
+          "title": "the application reports no console error while loading"
+        },
+        {
+          "check": "U-05",
+          "detail": {
+            "browser": "HeadlessChrome/153.0.8010.0",
+            "cases": [
+              {
+                "label": "/",
+                "status": "pass"
+              },
+              {
+                "label": "/items",
+                "status": "pass"
+              },
+              {
+                "label": "/pets",
+                "status": "pass"
+              },
+              {
+                "label": "/skills",
+                "status": "pass"
+              },
+              {
+                "label": "/maps",
+                "status": "pass"
+              },
+              {
+                "label": "/anomalies",
+                "status": "pass"
+              },
+              {
+                "label": "/items/41052",
+                "status": "pass"
+              },
+              {
+                "label": "/pets/2800",
+                "status": "pass"
+              },
+              {
+                "label": "/pets/3010",
+                "status": "pass"
+              },
+              {
+                "label": "/skills/4573",
+                "status": "pass"
+              },
+              {
+                "label": "items next page",
+                "status": "pass"
+              },
+              {
+                "label": "search 時空石 returns one row 41052",
+                "status": "pass"
+              },
+              {
+                "label": "NPC sources remain separate",
+                "status": "pass"
+              },
+              {
+                "label": "early empty page rejects partial success",
+                "result": {
+                  "code": "INCOMPLETE_RESULT_SET",
+                  "message": "关联查询未能取得一致的完整结果：尚未达到 total 就提前返回空页。不会将部分记录作为完整列表显示。"
+                },
+                "status": "pass"
+              },
+              {
+                "label": "mobile anomalies",
+                "status": "pass"
+              },
+              {
+                "label": "invalid 200 payload shows schema error, not white screen",
+                "status": "pass"
+              }
+            ],
+            "screenshot": "/tmp/mxsj-web-runtime-6eo07pgu/chromium-mobile-anomalies.png"
+          },
+          "status": "pass",
+          "title": "actual Chromium routes, interactions and failure paths"
+        }
+      ],
+      "commands": [
+        {
+          "api_start": "/home/user/review-hij-r2/.venv/bin/python server/tools/review_browser_checks/review_api_launch.py --batch-dir <tmp copy> --host 0.0.0.0 --port 56461",
+          "page_start": "cd server/apps/review_web && VITE_API_PROXY_TARGET=http://127.0.0.1:56461 PORT=60595 npm run dev"
+        },
+        {
+          "page_contract": "node --experimental-strip-types server/tools/review_browser_checks/web_origin_probe.mjs --app-dir server/apps/review_web --origin http://127.0.0.1:60595"
+        },
+        {
+          "page_render": "node --experimental-strip-types server/tools/review_browser_checks/web_ui_smoke.mjs --app-dir server/apps/review_web --origin http://127.0.0.1:60595"
+        }
+      ],
+      "fail": 0,
+      "not_executed": 0,
+      "pass": 12,
+      "reason": null,
+      "review": 0,
+      "session": {
+        "api_port": 56461,
+        "batch_dir": "/tmp/mxsj-web-runtime-6eo07pgu/batch",
+        "console": [],
+        "frontend_contract": {
+          "datasets": {
+            "items": "items",
+            "mapdataParentScene": "mapdata_parent_scene",
+            "mapdataSceneDictionary": "mapdata_scene_dictionary",
+            "minimapNpcPosRecords": "minimapnpcpos_pos_records",
+            "minimapNpcPosWenzi": "minimapnpcpos_wenzi_entries",
+            "npcAgreement": "npc_2601_vs_2804_agreement",
+            "npcAliasToRealname": "npcname2realnamedata_alias_to_realname",
+            "npcPosRecords": "npcposdata_records",
+            "petAptitudeMissing": "pet_aptitude_missing",
+            "petAptitudes": "pet_aptitudes",
+            "petRequiredSkills": "pet_required_skills",
+            "petSkillCandidates": "pet_skill_candidates",
+            "petSkillNameMatches": "pet_skill_name_matches",
+            "petSkillOverwrites": "pet_skill_overwrites",
+            "petSkills": "pet_skills",
+            "pets": "pets",
+            "sceneId2Name": "sceneid2name_minimap_scenes"
+          },
+          "page_size": 25
+        },
+        "node": "v22.22.3",
+        "origin": "http://127.0.0.1:60595",
+        "rendered": {
+          "html": "<div class=\"app\"><header class=\"app__header\"><div><h1 class=\"app__title\">MXSJ 静态数据复核浏览器</h1><p class=\"app__subtitle\">只读浏览 batch_001 复核材料 · 前端不读取仓库 CSV · 数据由 <code>/api/v1/review</code> 提供</p></div></header><nav class=\"app__nav\" aria-label=\"主导航\"><a class=\"nav-tab nav-tab--active\" href=\"/\" title=\"批次、计数、校验、隔离与缺失\" aria-current=\"page\">批次概览</a><a class=\"nav-tab\" href=\"/items\" title=\"按 ID / 名称搜索\">道具</a><a class=\"nav-tab\" href=\"/pets\" title=\"主表、资质、候选与必带技能\">宠物</a><a class=\"nav-tab\" href=\"/skills\" title=\"描述、公式、重复覆盖\">技能</a><a class=\"nav-tab\" href=\"/maps\" title=\"按来源分开，不合成唯一表\">地图 / NPC</a><a class=\"nav-tab\" href=\"/anomalies\" title=\"隔离、缺失、歧义与原始字节\">异常与证据</a></nav><section class=\"notice notice--review\" role=\"note\" data-testid=\"review-notice\"><h2>复核候选，非正式规则</h2><p>本页展示的 batch_001 行是<strong>静态候选解码</strong>结果：可用于人工复核与目录浏览，<strong>不是</strong>原生加载器验证结果，也<strong>不是</strong>正式服务端规则表。</p><ul><li>未做简繁转换；名称、描述、颜色标记与资源公式均按源文本原样展示，不解释、不计算。</li><li>隔离记录、缺失资质与同名技能多 ID 候选继续保留：不补零、不自动择一、不折叠重复记录。</li><li>页面不提供任何编辑、删除、导入或发布动作。</li></ul><p class=\"notice__meta\"></p></section><main class=\"app__main\" aria-label=\"批次概览\"><section class=\"page\" data-testid=\"page-overview\"><h1>批次概览</h1><p class=\"page__lede\">计数、校验状态与隔离/缺失数量全部来自复核 API（<code>/batch</code>、<code>/datasets</code>、<code>/health</code>），不在前端写死。若数值与 CSV 不一致，以接口返回为准并核对导出器。</p><div class=\"panel\"><h2>批次信息</h2><dl class=\"keyvalue\"><div class=\"keyvalue__row\"><dt>批次</dt><dd><code>batch_001</code></dd></div><div class=\"keyvalue__row\"><dt>原生加载器确认</dt><dd><code>native_loader_confirmed = false</code> <span class=\"badge badge--warn\">未确认</span></dd></div><div class=\"keyvalue__row\"><dt>数据集</dt><dd>清单 17 个 · manifest 文件 21 个 · 已加载 22 个文件、12,202 条记录</dd></div></dl><details><summary>CSV 格式约定（来自 manifest）</summary><dl class=\"keyvalue\"><div class=\"keyvalue__row\"><dt>delimiter</dt><dd><code>,</code></dd></div><div class=\"keyvalue__row\"><dt>encoding</dt><dd><code>UTF-8 without BOM</code></dd></div><div class=\"keyvalue__row\"><dt>formula_policy</dt><dd><code>Opaque text. Spreadsheet users must import text; do not evaluate formulas.</code></dd></div><div class=\"keyvalue__row\"><dt>newline</dt><dd><code>LF</code></dd></div><div class=\"keyvalue__row\"><dt>nulls</dt><dd><code>No nulls in core CSVs; missing relations are separate rows/files.</code></dd></div><div class=\"keyvalue__row\"><dt>quoting</dt><dd><code>all fields</code></dd></div><div class=\"keyvalue__row\"><dt>scope</dt><dd><code>Core CSVs only; maps_npcs overrides retained from E staging</code></dd></div></dl></details></div><div class=\"panel\"><h2>各表数量与隔离</h2><div class=\"table-scroll\"><table class=\"data-table\" data-testid=\"batch-tables\"><thead><tr><th scope=\"col\">源条目</th><th scope=\"col\">复核数据集</th><th scope=\"col\" class=\"is-numeric\">数据集行数</th><th scope=\"col\" class=\"is-numeric\">源记录数</th><th scope=\"col\" class=\"is-numeric\">复核行数</th><th scope=\"col\" class=\"is-numeric\">隔离</th><th scope=\"col\">源表</th></tr></thead><tbody><tr><td data-label=\"源条目\"><code>1945</code></td><td data-label=\"复核数据集\"><code data-testid=\"table-dataset\">items</code></td><td data-label=\"数据集行数\" class=\"is-numeric\">6,851</td><td data-label=\"源记录数\" class=\"is-numeric\">6,852</td><td data-label=\"复核行数\" class=\"is-numeric\">6,851</td><td data-label=\"隔离\" class=\"is-numeric\"><span class=\"badge badge--danger\">1</span></td><td data-label=\"源表\"><code>DATA+ITEMDATABYTYPE+SHAPETABLE</code></td></tr><tr><td data-label=\"源条目\"><code>2027</code></td><td data-label=\"复核数据集\"><code data-testid=\"table-dataset\">pets</code></td><td data-label=\"数据集行数\" class=\"is-numeric\">135</td><td data-label=\"源记录数\" class=\"is-numeric\">135</td><td data-label=\"复核行数\" class=\"is-numeric\">135</td><td data-label=\"隔离\" class=\"is-numeric\"><span>0</span></td><td data-label=\"源表\"><code>DATA</code></td></tr><tr><td data-label=\"源条目\"><code>2954</code></td><td data-label=\"复核数据集\"><code data-testid=\"table-dataset\">pet_aptitudes</code></td><td data-label=\"数据集行数\" class=\"is-numeric\">131</td><td data-label=\"源记录数\" class=\"is-numeric\">132</td><td data-label=\"复核行数\" class=\"is-numeric\">131</td><td dat",
+          "text": "MXSJ 静态数据复核浏览器只读浏览 batch_001 复核材料 · 前端不读取仓库 CSV · 数据由 /api/v1/review 提供批次概览道具宠物技能地图 / NPC异常与证据复核候选，非正式规则本页展示的 batch_001 行是静态候选解码结果：可用于人工复核与目录浏览，不是原生加载器验证结果，也不是正式服务端规则表。未做简繁转换；名称、描述、颜色标记与资源公式均按源文本原样展示，不解释、不计算。隔离记录、缺失资质与同名技能多 ID 候选继续保留：不补零、不自动择一、不折叠重复记录。页面不提供任何编辑、删除、导入或发布动作。批次概览计数、校验状态与隔离/缺失数量全部来自复核 API（/batch、/datasets、/health），不在前端写死。若数值与 CSV 不一致，以接口返回为准并核对导出器。批次信息批次batch_001原生加载器确认native_loader_confirmed = false 未确认数据集清单 17 个 · manifest 文件 21 个 · 已加载 22 个文件、12,202 条记录CSV 格式约定（来自 manifest）delimiter,encodingUTF-8 without BOMformula_policyOpaque text. Spreadsheet users must import text; do not e"
+        },
+        "reprobe_status": "incomplete",
+        "reprobe_summary": {
+          "executed": 19,
+          "fail": 0,
+          "not_executed": 1,
+          "pass": 19,
+          "total": 20
+        },
+        "requests": [
+          {
+            "body_preview": "{\"batch\":\"batch_001\",\"native_loader_confirmed\":false,\"manifest_files_count\":21,\"csv_format\":{\"delimiter\":\",\",\"encoding\":\"UTF-8 without BOM\",\"formula_policy\":\"Op",
+            "content_type": "application/json",
+            "method": "GET",
+            "status": 200,
+            "url": "http://127.0.0.1:60595/api/v1/review/batch"
+          },
+          {
+            "body_preview": "{\"status\":\"ready\",\"batch\":\"batch_001\",\"loaded_files_count\":22,\"datasets_count\":17,\"total_records_count\":12202}",
+            "content_type": "application/json",
+            "method": "GET",
+            "status": 200,
+            "url": "http://127.0.0.1:60595/api/v1/review/health"
+          },
+          {
+            "body_preview": "{\"total\":17,\"datasets\":[{\"id\":\"items\",\"filename\":\"items.csv\",\"rows\":6851,\"primary_key\":[\"client_shape_id\"],\"notes\":\"Display catalog, includes test/history entri",
+            "content_type": "application/json",
+            "method": "GET",
+            "status": 200,
+            "url": "http://127.0.0.1:60595/api/v1/review/datasets"
+          }
+        ],
+        "web_port": 60595,
+        "workdir": "/tmp/mxsj-web-runtime-6eo07pgu"
+      },
+      "status": "pass"
+    },
+    "unittest_suite": {
+      "exit_code": 0,
+      "failure_count": 0,
+      "failures": [],
+      "ran": "Ran 68 tests in 18.248s",
+      "skipped_count": 0,
+      "skipped_reasons": [],
+      "status": "pass",
+      "tail": [
+        "test_real_data_fallback_and_hardcoded_count_are_violations (test_harness_self_check.PageScannerSelfCheck.test_real_data_fallback_and_hardcoded_count_are_violations) ... ok",
+        "test_negative_control_reports_failures (test_harness_self_check.ProbeAgainstInjectedFaults.test_negative_control_reports_failures) ... ok",
+        "test_positive_control_passes_every_executed_check (test_harness_self_check.ProbeAgainstInjectedFaults.test_positive_control_passes_every_executed_check) ... ok",
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 68 tests in 18.248s",
+        "",
+        "OK"
+      ]
+    }
+  },
+  "summary": {
+    "csv_exporter_check": "pass",
+    "integration_acceptance_complete": true,
+    "new_acceptance_suite": "pass",
+    "not_executed_required_checks": [],
+    "original_architecture_suite": "pass",
+    "outstanding_api_checks": 0,
+    "outstanding_web_runtime_checks": 0,
+    "outstanding_web_static_checks": 0,
+    "phase1": "pass",
+    "phase2_live_api": "pass",
+    "phase3_static_page": "pass",
+    "phase3_web_runtime": "pass",
+    "test_counts": {
+      "new_acceptance_suite": "Ran 68 tests in 18.248s",
+      "note": "the new acceptance suite is deliberately counted separately from the original architecture tests",
+      "original_architecture_tests": "Ran 161 tests in 30.718s"
+    }
+  },
+  "tested_deliverables": {
+    "api_application": {
+      "last_commit": "01e2adb465fb8bb67f872184e805f2ab6549cae8",
+      "path": "server/apps/review_api",
+      "present": true,
+      "tested_sha": "01e2adb465fb8bb67f872184e805f2ab6549cae8"
+    },
+    "api_contract": {
+      "last_commit": "5ae8a3820b4db62ed4f16498d7eb422897a80b6d",
+      "path": "server/docs/review_browser/API_CONTRACT.md",
+      "present": true,
+      "reviewed_remote_ref": "origin/pr-22"
+    },
+    "loader_source": {
+      "last_commit": "d9721d8df758d905830ac9519df09853bd5b6b38",
+      "path": "server/src/mxsj_catalog",
+      "present": true
+    },
+    "web_page": {
+      "last_commit": "d9721d8df758d905830ac9519df09853bd5b6b38",
+      "path": "server/apps/review_web",
+      "present": true,
+      "reviewed_remote_ref": "origin/pr-24",
+      "tested_sha": "4bef44fcdbbff228b67831cff7395e373532ffcb"
+    }
+  }
+}

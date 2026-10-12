@@ -1,0 +1,12 @@
+{
+ "client_shape_id": 11,
+ "name": "NPC呼叫器",
+ "description_raw": "可以呼叫各種功能NPC以方便測試#r【類型】測試專用物品",
+ "category_code_raw": 6,
+ "image_id": 11,
+ "image_mapping_explicit": false,
+ "source_entry": 1945,
+ "source_table": "DATA+ITEMDATABYTYPE+SHAPETABLE",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "11"
+}

@@ -1,0 +1,9 @@
+=== SAVED [233, 132, 132, 105, 246]
+   filename b'script\\data\\newfurnituredata.py' names 65 consts 981
+   instructions walked: 9845 error: EXTENDED_ARG before argument-free instruction at 18307 (op 32)
+=== key1=11 [233, 11, 132, 105, 246]
+   filename b'script\\data\\newfurnituredata.py' names 65 consts 981
+   instructions walked: 18672 error: EXTENDED_ARG before argument-free instruction at 34192 (op 31)
+=== key1=73 [233, 73, 132, 105, 246]
+   filename b'script\\data\\newfurnituredata.py' names 65 consts 981
+   instructions walked: 18672 error: EXTENDED_ARG before argument-free instruction at 34192 (op 31)

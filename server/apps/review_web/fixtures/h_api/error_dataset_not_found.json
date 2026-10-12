@@ -1,0 +1,9 @@
+{
+ "error": {
+  "code": "DATASET_NOT_FOUND",
+  "message": "Dataset 'unknown_table' does not exist.",
+  "details": {
+   "dataset_id": "unknown_table"
+  }
+ }
+}

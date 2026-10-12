@@ -1,0 +1,465 @@
+{
+ "dataset": "sceneid2name_minimap_scenes",
+ "total": 57,
+ "offset": 0,
+ "limit": 500,
+ "count": 57,
+ "records": [
+  {
+   "scene_id": 1001,
+   "name": "永澤城",
+   "related_id_unresolved": 1001,
+   "size_a": 1800,
+   "size_b": 2400,
+   "_pk": "1001"
+  },
+  {
+   "scene_id": 1004,
+   "name": "清溪平原",
+   "related_id_unresolved": 1004,
+   "size_a": 2400,
+   "size_b": 3200,
+   "_pk": "1004"
+  },
+  {
+   "scene_id": 1005,
+   "name": "天水平原",
+   "related_id_unresolved": 1005,
+   "size_a": 3000,
+   "size_b": 4800,
+   "_pk": "1005"
+  },
+  {
+   "scene_id": 1007,
+   "name": "香葉城",
+   "related_id_unresolved": 1007,
+   "size_a": 1800,
+   "size_b": 2400,
+   "_pk": "1007"
+  },
+  {
+   "scene_id": 1008,
+   "name": "芳草鎮",
+   "related_id_unresolved": 1008,
+   "size_a": 2400,
+   "size_b": 3200,
+   "_pk": "1008"
+  },
+  {
+   "scene_id": 1012,
+   "name": "螢火森林",
+   "related_id_unresolved": 1012,
+   "size_a": 3000,
+   "size_b": 4800,
+   "_pk": "1012"
+  },
+  {
+   "scene_id": 1013,
+   "name": "天蒼城",
+   "related_id_unresolved": 1013,
+   "size_a": 1800,
+   "size_b": 2400,
+   "_pk": "1013"
+  },
+  {
+   "scene_id": 1014,
+   "name": "雲雀谷",
+   "related_id_unresolved": 1014,
+   "size_a": 2400,
+   "size_b": 3200,
+   "_pk": "1014"
+  },
+  {
+   "scene_id": 1018,
+   "name": "太息林地",
+   "related_id_unresolved": 1018,
+   "size_a": 3000,
+   "size_b": 4800,
+   "_pk": "1018"
+  },
+  {
+   "scene_id": 1019,
+   "name": "海底神殿",
+   "related_id_unresolved": 1019,
+   "size_a": 1800,
+   "size_b": 2400,
+   "_pk": "1019"
+  },
+  {
+   "scene_id": 1022,
+   "name": "落日海灣",
+   "related_id_unresolved": 1022,
+   "size_a": 2400,
+   "size_b": 3200,
+   "_pk": "1022"
+  },
+  {
+   "scene_id": 1023,
+   "name": "幻境海岸",
+   "related_id_unresolved": 1023,
+   "size_a": 2400,
+   "size_b": 3200,
+   "_pk": "1023"
+  },
+  {
+   "scene_id": 1025,
+   "name": "清風村",
+   "related_id_unresolved": 1025,
+   "size_a": 3000,
+   "size_b": 4000,
+   "_pk": "1025"
+  },
+  {
+   "scene_id": 1026,
+   "name": "黎明鎮",
+   "related_id_unresolved": 1026,
+   "size_a": 1800,
+   "size_b": 2400,
+   "_pk": "1026"
+  },
+  {
+   "scene_id": 1027,
+   "name": "夜幕鎮",
+   "related_id_unresolved": 1027,
+   "size_a": 1800,
+   "size_b": 2400,
+   "_pk": "1027"
+  },
+  {
+   "scene_id": 1028,
+   "name": "長風島",
+   "related_id_unresolved": 1028,
+   "size_a": 2400,
+   "size_b": 3200,
+   "_pk": "1028"
+  },
+  {
+   "scene_id": 1029,
+   "name": "疾風谷",
+   "related_id_unresolved": 1029,
+   "size_a": 2400,
+   "size_b": 4000,
+   "_pk": "1029"
+  },
+  {
+   "scene_id": 1032,
+   "name": "碎夢嶺",
+   "related_id_unresolved": 1032,
+   "size_a": 3000,
+   "size_b": 4000,
+   "_pk": "1032"
+  },
+  {
+   "scene_id": 1033,
+   "name": "金綠沙洲",
+   "related_id_unresolved": 1033,
+   "size_a": 3000,
+   "size_b": 4800,
+   "_pk": "1033"
+  },
+  {
+   "scene_id": 1034,
+   "name": "修羅森林",
+   "related_id_unresolved": 1034,
+   "size_a": 3000,
+   "size_b": 5600,
+   "_pk": "1034"
+  },
+  {
+   "scene_id": 1035,
+   "name": "落雪冰原",
+   "related_id_unresolved": 1035,
+   "size_a": 3000,
+   "size_b": 4800,
+   "_pk": "1035"
+  },
+  {
+   "scene_id": 1036,
+   "name": "珊瑚迷宮",
+   "related_id_unresolved": 1036,
+   "size_a": 1800,
+   "size_b": 2400,
+   "_pk": "1036"
+  },
+  {
+   "scene_id": 1039,
+   "name": "靈石塔一層",
+   "related_id_unresolved": 1039,
+   "size_a": 1200,
+   "size_b": 1600,
+   "_pk": "1039"
+  },
+  {
+   "scene_id": 1040,
+   "name": "靈石塔二層",
+   "related_id_unresolved": 1040,
+   "size_a": 1200,
+   "size_b": 1600,
+   "_pk": "1040"
+  },
+  {
+   "scene_id": 1041,
+   "name": "靈石塔三層",
+   "related_id_unresolved": 1041,
+   "size_a": 1800,
+   "size_b": 2400,
+   "_pk": "1041"
+  },
+  {
+   "scene_id": 1043,
+   "name": "古木祭壇一層",
+   "related_id_unresolved": 1043,
+   "size_a": 1800,
+   "size_b": 2400,
+   "_pk": "1043"
+  },
+  {
+   "scene_id": 1044,
+   "name": "古木祭壇二層",
+   "related_id_unresolved": 1044,
+   "size_a": 1800,
+   "size_b": 2400,
+   "_pk": "1044"
+  },
+  {
+   "scene_id": 1045,
+   "name": "古木祭壇三層",
+   "related_id_unresolved": 1045,
+   "size_a": 1800,
+   "size_b": 2400,
+   "_pk": "1045"
+  },
+  {
+   "scene_id": 1051,
+   "name": "沙漠迷宮",
+   "related_id_unresolved": 1051,
+   "size_a": 2400,
+   "size_b": 4000,
+   "_pk": "1051"
+  },
+  {
+   "scene_id": 1052,
+   "name": "兔神殿遺址",
+   "related_id_unresolved": 1052,
+   "size_a": 2400,
+   "size_b": 4000,
+   "_pk": "1052"
+  },
+  {
+   "scene_id": 1053,
+   "name": "兔坦卡門陵墓",
+   "related_id_unresolved": 1053,
+   "size_a": 3600,
+   "size_b": 4800,
+   "_pk": "1053"
+  },
+  {
+   "scene_id": 1054,
+   "name": "明月城",
+   "related_id_unresolved": 1054,
+   "size_a": 6000,
+   "size_b": 10000,
+   "_pk": "1054"
+  },
+  {
+   "scene_id": 1061,
+   "name": "南遙戰士師道殿",
+   "related_id_unresolved": 2302,
+   "size_a": 1500,
+   "size_b": 2000,
+   "_pk": "1061"
+  },
+  {
+   "scene_id": 1062,
+   "name": "南遙法師師道殿",
+   "related_id_unresolved": 2302,
+   "size_a": 1500,
+   "size_b": 2000,
+   "_pk": "1062"
+  },
+  {
+   "scene_id": 1063,
+   "name": "南遙術士師道殿",
+   "related_id_unresolved": 2302,
+   "size_a": 1500,
+   "size_b": 2000,
+   "_pk": "1063"
+  },
+  {
+   "scene_id": 1064,
+   "name": "天寧戰士師道殿",
+   "related_id_unresolved": 2302,
+   "size_a": 1500,
+   "size_b": 2000,
+   "_pk": "1064"
+  },
+  {
+   "scene_id": 1065,
+   "name": "天寧法師師道殿",
+   "related_id_unresolved": 2302,
+   "size_a": 1500,
+   "size_b": 2000,
+   "_pk": "1065"
+  },
+  {
+   "scene_id": 1066,
+   "name": "天寧術士師道殿",
+   "related_id_unresolved": 2302,
+   "size_a": 1500,
+   "size_b": 2000,
+   "_pk": "1066"
+  },
+  {
+   "scene_id": 1067,
+   "name": "清嵐戰士師道殿",
+   "related_id_unresolved": 2302,
+   "size_a": 1500,
+   "size_b": 2000,
+   "_pk": "1067"
+  },
+  {
+   "scene_id": 1068,
+   "name": "清嵐法師師道殿",
+   "related_id_unresolved": 2302,
+   "size_a": 1500,
+   "size_b": 2000,
+   "_pk": "1068"
+  },
+  {
+   "scene_id": 1069,
+   "name": "清嵐術士師道殿",
+   "related_id_unresolved": 2302,
+   "size_a": 1500,
+   "size_b": 2000,
+   "_pk": "1069"
+  },
+  {
+   "scene_id": 1070,
+   "name": "加洛戰士師道殿",
+   "related_id_unresolved": 2302,
+   "size_a": 1500,
+   "size_b": 2000,
+   "_pk": "1070"
+  },
+  {
+   "scene_id": 1071,
+   "name": "加洛法師師道殿",
+   "related_id_unresolved": 2302,
+   "size_a": 1500,
+   "size_b": 2000,
+   "_pk": "1071"
+  },
+  {
+   "scene_id": 1072,
+   "name": "加洛術士師道殿",
+   "related_id_unresolved": 2302,
+   "size_a": 1500,
+   "size_b": 2000,
+   "_pk": "1072"
+  },
+  {
+   "scene_id": 1073,
+   "name": "靈風塔一層",
+   "related_id_unresolved": 1041,
+   "size_a": 1800,
+   "size_b": 2400,
+   "_pk": "1073"
+  },
+  {
+   "scene_id": 1074,
+   "name": "靈風塔二層",
+   "related_id_unresolved": 1042,
+   "size_a": 1800,
+   "size_b": 2400,
+   "_pk": "1074"
+  },
+  {
+   "scene_id": 1075,
+   "name": "靈風塔三層",
+   "related_id_unresolved": 1047,
+   "size_a": 1800,
+   "size_b": 2400,
+   "_pk": "1075"
+  },
+  {
+   "scene_id": 1157,
+   "name": "天空要塞",
+   "related_id_unresolved": 1157,
+   "size_a": 2400,
+   "size_b": 3200,
+   "_pk": "1157"
+  },
+  {
+   "scene_id": 1158,
+   "name": "初雲峽谷",
+   "related_id_unresolved": 1158,
+   "size_a": 2400,
+   "size_b": 3200,
+   "_pk": "1158"
+  },
+  {
+   "scene_id": 1159,
+   "name": "初雲平原",
+   "related_id_unresolved": 1159,
+   "size_a": 2400,
+   "size_b": 3200,
+   "_pk": "1159"
+  },
+  {
+   "scene_id": 1176,
+   "name": "魔晶要塞",
+   "related_id_unresolved": 1176,
+   "size_a": 2400,
+   "size_b": 3200,
+   "_pk": "1176"
+  },
+  {
+   "scene_id": 1177,
+   "name": "聖痕峽谷",
+   "related_id_unresolved": 1177,
+   "size_a": 2400,
+   "size_b": 3200,
+   "_pk": "1177"
+  },
+  {
+   "scene_id": 1194,
+   "name": "梵天古城",
+   "related_id_unresolved": 1194,
+   "size_a": 2400,
+   "size_b": 3200,
+   "_pk": "1194"
+  },
+  {
+   "scene_id": 1301,
+   "name": "冒險家行會一層",
+   "related_id_unresolved": 2121,
+   "size_a": 1500,
+   "size_b": 2000,
+   "_pk": "1301"
+  },
+  {
+   "scene_id": 1303,
+   "name": "冒險家行會二層",
+   "related_id_unresolved": 2122,
+   "size_a": 1500,
+   "size_b": 2000,
+   "_pk": "1303"
+  },
+  {
+   "scene_id": 1313,
+   "name": "龍淵",
+   "related_id_unresolved": 1313,
+   "size_a": 2400,
+   "size_b": 3200,
+   "_pk": "1313"
+  },
+  {
+   "scene_id": 1323,
+   "name": "英靈殿",
+   "related_id_unresolved": 1323,
+   "size_a": 2600,
+   "size_b": 3400,
+   "_pk": "1323"
+  }
+ ]
+}

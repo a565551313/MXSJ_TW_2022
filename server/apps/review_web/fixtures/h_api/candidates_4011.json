@@ -1,0 +1,45 @@
+{
+ "dataset": "pet_skill_candidates",
+ "total": 4,
+ "offset": 0,
+ "limit": 50,
+ "count": 4,
+ "records": [
+  {
+   "client_shape_id": 4011,
+   "sequence": 0,
+   "skill_name_raw": "新月獠牙",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4011:0"
+  },
+  {
+   "client_shape_id": 4011,
+   "sequence": 1,
+   "skill_name_raw": "終級命中",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4011:1"
+  },
+  {
+   "client_shape_id": 4011,
+   "sequence": 2,
+   "skill_name_raw": "終級神跡",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4011:2"
+  },
+  {
+   "client_shape_id": 4011,
+   "sequence": 3,
+   "skill_name_raw": "終級強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4011:3"
+  }
+ ]
+}

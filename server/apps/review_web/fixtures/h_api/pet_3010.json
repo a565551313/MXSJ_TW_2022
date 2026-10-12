@@ -1,0 +1,13 @@
+{
+ "client_shape_id": 3010,
+ "name": "未定",
+ "liupai_raw": "",
+ "attack_type_raw": "",
+ "carry_grade": 0,
+ "maxskillnum_raw": 0,
+ "address_raw": "",
+ "source_entry": 2027,
+ "source_table": "DATA",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "3010"
+}

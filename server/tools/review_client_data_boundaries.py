@@ -96,6 +96,129 @@ def extract_table(co, name=b'DATA'):
     raise ValueError(f'table {name!r} not found')
 
 
+# --------------------------------------------------------------------------
+# Corrected module-level reading (added 2026-10-11; existing results unchanged)
+# --------------------------------------------------------------------------
+# `extract_table()` above keeps its historical behaviour on purpose: only
+# STORE_NAME terminates a statement, and a repeated dictionary key raises.  That
+# behaviour cannot describe entry 3205 (`petskill.py`), which publishes its
+# master table with STORE_GLOBAL and writes 9 skill ids twice.
+#
+# The two helpers below expose the corrected semantics -- both store opcodes,
+# duplicate writes kept as ordered evidence -- without changing any existing
+# result.  They are thin wrappers around `script_literal_reader.py`, which does
+# the structural work (constant/name indices, stack shape, literal grammar).
+_STRUCTURAL_READER = None
+
+
+def _structural_reader():
+    """Import `script_literal_reader.py` from this directory, in a fresh process too.
+
+    The module must be registered in `sys.modules` *before* it is executed:
+    `script_literal_reader` defines dataclasses, and `dataclasses` resolves
+    `cls.__module__` through `sys.modules`, so executing an unregistered module
+    raises `AttributeError: 'NoneType' object has no attribute '__dict__'` on the
+    first `@dataclass`.  Registering first also makes repeated calls reuse one
+    module instance instead of defining the classes twice.
+    """
+    global _STRUCTURAL_READER
+    if _STRUCTURAL_READER is not None:
+        return _STRUCTURAL_READER
+    import importlib.util
+    import sys
+    path = (Path(__file__).resolve().parent / 'script_literal_reader.py')
+    for module in list(sys.modules.values()):
+        file = getattr(module, '__file__', None)
+        if file and getattr(module, 'scan_module', None) is not None:
+            try:
+                if Path(file).resolve() == path:
+                    _STRUCTURAL_READER = module
+                    return module
+            except OSError:                       # pragma: no cover - defensive
+                continue
+    name = 'script_literal_reader'
+    if name in sys.modules:                       # a different module owns the name
+        name = '_review_client_data_boundaries_script_literal_reader'
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        sys.modules.pop(name, None)
+        raise
+    _STRUCTURAL_READER = module
+    return module
+
+
+def top_level_literal_assignments(co):
+    """Low-level scan: read module-level literal assignments, including STORE_GLOBAL.
+
+    Returns the `script_literal_reader.ScanResult` (assignments in source order with
+    their ordered dictionary writes, other statements, and every bytecode shape the
+    reader could not accept).  This entry point never raises for an unsupported
+    shape and never filters: it is the raw scanner, so the caller must check
+    `ScanResult.complete` / `ScanResult.violations` before trusting a value.
+    Use `extract_table_report()` for a single table with an enforced contract.
+    """
+    return _structural_reader().scan_module(co)
+
+
+def extract_table_report(co, name=b'DATA', duplicate_policy='record',
+                         allow_partial=False):
+    """Extract one module-level table plus the evidence of every key write.
+
+    Contract
+    --------
+    * `allow_partial=False` (default) is strict: the call raises `ValueError`
+      unless the whole module body was read without a violation.  A value that was
+      published *before* an unsupported instruction is therefore never returned as
+      if it were verified.
+    * `allow_partial=True` returns a partial result for inspection.  It is marked
+      with `verified=False`, a human-readable `warning`, and the full `violations`
+      tuple; the caller must treat the value as unfinished verification.
+    * `duplicate_policy` is 'record' (default: keep every write of a repeated key as
+      an ordered entry with position, old value and new value; the table value is
+      the runtime result, last write wins) or 'error' (raise on the first repeated
+      key, matching the historical `evaluate_literals()` behaviour).
+    """
+    if duplicate_policy not in ('record', 'error'):
+        raise ValueError(f'unknown duplicate_policy {duplicate_policy!r}')
+    scan = top_level_literal_assignments(co)
+    assignment = scan.by_name(name)
+    if assignment is None:
+        detail = (f'; first rejected shape: {scan.first_violation}'
+                  if scan.violations else '')
+        raise ValueError(f'table {name!r} not found as a module-level literal '
+                         f'assignment{detail}')
+    if scan.violations and not allow_partial:
+        raise ValueError(
+            f'module body could not be read completely, table {name!r} at '
+            f'{assignment.store_kind} {assignment.store_at} is unverified; pass '
+            f'allow_partial=True to inspect the partial value. '
+            f'First rejected shape: {scan.first_violation}')
+    if duplicate_policy == 'error' and assignment.overwrites:
+        first = assignment.overwrites[0]
+        raise ValueError(f'duplicate dictionary key {first.key!r} at {first.at}')
+    return {
+        'value': assignment.value,
+        'store': assignment.store_kind,
+        'store_at': assignment.store_at,
+        'writes': tuple(assignment.writes),
+        'overwrites': tuple(assignment.overwrites),
+        'duplicate_keys': tuple(assignment.duplicate_keys),
+        'verified': assignment.verified and scan.complete,
+        'partial': not (assignment.verified and scan.complete),
+        'violations': tuple(scan.violations),
+        'warning': (None if (assignment.verified and scan.complete) else
+                    f'partial result: the module body was not read completely '
+                    f'({len(scan.violations)} violation(s), first at '
+                    f'{scan.first_violation.at}); the value at {assignment.store_kind} '
+                    f'{assignment.store_at} is a prefix of the module body and is not '
+                    f'fully verified'),
+    }
+
+
 def readable(value):
     if isinstance(value, bytes):
         try:

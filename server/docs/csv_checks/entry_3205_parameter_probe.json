@@ -1,0 +1,773 @@
+{
+  "tool": "server/tools/probe_script_entry_3205.py",
+  "purpose": "three-way read-only reproduction of the entry 3205 parameter conflict",
+  "entry_index": 3205,
+  "module": "script/data/petskill.py",
+  "safety": {
+    "client_files_modified": false,
+    "recovered_code_executed": false,
+    "game_data_written": false,
+    "mock_server_started": false
+  },
+  "inputs": {
+    "data/script.fls": {
+      "sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "size": 24454082
+    },
+    "tools/decompiler/script_fls_keys.json": {
+      "sha256": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+    }
+  },
+  "parameter_sets": {
+    "saved": {
+      "label": "saved script_fls_keys.json",
+      "source": "tools/decompiler/script_fls_keys.json (baseline, method=catalog)",
+      "result": {
+        "keys": [
+          204,
+          23,
+          122,
+          74,
+          218
+        ],
+        "bounds": [
+          18043,
+          36122,
+          54130,
+          72108
+        ],
+        "saved_keys": [
+          204,
+          23,
+          122,
+          74,
+          218
+        ],
+        "saved_bounds": [
+          18043,
+          36122,
+          54130,
+          72108
+        ],
+        "changed_fields": [],
+        "payload_length": 89920,
+        "root_co_code_payload_span": [
+          22,
+          37496
+        ],
+        "unmapped_duoyi_opcodes_in_root_co_code": {
+          "count": 2433,
+          "first": [
+            18043,
+            18046,
+            18050,
+            18068,
+            18077,
+            18080,
+            18083,
+            18086
+          ]
+        },
+        "co_filename": "script\\data\\petskill.py",
+        "co_names": [
+          "GetData",
+          "GetShape",
+          "GetSkillID",
+          "GetDataByName",
+          "GetPetSkillNameById",
+          "IsPetSkill",
+          "ICON_MAPPING",
+          "DATA",
+          "AUTOFIGHTLIST",
+          "ShieldShortCutSkills"
+        ],
+        "const_count": 1639,
+        "standard_walk": {
+          "ok": false,
+          "error": {
+            "at": 18032,
+            "op": 0,
+            "op_name": "?",
+            "reason": "EXTENDED_ARG before argument-free instruction",
+            "expected": null,
+            "message": "EXTENDED_ARG before argument-free instruction at 18032: opcode 0 (?)"
+          }
+        },
+        "literal_grammar": {
+          "ok": false,
+          "first_violation": {
+            "at": 18032,
+            "op": 0,
+            "op_name": "?",
+            "reason": "EXTENDED_ARG before argument-free instruction",
+            "expected": null,
+            "message": "EXTENDED_ARG before argument-free instruction at 18032: opcode 0 (?)"
+          },
+          "violation_count": 1,
+          "stack_depth_max": 0
+        },
+        "disallowed_opcodes_in_module": {
+          "metric": "opcodes outside the module-level literal allowlist",
+          "histogram": {
+            "reader error: EXTENDED_ARG before argument-free instruction": 1
+          }
+        },
+        "index_bound_problems": [
+          {
+            "at": 18032,
+            "op": 0,
+            "op_name": "?",
+            "reason": "EXTENDED_ARG before argument-free instruction",
+            "expected": null,
+            "message": "EXTENDED_ARG before argument-free instruction at 18032: opcode 0 (?)"
+          }
+        ],
+        "index_bound_problem_count": 1,
+        "assignments": [],
+        "statements": []
+      }
+    },
+    "agent_d": {
+      "label": "Agent D / PR #14 candidate",
+      "source": "PR #14 server/docs/csv_checks/AGENT_D.md section 5",
+      "result": {
+        "keys": [
+          204,
+          152,
+          122,
+          74,
+          218
+        ],
+        "bounds": [
+          18043,
+          36123,
+          54155,
+          72143
+        ],
+        "saved_keys": [
+          204,
+          23,
+          122,
+          74,
+          218
+        ],
+        "saved_bounds": [
+          18043,
+          36122,
+          54130,
+          72108
+        ],
+        "changed_fields": [
+          "keys[1]: 23 -> 152",
+          "bounds[1]: 36122 -> 36123",
+          "bounds[2]: 54130 -> 54155",
+          "bounds[3]: 72108 -> 72143"
+        ],
+        "payload_length": 89920,
+        "root_co_code_payload_span": [
+          22,
+          37496
+        ],
+        "unmapped_duoyi_opcodes_in_root_co_code": {
+          "count": 0,
+          "first": []
+        },
+        "co_filename": "script\\data\\petskill.py",
+        "co_names": [
+          "GetData",
+          "GetShape",
+          "GetSkillID",
+          "GetDataByName",
+          "GetPetSkillNameById",
+          "IsPetSkill",
+          "ICON_MAPPING",
+          "DATA",
+          "AUTOFIGHTLIST",
+          "ShieldShortCutSkills"
+        ],
+        "const_count": 1639,
+        "standard_walk": {
+          "ok": true,
+          "instruction_count": 20776
+        },
+        "literal_grammar": {
+          "ok": true,
+          "first_violation": null,
+          "violation_count": 0,
+          "stack_depth_max": 37
+        },
+        "disallowed_opcodes_in_module": {
+          "metric": "opcodes outside the module-level literal allowlist",
+          "histogram": {}
+        },
+        "index_bound_problems": [],
+        "index_bound_problem_count": 0,
+        "assignments": [
+          {
+            "name": "ICON_MAPPING",
+            "store": "STORE_GLOBAL",
+            "at": 165,
+            "writes": 12,
+            "records": 12
+          },
+          {
+            "name": "DATA",
+            "store": "STORE_GLOBAL",
+            "at": 37341,
+            "writes": 590,
+            "records": 581
+          },
+          {
+            "name": "AUTOFIGHTLIST",
+            "store": "STORE_NAME",
+            "at": 37458,
+            "writes": 0,
+            "records": 37
+          },
+          {
+            "name": "ShieldShortCutSkills",
+            "store": "STORE_NAME",
+            "at": 37467,
+            "writes": 0,
+            "records": 1
+          }
+        ],
+        "statements": [
+          {
+            "at": 6,
+            "op": 90,
+            "kind": "opaque_assignment"
+          },
+          {
+            "at": 15,
+            "op": 90,
+            "kind": "opaque_assignment"
+          },
+          {
+            "at": 24,
+            "op": 90,
+            "kind": "opaque_assignment"
+          },
+          {
+            "at": 33,
+            "op": 90,
+            "kind": "opaque_assignment"
+          },
+          {
+            "at": 42,
+            "op": 90,
+            "kind": "opaque_assignment"
+          },
+          {
+            "at": 51,
+            "op": 90,
+            "kind": "opaque_assignment"
+          },
+          {
+            "at": 37473,
+            "op": 83,
+            "kind": "return"
+          }
+        ],
+        "DATA": {
+          "store": "STORE_GLOBAL",
+          "store_at": 37341,
+          "unique_records": 581,
+          "write_count": 590,
+          "key_types": [
+            "int"
+          ],
+          "key_min": 101,
+          "key_max": 45432,
+          "duplicate_keys": [
+            4573,
+            4574,
+            4575,
+            4576,
+            4577,
+            4578,
+            4579,
+            4581,
+            4236
+          ],
+          "overwrites": [
+            {
+              "order": 352,
+              "at": 22409,
+              "key": 4573,
+              "old": {
+                "type": 1,
+                "name": "天魔返生術",
+                "desc": "對隊友使用，使其起死回生，並恢復大量氣血",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              },
+              "new": {
+                "type": 1,
+                "name": "地魔返生術",
+                "desc": "對隊友使用，使其起死回生，並恢復大量氣血",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              }
+            },
+            {
+              "order": 353,
+              "at": 22472,
+              "key": 4574,
+              "old": {
+                "type": 1,
+                "name": "酒瘋發作",
+                "desc": "酒瘋發作，瘋狂攻擊敵人，對敵方全體造成固定傷害，威力不可小視",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              },
+              "new": {
+                "type": 1,
+                "name": "酒瘋發作",
+                "desc": "酒瘋發作，瘋狂攻擊敵人，對敵方全體造成固定傷害，威力不可小視",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              }
+            },
+            {
+              "order": 354,
+              "at": 22535,
+              "key": 4575,
+              "old": {
+                "type": 1,
+                "name": "視財如命",
+                "desc": "對金錢有著特殊嗅覺的怪物才擁有的技能",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              },
+              "new": {
+                "type": 1,
+                "name": "視財如命",
+                "desc": "對金錢有著特殊嗅覺的怪物才擁有的技能",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              }
+            },
+            {
+              "order": 355,
+              "at": 22598,
+              "key": 4576,
+              "old": {
+                "type": 1,
+                "name": "形神俱滅第一式·出竅",
+                "desc": "可控制目標元神的強大法術，元神一但被控制，距離死亡也就不遠了",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              },
+              "new": {
+                "type": 1,
+                "name": "形神俱滅第一式·出竅",
+                "desc": "可控制目標元神的強大法術，元神一但被控制，距離死亡也就不遠了",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              }
+            },
+            {
+              "order": 356,
+              "at": 22661,
+              "key": 4577,
+              "old": {
+                "type": 1,
+                "name": "形神俱滅第二式·幻滅",
+                "desc": "對中了形神俱滅第一式·出竅的目標使用，使用之後則目標立刻魂飛魄散",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              },
+              "new": {
+                "type": 1,
+                "name": "形神俱滅第二式·幻滅",
+                "desc": "對中了形神俱滅第一式·出竅的目標使用，使用之後則目標立刻魂飛魄散",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              }
+            },
+            {
+              "order": 357,
+              "at": 22724,
+              "key": 4578,
+              "old": {
+                "type": 1,
+                "name": "控心術",
+                "desc": "控制人心，使其攻擊隊友",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              },
+              "new": {
+                "type": 1,
+                "name": "控心術",
+                "desc": "控制人心，使其攻擊隊友",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              }
+            },
+            {
+              "order": 358,
+              "at": 22787,
+              "key": 4579,
+              "old": {
+                "type": 1,
+                "name": "多聞天王咒",
+                "desc": "第一回合設下咒印契約，下一回合若有人膽敢違背此契約，則立即遭受五雷轟頂攻擊",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              },
+              "new": {
+                "type": 1,
+                "name": "多聞天王咒",
+                "desc": "第一回合設下咒印契約，下一回合若有人膽敢違背此契約，則立即遭受五雷轟頂攻擊",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              }
+            },
+            {
+              "order": 359,
+              "at": 22850,
+              "key": 4581,
+              "old": {
+                "type": 1,
+                "name": "戾氣召喚",
+                "desc": "以戾氣為媒召喚出暴力的嗔魔惡魔",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              },
+              "new": {
+                "type": 1,
+                "name": "戾氣召喚",
+                "desc": "以戾氣為媒召喚出暴力的嗔魔惡魔",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              }
+            },
+            {
+              "order": 360,
+              "at": 22913,
+              "key": 4236,
+              "old": {
+                "type": 1,
+                "name": "順風連斬",
+                "desc": "在風環境下順著風向對敵方進行連續攻擊，只有借助風的力量才能使出的招式",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              },
+              "new": {
+                "type": 1,
+                "name": "順風連斬",
+                "desc": "在風環境下順著風向對敵方進行連續攻擊，只有借助風的力量才能使出的招式",
+                "fpneed": "0",
+                "mpneed": "0",
+                "hpneed": "0"
+              }
+            }
+          ]
+        },
+        "AUTOFIGHTLIST": [
+          407,
+          408,
+          409,
+          410,
+          411,
+          413,
+          414,
+          415,
+          416,
+          417,
+          418,
+          419,
+          420,
+          421,
+          422,
+          423,
+          424,
+          425,
+          426,
+          427,
+          428,
+          429,
+          430,
+          557,
+          451,
+          452,
+          454,
+          455,
+          558,
+          559,
+          561,
+          565,
+          566,
+          575,
+          576,
+          580,
+          581
+        ],
+        "ShieldShortCutSkills": [
+          556
+        ],
+        "ICON_MAPPING": {
+          "155": 129,
+          "255": 229,
+          "355": 329,
+          "299": 220,
+          "298": 219,
+          "297": 222,
+          "197": 117,
+          "599": 515,
+          "191": 111,
+          "196": 116,
+          "198": 118,
+          "296": 230
+        }
+      }
+    },
+    "pr18": {
+      "label": "PR #18 candidate",
+      "source": "PR #18 server/docs/CLIENT_DATA_INDEPENDENT_CHECK.md section 3.5",
+      "result": {
+        "keys": [
+          204,
+          218,
+          122,
+          74,
+          218
+        ],
+        "bounds": [
+          18043,
+          36122,
+          54130,
+          72108
+        ],
+        "saved_keys": [
+          204,
+          23,
+          122,
+          74,
+          218
+        ],
+        "saved_bounds": [
+          18043,
+          36122,
+          54130,
+          72108
+        ],
+        "changed_fields": [
+          "keys[1]: 23 -> 218"
+        ],
+        "payload_length": 89920,
+        "root_co_code_payload_span": [
+          22,
+          37496
+        ],
+        "unmapped_duoyi_opcodes_in_root_co_code": {
+          "count": 0,
+          "first": []
+        },
+        "co_filename": "script\\data\\petskill.py",
+        "co_names": [
+          "GetData",
+          "GetShape",
+          "GetSkillID",
+          "GetDataByName",
+          "GetPetSkillNameById",
+          "IsPetSkill",
+          "ICON_MAPPING",
+          "DATA",
+          "AUTOFIGHTLIST",
+          "ShieldShortCutSkills"
+        ],
+        "const_count": 1639,
+        "standard_walk": {
+          "ok": true,
+          "instruction_count": 20776
+        },
+        "literal_grammar": {
+          "ok": false,
+          "first_violation": {
+            "at": 18021,
+            "op": 80,
+            "op_name": "BREAK_LOOP",
+            "reason": "opcode is not allowed in module-level literal code (this reader follows literal tables only; a module that computes its tables at import time is reported here)",
+            "expected": null,
+            "message": "opcode is not allowed in module-level literal code (this reader follows literal tables only; a module that computes its tables at import time is reported here) at 18021: opcode 80 (BREAK_LOOP)"
+          },
+          "violation_count": 1,
+          "stack_depth_max": 6
+        },
+        "disallowed_opcodes_in_module": {
+          "metric": "opcodes outside the module-level literal allowlist",
+          "histogram": {
+            "opcode 80 (BREAK_LOOP)": 2183,
+            "opcode 136 (LOAD_LOCALS)": 2009,
+            "opcode 61 (?)": 2009,
+            "opcode 119 (CONTINUE_LOOP)": 2009,
+            "opcode 89 (BUILD_CLASS)": 1284,
+            "opcode 55 (?)": 146,
+            "opcode 63 (?)": 168,
+            "opcode 87 (?)": 6,
+            "opcode 78 (?)": 29
+          }
+        },
+        "index_bound_problems": [],
+        "index_bound_problem_count": 0,
+        "assignments": [
+          {
+            "name": "ICON_MAPPING",
+            "store": "STORE_GLOBAL",
+            "at": 165,
+            "writes": 12,
+            "records": 12
+          }
+        ],
+        "statements": [
+          {
+            "at": 6,
+            "op": 90,
+            "kind": "opaque_assignment"
+          },
+          {
+            "at": 15,
+            "op": 90,
+            "kind": "opaque_assignment"
+          },
+          {
+            "at": 24,
+            "op": 90,
+            "kind": "opaque_assignment"
+          },
+          {
+            "at": 33,
+            "op": 90,
+            "kind": "opaque_assignment"
+          },
+          {
+            "at": 42,
+            "op": 90,
+            "kind": "opaque_assignment"
+          },
+          {
+            "at": 51,
+            "op": 90,
+            "kind": "opaque_assignment"
+          }
+        ]
+      }
+    }
+  },
+  "comparison": {
+    "unmapped_duoyi_opcodes": {
+      "saved": 2433,
+      "agent_d": 0,
+      "pr18": 0,
+      "note": "PR #18's scoring metric does not separate the correct key from keys[1]=218: both report zero unmapped opcodes."
+    },
+    "disallowed_opcodes_in_module": {
+      "saved": {
+        "reader error: EXTENDED_ARG before argument-free instruction": 1
+      },
+      "agent_d": {},
+      "pr18": {
+        "opcode 80 (BREAK_LOOP)": 2183,
+        "opcode 136 (LOAD_LOCALS)": 2009,
+        "opcode 61 (?)": 2009,
+        "opcode 119 (CONTINUE_LOOP)": 2009,
+        "opcode 89 (BUILD_CLASS)": 1284,
+        "opcode 55 (?)": 146,
+        "opcode 63 (?)": 168,
+        "opcode 87 (?)": 6,
+        "opcode 78 (?)": 29
+      },
+      "note": "Module-level literal code may only contain the allowlisted ops; any other opcode is a structural contradiction."
+    },
+    "literal_grammar": {
+      "saved": {
+        "ok": false,
+        "first_violation": {
+          "at": 18032,
+          "op": 0,
+          "op_name": "?",
+          "reason": "EXTENDED_ARG before argument-free instruction",
+          "expected": null,
+          "message": "EXTENDED_ARG before argument-free instruction at 18032: opcode 0 (?)"
+        },
+        "violation_count": 1,
+        "stack_depth_max": 0
+      },
+      "agent_d": {
+        "ok": true,
+        "first_violation": null,
+        "violation_count": 0,
+        "stack_depth_max": 37
+      },
+      "pr18": {
+        "ok": false,
+        "first_violation": {
+          "at": 18021,
+          "op": 80,
+          "op_name": "BREAK_LOOP",
+          "reason": "opcode is not allowed in module-level literal code (this reader follows literal tables only; a module that computes its tables at import time is reported here)",
+          "expected": null,
+          "message": "opcode is not allowed in module-level literal code (this reader follows literal tables only; a module that computes its tables at import time is reported here) at 18021: opcode 80 (BREAK_LOOP)"
+        },
+        "violation_count": 1,
+        "stack_depth_max": 6
+      }
+    },
+    "DATA_recovered": {
+      "saved": false,
+      "agent_d": true,
+      "pr18": false
+    },
+    "verdict": "agent_d parameters recover the petskill DATA master table published with STORE_GLOBAL (581 unique skill ids, 9 recorded duplicate writes); the saved parameters fail at the first EXTENDED_ARG; the PR #18 keys[1]=218 candidate scores zero unmapped opcodes like the correct key but the module body then contains thousands of opcodes that module-level literal code cannot contain (first: BREAK_LOOP at 18021), and no DATA table is recovered."
+  },
+  "cross_table_links": {
+    "DATA_record_count": 581,
+    "skill_416": {
+      "present": true,
+      "name": "水擊"
+    },
+    "skill_64605": {
+      "present": false
+    },
+    "autofightlist": {
+      "count": 37,
+      "all_present_in_DATA": true,
+      "contains_416": true
+    },
+    "entry_2242": {
+      "literal_grammar_ok": true,
+      "assignments": [
+        {
+          "name": "SKILLIDLST",
+          "store": "STORE_NAME",
+          "at": 147,
+          "writes": 0,
+          "records": 48
+        }
+      ],
+      "count": 48,
+      "index_16": 416,
+      "all_present_in_DATA": true,
+      "missing": []
+    }
+  }
+}

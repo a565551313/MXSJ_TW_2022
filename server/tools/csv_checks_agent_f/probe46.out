@@ -1,0 +1,13 @@
+quality(132, 34193, 47423) = (6892, 334)
+quality(11, 18282, 34193)  = (8837, 2)
+quality(132, 18282, 34193) = (6029, 2027)
+
+B1=36508  parse of [18282,B1) with key11 ends exactly at boundary: True (last instr start 18225 op 90)
+B1=36509  parse of [18282,B1) with key11 ends exactly at boundary: False (last instr start 18226 op 143)
+B1=36510  parse of [18282,B1) with key11 ends exactly at boundary: False (last instr start 18226 op 143)
+B1=36511  parse of [18282,B1) with key11 ends exactly at boundary: True (last instr start 18226 op 143)
+B1=36512  parse of [18282,B1) with key11 ends exactly at boundary: False (last instr start 18229 op 138)
+B1=36513  parse of [18282,B1) with key11 ends exactly at boundary: False (last instr start 18229 op 138)
+B1=36514  parse of [18282,B1) with key11 ends exactly at boundary: True (last instr start 18229 op 138)
+B1=36515  parse of [18282,B1) with key11 ends exactly at boundary: False (last instr start 18232 op 129)
+B1=36516  parse of [18282,B1) with key11 ends exactly at boundary: False (last instr start 18232 op 129)

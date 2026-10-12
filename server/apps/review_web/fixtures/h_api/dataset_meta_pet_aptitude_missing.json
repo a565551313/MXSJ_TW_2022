@@ -1,0 +1,37 @@
+{
+ "id": "pet_aptitude_missing",
+ "filename": "pet_aptitude_missing.csv",
+ "rows": 3,
+ "primary_key": [
+  "client_shape_id"
+ ],
+ "notes": "Missing records, not zero-valued aptitude records.",
+ "source_entry": 2954,
+ "source_table": "DATA (absence checked against 2027.DATA)",
+ "columns": [
+  {
+   "name": "client_shape_id",
+   "type": "int"
+  },
+  {
+   "name": "pet_name",
+   "type": "str"
+  },
+  {
+   "name": "reason",
+   "type": "str"
+  },
+  {
+   "name": "source_entry",
+   "type": "int"
+  },
+  {
+   "name": "source_table",
+   "type": "str"
+  },
+  {
+   "name": "review_status",
+   "type": "str"
+  }
+ ]
+}

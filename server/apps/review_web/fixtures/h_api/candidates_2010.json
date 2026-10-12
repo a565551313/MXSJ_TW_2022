@@ -1,0 +1,45 @@
+{
+ "dataset": "pet_skill_candidates",
+ "total": 4,
+ "offset": 0,
+ "limit": 50,
+ "count": 4,
+ "records": [
+  {
+   "client_shape_id": 2010,
+   "sequence": 0,
+   "skill_name_raw": "連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2010:0"
+  },
+  {
+   "client_shape_id": 2010,
+   "sequence": 1,
+   "skill_name_raw": "反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2010:1"
+  },
+  {
+   "client_shape_id": 2010,
+   "sequence": 2,
+   "skill_name_raw": "智慧",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2010:2"
+  },
+  {
+   "client_shape_id": 2010,
+   "sequence": 3,
+   "skill_name_raw": "幸運",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2010:3"
+  }
+ ]
+}

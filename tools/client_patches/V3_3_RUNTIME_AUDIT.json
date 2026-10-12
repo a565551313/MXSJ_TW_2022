@@ -1,0 +1,33 @@
+{
+  "python25_runtime_output": [
+    "PASS: independent CPython 2.5 marshal load of BOTH entries; full game modules NOT executed",
+    "PASS: shipped v3 operands reproduce TypeError before overlay initialization",
+    "PASS: corrected actual None operands initialize overlay in module namespace",
+    "PASS: compiled homepage caption runs with fake native text button",
+    "PASS: compiled agreement body is byte strings; target-before-hide reject ordering",
+    "PASS: compiled form creates fields and inherits separate Next/Info dispatch",
+    "PASS: actual CClickBox constructor reproduces old coordinate bug; corrected info is transparent and positioned",
+    "PASS: complete replacement buttons hide old labels and arrow, with explicit caption Z",
+    "PASS: new action and info hit areas preserve Next/Info message dispatch",
+    "PASS: actual CEdit Active/Flash/MsgTab: all three dark carets blink, switch focus and wrap",
+    "PASS: actual CEdit focus loss stops caret command; pointer-event delivery still native-unverified",
+    "PASS: missing/empty caption image retains old label and logs failure",
+    "PASS: failed reject target does not hide current agreement",
+    "PASS: actual homepage bytecode has zero imports: ok",
+    "PASS: actual homepage bytecode has zero imports: missing-image",
+    "PASS: actual homepage bytecode has zero imports: empty-image",
+    "PASS: actual homepage bytecode has zero imports: ambiguous",
+    "PASS: actual homepage bytecode has zero imports: not-text",
+    "PASS: actual click-only import keeps home on failure: ok",
+    "PASS: actual click-only import keeps home on failure: import-error",
+    "PASS: actual click-only import keeps home on failure: actual-bad-overlay",
+    "PASS: actual click-only import keeps home on failure: constructor-error",
+    "PASS: 22 independent CPython 2.5 audit cases; NO native Windows acceptance"
+  ],
+  "candidate_fls_sha256": "6ef84a13c23ca0abfaa7a9febf8ba49b4df569a9cf65286c4b1844f9df63cddb",
+  "candidate_fls_bytes": 24556254,
+  "shipped_v3_fls_sha256": null,
+  "native_windows_client_tested": false,
+  "scope": "authored startup/UI fragments plus selected CClickBox/CEdit methods from entry 3854; fake rendering/input/scheduler boundaries",
+  "candidate_kind": "registration_visual_preview_v3_3_candidate"
+}

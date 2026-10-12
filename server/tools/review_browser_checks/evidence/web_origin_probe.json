@@ -1,0 +1,267 @@
+{
+  "stage": "phase3_web_origin_contract",
+  "origin": "http://127.0.0.1:60595",
+  "checks": [
+    {
+      "check": "W-10",
+      "title": "entry page uses relative assets",
+      "status": "pass",
+      "detail": {
+        "status": 200,
+        "scripts": [
+          "/@vite/client",
+          "/src/main.tsx"
+        ],
+        "links": [],
+        "problems": []
+      }
+    },
+    {
+      "check": "W-11",
+      "title": "application entry modules are reachable",
+      "status": "pass",
+      "detail": {
+        "problems": []
+      }
+    },
+    {
+      "check": "W-12",
+      "title": "dataset lists use records/total/offset/limit envelopes",
+      "status": "pass",
+      "detail": {
+        "problems": []
+      }
+    },
+    {
+      "check": "W-13",
+      "title": "batch and evidence endpoints agree with current contract",
+      "status": "pass",
+      "detail": {
+        "problems": []
+      }
+    },
+    {
+      "check": "W-14",
+      "title": "single-record details are reachable",
+      "status": "pass",
+      "detail": {
+        "problems": []
+      }
+    },
+    {
+      "check": "W-15",
+      "title": "web origin proxies the real API",
+      "status": "pass",
+      "detail": {
+        "status": 200,
+        "problems": []
+      }
+    },
+    {
+      "check": "W-16",
+      "title": "preview Host/Origin headers accepted",
+      "status": "pass",
+      "detail": {
+        "problems": []
+      }
+    }
+  ],
+  "requests": [
+    {
+      "label": "items",
+      "path": "/api/v1/review/datasets/items/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pets",
+      "path": "/api/v1/review/datasets/pets/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pet_skill_candidates",
+      "path": "/api/v1/review/datasets/pet_skill_candidates/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pet_required_skills",
+      "path": "/api/v1/review/datasets/pet_required_skills/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pet_aptitudes",
+      "path": "/api/v1/review/datasets/pet_aptitudes/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pet_aptitude_missing",
+      "path": "/api/v1/review/datasets/pet_aptitude_missing/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pet_skills",
+      "path": "/api/v1/review/datasets/pet_skills/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pet_skill_overwrites",
+      "path": "/api/v1/review/datasets/pet_skill_overwrites/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pet_skill_name_matches",
+      "path": "/api/v1/review/datasets/pet_skill_name_matches/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "mapdata_parent_scene",
+      "path": "/api/v1/review/datasets/mapdata_parent_scene/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "mapdata_scene_dictionary",
+      "path": "/api/v1/review/datasets/mapdata_scene_dictionary/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "minimapnpcpos_pos_records",
+      "path": "/api/v1/review/datasets/minimapnpcpos_pos_records/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "minimapnpcpos_wenzi_entries",
+      "path": "/api/v1/review/datasets/minimapnpcpos_wenzi_entries/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "npc_2601_vs_2804_agreement",
+      "path": "/api/v1/review/datasets/npc_2601_vs_2804_agreement/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "npcname2realnamedata_alias_to_realname",
+      "path": "/api/v1/review/datasets/npcname2realnamedata_alias_to_realname/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "npcposdata_records",
+      "path": "/api/v1/review/datasets/npcposdata_records/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "sceneid2name_minimap_scenes",
+      "path": "/api/v1/review/datasets/sceneid2name_minimap_scenes/records?offset=0&limit=25",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "health",
+      "path": "/api/v1/review/health",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "batch",
+      "path": "/api/v1/review/batch",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "datasets",
+      "path": "/api/v1/review/datasets",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "quarantine",
+      "path": "/api/v1/review/quarantine",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "overwrites",
+      "path": "/api/v1/review/overwrites",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "missingAptitudes",
+      "path": "/api/v1/review/missing-aptitudes",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "ambiguousSkills",
+      "path": "/api/v1/review/ambiguous-skills",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "items detail",
+      "path": "/api/v1/review/datasets/items/records/11",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pets detail",
+      "path": "/api/v1/review/datasets/pets/records/2010",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "pet_skills detail",
+      "path": "/api/v1/review/datasets/pet_skills/records/101",
+      "status": 200,
+      "problems": []
+    },
+    {
+      "label": "proxy",
+      "path": "/api/v1/review/datasets/items/records?offset=0&limit=1",
+      "status": 200,
+      "problems": []
+    }
+  ],
+  "frontend_contract": {
+    "datasets": {
+      "items": "items",
+      "pets": "pets",
+      "petSkillCandidates": "pet_skill_candidates",
+      "petRequiredSkills": "pet_required_skills",
+      "petAptitudes": "pet_aptitudes",
+      "petAptitudeMissing": "pet_aptitude_missing",
+      "petSkills": "pet_skills",
+      "petSkillOverwrites": "pet_skill_overwrites",
+      "petSkillNameMatches": "pet_skill_name_matches",
+      "mapdataParentScene": "mapdata_parent_scene",
+      "mapdataSceneDictionary": "mapdata_scene_dictionary",
+      "minimapNpcPosRecords": "minimapnpcpos_pos_records",
+      "minimapNpcPosWenzi": "minimapnpcpos_wenzi_entries",
+      "npcAgreement": "npc_2601_vs_2804_agreement",
+      "npcAliasToRealname": "npcname2realnamedata_alias_to_realname",
+      "npcPosRecords": "npcposdata_records",
+      "sceneId2Name": "sceneid2name_minimap_scenes"
+    },
+    "page_size": 25
+  },
+  "summary": {
+    "total": 7,
+    "pass": 7,
+    "fail": 0
+  },
+  "status": "pass"
+}

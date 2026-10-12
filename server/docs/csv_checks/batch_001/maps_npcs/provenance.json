@@ -1,0 +1,51 @@
+{
+  "rules": [
+    "zero-npcid records kept",
+    "duplicate records kept",
+    "no table merging",
+    "no Simplified/Traditional conversion"
+  ],
+  "source_entries": {
+    "1301": {
+      "bounds": [
+        1616,
+        3239,
+        4884,
+        6553
+      ]
+    },
+    "1799": {
+      "bounds": [
+        528,
+        1093,
+        1652,
+        2202
+      ]
+    },
+    "2601": {
+      "bounds": [
+        18827,
+        37735,
+        56546,
+        75376
+      ]
+    },
+    "2804": {
+      "bounds": [
+        26695,
+        53365,
+        79989,
+        106619
+      ]
+    },
+    "400": {
+      "bounds": [
+        961,
+        2001,
+        3063,
+        4125
+      ]
+    }
+  },
+  "status": "candidate_framing_not_confirmed_by_the_native_loader"
+}

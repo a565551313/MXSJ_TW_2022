@@ -1,0 +1,30 @@
+{
+ "dataset": "minimapnpcpos_pos_records",
+ "total": 631,
+ "offset": 0,
+ "limit": 1,
+ "count": 1,
+ "records": [
+  {
+   "scene_id": 1001,
+   "scene_display_name": "永澤城",
+   "record_index": 9,
+   "display_name": "永澤城商人",
+   "secondary_name": "",
+   "npcid": 0,
+   "type": 1,
+   "x": 8,
+   "y": 49,
+   "field5": 0,
+   "field6": "",
+   "field7_const255": 255,
+   "shape": "yzcsr",
+   "field9": 0,
+   "field10": 0,
+   "real_name": "",
+   "field12": null,
+   "field13": null,
+   "_pk": "1001:永澤城:9"
+  }
+ ]
+}

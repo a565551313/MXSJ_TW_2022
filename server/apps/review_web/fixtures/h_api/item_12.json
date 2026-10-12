@@ -1,0 +1,12 @@
+{
+ "client_shape_id": 12,
+ "name": "鹿茸",
+ "description_raw": "雄鹿額部生長出來的尚未骨化的嫩角，是有名的藥材，有強筋健骨、補氣養髓的作用#r【類型】藥品#r【使用】恢復160點氣血",
+ "category_code_raw": 6,
+ "image_id": 21302,
+ "image_mapping_explicit": true,
+ "source_entry": 1945,
+ "source_table": "DATA+ITEMDATABYTYPE+SHAPETABLE",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "12"
+}

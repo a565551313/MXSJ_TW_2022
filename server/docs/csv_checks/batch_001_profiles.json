@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "status": "review_only_not_native_verified",
+  "merged_prs": [19, 18, 20],
+  "expected_archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "expected_key_database_sha256": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+  "bytecode_boundary_solver_enabled": false,
+  "entries": {
+    "1945": {
+      "bounds": [259583, 519228, 778759, 1038307],
+      "keys": [152, 94, 50, 49, 104],
+      "evidence": "server/docs/CLIENT_DATA_INDEPENDENT_CHECK.md",
+      "note": "Three reviewed text-boundary candidates. Do not install these into the historical key database."
+    },
+    "2027": {
+      "bounds": [5383, 10831, 16264, 21751],
+      "keys": [220, 251, 132, 12, 100],
+      "evidence": "server/docs/CLIENT_DATA_INDEPENDENT_CHECK.md",
+      "note": "Reviewed candidates for address and skill-name text; no name-to-ID disambiguation assumed."
+    },
+    "2954": {
+      "bounds": [3973, 7978, 11868, 15798],
+      "keys": [113, 215, 173, 43, 182],
+      "evidence": "server/docs/CSV_READINESS.md",
+      "note": "Saved parameters only. Do NOT apply the unconfirmed 7979/1700 hypothesis; quarantine row 2800."
+    },
+    "3205": {
+      "bounds": [18043, 36123, 54155, 72143],
+      "keys": [204, 152, 122, 74, 218],
+      "evidence": "server/docs/csv_checks/AGENT_A_TAKEOVER.md",
+      "note": "Structure-supported parameters. Rows 719 and 4406 remain quarantined because their exact description-boundary evidence is weaker. All nine overwrites are retained."
+    }
+  },
+  "quarantine_policy": [
+    {"entry_index": 1945, "table": "DATA", "record_id": 72548, "reason": "invalid_cp950_source_name_bytes_preserved"},
+    {"entry_index": 2954, "table": "DATA", "record_id": 2800, "reason": "aptitude_value_exceeds_named_maximum_unresolved"},
+    {"entry_index": 3205, "table": "DATA", "record_id": 719, "reason": "description_boundary_requires_independent_confirmation"},
+    {"entry_index": 3205, "table": "DATA", "record_id": 4406, "reason": "description_boundary_requires_independent_confirmation"}
+  ]
+}

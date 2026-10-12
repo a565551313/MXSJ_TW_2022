@@ -1,0 +1,7 @@
+{
+ "error": {
+  "code": "METHOD_NOT_ALLOWED",
+  "message": "Method not allowed. This is a read-only review API.",
+  "details": {}
+ }
+}

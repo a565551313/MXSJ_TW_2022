@@ -1,0 +1,454 @@
+"""Map file format engine for MXSJ ``.map`` (``0.1M``) files.
+
+Design constraints that came from measured facts, not assumptions:
+
+* The sector count is **not** stored explicitly.  The header holds ``N`` absolute
+  file offsets starting at byte 12, and the u32 at ``12 + 4*N`` contains its own
+  address plus 4 (a self-referential pointer).  Scanning for that sentinel yields
+  ``N`` without hardcoding it.  Verified on all five sample maps (N=49 each).
+* Sector layout is ``ceil(width / 320) x ceil(height / 240)``.  The five samples
+  are 2000x1500 -> 7x7=49, which matches.  The client scene table contains 24
+  different sizes up to 10000x6000 -> 32x25=800 sectors, so nothing here may
+  assume 49 or 7x7.
+* Every block is ``tag(4) + u32 length + length bytes``, so a sector walks as
+  ``refs | GEPJ | LLEC | GIRB | 4-byte tail``.  The dispatcher in ``mx.exe``
+  (``0x4b8ca0``) also recognises a ``MASK`` tag, which the five sample maps do not
+  contain, so the walk is generic rather than a hardcoded triple.  With only the
+  three known blocks the length identity reduces to ``246 + 4*refs + image_length``.
+* The ``GIRB`` trailer was byte-identical in 245/245 sectors of the samples; it
+  is round-tripped verbatim rather than interpreted.
+
+Pure standard library, no Qt import, so it stays testable headlessly.
+"""
+from __future__ import annotations
+
+import math
+import struct
+from dataclasses import dataclass
+from pathlib import Path
+from typing import BinaryIO
+
+MAGIC = b"0.1M"
+SECTOR_PX_W, SECTOR_PX_H = 320, 240
+CELL_PX = 20                 # mx.exe 0x4baebf: signed divide by 20
+CELL_COLS_PER_SECTOR, CELL_ROWS_PER_SECTOR = 16, 12
+CELLS_PER_SECTOR = CELL_COLS_PER_SECTOR * CELL_ROWS_PER_SECTOR   # 192
+GEPJ_TAG = b"GEPJ"
+LLEC_TAG = b"LLEC"
+GIRB_TAG = b"GIRB"
+GEPJ_SEGMENTS = 13           # 1 shared header + 12 independent 80x80 scans
+MAX_BLOCKS_PER_SECTOR = 64   # guard against a corrupt chain looping forever
+PIECE_PX = 80                # each scan is an 80x80 JPEG
+MAX_SCAN_SECTORS = 4096      # bound for the sentinel scan
+
+
+class MapFormatError(ValueError):
+    """Raised when a file is not a readable ``0.1M`` map."""
+
+
+@dataclass(frozen=True, slots=True)
+class MapHeader:
+    width: int
+    height: int
+    sector_count: int
+    sector_columns: int
+    sector_rows: int
+    record_count: int
+    sector_offsets: tuple[int, ...]
+    record_offsets: tuple[int, ...]
+    file_length: int
+
+    @property
+    def grid_columns(self) -> int:
+        """Logical walkable-grid columns (cells are 20x20 px, cropped to the map)."""
+        return math.ceil(self.width / CELL_PX)
+
+    @property
+    def grid_rows(self) -> int:
+        return math.ceil(self.height / CELL_PX)
+
+
+@dataclass(frozen=True, slots=True)
+class Block:
+    """A block whose tag the editor does not interpret (e.g. ``MASK``)."""
+    tag: str
+    offset: int          # of the tag itself
+    length: int          # payload length, excluding tag+u32
+
+    @property
+    def payload_offset(self) -> int:
+        return self.offset + 8
+
+
+@dataclass(frozen=True, slots=True)
+class Sector:
+    index: int
+    row: int
+    col: int
+    offset: int
+    length: int
+    record_refs: tuple[int, ...]
+    image_offset: int
+    image_length: int
+    segment_lengths: tuple[int, ...]
+    cells_offset: int
+    girb_offset: int
+    girb_body: bytes
+    girb_trailer: bytes
+    extra_blocks: tuple["Block", ...] = ()
+
+    @property
+    def origin_x(self) -> int:
+        return self.col * SECTOR_PX_W
+
+    @property
+    def origin_y(self) -> int:
+        return self.row * SECTOR_PX_H
+
+
+@dataclass(frozen=True, slots=True)
+class PrefixRecord:
+    index: int
+    offset: int
+    x: int
+    y: int
+    width: int
+    height: int
+    payload_length: int
+    payload: bytes
+
+    @property
+    def total_length(self) -> int:
+        return 20 + self.payload_length
+
+
+def sniff(path: Path) -> bool:
+    """Cheap check used by client discovery: is this plausibly a ``0.1M`` map?"""
+    try:
+        with path.open("rb") as fh:
+            return fh.read(4) == MAGIC
+    except OSError:
+        return False
+
+
+def detect_sector_count(fh: BinaryIO, file_length: int) -> int:
+    """Find N via the self-referential u32 at ``12 + 4*N`` (== its own offset + 4)."""
+    for n in range(1, MAX_SCAN_SECTORS + 1):
+        at = 12 + 4 * n
+        if at + 4 > file_length:
+            break
+        fh.seek(at)
+        raw = fh.read(4)
+        if len(raw) < 4:
+            break
+        if struct.unpack("<I", raw)[0] == at + 4:
+            return n
+    raise MapFormatError("sector-count sentinel not found; not a 0.1M map")
+
+
+def read_header(fh: BinaryIO, file_length: int) -> MapHeader:
+    fh.seek(0)
+    head = fh.read(12)
+    if len(head) < 12 or head[:4] != MAGIC:
+        raise MapFormatError(f"missing {MAGIC!r} signature")
+    width, height = struct.unpack_from("<II", head, 4)
+    if not 0 < width <= 100_000 or not 0 < height <= 100_000:
+        raise MapFormatError(f"implausible dimensions {width}x{height}")
+
+    n = detect_sector_count(fh, file_length)
+    fh.seek(12)
+    offsets = struct.unpack(f"<{n}I", fh.read(4 * n))
+    if any(b <= a for a, b in zip(offsets, offsets[1:])):
+        raise MapFormatError("sector offset table is not strictly increasing")
+    # With no prefix records the first sector starts exactly at 12 + 4N + 8,
+    # so this must be a strict inequality.
+    if offsets[0] < 12 + 4 * n + 8:
+        raise MapFormatError("first sector offset overlaps the header")
+
+    fh.seek(12 + 4 * n + 4)
+    (record_count,) = struct.unpack("<I", fh.read(4))
+    if record_count > 1_000_000:
+        raise MapFormatError(f"implausible prefix-record count {record_count}")
+    record_offsets: tuple[int, ...] = ()
+    if record_count:
+        record_offsets = struct.unpack(f"<{record_count}I", fh.read(4 * record_count))
+        if any(b <= a for a, b in zip(record_offsets, record_offsets[1:])):
+            raise MapFormatError("prefix-record offset table is not increasing")
+
+    columns, rows = math.ceil(width / SECTOR_PX_W), math.ceil(height / SECTOR_PX_H)
+    if columns * rows != n:
+        raise MapFormatError(
+            f"sector count {n} != ceil({width}/320)*ceil({height}/240)={columns * rows}")
+
+    return MapHeader(
+        width=width, height=height, sector_count=n, sector_columns=columns,
+        sector_rows=rows, record_count=record_count, sector_offsets=offsets,
+        record_offsets=record_offsets, file_length=file_length,
+    )
+
+
+def read_sector(fh: BinaryIO, header: MapHeader, index: int) -> Sector:
+    offset = header.sector_offsets[index]
+    end = (header.sector_offsets[index + 1] if index + 1 < header.sector_count
+           else header.file_length)
+    fh.seek(offset)
+    (refs,) = struct.unpack("<I", fh.read(4))
+    if refs > 1_000_000:
+        raise MapFormatError(f"sector {index}: implausible reference count {refs}")
+    refs_tuple: tuple[int, ...] = ()
+    if refs:
+        refs_tuple = struct.unpack(f"<{refs}I", fh.read(4 * refs))
+
+    cursor = offset + 4 + 4 * refs
+    image_offset: int | None = None
+    image_length = 0
+    segment_lengths: tuple[int, ...] = ()
+    cells_offset: int | None = None
+    girb_offset: int | None = None
+    girb_body = b""
+    girb_trailer = b""
+    extra: list[Block] = []
+
+    # Walk the block chain the way the client's dispatcher does: read a tag and
+    # a u32 length, handle the tags we understand, and step over anything else
+    # (the client seeks past unknown tags with `seek(start + length)`).  Hardcoding
+    # the GEPJ->LLEC->GIRB triple would make the editor fail on any map that also
+    # carries a MASK block — the dispatcher recognises MASK, and the five sample
+    # maps simply happen not to contain one.
+    terminated = False
+    for _ in range(MAX_BLOCKS_PER_SECTOR):
+        if cursor + 8 > end:
+            break
+        fh.seek(cursor)
+        tag = fh.read(4)
+        (length,) = struct.unpack("<I", fh.read(4))
+        body = cursor + 8
+        if length < 0 or body + length > end:
+            raise MapFormatError(
+                f"sector {index}: block {tag!r} at {cursor} declares length {length}, "
+                f"which runs past the sector end {end}")
+        if tag == GEPJ_TAG:
+            if image_offset is not None:
+                raise MapFormatError(f"sector {index}: duplicate GEPJ block")
+            if length < GEPJ_SEGMENTS * 2:
+                raise MapFormatError(f"sector {index}: image length {length} too small")
+            segment_lengths = struct.unpack(
+                f"<{GEPJ_SEGMENTS}H", fh.read(2 * GEPJ_SEGMENTS))
+            if sum(segment_lengths) != length - 2 * GEPJ_SEGMENTS:
+                raise MapFormatError(
+                    f"sector {index}: segment lengths sum to {sum(segment_lengths)}, "
+                    f"expected {length - 2 * GEPJ_SEGMENTS}")
+            image_offset = body + 2 * GEPJ_SEGMENTS
+            image_length = length - 2 * GEPJ_SEGMENTS
+        elif tag == LLEC_TAG:
+            if length != CELLS_PER_SECTOR:
+                raise MapFormatError(f"sector {index}: LLEC length {length} != 192")
+            cells_offset = body
+        elif tag == GIRB_TAG:
+            girb_offset = cursor
+            girb_body = fh.read(length)
+            if len(girb_body) != length:
+                raise MapFormatError(f"sector {index}: truncated GIRB body")
+            girb_trailer = fh.read(4)
+            cursor = body + length + len(girb_trailer)
+            terminated = True
+            break
+        else:
+            extra.append(Block(_tag_name(tag), cursor, length))
+        cursor = body + length
+    if not terminated:
+        raise MapFormatError(
+            f"sector {index}: no GIRB terminator before sector end {end}")
+    if image_offset is None:
+        raise MapFormatError(f"sector {index}: no GEPJ image block")
+    if cells_offset is None:
+        raise MapFormatError(f"sector {index}: no LLEC block")
+    if cursor != end:
+        raise MapFormatError(
+            f"sector {index}: blocks end at {cursor}, expected {end}")
+
+    return Sector(
+        index=index, row=index // header.sector_columns, col=index % header.sector_columns,
+        offset=offset, length=end - offset, record_refs=refs_tuple,
+        image_offset=image_offset, image_length=image_length,
+        segment_lengths=segment_lengths, cells_offset=cells_offset,
+        girb_offset=girb_offset, girb_body=girb_body, girb_trailer=girb_trailer,
+        extra_blocks=tuple(extra),
+    )
+
+
+def _tag_name(tag: bytes) -> str:
+    try:
+        return tag.decode("ascii")
+    except UnicodeDecodeError:
+        return tag.hex()
+
+
+def read_prefix_records(fh: BinaryIO, header: MapHeader) -> tuple[PrefixRecord, ...]:
+    out: list[PrefixRecord] = []
+    for i, off in enumerate(header.record_offsets):
+        fh.seek(off)
+        # Origin is SIGNED.  Shipped maps really do store small negative
+        # offsets (0xFFFFFFEA = -22 on 1326, 0xFFFFFFFE = -2 on 2153), and
+        # rects may overhang the map edge.  Reading them as u32 and rejecting
+        # the result made 7 perfectly good maps unopenable.
+        x, y, w, h, plen = struct.unpack("<2i3I", fh.read(20))
+        if not 0 < w <= header.width * 4 or not 0 < h <= header.height * 4:
+            raise MapFormatError(f"record {i}: implausible size {w}x{h}")
+        if plen > 1 << 24:
+            raise MapFormatError(f"record {i}: implausible payload {plen}")
+        payload = fh.read(plen)
+        if len(payload) != plen:
+            raise MapFormatError(f"record {i}: truncated payload")
+        out.append(PrefixRecord(i, off, x, y, w, h, plen, payload))
+    return tuple(out)
+
+
+class MapDocument:
+    """Lazy, read-only view of one ``.map`` file.
+
+    Nothing is loaded until asked for, so a 10000x6000 map (800 sectors,
+    60 M pixels) costs only a header parse until a tile is requested.
+    """
+
+    def __init__(self, path: Path) -> None:
+        self.path = Path(path)
+        self._fh = self.path.open("rb")
+        self._fh.seek(0, 2)
+        length = self._fh.tell()
+        try:
+            self.header = read_header(self._fh, length)
+            self.records = read_prefix_records(self._fh, self.header)
+        except Exception:
+            self._fh.close()
+            raise
+        self._sectors: dict[int, Sector] = {}
+        self._collision: dict[int, list[int] | None] = {}
+
+    # -- lifecycle ---------------------------------------------------------
+    def close(self) -> None:
+        if not self._fh.closed:
+            self._fh.close()
+
+    def __enter__(self) -> "MapDocument":
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        self.close()
+
+    # -- accessors ---------------------------------------------------------
+    @property
+    def sector_count(self) -> int:
+        return self.header.sector_count
+
+    def sector(self, index: int) -> Sector:
+        if not 0 <= index < self.header.sector_count:
+            raise IndexError(f"sector index {index} out of range")
+        if index not in self._sectors:
+            self._sectors[index] = read_sector(self._fh, self.header, index)
+        return self._sectors[index]
+
+    def iter_sectors(self) -> "Iterator[Sector]":
+        return (self.sector(i) for i in range(self.header.sector_count))
+
+    def read_image_payload(self, sector: Sector) -> bytes:
+        self._fh.seek(sector.image_offset)
+        data = self._fh.read(sector.image_length)
+        if len(data) != sector.image_length:
+            raise MapFormatError(f"sector {sector.index}: truncated GEPJ payload")
+        return data
+
+    def read_cells(self, sector: Sector) -> bytes:
+        self._fh.seek(sector.cells_offset)
+        cells = self._fh.read(CELLS_PER_SECTOR)
+        if len(cells) != CELLS_PER_SECTOR:
+            raise MapFormatError(f"sector {sector.index}: truncated LLEC cells")
+        return cells
+
+    # -- collision grid (GIRB) -------------------------------------------
+    def collision_cells(self, sector: Sector) -> list[int] | None:
+        """The 1200 u16 collision cells of one sector, or None if undecodable.
+
+        ``None`` is a normal outcome, not an error: the GIRB inflater is still
+        incomplete for sectors that carry real obstacles.  Callers must render
+        around it rather than fail.
+        """
+        if sector.index not in self._collision:
+            from .girb import GirbError, cells
+            try:
+                self._collision[sector.index] = cells(sector.girb_body)
+            except (GirbError, IndexError):
+                # IndexError is belt-and-braces: decompress() is meant to
+                # raise GirbError for every bad stream, but a missed guard
+                # must degrade one sector, never abort the map.
+                self._collision[sector.index] = None
+        return self._collision[sector.index]
+
+    def out_of_bounds_records(self) -> list[PrefixRecord]:
+        """Records whose rect starts off-map or overhangs an edge.
+
+        Legal in shipped maps; surfaced so the UI can flag rather than hide it.
+        """
+        h = self.header
+        return [r for r in self.records
+                if r.x < 0 or r.y < 0
+                or r.x + r.width > h.width or r.y + r.height > h.height]
+
+    def collision_at(self, x: int, y: int) -> int | None:
+        """Collision value for a pixel coordinate, on the 8 px GIRB grid."""
+        from .girb import CELL_PX as CPX, GRID_COLS, GRID_ROWS
+        cx, cy = x // CPX, y // CPX
+        sc, sr = cx // GRID_COLS, cy // GRID_ROWS
+        if not 0 <= sc < self.header.sector_columns or not 0 <= sr < self.header.sector_rows:
+            return None
+        index = sr * self.header.sector_columns + sc
+        if index >= self.header.sector_count:
+            return None
+        values = self.collision_cells(self.sector(index))
+        if values is None:
+            return None
+        return values[(cy % GRID_ROWS) * GRID_COLS + (cx % GRID_COLS)]
+
+    def collision_stats(self) -> dict:
+        """How many sectors decoded, and the distinct cell values seen."""
+        decoded = failed = 0
+        seen: set[int] = set()
+        for s in self.iter_sectors():
+            values = self.collision_cells(s)
+            if values is None:
+                failed += 1
+            else:
+                decoded += 1
+                seen.update(values)
+        return {"sectors": self.header.sector_count, "decoded": decoded,
+                "failed": failed, "distinct_values": len(seen),
+                "uniform": len(seen) <= 1}
+
+    def cell_at(self, x: int, y: int) -> int | None:
+        """Raw LLEC byte for a pixel coordinate, or None outside the sector grid."""
+        cx, cy = x // CELL_PX, y // CELL_PX
+        if not 0 <= cx < self.header.grid_columns or not 0 <= cy < self.header.grid_rows:
+            return None
+        sc, sr = cx // CELL_COLS_PER_SECTOR, cy // CELL_ROWS_PER_SECTOR
+        index = sr * self.header.sector_columns + sc
+        if index >= self.header.sector_count:
+            return None
+        cells = self.read_cells(self.sector(index))
+        return cells[(cy % CELL_ROWS_PER_SECTOR) * CELL_COLS_PER_SECTOR + cx % CELL_COLS_PER_SECTOR]
+
+    def summary(self) -> dict:
+        h = self.header
+        return {
+            "path": str(self.path),
+            "file_length": h.file_length,
+            "width": h.width,
+            "height": h.height,
+            "sector_count": h.sector_count,
+            "sector_grid": f"{h.sector_columns}x{h.sector_rows}",
+            "logical_grid_cells": f"{h.grid_columns}x{h.grid_rows}",
+            "prefix_records": h.record_count,
+        }
+
+
+def open_map(path: Path | str) -> MapDocument:
+    return MapDocument(Path(path))

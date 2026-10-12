@@ -1,0 +1,37 @@
+{
+ "id": "npc_2601_vs_2804_agreement",
+ "filename": "maps_npcs/npc_2601_vs_2804_agreement.csv",
+ "rows": 677,
+ "primary_key": [
+  "scene_id",
+  "npcid"
+ ],
+ "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+ "source_entry": [
+  2601,
+  2804
+ ],
+ "source_table": "DATA vs DATA_POS",
+ "columns": [
+  {
+   "name": "scene_id",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "npcid",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "records_2601",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "records_2804",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "agreement",
+   "type": "str"
+  }
+ ]
+}

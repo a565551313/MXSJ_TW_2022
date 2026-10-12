@@ -1,0 +1,42 @@
+{
+ "id": "pet_skill_name_matches",
+ "filename": "pet_skill_name_matches.csv",
+ "rows": 145,
+ "primary_key": [
+  "skill_name_raw",
+  "skill_id"
+ ],
+ "notes": "All exact-name candidates retained. Do NOT choose first ID for duplicated names; this is evidence, not authoritative mapping.",
+ "source_entry": 3205,
+ "source_table": "DATA.name (references from 2027)",
+ "columns": [
+  {
+   "name": "skill_name_raw",
+   "type": "str"
+  },
+  {
+   "name": "skill_id",
+   "type": "int"
+  },
+  {
+   "name": "match_count",
+   "type": "int"
+  },
+  {
+   "name": "ambiguous",
+   "type": "bool"
+  },
+  {
+   "name": "source_entry",
+   "type": "int"
+  },
+  {
+   "name": "source_table",
+   "type": "str"
+  },
+  {
+   "name": "review_status",
+   "type": "str"
+  }
+ ]
+}

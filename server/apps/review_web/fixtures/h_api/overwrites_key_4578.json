@@ -1,0 +1,112 @@
+{
+ "total": 1,
+ "records": [
+  {
+   "order": 357,
+   "code_offset": 22724,
+   "entry_index": 3205,
+   "table": "DATA",
+   "key": 4578,
+   "old_value": {
+    "dict": [
+     [
+      {
+       "bytes_hex": "74797065"
+      },
+      1
+     ],
+     [
+      {
+       "bytes_hex": "6e616d65"
+      },
+      {
+       "bytes_hex": "b1b1a4dfb34e"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "64657363"
+      },
+      {
+       "bytes_hex": "b1b1a8eea448a4dfa141a8cfa8e4a7f0c0bbb6a4a4cd"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "66706e656564"
+      },
+      {
+       "bytes_hex": "30"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "6d706e656564"
+      },
+      {
+       "bytes_hex": "30"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "68706e656564"
+      },
+      {
+       "bytes_hex": "30"
+      }
+     ]
+    ]
+   },
+   "new_value": {
+    "dict": [
+     [
+      {
+       "bytes_hex": "74797065"
+      },
+      1
+     ],
+     [
+      {
+       "bytes_hex": "6e616d65"
+      },
+      {
+       "bytes_hex": "b1b1a4dfb34e"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "64657363"
+      },
+      {
+       "bytes_hex": "b1b1a8eea448a4dfa141a8cfa8e4a7f0c0bbb6a4a4cd"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "66706e656564"
+      },
+      {
+       "bytes_hex": "30"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "6d706e656564"
+      },
+      {
+       "bytes_hex": "30"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "68706e656564"
+      },
+      {
+       "bytes_hex": "30"
+      }
+     ]
+    ]
+   }
+  }
+ ]
+}

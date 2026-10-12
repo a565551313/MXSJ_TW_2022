@@ -1,0 +1,47 @@
+{
+  "ambiguous_pet_skill_names": {
+    "終級命中": [
+      329,
+      355
+    ],
+    "高級命中": [
+      229,
+      255
+    ]
+  },
+  "checks": {
+    "csv_round_trip": "pass",
+    "item_category_key_set": "pass",
+    "map_npc_evidence_and_staging_match": "pass",
+    "pet_aptitude_foreign_keys": "pass",
+    "pet_skill_names_have_candidates": "pass"
+  },
+  "missing_aptitude_count": 3,
+  "pet_skill_names": 143,
+  "quarantined_record_count": 4,
+  "skill_overwrite_count": 9,
+  "skill_unique_count": 581,
+  "skill_write_count": 590,
+  "tables": {
+    "1945": {
+      "quarantined_records": 1,
+      "review_csv_records": 6851,
+      "source_records": 6852
+    },
+    "2027": {
+      "quarantined_records": 0,
+      "review_csv_records": 135,
+      "source_records": 135
+    },
+    "2954": {
+      "quarantined_records": 1,
+      "review_csv_records": 131,
+      "source_records": 132
+    },
+    "3205": {
+      "quarantined_records": 2,
+      "review_csv_records": 579,
+      "source_records": 581
+    }
+  }
+}

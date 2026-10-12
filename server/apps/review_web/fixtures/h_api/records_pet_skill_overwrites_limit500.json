@@ -1,0 +1,117 @@
+{
+ "dataset": "pet_skill_overwrites",
+ "total": 9,
+ "offset": 0,
+ "limit": 500,
+ "count": 9,
+ "records": [
+  {
+   "write_order": 352,
+   "code_offset": 22409,
+   "skill_id": 4573,
+   "old_name": "天魔返生術",
+   "new_name": "地魔返生術",
+   "identical_values": false,
+   "source_entry": 3205,
+   "source_table": "DATA write history",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "352"
+  },
+  {
+   "write_order": 353,
+   "code_offset": 22472,
+   "skill_id": 4574,
+   "old_name": "酒瘋發作",
+   "new_name": "酒瘋發作",
+   "identical_values": true,
+   "source_entry": 3205,
+   "source_table": "DATA write history",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "353"
+  },
+  {
+   "write_order": 354,
+   "code_offset": 22535,
+   "skill_id": 4575,
+   "old_name": "視財如命",
+   "new_name": "視財如命",
+   "identical_values": true,
+   "source_entry": 3205,
+   "source_table": "DATA write history",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "354"
+  },
+  {
+   "write_order": 355,
+   "code_offset": 22598,
+   "skill_id": 4576,
+   "old_name": "形神俱滅第一式·出竅",
+   "new_name": "形神俱滅第一式·出竅",
+   "identical_values": true,
+   "source_entry": 3205,
+   "source_table": "DATA write history",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "355"
+  },
+  {
+   "write_order": 356,
+   "code_offset": 22661,
+   "skill_id": 4577,
+   "old_name": "形神俱滅第二式·幻滅",
+   "new_name": "形神俱滅第二式·幻滅",
+   "identical_values": true,
+   "source_entry": 3205,
+   "source_table": "DATA write history",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "356"
+  },
+  {
+   "write_order": 357,
+   "code_offset": 22724,
+   "skill_id": 4578,
+   "old_name": "控心術",
+   "new_name": "控心術",
+   "identical_values": true,
+   "source_entry": 3205,
+   "source_table": "DATA write history",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "357"
+  },
+  {
+   "write_order": 358,
+   "code_offset": 22787,
+   "skill_id": 4579,
+   "old_name": "多聞天王咒",
+   "new_name": "多聞天王咒",
+   "identical_values": true,
+   "source_entry": 3205,
+   "source_table": "DATA write history",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "358"
+  },
+  {
+   "write_order": 359,
+   "code_offset": 22850,
+   "skill_id": 4581,
+   "old_name": "戾氣召喚",
+   "new_name": "戾氣召喚",
+   "identical_values": true,
+   "source_entry": 3205,
+   "source_table": "DATA write history",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "359"
+  },
+  {
+   "write_order": 360,
+   "code_offset": 22913,
+   "skill_id": 4236,
+   "old_name": "順風連斬",
+   "new_name": "順風連斬",
+   "identical_values": true,
+   "source_entry": 3205,
+   "source_table": "DATA write history",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "360"
+  }
+ ]
+}

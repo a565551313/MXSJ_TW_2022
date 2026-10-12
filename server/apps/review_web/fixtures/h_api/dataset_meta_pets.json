@@ -1,0 +1,53 @@
+{
+ "id": "pets",
+ "filename": "pets.csv",
+ "rows": 135,
+ "primary_key": [
+  "client_shape_id"
+ ],
+ "notes": "Original classifications and maxskillnum semantics retained; not a server progression rule.",
+ "source_entry": 2027,
+ "source_table": "DATA",
+ "columns": [
+  {
+   "name": "client_shape_id",
+   "type": "int"
+  },
+  {
+   "name": "name",
+   "type": "str"
+  },
+  {
+   "name": "liupai_raw",
+   "type": "str"
+  },
+  {
+   "name": "attack_type_raw",
+   "type": "str"
+  },
+  {
+   "name": "carry_grade",
+   "type": "int"
+  },
+  {
+   "name": "maxskillnum_raw",
+   "type": "int"
+  },
+  {
+   "name": "address_raw",
+   "type": "str"
+  },
+  {
+   "name": "source_entry",
+   "type": "int"
+  },
+  {
+   "name": "source_table",
+   "type": "str"
+  },
+  {
+   "name": "review_status",
+   "type": "str"
+  }
+ ]
+}

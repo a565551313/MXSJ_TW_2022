@@ -1,0 +1,21 @@
+{
+ "id": "mapdata_parent_scene",
+ "filename": "maps_npcs/mapdata_parent_scene.csv",
+ "rows": 6,
+ "primary_key": [
+  "scene_id"
+ ],
+ "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+ "source_entry": 1301,
+ "source_table": "MAP_ASCRIPTION",
+ "columns": [
+  {
+   "name": "scene_id",
+   "type": "int_or_empty"
+  },
+  {
+   "name": "parent_scene_id",
+   "type": "int_or_empty"
+  }
+ ]
+}

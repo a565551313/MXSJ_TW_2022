@@ -1,0 +1,13 @@
+{
+ "skill_id": 101,
+ "type_code_raw": 0,
+ "name": "反擊",
+ "description_raw": "受到物理攻擊時，有20%幾率給予還擊，還擊時傷害結果為正常傷害結果的50%",
+ "fpneed_raw": "0",
+ "mpneed_raw": "0",
+ "hpneed_raw": "0",
+ "source_entry": 3205,
+ "source_table": "DATA",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "101"
+}

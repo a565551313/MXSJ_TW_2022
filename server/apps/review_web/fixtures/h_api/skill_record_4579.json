@@ -1,0 +1,13 @@
+{
+ "skill_id": 4579,
+ "type_code_raw": 1,
+ "name": "多聞天王咒",
+ "description_raw": "第一回合設下咒印契約，下一回合若有人膽敢違背此契約，則立即遭受五雷轟頂攻擊",
+ "fpneed_raw": "0",
+ "mpneed_raw": "0",
+ "hpneed_raw": "0",
+ "source_entry": 3205,
+ "source_table": "DATA",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "4579"
+}

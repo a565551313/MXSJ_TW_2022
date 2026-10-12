@@ -1,0 +1,217 @@
+{
+ "dataset": "pet_required_skills",
+ "total": 26,
+ "offset": 0,
+ "limit": 500,
+ "count": 26,
+ "records": [
+  {
+   "client_shape_id": 2030,
+   "skill_name_raw": "飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2030"
+  },
+  {
+   "client_shape_id": 2050,
+   "skill_name_raw": "刺甲",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2050"
+  },
+  {
+   "client_shape_id": 2070,
+   "skill_name_raw": "靈敏",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2070"
+  },
+  {
+   "client_shape_id": 2140,
+   "skill_name_raw": "鬼魂性質",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2140"
+  },
+  {
+   "client_shape_id": 2210,
+   "skill_name_raw": "肉食習性",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2210"
+  },
+  {
+   "client_shape_id": 2260,
+   "skill_name_raw": "勇敢",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2260"
+  },
+  {
+   "client_shape_id": 2270,
+   "skill_name_raw": "鬼魂性質",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2270"
+  },
+  {
+   "client_shape_id": 2280,
+   "skill_name_raw": "慧根",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2280"
+  },
+  {
+   "client_shape_id": 2290,
+   "skill_name_raw": "飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2290"
+  },
+  {
+   "client_shape_id": 2310,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2310"
+  },
+  {
+   "client_shape_id": 2360,
+   "skill_name_raw": "飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2360"
+  },
+  {
+   "client_shape_id": 2370,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2370"
+  },
+  {
+   "client_shape_id": 2380,
+   "skill_name_raw": "飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2380"
+  },
+  {
+   "client_shape_id": 2420,
+   "skill_name_raw": "肉食習性",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2420"
+  },
+  {
+   "client_shape_id": 2450,
+   "skill_name_raw": "鬼魂性質",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2450"
+  },
+  {
+   "client_shape_id": 2480,
+   "skill_name_raw": "仙神性質",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2480"
+  },
+  {
+   "client_shape_id": 2490,
+   "skill_name_raw": "肉食習性",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2490"
+  },
+  {
+   "client_shape_id": 2500,
+   "skill_name_raw": "勇敢",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2500"
+  },
+  {
+   "client_shape_id": 2510,
+   "skill_name_raw": "飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2510"
+  },
+  {
+   "client_shape_id": 2530,
+   "skill_name_raw": "鬼魂性質",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2530"
+  },
+  {
+   "client_shape_id": 2550,
+   "skill_name_raw": "飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2550"
+  },
+  {
+   "client_shape_id": 2600,
+   "skill_name_raw": "鬼魂性質",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2600"
+  },
+  {
+   "client_shape_id": 2650,
+   "skill_name_raw": "神罰",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2650"
+  },
+  {
+   "client_shape_id": 2670,
+   "skill_name_raw": "念力飛彈",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2670"
+  },
+  {
+   "client_shape_id": 2690,
+   "skill_name_raw": "妖氣纏繞",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2690"
+  },
+  {
+   "client_shape_id": 4105,
+   "skill_name_raw": "吸血攻擊",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4105"
+  }
+ ]
+}

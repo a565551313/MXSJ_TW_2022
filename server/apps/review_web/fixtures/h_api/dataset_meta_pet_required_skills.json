@@ -1,0 +1,33 @@
+{
+ "id": "pet_required_skills",
+ "filename": "pet_required_skills.csv",
+ "rows": 26,
+ "primary_key": [
+  "client_shape_id"
+ ],
+ "notes": "Only explicitly present source values; absence is not filled.",
+ "source_entry": 2027,
+ "source_table": "DATA.mustSkillName",
+ "columns": [
+  {
+   "name": "client_shape_id",
+   "type": "int"
+  },
+  {
+   "name": "skill_name_raw",
+   "type": "str"
+  },
+  {
+   "name": "source_entry",
+   "type": "int"
+  },
+  {
+   "name": "source_table",
+   "type": "str"
+  },
+  {
+   "name": "review_status",
+   "type": "str"
+  }
+ ]
+}

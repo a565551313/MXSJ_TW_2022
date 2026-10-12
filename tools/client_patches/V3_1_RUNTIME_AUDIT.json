@@ -1,0 +1,25 @@
+{
+  "python25_runtime_output": [
+    "PASS: independent CPython 2.5 marshal load; full game module NOT executed",
+    "PASS: shipped v3 operands reproduce TypeError before overlay initialization",
+    "PASS: corrected actual None operands initialize overlay in module namespace",
+    "PASS: compiled homepage caption runs with fake native text button",
+    "PASS: compiled agreement body is byte strings; target-before-hide reject ordering",
+    "PASS: compiled form creates fields and inherits separate Next/Info dispatch",
+    "PASS: missing/empty caption image retains old label and logs failure",
+    "PASS: failed reject target does not hide current agreement",
+    "PASS: homepage Python exception guard: ok",
+    "PASS: homepage Python exception guard: import-error",
+    "PASS: homepage Python exception guard: caption-error",
+    "PASS: homepage Python exception guard: actual-bad-overlay",
+    "PASS: registration target-before-home-hide: False",
+    "PASS: registration target-before-home-hide: True",
+    "PASS: 14 independent CPython 2.5 audit cases; NO native Windows acceptance"
+  ],
+  "candidate_fls_sha256": "1a0283d0b031f33868e875984fffa91b2ce7eed66de823d94efc9d25f196654e",
+  "candidate_fls_bytes": 24555932,
+  "shipped_v3_fls_sha256": "b26af0973ac1fb28f0d2b482e2d24a710d682e4ff51b2ec1a586c219a75cc4a2",
+  "native_windows_client_tested": false,
+  "scope": "authored compiled startup/UI code and modified call fragments only; fake engine boundaries",
+  "candidate_kind": "registration_visual_preview_v3_1_candidate"
+}
