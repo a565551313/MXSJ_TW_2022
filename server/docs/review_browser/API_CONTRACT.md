@@ -101,7 +101,7 @@ API 支持以下标准 Slug 访问 17 个 CSV 数据集：
     "batch": "batch_001",
     "loaded_files_count": 22,
     "datasets_count": 17,
-    "total_records_count": 12085
+    "total_records_count": 12202
   }
   ```
   若启动校验失败或尚未就绪，返回 HTTP 503 与错误详情。
@@ -230,9 +230,9 @@ API 支持以下标准 Slug 访问 17 个 CSV 数据集：
   | `offset` | int | `0` | 分页偏移量，>= 0 |
   | `limit` | int | `50` | 单页大小，1 <= limit <= 500 |
   | `q` | str | 无 | 文本搜索关键字，对表中字符串列进行大小写不敏感子串匹配，或对数值主键/代码列进行精确字符串匹配 |
-  | `sort_by` | str | 无 | 排序字段名（必须为该表的合法列名或 `_pk`） |
-  | `order` | str | `asc` | 排序方向：`asc`（升序）或 `desc`（降序） |
-  | `*` (列名) | any | 无 | **精确字段过滤**：任何属于当前表列名的查询参数均作为精确相等过滤。如 `client_shape_id=1010`、`category_code_raw=3`、`scene_id=1301`、`review_status=candidate` |
+  | `sort_by` | str | 无 | 排序字段名（必须为该表的合法列名或 `_pk`，否则返回 400 `INVALID_PARAMETER`） |
+  | `order` | str | `asc` | 排序方向：仅接受 `asc`（升序）或 `desc`（降序）；传入其它值返回 400 `INVALID_PARAMETER` |
+  | `*` (列名) | any | 无 | **精确字段过滤**：任何属于当前表列名或 `_pk` 的查询参数均作为精确相等过滤。如 `client_shape_id=1010`、`category_code_raw=3`、`scene_id=1301`、`review_status=candidate`。**若传入任何未知或拼错的参数名，严格返回 400 `INVALID_PARAMETER`，绝不静默忽略。** |
 - **响应结构：**
   ```json
   {
@@ -281,7 +281,8 @@ API 支持以下标准 Slug 访问 17 个 CSV 数据集：
 - **查询参数：**
   - `entry_index` (int, 可选): 按源条目过滤，如 `1945`、`2954`、`3205`。
   - `record_key` (str/int, 可选): 按记录键过滤，如 `72548`、`2800`。
-  - `offset` (int, 默认 0), `limit` (int, 默认 50)。
+  - `offset` (int, 默认 0), `limit` (int, 默认 50, 1 <= limit <= 500)。
+  - **严格参数校验**：仅允许上述 4 个参数；若传入未知或拼错参数（如 `record_kee`），严格返回 400 `INVALID_PARAMETER`，绝不静默忽略。
 - **响应：**
   ```json
   {
@@ -315,7 +316,8 @@ API 支持以下标准 Slug 访问 17 个 CSV 数据集：
 - **功能：** 查询 3205 技能表在编译时发生的 9 次覆盖摘要与字节码偏移证据（尤其包含 4573 从「天魔返生術」覆盖为「地魔返生術」证据）。
 - **查询参数：**
   - `key` (int, 可选): 按技能 ID 过滤，如 `4573`。
-  - `offset` (int, 默认 0), `limit` (int, 默认 50)。
+  - `offset` (int, 默认 0), `limit` (int, 默认 50, 1 <= limit <= 500)。
+  - **严格参数校验**：仅允许上述 3 个参数；若传入未知参数，严格返回 400 `INVALID_PARAMETER`。
 - **响应：**
   ```json
   {
@@ -352,4 +354,8 @@ API 支持以下标准 Slug 访问 17 个 CSV 数据集：
 1. **运行绑定**：开发服务器必须监听 `0.0.0.0`，适配 Arena Web 预览代理环境。
 2. **依赖隔离**：查询 API 依赖维护在 `server/apps/review_api/requirements.txt` 中，不污染全仓统一构建规则。
 3. **数据不可变性**：只读加载层在内存中必须封装为不可修改的数据结构（如只读副本、元组或深拷贝传递），防止调用方运行时篡改已校验的目录数据。
-4. **启动时加载**：所有 22 个文件在服务启动时完成全量哈希校验与类型解析载入，HTTP 请求期间绝不重新读取或重解密 FLS 归档。
+4. **启动时加载**：所有 21 个声明文件及 manifest 本身在服务启动时完成全量哈希校验与类型解析载入，HTTP 请求期间绝不重新读取或重解密 FLS 归档。若任何文件缺失或损坏，拒绝进入就绪状态。
+5. **受控批次目录配置（供 Agent J 验收及本地测试）**：
+   - 默认批次目录为仓库固定路径 `server/docs/csv_checks/batch_001`。
+   - 支持通过本地启动命令行参数 `--batch-dir`、环境变量 `REVIEW_BATCH_DIR` 或 Python 应用工厂 `create_app(batch_dir=...)` 指定测试副本目录。
+   - **严格禁止**在 HTTP 请求中接收任意文件系统路径参数，杜绝路径穿越与任意文件读取风险。
