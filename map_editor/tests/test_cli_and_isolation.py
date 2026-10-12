@@ -19,6 +19,7 @@ import os
 import shutil
 import sys
 import tempfile
+import types
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
@@ -27,6 +28,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _paths import PROJECT, SAMPLES                    # noqa: E402
+
+if str(PROJECT) not in sys.path:
+    sys.path.insert(0, str(PROJECT))
 
 from map_editor.cli import _bare_double_click_launch, main   # noqa: E402
 
@@ -197,8 +201,6 @@ class TestBareDoubleClickLaunch(unittest.TestCase):
 
     def test_main_dispatches_to_gui_when_frozen_with_no_arguments(self) -> None:
         """End-to-end through ``main()`` -- without needing Qt installed."""
-        import types
-
         calls: list[object] = []
         fake_widgets = types.ModuleType("map_editor.ui.widgets")
         fake_widgets.run = lambda vm: calls.append(vm) or 0  # type: ignore[attr-defined]
@@ -214,6 +216,60 @@ class TestBareDoubleClickLaunch(unittest.TestCase):
         code = main([])
         self.assertEqual(code, 0)
         self.assertEqual(len(calls), 1)
+
+
+class TestRunGuiEntryPoint(unittest.TestCase):
+    """``runGUI.py``: a second entry point that always opens the window,
+    regardless of flags/platform/argv -- unlike ``run.py``, which only opens
+    the GUI for ``--gui`` or (since the frozen-EXE fix) a bare double-click.
+    """
+
+    def setUp(self) -> None:
+        import runGUI
+        self.runGUI = runGUI
+
+        self.calls: list[object] = []
+        fake_widgets = types.ModuleType("map_editor.ui.widgets")
+        fake_widgets.run = lambda vm: self.calls.append(vm) or 0  # type: ignore[attr-defined]
+        sys.modules["map_editor.ui.widgets"] = fake_widgets
+        self.addCleanup(sys.modules.pop, "map_editor.ui.widgets", None)
+
+        home = Path(tempfile.mkdtemp(prefix="map_editor_rungui_"))
+        self.addCleanup(shutil.rmtree, home, True)
+        os.environ["MAP_EDITOR_HOME"] = str(home)
+        self.addCleanup(os.environ.pop, "MAP_EDITOR_HOME", None)
+
+        # Not frozen and no --gui flag: make sure the GUI still opens, i.e.
+        # this does not rely on the frozen-EXE auto-GUI behaviour at all.
+        if hasattr(sys, "frozen"):
+            del sys.frozen
+            self.addCleanup(setattr, sys, "frozen", False)
+
+    def test_bare_call_opens_the_gui(self) -> None:
+        code = self.runGUI.main_gui([])
+        self.assertEqual(code, 0)
+        self.assertEqual(len(self.calls), 1)
+
+    def test_scan_flag_does_not_suppress_the_gui(self) -> None:
+        """``--scan`` alone would mean CLI-mode for run.py; runGUI.py always
+        wins and still opens the window."""
+        code = self.runGUI.main_gui(["--scan", str(SAMPLES)])
+        self.assertEqual(code, 0)
+        self.assertEqual(len(self.calls), 1)
+
+    def test_client_root_flag_is_still_honoured(self) -> None:
+        code = self.runGUI.main_gui(["--client-root", str(SAMPLES)])
+        self.assertEqual(code, 0)
+        self.assertEqual(len(self.calls), 1)
+        (vm,) = self.calls
+        self.assertEqual(vm.config.client_root, str(SAMPLES))
+
+    def test_explicit_gui_flag_is_not_duplicated(self) -> None:
+        """Passing --gui explicitly must not confuse argparse (no duplicate
+        injection)."""
+        code = self.runGUI.main_gui(["--gui", "--client-root", str(SAMPLES)])
+        self.assertEqual(code, 0)
+        self.assertEqual(len(self.calls), 1)
 
 
 if __name__ == "__main__":

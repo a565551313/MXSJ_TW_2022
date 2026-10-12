@@ -21,7 +21,18 @@ pip install -r requirements.txt
 python run.py --gui --client-root "D:/Games/MXSJ"     # 图形界面
 python run.py --scan "D:/Games/MXSJ"                  # 终端列出全部地图（不需要 Qt）
 python run.py --scan . --export-json 2101:out/2101.json
+python runGUI.py                                       # 无论传不传参数，一律直接打开图形界面
+python runGUI.py --client-root "D:/Games/MXSJ"         # 同上，顺便记住客户端目录
 ```
+
+> **`run.py` 与 `runGUI.py` 的区别**：`run.py` 默认是命令行模式，只有加
+> `--gui`（或者打包成无控制台窗口的 EXE 后不带任何参数双击启动，2026-10-12
+> 起支持）才会打开图形界面；而 `runGUI.py` 不管加不加 `--gui`、加没加
+> `--scan`/`--export-json` 等任何其它参数，**始终**打开图形界面——相当于
+> 内部自动补上 `--gui` 再转发给同一套 `map_editor.cli.main()`，其余参数
+> （`--client-root`、`--scene-table` 等）照常生效。适合只想要"双击就进图形
+> 界面"这一种用法、不想记各种命令行参数的场景。它同样需要 Qt（PySide6），
+> 没装 Qt 时会直接报 `ImportError`，不像 `run.py` 那样有纯命令行的降级路径。
 
 ### 打包成 EXE（在 Windows 上执行）
 
@@ -43,7 +54,8 @@ build.bat
 
 ```
 map_editor/
-├── run.py                     入口（薄壳，转发给 map_editor.cli）
+├── run.py                     入口（薄壳，转发给 map_editor.cli；默认命令行，--gui 才开窗口）
+├── runGUI.py                  纯 GUI 入口（薄壳，强制补 --gui 再转发给 map_editor.cli；无论传什么参数都直接开窗口）
 ├── build.bat                  Windows 打包脚本
 ├── map_editor.spec            PyInstaller 配置（含数据文件打包）
 ├── data/
