@@ -9,12 +9,19 @@
 ## 1. 请求链路
 
 ```text
-TCP字节流 → legacy编解码 → 会话认证/限流 → 类型化业务请求
+TCP字节流 → transport帧处理 → legacy/modern协议白名单适配
+                                      ↓
+                 会话权威校验 → 实体归属路由 → 有界命令投递
                                       ↓
                   应用服务 → 状态拥有者/纯规则 → 仓储/事务
                                       ↓
-                  查询视图或回执 → legacy编码 → 客户端
+                  查询视图或回执 → 定向回送 → 编码 → 客户端
 ```
+
+采用**可拆分接入层**：第一版同进程装配，后续以远程适配器替换投递/回送，
+不把 socket、connection_id 或网关节点放入玩法接口。
+详细约束见 [GATEWAY.md](GATEWAY.md)，包括会话接管、归属代数、幂等、超时、背压与实施门槛。
+这是设计基线，尚未实现独立网关、路由目录或内部通信。
 
 接入层校验帧长度、格式、握手阶段和请求频率；业务层再次校验角色归属、权限、版本和资源。
 认证时不能让客户端输入任意 account_id；account.authenticate 例外地接收尚未认证的 LoginRequest，须由接入层限流并保护凭据。
@@ -29,7 +36,7 @@ TCP字节流 → legacy编解码 → 会话认证/限流 → 类型化业务请�
 | trace_id | 链路追踪，不承担幂等职责 |
 | realm_id | 区服范围；即使ID全局唯一仍校验范围 |
 | account_id / character_id | 已认证主体与角色；角色命令要求角色非空并核对归属 |
-| session_epoch | 登录接管代数，防止旧连接继续写；内部任务可为空 |
+| session_epoch | 登录接管代数；业务接受边界验证，不能只在网关检查；内部任务可为空 |
 | source | client/internal/admin；只是来源，**不替代授权** |
 
 内部实体ID暂以正整数表示；旧协议里一字节战斗单位ID、4字节角色ID等由适配器检查范围并映射，不能无校验截断。
@@ -128,3 +135,16 @@ RewardTxn.stage_grant(uow, server_reward_plan, claim_key) -> provisional_reward_
 这些卡片目前只有接口名字与职责，**不是类型化接口，也不保证接口已冻结**。
 新增独立模块（如 mount、achievement、profession、ranking、competition、billing 等）是待确认的拆分建议，未擅自移动现有所有权。
 各组先在自己模块的 `design/<feature_id>.md` 细化；集成负责人确认后再写入 contracts.py 或新增公开契约文件。
+
+## 9. 接入可拆分约束
+
+- RequestContext 保持业务上下文；session_id、连接回送句柄和路由元数据放在外层可信信封，不进入玩法参数。
+- request_id 关联单次请求；operation_id 去重同一业务操作；session_epoch 隔离旧会话；owner_epoch 隔离旧归属。
+  这四者不能相互替代。跨进程消息按白名单和版本校验，不直接反序列化 Python 对象。
+- 同一区服同账号第一版只允许一个活动会话/一个已选角色；接管与命令接受按拥有者顺序处理。
+  接管前已合法接受的命令不保证撤销；需要提交 fencing 的业务必须与持久化层联合实现。
+- 路由失败只有在明确未接受执行时才允许重新投递；超时/断链导致未知结果时按原 operation_id 恢复。
+  网关默认不自动重试有副作用请求，客户端缺少稳定幂等键时必须先解决协议适配。
+- 业务回执不等于 TCP ACK，推送失败不回滚已提交结果；断线重连通过授权快照/版本恢复。
+- GATEWAY.md 中的 SessionAuthority、OwnerDirectory、CommandDispatcher、ClientDelivery 是待实现端口，
+  尚未加入本文件 §4 的已声明 Python Protocol 清单，不得误认为已经能部署。
