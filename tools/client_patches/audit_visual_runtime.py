@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Independently replay authored v3/v3.1 startup fragments with CPython 2.5.6.
+"""Independently replay authored v3/v3.2 startup fragments with CPython 2.5.6.
 
 Never execute a recovered game module. Only the authored overlay, the changed
-startup hook, and the changed two-call transition run, against fake UI/modules.
+startup hook, and click-only registration entry run, against fake UI/modules.
 The target client's native engine/crypto/image loading are NOT tested here.
 """
 import argparse
@@ -62,17 +62,16 @@ def fixtures(source, key_bytes, shipped=None):
     bad = fragment(root, bad_code + ret, 'shipped-bad-namespace-operands', constants)
     home = dict(base.objects(extract(candidate, keys, 337)))
     init = home['CMainPage/__init__']
-    hook = fragment(init, init['code'][426:571] + init['code'][571:575], 'guarded-homepage-hook')
+    def inline_case(co, span, name):
+        start, end = span
+        seq = base.normalized(co['code'][start:end])
+        code = base.assemble(*[(op, arg-start if op in visual.ABS_JUMPS else arg) for _, op, arg in seq])
+        base.valid_code(co, code)
+        return fragment(co, code, name)
+    hook = inline_case(init, report['details']['homepage']['caption_span'], 'independent-homepage-caption')
     message = home['CMainPage/OnMessage']
-    transition = fragment(message, message['code'][215:238] + base.assemble(
-        (100, message['consts'].index(None)), (83, None)), 'target-before-home-hide')
-    # The fragment no longer includes IMPORT_NAME/STORE_FAST from the caller.
-    # Rebind its only LOAD_FAST operand from old local 8 to argument 1.
-    code = bytearray(transition['code'])
-    base.require(code[:3] == bytes([124, 8, 0]), 'unexpected transition local')
-    code[1:3] = struct.pack('<H', 1)
-    transition['code'] = bytes(code)
-    return {'bad': bad, 'good': good, 'hook': hook, 'transition': transition}, candidate, report
+    click = inline_case(message, report['details']['homepage']['click_span'], 'lazy-registration-click')
+    return {'bad': bad, 'good': good, 'hook': hook, 'click': click}, candidate, report
 
 
 def run(python25, shipped_zip=None):
@@ -91,6 +90,8 @@ def run(python25, shipped_zip=None):
         # Independently deserialize the COMPLETE artifact, but never execute it.
         plain = base.xor_payload(base.zlib.decompress(base.entries(candidate)[1][4007][1]), json.loads(keys)['4007'])
         Path(directory, 'parse-only.marshal').write_bytes(plain)
+        home_plain = base.xor_payload(base.zlib.decompress(base.entries(candidate)[1][337][1]), json.loads(keys)['337'])
+        Path(directory, 'parse-home-only.marshal').write_bytes(home_plain)
         proc = subprocess.run([python25, '-S', str(HERE / 'visual_runtime_harness.py2'), directory],
                               text=True, capture_output=True, timeout=30)
         base.require(proc.returncode == 0, 'CPython 2.5 audit failed:\n' + proc.stdout + proc.stderr)

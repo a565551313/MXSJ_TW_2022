@@ -1,0 +1,28 @@
+{
+  "python25_runtime_output": [
+    "PASS: independent CPython 2.5 marshal load of BOTH entries; full game modules NOT executed",
+    "PASS: shipped v3 operands reproduce TypeError before overlay initialization",
+    "PASS: corrected actual None operands initialize overlay in module namespace",
+    "PASS: compiled homepage caption runs with fake native text button",
+    "PASS: compiled agreement body is byte strings; target-before-hide reject ordering",
+    "PASS: compiled form creates fields and inherits separate Next/Info dispatch",
+    "PASS: missing/empty caption image retains old label and logs failure",
+    "PASS: failed reject target does not hide current agreement",
+    "PASS: actual homepage bytecode has zero imports: ok",
+    "PASS: actual homepage bytecode has zero imports: missing-image",
+    "PASS: actual homepage bytecode has zero imports: empty-image",
+    "PASS: actual homepage bytecode has zero imports: ambiguous",
+    "PASS: actual homepage bytecode has zero imports: not-text",
+    "PASS: actual click-only import keeps home on failure: ok",
+    "PASS: actual click-only import keeps home on failure: import-error",
+    "PASS: actual click-only import keeps home on failure: actual-bad-overlay",
+    "PASS: actual click-only import keeps home on failure: constructor-error",
+    "PASS: 17 independent CPython 2.5 audit cases; NO native Windows acceptance"
+  ],
+  "candidate_fls_sha256": "51187b3806497cab206cf2581cbcd2dbb0fe8ec4be4928a9bad41aebf2e105f3",
+  "candidate_fls_bytes": 24555986,
+  "shipped_v3_fls_sha256": "b26af0973ac1fb28f0d2b482e2d24a710d682e4ff51b2ec1a586c219a75cc4a2",
+  "native_windows_client_tested": false,
+  "scope": "authored compiled startup/UI code and modified call fragments only; fake engine boundaries",
+  "candidate_kind": "registration_visual_preview_v3_2_candidate"
+}

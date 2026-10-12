@@ -105,7 +105,8 @@ try:
     # Independent reader only: mapped native bytecode must NOT be executed here.
     parsed = load('parse-only')
     assert isinstance(parsed, types.CodeType)
-    passed('independent CPython 2.5 marshal load; full game module NOT executed')
+    assert isinstance(load('parse-home-only'), types.CodeType)
+    passed('independent CPython 2.5 marshal load of BOTH entries; full game modules NOT executed')
 
     ns, events = environment()
     try:
@@ -166,42 +167,68 @@ try:
     assert events == []
     passed('failed reject target does not hide current agreement')
 
-    def fail_import(name, *args): raise ImportError('simulated registration import failure')
-    def fail_caption(home): raise RuntimeError('simulated caption helper failure')
-    for mode in ('ok', 'import-error', 'caption-error', 'actual-bad-overlay'):
-        calls = []
-        def import_stub(name, *args):
-            assert name == 'register'
-            if mode == 'import-error': return fail_import(name)
-            if mode == 'actual-bad-overlay':
-                local_ns, ignored = environment()
-                exec load('bad') in local_ns, local_ns
-            return module('register', GetData=fail_caption if mode == 'caption-error' else lambda home: calls.append(home))
+    # Run the actual inlined homepage bytes, not the now-unused register.GetData.
+    for mode in ('ok', 'missing-image', 'empty-image', 'ambiguous', 'not-text'):
+        imports = []
+        def forbidden_import(name, *args):
+            imports.append(name)
+            raise AssertionError('homepage attempted import: ' + name)
         builtins = __builtin__.__dict__.copy()
-        builtins['__import__'] = import_stub
-        hook = types.FunctionType(load('hook'), {'__builtins__': builtins})
-        sentinel = object()
+        builtins['__import__'] = forbidden_import
+        ui = module('ui', CImage=Picture)
+        if mode == 'missing-image': ui.CImage = fail_image
+        if mode == 'empty-image': ui.CImage = EmptyPicture
+        home = Panel(None, 'login_new/newlogin_800.dlg')
+        if mode == 'ambiguous': home.m_Frames['duplicate'] = Node(home, 2)
+        if mode == 'not-text':
+            home.m_Frames['next'] = module('non-text', m_MsgID=2, text='old caption')
+        hook = types.FunctionType(load('hook'), {'__builtins__': builtins, 'ui': ui})
         start = captured.tell()
-        assert hook(sentinel, None) is None
-        if mode == 'ok': assert calls == [sentinel]
+        assert hook(home, None) is None
+        assert imports == []
+        if mode == 'ok':
+            assert home.m_Frames['next'].text == ''
+            assert home.m_Frames['next'].m_PreviewCaption.path.endswith('home_register.png')
+            # A second fresh homepage also must not import registration.
+            assert hook(Panel(None, 'login_new/newlogin_800.dlg'), None) is None
         else:
-            assert calls == []
-            assert 'login/mainpage.dlg' in captured.getvalue()[start:]
-        passed('homepage Python exception guard: ' + mode)
+            assert home.m_Frames['next'].text == 'old caption'
+            assert 'NOT installed' in captured.getvalue()[start:]
+        passed('actual homepage bytecode has zero imports: ' + mode)
 
-    for fails in (False, True):
+    for mode in ('ok', 'import-error', 'actual-bad-overlay', 'constructor-error'):
         calls = []
         def show_registration(flag):
             calls.append(('register', flag))
-            if fails: raise RuntimeError('simulated registration constructor failure')
-        transition = types.FunctionType(load('transition'), {'__builtins__': __builtin__.__dict__, 'Show': lambda flag: calls.append(('home', flag))})
-        try: transition(None, module('register', Show=show_registration))
-        except RuntimeError:
-            assert fails
+            if mode == 'constructor-error': raise RuntimeError('simulated constructor failure')
+        def import_stub(name, *args):
+            calls.append(('import', name))
+            if name == 'sound': return module('sound', Play=lambda path: calls.append(('sound', path)))
+            assert name == 'register'
+            if mode == 'import-error': raise ImportError('simulated registration import failure')
+            if mode == 'actual-bad-overlay':
+                local_ns, ignored = environment()
+                exec load('bad') in local_ns, local_ns
+            return module('register', Show=show_registration)
+        builtins = __builtin__.__dict__.copy()
+        builtins['__import__'] = import_stub
+        click = types.FunctionType(load('click'), {'__builtins__': builtins,
+            'Show': lambda flag: calls.append(('home', flag))})
+        start = captured.tell()
+        assert calls == []
+        assert click(None, None) is None
+        if mode == 'ok':
+            assert calls == [('import', 'register'), ('register', True), ('home', False),
+                             ('import', 'sound'), ('sound', 'action/button.wav')]
+            # Retry/revisit remains a normal lazy call (module cache owned by Python).
+            assert click(None, None) is None
+            assert len(calls) == 10
         else:
-            assert not fails
-        assert calls == ([('register', True)] if fails else [('register', True), ('home', False)])
-        passed('registration target-before-home-hide: ' + str(fails))
+            assert calls == ([('import', 'register'), ('register', True)] if mode == 'constructor-error'
+                             else [('import', 'register')])
+            assert 'cannot open registration' in captured.getvalue()[start:]
+        passed('actual click-only import keeps home on failure: ' + mode)
+
 finally:
     sys.stdout = saved_stdout
 

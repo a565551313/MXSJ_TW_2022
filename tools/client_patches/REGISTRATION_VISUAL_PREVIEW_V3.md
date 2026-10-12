@@ -8,6 +8,7 @@
 不把新生成的控件底图当成实际客户端截图；界面效果、资源加载、字体、遮挡、点击及滚动都待用户验证。
 
 后续自查已复现明确代码错误并修正为 v3.1 候选，见 [自查报告](V3_STARTUP_SELF_AUDIT.md)。
+当前已进一步拆分为 [v3.2 点击加载候选](REGISTRATION_LAZY_ENTRY_V3_2.md)。
 以下 v3 方案与初始排查内容是历史记录；旧 ZIP 保持不变，继续停用。
 
 ## 初次原生失败记录与处置（历史）
@@ -78,7 +79,7 @@ GetData 内的异常处理只覆盖按钮定位和图片添加，不能保护此
 仅从已锁定的原始 FLS 构建，不对用户已修改包做差分：
 
 ```bash
-# 当前脚本输出 v3.1 未验收候选，不再重建历史 v3；须显式选择候选。
+# 当前脚本输出 v3.2 未验收候选，不再重建历史 v3；须显式选择候选。
 # 只使用冻结产物，不要求本机安装 Python 2.5 或 Pillow。
 python3 tools/client_patches/build_visual_preview.py --allow-unverified-candidate \
   --output-dir /home/user/artifacts/NEW_VISUAL_OUTPUT

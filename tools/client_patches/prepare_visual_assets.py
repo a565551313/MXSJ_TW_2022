@@ -10,7 +10,6 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
-from PIL import Image, ImageDraw, ImageFont
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -63,11 +62,18 @@ def images():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--python25', required=True)
+    parser.add_argument('--code-only', action='store_true', help='keep existing frozen PNGs; no Pillow needed')
     args = parser.parse_args()
     version = subprocess.check_output([args.python25, '-S', '-c', 'import sys; print sys.version_info[:3]']).decode().strip()
     if version != '(2, 5, 6)':
         raise ValueError('CPython 2.5.6 required')
-    images()
+    if not args.code_only:
+        global Image, ImageDraw, ImageFont
+        from PIL import Image, ImageDraw, ImageFont
+        images()
+    subprocess.run([args.python25, '-S', '-c',
+        "import marshal,sys; s=open(sys.argv[1],'rb').read(); c=compile(s,'home_registration_entry.py','exec'); open(sys.argv[2],'wb').write(marshal.dumps(c,2))",
+        str(HERE / 'home_registration_entry.py'), str(OUT / 'home_entry.py25')], check=True)
     subprocess.run([args.python25, '-S', '-c',
         "import marshal,sys; s=open(sys.argv[1],'rb').read(); c=compile(s,'registration_visual_overlay.py','exec'); open(sys.argv[2],'wb').write(marshal.dumps(c,2))",
         str(HERE / 'registration_visual_overlay.py'), str(OUT / 'overlay.py25')], check=True)
@@ -75,6 +81,8 @@ def main():
                 'source_sha256': sha((HERE / 'registration_visual_overlay.py').read_bytes()),
                 'compiled_sha256': sha((OUT / 'overlay.py25').read_bytes()),
                 'font_sha256': sha(FONT.read_bytes()),
+                'home_source_sha256': sha((HERE / 'home_registration_entry.py').read_bytes()),
+                'home_compiled_sha256': sha((OUT / 'home_entry.py25').read_bytes()),
                 'assets': {p.name: sha(p.read_bytes()) for p in sorted(OUT.glob('*.png'))}}
     (OUT / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
 
