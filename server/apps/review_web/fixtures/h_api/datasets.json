@@ -1,0 +1,793 @@
+{
+ "total": 17,
+ "datasets": [
+  {
+   "id": "items",
+   "filename": "items.csv",
+   "rows": 6851,
+   "primary_key": [
+    "client_shape_id"
+   ],
+   "notes": "Display catalog, includes test/history entries. Category meanings not normalized. Image fallback mirrors Shape2Image; assets not checked.",
+   "source_entry": 1945,
+   "source_table": "DATA+ITEMDATABYTYPE+SHAPETABLE",
+   "columns": [
+    {
+     "name": "client_shape_id",
+     "type": "int"
+    },
+    {
+     "name": "name",
+     "type": "str"
+    },
+    {
+     "name": "description_raw",
+     "type": "str"
+    },
+    {
+     "name": "category_code_raw",
+     "type": "int"
+    },
+    {
+     "name": "image_id",
+     "type": "int"
+    },
+    {
+     "name": "image_mapping_explicit",
+     "type": "bool"
+    },
+    {
+     "name": "source_entry",
+     "type": "int"
+    },
+    {
+     "name": "source_table",
+     "type": "str"
+    },
+    {
+     "name": "review_status",
+     "type": "str"
+    }
+   ]
+  },
+  {
+   "id": "pets",
+   "filename": "pets.csv",
+   "rows": 135,
+   "primary_key": [
+    "client_shape_id"
+   ],
+   "notes": "Original classifications and maxskillnum semantics retained; not a server progression rule.",
+   "source_entry": 2027,
+   "source_table": "DATA",
+   "columns": [
+    {
+     "name": "client_shape_id",
+     "type": "int"
+    },
+    {
+     "name": "name",
+     "type": "str"
+    },
+    {
+     "name": "liupai_raw",
+     "type": "str"
+    },
+    {
+     "name": "attack_type_raw",
+     "type": "str"
+    },
+    {
+     "name": "carry_grade",
+     "type": "int"
+    },
+    {
+     "name": "maxskillnum_raw",
+     "type": "int"
+    },
+    {
+     "name": "address_raw",
+     "type": "str"
+    },
+    {
+     "name": "source_entry",
+     "type": "int"
+    },
+    {
+     "name": "source_table",
+     "type": "str"
+    },
+    {
+     "name": "review_status",
+     "type": "str"
+    }
+   ]
+  },
+  {
+   "id": "pet_skill_candidates",
+   "filename": "pet_skill_candidates.csv",
+   "rows": 458,
+   "primary_key": [
+    "client_shape_id",
+    "sequence"
+   ],
+   "notes": "Zero-based source order; not probabilities or guaranteed skills.",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "columns": [
+    {
+     "name": "client_shape_id",
+     "type": "int"
+    },
+    {
+     "name": "sequence",
+     "type": "int"
+    },
+    {
+     "name": "skill_name_raw",
+     "type": "str"
+    },
+    {
+     "name": "source_entry",
+     "type": "int"
+    },
+    {
+     "name": "source_table",
+     "type": "str"
+    },
+    {
+     "name": "review_status",
+     "type": "str"
+    }
+   ]
+  },
+  {
+   "id": "pet_required_skills",
+   "filename": "pet_required_skills.csv",
+   "rows": 26,
+   "primary_key": [
+    "client_shape_id"
+   ],
+   "notes": "Only explicitly present source values; absence is not filled.",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "columns": [
+    {
+     "name": "client_shape_id",
+     "type": "int"
+    },
+    {
+     "name": "skill_name_raw",
+     "type": "str"
+    },
+    {
+     "name": "source_entry",
+     "type": "int"
+    },
+    {
+     "name": "source_table",
+     "type": "str"
+    },
+    {
+     "name": "review_status",
+     "type": "str"
+    }
+   ]
+  },
+  {
+   "id": "pet_aptitudes",
+   "filename": "pet_aptitudes.csv",
+   "rows": 131,
+   "primary_key": [
+    "client_shape_id"
+   ],
+   "notes": "Original field labels; 2800 withheld. No 1700 substitution or missing-row zero fill.",
+   "source_entry": 2954,
+   "source_table": "DATA",
+   "columns": [
+    {
+     "name": "client_shape_id",
+     "type": "int"
+    },
+    {
+     "name": "法力資質",
+     "type": "int"
+    },
+    {
+     "name": "法力資質最大值",
+     "type": "int"
+    },
+    {
+     "name": "防禦資質",
+     "type": "int"
+    },
+    {
+     "name": "防禦資質最大值",
+     "type": "int"
+    },
+    {
+     "name": "攻擊資質",
+     "type": "int"
+    },
+    {
+     "name": "攻擊資質最大值",
+     "type": "int"
+    },
+    {
+     "name": "速度資質",
+     "type": "int"
+    },
+    {
+     "name": "速度資質最大值",
+     "type": "int"
+    },
+    {
+     "name": "體力資質",
+     "type": "int"
+    },
+    {
+     "name": "體力資質最大值",
+     "type": "int"
+    },
+    {
+     "name": "source_entry",
+     "type": "int"
+    },
+    {
+     "name": "source_table",
+     "type": "str"
+    },
+    {
+     "name": "review_status",
+     "type": "str"
+    }
+   ]
+  },
+  {
+   "id": "pet_aptitude_missing",
+   "filename": "pet_aptitude_missing.csv",
+   "rows": 3,
+   "primary_key": [
+    "client_shape_id"
+   ],
+   "notes": "Missing records, not zero-valued aptitude records.",
+   "source_entry": 2954,
+   "source_table": "DATA (absence checked against 2027.DATA)",
+   "columns": [
+    {
+     "name": "client_shape_id",
+     "type": "int"
+    },
+    {
+     "name": "pet_name",
+     "type": "str"
+    },
+    {
+     "name": "reason",
+     "type": "str"
+    },
+    {
+     "name": "source_entry",
+     "type": "int"
+    },
+    {
+     "name": "source_table",
+     "type": "str"
+    },
+    {
+     "name": "review_status",
+     "type": "str"
+    }
+   ]
+  },
+  {
+   "id": "pet_skills",
+   "filename": "pet_skills.csv",
+   "rows": 579,
+   "primary_key": [
+    "skill_id"
+   ],
+   "notes": "581 recovered, weak description rows 719/4406 withheld. Resource formulas are opaque strings: never eval.",
+   "source_entry": 3205,
+   "source_table": "DATA",
+   "columns": [
+    {
+     "name": "skill_id",
+     "type": "int"
+    },
+    {
+     "name": "type_code_raw",
+     "type": "int"
+    },
+    {
+     "name": "name",
+     "type": "str"
+    },
+    {
+     "name": "description_raw",
+     "type": "str"
+    },
+    {
+     "name": "fpneed_raw",
+     "type": "str"
+    },
+    {
+     "name": "mpneed_raw",
+     "type": "str"
+    },
+    {
+     "name": "hpneed_raw",
+     "type": "str"
+    },
+    {
+     "name": "source_entry",
+     "type": "int"
+    },
+    {
+     "name": "source_table",
+     "type": "str"
+    },
+    {
+     "name": "review_status",
+     "type": "str"
+    }
+   ]
+  },
+  {
+   "id": "pet_skill_overwrites",
+   "filename": "pet_skill_overwrites.csv",
+   "rows": 9,
+   "primary_key": [
+    "write_order"
+   ],
+   "notes": "Write order is zero-based per DATA dict. Full byte values in overwrite_evidence.jsonl.",
+   "source_entry": 3205,
+   "source_table": "DATA write history",
+   "columns": [
+    {
+     "name": "write_order",
+     "type": "int"
+    },
+    {
+     "name": "code_offset",
+     "type": "int"
+    },
+    {
+     "name": "skill_id",
+     "type": "int"
+    },
+    {
+     "name": "old_name",
+     "type": "str"
+    },
+    {
+     "name": "new_name",
+     "type": "str"
+    },
+    {
+     "name": "identical_values",
+     "type": "bool"
+    },
+    {
+     "name": "source_entry",
+     "type": "int"
+    },
+    {
+     "name": "source_table",
+     "type": "str"
+    },
+    {
+     "name": "review_status",
+     "type": "str"
+    }
+   ]
+  },
+  {
+   "id": "pet_skill_name_matches",
+   "filename": "pet_skill_name_matches.csv",
+   "rows": 145,
+   "primary_key": [
+    "skill_name_raw",
+    "skill_id"
+   ],
+   "notes": "All exact-name candidates retained. Do NOT choose first ID for duplicated names; this is evidence, not authoritative mapping.",
+   "source_entry": 3205,
+   "source_table": "DATA.name (references from 2027)",
+   "columns": [
+    {
+     "name": "skill_name_raw",
+     "type": "str"
+    },
+    {
+     "name": "skill_id",
+     "type": "int"
+    },
+    {
+     "name": "match_count",
+     "type": "int"
+    },
+    {
+     "name": "ambiguous",
+     "type": "bool"
+    },
+    {
+     "name": "source_entry",
+     "type": "int"
+    },
+    {
+     "name": "source_table",
+     "type": "str"
+    },
+    {
+     "name": "review_status",
+     "type": "str"
+    }
+   ]
+  },
+  {
+   "id": "mapdata_parent_scene",
+   "filename": "maps_npcs/mapdata_parent_scene.csv",
+   "rows": 6,
+   "primary_key": [
+    "scene_id"
+   ],
+   "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+   "source_entry": 1301,
+   "source_table": "MAP_ASCRIPTION",
+   "columns": [
+    {
+     "name": "scene_id",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "parent_scene_id",
+     "type": "int_or_empty"
+    }
+   ]
+  },
+  {
+   "id": "mapdata_scene_dictionary",
+   "filename": "maps_npcs/mapdata_scene_dictionary.csv",
+   "rows": 104,
+   "primary_key": [
+    "scene_id"
+   ],
+   "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+   "source_entry": 1301,
+   "source_table": "DATA",
+   "columns": [
+    {
+     "name": "scene_id",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "name",
+     "type": "str"
+    },
+    {
+     "name": "w",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "h",
+     "type": "int_or_empty"
+    }
+   ]
+  },
+  {
+   "id": "minimapnpcpos_pos_records",
+   "filename": "maps_npcs/minimapnpcpos_pos_records.csv",
+   "rows": 1344,
+   "primary_key": [
+    "scene_id",
+    "scene_display_name",
+    "record_index"
+   ],
+   "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+   "source_entry": 2804,
+   "source_table": "DATA_POS",
+   "columns": [
+    {
+     "name": "scene_id",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "scene_display_name",
+     "type": "str"
+    },
+    {
+     "name": "record_index",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "display_name",
+     "type": "str"
+    },
+    {
+     "name": "secondary_name",
+     "type": "str"
+    },
+    {
+     "name": "npcid",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "type",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "x",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "y",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "field5",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "field6",
+     "type": "str"
+    },
+    {
+     "name": "field7_const255",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "shape",
+     "type": "str"
+    },
+    {
+     "name": "field9",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "field10",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "real_name",
+     "type": "str"
+    },
+    {
+     "name": "field12",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "field13",
+     "type": "int_or_empty"
+    }
+   ]
+  },
+  {
+   "id": "minimapnpcpos_wenzi_entries",
+   "filename": "maps_npcs/minimapnpcpos_wenzi_entries.csv",
+   "rows": 287,
+   "primary_key": [
+    "scene_id",
+    "x",
+    "y"
+   ],
+   "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+   "source_entry": 2804,
+   "source_table": "DATA_WENZI",
+   "columns": [
+    {
+     "name": "scene_id",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "x",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "y",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "name",
+     "type": "str"
+    },
+    {
+     "name": "desc",
+     "type": "str"
+    },
+    {
+     "name": "jump_x",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "jump_y",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "npcID",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "npcName",
+     "type": "str"
+    },
+    {
+     "name": "servergrade",
+     "type": "int_or_empty"
+    }
+   ]
+  },
+  {
+   "id": "npc_2601_vs_2804_agreement",
+   "filename": "maps_npcs/npc_2601_vs_2804_agreement.csv",
+   "rows": 677,
+   "primary_key": [
+    "scene_id",
+    "npcid"
+   ],
+   "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+   "source_entry": [
+    2601,
+    2804
+   ],
+   "source_table": "DATA vs DATA_POS",
+   "columns": [
+    {
+     "name": "scene_id",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "npcid",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "records_2601",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "records_2804",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "agreement",
+     "type": "str"
+    }
+   ]
+  },
+  {
+   "id": "npcname2realnamedata_alias_to_realname",
+   "filename": "maps_npcs/npcname2realnamedata_alias_to_realname.csv",
+   "rows": 55,
+   "primary_key": [
+    "alias"
+   ],
+   "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+   "source_entry": 1799,
+   "source_table": "DATA",
+   "columns": [
+    {
+     "name": "alias",
+     "type": "str"
+    },
+    {
+     "name": "real_name",
+     "type": "str"
+    }
+   ]
+  },
+  {
+   "id": "npcposdata_records",
+   "filename": "maps_npcs/npcposdata_records.csv",
+   "rows": 1335,
+   "primary_key": [
+    "scene_id",
+    "record_index"
+   ],
+   "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+   "source_entry": 2601,
+   "source_table": "DATA",
+   "columns": [
+    {
+     "name": "scene_id",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "record_index",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "display_name",
+     "type": "str"
+    },
+    {
+     "name": "secondary_name",
+     "type": "str"
+    },
+    {
+     "name": "npcid",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "type",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "x",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "y",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "field5",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "field6",
+     "type": "str"
+    },
+    {
+     "name": "field7_const255",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "shape",
+     "type": "str"
+    },
+    {
+     "name": "field9",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "field10",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "real_name",
+     "type": "str"
+    },
+    {
+     "name": "field12",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "field13",
+     "type": "int_or_empty"
+    }
+   ]
+  },
+  {
+   "id": "sceneid2name_minimap_scenes",
+   "filename": "maps_npcs/sceneid2name_minimap_scenes.csv",
+   "rows": 57,
+   "primary_key": [
+    "scene_id"
+   ],
+   "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+   "source_entry": 400,
+   "source_table": "DATA",
+   "columns": [
+    {
+     "name": "scene_id",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "name",
+     "type": "str"
+    },
+    {
+     "name": "related_id_unresolved",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "size_a",
+     "type": "int_or_empty"
+    },
+    {
+     "name": "size_b",
+     "type": "int_or_empty"
+    }
+   ]
+  }
+ ]
+}

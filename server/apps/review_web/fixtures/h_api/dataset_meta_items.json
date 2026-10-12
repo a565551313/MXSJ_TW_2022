@@ -1,0 +1,49 @@
+{
+ "id": "items",
+ "filename": "items.csv",
+ "rows": 6851,
+ "primary_key": [
+  "client_shape_id"
+ ],
+ "notes": "Display catalog, includes test/history entries. Category meanings not normalized. Image fallback mirrors Shape2Image; assets not checked.",
+ "source_entry": 1945,
+ "source_table": "DATA+ITEMDATABYTYPE+SHAPETABLE",
+ "columns": [
+  {
+   "name": "client_shape_id",
+   "type": "int"
+  },
+  {
+   "name": "name",
+   "type": "str"
+  },
+  {
+   "name": "description_raw",
+   "type": "str"
+  },
+  {
+   "name": "category_code_raw",
+   "type": "int"
+  },
+  {
+   "name": "image_id",
+   "type": "int"
+  },
+  {
+   "name": "image_mapping_explicit",
+   "type": "bool"
+  },
+  {
+   "name": "source_entry",
+   "type": "int"
+  },
+  {
+   "name": "source_table",
+   "type": "str"
+  },
+  {
+   "name": "review_status",
+   "type": "str"
+  }
+ ]
+}

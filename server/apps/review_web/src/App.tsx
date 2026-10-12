@@ -1,4 +1,5 @@
 import { REVIEW_API_PREFIX } from './api/contract'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { FixtureModeBanner, ReviewNotice } from './components/Notices'
 import { hrefFor, useLinkClick, useRoute, type RouteName } from './lib/router'
 import { DATA_MODE } from './lib/runtimeMode'
@@ -21,8 +22,9 @@ const NAV: Array<{ name: RouteName; label: string; hint: string }> = [
 export function App() {
   const route = useRoute()
   const onClick = useLinkClick()
-
   const active = NAV.find((item) => item.name === route.name)
+
+  const pageKey = `${route.name}:${route.id ?? ''}:${route.query.get('focus') ?? ''}`
 
   return (
     <div className="app">
@@ -54,12 +56,14 @@ export function App() {
       <ReviewNotice />
 
       <main className="app__main" aria-label={active ? active.label : '内容'}>
-        {route.name === 'overview' ? <OverviewPage /> : null}
-        {route.name === 'items' ? <ItemsPage id={route.id} /> : null}
-        {route.name === 'pets' ? <PetsPage id={route.id} /> : null}
-        {route.name === 'skills' ? <SkillsPage id={route.id} /> : null}
-        {route.name === 'maps' ? <MapsNpcsPage /> : null}
-        {route.name === 'anomalies' ? <AnomaliesPage focus={route.query.get('focus')} /> : null}
+        <ErrorBoundary label={active ? active.label : '页面'} resetKey={pageKey}>
+          {route.name === 'overview' ? <OverviewPage /> : null}
+          {route.name === 'items' ? <ItemsPage id={route.id} /> : null}
+          {route.name === 'pets' ? <PetsPage id={route.id} /> : null}
+          {route.name === 'skills' ? <SkillsPage id={route.id} /> : null}
+          {route.name === 'maps' ? <MapsNpcsPage /> : null}
+          {route.name === 'anomalies' ? <AnomaliesPage focus={route.query.get('focus')} /> : null}
+        </ErrorBoundary>
       </main>
 
       <footer className="app__footer">
@@ -68,8 +72,9 @@ export function App() {
           删除、导入或发布动作。
         </p>
         <p className="muted">
-          接口契约以 Agent H 的 <code>server/docs/review_browser/API_CONTRACT.md</code> 为准；前端约定与
-          「待接口联调」状态见 <code>server/docs/review_browser/FRONTEND.md</code>。
+          接口契约：Agent H <code>server/docs/review_browser/API_CONTRACT.md</code>（v1.0.0，PR #22
+          提交 9f6ab439）。适配层位于 <code>src/api/</code>；前端说明见{' '}
+          <code>server/docs/review_browser/FRONTEND.md</code>。
         </p>
       </footer>
     </div>

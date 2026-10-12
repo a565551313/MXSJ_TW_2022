@@ -17,7 +17,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "fixture:api": "node fixtures/serve-fixture-api.mjs",
-    "fixtures:rebuild": "python3 fixtures/build_fixture_sample.py"
+    "fixture:capture": "python3 fixtures/capture_h_api.py",
+    "fixture:check": "python3 fixtures/capture_h_api.py --check"
   },
   "dependencies": {
     "react": "^19.3.0",

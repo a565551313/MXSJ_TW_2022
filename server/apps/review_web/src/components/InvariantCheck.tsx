@@ -1,13 +1,13 @@
-import type { AnomaliesPayload } from '../api/types'
+import type { AnomalyBoard } from '../api/reviewApi'
 import { evaluateInvariants } from '../lib/invariants'
 
 /**
- * Shows the batch_001 review invariants and whether the API response still
+ * Shows the batch_001 review invariants and whether the live API response still
  * satisfies them. The list of invariants is a specification; every verdict and
  * every "actual" string is derived from API data at render time.
  */
-export function InvariantCheck({ payload }: { payload: AnomaliesPayload }) {
-  const results = evaluateInvariants(payload)
+export function InvariantCheck({ board }: { board: AnomalyBoard }) {
+  const results = evaluateInvariants(board)
   const failed = results.filter((result) => !result.ok)
 
   return (
@@ -20,7 +20,10 @@ export function InvariantCheck({ payload }: { payload: AnomaliesPayload }) {
       <ul className="invariant-list">
         {results.map((result) => (
           <li key={result.id} className={result.ok ? 'invariant is-ok' : 'invariant is-failed'}>
-            <span className={result.ok ? 'badge badge--ok' : 'badge badge--danger'} data-testid="invariant-verdict">
+            <span
+              className={result.ok ? 'badge badge--ok' : 'badge badge--danger'}
+              data-testid="invariant-verdict"
+            >
               {result.ok ? '通过' : '未通过'}
             </span>
             <span className="invariant__label">{result.label}</span>

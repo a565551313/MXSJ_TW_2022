@@ -1,150 +1,118 @@
+/**
+ * Items page against Agent H's real captured responses.
+ *
+ * The numbers asserted here (total 6851, 鹿茸 twice, row order 11/12/9003) come
+ * from the backend capture; nothing is read from the repository CSV.
+ */
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
+import { captureBody, installCaptureFetch, installNetworkFailure, jsonResponse } from '../test/hApiReplay'
 import { renderApp } from '../test/renderApp'
-import { installFixtureFetch, installNetworkFailure, jsonResponse } from '../test/fakeApi'
 
 const LONG = { timeout: 4000 }
 
 describe('items page', () => {
-  it('lists items from the API and shows pagination counts from the response', async () => {
-    installFixtureFetch()
+  it('lists real rows and paging information from the list envelope', async () => {
+    const { calls } = installCaptureFetch()
     renderApp('/items')
-
-    expect(screen.getByTestId('loading-state')).toBeInTheDocument()
 
     const table = await screen.findByTestId('items-table', {}, LONG)
     expect(within(table).getAllByTestId('item-id')).toHaveLength(25)
-    expect(screen.getByTestId('pagination').textContent).toContain('第 1 / 3 页')
-    expect(screen.getByTestId('pagination').textContent).toContain('共 69 条')
+    expect(within(table).getByText('NPC呼叫器')).toBeInTheDocument()
+    expect(within(table).getByText('鹿茸')).toBeInTheDocument()
+
+    expect(screen.getByTestId('pagination').textContent).toContain('第 1 / 275 页')
+    expect(screen.getByTestId('pagination').textContent).toContain('共 6,851 条')
+
+    expect(calls[0]).toContain('/api/v1/review/datasets/items/records?offset=0&limit=25')
+    expect(calls[0]).not.toContain('page=')
   })
 
-  it('searches by name and by id against the API', async () => {
-    const { calls } = installFixtureFetch()
+  it('searches through the backend and shows both 鹿茸 rows', async () => {
+    const { calls } = installCaptureFetch()
     const user = userEvent.setup()
     renderApp('/items')
 
     await screen.findByTestId('items-table', {}, LONG)
-
-    const waitForQuery = (fragment: string) =>
-      waitFor(() => expect(calls.some((url) => url.includes(fragment))).toBe(true), LONG)
-
     await user.type(screen.getByLabelText('搜索道具'), '鹿茸')
-    await waitForQuery('q=%E9%B9%BF%E8%8C%B8')
+
+    await waitFor(
+      () => expect(calls.some((url) => url.includes('q=%E9%B9%BF%E8%8C%B8'))).toBe(true),
+      LONG,
+    )
+
     await waitFor(() => {
-      const table = screen.getByTestId('items-table')
-      expect(within(table).getAllByTestId('item-id')).toHaveLength(1)
-      expect(within(table).queryByText('鹿茸')).not.toBeNull()
+      const rows = within(screen.getByTestId('items-table')).getAllByTestId('item-id')
+      expect(rows.map((row) => row.textContent)).toEqual(['12', '21302'])
     }, LONG)
 
-    await user.clear(screen.getByLabelText('搜索道具'))
-    await user.type(screen.getByLabelText('搜索道具'), '41052')
-    await waitForQuery('q=41052')
-    await waitFor(() => {
-      const table = screen.getByTestId('items-table')
-      expect(within(table).getAllByTestId('item-id')).toHaveLength(1)
-      expect(within(table).queryByText('時空石')).not.toBeNull()
-    }, LONG)
+    // The search request keeps offset/limit pagination and adds q only.
+    const searchCall = calls.find((url) => url.includes('q=%E9%B9%BF%E8%8C%B8')) as string
+    expect(searchCall).toContain('offset=0')
+    expect(searchCall).toContain('limit=25')
   })
 
-  it('paginates without re-sorting or collapsing rows', async () => {
-    installFixtureFetch()
+  it('pages through the real rows without collapsing or reordering them', async () => {
+    const { calls } = installCaptureFetch()
     const user = userEvent.setup()
     renderApp('/items')
 
     const firstPage = await screen.findByTestId('items-table', {}, LONG)
-    const firstRowOfPageOne = within(firstPage).getAllByTestId('item-id')[0].textContent
+    const firstIds = within(firstPage)
+      .getAllByTestId('item-id')
+      .map((cell) => cell.textContent)
+    expect(firstIds[0]).toBe('11')
+    expect(firstIds[24]).toBe('10010')
 
     await user.click(screen.getByRole('button', { name: '下一页' }))
 
-    const secondPage = await screen.findByTestId('items-table', {}, LONG)
-    expect(screen.getByTestId('pagination').textContent).toContain('第 2 / 3 页')
-    expect(within(secondPage).getAllByTestId('item-id')[0].textContent).not.toBe(firstRowOfPageOne)
+    await waitFor(() => {
+      expect(calls.some((url) => url.includes('offset=25&limit=25'))).toBe(true)
+    }, LONG)
+    await waitFor(() => {
+      const ids = within(screen.getByTestId('items-table'))
+        .getAllByTestId('item-id')
+        .map((cell) => cell.textContent)
+      expect(ids[0]).toBe('10011')
+      expect(ids).not.toContain('11')
+    }, LONG)
   })
 
-  it('shows an empty state for a query with no matches', async () => {
-    installFixtureFetch()
-    const user = userEvent.setup()
-    renderApp('/items')
-
-    await screen.findByTestId('items-table', {}, LONG)
-    await user.type(screen.getByLabelText('搜索道具'), 'ZZZ-不存在')
-
-    expect(await screen.findByTestId('empty-state', {}, LONG)).toBeInTheDocument()
-    expect(screen.getByText('没有符合条件的记录。')).toBeInTheDocument()
-  })
-
-  it('renders item detail with raw description, category code and image mapping', async () => {
-    installFixtureFetch()
+  it('shows a row detail with the raw description text and the mapping id, not a fake image', async () => {
+    installCaptureFetch()
     renderApp('/items/12')
 
     const detail = await screen.findByTestId('item-detail', {}, LONG)
     expect(within(detail).getByText('鹿茸')).toBeInTheDocument()
-    expect(within(detail).getByText(/雄鹿額部生長出來的尚未骨化的嫩角/)).toBeInTheDocument()
-
-    const body = detail.textContent ?? ''
-    expect(body).toContain('category_code_raw')
-    expect(body).toContain('原始整数，未解释为业务类别')
-    expect(body).toContain('image_id = 21302')
-    expect(body).toContain('显式映射')
-    expect(body).toContain('本轮没有图片资源 API')
-
-    // No fabricated image preview is rendered.
+    // Source text stays raw: markers are displayed, never interpreted.
+    expect(detail.textContent).toContain('#r【類型】藥品')
+    expect(detail.textContent).toContain('21302')
     expect(detail.querySelector('img')).toBeNull()
   })
 
-  it('describes the fallback mapping when there is no explicit SHAPETABLE entry', async () => {
-    installFixtureFetch()
-    renderApp('/items/11')
-    const detail = await screen.findByTestId('item-detail', {}, LONG)
-    expect(within(detail).getByText('回退映射')).toBeInTheDocument()
-    expect(detail.textContent).toContain('可以呼叫各種功能NPC以方便測試#r【測試專用物品】'.slice(0, 10))
-  })
-
-  it('shows an API error instead of falling back to fixtures', async () => {
+  it('reports a backend failure loudly instead of showing an empty table', async () => {
     installNetworkFailure()
     renderApp('/items')
 
-    const error = await screen.findByTestId('error-state', {}, LONG)
-    expect(error.textContent).toContain('无法连接复核 API')
-    expect(error.textContent).toContain('/api/v1/review/items')
+    const panel = await screen.findByTestId('error-state', {}, LONG)
+    expect(panel.textContent).toContain('无法连接复核 API')
     expect(screen.queryByTestId('items-table')).toBeNull()
+    // No fallback to test data, and no "0 rows" story.
+    expect(screen.queryByTestId('empty-state')).toBeNull()
   })
 
-  it('surfaces a 404 for an unknown item id', async () => {
-    installFixtureFetch({
-      override: (url) =>
-        url.startsWith('/api/v1/review/items/') && !url.includes('?')
-          ? jsonResponse(404, { error: { code: 'NOT_FOUND', message: '道具 999999 不存在' } })
-          : null,
-    })
-    renderApp('/items/999999')
-
-    const error = await screen.findByTestId('error-state', {}, LONG)
-    expect(error.textContent).toContain('道具 999999 不存在')
-    expect(error.textContent).toContain('404')
-  })
-
-  it('retries the request when the retry button is pressed', async () => {
-    const user = userEvent.setup()
-    let attempt = 0
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (input: unknown) => {
-        const url = String(input)
-        attempt += 1
-        if (attempt === 1) throw new TypeError('Failed to fetch')
-        const { handleRequest, loadFixture } = await import('../../fixtures/contractHandler.mjs')
-        const parsed = new URL(url, 'http://review.local')
-        const { status, body } = handleRequest(loadFixture(), parsed.pathname, parsed.searchParams)
-        return jsonResponse(status, body)
-      }),
-    )
+  it('reports a wrong-shaped 200 response as an interface-structure error', async () => {
+    const envelope = captureBody('records_items_limit500') as Record<string, unknown>
+    delete envelope.records
+    delete envelope.count
+    installCaptureFetch({ override: () => jsonResponse(200, envelope) })
 
     renderApp('/items')
-    await screen.findByTestId('error-state', {}, LONG)
-    await user.click(screen.getByTestId('retry-button'))
 
-    expect(await screen.findByTestId('items-table', {}, LONG)).toBeInTheDocument()
+    const panel = await screen.findByTestId('error-state', {}, LONG)
+    expect(panel.textContent).toContain('接口结构错误')
+    expect(screen.queryByTestId('items-table')).toBeNull()
+    expect(panel.textContent).toContain('response.records')
   })
 })

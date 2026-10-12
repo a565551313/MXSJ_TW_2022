@@ -1,0 +1,4131 @@
+{
+ "dataset": "pet_skill_candidates",
+ "total": 458,
+ "offset": 0,
+ "limit": 500,
+ "count": 458,
+ "records": [
+  {
+   "client_shape_id": 2010,
+   "sequence": 0,
+   "skill_name_raw": "連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2010:0"
+  },
+  {
+   "client_shape_id": 2010,
+   "sequence": 1,
+   "skill_name_raw": "反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2010:1"
+  },
+  {
+   "client_shape_id": 2010,
+   "sequence": 2,
+   "skill_name_raw": "智慧",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2010:2"
+  },
+  {
+   "client_shape_id": 2010,
+   "sequence": 3,
+   "skill_name_raw": "幸運",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2010:3"
+  },
+  {
+   "client_shape_id": 2020,
+   "sequence": 0,
+   "skill_name_raw": "幸運",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2020:0"
+  },
+  {
+   "client_shape_id": 2020,
+   "sequence": 1,
+   "skill_name_raw": "感知",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2020:1"
+  },
+  {
+   "client_shape_id": 2020,
+   "sequence": 2,
+   "skill_name_raw": "再生",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2020:2"
+  },
+  {
+   "client_shape_id": 2020,
+   "sequence": 3,
+   "skill_name_raw": "防禦",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2020:3"
+  },
+  {
+   "client_shape_id": 2030,
+   "sequence": 0,
+   "skill_name_raw": "迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2030:0"
+  },
+  {
+   "client_shape_id": 2030,
+   "sequence": 1,
+   "skill_name_raw": "毒牙撕咬",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2030:1"
+  },
+  {
+   "client_shape_id": 2030,
+   "sequence": 2,
+   "skill_name_raw": "群攻弱點",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2030:2"
+  },
+  {
+   "client_shape_id": 2040,
+   "sequence": 0,
+   "skill_name_raw": "靈敏",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2040:0"
+  },
+  {
+   "client_shape_id": 2040,
+   "sequence": 1,
+   "skill_name_raw": "迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2040:1"
+  },
+  {
+   "client_shape_id": 2040,
+   "sequence": 2,
+   "skill_name_raw": "高級幸運",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2040:2"
+  },
+  {
+   "client_shape_id": 2040,
+   "sequence": 3,
+   "skill_name_raw": "力敵弱點",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2040:3"
+  },
+  {
+   "client_shape_id": 2050,
+   "sequence": 0,
+   "skill_name_raw": "反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2050:0"
+  },
+  {
+   "client_shape_id": 2050,
+   "sequence": 1,
+   "skill_name_raw": "防禦",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2050:1"
+  },
+  {
+   "client_shape_id": 2050,
+   "sequence": 2,
+   "skill_name_raw": "勇敢",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2050:2"
+  },
+  {
+   "client_shape_id": 2060,
+   "sequence": 0,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2060:0"
+  },
+  {
+   "client_shape_id": 2060,
+   "sequence": 1,
+   "skill_name_raw": "高級幸運",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2060:1"
+  },
+  {
+   "client_shape_id": 2060,
+   "sequence": 2,
+   "skill_name_raw": "勇敢",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2060:2"
+  },
+  {
+   "client_shape_id": 2060,
+   "sequence": 3,
+   "skill_name_raw": "高級感知",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2060:3"
+  },
+  {
+   "client_shape_id": 2060,
+   "sequence": 4,
+   "skill_name_raw": "普通弱點",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2060:4"
+  },
+  {
+   "client_shape_id": 2070,
+   "sequence": 0,
+   "skill_name_raw": "連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2070:0"
+  },
+  {
+   "client_shape_id": 2070,
+   "sequence": 1,
+   "skill_name_raw": "高級迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2070:1"
+  },
+  {
+   "client_shape_id": 2070,
+   "sequence": 2,
+   "skill_name_raw": "智慧",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2070:2"
+  },
+  {
+   "client_shape_id": 2080,
+   "sequence": 0,
+   "skill_name_raw": "妖系抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2080:0"
+  },
+  {
+   "client_shape_id": 2080,
+   "sequence": 1,
+   "skill_name_raw": "神跡",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2080:1"
+  },
+  {
+   "client_shape_id": 2080,
+   "sequence": 2,
+   "skill_name_raw": "毒性芳香",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2080:2"
+  },
+  {
+   "client_shape_id": 2080,
+   "sequence": 3,
+   "skill_name_raw": "神罰",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2080:3"
+  },
+  {
+   "client_shape_id": 2081,
+   "sequence": 0,
+   "skill_name_raw": "靈敏",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2081:0"
+  },
+  {
+   "client_shape_id": 2081,
+   "sequence": 1,
+   "skill_name_raw": "迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2081:1"
+  },
+  {
+   "client_shape_id": 2081,
+   "sequence": 2,
+   "skill_name_raw": "力道侵蝕",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2081:2"
+  },
+  {
+   "client_shape_id": 2090,
+   "sequence": 0,
+   "skill_name_raw": "高級必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2090:0"
+  },
+  {
+   "client_shape_id": 2090,
+   "sequence": 1,
+   "skill_name_raw": "迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2090:1"
+  },
+  {
+   "client_shape_id": 2090,
+   "sequence": 2,
+   "skill_name_raw": "高級偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2090:2"
+  },
+  {
+   "client_shape_id": 2090,
+   "sequence": 3,
+   "skill_name_raw": "毒牙撕咬",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2090:3"
+  },
+  {
+   "client_shape_id": 2100,
+   "sequence": 0,
+   "skill_name_raw": "恐怖",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2100:0"
+  },
+  {
+   "client_shape_id": 2100,
+   "sequence": 1,
+   "skill_name_raw": "高級強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2100:1"
+  },
+  {
+   "client_shape_id": 2100,
+   "sequence": 2,
+   "skill_name_raw": "高級保命",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2100:2"
+  },
+  {
+   "client_shape_id": 2100,
+   "sequence": 3,
+   "skill_name_raw": "火攻",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2100:3"
+  },
+  {
+   "client_shape_id": 2110,
+   "sequence": 0,
+   "skill_name_raw": "力敵抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2110:0"
+  },
+  {
+   "client_shape_id": 2110,
+   "sequence": 1,
+   "skill_name_raw": "迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2110:1"
+  },
+  {
+   "client_shape_id": 2110,
+   "sequence": 2,
+   "skill_name_raw": "閃擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2110:2"
+  },
+  {
+   "client_shape_id": 2110,
+   "sequence": 3,
+   "skill_name_raw": "妖系弱點",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2110:3"
+  },
+  {
+   "client_shape_id": 2120,
+   "sequence": 0,
+   "skill_name_raw": "靈巧抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2120:0"
+  },
+  {
+   "client_shape_id": 2120,
+   "sequence": 1,
+   "skill_name_raw": "閃擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2120:1"
+  },
+  {
+   "client_shape_id": 2130,
+   "sequence": 0,
+   "skill_name_raw": "驅鬼術",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2130:0"
+  },
+  {
+   "client_shape_id": 2130,
+   "sequence": 1,
+   "skill_name_raw": "高級必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2130:1"
+  },
+  {
+   "client_shape_id": 2130,
+   "sequence": 2,
+   "skill_name_raw": "連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2130:2"
+  },
+  {
+   "client_shape_id": 2130,
+   "sequence": 3,
+   "skill_name_raw": "肉食習性",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2130:3"
+  },
+  {
+   "client_shape_id": 2130,
+   "sequence": 4,
+   "skill_name_raw": "念系弱點",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2130:4"
+  },
+  {
+   "client_shape_id": 2140,
+   "sequence": 0,
+   "skill_name_raw": "飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2140:0"
+  },
+  {
+   "client_shape_id": 2140,
+   "sequence": 1,
+   "skill_name_raw": "仙系抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2140:1"
+  },
+  {
+   "client_shape_id": 2140,
+   "sequence": 2,
+   "skill_name_raw": "鬼爪飛擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2140:2"
+  },
+  {
+   "client_shape_id": 2150,
+   "sequence": 0,
+   "skill_name_raw": "劍氣四射",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2150:0"
+  },
+  {
+   "client_shape_id": 2150,
+   "sequence": 1,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2150:1"
+  },
+  {
+   "client_shape_id": 2150,
+   "sequence": 2,
+   "skill_name_raw": "防禦",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2150:2"
+  },
+  {
+   "client_shape_id": 2150,
+   "sequence": 3,
+   "skill_name_raw": "勇敢",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2150:3"
+  },
+  {
+   "client_shape_id": 2160,
+   "sequence": 0,
+   "skill_name_raw": "法術連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2160:0"
+  },
+  {
+   "client_shape_id": 2160,
+   "sequence": 1,
+   "skill_name_raw": "終級靈敏",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2160:1"
+  },
+  {
+   "client_shape_id": 2160,
+   "sequence": 2,
+   "skill_name_raw": "妖系抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2160:2"
+  },
+  {
+   "client_shape_id": 2160,
+   "sequence": 3,
+   "skill_name_raw": "念力飛彈",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2160:3"
+  },
+  {
+   "client_shape_id": 2170,
+   "sequence": 0,
+   "skill_name_raw": "偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2170:0"
+  },
+  {
+   "client_shape_id": 2170,
+   "sequence": 1,
+   "skill_name_raw": "反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2170:1"
+  },
+  {
+   "client_shape_id": 2170,
+   "sequence": 2,
+   "skill_name_raw": "強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2170:2"
+  },
+  {
+   "client_shape_id": 2180,
+   "sequence": 0,
+   "skill_name_raw": "水擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2180:0"
+  },
+  {
+   "client_shape_id": 2180,
+   "sequence": 1,
+   "skill_name_raw": "驅鬼術",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2180:1"
+  },
+  {
+   "client_shape_id": 2180,
+   "sequence": 2,
+   "skill_name_raw": "意念無常",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2180:2"
+  },
+  {
+   "client_shape_id": 2180,
+   "sequence": 3,
+   "skill_name_raw": "終級魔法反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2180:3"
+  },
+  {
+   "client_shape_id": 2190,
+   "sequence": 0,
+   "skill_name_raw": "強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2190:0"
+  },
+  {
+   "client_shape_id": 2190,
+   "sequence": 1,
+   "skill_name_raw": "防禦",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2190:1"
+  },
+  {
+   "client_shape_id": 2190,
+   "sequence": 2,
+   "skill_name_raw": "終級必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2190:2"
+  },
+  {
+   "client_shape_id": 2190,
+   "sequence": 3,
+   "skill_name_raw": "鬼系抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2190:3"
+  },
+  {
+   "client_shape_id": 2200,
+   "sequence": 0,
+   "skill_name_raw": "終級靈通術",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2200:0"
+  },
+  {
+   "client_shape_id": 2200,
+   "sequence": 1,
+   "skill_name_raw": "鬼系抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2200:1"
+  },
+  {
+   "client_shape_id": 2200,
+   "sequence": 2,
+   "skill_name_raw": "靈敏",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2200:2"
+  },
+  {
+   "client_shape_id": 2200,
+   "sequence": 3,
+   "skill_name_raw": "念力飛彈",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2200:3"
+  },
+  {
+   "client_shape_id": 2210,
+   "sequence": 0,
+   "skill_name_raw": "反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2210:0"
+  },
+  {
+   "client_shape_id": 2220,
+   "sequence": 0,
+   "skill_name_raw": "感知",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2220:0"
+  },
+  {
+   "client_shape_id": 2220,
+   "sequence": 1,
+   "skill_name_raw": "偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2220:1"
+  },
+  {
+   "client_shape_id": 2220,
+   "sequence": 2,
+   "skill_name_raw": "妖氣纏繞",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2220:2"
+  },
+  {
+   "client_shape_id": 2220,
+   "sequence": 3,
+   "skill_name_raw": "勇敢",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2220:3"
+  },
+  {
+   "client_shape_id": 2230,
+   "sequence": 0,
+   "skill_name_raw": "閃擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2230:0"
+  },
+  {
+   "client_shape_id": 2230,
+   "sequence": 1,
+   "skill_name_raw": "終級偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2230:1"
+  },
+  {
+   "client_shape_id": 2240,
+   "sequence": 0,
+   "skill_name_raw": "毒牙撕咬",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2240:0"
+  },
+  {
+   "client_shape_id": 2240,
+   "sequence": 1,
+   "skill_name_raw": "再生",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2240:1"
+  },
+  {
+   "client_shape_id": 2250,
+   "sequence": 0,
+   "skill_name_raw": "魔法毒咒",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2250:0"
+  },
+  {
+   "client_shape_id": 2250,
+   "sequence": 1,
+   "skill_name_raw": "仙系抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2250:1"
+  },
+  {
+   "client_shape_id": 2260,
+   "sequence": 0,
+   "skill_name_raw": "連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2260:0"
+  },
+  {
+   "client_shape_id": 2260,
+   "sequence": 1,
+   "skill_name_raw": "衝擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2260:1"
+  },
+  {
+   "client_shape_id": 2260,
+   "sequence": 2,
+   "skill_name_raw": "魔法回擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2260:2"
+  },
+  {
+   "client_shape_id": 2260,
+   "sequence": 3,
+   "skill_name_raw": "飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2260:3"
+  },
+  {
+   "client_shape_id": 2270,
+   "sequence": 0,
+   "skill_name_raw": "恐怖",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2270:0"
+  },
+  {
+   "client_shape_id": 2270,
+   "sequence": 1,
+   "skill_name_raw": "追擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2270:1"
+  },
+  {
+   "client_shape_id": 2270,
+   "sequence": 2,
+   "skill_name_raw": "仙系弱點",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2270:2"
+  },
+  {
+   "client_shape_id": 2280,
+   "sequence": 0,
+   "skill_name_raw": "亡靈氣箭",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2280:0"
+  },
+  {
+   "client_shape_id": 2290,
+   "sequence": 0,
+   "skill_name_raw": "靈敏",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2290:0"
+  },
+  {
+   "client_shape_id": 2300,
+   "sequence": 0,
+   "skill_name_raw": "高級靈通術",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2300:0"
+  },
+  {
+   "client_shape_id": 2300,
+   "sequence": 1,
+   "skill_name_raw": "高級幸運",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2300:1"
+  },
+  {
+   "client_shape_id": 2300,
+   "sequence": 2,
+   "skill_name_raw": "法術連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2300:2"
+  },
+  {
+   "client_shape_id": 2310,
+   "sequence": 0,
+   "skill_name_raw": "群攻抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2310:0"
+  },
+  {
+   "client_shape_id": 2320,
+   "sequence": 0,
+   "skill_name_raw": "偵察",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2320:0"
+  },
+  {
+   "client_shape_id": 2320,
+   "sequence": 1,
+   "skill_name_raw": "再生",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2320:1"
+  },
+  {
+   "client_shape_id": 2330,
+   "sequence": 0,
+   "skill_name_raw": "天雷地火",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2330:0"
+  },
+  {
+   "client_shape_id": 2330,
+   "sequence": 1,
+   "skill_name_raw": "仙神性質",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2330:1"
+  },
+  {
+   "client_shape_id": 2340,
+   "sequence": 0,
+   "skill_name_raw": "天雷地火",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2340:0"
+  },
+  {
+   "client_shape_id": 2340,
+   "sequence": 1,
+   "skill_name_raw": "高級慧根",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2340:1"
+  },
+  {
+   "client_shape_id": 2350,
+   "sequence": 0,
+   "skill_name_raw": "勇敢",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2350:0"
+  },
+  {
+   "client_shape_id": 2350,
+   "sequence": 1,
+   "skill_name_raw": "魔法回擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2350:1"
+  },
+  {
+   "client_shape_id": 2350,
+   "sequence": 2,
+   "skill_name_raw": "必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2350:2"
+  },
+  {
+   "client_shape_id": 2350,
+   "sequence": 3,
+   "skill_name_raw": "靈敏",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2350:3"
+  },
+  {
+   "client_shape_id": 2350,
+   "sequence": 4,
+   "skill_name_raw": "靈巧抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2350:4"
+  },
+  {
+   "client_shape_id": 2360,
+   "sequence": 0,
+   "skill_name_raw": "靈通術",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2360:0"
+  },
+  {
+   "client_shape_id": 2360,
+   "sequence": 1,
+   "skill_name_raw": "高級智慧",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2360:1"
+  },
+  {
+   "client_shape_id": 2360,
+   "sequence": 2,
+   "skill_name_raw": "念力飛彈",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2360:2"
+  },
+  {
+   "client_shape_id": 2370,
+   "sequence": 0,
+   "skill_name_raw": "衝擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2370:0"
+  },
+  {
+   "client_shape_id": 2380,
+   "sequence": 0,
+   "skill_name_raw": "烈炎爆破",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2380:0"
+  },
+  {
+   "client_shape_id": 2380,
+   "sequence": 1,
+   "skill_name_raw": "妖系抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2380:1"
+  },
+  {
+   "client_shape_id": 2380,
+   "sequence": 2,
+   "skill_name_raw": "破魔",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2380:2"
+  },
+  {
+   "client_shape_id": 2390,
+   "sequence": 0,
+   "skill_name_raw": "偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2390:0"
+  },
+  {
+   "client_shape_id": 2390,
+   "sequence": 1,
+   "skill_name_raw": "刺甲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2390:1"
+  },
+  {
+   "client_shape_id": 2390,
+   "sequence": 2,
+   "skill_name_raw": "毒牙撕咬",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2390:2"
+  },
+  {
+   "client_shape_id": 2400,
+   "sequence": 0,
+   "skill_name_raw": "迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2400:0"
+  },
+  {
+   "client_shape_id": 2400,
+   "sequence": 1,
+   "skill_name_raw": "妖系弱點",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2400:1"
+  },
+  {
+   "client_shape_id": 2400,
+   "sequence": 2,
+   "skill_name_raw": "飛星亂舞",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2400:2"
+  },
+  {
+   "client_shape_id": 2400,
+   "sequence": 3,
+   "skill_name_raw": "反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2400:3"
+  },
+  {
+   "client_shape_id": 2400,
+   "sequence": 4,
+   "skill_name_raw": "肉食習性",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2400:4"
+  },
+  {
+   "client_shape_id": 2410,
+   "sequence": 0,
+   "skill_name_raw": "再生",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2410:0"
+  },
+  {
+   "client_shape_id": 2410,
+   "sequence": 1,
+   "skill_name_raw": "智系抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2410:1"
+  },
+  {
+   "client_shape_id": 2410,
+   "sequence": 2,
+   "skill_name_raw": "毒性芳香",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2410:2"
+  },
+  {
+   "client_shape_id": 2420,
+   "sequence": 0,
+   "skill_name_raw": "命中",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2420:0"
+  },
+  {
+   "client_shape_id": 2420,
+   "sequence": 1,
+   "skill_name_raw": "力道侵蝕",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2420:1"
+  },
+  {
+   "client_shape_id": 2420,
+   "sequence": 2,
+   "skill_name_raw": "高級必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2420:2"
+  },
+  {
+   "client_shape_id": 2430,
+   "sequence": 0,
+   "skill_name_raw": "毒牙撕咬",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2430:0"
+  },
+  {
+   "client_shape_id": 2430,
+   "sequence": 1,
+   "skill_name_raw": "捕獲之網",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2430:1"
+  },
+  {
+   "client_shape_id": 2430,
+   "sequence": 2,
+   "skill_name_raw": "命中",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2430:2"
+  },
+  {
+   "client_shape_id": 2440,
+   "sequence": 0,
+   "skill_name_raw": "勇敢",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2440:0"
+  },
+  {
+   "client_shape_id": 2440,
+   "sequence": 1,
+   "skill_name_raw": "群攻抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2440:1"
+  },
+  {
+   "client_shape_id": 2440,
+   "sequence": 2,
+   "skill_name_raw": "終級衝擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2440:2"
+  },
+  {
+   "client_shape_id": 2440,
+   "sequence": 3,
+   "skill_name_raw": "劍氣四射",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2440:3"
+  },
+  {
+   "client_shape_id": 2440,
+   "sequence": 4,
+   "skill_name_raw": "鬼魂性質",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2440:4"
+  },
+  {
+   "client_shape_id": 2450,
+   "sequence": 0,
+   "skill_name_raw": "吸血攻擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2450:0"
+  },
+  {
+   "client_shape_id": 2450,
+   "sequence": 1,
+   "skill_name_raw": "仙系弱點",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2450:1"
+  },
+  {
+   "client_shape_id": 2450,
+   "sequence": 2,
+   "skill_name_raw": "幽冥鬼判",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2450:2"
+  },
+  {
+   "client_shape_id": 2460,
+   "sequence": 0,
+   "skill_name_raw": "高級連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2460:0"
+  },
+  {
+   "client_shape_id": 2460,
+   "sequence": 1,
+   "skill_name_raw": "劍氣四射",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2460:1"
+  },
+  {
+   "client_shape_id": 2460,
+   "sequence": 2,
+   "skill_name_raw": "智慧",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2460:2"
+  },
+  {
+   "client_shape_id": 2470,
+   "sequence": 0,
+   "skill_name_raw": "終級必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2470:0"
+  },
+  {
+   "client_shape_id": 2470,
+   "sequence": 1,
+   "skill_name_raw": "終級強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2470:1"
+  },
+  {
+   "client_shape_id": 2470,
+   "sequence": 2,
+   "skill_name_raw": "仙神性質",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2470:2"
+  },
+  {
+   "client_shape_id": 2470,
+   "sequence": 3,
+   "skill_name_raw": "鎮魂",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2470:3"
+  },
+  {
+   "client_shape_id": 2480,
+   "sequence": 0,
+   "skill_name_raw": "高級法術連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2480:0"
+  },
+  {
+   "client_shape_id": 2480,
+   "sequence": 1,
+   "skill_name_raw": "高級幸運",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2480:1"
+  },
+  {
+   "client_shape_id": 2480,
+   "sequence": 2,
+   "skill_name_raw": "神罰",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2480:2"
+  },
+  {
+   "client_shape_id": 2490,
+   "sequence": 0,
+   "skill_name_raw": "高級閃擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2490:0"
+  },
+  {
+   "client_shape_id": 2490,
+   "sequence": 1,
+   "skill_name_raw": "亂舞衝擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2490:1"
+  },
+  {
+   "client_shape_id": 2500,
+   "sequence": 0,
+   "skill_name_raw": "終級偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2500:0"
+  },
+  {
+   "client_shape_id": 2500,
+   "sequence": 1,
+   "skill_name_raw": "精神打擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2500:1"
+  },
+  {
+   "client_shape_id": 2510,
+   "sequence": 0,
+   "skill_name_raw": "天雷地火",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2510:0"
+  },
+  {
+   "client_shape_id": 2510,
+   "sequence": 1,
+   "skill_name_raw": "高級魔法天份",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2510:1"
+  },
+  {
+   "client_shape_id": 2510,
+   "sequence": 2,
+   "skill_name_raw": "高級靈通術",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2510:2"
+  },
+  {
+   "client_shape_id": 2510,
+   "sequence": 3,
+   "skill_name_raw": "烈炎爆破",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2510:3"
+  },
+  {
+   "client_shape_id": 2520,
+   "sequence": 0,
+   "skill_name_raw": "吸血攻擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2520:0"
+  },
+  {
+   "client_shape_id": 2520,
+   "sequence": 1,
+   "skill_name_raw": "鬼魂性質",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2520:1"
+  },
+  {
+   "client_shape_id": 2530,
+   "sequence": 0,
+   "skill_name_raw": "妖氣纏繞",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2530:0"
+  },
+  {
+   "client_shape_id": 2530,
+   "sequence": 1,
+   "skill_name_raw": "亂舞衝擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2530:1"
+  },
+  {
+   "client_shape_id": 2530,
+   "sequence": 2,
+   "skill_name_raw": "恐怖",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2530:2"
+  },
+  {
+   "client_shape_id": 2540,
+   "sequence": 0,
+   "skill_name_raw": "終級強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2540:0"
+  },
+  {
+   "client_shape_id": 2540,
+   "sequence": 1,
+   "skill_name_raw": "終級必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2540:1"
+  },
+  {
+   "client_shape_id": 2540,
+   "sequence": 2,
+   "skill_name_raw": "力敵弱點",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2540:2"
+  },
+  {
+   "client_shape_id": 2540,
+   "sequence": 3,
+   "skill_name_raw": "肉食習性",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2540:3"
+  },
+  {
+   "client_shape_id": 2550,
+   "sequence": 0,
+   "skill_name_raw": "落雷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2550:0"
+  },
+  {
+   "client_shape_id": 2550,
+   "sequence": 1,
+   "skill_name_raw": "高級智慧",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2550:1"
+  },
+  {
+   "client_shape_id": 2550,
+   "sequence": 2,
+   "skill_name_raw": "神祐",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2550:2"
+  },
+  {
+   "client_shape_id": 2560,
+   "sequence": 0,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2560:0"
+  },
+  {
+   "client_shape_id": 2560,
+   "sequence": 1,
+   "skill_name_raw": "必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2560:1"
+  },
+  {
+   "client_shape_id": 2560,
+   "sequence": 2,
+   "skill_name_raw": "力敵抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2560:2"
+  },
+  {
+   "client_shape_id": 2560,
+   "sequence": 3,
+   "skill_name_raw": "反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2560:3"
+  },
+  {
+   "client_shape_id": 2570,
+   "sequence": 0,
+   "skill_name_raw": "智慧",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2570:0"
+  },
+  {
+   "client_shape_id": 2570,
+   "sequence": 1,
+   "skill_name_raw": "媚笑",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2570:1"
+  },
+  {
+   "client_shape_id": 2570,
+   "sequence": 2,
+   "skill_name_raw": "鬼系抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2570:2"
+  },
+  {
+   "client_shape_id": 2570,
+   "sequence": 3,
+   "skill_name_raw": "神跡",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2570:3"
+  },
+  {
+   "client_shape_id": 2580,
+   "sequence": 0,
+   "skill_name_raw": "再生",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2580:0"
+  },
+  {
+   "client_shape_id": 2580,
+   "sequence": 1,
+   "skill_name_raw": "專注連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2580:1"
+  },
+  {
+   "client_shape_id": 2580,
+   "sequence": 2,
+   "skill_name_raw": "詛咒之刃",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2580:2"
+  },
+  {
+   "client_shape_id": 2590,
+   "sequence": 0,
+   "skill_name_raw": "智慧",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2590:0"
+  },
+  {
+   "client_shape_id": 2590,
+   "sequence": 1,
+   "skill_name_raw": "污染",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2590:1"
+  },
+  {
+   "client_shape_id": 2590,
+   "sequence": 2,
+   "skill_name_raw": "精神打擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2590:2"
+  },
+  {
+   "client_shape_id": 2600,
+   "sequence": 0,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2600:0"
+  },
+  {
+   "client_shape_id": 2600,
+   "sequence": 1,
+   "skill_name_raw": "隔山打牛",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2600:1"
+  },
+  {
+   "client_shape_id": 2610,
+   "sequence": 0,
+   "skill_name_raw": "捨身一搏",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2610:0"
+  },
+  {
+   "client_shape_id": 2610,
+   "sequence": 1,
+   "skill_name_raw": "強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2610:1"
+  },
+  {
+   "client_shape_id": 2610,
+   "sequence": 2,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2610:2"
+  },
+  {
+   "client_shape_id": 2620,
+   "sequence": 0,
+   "skill_name_raw": "獸王令",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2620:0"
+  },
+  {
+   "client_shape_id": 2620,
+   "sequence": 1,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2620:1"
+  },
+  {
+   "client_shape_id": 2620,
+   "sequence": 2,
+   "skill_name_raw": "必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2620:2"
+  },
+  {
+   "client_shape_id": 2620,
+   "sequence": 3,
+   "skill_name_raw": "勇敢",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2620:3"
+  },
+  {
+   "client_shape_id": 2630,
+   "sequence": 0,
+   "skill_name_raw": "神之夙敵",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2630:0"
+  },
+  {
+   "client_shape_id": 2630,
+   "sequence": 1,
+   "skill_name_raw": "感知",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2630:1"
+  },
+  {
+   "client_shape_id": 2630,
+   "sequence": 2,
+   "skill_name_raw": "智慧",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2630:2"
+  },
+  {
+   "client_shape_id": 2630,
+   "sequence": 3,
+   "skill_name_raw": "高級飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2630:3"
+  },
+  {
+   "client_shape_id": 2640,
+   "sequence": 0,
+   "skill_name_raw": "協同攻擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2640:0"
+  },
+  {
+   "client_shape_id": 2640,
+   "sequence": 1,
+   "skill_name_raw": "強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2640:1"
+  },
+  {
+   "client_shape_id": 2640,
+   "sequence": 2,
+   "skill_name_raw": "防禦",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2640:2"
+  },
+  {
+   "client_shape_id": 2640,
+   "sequence": 3,
+   "skill_name_raw": "命中",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2640:3"
+  },
+  {
+   "client_shape_id": 2650,
+   "sequence": 0,
+   "skill_name_raw": "能量波動",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2650:0"
+  },
+  {
+   "client_shape_id": 2650,
+   "sequence": 1,
+   "skill_name_raw": "高級法術連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2650:1"
+  },
+  {
+   "client_shape_id": 2660,
+   "sequence": 0,
+   "skill_name_raw": "神之夙敵",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2660:0"
+  },
+  {
+   "client_shape_id": 2660,
+   "sequence": 1,
+   "skill_name_raw": "衝擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2660:1"
+  },
+  {
+   "client_shape_id": 2660,
+   "sequence": 2,
+   "skill_name_raw": "連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2660:2"
+  },
+  {
+   "client_shape_id": 2670,
+   "sequence": 0,
+   "skill_name_raw": "法術必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2670:0"
+  },
+  {
+   "client_shape_id": 2670,
+   "sequence": 1,
+   "skill_name_raw": "高級法術連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2670:1"
+  },
+  {
+   "client_shape_id": 2680,
+   "sequence": 0,
+   "skill_name_raw": "協同攻擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2680:0"
+  },
+  {
+   "client_shape_id": 2680,
+   "sequence": 1,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2680:1"
+  },
+  {
+   "client_shape_id": 2680,
+   "sequence": 2,
+   "skill_name_raw": "高級飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2680:2"
+  },
+  {
+   "client_shape_id": 2690,
+   "sequence": 0,
+   "skill_name_raw": "鬼魂性質",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2690:0"
+  },
+  {
+   "client_shape_id": 2690,
+   "sequence": 1,
+   "skill_name_raw": "能量波動",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2690:1"
+  },
+  {
+   "client_shape_id": 2700,
+   "sequence": 0,
+   "skill_name_raw": "神之夙敵",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2700:0"
+  },
+  {
+   "client_shape_id": 2700,
+   "sequence": 1,
+   "skill_name_raw": "反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2700:1"
+  },
+  {
+   "client_shape_id": 2700,
+   "sequence": 2,
+   "skill_name_raw": "毒牙撕咬",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2700:2"
+  },
+  {
+   "client_shape_id": 2710,
+   "sequence": 0,
+   "skill_name_raw": "乘勝追擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2710:0"
+  },
+  {
+   "client_shape_id": 2710,
+   "sequence": 1,
+   "skill_name_raw": "高級飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2710:1"
+  },
+  {
+   "client_shape_id": 2710,
+   "sequence": 2,
+   "skill_name_raw": "連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2710:2"
+  },
+  {
+   "client_shape_id": 2710,
+   "sequence": 3,
+   "skill_name_raw": "反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2710:3"
+  },
+  {
+   "client_shape_id": 2720,
+   "sequence": 0,
+   "skill_name_raw": "能量波動",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2720:0"
+  },
+  {
+   "client_shape_id": 2720,
+   "sequence": 1,
+   "skill_name_raw": "魔法天份",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2720:1"
+  },
+  {
+   "client_shape_id": 2720,
+   "sequence": 2,
+   "skill_name_raw": "高級飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2720:2"
+  },
+  {
+   "client_shape_id": 2720,
+   "sequence": 3,
+   "skill_name_raw": "靈通術",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2720:3"
+  },
+  {
+   "client_shape_id": 2730,
+   "sequence": 0,
+   "skill_name_raw": "高級強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2730:0"
+  },
+  {
+   "client_shape_id": 2730,
+   "sequence": 1,
+   "skill_name_raw": "高級強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2730:1"
+  },
+  {
+   "client_shape_id": 2730,
+   "sequence": 2,
+   "skill_name_raw": "高級幸運",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2730:2"
+  },
+  {
+   "client_shape_id": 2730,
+   "sequence": 3,
+   "skill_name_raw": "偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2730:3"
+  },
+  {
+   "client_shape_id": 2740,
+   "sequence": 0,
+   "skill_name_raw": "高級魔法天份",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2740:0"
+  },
+  {
+   "client_shape_id": 2740,
+   "sequence": 1,
+   "skill_name_raw": "高級法術連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2740:1"
+  },
+  {
+   "client_shape_id": 2740,
+   "sequence": 2,
+   "skill_name_raw": "法術必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2740:2"
+  },
+  {
+   "client_shape_id": 2740,
+   "sequence": 3,
+   "skill_name_raw": "魔法毒咒",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2740:3"
+  },
+  {
+   "client_shape_id": 2750,
+   "sequence": 0,
+   "skill_name_raw": "強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2750:0"
+  },
+  {
+   "client_shape_id": 2750,
+   "sequence": 1,
+   "skill_name_raw": "命中",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2750:1"
+  },
+  {
+   "client_shape_id": 2750,
+   "sequence": 2,
+   "skill_name_raw": "迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2750:2"
+  },
+  {
+   "client_shape_id": 2750,
+   "sequence": 3,
+   "skill_name_raw": "幸運",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2750:3"
+  },
+  {
+   "client_shape_id": 2760,
+   "sequence": 0,
+   "skill_name_raw": "靈通術",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2760:0"
+  },
+  {
+   "client_shape_id": 2760,
+   "sequence": 1,
+   "skill_name_raw": "智慧",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2760:1"
+  },
+  {
+   "client_shape_id": 2760,
+   "sequence": 2,
+   "skill_name_raw": "神跡",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2760:2"
+  },
+  {
+   "client_shape_id": 2760,
+   "sequence": 3,
+   "skill_name_raw": "魔法反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2760:3"
+  },
+  {
+   "client_shape_id": 2770,
+   "sequence": 0,
+   "skill_name_raw": "協同攻擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2770:0"
+  },
+  {
+   "client_shape_id": 2770,
+   "sequence": 1,
+   "skill_name_raw": "強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2770:1"
+  },
+  {
+   "client_shape_id": 2770,
+   "sequence": 2,
+   "skill_name_raw": "高級衝擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2770:2"
+  },
+  {
+   "client_shape_id": 2770,
+   "sequence": 3,
+   "skill_name_raw": "命中",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2770:3"
+  },
+  {
+   "client_shape_id": 2780,
+   "sequence": 0,
+   "skill_name_raw": "生命吸取",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2780:0"
+  },
+  {
+   "client_shape_id": 2780,
+   "sequence": 1,
+   "skill_name_raw": "高級慧根",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2780:1"
+  },
+  {
+   "client_shape_id": 2780,
+   "sequence": 2,
+   "skill_name_raw": "再生",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2780:2"
+  },
+  {
+   "client_shape_id": 2780,
+   "sequence": 3,
+   "skill_name_raw": "魔法反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2780:3"
+  },
+  {
+   "client_shape_id": 2790,
+   "sequence": 0,
+   "skill_name_raw": "詛咒之刃",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2790:0"
+  },
+  {
+   "client_shape_id": 2790,
+   "sequence": 1,
+   "skill_name_raw": "高級命中",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2790:1"
+  },
+  {
+   "client_shape_id": 2790,
+   "sequence": 2,
+   "skill_name_raw": "連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2790:2"
+  },
+  {
+   "client_shape_id": 2800,
+   "sequence": 0,
+   "skill_name_raw": "英勇對決",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2800:0"
+  },
+  {
+   "client_shape_id": 2800,
+   "sequence": 1,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2800:1"
+  },
+  {
+   "client_shape_id": 2800,
+   "sequence": 2,
+   "skill_name_raw": "神跡",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2800:2"
+  },
+  {
+   "client_shape_id": 2820,
+   "sequence": 0,
+   "skill_name_raw": "專注連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2820:0"
+  },
+  {
+   "client_shape_id": 2820,
+   "sequence": 1,
+   "skill_name_raw": "高級迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2820:1"
+  },
+  {
+   "client_shape_id": 2820,
+   "sequence": 2,
+   "skill_name_raw": "報復",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2820:2"
+  },
+  {
+   "client_shape_id": 2830,
+   "sequence": 0,
+   "skill_name_raw": "神罰",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2830:0"
+  },
+  {
+   "client_shape_id": 2830,
+   "sequence": 1,
+   "skill_name_raw": "高級慧根",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2830:1"
+  },
+  {
+   "client_shape_id": 2830,
+   "sequence": 2,
+   "skill_name_raw": "再生",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2830:2"
+  },
+  {
+   "client_shape_id": 2830,
+   "sequence": 3,
+   "skill_name_raw": "靈敏",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2830:3"
+  },
+  {
+   "client_shape_id": 2850,
+   "sequence": 0,
+   "skill_name_raw": "高級強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2850:0"
+  },
+  {
+   "client_shape_id": 2850,
+   "sequence": 1,
+   "skill_name_raw": "高級防禦",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2850:1"
+  },
+  {
+   "client_shape_id": 2850,
+   "sequence": 2,
+   "skill_name_raw": "強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2850:2"
+  },
+  {
+   "client_shape_id": 2850,
+   "sequence": 3,
+   "skill_name_raw": "反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2850:3"
+  },
+  {
+   "client_shape_id": 2860,
+   "sequence": 0,
+   "skill_name_raw": "妖氣纏繞",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2860:0"
+  },
+  {
+   "client_shape_id": 2860,
+   "sequence": 1,
+   "skill_name_raw": "偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2860:1"
+  },
+  {
+   "client_shape_id": 2860,
+   "sequence": 2,
+   "skill_name_raw": "高級迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2860:2"
+  },
+  {
+   "client_shape_id": 2860,
+   "sequence": 3,
+   "skill_name_raw": "神罰",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2860:3"
+  },
+  {
+   "client_shape_id": 2860,
+   "sequence": 4,
+   "skill_name_raw": "妖系弱點",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2860:4"
+  },
+  {
+   "client_shape_id": 2870,
+   "sequence": 0,
+   "skill_name_raw": "神罰",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2870:0"
+  },
+  {
+   "client_shape_id": 2870,
+   "sequence": 1,
+   "skill_name_raw": "偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2870:1"
+  },
+  {
+   "client_shape_id": 2870,
+   "sequence": 2,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2870:2"
+  },
+  {
+   "client_shape_id": 2870,
+   "sequence": 3,
+   "skill_name_raw": "保命",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2870:3"
+  },
+  {
+   "client_shape_id": 2870,
+   "sequence": 4,
+   "skill_name_raw": "仙系弱點",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2870:4"
+  },
+  {
+   "client_shape_id": 2880,
+   "sequence": 0,
+   "skill_name_raw": "乘勝追擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2880:0"
+  },
+  {
+   "client_shape_id": 2880,
+   "sequence": 1,
+   "skill_name_raw": "保命",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2880:1"
+  },
+  {
+   "client_shape_id": 2890,
+   "sequence": 0,
+   "skill_name_raw": "劍氣四射",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2890:0"
+  },
+  {
+   "client_shape_id": 2890,
+   "sequence": 1,
+   "skill_name_raw": "鬼系抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2890:1"
+  },
+  {
+   "client_shape_id": 2890,
+   "sequence": 2,
+   "skill_name_raw": "終級迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2890:2"
+  },
+  {
+   "client_shape_id": 2890,
+   "sequence": 3,
+   "skill_name_raw": "靈敏",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2890:3"
+  },
+  {
+   "client_shape_id": 2900,
+   "sequence": 0,
+   "skill_name_raw": "終級反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2900:0"
+  },
+  {
+   "client_shape_id": 2900,
+   "sequence": 1,
+   "skill_name_raw": "仙系抵抗",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2900:1"
+  },
+  {
+   "client_shape_id": 2900,
+   "sequence": 2,
+   "skill_name_raw": "高級偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2900:2"
+  },
+  {
+   "client_shape_id": 2900,
+   "sequence": 3,
+   "skill_name_raw": "終級衝擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2900:3"
+  },
+  {
+   "client_shape_id": 2910,
+   "sequence": 0,
+   "skill_name_raw": "捨身一搏",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2910:0"
+  },
+  {
+   "client_shape_id": 2910,
+   "sequence": 1,
+   "skill_name_raw": "高級反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2910:1"
+  },
+  {
+   "client_shape_id": 2910,
+   "sequence": 2,
+   "skill_name_raw": "高級偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2910:2"
+  },
+  {
+   "client_shape_id": 2910,
+   "sequence": 3,
+   "skill_name_raw": "命中",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2910:3"
+  },
+  {
+   "client_shape_id": 2920,
+   "sequence": 0,
+   "skill_name_raw": "神之夙敵",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2920:0"
+  },
+  {
+   "client_shape_id": 2920,
+   "sequence": 1,
+   "skill_name_raw": "高級反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2920:1"
+  },
+  {
+   "client_shape_id": 2920,
+   "sequence": 2,
+   "skill_name_raw": "高級神跡",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2920:2"
+  },
+  {
+   "client_shape_id": 2920,
+   "sequence": 3,
+   "skill_name_raw": "飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2920:3"
+  },
+  {
+   "client_shape_id": 2930,
+   "sequence": 0,
+   "skill_name_raw": "神之夙敵",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2930:0"
+  },
+  {
+   "client_shape_id": 2930,
+   "sequence": 1,
+   "skill_name_raw": "高級法術連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2930:1"
+  },
+  {
+   "client_shape_id": 2930,
+   "sequence": 2,
+   "skill_name_raw": "神跡",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2930:2"
+  },
+  {
+   "client_shape_id": 2930,
+   "sequence": 3,
+   "skill_name_raw": "再生",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2930:3"
+  },
+  {
+   "client_shape_id": 2940,
+   "sequence": 0,
+   "skill_name_raw": "飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2940:0"
+  },
+  {
+   "client_shape_id": 2940,
+   "sequence": 1,
+   "skill_name_raw": "高級魔法天份",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2940:1"
+  },
+  {
+   "client_shape_id": 2940,
+   "sequence": 2,
+   "skill_name_raw": "高級靈通術",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2940:2"
+  },
+  {
+   "client_shape_id": 2940,
+   "sequence": 3,
+   "skill_name_raw": "高級再生",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2940:3"
+  },
+  {
+   "client_shape_id": 2950,
+   "sequence": 0,
+   "skill_name_raw": "連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2950:0"
+  },
+  {
+   "client_shape_id": 2950,
+   "sequence": 1,
+   "skill_name_raw": "必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2950:1"
+  },
+  {
+   "client_shape_id": 2950,
+   "sequence": 2,
+   "skill_name_raw": "反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2950:2"
+  },
+  {
+   "client_shape_id": 2950,
+   "sequence": 3,
+   "skill_name_raw": "刺甲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2950:3"
+  },
+  {
+   "client_shape_id": 2960,
+   "sequence": 0,
+   "skill_name_raw": "捨身一搏",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2960:0"
+  },
+  {
+   "client_shape_id": 2960,
+   "sequence": 1,
+   "skill_name_raw": "高級力道侵蝕",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2960:1"
+  },
+  {
+   "client_shape_id": 2960,
+   "sequence": 2,
+   "skill_name_raw": "報復",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2960:2"
+  },
+  {
+   "client_shape_id": 2960,
+   "sequence": 3,
+   "skill_name_raw": "偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2960:3"
+  },
+  {
+   "client_shape_id": 2970,
+   "sequence": 0,
+   "skill_name_raw": "寒冰屏障",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2970:0"
+  },
+  {
+   "client_shape_id": 2970,
+   "sequence": 1,
+   "skill_name_raw": "恐怖",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2970:1"
+  },
+  {
+   "client_shape_id": 2970,
+   "sequence": 2,
+   "skill_name_raw": "高級強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2970:2"
+  },
+  {
+   "client_shape_id": 2970,
+   "sequence": 3,
+   "skill_name_raw": "仙系弱點",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2970:3"
+  },
+  {
+   "client_shape_id": 2970,
+   "sequence": 4,
+   "skill_name_raw": "神跡",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2970:4"
+  },
+  {
+   "client_shape_id": 2980,
+   "sequence": 0,
+   "skill_name_raw": "高級連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2980:0"
+  },
+  {
+   "client_shape_id": 2980,
+   "sequence": 1,
+   "skill_name_raw": "高級衝擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2980:1"
+  },
+  {
+   "client_shape_id": 2980,
+   "sequence": 2,
+   "skill_name_raw": "飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2980:2"
+  },
+  {
+   "client_shape_id": 2980,
+   "sequence": 3,
+   "skill_name_raw": "命中",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2980:3"
+  },
+  {
+   "client_shape_id": 2990,
+   "sequence": 0,
+   "skill_name_raw": "生命吸取",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2990:0"
+  },
+  {
+   "client_shape_id": 2990,
+   "sequence": 1,
+   "skill_name_raw": "高級飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2990:1"
+  },
+  {
+   "client_shape_id": 2990,
+   "sequence": 2,
+   "skill_name_raw": "魔法天份",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2990:2"
+  },
+  {
+   "client_shape_id": 2990,
+   "sequence": 3,
+   "skill_name_raw": "高級法術狂暴",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2990:3"
+  },
+  {
+   "client_shape_id": 4005,
+   "sequence": 0,
+   "skill_name_raw": "護主",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4005:0"
+  },
+  {
+   "client_shape_id": 4005,
+   "sequence": 1,
+   "skill_name_raw": "連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4005:1"
+  },
+  {
+   "client_shape_id": 4005,
+   "sequence": 2,
+   "skill_name_raw": "高級強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4005:2"
+  },
+  {
+   "client_shape_id": 4005,
+   "sequence": 3,
+   "skill_name_raw": "再生",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4005:3"
+  },
+  {
+   "client_shape_id": 4006,
+   "sequence": 0,
+   "skill_name_raw": "高級強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4006:0"
+  },
+  {
+   "client_shape_id": 4006,
+   "sequence": 1,
+   "skill_name_raw": "終級神跡",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4006:1"
+  },
+  {
+   "client_shape_id": 4006,
+   "sequence": 2,
+   "skill_name_raw": "高級神祐",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4006:2"
+  },
+  {
+   "client_shape_id": 4006,
+   "sequence": 3,
+   "skill_name_raw": "勇敢",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4006:3"
+  },
+  {
+   "client_shape_id": 4007,
+   "sequence": 0,
+   "skill_name_raw": "高級幸運",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4007:0"
+  },
+  {
+   "client_shape_id": 4007,
+   "sequence": 1,
+   "skill_name_raw": "高級連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4007:1"
+  },
+  {
+   "client_shape_id": 4007,
+   "sequence": 2,
+   "skill_name_raw": "終級靈敏",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4007:2"
+  },
+  {
+   "client_shape_id": 4007,
+   "sequence": 3,
+   "skill_name_raw": "勇敢",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4007:3"
+  },
+  {
+   "client_shape_id": 4008,
+   "sequence": 0,
+   "skill_name_raw": "烈炎爆破",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4008:0"
+  },
+  {
+   "client_shape_id": 4008,
+   "sequence": 1,
+   "skill_name_raw": "恐怖",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4008:1"
+  },
+  {
+   "client_shape_id": 4008,
+   "sequence": 2,
+   "skill_name_raw": "高級魔法天份",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4008:2"
+  },
+  {
+   "client_shape_id": 4008,
+   "sequence": 3,
+   "skill_name_raw": "高級再生",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4008:3"
+  },
+  {
+   "client_shape_id": 4009,
+   "sequence": 0,
+   "skill_name_raw": "破防攻擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4009:0"
+  },
+  {
+   "client_shape_id": 4009,
+   "sequence": 1,
+   "skill_name_raw": "終級強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4009:1"
+  },
+  {
+   "client_shape_id": 4009,
+   "sequence": 2,
+   "skill_name_raw": "終級衝擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4009:2"
+  },
+  {
+   "client_shape_id": 4009,
+   "sequence": 3,
+   "skill_name_raw": "終級強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4009:3"
+  },
+  {
+   "client_shape_id": 4010,
+   "sequence": 0,
+   "skill_name_raw": "終級防禦",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4010:0"
+  },
+  {
+   "client_shape_id": 4010,
+   "sequence": 1,
+   "skill_name_raw": "終級迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4010:1"
+  },
+  {
+   "client_shape_id": 4010,
+   "sequence": 2,
+   "skill_name_raw": "終級幸運",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4010:2"
+  },
+  {
+   "client_shape_id": 4010,
+   "sequence": 3,
+   "skill_name_raw": "一箭鐘情",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4010:3"
+  },
+  {
+   "client_shape_id": 4011,
+   "sequence": 0,
+   "skill_name_raw": "新月獠牙",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4011:0"
+  },
+  {
+   "client_shape_id": 4011,
+   "sequence": 1,
+   "skill_name_raw": "終級命中",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4011:1"
+  },
+  {
+   "client_shape_id": 4011,
+   "sequence": 2,
+   "skill_name_raw": "終級神跡",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4011:2"
+  },
+  {
+   "client_shape_id": 4011,
+   "sequence": 3,
+   "skill_name_raw": "終級強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4011:3"
+  },
+  {
+   "client_shape_id": 4012,
+   "sequence": 0,
+   "skill_name_raw": "葉落風回",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4012:0"
+  },
+  {
+   "client_shape_id": 4012,
+   "sequence": 1,
+   "skill_name_raw": "終級靈敏",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4012:1"
+  },
+  {
+   "client_shape_id": 4012,
+   "sequence": 2,
+   "skill_name_raw": "終級魔法天份",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4012:2"
+  },
+  {
+   "client_shape_id": 4012,
+   "sequence": 3,
+   "skill_name_raw": "終級強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4012:3"
+  },
+  {
+   "client_shape_id": 4013,
+   "sequence": 0,
+   "skill_name_raw": "念力飛彈",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4013:0"
+  },
+  {
+   "client_shape_id": 4013,
+   "sequence": 1,
+   "skill_name_raw": "幸運",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4013:1"
+  },
+  {
+   "client_shape_id": 4013,
+   "sequence": 2,
+   "skill_name_raw": "必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4013:2"
+  },
+  {
+   "client_shape_id": 4013,
+   "sequence": 3,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4013:3"
+  },
+  {
+   "client_shape_id": 4014,
+   "sequence": 0,
+   "skill_name_raw": "高級強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4014:0"
+  },
+  {
+   "client_shape_id": 4014,
+   "sequence": 1,
+   "skill_name_raw": "終級衝擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4014:1"
+  },
+  {
+   "client_shape_id": 4014,
+   "sequence": 2,
+   "skill_name_raw": "高級偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4014:2"
+  },
+  {
+   "client_shape_id": 4014,
+   "sequence": 3,
+   "skill_name_raw": "勇敢",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4014:3"
+  },
+  {
+   "client_shape_id": 4015,
+   "sequence": 0,
+   "skill_name_raw": "落雷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4015:0"
+  },
+  {
+   "client_shape_id": 4015,
+   "sequence": 1,
+   "skill_name_raw": "迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4015:1"
+  },
+  {
+   "client_shape_id": 4015,
+   "sequence": 2,
+   "skill_name_raw": "智慧",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4015:2"
+  },
+  {
+   "client_shape_id": 4015,
+   "sequence": 3,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4015:3"
+  },
+  {
+   "client_shape_id": 4016,
+   "sequence": 0,
+   "skill_name_raw": "偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4016:0"
+  },
+  {
+   "client_shape_id": 4016,
+   "sequence": 1,
+   "skill_name_raw": "刺甲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4016:1"
+  },
+  {
+   "client_shape_id": 4016,
+   "sequence": 2,
+   "skill_name_raw": "感知",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4016:2"
+  },
+  {
+   "client_shape_id": 4016,
+   "sequence": 3,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4016:3"
+  },
+  {
+   "client_shape_id": 4017,
+   "sequence": 0,
+   "skill_name_raw": "強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4017:0"
+  },
+  {
+   "client_shape_id": 4017,
+   "sequence": 1,
+   "skill_name_raw": "飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4017:1"
+  },
+  {
+   "client_shape_id": 4017,
+   "sequence": 2,
+   "skill_name_raw": "智慧",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4017:2"
+  },
+  {
+   "client_shape_id": 4017,
+   "sequence": 3,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4017:3"
+  },
+  {
+   "client_shape_id": 4018,
+   "sequence": 0,
+   "skill_name_raw": "善惡有報",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4018:0"
+  },
+  {
+   "client_shape_id": 4018,
+   "sequence": 1,
+   "skill_name_raw": "終級迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4018:1"
+  },
+  {
+   "client_shape_id": 4018,
+   "sequence": 2,
+   "skill_name_raw": "終級偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4018:2"
+  },
+  {
+   "client_shape_id": 4018,
+   "sequence": 3,
+   "skill_name_raw": "終級強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4018:3"
+  },
+  {
+   "client_shape_id": 4019,
+   "sequence": 0,
+   "skill_name_raw": "高級保命",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4019:0"
+  },
+  {
+   "client_shape_id": 4019,
+   "sequence": 1,
+   "skill_name_raw": "終級慧根",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4019:1"
+  },
+  {
+   "client_shape_id": 4019,
+   "sequence": 2,
+   "skill_name_raw": "高級法術連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4019:2"
+  },
+  {
+   "client_shape_id": 4019,
+   "sequence": 3,
+   "skill_name_raw": "意念無常",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4019:3"
+  },
+  {
+   "client_shape_id": 4020,
+   "sequence": 0,
+   "skill_name_raw": "高級偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4020:0"
+  },
+  {
+   "client_shape_id": 4020,
+   "sequence": 1,
+   "skill_name_raw": "終級靈敏",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4020:1"
+  },
+  {
+   "client_shape_id": 4020,
+   "sequence": 2,
+   "skill_name_raw": "高級神祐",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4020:2"
+  },
+  {
+   "client_shape_id": 4020,
+   "sequence": 3,
+   "skill_name_raw": "神跡",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4020:3"
+  },
+  {
+   "client_shape_id": 4023,
+   "sequence": 0,
+   "skill_name_raw": "神龍擺尾",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4023:0"
+  },
+  {
+   "client_shape_id": 4023,
+   "sequence": 1,
+   "skill_name_raw": "終級報復",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4023:1"
+  },
+  {
+   "client_shape_id": 4023,
+   "sequence": 2,
+   "skill_name_raw": "終級偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4023:2"
+  },
+  {
+   "client_shape_id": 4023,
+   "sequence": 3,
+   "skill_name_raw": "終級迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4023:3"
+  },
+  {
+   "client_shape_id": 4024,
+   "sequence": 0,
+   "skill_name_raw": "魔動冰晶",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4024:0"
+  },
+  {
+   "client_shape_id": 4024,
+   "sequence": 1,
+   "skill_name_raw": "終級慧根",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4024:1"
+  },
+  {
+   "client_shape_id": 4024,
+   "sequence": 2,
+   "skill_name_raw": "終級法術連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4024:2"
+  },
+  {
+   "client_shape_id": 4024,
+   "sequence": 3,
+   "skill_name_raw": "終級迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4024:3"
+  },
+  {
+   "client_shape_id": 4025,
+   "sequence": 0,
+   "skill_name_raw": "終級法術連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4025:0"
+  },
+  {
+   "client_shape_id": 4025,
+   "sequence": 1,
+   "skill_name_raw": "魔動冰晶",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4025:1"
+  },
+  {
+   "client_shape_id": 4025,
+   "sequence": 2,
+   "skill_name_raw": "終級慧根",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4025:2"
+  },
+  {
+   "client_shape_id": 4025,
+   "sequence": 3,
+   "skill_name_raw": "終級迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4025:3"
+  },
+  {
+   "client_shape_id": 4026,
+   "sequence": 0,
+   "skill_name_raw": "天之怒吼",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4026:0"
+  },
+  {
+   "client_shape_id": 4026,
+   "sequence": 1,
+   "skill_name_raw": "終級靈敏",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4026:1"
+  },
+  {
+   "client_shape_id": 4026,
+   "sequence": 2,
+   "skill_name_raw": "終級命中",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4026:2"
+  },
+  {
+   "client_shape_id": 4026,
+   "sequence": 3,
+   "skill_name_raw": "終級強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4026:3"
+  },
+  {
+   "client_shape_id": 4027,
+   "sequence": 0,
+   "skill_name_raw": "再生",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4027:0"
+  },
+  {
+   "client_shape_id": 4027,
+   "sequence": 1,
+   "skill_name_raw": "連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4027:1"
+  },
+  {
+   "client_shape_id": 4027,
+   "sequence": 2,
+   "skill_name_raw": "高級強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4027:2"
+  },
+  {
+   "client_shape_id": 4027,
+   "sequence": 3,
+   "skill_name_raw": "護主",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4027:3"
+  },
+  {
+   "client_shape_id": 4028,
+   "sequence": 0,
+   "skill_name_raw": "必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4028:0"
+  },
+  {
+   "client_shape_id": 4028,
+   "sequence": 1,
+   "skill_name_raw": "迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4028:1"
+  },
+  {
+   "client_shape_id": 4028,
+   "sequence": 2,
+   "skill_name_raw": "智慧",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4028:2"
+  },
+  {
+   "client_shape_id": 4028,
+   "sequence": 3,
+   "skill_name_raw": "強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4028:3"
+  },
+  {
+   "client_shape_id": 4101,
+   "sequence": 0,
+   "skill_name_raw": "高級偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4101:0"
+  },
+  {
+   "client_shape_id": 4101,
+   "sequence": 1,
+   "skill_name_raw": "報復",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4101:1"
+  },
+  {
+   "client_shape_id": 4101,
+   "sequence": 2,
+   "skill_name_raw": "保命",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4101:2"
+  },
+  {
+   "client_shape_id": 4102,
+   "sequence": 0,
+   "skill_name_raw": "終級強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4102:0"
+  },
+  {
+   "client_shape_id": 4102,
+   "sequence": 1,
+   "skill_name_raw": "高級偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4102:1"
+  },
+  {
+   "client_shape_id": 4102,
+   "sequence": 2,
+   "skill_name_raw": "衝擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4102:2"
+  },
+  {
+   "client_shape_id": 4104,
+   "sequence": 0,
+   "skill_name_raw": "終級強壯",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4104:0"
+  },
+  {
+   "client_shape_id": 4104,
+   "sequence": 1,
+   "skill_name_raw": "高級強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4104:1"
+  },
+  {
+   "client_shape_id": 4104,
+   "sequence": 2,
+   "skill_name_raw": "反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4104:2"
+  },
+  {
+   "client_shape_id": 4105,
+   "sequence": 0,
+   "skill_name_raw": "強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4105:0"
+  },
+  {
+   "client_shape_id": 4105,
+   "sequence": 1,
+   "skill_name_raw": "反擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4105:1"
+  },
+  {
+   "client_shape_id": 4109,
+   "sequence": 0,
+   "skill_name_raw": "終級魔法天份",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4109:0"
+  },
+  {
+   "client_shape_id": 4109,
+   "sequence": 1,
+   "skill_name_raw": "高級靈通術",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4109:1"
+  },
+  {
+   "client_shape_id": 4109,
+   "sequence": 2,
+   "skill_name_raw": "亡靈氣箭",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4109:2"
+  },
+  {
+   "client_shape_id": 4110,
+   "sequence": 0,
+   "skill_name_raw": "終級靈通術",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4110:0"
+  },
+  {
+   "client_shape_id": 4110,
+   "sequence": 1,
+   "skill_name_raw": "高級魔法天份",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4110:1"
+  },
+  {
+   "client_shape_id": 4110,
+   "sequence": 2,
+   "skill_name_raw": "魔法毒咒",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4110:2"
+  },
+  {
+   "client_shape_id": 4113,
+   "sequence": 0,
+   "skill_name_raw": "終級命中",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4113:0"
+  },
+  {
+   "client_shape_id": 4113,
+   "sequence": 1,
+   "skill_name_raw": "高級必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4113:1"
+  },
+  {
+   "client_shape_id": 4113,
+   "sequence": 2,
+   "skill_name_raw": "強力",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "4113:2"
+  },
+  {
+   "client_shape_id": 5100,
+   "sequence": 0,
+   "skill_name_raw": "雷霆一擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5100:0"
+  },
+  {
+   "client_shape_id": 5100,
+   "sequence": 1,
+   "skill_name_raw": "高級迅捷",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5100:1"
+  },
+  {
+   "client_shape_id": 5100,
+   "sequence": 2,
+   "skill_name_raw": "衝擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5100:2"
+  },
+  {
+   "client_shape_id": 5100,
+   "sequence": 3,
+   "skill_name_raw": "神跡",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5100:3"
+  },
+  {
+   "client_shape_id": 5101,
+   "sequence": 0,
+   "skill_name_raw": "雙月舞",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5101:0"
+  },
+  {
+   "client_shape_id": 5101,
+   "sequence": 1,
+   "skill_name_raw": "高級飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5101:1"
+  },
+  {
+   "client_shape_id": 5101,
+   "sequence": 2,
+   "skill_name_raw": "終級法術狂暴",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5101:2"
+  },
+  {
+   "client_shape_id": 5101,
+   "sequence": 3,
+   "skill_name_raw": "魔法回擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5101:3"
+  },
+  {
+   "client_shape_id": 5101,
+   "sequence": 4,
+   "skill_name_raw": "高級慧根",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5101:4"
+  },
+  {
+   "client_shape_id": 5103,
+   "sequence": 0,
+   "skill_name_raw": "神之夙敵",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5103:0"
+  },
+  {
+   "client_shape_id": 5103,
+   "sequence": 1,
+   "skill_name_raw": "高級防禦",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5103:1"
+  },
+  {
+   "client_shape_id": 5103,
+   "sequence": 2,
+   "skill_name_raw": "命中",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5103:2"
+  },
+  {
+   "client_shape_id": 5103,
+   "sequence": 3,
+   "skill_name_raw": "報復",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5103:3"
+  },
+  {
+   "client_shape_id": 5104,
+   "sequence": 0,
+   "skill_name_raw": "高級魔法天份",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5104:0"
+  },
+  {
+   "client_shape_id": 5104,
+   "sequence": 1,
+   "skill_name_raw": "高級靈通術",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5104:1"
+  },
+  {
+   "client_shape_id": 5104,
+   "sequence": 2,
+   "skill_name_raw": "亡靈氣箭",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5104:2"
+  },
+  {
+   "client_shape_id": 5104,
+   "sequence": 3,
+   "skill_name_raw": "神跡",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5104:3"
+  },
+  {
+   "client_shape_id": 5104,
+   "sequence": 4,
+   "skill_name_raw": "能量波動",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5104:4"
+  },
+  {
+   "client_shape_id": 5105,
+   "sequence": 0,
+   "skill_name_raw": "高級必殺",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5105:0"
+  },
+  {
+   "client_shape_id": 5105,
+   "sequence": 1,
+   "skill_name_raw": "高級連擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5105:1"
+  },
+  {
+   "client_shape_id": 5105,
+   "sequence": 2,
+   "skill_name_raw": "高級偷襲",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5105:2"
+  },
+  {
+   "client_shape_id": 5105,
+   "sequence": 3,
+   "skill_name_raw": "神跡",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5105:3"
+  },
+  {
+   "client_shape_id": 5105,
+   "sequence": 4,
+   "skill_name_raw": "乘勝追擊",
+   "source_entry": 2027,
+   "source_table": "DATA.maySkillLst",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "5105:4"
+  }
+ ]
+}

@@ -1,0 +1,13 @@
+{
+ "client_shape_id": 2800,
+ "name": "機甲少女",
+ "liupai_raw": "念",
+ "attack_type_raw": "力敵",
+ "carry_grade": 115,
+ "maxskillnum_raw": 3,
+ "address_raw": "出現地點：#r魔晶要塞#r聖痕峽谷#r梵天古城#r龍淵",
+ "source_entry": 2027,
+ "source_table": "DATA",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "2800"
+}

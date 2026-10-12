@@ -1,0 +1,22 @@
+{
+ "error": {
+  "code": "INVALID_PARAMETER",
+  "message": "Validation failed: query.limit: Input should be greater than or equal to 1",
+  "details": {
+   "validation_errors": [
+    {
+     "type": "greater_than_equal",
+     "loc": [
+      "query",
+      "limit"
+     ],
+     "msg": "Input should be greater than or equal to 1",
+     "input": "0",
+     "ctx": {
+      "ge": 1
+     }
+    }
+   ]
+  }
+ }
+}

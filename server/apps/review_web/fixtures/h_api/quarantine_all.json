@@ -1,0 +1,217 @@
+{
+ "total": 4,
+ "records": [
+  {
+   "entry_index": 1945,
+   "table": "DATA",
+   "record_key": 72548,
+   "reasons": [
+    "invalid_cp950_source_name_bytes_preserved",
+    "encoding_or_control_character"
+   ],
+   "native_verified": false,
+   "value_under_applied_profile": {
+    "tuple": [
+     {
+      "bytes_hex": "c2f9a448a7a4c34dc5e9c5e784"
+     },
+     {
+      "bytes_hex": "a8cfa5ceabe1a569a74bb64fc5e9c5e7c2f9a448a7a4c34db961c54ca470d8703135a4d12372a169c0f2b16fb37eae7ca16aa16db9dab751a540acc9a16ec34dbd74a9e2bcfaaca1b0ca2372a169a8cfa5ceb1f8a5f3a16aa448aaabb5a5afc5a1d9313035afc52372a169a8cfa5cea4e8a6a1a16aa56bc1e4c249c0bb"
+     }
+    ]
+   }
+  },
+  {
+   "entry_index": 2954,
+   "table": "DATA",
+   "record_key": 2800,
+   "reasons": [
+    "aptitude_value_exceeds_named_maximum_unresolved",
+    "value_exceeds_named_maximum:法力資質"
+   ],
+   "native_verified": false,
+   "value_under_applied_profile": {
+    "dict": [
+     [
+      {
+       "bytes_hex": "aa6ba44fb8eabde8"
+      },
+      2130
+     ],
+     [
+      {
+       "bytes_hex": "aa6ba44fb8eabde8b3cca46aadc8"
+      },
+      1989
+     ],
+     [
+      {
+       "bytes_hex": "a8bebf6db8eabde8"
+      },
+      1760
+     ],
+     [
+      {
+       "bytes_hex": "a8bebf6db8eabde8b3cca46aadc8"
+      },
+      2059
+     ],
+     [
+      {
+       "bytes_hex": "a7f0c0bbb8eabde8"
+      },
+      2120
+     ],
+     [
+      {
+       "bytes_hex": "a7f0c0bbb8eabde8b3cca46aadc8"
+      },
+      2480
+     ],
+     [
+      {
+       "bytes_hex": "b374abd7b8eabde8"
+      },
+      1850
+     ],
+     [
+      {
+       "bytes_hex": "b374abd7b8eabde8b3cca46aadc8"
+      },
+      2164
+     ],
+     [
+      {
+       "bytes_hex": "c5e9a44fb8eabde8"
+      },
+      1850
+     ],
+     [
+      {
+       "bytes_hex": "c5e9a44fb8eabde8b3cca46aadc8"
+      },
+      2164
+     ]
+    ]
+   }
+  },
+  {
+   "entry_index": 3205,
+   "table": "DATA",
+   "record_key": 719,
+   "reasons": [
+    "description_boundary_requires_independent_confirmation"
+   ],
+   "native_verified": false,
+   "value_under_applied_profile": {
+    "dict": [
+     [
+      {
+       "bytes_hex": "74797065"
+      },
+      1
+     ],
+     [
+      {
+       "bytes_hex": "6e616d65"
+      },
+      {
+       "bytes_hex": "a9c0b0caa44f"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "64657363"
+      },
+      {
+       "bytes_hex": "ac50acc9a451a447ae63ac50abd2a47eb074a8cfa5ceaabab854a7dea141a5d5a6cfac50aabab5b4a9dba146a5d8bcd0b77ca8fcb16aa46aaabaa9c0a44fbc76c554a141b342a9f3c5f6a867aaacba41a141bcc4a7daa4a3a4c0"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "66706e656564"
+      },
+      {
+       "bytes_hex": "30"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "6d706e656564"
+      },
+      {
+       "bytes_hex": "30"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "68706e656564"
+      },
+      {
+       "bytes_hex": "30"
+      }
+     ]
+    ]
+   }
+  },
+  {
+   "entry_index": 3205,
+   "table": "DATA",
+   "record_key": 4406,
+   "reasons": [
+    "description_boundary_requires_independent_confirmation"
+   ],
+   "native_verified": false,
+   "value_under_applied_profile": {
+    "dict": [
+     [
+      {
+       "bytes_hex": "74797065"
+      },
+      0
+     ],
+     [
+      {
+       "bytes_hex": "6e616d65"
+      },
+      {
+       "bytes_hex": "bc76bbeea76ca6ac"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "64657363"
+      },
+      {
+       "bytes_hex": "a843a65ea658c0cbac64b3f5a457ac4fa75fa6b3bc76bbeea673a662a141a670aa47a6b3bc76bbeea141ab68a662a455a65ea658a5bda76ca6acbc76bbee"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "66706e656564"
+      },
+      {
+       "bytes_hex": "30"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "6d706e656564"
+      },
+      {
+       "bytes_hex": "30"
+      }
+     ],
+     [
+      {
+       "bytes_hex": "68706e656564"
+      },
+      {
+       "bytes_hex": "30"
+      }
+     ]
+    ]
+   }
+  }
+ ]
+}

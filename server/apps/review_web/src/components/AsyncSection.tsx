@@ -31,7 +31,15 @@ export function ErrorPanel({
   return (
     <div className="panel panel--error" role="alert" data-testid="error-state">
       <h3>{title}</h3>
-      <p>{apiError ? apiError.message : error instanceof Error ? error.message : String(error)}</p>
+      {apiError?.kind === 'schema' ? (
+        <p className="error-schema-hint">
+          这是<strong>接口结构错误</strong>：HTTP 请求成功，但响应结构与契约不符。
+          页面不会把缺失字段补成空数组或 0 来掩盖差异。
+        </p>
+      ) : null}
+      <p data-testid="error-message">
+        {apiError ? apiError.message : error instanceof Error ? error.message : String(error)}
+      </p>
       <dl className="error-detail">
         {apiError ? (
           <>
@@ -53,11 +61,15 @@ export function ErrorPanel({
                 <dd>{apiError.code}</dd>
               </>
             ) : null}
-            {apiError.detail ? (
+            {apiError.details !== undefined ? (
               <>
-                <dt>响应片段</dt>
+                <dt>响应内容</dt>
                 <dd>
-                  <pre className="raw-fallback">{apiError.detail}</pre>
+                  <pre className="raw-fallback">
+                    {typeof apiError.details === 'string'
+                      ? apiError.details
+                      : JSON.stringify(apiError.details, null, 2).slice(0, 2000)}
+                  </pre>
                 </dd>
               </>
             ) : null}
@@ -65,7 +77,7 @@ export function ErrorPanel({
         ) : null}
       </dl>
       <p className="muted">
-        本页不会在 API 失败时改用测试夹具或假数据；请确认 Python 复核 API 已启动，且端点与{' '}
+        本页不会在 API 失败时改用测试夹具或假数据；请确认复核 API 已启动，且端点与{' '}
         <code>server/docs/review_browser/API_CONTRACT.md</code> 一致。
       </p>
       {onRetry ? (

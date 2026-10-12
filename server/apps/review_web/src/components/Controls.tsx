@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useId, useState, type FormEvent, type ReactNode } from 'react'
 import { PAGE_SIZE_OPTIONS } from '../api/contract'
 
 export function SearchBar({
@@ -16,17 +16,18 @@ export function SearchBar({
   label?: string
   hint?: ReactNode
 }) {
+  const inputId = useId()
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
     onSubmit?.()
   }
   return (
     <form className="search-bar" onSubmit={handleSubmit} role="search">
-      <label className="search-bar__label" htmlFor="review-search">
+      <label className="search-bar__label" htmlFor={inputId}>
         {label}
       </label>
       <input
-        id="review-search"
+        id={inputId}
         className="search-bar__input"
         type="search"
         value={value}
@@ -69,6 +70,7 @@ export function Pagination({
   onPageSize?: (next: number) => void
   loading?: boolean
 }) {
+  const jumpId = useId()
   const pageCount = pageSize > 0 ? Math.max(1, Math.ceil(total / pageSize)) : 1
   const [jump, setJump] = useState(String(page))
 
@@ -99,9 +101,9 @@ export function Pagination({
           if (Number.isFinite(parsed)) onPage(Math.min(Math.max(1, parsed), pageCount))
         }}
       >
-        <label htmlFor="page-jump">跳至</label>
+        <label htmlFor={jumpId}>跳至</label>
         <input
-          id="page-jump"
+          id={jumpId}
           className="pagination__jump-input"
           value={jump}
           inputMode="numeric"

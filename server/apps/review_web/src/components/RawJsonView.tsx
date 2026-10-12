@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { RawJson } from '../api/types'
+import type { RawJson } from '../api/rawJson'
 import { asciiHint } from '../lib/hex'
 import { ByteHexView } from './ByteHexView'
 import { SafeText } from './SafeText'

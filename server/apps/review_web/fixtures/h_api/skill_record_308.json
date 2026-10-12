@@ -1,0 +1,13 @@
+{
+ "skill_id": 308,
+ "type_code_raw": 0,
+ "name": "終級神跡",
+ "description_raw": "受到物理攻擊時，有10%幾率使傷害變為1；同時每回合都有25%幾率解除所受到的異常狀態，對毒效果無效",
+ "fpneed_raw": "0",
+ "mpneed_raw": "0",
+ "hpneed_raw": "0",
+ "source_entry": 3205,
+ "source_table": "DATA",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "308"
+}

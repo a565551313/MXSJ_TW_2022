@@ -870,3 +870,28 @@ a {
   margin: 8px 0 0;
   font-size: 0.9rem;
 }
+
+/* --------------------------------------------------- schema error banner */
+
+.error-schema-hint {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.92rem;
+}
+
+/* ----------------------------------------------------------- error boundary */
+
+.crash-panel {
+  border: 2px solid var(--danger-border);
+  background: var(--danger-bg);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin: 16px 0;
+}
+
+.crash-panel pre {
+  max-height: 240px;
+  overflow: auto;
+}

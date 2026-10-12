@@ -1,0 +1,13 @@
+{
+ "skill_id": 355,
+ "type_code_raw": 0,
+ "name": "終級命中",
+ "description_raw": "使用物理攻擊時，命中率提高15%",
+ "fpneed_raw": "0",
+ "mpneed_raw": "0",
+ "hpneed_raw": "0",
+ "source_entry": 3205,
+ "source_table": "DATA",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "355"
+}

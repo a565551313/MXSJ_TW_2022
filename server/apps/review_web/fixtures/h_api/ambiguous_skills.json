@@ -1,0 +1,42 @@
+[
+ {
+  "skill_name_raw": "終級命中",
+  "skill_id": 329,
+  "match_count": 2,
+  "ambiguous": true,
+  "source_entry": 3205,
+  "source_table": "DATA.name (references from 2027)",
+  "review_status": "review_candidate_not_native_verified",
+  "_pk": "終級命中:329"
+ },
+ {
+  "skill_name_raw": "終級命中",
+  "skill_id": 355,
+  "match_count": 2,
+  "ambiguous": true,
+  "source_entry": 3205,
+  "source_table": "DATA.name (references from 2027)",
+  "review_status": "review_candidate_not_native_verified",
+  "_pk": "終級命中:355"
+ },
+ {
+  "skill_name_raw": "高級命中",
+  "skill_id": 229,
+  "match_count": 2,
+  "ambiguous": true,
+  "source_entry": 3205,
+  "source_table": "DATA.name (references from 2027)",
+  "review_status": "review_candidate_not_native_verified",
+  "_pk": "高級命中:229"
+ },
+ {
+  "skill_name_raw": "高級命中",
+  "skill_id": 255,
+  "match_count": 2,
+  "ambiguous": true,
+  "source_entry": 3205,
+  "source_table": "DATA.name (references from 2027)",
+  "review_status": "review_candidate_not_native_verified",
+  "_pk": "高級命中:255"
+ }
+]

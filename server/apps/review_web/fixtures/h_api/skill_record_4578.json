@@ -1,0 +1,13 @@
+{
+ "skill_id": 4578,
+ "type_code_raw": 1,
+ "name": "控心術",
+ "description_raw": "控制人心，使其攻擊隊友",
+ "fpneed_raw": "0",
+ "mpneed_raw": "0",
+ "hpneed_raw": "0",
+ "source_entry": 3205,
+ "source_table": "DATA",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "4578"
+}

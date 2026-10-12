@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { AptitudeStatus, AptitudeStatusInfo } from '../api/types'
+import type { AptitudeStatus, AptitudeStatusInfo } from '../api/reviewApi'
 import { isTrue, rawText } from '../lib/display'
 
 export function Badge({

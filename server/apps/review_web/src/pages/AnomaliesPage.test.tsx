@@ -1,159 +1,146 @@
-import { screen, within } from '@testing-library/react'
+/**
+ * Anomaly / evidence page against Agent H's real captured responses.
+ *
+ * Pins the four anomaly sources separately (never merged into one story), the
+ * raw byte evidence for the quarantined item name, and the invariant panel that
+ * re-derives every verdict from the API answer.
+ */
+import { screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { loadFixture } from '../../fixtures/contractHandler.mjs'
+import { captureBody, installCaptureFetch, jsonResponse } from '../test/hApiReplay'
 import { renderApp } from '../test/renderApp'
-import { installFixtureFetch, jsonResponse } from '../test/fakeApi'
 
 const LONG = { timeout: 4000 }
 
 describe('anomalies page', () => {
-  it('lists the four quarantine records with their source entries', async () => {
-    installFixtureFetch()
+  it('lists all four quarantined records with their reasons and evidence ids', async () => {
+    const { calls } = installCaptureFetch()
     renderApp('/anomalies')
 
-    const cards = await screen.findAllByTestId('quarantine-card', {}, LONG)
+    const page = await screen.findByTestId('page-anomalies', {}, LONG)
+    const cards = within(page).getAllByTestId('quarantine-card')
     expect(cards).toHaveLength(4)
-    expect(cards.map((card) => card.getAttribute('data-anomaly-id'))).toEqual([
+
+    const index = within(page).getByTestId('quarantine-index')
+    expect(within(index).getAllByRole('link').map((link) => link.textContent)).toEqual([
       '1945:72548',
       '2954:2800',
       '3205:719',
       '3205:4406',
     ])
-    for (const card of cards) {
-      expect(card.textContent).toContain('已隔离')
-      expect(card.textContent).toContain('native_verified = false')
-    }
+
+    const item = cards[0]
+    expect(item.textContent).toContain('72548')
+    expect(item.textContent).toContain('invalid_cp950_source_name_bytes_preserved')
+    // The illegal source name bytes are preserved as hex.
+    expect(within(item).getByTestId('raw-evidence').textContent).toContain('c2 f9 a4 48 a7 a4 c3 4d')
+
+    expect(cards[1].textContent).toContain('2800')
+    expect(cards[1].textContent).toContain('value_exceeds_named_maximum:法力資質')
+    expect(cards[2].textContent).toContain('719')
+    expect(cards[3].textContent).toContain('4406')
+
+    expect(calls).toContain('/api/v1/review/quarantine?offset=0&limit=500')
+    expect(calls).toContain('/api/v1/review/missing-aptitudes')
+    expect(calls).toContain('/api/v1/review/ambiguous-skills')
+    expect(calls).toContain('/api/v1/review/overwrites?offset=0&limit=500')
   })
 
-  it('renders the invalid CP950 name bytes of 72548 as hex, not as a fake name', async () => {
-    installFixtureFetch()
+  it('lists the missing aptitudes with reasons and links to the pets page', async () => {
+    installCaptureFetch()
     renderApp('/anomalies')
 
-    await screen.findAllByTestId('quarantine-card', {}, LONG)
-    const container = document.querySelector('[data-anomaly-id="1945:72548"]') as HTMLElement
-    expect(container).not.toBeNull()
-    const body = container.textContent ?? ''
-
-    expect(body).toContain('invalid_cp950_source_name_bytes_preserved')
-    expect(body).toContain('c2 f9 a4 48 a7 a4 c3 4d c5 e9 c5 e7 84')
-    expect(body).toContain('十六进制，未解码')
-    // No replacement characters, no invented name, no lossy truncation.
-    expect(body).not.toContain('\uFFFD')
-    expect(body).not.toContain('時空石')
-    expect(within(container).getAllByTestId('byte-hex').length).toBeGreaterThan(0)
-  })
-
-  it('never decodes byte-encoded structure keys that are not printable ASCII', async () => {
-    installFixtureFetch()
-    renderApp('/anomalies')
-
-    await screen.findAllByTestId('quarantine-card', {}, LONG)
-    const container = document.querySelector('[data-anomaly-id="1945:72548"]') as HTMLElement
-    expect(container).not.toBeNull()
-    // The 2954/3205 records carry ASCII keys (name/desc), but no byte run of the
-    // 72548 record may be turned into a decoded string.
-    const hints = container.querySelectorAll('.byte-hex__hint')
-    for (const hint of Array.from(hints)) {
-      expect(hint.textContent).toMatch(/^[\x20-\x7e]+$/)
-    }
-  })
-
-  it('shows quarantine evidence values with byte hex for the aptitude conflict', async () => {
-    installFixtureFetch()
-    renderApp('/anomalies?focus=2954%3A2800')
-
-    await screen.findAllByTestId('quarantine-card', {}, LONG)
-    const container = document.querySelector('[data-anomaly-id="2954:2800"]') as HTMLElement
-    expect(container).not.toBeNull()
-    const body = container.textContent ?? ''
-
-    expect(body).toContain('aptitude_value_exceeds_named_maximum_unresolved')
-    expect(body).toContain('法力資質')
-    expect(body).toContain('2130')
-    expect(body).toContain('1989')
-    expect(container.className).toContain('is-focused')
-  })
-
-  it('lists the three pets whose aptitude rows are missing, without zero filling', async () => {
-    installFixtureFetch()
-    renderApp('/anomalies')
-
-    const table = await screen.findByTestId('missing-aptitude-table', {}, LONG)
-    const reasons = within(table).getAllByTestId('missing-reason')
-    expect(reasons.map((node) => node.textContent)).toEqual([
+    const page = await screen.findByTestId('page-anomalies', {}, LONG)
+    const table = within(page).getByTestId('missing-aptitude-table')
+    const rows = within(table).getAllByRole('row')
+    expect(rows).toHaveLength(4) // header + 3
+    expect(table.textContent).toContain('3010')
+    expect(table.textContent).toContain('4021')
+    expect(table.textContent).toContain('4022')
+    expect(within(table).getAllByTestId('missing-reason').map((cell) => cell.textContent)).toEqual([
       'no_record_in_2954',
       'no_record_in_2954',
       'no_record_in_2954',
     ])
-    expect(table.textContent).toContain('未定')
-    expect(table.textContent).toContain('年獸')
-    expect(table.textContent).toContain('爆竹')
   })
 
-  it('lists the ambiguous skill names with every candidate id', async () => {
-    installFixtureFetch()
+  it('keeps every candidate id of an ambiguous skill name', async () => {
+    installCaptureFetch()
     renderApp('/anomalies')
 
-    const list = await screen.findByTestId('ambiguous-list', {}, LONG)
-    const items = within(list).getAllByRole('listitem')
-    expect(items).toHaveLength(2)
-
-    const byName = (name: string) =>
-      items.find((item) => item.textContent?.startsWith(name)) as HTMLElement
-
-    expect(within(byName('高級命中')).getAllByRole('link').map((link) => link.textContent)).toEqual([
-      'ID 229',
-      'ID 255',
-    ])
-    expect(within(byName('終級命中')).getAllByRole('link').map((link) => link.textContent)).toEqual([
-      'ID 329',
-      'ID 355',
+    const page = await screen.findByTestId('page-anomalies', {}, LONG)
+    const list = within(page).getByTestId('ambiguous-list')
+    const entries = within(list).getAllByRole('listitem')
+    expect(entries.map((entry) => entry.textContent?.replace(/\s+/g, ''))).toEqual([
+      '終級命中ID329ID355match_count2同名多ID（2个候选）',
+      '高級命中ID229ID255match_count2同名多ID（2个候选）',
     ])
   })
 
-  it('lists all nine overwrite writes including the unchanged ones', async () => {
-    installFixtureFetch()
+  it('shows the overwrite evidence with names decoded from the raw bytes', async () => {
+    installCaptureFetch()
     renderApp('/anomalies')
 
-    const table = await screen.findByTestId('overwrite-table', {}, LONG)
-    expect(within(table).getAllByTestId('overwrite-skill-link')).toHaveLength(9)
-    expect(table.textContent).toContain('天魔返生術')
-    expect(table.textContent).toContain('地魔返生術')
-    expect(within(table).getAllByText('true（值相同，仍是写入）')).toHaveLength(8)
-    expect(within(table).getAllByText('false（值已改变）')).toHaveLength(1)
+    const page = await screen.findByTestId('page-anomalies', {}, LONG)
+    const table = within(page).getByTestId('overwrite-table')
+    expect(within(table).getAllByRole('row')).toHaveLength(10) // header + 9
+
+    // 4573 is the real write 天魔返生術 -> 地魔返生術.
+    const row = within(table).getAllByRole('row')[1]
+    expect(row.textContent).toContain('352')
+    expect(row.textContent).toContain('22409')
+    await waitFor(() => {
+      const names = within(within(page).getByTestId('overwrite-table')).getAllByTestId('overwrite-names')[0]
+      expect(names.textContent).toContain('天魔返生術')
+      expect(names.textContent).toContain('地魔返生術')
+    }, LONG)
+
+    expect(page.textContent).toContain('接口 total 9 次写入')
   })
-})
 
-describe('anomalies page invariant self-check', () => {
-  it('verifies the preserved batch_001 semantics against API data', async () => {
-    installFixtureFetch()
+  it('re-derives every review invariant from the API answer', async () => {
+    installCaptureFetch()
     renderApp('/anomalies')
 
-    const panel = await screen.findByTestId('invariant-panel', {}, LONG)
+    const page = await screen.findByTestId('page-anomalies', {}, LONG)
+    const panel = within(page).getByTestId('invariant-panel')
     const verdicts = within(panel).getAllByTestId('invariant-verdict')
-    expect(verdicts).toHaveLength(9)
-    expect(verdicts.map((node) => node.textContent)).toEqual(Array(9).fill('通过'))
-    expect(panel.textContent).toContain('全部 9 项不变量在本接口返回值下成立')
+    expect(verdicts.length).toBeGreaterThanOrEqual(9)
+    expect(verdicts.map((verdict) => verdict.textContent)).toEqual(
+      verdicts.map(() => '通过'),
+    )
+    expect(panel.textContent).toContain('高級命中 保留全部候选 229 / 255')
     expect(panel.textContent).toContain('接口实际值：229 / 255')
     expect(panel.textContent).toContain('接口实际值：329 / 355')
   })
 
-  it('flags a backend that stops quarantining item 72548', async () => {
-    installFixtureFetch({
-      override: (url) => {
-        if (url !== '/api/v1/review/anomalies') return null
-        const payload = JSON.parse(JSON.stringify(loadFixture().anomalies))
-        payload.quarantine = payload.quarantine.filter(
-          (record: { record_key: number }) => record.record_key !== 72548,
-        )
-        return jsonResponse(200, payload)
-      },
+  it('reports a failed invariant instead of repeating the old story', async () => {
+    const quarantine = captureBody('quarantine_all') as { records: Array<{ record_key: string }> }
+    quarantine.records = quarantine.records.filter((record) => String(record.record_key) !== '72548')
+    installCaptureFetch({
+      override: (url) =>
+        url.includes('/quarantine') ? jsonResponse(200, { total: 3, records: quarantine.records }) : null,
     })
+
     renderApp('/anomalies')
 
-    const panel = await screen.findByTestId('invariant-panel', {}, LONG)
-    expect(panel.textContent).toContain('未通过')
+    const page = await screen.findByTestId('page-anomalies', {}, LONG)
+    const panel = within(page).getByTestId('invariant-panel')
+    await waitFor(() => {
+      expect(within(panel).getAllByTestId('invariant-verdict').map((v) => v.textContent)).toContain('未通过')
+    }, LONG)
     expect(panel.textContent).toContain('隔离清单中没有 1945 / 72548')
-    expect(panel.textContent).toContain('有 1 项不变量未通过')
+  })
+
+  it('focuses the quarantine card named in the URL', async () => {
+    installCaptureFetch()
+    renderApp('/anomalies?focus=2954:2800')
+
+    const page = await screen.findByTestId('page-anomalies', {}, LONG)
+    const cards = within(page).getAllByTestId('quarantine-card')
+    const focused = cards.filter((card) => card.className.includes('is-focused'))
+    expect(focused).toHaveLength(1)
+    expect(focused[0].getAttribute('data-anomaly-id')).toBe('2954:2800')
+    expect(focused[0].textContent).toContain('2800')
   })
 })

@@ -1,95 +1,187 @@
-import { describe, expect, it, vi } from 'vitest'
-import { ApiError, fetchBatchOverview, fetchItem, fetchItems, getJson } from './client'
-import { REVIEW_API_PREFIX } from './contract'
-import { installFixtureFetch, installNetworkFailure, jsonResponse, textResponse } from '../test/fakeApi'
+/**
+ * Client tests against Agent H's **real** responses.
+ *
+ * Every happy-path body here is a committed capture from the running Python
+ * service (`fixtures/h_api/`, re-verifiable with
+ * `python3 fixtures/capture_h_api.py --check`). Failure paths are produced by
+ * mutating those captures or by failing the transport, never by inventing a
+ * different contract.
+ */
+import { describe, expect, it } from 'vitest'
+import {
+  fetchAmbiguousSkills,
+  fetchBatch,
+  fetchDatasetMeta,
+  fetchDatasets,
+  fetchHealth,
+  fetchQuarantine,
+  fetchRecord,
+  fetchRecords,
+} from './client'
+import { isApiError, isSchemaApiError } from './client'
+import { isResponseSchemaError } from './schema'
+import { captureBody, installCaptureFetch, installNetworkFailure, jsonResponse, textResponse } from '../test/hApiReplay'
 
-describe('review API client', () => {
-  it('always requests a same-origin relative /api/v1/review path', async () => {
-    const { calls } = installFixtureFetch()
-    await fetchBatchOverview()
-    await fetchItems({ q: '鹿茸', page: 2, page_size: 25 })
-    await fetchItem('12')
+describe('client against real backend captures', () => {
+  it('parses the health envelope verbatim', async () => {
+    installCaptureFetch()
+    const health = await fetchHealth()
+    expect(health.batch).toBe('batch_001')
+    expect(health.datasets_count).toBe(17)
+    expect(health.total_records_count).toBe(12202)
+  })
 
-    expect(calls).toHaveLength(3)
-    for (const url of calls) {
-      expect(url.startsWith(REVIEW_API_PREFIX)).toBe(true)
-      expect(url.startsWith('/')).toBe(true)
-      expect(url).not.toMatch(/^https?:/i)
-      expect(url).not.toContain('localhost')
-      expect(url).not.toContain('127.0.0.1')
-      expect(url).not.toContain('0.0.0.0')
+  it('parses a list envelope with offset/limit/count and _pk identities', async () => {
+    installCaptureFetch()
+    const envelope = await fetchRecords('items', { offset: 0, limit: 25 })
+    expect(envelope.dataset).toBe('items')
+    expect(envelope.total).toBe(6851)
+    expect(envelope.offset).toBe(0)
+    expect(envelope.limit).toBe(25)
+    expect(envelope.count).toBe(25)
+    expect(envelope.records).toHaveLength(25)
+    expect(envelope.records[0]._pk).toBe('11')
+    expect(envelope.records[0].name).toBe('NPC呼叫器')
+    expect(envelope.records[1].name).toBe('鹿茸')
+  })
+
+  it('sends the reviewer-reported query as offset/limit, never page/page_size', async () => {
+    const { calls } = installCaptureFetch()
+    await fetchRecords('items', { offset: 0, limit: 25, q: '鹿茸' })
+    expect(calls).toHaveLength(1)
+    expect(calls[0]).toContain('/api/v1/review/datasets/items/records?')
+    expect(calls[0]).toContain('offset=0')
+    expect(calls[0]).toContain('limit=25')
+    expect(calls[0]).toContain('q=%E9%B9%BF%E8%8C%B8')
+    expect(calls[0]).not.toContain('page=')
+  })
+
+  it('parses dataset metadata and the dataset list', async () => {
+    installCaptureFetch()
+    const list = await fetchDatasets()
+    expect(list.datasets).toHaveLength(17)
+    expect(list.datasets.map((dataset) => dataset.id)).toContain('pet_skill_overwrites')
+
+    const meta = await fetchDatasetMeta('pet_aptitudes')
+    expect(meta.id).toBe('pet_aptitudes')
+    expect(meta.rows).toBe(131)
+    expect(meta.primary_key).toEqual(['client_shape_id'])
+  })
+
+  it('parses the auxiliary endpoints, including bare arrays', async () => {
+    installCaptureFetch()
+    const quarantine = await fetchQuarantine({ limit: 500 })
+    expect(quarantine.total).toBe(4)
+    // The parser normalises the key to text; identity is compared as text.
+    expect(quarantine.records.map((record) => record.record_key)).toEqual(['72548', '2800', '719', '4406'])
+
+    const ambiguous = await fetchAmbiguousSkills()
+    expect(ambiguous).toHaveLength(4)
+    expect(ambiguous[0].skill_name_raw).toBe('終級命中')
+  })
+
+  it('surfaces a real backend error envelope (HTTP 404, no fallback)', async () => {
+    const { calls } = installCaptureFetch()
+    await expect(fetchRecord('items', '999999')).rejects.toSatisfy(
+      (error: unknown) => isApiError(error) && error.kind === 'http',
+    )
+    await expect(fetchRecord('items', '999999')).rejects.toMatchObject({
+      status: 404,
+      code: 'RECORD_NOT_FOUND',
+    })
+    expect(calls).toHaveLength(2)
+  })
+
+  it('reports an un-captured query as a failure instead of an empty list', async () => {
+    const { unmatched } = installCaptureFetch()
+    let caught: unknown = null
+    try {
+      await fetchRecords('items', { offset: 0, limit: 25, q: '不存在的查詢' })
+    } catch (error) {
+      caught = error
     }
-    expect(calls[1]).toBe('/api/v1/review/items?q=%E9%B9%BF%E8%8C%B8&page=2&page_size=25')
-  })
-
-  it('omits empty search parameters instead of sending placeholders', async () => {
-    const { calls } = installFixtureFetch()
-    await fetchItems({ q: '   ', page: 1, page_size: 25 })
-    expect(calls[0]).toBe('/api/v1/review/items?page=1&page_size=25')
-  })
-
-  it('surfaces HTTP errors with the failing URL and status', async () => {
-    installFixtureFetch({
-      override: (url) =>
-        url.includes('/items') ? jsonResponse(404, { error: { code: 'NOT_FOUND', message: '不存在' } }) : null,
-    })
-
-    const error = await fetchItems({ page: 1, page_size: 25 }).catch((caught: unknown) => caught)
-    expect(error).toBeInstanceOf(ApiError)
-    const apiError = error as ApiError
-    expect(apiError.kind).toBe('http')
-    expect(apiError.status).toBe(404)
-    expect(apiError.code).toBe('NOT_FOUND')
-    expect(apiError.url).toBe('/api/v1/review/items?page=1&page_size=25')
-  })
-
-  it('explains a non-JSON response (dead proxy) instead of pretending the data is empty', async () => {
-    installFixtureFetch({
-      override: (url) => (url.includes('/batch') ? textResponse(500, '<html>proxy error</html>') : null),
-    })
-    const error = (await fetchBatchOverview().catch((caught: unknown) => caught)) as ApiError
-    expect(error.kind).toBe('http')
-    expect(error.status).toBe(500)
-    expect(error.message).toContain('不是 JSON')
+    expect(isApiError(caught)).toBe(true)
+    expect((caught as { code?: string }).code).toBe('FIXTURE_CAPTURE_MISSING')
+    expect(unmatched).toHaveLength(1)
+    // The point of the check: the app must not receive `records: []` here.
+    expect((caught as { details?: unknown }).details).toBeDefined()
   })
 
   it('reports a transport failure as a network error', async () => {
     installNetworkFailure()
-    const error = (await fetchBatchOverview().catch((caught: unknown) => caught)) as ApiError
-    expect(error).toBeInstanceOf(ApiError)
-    expect(error.kind).toBe('network')
-    expect(error.message).toContain('无法连接复核 API')
+    await expect(fetchHealth()).rejects.toMatchObject({ kind: 'network' })
   })
 
-  it('rejects a 200 response whose body is not JSON', async () => {
-    installFixtureFetch({ override: () => textResponse(200, 'not json') })
-    const error = (await getJson('/api/v1/review/batch').catch((caught: unknown) => caught)) as ApiError
-    expect(error.kind).toBe('invalid_payload')
+  it('reports invalid JSON as such (HTTP 200 is not enough)', async () => {
+    installCaptureFetch({ override: () => textResponse(200, '<html>proxy error</html>') })
+    let caught: unknown = null
+    try {
+      await fetchBatch()
+    } catch (error) {
+      caught = error
+    }
+    expect(isApiError(caught)).toBe(true)
+    expect((caught as { kind: string }).kind).toBe('invalid_json')
   })
 
-  it('does not fall back to fixture data when the API fails', async () => {
-    const stub = installNetworkFailure()
-    const result = await fetchBatchOverview().catch((caught: unknown) => caught)
-    expect(result).toBeInstanceOf(ApiError)
-    expect(stub).toHaveBeenCalledTimes(1)
-    // A fixture fallback would have returned the sample batch instead of throwing.
-    expect(result).not.toHaveProperty('batch_id')
+  it('reports a JSON-valid but wrongly shaped response as a schema error', async () => {
+    // Exactly the shape the reviewer saw when the frontend expected the old
+    // fictional contract: HTTP 200, JSON parses, keys are wrong.
+    installCaptureFetch({
+      override: () =>
+        jsonResponse(200, {
+          batch_id: 'batch_001',
+          tables: [{ name: 'items', rows: 6851 }],
+          counters: {},
+          input_hashes: {},
+        }),
+    })
+
+    let caught: unknown = null
+    try {
+      await fetchBatch()
+    } catch (error) {
+      caught = error
+    }
+
+    expect(isSchemaApiError(caught)).toBe(true)
+    expect(isApiError(caught)).toBe(true)
+    const error = caught as { kind: string; message: string; schemaError: { issues: Array<{ path: string }> } }
+    // The wrapper carries the original structural error, so the UI can print
+    // the exact JSON paths that did not match.
+    expect(isResponseSchemaError(error.schemaError)).toBe(true)
+    expect(error.kind).toBe('schema')
+    expect(error.message).toContain('结构')
+    expect(error.schemaError.issues.map((issue) => issue.path)).toContain('response.batch')
   })
 
-  it('propagates aborts instead of converting them into API errors', async () => {
-    const controller = new AbortController()
-    const abortError = Object.assign(new Error('aborted'), { name: 'AbortError' })
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => {
-        controller.abort()
-        throw abortError
-      }),
-    )
-    const caught = await getJson('/api/v1/review/batch', { signal: controller.signal }).catch(
-      (error: unknown) => error,
-    )
-    expect(caught).toBe(abortError)
-    expect(caught).not.toBeInstanceOf(ApiError)
+  it('reports a structurally broken capture (too few keys) as a schema error', async () => {
+    const broken = captureBody('batch')
+    delete broken.tables_summary
+    installCaptureFetch({ override: () => jsonResponse(200, broken) })
+
+    let caught: unknown = null
+    try {
+      await fetchBatch()
+    } catch (error) {
+      caught = error
+    }
+    expect(isSchemaApiError(caught)).toBe(true)
+    const issues = (caught as { schemaError: { issues: Array<{ path: string }> } }).schemaError.issues
+    expect(issues.some((issue) => issue.path.includes('tables_summary'))).toBe(true)
+  })
+
+  it('refuses a list envelope whose count disagrees with its records', async () => {
+    const envelope = captureBody('records_pets_limit500') as { count: number }
+    const tampered = { ...envelope, count: 999 }
+    installCaptureFetch({ override: () => jsonResponse(200, tampered) })
+
+    let caught: unknown = null
+    try {
+      await fetchRecords('pets', { offset: 0, limit: 25 })
+    } catch (error) {
+      caught = error
+    }
+    expect(isSchemaApiError(caught)).toBe(true)
   })
 })

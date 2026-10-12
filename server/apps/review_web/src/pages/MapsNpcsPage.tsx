@@ -1,22 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
+import { DEFAULT_PAGE_SIZE, MAP_DATASET_KEYS, type NpcSourceKey } from '../api/contract'
 import {
-  fetchMapDataset,
-  fetchMapDatasets,
-  fetchNpcAgreement,
-  fetchNpcs,
-} from '../api/client'
-import type {
-  AgreementPage,
-  AgreementRow,
-  MapDatasetPage,
-  MapDatasetSummary,
-  MapRow,
-  NpcPage,
-  NpcRecord,
-  NpcSourceKey,
-} from '../api/types'
+  asText,
+  loadAgreement,
+  loadMapDatasets,
+  loadNpcSourcePage,
+  queryDatasetRecords,
+  type AgreementView,
+  type ApiRecord,
+  type DatasetMeta,
+  type Envelope,
+  type NpcSourcePage,
+} from '../api/reviewApi'
 import { AsyncSection } from '../components/AsyncSection'
-import { Badge, DuplicateBadge, ReviewStatusBadge, SourceTag, ZeroIdBadge } from '../components/Badges'
+import { Badge, DuplicateBadge, SourceTag, ZeroIdBadge } from '../components/Badges'
 import { Pagination, SearchBar } from '../components/Controls'
 import { DataTable, type Column } from '../components/DataTable'
 import { SafeText } from '../components/SafeText'
@@ -26,14 +23,14 @@ import { rawText, rawTextOrMarker } from '../lib/display'
 
 const NPC_SOURCES: Array<{ key: NpcSourceKey; label: string; note: string }> = [
   {
-    key: 'npcposdata_2601',
+    key: 'npcposdata_records',
     label: '条目 2601 · npcposdata_records',
-    note: '记录身份 (scene_id, record_index)；1,335 条记录不是唯一 NPC 数。',
+    note: '记录身份 (scene_id, record_index)；接口把复合主键拼成 _pk（如 1001:0）。1,335 条记录不是唯一 NPC 数。',
   },
   {
-    key: 'minimapnpcpos_2804',
+    key: 'minimapnpcpos_pos_records',
     label: '条目 2804 · minimapnpcpos_pos_records',
-    note: '记录身份 (scene_id, scene_display_name, record_index)；1,344 条记录不是唯一 NPC 数。',
+    note: '记录身份 (scene_id, scene_display_name, record_index)，_pk 如 1001:永澤城:0。1,344 条记录不是唯一 NPC 数。',
   },
 ]
 
@@ -45,15 +42,27 @@ const AGREEMENT_LABELS: Record<string, string> = {
   only_in_minimapnpcpos_2804: '仅存在于 2804',
 }
 
-function recordIdentity(row: NpcRecord): string {
-  const sceneId = rawText((row as { scene_id?: unknown }).scene_id) ?? '—'
-  const displayName = rawText((row as { scene_display_name?: unknown }).scene_display_name)
-  const recordIndex = rawText((row as { record_index?: unknown }).record_index) ?? '—'
-  return displayName ? `${sceneId} / ${displayName} / #${recordIndex}` : `${sceneId} / #${recordIndex}`
+const NPC_COLUMN_LABELS: Record<string, string> = {
+  display_name: 'display_name',
+  secondary_name: 'secondary_name',
+  field6: 'field6',
+  real_name: 'real_name',
+  scene_display_name: 'scene_display_name',
 }
 
-function npcColumns(): Array<Column<NpcRecord>> {
-  const base: Array<Column<NpcRecord>> = [
+function recordIdentity(record: ApiRecord): string {
+  const pk = asText(record, '_pk')
+  const sceneId = asText(record, 'scene_id')
+  const sceneName = asText(record, 'scene_display_name')
+  const index = asText(record, 'record_index')
+  const parts = [sceneId ?? '—']
+  if (sceneName) parts.push(sceneName)
+  if (index !== null) parts.push(`#${index}`)
+  return pk ? `${parts.join(' / ')}（_pk=${pk}）` : parts.join(' / ')
+}
+
+function npcColumns(): Array<Column<ApiRecord>> {
+  return [
     {
       key: 'identity',
       label: '记录身份',
@@ -64,44 +73,40 @@ function npcColumns(): Array<Column<NpcRecord>> {
       label: 'npcid',
       render: (row) => (
         <span className="npcid-cell">
-          <code>{rawTextOrMarker(row.npcid)}</code>
-          <ZeroIdBadge value={row.npcid} label="ID" />
+          <code>{rawTextOrMarker(asText(row, 'npcid'))}</code>
+          <ZeroIdBadge value={asText(row, 'npcid')} label="ID" />
         </span>
       ),
     },
-    {
-      key: 'display_name',
-      label: 'display_name',
-      render: (row) => <SafeText value={row.display_name} />,
-    },
-    {
-      key: 'secondary_name',
-      label: 'secondary_name',
-      render: (row) => <SafeText value={row.secondary_name} />,
-    },
-    { key: 'type', label: 'type', render: (row) => <code>{rawTextOrMarker(row.type)}</code> },
-    { key: 'x', label: 'x', render: (row) => <code>{rawTextOrMarker(row.x)}</code> },
-    { key: 'y', label: 'y', render: (row) => <code>{rawTextOrMarker(row.y)}</code> },
-    {
-      key: 'field6',
-      label: 'field6',
-      render: (row) => <SafeText value={row.field6} />,
-    },
-    { key: 'shape', label: 'shape', render: (row) => <SafeText value={row.shape} /> },
-    {
-      key: 'real_name',
-      label: 'real_name',
-      render: (row) => <SafeText value={row.real_name} />,
-    },
+    ...['display_name', 'secondary_name', 'type', 'x', 'y', 'field6', 'shape', 'real_name'].map((key) => ({
+      key,
+      label: NPC_COLUMN_LABELS[key] ?? key,
+      render: (row: ApiRecord) =>
+        key === 'type' || key === 'x' || key === 'y' ? (
+          <code>{rawTextOrMarker(asText(row, key))}</code>
+        ) : (
+          <SafeText value={asText(row, key)} />
+        ),
+    })),
   ]
-  return base
 }
 
 function MapDatasetSection() {
-  const datasetsResource = useApiResource(
-    (signal) => fetchMapDatasets({ signal }),
+  const datasetsResource = useApiResource<{ datasets: DatasetMeta[]; issues: string[] }>(
+    async (signal) => {
+      const { datasets, errors } = await loadMapDatasets(MAP_DATASET_KEYS, { signal })
+      const available = new Set(datasets.map((dataset) => dataset.id))
+      const issues = MAP_DATASET_KEYS.filter((key) => !available.has(key)).map(
+        (key) => `接口未返回数据集 ${key} 的元数据，本节不显示该来源`,
+      )
+      for (const failure of errors) {
+        issues.push(`数据集 ${failure.dataset} 元数据读取失败：${failure.error instanceof Error ? failure.error.message : String(failure.error)}`)
+      }
+      return { datasets, issues }
+    },
     [],
   )
+
   const [selected, setSelected] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
@@ -109,7 +114,7 @@ function MapDatasetSection() {
 
   useEffect(() => {
     if (selected === null && datasetsResource.data && datasetsResource.data.datasets.length > 0) {
-      setSelected(datasetsResource.data.datasets[0].dataset_key)
+      setSelected(datasetsResource.data.datasets[0].id)
     }
   }, [datasetsResource.data, selected])
 
@@ -117,37 +122,38 @@ function MapDatasetSection() {
     setPage(1)
   }, [debouncedQuery, selected])
 
-  const rowsResource = useApiResource<MapDatasetPage | null>(
-    (signal) =>
-      selected
-        ? fetchMapDataset(selected, { q: debouncedQuery, page, page_size: 25 }, { signal })
-        : Promise.resolve(null),
+  const summary = useMemo(
+    () => datasetsResource.data?.datasets.find((item) => item.id === selected) ?? null,
+    [datasetsResource.data, selected],
+  )
+
+  const rowsResource = useApiResource<Envelope | null>(
+    async (signal) => {
+      if (!selected) return null
+      return queryDatasetRecords(
+        selected,
+        { offset: (page - 1) * DEFAULT_PAGE_SIZE, limit: DEFAULT_PAGE_SIZE, q: debouncedQuery },
+        { signal },
+      )
+    },
     [selected, debouncedQuery, page],
   )
 
-  const summary: MapDatasetSummary | null = useMemo(() => {
-    if (rowsResource.data?.dataset) return rowsResource.data.dataset
-    if (datasetsResource.data && selected) {
-      return datasetsResource.data.datasets.find((item) => item.dataset_key === selected) ?? null
-    }
-    return null
-  }, [rowsResource.data, datasetsResource.data, selected])
-
-  const columns: Array<Column<MapRow>> = useMemo(() => {
+  const columns = useMemo<Array<Column<ApiRecord>>>(() => {
     const definitions = summary?.columns ?? []
     if (definitions.length > 0) {
       return definitions.map((column) => ({
         key: column.name,
         label: column.name,
-        render: (row: MapRow) => <SafeText value={row[column.name]} />,
+        render: (row: ApiRecord) => <SafeText value={asText(row, column.name)} />,
       }))
     }
-    const first = rowsResource.data?.items[0]
+    const first = rowsResource.data?.records[0]
     if (!first) return []
     return Object.keys(first).map((key) => ({
       key,
       label: key,
-      render: (row: MapRow) => <SafeText value={row[key]} />,
+      render: (row: ApiRecord) => <SafeText value={asText(row, key)} />,
     }))
   }, [summary, rowsResource.data])
 
@@ -155,8 +161,9 @@ function MapDatasetSection() {
     <div className="panel">
       <h2>地图 / 场景 / 别名数据集</h2>
       <p className="muted">
-        每个数据集独立展示自己的来源条目与列，不与其他数据集合并，也不虚构统一的地图表。
-        E 的 CSV 保留其原有格式（最小引号、CRLF），空单元格同时表示空值与空文本。
+        每个数据集独立查询自己的 <code>/datasets/&lt;id&gt;/records</code>，各自保留来源条目与列定义，
+        不与其他数据集合并，也不虚构统一的地图表。E 的 CSV 保留原有格式（最小引号、CRLF）：
+        空单元格在接口中为 <code>null</code> 或空串，本页原样显示。
       </p>
 
       <AsyncSection
@@ -167,29 +174,37 @@ function MapDatasetSection() {
         loadingLabel="正在读取数据集清单…"
       >
         {datasetsResource.data ? (
-          <div className="tabs" role="tablist" aria-label="数据集">
-            {datasetsResource.data.datasets.map((dataset) => (
-              <button
-                key={dataset.dataset_key}
-                type="button"
-                role="tab"
-                aria-selected={selected === dataset.dataset_key}
-                className={selected === dataset.dataset_key ? 'tab tab--active' : 'tab'}
-                onClick={() => setSelected(dataset.dataset_key)}
-              >
-                {dataset.dataset_key}
-              </button>
+          <>
+            <div className="tabs" role="tablist" aria-label="数据集">
+              {datasetsResource.data.datasets.map((dataset) => (
+                <button
+                  key={dataset.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected === dataset.id}
+                  className={selected === dataset.id ? 'tab tab--active' : 'tab'}
+                  onClick={() => setSelected(dataset.id)}
+                >
+                  {dataset.id}
+                </button>
+              ))}
+            </div>
+            {datasetsResource.data.issues.map((issue) => (
+              <p className="muted" key={issue}>
+                {issue}
+              </p>
             ))}
-          </div>
+          </>
         ) : null}
       </AsyncSection>
 
       {summary ? (
         <div className="dataset-meta" data-testid="dataset-meta">
           <SourceTag entry={summary.source_entry} table={summary.source_table} />
-          <Badge tone="neutral">行数 {rawTextOrMarker(summary.rows)}</Badge>
-          <Badge tone="info">主键 {summary.primary_key?.join(' + ') ?? '（未提供）'}</Badge>
-          <ReviewStatusBadge status={summary.review_status} />
+          <Badge tone="neutral">全表行数 {rawTextOrMarker(summary.rows)}</Badge>
+          <Badge tone="info">
+            主键 {summary.primary_key.length > 0 ? summary.primary_key.join(' + ') : '（接口未提供）'}
+          </Badge>
           {summary.notes ? <p className="muted dataset-meta__notes">{summary.notes}</p> : null}
         </div>
       ) : null}
@@ -199,13 +214,13 @@ function MapDatasetSection() {
         onChange={setQuery}
         label="搜索当前数据集"
         placeholder="按 ID、名称或任意列内容搜索"
-        hint="搜索由后端执行；前端不对结果做去重或合并。"
+        hint="搜索由后端执行；前端不对结果去重或合并来源。"
       />
 
       <AsyncSection
         loading={rowsResource.loading}
         error={rowsResource.error}
-        empty={(rowsResource.data?.items.length ?? 0) === 0}
+        empty={(rowsResource.data?.records.length ?? 0) === 0}
         onRetry={rowsResource.reload}
         loadingLabel="正在读取数据集…"
       >
@@ -213,13 +228,13 @@ function MapDatasetSection() {
           <>
             <DataTable
               columns={columns}
-              rows={rowsResource.data.items}
-              rowKey={(_row, index) => String(index)}
+              rows={rowsResource.data.records}
+              rowKey={(row) => String(row._pk ?? '')}
               testId="map-dataset-table"
             />
             <Pagination
-              page={rowsResource.data.page}
-              pageSize={rowsResource.data.page_size}
+              page={page}
+              pageSize={DEFAULT_PAGE_SIZE}
               total={rowsResource.data.total}
               onPage={setPage}
               loading={rowsResource.loading}
@@ -231,8 +246,8 @@ function MapDatasetSection() {
   )
 }
 
-function NpcRecordsSection() {
-  const [source, setSource] = useState<NpcSourceKey>('npcposdata_2601')
+function NpcSourceSection({ source }: { source: NpcSourceKey }) {
+  const meta = NPC_SOURCES.find((item) => item.key === source) as (typeof NPC_SOURCES)[number]
   const [query, setQuery] = useState('')
   const [sceneId, setSceneId] = useState('')
   const [page, setPage] = useState(1)
@@ -241,88 +256,60 @@ function NpcRecordsSection() {
 
   useEffect(() => {
     setPage(1)
-  }, [source, debouncedQuery, debouncedScene])
+  }, [debouncedQuery, debouncedScene])
 
-  const resource = useApiResource<NpcPage>(
+  const resource = useApiResource<NpcSourcePage>(
     (signal) =>
-      fetchNpcs(
-        {
-          source,
-          q: debouncedQuery,
-          scene_id: debouncedScene,
-          page,
-          page_size: 25,
-        },
-        { signal },
-      ),
-    [source, debouncedQuery, debouncedScene, page],
+      loadNpcSourcePage(source, { page, pageSize: DEFAULT_PAGE_SIZE, search: debouncedQuery, sceneId: debouncedScene }, { signal }),
+    [source, page, debouncedQuery, debouncedScene],
   )
 
   const duplicateCounts = useMemo(() => {
     const counts = new Map<string, number>()
-    for (const row of resource.data?.items ?? []) {
-      const key = `${rawText((row as { scene_id?: unknown }).scene_id)}::${rawText(
-        (row as { npcid?: unknown }).npcid,
-      )}`
+    for (const row of resource.data?.envelope.records ?? []) {
+      const key = `${asText(row, 'scene_id')}::${asText(row, 'npcid')}`
       counts.set(key, (counts.get(key) ?? 0) + 1)
     }
     return counts
   }, [resource.data])
 
-  const columns = useMemo<Array<Column<NpcRecord>>>(() => {
+  const columns = useMemo<Array<Column<ApiRecord>>>(() => {
     const base = npcColumns()
     return [
       base[0],
       {
         key: 'duplicate',
-        label: '重复',
-        render: (row) => {
-          const key = `${rawText((row as { scene_id?: unknown }).scene_id)}::${rawText(
-            (row as { npcid?: unknown }).npcid,
-          )}`
+        label: '同页重复',
+        render: (row: ApiRecord) => {
+          const key = `${asText(row, 'scene_id')}::${asText(row, 'npcid')}`
           return <DuplicateBadge count={duplicateCounts.get(key) ?? 1} />
         },
       },
       ...base.slice(1),
     ]
-  }, [source, duplicateCounts])
-
-  const active = NPC_SOURCES.find((item) => item.key === source)
+  }, [duplicateCounts])
 
   return (
-    <div className="panel">
-      <h2>NPC 位置记录（按来源分开）</h2>
-      <p className="muted">
-        两个来源各自保留复合记录身份、零 ID 与重复记录。不把 (scene_id, npcid) 当作唯一主键，
-        也不把两个来源合成一个「唯一真实 NPC 表」。
-      </p>
-
-      <div className="tabs" role="tablist" aria-label="NPC 来源">
-        {NPC_SOURCES.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            role="tab"
-            aria-selected={source === item.key}
-            className={source === item.key ? 'tab tab--active' : 'tab'}
-            onClick={() => setSource(item.key)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-      {active ? <p className="muted">{active.note}</p> : null}
+    <div className="panel" data-testid={`npc-source-${source}`}>
+      <h2>{meta.label}</h2>
+      <p className="muted">{meta.note}</p>
 
       {resource.data ? (
         <div className="dataset-meta" data-testid="npc-source-info">
-          <SourceTag entry={resource.data.source_info.source_entry} table={resource.data.source_info.source_table} />
-          <Badge tone="neutral">本来源记录数 {rawTextOrMarker(resource.data.source_info.total)}</Badge>
+          <SourceTag
+            entry={resource.data.meta?.source_entry}
+            table={resource.data.meta?.source_table}
+          />
+          <Badge tone="neutral">本来源记录数 {rawTextOrMarker(resource.data.envelope.total)}</Badge>
           <Badge tone="info">
-            npcid = 0 的记录 {rawTextOrMarker(resource.data.source_info.zero_npcid_records)}（全部保留）
+            npcid = 0 的记录 {rawTextOrMarker(resource.data.zeroNpcIdTotal)}（全部保留）
           </Badge>
           <Badge tone="neutral">
-            记录主键 {resource.data.source_info.primary_key.join(' + ')}
+            记录主键 {resource.data.meta?.primary_key.join(' + ') ?? '（接口未提供）'}
           </Badge>
+          {resource.data.metaError ? (
+            <Badge tone="warn">数据集元数据读取失败，计数仍来自 rows 接口</Badge>
+          ) : null}
         </div>
       ) : null}
 
@@ -348,7 +335,7 @@ function NpcRecordsSection() {
       <AsyncSection
         loading={resource.loading}
         error={resource.error}
-        empty={(resource.data?.items.length ?? 0) === 0}
+        empty={(resource.data?.envelope.records.length ?? 0) === 0}
         onRetry={resource.reload}
         loadingLabel="正在读取 NPC 记录…"
       >
@@ -356,18 +343,18 @@ function NpcRecordsSection() {
           <>
             <DataTable
               columns={columns}
-              rows={resource.data.items}
-              rowKey={(_row, index) => String(index)}
+              rows={resource.data.envelope.records}
+              rowKey={(row) => String(row._pk ?? '')}
               testId="npc-table"
             />
             <p className="muted">
-              「重复」按当前页内的 (scene_id, npcid) 计数，仅提示同键多记录事实；不做折叠、
-              不合并单元格，也不据此推断唯一 NPC 数。
+              「同页重复」只按当前页内的 (scene_id, npcid) 计数，提示同键多记录事实；不折叠、不合并单元格，
+              也不据此推断唯一 NPC 数。记录顺序保持接口返回顺序。
             </p>
             <Pagination
-              page={resource.data.page}
-              pageSize={resource.data.page_size}
-              total={resource.data.total}
+              page={page}
+              pageSize={DEFAULT_PAGE_SIZE}
+              total={resource.data.envelope.total}
               onPage={setPage}
               loading={resource.loading}
             />
@@ -378,6 +365,34 @@ function NpcRecordsSection() {
   )
 }
 
+const agreementColumns: Array<Column<ApiRecord>> = [
+  { key: 'scene_id', label: 'scene_id', render: (row) => <code>{rawTextOrMarker(asText(row, 'scene_id'))}</code> },
+  { key: 'npcid', label: 'npcid', render: (row) => <code>{rawTextOrMarker(asText(row, 'npcid'))}</code> },
+  {
+    key: 'records_2601',
+    label: '2601 记录数',
+    render: (row) => <code>{rawTextOrMarker(asText(row, 'records_2601'))}</code>,
+  },
+  {
+    key: 'records_2804',
+    label: '2804 记录数',
+    render: (row) => <code>{rawTextOrMarker(asText(row, 'records_2804'))}</code>,
+  },
+  {
+    key: 'agreement',
+    label: '对比结果',
+    render: (row) => {
+      const value = rawText(asText(row, 'agreement')) ?? '（空）'
+      return (
+        <span>
+          <Badge tone={value === 'identical_sequence' ? 'ok' : 'warn'}>{value}</Badge>
+          {AGREEMENT_LABELS[value] ? <span className="muted"> {AGREEMENT_LABELS[value]}</span> : null}
+        </span>
+      )
+    },
+  },
+]
+
 function AgreementSection() {
   const [sceneId, setSceneId] = useState('')
   const [page, setPage] = useState(1)
@@ -387,54 +402,33 @@ function AgreementSection() {
     setPage(1)
   }, [debouncedScene])
 
-  const resource = useApiResource<AgreementPage>(
-    (signal) => fetchNpcAgreement({ scene_id: debouncedScene, page, page_size: 25 }, { signal }),
-    [debouncedScene, page],
+  const resource = useApiResource<AgreementView>(
+    (signal) => loadAgreement({ page, pageSize: DEFAULT_PAGE_SIZE, sceneId: debouncedScene }, { signal }),
+    [page, debouncedScene],
   )
-
-  const columns: Array<Column<AgreementRow>> = [
-    { key: 'scene_id', label: 'scene_id', render: (row) => <code>{rawTextOrMarker(row.scene_id)}</code> },
-    { key: 'npcid', label: 'npcid', render: (row) => <code>{rawTextOrMarker(row.npcid)}</code> },
-    {
-      key: 'records_2601',
-      label: '2601 记录数',
-      render: (row) => <code>{rawTextOrMarker(row.records_2601)}</code>,
-    },
-    {
-      key: 'records_2804',
-      label: '2804 记录数',
-      render: (row) => <code>{rawTextOrMarker(row.records_2804)}</code>,
-    },
-    {
-      key: 'agreement',
-      label: '对比结果',
-      render: (row) => (
-        <span>
-          <Badge tone={row.agreement === 'identical_sequence' ? 'ok' : 'warn'}>{row.agreement}</Badge>
-          {AGREEMENT_LABELS[row.agreement] ? (
-            <span className="muted"> {AGREEMENT_LABELS[row.agreement]}</span>
-          ) : null}
-        </span>
-      ),
-    },
-  ]
 
   return (
     <div className="panel">
       <h2>来源对照（2601 vs 2804，仅非零 NPC ID）</h2>
       <p className="muted">
         对照表只描述两个来源在非零 NPC ID 上的记录差异，不代表服务端坐标已确认，也不把差异静默合并。
+        下面的分类计数由前端遍历<strong>全表记录</strong>（不只第一页）后统计。
       </p>
 
       {resource.data ? (
-        <ul className="chip-list" data-testid="agreement-counts">
-          {Object.entries(resource.data.agreement_counts ?? {}).map(([key, value]) => (
-            <li key={key}>
-              <span className="chip-list__name">{key}</span>
-              <span className="chip">{String(value)}</span>
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="chip-list" data-testid="agreement-counts">
+            {Object.entries(resource.data.counts).map(([key, value]) => (
+              <li key={key}>
+                <span className="chip-list__name">{key}</span>
+                <span className="chip">{String(value)}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="muted">
+            全表 {resource.data.total} 行；当前筛选返回 {resource.data.envelope.total} 行。
+          </p>
+        </>
       ) : null}
 
       <label className="filters__field">
@@ -451,22 +445,22 @@ function AgreementSection() {
       <AsyncSection
         loading={resource.loading}
         error={resource.error}
-        empty={(resource.data?.items.length ?? 0) === 0}
+        empty={(resource.data?.envelope.records.length ?? 0) === 0}
         onRetry={resource.reload}
         loadingLabel="正在读取来源对照…"
       >
         {resource.data ? (
           <>
             <DataTable
-              columns={columns}
-              rows={resource.data.items}
-              rowKey={(_row, index) => String(index)}
+              columns={agreementColumns}
+              rows={resource.data.envelope.records}
+              rowKey={(row) => String(row._pk ?? '')}
               testId="agreement-table"
             />
             <Pagination
-              page={resource.data.page}
-              pageSize={resource.data.page_size}
-              total={resource.data.total}
+              page={page}
+              pageSize={DEFAULT_PAGE_SIZE}
+              total={resource.data.envelope.total}
               onPage={setPage}
               loading={resource.loading}
             />
@@ -486,7 +480,8 @@ export function MapsNpcsPage() {
         <code>related_id_unresolved</code> 仍未定性，两个来源的尺寸/坐标不合并为服务端坐标系统。
       </p>
       <MapDatasetSection />
-      <NpcRecordsSection />
+      <NpcSourceSection source="npcposdata_records" />
+      <NpcSourceSection source="minimapnpcpos_pos_records" />
       <AgreementSection />
     </section>
   )

@@ -1,0 +1,21 @@
+{
+ "id": "npcname2realnamedata_alias_to_realname",
+ "filename": "maps_npcs/npcname2realnamedata_alias_to_realname.csv",
+ "rows": 55,
+ "primary_key": [
+  "alias"
+ ],
+ "notes": "E staging copied byte-for-byte after revalidation. Preserve record_index and zero IDs. Blank cells use E legacy convention (None/empty text not distinguished); not a lossless typed round-trip format.",
+ "source_entry": 1799,
+ "source_table": "DATA",
+ "columns": [
+  {
+   "name": "alias",
+   "type": "str"
+  },
+  {
+   "name": "real_name",
+   "type": "str"
+  }
+ ]
+}

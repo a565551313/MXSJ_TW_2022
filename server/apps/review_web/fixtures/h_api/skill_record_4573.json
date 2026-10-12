@@ -1,0 +1,13 @@
+{
+ "skill_id": 4573,
+ "type_code_raw": 1,
+ "name": "地魔返生術",
+ "description_raw": "對隊友使用，使其起死回生，並恢復大量氣血",
+ "fpneed_raw": "0",
+ "mpneed_raw": "0",
+ "hpneed_raw": "0",
+ "source_entry": 3205,
+ "source_table": "DATA",
+ "review_status": "review_candidate_not_native_verified",
+ "_pk": "4573"
+}

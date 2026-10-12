@@ -1,73 +1,95 @@
-import { screen, within } from '@testing-library/react'
+/**
+ * Skills page against Agent H's real captured responses.
+ *
+ * Pins: raw description text is shown verbatim (never interpreted), formulas are
+ * displayed but not computed, and overwrite evidence names come from the raw
+ * CP950 byte dicts (a byte run that does not decode stays raw hex).
+ */
+import { screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
+import { installCaptureFetch } from '../test/hApiReplay'
 import { renderApp } from '../test/renderApp'
-import { installFixtureFetch } from '../test/fakeApi'
 
 const LONG = { timeout: 4000 }
 
 describe('skills page', () => {
-  it('searches skills and shows the source type code', async () => {
-    installFixtureFetch()
+  it('lists the real skill rows with the dataset total', async () => {
+    const { calls } = installCaptureFetch()
     renderApp('/skills')
 
     const table = await screen.findByTestId('skills-table', {}, LONG)
-    expect(within(table).getAllByTestId('skill-id').length).toBeGreaterThan(0)
-    expect(screen.getByTestId('pagination').textContent).toContain('共 28 条')
+    const ids = within(table)
+      .getAllByTestId('skill-id')
+      .map((cell) => cell.textContent)
+    expect(ids).toHaveLength(25)
+    expect(ids[0]).toBe('101')
+    expect(within(table).getByText('反擊')).toBeInTheDocument()
+    expect(screen.getByTestId('pagination').textContent).toContain('共 579 条')
+    expect(calls[0]).toContain('/api/v1/review/datasets/pet_skills/records?offset=0&limit=25')
   })
 
-  it('displays descriptions and formulas as text without evaluating them', async () => {
-    installFixtureFetch()
-    renderApp('/skills/229')
+  it('searches an ambiguous name and keeps both rows', async () => {
+    const { calls } = installCaptureFetch()
+    const user = userEvent.setup()
+    renderApp('/skills')
 
-    const detail = await screen.findByTestId('skill-detail', {}, LONG)
-    const nameCell = detail.querySelector('.keyvalue__row dd [data-testid="safe-text"]')
-    expect(nameCell?.textContent).toBe('高級命中')
-    expect(detail.textContent).toContain('使用物理攻擊時，命中率提高10%')
+    await screen.findByTestId('skills-table', {}, LONG)
+    await user.type(screen.getByLabelText('搜索技能'), '高級命中')
 
-    const formulas = within(detail).getAllByTestId('safe-formula')
-    expect(formulas).toHaveLength(3)
-    expect(formulas.map((node) => node.textContent)).toEqual(['0', '0', '0'])
-    expect(detail.textContent).toContain('仅展示，不计算')
-    expect(detail.querySelector('script')).toBeNull()
+    await waitFor(() => {
+      const ids = within(screen.getByTestId('skills-table'))
+        .getAllByTestId('skill-id')
+        .map((cell) => cell.textContent)
+      expect(ids).toEqual(['229', '255'])
+    }, LONG)
+    expect(calls.some((url) => url.includes('q=%E9%AB%98%E7%B4%9A%E5%91%BD%E4%B8%AD'))).toBe(true)
   })
 
-  it('shows both IDs of an ambiguous name instead of picking one', async () => {
-    installFixtureFetch()
-    renderApp('/skills/229')
-
-    const matches = await screen.findByTestId('skill-name-matches', {}, LONG)
-    expect(matches.textContent).toContain('高級命中')
-    expect(matches.textContent).toContain('ID 229')
-    expect(matches.textContent).toContain('match_count 2')
-    expect(within(matches).getByText(/同名多 ID（2 个候选）/)).toBeInTheDocument()
-  })
-
-  it('shows the overwrite summary and preserves the old value', async () => {
-    installFixtureFetch()
+  it('shows description, non-computed formulas and overwrite evidence for a skill', async () => {
+    installCaptureFetch()
     renderApp('/skills/4573')
 
-    const panel = await screen.findByTestId('overwrite-panel', {}, LONG)
-    expect(panel.textContent).toContain('天魔返生術')
-    expect(panel.textContent).toContain('地魔返生術')
-    expect(panel.textContent).toContain('值已改变')
-    expect(panel.textContent).toContain('22409')
-    expect(panel.textContent).toContain('352')
+    const detail = await screen.findByTestId('skill-detail', {}, LONG)
+
+    // Raw source text, markers and all - no rich-text interpretation.
+    expect(detail.textContent).toContain('對隊友使用，使其起死回生，並恢復大量氣血')
+    // The dataset row name and the overwrite's new value both read 地魔返生術.
+    expect(within(detail).getAllByText('地魔返生術').length).toBeGreaterThanOrEqual(2)
+
+    // Formulas are shown as text; 0 stays 0 and is never evaluated.
+    expect(detail.textContent).toContain('fpneed_raw')
+    expect(within(detail).getAllByText('0').length).toBeGreaterThanOrEqual(3)
+
+    const overwrite = within(detail).getByTestId('overwrite-panel')
+    expect(overwrite.textContent).toContain('天魔返生術')
+    expect(overwrite.textContent).toContain('地魔返生術')
+    expect(within(overwrite).getByText('值已改变')).toBeInTheDocument()
+    expect(overwrite.textContent).toContain('352')
+    expect(overwrite.textContent).toContain('22409')
+
+    // The raw byte evidence stays available verbatim.
+    // Byte evidence is rendered byte by byte, so the old name stays readable as hex.
+    expect(within(overwrite).getByTestId('overwrite-raw').textContent).toContain('a4 d1 c5 5d aa f0 a5 cd b3 4e')
+
+    expect(within(detail).getByTestId('skill-name-matches-empty')).toBeInTheDocument()
   })
 
-  it('marks identical-value overwrites as evidence that is still kept', async () => {
-    installFixtureFetch()
-    renderApp('/skills/4574')
-
-    const panel = await screen.findByTestId('overwrite-panel', {}, LONG)
-    expect(panel.textContent).toContain('identical_values = true')
-    expect(panel.textContent).toContain('不因值相同而删除证据')
-  })
-
-  it('states that a skill id outside the overwrite list has no overwrite entry', async () => {
-    installFixtureFetch()
+  it('shows a skill without overwrite evidence as such (not as an empty table)', async () => {
+    installCaptureFetch()
     renderApp('/skills/101')
 
     const detail = await screen.findByTestId('skill-detail', {}, LONG)
-    expect(detail.textContent).toContain('不在 9 次重复键写入的覆盖清单中')
+    expect(within(detail).getByTestId('overwrite-none')).toBeInTheDocument()
+  })
+
+  it('lists the pets that reference a skill through the name-match dataset', async () => {
+    installCaptureFetch()
+    renderApp('/skills/229')
+
+    const detail = await screen.findByTestId('skill-detail', {}, LONG)
+    const matches = await within(detail).findByTestId('skill-name-matches', {}, LONG)
+    expect(matches.textContent).toContain('高級命中')
+    expect(matches.textContent).toContain('229')
   })
 })

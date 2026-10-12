@@ -64,12 +64,14 @@ describe('architecture guards', () => {
 
   it('keeps test fixtures out of the production bundle', () => {
     for (const file of productionFiles) {
-      const text = read(file)
+      // Comments may *name* the fixtures (as provenance for the contract); code
+      // must never import or read them.
+      const text = stripComments(read(file))
       const label = relative(APP_DIR, file)
       expect(text, `${label} must not import test fixtures`).not.toMatch(/from\s+['"][^'"]*fixtures\//)
       expect(text, `${label} must not import src/test helpers`).not.toMatch(/from\s+['"][^'"]*\/test\//)
-      expect(text, `${label} must not reference the fixture sample`).not.toContain('batch001.sample')
-      expect(text, `${label} must not reference the fixture server`).not.toContain('contractHandler')
+      expect(text, `${label} must not replay Agent H captures`).not.toContain('h_api/replay')
+      expect(text, `${label} must not read capture files`).not.toContain('fixtures/h_api')
     }
   })
 
@@ -107,6 +109,7 @@ describe('architecture guards', () => {
     const config = read(join(APP_DIR, 'vite.config.ts'))
     expect(config).toMatch(/host:\s*'0\.0\.0\.0'/)
     expect(config).toMatch(/allowedHosts/)
+    expect(config).toContain('VITE_API_PROXY_TARGET')
     expect(config).toMatch(/proxy/)
     expect(config).toContain("'/api'")
   })
@@ -115,12 +118,44 @@ describe('architecture guards', () => {
     const server = read(join(APP_DIR, 'fixtures', 'serve-fixture-api.mjs'))
     expect(server).toContain("'127.0.0.1'")
     expect(server).toContain('NOT real data, NOT integration evidence')
+    // The fixture server replays captured responses and fails on anything else.
+    expect(server).toContain('replay')
   })
 
-  it('documents the pending integration status in the contract module', () => {
+  it('records the integrated backend commit in the contract module', () => {
     const contract = read(join(SRC_DIR, 'api', 'contract.ts'))
     expect(contract).toContain('API_CONTRACT.md')
-    expect(contract).toContain('PENDING')
-    expect(contract).toContain('NOT been verified')
+    // The contract module must name the backend revision it was written against.
+    expect(contract).toMatch(/9f6ab439/)
+    expect(contract).toContain('offset')
+    expect(contract).toContain('limit')
+    // The old page/page_size dialect must not come back (comments explaining the
+    // change are fine; code must not carry the old parameter).
+    expect(stripComments(contract)).not.toContain('page_size')
+  })
+
+  it('only shows fixture-mode copy behind the explicit fixture switch', () => {
+    const notices = read(join(SRC_DIR, 'components', 'Notices.tsx'))
+    expect(notices).toContain('IS_FIXTURE_MODE')
+    expect(notices).toContain('if (!IS_FIXTURE_MODE) return null')
+    expect(read(join(SRC_DIR, 'lib', 'runtimeMode.ts'))).toContain("=== 'fixture'")
+  })
+
+  it('never falls back to test data from the runtime client', () => {
+    for (const file of ['client.ts', 'reviewApi.ts', 'parsers.ts']) {
+      const text = read(join(SRC_DIR, 'api', file))
+      expect(text, `${file} must not import fixtures`).not.toContain('fixtures')
+      expect(text, `${file} must not import test helpers`).not.toContain('/test/')
+    }
+  })
+
+  it('validates responses structurally instead of casting them', () => {
+    for (const file of ['client.ts', 'reviewApi.ts', 'parsers.ts', 'schema.ts']) {
+      const text = stripComments(read(join(SRC_DIR, 'api', file)))
+      // `as const` and `as never` guards are fine; pretending raw JSON is a DTO
+      // (e.g. `body as ItemsPayload`) is not.
+      const suspicious = text.match(/ as (?!const|never|unknown\b)[A-Z][A-Za-z]*Payload/g)
+      expect(suspicious, `${file} must not cast raw responses to DTOs`).toBeNull()
+    }
   })
 })

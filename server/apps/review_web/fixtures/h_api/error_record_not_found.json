@@ -1,0 +1,10 @@
+{
+ "error": {
+  "code": "RECORD_NOT_FOUND",
+  "message": "Record with id '999999' not found in dataset 'items'.",
+  "details": {
+   "dataset_id": "items",
+   "record_id": "999999"
+  }
+ }
+}

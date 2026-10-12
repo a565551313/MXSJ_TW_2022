@@ -1,0 +1,17 @@
+{
+ "dataset": "pet_required_skills",
+ "total": 1,
+ "offset": 0,
+ "limit": 50,
+ "count": 1,
+ "records": [
+  {
+   "client_shape_id": 2030,
+   "skill_name_raw": "飛行",
+   "source_entry": 2027,
+   "source_table": "DATA.mustSkillName",
+   "review_status": "review_candidate_not_native_verified",
+   "_pk": "2030"
+  }
+ ]
+}
