@@ -12,8 +12,10 @@ from __future__ import annotations
 
 import math
 import os
+import shutil
 import struct
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -178,3 +180,100 @@ class TestRegionRendering(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+def _build_sector(image_payload_len: int = 260, extra: list[tuple[bytes, bytes]] = (),
+                  refs: int = 0) -> bytes:
+    """One sector: refs | GEPJ | LLEC | 192 | extras | GIRB | 22 | tail4."""
+    import struct as _s
+    out = bytearray(_s.pack("<I", refs) + b"\x00" * (4 * refs))
+    # GEPJ: 13 segment lengths summing to (length - 26)
+    per = image_payload_len // 12
+    segs = [26 + (image_payload_len - per * 12)] + [per] * 12
+    segs[0] = 26 + image_payload_len - per * 12
+    total = sum(segs) + 26
+    out += b"GEPJ" + _s.pack("<I", total) + _s.pack(f"<{len(segs)}H", *segs)
+    out += b"\xff" * (total - 26)
+    out += b"LLEC" + _s.pack("<I", 192) + bytes(range(192))
+    for tag, body in extra:
+        out += tag + _s.pack("<I", len(body)) + body
+    out += b"GIRB" + _s.pack("<I", 22) + b"\x02" * 22 + b"\x00" * 4
+    return bytes(out)
+
+
+def _build_map(sectors: list[bytes], width: int, height: int,
+               records: int = 0) -> bytes:
+    import struct as _s
+    n = len(sectors)
+    first = 12 + 4 * n + 8 + 4 * records
+    head = bytearray(b"0.1M" + _s.pack("<II", width, height))
+    pos = first
+    for sec in sectors:
+        head += _s.pack("<I", pos)
+        pos += len(sec)
+    head += _s.pack("<I", 12 + 4 * n + 4)      # self-referential sentinel
+    head += _s.pack("<I", records)
+    return bytes(head) + b"".join(sectors)
+
+
+class TestUnknownBlockTolerance(unittest.TestCase):
+    """The client dispatcher recognises MASK; the parser must not choke on it."""
+
+    def test_sector_with_mask_block_is_accepted(self) -> None:
+        mask_body = b"\x01\x02" * 100
+        data = _build_map([_build_sector(extra=[(b"MASK", mask_body)])], 320, 240)
+        path = Path(tempfile.mkdtemp()) / "masked.map"
+        path.write_bytes(data)
+        self.addCleanup(shutil.rmtree, path.parent, True)
+        self.assertTrue(sniff(path))
+        with open_map(path) as doc:
+            s = doc.sector(0)
+            self.assertEqual([b.tag for b in s.extra_blocks], ["MASK"])
+            self.assertEqual(s.extra_blocks[0].length, 200)
+            self.assertEqual(len(doc.read_cells(s)), 192)
+            self.assertEqual(doc.read_cells(s), bytes(range(192)))
+            self.assertEqual(len(s.girb_body), 22)
+
+    def test_multiple_unknown_blocks_keep_the_chain_aligned(self) -> None:
+        extras = [(b"MASK", b"\xAA" * 40), (b"ZZZZ", b"\xBB" * 7)]
+        data = _build_map([_build_sector(extra=extras)] * 4, 640, 480)
+        path = Path(tempfile.mkdtemp()) / "multi.map"
+        path.write_bytes(data)
+        self.addCleanup(shutil.rmtree, path.parent, True)
+        with open_map(path) as doc:
+            self.assertEqual(doc.header.sector_count, 4)
+            for s in doc.iter_sectors():
+                self.assertEqual([b.tag for b in s.extra_blocks], ["MASK", "ZZZZ"])
+                self.assertEqual([b.length for b in s.extra_blocks], [40, 7])
+
+    def test_block_overrunning_the_sector_is_rejected(self) -> None:
+        # MASK claims more bytes than the sector actually has left.
+        import struct as _s
+        sec = _build_sector(extra=[(b"MASK", b"\xAA" * 40)])
+        broken = sec[:-4 - 40] + _s.pack("<I", 9999) + b"\xAA" * 40 + sec[-4 - 40:]
+        data = _build_map([broken], 320, 240)
+        path = Path(tempfile.mkdtemp()) / "broken.map"
+        path.write_bytes(data)
+        self.addCleanup(shutil.rmtree, path.parent, True)
+        with self.assertRaises(MapFormatError):
+            with open_map(path) as doc:
+                doc.sector(0)
+
+    def test_missing_girb_terminator_is_rejected(self) -> None:
+        sec = _build_sector()
+        sec = sec[:sec.index(b"GIRB")]                    # drop GIRB + tail
+        data = _build_map([sec], 320, 240)
+        path = Path(tempfile.mkdtemp()) / "nogirb.map"
+        path.write_bytes(data)
+        self.addCleanup(shutil.rmtree, path.parent, True)
+        with self.assertRaises(MapFormatError):
+            with open_map(path) as doc:
+                doc.sector(0)
+
+    def test_real_samples_have_no_extra_blocks(self) -> None:
+        """Cross-check the synthetic path against the shipped maps."""
+        for path in sample_maps():
+            with self.subTest(map=path.name), open_map(path) as doc:
+                for s in doc.iter_sectors():
+                    self.assertEqual(s.extra_blocks, (),
+                                     f"{path.name} sector {s.index} has extra blocks")

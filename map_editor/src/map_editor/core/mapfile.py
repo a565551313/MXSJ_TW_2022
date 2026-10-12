@@ -10,7 +10,11 @@ Design constraints that came from measured facts, not assumptions:
   are 2000x1500 -> 7x7=49, which matches.  The client scene table contains 24
   different sizes up to 10000x6000 -> 32x25=800 sectors, so nothing here may
   assume 49 or 7x7.
-* Sector length identity: ``246 + 4*refs + image_length``.
+* Every block is ``tag(4) + u32 length + length bytes``, so a sector walks as
+  ``refs | GEPJ | LLEC | GIRB | 4-byte tail``.  The dispatcher in ``mx.exe``
+  (``0x4b8ca0``) also recognises a ``MASK`` tag, which the five sample maps do not
+  contain, so the walk is generic rather than a hardcoded triple.  With only the
+  three known blocks the length identity reduces to ``246 + 4*refs + image_length``.
 * The ``GIRB`` trailer was byte-identical in 245/245 sectors of the samples; it
   is round-tripped verbatim rather than interpreted.
 
@@ -33,6 +37,7 @@ GEPJ_TAG = b"GEPJ"
 LLEC_TAG = b"LLEC"
 GIRB_TAG = b"GIRB"
 GEPJ_SEGMENTS = 13           # 1 shared header + 12 independent 80x80 scans
+MAX_BLOCKS_PER_SECTOR = 64   # guard against a corrupt chain looping forever
 PIECE_PX = 80                # each scan is an 80x80 JPEG
 MAX_SCAN_SECTORS = 4096      # bound for the sentinel scan
 
@@ -64,6 +69,18 @@ class MapHeader:
 
 
 @dataclass(frozen=True, slots=True)
+class Block:
+    """A block whose tag the editor does not interpret (e.g. ``MASK``)."""
+    tag: str
+    offset: int          # of the tag itself
+    length: int          # payload length, excluding tag+u32
+
+    @property
+    def payload_offset(self) -> int:
+        return self.offset + 8
+
+
+@dataclass(frozen=True, slots=True)
 class Sector:
     index: int
     row: int
@@ -78,6 +95,7 @@ class Sector:
     girb_offset: int
     girb_body: bytes
     girb_trailer: bytes
+    extra_blocks: tuple["Block", ...] = ()
 
     @property
     def origin_x(self) -> int:
@@ -182,49 +200,88 @@ def read_sector(fh: BinaryIO, header: MapHeader, index: int) -> Sector:
         refs_tuple = struct.unpack(f"<{refs}I", fh.read(4 * refs))
 
     cursor = offset + 4 + 4 * refs
-    fh.seek(cursor)
-    if fh.read(4) != GEPJ_TAG:
-        raise MapFormatError(f"sector {index}: GEPJ tag missing at {cursor}")
-    (image_length,) = struct.unpack("<I", fh.read(4))
-    if image_length < GEPJ_SEGMENTS * 2:
-        raise MapFormatError(f"sector {index}: image length {image_length} too small")
-    segment_lengths = struct.unpack(f"<{GEPJ_SEGMENTS}H", fh.read(2 * GEPJ_SEGMENTS))
-    if sum(segment_lengths) != image_length - 2 * GEPJ_SEGMENTS:
+    image_offset: int | None = None
+    image_length = 0
+    segment_lengths: tuple[int, ...] = ()
+    cells_offset: int | None = None
+    girb_offset: int | None = None
+    girb_body = b""
+    girb_trailer = b""
+    extra: list[Block] = []
+
+    # Walk the block chain the way the client's dispatcher does: read a tag and
+    # a u32 length, handle the tags we understand, and step over anything else
+    # (the client seeks past unknown tags with `seek(start + length)`).  Hardcoding
+    # the GEPJ->LLEC->GIRB triple would make the editor fail on any map that also
+    # carries a MASK block — the dispatcher recognises MASK, and the five sample
+    # maps simply happen not to contain one.
+    terminated = False
+    for _ in range(MAX_BLOCKS_PER_SECTOR):
+        if cursor + 8 > end:
+            break
+        fh.seek(cursor)
+        tag = fh.read(4)
+        (length,) = struct.unpack("<I", fh.read(4))
+        body = cursor + 8
+        if length < 0 or body + length > end:
+            raise MapFormatError(
+                f"sector {index}: block {tag!r} at {cursor} declares length {length}, "
+                f"which runs past the sector end {end}")
+        if tag == GEPJ_TAG:
+            if image_offset is not None:
+                raise MapFormatError(f"sector {index}: duplicate GEPJ block")
+            if length < GEPJ_SEGMENTS * 2:
+                raise MapFormatError(f"sector {index}: image length {length} too small")
+            segment_lengths = struct.unpack(
+                f"<{GEPJ_SEGMENTS}H", fh.read(2 * GEPJ_SEGMENTS))
+            if sum(segment_lengths) != length - 2 * GEPJ_SEGMENTS:
+                raise MapFormatError(
+                    f"sector {index}: segment lengths sum to {sum(segment_lengths)}, "
+                    f"expected {length - 2 * GEPJ_SEGMENTS}")
+            image_offset = body + 2 * GEPJ_SEGMENTS
+            image_length = length - 2 * GEPJ_SEGMENTS
+        elif tag == LLEC_TAG:
+            if length != CELLS_PER_SECTOR:
+                raise MapFormatError(f"sector {index}: LLEC length {length} != 192")
+            cells_offset = body
+        elif tag == GIRB_TAG:
+            girb_offset = cursor
+            girb_body = fh.read(length)
+            if len(girb_body) != length:
+                raise MapFormatError(f"sector {index}: truncated GIRB body")
+            girb_trailer = fh.read(4)
+            cursor = body + length + len(girb_trailer)
+            terminated = True
+            break
+        else:
+            extra.append(Block(_tag_name(tag), cursor, length))
+        cursor = body + length
+    if not terminated:
         raise MapFormatError(
-            f"sector {index}: segment lengths sum to {sum(segment_lengths)}, "
-            f"expected {image_length - 2 * GEPJ_SEGMENTS}")
-    image_offset = cursor + 8 + 2 * GEPJ_SEGMENTS
-
-    cells_offset = cursor + 8 + image_length
-    fh.seek(cells_offset)
-    if fh.read(4) != LLEC_TAG:
-        raise MapFormatError(f"sector {index}: LLEC tag missing at {cells_offset}")
-    (cell_count,) = struct.unpack("<I", fh.read(4))
-    if cell_count != CELLS_PER_SECTOR:
-        raise MapFormatError(f"sector {index}: LLEC length {cell_count} != 192")
-
-    girb_offset = cells_offset + 8 + cell_count
-    fh.seek(girb_offset)
-    if fh.read(4) != GIRB_TAG:
-        raise MapFormatError(f"sector {index}: GIRB tag missing at {girb_offset}")
-    (girb_len,) = struct.unpack("<I", fh.read(4))
-    girb_body = fh.read(girb_len)
-    girb_trailer = fh.read(4)
-    if len(girb_body) != girb_len:
-        raise MapFormatError(f"sector {index}: truncated GIRB body")
-
-    expected = 246 + 4 * refs + image_length
-    if end - offset != expected:
+            f"sector {index}: no GIRB terminator before sector end {end}")
+    if image_offset is None:
+        raise MapFormatError(f"sector {index}: no GEPJ image block")
+    if cells_offset is None:
+        raise MapFormatError(f"sector {index}: no LLEC block")
+    if cursor != end:
         raise MapFormatError(
-            f"sector {index}: length {end - offset} != 246+4*{refs}+{image_length}={expected}")
+            f"sector {index}: blocks end at {cursor}, expected {end}")
 
     return Sector(
         index=index, row=index // header.sector_columns, col=index % header.sector_columns,
         offset=offset, length=end - offset, record_refs=refs_tuple,
-        image_offset=image_offset, image_length=image_length - 2 * GEPJ_SEGMENTS,
-        segment_lengths=segment_lengths, cells_offset=cells_offset + 8,
+        image_offset=image_offset, image_length=image_length,
+        segment_lengths=segment_lengths, cells_offset=cells_offset,
         girb_offset=girb_offset, girb_body=girb_body, girb_trailer=girb_trailer,
+        extra_blocks=tuple(extra),
     )
+
+
+def _tag_name(tag: bytes) -> str:
+    try:
+        return tag.decode("ascii")
+    except UnicodeDecodeError:
+        return tag.hex()
 
 
 def read_prefix_records(fh: BinaryIO, header: MapHeader) -> tuple[PrefixRecord, ...]:

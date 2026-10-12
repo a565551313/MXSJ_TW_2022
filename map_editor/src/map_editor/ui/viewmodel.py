@@ -214,6 +214,10 @@ class EditorViewModel:
                     "image_bytes": s.image_length,
                     "segment_lengths": list(s.segment_lengths),
                     "girb_sha256": _sha(s.girb_body + s.girb_trailer),
+                    "extra_blocks": [
+                        {"tag": b.tag, "offset": b.offset, "length": b.length}
+                        for b in s.extra_blocks
+                    ],
                 }
                 for s in doc.iter_sectors()
             ],
