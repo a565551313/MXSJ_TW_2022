@@ -10,7 +10,33 @@
 
 ## 1. [P1] 回溯基址从 0x801 改成 1，新增的 15 个“成功”扇区全部错误
 
-位置：`map_editor/src/map_editor/core/girb.py:238–245`。
+> **2026-10-12 后续更新：已修复，重新独立复核通过。**
+> 另一会话先尝试从 `data/script.fls` 反编译出的 Python 源码里找线索（`script/mxgame/map/*`、
+> `script/char/walker*.py` 等）：确认地图/碰撞数据的加载、解压、行走判定全部在
+> `interface.CMapObject` 这个原生对象内部完成——Python 层只传 `filename`/`path`
+> （见 `map.py` 的 `CMap.__init__`），本身不含任何 GIRB 字节语义，这条路线查无可用线索，
+> 已排除，不必再在 Python 反编译产物里找这个算法。
+>
+> 随后换回对 `mx.exe` 本身独立取证：(1) 用 `pefile` 精确定位 section 文件偏移，重新
+> `objdump` 反汇编 0x60eb29 附近，确认字节码就是 `movzbl -0x801(%edx),%eax`、
+> `-0x800(%edx)`、`-0x7ff(%edx)` 三连读，没有 `-0x1`；(2) 确认 `0x60ea90` 函数不访问任何
+> 全局数据、不调用其它函数（纯栈上操作两个输入指针），于是直接用 Unicorn 把这段机器码连同
+> 整个 PE 映像原样加载仿真，对 1034.map + 1035.map 全部 429 个真实 GIRB 扇区重新跑了一遍原生
+> 解压，和两种基址的 Python 实现逐字节比对：
+>
+> | 基址 | 与原生逐字节一致 | 成功但与原生不一致（静默写坏数据） |
+> |---|---:|---:|
+> | `1`（此前仓库代码） | 129 | 32 |
+> | `0x801`（本次改回） | 129 | 0 |
+>
+> 两种基址能解出的真数据完全一样（129 个），`1` 只是多出 32 个“不报错但内容错”的假成功，
+> 没有任何覆盖率代价。已将 `short_match_token()` 改回 `0x801 + (nb << 2) + (t >> 2)`，
+> `--girb-report` 现在对 1034/1035 分别报 81/234、48/195（即 81+48=129，不再是旧的 90+54=144），
+> 68 项测试全绿。**仍有 300 个扇区解不出，本次只修复“假成功”，不代表 GIRB 已全部解开。**
+> 仿真脚本未入库（是临时诊断工具，依赖 `unicorn`/`pefile`，且大段来自 `mx.exe` 原始字节的
+> 内存镜像不适合提交），需要时按本节方法重新实现即可复现。
+
+位置：`map_editor/src/map_editor/core/girb.py:238–245`（修复前行号，供历史对照）。
 
 PR 用“成功数量从 129 上升到 144”支持基址改成 1。直接反汇编原始 `mx.exe`：
 
@@ -41,6 +67,30 @@ PR 输出 SHA256：
 
 ## 2. [P1] JSON 导出可覆盖源地图，违反只读承诺
 
+> **2026-10-12 后续更新：已修复，补充了拒绝测试。**
+> 在 `viewmodel.py` 中新增 `ExportBlockedError` 异常、`_normalized_path()` /
+> `_same_file_or_path()` 归一化比较（两者都存在时用 `os.path.samefile()`，
+> 可识别硬链接/符号链接；否则退回归一化路径字符串比较，覆盖大小写和 `..`
+> 别名场景）以及 `EditorViewModel._protected_source_paths()`
+> （当前已打开文档路径 + 最近一次 `set_client_root()`/`discover()` 扫描到的
+> 全部地图路径）、`_guard_export_target()`。`export_json()`/`export_png()`
+> 现在都把目标路径先交给 `_guard_export_target()` 校验，命中任何受保护路径
+> 就直接抛 `ExportBlockedError`，不会触达 `write_text()`/`Image.save()`。
+> CLI 的 `run_cli()` 本来就用 `except Exception` 包住导出调用并打印
+> `[错误] 导出失败: ...`，`ExportBlockedError` 继承自 `RuntimeError`，无需
+> 额外改 `cli.py` 就能给出干净的错误提示而不是把源文件写坏或抛栈回溯。
+>
+> 新增回归测试（`tests/test_client.py::TestViewModel`）：
+> `test_export_json_refuses_to_overwrite_the_open_source_map`（导出目标等于
+> 当前打开的地图路径，断言 SHA256 不变）、
+> `test_export_json_refuses_any_discovered_map_not_only_the_open_one`
+> （覆盖“只保护当前打开文档”这个漏洞，验证任何已扫描到的地图都受保护）、
+> `test_export_json_refuses_an_equivalent_unresolved_path`（`..` 路径别名）、
+> `test_export_png_refuses_to_overwrite_a_source_map`、以及
+> `test_export_json_to_a_new_path_still_works_after_the_guard`（确认正常导出
+> 路径不会被误伤）。全部 78 项测试（68 项原有 + 5 项导出保护 + 5 项第 4 项的
+> CLI 分派测试）通过。
+
 位置：`map_editor/src/map_editor/ui/viewmodel.py:303–305`；CLI 调用位置 `cli.py:80–89`。
 
 `export_json()` 将用户给出的任意路径直接交给 `Path.write_text()`，没有源文件或客户端资源保护。CLI 也不限制扩展名，因此即使 GUI 文件过滤器能降低误选概率，仍不能保护底层导出接口。
@@ -57,6 +107,19 @@ vm.export_json(source_map_path)
 **修改要求：**写入前识别并拒绝客户端源资源目标，至少保护当前及已发现的地图文件；覆盖判断需考虑路径归一化、符号链接/硬链接及平台大小写规则。补充源文件哈希保持不变的拒绝测试。只用临时输出路径做正常导出测试不能证明“只读”。
 
 ## 3. [P2] 2400 字节是截出来的，超长解码被当作成功
+
+> **2026-10-12 后续更新：已修复。**
+> `decompress()` 原本的三处 `return bytes(out[:limit])` 全部改为调用新增的
+> `finish()` 收尾闭包：只有在结束标记触发的那一刻 `len(out)` 恰好等于
+> `limit`（2400）才算成功返回，否则直接抛 `GirbError`，不再做任何静默裁剪
+> 或补零。这同时堵住了本节描述的“超长却被接受”和潜在的“不足长度也被接受”
+> 两类问题。验证：68 项原有测试全绿；`--girb-report` 对 1034/1035 的统计
+> 仍是 81/234、48/195，与修复前完全一致——说明这次收紧没有误杀任何已验证
+> 正确的扇区，只是替未来可能出现的静默损坏情形关上了口子（本次 429 个真实
+> 扇区样本里恰好没有触发这个分支的案例，但该漏洞点已被消除）。
+>
+> 仍然维持本节原有结论：**300/429 个扇区解不出的根因未解决**，这次修复只是
+> 不让“看起来成功但实际错误/被裁剪”的假阳性蒙混过关。
 
 位置：`map_editor/src/map_editor/core/girb.py:260,265,275,284,287–292`。
 
@@ -80,6 +143,24 @@ len(cells(body))       # 1200，没有抛错
 **修改要求：**严格检查每次操作数/字面量读取的实际输入边界；输出追加时限制长度，完整结束时验证恰好 2400，禁止静默截断冒充成功。补充超长、截断结束标记和真实扇区回归测试。此问题与第 1 项相互掩盖，单修其中一个不足够。
 
 ## 4. [P2] 打包 EXE 无参数启动不会打开 GUI
+
+> **2026-10-12 后续更新：已修复（入口分派逻辑 + 单测，未做 Windows 实机冒烟）。**
+> 在 `cli.py` 新增 `_bare_double_click_launch(argv)`：仅当 `sys.frozen` 为真
+> （PyInstaller 打包后设置）且有效参数列表为空时返回 `True`；`main()` 的 GUI
+> 分支条件从 `if args.gui:` 改成 `if args.gui or _bare_double_click_launch(argv):`。
+> 未打包（`python run.py`/`python -m map_editor.cli`）或打包后带任何参数时行为
+> 完全不变，继续走原来的 CLI-默认路径，不会影响现有脚本化用法。GUI 本身
+> （`widgets.py` 的 `MainWindow.__init__`/`pick_client_root`）已经能在没有
+> `client_root` 时弹出“选择客户端目录…”对话框，不需要额外改动。
+>
+> 新增测试（`tests/test_cli_and_isolation.py`）：`TestBareDoubleClickLaunch`
+> 四个用例覆盖“未打包不生效”“打包+无参数触发”“打包+显式参数不覆盖”以及
+> 通过给 `sys.modules['map_editor.ui.widgets']` 打桩、不依赖真实 Qt 环境验证
+> `main([])` 在冻结状态下确实调用到 GUI 的 `run()`；另加
+> `test_main_still_errors_in_dev_mode_with_no_arguments` 固定住未打包时的
+> 原有报错行为不被破坏。**仍未做的验收**：在 Windows 上实际构建
+> `MapEditor.exe` 并双击冒烟测试——这需要 Windows 环境和 PyInstaller 构建产物，
+> 本次沙箱环境无法完成，留给后续有 Windows 机器时验收。
 
 位置：`map_editor/run.py:23–24`、`map_editor/src/map_editor/cli.py:179–189`、`map_editor/map_editor.spec:44`。
 

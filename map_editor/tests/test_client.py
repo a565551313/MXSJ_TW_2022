@@ -279,6 +279,73 @@ class TestViewModel(TmpCase):
         with self.assertRaises(RuntimeError):
             self.vm.render(0, 0, 10, 10)
 
+    def test_export_json_refuses_to_overwrite_the_open_source_map(self) -> None:
+        """PR #25 review item 2: export must never touch client source files.
+
+        Reproduces the exact regression (JSON export truncating a live
+        ``.map`` file in place) on an isolated copy, then asserts the file
+        is untouched byte-for-byte -- not just "still parses".
+        """
+        import hashlib
+        from map_editor.ui.viewmodel import ExportBlockedError
+
+        src = SAMPLES / "2101.map"
+        before = hashlib.sha256(src.read_bytes()).hexdigest()
+        self.vm.set_client_root(SAMPLES)
+        self.vm.open_map("2101")
+        with self.assertRaises(ExportBlockedError):
+            self.vm.export_json(src)
+        self.vm.close_map()
+        after = hashlib.sha256(src.read_bytes()).hexdigest()
+        self.assertEqual(before, after, "source .map was modified by a blocked export")
+
+    def test_export_json_refuses_any_discovered_map_not_only_the_open_one(self) -> None:
+        """The guard must cover every scanned map, not just the open document."""
+        import hashlib
+        from map_editor.ui.viewmodel import ExportBlockedError
+
+        other = SAMPLES / "2111.map"
+        before = hashlib.sha256(other.read_bytes()).hexdigest()
+        self.vm.set_client_root(SAMPLES)
+        self.vm.open_map("2101")      # a *different* map is open
+        with self.assertRaises(ExportBlockedError):
+            self.vm.export_json(other)
+        self.vm.close_map()
+        self.assertEqual(before, hashlib.sha256(other.read_bytes()).hexdigest())
+
+    def test_export_json_refuses_an_equivalent_unresolved_path(self) -> None:
+        """A ``..``-laden or relative alias of the same file must be caught too."""
+        from map_editor.ui.viewmodel import ExportBlockedError
+
+        self.vm.set_client_root(SAMPLES)
+        self.vm.open_map("2101")
+        alias = SAMPLES / "." / ".." / SAMPLES.name / "2101.map"
+        with self.assertRaises(ExportBlockedError):
+            self.vm.export_json(alias)
+        self.vm.close_map()
+
+    def test_export_png_refuses_to_overwrite_a_source_map(self) -> None:
+        try:
+            from PIL import Image  # noqa: F401
+        except ImportError:
+            self.skipTest("Pillow not installed")
+        from map_editor.ui.viewmodel import ExportBlockedError
+
+        src = SAMPLES / "2101.map"
+        self.vm.set_client_root(SAMPLES)
+        self.vm.open_map("2101")
+        with self.assertRaises(ExportBlockedError):
+            self.vm.export_png(src)
+        self.vm.close_map()
+
+    def test_export_json_to_a_new_path_still_works_after_the_guard(self) -> None:
+        """The guard must not false-positive on ordinary, safe export targets."""
+        self.vm.set_client_root(SAMPLES)
+        self.vm.open_map("2101")
+        out = self.vm.export_json(self.tmp / "out" / "not_a_source_file.json")
+        self.assertTrue(out.is_file())
+        self.vm.close_map()
+
     def test_unknown_key_raises(self) -> None:
         self.vm.set_client_root(SAMPLES)
         with self.assertRaises(KeyError):

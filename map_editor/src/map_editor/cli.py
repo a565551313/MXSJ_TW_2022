@@ -168,6 +168,22 @@ def _girb_dump(vm: EditorViewModel, spec: str) -> int:
     return 0
 
 
+def _bare_double_click_launch(argv: list[str] | None) -> bool:
+    """True when a packaged, windowed build was started with no arguments.
+
+    The PyInstaller build uses ``console=False`` (see ``map_editor.spec``) so
+    a double-clicked ``MapEditor.exe`` has no stdout/stderr at all. Without
+    this check, no args meant "CLI mode" (the dev-friendly default), which
+    then printed a "need --scan or --client-root" error to a console nobody
+    can see and the app just silently closed -- a packaged GUI build must
+    default to opening the window instead.
+    """
+    if not getattr(sys, "frozen", False):
+        return False
+    effective = sys.argv[1:] if argv is None else argv
+    return len(effective) == 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     config = Config.load()
@@ -176,7 +192,7 @@ def main(argv: list[str] | None = None) -> int:
     vm = EditorViewModel(config=config)
     root = args.scan or args.client_root or config.client_root
 
-    if args.gui:
+    if args.gui or _bare_double_click_launch(argv):
         if args.client_root:
             config.remember_root(args.client_root)
             config.save()
