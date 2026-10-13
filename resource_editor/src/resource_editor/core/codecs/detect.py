@@ -30,7 +30,20 @@ KIND_LABELS = {
 
 
 def sniff(content: bytes) -> EntryKind:
-    """判断条目内容类型。content 应为"内容视图"字节。"""
+    """判断条目内容类型。content 应为完整的"内容视图"字节。"""
+    return _sniff(content, complete=True)
+
+
+def sniff_prefix(head: bytes) -> EntryKind:
+    """只凭内容头部（至多前 512 字节）判断类型，供大包快速分类。
+
+    与 :func:`sniff` 的区别仅在 JSON 分支：头部以 ``{``/``[`` 开头
+    且可按 UTF-8 解码即判 JSON，不要求整段能解析完。
+    """
+    return _sniff(head, complete=False)
+
+
+def _sniff(content: bytes, complete: bool) -> EntryKind:
     if len(content) >= 2 and content[:2] in SPRITE_MAGICS:
         return EntryKind.SPRITE
     if content[:4] == b"\x89PNG":
@@ -46,11 +59,18 @@ def sniff(content: bytes) -> EntryKind:
             pass
     stripped = content.strip()
     if stripped[:1] in (b"{", b"["):
-        try:
-            json.loads(stripped.decode("utf-8"))
-            return EntryKind.JSON
-        except (ValueError, UnicodeDecodeError):
-            pass
+        if complete:
+            try:
+                json.loads(stripped.decode("utf-8"))
+                return EntryKind.JSON
+            except (ValueError, UnicodeDecodeError):
+                pass
+        else:
+            try:
+                stripped.decode("utf-8")
+                return EntryKind.JSON
+            except UnicodeDecodeError:
+                pass
     if content and _looks_textual(content):
         return EntryKind.TEXT
     return EntryKind.BINARY

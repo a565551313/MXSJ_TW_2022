@@ -101,8 +101,8 @@ class Inspector(QWidget):
         f = self._fields
         f["名称"].setText(doc.label(index))
         f["类型"].setText(KIND_LABELS[kind])
-        f["内容大小"].setText(f"{len(doc.content(index))} 字节")
-        f["存储大小"].setText(f"{len(doc.stored(index))} 字节")
+        f["内容大小"].setText(f"{doc.content_len(index)} 字节")
+        f["存储大小"].setText(f"{doc.stored_len(index)} 字节")
         f["状态"].setText("已修改" if doc.is_dirty(index) else "未修改")
         self._frames.clear()
         if sprite is None:

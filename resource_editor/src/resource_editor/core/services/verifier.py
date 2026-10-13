@@ -1,11 +1,13 @@
 """重打包结果校验：重新解析新包并逐条比对、试解码全部精灵。"""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from ..codecs import detect
 from ..codecs.sprite import decode_sprite
-from ..containers import open_archive
+from ..containers import open_archive, open_archive_path
 from ..errors import ContainerError
 
 
@@ -18,31 +20,65 @@ class VerifyReport:
     sprite_checked: int = 0
 
 
+_MAX_MESSAGES = 50
+
+
+def _check_archive(archive, count: int,
+                   expected_stored: Callable[[int], bytes]) -> VerifyReport:
+    """对已重解析的 archive 逐条比对存储字节并试解码精灵。"""
+    report = VerifyReport()
+    problems = 0
+
+    def complain(text: str) -> None:
+        nonlocal problems
+        report.ok = False
+        problems += 1
+        if problems <= _MAX_MESSAGES:
+            report.messages.append(text)
+
+    if archive.orig_count != count:
+        complain(f"条目数不一致：重解析 {archive.orig_count}，期望 {count}")
+        return report
+    for index in range(count):
+        got = archive.read_stored(index)
+        if got != expected_stored(index):
+            complain(f"条目 {index} 负载与预期不一致")
+    # 逐条试解码精灵（sprite 只存在于 0SLF 包，负载即内容视图）
+    for index in range(count):
+        head = archive.stored_head(index, 512)
+        if detect.sniff_prefix(head) is detect.EntryKind.SPRITE:
+            try:
+                decode_sprite(archive.read_stored(index))
+                report.sprite_checked += 1
+            except Exception as exc:  # 解码器异常统一汇报
+                complain(f"条目 {index} 精灵解码失败：{exc}")
+    if problems > _MAX_MESSAGES:
+        report.messages.append(
+            f"…另有 {problems - _MAX_MESSAGES} 处问题（已省略）")
+    return report
+
+
 def verify_rebuilt(built: bytes, expected_payloads: list[bytes]) -> VerifyReport:
     """校验构建出的包字节：可重解析、条目数/负载一致、精灵可解码。"""
-    report = VerifyReport()
     try:
         archive = open_archive(built)
     except ContainerError as exc:
         return VerifyReport(ok=False, messages=[f"重解析失败：{exc}"])
-    if archive.count != len(expected_payloads):
-        report.ok = False
-        report.messages.append(
-            f"条目数不一致：重解析 {archive.count}，期望 {len(expected_payloads)}"
-        )
-        return report
-    for index, (got, want) in enumerate(
-            zip(archive.payloads, expected_payloads, strict=True)):
-        if got != want:
-            report.ok = False
-            report.messages.append(f"条目 {index} 负载与预期不一致")
-    # 逐条试解码精灵（sprite 只存在于 0SLF 包，负载即内容视图）
-    for index, payload in enumerate(archive.payloads):
-        if detect.sniff(payload) is detect.EntryKind.SPRITE:
-            try:
-                decode_sprite(payload)
-                report.sprite_checked += 1
-            except Exception as exc:  # 解码器异常统一汇报
-                report.ok = False
-                report.messages.append(f"条目 {index} 精灵解码失败：{exc}")
-    return report
+    try:
+        return _check_archive(
+            archive, len(expected_payloads), expected_payloads.__getitem__)
+    finally:
+        archive.close()
+
+
+def verify_saved(path: str | Path, count: int,
+                 expected_stored: Callable[[int], bytes]) -> VerifyReport:
+    """流式校验已写出的包文件（惰性重开索引，逐条按需比对）。"""
+    try:
+        archive = open_archive_path(path)
+    except ContainerError as exc:
+        return VerifyReport(ok=False, messages=[f"重解析失败：{exc}"])
+    try:
+        return _check_archive(archive, count, expected_stored)
+    finally:
+        archive.close()

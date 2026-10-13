@@ -1,4 +1,6 @@
-"""主窗口：菜单、条目面板、预览区、检查器与日志的装配。
+"""主窗口：设定目录→左侧文件树→双击打开到中间分页网格→单击条目
+在右侧预览/检查。多个已打开的包驻留内存（惰性索引，驻留成本低），
+切换不重读。
 
 后台任务的回调统一登记在 ``_job_callbacks`` 中、经主窗口的
 槽函数分发，保证所有回调都在 GUI 线程执行（直接把普通函数
@@ -11,8 +13,8 @@ from collections import OrderedDict
 from pathlib import Path
 
 from PIL import Image
-from PySide6.QtCore import QPoint, Qt, QThreadPool
-from PySide6.QtGui import QAction, QImage
+from PySide6.QtCore import QPoint, QSettings, Qt, QThreadPool
+from PySide6.QtGui import QAction, QIcon, QImage, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -28,6 +30,7 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QScrollArea,
     QSpinBox,
+    QSplitter,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -39,7 +42,8 @@ from ..core.model.document import PackDocument
 from ..core.services import exporter
 from ..core.services.saver import save_document
 from .dialogs import ReplaceImagesDialog
-from .entry_panel import EntryPanel
+from .file_tree import DirectoryPanel
+from .grid_panel import EntryGridPanel
 from .inspector import Inspector
 from .preview.animation_bar import AnimationBar
 from .preview.sprite_view import MODE_CANVAS, MODE_FRAME, SpriteView
@@ -49,6 +53,22 @@ from .workers import Job
 
 _ZOOM_ITEMS = [("适应窗口", None), ("50%", 0.5), ("100%", 1.0), ("200%", 2.0),
                ("300%", 3.0), ("400%", 4.0), ("600%", 6.0)]
+_THUMB_SIZE = 72
+_THUMB_CACHE_MAX = 500
+
+
+def _key_of(path: str | Path) -> str:
+    return str(Path(path).resolve())
+
+
+def _scan_fls(directory: Path) -> list[Path]:
+    """列出目录顶层的 .fls 文件（不含子目录），按文件名排序。"""
+    try:
+        files = [p for p in directory.iterdir()
+                 if p.is_file() and p.suffix.lower() == ".fls"]
+    except OSError:
+        return []
+    return sorted(files, key=lambda p: p.name.lower())
 
 
 class MainWindow(QMainWindow):
@@ -58,12 +78,16 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("MXSJ 资源编辑器")
         self.resize(1240, 800)
-        self._doc: PackDocument | None = None
-        self._kinds: list[EntryKind] = []
+        self._settings = QSettings("MXSJ", "resource_editor")
+        self._docs: dict[str, PackDocument] = {}
+        self._kinds_map: dict[str, list[EntryKind]] = {}
+        self._current_key: str | None = None
+        self._workspace: Path | None = None
         self._current = -1
         self._sprite: Sprite | None = None
         self._pool = QThreadPool.globalInstance()
         self._render_cache: OrderedDict[int, tuple] = OrderedDict()
+        self._thumb_cache: OrderedDict[tuple[str, int], QImage] = OrderedDict()
         self._busy = False
         # 任务回调注册表：以 JobSignals 为键，经槽函数在 GUI 线程分发
         self._job_callbacks: dict[object, tuple] = {}
@@ -72,19 +96,36 @@ class MainWindow(QMainWindow):
         self._build_menus()
         self._update_actions()
 
+    # ---------------------------------------------------------- 文档 ----
+    @property
+    def _doc(self) -> PackDocument | None:
+        if self._current_key is None:
+            return None
+        return self._docs.get(self._current_key)
+
     # ---------------------------------------------------------- 界面 ----
     def _build_ui(self) -> None:
-        self._entry_panel = EntryPanel(self)
-        self._entry_panel.entry_selected.connect(self._select_entry)
-        left = QDockWidget("资源条目", self)
-        left.setWidget(self._entry_panel)
+        self._dir_panel = DirectoryPanel(self)
+        self._dir_panel.choose_dir_requested.connect(self.choose_workspace)
+        self._dir_panel.refresh_requested.connect(self.refresh_workspace)
+        self._dir_panel.file_selected.connect(self._on_file_selected)
+        self._dir_panel.file_activated.connect(self.open_pack)
+        left = QDockWidget("资源文件", self)
+        left.setWidget(self._dir_panel)
         self.addDockWidget(Qt.LeftDockWidgetArea, left)
 
-        self._inspector = Inspector(self)
-        self._inspector.frame_chosen.connect(self._on_frame_chosen)
-        right = QDockWidget("检查器", self)
-        right.setWidget(self._inspector)
+        self._grid = EntryGridPanel(self)
+        self._grid.entry_selected.connect(self._select_entry)
+        self._grid.page_changed.connect(self._ensure_page_thumbnails)
+        per_page = self._settings.value("per_page", 0, int)
+        if per_page:
+            self._grid.set_per_page(per_page)
+        self.setCentralWidget(self._grid)
+
+        right = QDockWidget("预览与检查", self)
+        right.setWidget(self._build_right_panel())
         self.addDockWidget(Qt.RightDockWidgetArea, right)
+        self.resizeDocks([left, right], [240, 400], Qt.Horizontal)
 
         self._log = QPlainTextEdit(self)
         self._log.setReadOnly(True)
@@ -93,20 +134,36 @@ class MainWindow(QMainWindow):
         bottom.setWidget(self._log)
         self.addDockWidget(Qt.BottomDockWidgetArea, bottom)
 
-        self._stack = QStackedWidget(self)
-        self._stack.addWidget(self._build_sprite_page())
-        self._text_preview = TextPreview(self)
-        self._stack.addWidget(self._text_preview)
-        self._hex_preview = HexPreview(self)
-        self._stack.addWidget(self._hex_preview)
-        self.setCentralWidget(self._stack)
-
         self._status_label = QLabel("未打开资源包", self)
         self._progress = QProgressBar(self)
         self._progress.setMaximumWidth(220)
         self._progress.hide()
         self.statusBar().addWidget(self._status_label, 1)
         self.statusBar().addPermanentWidget(self._progress)
+
+    def _build_right_panel(self) -> QWidget:
+        """右侧栏：上方预览（精灵动画/图片/文本/Hex 切换），下方检查器。"""
+        container = QWidget(self)
+        splitter = QSplitter(Qt.Vertical, container)
+
+        self._preview_stack = QStackedWidget(splitter)
+        self._preview_stack.addWidget(self._build_sprite_page())
+        self._text_preview = TextPreview(splitter)
+        self._preview_stack.addWidget(self._text_preview)
+        self._hex_preview = HexPreview(splitter)
+        self._preview_stack.addWidget(self._hex_preview)
+
+        self._inspector = Inspector(splitter)
+        self._inspector.frame_chosen.connect(self._on_frame_chosen)
+        splitter.addWidget(self._preview_stack)
+        splitter.addWidget(self._inspector)
+        splitter.setStretchFactor(0, 3)
+        splitter.setStretchFactor(1, 2)
+
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(splitter)
+        return container
 
     def _build_sprite_page(self) -> QWidget:
         page = QWidget(self)
@@ -118,7 +175,7 @@ class MainWindow(QMainWindow):
         self._zoom_box = QComboBox(self)
         for label, value in _ZOOM_ITEMS:
             self._zoom_box.addItem(label, value)
-        self._zoom_box.setCurrentIndex(3)  # 200%
+        self._zoom_box.setCurrentIndex(0)  # 适应窗口（右侧小窗默认）
         self._zoom_box.currentIndexChanged.connect(self._apply_zoom)
         self._anchor_check = QCheckBox("锚点十字", self)
         self._anchor_check.setChecked(True)
@@ -150,7 +207,9 @@ class MainWindow(QMainWindow):
 
     def _build_menus(self) -> None:
         file_menu = self.menuBar().addMenu("文件")
-        self._act_open = self._action("打开资源包…", "Ctrl+O",
+        self._act_workspace = self._action("设定工作目录…", "Ctrl+O",
+                                           self.choose_workspace)
+        self._act_open = self._action("打开资源包…", None,
                                       lambda: self.open_file())
         self._act_save = self._action("保存", "Ctrl+S",
                                       lambda: self.save_file(False))
@@ -161,8 +220,9 @@ class MainWindow(QMainWindow):
         self._act_export_all = self._action("导出全部精灵…", None,
                                             self.export_all_sprites)
         act_quit = self._action("退出", "Ctrl+Q", self.close)
-        for act in (self._act_open, self._act_save, self._act_save_as,
-                    self._act_export_entry, self._act_export_all, act_quit):
+        for act in (self._act_workspace, self._act_open, self._act_save,
+                    self._act_save_as, self._act_export_entry,
+                    self._act_export_all, act_quit):
             file_menu.addAction(act)
 
         edit_menu = self.menuBar().addMenu("编辑")
@@ -193,112 +253,196 @@ class MainWindow(QMainWindow):
         stamp = time.strftime("%H:%M:%S")
         self._log.appendPlainText(f"[{stamp}] {message}")
 
+    # ----------------------------------------------------- 工作目录 ----
+    def choose_workspace(self) -> None:
+        start = str(self._workspace) if self._workspace else ""
+        directory = QFileDialog.getExistingDirectory(
+            self, "设定工作目录（资源 .fls 所在文件夹）", start)
+        if directory:
+            self.set_workspace(directory)
+
+    def set_workspace(self, directory: str | Path, remember: bool = True) -> None:
+        """设定工作目录并刷新文件树；目录为空/不存在都不报错。"""
+        d = Path(directory)
+        if not d.is_dir():
+            self._workspace = None
+            self._dir_panel.set_files(None, [], set())
+            self.log(f"目录不存在或不可用：{d}")
+            return
+        self._workspace = d
+        if remember:
+            self._settings.setValue("workspace_dir", str(d))
+        files = _scan_fls(d)
+        modified = {k for k, doc in self._docs.items() if doc.is_modified}
+        self._dir_panel.set_files(d, files, modified)
+        self.log(f"工作目录：{d}（找到 {len(files)} 个 .fls 文件）")
+
+    def refresh_workspace(self) -> None:
+        if self._workspace is not None:
+            self.set_workspace(self._workspace, remember=False)
+
+    def restore_workspace(self) -> None:
+        """启动时恢复上次的工作目录（没有则空着）。"""
+        saved = self._settings.value("workspace_dir", "", str)
+        if saved:
+            self.set_workspace(saved, remember=False)
+
+    def _on_file_selected(self, key: str) -> None:
+        doc = self._docs.get(key)
+        note = "（已打开）" if doc is not None else ""
+        self.statusBar().showMessage(f"{key}{note}", 4000)
+
     # ---------------------------------------------------------- 打开 ----
     def open_file(self, path: str | None = None) -> None:
-        if self._busy:
-            return
+        """打开单个资源包（同时把工作目录切到它所在文件夹）。"""
         if path is None:
+            start = str(self._workspace) if self._workspace else ""
             path, _ = QFileDialog.getOpenFileName(
-                self, "打开资源包", "", "资源包 (*.fls);;所有文件 (*)")
+                self, "打开资源包", start, "资源包 (*.fls);;所有文件 (*)")
             if not path:
                 return
-        self._run_job(
-            Job(lambda progress: self._load_pack(Path(path), progress),
-                "打开资源包"),
-            self._on_pack_opened,
-        )
+        p = Path(path)
+        if self._workspace is None or _key_of(p.parent) != _key_of(self._workspace):
+            self.set_workspace(p.parent)
+        self.open_pack(str(p))
 
-    @staticmethod
-    def _load_pack(path: Path, progress) -> tuple[PackDocument, list[EntryKind]]:
-        doc = PackDocument.open(path)
-        kinds = []
-        for i in range(doc.count):
-            kinds.append(doc.entry_kind(i))
-            if i % 250 == 0:
-                progress(i, doc.count)
-        progress(doc.count, doc.count)
-        return doc, kinds
-
-    def _on_pack_opened(self, result) -> None:
-        doc, kinds = result
-        self._doc = doc
-        self._kinds = kinds
-        self._render_cache.clear()
-        self._sprite = None
-        self._entry_panel.set_document(doc, kinds)
-        pack_name = doc.path.name if doc.path else "未命名"
-        self.setWindowTitle(f"{pack_name} — MXSJ 资源编辑器")
-        self.log(f"已打开 {doc.path}：{doc.count} 个条目")
-        self._update_actions()
-        self._start_thumbnails()
-        if doc.count:
-            self._entry_panel.select_entry(0)
-
-    def _start_thumbnails(self) -> None:
-        doc = self._doc
-        if doc is None:
+    def open_pack(self, path: str) -> None:
+        """把资源包打开到中间网格（已打开过的直接切换，不重读）。"""
+        key = _key_of(path)
+        if key in self._docs:
+            self._activate_pack(key)
             return
-        kinds = list(self._kinds)
+        if self._busy:
+            return
+        p = Path(path)
 
         def job(progress):
+            doc = PackDocument.open(p)
+            kinds = []
+            for i in range(doc.count):
+                kinds.append(doc.entry_kind(i))
+                if i % 250 == 0:
+                    progress(i, doc.count)
+            progress(doc.count, doc.count)
+            return doc, kinds
+
+        def done(result) -> None:
+            doc, kinds = result
+            self._docs[key] = doc
+            self._kinds_map[key] = kinds
+            self.log(f"已打开 {doc.path}：{doc.count} 个条目")
+            self._activate_pack(key)
+
+        self._run_job(Job(job, "打开资源包"), done)
+
+    def _activate_pack(self, key: str) -> None:
+        doc = self._docs[key]
+        self._current_key = key
+        self._current = -1
+        self._sprite = None
+        self._render_cache.clear()
+        self._grid.set_document(doc, self._kinds_map[key])
+        self._dir_panel.select_file(key)
+        name = doc.path.name if doc.path else "未命名"
+        self.setWindowTitle(f"{name} — MXSJ 资源编辑器")
+        self._inspector.clear()
+        self._sprite_view.clear()
+        self._update_actions()
+        if doc.count:
+            self._grid.select_entry(0)
+            self._select_entry(0)
+        else:
+            self._ensure_page_thumbnails()
+
+    # -------------------------------------------------------- 缩略图 ----
+    def _ensure_page_thumbnails(self) -> None:
+        doc = self._doc
+        key = self._current_key
+        if doc is None or key is None:
+            return
+        entries = [i for i in self._grid.page_entries()
+                   if (key, i) not in self._thumb_cache]
+        self._apply_cached_icons()
+        if not entries:
+            return
+
+        def job(_progress):
             thumbs: dict[int, QImage] = {}
-            total = doc.count
-            for i in range(total):
-                kind = kinds[i]
+            for i in entries:
                 try:
+                    kind = doc.entry_kind(i)
                     if kind is EntryKind.SPRITE:
                         sprite = decode_sprite(doc.content(i))
                         img = sprite.render_frame(0)
-                        img.thumbnail((46, 46), Image.NEAREST)
+                        img.thumbnail((_THUMB_SIZE, _THUMB_SIZE),
+                                      Image.NEAREST)
                         thumbs[i] = pil_to_qimage(img)
                     elif kind is EntryKind.PNG:
                         qimg = QImage.fromData(doc.content(i))
                         thumbs[i] = qimg.scaled(
-                            46, 46, Qt.KeepAspectRatio, Qt.FastTransformation)
+                            _THUMB_SIZE, _THUMB_SIZE,
+                            Qt.KeepAspectRatio, Qt.FastTransformation)
                 except Exception:
-                    pass  # 缩略图失败不影响打开
-                if i % 100 == 0:
-                    progress(i, total)
-            progress(total, total)
+                    pass  # 缩略图失败不影响浏览，占位图即可
             return thumbs
 
         j = Job(job, "生成缩略图")
-        j.signals.finished.connect(self._on_thumbnails)
-        self._pool.start(j)
+        self._register_job(
+            j, lambda thumbs: self._on_thumbnails(key, thumbs),
+            on_error=lambda _t: None)
 
-    def _on_thumbnails(self, thumbs: dict) -> None:
-        model = self._entry_panel.model
+    def _apply_cached_icons(self) -> None:
+        key = self._current_key
+        if key is None:
+            return
+        icons = {}
+        for i in self._grid.page_entries():
+            img = self._thumb_cache.get((key, i))
+            if img is not None:
+                self._thumb_cache.move_to_end((key, i))
+                icons[i] = QIcon(QPixmap.fromImage(img))
+        if icons:
+            self._grid.set_icons(icons)
+
+    def _on_thumbnails(self, key: str, thumbs: dict) -> None:
         for index, image in thumbs.items():
-            model.set_thumbnail(index, image)
+            self._thumb_cache[(key, index)] = image
+            self._thumb_cache.move_to_end((key, index))
+        while len(self._thumb_cache) > _THUMB_CACHE_MAX:
+            self._thumb_cache.popitem(last=False)
+        if key == self._current_key:
+            self._apply_cached_icons()
 
     # ---------------------------------------------------------- 选中 ----
     def _select_entry(self, index: int) -> None:
-        if self._doc is None or not 0 <= index < self._doc.count:
+        doc = self._doc
+        if doc is None or not 0 <= index < doc.count:
             return
         self._current = index
-        kind = self._kinds[index]
+        kind = doc.entry_kind(index)
         self._anim_bar.stop()
         if kind is EntryKind.SPRITE:
             self._show_sprite(index)
         elif kind is EntryKind.PNG:
             self._sprite = None
-            self._inspector.set_entry(self._doc, index, None)
-            qimg = QImage.fromData(self._doc.content(index))
+            self._inspector.set_entry(doc, index, None)
+            qimg = QImage.fromData(doc.content(index))
             self._sprite_view.set_image(qimg)
+            self._apply_zoom()
             self._anim_bar.set_frame_count(1)
-            self._stack.setCurrentIndex(0)
+            self._preview_stack.setCurrentIndex(0)
         elif kind in (EntryKind.JSON, EntryKind.TEXT):
             self._sprite = None
-            self._inspector.set_entry(self._doc, index, None)
-            self._text_preview.set_content(self._doc.content(index))
-            self._stack.setCurrentIndex(1)
+            self._inspector.set_entry(doc, index, None)
+            self._text_preview.set_content(doc.content(index))
+            self._preview_stack.setCurrentIndex(1)
         else:
             self._sprite = None
-            self._inspector.set_entry(self._doc, index, None)
+            self._inspector.set_entry(doc, index, None)
             note = ("zlib 包装的脚本数据（内层含 XOR，编辑器不解码）"
                     if kind is EntryKind.SCRIPT else "")
-            self._hex_preview.set_content(self._doc.content(index), note)
-            self._stack.setCurrentIndex(2)
+            self._hex_preview.set_content(doc.content(index), note)
+            self._preview_stack.setCurrentIndex(2)
         self._update_actions()
 
     def _show_sprite(self, index: int) -> None:
@@ -341,7 +485,7 @@ class MainWindow(QMainWindow):
         self._sprite_view.set_mode(self._mode_box.currentData())
         self._apply_zoom()
         self._anim_bar.set_frame_count(sprite.frame_count)
-        self._stack.setCurrentIndex(0)
+        self._preview_stack.setCurrentIndex(0)
 
     def _on_frame_chosen(self, frame: int) -> None:
         if frame < 0:
@@ -415,13 +559,8 @@ class MainWindow(QMainWindow):
             return
         assert self._doc is not None
         self._doc.replace_content(index, encoded)
-        self._render_cache.pop(index, None)
         self.log(f"条目 {index} 已替换图片，新大小 {len(encoded)} 字节")
-        self._kinds[index] = self._doc.entry_kind(index)
-        self._entry_panel.model.refresh_entry(index)
-        self._start_thumbnails()
-        self._select_entry(index)
-        self._update_actions()
+        self._after_entry_changed(index)
 
     def replace_raw(self) -> None:
         if self._doc is None or self._current < 0:
@@ -454,7 +593,7 @@ class MainWindow(QMainWindow):
                 return
         index = self._doc.add_entry(Path(path).read_bytes(), name)
         self.log(f"已新增条目 {index}")
-        self._reload_entry_list(select=index)
+        self._reload_grid(select=index)
 
     def delete_entry(self) -> None:
         if self._doc is None or self._current < 0:
@@ -466,8 +605,14 @@ class MainWindow(QMainWindow):
             return
         self._doc.delete_entry(index)
         self._render_cache.clear()
+        # 序号整体移位：该包的缩略图缓存失效
+        if self._current_key is not None:
+            key = self._current_key
+            self._thumb_cache = OrderedDict(
+                (k, v) for k, v in self._thumb_cache.items() if k[0] != key)
         self.log(f"已删除条目 {index}")
-        self._reload_entry_list(select=min(index, self._doc.count - 1))
+        nxt = min(index, self._doc.count - 1)
+        self._reload_grid(select=nxt)
 
     def undo_entry(self) -> None:
         if self._doc is None or self._current < 0:
@@ -486,20 +631,31 @@ class MainWindow(QMainWindow):
         self._after_entry_changed(self._current)
 
     def _after_entry_changed(self, index: int) -> None:
-        assert self._doc is not None
+        assert self._doc is not None and self._current_key is not None
         self._render_cache.pop(index, None)
-        self._kinds[index] = self._doc.entry_kind(index)
-        self._entry_panel.model.refresh_entry(index)
+        self._thumb_cache.pop((self._current_key, index), None)
+        kinds = self._kinds_map[self._current_key]
+        if 0 <= index < len(kinds):
+            kinds[index] = self._doc.entry_kind(index)
+        self._grid.refresh_entry(index)
         self._select_entry(index)
+        self._sync_doc_marks()
         self._update_actions()
 
-    def _reload_entry_list(self, select: int = -1) -> None:
-        assert self._doc is not None
-        self._kinds = [self._doc.entry_kind(i) for i in range(self._doc.count)]
-        self._entry_panel.set_document(self._doc, self._kinds)
-        self._start_thumbnails()
-        if 0 <= select < self._doc.count:
-            self._entry_panel.select_entry(select)
+    def _reload_grid(self, select: int = -1) -> None:
+        doc = self._doc
+        assert doc is not None and self._current_key is not None
+        kinds = [doc.entry_kind(i) for i in range(doc.count)]
+        self._kinds_map[self._current_key] = kinds
+        self._grid.set_document(doc, kinds)
+        self._sync_doc_marks()
+        if 0 <= select < doc.count:
+            self._current = -1
+            self._grid.select_entry(select)
+            self._select_entry(select)
+        elif doc.count == 0:
+            self._current = -1
+            self._inspector.clear()
         self._update_actions()
 
     # ---------------------------------------------------------- 导出 ----
@@ -533,29 +689,49 @@ class MainWindow(QMainWindow):
     def save_file(self, save_as: bool) -> None:
         if self._doc is None or self._busy:
             return
-        target = None if save_as else self._doc.path
+        doc = self._doc
+        old_key = self._current_key
+        target = None if save_as else doc.path
         if target is None:
             path, _ = QFileDialog.getSaveFileName(
                 self, "保存资源包", "", "资源包 (*.fls);;所有文件 (*)")
             if not path:
                 return
             target = Path(path)
-        doc = self._doc
 
-        def job(_progress):
-            return save_document(doc, target)
+        def job(progress):
+            return save_document(doc, target, progress)
 
         def done(report) -> None:
-            self._entry_panel.model.refresh_all_states()
+            self._docs.pop(old_key, None)
+            if old_key is not None:
+                self._kinds_map.pop(old_key, None)
+            new_key = _key_of(target)
+            self._docs[new_key] = doc
+            self._kinds_map[new_key] = [doc.entry_kind(i)
+                                        for i in range(doc.count)]
+            self._current_key = new_key
+            if save_as:
+                self.set_workspace(target.parent)
+            self._dir_panel.select_file(new_key)
+            self._grid.refresh_header()
             backup = target.with_suffix(target.suffix + ".bak")
             note = f"，原文件备份为 {backup.name}" if backup.exists() else ""
             self.log(
                 f"已保存到 {target}（校验通过，试解码精灵 "
                 f"{report.sprite_checked} 个{note}）")
             self.setWindowTitle(f"{target.name} — MXSJ 资源编辑器")
+            self._sync_doc_marks()
             self._update_actions()
 
         self._run_job(Job(job, "保存资源包"), done)
+
+    def _sync_doc_marks(self) -> None:
+        doc = self._doc
+        if doc is not None and self._current_key is not None:
+            self._dir_panel.set_modified(
+                self._current_key, doc.is_modified)
+            self._grid.refresh_header()
 
     # ---------------------------------------------------------- 任务 ----
     def _register_job(self, job: Job, on_finished, on_error=None) -> None:
@@ -604,7 +780,8 @@ class MainWindow(QMainWindow):
         has_doc = self._doc is not None
         has_entry = has_doc and self._current >= 0
         is_sprite = (
-            has_entry and self._kinds[self._current] is EntryKind.SPRITE)
+            has_entry and self._doc is not None
+            and self._doc.entry_kind(self._current) is EntryKind.SPRITE)
         self._act_save.setEnabled(has_doc)
         self._act_save_as.setEnabled(has_doc)
         self._act_export_entry.setEnabled(has_entry)
@@ -626,8 +803,9 @@ class MainWindow(QMainWindow):
     def _show_about(self) -> None:
         QMessageBox.about(
             self, "关于",
-            "MXSJ 资源编辑器 0.1.0\n"
+            "MXSJ 资源编辑器 0.2.0\n"
             "梦想世界客户端 FLS 资源包浏览与编辑工具。\n"
+            "目录式工作区 + 分页网格浏览 + 惰性加载（大包秒开）。\n"
             "精灵格式 I0/T0/I1 规格见 tools/data-parser/I0_SPRITE_FORMAT.md。")
 
     # ---------------------------------------------------------- 事件 ----
@@ -641,12 +819,19 @@ class MainWindow(QMainWindow):
         super().keyPressEvent(event)
 
     def closeEvent(self, event) -> None:  # noqa: N802 (Qt 命名)
-        if self._doc is not None and self._doc.is_modified:
+        modified = [doc.path.name if doc.path else "未命名"
+                    for doc in self._docs.values() if doc.is_modified]
+        if modified:
+            names = "、".join(modified[:5])
+            more = f" 等 {len(modified)} 个包" if len(modified) > 5 else ""
             answer = QMessageBox.question(
                 self, "退出",
-                "资源包有未保存的修改，确认退出？",
+                f"以下资源包有未保存的修改：{names}{more}，确认退出？",
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if answer != QMessageBox.Yes:
                 event.ignore()
                 return
+        self._settings.setValue("per_page", self._grid.per_page)
+        for doc in self._docs.values():
+            doc.close()
         super().closeEvent(event)
