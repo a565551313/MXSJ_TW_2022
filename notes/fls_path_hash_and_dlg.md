@@ -130,3 +130,15 @@ python tools/data-parser/extract_dlg.py <interface.fls> <输出目录> \
 dump 指定条目」流程：探针 `interface_probe4.py`（仓库根目录，
 未入库）内嵌由脚本收割路径算出的 2,706 个条目下标，批量导出
 负载与目录原字段，再由本机解码校验。
+
+## 8. 附记：ui.lst
+
+`ui.lst` 同样以哈希条目存于 interface.fls（idx 29720，
+`entry_id = 0x8DA5E6EC`，f1=0），但其负载为 **明文**（无 XOR）：
+69,300 字节、2,418 行的 INI 风格 UI 样式注册表，含 `[Font]`、
+`[NewFont]`、`[List]`、`[Table]`、`[Button]`、`[Frame]`、
+`[TBStyle_000]`…`[TBStyle_105]` 等节（字体表、控件颜色/边距等
+样式参数），GB18030 编码。说明 XOR 加密只施加于 UI 编辑器产出的
+`.dlg`，并非包级统一处理。用 `extract_dlg.py` 按路径 `ui.lst`
+即可直接取出（频率恢复得到全零密钥时按明文写出）。成品与
+2,706 个 `.dlg` 同置于 `interface_dlg_decoded/`。
