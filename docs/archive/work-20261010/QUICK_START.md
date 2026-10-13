@@ -1,15 +1,19 @@
+> ⚠️ **已归档（2026-10-14 整理）**：原 `work/dream-world-connect-login-map/QUICK_START.md`。2026-10-09/10 多 Agent 分派与交接时期的文档。
+> 文中“当前/下一步/分支”等描述是 2026-10-10 前后的历史快照，路径与计数可能已失效；保留仅用于证据追溯。
+> 现行内容以 [work/dream-world-connect-login-map/report/client-status-20261012.md（客户端侧权威现状）](../../../work/dream-world-connect-login-map/report/client-status-20261012.md)；[work/dream-world-connect-login-map/INDEX.md（研究区索引）](../../../work/dream-world-connect-login-map/INDEX.md)；[AGENTS.md / docs/STATUS.md（项目级入口）](../../../AGENTS.md) 为准。
+
 # 梦想世界逆向工程 — 快速开始指南
 
 **欢迎加入！** 请先阅读本文，了解项目背景和你的任务。
 
-> ⛔ **2026-10-12 更新：本文多处已过期，客户端侧现状以 [`report/client-status-20261012.md`](report/client-status-20261012.md) 为准。**
+> ⛔ **2026-10-12 更新：本文多处已过期，客户端侧现状以 [`report/client-status-20261012.md`](../../../work/dream-world-connect-login-map/report/client-status-20261012.md) 为准。**
 > 具体过期项：模拟服务器现在在**仓库根目录** `mock_server.py`（不是 `tools/mock_server.py`）；
 > "命令字 0x0001/0x0010/0x00FF" 一节整段作废——命令字是单字节，权威表用
 > `python3 tools/extract_protocol_table.py` 从客户端自己提取；帧格式为 `[1B 长度][包体]`，
 > `0xFF` 转义续读 **2** 字节（不是 3）；`im_crypto.py` 的 `build_frame` 用大端 2 字节总长，属于已被
 > 推翻的 `IMProtocol.dll` 模型，勿用于真实报文分析。
 
-> ⚠️ **2026-10-10 核对更新**：通信密钥未获得，仓库中没有任何真实捕获字节；loginhello 明文包与 C→S 命令字数值未证实。请先读 [`report/verification-20261010.md`](report/verification-20261010.md)。
+> ⚠️ **2026-10-10 核对更新**：通信密钥未获得，仓库中没有任何真实捕获字节；loginhello 明文包与 C→S 命令字数值未证实。请先读 [`report/verification-20261010.md`](../../../work/dream-world-connect-login-map/report/verification-20261010.md)。
 >
 > ⭐ **新接手的 agent 请先阅读交接文档**: [`HANDOVER-20261010.md`](HANDOVER-20261010.md)（项目交接文档，含完整进度、文件路径、工具手册）
 

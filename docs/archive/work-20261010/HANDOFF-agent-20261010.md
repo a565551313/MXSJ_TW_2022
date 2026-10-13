@@ -1,3 +1,7 @@
+> ⚠️ **已归档（2026-10-14 整理）**：原 `work/dream-world-connect-login-map/HANDOFF-agent-20261010.md`。2026-10-09/10 多 Agent 分派与交接时期的文档。
+> 文中“当前/下一步/分支”等描述是 2026-10-10 前后的历史快照，路径与计数可能已失效；保留仅用于证据追溯。
+> 现行内容以 [work/dream-world-connect-login-map/report/client-status-20261012.md（客户端侧权威现状）](../../../work/dream-world-connect-login-map/report/client-status-20261012.md)；[work/dream-world-connect-login-map/INDEX.md（研究区索引）](../../../work/dream-world-connect-login-map/INDEX.md)；[AGENTS.md / docs/STATUS.md（项目级入口）](../../../AGENTS.md) 为准。
+
 # 交接文档：给后续 agent（2026-10-10 晚）
 
 > 本文件是接手说明，覆盖 `HANDOVER-20261010.md` 之后的进展。旧交接文档中的部分表述已被 `report/verification-20261010.md` 修正，以那份为准。

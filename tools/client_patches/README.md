@@ -1,6 +1,6 @@
 # 客户端局部测试补丁：注册流程预览
 
-> 后续 Agent 接手请先读[完整项目交接（2026-10-12）](../../AGENT_HANDOFF.md)：当前交付、原生待验收项、复现命令与下一步边界。
+> 接手请先读根目录 [AGENTS.md](../../AGENTS.md) 与 [docs/STATUS.md](../../docs/STATUS.md)。本专题的交付哈希/链接、FLS 封装参数、构建/审计命令、Windows 安装回退与原生验收清单集中在 [V3_3_DELIVERY_AND_ACCEPTANCE.md](V3_3_DELIVERY_AND_ACCEPTANCE.md)（原根目录 `AGENT_HANDOFF.md` 的事实部分，原文已归档）。
 
 **已交付 v3 停用。自查已确认其 EXEC 命名空间参数错误，并复现 TypeError。**
 当前为 **v3.3 控件修正候选**：保留点击加载，替换协议/表单按钮，修正说明入口坐标/透明度，

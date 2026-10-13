@@ -1,3 +1,7 @@
+> ⚠️ **已归档（2026-10-14 整理）**：原 `work/dream-world-connect-login-map/DISPATCH_OVERVIEW.md`。2026-10-09/10 多 Agent 分派与交接时期的文档。
+> 文中“当前/下一步/分支”等描述是 2026-10-10 前后的历史快照，路径与计数可能已失效；保留仅用于证据追溯。
+> 现行内容以 [work/dream-world-connect-login-map/report/client-status-20261012.md（客户端侧权威现状）](../../../work/dream-world-connect-login-map/report/client-status-20261012.md)；[work/dream-world-connect-login-map/INDEX.md（研究区索引）](../../../work/dream-world-connect-login-map/INDEX.md)；[AGENTS.md / docs/STATUS.md（项目级入口）](../../../AGENTS.md) 为准。
+
 > ⚠️ **2026-10-10 核对更新**：本文件中部分“已完成/已确认”表述与仓库实际情况不符。以 `report/verification-20261010.md` 为准。主要问题：通信密钥未获得、仓库中无真实捕获字节、loginhello 样本缺失、C→S 命令字数值未证实、`server.ini` 已被改为回环地址。
 
 # 任务分派总览 — 梦想世界逆向工程

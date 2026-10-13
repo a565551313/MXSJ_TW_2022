@@ -1,3 +1,7 @@
+> ⚠️ **已归档（2026-10-14 整理）**：原 `AGENT_HANDOFF.md`（根目录）。注册 UI v3.3 交付时期的完整状态快照与接手指南。
+> 文中“当前/下一步/分支”等描述是 2026-10-12 前后的历史快照，路径与计数可能已失效；保留仅用于证据追溯。
+> 现行内容以 [AGENTS.md（长期规则与地图）](../../AGENTS.md)；[docs/STATUS.md（当前状态）](../STATUS.md)；[tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md（v3.3 交付哈希、安装/回退、验收清单）](../../tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md) 为准。
+
 # MXSJ 项目完整交接：后续 Agent 从这里开始
 
 > 交接日期：2026-10-12（用户时区 Asia/Shanghai）。
@@ -305,17 +309,17 @@ DLG 中多余的旧交互控件隐藏；模板部分静态装饰、顶部提示�
 
 | 路径 | 作用 |
 |---|---|
-| [`tools/client_patches/README.md`](tools/client_patches/README.md) | 客户端补丁最新入口与历史指引 |
-| [`REGISTRATION_CONTROL_FIX_V3_3.md`](tools/client_patches/REGISTRATION_CONTROL_FIX_V3_3.md) | 五类问题、原生接口依据、本轮修正和验收边界 |
-| [`registration_visual_overlay.py`](tools/client_patches/registration_visual_overlay.py) | 自写 Python 2.5 UI；图片、动作控件、新协议、新表单 |
-| [`home_registration_entry.py`](tools/client_patches/home_registration_entry.py) | 独立首页标题与点击加载片段 |
-| [`build_visual_preview.py`](tools/client_patches/build_visual_preview.py) | 最新 v3.3 构建器、映射、内联、定长重序列化、报告 |
-| [`build_registration_preview.py`](tools/client_patches/build_registration_preview.py) | 原 v1–v2.2 定宽补丁、校验逻辑、FLS/字节码公用函数 |
-| [`prepare_visual_assets.py`](tools/client_patches/prepare_visual_assets.py) | CPython 2.5 精确编译和 Pillow 图片生成 |
-| [`visual_assets/manifest.json`](tools/client_patches/visual_assets/manifest.json) | 源码、编译产物、字体输入、8 张 PNG 哈希 |
-| [`audit_visual_runtime.py`](tools/client_patches/audit_visual_runtime.py) | 从实际构建 FLS 提取片段、标准 opcode 转译和独立执行 |
-| [`visual_runtime_harness.py2`](tools/client_patches/visual_runtime_harness.py2) | CPython 2.5 假引擎边界、原控件方法、失败路径与光标审计 |
-| [`V3_3_RUNTIME_AUDIT.json`](tools/client_patches/V3_3_RUNTIME_AUDIT.json) | 本版 22 项结果、FLS SHA、原生未验证标记 |
+| [`tools/client_patches/README.md`](../../tools/client_patches/README.md) | 客户端补丁最新入口与历史指引 |
+| [`REGISTRATION_CONTROL_FIX_V3_3.md`](../../tools/client_patches/REGISTRATION_CONTROL_FIX_V3_3.md) | 五类问题、原生接口依据、本轮修正和验收边界 |
+| [`registration_visual_overlay.py`](../../tools/client_patches/registration_visual_overlay.py) | 自写 Python 2.5 UI；图片、动作控件、新协议、新表单 |
+| [`home_registration_entry.py`](../../tools/client_patches/home_registration_entry.py) | 独立首页标题与点击加载片段 |
+| [`build_visual_preview.py`](../../tools/client_patches/build_visual_preview.py) | 最新 v3.3 构建器、映射、内联、定长重序列化、报告 |
+| [`build_registration_preview.py`](../../tools/client_patches/build_registration_preview.py) | 原 v1–v2.2 定宽补丁、校验逻辑、FLS/字节码公用函数 |
+| [`prepare_visual_assets.py`](../../tools/client_patches/prepare_visual_assets.py) | CPython 2.5 精确编译和 Pillow 图片生成 |
+| [`visual_assets/manifest.json`](../../tools/client_patches/visual_assets/manifest.json) | 源码、编译产物、字体输入、8 张 PNG 哈希 |
+| [`audit_visual_runtime.py`](../../tools/client_patches/audit_visual_runtime.py) | 从实际构建 FLS 提取片段、标准 opcode 转译和独立执行 |
+| [`visual_runtime_harness.py2`](../../tools/client_patches/visual_runtime_harness.py2) | CPython 2.5 假引擎边界、原控件方法、失败路径与光标审计 |
+| [`V3_3_RUNTIME_AUDIT.json`](../../tools/client_patches/V3_3_RUNTIME_AUDIT.json) | 本版 22 项结果、FLS SHA、原生未验证标记 |
 
 ### 6.2 测试文件
 
@@ -638,7 +642,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 server/tools/export_review_csv.py --check
 | 原包/key DB SHA | 与锁定值一致 | 所有历史密钥语义都已认证 |
 | 当前已交付 ZIP SHA | 与第 8 节一致 | 新 Windows 安装已验收 |
 
-机器摘要：[`notes/handoff/2026-10-12-checks.json`](notes/handoff/2026-10-12-checks.json)。
+机器摘要：[`notes/handoff/2026-10-12-checks.json`](../../notes/handoff/2026-10-12-checks.json)。
 原始输出在 `/home/user/artifacts/handoff-checks/`，其存续需重新检查。
 本轮没有重跑 H/I/J 的浏览器与 API 全套；不要把第 17 节历史计数写成本轮新执行。
 
@@ -888,11 +892,11 @@ server/docs/review_browser/
 
 必须先读：
 
-- [`server/docs/GATEWAY.md`](server/docs/GATEWAY.md)
-- [`server/docs/GATEWAY_SECURITY_GM.md`](server/docs/GATEWAY_SECURITY_GM.md)
-- [`server/docs/INTERFACES.md`](server/docs/INTERFACES.md)
-- [`server/docs/OWNERSHIP.md`](server/docs/OWNERSHIP.md)
-- [`server/docs/BATTLE.md`](server/docs/BATTLE.md)
+- [`server/docs/GATEWAY.md`](../../server/docs/GATEWAY.md)
+- [`server/docs/GATEWAY_SECURITY_GM.md`](../../server/docs/GATEWAY_SECURITY_GM.md)
+- [`server/docs/INTERFACES.md`](../../server/docs/INTERFACES.md)
+- [`server/docs/OWNERSHIP.md`](../../server/docs/OWNERSHIP.md)
+- [`server/docs/BATTLE.md`](../../server/docs/BATTLE.md)
 
 ### 18.1 架构边界
 

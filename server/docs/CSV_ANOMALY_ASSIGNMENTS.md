@@ -24,7 +24,7 @@
 初始基线中已有：
 
 ```text
-server/docs/CLIENT_DATA_AGENT_HANDOFF.md
+docs/archive/2026-10-11-CLIENT_DATA_AGENT_HANDOFF.md（原 server/docs/CLIENT_DATA_AGENT_HANDOFF.md，已归档）
 server/docs/CLIENT_DATA_REVIEW.md
 server/docs/catalog/client_data_boundary_review.json
 server/tools/review_client_data_boundaries.py

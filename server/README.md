@@ -1,6 +1,6 @@
 # MXSJ Python 服务端工程骨架
 
-> 后续 Agent 接手请先读[完整项目交接（2026-10-12）](../AGENT_HANDOFF.md)：当前交付、原生待验收项、复现命令与下一步边界。
+> 接手请先读根目录 [AGENTS.md](../AGENTS.md)（规则与地图）和 [docs/STATUS.md](../docs/STATUS.md)（当前状态、红灯、下一步）。2026-10-12 的完整交接快照已归档至 [docs/archive/](../docs/archive/README.md)。
 
 **状态：模块边界与内部接口 v0.1 草案。游戏运行时尚无网络服务、数据库实现或可游玩业务；独立只读复核 API/网页已交付。**
 
