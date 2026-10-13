@@ -7,12 +7,13 @@
 """
 from __future__ import annotations
 
-from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtCore import QPoint, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QPushButton,
@@ -60,6 +61,8 @@ class EntryGridPanel(QWidget):
 
     entry_selected = Signal(int)
     page_changed = Signal()
+    selection_changed = Signal(int)          # 多选数量变化
+    context_menu_requested = Signal(int, QPoint)  # 右键条目序号+全局坐标
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -70,6 +73,10 @@ class EntryGridPanel(QWidget):
         self._per_page = DEFAULT_PAGE_SIZE
         self._kind_filter: EntryKind | None = None
         self._icons: dict[int, QIcon] = {}
+        self._select_mode = False
+        self._selected_set: set[int] = set()
+        self._filling = False
+        self._query = ""
 
         self._header = QLabel("未打开资源包（双击左侧文件名打开）", self)
 
@@ -102,10 +109,27 @@ class EntryGridPanel(QWidget):
             lambda v: self.goto_page(v - 1))
         self._page_label = QLabel("共 0 页", self)
 
+        self._select_btn = QPushButton("选择", self)
+        self._select_btn.setCheckable(True)
+        self._select_btn.setToolTip(
+            "进入/退出多选：点选多条后可用右键或文件菜单「导出选中」")
+        self._select_btn.toggled.connect(self.set_selection_mode)
+
+        self._search_edit = QLineEdit(self)
+        self._search_edit.setPlaceholderText("按名称搜索，如 底板800")
+        self._search_edit.setToolTip(
+            "按条目真名子串过滤（不分大小写），也可输序号；与类型过滤叠加")
+        self._search_edit.setClearButtonEnabled(True)
+        self._search_edit.setFixedWidth(180)
+        self._search_edit.textChanged.connect(self._on_search_changed)
+
         pager = QHBoxLayout()
         pager.addWidget(QLabel("类型：", self))
         pager.addWidget(self._kind_box)
         pager.addWidget(self._per_page_box)
+        pager.addWidget(self._select_btn)
+        pager.addWidget(QLabel("搜索：", self))
+        pager.addWidget(self._search_edit)
         pager.addStretch(1)
         pager.addWidget(self._first_btn)
         pager.addWidget(self._prev_btn)
@@ -126,6 +150,9 @@ class EntryGridPanel(QWidget):
         self._list.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self._list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self._list.itemClicked.connect(self._on_item_clicked)
+        self._list.itemSelectionChanged.connect(self._on_selection_changed)
+        self._list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._list.customContextMenuRequested.connect(self._on_context_menu)
 
         layout = QVBoxLayout(self)
         layout.addWidget(self._header)
@@ -138,6 +165,10 @@ class EntryGridPanel(QWidget):
         self._doc = doc
         self._kinds = list(kinds)
         self._icons.clear()
+        self._selected_set.clear()  # 换包/结构变化后旧序号作废
+        self._update_select_button()
+        if self._select_mode:
+            self.selection_changed.emit(0)
         self._rebuild_view()
 
     def refresh_header(self) -> None:
@@ -207,6 +238,63 @@ class EntryGridPanel(QWidget):
                 return True
         return False
 
+    # ---------------------------------------------------------- 多选 ----
+    @property
+    def selection_mode(self) -> bool:
+        return self._select_mode
+
+    def selected_indexes(self) -> list[int]:
+        """多选选中的条目序号（升序）。"""
+        return sorted(self._selected_set)
+
+    def set_selection_mode(self, on: bool) -> None:
+        """开关多选模式：开时点击条目只勾选/取消，不再跳详情。"""
+        if on == self._select_mode and self._select_btn.isChecked() == on:
+            return
+        self._select_mode = on
+        self._selected_set.clear()
+        self._list.setSelectionMode(
+            QListWidget.MultiSelection if on
+            else QListWidget.SingleSelection)
+        self._select_btn.blockSignals(True)
+        self._select_btn.setChecked(on)
+        self._select_btn.blockSignals(False)
+        self._update_select_button()
+        self._fill_page()
+        self.selection_changed.emit(0)
+
+    def clear_selection(self) -> None:
+        """清空多选集合（保留当前模式，删条目后序号移位时用）。"""
+        if not self._selected_set:
+            return
+        self._selected_set.clear()
+        self._update_select_button()
+        self._fill_page()
+        self.selection_changed.emit(0)
+
+    def _update_select_button(self) -> None:
+        if self._select_mode:
+            self._select_btn.setText(f"选择 ({len(self._selected_set)})")
+        else:
+            self._select_btn.setText("选择")
+
+    def _on_selection_changed(self) -> None:
+        if not self._select_mode or self._filling:
+            return
+        page = set(self.page_entries())
+        now = {int(it.data(_ROLE_INDEX))
+               for it in self._list.selectedItems()}
+        self._selected_set = (self._selected_set - page) | (now & page)
+        self._update_select_button()
+        self.selection_changed.emit(len(self._selected_set))
+
+    def _on_context_menu(self, pos: QPoint) -> None:
+        item = self._list.itemAt(pos)
+        if item is not None:
+            self.context_menu_requested.emit(
+                int(item.data(_ROLE_INDEX)),
+                self._list.viewport().mapToGlobal(pos))
+
     def goto_page(self, page: int) -> None:
         page = max(0, min(page, self.page_count() - 1)) if self._view else 0
         if page == self._page and self._list.count():
@@ -216,6 +304,24 @@ class EntryGridPanel(QWidget):
         self._fill_page()
 
     # ---------------------------------------------------------- 内部 ----
+    def focus_search(self) -> None:
+        """把键盘焦点送到搜索框（主窗口 Ctrl+F 用）。"""
+        self._search_edit.setFocus()
+        self._search_edit.selectAll()
+
+    def _matches_query(self, index: int) -> bool:
+        """真名子串（不分大小写）或序号命中即算搜索命中。"""
+        if self._doc is None:
+            return False
+        query = self._query.lower()
+        return (query in self._doc.label(index).lower()
+                or query in str(index))
+
+    def _on_search_changed(self, text: str) -> None:
+        self._query = text.strip()
+        self._page = 0
+        self._rebuild_view()
+
     def _rebuild_view(self) -> None:
         if self._doc is None:
             self._view = []
@@ -224,23 +330,32 @@ class EntryGridPanel(QWidget):
         else:
             self._view = [i for i, k in enumerate(self._kinds)
                           if k is self._kind_filter]
+        if self._query:
+            self._view = [i for i in self._view
+                          if self._matches_query(i)]
         self._page = max(0, min(self._page, self.page_count() - 1)) \
             if self._view else 0
         self._fill_page()
         self.refresh_header()
 
     def _fill_page(self) -> None:
-        self._list.clear()
-        for index in self.page_entries():
-            item = QListWidgetItem(self._item_text(index), self._list)
-            item.setData(_ROLE_INDEX, index)
-            item.setTextAlignment(Qt.AlignCenter)
-            icon = self._icons.get(index)
-            item.setIcon(icon if icon is not None
-                         else _placeholder_icon(self._kinds[index]))
-            item.setToolTip(
-                f"#{index} {self._doc.label(index) if self._doc else ''} · "
-                f"{KIND_LABELS.get(self._kinds[index], '')}")
+        self._filling = True
+        try:
+            self._list.clear()
+            for index in self.page_entries():
+                item = QListWidgetItem(self._item_text(index), self._list)
+                item.setData(_ROLE_INDEX, index)
+                item.setTextAlignment(Qt.AlignCenter)
+                icon = self._icons.get(index)
+                item.setIcon(icon if icon is not None
+                             else _placeholder_icon(self._kinds[index]))
+                item.setToolTip(
+                    f"#{index} {self._doc.label(index) if self._doc else ''} · "
+                    f"{KIND_LABELS.get(self._kinds[index], '')}")
+                if self._select_mode and index in self._selected_set:
+                    item.setSelected(True)
+        finally:
+            self._filling = False
         self._sync_pager()
         self.page_changed.emit()
 
@@ -263,7 +378,7 @@ class EntryGridPanel(QWidget):
     def _item_text(self, index: int) -> str:
         label = self._doc.label(index) if self._doc else str(index)
         if len(label) > 16:
-            label = label[:15] + "…"
+            label = "…" + label[-15:]  # 长路径保留尾部文件名
         return f"#{index}\n{label}"
 
     def _on_kind_changed(self, _i: int) -> None:
@@ -280,4 +395,6 @@ class EntryGridPanel(QWidget):
         self._fill_page()
 
     def _on_item_clicked(self, item: QListWidgetItem) -> None:
+        if self._select_mode:
+            return  # 多选模式下点击只勾选/取消，集合由选中信号维护
         self.entry_selected.emit(int(item.data(_ROLE_INDEX)))

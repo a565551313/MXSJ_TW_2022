@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import BinaryIO
 
+from .. import names as _names
 from ..codecs import detect
 from ..containers import (
     KIND_FLSDATA,
@@ -26,6 +27,7 @@ from ..containers import (
     open_archive,
     open_archive_path,
 )
+from ..mxhash import mx_hash
 
 
 @dataclass
@@ -36,6 +38,7 @@ class _Slot:
     stored: bytes | None = None        # 改动后的存储字节；None=用原始
     dirty: bool = False                # 当前字节是否与原始不同
     history: list[tuple[bytes | None, bool]] = field(default_factory=list)
+    path_name: str | None = None       # 按路径导入时登记的真名
 
 
 class PackDocument:
@@ -48,6 +51,7 @@ class PackDocument:
             _Slot(origin=i) for i in range(archive.orig_count)
         ]
         self._kind_cache: dict[int, detect.EntryKind] = {}
+        self._names: dict[int, str] | None = None  # 原始序号→真名
 
     # ---------------------------------------------------------- 打开 ----
     @classmethod
@@ -140,10 +144,59 @@ class PackDocument:
         assert slot.origin is not None
         return self.archive.stored_head(slot.origin, 512)
 
+    # ---------------------------------------------------- 真名识别 ----
+    def resolve_names(self) -> int:
+        """为 0SLF 条目识别真名，返回识别出的条数（幂等）。
+
+        字典命中给 .dlg 条目命名，再读这些布局扒出其引用的图片
+        路径反查目录（详见 core.names）。识别需读种子条目负载，
+        打开大包时应由后台任务调用；label() 首次被问到也会惰性
+        触发。识别失败绝不影响文档可用性。
+        """
+        if self.archive.kind != "0slf":
+            return 0
+        if self._names is None:
+            try:
+                entry_ids = [meta.entry_id
+                             for meta in self.archive.extra_metas]
+                self._names = _names.build_name_map(
+                    entry_ids, self.archive.read_stored)
+            except Exception:
+                self._names = {}
+        return len(self._names)
+
+    @property
+    def named_count(self) -> int:
+        """已识别真名的条数（未解析时为 0，不触发解析）。"""
+        return len(self._names) if self._names else 0
+
+    def true_name(self, index: int) -> str | None:
+        """条目真名（导出命名用）：认不出返回 None，不回退序号。"""
+        if self.archive.kind == KIND_FLSDATA:
+            meta = self.archive.extra_metas[index]
+            return meta.name if not meta.is_dir else None
+        slot = self._slots[index]
+        if slot.path_name:
+            return slot.path_name
+        self.resolve_names()
+        origin = slot.origin
+        if origin is not None and self._names:
+            return self._names.get(origin)
+        return None
+
     def label(self, index: int) -> str:
-        """条目显示名：data.fls 用文件名，0SLF 用序号。"""
+        """条目显示名：data.fls 用文件名；0SLF 优先真名，未识别出真名时回退序号。"""
         if self.archive.kind == KIND_FLSDATA:
             return self.archive.extra_metas[index].name
+        slot = self._slots[index]
+        if slot.path_name:
+            return slot.path_name
+        self.resolve_names()
+        origin = slot.origin
+        if origin is not None and self._names:
+            name = self._names.get(origin)
+            if name:
+                return name
         return f"条目 {index}"
 
     def is_dirty(self, index: int) -> bool:
@@ -216,6 +269,35 @@ class PackDocument:
             )
             stored = content
         self._slots.append(_Slot(origin=None, stored=stored))
+        return self.count - 1
+
+    def index_by_path(self, res_path: str) -> int | None:
+        """按资源路径查条目序号（0SLF：算 mx_hash 对 entry_id）。"""
+        if self.archive.kind != "0slf":
+            return None
+        entry_id = mx_hash(res_path.encode("gbk", "replace"))
+        for index, meta in enumerate(self.archive.extra_metas):
+            if meta.entry_id == entry_id:
+                return index
+        return None
+
+    def add_entry_for_path(self, content: bytes, res_path: str) -> int:
+        """按资源路径追加条目：entry_id 用路径哈希，游戏才查得到。
+
+        路径已在包中时抛 ValueError（调用方应改走替换）。仅 0SLF：
+        data.fls 是名目录式容器，用 add_entry 并提供 name。
+        """
+        if self.archive.kind == KIND_FLSDATA:
+            raise ValueError("data.fls 请用 add_entry 并提供文件名")
+        existing = self.index_by_path(res_path)
+        if existing is not None:
+            raise ValueError(
+                f"路径已存在于条目 {existing}，请改用替换")
+        entry_id = mx_hash(res_path.encode("gbk", "replace"))
+        self.archive.extra_metas.append(
+            fls0slf.EntryMeta(entry_id=entry_id, r1=0))
+        self._slots.append(_Slot(origin=None, stored=content,
+                                 path_name=res_path))
         return self.count - 1
 
     def delete_entry(self, index: int) -> None:

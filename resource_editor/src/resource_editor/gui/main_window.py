@@ -14,7 +14,7 @@ from pathlib import Path
 
 from PIL import Image
 from PySide6.QtCore import QPoint, QSettings, Qt, QThreadPool
-from PySide6.QtGui import QAction, QIcon, QImage, QPixmap
+from PySide6.QtGui import QAction, QIcon, QImage, QPixmap, QShortcut
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMainWindow,
+    QMenu,
     QMessageBox,
     QPlainTextEdit,
     QProgressBar,
@@ -118,6 +119,12 @@ class MainWindow(QMainWindow):
         self._grid = EntryGridPanel(self)
         self._grid.entry_selected.connect(self._select_entry)
         self._grid.page_changed.connect(self._ensure_page_thumbnails)
+        self._grid.selection_changed.connect(
+            lambda _n: self._update_actions())
+        self._grid.context_menu_requested.connect(
+            self._show_grid_context_menu)
+        find = QShortcut("Ctrl+F", self)
+        find.activated.connect(self._grid.focus_search)
         per_page = self._settings.value("per_page", 0, int)
         if per_page:
             self._grid.set_per_page(per_page)
@@ -218,12 +225,15 @@ class MainWindow(QMainWindow):
                                          lambda: self.save_file(True))
         self._act_export_entry = self._action("导出当前条目…", None,
                                               self.export_current)
+        self._act_export_selected = self._action(
+            "导出选中…", None, self.export_selected)
         self._act_export_all = self._action("导出全部精灵…", None,
                                             self.export_all_sprites)
         act_quit = self._action("退出", "Ctrl+Q", self.close)
         for act in (self._act_workspace, self._act_open, self._act_save,
                     self._act_save_as, self._act_export_entry,
-                    self._act_export_all, act_quit):
+                    self._act_export_selected, self._act_export_all,
+                    act_quit):
             file_menu.addAction(act)
 
         edit_menu = self.menuBar().addMenu("编辑")
@@ -232,10 +242,15 @@ class MainWindow(QMainWindow):
         self._act_replace_raw = self._action("替换原始数据…", None,
                                              self.replace_raw)
         self._act_add = self._action("新增条目…", None, self.add_entry)
+        self._act_add_multi = self._action("多选导入…", None,
+                                           self.import_entries_multi)
+        self._act_import_path = self._action("按路径导入…", None,
+                                             self.import_by_path)
         self._act_delete = self._action("删除条目", None, self.delete_entry)
         self._act_undo = self._action("撤销条目修改", None, self.undo_entry)
         self._act_revert = self._action("还原条目", None, self.revert_entry)
         for act in (self._act_replace_img, self._act_replace_raw, self._act_add,
+                    self._act_add_multi, self._act_import_path,
                     self._act_delete, self._act_undo, self._act_revert):
             edit_menu.addAction(act)
 
@@ -324,14 +339,16 @@ class MainWindow(QMainWindow):
                 kinds.append(doc.entry_kind(i))
                 if i % 250 == 0:
                     progress(i, doc.count)
+            named = doc.resolve_names()  # 顺带把能认出的真名认了
             progress(doc.count, doc.count)
-            return doc, kinds
+            return doc, kinds, named
 
         def done(result) -> None:
-            doc, kinds = result
+            doc, kinds, named = result
             self._docs[key] = doc
             self._kinds_map[key] = kinds
-            self.log(f"已打开 {doc.path}：{doc.count} 个条目")
+            suffix = f"（识别真名 {named} 条）" if named else ""
+            self.log(f"已打开 {doc.path}：{doc.count} 个条目{suffix}")
             self._activate_pack(key)
 
         self._run_job(Job(job, "打开资源包"), done)
@@ -515,14 +532,33 @@ class MainWindow(QMainWindow):
     def replace_images(self) -> None:
         if self._doc is None or self._sprite is None or self._current < 0:
             return
-        sprite = self._sprite
-        index = self._current
+        self._open_replace_images_dialog(
+            self._current, self._sprite,
+            self._sprite_view.current_frame)
+
+    def _replace_images_at(self, index: int) -> None:
+        """右键替换图片：目标不是当前预览条目时先后台解码再弹框。"""
+        doc = self._doc
+        if doc is None or not 0 <= index < doc.count:
+            return
+        if doc.entry_kind(index) is not EntryKind.SPRITE:
+            return
+        if index == self._current and self._sprite is not None:
+            self._open_replace_images_dialog(
+                index, self._sprite, self._sprite_view.current_frame)
+            return
+        self._run_job(
+            Job(lambda _p: decode_sprite(doc.content(index)), "解码精灵"),
+            lambda sprite: self._open_replace_images_dialog(
+                index, sprite, 0))
+
+    def _open_replace_images_dialog(self, index: int, sprite,
+                                    current_frame: int) -> None:
         dialog = ReplaceImagesDialog(
-            self, sprite, self._sprite_view.current_frame)
+            self, sprite, current_frame)
         if dialog.exec() != dialog.Accepted:
             return
         paths = dialog.file_paths
-        current_frame = self._sprite_view.current_frame
         use_base = dialog.use_base_palette
 
         def job(_progress):
@@ -566,11 +602,15 @@ class MainWindow(QMainWindow):
     def replace_raw(self) -> None:
         if self._doc is None or self._current < 0:
             return
+        self._replace_raw_at(self._current)
+
+    def _replace_raw_at(self, index: int) -> None:
+        if self._doc is None or not 0 <= index < self._doc.count:
+            return
         path, _ = QFileDialog.getOpenFileName(self, "选择原始数据文件")
         if not path:
             return
         data = Path(path).read_bytes()
-        index = self._current
         if QMessageBox.question(
             self, "替换原始数据",
             f"用所选文件（{len(data)} 字节）替换条目 {index} 的内容？",
@@ -586,12 +626,14 @@ class MainWindow(QMainWindow):
         path, _ = QFileDialog.getOpenFileName(self, "选择要新增的文件")
         if not path:
             return
-        name = None
-        if self._doc.kind != "0slf":
-            name, ok = QInputDialog.getText(
-                self, "新增条目", "新条目文件名（如 sub\\mod.pyo）：")
-            if not ok or not name:
-                return
+        if self._doc.kind == "0slf":
+            # 0SLF 必须按路径导入：随便分配的编号游戏按名找不到
+            self._import_files_by_path([path])
+            return
+        name, ok = QInputDialog.getText(
+            self, "新增条目", "新条目文件名（如 sub\\mod.pyo）：")
+        if not ok or not name:
+            return
         index = self._doc.add_entry(Path(path).read_bytes(), name)
         self.log(f"已新增条目 {index}")
         self._reload_grid(select=index)
@@ -685,6 +727,156 @@ class MainWindow(QMainWindow):
                 "导出全部精灵"),
             lambda count: self.log(f"已导出 {count} 个精灵到 {out}"),
         )
+
+    # ------------------------------------------------ 网格右键/批量 ----
+    def _show_grid_context_menu(self, index: int, pos) -> None:
+        """网格右键菜单：导出（该条/选中/该页）、替换、多选导入。"""
+        doc = self._doc
+        if doc is None or not 0 <= index < doc.count:
+            return
+        if not self._grid.selection_mode:
+            self._grid.select_entry(index)
+            self._select_entry(index)
+        menu = QMenu(self)
+        menu.addAction("导出该条",
+                       lambda: self.export_entries([index], "该条"))
+        picked = len(self._grid.selected_indexes())
+        act_selected = menu.addAction(
+            f"导出选中 ({picked})", self.export_selected)
+        act_selected.setEnabled(picked > 0)  # 与「选择」按钮联动
+        menu.addAction("导出该页", self.export_page)
+        menu.addSeparator()
+        replace_menu = menu.addMenu("替换")
+        act_img = replace_menu.addAction(
+            "替换图片…", lambda: self._replace_images_at(index))
+        act_img.setEnabled(doc.entry_kind(index) is EntryKind.SPRITE)
+        replace_menu.addAction(
+            "替换原始数据…", lambda: self._replace_raw_at(index))
+        menu.addSeparator()
+        menu.addAction("多选导入…", self.import_entries_multi)
+        act_path = menu.addAction("按路径导入…", self.import_by_path)
+        act_path.setEnabled(doc.kind == "0slf")  # 名字决定游戏能否找到
+        menu.exec(pos)
+
+    def export_entries(self, indexes: list[int], what: str = "条目") -> None:
+        """按真名目录树批量导出（右键/文件菜单共用）。"""
+        if self._doc is None or not indexes:
+            return
+        out = QFileDialog.getExistingDirectory(self, "选择导出目录")
+        if not out:
+            return
+        doc = self._doc
+        targets = list(indexes)
+
+        def done(report) -> None:
+            note = (f"已导出{what} {report['entries']} 条"
+                    f"（{report['files']} 个文件）到 {out}")
+            if report["failed"]:
+                note += f"；失败 {len(report['failed'])} 条：{report['failed'][:5]}"
+            self.log(note)
+
+        self._run_job(
+            Job(lambda _p: exporter.export_entries(doc, targets, Path(out)),
+                f"导出{what}"),
+            done)
+
+    def export_selected(self) -> None:
+        self.export_entries(self._grid.selected_indexes(), "选中条目")
+
+    def export_page(self) -> None:
+        self.export_entries(self._grid.page_entries(), "本页条目")
+
+    def import_entries_multi(self) -> None:
+        """多选导入：一次选多个文件逐个新增。
+
+        0SLF 包逐个问资源路径并按路径导入（名字对了游戏才找得
+        到）；data.fls 逐个问包内文件名后新增。
+        """
+        if self._doc is None:
+            return
+        paths, _ = QFileDialog.getOpenFileNames(
+            self, "选择要导入的文件（可多选）")
+        if not paths:
+            return
+        doc = self._doc
+        if doc.kind == "0slf":
+            self._import_files_by_path(paths)
+            return
+        added: list[int] = []
+        skipped = 0
+        for path in paths:
+            name, ok = QInputDialog.getText(
+                self, "多选导入",
+                f"为 {Path(path).name} 输入包内文件名：",
+                text=Path(path).name)
+            if not ok or not name:
+                skipped += 1
+                continue
+            try:
+                added.append(doc.add_entry(Path(path).read_bytes(), name))
+            except Exception as exc:
+                self.log(f"导入 {path} 失败：{exc}")
+                skipped += 1
+        if added:
+            self._reload_grid(select=added[-1])
+        self.log(f"多选导入完成：新增 {len(added)} 条"
+                 + (f"，跳过 {skipped} 个" if skipped else ""))
+
+    def import_by_path(self) -> None:
+        """按路径导入（单个文件）：名字算编号，游戏才查得到。"""
+        if self._doc is None or self._doc.kind != "0slf":
+            return
+        path, _ = QFileDialog.getOpenFileName(self, "选择要导入的文件")
+        if path:
+            self._import_files_by_path([path])
+
+    def _import_files_by_path(self, paths: list[str]) -> None:
+        """逐个询问资源路径并导入；路径已存在时询问是否替换。"""
+        doc = self._doc
+        assert doc is not None
+        added: list[int] = []
+        replaced: list[int] = []
+        skipped = 0
+        for path in paths:
+            filename = Path(path).name
+            res_path, ok = QInputDialog.getText(
+                self, "按路径导入",
+                f"输入 {filename} 在游戏里的资源路径\n"
+                "（如 combdialog4\\新登陆界面\\底板800.png；\n"
+                "游戏靠这个名字找图，填错了就找不到）：",
+                text=filename)
+            if not ok or not res_path.strip():
+                skipped += 1
+                continue
+            res_path = res_path.strip()
+            try:
+                data = Path(path).read_bytes()
+            except OSError as exc:
+                self.log(f"读取 {path} 失败：{exc}")
+                skipped += 1
+                continue
+            existing = doc.index_by_path(res_path)
+            if existing is not None:
+                answer = QMessageBox.question(
+                    self, "这个路径已在包里",
+                    f"路径 {res_path} 已经是条目 {existing}。\n"
+                    f"要用 {filename} 替换它的内容吗？")
+                if answer != QMessageBox.Yes:
+                    skipped += 1
+                    continue
+                doc.replace_content(existing, data)
+                replaced.append(existing)
+                self._after_entry_changed(existing)
+                self.log(f"已按路径替换条目 {existing}：{res_path}")
+                continue
+            index = doc.add_entry_for_path(data, res_path)
+            added.append(index)
+            self.log(f"已按路径导入条目 {index}：{res_path}")
+        if added:
+            self._reload_grid(select=added[-1])
+        self.log(f"按路径导入完成：新增 {len(added)} 条、"
+                 f"替换 {len(replaced)} 条"
+                 + (f"，跳过 {skipped} 个" if skipped else ""))
 
     # ---------------------------------------------------------- 保存 ----
     def save_file(self, save_as: bool) -> None:
@@ -786,10 +978,16 @@ class MainWindow(QMainWindow):
         self._act_save.setEnabled(has_doc)
         self._act_save_as.setEnabled(has_doc)
         self._act_export_entry.setEnabled(has_entry)
+        self._act_export_selected.setEnabled(
+            has_doc and bool(self._grid.selected_indexes()))
         self._act_export_all.setEnabled(has_doc)
         self._act_replace_img.setEnabled(is_sprite)
         self._act_replace_raw.setEnabled(has_entry)
         self._act_add.setEnabled(has_doc)
+        self._act_add_multi.setEnabled(has_doc)
+        self._act_import_path.setEnabled(
+            has_doc and self._doc is not None
+            and self._doc.kind == "0slf")
         self._act_delete.setEnabled(has_entry)
         self._act_undo.setEnabled(has_entry)
         self._act_revert.setEnabled(has_entry)
