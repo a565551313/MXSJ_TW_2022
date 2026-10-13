@@ -16,7 +16,7 @@ from pathlib import Path
 from PySide6.QtGui import QImage
 
 from . import dlg_codec, sprite
-from .catalog import known_layout_hashes
+from .catalog import known_layout_hashes, known_layout_paths
 from .errors import DlgError
 from .pack import FlsPack
 from .styles import StyleBook
@@ -115,6 +115,11 @@ class AssetResolver:
         if pack is None:
             return []
         return pack.matched_paths(known_layout_hashes())
+
+    def missing_layouts(self, pack_path: str | Path) -> list[str]:
+        """目录中被引用、但该包里没有的布局（死引用/热更新候选）。"""
+        found = set(self.scan_layouts(pack_path))
+        return [p for p in known_layout_paths() if p not in found]
 
     @property
     def summary(self) -> str:

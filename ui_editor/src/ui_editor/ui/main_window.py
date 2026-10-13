@@ -13,17 +13,9 @@ from pathlib import Path
 from PySide6.QtCore import QSettings, Qt
 from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
     QFileDialog,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QListWidget,
-    QListWidgetItem,
     QMainWindow,
     QMessageBox,
-    QPushButton,
     QSplitter,
     QStatusBar,
     QTabWidget,
@@ -34,6 +26,7 @@ from PySide6.QtWidgets import (
 from .. import __version__
 from ..core import dlg_codec
 from ..core.assets import AssetResolver
+from ..core.catalog import known_layout_paths
 from ..core.model import LayoutDocument, Widget
 from ..core.painters import PaintContext
 from ..core.styles import StyleBook
@@ -230,24 +223,53 @@ class MainWindow(QMainWindow):
             self._settings.setValue("last_dir", path)
             self.open_layout_dir(path)
 
-    def open_from_pack(self) -> None:
-        if not self._confirm_discard():
-            return
-        dialog = _PackOpenDialog(self, self._settings.value("pack_dir", ""))
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        pack_path, res_path = dialog.values()
-        if not pack_path or not res_path:
-            return
-        self._settings.setValue("pack_dir", str(Path(pack_path).parent))
+    def open_pack_file(self, pack_path: str) -> int:
+        """挂载一个资源包：有布局才入树并展开。返回布局数（无弹窗）。
+
+        直接选包即可，不再经布局列表对话框；包内具体打开哪个
+        布局，由用户在左侧资源树（可按名称搜索）双击决定。
+        """
         try:
-            known = {str(p) for p in self.resolver.pack_paths}
-            if pack_path not in known:
+            if self.resolver.pack_for(pack_path) is None:
                 self.resolver.mount_pack(pack_path)
         except Exception as exc:
             QMessageBox.warning(self, "挂载资源包失败", str(exc))
+            return -1
+        layouts = self.resolver.scan_layouts(pack_path)
+        if layouts:
+            self._add_pack_to_tree(pack_path, layouts)
+            self.resource_panel.expand_pack(pack_path)
+        self._try_load_styles()
+        self.scene.refresh_all()
+        return len(layouts)
+
+    def _add_pack_to_tree(self, pack_path: str,
+                          layouts: list[str]) -> None:
+        """包入树；近乎全量的主 UI 包再挂包内缺失（灰显）名单。"""
+        missing: list[str] = []
+        if len(layouts) * 2 >= len(known_layout_paths()):
+            missing = self.resolver.missing_layouts(pack_path)
+        self.resource_panel.add_pack(pack_path, layouts, missing)
+
+    def open_from_pack(self) -> None:
+        """文件菜单入口：只选资源包本身，选完入树待双击。"""
+        path, _ = QFileDialog.getOpenFileName(
+            self, "选择资源包", self._settings.value("pack_dir", ""),
+            "资源包 (*.fls);;所有文件 (*)")
+        if not path:
             return
-        self._open_pack_layout(pack_path, res_path, skip_discard=True)
+        self._settings.setValue("pack_dir", str(Path(path).parent))
+        count = self.open_pack_file(path)
+        if count == 0:
+            QMessageBox.information(
+                self, "没有布局文件",
+                f"该资源包内没有布局文件：\n{path}\n\n"
+                "（图片等其它资源已照常挂载，打开布局时可自动取图；"
+                "布局请到资源树中按名称查找后双击。）")
+        elif count > 0:
+            self._update_status(
+                f"已挂载 {Path(path).name}：识别到 {count} 个布局，"
+                "在左侧资源树双击（可先按名称搜索）即可打开。")
 
     def _open_pack_layout(self, pack_path: str, res_path: str,
                           skip_discard: bool = False) -> None:
@@ -260,13 +282,15 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             QMessageBox.warning(self, "挂载资源包失败", str(exc))
             return
-        self.resource_panel.add_pack(
+        self._add_pack_to_tree(
             pack_path, self.resolver.scan_layouts(pack_path))
         result = self.resolver.fetch_dlg(res_path)
         if result is None:
             QMessageBox.warning(
                 self, "找不到布局",
                 f"在已挂载的包中找不到 {res_path}。\n"
+                "树上灰色斜体的条目是内置目录里有、但该包内缺失的"
+                "布局（已下线或走热更新），本来就打不开；其余情况"
                 "请确认路径写法（如 dialog/xxx.dlg）与包是否正确。")
             return
         dicts, md5 = result
@@ -280,17 +304,21 @@ class MainWindow(QMainWindow):
         """从资源目录打开：挂载目录内全部包并逐个入树。"""
         before = {str(p) for p in self.resolver.pack_paths}
         self.resolver.mount_dir(path)
-        added = 0
+        added = skipped = 0
         for pack_file in self.resolver.pack_paths:
-            if str(pack_file) not in before:
-                self.resource_panel.add_pack(
-                    str(pack_file),
-                    self.resolver.scan_layouts(str(pack_file)))
-                added += 1
+            if str(pack_file) in before:
+                continue
+            layouts = self.resolver.scan_layouts(str(pack_file))
+            if not layouts:
+                skipped += 1  # 没有布局文件的包不进树（仍挂载供取图）
+                continue
+            self._add_pack_to_tree(str(pack_file), layouts)
+            added += 1
         self._try_load_styles()
         self.scene.refresh_all()
         self._update_status(
-            f"资源目录：{path}；新入树 {added} 个包。{self.resolver.summary}；"
+            f"资源目录：{path}；新入树 {added} 个含布局的包"
+            f"（跳过 {skipped} 个无布局包）。{self.resolver.summary}；"
             "双击包中布局即可切换打开。")
 
     def open_resource_dir_dialog(self) -> None:
@@ -530,114 +558,3 @@ class MainWindow(QMainWindow):
         self.resolver.close()
         super().closeEvent(event)
 
-
-class _PackOpenDialog(QDialog):
-    """从资源包打开布局：选包后自动识别其中布局，下拉/搜索选用。
-
-    包内不存文件名（只有路径哈希），不能直接枚举；用内置的已知
-    布局路径目录逐条哈希核对，命中的自动进列表。目录里没有的
-    布局也可在底部手动输入路径。
-    """
-
-    def __init__(self, parent: QWidget, last_dir: str) -> None:
-        super().__init__(parent)
-        self.setWindowTitle("从资源包打开布局")
-        self.resize(560, 520)
-        self._last_dir = last_dir
-        self._found: list[str] = []
-        layout = QVBoxLayout(self)
-
-        row1 = QHBoxLayout()
-        self._pack_edit = QLineEdit()
-        self._pack_edit.setPlaceholderText("如 D:\\游戏\\data\\interface.fls")
-        self._pack_edit.editingFinished.connect(self._scan_current_pack)
-        browse = QPushButton("浏览…")
-        browse.clicked.connect(self._browse)
-        row1.addWidget(QLabel("资源包："))
-        row1.addWidget(self._pack_edit, 1)
-        row1.addWidget(browse)
-        layout.addLayout(row1)
-
-        self._status = QLabel("选择资源包后，自动列出其中可打开的布局。")
-        self._status.setWordWrap(True)
-        layout.addWidget(self._status)
-
-        self._filter_edit = QLineEdit()
-        self._filter_edit.setPlaceholderText("搜索布局路径（如 equip）…")
-        self._filter_edit.textChanged.connect(self._apply_filter)
-        layout.addWidget(self._filter_edit)
-
-        self._list = QListWidget()
-        self._list.itemDoubleClicked.connect(lambda _item: self.accept())
-        layout.addWidget(self._list, 1)
-
-        row2 = QHBoxLayout()
-        self._path_edit = QLineEdit()
-        self._path_edit.setPlaceholderText(
-            "或手动输入布局路径，如 dialog/equip.dlg")
-        row2.addWidget(QLabel("布局路径："))
-        row2.addWidget(self._path_edit, 1)
-        layout.addLayout(row2)
-
-        hint = QLabel("提示：包会同时挂载为图片资源来源；interface.fls "
-                      "内的 ui.lst 会被自动加载为样式表。")
-        hint.setWordWrap(True)
-        layout.addWidget(hint)
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok
-            | QDialogButtonBox.StandardButton.Cancel)
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
-
-    def _browse(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(
-            self, "选择资源包", self._last_dir, "资源包 (*.fls);;所有文件 (*)")
-        if path:
-            self._pack_edit.setText(path)
-            self._scan_current_pack()
-
-    def _scan_current_pack(self) -> None:
-        """用内置路径目录核对当前包，命中的布局填进列表。"""
-        pack_path = self._pack_edit.text().strip()
-        self._found = []
-        self._list.clear()
-        if not pack_path:
-            return
-        from ..core.catalog import known_layout_paths
-        from ..core.pack import FlsPack
-
-        try:
-            with FlsPack(pack_path) as pack:
-                self._found = [p for p in known_layout_paths()
-                               if pack.contains(p)]
-        except Exception as exc:
-            self._status.setText(f"读取资源包失败：{exc}（仍可手动输入路径）")
-            return
-        self._apply_filter()
-        if self._found:
-            self._status.setText(
-                f"在该包中识别到 {len(self._found)} 个布局，"
-                "双击或选中后确定即可打开。")
-        else:
-            self._status.setText(
-                "该包中未识别到已知布局（可能不是界面资源包），"
-                "可在下方手动输入路径试开。")
-
-    def _apply_filter(self) -> None:
-        keyword = self._filter_edit.text().strip().lower()
-        self._list.clear()
-        for path in self._found:
-            if not keyword or keyword in path.lower():
-                self._list.addItem(QListWidgetItem(path))
-        if self._list.count():
-            self._list.setCurrentRow(0)
-
-    def values(self) -> tuple[str, str]:
-        manual = self._path_edit.text().strip()
-        if manual:
-            chosen = manual
-        else:
-            item = self._list.currentItem()
-            chosen = item.text() if item is not None else ""
-        return self._pack_edit.text().strip(), chosen

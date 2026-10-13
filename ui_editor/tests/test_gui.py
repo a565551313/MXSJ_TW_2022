@@ -92,95 +92,117 @@ def _mini_pack_bytes(res_name: str = "dialog/test.dlg") -> bytes:
     return head + packed + struct.pack("<IIII", entry_id, r1, r2, r3)
 
 
-class _FakePackDialog:
-    """替身：替代文件选择对话框，直接回填包路径与资源路径。"""
-
-    pack_path = ""
-    res_path = ""
-
-    def __init__(self, parent, last_dir):
-        pass
-
-    def exec(self):
-        from PySide6.QtWidgets import QDialog
-        return QDialog.DialogCode.Accepted
-
-    def values(self):
-        return (self.pack_path, self.res_path)
-
-
 class TestOpenFromPack(unittest.TestCase):
-    """回归：从资源包打开布局（0.1.0 在 Windows 上因此处属性误用崩溃）。"""
+    """从资源包打开：直接选包入树；无布局返回 0；树打开保真。"""
 
     @classmethod
     def setUpClass(cls):
         from PySide6.QtWidgets import QApplication
         cls._app = QApplication.instance() or QApplication([])
 
-    def test_open_from_pack(self):
-        import tempfile
-
-        from ui_editor.ui import main_window as main_module
+    def setUp(self):
         from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
 
-        with tempfile.TemporaryDirectory() as tmp:
-            pack_path = Path(tmp) / "mini.fls"
-            pack_path.write_bytes(_mini_pack_bytes())
-            _FakePackDialog.pack_path = str(pack_path)
-            _FakePackDialog.res_path = "dialog/test.dlg"
-            original = main_module._PackOpenDialog
-            main_module._PackOpenDialog = _FakePackDialog
-            window = MainWindow()
-            try:
-                window.open_from_pack()
-                self.assertIsNotNone(window.doc)
-                self.assertEqual(window.doc.roots[0].wtype, "CMainFrame")
-                self.assertEqual(window.doc.source_pack[1], "dialog/test.dlg")
-            finally:
-                main_module._PackOpenDialog = original
-                if window.doc is not None:
-                    window.doc.dirty = False
-                window.close()
-                window.deleteLater()
-                self._app.processEvents()
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
 
-
-if __name__ == "__main__":
-    unittest.main()
-
-
-class TestPackOpenDialog(unittest.TestCase):
-    """从资源包打开对话框：选包后自动列出包内已知布局。"""
-
-    @classmethod
-    def setUpClass(cls):
-        from PySide6.QtWidgets import QApplication
-        cls._app = QApplication.instance() or QApplication([])
-
-    def test_scan_lists_known_layout(self):
+    def test_pack_with_layouts_goes_to_tree(self):
         import tempfile
-
-        from ui_editor.ui.main_window import _PackOpenDialog
 
         with tempfile.TemporaryDirectory() as tmp:
             pack_path = Path(tmp) / "mini.fls"
             pack_path.write_bytes(_mini_pack_bytes("dialog/cateroom.dlg"))
-            dialog = _PackOpenDialog(None, "")
-            dialog._pack_edit.setText(str(pack_path))
-            dialog._scan_current_pack()
-            self.assertIn("dialog/cateroom.dlg", dialog._found)
-            self.assertEqual(dialog.values()[1], "dialog/cateroom.dlg")
-            dialog._path_edit.setText("dialog/manual.dlg")
-            self.assertEqual(dialog.values()[1], "dialog/manual.dlg")
-            dialog.close()
-            dialog.deleteLater()
+            count = self.window.open_pack_file(str(pack_path))
+            self.assertEqual(count, 1)
+            self.assertEqual(self.window.resource_panel.root_count(), 1)
+            self.assertIsNone(self.window.doc)  # 只入树，不自动打开
+
+    def test_pack_without_layouts_returns_zero(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "itemish.fls"
+            pack_path.write_bytes(_mini_pack_bytes("data/junk.bin"))
+            count = self.window.open_pack_file(str(pack_path))
+            self.assertEqual(count, 0)
+            self.assertEqual(self.window.resource_panel.root_count(), 0)
+
+    def test_open_pack_layout_after_tree_add(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "mini.fls"
+            pack_path.write_bytes(_mini_pack_bytes("dialog/cateroom.dlg"))
+            self.window.open_pack_file(str(pack_path))
+            first_root = self.window.resource_panel._tree.topLevelItem(0)
+            # 再双击打开：包根不能被拆掉重挂（树跳动回归）
+            self.window._open_pack_layout(
+                str(pack_path), "dialog/cateroom.dlg")
+            self.assertIsNotNone(self.window.doc)
+            self.assertEqual(self.window.doc.roots[0].wtype, "CMainFrame")
+            self.assertEqual(
+                self.window.doc.source_pack[1], "dialog/cateroom.dlg")
+            self.assertEqual(self.window.resource_panel.root_count(), 1)
+            self.assertIs(
+                self.window.resource_panel._tree.topLevelItem(0), first_root)
+
+
+class TestMainPackMissingList(unittest.TestCase):
+    """近乎全量的主 UI 包：树上追加包内缺失（灰显）名单。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def test_missing_appended_for_main_pack(self):
+        import tempfile
+
+        from ui_editor.core import assets as assets_module
+        from ui_editor.ui import main_window as main_module
+        from ui_editor.ui.main_window import MainWindow
+
+        window = MainWindow()
+        small_catalog = ["dialog/cateroom.dlg", "dialog/gone.dlg"]
+        old_main = main_module.known_layout_paths
+        old_assets = assets_module.known_layout_paths
+        main_module.known_layout_paths = lambda: list(small_catalog)
+        assets_module.known_layout_paths = lambda: list(small_catalog)
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                pack_path = Path(tmp) / "ui.fls"
+                pack_path.write_bytes(
+                    _mini_pack_bytes("dialog/cateroom.dlg"))
+                count = window.open_pack_file(str(pack_path))
+                self.assertEqual(count, 1)
+                root = window.resource_panel._tree.topLevelItem(0)
+                self.assertEqual(root.childCount(), 2)  # 1 活 + 1 灰显
+                self.assertIn("包内缺失", root.text(0))
+        finally:
+            main_module.known_layout_paths = old_main
+            assets_module.known_layout_paths = old_assets
+            if window.doc is not None:
+                window.doc.dirty = False
+            window.close()
+            window.deleteLater()
             self._app.processEvents()
 
+
+class TestCatalog(unittest.TestCase):
     def test_catalog_loaded(self):
         from ui_editor.core.catalog import known_layout_paths
         paths = known_layout_paths()
         self.assertGreaterEqual(len(paths), 2900)
         self.assertTrue(all(p.endswith(".dlg") for p in paths))
+
+
+if __name__ == "__main__":
+    unittest.main()
 
 
 class TestResourceTree(unittest.TestCase):
@@ -255,3 +277,107 @@ class TestResourceTree(unittest.TestCase):
             self.assertNotIn("junk.txt", texts)
             self.assertNotIn("readme.md", texts)
             self.assertNotIn("only_text", texts)
+
+
+class TestResourceDirFilterAndSearch(unittest.TestCase):
+    """无布局包过滤 + 树上方按名称查找布局。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+
+    def _visible_texts(self) -> list[str]:
+        texts = []
+
+        def visit(item):
+            if not item.isHidden():
+                texts.append(item.text(0))
+                for i in range(item.childCount()):
+                    visit(item.child(i))
+
+        tree = self.window.resource_panel._tree
+        for i in range(tree.topLevelItemCount()):
+            visit(tree.topLevelItem(i))
+        return texts
+
+    def test_resource_dir_skips_pack_without_layouts(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "ui.fls").write_bytes(
+                _mini_pack_bytes("dialog/cateroom.dlg"))
+            (Path(tmp) / "item.fls").write_bytes(
+                _mini_pack_bytes("data/junk.bin"))
+            self.window.open_resource_dir(tmp)
+            self.assertEqual(self.window.resource_panel.root_count(), 1)
+            self.assertTrue(any(
+                "ui.fls" in t for t in self._visible_texts()))
+
+    def test_search_filters_layouts(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in ("service.dlg", "equip.dlg", "init.dlg"):
+                (Path(tmp) / name).write_bytes(b"UI_INFO = []\n")
+            self.window.open_layout_dir(tmp)
+            panel = self.window.resource_panel
+            panel._search.setText("serv")
+            visible = self._visible_texts()
+            self.assertIn("service.dlg", visible)
+            self.assertNotIn("equip.dlg", visible)
+            self.assertNotIn("init.dlg", visible)
+            panel._search.setText("")
+            visible = self._visible_texts()
+            for name in ("service.dlg", "equip.dlg", "init.dlg"):
+                self.assertIn(name, visible)
+
+
+class TestGenerationMarks(unittest.TestCase):
+    """资源树着色：现役绿色、包内缺失灰色斜体、搜索能找到缺失项。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.panels import ResourceTreePanel
+        self.panel = ResourceTreePanel()
+
+    def tearDown(self):
+        self.panel.close()
+        self.panel.deleteLater()
+        self._app.processEvents()
+
+    def test_leaf_colors_and_missing(self):
+        from PySide6.QtGui import QColor
+
+        self.panel.add_pack(
+            "D:/game/data/interface.fls",
+            ["dialog4/activity/2021summer/main.dlg"],
+            ["dialog/gone.dlg"])
+        root = self.panel._tree.topLevelItem(0)
+        self.assertEqual(root.childCount(), 2)
+        live = root.child(0)
+        missing = root.child(1)
+        self.assertEqual(
+            live.foreground(0).color(), QColor("#1a7f37"))
+        self.assertEqual(
+            missing.foreground(0).color(), QColor("#8a8a8a"))
+        self.assertTrue(missing.font(0).italic())
+        # 搜索仍能找到包内缺失项（方便确认死引用）
+        self.panel._search.setText("gone")
+        self.assertFalse(missing.isHidden())
+        self.assertTrue(live.isHidden())

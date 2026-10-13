@@ -5,9 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QBrush, QColor
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QPushButton,
@@ -18,7 +20,37 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..core.catalog import (
+    GENERATION_CURRENT,
+    GENERATION_TRANSITIONAL,
+    generation_of,
+)
 from ..core.model import WIDGET_TYPES, LayoutDocument, Widget
+
+_COLOR_CURRENT = QBrush(QColor("#1a7f37"))
+_COLOR_TRANSITIONAL = QBrush(QColor("#9a6700"))
+_COLOR_MISSING = QBrush(QColor("#8a8a8a"))
+
+
+def _style_leaf(item: QTreeWidgetItem, res_path: str,
+                missing: bool = False) -> None:
+    """按代际给布局叶子着色；包内缺失的灰色斜体。"""
+    if missing:
+        item.setForeground(0, _COLOR_MISSING)
+        font = item.font(0)
+        font.setItalic(True)
+        item.setFont(0, font)
+        item.setToolTip(
+            0, "内置目录中有此布局，但该资源包里没有"
+               "（死引用或热更新资源）；双击会提示打不开。")
+        return
+    gen = generation_of(res_path)
+    if gen == GENERATION_CURRENT:
+        item.setForeground(0, _COLOR_CURRENT)
+        item.setToolTip(0, "现役新 UI（dialog4 / login_new / 新系统目录）")
+    elif gen == GENERATION_TRANSITIONAL:
+        item.setForeground(0, _COLOR_TRANSITIONAL)
+        item.setToolTip(0, "第三代布局（dialog3，过渡层）")
 
 
 class ResourceTreePanel(QWidget):
@@ -48,7 +80,13 @@ class ResourceTreePanel(QWidget):
         bar.addWidget(res_btn, 1)
         bar.addWidget(loose_btn, 1)
         layout.addLayout(bar)
-        hint = QLabel("双击布局即可切换打开；多次打开只追加、不移除。")
+        self._search = QLineEdit()
+        self._search.setPlaceholderText("按名称查找布局（如 service）…")
+        self._search.setClearButtonEnabled(True)
+        self._search.textChanged.connect(self._apply_search)
+        layout.addWidget(self._search)
+        hint = QLabel("双击布局即可切换打开；多次打开只追加、不移除。"
+                      "绿色为现役新 UI，橙色为第三代，灰色斜体为包内缺失。")
         hint.setWordWrap(True)
         layout.addWidget(hint)
         self._tree = QTreeWidget()
@@ -58,20 +96,34 @@ class ResourceTreePanel(QWidget):
         self._roots: dict[tuple[str, str], QTreeWidgetItem] = {}
 
     # -- 根节点管理 -------------------------------------------------
-    def add_pack(self, pack_path: str | Path, layouts: list[str]) -> None:
-        """把一个资源包挂到树上（已在树上则刷新其布局列表）。"""
+    def add_pack(self, pack_path: str | Path, layouts: list[str],
+                 missing: list[str] | tuple[str, ...] = ()) -> None:
+        """把一个资源包挂到树上。已在树上则原样保留：不重建节点、
+
+        不改位置与展开状态。否则每次双击打开布局，包节点都会被
+        拆掉重挂到末尾并收起，树看起来就会「跳来跳去」。
+        """
         key = ("pack", str(pack_path))
-        old = self._roots.pop(key, None)
-        if old is not None:
-            self._tree.takeTopLevelItem(self._tree.indexOfTopLevelItem(old))
+        if key in self._roots:
+            return
         name = Path(pack_path).name
-        root = QTreeWidgetItem([f"{name}（{len(layouts)} 个布局）"])
+        label = f"{name}（{len(layouts)} 个布局"
+        if missing:
+            label += f"，另 {len(missing)} 个包内缺失"
+        root = QTreeWidgetItem([label + "）"])
         root.setToolTip(0, str(pack_path))
         root.setData(0, Qt.ItemDataRole.UserRole, ("packroot", str(pack_path)))
         for res_path in layouts:
             leaf = QTreeWidgetItem([res_path])
             leaf.setData(0, Qt.ItemDataRole.UserRole,
                          ("pack", str(pack_path), res_path))
+            _style_leaf(leaf, res_path)
+            root.addChild(leaf)
+        for res_path in missing:
+            leaf = QTreeWidgetItem([res_path])
+            leaf.setData(0, Qt.ItemDataRole.UserRole,
+                         ("pack", str(pack_path), res_path))
+            _style_leaf(leaf, res_path, missing=True)
             root.addChild(leaf)
         self._tree.addTopLevelItem(root)
         root.setExpanded(False)
@@ -80,19 +132,19 @@ class ResourceTreePanel(QWidget):
     def add_loose_dir(self, dir_path: str | Path) -> None:
         """把一个散装 .dlg 目录挂到树上（只保留 .dlg 与含它的目录）。"""
         key = ("dir", str(dir_path))
-        old = self._roots.pop(key, None)
-        if old is not None:
-            self._tree.takeTopLevelItem(self._tree.indexOfTopLevelItem(old))
+        if key in self._roots:
+            return
         root = QTreeWidgetItem([f"📁 {Path(dir_path).name}（散装目录）"])
         root.setToolTip(0, str(dir_path))
         root.setData(0, Qt.ItemDataRole.UserRole, ("dirroot", str(dir_path)))
-        self._fill_loose(root, Path(dir_path))
+        self._fill_loose(root, Path(dir_path), "")
         if root.childCount() == 0:
             return  # 目录里没有 .dlg，不挂空节点
         self._tree.addTopLevelItem(root)
         self._roots[key] = root
 
-    def _fill_loose(self, parent: QTreeWidgetItem, folder: Path) -> int:
+    def _fill_loose(self, parent: QTreeWidgetItem, folder: Path,
+                    rel: str) -> int:
         """递归填充，只收 .dlg 文件与非空文件夹，返回收录数。"""
         try:
             entries = sorted(folder.iterdir(),
@@ -101,21 +153,54 @@ class ResourceTreePanel(QWidget):
             return 0
         count = 0
         for entry in entries:
+            child_rel = f"{rel}/{entry.name}" if rel else entry.name
             if entry.is_dir():
                 node = QTreeWidgetItem([entry.name])
-                if self._fill_loose(node, entry) > 0:
+                if self._fill_loose(node, entry, child_rel) > 0:
                     parent.addChild(node)
                     count += 1
             elif entry.suffix.lower() == ".dlg":
                 leaf = QTreeWidgetItem([entry.name])
                 leaf.setData(0, Qt.ItemDataRole.UserRole,
                              ("file", str(entry)))
+                _style_leaf(leaf, child_rel)
                 parent.addChild(leaf)
                 count += 1
         return count
 
     def root_count(self) -> int:
         return self._tree.topLevelItemCount()
+
+    def expand_pack(self, pack_path: str | Path) -> None:
+        """展开指定包节点并滚动到它（刚从文件对话框选包时用）。"""
+        root = self._roots.get(("pack", str(pack_path)))
+        if root is not None:
+            root.setExpanded(True)
+            self._tree.scrollToItem(root)
+
+    # -- 名称搜索 -----------------------------------------------------
+    _saved_expansion: dict[int, bool] | None = None
+
+    def _apply_search(self, keyword: str) -> None:
+        """按名称过滤：命中布局及其祖先可见，搜索时自动展开。"""
+        kw = keyword.strip().casefold()
+        roots = [self._tree.topLevelItem(i)
+                 for i in range(self._tree.topLevelItemCount())]
+        if not kw:
+            if self._saved_expansion is not None:
+                saved, self._saved_expansion = self._saved_expansion, None
+                for root in roots:
+                    _restore_filter(root, saved)
+            else:
+                for root in roots:
+                    _restore_filter(root, {})
+            return
+        if self._saved_expansion is None:
+            self._saved_expansion = {}
+            for root in roots:
+                _record_expansion(root, self._saved_expansion)
+        for root in roots:
+            _filter_item(root, kw)
 
     # -- 交互 ---------------------------------------------------------
     def _on_double_click(self, item: QTreeWidgetItem) -> None:
@@ -274,3 +359,39 @@ class PalettePanel(QWidget):
     def current_type(self) -> str | None:
         item = self._list.currentItem()
         return item.text() if item is not None else None
+
+
+def _record_expansion(item: QTreeWidgetItem, saved: dict[int, bool]) -> None:
+    saved[id(item)] = item.isExpanded()
+    for i in range(item.childCount()):
+        _record_expansion(item.child(i), saved)
+
+
+def _restore_filter(item: QTreeWidgetItem,
+                    saved: dict[int, bool]) -> None:
+    item.setHidden(False)
+    if id(item) in saved:
+        item.setExpanded(saved[id(item)])
+    for i in range(item.childCount()):
+        _restore_filter(item.child(i), saved)
+
+
+def _show_subtree(item: QTreeWidgetItem) -> None:
+    item.setHidden(False)
+    for i in range(item.childCount()):
+        _show_subtree(item.child(i))
+
+
+def _filter_item(item: QTreeWidgetItem, kw: str) -> bool:
+    """返回该项是否应可见：自身命中则整棵子树显示。"""
+    if kw in item.text(0).casefold():
+        _show_subtree(item)
+        return True
+    any_child = False
+    for i in range(item.childCount()):
+        if _filter_item(item.child(i), kw):
+            any_child = True
+    item.setHidden(not any_child)
+    if any_child:
+        item.setExpanded(True)
+    return any_child

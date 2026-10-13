@@ -29,12 +29,7 @@ def main(argv: list[str] | None = None) -> int:
         elif path.is_dir():
             window.open_layout_dir(str(path))
         elif path.is_file() and path.suffix.lower() == ".fls":
-            try:
-                window.resolver.mount_pack(path)
-                window._try_load_styles()
-                window.scene.refresh_all()
-            except Exception as exc:  # 启动参数错误不挡界面
-                window._update_status(f"挂载 {arg} 失败：{exc}")
+            window.open_pack_file(str(path))  # 挂载并入树，布局数见状态栏
         break
     return app.exec()
 
