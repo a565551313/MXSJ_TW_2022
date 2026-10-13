@@ -45,6 +45,9 @@ __all__ = [
     "dump_archive",
     "entry_xor_key",
     "parse_archive",
+    "patch_dlg_entry_in_file",
+    "patch_pack_copy",
+    "patch_raw_entry_in_file",
     "replace_dlg_entry",
     "replace_dlg_entry_to_file",
     "unpack_packed_text",
@@ -220,16 +223,9 @@ class _PatchPlan:
             setattr(self, key, value)
 
 
-def _plan_patch(path: Path, res_path: str,
-                new_plain: bytes) -> _PatchPlan:
-    """只读侦察：结构闸门 + 定位条目 + 算出新存储字节，不写文件。"""
-    from .errors import DlgError
-
-    try:  # 与 replace_dlg_entry 相同的结构闸门
-        dlg_codec.parse_bytes(new_plain)
-    except DlgError as exc:
-        raise PackError(f"新布局无法解析，拒绝写回：{exc}") from exc
-    entry_id = mx_hash(res_path.encode("gbk", "replace"))
+def _read_index(path: Path):
+    """只读头部与目录：返回 (文件大小, 条数, 目录偏移, 目录字节,
+    spans[(偏移,长度)], records[(entry_id,r1,r2,r3)])。"""
     with open(path, "rb") as fh:
         fh.seek(0, 2)
         file_size = fh.tell()
@@ -246,37 +242,98 @@ def _plan_patch(path: Path, res_path: str,
         if len(dir_data) < dir_size:
             raise PackError("目录区读取不完整")
         spans: list[tuple[int, int]] = []
-        target = -1
+        records = []
         for index in range(count):
             raw = _RECORD.unpack_from(dir_data, index * DIR_RECORD_SIZE)
             clen, doff = decode_directory(index, raw)
             if doff + clen > file_size:
                 raise PackError(f"条目 {index} 负载越界")
             spans.append((doff, clen))
-            if raw[0] == entry_id and target < 0:
-                target = index
-        if target < 0:
-            raise PackError(f"包中找不到条目：{res_path}")
-        doff, clen = spans[target]
+            records.append(raw)
+    return file_size, count, dir_offset, dir_data, spans, records
+
+
+def _fit_limit(spans, doff: int, dir_offset: int, file_size: int) -> int:
+    """条目之后第一个被占用的位置：新负载不超过它就能原位放下。"""
+    limit = file_size
+    if dir_offset > doff:
+        limit = min(limit, dir_offset)
+    for off, _ln in spans:
+        if off > doff:
+            limit = min(limit, off)
+    return limit
+
+
+def _plan_patch(path: Path, res_path: str,
+                new_plain: bytes) -> _PatchPlan:
+    """只读侦察：结构闸门 + 定位条目 + 算出新存储字节，不写文件。"""
+    from .errors import DlgError
+
+    try:  # 与 replace_dlg_entry 相同的结构闸门
+        dlg_codec.parse_bytes(new_plain)
+    except DlgError as exc:
+        raise PackError(f"新布局无法解析，拒绝写回：{exc}") from exc
+    entry_id = mx_hash(res_path.encode("gbk", "replace"))
+    file_size, count, dir_offset, dir_data, spans, records = \
+        _read_index(path)
+    target = -1
+    for index, raw in enumerate(records):
+        if raw[0] == entry_id:
+            target = index
+            break
+    if target < 0:
+        raise PackError(f"包中找不到条目：{res_path}")
+    doff, clen = spans[target]
+    with open(path, "rb") as fh:
         fh.seek(doff)
         stored = fh.read(clen)
-        if len(stored) != clen:
-            raise PackError("目标条目读取不完整")
-        if unpack_packed_text(stored).startswith(b"["):
-            raise PackError(f"{res_path} 不是 .dlg 条目，拒绝替换")
-        # 该条目之后第一个被占用的位置（下一条负载或目录）：
-        # 新负载只要不超过它，就能原位放下
-        limit = file_size
-        if dir_offset > doff:
-            limit = min(limit, dir_offset)
-        for off, _ln in spans:
-            if off > doff:
-                limit = min(limit, off)
-        return _PatchPlan(
-            count=count, dir_offset=dir_offset, dir_data=dir_data,
-            spans=spans, target=target, doff=doff, clen=clen,
-            limit=limit,
-            new_stored=_xor4(new_plain, entry_xor_key(stored)))
+    if len(stored) != clen:
+        raise PackError("目标条目读取不完整")
+    if unpack_packed_text(stored).startswith(b"["):
+        raise PackError(f"{res_path} 不是 .dlg 条目，拒绝替换")
+    return _PatchPlan(
+        count=count, dir_offset=dir_offset, dir_data=dir_data,
+        spans=spans, target=target, doff=doff, clen=clen,
+        limit=_fit_limit(spans, doff, dir_offset, file_size),
+        new_stored=_xor4(new_plain, entry_xor_key(stored)))
+
+
+def _write_located(path: Path, *, count: int, dir_offset: int,
+                   dir_data: bytes, spans, target: int, entry_id: int,
+                   r1: int, doff: int, limit: int,
+                   new_stored: bytes) -> dict:
+    """把已定位条目的负载换成 new_stored（原位放得下就原位，
+    放不下挪到目录原址），返回 {"mode", "target_index", "bytes"}。"""
+    with open(path, "r+b") as fh:
+        if len(new_stored) <= limit - doff:
+            fh.seek(doff)
+            fh.write(new_stored)
+            fh.seek(dir_offset + target * DIR_RECORD_SIZE)
+            fh.write(_dir_record(entry_id, r1, target,
+                                 len(new_stored), doff))
+            mode = "inplace"
+        else:
+            new_doff = dir_offset
+            new_end = new_doff + len(new_stored)
+            for i, (off, ln) in enumerate(spans):
+                if i != target and off < new_end \
+                        and new_doff < off + ln:
+                    raise _RebuildNeeded("包内负载与目录交叠")
+            records = bytearray(dir_data)
+            start = target * DIR_RECORD_SIZE
+            records[start:start + DIR_RECORD_SIZE] = _dir_record(
+                entry_id, r1, target, len(new_stored), new_doff)
+            fh.seek(new_doff)
+            fh.write(new_stored)
+            fh.write(bytes(records))  # 紧接新负载之后就是新目录
+            fh.seek(0)
+            fh.write(_HEADER.pack(MAGIC, count,
+                                  new_doff + len(new_stored)))
+            mode = "relocated"
+        fh.flush()
+        fh.seek(0, 2)
+        size = fh.tell()
+    return {"mode": mode, "target_index": target, "bytes": size}
 
 
 def patch_dlg_entry_in_file(pack_path, res_path: str,
@@ -296,49 +353,65 @@ def patch_dlg_entry_in_file(pack_path, res_path: str,
     path = Path(pack_path)
     plan = _plan_patch(path, res_path, new_plain)
     entry_id = mx_hash(res_path.encode("gbk", "replace"))
+    raw = _RECORD.unpack_from(
+        plan.dir_data, plan.target * DIR_RECORD_SIZE)
+    return _write_located(
+        path, count=plan.count, dir_offset=plan.dir_offset,
+        dir_data=plan.dir_data, spans=plan.spans, target=plan.target,
+        entry_id=entry_id, r1=raw[1], doff=plan.doff,
+        limit=plan.limit, new_stored=plan.new_stored)
+
+
+def patch_raw_entry_in_file(pack_path, entry_id: int,
+                            new_stored: bytes) -> dict:
+    """按 entry_id 写入任意条目的存储字节（图片/音频等原样数据）。
+
+    条目已存在同 _write_located 的原位/迁移规则；不存在则在
+    目录原址追加负载、目录后移并扩一条记录（mode="added"，
+    其余条目序号与偏移不变）。返回 {"mode", "target_index",
+    "bytes"}。
+    """
+    path = Path(pack_path)
+    file_size, count, dir_offset, dir_data, spans, records = \
+        _read_index(path)
+    for target, raw in enumerate(records):
+        if raw[0] == entry_id:
+            doff, _clen = spans[target]
+            return _write_located(
+                path, count=count, dir_offset=dir_offset,
+                dir_data=dir_data, spans=spans, target=target,
+                entry_id=entry_id, r1=raw[1], doff=doff,
+                limit=_fit_limit(spans, doff, dir_offset, file_size),
+                new_stored=new_stored)
+    record = _dir_record(entry_id, 0, count, len(new_stored),
+                         dir_offset)
     with open(path, "r+b") as fh:
-        raw = _RECORD.unpack_from(
-            plan.dir_data, plan.target * DIR_RECORD_SIZE)
-        r1 = raw[1]
-        if len(plan.new_stored) <= plan.limit - plan.doff:
-            fh.seek(plan.doff)
-            fh.write(plan.new_stored)
-            fh.seek(plan.dir_offset + plan.target * DIR_RECORD_SIZE)
-            fh.write(_dir_record(entry_id, r1, plan.target,
-                                 len(plan.new_stored), plan.doff))
-            mode = "inplace"
-        else:
-            new_doff = plan.dir_offset
-            new_end = new_doff + len(plan.new_stored)
-            for i, (off, ln) in enumerate(plan.spans):
-                if i != plan.target and off < new_end \
-                        and new_doff < off + ln:
-                    raise _RebuildNeeded("包内负载与目录交叠")
-            records = bytearray(plan.dir_data)
-            start = plan.target * DIR_RECORD_SIZE
-            records[start:start + DIR_RECORD_SIZE] = _dir_record(
-                entry_id, r1, plan.target, len(plan.new_stored),
-                new_doff)
-            fh.seek(new_doff)
-            fh.write(plan.new_stored)
-            fh.write(bytes(records))  # 紧接新负载之后就是新目录
-            fh.seek(0)
-            fh.write(_HEADER.pack(MAGIC, plan.count,
-                                  new_doff + len(plan.new_stored)))
-            mode = "relocated"
+        fh.seek(dir_offset)
+        fh.write(new_stored)
+        fh.write(dir_data)
+        fh.write(record)  # 新目录 = 旧目录 + 追加的一条记录
+        fh.seek(0)
+        fh.write(_HEADER.pack(MAGIC, count + 1,
+                              dir_offset + len(new_stored)))
         fh.flush()
         fh.seek(0, 2)
         size = fh.tell()
-    return {"mode": mode, "target_index": plan.target, "bytes": size}
+    return {"mode": "added", "target_index": count, "bytes": size}
 
 
 def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
-                    out_path) -> dict:
+                    out_path, extra_entries: dict | None = None) -> dict:
     """把 res_path 条目的新内容落到 out_path，返回补丁报告。
 
     out 与源包不同：先整文件复制（系统级顺序拷贝）再在副本上
     打补丁，源包一字节不动；out 就是源包本身（用户明确覆盖
     时）：直接在原文件上打补丁，只写几 KB。校验由调用方完成。
+
+    extra_entries 为 {资源路径: 存储字节}：随布局一并写入的
+    附加条目（如本次编辑新加的图片），路径已存在则替换其内容，
+    不存在则按路径哈希新增。报告以 images_added/images_replaced
+    汇报，并以 changed_indexes 给出允许内容不同的条目序号集合
+    （含布局条目与被替换的附加条目），供调用方逐条校验。
     """
     src, out = Path(archive_path), Path(out_path)
     try:
@@ -356,6 +429,24 @@ def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
                                           res_path, new_plain))
         info = {"mode": "rebuild",
                 "target_index": -1, "bytes": out.stat().st_size}
+    changed = set()
+    if info["target_index"] >= 0:
+        changed.add(info["target_index"])
+    added: list[str] = []
+    replaced: list[str] = []
+    for name in sorted(extra_entries or {}):
+        entry_id = mx_hash(name.encode("gbk", "replace"))
+        result = patch_raw_entry_in_file(
+            out, entry_id, (extra_entries or {})[name])
+        if result["mode"] == "added":
+            added.append(name)
+        else:
+            replaced.append(name)
+            changed.add(result["target_index"])
+    info["images_added"] = added
+    info["images_replaced"] = replaced
+    info["changed_indexes"] = sorted(changed)
+    info["bytes"] = out.stat().st_size
     info["out"] = str(out)
     return info
 

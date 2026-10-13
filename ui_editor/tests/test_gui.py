@@ -92,6 +92,50 @@ def _mini_pack_bytes(res_name: str = "dialog/test.dlg") -> bytes:
     return head + packed + struct.pack("<IIII", entry_id, r1, r2, r3)
 
 
+class TestTopLevelWidgets(unittest.TestCase):
+    """加顶级控件 + 把已有控件提升为顶级（入口行为）。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+
+    def test_add_root_and_promote(self):
+        w = self.window
+        w.open_layout_file(str(FIXTURE))
+        doc = w.doc
+        assert doc is not None
+        main = doc.roots[0]
+        roots_before = len(doc.roots)
+
+        w.palette_panel.current_type = lambda: "CButton"  # type: ignore[method-assign]
+        w._select_widget(main)
+        w._add_root_from_tree()  # 选中了主窗口也照样加在顶层
+        top = w.current_selection()
+        self.assertEqual(top.wtype, "CButton")
+        self.assertIsNone(top.parent)
+        self.assertEqual(len(doc.roots), roots_before + 1)
+
+        w._select_widget(main)
+        w.add_widget("CButton")  # 先挂到主窗口下
+        child = w.current_selection()
+        self.assertIs(child.parent, main)
+        w.promote_selected_to_root()
+        self.assertIsNone(child.parent)
+        self.assertIn(child, doc.roots)
+
+
 class TestOpenFromPack(unittest.TestCase):
     """从资源包打开：直接选包入树；无布局返回 0；树打开保真。"""
 
@@ -434,6 +478,57 @@ class TestSaveToPack(unittest.TestCase):
             self.assertEqual(got[0][0]["sTitle"], "改過的新標題")
 
 
+class TestSaveToPackWithStagedImage(unittest.TestCase):
+    """选图窗新加的图被布局引用时，随布局一并写进新包并销账。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+
+    def test_staged_image_written_with_pack(self):
+        import tempfile
+
+        from ui_editor.core.assets import AssetResolver
+
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "interface_mini.fls"
+            pack_path.write_bytes(_mini_pack_bytes("dialog/cateroom.dlg"))
+            self.window.open_pack_file(str(pack_path))
+            self.window._open_pack_layout(
+                str(pack_path), "dialog/cateroom.dlg")
+            doc = self.window.doc
+            self.assertIsNotNone(doc)
+            staged_path = "newdir\\我的背景.png"
+            self.window.resolver.stage_image(staged_path, b"\x89PNGnewpic")
+            doc.roots[0].props["sFileName"] = staged_path
+            doc.dirty = True
+            out = str(Path(tmp) / "interface_patched.fls")
+            report = self.window.write_pack_copy(out)
+            self.assertIsNotNone(report)
+            self.assertTrue(report.get("ok"), report)
+            self.assertEqual(report.get("images_added"), 1)
+            self.assertEqual(self.window.resolver.staged_images(), {})
+            fresh = AssetResolver()
+            fresh.mount_pack(out)
+            try:
+                self.assertEqual(fresh.fetch_bytes(staged_path),
+                                 b"\x89PNGnewpic")
+            finally:
+                fresh.close()
+
+
 class TestImagePicker(unittest.TestCase):
     """从资源包选择图片：对话框过滤/选择 + 属性面板已接解析器。"""
 
@@ -459,6 +554,70 @@ class TestImagePicker(unittest.TestCase):
         self.assertEqual(dialog._list.count(), 3)
         dialog.close()
 
+    def test_export_writes_png_and_sprite_frames(self):
+        import tempfile
+
+        from PySide6.QtGui import QImage
+
+        from ui_editor.ui.image_export import export_image_files
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out_dir = Path(tmp)
+            # 真 PNG：原样写出
+            written = export_image_files(
+                "a\\b.png", b"\x89PNG\r\n\x1a\nDATA", None, out_dir)
+            self.assertEqual(written, [out_dir / "b.png"])
+            self.assertEqual((out_dir / "b.png").read_bytes(),
+                             b"\x89PNG\r\n\x1a\nDATA")
+            # 精灵字节 + 帧：转成逐帧 PNG
+            frame = QImage(3, 2, QImage.Format.Format_ARGB32)
+            frame.fill(0xFF336699)
+            sprite_data = b"I0" + b"\x00" * 30
+            written = export_image_files(
+                "a\\hero.png", sprite_data, [frame, frame], out_dir)
+            self.assertEqual([p.name for p in written],
+                             ["hero-0.png", "hero-1.png"])
+            back = QImage(str(written[0]))
+            self.assertEqual((back.width(), back.height()), (3, 2))
+
+    def test_stage_one_collects_and_selects(self):
+        from ui_editor.ui.image_picker import ResourcePickerDialog
+
+        staged: dict = {}
+        dialog = ResourcePickerDialog(
+            None, "t", ["a\\x.png"], "", None,
+            on_stage=lambda p, d: staged.update({p: d}))
+        dialog._stage_one("newdir\\pic.png", b"BYTES")
+        self.assertEqual(staged, {"newdir\\pic.png": b"BYTES"})
+        self.assertEqual(dialog.selected_path(), "newdir\\pic.png")
+        dialog.close()
+
+    def test_export_handler_receives_selection(self):
+        from ui_editor.ui.image_picker import ResourcePickerDialog
+
+        got: list = []
+        dialog = ResourcePickerDialog(
+            None, "t", ["a\\x.png", "a\\y.png"], "", None,
+            export_handler=got.extend)
+        dialog._list.item(1).setSelected(True)
+        dialog._choose_export()
+        self.assertEqual(got, ["a\\y.png"])
+        dialog.close()
+
+    def test_add_staged_marks_and_selects(self):
+        from ui_editor.ui.image_picker import ResourcePickerDialog
+
+        staged: dict = {}
+        dialog = ResourcePickerDialog(
+            None, "t", ["a\\x.png"], "", None,
+            on_stage=lambda p, d: staged.update({p: d}))
+        dialog.add_staged_path("newdir\\pic.png")
+        self.assertEqual(dialog.selected_path(), "newdir\\pic.png")
+        texts = [dialog._list.item(r).text()
+                 for r in range(dialog._list.count())]
+        self.assertTrue(any("（新）" in t for t in texts))
+        dialog.close()
+
     def test_external_button_requests_fallback(self):
         from ui_editor.ui.image_picker import ResourcePickerDialog
 
@@ -476,3 +635,107 @@ class TestImagePicker(unittest.TestCase):
             window.close()
             window.deleteLater()
             self._app.processEvents()
+
+
+class TestUndoRedoGui(unittest.TestCase):
+    """窗口层撤销：加控件可退、几何提交合并、选择按路径恢复。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+
+    def test_undo_removes_added_widget_then_redo(self):
+        w = self.window
+        w.open_layout_file(str(FIXTURE))
+        doc = w.doc
+        assert doc is not None
+        base = len(doc.all_widgets())
+        w._select_widget(doc.roots[0])
+        w.add_widget("CButton")
+        self.assertEqual(len(doc.all_widgets()), base + 1)
+        button = w.current_selection()
+        path = w._selection_path(button)
+        w.undo()
+        self.assertEqual(len(doc.all_widgets()), base)
+        w.redo()
+        self.assertEqual(len(doc.all_widgets()), base + 1)
+        # 选择按路径恢复到重建出来的按钮对象
+        self.assertIsNotNone(w.current_selection())
+        self.assertEqual(w._selection_path(w.current_selection()), path)
+
+    def test_property_change_merges_into_one_step(self):
+        w = self.window
+        w.open_layout_file(str(FIXTURE))
+        doc = w.doc
+        assert doc is not None
+        main = doc.roots[0]
+        before = list(main.props.get("sTitle", ""))
+        for text in ("甲", "乙", "丙"):
+            main.props["sTitle"] = text
+            w._on_property_changed(main, "sTitle")
+        w.undo()
+        self.assertEqual(
+            w.doc.roots[0].props.get("sTitle", ""), "".join(before))
+        self.assertFalse(w.doc.can_undo)  # 只用了一步就退完
+
+
+class TestToolbar(unittest.TestCase):
+    """顶部工具栏：高频动作齐备，撤销按钮与历史状态同步。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+
+    def test_toolbar_actions_and_undo_state(self):
+        from PySide6.QtWidgets import QToolBar
+
+        w = self.window
+        bars = w.findChildren(QToolBar)
+        self.assertTrue(bars)
+        actions = bars[0].actions()
+        for expected in (w._act_open_file, w._act_open_pack, w._act_save,
+                         w._act_save_pack, w._act_export_png,
+                         w._undo_action, w._redo_action):
+            self.assertIn(expected, actions)
+            self.assertFalse(expected.icon().isNull())  # 带图标按钮
+        from PySide6.QtCore import Qt as _Qt
+        self.assertEqual(
+            bars[0].toolButtonStyle(),
+            _Qt.ToolButtonStyle.ToolButtonTextUnderIcon)  # 图标下带短字
+        self.assertEqual(w._act_open_file.iconText(), "打开")
+        self.assertEqual(w._act_save_pack.iconText(), "存包")
+        self.assertFalse(w._undo_action.isEnabled())  # 没文档时不可撤销
+        w.open_layout_file(str(FIXTURE))
+        self.assertFalse(w._undo_action.isEnabled())  # 刚打开还没改
+        doc = w.doc
+        assert doc is not None
+        w._select_widget(doc.roots[0])
+        w.add_widget("CButton")
+        self.assertTrue(w._undo_action.isEnabled())   # 改完可撤销
+        self.assertFalse(w._redo_action.isEnabled())
+        w.undo()
+        self.assertTrue(w._redo_action.isEnabled())

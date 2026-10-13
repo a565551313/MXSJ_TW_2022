@@ -101,6 +101,18 @@ class TestAssetResolver(unittest.TestCase):
             finally:
                 resolver.close()
 
+    def test_staged_images_roundtrip(self):
+        # 选图窗挂账：预览直读、候选清单包含、写包后可销账
+        self.resolver.stage_image("new/pic.png", b"\x89PNGstaged")
+        self.assertEqual(self.resolver.fetch_bytes("new/pic.png"),
+                         b"\x89PNGstaged")
+        self.assertEqual(self.resolver.fetch_bytes("new\\pic.png"),
+                         b"\x89PNGstaged")  # 分隔符写法不同也命中
+        self.assertIn("new/pic.png",
+                      self.resolver.candidates_with_staged())
+        self.resolver.discard_staged(["new/pic.png"])
+        self.assertEqual(self.resolver.staged_images(), {})
+
     def test_fetch_styles(self):
         book = self.resolver.fetch_styles()
         self.assertIsNotNone(book)

@@ -33,11 +33,15 @@ class WidgetItem(QGraphicsItem):
     """一个控件对应的画布图元。"""
 
     def __init__(self, widget: Widget, ctx: PaintContext,
-                 on_geometry: Callable[[Widget], None]) -> None:
+                 on_geometry: Callable[[Widget], None],
+                 on_commit: Callable[[Widget], None] | None = None
+                 ) -> None:
         super().__init__()
         self.widget = widget
         self.ctx = ctx
         self.on_geometry = on_geometry
+        self.on_commit = on_commit  # 拖放/缩放送手时通知（撤销记步）
+        self._press_geom: tuple[int, int, int, int] | None = None
         self._width, self._height = painters.effective_size(widget, ctx)
         self._syncing = False
         self._resize_handle: str | None = None
@@ -51,7 +55,7 @@ class WidgetItem(QGraphicsItem):
         )
         self.child_items: list[WidgetItem] = []
         for child in widget.children:
-            item = WidgetItem(child, ctx, on_geometry)
+            item = WidgetItem(child, ctx, on_geometry, on_commit)
             item.setParentItem(self)
             self.child_items.append(item)
 
@@ -116,6 +120,8 @@ class WidgetItem(QGraphicsItem):
 
     # -- 缩放拖动 ---------------------------------------------------
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:  # noqa: N802
+        self._press_geom = (self.widget.x, self.widget.y,
+                            self.widget.width, self.widget.height)
         handle = self._handle_at(event.pos())
         if handle is not None:
             self._resize_handle = handle
@@ -162,23 +168,37 @@ class WidgetItem(QGraphicsItem):
         self.on_geometry(self.widget)
         event.accept()
 
+    def _commit_if_changed(self) -> None:
+        """本次按压期间几何真变过才回调记一步。"""
+        geom = (self.widget.x, self.widget.y,
+                self.widget.width, self.widget.height)
+        if (self.on_commit is not None and self._press_geom is not None
+                and geom != self._press_geom):
+            self.on_commit(self.widget)
+        self._press_geom = None
+
     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:  # noqa: N802
         if self._resize_handle is not None:
             self._resize_handle = None
             self._resize_start = None
+            self._commit_if_changed()
             event.accept()
             return
         super().mouseReleaseEvent(event)
+        self._commit_if_changed()
 
 
 class LayoutScene(QGraphicsScene):
     """承载一个布局文档全部图元的场景。"""
 
     def __init__(self, ctx: PaintContext,
-                 on_geometry: Callable[[Widget], None]) -> None:
+                 on_geometry: Callable[[Widget], None],
+                 on_commit: Callable[[Widget], None] | None = None
+                 ) -> None:
         super().__init__()
         self.ctx = ctx
         self.on_geometry = on_geometry
+        self.on_commit = on_commit
         self.document: LayoutDocument | None = None
         self._items: dict[int, WidgetItem] = {}
 
@@ -189,7 +209,8 @@ class LayoutScene(QGraphicsScene):
         if doc is None:
             return
         for root in doc.roots:
-            item = WidgetItem(root, self.ctx, self.on_geometry)
+            item = WidgetItem(root, self.ctx, self.on_geometry,
+                            self.on_commit)
             self.addItem(item)
             self._register(item)
         if self.items():

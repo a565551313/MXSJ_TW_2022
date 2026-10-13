@@ -231,6 +231,8 @@ class WidgetTreePanel(QWidget):
 
     widget_selected = Signal(object)
     add_child_requested = Signal()
+    add_root_requested = Signal()
+    promote_requested = Signal()
     delete_requested = Signal()
     reorder_requested = Signal(object, int)  # (控件, -1 上移/+1 下移)
 
@@ -240,6 +242,14 @@ class WidgetTreePanel(QWidget):
         bar = QHBoxLayout()
         self._add_btn = QPushButton("加子控件")
         self._add_btn.setToolTip("把调色板里选中的控件类型加为当前控件的子控件")
+        add_root_btn = QPushButton("加顶级")
+        add_root_btn.setToolTip(
+            "把调色板里选中的控件类型加为顶级控件（不挂在任何控件下面）")
+        add_root_btn.clicked.connect(self.add_root_requested)
+        promote_btn = QPushButton("设为顶级")
+        promote_btn.setToolTip(
+            "把当前控件提升为顶级控件（脱离父控件，位置不变）")
+        promote_btn.clicked.connect(self.promote_requested)
         self._del_btn = QPushButton("删除")
         up_btn = QToolButton()
         up_btn.setText("↑")
@@ -251,7 +261,8 @@ class WidgetTreePanel(QWidget):
         self._del_btn.clicked.connect(self.delete_requested)
         up_btn.clicked.connect(lambda: self._reorder(-1))
         down_btn.clicked.connect(lambda: self._reorder(1))
-        for btn in (self._add_btn, self._del_btn, up_btn, down_btn):
+        for btn in (self._add_btn, add_root_btn, promote_btn,
+                    self._del_btn, up_btn, down_btn):
             bar.addWidget(btn)
         layout.addLayout(bar)
         self._tree = QTreeWidget()

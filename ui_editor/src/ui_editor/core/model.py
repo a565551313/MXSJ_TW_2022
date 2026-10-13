@@ -109,6 +109,8 @@ class Widget:
 class LayoutDocument:
     """一个布局文档：顶层控件列表 + 来源信息 + 脏标记。"""
 
+    HISTORY_LIMIT = 50  # 撤销时间线最多保留的步数
+
     def __init__(self, roots: list[Widget] | None = None,
                  md5: str | None = None) -> None:
         self.roots: list[Widget] = roots or []
@@ -117,6 +119,75 @@ class LayoutDocument:
         self.source_path: str | None = None
         self.source_pack: tuple[str, str] | None = None
         self.dirty = False
+        # 撤销/重做时间线：to_dicts() 快照列表，_h_index 指当前状态
+        self._history: list[list[dict]] = []
+        self._h_index = -1
+        self._last_merge_key = None
+
+    # -- 撤销/重做（快照时间线，设计见 notes/ui_editor_phase2） ----
+    def _snapshot(self) -> list[dict]:
+        return copy.deepcopy(self.to_dicts())
+
+    def reset_history(self) -> None:
+        """打开/新建文档后调用：时间线只含当前状态。"""
+        self._history = [self._snapshot()]
+        self._h_index = 0
+        self._last_merge_key = None
+
+    def checkpoint(self, merge_key=None) -> None:
+        """一次编辑提交后记一步。
+
+        同 merge_key 且位于时间线末端时，把新状态并入末端步
+        （连续改同一字段只算一步）；否则截断重做尾巴并追加，
+        超过 HISTORY_LIMIT 丢最老状态。
+        """
+        state = self._snapshot()
+        if not self._history:
+            self._history = [state]
+            self._h_index = 0
+            self._last_merge_key = merge_key
+            return
+        if (merge_key is not None
+                and merge_key == self._last_merge_key
+                and self._h_index == len(self._history) - 1):
+            self._history[self._h_index] = state
+        else:
+            del self._history[self._h_index + 1:]
+            self._history.append(state)
+            while len(self._history) > self.HISTORY_LIMIT:
+                self._history.pop(0)
+            self._h_index = len(self._history) - 1
+        self._last_merge_key = merge_key
+
+    @property
+    def can_undo(self) -> bool:
+        return self._h_index > 0
+
+    @property
+    def can_redo(self) -> bool:
+        return 0 <= self._h_index < len(self._history) - 1
+
+    def _apply_state(self, state: list[dict]) -> None:
+        self.roots = [Widget.from_dict(d)
+                      for d in copy.deepcopy(state)]
+        self._last_merge_key = None
+        self.dirty = True
+
+    def undo(self) -> bool:
+        """回退一步；成功返回 True（roots 已重建，选中需重解析）。"""
+        if not self.can_undo:
+            return False
+        self._h_index -= 1
+        self._apply_state(self._history[self._h_index])
+        return True
+
+    def redo(self) -> bool:
+        """前进一步；成功返回 True。"""
+        if not self.can_redo:
+            return False
+        self._h_index += 1
+        self._apply_state(self._history[self._h_index])
+        return True
 
     @classmethod
     def from_dicts(cls, dicts: list[dict], md5: str | None) -> LayoutDocument:
@@ -168,6 +239,30 @@ class LayoutDocument:
     def siblings_of(self, widget: Widget) -> list[Widget]:
         return (widget.parent.children if widget.parent is not None
                 else self.roots)
+
+    def abs_position(self, widget: Widget) -> tuple[int, int]:
+        """累加各级父控件偏移，得到画布上的绝对位置。"""
+        x, y = widget.x, widget.y
+        node = widget.parent
+        while node is not None:
+            x += node.x
+            y += node.y
+            node = node.parent
+        return x, y
+
+    def move_to_root(self, widget: Widget, index: int | None = None) -> None:
+        """把控件提升为顶级控件；坐标换算成绝对位置，视觉不跳位。"""
+        if widget.parent is None:
+            return
+        abs_x, abs_y = self.abs_position(widget)
+        widget.parent.children.remove(widget)
+        widget.parent = None
+        if index is None:
+            self.roots.append(widget)
+        else:
+            self.roots.insert(index, widget)
+        widget.set_geometry(x=abs_x, y=abs_y)
+        self.dirty = True
 
     @property
     def display_name(self) -> str:

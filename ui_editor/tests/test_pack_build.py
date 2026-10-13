@@ -175,5 +175,42 @@ class TestPatchPackCopy(unittest.TestCase):
             self.assertFalse(out.exists())  # 失败不落半成品
 
 
+class TestPatchWithExtraEntries(unittest.TestCase):
+    """随布局写入附加条目：新图按路径新增、已有路径替换内容。"""
+
+    def test_add_new_and_replace_existing(self):
+        import tempfile
+
+        key = b"\x5a\xa5\x11\x7e"
+        original = _archive([
+            ("dialog/a.dlg", _dlg("甲"), key),
+            ("dialog/b.dlg", _dlg("乙"), key),
+            ("ui.lst", b"[Font]\nABC\n", b"\0" * 4),
+        ])
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / "src.fls"
+            out = Path(tmp) / "out.fls"
+            src.write_bytes(original)
+            info = patch_pack_copy(
+                src, "dialog/a.dlg", _dlg("新標題"), out,
+                extra_entries={"newdir/pic.png": b"\x89PNGdata",
+                               "ui.lst": b"[Font]\nXYZ\n"})
+            self.assertEqual(info["images_added"], ["newdir/pic.png"])
+            self.assertEqual(info["images_replaced"], ["ui.lst"])
+            self.assertEqual(src.read_bytes(), original)  # 源包不动
+            with FlsPack(out) as pack:
+                self.assertEqual(pack.count, 4)  # 3 + 新增 1
+                self.assertEqual(pack.read_named("newdir/pic.png"),
+                                 b"\x89PNGdata")
+                self.assertEqual(pack.read_named("ui.lst"),
+                                 b"[Font]\nXYZ\n")
+                dicts, _ = dlg_codec.parse_bytes(unpack_packed_text(
+                    pack.read_named("dialog/a.dlg")))
+                self.assertEqual(dicts[0]["sTitle"], "新標題")
+            after = parse_archive(out.read_bytes())
+            before = parse_archive(original)
+            self.assertEqual(after[1].stored, before[1].stored)  # b 不变
+
+
 if __name__ == "__main__":
     unittest.main()

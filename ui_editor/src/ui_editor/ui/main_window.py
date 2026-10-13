@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QSettings, Qt
+from PySide6.QtCore import QSettings, QSize, Qt
 from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QSplitter,
     QStatusBar,
     QTabWidget,
+    QToolBar,
     QVBoxLayout,
     QWidget,
 )
@@ -32,6 +33,7 @@ from ..core.model import LayoutDocument, Widget
 from ..core.pack import FlsPack
 from ..core.painters import PaintContext
 from ..core.styles import StyleBook
+from . import icons
 from .canvas import CanvasView, LayoutScene
 from .panels import PalettePanel, ResourceTreePanel, WidgetTreePanel
 from .property_panel import PropertyPanel
@@ -48,10 +50,12 @@ class MainWindow(QMainWindow):
         self.ctx = PaintContext(assets=self.resolver, styles=self.styles)
         self.doc: LayoutDocument | None = None
         self._selected: Widget | None = None
+        self._selection_anchor: list[int] | None = None
         self._syncing_selection = False
         self._loading = False
 
-        self.scene = LayoutScene(self.ctx, self._on_geometry_changed)
+        self.scene = LayoutScene(self.ctx, self._on_geometry_changed,
+                                 self._on_geometry_committed)
         self.view = CanvasView(self.scene)
         self.setCentralWidget(self.view)
 
@@ -101,35 +105,103 @@ class MainWindow(QMainWindow):
 
     def _build_menus(self) -> None:
         file_menu = self.menuBar().addMenu("文件")
-        self._add_action(file_menu, "打开布局文件…", self.open_layout_file_dialog,
-                         QKeySequence.StandardKey.Open)
+        self._act_open_file = self._add_action(
+            file_menu, "打开布局文件…", self.open_layout_file_dialog,
+            QKeySequence.StandardKey.Open)
         self._add_action(file_menu, "打开布局目录…", self.open_layout_dir_dialog)
-        self._add_action(file_menu, "从资源包打开布局…", self.open_from_pack)
+        self._act_open_pack = self._add_action(
+            file_menu, "从资源包打开布局…", self.open_from_pack)
         self._add_action(file_menu, "从资源目录打开布局…",
                          self.open_resource_dir_dialog)
         file_menu.addSeparator()
         self._add_action(file_menu, "新建布局", self.new_layout,
                          QKeySequence.StandardKey.New)
-        self._add_action(file_menu, "保存", self.save,
-                         QKeySequence.StandardKey.Save)
+        self._act_save = self._add_action(
+            file_menu, "保存", self.save, QKeySequence.StandardKey.Save)
+        self._act_save.setToolTip("保存当前布局（Ctrl+S）")
         self._add_action(file_menu, "另存为…", lambda: self.save_as())
-        self._add_action(file_menu, "保存回资源包（生成新包）…",
-                         self.save_to_pack_dialog)
-        self._add_action(file_menu, "导出 PNG…", self.export_png)
+        self._act_save_pack = self._add_action(
+            file_menu, "保存回资源包（生成新包）…", self.save_to_pack_dialog)
+        self._act_save_pack.setToolTip("写回资源包生成新包（编辑包内布局时）")
+        self._act_export_png = self._add_action(
+            file_menu, "导出 PNG…", self.export_png)
         file_menu.addSeparator()
         self._add_action(file_menu, "退出", self.close,
                          QKeySequence.StandardKey.Quit)
 
         view_menu = self.menuBar().addMenu("视图")
-        self._add_action(view_menu, "适应窗口", self.view.fit_content)
-        self._add_action(view_menu, "实际大小（100%）", self.view.actual_size)
+        self._act_fit = self._add_action(
+            view_menu, "适应窗口", self.view.fit_content)
+        self._act_actual = self._add_action(
+            view_menu, "实际大小（100%）", self.view.actual_size)
         names_action = QAction("显示占位/控件名标注", self, checkable=True)
         names_action.setChecked(True)
         names_action.toggled.connect(self._toggle_names)
         view_menu.addAction(names_action)
+        self._names_action = names_action
+
+        edit_menu = self.menuBar().addMenu("编辑")
+        self._undo_action = QAction("撤销", self)
+        self._undo_action.setShortcut(QKeySequence("Ctrl+Z"))
+        self._undo_action.triggered.connect(self.undo)
+        self._undo_action.setEnabled(False)
+        edit_menu.addAction(self._undo_action)
+        self._redo_action = QAction("重做", self)
+        self._redo_action.setShortcuts(
+            [QKeySequence("Ctrl+Y"), QKeySequence("Ctrl+Shift+Z")])
+        self._redo_action.triggered.connect(self.redo)
+        self._redo_action.setEnabled(False)
+        edit_menu.addAction(self._redo_action)
 
         help_menu = self.menuBar().addMenu("帮助")
         self._add_action(help_menu, "关于", self._about)
+        self._build_toolbar()
+
+    def _build_toolbar(self) -> None:
+        """顶部图标工具栏：与菜单共用同一 QAction（状态同步）。"""
+        for action, icon, tip, short in (
+                (self._act_open_file, icons.icon_open_file(),
+                 "打开布局文件", "打开"),
+                (self._act_open_pack, icons.icon_open_pack(),
+                 "从资源包打开布局", "开包"),
+                (self._undo_action, icons.icon_undo(),
+                 "撤销（Ctrl+Z）", "撤销"),
+                (self._redo_action, icons.icon_redo(),
+                 "重做（Ctrl+Y）", "重做"),
+                (self._act_save, icons.icon_save(),
+                 "保存（Ctrl+S）", "保存"),
+                (self._act_save_pack, icons.icon_save_pack(),
+                 "保存回资源包（生成新包）", "存包"),
+                (self._act_export_png, icons.icon_export_image(),
+                 "导出 PNG 预览图", "导出"),
+                (self._act_fit, icons.icon_fit(), "适应窗口", "适屏"),
+                (self._act_actual, icons.icon_actual_size(),
+                 "实际大小（100%）", "100%"),
+                (self._names_action, icons.icon_names(),
+                 "显示/隐藏名字标注", "标注")):
+            action.setIcon(icon)
+            action.setToolTip(tip)
+            action.setIconText(short)
+        bar = QToolBar("主工具栏", self)
+        bar.setMovable(False)
+        bar.setIconSize(QSize(26, 26))
+        bar.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        self.addToolBar(Qt.ToolBarArea.TopToolBarArea, bar)
+        bar.addAction(self._act_open_file)
+        bar.addAction(self._act_open_pack)
+        bar.addSeparator()
+        bar.addAction(self._undo_action)
+        bar.addAction(self._redo_action)
+        bar.addSeparator()
+        bar.addAction(self._act_save)
+        bar.addAction(self._act_save_pack)
+        bar.addAction(self._act_export_png)
+        bar.addSeparator()
+        bar.addAction(self._act_fit)
+        bar.addAction(self._act_actual)
+        bar.addAction(self._names_action)
+        self._toolbar = bar
 
     @staticmethod
     def _add_action(menu, text, slot, shortcut=None) -> QAction:
@@ -150,6 +222,9 @@ class MainWindow(QMainWindow):
             self.open_layout_dir_dialog)
         self.tree_panel.widget_selected.connect(self._select_from_tree)
         self.tree_panel.add_child_requested.connect(self._add_child_from_tree)
+        self.tree_panel.add_root_requested.connect(self._add_root_from_tree)
+        self.tree_panel.promote_requested.connect(
+            self.promote_selected_to_root)
         self.tree_panel.delete_requested.connect(self.delete_selected)
         self.tree_panel.reorder_requested.connect(self._reorder_widget)
         self.palette_panel.add_requested.connect(self.add_widget)
@@ -176,6 +251,9 @@ class MainWindow(QMainWindow):
         self.tree_panel.build(doc)
         self.props_panel.set_widget(None)
         self._loading = False
+        if doc is not None:
+            doc.reset_history()
+        self._sync_history_actions()
         if doc is not None:
             self.view.fit_content()
         self._update_title()
@@ -368,44 +446,69 @@ class MainWindow(QMainWindow):
             self.save_as()
 
     # -- 写回资源包 ---------------------------------------------------
+    def _referenced_staged_images(self) -> dict[str, bytes]:
+        """选图窗挂账的新图里，被当前布局引用到的那些（随包写入）。"""
+        if self.doc is None:
+            return {}
+        staged = self.resolver.staged_images()
+        if not staged:
+            return {}
+        texts: set[str] = set()
+        stack: list = [self.doc.to_dicts()]
+        while stack:
+            value = stack.pop()
+            if isinstance(value, str):
+                texts.add(value.replace("/", "\\").lower())
+            elif isinstance(value, dict):
+                stack.extend(value.values())
+            elif isinstance(value, (list, tuple)):
+                stack.extend(value)
+        return {path: data for path, data in staged.items()
+                if path.replace("/", "\\").lower() in texts}
+
     def write_pack_copy(self, out_path: str) -> dict | None:
         """把当前包内布局写回一个新包文件（原包不动）。返回校验报告。
 
-        写后硬性校验：条目数一致、除目标外每条存储字节一致、
-        用全新解析器回读目标布局与当前文档逐字段一致；任一不
-        过返回 None 并说明（弹错在对话框层，这里只记报告）。
+        选图窗新加且被本布局引用到的图片随布局一并写入（按路径
+        新增或替换）。写后硬性校验：条目数 = 原数 + 新增图片数、
+        除布局条目与这些图片外每条存储字节一致、用全新解析器
+        回读目标布局与当前文档逐字段一致、新图逐字节回读一致；
+        任一不过返回 None 并说明（弹错在对话框层，这里只记报告）。
         """
         if self.doc is None or not self.doc.source_pack:
             return None
         src_pack, res_path = self.doc.source_pack
         plain = dlg_codec.dump_bytes(self.doc.to_dicts())
         tmp_out = str(out_path)
+        extras = self._referenced_staged_images()
         info = pack_build.patch_pack_copy(
-            src_pack, res_path, plain, tmp_out)
+            src_pack, res_path, plain, tmp_out, extra_entries=extras)
         report: dict = {"out": tmp_out, "bytes": info["bytes"],
-                        "mode": info["mode"]}
+                        "mode": info["mode"],
+                        "images_added": len(info["images_added"]),
+                        "images_replaced": len(info["images_replaced"])}
         try:
             from ..core.assets import AssetResolver as _Resolver
 
             with FlsPack(src_pack) as before, FlsPack(tmp_out) as after:
-                if before.count != after.count:
+                expected = before.count + len(info["images_added"])
+                if after.count != expected:
                     report["error"] = "条目数变化，写回结果不可信"
                     return report
-                target_index = info["target_index"]
+                allowed = set(info["changed_indexes"])
                 mismatched = 0
                 for index in range(before.count):
                     # 快速补丁不挪动其他条目：span 未变即可断定
-                    # 存储字节未变，跳过读取（目标条目即便 span
-                    # 未变也要比内容，它可能只是等长改字）
+                    # 存储字节未变，跳过读取（允许变化的条目即便
+                    # span 未变也要比内容，可能只是等长改字）
                     if (before._spans[index] == after._spans[index]
-                            and index != target_index):
+                            and index not in allowed):
                         continue
                     a = before.read_index(index)
                     b = after.read_index(index)
                     if a != b:
                         mismatched += 1
-                # 允许且只允许 1 条不同（目标条目本身）
-                if mismatched > 1:
+                if mismatched > len(allowed):
                     report["error"] = f"有 {mismatched} 条条目被意外改变"
                     return report
                 report["changed_entries"] = mismatched
@@ -413,6 +516,10 @@ class MainWindow(QMainWindow):
             fresh.mount_pack(tmp_out)
             try:
                 got = fresh.fetch_dlg(res_path)
+                for name, data in extras.items():
+                    if fresh.fetch_bytes(name) != data:
+                        report["error"] = f"新图 {name} 回读不一致"
+                        return report
             finally:
                 fresh.close()
             if got is None:
@@ -429,6 +536,7 @@ class MainWindow(QMainWindow):
         # 状态迁移：已验证落盘，标记干净并让后续保存续写新包
         self.doc.dirty = False
         self.doc.source_pack = (tmp_out, res_path)
+        self.resolver.discard_staged(list(extras))  # 已进新包，销账
         self._update_title()
         return report
 
@@ -472,6 +580,11 @@ class MainWindow(QMainWindow):
                 + "\n新包文件已生成但不可信，请勿替换进客户端。")
             return
         fast = report.get("mode") in ("inplace", "relocated")
+        images_note = ""
+        if report.get("images_added") or report.get("images_replaced"):
+            images_note = (
+                f"\n一并写入新图 {report.get('images_added', 0)} 张、"
+                f"替换图片 {report.get('images_replaced', 0)} 张。")
         tail = ("已直接覆盖原文件——请确认你手边留有原包备份。"
                 if overwritten else
                 "原包未被修改。安装时请在完整客户端副本上操作：先备份"
@@ -481,7 +594,8 @@ class MainWindow(QMainWindow):
             f"已写回：{res_path}\n新包：{path}\n"
             f"条目校验通过（改变 {report.get('changed_entries', 0)} 条，"
             f"大小 {report['bytes']} 字节"
-            + ("，快速补丁未重写整包" if fast else "") + "）。\n\n"
+            + ("，快速补丁未重写整包" if fast else "") + "）。"
+            + images_note + "\n\n"
             + tail)
 
     def save_as(self, path: str | None = None) -> bool:
@@ -553,6 +667,7 @@ class MainWindow(QMainWindow):
                                     "请先打开或新建一个布局。")
             return
         widget = self.doc.new_widget(wtype, parent=self._selected)
+        self.doc.checkpoint()
         self._refresh_structure()
         self._select_widget(widget)
         self._update_title()
@@ -571,6 +686,41 @@ class MainWindow(QMainWindow):
         if self.doc is None:
             return
         widget = self.doc.new_widget(wtype, parent=target)
+        self.doc.checkpoint()
+        self._refresh_structure()
+        self._select_widget(widget)
+        self._update_title()
+
+    def _add_root_from_tree(self) -> None:
+        """按调色板选中的类型新建一个顶级控件。"""
+        if self.doc is None:
+            QMessageBox.information(self, "没有布局",
+                                    "请先打开或新建一个布局。")
+            return
+        wtype = self.palette_panel.current_type()
+        if wtype is None:
+            QMessageBox.information(self, "未选控件类型",
+                                    "请先在控件调色板中选中要添加的类型。")
+            return
+        widget = self.doc.new_widget(wtype, parent=None)
+        self.doc.checkpoint()
+        self._refresh_structure()
+        self._select_widget(widget)
+        self._update_title()
+
+    def promote_selected_to_root(self) -> None:
+        """把当前控件提升为顶级控件（坐标换算，位置不跳）。"""
+        widget = self._selected or self.tree_panel.current_widget()
+        if self.doc is None or widget is None:
+            QMessageBox.information(self, "未选中控件",
+                                    "请先选中要提升的控件。")
+            return
+        if widget.parent is None:
+            QMessageBox.information(self, "已是顶级控件",
+                                    "这个控件本来就在顶层。")
+            return
+        self.doc.move_to_root(widget)
+        self.doc.checkpoint()
         self._refresh_structure()
         self._select_widget(widget)
         self._update_title()
@@ -590,6 +740,7 @@ class MainWindow(QMainWindow):
                 return
         parent = widget.parent
         self.doc.remove_widget(widget)
+        self.doc.checkpoint()
         self._refresh_structure()
         self._select_widget(parent)
         self._update_title()
@@ -604,6 +755,7 @@ class MainWindow(QMainWindow):
             return
         siblings[index], siblings[target] = siblings[target], siblings[index]
         self.doc.dirty = True
+        self.doc.checkpoint()
         self._refresh_structure()
         self._select_widget(widget)
         self._update_title()
@@ -617,6 +769,11 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
     def _select_widget(self, widget: Widget | None) -> None:
         self._selected = widget
+        if widget is not None:
+            # 记住选择锚点：撤销重建对象后按它重解析选择
+            anchor = self._selection_path(widget)
+            if anchor is not None:
+                self._selection_anchor = anchor
         self.props_panel.set_widget(widget)
         self.tree_panel.select_widget(widget)
         if self._syncing_selection:
@@ -656,8 +813,74 @@ class MainWindow(QMainWindow):
         if self.doc is None:
             return
         self.doc.dirty = True
+        self.doc.checkpoint(("prop", id(widget), key))
         self.scene.refresh_widget(widget)
         self.tree_panel.update_label(widget)
+        self._update_title()
+
+    # -- 撤销/重做 ----------------------------------------------------
+    def _sync_history_actions(self) -> None:
+        if not hasattr(self, "_undo_action"):
+            return
+        doc = self.doc
+        self._undo_action.setEnabled(bool(doc and doc.can_undo))
+        self._redo_action.setEnabled(bool(doc and doc.can_redo))
+
+    def _selection_path(self, widget) -> list[int] | None:
+        """选中控件的顶层序号路径，撤销重建对象后按它重解析。"""
+        if widget is None or self.doc is None:
+            return None
+        path: list[int] = []
+        node = widget
+        while node is not None:
+            siblings = (node.parent.children if node.parent is not None
+                        else self.doc.roots)
+            try:
+                path.append(siblings.index(node))
+            except ValueError:
+                return None
+            node = node.parent
+        return list(reversed(path))
+
+    def _resolve_path(self, path) -> Widget | None:
+        if not path or self.doc is None:
+            return None
+        widgets = self.doc.roots
+        node = None
+        for index in path:
+            if index >= len(widgets):
+                return None
+            node = widgets[index]
+            widgets = node.children
+        return node
+
+    def undo(self) -> None:
+        if self.doc is None:
+            return
+        path = (self._selection_path(self._selected)
+                or self._selection_anchor)
+        if not self.doc.undo():
+            return
+        self._refresh_structure()
+        self._select_widget(self._resolve_path(path))
+        self._update_title()
+
+    def redo(self) -> None:
+        if self.doc is None:
+            return
+        path = (self._selection_path(self._selected)
+                or self._selection_anchor)
+        if not self.doc.redo():
+            return
+        self._refresh_structure()
+        self._select_widget(self._resolve_path(path))
+        self._update_title()
+
+    def _on_geometry_committed(self, widget: Widget) -> None:
+        """拖放/缩放送手：这一次手势算撤销的一步。"""
+        if self._loading or self.doc is None:
+            return
+        self.doc.checkpoint()
         self._update_title()
 
     # ------------------------------------------------------------------
@@ -668,6 +891,7 @@ class MainWindow(QMainWindow):
         self.scene.refresh_all()
 
     def _update_title(self) -> None:
+        self._sync_history_actions()
         name = self.doc.display_name if self.doc else "未打开布局"
         star = "*" if self.doc and self.doc.dirty else ""
         self.setWindowTitle(f"{name}{star} — MXSJ UI 编辑器 {__version__}")

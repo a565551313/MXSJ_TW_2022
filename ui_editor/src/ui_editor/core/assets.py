@@ -58,6 +58,7 @@ class AssetResolver:
         self._bytes_cache: dict[str, bytes | None] = {}
         self._image_cache: dict[str, list[QImage] | None] = {}
         self._media_cache: list[str] | None = None
+        self._staged: dict[str, bytes] = {}  # 选图窗新加、待随包写入
 
     # -- 挂载 -----------------------------------------------------
     def mount_pack(self, path: str | Path) -> FlsPack:
@@ -119,6 +120,32 @@ class AssetResolver:
         rel = Path(name.replace("\\", os.sep).replace("/", os.sep))
         return any((root / rel).is_file() for root in self._loose_dirs)
 
+    # -- 待入包图片（选图窗"添加到包"挂账） ----------------------
+    def stage_image(self, res_path: str, data: bytes) -> None:
+        """登记一张新图：预览立即可见，保存回资源包时一并写入。"""
+        self._staged[res_path] = data
+        for key in (res_path, res_path.replace("/", "\\"),
+                    res_path.replace("\\", "/")):
+            cache_key = key.replace("/", "\\")
+            self._bytes_cache.pop(cache_key, None)
+            self._image_cache.pop(cache_key, None)
+
+    def staged_images(self) -> dict[str, bytes]:
+        """全部待入包图片 {资源路径: 原始字节}（拷贝）。"""
+        return dict(self._staged)
+
+    def discard_staged(self, res_paths) -> None:
+        """写包成功后销账，避免下次保存重复写入。"""
+        for path in res_paths:
+            self._staged.pop(path, None)
+
+    def _staged_lookup(self, name: str) -> bytes | None:
+        for key in (name, name.replace("/", "\\"),
+                    name.replace("\\", "/")):
+            if key in self._staged:
+                return self._staged[key]
+        return None
+
     def media_candidates(self) -> list[str]:
         """包内可选媒体资源路径清单（供"从资源包选择"对话框）。
 
@@ -143,15 +170,22 @@ class AssetResolver:
             path for path in found if self._exists(path))
         return self._media_cache
 
+    def candidates_with_staged(self) -> list[str]:
+        """选图窗清单：包内候选 + 已挂账待入包的新图。"""
+        return sorted(set(self.media_candidates()) | set(self._staged))
+
     @property
     def summary(self) -> str:
         return f"已挂载 {len(self._packs)} 个资源包、{len(self._loose_dirs)} 个散装目录"
 
     # -- 查找 -----------------------------------------------------
     def fetch_bytes(self, name: str) -> bytes | None:
-        """按资源路径取原始字节（包优先，其次散装目录）。"""
+        """按资源路径取原始字节（待入包图片优先，其次包/散装目录）。"""
         if not name or not name.strip("\\/ "):
             return None
+        staged = self._staged_lookup(name)
+        if staged is not None:
+            return staged
         cache_key = name.replace("/", "\\")
         if cache_key in self._bytes_cache:
             return self._bytes_cache[cache_key]

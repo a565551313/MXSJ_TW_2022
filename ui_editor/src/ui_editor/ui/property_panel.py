@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QScrollArea,
@@ -269,7 +270,7 @@ class PropertyPanel(QWidget):
         exts = self._AUDIO_EXTS if key == "sSoundPath" else self._IMAGE_EXTS
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         try:
-            candidates = [p for p in assets.media_candidates()
+            candidates = [p for p in assets.candidates_with_staged()
                           if p.lower().endswith(exts)]
         finally:
             QApplication.restoreOverrideCursor()
@@ -278,10 +279,51 @@ class PropertyPanel(QWidget):
             frames = assets.fetch_image(path)
             return frames[0] if frames else None
 
+        def export_handler(paths: list[str]) -> None:
+            from pathlib import Path
+
+            from .image_export import export_image_files
+
+            def one(path: str, dest_dir, dest_name=None):
+                return export_image_files(
+                    path, assets.fetch_bytes(path),
+                    assets.fetch_image(path), dest_dir, dest_name)
+
+            written: list = []
+            try:
+                if len(paths) == 1:
+                    base = paths[0].replace("\\", "/").split("/")[-1]
+                    chosen, _ = QFileDialog.getSaveFileName(
+                        self, "导出图片", base, "所有文件 (*)")
+                    if not chosen:
+                        return
+                    target = Path(chosen)
+                    written = one(paths[0], target.parent, target.name)
+                else:
+                    directory = QFileDialog.getExistingDirectory(
+                        self, "选择导出到的文件夹")
+                    if not directory:
+                        return
+                    for path in paths:
+                        written.extend(one(path, directory))
+            except OSError as exc:
+                QMessageBox.warning(self, "导出失败", str(exc))
+                return
+            if written:
+                QMessageBox.information(
+                    self, "导出完成",
+                    f"已导出 {len(written)} 个文件，第一个在：\n"
+                    f"{written[0]}")
+            else:
+                QMessageBox.warning(
+                    self, "导出失败", "这些资源在包里取不到内容。")
+
         dialog = ResourcePickerDialog(
             self, "从资源包选择（选完保存回包不丢图）",
             candidates, edit.text(),
-            thumb if key != "sSoundPath" else None)
+            thumb if key != "sSoundPath" else None,
+            on_stage=assets.stage_image,
+            export_handler=export_handler)
         if (dialog.exec() == QDialog.DialogCode.Accepted
                 and dialog.selected_path()):
             edit.setText(dialog.selected_path())
