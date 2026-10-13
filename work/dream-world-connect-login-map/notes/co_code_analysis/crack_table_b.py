@@ -226,7 +226,9 @@ def main():
         'CRandomConnectMgr': ('bytecode_49_CRandomConnectMgr.bin', 49),
         'ShowConnectingDlg': ('bytecode_25_ShowConnectingDlg.bin', 25),
         'S2CServerRoleInfo': ('bytecode_26_S2CServerRoleInfo.bin', 26),
-        '<module>': ('bytecode_58_<module>.bin', 58),
+        # 文件原名 bytecode_58_<module>.bin；'<' '>' 在 Windows 上是非法文件名字符，
+        # 2026-10-14 改名为 bytecode_58_module.bin（内容未变）。
+        '<module>': ('bytecode_58_module.bin', 58),
     }
     
     print('=' * 80)

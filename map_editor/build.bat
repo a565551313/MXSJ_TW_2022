@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 REM ============================================================
 REM  《夢想世界》地图编辑器 - Windows 打包脚本
 REM  在 Windows 上执行本文件即可得到 dist\MapEditor\MapEditor.exe
