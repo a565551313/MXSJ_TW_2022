@@ -20,6 +20,7 @@ from typing import BinaryIO
 from .. import names as _names
 from ..codecs import detect
 from ..containers import (
+    KIND_0SLF,
     KIND_FLSDATA,
     Archive,
     fls0slf,
@@ -265,7 +266,8 @@ class PackDocument:
         else:
             entry_id = len(self._slots)
             self.archive.extra_metas.append(
-                fls0slf.EntryMeta(entry_id=entry_id, r1=0)
+                fls0slf.EntryMeta(entry_id=entry_id,
+                                  r1=fls0slf.fresh_r1(entry_id))
             )
             stored = content
         self._slots.append(_Slot(origin=None, stored=stored))
@@ -295,7 +297,8 @@ class PackDocument:
                 f"路径已存在于条目 {existing}，请改用替换")
         entry_id = mx_hash(res_path.encode("gbk", "replace"))
         self.archive.extra_metas.append(
-            fls0slf.EntryMeta(entry_id=entry_id, r1=0))
+            fls0slf.EntryMeta(entry_id=entry_id,
+                              r1=fls0slf.fresh_r1(entry_id)))
         self._slots.append(_Slot(origin=None, stored=content,
                                  path_name=res_path))
         return self.count - 1
@@ -306,12 +309,31 @@ class PackDocument:
         self._kind_cache.clear()
 
     # ---------------------------------------------------------- 保存 ----
+    def _sort_slots_for_write(self) -> None:
+        """保存对齐（仅 0SLF）：槽位与目录元数据按 entry_id 升序排列。
+
+        引擎按有序目录寻址，写出的目录必须升序（见 fls0slf 模块
+        文档）；先把文档顺序与将写出的文件顺序对齐，保存后按
+        下标逐条校验（verifier）才成立。名字映射走槽位的原包
+        序号，不受排序影响；按下标的种类缓存须清掉。
+        """
+        metas = self.archive.extra_metas
+        order = sorted(range(len(self._slots)),
+                       key=lambda i: metas[i].entry_id)
+        if order == list(range(len(self._slots))):
+            return
+        self._slots = [self._slots[i] for i in order]
+        self.archive.extra_metas = [metas[i] for i in order]
+        self._kind_cache.clear()
+
     def write_to(
         self,
         out: BinaryIO,
         progress: Callable[[int, int], None] | None = None,
     ) -> None:
         """把当前文档流式写入 out（未改动条目从源文件拷贝）。"""
+        if self.archive.kind == KIND_0SLF:
+            self._sort_slots_for_write()
         items: list[tuple[str, object]] = []
         for slot in self._slots:
             if slot.stored is not None:

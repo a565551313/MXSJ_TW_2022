@@ -13,8 +13,15 @@
 :func:`parse_index` 只读头部与目录，给出每条负载在源中的位置
 （惰性打开，大包用这个，与文件大小无关地秒开）。
 
-重打包策略：16 字节头 + 负载按条目顺序拼接 + 目录重编码；
-每条目保留原始 ``(entry_id, r1)``，未改动条目逐字节一致。
+重打包策略：16 字节头 + 负载拼接 + 目录重编码；每条目保留
+原始 ``(entry_id, r1)``，未改动条目逐字节一致。
+
+**目录不变量（真实包实测，写回必须维持）**：全部真实包（共
+6,056 条）的目录记录按 ``entry_id`` 严格升序、且每条 ``r1``
+均非零。引擎按有序目录寻址（条目偏移的闭式变换含目录下
+标），新增条目若追加到目录尾并给 ``r1=0``，线性解析读得到、
+引擎却查不到。故写出时目录恒按 ``entry_id`` 升序排列，新
+条目的 r1 用 :func:`fresh_r1` 给出非零值。
 """
 from __future__ import annotations
 
@@ -47,6 +54,15 @@ def encode_directory(index: int, entry_id: int, r1: int, clen: int, doff: int) -
     r2 = (((r1 * entry_id + 0x0DF25E) & MASK32) ^ clen) & MASK32
     r3 = (((r2 * index * 0x00F718FE + 0x0D59D16C) & MASK32) ^ doff) & MASK32
     return struct.pack("<IIII", entry_id, r1, r2, r3)
+
+
+def fresh_r1(entry_id: int) -> int:
+    """给新增条目定一个非零 r1（真实包 6,056 条无一为 0）。
+
+    长度的闭式变换对任何 r1 都成立（编码时按选定 r1 反算 r2），
+    故只需确定性地非零：黄金比例乘子散列 entry_id，为零取 1。
+    """
+    return ((entry_id * 0x9E3779B1) & MASK32) or 1
 
 
 @dataclass
@@ -132,15 +148,21 @@ def write_stream(
 ) -> None:
     """流式写出 0SLF 包：write_entry(i, out) 写第 i 条负载并返回其长度。
 
-    out 需可 seek（临时文件即可）：先写占位头，负载与目录写完后回填。
+    out 需可 seek（临时文件即可）：先写占位头，负载与目录写完后
+    回填。负载按 ``entry_id`` 升序写出、目录记录随之下标即有序
+    位置（目录不变量，见模块文档）；write_entry 仍按 metas 的
+    原始下标取内容。r1 为零者以 :func:`fresh_r1` 代替。
     """
     out.write(bytes(HEADER_SIZE))
     records = bytearray()
-    for index, meta in enumerate(metas):
+    order = sorted(range(len(metas)), key=lambda i: metas[i].entry_id)
+    for pos, i in enumerate(order):
+        meta = metas[i]
         offset = out.tell()
-        clen = write_entry(index, out)
+        clen = write_entry(i, out)
+        r1 = meta.r1 if meta.r1 else fresh_r1(meta.entry_id)
         records.extend(
-            encode_directory(index, meta.entry_id, meta.r1, clen, offset))
+            encode_directory(pos, meta.entry_id, r1, clen, offset))
     dir_offset = out.tell()
     out.write(bytes(records))
     out.seek(0)

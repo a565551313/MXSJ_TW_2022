@@ -135,9 +135,13 @@ class Archive:
             dest.write(data)
             return len(data)
 
+        written = 0
+
         def wrapped(i: int, dest: BinaryIO) -> int:
+            nonlocal written
             n = write_entry(i, dest)
-            self._report(progress, i + 1, total)
+            written += 1  # 写出顺序按 entry_id 升序，按完成数报进度
+            self._report(progress, written, total)
             return n
 
         fls0slf.write_stream(out, self.extra_metas, wrapped)

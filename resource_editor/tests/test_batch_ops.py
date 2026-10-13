@@ -24,6 +24,10 @@ class TestExportEntries(unittest.TestCase):
         known = {mx_hash(DLG_PATH.encode("gbk")): DLG_PATH}
         with mock.patch.object(names, "_KNOWN_CACHE", known):
             doc = PackDocument.from_bytes(raw)
+            i_img = doc.index_by_path(IMG_REF)
+            i_rest = next(i for i, m in enumerate(doc.archive.extra_metas)
+                          if m.entry_id == 0xDEADBEEF)
+            assert i_img is not None
             with tempfile.TemporaryDirectory() as tmp:
                 out = Path(tmp)
                 report = exporter.export_entries(doc, [0, 1, 2], out)
@@ -38,11 +42,11 @@ class TestExportEntries(unittest.TestCase):
                 img_file = out.joinpath(
                     *IMG_REF.replace("\\", "/").split("/"))
                 self.assertTrue(img_file.exists())
-                self.assertEqual(img_file.read_bytes(), payloads[1])
+                self.assertEqual(img_file.read_bytes(), payloads[i_img])
                 # 无名条目回退 unnamed/<包名>_<序号>.bin
-                unnamed = list((out / "unnamed").glob("*_0002.bin"))
+                unnamed = list((out / "unnamed").glob(f"*_{i_rest:04d}.bin"))
                 self.assertEqual(len(unnamed), 1)
-                self.assertEqual(unnamed[0].read_bytes(), payloads[2])
+                self.assertEqual(unnamed[0].read_bytes(), payloads[i_rest])
             doc.close()
 
 
@@ -76,10 +80,13 @@ class TestGridSearch(unittest.TestCase):
 
     def test_search_by_name_substring(self):
         panel = self._panel()
+        assert panel._doc is not None
+        i_img = panel._doc.index_by_path(IMG_REF)
+        i_dlg = panel._doc.index_by_path(DLG_PATH)
         panel._search_edit.setText("底板800")
-        self.assertEqual(panel._view, [1])
+        self.assertEqual(panel._view, [i_img])
         panel._search_edit.setText("TEST.DLG")  # 不分大小写
-        self.assertEqual(panel._view, [0])
+        self.assertEqual(panel._view, [i_dlg])
         panel._search_edit.setText("不存在的名字xyz")
         self.assertEqual(panel._view, [])
         panel._search_edit.setText("")  # 清空恢复全部
