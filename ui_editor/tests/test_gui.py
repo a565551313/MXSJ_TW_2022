@@ -71,5 +71,113 @@ class TestMainWindowFlow(unittest.TestCase):
         self.assertGreater(len(colors), 1)
 
 
+def _mini_pack_bytes(res_name: str = "dialog/test.dlg") -> bytes:
+    """自建微型 0SLF 包：一个 XOR 加密的 .dlg 条目。"""
+    import struct
+
+    from ui_editor.core import dlg_codec
+    from ui_editor.core.mxhash import mx_hash
+
+    plain = dlg_codec.dump_bytes(
+        [{"sWidgetType": "CMainFrame", "sName": "root", "lChildren": []}],
+        md5="0" * 32)
+    key = b"\x5a\xa5\x11\x7e"
+    packed = bytes(b ^ key[i & 3] for i, b in enumerate(plain))
+    entry_id = mx_hash(res_name.encode("gbk"))
+    offset = 12
+    r1 = 12345
+    r2 = (((r1 * entry_id + 0x0DF25E) & 0xFFFFFFFF) ^ len(packed)) & 0xFFFFFFFF
+    r3 = (((r2 * 0 * 0x00F718FE + 0x0D59D16C) & 0xFFFFFFFF) ^ offset) & 0xFFFFFFFF
+    head = b"0SLF" + struct.pack("<II", 1, offset + len(packed))
+    return head + packed + struct.pack("<IIII", entry_id, r1, r2, r3)
+
+
+class _FakePackDialog:
+    """替身：替代文件选择对话框，直接回填包路径与资源路径。"""
+
+    pack_path = ""
+    res_path = ""
+
+    def __init__(self, parent, last_dir):
+        pass
+
+    def exec(self):
+        from PySide6.QtWidgets import QDialog
+        return QDialog.DialogCode.Accepted
+
+    def values(self):
+        return (self.pack_path, self.res_path)
+
+
+class TestOpenFromPack(unittest.TestCase):
+    """回归：从资源包打开布局（0.1.0 在 Windows 上因此处属性误用崩溃）。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def test_open_from_pack(self):
+        import tempfile
+
+        from ui_editor.ui import main_window as main_module
+        from ui_editor.ui.main_window import MainWindow
+
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "mini.fls"
+            pack_path.write_bytes(_mini_pack_bytes())
+            _FakePackDialog.pack_path = str(pack_path)
+            _FakePackDialog.res_path = "dialog/test.dlg"
+            original = main_module._PackOpenDialog
+            main_module._PackOpenDialog = _FakePackDialog
+            window = MainWindow()
+            try:
+                window.open_from_pack()
+                self.assertIsNotNone(window.doc)
+                self.assertEqual(window.doc.roots[0].wtype, "CMainFrame")
+                self.assertEqual(window.doc.source_pack[1], "dialog/test.dlg")
+            finally:
+                main_module._PackOpenDialog = original
+                if window.doc is not None:
+                    window.doc.dirty = False
+                window.close()
+                window.deleteLater()
+                self._app.processEvents()
+
+
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestPackOpenDialog(unittest.TestCase):
+    """从资源包打开对话框：选包后自动列出包内已知布局。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def test_scan_lists_known_layout(self):
+        import tempfile
+
+        from ui_editor.ui.main_window import _PackOpenDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "mini.fls"
+            pack_path.write_bytes(_mini_pack_bytes("dialog/cateroom.dlg"))
+            dialog = _PackOpenDialog(None, "")
+            dialog._pack_edit.setText(str(pack_path))
+            dialog._scan_current_pack()
+            self.assertIn("dialog/cateroom.dlg", dialog._found)
+            self.assertEqual(dialog.values()[1], "dialog/cateroom.dlg")
+            dialog._path_edit.setText("dialog/manual.dlg")
+            self.assertEqual(dialog.values()[1], "dialog/manual.dlg")
+            dialog.close()
+            dialog.deleteLater()
+            self._app.processEvents()
+
+    def test_catalog_loaded(self):
+        from ui_editor.core.catalog import known_layout_paths
+        paths = known_layout_paths()
+        self.assertGreaterEqual(len(paths), 2900)
+        self.assertTrue(all(p.endswith(".dlg") for p in paths))

@@ -88,6 +88,12 @@ class FlsPack:
             raise PackError(f"条目 {index} 读取不完整：{self.path}")
         return data
 
+    def contains(self, name: str) -> bool:
+        """仅按路径哈希判断包里是否有该资源（不读负载，目录核对用）。"""
+        if not name or not name.strip("\\/ "):
+            return False
+        return mx_hash(name.encode("gbk", "replace")) in self._by_id
+
     def read_named(self, name: str) -> bytes | None:
         """按资源路径读取条目（引擎查表方式），没有返回 None。"""
         if not name or not name.strip("\\/ "):

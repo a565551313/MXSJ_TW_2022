@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QListWidget,
+    QListWidgetItem,
     QMainWindow,
     QMessageBox,
     QPushButton,
@@ -237,7 +239,8 @@ class MainWindow(QMainWindow):
             return
         self._settings.setValue("pack_dir", str(Path(pack_path).parent))
         try:
-            if all(str(p.path) != pack_path for p in self.resolver.pack_paths):
+            known = {str(p) for p in self.resolver.pack_paths}
+            if pack_path not in known:
                 self.resolver.mount_pack(pack_path)
         except Exception as exc:
             QMessageBox.warning(self, "挂载资源包失败", str(exc))
@@ -523,28 +526,53 @@ class MainWindow(QMainWindow):
 
 
 class _PackOpenDialog(QDialog):
-    """从资源包打开布局：包文件 + 资源路径。"""
+    """从资源包打开布局：选包后自动识别其中布局，下拉/搜索选用。
+
+    包内不存文件名（只有路径哈希），不能直接枚举；用内置的已知
+    布局路径目录逐条哈希核对，命中的自动进列表。目录里没有的
+    布局也可在底部手动输入路径。
+    """
 
     def __init__(self, parent: QWidget, last_dir: str) -> None:
         super().__init__(parent)
         self.setWindowTitle("从资源包打开布局")
+        self.resize(560, 520)
         self._last_dir = last_dir
+        self._found: list[str] = []
         layout = QVBoxLayout(self)
+
         row1 = QHBoxLayout()
         self._pack_edit = QLineEdit()
         self._pack_edit.setPlaceholderText("如 D:\\游戏\\data\\interface.fls")
+        self._pack_edit.editingFinished.connect(self._scan_current_pack)
         browse = QPushButton("浏览…")
         browse.clicked.connect(self._browse)
         row1.addWidget(QLabel("资源包："))
         row1.addWidget(self._pack_edit, 1)
         row1.addWidget(browse)
         layout.addLayout(row1)
+
+        self._status = QLabel("选择资源包后，自动列出其中可打开的布局。")
+        self._status.setWordWrap(True)
+        layout.addWidget(self._status)
+
+        self._filter_edit = QLineEdit()
+        self._filter_edit.setPlaceholderText("搜索布局路径（如 equip）…")
+        self._filter_edit.textChanged.connect(self._apply_filter)
+        layout.addWidget(self._filter_edit)
+
+        self._list = QListWidget()
+        self._list.itemDoubleClicked.connect(lambda _item: self.accept())
+        layout.addWidget(self._list, 1)
+
         row2 = QHBoxLayout()
         self._path_edit = QLineEdit()
-        self._path_edit.setPlaceholderText("如 dialog/equip.dlg")
+        self._path_edit.setPlaceholderText(
+            "或手动输入布局路径，如 dialog/equip.dlg")
         row2.addWidget(QLabel("布局路径："))
         row2.addWidget(self._path_edit, 1)
         layout.addLayout(row2)
+
         hint = QLabel("提示：包会同时挂载为图片资源来源；interface.fls "
                       "内的 ui.lst 会被自动加载为样式表。")
         hint.setWordWrap(True)
@@ -561,7 +589,49 @@ class _PackOpenDialog(QDialog):
             self, "选择资源包", self._last_dir, "资源包 (*.fls);;所有文件 (*)")
         if path:
             self._pack_edit.setText(path)
+            self._scan_current_pack()
+
+    def _scan_current_pack(self) -> None:
+        """用内置路径目录核对当前包，命中的布局填进列表。"""
+        pack_path = self._pack_edit.text().strip()
+        self._found = []
+        self._list.clear()
+        if not pack_path:
+            return
+        from ..core.catalog import known_layout_paths
+        from ..core.pack import FlsPack
+
+        try:
+            with FlsPack(pack_path) as pack:
+                self._found = [p for p in known_layout_paths()
+                               if pack.contains(p)]
+        except Exception as exc:
+            self._status.setText(f"读取资源包失败：{exc}（仍可手动输入路径）")
+            return
+        self._apply_filter()
+        if self._found:
+            self._status.setText(
+                f"在该包中识别到 {len(self._found)} 个布局，"
+                "双击或选中后确定即可打开。")
+        else:
+            self._status.setText(
+                "该包中未识别到已知布局（可能不是界面资源包），"
+                "可在下方手动输入路径试开。")
+
+    def _apply_filter(self) -> None:
+        keyword = self._filter_edit.text().strip().lower()
+        self._list.clear()
+        for path in self._found:
+            if not keyword or keyword in path.lower():
+                self._list.addItem(QListWidgetItem(path))
+        if self._list.count():
+            self._list.setCurrentRow(0)
 
     def values(self) -> tuple[str, str]:
-        return self._pack_edit.text().strip(), \
-            self._path_edit.text().strip()
+        manual = self._path_edit.text().strip()
+        if manual:
+            chosen = manual
+        else:
+            item = self._list.currentItem()
+            chosen = item.text() if item is not None else ""
+        return self._pack_edit.text().strip(), chosen
