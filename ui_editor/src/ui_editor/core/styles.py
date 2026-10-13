@@ -75,7 +75,16 @@ class StyleBook:
 
     @classmethod
     def parse_bytes(cls, data: bytes) -> StyleBook:
-        return cls.parse_text(data.decode("gb18030", "replace"))
+        """按节解码原始字节：字体名是 Big5，其余行以 GB18030 兜底。"""
+        lines: list[str] = []
+        section = ""
+        for raw in data.splitlines():
+            header = raw.strip()
+            if header.startswith(b"[") and header.endswith(b"]"):
+                section = header[1:-1].decode("ascii", "replace")
+            codec = "big5" if section in ("Font", "NewFont") else "gb18030"
+            lines.append(raw.decode(codec, "surrogateescape"))
+        return cls.parse_text("\n".join(lines))
 
     def font(self, index: int) -> FontDef | None:
         """按 iFont 取字体：先 [Font] 后 [NewFont]，越界返回 None。"""

@@ -181,3 +181,77 @@ class TestPackOpenDialog(unittest.TestCase):
         paths = known_layout_paths()
         self.assertGreaterEqual(len(paths), 2900)
         self.assertTrue(all(p.endswith(".dlg") for p in paths))
+
+
+class TestResourceTree(unittest.TestCase):
+    """资源树：包/目录入树、累加不移除、散装目录严格过滤。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+
+    @staticmethod
+    def _tree_texts(window) -> list[str]:
+        texts = []
+
+        def visit(item):
+            texts.append(item.text(0))
+            for i in range(item.childCount()):
+                visit(item.child(i))
+
+        tree = window.resource_panel._tree
+        for i in range(tree.topLevelItemCount()):
+            visit(tree.topLevelItem(i))
+        return texts
+
+    def test_resource_dir_mounts_pack_into_tree(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "mini.fls"
+            pack_path.write_bytes(_mini_pack_bytes("dialog/cateroom.dlg"))
+            self.window.open_resource_dir(tmp)
+            panel = self.window.resource_panel
+            self.assertEqual(panel.root_count(), 1)
+            texts = self._tree_texts(self.window)
+            self.assertTrue(any("mini.fls" in t for t in texts))
+            self.assertIn("dialog/cateroom.dlg", texts)
+            # 再挂一个散装目录：只追加，不顶掉已有包节点
+            loose = Path(tmp) / "loose"
+            loose.mkdir()
+            (loose / "x.dlg").write_bytes(b"UI_INFO = []\n")
+            self.window.open_layout_dir(str(loose))
+            self.assertEqual(panel.root_count(), 2)
+
+    def test_loose_dir_filters_non_dlg(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "a.dlg").write_bytes(b"UI_INFO = []\n")
+            (root / "junk.txt").write_text("x", encoding="utf-8")
+            sub = root / "only_text"
+            sub.mkdir()
+            (sub / "readme.md").write_text("x", encoding="utf-8")
+            sub2 = root / "has_dlg"
+            sub2.mkdir()
+            (sub2 / "b.dlg").write_bytes(b"UI_INFO = []\n")
+            self.window.open_layout_dir(tmp)
+            texts = self._tree_texts(self.window)
+            self.assertIn("a.dlg", texts)
+            self.assertIn("b.dlg", texts)
+            self.assertNotIn("junk.txt", texts)
+            self.assertNotIn("readme.md", texts)
+            self.assertNotIn("only_text", texts)

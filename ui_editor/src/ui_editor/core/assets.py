@@ -16,6 +16,7 @@ from pathlib import Path
 from PySide6.QtGui import QImage
 
 from . import dlg_codec, sprite
+from .catalog import known_layout_hashes
 from .errors import DlgError
 from .pack import FlsPack
 from .styles import StyleBook
@@ -99,6 +100,21 @@ class AssetResolver:
     @property
     def pack_paths(self) -> list[Path]:
         return [pack.path for pack in self._packs]
+
+    def pack_for(self, path: str | Path) -> FlsPack | None:
+        """按路径取已挂载的包（未挂载返回 None）。"""
+        target = str(path)
+        for pack in self._packs:
+            if str(pack.path) == target:
+                return pack
+        return None
+
+    def scan_layouts(self, pack_path: str | Path) -> list[str]:
+        """列出已挂载包里实际存在的已知布局路径（哈希相交，很快）。"""
+        pack = self.pack_for(pack_path)
+        if pack is None:
+            return []
+        return pack.matched_paths(known_layout_hashes())
 
     @property
     def summary(self) -> str:

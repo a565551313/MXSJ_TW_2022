@@ -9,8 +9,14 @@
 
 序列化风格与原文件一致：制表符缩进、双引号字符串、每项一行且
 逗号后带空格、非空容器多行展开。键序采用「常用键优先 + 其余
-字母序」的固定顺序（运行时 ``exec`` 不依赖顺序）。字符串转义
-后以 GBK 落盘（含 GBK 外字符时退回 GB18030，保证不崩）。
+字母序」的固定顺序（运行时 ``exec`` 不依赖顺序）。
+
+编码是混合的，不能整文件按一种编码处理：经 2,706 个真实文件
+统计，显示文本（``sText/sTitle/sTitles/sTips``）为 Big5 字节，
+资源路径（``sFileName/sBarFileName/sBgFileName/sSoundPath``）
+为 GBK 字节。解析时先以 GB18030 还原源代码形态，再按字段把
+原始字节分别按 Big5/GBK 解码；序列化时反向处理。这样界面上
+看到和编辑的是正确繁体文本，落盘字节仍与游戏资源约定一致。
 
 验收口径：2,706 个已解密布局应全部通过「解析 → 序列化 →
 再解析」的结构一致性（见 tests/test_codec.py 的语料库测试）。
@@ -36,9 +42,24 @@ _PREFERRED_KEYS = (
 
 __all__ = ["parse_bytes", "parse_text", "dump_bytes", "dump_text"]
 
+# 显示给玩家看的文本是 Big5；资源路径是 GBK。字段表来自全量普查。
+_BIG5_TEXT_KEYS = frozenset({"sText", "sTitle", "sTitles", "sTips"})
+_GBK_PATH_KEYS = frozenset(
+    {"sFileName", "sBarFileName", "sBgFileName", "sSoundPath"})
+
 
 def parse_text(text: str) -> tuple[list[dict], str | None]:
-    """解析 .dlg 文本，返回 (控件字典列表, MD5 或 None)。"""
+    """解析按 GB18030 解开的 .dlg 源文本，返回 (控件字典列表, MD5)。
+
+    这里解析出的字符串先按字段做 Big5/GBK 还原，调用方拿到的是
+    可直接显示、编辑的 Unicode 文本。
+    """
+    # ast.literal_eval 无法直接吃带 surrogate 的源码文本，故把
+    # 挂起字节写成 \uXXXX 字面转义；解析后字符串里仍是挂起字符，
+    # 由 _decode_value 按字段还原为原始字节。
+    text = "".join(
+        f"\\u{ord(ch):04x}" if 0xDC80 <= ord(ch) <= 0xDCFF else ch
+        for ch in text)
     match = _MD5_RE.search(text)
     md5 = match.group(1).lower() if match else None
     marker = text.find("UI_INFO")
@@ -54,33 +75,89 @@ def parse_text(text: str) -> tuple[list[dict], str | None]:
     if not isinstance(value, list) or not all(
             isinstance(item, dict) for item in value):
         raise DlgError("UI_INFO 应为控件字典组成的列表")
-    return value, md5
+    return [_decode_value(item) for item in value], md5
 
 
 def parse_bytes(data: bytes) -> tuple[list[dict], str | None]:
-    """解析 .dlg 字节（GBK/GB18030 文本）。"""
-    try:
-        text = data.decode("gb18030")
-    except UnicodeDecodeError as exc:
-        raise DlgError(f"文件不是 GBK 文本：{exc}") from exc
+    """解析 .dlg 字节（源代码形态按 GB18030 还原，内容按字段解码）。"""
+    # surrogateescape：少数 Big5 字节组合在 GB18030 里非法，
+    # 先把这类字节挂起，后续按字段解码时再还原，保证不丢字节。
+    text = data.decode("gb18030", "surrogateescape")
     return parse_text(text)
 
 
 def dump_text(widgets: list[dict], md5: str | None = None) -> str:
-    """把控件字典列表序列化为 .dlg 文本（不含最终编码）。"""
-    body = "UI_INFO = " + _format_value(widgets, 0) + "\n"
+    """把控件字典列表序列化成源文本形态（字段已按目标编码预处理）。"""
+    prepared = [_encode_value(widget) for widget in widgets]
+    body = "UI_INFO = " + _format_value(prepared, 0) + "\n"
     if md5 is None:
-        md5 = hashlib.md5(body.encode("gb18030")).hexdigest()
+        md5 = hashlib.md5(body.encode("gb18030", "surrogateescape")).hexdigest()
     return f"{HEADER_LINE}\n# MD5: {md5}\n\n{body}\n"
 
 
 def dump_bytes(widgets: list[dict], md5: str | None = None) -> bytes:
-    """序列化为落盘字节：优先 GBK，外字符时退回 GB18030。"""
-    text = dump_text(widgets, md5)
+    """序列化为落盘字节；字段字节已由 dump_text 预处理成源形态。"""
+    return dump_text(widgets, md5).encode("gb18030", "surrogateescape")
+
+
+def _decode_value(value: object, key: str | None = None) -> object:
+    """递归地把源字符串按字段还原为正确的 Unicode 文本。"""
+    if isinstance(value, str):
+        return _decode_string(value, key)
+    if isinstance(value, dict):
+        return {str(k): _decode_value(v, str(k)) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_decode_value(item, key) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_decode_value(item, key) for item in value)
+    return value
+
+
+def _decode_string(value: str, key: str | None) -> str:
+    if all(ord(ch) < 128 for ch in value):
+        return value
+    codec = None
+    if key in _BIG5_TEXT_KEYS:
+        codec = "big5"
+    elif key in _GBK_PATH_KEYS:
+        codec = "gbk"
+    if codec is None:
+        return value
+    # value 是 GB18030 解开的源形态；先还原该字段的原始字节再按
+    # 字段编码解码。surrogateescape 保留极少数未收录码位，不丢字节。
+    raw = value.encode("gb18030", "surrogateescape")
+    return raw.decode(codec, "surrogateescape")
+
+
+def _encode_value(value: object, key: str | None = None) -> object:
+    """递归地把 Unicode 文本按字段编码回源字符串形态。"""
+    if isinstance(value, str):
+        return _encode_string(value, key)
+    if isinstance(value, dict):
+        return {str(k): _encode_value(v, str(k)) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_encode_value(item, key) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_encode_value(item, key) for item in value)
+    return value
+
+
+def _encode_string(value: str, key: str | None) -> str:
+    if all(ord(ch) < 128 for ch in value):
+        return value
+    if key in _BIG5_TEXT_KEYS:
+        codec = "big5"
+    elif key in _GBK_PATH_KEYS:
+        codec = "gbk"
+    else:
+        return value
     try:
-        return text.encode("gbk")
+        raw = value.encode(codec, "surrogateescape")
     except UnicodeEncodeError:
-        return text.encode("gb18030")
+        # 个别 Big5/GBK 未收录的新字（如用户输入的生僻字）退回
+        # GB18030 字节，避免保存时崩溃；主流文本不受影响。
+        raw = value.encode("gb18030", "surrogateescape")
+    return raw.decode("gb18030", "surrogateescape")
 
 
 def _ordered_keys(d: dict) -> list[str]:
@@ -143,6 +220,8 @@ def _format_string(text: str) -> str:
             out.append("\\t")
         elif code < 0x20 or code == 0x7F:
             out.append(f"\\x{code:02x}")
+        elif 0xDC80 <= code <= 0xDCFF:
+            out.append(f"\\u{code:04x}")
         else:
             out.append(ch)
     out.append('"')

@@ -94,6 +94,11 @@ class FlsPack:
             return False
         return mx_hash(name.encode("gbk", "replace")) in self._by_id
 
+    def matched_paths(self, hash_to_path: dict[int, str]) -> list[str]:
+        """从 {路径哈希: 路径} 映射里挑出本包实际包含的路径（已排序）。"""
+        return sorted(path for eid, path in hash_to_path.items()
+                      if eid in self._by_id)
+
     def read_named(self, name: str) -> bytes | None:
         """按资源路径读取条目（引擎查表方式），没有返回 None。"""
         if not name or not name.strip("\\/ "):

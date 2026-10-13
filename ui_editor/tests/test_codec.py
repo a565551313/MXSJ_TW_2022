@@ -32,7 +32,7 @@ class TestParseFixture(unittest.TestCase):
         self.assertEqual(self.md5, "0123456789abcdef0123456789abcdef")
         self.assertEqual(len(self.dicts), 4)
         self.assertEqual(self.dicts[0]["sWidgetType"], "CMainFrame")
-        self.assertEqual(self.dicts[0]["sTitle"], "测试对话框")
+        self.assertEqual(self.dicts[0]["sTitle"], "測試對話框")
 
     def test_tuple_and_float_keep_type(self):
         button = self.dicts[1]
@@ -64,7 +64,7 @@ class TestValuesRoundTrip(unittest.TestCase):
     def test_escapes_and_chinese(self):
         dicts = [{
             "sWidgetType": "CTextFrame",
-            "sText": "引\"号 与 \\ 反斜杠\n换行\t制表",
+            "sText": "引\"號 與 \\ 反斜線\n換行\t製表",
             "iX": -3,
             "fRatio": 0.25,
             "bShow": True,

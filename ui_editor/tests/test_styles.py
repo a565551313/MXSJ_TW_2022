@@ -16,7 +16,7 @@ class TestStyleBook(unittest.TestCase):
 
     def test_fonts(self):
         self.assertEqual(len(self.book.fonts), 2)
-        self.assertEqual(self.book.fonts[0].name, "宋体")
+        self.assertEqual(self.book.fonts[0].name, "宋體")
         self.assertEqual(self.book.fonts[0].size, 12)
         self.assertEqual(self.book.font(1).weight, 700)
         self.assertIsNone(StyleBook().font(0))

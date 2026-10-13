@@ -38,7 +38,7 @@ from ..core.model import LayoutDocument, Widget
 from ..core.painters import PaintContext
 from ..core.styles import StyleBook
 from .canvas import CanvasView, LayoutScene
-from .panels import LayoutFilesPanel, PalettePanel, WidgetTreePanel
+from .panels import PalettePanel, ResourceTreePanel, WidgetTreePanel
 from .property_panel import PropertyPanel
 
 
@@ -60,7 +60,7 @@ class MainWindow(QMainWindow):
         self.view = CanvasView(self.scene)
         self.setCentralWidget(self.view)
 
-        self.files_panel = LayoutFilesPanel()
+        self.resource_panel = ResourceTreePanel()
         self.tree_panel = WidgetTreePanel()
         self.props_panel = PropertyPanel()
         self.palette_panel = PalettePanel()
@@ -86,7 +86,7 @@ class MainWindow(QMainWindow):
         left_host = QWidget()
         left_layout = QVBoxLayout(left_host)
         left_tabs = QTabWidget()
-        left_tabs.addTab(self.files_panel, "布局文件")
+        left_tabs.addTab(self.resource_panel, "资源树")
         left_tabs.addTab(self.tree_panel, "控件树")
         left_layout.addWidget(left_tabs)
         left.setWidget(left_host)
@@ -109,6 +109,8 @@ class MainWindow(QMainWindow):
                          QKeySequence.StandardKey.Open)
         self._add_action(file_menu, "打开布局目录…", self.open_layout_dir_dialog)
         self._add_action(file_menu, "从资源包打开布局…", self.open_from_pack)
+        self._add_action(file_menu, "从资源目录打开布局…",
+                         self.open_resource_dir_dialog)
         file_menu.addSeparator()
         self._add_action(file_menu, "新建布局", self.new_layout,
                          QKeySequence.StandardKey.New)
@@ -119,11 +121,6 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         self._add_action(file_menu, "退出", self.close,
                          QKeySequence.StandardKey.Quit)
-
-        res_menu = self.menuBar().addMenu("资源")
-        self._add_action(res_menu, "挂载资源包（.fls）…", self.mount_packs_dialog)
-        self._add_action(res_menu, "挂载资源目录…", self.mount_dir_dialog)
-        self._add_action(res_menu, "加载 ui.lst 样式…", self.load_styles_dialog)
 
         view_menu = self.menuBar().addMenu("视图")
         self._add_action(view_menu, "适应窗口", self.view.fit_content)
@@ -146,9 +143,13 @@ class MainWindow(QMainWindow):
         return action
 
     def _connect_signals(self) -> None:
-        self.files_panel.file_opened.connect(self.open_layout_file)
-        self.files_panel.directory_chosen.connect(
-            lambda: self.open_layout_dir_dialog())
+        self.resource_panel.open_pack_layout.connect(
+            self._open_pack_layout)
+        self.resource_panel.open_loose_file.connect(self.open_layout_file)
+        self.resource_panel.choose_resource_dir.connect(
+            self.open_resource_dir_dialog)
+        self.resource_panel.choose_loose_dir.connect(
+            self.open_layout_dir_dialog)
         self.tree_panel.widget_selected.connect(self._select_from_tree)
         self.tree_panel.add_child_requested.connect(self._add_child_from_tree)
         self.tree_panel.delete_requested.connect(self.delete_selected)
@@ -200,6 +201,7 @@ class MainWindow(QMainWindow):
         self.resolver.add_loose_dir(Path(path).parent)
         self._try_load_styles()
         self._set_document(doc)
+        self.resource_panel.reveal_selection(("file", str(path)))
 
     def open_layout_file_dialog(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
@@ -210,7 +212,7 @@ class MainWindow(QMainWindow):
             self.open_layout_file(path)
 
     def open_layout_dir(self, path: str) -> None:
-        self.files_panel.set_directory(path)
+        self.resource_panel.add_loose_dir(path)
         self.resolver.add_loose_dir(path)
         local_lst = Path(path) / "ui.lst"
         if local_lst.is_file():
@@ -245,6 +247,21 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             QMessageBox.warning(self, "挂载资源包失败", str(exc))
             return
+        self._open_pack_layout(pack_path, res_path, skip_discard=True)
+
+    def _open_pack_layout(self, pack_path: str, res_path: str,
+                          skip_discard: bool = False) -> None:
+        """从包中打开一个布局（树双击与对话框共用）。包顺带入树。"""
+        if not skip_discard and not self._confirm_discard():
+            return
+        try:
+            if self.resolver.pack_for(pack_path) is None:
+                self.resolver.mount_pack(pack_path)
+        except Exception as exc:
+            QMessageBox.warning(self, "挂载资源包失败", str(exc))
+            return
+        self.resource_panel.add_pack(
+            pack_path, self.resolver.scan_layouts(pack_path))
         result = self.resolver.fetch_dlg(res_path)
         if result is None:
             QMessageBox.warning(
@@ -257,6 +274,32 @@ class MainWindow(QMainWindow):
         doc.source_pack = (pack_path, res_path)
         self._try_load_styles()
         self._set_document(doc)
+        self.resource_panel.reveal_selection(("pack", pack_path, res_path))
+
+    def open_resource_dir(self, path: str) -> None:
+        """从资源目录打开：挂载目录内全部包并逐个入树。"""
+        before = {str(p) for p in self.resolver.pack_paths}
+        self.resolver.mount_dir(path)
+        added = 0
+        for pack_file in self.resolver.pack_paths:
+            if str(pack_file) not in before:
+                self.resource_panel.add_pack(
+                    str(pack_file),
+                    self.resolver.scan_layouts(str(pack_file)))
+                added += 1
+        self._try_load_styles()
+        self.scene.refresh_all()
+        self._update_status(
+            f"资源目录：{path}；新入树 {added} 个包。{self.resolver.summary}；"
+            "双击包中布局即可切换打开。")
+
+    def open_resource_dir_dialog(self) -> None:
+        path = QFileDialog.getExistingDirectory(
+            self, "从资源目录打开布局（其中 .fls 全部挂载）",
+            self._settings.value("pack_dir", ""))
+        if path:
+            self._settings.setValue("pack_dir", path)
+            self.open_resource_dir(path)
 
     def new_layout(self) -> None:
         if not self._confirm_discard():
@@ -323,43 +366,6 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
     # 资源挂载与样式
     # ------------------------------------------------------------------
-    def mount_packs_dialog(self) -> None:
-        paths, _ = QFileDialog.getOpenFileNames(
-            self, "挂载资源包", self._settings.value("pack_dir", ""),
-            "资源包 (*.fls);;所有文件 (*)")
-        mounted = 0
-        for path in paths:
-            try:
-                self.resolver.mount_pack(path)
-                mounted += 1
-            except Exception as exc:
-                QMessageBox.warning(self, "挂载失败", f"{path}\n{exc}")
-        if mounted:
-            self._settings.setValue("pack_dir", str(Path(paths[0]).parent))
-            self._try_load_styles()
-            self.scene.refresh_all()
-            self._update_status(self.resolver.summary)
-
-    def mount_dir_dialog(self) -> None:
-        path = QFileDialog.getExistingDirectory(
-            self, "挂载资源目录（其中 .fls 全部挂载）",
-            self._settings.value("pack_dir", ""))
-        if not path:
-            return
-        self._settings.setValue("pack_dir", path)
-        count = self.resolver.mount_dir(path)
-        self._try_load_styles()
-        self.scene.refresh_all()
-        self._update_status(
-            f"目录挂载完成（{count} 个包）：{self.resolver.summary}")
-
-    def load_styles_dialog(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(
-            self, "加载 ui.lst", "", "样式表 (ui.lst);;所有文件 (*)")
-        if path:
-            self._set_styles(
-                StyleBook.parse_bytes(Path(path).read_bytes()), path)
-
     def _set_styles(self, book: StyleBook, origin: str) -> None:
         self.styles = book
         self.ctx.styles = book

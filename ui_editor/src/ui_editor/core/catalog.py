@@ -11,8 +11,9 @@ from __future__ import annotations
 from pathlib import Path
 
 _CACHE: list[str] | None = None
+_HASH_CACHE: dict[int, str] | None = None
 
-__all__ = ["known_layout_paths"]
+__all__ = ["known_layout_paths", "known_layout_hashes"]
 
 
 def _catalog_file() -> Path:
@@ -30,3 +31,16 @@ def known_layout_paths() -> list[str]:
         except OSError:
             _CACHE = []
     return list(_CACHE)
+
+
+def known_layout_hashes() -> dict[int, str]:
+    """路径目录的哈希索引：{路径哈希: 路径}（整包扫描时快速相交）。"""
+    global _HASH_CACHE
+    if _HASH_CACHE is None:
+        from .mxhash import mx_hash
+
+        _HASH_CACHE = {}
+        for path in known_layout_paths():
+            _HASH_CACHE.setdefault(mx_hash(path.encode("gbk", "replace")),
+                                   path)
+    return dict(_HASH_CACHE)

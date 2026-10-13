@@ -1,4 +1,4 @@
-"""左侧文件面板、控件树面板与控件面板（调色板）。"""
+"""左侧资源树、控件树面板与控件面板（调色板）。"""
 
 from __future__ import annotations
 
@@ -21,64 +21,124 @@ from PySide6.QtWidgets import (
 from ..core.model import WIDGET_TYPES, LayoutDocument, Widget
 
 
-class LayoutFilesPanel(QWidget):
-    """一个目录下全部 .dlg 的文件树，双击打开。"""
+class ResourceTreePanel(QWidget):
+    """资源树：已挂载的包/散装目录做根节点，下挂其布局。
 
-    file_opened = Signal(str)
-    directory_chosen = Signal(str)
+    根节点累加不替换：从资源包打开、从资源目录打开、打开散装
+    布局目录都会往树上追加。双击包内布局发 open_pack_layout，
+    双击散装 .dlg 发 open_loose_file。散装目录严格过滤：只有
+    .dlg 文件与（递归地）含有 .dlg 的文件夹才出现。
+    """
+
+    open_pack_layout = Signal(str, str)  # (包路径, 资源路径)
+    open_loose_file = Signal(str)        # 散装 .dlg 路径
+    choose_resource_dir = Signal()
+    choose_loose_dir = Signal()
 
     def __init__(self) -> None:
         super().__init__()
         layout = QVBoxLayout(self)
         bar = QHBoxLayout()
-        choose = QPushButton("打开布局目录…")
-        choose.clicked.connect(lambda: self.directory_chosen.emit(""))
-        refresh = QToolButton()
-        refresh.setText("↻")
-        refresh.setToolTip("刷新文件列表")
-        refresh.clicked.connect(self.refresh)
-        bar.addWidget(choose, 1)
-        bar.addWidget(refresh)
+        res_btn = QPushButton("打开资源目录…")
+        res_btn.setToolTip("挂载整个资源目录，并把其中每个包及其布局挂到树上")
+        res_btn.clicked.connect(self.choose_resource_dir)
+        loose_btn = QPushButton("打开布局目录…")
+        loose_btn.setToolTip("把散装 .dlg 目录挂到树上（已解密布局目录用这个）")
+        loose_btn.clicked.connect(self.choose_loose_dir)
+        bar.addWidget(res_btn, 1)
+        bar.addWidget(loose_btn, 1)
         layout.addLayout(bar)
+        hint = QLabel("双击布局即可切换打开；多次打开只追加、不移除。")
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
         self._tree = QTreeWidget()
         self._tree.setHeaderHidden(True)
         self._tree.itemDoubleClicked.connect(self._on_double_click)
         layout.addWidget(self._tree, 1)
-        self._directory: Path | None = None
+        self._roots: dict[tuple[str, str], QTreeWidgetItem] = {}
 
-    def set_directory(self, path: str | Path) -> None:
-        self._directory = Path(path)
-        self.refresh()
+    # -- 根节点管理 -------------------------------------------------
+    def add_pack(self, pack_path: str | Path, layouts: list[str]) -> None:
+        """把一个资源包挂到树上（已在树上则刷新其布局列表）。"""
+        key = ("pack", str(pack_path))
+        old = self._roots.pop(key, None)
+        if old is not None:
+            self._tree.takeTopLevelItem(self._tree.indexOfTopLevelItem(old))
+        name = Path(pack_path).name
+        root = QTreeWidgetItem([f"{name}（{len(layouts)} 个布局）"])
+        root.setToolTip(0, str(pack_path))
+        root.setData(0, Qt.ItemDataRole.UserRole, ("packroot", str(pack_path)))
+        for res_path in layouts:
+            leaf = QTreeWidgetItem([res_path])
+            leaf.setData(0, Qt.ItemDataRole.UserRole,
+                         ("pack", str(pack_path), res_path))
+            root.addChild(leaf)
+        self._tree.addTopLevelItem(root)
+        root.setExpanded(False)
+        self._roots[key] = root
 
-    @property
-    def directory(self) -> Path | None:
-        return self._directory
+    def add_loose_dir(self, dir_path: str | Path) -> None:
+        """把一个散装 .dlg 目录挂到树上（只保留 .dlg 与含它的目录）。"""
+        key = ("dir", str(dir_path))
+        old = self._roots.pop(key, None)
+        if old is not None:
+            self._tree.takeTopLevelItem(self._tree.indexOfTopLevelItem(old))
+        root = QTreeWidgetItem([f"📁 {Path(dir_path).name}（散装目录）"])
+        root.setToolTip(0, str(dir_path))
+        root.setData(0, Qt.ItemDataRole.UserRole, ("dirroot", str(dir_path)))
+        self._fill_loose(root, Path(dir_path))
+        if root.childCount() == 0:
+            return  # 目录里没有 .dlg，不挂空节点
+        self._tree.addTopLevelItem(root)
+        self._roots[key] = root
 
-    def refresh(self) -> None:
-        self._tree.clear()
-        if self._directory is None or not self._directory.is_dir():
-            return
+    def _fill_loose(self, parent: QTreeWidgetItem, folder: Path) -> int:
+        """递归填充，只收 .dlg 文件与非空文件夹，返回收录数。"""
+        try:
+            entries = sorted(folder.iterdir(),
+                             key=lambda p: (p.is_file(), p.name.lower()))
+        except OSError:
+            return 0
+        count = 0
+        for entry in entries:
+            if entry.is_dir():
+                node = QTreeWidgetItem([entry.name])
+                if self._fill_loose(node, entry) > 0:
+                    parent.addChild(node)
+                    count += 1
+            elif entry.suffix.lower() == ".dlg":
+                leaf = QTreeWidgetItem([entry.name])
+                leaf.setData(0, Qt.ItemDataRole.UserRole,
+                             ("file", str(entry)))
+                parent.addChild(leaf)
+                count += 1
+        return count
 
-        def fill(parent_item: QTreeWidgetItem | QTreeWidget, folder: Path):
-            try:
-                entries = sorted(folder.iterdir(),
-                                 key=lambda p: (p.is_file(), p.name.lower()))
-            except OSError:
-                return
-            for entry in entries:
-                item = QTreeWidgetItem(parent_item, [entry.name])
-                if entry.is_dir():
-                    item.setData(0, Qt.ItemDataRole.UserRole, "")
-                    fill(item, entry)
-                elif entry.suffix.lower() == ".dlg":
-                    item.setData(0, Qt.ItemDataRole.UserRole, str(entry))
+    def root_count(self) -> int:
+        return self._tree.topLevelItemCount()
 
-        fill(self._tree, self._directory)
-
+    # -- 交互 ---------------------------------------------------------
     def _on_double_click(self, item: QTreeWidgetItem) -> None:
-        path = item.data(0, Qt.ItemDataRole.UserRole)
-        if path:
-            self.file_opened.emit(path)
+        data = item.data(0, Qt.ItemDataRole.UserRole)
+        if not isinstance(data, tuple) or not data:
+            return
+        if data[0] == "pack":
+            self.open_pack_layout.emit(data[1], data[2])
+        elif data[0] == "file":
+            self.open_loose_file.emit(data[1])
+
+    def reveal_selection(self, data: tuple) -> None:
+        """把树当前项同步到指定布局（打开后高亮定位用）。"""
+
+        def visit(item: QTreeWidgetItem) -> bool:
+            if item.data(0, Qt.ItemDataRole.UserRole) == data:
+                self._tree.setCurrentItem(item)
+                return True
+            return any(visit(item.child(i)) for i in range(item.childCount()))
+
+        for i in range(self._tree.topLevelItemCount()):
+            if visit(self._tree.topLevelItem(i)):
+                break
 
 
 class WidgetTreePanel(QWidget):
