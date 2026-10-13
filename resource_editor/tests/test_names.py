@@ -17,9 +17,11 @@ KEY = b"\x5a\xa5\x11\x7e"
 
 
 def _dlg_stored() -> bytes:
+    # 真实 .dlg 是类 JSON 文本：路径在双引号里、反斜杠转义双写
+    escaped = IMG_REF.replace("\\", "\\\\")
     text = (
-        "# -*- coding: gbk -*-\n"
-        f"[{{'sWidgetType': 'CImage', 'sResource': '{IMG_REF}'}}]\n"
+        "# -*- coding: gbk -*-\nUI_INFO = [\n"
+        f'{{"sWidgetType": "CImage", "sFileName": "{escaped}"}}\n]\n'
     ).encode("gbk")
     return bytes(b ^ KEY[i & 3] for i, b in enumerate(text))
 

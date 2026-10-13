@@ -33,7 +33,7 @@ __all__ = [
 
 _KNOWN_CACHE: dict[int, str] | None = None
 _IMAGE_EXTS = (b".png", b".jpg", b".jpeg", b".bmp", b".tga")
-_TOKEN_SPLIT = re.compile(rb"[\s\"'=<>()\[\]{},;|]+")
+_QUOTED_RE = re.compile(rb'"((?:[^"\\]|\\.)*)"|\'((?:[^\'\\]|\\.)*)\'')
 _DLG_HEADER = b"# -*- coding: gbk -*-"
 
 
@@ -61,7 +61,29 @@ def known_path_hashes() -> dict[int, str]:
 
 
 def _xor4(data: bytes, key: bytes) -> bytes:
-    return bytes(b ^ key[i & 3] for i, b in enumerate(data))
+    """4 字节循环 XOR（整数整体异或，比逐字节快两个数量级）。"""
+    if not data:
+        return data
+    repeated = (key * (len(data) // 4 + 1))[:len(data)]
+    return (int.from_bytes(data, "little")
+            ^ int.from_bytes(repeated, "little")).to_bytes(
+                len(data), "little")
+
+
+def _recover_key_by_frequency(data: bytes) -> bytes:
+    """文件头反推不成时，用列频率法恢复 4 字节 XOR 密钥。"""
+    favourites = set(
+        b" etaoinshrdlu=(){}_#'\"0123456789.,:[]\n\t<>")
+    key = bytearray(4)
+    for r in range(4):
+        column = data[r::4][:2048]
+        best_score, best = -1, 0
+        for cand in range(256):
+            score = sum(1 for b in column if (b ^ cand) in favourites)
+            if score > best_score:
+                best_score, best = score, cand
+        key[r] = best
+    return bytes(key)
 
 
 def unpack_dlg_text(stored: bytes) -> bytes | None:
@@ -69,7 +91,7 @@ def unpack_dlg_text(stored: bytes) -> bytes | None:
 
     .dlg 明文以 ``# -*- coding: gbk -*-`` 开头，存储形是它与
     逐条 4 字节 XOR 密钥的异或（密钥靠已知文件头反推）；明文
-    存储的条目直接返回。
+    存储的条目直接返回；文件头反推不成时再用列频率法兜底。
     """
     if stored.startswith(b"# -"):
         return stored
@@ -77,20 +99,44 @@ def unpack_dlg_text(stored: bytes) -> bytes | None:
         return None
     key = bytes(a ^ b for a, b in zip(stored[:4], b"# -*", strict=True))
     decoded = _xor4(stored, key)
-    return decoded if decoded.startswith(_DLG_HEADER) else None
+    if decoded.startswith(_DLG_HEADER):
+        return decoded
+    decoded = _xor4(stored, _recover_key_by_frequency(stored))
+    if decoded.startswith(b"# -") or b"sFileName" in decoded[:4096]:
+        return decoded
+    return None
+
+
+def _unescape(raw: bytes) -> bytes:
+    """还原引号字符串里的反斜杠转义（\\\\ → \\ 等）。"""
+    out = bytearray()
+    i = 0
+    while i < len(raw):
+        if raw[i] == 0x5C and i + 1 < len(raw):
+            out.append(raw[i + 1])
+            i += 2
+        else:
+            out.append(raw[i])
+            i += 1
+    return bytes(out)
 
 
 def extract_resource_paths(data: bytes) -> list[str]:
     """从 .dlg 明文字节里扒出被引用的资源路径（图片为主）。
 
-    路径在布局文本中以 GBK 字节明文出现；按分隔符切词后，保留
-    含目录分隔符、且以图片扩展名结尾的词，GBK 解码失败丢弃。
+    .dlg 文本是类 JSON 结构：路径写在引号字符串里且反斜杠被
+    转义成双写（``combdialog\\\\...\\\\x.png``），必须先按引号
+    取出字符串、反转义成单反斜杠，算出的哈希才与包内条目对
+    得上。路径字段是 GBK 字节，解码失败的候选丢弃。
     """
     found: list[str] = []
     seen: set[str] = set()
-    for token in _TOKEN_SPLIT.split(data):
-        if len(token) < 5 or len(token) > 240:
+    for match in _QUOTED_RE.finditer(data):
+        raw = match.group(1) if match.group(1) is not None \
+            else match.group(2)
+        if len(raw) < 5 or len(raw) > 240:
             continue
+        token = _unescape(raw)
         if b"\\" not in token and b"/" not in token:
             continue
         if not token.lower().endswith(_IMAGE_EXTS):
