@@ -12,6 +12,7 @@ from resource_editor.core.codecs.sprite import (  # noqa: E402
     EncodeError,
     decode_sprite,
     encode_sprite,
+    sprite_bytes_from_files,
 )
 from resource_editor.core.model.document import PackDocument  # noqa: E402
 
@@ -92,3 +93,24 @@ class TestEncodeSynthetic(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSpriteFromFiles(unittest.TestCase):
+    """多帧文件转精灵：自然序成帧、解码帧数与尺寸一致。"""
+
+    def test_two_frames_roundtrip(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            Image.new("RGBA", (9, 5), (10, 200, 30, 255)).save(
+                root / "02.png")
+            Image.new("RGBA", (7, 5), (200, 30, 30, 255)).save(
+                root / "01.png")
+            data, count, _report = sprite_bytes_from_files(
+                [str(root / "02.png"), str(root / "01.png")])
+            self.assertEqual(count, 2)
+            decoded = decode_sprite(data)
+            self.assertEqual(decoded.frame_count, 2)
+            # 01.png 在前：画布取最大帧尺寸 9x5
+            self.assertEqual((decoded.canvas_w, decoded.canvas_h), (9, 5))

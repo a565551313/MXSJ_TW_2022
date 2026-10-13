@@ -430,3 +430,50 @@ def _verify_roundtrip(encoded: bytes, images: list[Image.Image]) -> EncodeReport
     if report.total_pixels:
         report.mean_rgb_error = err_sum / report.total_pixels
     return report
+
+
+def load_frame_files(paths) -> list[Image.Image]:
+    """按文件名自然序（01、02…）读帧图，GIF 展开为多帧 RGBA。"""
+    import re
+    from pathlib import Path
+
+    from PIL import ImageSequence
+
+    def natural(name: str):
+        return [int(p) if p.isdigit() else p.lower()
+                for p in re.split(r"(\d+)", name)]
+
+    frames: list[Image.Image] = []
+    for path in sorted((Path(p) for p in paths),
+                       key=lambda p: natural(p.name)):
+        try:
+            with Image.open(path) as img:
+                if getattr(img, "is_animated", False):
+                    for frame in ImageSequence.Iterator(img):
+                        frames.append(frame.convert("RGBA"))
+                else:
+                    frames.append(img.convert("RGBA"))
+        except Exception as exc:
+            raise EncodeError(f"读取图片 {path.name} 失败：{exc}") from exc
+    if not frames:
+        raise EncodeError("没有读到任何帧图")
+    return frames
+
+
+def sprite_bytes_from_files(paths) -> tuple[bytes, int, EncodeReport]:
+    """多张帧图 → (精灵字节, 帧数, 误差报告)，锚点一律左上角。
+
+    画布取最大帧尺寸；I0 单行过长时自动改用 I1。与 UI 编辑器的
+    core/sprite_encode 是同一格式的两种落点。
+    """
+    frames = load_frame_files(paths)
+    keys = [(0, 0)] * len(frames)
+    canvas_w = max(img.width for img in frames)
+    canvas_h = max(img.height for img in frames)
+    try:
+        data, _pal, report = encode_sprite(
+            frames, keys, canvas_w, canvas_h, 0, 0, magic="I0")
+    except EncodeError:
+        data, _pal, report = encode_sprite(
+            frames, keys, canvas_w, canvas_h, 0, 0, magic="I1")
+    return data, len(frames), report

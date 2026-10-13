@@ -246,11 +246,14 @@ class MainWindow(QMainWindow):
                                            self.import_entries_multi)
         self._act_import_path = self._action("按路径导入…", None,
                                              self.import_by_path)
+        self._act_import_sprite = self._action(
+            "帧图转精灵导入…", None, self.import_frames_as_sprite)
         self._act_delete = self._action("删除条目", None, self.delete_entry)
         self._act_undo = self._action("撤销条目修改", None, self.undo_entry)
         self._act_revert = self._action("还原条目", None, self.revert_entry)
         for act in (self._act_replace_img, self._act_replace_raw, self._act_add,
                     self._act_add_multi, self._act_import_path,
+                    self._act_import_sprite,
                     self._act_delete, self._act_undo, self._act_revert):
             edit_menu.addAction(act)
 
@@ -756,6 +759,9 @@ class MainWindow(QMainWindow):
         menu.addAction("多选导入…", self.import_entries_multi)
         act_path = menu.addAction("按路径导入…", self.import_by_path)
         act_path.setEnabled(doc.kind == "0slf")  # 名字决定游戏能否找到
+        act_sprite = menu.addAction("帧图转精灵导入…",
+                                    self.import_frames_as_sprite)
+        act_sprite.setEnabled(doc.kind == "0slf")
         menu.exec(pos)
 
     def export_entries(self, indexes: list[int], what: str = "条目") -> None:
@@ -829,6 +835,54 @@ class MainWindow(QMainWindow):
         path, _ = QFileDialog.getOpenFileName(self, "选择要导入的文件")
         if path:
             self._import_files_by_path([path])
+
+    def import_frames_as_sprite(self) -> None:
+        """选一至多张帧图，转成游戏精灵后按路径导入。
+
+        多张图按文件名顺序（01、02…）合成多帧动画；一张图就是
+        单帧精灵。锚点取左上角，适合界面图与简单动画。
+        """
+        if self._doc is None or self._doc.kind != "0slf":
+            return
+        files, _ = QFileDialog.getOpenFileNames(
+            self, "选择帧图片（多选 = 多帧动画，按文件名顺序）", "",
+            "图片 (*.png *.jpg *.jpeg *.bmp *.tga *.gif);;所有文件 (*)")
+        if not files:
+            return
+        res_path, ok = QInputDialog.getText(
+            self, "帧图转精灵导入",
+            "输入这个精灵在游戏里的资源路径\n"
+            "（如 combdialog4\\新登陆界面\\我的动画.png；\n"
+            "游戏靠这个名字找图，填错了就找不到）：",
+            text=Path(files[0]).name)
+        if not ok or not res_path.strip():
+            return
+        res_path = res_path.strip()
+        from ..core.codecs import sprite as sprite_codec
+
+        try:
+            data, count, _report = sprite_codec.sprite_bytes_from_files(
+                files)
+        except Exception as exc:
+            self.log(f"转精灵失败：{exc}")
+            QMessageBox.warning(self, "转精灵失败", str(exc))
+            return
+        doc = self._doc
+        existing = doc.index_by_path(res_path)
+        if existing is not None:
+            answer = QMessageBox.question(
+                self, "这个路径已在包里",
+                f"路径 {res_path} 已经是条目 {existing}。\n"
+                "要用转好的精灵替换它的内容吗？")
+            if answer != QMessageBox.Yes:
+                return
+            doc.replace_content(existing, data)
+            self._after_entry_changed(existing)
+            self.log(f"已用 {count} 帧精灵替换条目 {existing}：{res_path}")
+            return
+        index = doc.add_entry_for_path(data, res_path)
+        self._reload_grid(select=index)
+        self.log(f"已导入 {count} 帧精灵为条目 {index}：{res_path}")
 
     def _import_files_by_path(self, paths: list[str]) -> None:
         """逐个询问资源路径并导入；路径已存在时询问是否替换。"""
@@ -986,6 +1040,9 @@ class MainWindow(QMainWindow):
         self._act_add.setEnabled(has_doc)
         self._act_add_multi.setEnabled(has_doc)
         self._act_import_path.setEnabled(
+            has_doc and self._doc is not None
+            and self._doc.kind == "0slf")
+        self._act_import_sprite.setEnabled(
             has_doc and self._doc is not None
             and self._doc.kind == "0slf")
         self._act_delete.setEnabled(has_entry)
