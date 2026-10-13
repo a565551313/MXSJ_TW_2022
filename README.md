@@ -4,6 +4,7 @@
 > - [`AGENTS.md`](AGENTS.md) — 给 Agent / 新成员的接手指南：目录地图、命令、红线、工作方式（长期有效）。
 > - [`docs/STATUS.md`](docs/STATUS.md) — **当前状态**：分支、各组件实测、红灯、等待事项、下一步（每轮更新）。
 > - 本文 — 项目总览：目标、能力边界、各子系统说明、原则与常见问题。
+> - [`docs/PYTHON_TOOL_CONVENTIONS.md`](docs/PYTHON_TOOL_CONVENTIONS.md) — Python 工具 / 编辑器开发约定（PEP 8、PySide6、自检启动脚本、一键 EXE、Linux→Windows 交付检查）。
 > - [`docs/archive/`](docs/archive/README.md) — 已被取代的历史快照（含原 `AGENT_HANDOFF.md`）。
 
 > 本仓库围绕 TW v2.27.2 客户端材料，开展资源/协议逆向、静态数据复核、可逆客户端界面改造、客户端资源/UI/地图编辑器，以及长期 Python 回合制服务端设计。仓库根目录本身就是一份游戏安装目录，工具与文档叠加其上。
@@ -86,7 +87,9 @@ MXSJ_TW_2022/
 ├── README.md                     项目总览（本文）
 ├── docs/
 │   ├── STATUS.md                 当前状态快照（每轮更新）
+│   ├── PYTHON_TOOL_CONVENTIONS.md 工具 / 编辑器开发约定
 │   └── archive/                  已被取代的历史快照（含原 AGENT_HANDOFF.md）
+├── ruff.toml / .editorconfig / .gitattributes  统一风格（88 列、py310）、编辑器设置、*.bat 强制 CRLF
 ├── notes/                        逆向结案笔记：双 VM opcode 表、0SLF 路径哈希与 .dlg、游戏数据、UI 编辑器二期设计
 ├── mx.exe / mxmain.dll / *.dll   客户端程序（根目录即游戏安装目录；mx.exe/mxmain.dll/exe/python27*.dll 是逆向对象）
 ├── data/                         FLS 样本（script.fls 等 6 个包；.gitignore 白名单）
@@ -111,6 +114,7 @@ MXSJ_TW_2022/
 │   ├── tests/                    编辑器回归测试
 │   └── build.bat / *.spec        Windows 打包脚本与配置
 ├── tools/
+│   ├── devkit/                   开发自检工具箱：check_windows_compat.py（交付 Windows 前必跑）
 │   ├── client_patches/           可逆注册 UI 预览、冻结资产、测试与审计、v3.3 交付事实表
 │   ├── decompiler/               双 VM 字节码反编译、5 段 XOR 重打包；output/ 为反编译文本（仅线索）
 │   ├── data-parser/              universal_fls_tool、mx_path_hash、extract_dlg、i0_sprite 等
@@ -507,6 +511,11 @@ python -m unittest discover -s server/tests/review_browser_acceptance -v
 npm --prefix server/apps/review_web run typecheck
 npm --prefix server/apps/review_web test
 npm --prefix server/apps/review_web run build
+
+# 开发工具箱自测 + Windows 兼容静态检查（交付前对要交付的目录跑一遍）
+python -m unittest discover -s tools/devkit/tests -v
+python tools/devkit/check_windows_compat.py resource_editor ui_editor map_editor
+ruff check resource_editor ui_editor map_editor   # pip install ruff；配置见 ruff.toml / 各 pyproject.toml
 ```
 
 地图测试依赖相应地图和参考资源；缺夹具导致跳过不能算覆盖通过。无头执行不要求 Qt，但 GUI/原生渲染仍需另测。
@@ -563,6 +572,7 @@ REVIEW_API_BASE=http://127.0.0.1:8000 npx vitest run src/api/liveBackend.test.ts
 8. **明确 PR 行为变更。** 协议编号、封包、导出写入和配置路径变化都属于行为，不写成“只改注释”。
 9. **分支集成与生产发布分开。** 当前 Draft PR 只是审阅入口；不得以“已合并到协调分支”推导出 master/生产发布授权。
 10. **保留保护边界。** 不在仓库、日志、截图或报告中提交真实账号、密码、票据或凭据；需要客户端反馈时索取最小且脱敏的证据。
+11. **Python 工具按约定开发。** PEP 8（ruff 0 报告）+ `core`/`gui` 模块化；GUI 一律 PySide6；每个工具带 `bootstrap.py` 自检启动脚本与 `build_exe.bat`；Linux 上开发的东西交付前过 `tools/devkit/check_windows_compat.py` 与人工清单，PR 里分「Linux 已做 / Windows 待验 / 已知差异」三栏如实写。全文见 [docs/PYTHON_TOOL_CONVENTIONS.md](docs/PYTHON_TOOL_CONVENTIONS.md)。
 
 ## 14. 文档导航与常见问题
 
@@ -572,6 +582,7 @@ REVIEW_API_BASE=http://127.0.0.1:8000 npx vitest run src/api/liveBackend.test.ts
 |---|---|
 | 接手整个项目 | [AGENTS.md](AGENTS.md) → [docs/STATUS.md](docs/STATUS.md) → 要碰的子目录 README |
 | 看历史交接快照 | [docs/archive/](docs/archive/README.md)（含原 `AGENT_HANDOFF.md`） |
+| 新写 / 改造 Python 工具或编辑器 | [docs/PYTHON_TOOL_CONVENTIONS.md](docs/PYTHON_TOOL_CONVENTIONS.md) → [tools/devkit/README.md](tools/devkit/README.md)；现状差距 [STATUS §3.5](docs/STATUS.md) |
 | 了解服务端范围 | [server/README.md](server/README.md) |
 | 找模块/玩法材料 | [MODULES.md](server/docs/MODULES.md)、[SUBSYSTEMS.md](server/docs/SUBSYSTEMS.md)、[材料目录](server/docs/catalog/DIRECTORIES.md) |
 | 审核数据来源 | [CSV_READINESS.md](server/docs/CSV_READINESS.md)、[SOURCE_EVIDENCE.md](server/docs/SOURCE_EVIDENCE.md) |

@@ -27,11 +27,13 @@
 |---|---|---|
 | `AGENTS.md` / `README.md` / `docs/STATUS.md` | 规则 / 项目总览 / 当前状态 | 本文 |
 | `docs/archive/` | 已被取代的历史快照（只读，有横幅） | [`docs/archive/README.md`](docs/archive/README.md) |
+| `docs/PYTHON_TOOL_CONVENTIONS.md` | Python 工具 / 编辑器开发约定（PEP 8、PySide6、自检启动脚本、一键 EXE、Windows 交付检查） | 本文 §5 |
 | `notes/` | 逆向**结案**笔记：双 VM opcode 表、0SLF 路径哈希与 `.dlg`、游戏数据 | 各文件自述 |
 | `work/dream-world-connect-login-map/` | 早期研究区（297 份笔记、证据、报告、专项工具）；客户端侧权威现状 = `report/client-status-20261012.md` | [`INDEX.md`](work/dream-world-connect-login-map/INDEX.md) |
 | `tools/decompiler/` | 双 VM 字节码反编译、5 段 XOR 重打包；`output/` 是反编译文本（**不准确、不可执行，只作线索**） | `notes/opcode_mapping_and_decompilation.md` |
 | `tools/data-parser/` | `universal_fls_tool.py`、`mx_path_hash.py`、`extract_dlg.py`、`i0_sprite.py`、精灵格式说明 | `I0_SPRITE_FORMAT.md` |
 | `tools/client_patches/` | 注册 UI 离线预览补丁（只改 entry 337/4007），构建器、测试、冻结资产、CPython 2.5 审计 | [`README.md`](tools/client_patches/README.md)、[`V3_3_DELIVERY_AND_ACCEPTANCE.md`](tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md) |
+| `tools/devkit/` | 开发自检工具箱：`check_windows_compat.py`（Windows 兼容静态检查，交付前必跑） | [`README.md`](tools/devkit/README.md) |
 | `tools/data-export/`、`tools/data_browser/`、`tools/dis_v43/`、`tools/*.py` | 历史数据导出/浏览/反汇编工具，仍可用但不是现行复核入口 | — |
 | `resource_editor/` | `.fls` 资源包浏览/编辑器（PySide6；core 无 Qt） | [`README.md`](resource_editor/README.md)、`DESIGN.md` |
 | `ui_editor/` | `.dlg` 布局可视化编辑器（PySide6；core 无 Qt） | [`README.md`](ui_editor/README.md)、`DESIGN.md`、`notes/ui_editor_phase2_design.md` |
@@ -55,6 +57,7 @@
 | 地图编辑器 | `Pillow>=10`；GUI 另需 PySide6 + 桌面 | `(cd map_editor && python3 -m unittest discover -s tests)`；`python3 map_editor/run.py --scan .` |
 | 资源编辑器 | PySide6 + Pillow | `(cd resource_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`；运行 `PYTHONPATH=resource_editor/src python3 -m resource_editor data`（或 `python3 resource_editor/bootstrap.py`） |
 | UI 编辑器 | PySide6（+Pillow 转精灵）；`.dlg` 语料库在 `MXSJ_DLG_CORPUS` | `(cd ui_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`；运行 `python3 ui_editor/bootstrap.py` |
+| 开发工具箱 / 风格检查 | 标准库；ruff 另装（`pip install ruff`，根 `ruff.toml` 为默认配置） | `python3 -m unittest discover -s tools/devkit/tests`；`python3 tools/devkit/check_windows_compat.py <dir>`；`ruff check <dir>` |
 
 - 用仓库**外**的 venv（`python3 -m venv ../mxsj-venv`）；系统 pip 受 PEP 668 保护。
 - 无 `libGL.so.1` 的沙箱跑不了任何 Qt 测试（`test_gui*`、`test_painters`、`test_pack_build`、`test_batch_ops` 会 ImportError）；这是环境限制，**记录为未执行，不算通过**。
@@ -79,7 +82,17 @@
 10. 不自动启动根目录 `mock_server.py` 对真实客户端；先审查参数与副作用。
 11. 不索取、不记录真实账号、密码、票据、密钥；不改 Drive 权限、不发邮件。
 
-## 5. 工作方式
+## 5. Python 工具 / 编辑器开发约定
+
+> 2026-10-14 与用户约定；全文、目录模板与清单见 [`docs/PYTHON_TOOL_CONVENTIONS.md`](docs/PYTHON_TOOL_CONVENTIONS.md)。新写或大改的 Python 工具、编辑器、脚本一律遵守；老工具碰到就补齐，差距清单在 STATUS §3.5。
+
+1. **PEP 8 + 模块化**：`ruff check <tool>` 0 报告（规则 `E,W,F,I,UP,B`、88 列、py310；根 `ruff.toml` 是默认值，工具自己的 `pyproject.toml` 照抄一份）。`src/<package>/{core,gui}` 分层，`core` 不 import Qt、可在无显示器环境测试；路径用 `pathlib`，文本 IO 必须显式 `encoding="utf-8"`。
+2. **GUI 一律 PySide6**（≥ 6.4）。不新增 tkinter / PyQt / wx 代码；现有 tkinter 工具只保留，不修补。
+3. **必须有自检并启动脚本**：`bootstrap.py`（检查 Python ≥ 3.10、缺依赖自动 `pip install` 并带国内镜像回退、`--check-only`、失败写 `启动日志.txt` 并停住不闪退）+ `启动<工具名>.bat`（CRLF、纯 ASCII、`chcp 65001`、`py -3` → `python` 探测）。参考实现 `resource_editor/bootstrap.py`。
+4. **必须有一键构建 EXE 脚本**：`build_exe.bat` + `<tool>.spec`（venv → 依赖 → 测试 → PyInstaller → `dist\<Name>\<Name>.exe`；GUI 用 `console=False` 且无参数双击必须直接开窗）。EXE 只能在 Windows 上构建：Linux 侧把 spec 写对并干跑，Windows 侧构建并把结果写回 STATUS。参考实现 `map_editor/build.bat`。
+5. **Linux 开发 → Windows 交付前必查**：`ruff check` → 单元测试（`QT_QPA_PLATFORM=offscreen`）→ `bootstrap.py --check-only` → `python3 tools/devkit/check_windows_compat.py <tool>`（0 ERROR，WARNING 逐条修掉或说明）→ 过一遍 CONVENTIONS §5.2 人工清单（路径大小写、编码、`sys.executable`、文件锁、`%APPDATA%`）。PR 描述分三栏写 **Linux 已做 / Windows 待验 / 已知差异**；没在 Windows 实机跑过就不能写「可用」。
+
+## 6. 工作方式
 
 - **事实 / 推断 / 设计三分开**：原字节、反汇编地址、测试输出是事实；“应该是”“推测为”要写明；设计文档不是实现。
 - **先复现，再修复，再补能复现旧 bug 的测试。** 不要只改测试期望让它变绿；记住本项目最贵的教训：*测试替身可能与实现共享同一个错误假设*（CClickBox 签名事故）——接口以原 code object / 反汇编核对。
@@ -88,7 +101,7 @@
 - **结束一轮工作时**：更新 `docs/STATUS.md`（日期、分支、测试实测、红灯、下一步），提交并推送到当前会话分支。
 - 多 Agent 并行时按 `server/docs/OWNERSHIP.md` 的目录所有权划分；跨模块只走 `contracts`。
 
-## 6. 已知坑（详见 STATUS 与各子项目文档）
+## 7. 已知坑（详见 STATUS 与各子项目文档）
 
 - GIRB 碰撞解码仍有 300/429 扇区解不出；现在明确失败而非假成功。不要拿旧的成功率反驳字节级差异。
 - `notes/fls_path_hash_and_dlg.md` 说引擎**线性扫描**目录，而编辑器 P0 修复依据是“有序目录 / 二分寻址 + `r1≠0`”——两者尚未用反汇编统一；改目录写回逻辑前先看 `mx.exe:0x48ECF0`。
@@ -97,7 +110,7 @@
 - 仓库里**没有任何真实客户端抓包字节**；所有协议结论来自静态分析。
 - `tools/decompiler/output/` 下的 `.py` 是反编译输出，有缺失和错误，不是源码。
 
-## 7. 术语
+## 8. 术语
 
 | 术语 | 含义 |
 |---|---|
