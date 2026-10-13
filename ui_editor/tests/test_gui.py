@@ -529,6 +529,86 @@ class TestSaveToPackWithStagedImage(unittest.TestCase):
                 fresh.close()
 
 
+class TestSaveWithUnreferencedStagedImage(unittest.TestCase):
+    """挂账新图未被当前布局引用时：保存成功但必须明示未写入。
+
+    回归背景：用户反馈「图片始终存不进去，保存成功但重开还是
+    原数」——旧弹窗只字不提有几张图真进了新包，没引用到的图被
+    静默漏过。报告须列出 stages_unreferenced 与新包总条数。
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+
+    def test_unreferenced_staged_image_flagged_not_written(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "interface_mini.fls"
+            pack_path.write_bytes(_mini_pack_bytes("dialog/cateroom.dlg"))
+            self.window.open_pack_file(str(pack_path))
+            self.window._open_pack_layout(
+                str(pack_path), "dialog/cateroom.dlg")
+            doc = self.window.doc
+            self.assertIsNotNone(doc)
+            self.window.resolver.stage_image(
+                "newdir\\未用上的圖.png", b"\x89PNGunused")
+            doc.dirty = True
+            out = str(Path(tmp) / "interface_patched.fls")
+            report = self.window.write_pack_copy(out)
+            self.assertTrue(report.get("ok"), report)
+            self.assertEqual(report.get("images_added"), 0)
+            self.assertEqual(report.get("staged_unreferenced"),
+                             ["newdir\\未用上的圖.png"])
+            self.assertEqual(report.get("entries_after"), 1)  # 原包 1 条、无新增
+            # 账未销：还在挂账里，可换个布局再保存写入
+            self.assertIn("newdir\\未用上的圖.png",
+                          self.window.resolver.staged_images())
+            from ui_editor.core.pack import FlsPack
+            with FlsPack(out) as pack:
+                self.assertEqual(pack.count, 1)
+                self.assertFalse(pack.contains("newdir\\未用上的圖.png"))
+
+
+class TestZoomCallbackAfterTeardown(unittest.TestCase):
+    """窗口销毁中画布补发缩放信号不得炸（0.5.0 原生反馈的崩溃）。
+
+    _on_zoom_changed 若只判 hasattr，标签 C++ 对象已删时 setText
+    抛 RuntimeError: libshiboken ... already deleted。
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def test_zoom_handler_survives_deleted_label(self):
+        from shiboken6 import delete, isValid
+
+        from ui_editor.ui.main_window import MainWindow
+
+        window = MainWindow()
+        delete(window._zoom_label)  # 强制删 C++ 对象（复现销毁中补发信号）
+        self.assertFalse(isValid(window._zoom_label))
+        window._on_zoom_changed(1.5)  # 不得抛 RuntimeError
+        window.close()
+        window.deleteLater()
+        self._app.processEvents()
+
+
 class TestImagePicker(unittest.TestCase):
     """从资源包选择图片：对话框过滤/选择 + 属性面板已接解析器。"""
 

@@ -566,6 +566,8 @@ class MainWindow(QMainWindow):
                         "mode": info["mode"],
                         "images_added": len(info["images_added"]),
                         "images_replaced": len(info["images_replaced"])}
+        staged_all = set(self.resolver.staged_images())
+        report["staged_unreferenced"] = sorted(staged_all - set(extras))
         try:
             from ..core.assets import AssetResolver as _Resolver
 
@@ -616,6 +618,7 @@ class MainWindow(QMainWindow):
                     report["error"] = f"有 {unexpected} 条条目被意外改变"
                     return report
                 report["changed_entries"] = changed
+                report["entries_after"] = after.count
             fresh = _Resolver()
             fresh.mount_pack(tmp_out)
             try:
@@ -693,14 +696,30 @@ class MainWindow(QMainWindow):
                 if overwritten else
                 "原包未被修改。安装时请在完整客户端副本上操作：先备份"
                 "原包，再把新包改名替换，最后进游戏验证该界面。")
-        QMessageBox.information(
-            self, "已生成新包",
+        entries_note = ""
+        if report.get("entries_after") is not None:
+            entries_note = (
+                f"\n新包条目总数：{report['entries_after']} 条"
+                "（用资源编辑器打开新包应能对上这个数）。")
+        unused = report.get("staged_unreferenced") or []
+        unused_note = ""
+        if unused:
+            shown = "\n".join(f"· {name}" for name in unused[:6])
+            if len(unused) > 6:
+                shown += f"\n· ……等共 {len(unused)} 张"
+            unused_note = (
+                f"\n\n⚠ 有 {len(unused)} 张「添加新图到包」的图片未被"
+                "当前布局引用，未写入新包：\n" + shown
+                + "\n要写入：先在本布局的控件上把图片改选为上面列出的"
+                "新图（或在该图片所在的布局里保存），再保存回包。")
+        box = (QMessageBox.warning if unused
+               else QMessageBox.information)
+        box(self, "已生成新包" if not unused else "已生成新包（有新图未写入）",
             f"已写回：{res_path}\n新包：{path}\n"
             f"条目校验通过（改变 {report.get('changed_entries', 0)} 条，"
             f"大小 {report['bytes']} 字节"
             + ("，快速补丁未重写整包" if fast else "") + "）。"
-            + images_note + "\n\n"
-            + tail)
+            + images_note + entries_note + unused_note + "\n\n" + tail)
 
     def save_as(self, path: str | None = None) -> bool:
         if self.doc is None:
@@ -991,8 +1010,13 @@ class MainWindow(QMainWindow):
 
     # -- 画布像素级辅助（M3.1） ----------------------------------------
     def _on_zoom_changed(self, factor: float) -> None:
-        if hasattr(self, "_zoom_label"):
-            self._zoom_label.setText(f"缩放 {round(factor * 100)}%")
+        # 窗口销毁过程中画布可能补发缩放信号，此时标签的 C++ 对象
+        # 已删除（只剩 Python 壳），setText 会抛 RuntimeError。
+        from shiboken6 import isValid
+
+        label = getattr(self, "_zoom_label", None)
+        if label is not None and isValid(label):
+            label.setText(f"缩放 {round(factor * 100)}%")
 
     def set_button_state(self, state: str) -> None:
         """切换画布按钮预览状态（多帧/竖条图取真状态图，余者模拟）。
