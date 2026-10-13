@@ -63,6 +63,16 @@ class PackDocument:
     def close(self) -> None:
         self.archive.close()
 
+    def reopen_source(self) -> None:
+        """按原路径重开归档，编辑状态（槽位/历史）保持不变。
+
+        保存收尾时先释放源文件读句柄才能在 Windows 上覆盖原文件；
+        若覆盖失败，用这个方法把句柄按原样接回来，文档继续可用。
+        内存文档（from_bytes）没有源路径，句柄本就无需释放，跳过。
+        """
+        if self.path is not None:
+            self.archive = open_archive_path(self.path)
+
     # ---------------------------------------------------------- 查询 ----
     @property
     def count(self) -> int:

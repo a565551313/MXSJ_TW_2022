@@ -40,8 +40,20 @@ def save_document(
     try:
         if target.exists():
             shutil.copyfile(target, target.with_suffix(target.suffix + ".bak"))
+    except OSError as exc:
+        raise SaveError(f"写入文件失败：{exc}") from exc
+    # Windows 上 target 若还被文档的惰性读句柄占着，os.replace 会
+    # 报 PermissionError（POSIX 无此限制，所以 Linux 测不出来）：
+    # 先释放源句柄再替换；替换失败则按原路径重开，编辑状态保留，
+    # 成功后由 mark_saved 以新文件重建基线。
+    doc.close()
+    try:
         os.replace(tmp, target)
     except OSError as exc:
+        try:
+            doc.reopen_source()
+        except Exception:
+            pass  # 重开失败也不掩盖真正的保存错误
         raise SaveError(f"写入文件失败：{exc}") from exc
     doc.mark_saved(target)
     return report

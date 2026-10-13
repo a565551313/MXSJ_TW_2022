@@ -16,3 +16,6 @@ map/*
 # Python cache
 __pycache__/
 *.pyc
+
+# 云盘下载中转目录（Drive 工具落盘的临时文件，不入库）
+google_drive/

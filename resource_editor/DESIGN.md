@@ -74,3 +74,33 @@ ruff（PEP8，行宽 88）零警告。离屏冒烟截图验证过条目缩略图
 * 兼容：`build_bytes`/`verify_rebuilt` 等旧 API 保留（小包/测试），
   单元测试 17 个（新增惰性打开、bootstrap、目录工作区 GUI 冒烟）。
 
+## 0.2.1 实现增量（Windows 兼容修复）
+
+0.2.0 的惰性打开在真实 Windows 上首次实测即崩（用户实测目录
+`D:\Lager\夢想世界\data`，49 个包）：`readers.py` 用了 POSIX
+专属的 `os.pread`，Windows 的 `os` 模块没有这个函数。修复三处：
+
+* **定位读可移植化**（`readers.py`）：模块级
+  `_PREAD = getattr(os, "pread", None)`，有则用无状态 pread；
+  无（Windows）则退化为「一把锁串行化 `lseek + read`」，锁只
+  包住定位读本身，负载解码仍在锁外并行。打开文件统一带
+  `O_BINARY`（POSIX 无此标志，用 `getattr` 兜底）——Windows
+  文本模式会折叠 CRLF、把 0x1A 当 EOF，不带它二进制负载会被
+  静默损坏，比报错更危险。
+* **保存覆盖原文件**（`saver.py` + `document.py`）：Windows 上
+  目标文件被文档的惰性读句柄占着时 `os.replace` 报
+  PermissionError（POSIX 允许，故 Linux 测不出）。保存收尾改为：
+  备份 → `doc.close()` 释放源句柄 → `os.replace`；替换失败时
+  `doc.reopen_source()` 按原路径重开（槽位/撤销历史不动，编辑
+  状态完整保留）再抛 `SaveError`；成功走原 `mark_saved` 重建基线。
+* **版本号单点化**：`__init__.__version__` 更新为 0.2.1，
+  GUI「关于」对话框改为读该常量（0.2.0 发布时两处曾不一致）。
+
+回归测试（`tests/test_windows_compat.py`，新增 4 个）：`_PREAD`
+置 None 强制回退路径下 read_at/copy_to/6 线程并发读逐字节校验
+（样本含 0x1A 与 CRLF 字节）；「打开源文件 → 改一条 → 存回同一
+路径」往返并校验 `.bak` 备份内容；mock `os.replace` 抛
+PermissionError 后文档按原路径重开且 `is_modified` 保留。另以
+删除 `os.pread` 的解释器把全套 21 个测试（含 GUI 离屏冒烟）
+整场重跑，全绿——等于在 Linux 上整场模拟 Windows。
+

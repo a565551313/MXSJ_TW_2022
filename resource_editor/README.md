@@ -61,3 +61,15 @@ PYTHONPATH=src python -m unittest discover -s tests
 * effect.fls 的 41 个未破译二进制条目只提供 Hex 查看，
   背景见 `../tools/data-parser/I0_SPRITE_FORMAT.md`。
 * 与原版客户端二进制的最终兼容性需 Windows 原生环境验证。
+
+## 版本历史
+
+* **0.2.1**（2026-10-13）：修 Windows 兼容（0.2.0 在真实 Windows
+  打开目录即因 `os.pread` 不存在而报错）——定位读可移植化
+  （Windows 走加锁 seek+read），保存前先释放源文件句柄再覆盖
+  原文件，并补 `O_BINARY` 防文本模式损坏二进制负载；
+  21 个测试全绿（含整场删除 `os.pread` 的模拟 Windows 重跑）。
+* **0.2.0**（2026-10-13）：目录式工作区 + 中间分页网格 + 右侧
+  动画预览；惰性打开大包秒开、保存时流式校验；.bat 一键启动。
+* **0.1.0**（2026-10-13）：首版——资源包浏览、I0/T0/I1 动画
+  预览、PNG 替换重打包、未改条目逐字节保真。

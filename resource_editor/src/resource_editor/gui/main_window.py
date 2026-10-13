@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .. import __version__
 from ..core.codecs.detect import EntryKind
 from ..core.codecs.sprite import Sprite, decode_sprite, encode_sprite
 from ..core.model.document import PackDocument
@@ -803,7 +804,7 @@ class MainWindow(QMainWindow):
     def _show_about(self) -> None:
         QMessageBox.about(
             self, "关于",
-            "MXSJ 资源编辑器 0.2.0\n"
+            f"MXSJ 资源编辑器 {__version__}\n"
             "梦想世界客户端 FLS 资源包浏览与编辑工具。\n"
             "目录式工作区 + 分页网格浏览 + 惰性加载（大包秒开）。\n"
             "精灵格式 I0/T0/I1 规格见 tools/data-parser/I0_SPRITE_FORMAT.md。")
