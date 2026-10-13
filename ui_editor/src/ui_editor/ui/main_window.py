@@ -15,18 +15,21 @@ from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
+    QLabel,
     QMainWindow,
+    QMenu,
     QMessageBox,
     QSplitter,
     QStatusBar,
     QTabWidget,
     QToolBar,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
 from .. import __version__
-from ..core import dlg_codec, pack_build
+from ..core import dlg_codec, pack_build, snap
 from ..core.assets import AssetResolver
 from ..core.catalog import known_layout_paths
 from ..core.model import LayoutDocument, Widget
@@ -139,6 +142,9 @@ class MainWindow(QMainWindow):
         names_action.toggled.connect(self._toggle_names)
         view_menu.addAction(names_action)
         self._names_action = names_action
+        self._act_grid = QAction("显示网格与标尺", self, checkable=True)
+        self._act_grid.toggled.connect(self._toggle_grid)
+        view_menu.addAction(self._act_grid)
 
         edit_menu = self.menuBar().addMenu("编辑")
         self._undo_action = QAction("撤销", self)
@@ -201,7 +207,39 @@ class MainWindow(QMainWindow):
         bar.addAction(self._act_fit)
         bar.addAction(self._act_actual)
         bar.addAction(self._names_action)
+        # 网格/标尺开关与对齐下拉都进工具栏（常用手势不走菜单）
+        self._act_grid.setIcon(icons.icon_grid())
+        self._act_grid.setIconText("网格")
+        self._act_grid.setToolTip("显示/隐藏网格与标尺")
+        bar.addAction(self._act_grid)
+        align_btn = QToolButton(self)
+        align_btn.setText("对齐")
+        align_btn.setIcon(icons.icon_align())
+        align_btn.setToolTip("对齐与等距分布（先在画布上 Ctrl+点选多个同级控件）")
+        align_btn.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        align_btn.setPopupMode(
+            QToolButton.ToolButtonPopupMode.InstantPopup)
+        align_menu = QMenu(align_btn)
+        for text, mode in (("左对齐", "left"), ("水平居中", "hcenter"),
+                           ("右对齐", "right"), ("顶对齐", "top"),
+                           ("垂直居中", "vcenter"), ("底对齐", "bottom")):
+            act = align_menu.addAction(text)
+            act.triggered.connect(
+                lambda _checked=False, m=mode: self.apply_alignment(m))
+        align_menu.addSeparator()
+        act = align_menu.addAction("横向等距分布")
+        act.triggered.connect(lambda: self.apply_distribute("x"))
+        act = align_menu.addAction("纵向等距分布")
+        act.triggered.connect(lambda: self.apply_distribute("y"))
+        align_btn.setMenu(align_menu)
+        bar.addWidget(align_btn)
+        self._align_btn = align_btn
         self._toolbar = bar
+        # 状态栏右端常驻缩放百分比
+        self._zoom_label = QLabel("100%", self)
+        self.statusBar().addPermanentWidget(self._zoom_label)
+        self.view.zoom_changed.connect(self._on_zoom_changed)
 
     @staticmethod
     def _add_action(menu, text, slot, shortcut=None) -> QAction:
@@ -767,7 +805,8 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
     # 选择与回调
     # ------------------------------------------------------------------
-    def _select_widget(self, widget: Widget | None) -> None:
+    def _select_widget(self, widget: Widget | None,
+                       *, sync_scene: bool = True) -> None:
         self._selected = widget
         if widget is not None:
             # 记住选择锚点：撤销重建对象后按它重解析选择
@@ -776,7 +815,7 @@ class MainWindow(QMainWindow):
                 self._selection_anchor = anchor
         self.props_panel.set_widget(widget)
         self.tree_panel.select_widget(widget)
-        if self._syncing_selection:
+        if self._syncing_selection or not sync_scene:
             return
         self._syncing_selection = True
         try:
@@ -800,7 +839,8 @@ class MainWindow(QMainWindow):
         except RuntimeError:
             return  # 窗口销毁过程中场景已释放，忽略残响信号
         widget = selected[0].widget if selected else None
-        self._select_widget(widget)
+        # 多选（Ctrl+点）时不能回灌单选同步，否则其余选中会被冲掉
+        self._select_widget(widget, sync_scene=False)
 
     def _on_geometry_changed(self, widget: Widget) -> None:
         if self._loading or self.doc is None:
@@ -882,6 +922,73 @@ class MainWindow(QMainWindow):
             return
         self.doc.checkpoint()
         self._update_title()
+
+    # -- 画布像素级辅助（M3.1） ----------------------------------------
+    def _on_zoom_changed(self, factor: float) -> None:
+        if hasattr(self, "_zoom_label"):
+            self._zoom_label.setText(f"缩放 {round(factor * 100)}%")
+
+    def _toggle_grid(self, on: bool) -> None:
+        self.scene.show_grid = on
+        self.scene.update()
+
+    def _selected_group(self):
+        """画布多选的同级控件组；返回 (基准控件, 组内控件)。"""
+        if self.doc is None:
+            return None, []
+        try:
+            items = self.scene.selectedItems()
+        except RuntimeError:
+            return None, []
+        widgets = [it.widget for it in items if hasattr(it, "widget")]
+        if self._selected is not None and self._selected not in widgets:
+            widgets.append(self._selected)
+        if not widgets:
+            return None, []
+        # 基准取文档顺序最靠前者（可预测，状态栏会报它的名字）
+        order = {id(w): i for i, w in enumerate(self.doc.all_widgets())}
+        ref = min(widgets, key=lambda w: order.get(id(w), 0))
+        return ref, [w for w in widgets if w.parent is ref.parent]
+
+    def apply_alignment(self, mode: str) -> None:
+        """把多选的同级控件按 mode 对齐到基准控件（默认当前选中）。"""
+        if self.doc is None:
+            return
+        ref, group = self._selected_group()
+        targets = [w for w in group if w is not ref]
+        if ref is None or not targets:
+            self._update_status(
+                "对齐需要先在画布 Ctrl+点选至少两个同级控件。")
+            return
+        ref_rect = (ref.x, ref.y, ref.width, ref.height)
+        for w in targets:
+            x, y = snap.align_position(
+                ref_rect, (w.x, w.y, w.width, w.height), mode)
+            w.set_geometry(x=int(round(x)), y=int(round(y)))
+            self.scene.refresh_widget(w)
+        self.doc.checkpoint()
+        self.doc.dirty = True
+        self._update_title()
+        self._update_status(f"已按基准「{ref.name}」对齐 {len(targets)} 个控件。")
+
+    def apply_distribute(self, axis: str) -> None:
+        """三个以上同级控件沿 axis 等距分布（首尾不动）。"""
+        if self.doc is None:
+            return
+        _ref, group = self._selected_group()
+        if len(group) < 3:
+            self._update_status("等距分布需要至少三个同级控件被选中。")
+            return
+        rects = [(w.x, w.y, w.width, w.height) for w in group]
+        for w, (x, y) in zip(
+                group, snap.distribute_positions(rects, axis), strict=True):
+            w.set_geometry(x=int(round(x)), y=int(round(y)))
+            self.scene.refresh_widget(w)
+        self.doc.checkpoint()
+        self.doc.dirty = True
+        self._update_title()
+        direction = "横" if axis == "x" else "纵"
+        self._update_status(f"已沿{direction}向等距分布 {len(group)} 个控件。")
 
     # ------------------------------------------------------------------
     # 视图/状态

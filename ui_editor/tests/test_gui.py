@@ -739,3 +739,52 @@ class TestToolbar(unittest.TestCase):
         self.assertFalse(w._redo_action.isEnabled())
         w.undo()
         self.assertTrue(w._redo_action.isEnabled())
+
+
+class TestAlignGridZoom(unittest.TestCase):
+    """M3.1：画布对齐/网格/缩放百分比入口行为。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+
+    def _select_widgets(self, widgets):
+        for item in self.window.scene.items():
+            if hasattr(item, "widget") and item.widget in widgets:
+                item.setSelected(True)
+
+    def test_align_left_to_reference(self):
+        w = self.window
+        w.open_layout_file(str(FIXTURE))
+        doc = w.doc
+        assert doc is not None
+        # 该布局的 UI_INFO 是平级列表：四个控件都是顶层同级
+        _frame, button, box, image = doc.roots
+        self._select_widgets([button, box, image])
+        w.apply_alignment("left")  # 基准=文档顺序最靠前者（按钮 x=10）
+        self.assertEqual(box.x, button.x)
+        self.assertEqual(image.x, button.x)
+        w.undo()  # 对齐算一步，可退回（撤销会重建对象，从文档读）
+        self.assertEqual(w.doc.roots[2].x, 0)
+
+    def test_grid_toggle_and_zoom_label(self):
+        w = self.window
+        self.assertFalse(w.scene.show_grid)
+        w._act_grid.trigger()
+        self.assertTrue(w.scene.show_grid)
+        w.view.actual_size()
+        self.assertEqual(w._zoom_label.text(), "缩放 100%")
+        w.view.zoom_changed.emit(2.5)
+        self.assertEqual(w._zoom_label.text(), "缩放 250%")

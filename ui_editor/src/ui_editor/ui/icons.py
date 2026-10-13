@@ -208,3 +208,29 @@ def icon_names() -> QIcon:
     p.drawLine(QPointF(14, 12.5), QPointF(21.5, 12.5))
     p.drawLine(QPointF(14, 16), QPointF(19.5, 16))
     return _end(pixmap, p)
+
+
+def icon_grid() -> QIcon:
+    """网格开关：浅灰点阵。"""
+    pixmap, p = _begin()
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor("#8a94a6"))
+    for x in (7, 14, 21):
+        for y in (7, 14, 21):
+            p.drawRect(x - 1, y - 1, 2.6, 2.6)
+    p.setPen(_pen("#8a94a6", 1.2))
+    p.drawRect(QRectF(4.5, 4.5, 19, 19))
+    return _end(pixmap, p)
+
+
+def icon_align() -> QIcon:
+    """对齐：长短条靠左排齐。"""
+    pixmap, p = _begin()
+    p.setPen(_pen("#8892a4", 1.8))
+    p.drawLine(QPointF(5, 4), QPointF(5, 24))
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor("#2f6fb4"))
+    p.drawRoundedRect(QRectF(8, 6, 14, 4), 1.6, 1.6)
+    p.drawRoundedRect(QRectF(8, 12.5, 9, 4), 1.6, 1.6)
+    p.drawRoundedRect(QRectF(8, 19, 12, 4), 1.6, 1.6)
+    return _end(pixmap, p)

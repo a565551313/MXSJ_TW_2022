@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from PySide6.QtCore import QPointF, QRectF, Qt
+from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QImage, QPainter, QPen
 from PySide6.QtWidgets import (
     QGraphicsItem,
@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..core import painters
+from ..core import painters, snap
 from ..core.model import LayoutDocument, Widget
 from ..core.painters import PaintContext
 
@@ -75,6 +75,9 @@ class WidgetItem(QGraphicsItem):
         self.update()
 
     def itemChange(self, change, value):  # noqa: N802 (Qt 命名)
+        if (change == QGraphicsItem.GraphicsItemChange.ItemPositionChange
+                and not self._syncing):
+            value = self._snapped_position(value)
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged \
                 and not self._syncing:
             pos = self.pos()
@@ -82,6 +85,52 @@ class WidgetItem(QGraphicsItem):
                                      y=int(round(pos.y())))
             self.on_geometry(self.widget)
         return super().itemChange(change, value)
+
+    # -- 拖动吸附 -----------------------------------------------------
+    def _snapped_position(self, value):
+        """拖动中把坐标贴到同级控件/父边缘，返回修正后坐标（QPointF）。
+
+        Alt 临时禁吸附；阈值按 6 屏幕像素折算到场景单位。命中的
+        参考线同步给场景描红线（父坐标 → 场景坐标）。
+        """
+        from PySide6.QtWidgets import QApplication
+
+        scene = self.scene()
+        if scene is None:
+            return value
+        if QApplication.keyboardModifiers() & Qt.KeyboardModifier.AltModifier:
+            scene.set_guides([], [])
+            return value
+        widget = self.widget
+        parent = widget.parent
+        if parent is not None:
+            siblings = [c for c in parent.children if c is not widget]
+            parent_size = (float(parent.width), float(parent.height))
+        else:
+            doc = getattr(scene, "document", None)
+            siblings = [r for r in (doc.roots if doc else [])
+                        if r is not widget]
+            parent_size = None
+        others = [(float(c.x), float(c.y), float(c.width),
+                   float(c.height)) for c in siblings]
+        views = scene.views()
+        scale = views[0].transform().m11() if views else 1.0
+        threshold = max(6.0 / scale, 1.0) if scale > 0 else 6.0
+        new_x, new_y, guides_x, guides_y = snap.snap_position(
+            (float(value.x()), float(value.y()),
+             float(widget.width), float(widget.height)),
+            others, parent_size, threshold)
+        parent_item = self.parentItem()
+        if parent_item is not None:
+            scene_x = [parent_item.mapToScene(
+                QPointF(gx, 0)).x() for gx in guides_x]
+            scene_y = [parent_item.mapToScene(
+                QPointF(0, gy)).y() for gy in guides_y]
+        else:
+            scene_x, scene_y = guides_x, guides_y
+        scene.set_guides(scene_x, scene_y)
+        from PySide6.QtCore import QPointF as _PF
+        return _PF(new_x, new_y)
 
     # -- 绘制 -------------------------------------------------------
     def paint(self, painter: QPainter, option, widget: QWidget = None) -> None:
@@ -186,6 +235,9 @@ class WidgetItem(QGraphicsItem):
             return
         super().mouseReleaseEvent(event)
         self._commit_if_changed()
+        scene = self.scene()
+        if scene is not None:
+            scene.set_guides([], [])
 
 
 class LayoutScene(QGraphicsScene):
@@ -201,6 +253,66 @@ class LayoutScene(QGraphicsScene):
         self.on_commit = on_commit
         self.document: LayoutDocument | None = None
         self._items: dict[int, WidgetItem] = {}
+        self.show_grid = False  # 网格+标尺（视图菜单/工具栏开关）
+        self._guides_x: list[float] = []  # 场景坐标参考线（拖动吸附）
+        self._guides_y: list[float] = []
+
+    # -- 拖动参考线 ---------------------------------------------------
+    def set_guides(self, xs, ys) -> None:
+        if xs == self._guides_x and ys == self._guides_y:
+            return
+        self._guides_x = list(xs)
+        self._guides_y = list(ys)
+        self.update()
+
+    # -- 网格/标尺/参考线绘制 ------------------------------------------
+    def drawBackground(self, painter: QPainter, rect: QRectF) -> None:  # noqa: N802
+        super().drawBackground(painter, rect)
+        if not self.show_grid:
+            return
+        left, top = int(rect.left()) // 10 * 10, int(rect.top()) // 10 * 10
+        faint = QPen(QColor(255, 255, 255, 14), 0)
+        strong = QPen(QColor(255, 255, 255, 30), 0)
+        x = left
+        while x <= rect.right():
+            painter.setPen(strong if x % 50 == 0 else faint)
+            painter.drawLine(QPointF(x, rect.top()), QPointF(x, rect.bottom()))
+            x += 10
+        y = top
+        while y <= rect.bottom():
+            painter.setPen(strong if y % 50 == 0 else faint)
+            painter.drawLine(QPointF(rect.left(), y), QPointF(rect.right(), y))
+            y += 10
+
+    def drawForeground(self, painter: QPainter, rect: QRectF) -> None:  # noqa: N802
+        super().drawForeground(painter, rect)
+        bounds = self.sceneRect()
+        if self.show_grid:  # 简易标尺：沿场景左/上边界每 100 单位刻字
+            painter.save()
+            painter.setPen(QColor(200, 205, 215, 160))
+            font = painter.font()
+            font.setPixelSize(9)
+            painter.setFont(font)
+            x = int(bounds.left()) // 100 * 100
+            while x <= bounds.right():
+                painter.drawText(QPointF(x + 2, bounds.top() + 10), str(x))
+                x += 100
+            y = int(bounds.top()) // 100 * 100
+            while y <= bounds.bottom():
+                painter.drawText(QPointF(bounds.left() + 2, y + 10), str(y))
+                y += 100
+            painter.restore()
+        if self._guides_x or self._guides_y:
+            painter.save()
+            pen = QPen(QColor(235, 60, 170), 0)
+            painter.setPen(pen)
+            for gx in self._guides_x:
+                painter.drawLine(QPointF(gx, bounds.top()),
+                                 QPointF(gx, bounds.bottom()))
+            for gy in self._guides_y:
+                painter.drawLine(QPointF(bounds.left(), gy),
+                                 QPointF(bounds.right(), gy))
+            painter.restore()
 
     def set_document(self, doc: LayoutDocument | None) -> None:
         self.clear()
@@ -242,6 +354,8 @@ class LayoutScene(QGraphicsScene):
 class CanvasView(QGraphicsView):
     """带滚轮缩放的画布视图。"""
 
+    zoom_changed = Signal(float)
+
     def __init__(self, scene: LayoutScene) -> None:
         super().__init__(scene)
         self.setRenderHints(QPainter.RenderHint.Antialiasing
@@ -257,15 +371,62 @@ class CanvasView(QGraphicsView):
         if (factor > 1 and current > 8) or (factor < 1 and current < 0.08):
             return
         self.scale(factor, factor)
+        self.zoom_changed.emit(self.transform().m11())
+
+    # -- 空格拖动画布 / 中键平移 ---------------------------------------
+    def keyPressEvent(self, event) -> None:  # noqa: N802
+        if event.key() == Qt.Key.Key_Space and not event.isAutoRepeat():
+            self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
+    def keyReleaseEvent(self, event) -> None:  # noqa: N802
+        if event.key() == Qt.Key.Key_Space and not event.isAutoRepeat():
+            self.setDragMode(QGraphicsView.DragMode.NoDrag)
+            event.accept()
+            return
+        super().keyReleaseEvent(event)
+
+    def mousePressEvent(self, event) -> None:  # noqa: N802
+        if event.button() == Qt.MouseButton.MiddleButton:
+            self._pan_start = (
+                event.position().toPoint(),
+                self.horizontalScrollBar().value(),
+                self.verticalScrollBar().value())
+            self.setCursor(Qt.CursorShape.ClosedHandCursor)
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event) -> None:  # noqa: N802
+        if getattr(self, "_pan_start", None) is not None:
+            start, h0, v0 = self._pan_start
+            delta = event.position().toPoint() - start
+            self.horizontalScrollBar().setValue(h0 - delta.x())
+            self.verticalScrollBar().setValue(v0 - delta.y())
+            event.accept()
+            return
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:  # noqa: N802
+        if getattr(self, "_pan_start", None) is not None:
+            self._pan_start = None
+            self.unsetCursor()
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
 
     def fit_content(self) -> None:
         rect = self.scene().itemsBoundingRect()
         if not rect.isEmpty():
             self.fitInView(rect.adjusted(-16, -16, 16, 16),
                            Qt.AspectRatioMode.KeepAspectRatio)
+            self.zoom_changed.emit(self.transform().m11())
 
     def actual_size(self) -> None:
         self.resetTransform()
+        self.zoom_changed.emit(self.transform().m11())
 
     def export_image(self) -> QImage:
         """把布局区域渲染为一张图片（导出 PNG 用）。"""
