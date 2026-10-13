@@ -122,7 +122,13 @@ def dump_archive(entries: list[RawEntry], fh) -> int:
 
 
 def _xor4(data: bytes, key: bytes) -> bytes:
-    return bytes(b ^ key[i & 3] for i, b in enumerate(data))
+    """4 字节循环 XOR（整数整体异或，比逐字节快两个数量级）。"""
+    if not data:
+        return data
+    repeated = (key * (len(data) // 4 + 1))[:len(data)]
+    return (int.from_bytes(data, "little")
+            ^ int.from_bytes(repeated, "little")).to_bytes(
+                len(data), "little")
 
 
 def unpack_packed_text(data: bytes) -> bytes:

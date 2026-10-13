@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 
 from PySide6.QtGui import QImage
@@ -28,16 +29,19 @@ _MEDIA_EXTS = (".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif",
                ".igs", ".wav", ".mp3", ".ogg")
 
 
-def _walk_strings(value: object):
-    """递归产出解析后布局里的全部字符串值。"""
-    if isinstance(value, str):
-        yield value
-    elif isinstance(value, dict):
-        for item in value.values():
-            yield from _walk_strings(item)
-    elif isinstance(value, (list, tuple)):
-        for item in value:
-            yield from _walk_strings(item)
+_QUOTED_STR_RE = re.compile(r'"((?:[^"\\]|\\.)*)"|\'((?:[^\'\\]|\\.)*)\'')
+
+
+def _scan_media_in_text(text: str) -> set[str]:
+    """从 .dlg 明文里扒引号中的媒体路径（反斜杠先反转义回单写）。"""
+    out: set[str] = set()
+    for match in _QUOTED_STR_RE.finditer(text):
+        value = match.group(1) if match.group(1) is not None \
+            else match.group(2)
+        value = value.replace("\\\\", "\\")
+        if _looks_media(value):
+            out.add(value)
+    return out
 
 
 def _looks_media(text: str) -> bool:
@@ -128,12 +132,13 @@ class AssetResolver:
         found: set[str] = set()
         for pack in self._packs:
             for layout in pack.matched_paths(known_layout_hashes()):
-                got = self.fetch_dlg(layout)
-                if got is None:
+                data = self.fetch_bytes(layout)
+                if data is None:
                     continue
-                for text in _walk_strings(got[0]):
-                    if _looks_media(text):
-                        found.add(text)
+                # 只做文本扫描（不完整解析布局），大包也够快
+                text = unpack_packed_text(data).decode(
+                    "gb18030", "surrogateescape")
+                found.update(_scan_media_in_text(text))
         self._media_cache = sorted(
             path for path in found if self._exists(path))
         return self._media_cache
