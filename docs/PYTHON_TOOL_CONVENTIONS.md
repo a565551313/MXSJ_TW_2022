@@ -72,10 +72,10 @@ PEP 8 + 模块化；GUI 只用 PySide6；每个工具自带「自检并启动」
 
 - **PyInstaller 不能跨平台**：EXE 只能在 Windows 上构建。Linux 侧负责把 spec 和脚本写对并做干跑（§5.1），Windows 侧（用户或 Windows 机器上的 Agent）负责双击 `build_exe.bat` 并把结果写回 STATUS。
 - `build_exe.bat`（CRLF、ASCII）步骤固定：检查 Python → 创建 / 复用 `.venv` → `pip install -r requirements-dev.txt` → 跑 `unittest`（失败即停）→ `pyinstaller --noconfirm --clean <tool>.spec` → 打印 `dist\<Name>\<Name>.exe` 路径 → `pause`。用环境变量（如 `set <TOOL>_ONEFILE=1`）切换单文件版。
-- spec 要求：入口是**不做 pip 安装**的轻量脚本（`run.py` 或 `src/<package>/__main__.py`，不是 `bootstrap.py`）；GUI 程序 `console=False`，但无参数双击必须直接开窗（map_editor PR #25 的教训）；`datas` 带上程序需要的数据文件；`hiddenimports` 用 `collect_submodules("<package>")`；`excludes` 去掉 tkinter / matplotlib / numpy / pytest 等没用到的大包；用了 `multiprocessing` 必须 `freeze_support()`。
+- spec 要求：入口是**不做 pip 安装**的轻量脚本（`run.py` 或 `src/<package>/__main__.py`，不是 `bootstrap.py`）；GUI 程序 `console=False`，但无参数双击必须直接开窗（map_editor PR #25 的教训）；`datas` 带上程序需要的数据文件；`hiddenimports` 用 `collect_submodules("<package>")`；`excludes` 去掉 tkinter / matplotlib / numpy / pytest 等没用到的大包；用了 `multiprocessing` 必须 `freeze_support()`；onedir 模式 `EXE(...)` 必须 `exclude_binaries=True`（写成 `exclude_binaries=not ONEFILE` 让一份 spec 两用），否则 `COLLECT` 必报 `Resource ... is not a valid file`——map_editor 的旧 spec 就漏了这一项，直到 10-14 干跑才暴露。
 - 冻结态资源定位：`Path(getattr(sys, "_MEIPASS", Path(__file__).parent))`；用户配置写到 `%APPDATA%\<Tool>\`（`Path(os.environ.get("APPDATA", Path.home()))`），不写进安装目录或源码目录。
 - 版本：「关于」对话框或 `--version` 显示 `__version__`，与 `pyproject.toml` 一致；`dist/`、`build/`、`.venv/` 不入库。
-- **参考实现**：[`map_editor/build.bat`](../map_editor/build.bat) + [`map_editor/map_editor.spec`](../map_editor/map_editor.spec)。注意它至今**没有在 Windows 上实机构建过**（STATUS §3.5），谁先在 Windows 上跑通谁把结果写回去。
+- **参考实现**：[`map_editor/build_exe.bat`](../map_editor/build_exe.bat) + [`map_editor/map_editor.spec`](../map_editor/map_editor.spec)；`resource_editor/`、`ui_editor/` 的同名文件由同一模板生成，只差工具名 / spec 名 / `<TOOL>_ONEFILE` 变量名。注意三者至今**没有在 Windows 上实机构建过**（STATUS §3.5），谁先在 Windows 上跑通谁把结果写回去。
 
 ## 5. Linux 开发 → Windows 交付检查
 
@@ -87,7 +87,7 @@ PEP 8 + 模块化；GUI 只用 PySide6；每个工具自带「自检并启动」
 | 单元测试 | `(cd <tool> && PYTHONPATH=src QT_QPA_PLATFORM=offscreen python3 -m unittest discover -s tests)` | 全过；缺 libGL 时 GUI 测试记「未执行」 |
 | 自检脚本 | `python3 <tool>/bootstrap.py --check-only` | 退出码 0 |
 | Windows 兼容静态检查 | `python3 tools/devkit/check_windows_compat.py <tool>`（新工具或大改时加 `--strict`） | 无 ERROR；每条 WARNING 要么修掉，要么在 PR 里逐条说明为什么可以留 |
-| spec 干跑（可选，需能 import PySide6） | `(cd <tool> && pyinstaller --noconfirm --clean --distpath /tmp/wc-dist --workpath /tmp/wc-build <tool>.spec)` | 构建成功，说明 hiddenimports / datas 没漏 |
+| spec 干跑（可选，需能 import PySide6） | `(cd <tool> && pyinstaller --noconfirm --clean --distpath /tmp/wc-dist --workpath /tmp/wc-build <tool>.spec)`，再带 `<TOOL>_ONEFILE=1` 跑一次 | 两种模式都构建成功，且数据文件出现在 `dist/<Name>/_internal/<package>/data/`；沙箱缺 libGL / libpython 时的桩库办法见 STATUS §3.3 |
 
 [`tools/devkit/check_windows_compat.py`](../tools/devkit/README.md) 检查：文件名（非法字符、保留名、大小写冲突、长度、符号链接）、`.bat`（CRLF、BOM、`chcp 65001`）、Python 源码（`open`/`read_text` 缺 `encoding`、POSIX 专用 API、硬编码 `/tmp`、字面量 `python3` 启动子进程、非 PySide6 GUI）。规则表：`--list-rules`；行内豁免：行尾加 `# win-ok: 原因`。
 

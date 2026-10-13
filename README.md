@@ -112,7 +112,8 @@ MXSJ_TW_2022/
 │   ├── run.py / runGUI.py        CLI+GUI 合一入口 / 纯 GUI 入口
 │   ├── src/map_editor/           core、client、ui 分层实现
 │   ├── tests/                    编辑器回归测试
-│   └── build.bat / *.spec        Windows 打包脚本与配置
+│   ├── 启动地图编辑器.bat / bootstrap.py  Windows 一键启动 / 自检入口
+│   └── build_exe.bat / *.spec    Windows 一键打包脚本与配置（三个编辑器同构）
 ├── tools/
 │   ├── devkit/                   开发自检工具箱：check_windows_compat.py（交付 Windows 前必跑）
 │   ├── client_patches/           可逆注册 UI 预览、冻结资产、测试与审计、v3.3 交付事实表
@@ -323,7 +324,7 @@ python map_editor/runGUI.py --client-root /path/to/client-test-copy   # 永远�
 
 将示例路径替换为真实测试副本。不要把 `--export-json` 的目标写成任何源 `.map` 或其它客户端资源路径——导出前现在会自动检查并拒绝写到当前打开或已扫描到的任何源地图路径（2026-10-12 修复，见 7.3）。导出同名文件也可能覆盖既有输出，应选择新文件名。
 
-Windows 打包入口是 `map_editor/build.bat`。它会安装依赖、执行测试并调用 PyInstaller；无参数启动分派逻辑已修复（见 7.3），但尚未完成 Windows EXE 实机双击冒烟验证，因此不能将“存在打包脚本 + 分派逻辑已改”等同于“已有经过实机验收的可用安装包”。
+Windows 打包入口是 `map_editor/build_exe.bat`（2026-10-14 由 `build.bat` 改名并重写为纯 ASCII；`resource_editor/`、`ui_editor/` 同日补了同构的 `build_exe.bat` + spec）。它会安装依赖、执行测试并调用 PyInstaller；无参数启动分派逻辑已修复（见 7.3），spec 在 Linux 侧完成干跑（并修掉 onedir 缺 `exclude_binaries` 的硬错误），但尚未完成 Windows EXE 实机构建与双击冒烟验证，因此不能将“存在打包脚本 + 分派逻辑已改 + 干跑通过”等同于“已有经过实机验收的可用安装包”。
 
 ### 7.3 合并后的问题与修复状态
 

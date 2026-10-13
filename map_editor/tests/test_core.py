@@ -11,7 +11,6 @@ still passes on a clean checkout.
 from __future__ import annotations
 
 import math
-import os
 import shutil
 import struct
 import sys
@@ -22,15 +21,23 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paths import SAMPLES, reference_png_dir          # noqa: E402
+from _paths import SAMPLES, reference_png_dir  # noqa: E402
 
-from map_editor.core import (                     # noqa: E402
-    GepjError, MapDocument, MapFormatError, decode_sector_image, open_map, render_full,
-    render_region, sniff,
+from map_editor.core import (  # noqa: E402
+    GepjError,
+    MapFormatError,
+    decode_sector_image,
+    open_map,
+    render_full,
+    render_region,
+    sniff,
 )
-from map_editor.core.mapfile import (             # noqa: E402
-    CELLS_PER_SECTOR, detect_sector_count, read_header,
+from map_editor.core.mapfile import (  # noqa: E402
+    CELLS_PER_SECTOR,
+    detect_sector_count,
+    read_header,
 )
+
 
 def sample_maps() -> list[Path]:
     if not SAMPLES.is_dir():
@@ -80,8 +87,9 @@ class TestParseAllSamples(unittest.TestCase):
             with self.subTest(map=path.name):
                 with open_map(path) as doc:
                     h = doc.header
-                    self.assertEqual(h.sector_count,
-                                     math.ceil(h.width / 320) * math.ceil(h.height / 240))
+                    self.assertEqual(
+                        h.sector_count,
+                        math.ceil(h.width / 320) * math.ceil(h.height / 240))
                     # Forces every sector through the tag + length-identity checks.
                     for s in doc.iter_sectors():
                         self.assertEqual(len(doc.read_cells(s)), CELLS_PER_SECTOR)
@@ -151,12 +159,14 @@ class TestGepjDecoder(unittest.TestCase):
             ref = ref_dir / f"{path.stem}.png"
             if not ref.is_file():
                 continue
-            with self.subTest(map=path.name), Image.open(ref) as im, open_map(path) as doc:
+            with (self.subTest(map=path.name), Image.open(ref) as im,
+                  open_map(path) as doc):
                 expected = im.convert("RGB")
                 got = render_full(doc)
                 self.assertEqual((got.width, got.height), expected.size)
-                self.assertEqual(got.data, expected.tobytes(),
-                                 f"{path.name}: Pillow decode differs from ImageMagick reference")
+                self.assertEqual(
+                    got.data, expected.tobytes(),
+                    f"{path.name}: Pillow decode differs from ImageMagick reference")
             checked += 1
         self.assertGreater(checked, 0, "no reference PNG matched a sample map")
 
@@ -169,7 +179,8 @@ class TestRegionRendering(unittest.TestCase):
         path = sample_maps()[0]
         with open_map(path) as doc:
             full = render_full(doc)
-            for box in ((0, 0, 100, 80), (319, 239, 400, 300), (1500, 1200, 2000, 1500)):
+            boxes = ((0, 0, 100, 80), (319, 239, 400, 300), (1500, 1200, 2000, 1500))
+            for box in boxes:
                 with self.subTest(box=box):
                     x0, y0, x1, y1 = box
                     region = render_region(doc, x0, y0, x1, y1)
@@ -331,9 +342,11 @@ class TestGirbDecompressor(unittest.TestCase):
             with self.subTest(map=path.name), open_map(path) as doc:
                 h = doc.header
                 self.assertEqual(GRID_COLS * GRID_ROWS, GRID_CELLS)
-                self.assertEqual(h.sector_count * GRID_CELLS,
-                                 (h.sector_columns * GRID_COLS) * (h.sector_rows * GRID_ROWS))
-                self.assertEqual(h.sector_columns * GRID_COLS * 8, h.sector_columns * 320)
+                self.assertEqual(
+                    h.sector_count * GRID_CELLS,
+                    (h.sector_columns * GRID_COLS) * (h.sector_rows * GRID_ROWS))
+                self.assertEqual(h.sector_columns * GRID_COLS * 8,
+                                 h.sector_columns * 320)
 
 
 def _build_map_with_records(sectors: list[bytes], width: int, height: int,
@@ -342,7 +355,8 @@ def _build_map_with_records(sectors: list[bytes], width: int, height: int,
     import struct as _s
     n = len(sectors)
     first = 12 + 4 * n + 8 + 4 * len(recs)
-    blobs = [b"".join([_s.pack("<2i3I", x, y, w, h, len(p)), p]) for x, y, w, h, p in recs]
+    blobs = [b"".join([_s.pack("<2i3I", x, y, w, h, len(p)), p])
+             for x, y, w, h, p in recs]
     head = bytearray(b"0.1M" + _s.pack("<II", width, height))
     pos = first
     for sec in sectors:
@@ -406,6 +420,7 @@ class TestGirbNeverLeaksIndexError(unittest.TestCase):
 
     def test_random_bodies_raise_only_girberror(self) -> None:
         import random
+
         from map_editor.core.girb import GirbError, decompress
         rng = random.Random(20261012)
         for _ in range(400):

@@ -24,7 +24,9 @@ from __future__ import annotations
 
 import math
 import struct
+from collections.abc import Iterator
 from dataclasses import dataclass
+from itertools import pairwise
 from pathlib import Path
 from typing import BinaryIO
 
@@ -95,7 +97,7 @@ class Sector:
     girb_offset: int
     girb_body: bytes
     girb_trailer: bytes
-    extra_blocks: tuple["Block", ...] = ()
+    extra_blocks: tuple[Block, ...] = ()
 
     @property
     def origin_x(self) -> int:
@@ -158,7 +160,7 @@ def read_header(fh: BinaryIO, file_length: int) -> MapHeader:
     n = detect_sector_count(fh, file_length)
     fh.seek(12)
     offsets = struct.unpack(f"<{n}I", fh.read(4 * n))
-    if any(b <= a for a, b in zip(offsets, offsets[1:])):
+    if any(b <= a for a, b in pairwise(offsets)):
         raise MapFormatError("sector offset table is not strictly increasing")
     # With no prefix records the first sector starts exactly at 12 + 4N + 8,
     # so this must be a strict inequality.
@@ -172,13 +174,14 @@ def read_header(fh: BinaryIO, file_length: int) -> MapHeader:
     record_offsets: tuple[int, ...] = ()
     if record_count:
         record_offsets = struct.unpack(f"<{record_count}I", fh.read(4 * record_count))
-        if any(b <= a for a, b in zip(record_offsets, record_offsets[1:])):
+        if any(b <= a for a, b in pairwise(record_offsets)):
             raise MapFormatError("prefix-record offset table is not increasing")
 
     columns, rows = math.ceil(width / SECTOR_PX_W), math.ceil(height / SECTOR_PX_H)
     if columns * rows != n:
         raise MapFormatError(
-            f"sector count {n} != ceil({width}/320)*ceil({height}/240)={columns * rows}")
+            f"sector count {n} != ceil({width}/320)*ceil({height}/240)"
+            f"={columns * rows}")
 
     return MapHeader(
         width=width, height=height, sector_count=n, sector_columns=columns,
@@ -268,7 +271,8 @@ def read_sector(fh: BinaryIO, header: MapHeader, index: int) -> Sector:
             f"sector {index}: blocks end at {cursor}, expected {end}")
 
     return Sector(
-        index=index, row=index // header.sector_columns, col=index % header.sector_columns,
+        index=index,
+        row=index // header.sector_columns, col=index % header.sector_columns,
         offset=offset, length=end - offset, record_refs=refs_tuple,
         image_offset=image_offset, image_length=image_length,
         segment_lengths=segment_lengths, cells_offset=cells_offset,
@@ -330,7 +334,7 @@ class MapDocument:
         if not self._fh.closed:
             self._fh.close()
 
-    def __enter__(self) -> "MapDocument":
+    def __enter__(self) -> MapDocument:
         return self
 
     def __exit__(self, *exc: object) -> None:
@@ -348,7 +352,7 @@ class MapDocument:
             self._sectors[index] = read_sector(self._fh, self.header, index)
         return self._sectors[index]
 
-    def iter_sectors(self) -> "Iterator[Sector]":
+    def iter_sectors(self) -> Iterator[Sector]:
         return (self.sector(i) for i in range(self.header.sector_count))
 
     def read_image_payload(self, sector: Sector) -> bytes:
@@ -396,10 +400,12 @@ class MapDocument:
 
     def collision_at(self, x: int, y: int) -> int | None:
         """Collision value for a pixel coordinate, on the 8 px GIRB grid."""
-        from .girb import CELL_PX as CPX, GRID_COLS, GRID_ROWS
+        from .girb import CELL_PX as CPX
+        from .girb import GRID_COLS, GRID_ROWS
         cx, cy = x // CPX, y // CPX
         sc, sr = cx // GRID_COLS, cy // GRID_ROWS
-        if not 0 <= sc < self.header.sector_columns or not 0 <= sr < self.header.sector_rows:
+        if (not 0 <= sc < self.header.sector_columns
+                or not 0 <= sr < self.header.sector_rows):
             return None
         index = sr * self.header.sector_columns + sc
         if index >= self.header.sector_count:
@@ -427,14 +433,16 @@ class MapDocument:
     def cell_at(self, x: int, y: int) -> int | None:
         """Raw LLEC byte for a pixel coordinate, or None outside the sector grid."""
         cx, cy = x // CELL_PX, y // CELL_PX
-        if not 0 <= cx < self.header.grid_columns or not 0 <= cy < self.header.grid_rows:
+        if (not 0 <= cx < self.header.grid_columns
+                or not 0 <= cy < self.header.grid_rows):
             return None
         sc, sr = cx // CELL_COLS_PER_SECTOR, cy // CELL_ROWS_PER_SECTOR
         index = sr * self.header.sector_columns + sc
         if index >= self.header.sector_count:
             return None
         cells = self.read_cells(self.sector(index))
-        return cells[(cy % CELL_ROWS_PER_SECTOR) * CELL_COLS_PER_SECTOR + cx % CELL_COLS_PER_SECTOR]
+        return cells[(cy % CELL_ROWS_PER_SECTOR) * CELL_COLS_PER_SECTOR
+                     + cx % CELL_COLS_PER_SECTOR]
 
     def summary(self) -> dict:
         h = self.header

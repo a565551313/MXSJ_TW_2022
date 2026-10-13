@@ -19,9 +19,9 @@ from __future__ import annotations
 
 import os
 import time
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Iterable
 
 from ..core.mapfile import MAGIC, sniff
 
@@ -172,12 +172,14 @@ def discover(
 def describe(layout: ClientLayout) -> str:
     """One-line human summary used by the UI status bar and the CLI."""
     if not layout.ok:
-        return f"{layout.root}: no 0.1M map files found ({layout.scanned_files} files scanned)"
+        return (f"{layout.root}: no 0.1M map files found "
+                f"({layout.scanned_files} files scanned)")
     sizes = {f"{m.size}" for m in layout.maps}
     return (f"{len(layout.maps)} maps under {layout.root} "
             f"({len(sizes)} distinct sizes, {layout.scanned_files} files scanned in "
             f"{layout.elapsed_s:.2f}s)"
-            + (f", script.fls: {layout.script_fls.name}" if layout.script_fls else ", no script.fls"))
+            + (f", script.fls: {layout.script_fls.name}" if layout.script_fls
+               else ", no script.fls"))
 
 
 __all__ = ["ClientLayout", "DiscoveryError", "MapFile", "MAGIC", "describe", "discover"]

@@ -74,6 +74,28 @@ PYTHONPATH=src python -m resource_editor ../data/skill.fls # 或直接给包路�
 ```
 
 或安装后使用入口脚本：`pip install -e .` 后执行 `mxsj-resource-editor`。
+`run.py` 是不装依赖、不自检的轻量入口（`python run.py [路径]`），
+主要给 PyInstaller 用；日常请走 `启动编辑器.bat` / `bootstrap.py`。
+
+## 打包成 EXE（在 Windows 上执行）
+
+```bat
+build_exe.bat
+:: 产物：dist\ResourceEditor\ResourceEditor.exe
+:: 单文件版： set RESOURCE_EDITOR_ONEFILE=1  然后再跑 build_exe.bat
+```
+
+`build_exe.bat`（纯 ASCII、CRLF）依次：探测 `py -3`/`python` → 建或复用 `.venv` →
+`pip install -r requirements-dev.txt` → 跑全部 `unittest`（`PYTHONPATH=src`、
+`QT_QPA_PLATFORM=offscreen`，不通过就不出包）→
+`python -m PyInstaller --noconfirm --clean resource_editor.spec`。spec 把
+`src/resource_editor/data/known_paths.txt` 打进 `resource_editor/data/`，与源码里
+`Path(__file__).parent.parent / "data"` 的查找方式一致；`console=False`，双击直接开窗。
+
+> 流程与 [`docs/PYTHON_TOOL_CONVENTIONS.md`](../docs/PYTHON_TOOL_CONVENTIONS.md) §4
+> 一致。PyInstaller 不能跨平台：Linux 沙箱只做了 spec 干跑（onedir / onefile 都能
+> 完整构建出 Linux 产物，数据文件落位正确），**`.exe` 尚未在 Windows 上实际构建和
+> 双击验收**（STATUS §3.5）。
 
 ## 测试
 

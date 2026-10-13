@@ -21,13 +21,27 @@ from pathlib import Path
 from PySide6.QtCore import QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QColor, QImage, QPainter, QPen
 from PySide6.QtWidgets import (
-    QAbstractItemView, QApplication, QCheckBox, QDoubleSpinBox, QFileDialog,
-    QGroupBox, QHBoxLayout, QHeaderView, QLabel, QMainWindow, QMessageBox,
-    QPushButton, QScrollArea, QSpinBox, QTableWidget, QTableWidgetItem,
-    QToolBar, QVBoxLayout, QWidget,
+    QAbstractItemView,
+    QApplication,
+    QCheckBox,
+    QDoubleSpinBox,
+    QFileDialog,
+    QGroupBox,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QSpinBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
 )
 
-from ..client.config import Config
 from ..client.discovery import DiscoveryError
 from ..core.girb import EMPTY_FILL
 from ..core.mapfile import CELL_PX, SECTOR_PX_H, SECTOR_PX_W, MapFormatError
@@ -53,7 +67,7 @@ class MapCanvas(QWidget):
         super().__init__()
         self.vm = vm
         self.zoom = 1.0
-        self._cache: "OrderedDict[tuple[int, int], QImage]" = OrderedDict()
+        self._cache: OrderedDict[tuple[int, int], QImage] = OrderedDict()
         # Set by EditorWindow right after construction: panning scrolls this
         # QScrollArea's bars rather than moving the canvas itself.
         self.scroll_area: QScrollArea | None = None
@@ -251,7 +265,8 @@ class MapCanvas(QWidget):
             self.vm.state.status = (
                 f"像素 {x},{y} · 格 {info['cell'][0]},{info['cell'][1]}"
                 + (f" · 扇区 {info['sector']}" if "sector" in info else "")
-                + (f" · LLEC={info['cell_value']}" if info["cell_value"] is not None else ""))
+                + (f" · LLEC={info['cell_value']}"
+                   if info["cell_value"] is not None else ""))
             window = self.window()
             if isinstance(window, EditorWindow):
                 window.set_cursor_status(self.vm.state.status)
@@ -413,7 +428,8 @@ class EditorWindow(QMainWindow):
     # -- actions ----------------------------------------------------------
     def pick_client_root(self) -> None:
         start = self.vm.config.client_root or str(Path.home())
-        chosen = QFileDialog.getExistingDirectory(self, "选择《夢想世界》客户端根目录", start)
+        chosen = QFileDialog.getExistingDirectory(
+            self, "选择《夢想世界》客户端根目录", start)
         if not chosen:
             return
         self.edit_root.setText(chosen)
@@ -540,8 +556,10 @@ class EditorWindow(QMainWindow):
         if self.vm.document is None:
             return
         doc = self.vm.document
-        default = f"{self.vm.state.current_key}_{doc.header.width}x{doc.header.height}.png"
-        dest, _ = QFileDialog.getSaveFileName(self, "导出 PNG", default, "PNG 图片 (*.png)")
+        default = (f"{self.vm.state.current_key}_"
+                   f"{doc.header.width}x{doc.header.height}.png")
+        dest, _ = QFileDialog.getSaveFileName(self, "导出 PNG", default,
+                                              "PNG 图片 (*.png)")
         if not dest:
             return
         if doc.header.width * doc.header.height > 40_000_000:
@@ -565,7 +583,8 @@ class EditorWindow(QMainWindow):
         if self.vm.document is None:
             return
         default = f"{self.vm.state.current_key}_map.json"
-        dest, _ = QFileDialog.getSaveFileName(self, "导出 JSON", default, "JSON (*.json)")
+        dest, _ = QFileDialog.getSaveFileName(self, "导出 JSON", default,
+                                              "JSON (*.json)")
         if not dest:
             return
         try:

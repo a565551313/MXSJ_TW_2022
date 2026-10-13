@@ -63,7 +63,7 @@ class SceneTable:
         self.source = source
 
     @classmethod
-    def load(cls, path: Path | str | None = None) -> "SceneTable":
+    def load(cls, path: Path | str | None = None) -> SceneTable:
         p = Path(path) if path else default_table_path()
         try:
             doc = json.loads(p.read_text(encoding="utf-8"))

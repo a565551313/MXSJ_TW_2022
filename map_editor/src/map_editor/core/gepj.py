@@ -66,7 +66,8 @@ def build_jpeg_header(payload: bytes, head_len: int) -> bytes:
     return _SOI + header[4:-11] + _SOS_FIXED
 
 
-def split_scans(payload: bytes, segment_lengths: tuple[int, ...] | list[int]) -> list[bytes]:
+def split_scans(payload: bytes,
+                segment_lengths: tuple[int, ...] | list[int]) -> list[bytes]:
     """Return the twelve raw, unstuffed 80x80 scan streams."""
     if len(segment_lengths) != 13 or any(n < 1 for n in segment_lengths):
         raise GepjError("expected 13 nonempty GEPJ segments")
@@ -99,7 +100,8 @@ def decode_scan(jpeg_header: bytes, scan: bytes) -> bytes:
         raise GepjError(f"JPEG decode failed: {exc}") from exc
 
 
-def decode_sector_image(payload: bytes, segment_lengths: tuple[int, ...] | list[int]) -> RgbImage:
+def decode_sector_image(payload: bytes,
+                        segment_lengths: tuple[int, ...] | list[int]) -> RgbImage:
     """Decode a whole sector payload into a 320x240 RGB image."""
     head_len = segment_lengths[0]
     jpeg_header = build_jpeg_header(payload, head_len)
@@ -148,7 +150,8 @@ def _composite(doc: MapDocument, x0: int, y0: int, x1: int, y1: int) -> RgbImage
     for sr in range(sr0, min(sr1, rows - 1) + 1):
         for sc in range(sc0, min(sc1, cols - 1) + 1):
             sector: Sector = doc.sector(sr * cols + sc)
-            img = decode_sector_image(doc.read_image_payload(sector), sector.segment_lengths)
+            img = decode_sector_image(doc.read_image_payload(sector),
+                                      sector.segment_lengths)
             _blit(canvas, out_w, out_h, x0, y0, img, sector.origin_x, sector.origin_y)
     return RgbImage(out_w, out_h, bytes(canvas))
 

@@ -84,7 +84,8 @@ class TestValuesRoundTrip(unittest.TestCase):
 def _corpus_root():
     env = os.environ.get("MXSJ_DLG_CORPUS")
     candidates = [env] if env else []
-    candidates.append("/home/user/interface_dlg_decoded")
+    # 开发沙箱里的语料库兜底路径；目录不存在时整组测试 skipTest，Windows 上不受影响。
+    candidates.append("/home/user/interface_dlg_decoded")  # win-ok: 缺则跳过
     for cand in candidates:
         if cand and Path(cand).is_dir():
             return Path(cand)

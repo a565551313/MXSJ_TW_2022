@@ -89,7 +89,7 @@
 1. **PEP 8 + 模块化**：`ruff check <tool>` 0 报告（规则 `E,W,F,I,UP,B`、88 列、py310；根 `ruff.toml` 是默认值，工具自己的 `pyproject.toml` 照抄一份）。`src/<package>/{core,gui}` 分层，`core` 不 import Qt、可在无显示器环境测试；路径用 `pathlib`，文本 IO 必须显式 `encoding="utf-8"`。
 2. **GUI 一律 PySide6**（≥ 6.4）。不新增 tkinter / PyQt / wx 代码；现有 tkinter 工具只保留，不修补。
 3. **必须有自检并启动脚本**：`bootstrap.py`（检查 Python ≥ 3.10、缺依赖自动 `pip install` 并带国内镜像回退、`--check-only`、失败写 `启动日志.txt` 并停住不闪退）+ `启动<工具名>.bat`（CRLF、纯 ASCII、`chcp 65001`、`py -3` → `python` 探测）。参考实现 `resource_editor/bootstrap.py`。
-4. **必须有一键构建 EXE 脚本**：`build_exe.bat` + `<tool>.spec`（venv → 依赖 → 测试 → PyInstaller → `dist\<Name>\<Name>.exe`；GUI 用 `console=False` 且无参数双击必须直接开窗）。EXE 只能在 Windows 上构建：Linux 侧把 spec 写对并干跑，Windows 侧构建并把结果写回 STATUS。参考实现 `map_editor/build.bat`。
+4. **必须有一键构建 EXE 脚本**：`build_exe.bat` + `<tool>.spec`（venv → 依赖 → 测试 → PyInstaller → `dist\<Name>\<Name>.exe`；GUI 用 `console=False` 且无参数双击必须直接开窗）。EXE 只能在 Windows 上构建：Linux 侧把 spec 写对并干跑，Windows 侧构建并把结果写回 STATUS。参考实现 `map_editor/build_exe.bat`（三个编辑器的 `build_exe.bat` 同一模板）+ `map_editor/map_editor.spec`。
 5. **Linux 开发 → Windows 交付前必查**：`ruff check` → 单元测试（`QT_QPA_PLATFORM=offscreen`）→ `bootstrap.py --check-only` → `python3 tools/devkit/check_windows_compat.py <tool>`（0 ERROR，WARNING 逐条修掉或说明）→ 过一遍 CONVENTIONS §5.2 人工清单（路径大小写、编码、`sys.executable`、文件锁、`%APPDATA%`）。PR 描述分三栏写 **Linux 已做 / Windows 待验 / 已知差异**；没在 Windows 实机跑过就不能写「可用」。
 
 ## 6. 工作方式
