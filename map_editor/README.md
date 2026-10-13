@@ -14,6 +14,17 @@
 
 ## 1. 快速开始
 
+### Windows 用户：双击即用
+
+双击 **`启动地图编辑器.bat`**。它调用 `bootstrap.py`：检查 Python ≥ 3.10 →
+缺 PySide6 / Pillow 时自动 `pip install`（官方源失败自动换清华/阿里云镜像）→
+打开图形界面。任何异常都会写进同目录 `启动日志.txt` 并停在窗口里，不会一闪而过。
+只想检查环境不开窗口：`python bootstrap.py --check-only`（退出码 0 = 就绪）。
+
+> 2026-10-14 起按 [`docs/PYTHON_TOOL_CONVENTIONS.md`](../docs/PYTHON_TOOL_CONVENTIONS.md) §3
+> 补齐；bat 与 `bootstrap.py` 在 Linux 沙箱里只验证到「依赖检查 + 离屏开窗」，
+> **尚未在 Windows 实机双击过**（见 STATUS §3.5）。
+
 ### 开发环境（任意平台）
 
 ```bash
@@ -51,16 +62,21 @@ python runGUI.py --client-root "D:/Games/MXSJ"         # 同上，顺便记住�
 ### 打包成 EXE（在 Windows 上执行）
 
 ```bat
-build.bat
+build_exe.bat
 :: 产物：dist\MapEditor\MapEditor.exe
-:: 单文件版： set MAP_EDITOR_ONEFILE=1  然后再跑 build.bat
+:: 单文件版： set MAP_EDITOR_ONEFILE=1  然后再跑 build_exe.bat
 ```
 
-`build.bat` 会依次：建虚拟环境 → 装依赖 → **跑测试** → PyInstaller 打包。
-测试不通过就不会出包。
+`build_exe.bat`（原 `build.bat`，2026-10-14 按约定改名并重写为纯 ASCII）会依次：
+探测 `py -3`/`python` → 建或复用 `.venv` → `pip install -r requirements-dev.txt` →
+**跑测试**（`QT_QPA_PLATFORM=offscreen`，不通过就不出包）→
+`python -m PyInstaller --noconfirm --clean map_editor.spec`。
 
-> 本仓库的开发沙箱是 Linux，PyInstaller 无法跨平台生成 `.exe`，
-> 所以打包这一步由你在 Windows 上执行。
+> 本仓库的开发沙箱是 Linux，PyInstaller 无法跨平台生成 `.exe`，所以打包这一步
+> 由你在 Windows 上执行。Linux 侧已做 spec 干跑（onedir + onefile 都能完整
+> 构建出 Linux 产物，`map_editor_data/scenes_tw_v2_27_2.json` 落在包内），并顺手
+> 修了 spec 里缺 `exclude_binaries=not ONEFILE` 导致 onedir 模式 `COLLECT` 必然
+> 报错的问题——这正是「从未在 Windows 构建过」才会残留的 bug。
 
 ---
 
@@ -68,10 +84,13 @@ build.bat
 
 ```
 map_editor/
+├── 启动地图编辑器.bat          Windows 双击入口（纯 ASCII、CRLF；调用 bootstrap.py）
+├── bootstrap.py               自检并启动：Python 版本、缺依赖自动装（带国内镜像回退）、失败写 启动日志.txt
 ├── run.py                     入口（薄壳，转发给 map_editor.cli；默认命令行，--gui 才开窗口）
 ├── runGUI.py                  纯 GUI 入口（薄壳，强制补 --gui 再转发给 map_editor.cli；无论传什么参数都直接开窗口）
-├── build.bat                  Windows 打包脚本
-├── map_editor.spec            PyInstaller 配置（含数据文件打包）
+├── build_exe.bat              Windows 一键打包脚本（venv → 依赖 → 测试 → PyInstaller）
+├── map_editor.spec            PyInstaller 配置（含数据文件打包；MAP_EDITOR_ONEFILE=1 切单文件）
+├── requirements.txt           运行期依赖；requirements-dev.txt 另加 pyinstaller
 ├── data/
 │   └── scenes_tw_v2_27_2.json 104 个场景的名称/尺寸表（可选，缺失不影响功能）
 ├── src/map_editor/
@@ -87,7 +106,7 @@ map_editor/
 │   └── ui/
 │       ├── viewmodel.py       **全部编辑器逻辑，零 Qt 依赖** → 可无头测试
 │       └── widgets.py         PySide6 薄绑定层（唯一 import Qt 的文件）
-└── tests/                     41 个用例，全部可在无 Qt 环境运行
+└── tests/                     88 个用例，全部可在无 Qt 环境运行（含 bootstrap 自检逻辑测试）
 ```
 
 ---

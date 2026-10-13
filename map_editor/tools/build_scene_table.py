@@ -50,9 +50,11 @@ def main() -> int:
     sizes = {(v["w"], v["h"]) for v in scenes.values()}
     doc = {
         "schema": 1,
-        "source": "data/script.fls entries 1301 (scene dictionary) and 400 (minimap names)",
+        "source": ("data/script.fls entries 1301 (scene dictionary) "
+                   "and 400 (minimap names)"),
         "client": "MXSJ TW v2.27.2",
-        "note": "Regenerate with tools/build_scene_table.py; the editor works without this file.",
+        "note": ("Regenerate with tools/build_scene_table.py; "
+                 "the editor works without this file."),
         "scene_count": len(scenes),
         "distinct_sizes": len(sizes),
         "scenes": dict(sorted(scenes.items())),

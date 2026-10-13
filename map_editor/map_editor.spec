@@ -1,8 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
 """PyInstaller spec for the MXSJ map editor.
 
-Build on Windows:      build.bat
-Single-file EXE:       set MAP_EDITOR_ONEFILE=1 && build.bat
+Build on Windows:      build_exe.bat
+Single-file EXE:       set MAP_EDITOR_ONEFILE=1  then run build_exe.bat again
+Linux dry run only:    pyinstaller --noconfirm --clean map_editor.spec
+                       (proves hiddenimports/datas are complete; no .exe)
 """
 import os
 
@@ -36,6 +38,9 @@ exe = EXE(
     a.binaries if ONEFILE else [],
     a.datas if ONEFILE else [],
     [],
+    # onedir: binaries/datas go to COLLECT below; without this flag PyInstaller
+    # treats the EXE as onefile and COLLECT then fails (caught by the Linux dry run).
+    exclude_binaries=not ONEFILE,
     name="MapEditor",
     debug=False,
     bootloader_ignore_signals=False,

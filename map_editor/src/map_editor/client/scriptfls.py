@@ -47,7 +47,8 @@ def u32(data: bytes, offset: int) -> int:
     return struct.unpack_from("<I", data, offset)[0]
 
 
-def decode_directory(index: int, raw: tuple[int, int, int, int]) -> tuple[int, int, int]:
+def decode_directory(index: int,
+                     raw: tuple[int, int, int, int]) -> tuple[int, int, int]:
     """Invert the directory obfuscation.
 
     Mirrors the transform used by ``tools/fls_batch_decoder.py``:
@@ -79,7 +80,7 @@ class FlsArchive:
         if not self._fh.closed:
             self._fh.close()
 
-    def __enter__(self) -> "FlsArchive":
+    def __enter__(self) -> FlsArchive:
         return self
 
     def __exit__(self, *exc: object) -> None:

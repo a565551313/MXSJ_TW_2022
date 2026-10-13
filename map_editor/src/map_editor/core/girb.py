@@ -151,7 +151,8 @@ def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
     def literal(count: int) -> None:
         nonlocal i
         if i + count > payload:
-            raise GirbError(f"literal run of {count} runs past the {payload}-byte payload")
+            raise GirbError(
+                f"literal run of {count} runs past the {payload}-byte payload")
         out.extend(buf[i:i + count])
         i += count
 

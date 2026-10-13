@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Iterable
 
 from ..client.config import Config
 from ..client.discovery import ClientLayout, DiscoveryError, discover
@@ -116,7 +116,8 @@ class EditorViewModel:
         self._rows: list[MapRow] = []
 
     # -- client root ------------------------------------------------------
-    def set_client_root(self, root: str | Path, progress: Progress | None = None) -> None:
+    def set_client_root(self, root: str | Path,
+                        progress: Progress | None = None) -> None:
         """Scan a client directory.  Raises :class:`DiscoveryError` if unusable."""
         def cb(count: int, _path: Path) -> None:
             if progress:
@@ -148,7 +149,8 @@ class EditorViewModel:
                     rows.append(MapRow(m.scene_key, name, h.width, h.height,
                                        h.sector_count, m.size, m.path))
             except (MapFormatError, OSError) as exc:
-                rows.append(MapRow(m.scene_key, name, 0, 0, 0, m.size, m.path, str(exc)))
+                rows.append(MapRow(m.scene_key, name, 0, 0, 0, m.size, m.path,
+                                   str(exc)))
                 self.state.errors.append(f"{m.path.name}: {exc}")
         self._rows = rows
         return rows
@@ -256,8 +258,9 @@ class EditorViewModel:
                         failed += 1
                     else:
                         decoded += 1
-                values.append(None if vals is None
-                              else vals[(cy % GRID_ROWS) * GRID_COLS + (cx % GRID_COLS)])
+                values.append(
+                    None if vals is None
+                    else vals[(cy % GRID_ROWS) * GRID_COLS + (cx % GRID_COLS)])
         return {"origin_cell": (cx0, cy0), "cols": cx1 - cx0, "rows": cy1 - cy0,
                 "cell_px": CELL_PX, "values": values,
                 "decoded": decoded, "failed": failed}
@@ -275,7 +278,8 @@ class EditorViewModel:
             try:
                 self.open_map(r)
                 st = self.collision_stats()
-                lengths = sorted({len(s.girb_body) for s in self._require_doc().iter_sectors()})
+                lengths = sorted({len(s.girb_body)
+                                  for s in self._require_doc().iter_sectors()})
                 st.update({"key": r.key, "name": r.name,
                            "size": f"{r.width}x{r.height}",
                            "girb_len_min": lengths[0], "girb_len_max": lengths[-1]})
@@ -362,10 +366,12 @@ class EditorViewModel:
             ]
         p = dest  # already a Path, already guarded above
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
+        p.write_text(json.dumps(payload, ensure_ascii=False, indent=1),
+                     encoding="utf-8")
         return p
 
-    def export_png(self, dest: str | Path, region: tuple[int, int, int, int] | None = None) -> Path:
+    def export_png(self, dest: str | Path,
+                   region: tuple[int, int, int, int] | None = None) -> Path:
         """Write a PNG.  Pillow writes the file, so no external tool is needed."""
         from PIL import Image
         p = self._guard_export_target(dest)
