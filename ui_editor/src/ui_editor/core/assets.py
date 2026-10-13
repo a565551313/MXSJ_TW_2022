@@ -19,47 +19,30 @@ from . import dlg_codec, sprite
 from .catalog import known_layout_hashes, known_layout_paths
 from .errors import DlgError
 from .pack import FlsPack
+from .pack_build import unpack_packed_text  # noqa: F401  转发
 from .styles import StyleBook
-
-_KNOWN_HEADER = b"# -*- coding: gbk -*-"
-_HEADER_PREFIX4 = b"# -*"
 
 __all__ = ["AssetResolver", "unpack_packed_text"]
 
-
-def _xor4(data: bytes, key: bytes) -> bytes:
-    return bytes(b ^ key[i & 3] for i, b in enumerate(data))
-
-
-def unpack_packed_text(data: bytes) -> bytes:
-    """把包内文本还原为明文字节：明文直接返回，XOR 加密则解开。
-
-    先按已知文件头反推 4 字节密钥；不成再用列频率法恢复（明文
-    本身列频率得全零密钥）；都不成时原样返回，交给上层报错。
-    """
-    if data.startswith(_KNOWN_HEADER[:5]) or data[:1] == b"[":
-        return data  # .dlg 明文或 ui.lst（INI）
-    key = bytes(a ^ b for a, b in
-                zip(data[:4], _HEADER_PREFIX4, strict=False))
-    decoded = _xor4(data, key)
-    if decoded.startswith(_KNOWN_HEADER):
-        return decoded
-    return _xor4(data, _recover_key_by_frequency(data))
+_MEDIA_EXTS = (".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif",
+               ".igs", ".wav", ".mp3", ".ogg")
 
 
-def _recover_key_by_frequency(data: bytes) -> bytes:
-    favourites = set(
-        b" etaoinshrdlu=(){}_#'\"0123456789.,:[]\n\t<>")
-    key = bytearray(4)
-    for r in range(4):
-        column = data[r::4][:2048]
-        best_score, best = -1, 0
-        for cand in range(256):
-            score = sum(1 for b in column if (b ^ cand) in favourites)
-            if score > best_score:
-                best_score, best = score, cand
-        key[r] = best
-    return bytes(key)
+def _walk_strings(value: object):
+    """递归产出解析后布局里的全部字符串值。"""
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for item in value.values():
+            yield from _walk_strings(item)
+    elif isinstance(value, (list, tuple)):
+        for item in value:
+            yield from _walk_strings(item)
+
+
+def _looks_media(text: str) -> bool:
+    return (("\\" in text or "/" in text)
+            and text.lower().endswith(_MEDIA_EXTS))
 
 
 class AssetResolver:
@@ -70,6 +53,7 @@ class AssetResolver:
         self._loose_dirs: list[Path] = []
         self._bytes_cache: dict[str, bytes | None] = {}
         self._image_cache: dict[str, list[QImage] | None] = {}
+        self._media_cache: list[str] | None = None
 
     # -- 挂载 -----------------------------------------------------
     def mount_pack(self, path: str | Path) -> FlsPack:
@@ -77,6 +61,7 @@ class AssetResolver:
         self._packs.append(pack)
         self._bytes_cache.clear()
         self._image_cache.clear()
+        self._media_cache = None
         return pack
 
     def mount_dir(self, dirpath: str | Path) -> int:
@@ -96,6 +81,7 @@ class AssetResolver:
         root = Path(dirpath)
         if root not in self._loose_dirs:
             self._loose_dirs.append(root)
+            self._media_cache = None
 
     @property
     def pack_paths(self) -> list[Path]:
@@ -120,6 +106,37 @@ class AssetResolver:
         """目录中被引用、但该包里没有的布局（死引用/热更新候选）。"""
         found = set(self.scan_layouts(pack_path))
         return [p for p in known_layout_paths() if p not in found]
+
+    def _exists(self, name: str) -> bool:
+        """资源是否真在某个包/散装目录里（只查索引与文件存在性）。"""
+        for pack in self._packs:
+            if pack.contains(name):
+                return True
+        rel = Path(name.replace("\\", os.sep).replace("/", os.sep))
+        return any((root / rel).is_file() for root in self._loose_dirs)
+
+    def media_candidates(self) -> list[str]:
+        """包内可选媒体资源路径清单（供"从资源包选择"对话框）。
+
+        0SLF 包不存文件名，能列出的名字来自已知布局：逐个解开
+        已命名的 .dlg，把里面引用的图片/音频路径扒出来，再只留
+        挂载的包/目录里真有的。首次构建需解开全部已命名布局
+        （一次性，结果缓存；挂载变化自动失效）。
+        """
+        if self._media_cache is not None:
+            return self._media_cache
+        found: set[str] = set()
+        for pack in self._packs:
+            for layout in pack.matched_paths(known_layout_hashes()):
+                got = self.fetch_dlg(layout)
+                if got is None:
+                    continue
+                for text in _walk_strings(got[0]):
+                    if _looks_media(text):
+                        found.add(text)
+        self._media_cache = sorted(
+            path for path in found if self._exists(path))
+        return self._media_cache
 
     @property
     def summary(self) -> str:

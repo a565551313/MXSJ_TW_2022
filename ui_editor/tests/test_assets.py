@@ -77,6 +77,30 @@ class TestAssetResolver(unittest.TestCase):
         self.resolver.close()
         self._tmp.cleanup()
 
+    def test_media_candidates_from_named_layouts(self):
+        # 用真实目录里的布局名 booth.dlg 作种子：它引用的图在包
+        # 里有才入清单，引用了但包里没有的被过滤掉
+        dlg_plain = dlg_codec.dump_bytes(
+            [{"sWidgetType": "CMainFrame", "sName": "root",
+              "lChildren": [
+                  {"sWidgetType": "CImage", "sFileName": "test/pic.igs"},
+                  {"sWidgetType": "CImage",
+                   "sFileName": "test/gone.png"}]}],
+            md5="0" * 32)
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "cand.fls"
+            pack_path.write_bytes(build_pack([
+                ("test/pic.igs", make_sprite()),
+                ("booth.dlg", xor4(dlg_plain, b"\x5a\xa5\x11\x7e")),
+            ]))
+            resolver = AssetResolver()
+            resolver.mount_pack(pack_path)
+            try:
+                self.assertEqual(resolver.media_candidates(),
+                                 ["test/pic.igs"])
+            finally:
+                resolver.close()
+
     def test_fetch_styles(self):
         book = self.resolver.fetch_styles()
         self.assertIsNotNone(book)

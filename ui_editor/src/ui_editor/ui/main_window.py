@@ -2,8 +2,8 @@
 
 布局：左侧（布局文件树 + 控件树）、中央画布、右侧（属性面板 +
 控件调色板）。打开来源两种：散装 ``.dlg`` 文件/目录，以及从
-``interface.fls`` 等资源包按路径直开（自动解密）。保存一期只写
-散装 ``.dlg``（回写包内放二期）。
+``interface.fls`` 等资源包按路径直开（自动解密）；保存可写散装
+``.dlg``，也可生成写回布局的新资源包（原包不动，见 M1）。
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ from pathlib import Path
 from PySide6.QtCore import QSettings, Qt
 from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
+    QApplication,
     QFileDialog,
     QMainWindow,
     QMessageBox,
@@ -24,10 +25,11 @@ from PySide6.QtWidgets import (
 )
 
 from .. import __version__
-from ..core import dlg_codec
+from ..core import dlg_codec, pack_build
 from ..core.assets import AssetResolver
 from ..core.catalog import known_layout_paths
 from ..core.model import LayoutDocument, Widget
+from ..core.pack import FlsPack
 from ..core.painters import PaintContext
 from ..core.styles import StyleBook
 from .canvas import CanvasView, LayoutScene
@@ -56,6 +58,7 @@ class MainWindow(QMainWindow):
         self.resource_panel = ResourceTreePanel()
         self.tree_panel = WidgetTreePanel()
         self.props_panel = PropertyPanel()
+        self.props_panel.assets = self.resolver  # 文件字段从包里选
         self.palette_panel = PalettePanel()
         self._build_docks()
         self._build_menus()
@@ -110,6 +113,8 @@ class MainWindow(QMainWindow):
         self._add_action(file_menu, "保存", self.save,
                          QKeySequence.StandardKey.Save)
         self._add_action(file_menu, "另存为…", lambda: self.save_as())
+        self._add_action(file_menu, "保存回资源包（生成新包）…",
+                         self.save_to_pack_dialog)
         self._add_action(file_menu, "导出 PNG…", self.export_png)
         file_menu.addSeparator()
         self._add_action(file_menu, "退出", self.close,
@@ -345,12 +350,139 @@ class MainWindow(QMainWindow):
         if self.doc.source_path:
             self._write_to(self.doc.source_path)
         elif self.doc.source_pack:
-            QMessageBox.information(
-                self, "保存为散装文件",
-                "一期暂不支持回写资源包（.fls），请另存为散装 .dlg。")
-            self.save_as()
+            box = QMessageBox(self)
+            box.setWindowTitle("保存")
+            box.setText("这个布局来自资源包，要怎么保存？原包不会被修改。")
+            to_pack = box.addButton(
+                "存回资源包（生成新包）", QMessageBox.ButtonRole.AcceptRole)
+            box.addButton("另存为散装 .dlg", QMessageBox.ButtonRole.ActionRole)
+            box.addButton(QMessageBox.StandardButton.Cancel)
+            box.exec()
+            if box.clickedButton() is to_pack:
+                self.save_to_pack_dialog()
+            elif box.clickedButton() is not None and \
+                    box.button(QMessageBox.StandardButton.Cancel) \
+                    is not box.clickedButton():
+                self.save_as()
         else:
             self.save_as()
+
+    # -- 写回资源包 ---------------------------------------------------
+    def write_pack_copy(self, out_path: str) -> dict | None:
+        """把当前包内布局写回一个新包文件（原包不动）。返回校验报告。
+
+        写后硬性校验：条目数一致、除目标外每条存储字节一致、
+        用全新解析器回读目标布局与当前文档逐字段一致；任一不
+        过返回 None 并说明（弹错在对话框层，这里只记报告）。
+        """
+        if self.doc is None or not self.doc.source_pack:
+            return None
+        src_pack, res_path = self.doc.source_pack
+        plain = dlg_codec.dump_bytes(self.doc.to_dicts())
+        tmp_out = str(out_path)
+        info = pack_build.patch_pack_copy(
+            src_pack, res_path, plain, tmp_out)
+        report: dict = {"out": tmp_out, "bytes": info["bytes"],
+                        "mode": info["mode"]}
+        try:
+            from ..core.assets import AssetResolver as _Resolver
+
+            with FlsPack(src_pack) as before, FlsPack(tmp_out) as after:
+                if before.count != after.count:
+                    report["error"] = "条目数变化，写回结果不可信"
+                    return report
+                target_index = info["target_index"]
+                mismatched = 0
+                for index in range(before.count):
+                    # 快速补丁不挪动其他条目：span 未变即可断定
+                    # 存储字节未变，跳过读取（目标条目即便 span
+                    # 未变也要比内容，它可能只是等长改字）
+                    if (before._spans[index] == after._spans[index]
+                            and index != target_index):
+                        continue
+                    a = before.read_index(index)
+                    b = after.read_index(index)
+                    if a != b:
+                        mismatched += 1
+                # 允许且只允许 1 条不同（目标条目本身）
+                if mismatched > 1:
+                    report["error"] = f"有 {mismatched} 条条目被意外改变"
+                    return report
+                report["changed_entries"] = mismatched
+            fresh = _Resolver()
+            fresh.mount_pack(tmp_out)
+            try:
+                got = fresh.fetch_dlg(res_path)
+            finally:
+                fresh.close()
+            if got is None:
+                report["error"] = "新包回读目标布局失败"
+                return report
+            dicts = self.doc.to_dicts()
+            if got[0] != dicts:
+                report["error"] = "新包回读内容与当前文档不一致"
+                return report
+        except Exception as exc:
+            report["error"] = f"写回校验失败：{exc}"
+            return report
+        report["ok"] = True
+        # 状态迁移：已验证落盘，标记干净并让后续保存续写新包
+        self.doc.dirty = False
+        self.doc.source_pack = (tmp_out, res_path)
+        self._update_title()
+        return report
+
+    def save_to_pack_dialog(self) -> None:
+        if self.doc is None or not self.doc.source_pack:
+            QMessageBox.information(
+                self, "保存回资源包",
+                "当前布局不是从资源包打开的（散装/新建布局请直接保存）。")
+            return
+        src_pack, res_path = self.doc.source_pack
+        default = str(Path(src_pack).with_name(
+            Path(src_pack).stem + "_patched.fls"))
+        path, _ = QFileDialog.getSaveFileName(
+            self, "保存回资源包（生成新包，原包不动）", default,
+            "资源包 (*.fls);;所有文件 (*)")
+        if not path:
+            return
+        if Path(path) == Path(src_pack):
+            answer = QMessageBox.warning(
+                self, "要覆盖原包吗？",
+                "你选了原包本身。强烈建议改存为新文件，并保留原包备份。\n"
+                "确定要直接覆盖原包吗？",
+                QMessageBox.StandardButton.Yes
+                | QMessageBox.StandardButton.No)
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+        overwritten = Path(path) == Path(src_pack)
+        self._update_status("正在写回资源包并校验…")
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            report = self.write_pack_copy(path)
+        except Exception as exc:
+            QMessageBox.warning(self, "写回失败", str(exc))
+            return
+        finally:
+            QApplication.restoreOverrideCursor()
+        if not report or not report.get("ok"):
+            QMessageBox.warning(
+                self, "写回校验未通过",
+                (report or {}).get("error", "未知错误")
+                + "\n新包文件已生成但不可信，请勿替换进客户端。")
+            return
+        fast = report.get("mode") in ("inplace", "relocated")
+        tail = ("已直接覆盖原文件——请确认你手边留有原包备份。"
+                if overwritten else
+                "原包未被修改。安装时请在完整客户端副本上操作：先备份"
+                "原包，再把新包改名替换，最后进游戏验证该界面。")
+        QMessageBox.information(
+            self, "已生成新包",
+            f"已写回：{res_path}\n新包：{path}\n"
+            f"条目校验通过（改变 {report.get('changed_entries', 0)} 条，"
+            f"大小 {report['bytes']} 字节"
+            + ("，快速补丁未重写整包" if fast else "") + "）。\n\n"
+            + tail)
 
     def save_as(self, path: str | None = None) -> bool:
         if self.doc is None:

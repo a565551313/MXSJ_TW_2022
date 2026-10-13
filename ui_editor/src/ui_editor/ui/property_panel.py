@@ -10,7 +10,9 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
+    QApplication,
     QCheckBox,
+    QDialog,
     QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
@@ -73,6 +75,8 @@ class PropertyPanel(QWidget):
         self._widget: Widget | None = None
         self._building = False
         self._getters: dict[str, object] = {}
+        # 主窗口注入资源解析器：文件字段优先从资源包里选
+        self.assets = None
 
         root = QVBoxLayout(self)
         self._header = QLabel("未选中控件")
@@ -246,6 +250,45 @@ class PropertyPanel(QWidget):
             return edit
         return None
 
+    _IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif",
+                   ".igs")
+    _AUDIO_EXTS = (".wav", ".mp3", ".ogg")
+
+    def _browse_from_pack(self, key: str, edit: QLineEdit) -> bool:
+        """优先从已挂载资源包里选（返回 False 表示改走外部文件）。
+
+        包里选的路径本来就在包内，布局保存回资源包后游戏按
+        路径哈希即可找到，不丢图。没有挂载包、或用户在选择窗
+        里点了"从外部文件…"时返回 False 落到旧外部流程。
+        """
+        assets = self.assets
+        if assets is None or not assets._packs:
+            return False
+        from .image_picker import ResourcePickerDialog
+
+        exts = self._AUDIO_EXTS if key == "sSoundPath" else self._IMAGE_EXTS
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            candidates = [p for p in assets.media_candidates()
+                          if p.lower().endswith(exts)]
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        def thumb(path: str):
+            frames = assets.fetch_image(path)
+            return frames[0] if frames else None
+
+        dialog = ResourcePickerDialog(
+            self, "从资源包选择（选完保存回包不丢图）",
+            candidates, edit.text(),
+            thumb if key != "sSoundPath" else None)
+        if (dialog.exec() == QDialog.DialogCode.Accepted
+                and dialog.selected_path()):
+            edit.setText(dialog.selected_path())
+            self._commit(key, edit.text())
+            return True
+        return dialog.external_requested is not True
+
     def _with_browse(self, key: str, edit: QLineEdit) -> QWidget:
         host = QWidget()
         layout = QHBoxLayout(host)
@@ -253,9 +296,13 @@ class PropertyPanel(QWidget):
         layout.addWidget(edit, 1)
         browse = QToolButton()
         browse.setText("…")
-        browse.setToolTip("从散装文件选择（只取文件名，包内资源请直接填路径）")
+        browse.setToolTip(
+            "从资源包选择（优先）；包内没有的也可改选外部文件"
+            "（只取文件名，图本身不进包）")
 
         def _pick() -> None:
+            if self._browse_from_pack(key, edit):
+                return  # 已在包内选择窗处理完（选定或取消）
             path, _ = QFileDialog.getOpenFileName(
                 self, "选择图片文件", edit.text(),
                 "图片 (*.igs *.png *.jpg *.jpeg *.bmp);;所有文件 (*)")

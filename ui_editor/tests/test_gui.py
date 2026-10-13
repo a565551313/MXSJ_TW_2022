@@ -381,3 +381,98 @@ class TestGenerationMarks(unittest.TestCase):
         self.panel._search.setText("gone")
         self.assertFalse(missing.isHidden())
         self.assertTrue(live.isHidden())
+
+
+class TestSaveToPack(unittest.TestCase):
+    """M1 写回：从包打开 -> 改 -> 生成新包 -> 回读一致、原包不动。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+
+    def test_write_pack_copy_verified(self):
+        import tempfile
+
+        from ui_editor.core.assets import AssetResolver
+
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "interface_mini.fls"
+            pack_path.write_bytes(_mini_pack_bytes("dialog/cateroom.dlg"))
+            before_bytes = pack_path.read_bytes()
+            self.window.open_pack_file(str(pack_path))
+            self.window._open_pack_layout(
+                str(pack_path), "dialog/cateroom.dlg")
+            doc = self.window.doc
+            self.assertIsNotNone(doc)
+            doc.roots[0].props["sTitle"] = "改過的新標題"
+            doc.dirty = True
+            out = str(Path(tmp) / "interface_patched.fls")
+            report = self.window.write_pack_copy(out)
+            self.assertIsNotNone(report)
+            self.assertTrue(report.get("ok"), report)
+            self.assertEqual(pack_path.read_bytes(), before_bytes)  # 原包不动
+            self.assertFalse(doc.dirty)
+            fresh = AssetResolver()
+            fresh.mount_pack(out)
+            try:
+                got = fresh.fetch_dlg("dialog/cateroom.dlg")
+            finally:
+                fresh.close()
+            self.assertIsNotNone(got)
+            self.assertEqual(got[0][0]["sTitle"], "改過的新標題")
+
+
+class TestImagePicker(unittest.TestCase):
+    """从资源包选择图片：对话框过滤/选择 + 属性面板已接解析器。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def test_filter_and_select(self):
+        from ui_editor.ui.image_picker import ResourcePickerDialog
+
+        paths = ["combdialog4\\底板\\a.png",
+                 "combdialog4\\新登陸介面\\底板800.png",
+                 "dialog\\other.jpg"]
+        dialog = ResourcePickerDialog(None, "t", paths, paths[0])
+        self.assertEqual(dialog.selected_path(), paths[0])  # 当前值预选
+        dialog._search.setText("底板800")
+        self.assertEqual(dialog._list.count(), 1)
+        item = dialog._list.item(0)
+        dialog._list.setCurrentItem(item)
+        self.assertEqual(dialog.selected_path(), paths[1])
+        dialog._search.setText("")
+        self.assertEqual(dialog._list.count(), 3)
+        dialog.close()
+
+    def test_external_button_requests_fallback(self):
+        from ui_editor.ui.image_picker import ResourcePickerDialog
+
+        dialog = ResourcePickerDialog(None, "t", ["a\\x.png"])
+        dialog._choose_external()
+        self.assertTrue(dialog.external_requested)
+
+    def test_main_window_wires_resolver_to_props(self):
+        from ui_editor.ui.main_window import MainWindow
+
+        window = MainWindow()
+        try:
+            self.assertIs(window.props_panel.assets, window.resolver)
+        finally:
+            window.close()
+            window.deleteLater()
+            self._app.processEvents()
