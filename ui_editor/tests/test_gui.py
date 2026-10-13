@@ -788,3 +788,67 @@ class TestAlignGridZoom(unittest.TestCase):
         self.assertEqual(w._zoom_label.text(), "缩放 100%")
         w.view.zoom_changed.emit(2.5)
         self.assertEqual(w._zoom_label.text(), "缩放 250%")
+
+
+class TestButtonStatePreview(unittest.TestCase):
+    """M3.2：竖条三态图在按下态预览画中段、正常态整图，像素不同。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+
+    def tearDown(self):
+        self.window.ctx.button_state = "normal"
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+
+    def test_pressed_state_changes_rendered_pixels(self):
+        import tempfile
+
+        from PySide6.QtGui import QColor, QImage, QPainter
+
+        with tempfile.TemporaryDirectory() as tmp:
+            strip = QImage(80, 72, QImage.Format.Format_ARGB32)
+            painter = QPainter(strip)
+            painter.fillRect(0, 0, 80, 24, QColor(200, 0, 0))
+            painter.fillRect(0, 24, 80, 24, QColor(0, 200, 0))
+            painter.fillRect(0, 48, 80, 24, QColor(0, 0, 200))
+            painter.end()
+            strip_path = Path(tmp) / "strip.png"
+            self.assertTrue(strip.save(str(strip_path)))
+
+            w = self.window
+            w.new_layout()
+            doc = w.doc
+            assert doc is not None
+            w.resolver.mount_dir(tmp)
+            frame = doc.roots[0]
+            w._select_widget(frame)
+            w.add_widget("CButton")
+            button = w.current_selection()
+            button.set_geometry(x=10, y=20, width=80, height=24)
+            button.props["sFileName"] = "strip.png"
+            w.scene.refresh_all()
+
+            def sample() -> tuple[int, int, int]:
+                image = w.view.export_image()
+                rect = w.scene.itemsBoundingRect()
+                color = image.pixelColor(int(50 - rect.left()),
+                                         int(26 - rect.top()))
+                return color.red(), color.green(), color.blue()
+
+            normal = sample()
+            w.set_button_state("pressed")
+            pressed = sample()
+            self.assertNotEqual(normal, pressed)
+            # 按下态取竖条中段（纯绿），各分量以绿为主
+            self.assertGreater(pressed[1], 150)
+            self.assertLess(pressed[0], 80)

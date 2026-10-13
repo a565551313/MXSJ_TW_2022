@@ -33,6 +33,7 @@ class PaintContext:
     assets: AssetResolver
     styles: StyleBook = field(default_factory=StyleBook)
     show_names: bool = True
+    button_state: str = "normal"  # 按钮状态预览：normal/pressed/hover/disabled
     _pixmaps: dict[tuple[str, int], QPixmap] = field(default_factory=dict)
 
     def pixmap(self, name: str, frame: int = 0) -> QPixmap | None:
@@ -314,12 +315,77 @@ def _paint_grid(p: QPainter, w: Widget, ctx: PaintContext) -> None:
                          QColor(140, 180, 255))
 
 
+# -- 按钮多状态（M3.2：精灵帧 / 竖条多态 / 模拟三路） ----------------
+_BUTTON_STATE_INDEX = {"pressed": 1, "hover": 2, "disabled": 3}
+
+
+def state_slice(img_w: int, img_h: int, widget_w: int, widget_h: int,
+                frame_count: int, state_idx: int):
+    """判定非正常态画哪一块。
+
+    返回 ("frame", 帧序号) —— 精灵帧够数；或 ("strip",
+    (x, y, w, h)) —— 单图高度至少是控件高两倍时按等分竖条切
+    （按钮图常见的一图多态排法）；都不满足返回 None（走模拟）。
+    """
+    if state_idx <= 0:
+        return None
+    if frame_count > state_idx:
+        return ("frame", state_idx)
+    if widget_h > 0 and img_h >= widget_h * 2:
+        parts = img_h // widget_h
+        if 2 <= parts <= 8 and state_idx < parts:
+            return ("strip", (0, state_idx * widget_h, img_w, widget_h))
+    return None
+
+
+def _button_state_pixmap(ctx: PaintContext, name: str, w: Widget):
+    """按当前 button_state 取 (pixmap, 源矩形)；正常态返回 None。"""
+    state = ctx.button_state
+    if state == "normal" or state not in _BUTTON_STATE_INDEX:
+        return None
+    idx = _BUTTON_STATE_INDEX[state]
+    frames = ctx.assets.fetch_image(name) or []
+    base = ctx.pixmap(name, 0)
+    if base is None:
+        return None
+    found = state_slice(base.width(), base.height(),
+                        w.width, w.height, len(frames), idx)
+    if found is None:
+        return None
+    kind, payload = found
+    if kind == "frame":
+        pixmap = ctx.pixmap(name, payload)  # type: ignore[arg-type]
+        if pixmap is not None:
+            return pixmap, QRectF(pixmap.rect())
+        return None
+    return base, QRectF(*payload)  # type: ignore[operator]
+
+
+def _simulate_state_overlay(p: QPainter, rect: QRectF,
+                            ctx: PaintContext) -> None:
+    """切不出真状态时的近似预览（压暗/提亮/灰化），仅供编辑参考。"""
+    state = ctx.button_state
+    if state == "pressed":
+        p.fillRect(rect, QColor(0, 0, 0, 70))
+        p.setPen(QPen(QColor(0, 0, 0, 120), 1))
+        p.drawLine(rect.topLeft(), rect.topRight())
+    elif state == "hover":
+        p.fillRect(rect, QColor(255, 255, 255, 45))
+    elif state == "disabled":
+        p.fillRect(rect, QColor(128, 128, 128, 110))
+
+
 def _paint_button(p: QPainter, w: Widget, ctx: PaintContext) -> None:
     rect = _rect(w, ctx)
     name = str(w.props.get("sFileName", "") or "")
     pixmap = ctx.pixmap(name) if name else None
     if pixmap is not None:
-        p.drawPixmap(rect, pixmap, QRectF(pixmap.rect()))
+        stated = _button_state_pixmap(ctx, name, w) if name else None
+        if stated is not None:
+            p.drawPixmap(rect, stated[0], stated[1])
+        else:
+            p.drawPixmap(rect, pixmap, QRectF(pixmap.rect()))
+            _simulate_state_overlay(p, rect, ctx)
         return
     gradient = QLinearGradient(rect.topLeft(), rect.bottomLeft())
     gradient.setColorAt(0, QColor(108, 124, 152))
@@ -336,7 +402,12 @@ def _paint_text_button(p: QPainter, w: Widget, ctx: PaintContext) -> None:
     name = str(w.props.get("sFileName", "") or "")
     pixmap = ctx.pixmap(name) if name else None
     if pixmap is not None:
-        p.drawPixmap(rect, pixmap, QRectF(pixmap.rect()))
+        stated = _button_state_pixmap(ctx, name, w) if name else None
+        if stated is not None:
+            p.drawPixmap(rect, stated[0], stated[1])
+        else:
+            p.drawPixmap(rect, pixmap, QRectF(pixmap.rect()))
+            _simulate_state_overlay(p, rect, ctx)
     else:
         style = ctx.styles.tbstyle(_int(w, "iStyle"))
         color = _color_from_value(w.props.get("lNormalColor"), None) \

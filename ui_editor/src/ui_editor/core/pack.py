@@ -41,12 +41,13 @@ class FlsPack:
         self.path = Path(path)
         self._fh = open(self.path, "rb")
         try:
-            self._spans, self._by_id = self._read_index()
+            self._spans, self._by_id, self._ids = self._read_index()
         except Exception:
             self._fh.close()
             raise
 
-    def _read_index(self) -> tuple[list[tuple[int, int]], dict[int, int]]:
+    def _read_index(self) -> tuple[list[tuple[int, int]], dict[int, int],
+                                   list[int]]:
         fh = self._fh
         fh.seek(0, 2)
         size = fh.tell()
@@ -66,6 +67,7 @@ class FlsPack:
             raise PackError(f"目录区读取不完整：{self.path}")
         spans: list[tuple[int, int]] = []
         by_id: dict[int, int] = {}
+        ids: list[int] = []
         for index in range(count):
             raw = struct.unpack_from("<IIII", dir_data, index * DIR_RECORD_SIZE)
             clen, doff = decode_directory(index, raw)
@@ -73,11 +75,27 @@ class FlsPack:
                 raise PackError(f"条目 {index} 负载越界：{self.path}")
             spans.append((doff, clen))
             by_id.setdefault(raw[0], index)
-        return spans, by_id
+            ids.append(raw[0])
+        return spans, by_id, ids
 
     @property
     def count(self) -> int:
         return len(self._spans)
+
+    @property
+    def entry_ids(self) -> list[int]:
+        """目录中的条目号列表（按目录顺序；真实包恒为升序）。"""
+        return self._ids
+
+    def span_of(self, entry_id: int) -> tuple[int, int] | None:
+        """按条目号查 (负载偏移, 长度)；不在包中返回 None。"""
+        index = self._by_id.get(entry_id)
+        return None if index is None else self._spans[index]
+
+    def read_id(self, entry_id: int) -> bytes | None:
+        """按条目号读存储字节；不在包中返回 None。"""
+        index = self._by_id.get(entry_id)
+        return None if index is None else self.read_index(index)
 
     def read_index(self, index: int) -> bytes:
         """按条目下标读取存储字节。"""

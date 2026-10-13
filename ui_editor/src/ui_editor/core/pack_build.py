@@ -16,6 +16,17 @@
 
 写后校验由调用方负责（用 FlsPack 重开、fetch_dlg 回读比对）。
 
+**目录不变量（真实包实测，写回必须维持）**：6 个真实 0SLF 包
+（script/effect/skill/skill2/passive/magicres5，共 6,056 条）一致
+满足：目录记录按 ``entry_id`` 严格升序、目录区恰在文件尾、每条
+记录的 ``r1`` 均非零。引擎按有序目录寻址（条目偏移的闭式变换
+含目录下标），新增条目若只是把记录追加到目录尾并给 ``r1=0``，
+自家线性解析读得到、引擎却查不到（甚至连累邻近条目），表现为
+新条目丢失、重开计数变少、进游戏卡屏。故新增必须**按
+entry_id 排序插入**（插入点之后记录的下标变化，r3 按新下标
+重算），新记录的 r1 用 :func:`fresh_r1` 给出非零值；若待写源包
+的目录已经乱序（旧版本写坏的包），保存时整包重组顺带修复。
+
 大包快速路径（编辑器的保存入口用这组）：
 :func:`patch_dlg_entry_in_file` 只改目标条目的负载与它那一条
 16 字节目录记录——新负载变短/等长就原位替换（多出的旧字节
@@ -28,6 +39,7 @@
 
 from __future__ import annotations
 
+import bisect
 import shutil
 import struct
 from pathlib import Path
@@ -44,6 +56,7 @@ __all__ = [
     "build_archive",
     "dump_archive",
     "entry_xor_key",
+    "fresh_r1",
     "parse_archive",
     "patch_dlg_entry_in_file",
     "patch_pack_copy",
@@ -52,6 +65,15 @@ __all__ = [
     "replace_dlg_entry_to_file",
     "unpack_packed_text",
 ]
+
+
+def fresh_r1(entry_id: int) -> int:
+    """给新增条目定一个非零 r1（真实包 6,056 条无一为 0）。
+
+    长度的闭式变换对任何 r1 都成立（写回时按选定 r1 反算 r2），
+    故只需确定性地非零：黄金比例乘子散列 entry_id，为零取 1。
+    """
+    return ((entry_id * 0x9E3779B1) & MASK32) or 1
 
 _KNOWN_HEADER = b"# -*- coding: gbk -*-"
 _HEADER_PREFIX4 = b"# -*"
@@ -88,26 +110,36 @@ def parse_archive(data: bytes) -> list[RawEntry]:
 
 
 def build_archive(entries: list[RawEntry]) -> bytes:
-    """按给定顺序重组归档：负载自 12 起紧凑排布，目录置于末尾。
+    """重组归档：负载自 12 起紧凑排布，目录按 entry_id 升序置于尾。
 
-    每条记录的 r1 沿用原值；r2/r3 由长度/偏移闭式重算，因而
-    长度变化只影响该条目自身与其后条目的偏移簿记，存储字节
-    一概不动。
+    每条记录的 r1 沿用原值（为 0 的换 :func:`fresh_r1`，见模块
+    文档的目录不变量）；r2/r3 由长度/偏移闭式重算，存储字节
+    一概不动。排序使本函数同时成为乱序目录的修复路径。
     """
     import io
 
+    ordered = sorted(entries, key=lambda e: e.entry_id)
     buffer = io.BytesIO()
-    dump_archive(entries, buffer)
+    dump_archive(ordered, buffer)
     return buffer.getvalue()
 
 
+def _effective_r1(entry: RawEntry) -> int:
+    """写回时实际使用的 r1：原值非零沿用，为零换确定性非零值。"""
+    return entry.r1 if entry.r1 else fresh_r1(entry.entry_id)
+
+
 def dump_archive(entries: list[RawEntry], fh) -> int:
-    """流式写出归档到二进制文件对象，返回总字节数（大包省内存）。"""
+    """流式写出归档到二进制文件对象，返回总字节数（大包省内存）。
+
+    按给定顺序写出（重组入口 build_archive 已排序）；r2/r3 闭式
+    重算，r1 为零者以 :func:`fresh_r1` 代替。
+    """
     offset = _HEADER.size
     r2_of = []
     for entry in entries:
-        r2_of.append((((entry.r1 * entry.entry_id + 0x0DF25E) & MASK32)
-                      ^ len(entry.stored)) & MASK32)
+        r2_of.append(((_effective_r1(entry) * entry.entry_id
+                       + 0x0DF25E) & MASK32 ^ len(entry.stored)) & MASK32)
         offset += len(entry.stored)
     total = offset + len(entries) * DIR_RECORD_SIZE
     fh.write(_HEADER.pack(MAGIC, len(entries), offset))
@@ -116,7 +148,8 @@ def dump_archive(entries: list[RawEntry], fh) -> int:
     for index, entry in enumerate(entries):
         r3 = (((r2_of[index] * index * 0x00F718FE + 0x0D59D16C) & MASK32)
               ^ offset) & MASK32
-        records.append(_RECORD.pack(entry.entry_id, entry.r1,
+        records.append(_RECORD.pack(entry.entry_id,
+                                    _effective_r1(entry),
                                     r2_of[index], r3))
         fh.write(entry.stored)
         offset += len(entry.stored)
@@ -366,10 +399,12 @@ def patch_raw_entry_in_file(pack_path, entry_id: int,
                             new_stored: bytes) -> dict:
     """按 entry_id 写入任意条目的存储字节（图片/音频等原样数据）。
 
-    条目已存在同 _write_located 的原位/迁移规则；不存在则在
-    目录原址追加负载、目录后移并扩一条记录（mode="added"，
-    其余条目序号与偏移不变）。返回 {"mode", "target_index",
-    "bytes"}。
+    条目已存在同 _write_located 的原位/迁移规则；不存在则新增：
+    负载写在目录原址，目录按 entry_id 升序整表重写（新记录以
+    :func:`fresh_r1` 插入有序位置，其后记录的下标变化，r3 按
+    新下标重算——见模块文档的目录不变量；源目录若已乱序也因此
+    顺带修复）。返回 {"mode", "target_index", "bytes"}，
+    target_index 为新记录在有序目录中的位置。
     """
     path = Path(pack_path)
     file_size, count, dir_offset, dir_data, spans, records = \
@@ -383,20 +418,32 @@ def patch_raw_entry_in_file(pack_path, entry_id: int,
                 entry_id=entry_id, r1=raw[1], doff=doff,
                 limit=_fit_limit(spans, doff, dir_offset, file_size),
                 new_stored=new_stored)
-    record = _dir_record(entry_id, 0, count, len(new_stored),
-                         dir_offset)
+    # 负载 + 新目录都写在目录原址起的连续区，与他条负载交叠则回退重组
+    new_end = dir_offset + len(new_stored) + (count + 1) * DIR_RECORD_SIZE
+    for off, ln in spans:
+        if off < new_end and dir_offset < off + ln:
+            raise _RebuildNeeded("新增条目与包内负载交叠")
+    order = sorted(range(count), key=lambda i: records[i][0])
+    sorted_ids = [records[i][0] for i in order]
+    pos = bisect.bisect_left(sorted_ids, entry_id)
+    rows = [(records[i][0], records[i][1] or fresh_r1(records[i][0]),
+             spans[i][1], spans[i][0]) for i in order]
+    rows.insert(pos, (entry_id, fresh_r1(entry_id),
+                      len(new_stored), dir_offset))
+    new_dir = b"".join(
+        _dir_record(eid, r1, index, clen, doff)
+        for index, (eid, r1, clen, doff) in enumerate(rows))
     with open(path, "r+b") as fh:
         fh.seek(dir_offset)
         fh.write(new_stored)
-        fh.write(dir_data)
-        fh.write(record)  # 新目录 = 旧目录 + 追加的一条记录
+        fh.write(new_dir)
         fh.seek(0)
         fh.write(_HEADER.pack(MAGIC, count + 1,
                               dir_offset + len(new_stored)))
         fh.flush()
         fh.seek(0, 2)
         size = fh.tell()
-    return {"mode": "added", "target_index": count, "bytes": size}
+    return {"mode": "added", "target_index": pos, "bytes": size}
 
 
 def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
@@ -409,43 +456,60 @@ def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
 
     extra_entries 为 {资源路径: 存储字节}：随布局一并写入的
     附加条目（如本次编辑新加的图片），路径已存在则替换其内容，
-    不存在则按路径哈希新增。报告以 images_added/images_replaced
-    汇报，并以 changed_indexes 给出允许内容不同的条目序号集合
-    （含布局条目与被替换的附加条目），供调用方逐条校验。
+    不存在则按路径哈希新增（排序插入，维持目录升序不变量）。
+    源包目录若已乱序（旧版写坏的包）或负载交叠无法快速补丁，
+    回退整包重组（build_archive 排序写目录，顺带修复）。
+
+    报告以 images_added/images_replaced 汇报，并以 changed_ids
+    给出允许内容不同的条目号集合（布局条目与被替换的附加
+    条目；新增条目不在内，其下标会平移其后条目，故校验须按
+    条目号而非序号比对）。
     """
     src, out = Path(archive_path), Path(out_path)
+    extras = dict(extra_entries or {})
     try:
         same = src.resolve() == out.resolve()
     except OSError:
         same = str(src) == str(out)
-    _plan_patch(src, res_path, new_plain)  # 先只读侦察，失败不落盘
-    try:
-        if not same:
-            with open(src, "rb") as fin, open(out, "wb") as fout:
-                shutil.copyfileobj(fin, fout, 8 * 1024 * 1024)
-        info = patch_dlg_entry_in_file(out, res_path, new_plain)
-    except _RebuildNeeded:  # 病态包回退整包重组（慢，但正确）
-        out.write_bytes(replace_dlg_entry(src.read_bytes(),
-                                          res_path, new_plain))
-        info = {"mode": "rebuild",
-                "target_index": -1, "bytes": out.stat().st_size}
-    changed = set()
-    if info["target_index"] >= 0:
-        changed.add(info["target_index"])
+    plan = _plan_patch(src, res_path, new_plain)  # 先只读侦察，失败不落盘
+    src_ids = [_RECORD.unpack_from(plan.dir_data, i * DIR_RECORD_SIZE)[0]
+               for i in range(plan.count)]
+    need_rebuild = any(a > b for a, b in
+                       zip(src_ids, src_ids[1:], strict=False))
     added: list[str] = []
     replaced: list[str] = []
-    for name in sorted(extra_entries or {}):
-        entry_id = mx_hash(name.encode("gbk", "replace"))
-        result = patch_raw_entry_in_file(
-            out, entry_id, (extra_entries or {})[name])
-        if result["mode"] == "added":
-            added.append(name)
-        else:
-            replaced.append(name)
-            changed.add(result["target_index"])
+
+    def apply_extras() -> None:
+        added.clear()
+        replaced.clear()
+        for name in sorted(extras):
+            result = patch_raw_entry_in_file(
+                out, mx_hash(name.encode("gbk", "replace")),
+                extras[name])
+            (added if result["mode"] == "added"
+             else replaced).append(name)
+
+    info: dict | None = None
+    if not need_rebuild:
+        try:
+            if not same:
+                with open(src, "rb") as fin, open(out, "wb") as fout:
+                    shutil.copyfileobj(fin, fout, 8 * 1024 * 1024)
+            info = patch_dlg_entry_in_file(out, res_path, new_plain)
+            apply_extras()
+        except _RebuildNeeded:  # 病态包回退整包重组（慢，但正确）
+            need_rebuild = True
+    if need_rebuild:
+        out.write_bytes(replace_dlg_entry(src.read_bytes(),
+                                          res_path, new_plain))
+        apply_extras()
+        info = {"mode": "rebuild", "target_index": -1}
+    layout_id = mx_hash(res_path.encode("gbk", "replace"))
     info["images_added"] = added
     info["images_replaced"] = replaced
-    info["changed_indexes"] = sorted(changed)
+    info["changed_ids"] = sorted(
+        {layout_id} | {mx_hash(n.encode("gbk", "replace"))
+                       for n in replaced})
     info["bytes"] = out.stat().st_size
     info["out"] = str(out)
     return info

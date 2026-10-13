@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+from bisect import bisect_left
 from pathlib import Path
 
 from PySide6.QtCore import QSettings, QSize, Qt
@@ -33,6 +34,7 @@ from ..core import dlg_codec, pack_build, snap
 from ..core.assets import AssetResolver
 from ..core.catalog import known_layout_paths
 from ..core.model import LayoutDocument, Widget
+from ..core.mxhash import mx_hash
 from ..core.pack import FlsPack
 from ..core.painters import PaintContext
 from ..core.styles import StyleBook
@@ -145,6 +147,19 @@ class MainWindow(QMainWindow):
         self._act_grid = QAction("显示网格与标尺", self, checkable=True)
         self._act_grid.toggled.connect(self._toggle_grid)
         view_menu.addAction(self._act_grid)
+        state_menu = view_menu.addMenu("按钮状态预览")
+        self._button_state_actions: dict[str, QAction] = {}
+        for state_key, state_label in (("normal", "正常"),
+                                       ("pressed", "按下"),
+                                       ("hover", "悬停"),
+                                       ("disabled", "禁用")):
+            act = QAction(state_label, self, checkable=True)
+            act.setChecked(state_key == "normal")
+            act.triggered.connect(
+                lambda _checked=False, k=state_key:
+                self.set_button_state(k))
+            state_menu.addAction(act)
+            self._button_state_actions[state_key] = act
 
         edit_menu = self.menuBar().addMenu("编辑")
         self._undo_action = QAction("撤销", self)
@@ -235,6 +250,30 @@ class MainWindow(QMainWindow):
         align_btn.setMenu(align_menu)
         bar.addWidget(align_btn)
         self._align_btn = align_btn
+        state_btn = QToolButton(self)
+        state_btn.setText("按钮态")
+        state_btn.setIcon(icons.icon_button_state())
+        state_btn.setToolTip("切换画布上按钮的预览状态（正常/按下/悬停/禁用）")
+        state_btn.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        state_btn.setPopupMode(
+            QToolButton.ToolButtonPopupMode.InstantPopup)
+        state_menu = QMenu(state_btn)
+        self._button_state_btn_actions: dict[str, QAction] = {}
+        for state_key, state_label in (("normal", "正常"),
+                                       ("pressed", "按下"),
+                                       ("hover", "悬停"),
+                                       ("disabled", "禁用")):
+            act = state_menu.addAction(state_label)
+            act.setCheckable(True)
+            act.setChecked(state_key == "normal")
+            act.triggered.connect(
+                lambda _checked=False, k=state_key:
+                self.set_button_state(k))
+            self._button_state_btn_actions[state_key] = act
+        state_btn.setMenu(state_menu)
+        bar.addWidget(state_btn)
+        self._button_state_btn = state_btn
         self._toolbar = bar
         # 状态栏右端常驻缩放百分比
         self._zoom_label = QLabel("100%", self)
@@ -509,8 +548,10 @@ class MainWindow(QMainWindow):
 
         选图窗新加且被本布局引用到的图片随布局一并写入（按路径
         新增或替换）。写后硬性校验：条目数 = 原数 + 新增图片数、
-        除布局条目与这些图片外每条存储字节一致、用全新解析器
-        回读目标布局与当前文档逐字段一致、新图逐字节回读一致；
+        新包目录按条目号升序且布局与新图都能被二分查找命中
+        （模拟引擎寻址）、条目集合与预期一致、除布局条目与这些
+        图片外每条（按条目号）存储字节一致、用全新解析器回读
+        目标布局与当前文档逐字段一致、新图逐字节回读一致；
         任一不过返回 None 并说明（弹错在对话框层，这里只记报告）。
         """
         if self.doc is None or not self.doc.source_pack:
@@ -533,23 +574,48 @@ class MainWindow(QMainWindow):
                 if after.count != expected:
                     report["error"] = "条目数变化，写回结果不可信"
                     return report
-                allowed = set(info["changed_indexes"])
-                mismatched = 0
-                for index in range(before.count):
+                ids_after = after.entry_ids
+                if any(a > b for a, b in
+                       zip(ids_after, ids_after[1:], strict=False)):
+                    report["error"] = ("新包目录未按条目号升序，"
+                                        "引擎可能查不到条目")
+                    return report
+
+                def engine_finds(entry_id: int) -> bool:
+                    """模拟引擎按有序目录二分寻址：找得到才算写入成功。"""
+                    j = bisect_left(ids_after, entry_id)
+                    return j < len(ids_after) and ids_after[j] == entry_id
+
+                added_ids = {mx_hash(n.encode("gbk", "replace"))
+                             for n in info["images_added"]}
+                if set(ids_after) != set(before.entry_ids) | added_ids:
+                    report["error"] = "新包条目集合与预期不符，写回结果不可信"
+                    return report
+                for name in [res_path, *extras]:
+                    if not engine_finds(mx_hash(name.encode("gbk",
+                                                             "replace"))):
+                        report["error"] = f"新包中二分查找不到：{name}"
+                        return report
+                allowed = set(info["changed_ids"])
+                changed = 0
+                unexpected = 0
+                for entry_id in before.entry_ids:
                     # 快速补丁不挪动其他条目：span 未变即可断定
                     # 存储字节未变，跳过读取（允许变化的条目即便
                     # span 未变也要比内容，可能只是等长改字）
-                    if (before._spans[index] == after._spans[index]
-                            and index not in allowed):
+                    if (entry_id not in allowed
+                            and before.span_of(entry_id)
+                            == after.span_of(entry_id)):
                         continue
-                    a = before.read_index(index)
-                    b = after.read_index(index)
-                    if a != b:
-                        mismatched += 1
-                if mismatched > len(allowed):
-                    report["error"] = f"有 {mismatched} 条条目被意外改变"
+                    if before.read_id(entry_id) != after.read_id(entry_id):
+                        if entry_id in allowed:
+                            changed += 1
+                        else:
+                            unexpected += 1
+                if unexpected:
+                    report["error"] = f"有 {unexpected} 条条目被意外改变"
                     return report
-                report["changed_entries"] = mismatched
+                report["changed_entries"] = changed
             fresh = _Resolver()
             fresh.mount_pack(tmp_out)
             try:
@@ -927,6 +993,23 @@ class MainWindow(QMainWindow):
     def _on_zoom_changed(self, factor: float) -> None:
         if hasattr(self, "_zoom_label"):
             self._zoom_label.setText(f"缩放 {round(factor * 100)}%")
+
+    def set_button_state(self, state: str) -> None:
+        """切换画布按钮预览状态（多帧/竖条图取真状态图，余者模拟）。
+
+        仅预览，不改文档；具体切法对不对以游戏内显示为准（M3.2）。
+        """
+        self.ctx.button_state = state
+        labels = {"normal": "正常", "pressed": "按下",
+                  "hover": "悬停", "disabled": "禁用"}
+        for group in (self._button_state_actions,
+                      getattr(self, "_button_state_btn_actions", {})):
+            for key, act in group.items():
+                act.setChecked(key == state)
+        self.scene.refresh_all()
+        self._update_status(
+            f"按钮预览切到「{labels.get(state, state)}」：多帧精灵与"
+            "竖条多态图显示对应状态，其余按钮为模拟效果（进游戏为准）。")
 
     def _toggle_grid(self, on: bool) -> None:
         self.scene.show_grid = on

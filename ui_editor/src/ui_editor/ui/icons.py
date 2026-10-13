@@ -234,3 +234,15 @@ def icon_align() -> QIcon:
     p.drawRoundedRect(QRectF(8, 12.5, 9, 4), 1.6, 1.6)
     p.drawRoundedRect(QRectF(8, 19, 12, 4), 1.6, 1.6)
     return _end(pixmap, p)
+
+
+def icon_button_state() -> QIcon:
+    """按钮态：一半亮一半暗的钮。"""
+    pixmap, p = _begin()
+    p.setPen(_pen("#274b7a"))
+    p.setBrush(QColor("#79a6e8"))
+    p.drawRoundedRect(QRectF(4.5, 8.5, 19, 11), 3, 3)
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor(0, 0, 0, 80))
+    p.drawRoundedRect(QRectF(14, 8.5, 9.5, 11), 3, 3)
+    return _end(pixmap, p)
