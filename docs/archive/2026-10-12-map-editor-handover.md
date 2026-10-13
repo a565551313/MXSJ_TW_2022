@@ -1,3 +1,7 @@
+> ⚠️ **已归档（2026-10-14 整理）**：原 `work/dream-world-connect-login-map/report/map-editor-handover-20261012.md`。地图编辑器一期（PR #25）交接报告，其中成功率/格式结论部分已被后续字节级复核推翻。
+> 文中“当前/下一步/分支”等描述是 2026-10-12 前后的历史快照，路径与计数可能已失效；保留仅用于证据追溯。
+> 现行内容以 [map_editor/PR25_REVIEW.md（独立审查与修复状态）](../../map_editor/PR25_REVIEW.md)；[map_editor/README.md](../../map_editor/README.md) 为准。
+
 # 地图编辑器 交接文档
 
 **日期** 2026-10-12

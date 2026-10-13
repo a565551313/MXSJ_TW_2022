@@ -1,3 +1,7 @@
+> ⚠️ **已归档（2026-10-14 整理）**：原 `server/docs/CLIENT_DATA_AGENT_HANDOFF.md`。首批客户端静态数据提取的早期分工交接，其计数与“未完成”状态已被 batch_001 取代。
+> 文中“当前/下一步/分支”等描述是 2026-10-11 前后的历史快照，路径与计数可能已失效；保留仅用于证据追溯。
+> 现行内容以 [server/docs/csv_checks/BATCH_001.md](../../server/docs/csv_checks/BATCH_001.md)；[server/docs/CSV_READINESS.md](../../server/docs/CSV_READINESS.md) 为准。
+
 # 交给另一位 Agent：客户端静态配置提取正确性检查
 
 ## 任务目标

@@ -1,0 +1,111 @@
+# AGENTS.md — MXSJ_TW_2022 接手指南
+
+> 给任何 AI Agent / 新成员的**长期有效**入口：只写规则、地图、命令和红线。
+> “现在红什么、下一步做什么、谁在等谁”这类会过期的信息**只**写在 [`docs/STATUS.md`](docs/STATUS.md)，每轮工作结束时更新那里，不要改这里。
+
+## 0. 这是什么 / 不是什么
+
+- 围绕《夢想世界》台服客户端 **v2.27.2**（多益网络）的逆向研究 + 工具链 + Python 私服重建。仓库根目录**就是一份游戏安装目录**，上面叠加了工具与文档。
+- **不是**可游玩的服务端，也**不是**已验收的客户端发行版。服务端目前只有契约与设计（`server/src/mxsj_server/` 无运行代码）。
+- 项目原则：**能展示 ≠ 能运行，能运行 ≠ 正确，测试通过 ≠ 原生验收完成。** 所有完成声明都要有范围、版本和可追溯证据。
+
+## 1. 开始前的 60 秒
+
+1. 读本文 → 读 [`docs/STATUS.md`](docs/STATUS.md)（当前状态、红灯、待办）→ 读你要碰的子目录自己的 `README.md` / `DESIGN.md`。
+2. `git status --short && git branch --show-current && git log -5 --oneline`。看到 untracked 目录**不要删**，看到旧 HEAD **不要覆盖**：先对比远程再决定（历史上发生过快照回退）。
+3. 核对锁定输入未被改动：
+   ```bash
+   sha256sum data/script.fls tools/decompiler/script_fls_keys.json
+   # 8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72  data/script.fls
+   # 43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb  tools/decompiler/script_fls_keys.json
+   ```
+4. 本地克隆可能是 shallow（深度 2）；需要历史时用 `gh api repos/a565551313/MXSJ_TW_2022/commits?sha=<branch>` 或 `gh pr list --state all`。
+
+## 2. 目录地图
+
+| 路径 | 是什么 | 入口文档 |
+|---|---|---|
+| `AGENTS.md` / `README.md` / `docs/STATUS.md` | 规则 / 项目总览 / 当前状态 | 本文 |
+| `docs/archive/` | 已被取代的历史快照（只读，有横幅） | [`docs/archive/README.md`](docs/archive/README.md) |
+| `notes/` | 逆向**结案**笔记：双 VM opcode 表、0SLF 路径哈希与 `.dlg`、游戏数据 | 各文件自述 |
+| `work/dream-world-connect-login-map/` | 早期研究区（297 份笔记、证据、报告、专项工具）；客户端侧权威现状 = `report/client-status-20261012.md` | [`INDEX.md`](work/dream-world-connect-login-map/INDEX.md) |
+| `tools/decompiler/` | 双 VM 字节码反编译、5 段 XOR 重打包；`output/` 是反编译文本（**不准确、不可执行，只作线索**） | `notes/opcode_mapping_and_decompilation.md` |
+| `tools/data-parser/` | `universal_fls_tool.py`、`mx_path_hash.py`、`extract_dlg.py`、`i0_sprite.py`、精灵格式说明 | `I0_SPRITE_FORMAT.md` |
+| `tools/client_patches/` | 注册 UI 离线预览补丁（只改 entry 337/4007），构建器、测试、冻结资产、CPython 2.5 审计 | [`README.md`](tools/client_patches/README.md)、[`V3_3_DELIVERY_AND_ACCEPTANCE.md`](tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md) |
+| `tools/data-export/`、`tools/data_browser/`、`tools/dis_v43/`、`tools/*.py` | 历史数据导出/浏览/反汇编工具，仍可用但不是现行复核入口 | — |
+| `resource_editor/` | `.fls` 资源包浏览/编辑器（PySide6；core 无 Qt） | [`README.md`](resource_editor/README.md)、`DESIGN.md` |
+| `ui_editor/` | `.dlg` 布局可视化编辑器（PySide6；core 无 Qt） | [`README.md`](ui_editor/README.md)、`DESIGN.md`、`notes/ui_editor_phase2_design.md` |
+| `map_editor/` | 地图解析/渲染/导出 + GIRB 碰撞解码（PySide6 GUI 可选） | [`README.md`](map_editor/README.md)、[`PR25_REVIEW.md`](map_editor/PR25_REVIEW.md) |
+| `server/src/mxsj_server/` | 游戏服务端**骨架**：21 个模块只有 `contracts.py` | [`server/README.md`](server/README.md)、`server/docs/*.md` |
+| `server/src/mxsj_catalog/` + `server/apps/review_api/` + `server/apps/review_web/` | 只读静态数据复核链（加载器 → FastAPI → React） | `server/docs/review_browser/` |
+| `server/docs/csv_checks/batch_001/` | 首批待审 CSV + manifest + 证据（**不是**正式配置） | `server/docs/csv_checks/BATCH_001.md` |
+| `mock_server.py` | 历史联调 Mock（协议真值已按客户端修正，但从未与真机联调） | 文件头 docstring |
+| `data/*.fls`、`map/*.map`、`Fonts/`、`mx.exe`、`mxmain.dll`、`exe/python27*.dll` | 工具与逆向依赖的客户端材料；`.gitignore` 只白名单了部分 | — |
+| 其余根目录 `*.dll/*.exe/*.pak/music*/log/` | 客户端运行时与用户日志，工具不依赖；部分日志被 `work/.../evidence` 引用 | — |
+
+## 3. 环境与命令（从仓库根目录执行）
+
+| 组件 | 依赖 | 测试 / 运行 |
+|---|---|---|
+| 客户端补丁 | Python 3.11+ 标准库 | `python3 -m unittest discover -s tools/client_patches` |
+| 服务端骨架 / 来源映射 / 批次核验 | 标准库 | `python3 -m unittest discover -s server/tests/architecture`；`python3 server/tools/verify_source_map.py`；`python3 server/tools/export_review_csv.py --check` |
+| 复核目录 / API | `pip install -r server/apps/review_api/requirements.txt` | `python3 -m unittest discover -s server/tests/catalog`；`… -s server/tests/review_api`；运行 `python3 server/apps/review_api/main.py --host 0.0.0.0 --port 8000` |
+| 复核验收套件 | 同上，且 `uvicorn` 必须在 `python3` 的 PATH 环境里（测试会**原样执行文档里的启动命令**） | `python3 -m unittest discover -s server/tests/review_browser_acceptance` |
+| 复核网页 | Node ≥ 20.19，`npm ci --prefix server/apps/review_web` | `npm --prefix server/apps/review_web run typecheck && npm --prefix server/apps/review_web test`；开发 `npm run dev`（Vite 监听 0.0.0.0:5173，代理 `/api` 到 127.0.0.1:8000） |
+| 地图编辑器 | `Pillow>=10`；GUI 另需 PySide6 + 桌面 | `(cd map_editor && python3 -m unittest discover -s tests)`；`python3 map_editor/run.py --scan .` |
+| 资源编辑器 | PySide6 + Pillow | `(cd resource_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`；运行 `PYTHONPATH=resource_editor/src python3 -m resource_editor data`（或 `python3 resource_editor/bootstrap.py`） |
+| UI 编辑器 | PySide6（+Pillow 转精灵）；`.dlg` 语料库在 `MXSJ_DLG_CORPUS` | `(cd ui_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`；运行 `python3 ui_editor/bootstrap.py` |
+
+- 用仓库**外**的 venv（`python3 -m venv ../mxsj-venv`）；系统 pip 受 PEP 668 保护。
+- 无 `libGL.so.1` 的沙箱跑不了任何 Qt 测试（`test_gui*`、`test_painters`、`test_pack_build`、`test_batch_ops` 会 ImportError）；这是环境限制，**记录为未执行，不算通过**。
+- 冻结客户端片段需要 CPython **2.5.6**（仅编译/审计用，见 `tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md` §5），不是服务端运行版本。
+
+## 4. 红线（违反任何一条都要先停下来问）
+
+**数据与原包**
+1. 不覆盖 `data/script.fls`、`tools/decompiler/script_fls_keys.json` 或任何原始客户端包；所有生成物写到仓库外新目录。构建器拒绝非锁定基线时**不要放宽**。
+2. 不执行反编译/恢复出来的游戏模块，不 `eval` 任何数据；只做只读解析与受限字面量重建。不重建已删除的敏感 entry 1288 dump。
+3. 不把待审 CSV（`batch_001`）复制进 `server/game_data/`；缺失不补零、异常不静默修复、同名多候选不按名字合并、不用简繁替换掩盖解码损坏。
+4. 编辑器写回 `.fls` 时：原包不动、生成新包、写后逐条校验；目录按 entry_id 升序、新条目 `r1≠0`（见 `resource_editor/.../fls0slf.py` 模块注释）。导出目标不得是任何源资源路径或其别名。
+
+**客户端补丁**
+5. 注册预览只改 entry 337/4007；其余 5000 条与 entry 4806 逐字节不变。片段保持 Python 2.5 语法，用 CPython 2.5.6 编译后映射 opcode，不用 Python 3 编译。
+6. 首页标题独立、点击时才 `import register`、目标页构造成功后才隐藏当前页；不实例化原登录控制器；不恢复 reg2/2980 旧 UI。
+7. 不先上传未改完的候选让用户盲试；要求用户提供日志/截图时索取最小且脱敏的证据；只用假数据（`preview@example.invalid`）。
+
+**仓库与协作**
+8. 不 `git add` 生成的 FLS/ZIP、`node_modules`、编译器、浏览器缓存。新增大二进制前先问。
+9. 不切分支、不 force-push、不合入 `master`、不发布生产，除非用户当轮明确授权。PR 描述里**行为变更**（协议号、封包长度、导出写入、配置路径）必须写明，不能写成“只改注释”。
+10. 不自动启动根目录 `mock_server.py` 对真实客户端；先审查参数与副作用。
+11. 不索取、不记录真实账号、密码、票据、密钥；不改 Drive 权限、不发邮件。
+
+## 5. 工作方式
+
+- **事实 / 推断 / 设计三分开**：原字节、反汇编地址、测试输出是事实；“应该是”“推测为”要写明；设计文档不是实现。
+- **先复现，再修复，再补能复现旧 bug 的测试。** 不要只改测试期望让它变绿；记住本项目最贵的教训：*测试替身可能与实现共享同一个错误假设*（CClickBox 签名事故）——接口以原 code object / 反汇编核对。
+- **证据钉死输入**：许多测试把工具源码的 SHA-256 钉进证据 JSON（例如 `server/docs/csv_checks/agent_e_reproduction.json` 钉了 `tools/decompiler/batch_decompile.py`）。改这些工具后必须重新生成证据、逐字段 diff 并在提交信息里说明，否则架构测试会红。
+- **文档去处**：长期规则 → 本文；当前状态 → `docs/STATUS.md`；逆向结案 → `notes/`；子项目细节 → 子项目 README/DESIGN；被取代的快照 → `docs/archive/`（`git mv` + 横幅 + 修链接 + 登记索引，见 `docs/archive/README.md`）。不要再在根目录新建 `*_HANDOFF.md`。
+- **结束一轮工作时**：更新 `docs/STATUS.md`（日期、分支、测试实测、红灯、下一步），提交并推送到当前会话分支。
+- 多 Agent 并行时按 `server/docs/OWNERSHIP.md` 的目录所有权划分；跨模块只走 `contracts`。
+
+## 6. 已知坑（详见 STATUS 与各子项目文档）
+
+- GIRB 碰撞解码仍有 300/429 扇区解不出；现在明确失败而非假成功。不要拿旧的成功率反驳字节级差异。
+- `notes/fls_path_hash_and_dlg.md` 说引擎**线性扫描**目录，而编辑器 P0 修复依据是“有序目录 / 二分寻址 + `r1≠0`”——两者尚未用反汇编统一；改目录写回逻辑前先看 `mx.exe:0x48ECF0`。
+- `GS2C_PROP_CHANGE` 与 `GS2C_NPC_CHAT_EXT` 在客户端表里同为 152（客户端自身冲突）；链路帧 `0xFF` 续读长度是 **2 字节**。
+- `script.fls` 模块导入不走路径哈希（未解）；`.dlg` 每条目 4 字节 XOR 密钥的派生公式未定位（靠固定文件头反推）。
+- 仓库里**没有任何真实客户端抓包字节**；所有协议结论来自静态分析。
+- `tools/decompiler/output/` 下的 `.py` 是反编译输出，有缺失和错误，不是源码。
+
+## 7. 术语
+
+| 术语 | 含义 |
+|---|---|
+| FLS / `0SLF` | 客户端资源包；12 字节头 + 16 字节目录记录（`entry_id, r1, r2, r3`，长度/偏移经闭式变换混淆） |
+| entry | `script.fls` 中的条目号（共 5002）；`server/docs/catalog/script_entries.jsonl` 是索引 |
+| 五段 XOR | `script.fls` 载荷在 zlib 之外的分段异或加密，keys/bounds 在 key DB |
+| 双 VM | `mxmain.dll` 内定制 Python 2.5（`HAVE_ARGUMENT=0x5F`）与 `exe/python27.dll` 内定制 Python 2.7（指令/参数双流） |
+| `.dlg` | UI 布局文件（Python 源码，GBK/Big5 混合），存于 `interface.fls`，按路径哈希寻址 |
+| GEPJ / GIRB / LLEC / MASK | `.map` 内的块：底图 / 碰撞网格 / 判定表 / 掩码（角色不能只凭名字猜） |
+| batch_001 | 首批待审静态数据：17 CSV + manifest + validation + JSONL 证据 |
+| H / I / J | 复核链的三个历史工作包：目录+API / 网页 / 独立验收 |
