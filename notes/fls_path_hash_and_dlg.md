@@ -142,3 +142,27 @@ dump 指定条目」流程：探针 `interface_probe4.py`（仓库根目录，
 `.dlg`，并非包级统一处理。用 `extract_dlg.py` 按路径 `ui.lst`
 即可直接取出（频率恢复得到全零密钥时按明文写出）。成品与
 2,706 个 `.dlg` 同置于 `interface_dlg_decoded/`。
+
+## 9. 附记：控件图片（sFileName）引用分布
+
+全包目录扫描（探针 v7）结论：2,706 个已解密 `.dlg` 共引用
+2,738 个不同的 `sFileName`。其中 706 个是以 `\` 结尾的**目录型
+伪引用**（边框类控件拼图用的基路径，如
+`combdialog2\公用内框\`，运行时再拼 left/right/top/bottom 等
+子图），并非文件、永不命中。其余 2,032 个文件引用中 **2,028
+个命中，仅 4 个未命中**：
+
+* interface.fls 2,008 条（PNG 与 I0/T0/I1 精灵为主）；
+* item.fls 20 条（`item120/`、`item44/` 前缀，与运行时
+  `combdialog.py::GetIgsPath` 的“interface 不存在则回退 item”
+  逻辑吻合）；
+* 未命中 4 条：`combdialog4\回归活动\huawen1.png`、
+  `huawen2.png`、`combdialog4\活动界面\氛围图.png`、
+  `combdialog\杂图\人物大筐140x200.igs`，疑为热更新资源，
+  不在本批客户端文件中。
+
+注意抓取口径：`sFileName` 必须经 Python 字面量求值得到单反斜
+杠原值再做 GBK 编码哈希；直接正则抓取 `.dlg` 源码会得到双反
+斜杠转义形，哈希后变成双斜杠而全部落空（探针 v6 的教训）。
+UI 编辑器挂载 interface.fls（+ item.fls）即可解析约 99.8% 的
+文件引用图片。
