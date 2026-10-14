@@ -32,7 +32,7 @@
 | `work/dream-world-connect-login-map/` | 早期研究区（297 份笔记、证据、报告、专项工具）；客户端侧权威现状 = `report/client-status-20261012.md` | [`INDEX.md`](work/dream-world-connect-login-map/INDEX.md) |
 | `tools/decompiler/` | 双 VM 字节码反编译、5 段 XOR 重打包；`output/` 是反编译文本（**不准确、不可执行，只作线索**） | `notes/opcode_mapping_and_decompilation.md` |
 | `tools/data-parser/` | `universal_fls_tool.py`、`mx_path_hash.py`、`extract_dlg.py`、`i0_sprite.py`、精灵格式说明 | `I0_SPRITE_FORMAT.md` |
-| `tools/client_patches/` | 注册 UI 离线预览补丁（只改 entry 337/4007），构建器、测试、冻结资产、CPython 2.5 审计 | [`README.md`](tools/client_patches/README.md)、[`V3_3_DELIVERY_AND_ACCEPTANCE.md`](tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md) |
+| `tools/client_patches/` | 注册 UI 离线预览补丁（只改 entry 337/4007），构建器、测试、冻结资产、CPython 2.5 审计。**v3.3 已由用户判定不规范并作废（2026-10-14），待还原原包并按原生重做，不得再分发** | [`README.md`](tools/client_patches/README.md)、[`V3_3_DELIVERY_AND_ACCEPTANCE.md`](tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md) |
 | `tools/devkit/` | 开发自检工具箱：`check_windows_compat.py`（Windows 兼容静态检查，交付前必跑） | [`README.md`](tools/devkit/README.md) |
 | `tools/data-export/`、`tools/data_browser/`、`tools/dis_v43/`、`tools/*.py` | 历史数据导出/浏览/反汇编工具，仍可用但不是现行复核入口 | — |
 | `resource_editor/` | `.fls` 资源包浏览/编辑器（PySide6；core 无 Qt） | [`README.md`](resource_editor/README.md)、`DESIGN.md` |
@@ -81,6 +81,10 @@
 9. 不切分支、不 force-push、不合入 `master`、不发布生产，除非用户当轮明确授权。PR 描述里**行为变更**（协议号、封包长度、导出写入、配置路径）必须写明，不能写成“只改注释”。
 10. 不自动启动根目录 `mock_server.py` 对真实客户端；先审查参数与副作用。
 11. 不索取、不记录真实账号、密码、票据、密钥；不改 Drive 权限、不发邮件。
+
+**原生优先（用户 2026-10-14 定，适用于一切面向客户端的功能）**
+12. 凡游戏原生机制能实现的功能——原生控件、`.dlg` 布局、`ui.lst` 样式、引擎与脚本的既有套路——**必须**按原生规范实现，不得用外挂图片、代码 overlay 临时拼凑控件、包外散图等非原生方式替代。注册预览 v3.3 的整图按钮 + 透明点击框做法已被用户判定为不规范并作废（见 STATUS），不得再沿用或作为先例。
+13. 原生确实实现不了、只能借助其他方式实现的功能，必须先把「原生为什么做不到、替代方案是什么、与原生的差异和风险」向用户**反复确认**，只有得到用户明确同意后才能动手；未经同意不得先实现再汇报。
 
 ## 5. Python 工具 / 编辑器开发约定
 

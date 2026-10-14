@@ -19,11 +19,11 @@
 | 组件 | 版本/阶段 | 状态 | 本次实测 |
 |---|---|---|---|
 | 逆向研究（`notes/`, `work/`） | 结案：双 VM opcode 表、0SLF 目录/路径哈希、`.dlg` 2,706/2,901、协议号表 412 条、帧续读 2 字节 | 稳定；未决项见 AGENTS §7 | 锁定输入 SHA 匹配 |
-| 注册 UI 补丁（`tools/client_patches/`） | v3.3 控件修正候选 | **等待用户 Windows 原生验收**（自 10-12 起无反馈） | 90/90 通过 |
+| 注册 UI 补丁（`tools/client_patches/`） | v3.3 控件修正候选 | **已作废**（2026-10-14 用户判定不规范：代码 overlay 拼控件、整图烤字按钮、包外散图，非游戏原生做法）；待用户在 Windows 测试副本还原原包（`script.fls.before-registration-preview` 改回 `script.fls`，SHA-256 `8b6e9266…`，并移除 `photo/registration_preview_v3`）；之后按原生重做（原生 `.dlg` 进 `interface.fls` + 原生脚本套路，提交动作先留桩，服务端尚无运行代码），并作为 UI 编辑器脚本联动的第一个实战。**勿再分发 v3/v3.2/v3.3** | 90/90 通过（仅历史证据，不再作为验收依据） |
 | 只读复核链（catalog / API / web） | H/I/J 已收尾 | 可运行，只读 | catalog 34/34；review_api 27/27；验收套件 68 通过 + 2 跳过（需 uvicorn 在 PATH 上）；网页未装 node_modules 未跑 |
 | 地图编辑器 | 一期 + PR #27 修复 + 10-14 补齐约定（`bootstrap.py`、`启动地图编辑器.bat`、`build_exe.bat`、ruff 0） | GIRB 300/429 扇区仍解不出（明确失败）；Windows EXE 未实机构建/冒烟 | **88/88** 通过（含 6 条 bootstrap 测试；GUI 冒烟在沙箱用 Qt offscreen + 桩 libGL 跑过）；ruff 0；wincompat 0/0 |
-| 资源编辑器 | 0.3.4 + 10-14 补 `build_exe.bat` / spec / `run.py` / requirements | 写回目录不变量 P0 已修；精灵解码器对真实 interface.fls 两条原始精灵（条目 1163/52227）未覆盖——0.3.4 起未改动者只提示不拦保存，待用户导出该两条样本后定点补解码；Windows EXE 未验 | **39/39** 通过（含保存校验降级两条回归）；spec 干跑 onedir/onefile 通过 |
-| UI 编辑器 | 0.5.3 + 10-14 补 `build_exe.bat` / spec / `run.py` / requirements | M3.3 九宫格未做；EXE 未验（0.5.3 已由用户在真实 Windows 实机跑通加图存包主流程） | **94 通过 + 1 跳过**（含 0.5.3 两条原生回归：缩放回调已删标签不崩、挂账图无引用须明示未写入）；ruff 0；wincompat 0/0 |
+| 资源编辑器 | 0.3.5 + 10-14 补 `build_exe.bat` / spec / `run.py` / requirements | 写回目录不变量 P0 已修；精灵解码器对真实 interface.fls 两条原始精灵（条目 1163/52227）未覆盖——0.3.4 起未改动者只提示不拦保存，待用户导出该两条样本后定点补解码；Windows EXE 未验 | **40/40** 通过（含 0.3.5 工具栏冒烟）；spec 干跑 onedir/onefile 通过 |
+| UI 编辑器 | 0.6.0 + 10-14 补 `build_exe.bat` / spec / `run.py` / requirements | M3.3 九宫格未做；EXE 未验（0.5.3 已由用户在真实 Windows 实机跑通加图存包主流程；0.6.0 画布右键/复制粘贴/等比缩放/控件锁定待用户手感确认）；下一大功能已定：与 `script.fls` 联动（离线索引→代码现造控件的真皮肤渲染→加控件自动接线/改名护栏→脚本编辑与写回），第一个实战为注册界面原生重做，见 §5 | **112 通过 + 1 跳过**（含画布剪贴板/右键菜单、等比缩放、控件锁定共 18 条新测）；ruff 0；wincompat 0/0 |
 | 游戏服务端（`mxsj_server`） | 契约 v0.1 + 设计文档 | **无运行代码**；账号/网关/数据库/地图/战斗均未开始 | 架构测试 150 跑，**1 FAIL + 1 ERROR**（见 §3.1） |
 | `mock_server.py` | 历史 Mock，协议号已按客户端修正 | 从未与真机联调；PR #25 顺带改的帧长度 3→2 未单独评审 | 未运行 |
 | 文档 | 10-14 整理：AGENTS.md / STATUS.md / 归档目录；README 已刷新；新增 `docs/PYTHON_TOOL_CONVENTIONS.md`（工具开发约定） | — | 仓库内相对链接全部可解析（脚本校验） |
@@ -59,7 +59,7 @@
 | `resource_editor/` 0.3.3 | 0 | PySide6 | ✅ `bootstrap.py` + bat | ✅ `build_exe.bat` + `resource_editor.spec` + `run.py`（10-14；Linux 干跑通过） | 0 | 未验（bat / EXE 都没在 Windows 跑过） |
 | `ui_editor/` 0.5.2 | 0 | PySide6 | ✅ `bootstrap.py` + bat | ✅ `build_exe.bat` + `ui_editor.spec` + `run.py`（10-14；Linux 干跑通过） | 0（沙箱语料库兜底路径加 `# win-ok`，缺目录只会 skipTest） | 未验（bat / EXE 都没在 Windows 跑过） |
 | `map_editor/` 0.1.0 | **0**（10-14 清掉 74 条；只做定点修改，未整体 `ruff format`） | PySide6（可选） | ✅ `bootstrap.py` + `启动地图编辑器.bat`（10-14；强制 `--gui`，其余参数转发） | ✅ `build_exe.bat`（原 `build.bat`，改名并重写为纯 ASCII）+ spec（10-14 修 onedir 缺 `exclude_binaries` 的硬错误；Linux 干跑通过） | 0 | 未验（PR #25 遗留；bat / EXE 都没在 Windows 跑过） |
-| `tools/client_patches/` | 328（E501 268） | CLI | — | — | 7 W + 2 INFO（Py 2.5 片段按设计不可解析） | v3.3 待验收 |
+| `tools/client_patches/` | 328（E501 268） | CLI | — | — | 7 W + 2 INFO（Py 2.5 片段按设计不可解析） | v3.3 已作废（2026-10-14），待还原+原生重做 |
 | `tools/data_browser/desktop_app.py` | 37 | **tkinter** | ❌ | ❌ | 3 E（CONV001） | — |
 | `work/.../tools/map_gui.py` | （目录合计 585） | **tkinter** | ❌ | ❌ | 2 E（CONV001）+ 3 W | 历史工具 |
 | `tools/data-parser/`、`tools/dis_v43/`、`tools/decompiler/*.py` | 82 / 28 / 239 | CLI | — | — | 0 / 0 / 3 W | — |
@@ -73,14 +73,14 @@
 
 | 事项 | 等谁 | 阻塞什么 |
 |---|---|---|
-| 注册 UI v3.3 原生复测（5 项控件问题 + 光标闪烁） | 用户在 Windows 测试副本上验证，清单见 `tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md` §7 | 客户端里程碑收口；之后才开始服务端第一条真实链路 |
+| 注册界面原生重做的前置确认：测试副本是否已还原原包；原生版提交动作的桩提示文案与范围 | 用户 | UI 编辑器脚本联动第一个实战的开工（见 §5） |
 | 两个编辑器在真实 Windows + 真实 `interface.fls` 上的实机验证（新图写包后进游戏能否显示） | 用户 | 编辑器“可用”声明 |
 | 是否合入 master、是否清理二进制 | 用户授权 | — |
 
 ## 5. 下一步（优先级）
 
 1. 修 §3.1（单独一个小提交），让架构套件与 `--check` 回绿。
-2. 收到 v3.3 反馈后：先按原档接口复现，再补测试，再出下一候选；不盲发。
+2. **UI 编辑器 × script.fls 联动 + 注册界面原生重做**（用户 2026-10-14 定的方向，合并为一条线）：① 离线扫描已还原脚本（4,442/5,002）生成「布局⇄脚本」索引，打开布局自动关联脚本；② 代码现造的按钮（如 login 的占位锚点）按真皮肤渲染，不再显示默认占位；③ 加控件自动接线（GetObject 认领 + OnMessage 骨架 + 空闲消息号）、改名/删除引用护栏；④ 脚本可在编辑器内查看/编辑，保存时布局与脚本一起出新包（写回管线 `tools/decompiler/pack_and_encrypt.py` 已验证往返逐字节一致；编辑后源码编译依赖 CPython 2.5.6，Windows 侧打包方式待攻关，不行先走「编辑器出补丁、仓库侧打包」）；⑤ 第一个实战：注册界面按原生重做（原生 `.dlg` + 原生脚本套路，参照 `chgpwd` 类原生表单；提交先留桩并明示未接通）。硬边界：546 个 stub + 12 个转译失败的脚本无源码、不可联动编辑，须明确标记；写脚本前先拿无害小改动做真机验证。
 3. 判定 §3.2，统一 `notes/` 与编辑器文档。
 4. 三个编辑器在 Windows 实机跑 CONVENTIONS §5.3 冒烟（启动 bat → `build_exe.bat` → 双击 EXE），把结果回填 §2 / §3.5；沙箱侧 10-14 已把完整测试（含 GUI 组）跑绿，不再需要「有桌面的机器跑测试」这一步。
 5. 二进制清理（需授权）与 LICENSE/权利说明。
@@ -92,6 +92,8 @@
 |---|---|
 | 2026-10-14 | 三个编辑器补齐工具约定 ①②：`map_editor` 新增 `bootstrap.py` + `启动地图编辑器.bat`、`tests/test_bootstrap.py`，ruff 74→0（定点改：E501 换行、`itertools.pairwise`、`zip(strict=True)`、`Iterator` 真实导入、`assertRaises(FlsError)` 等），`build.bat` 改名 `build_exe.bat` 并重写为纯 ASCII，spec 补 `exclude_binaries`，修 `test_cli_and_isolation` 读到开发者真实配置的隔离漏洞；`resource_editor` / `ui_editor` 各加 `build_exe.bat`、`<tool>.spec`、`run.py`、`requirements*.txt`、`.gitignore`（`build/` `dist/` `启动日志.txt`）。沙箱用桩库跑通 Qt offscreen：三套测试 88 / 37 / 92+1 跳过全绿；三份 spec onedir + onefile 干跑通过。**Windows 实机未验**（§3.5 ③）。 |
 | 2026-10-14 | 用户实机确认：UI 编辑器 0.5.3 在真实 `interface.fls` 上加图存包成功、使用无报错——P0 写回修复 + 0.5.3 保存明示两轮闭环（§4 该行 UI 侧销项；资源编辑器同路径与 EXE 路径仍待验）。 |
+| 2026-10-14 | 用户立「原生优先」规矩并写入 `AGENTS.md` §4（第 12、13 条）：原生能实现的必须按原生规范做；原生做不到、只能用替代方式的，必须反复向用户确认并获明确同意才能做。同时用户判定注册预览 v3.3 不规范（代码 overlay 拼控件、整图烤字按钮、包外散图）并作废——待其在 Windows 测试副本还原原包（`script.fls.before-registration-preview` 改回，SHA-256 `8b6e9266…`）并移除 `photo/registration_preview_v3`，勿再分发 v3/v3.2/v3.3。重做方向已定（§5 第 2 项）：注册界面按原生重做（原生 `.dlg` + 原生脚本套路，提交先留桩），与 UI 编辑器 × script.fls「一步到位」联动合并为一条线，注册界面为第一个实战。本轮发布：UI 编辑器 0.6.0（右键/复制粘贴/等比/锁定）与资源编辑器 0.3.5（工具栏）已提交推送并上传网盘（见下一行）。 |
+| 2026-10-14 | 两编辑器补常用功能（用户点单）：资源编辑器 0.3.5 新增顶部图标工具栏（目录/打开/刷新/保存/另存/导出/导入/精灵/删除；图标在上+两字短名、与菜单共用同一动作、置灰同步，规格对齐 UI 编辑器；现画图标 `gui/icons.py`），40/40 绿。UI 编辑器 0.6.0 画布控件右键菜单 + 复制/粘贴/删除（Ctrl+C/Ctrl+V/Delete 走系统剪贴板 MIME，多选整组、粘贴偏移 16px 不重叠、整组一步撤销、删除改进为多选并汇总子控件数确认；焦点在文本框时三键回落文本编辑不误伤；model 新增 `insert_widget`）；追加「等比」工具栏开关（canvas `aspect_resize`：角把手按相对变化大的一轴定比例、边把手以中心为锚、最小 8px 保比例、Shift 临时等比）与「锁定」控件开关（工具栏/右键菜单/Ctrl+L：锁后拖不动/缩不了/删不掉、对齐分布绕开、父锁不挡子；`Widget.locked` 仅内存态不写 .dlg、不标脏不进撤销，撤销重建后按序号路径恢复锁定），112 通过 + 1 跳过绿。两边 ruff 0、wincompat 0/0；Windows 手感待用户确认。 |
 | 2026-10-14 | 资源编辑器 0.3.4（用户实机反馈）：真实 interface.fls（53,555 条）仅新增一条无关条目，保存却被写后校验的逐条试解码拦下——条目 1163（头解析越界读）、52227（totalLines 与帧高和不符）是原包自带精灵，本机解码器未覆盖其变体，字节并未经手改动。改判责任：字节逐字比对仍是硬闸门，试解码只对本次改动/新增（`PackDocument.changed_indexes()`）的条目拦截，未改动者记 `sprite_undecodable` 在保存日志提示。补两条回归（未动不拦、改了必拦），39/39 绿。解码器缺口待样本：请用户从原包导出条目 1163/52227 的原始字节后再定点补。 |
 | 2026-10-14 | UI 编辑器 0.5.3（用户 0.5.0 原生反馈两缺陷）：① 关闭窗口中画布补发缩放信号时 `_on_zoom_changed` 只判 `hasattr`，标签 C++ 对象已删仍 `setText` 抛 `RuntimeError: libshiboken ... already deleted`——改用 `shiboken6.isValid` 把关；② 「图片保存成功却没存进去」：挂账新图仅当被当前布局引用才随包写（设计如此），旧成功弹窗不报实际写入数，未引用被静默漏过、且保存默认生成 `原名_patched.fls` 新包，用户重开原包自然还是原条数——弹窗改明示新包路径、条目总数、实际写入/替换数，有未引用挂账图时点名警告（报告新增 `staged_unreferenced`/`entries_after`）。补两条回归测试，94+1 跳过全绿。用户侧用 0.5.0 时另请注意：务必升级到含 P0 写回修复的版本再对真实包加图。 |
 | 2026-10-14 | 工具开发约定：新增 `docs/PYTHON_TOOL_CONVENTIONS.md`（PEP 8 + 模块化、GUI 一律 PySide6、必须有 `bootstrap.py` 自检启动与 `build_exe.bat`、Linux→Windows 交付检查）与 AGENTS §5 摘要；新增 `tools/devkit/check_windows_compat.py`（Windows 兼容静态检查，29 测试）、根 `ruff.toml`、`.editorconfig`、`.gitattributes`（`*.bat` CRLF）；`map_editor/pyproject.toml` 补 ruff 配置，两个编辑器的 ruff 规则加 `W`；修 Windows 必坏项（`bytecode_58_<module>.bin` 改名、bat CRLF、`build.bat` 加 `chcp 65001`）。差距清单见 §3.5。 |
