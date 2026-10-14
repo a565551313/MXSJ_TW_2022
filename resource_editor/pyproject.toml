@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mxsj-resource-editor"
-version = "0.3.4"
+version = "0.3.5"
 description = "梦想世界（MXSJ）客户端 FLS 资源包编辑器"
 readme = "README.md"
 requires-python = ">=3.10"

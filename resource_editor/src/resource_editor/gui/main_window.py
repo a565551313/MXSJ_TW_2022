@@ -13,7 +13,7 @@ from collections import OrderedDict
 from pathlib import Path
 
 from PIL import Image
-from PySide6.QtCore import QPoint, QSettings, Qt, QThreadPool
+from PySide6.QtCore import QPoint, QSettings, QSize, Qt, QThreadPool
 from PySide6.QtGui import QAction, QIcon, QImage, QPixmap, QShortcut
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -33,6 +33,7 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QSplitter,
     QStackedWidget,
+    QToolBar,
     QVBoxLayout,
     QWidget,
 )
@@ -43,6 +44,7 @@ from ..core.codecs.sprite import Sprite, decode_sprite, encode_sprite
 from ..core.model.document import PackDocument
 from ..core.services import exporter
 from ..core.services.saver import save_document
+from . import icons
 from .dialogs import ReplaceImagesDialog
 from .file_tree import DirectoryPanel
 from .grid_panel import EntryGridPanel
@@ -96,6 +98,7 @@ class MainWindow(QMainWindow):
 
         self._build_ui()
         self._build_menus()
+        self._build_toolbar()
         self._update_actions()
 
     # ---------------------------------------------------------- 文档 ----
@@ -219,6 +222,8 @@ class MainWindow(QMainWindow):
                                            self.choose_workspace)
         self._act_open = self._action("打开资源包…", None,
                                       lambda: self.open_file())
+        self._act_refresh = self._action("刷新目录", "F5",
+                                         self.refresh_workspace)
         self._act_save = self._action("保存", "Ctrl+S",
                                       lambda: self.save_file(False))
         self._act_save_as = self._action("另存为…", "Ctrl+Shift+S",
@@ -230,8 +235,8 @@ class MainWindow(QMainWindow):
         self._act_export_all = self._action("导出全部精灵…", None,
                                             self.export_all_sprites)
         act_quit = self._action("退出", "Ctrl+Q", self.close)
-        for act in (self._act_workspace, self._act_open, self._act_save,
-                    self._act_save_as, self._act_export_entry,
+        for act in (self._act_workspace, self._act_open, self._act_refresh,
+                    self._act_save, self._act_save_as, self._act_export_entry,
                     self._act_export_selected, self._act_export_all,
                     act_quit):
             file_menu.addAction(act)
@@ -266,6 +271,53 @@ class MainWindow(QMainWindow):
             act.setShortcut(shortcut)
         act.triggered.connect(slot)
         return act
+
+    def _build_toolbar(self) -> None:
+        """顶部图标工具栏：与菜单共用同一 QAction（状态同步）。
+
+        图标在上、两字短名在下（与 UI 编辑器同一约定）；菜单与
+        悬停提示仍显示全名。
+        """
+        for action, icon, tip, short in (
+                (self._act_workspace, icons.icon_workspace(),
+                 "设定工作目录（资源包所在文件夹）", "目录"),
+                (self._act_open, icons.icon_open_pack(),
+                 "打开资源包", "打开"),
+                (self._act_refresh, icons.icon_refresh(),
+                 "刷新工作目录文件列表（F5）", "刷新"),
+                (self._act_save, icons.icon_save(), "保存（Ctrl+S）", "保存"),
+                (self._act_save_as, icons.icon_save_as(),
+                 "另存为（Ctrl+Shift+S）", "另存"),
+                (self._act_export_selected, icons.icon_export(),
+                 "导出选中条目（按真名目录树）", "导出"),
+                (self._act_import_path, icons.icon_import_path(),
+                 "按路径导入（游戏按路径找图，编号须为路径哈希）", "导入"),
+                (self._act_import_sprite, icons.icon_import_sprite(),
+                 "帧图转精灵导入（多张合成多帧动画）", "精灵"),
+                (self._act_delete, icons.icon_delete(),
+                 "删除当前条目", "删除")):
+            action.setIcon(icon)
+            action.setToolTip(tip)
+            action.setIconText(short)
+        bar = QToolBar("主工具栏", self)
+        bar.setMovable(False)
+        bar.setIconSize(QSize(26, 26))
+        bar.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        self.addToolBar(Qt.ToolBarArea.TopToolBarArea, bar)
+        bar.addAction(self._act_workspace)
+        bar.addAction(self._act_open)
+        bar.addAction(self._act_refresh)
+        bar.addSeparator()
+        bar.addAction(self._act_save)
+        bar.addAction(self._act_save_as)
+        bar.addSeparator()
+        bar.addAction(self._act_export_selected)
+        bar.addAction(self._act_import_path)
+        bar.addAction(self._act_import_sprite)
+        bar.addSeparator()
+        bar.addAction(self._act_delete)
+        self._toolbar = bar
 
     # ---------------------------------------------------------- 日志 ----
     def log(self, message: str) -> None:

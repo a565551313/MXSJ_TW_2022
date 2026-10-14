@@ -28,6 +28,34 @@ SKILL_FLS = DATA_DIR / "skill.fls"
 
 
 @unittest.skipUnless(HAS_QT, "PySide6 不可用")
+class TestToolbar(unittest.TestCase):
+    """顶部工具栏：图标+两字短名，与菜单共用同一 QAction。"""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def test_toolbar_shares_menu_actions(self):
+        win = MainWindow()
+        bar = win._toolbar
+        self.assertIsNotNone(bar)
+        actions = bar.actions()
+        # 工具栏里的就是菜单里那批 QAction 本人（状态/置灰同步）
+        for act in (win._act_save, win._act_open, win._act_import_path):
+            self.assertIn(act, actions)
+        for act in actions:
+            if act.isSeparator():
+                continue
+            icon = act.icon()
+            self.assertFalse(icon.isNull(), act.text())
+            self.assertLessEqual(len(act.iconText()), 2, act.text())
+        # 无文档时保存类动作置灰（工具栏按钮随之不可点）
+        self.assertFalse(win._act_save.isEnabled())
+        self.assertFalse(win._act_import_path.isEnabled())
+        win.close()
+
+
+@unittest.skipUnless(HAS_QT, "PySide6 不可用")
 @unittest.skipUnless(SKILL_FLS.exists(), "缺少 data/skill.fls")
 class TestGuiSmoke(unittest.TestCase):
     @classmethod
