@@ -43,7 +43,8 @@ def save_document(
                 out.flush()
                 os.fsync(out.fileno())
             report = verify_saved(tmp, doc.count, doc.stored,
-                                  changed=doc.changed_indexes())
+                                  changed=doc.changed_indexes(),
+                                  layout_indexes=doc.layout_indexes_for_verification())
             if not report.ok:
                 raise SaveError("保存前校验未通过：" + "；".join(report.messages))
             guard_output(target, sources)

@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from ui_editor.core import dlg_codec  # noqa: E402
 from ui_editor.core.mxhash import mx_hash  # noqa: E402
+from ui_editor.core.native_layout import key_for_path  # noqa: E402
 from ui_editor.core.pack import FlsPack  # noqa: E402
 from ui_editor.core.pack_build import (  # noqa: E402
     RawEntry,
@@ -80,11 +81,11 @@ class TestReplaceDlgEntry(unittest.TestCase):
         id_a = mx_hash("dialog/a.dlg".encode("gbk"))
         self.assertEqual(after[id_b].stored, before[id_b].stored)
         self.assertEqual(after[id_lst].stored, before[id_lst].stored)
-        # 目标条目：同密钥、解开后是新明文
+        # 目标条目：旧任意密钥迁移为原生路径密钥，原生回读为新明文
         self.assertEqual(unpack_packed_text(after[id_a].stored), new_plain)
         self.assertEqual(after[id_a].stored[:4],
                          bytes(x ^ y for x, y in zip(
-                             new_plain[:4], self.key_a, strict=True)))
+                             new_plain[:4], key_for_path("dialog/a.dlg"), strict=True)))
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "out.fls"
             target.write_bytes(out)

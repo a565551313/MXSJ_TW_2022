@@ -39,6 +39,9 @@ class SaveReviewDialog(QDialog):
             "布局按树位置比较，重排/移动会表现为字段与增删差异；未知字段也列出。\n"
             "散装布局不会嵌入图片；静态未发现引用不等于无引用。取消不改变编辑状态。"
         )
+        if to_pack:
+            summary.setText(summary.text() + "\n目标布局按原生路径密钥写入；"
+                            "旧明文/错误密钥会在本次保存时迁移，未改布局不动。")
         if layout_notice:
             summary.setText(summary.text() + "\n" + layout_notice)
         summary.setWordWrap(True)

@@ -32,6 +32,7 @@ from ..containers import (
 )
 from ..history import Action, History
 from ..mxhash import mx_hash
+from ..native_layout import encode_layout, layout_hint, path_bytes
 
 
 @dataclass
@@ -262,7 +263,29 @@ class PackDocument:
         if self.archive.kind == KIND_FLSDATA:
             self._set_stored(index, flsdata.deflate(content))
         else:
+            # 内容替换自动规范识别出的布局，原始存储替换仍有独立高级API。
+            slot = self._slots[index]
+            old_head = (slot.stored[:4096] if slot.stored is not None
+                        else self.archive.stored_head(slot.origin, 4096))
+            if layout_hint(content[:4096]) or layout_hint(old_head):
+                content = encode_layout(
+                    content, self.archive.extra_metas[index].entry_id
+                )
             self._set_stored(index, content)
+
+    def replace_for_path(self, index: int, content: bytes, res_path: str) -> None:
+        """按路径替换：.dlg自动转原生密文，二进制资源仍原样存储。"""
+        if self.kind != KIND_0SLF:
+            raise ValueError("按路径替换只支持0SLF")
+        if res_path.strip().lower().endswith(".dlg"):
+            res_path = path_bytes(res_path).decode("gbk")
+        entry_id = mx_hash(res_path.encode("gbk", "strict"))
+        if self.archive.extra_metas[index].entry_id != entry_id:
+            raise ValueError("替换路径与目标条目编号不一致")
+        if res_path.lower().endswith(".dlg"):
+            entry_id = mx_hash(path_bytes(res_path))
+            content = encode_layout(content, entry_id)
+        self._set_stored(index, content)
 
     def replace_stored(self, index: int, stored: bytes) -> None:
         """直接替换存储字节（高级用法，如整条目原始数据替换）。"""
@@ -369,11 +392,16 @@ class PackDocument:
         """
         if self.archive.kind == KIND_FLSDATA:
             raise ValueError("data.fls 请用 add_entry 并提供文件名")
+        if res_path.strip().lower().endswith(".dlg"):
+            res_path = path_bytes(res_path).decode("gbk")
         existing = self.index_by_path(res_path)
         if existing is not None:
             raise ValueError(
                 f"路径已存在于条目 {existing}，请改用替换")
-        entry_id = mx_hash(res_path.encode("gbk", "replace"))
+        entry_id = mx_hash(res_path.encode("gbk", "strict"))
+        if res_path.lower().endswith(".dlg"):
+            entry_id = mx_hash(path_bytes(res_path))
+            content = encode_layout(content, entry_id)
         meta = fls0slf.EntryMeta(entry_id=entry_id,
                                   r1=fls0slf.fresh_r1(entry_id))
         return self._add_slot(
@@ -468,6 +496,21 @@ class PackDocument:
         self._slots = [self._slots[i] for i in order]
         self.archive.extra_metas = [metas[i] for i in order]
         self._invalidate_kinds()
+
+    def layout_indexes_for_verification(self) -> set[int]:
+        """只检查改动布局；源/新内容或登记路径可识别时不能降级为任意二进制。"""
+        result = set()
+        for index in self.changed_indexes():
+            slot = self._slots[index]
+            if slot.path_name and slot.path_name.lower().endswith(".dlg"):
+                result.add(index)
+                continue
+            candidates = [self.stored(index)[:4096]]
+            if slot.origin is not None:
+                candidates.append(self.archive.stored_head(slot.origin, 4096))
+            if any(layout_hint(data) for data in candidates):
+                result.add(index)
+        return result
 
     def write_to(
         self,

@@ -51,6 +51,28 @@ class TestGuiResourcePaths(unittest.TestCase):
         self.doc.archive.close()
         self.temp.cleanup()
 
+    def test_raw_layout_replacement_error_is_reported_without_mutation(self):
+        plain = (b"# -*- coding: gbk -*-\n"
+                 b'UI_INFO=[{"sName":"mine","sWidgetType":"CBox"}]\n')
+        index = self.doc.add_entry_for_path(plain, "future/mine.dlg")
+        before = self.doc.stored(index)
+        history = list(self.doc.history.applied)
+        local = self.root / "invalid.dlg"
+        local.write_bytes(b"INVALID LAYOUT")
+        with (
+            mock.patch("resource_editor.gui.main_window.QFileDialog.getOpenFileName",
+                       return_value=(str(local), "")),
+            mock.patch("resource_editor.gui.main_window.QMessageBox.question",
+                       return_value=QMessageBox.Yes),
+            mock.patch("resource_editor.gui.main_window.QMessageBox.warning") as warn,
+            mock.patch.object(self.window, "_after_entry_changed") as changed,
+        ):
+            self.window._replace_raw_at(index)
+        warn.assert_called_once()
+        changed.assert_not_called()
+        self.assertEqual(self.doc.stored(index), before)
+        self.assertEqual(self.doc.history.applied, history)
+
     def test_editable_contains_case_insensitive_and_manual_path(self):
         dialog = ResourcePathDialog("local.bin", ["ui/a.bin", "login/b.bin"], "new.bin")
         self.assertTrue(dialog.combo.isEditable())

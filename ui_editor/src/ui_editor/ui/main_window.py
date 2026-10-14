@@ -847,6 +847,8 @@ class MainWindow(QMainWindow):
         report: dict = {"out": tmp_out, "bytes": info["bytes"],
                         "mode": info["mode"],
                         "layout_added": bool(info.get("layout_added")),
+                        "native_layout_storage": bool(
+                            info.get("native_layout_storage")),
                         "images_added": len(info["images_added"]),
                         "images_replaced": len(info["images_replaced"])}
         staged_all = set(self.resolver.staged_images())
@@ -1000,6 +1002,7 @@ class MainWindow(QMainWindow):
             f"条目校验通过（改变 {report.get('changed_entries', 0)} 条，"
             f"大小 {report['bytes']} 字节"
             + ("，快速补丁未重写整包" if fast else "") + "）。"
+            + "\n布局已按原生路径密钥写入并回读验证。"
             + images_note + entries_note + unused_note + "\n\n" + tail)
 
     def save_as(self, path: str | None = None) -> bool:

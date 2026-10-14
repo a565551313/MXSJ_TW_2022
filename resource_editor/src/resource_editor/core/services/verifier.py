@@ -7,8 +7,9 @@ from pathlib import Path
 
 from ..codecs import detect
 from ..codecs.sprite import decode_sprite
-from ..containers import open_archive, open_archive_path
+from ..containers import KIND_0SLF, open_archive, open_archive_path
 from ..errors import ContainerError
+from ..native_layout import decode_native, plain_if_layout
 
 
 @dataclass
@@ -27,7 +28,8 @@ _MAX_MESSAGES = 50
 
 def _check_archive(archive, count: int,
                    expected_stored: Callable[[int], bytes],
-                   changed: set[int] | None = None) -> VerifyReport:
+                   changed: set[int] | None = None,
+                   layout_indexes: set[int] | None = None) -> VerifyReport:
     """对已重解析的 archive 逐条比对存储字节并试解码精灵。
 
     存储字节逐字一致是硬闸门。试解码只是启发式：原包自带的精灵
@@ -54,6 +56,17 @@ def _check_archive(archive, count: int,
         got = archive.read_stored(index)
         if got != expected_stored(index):
             complain(f"条目 {index} 负载与预期不一致")
+        if archive.kind == KIND_0SLF and (changed is None or index in changed):
+            try:
+                plain = plain_if_layout(got)
+                required = index in (layout_indexes or set())
+                if plain is not None or required:
+                    entry_id = archive.extra_metas[index].entry_id
+                    native_plain = decode_native(got, entry_id)
+                    if native_plain != plain:
+                        complain(f"条目 {index} 布局原生回读不一致")
+            except ValueError as exc:
+                complain(f"条目 {index} 布局原生回读失败：{exc}")
     # 逐条试解码精灵（sprite 只存在于 0SLF 包，负载即内容视图）
     for index in range(count):
         head = archive.stored_head(index, 512)
@@ -87,7 +100,8 @@ def verify_rebuilt(built: bytes, expected_payloads: list[bytes]) -> VerifyReport
 
 def verify_saved(path: str | Path, count: int,
                  expected_stored: Callable[[int], bytes],
-                 changed: set[int] | None = None) -> VerifyReport:
+                 changed: set[int] | None = None,
+                 layout_indexes: set[int] | None = None) -> VerifyReport:
     """流式校验已写出的包文件（惰性重开索引，逐条按需比对）。
 
     ``changed`` 为本次改动/新增的条目下标：只有这些条目的精灵
@@ -100,6 +114,6 @@ def verify_saved(path: str | Path, count: int,
         return VerifyReport(ok=False, messages=[f"重解析失败：{exc}"])
     try:
         return _check_archive(archive, count, expected_stored,
-                              changed=changed)
+                              changed=changed, layout_indexes=layout_indexes)
     finally:
         archive.close()

@@ -735,13 +735,23 @@ class MainWindow(QMainWindow):
         path, _ = QFileDialog.getOpenFileName(self, "选择原始数据文件")
         if not path:
             return
-        data = Path(path).read_bytes()
+        try:
+            data = Path(path).read_bytes()
+        except OSError as exc:
+            QMessageBox.warning(self, "读取失败", str(exc))
+            return
         if QMessageBox.question(
             self, "替换原始数据",
-            f"用所选文件（{len(data)} 字节）替换条目 {index} 的内容？",
+            f"用所选文件（{len(data)} 字节）替换条目 {index} 的内容？"
+            "\n若为布局，将自动按原生路径密钥写入。",
         ) != QMessageBox.Yes:
             return
-        self._doc.replace_content(index, data)
+        try:
+            self._doc.replace_content(index, data)
+        except ValueError as exc:
+            self.log(f"条目 {index} 替换失败：{exc}")
+            QMessageBox.warning(self, "布局替换失败", str(exc))
+            return
         self.log(f"条目 {index} 已替换原始数据")
         self._after_entry_changed(index)
 
@@ -1094,12 +1104,22 @@ class MainWindow(QMainWindow):
                     if answer != QMessageBox.Yes:
                         skipped += 1
                         continue
-                    doc.replace_content(existing, data)
+                    try:
+                        doc.replace_for_path(existing, data, res_path)
+                    except ValueError as exc:
+                        self.log(f"布局/路径导入失败：{exc}")
+                        skipped += 1
+                        continue
                     replaced.append(existing)
                     self._after_entry_changed(existing)
                     self.log(f"已按路径替换条目 {existing}：{res_path}")
                     continue
-                index = doc.add_entry_for_path(data, res_path)
+                try:
+                    index = doc.add_entry_for_path(data, res_path)
+                except ValueError as exc:
+                    self.log(f"布局/路径导入失败：{exc}")
+                    skipped += 1
+                    continue
                 added.append(index)
                 self.log(f"已按路径导入条目 {index}：{res_path}")
         if added:

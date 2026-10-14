@@ -11,6 +11,7 @@ from ui_editor.core import dlg_codec, pack_build
 from ui_editor.core.errors import DlgError, PackError
 from ui_editor.core.layout_import import prepare_layout_import, validate_layout_path
 from ui_editor.core.mxhash import mx_hash
+from ui_editor.core.native_layout import decode_native
 from ui_editor.core.pack import FlsPack
 
 
@@ -139,7 +140,10 @@ class TestLayoutImport(unittest.TestCase):
         self.assertEqual(info["mode"], "rebuild")
         with FlsPack(self.out) as after:
             self.assertEqual(after.read_named("image/keep.bin"), b"REPLACED")
-            self.assertEqual(after.read_named("new/a.dlg"), self.new)
+            self.assertEqual(
+                decode_native(after.read_named("new/a.dlg"), mx_hash(b"new/a.dlg")),
+                self.new,
+            )
 
     def test_actual_zero_seed_rebuild_and_unchanged_payload(self):
         entry_id = mx_hash(b"image/a.bin")
@@ -170,8 +174,14 @@ class TestLayoutImport(unittest.TestCase):
         )
         with FlsPack(second) as after:
             self.assertEqual(after.count, 4)
-            self.assertEqual(after.read_named("new/a.dlg"), self.new)
-            self.assertEqual(after.read_named("new/b.dlg"), self.old)
+            self.assertEqual(
+                decode_native(after.read_named("new/a.dlg"), mx_hash(b"new/a.dlg")),
+                self.new,
+            )
+            self.assertEqual(
+                decode_native(after.read_named("new/b.dlg"), mx_hash(b"new/b.dlg")),
+                self.old,
+            )
 
     def test_verified_failure_keeps_existing_output_and_no_temp(self):
         self.out.write_bytes(b"previous output")
