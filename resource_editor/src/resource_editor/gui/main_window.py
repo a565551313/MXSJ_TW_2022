@@ -773,8 +773,9 @@ class MainWindow(QMainWindow):
         if not out:
             return
         doc, index = self._doc, self._current
+        protected = self._protected_sources()
         self._run_job(
-            Job(lambda _p: exporter.export_entry(doc, index, Path(out)),
+            Job(lambda _p: exporter.export_entry(doc, index, Path(out), protected),
                 "导出条目"),
             lambda paths: self.log(f"条目 {index} 已导出到 {out}"),
         )
@@ -786,8 +787,9 @@ class MainWindow(QMainWindow):
         if not out:
             return
         doc = self._doc
+        protected = self._protected_sources()
         self._run_job(
-            Job(lambda _p: exporter.export_all_sprites(doc, Path(out)),
+            Job(lambda _p: exporter.export_all_sprites(doc, Path(out), protected),
                 "导出全部精灵"),
             lambda count: self.log(f"已导出 {count} 个精灵到 {out}"),
         )
@@ -834,6 +836,7 @@ class MainWindow(QMainWindow):
             return
         doc = self._doc
         targets = list(indexes)
+        protected = self._protected_sources()
 
         def done(report) -> None:
             note = (f"已导出{what} {report['entries']} 条"
@@ -843,7 +846,8 @@ class MainWindow(QMainWindow):
             self.log(note)
 
         self._run_job(
-            Job(lambda _p: exporter.export_entries(doc, targets, Path(out)),
+            Job(lambda _p: exporter.export_entries(
+                doc, targets, Path(out), protected),
                 f"导出{what}"),
             done)
 
@@ -994,21 +998,42 @@ class MainWindow(QMainWindow):
                  + (f"，跳过 {skipped} 个" if skipped else ""))
 
     # ---------------------------------------------------------- 保存 ----
+    def _protected_sources(self) -> list[Path]:
+        sources = [path for doc in self._docs.values()
+                   for path in doc.source_paths]
+        if self._workspace is not None:
+            sources.extend(path for path in self._workspace.iterdir()
+                           if path.suffix.lower() == ".fls")
+        return sources
+
     def save_file(self, save_as: bool) -> None:
         if self._doc is None or self._busy:
             return
         doc = self._doc
         old_key = self._current_key
-        target = None if save_as else doc.path
-        if target is None:
-            path, _ = QFileDialog.getSaveFileName(
-                self, "保存资源包", "", "资源包 (*.fls);;所有文件 (*)")
-            if not path:
-                return
-            target = Path(path)
+        selected = self._current
+        selected_id = (
+            doc.archive.extra_metas[selected].entry_id
+            if doc.kind == "0slf" and 0 <= selected < doc.count else None
+        )
+        # Ctrl+S 与另存都生成新包，不能直接覆盖源包或历史基线。
+        default = (doc.path.with_name(doc.path.stem + "_patched.fls")
+                   if doc.path else Path("new.fls"))
+        sequence = 2
+        while default.exists():
+            default = default.with_name(
+                f"{doc.path.stem if doc.path else 'new'}_patched_{sequence}.fls")
+            sequence += 1
+        path, _ = QFileDialog.getSaveFileName(
+            self, "保存资源包（生成新包，原包不动）", str(default),
+            "资源包 (*.fls);;所有文件 (*)")
+        if not path:
+            return
+        target = Path(path)
+        protected = self._protected_sources()
 
         def job(progress):
-            return save_document(doc, target, progress)
+            return save_document(doc, target, progress, protected)
 
         def done(report) -> None:
             self._docs.pop(old_key, None)
@@ -1022,9 +1047,18 @@ class MainWindow(QMainWindow):
             if save_as:
                 self.set_workspace(target.parent)
             self._dir_panel.select_file(new_key)
-            self._grid.refresh_header()
-            backup = target.with_suffix(target.suffix + ".bak")
-            note = f"，原文件备份为 {backup.name}" if backup.exists() else ""
+            # 保存会按 entry_id 排序，不能沿用旧下标的名称、图标、
+            # 类型或选择；按稳定条目身份恢复选择并重建网格。
+            self._render_cache.clear()
+            self._thumb_cache.clear()
+            if selected_id is not None:
+                selected_after = next(
+                    (i for i, meta in enumerate(doc.archive.extra_metas)
+                     if meta.entry_id == selected_id), -1)
+            else:
+                selected_after = selected
+            self._reload_grid(select=selected_after)
+            note = "，源包未修改"
             gap = (f"，另有 {report.sprite_undecodable} 条原包精灵超出"
                    "本机解码器覆盖（字节原样保留，不影响保存）"
                    if report.sprite_undecodable else "")

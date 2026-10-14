@@ -12,7 +12,8 @@ from __future__ import annotations
 
 import io
 import zlib
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import BinaryIO
@@ -48,6 +49,7 @@ class PackDocument:
     def __init__(self, archive: Archive, path: Path | None = None):
         self.archive = archive
         self.path = path
+        self.source_paths: set[Path] = {path} if path is not None else set()
         self._slots: list[_Slot] = [
             _Slot(origin=i) for i in range(archive.orig_count)
         ]
@@ -309,6 +311,25 @@ class PackDocument:
         self._kind_cache.clear()
 
     # ---------------------------------------------------------- 保存 ----
+    @contextmanager
+    def preserve_write_order(self) -> Iterator[None]:
+        """保存失败时恢复写前槽位顺序，避免 GUI 旧下标指向别的条目。
+
+        write_to 为逐条校验对齐目录顺序；成功后 mark_saved 重建基线，
+        发布前任一异常则撤销排序，不撤销用户本来的编辑。
+        """
+        archive = self.archive
+        slots = list(self._slots)
+        metas = list(archive.extra_metas)
+        try:
+            yield
+        except BaseException:
+            if self.archive is archive:
+                self._slots = slots
+                archive.extra_metas = metas
+                self._kind_cache.clear()
+            raise
+
     def changed_indexes(self) -> set[int]:
         """内容与原包不同（或新增）的条目下标集合。
 
@@ -362,10 +383,28 @@ class PackDocument:
 
     def mark_saved(self, path: Path) -> None:
         """保存成功后同步基线：以新文件重建索引，改动状态清零。"""
+        # 路径哈希包不存真名：保留本会话导入时登记的名字，不能
+        # 在保存后的槽位重建中丢失；旧名字缓存按原下标，必须重建。
+        imported = {}
+        if self.archive.kind == KIND_0SLF:
+            imported = {
+                meta.entry_id: slot.path_name
+                for meta, slot in zip(
+                    self.archive.extra_metas, self._slots, strict=True
+                )
+                if slot.path_name
+            }
+        # 新路径已发布且不是源包；先取得新句柄，再释放旧基线。
+        # 若新文件打开失败，旧文档仍可读取，不留下已关闭的归档。
+        new_archive = open_archive_path(path)
         self.archive.close()
-        self.archive = open_archive_path(path)
+        self.archive = new_archive
         self.path = path
+        self.source_paths.add(path)
         self._slots = [
-            _Slot(origin=i) for i in range(self.archive.orig_count)
+            _Slot(origin=i, path_name=imported.get(meta.entry_id))
+            if self.archive.kind == KIND_0SLF else _Slot(origin=i)
+            for i, meta in enumerate(self.archive.extra_metas)
         ]
+        self._names = None
         self._kind_cache.clear()

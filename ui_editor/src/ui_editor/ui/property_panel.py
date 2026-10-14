@@ -287,7 +287,8 @@ class PropertyPanel(QWidget):
             def one(path: str, dest_dir, dest_name=None):
                 return export_image_files(
                     path, assets.fetch_bytes(path),
-                    assets.fetch_image(path), dest_dir, dest_name)
+                    assets.fetch_image(path), dest_dir, dest_name,
+                    protected_paths=assets.pack_paths)
 
             written: list = []
             try:
@@ -306,7 +307,7 @@ class PropertyPanel(QWidget):
                         return
                     for path in paths:
                         written.extend(one(path, directory))
-            except OSError as exc:
+            except (OSError, ValueError) as exc:
                 QMessageBox.warning(self, "导出失败", str(exc))
                 return
             if written:

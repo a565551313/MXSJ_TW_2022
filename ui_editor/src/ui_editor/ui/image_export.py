@@ -8,9 +8,11 @@
 """
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
 
 from ..core import sprite
+from ..core.output_paths import guard_output
 
 _REAL_MAGICS = (b"\x89PNG\r\n\x1a\n", b"\xff\xd8\xff", b"GIF8", b"BM")
 
@@ -22,6 +24,7 @@ def _basename(path: str) -> str:
 
 def export_image_files(res_path: str, data: bytes | None,
                        frames, dest_dir, dest_name: str | None = None,
+                       protected_paths: Iterable[str | Path] = (),
                        ) -> list[Path]:
     """导出一个资源，返回实际写出的文件列表（可能多帧多个）。
 
@@ -31,17 +34,22 @@ def export_image_files(res_path: str, data: bytes | None,
     dest = Path(dest_dir)
     dest.mkdir(parents=True, exist_ok=True)
     name = dest_name or _basename(res_path)
+    sources = list(protected_paths)
     if data is not None and data.startswith(_REAL_MAGICS):
         out = dest / name
+        guard_output(out, sources, dest)
         out.write_bytes(data)
         return [out]
     if frames:
         stem = name.rsplit(".", 1)[0] if "." in name else name
+        paths = [dest / (f"{stem}.png" if len(frames) == 1
+                         else f"{stem}-{index}.png")
+                 for index in range(len(frames))]
+        for out in paths:
+            guard_output(out, sources, dest)
         written = []
-        for index, frame in enumerate(frames):
-            filename = (f"{stem}.png" if len(frames) == 1
-                        else f"{stem}-{index}.png")
-            out = dest / filename
+        for frame, out in zip(frames, paths, strict=True):
+            guard_output(out, sources, dest)
             if frame.save(str(out), "PNG"):
                 written.append(out)
         if written:
@@ -52,6 +60,7 @@ def export_image_files(res_path: str, data: bytes | None,
             out = dest / name
         else:
             out = dest / (dest_name or _basename(res_path))
+        guard_output(out, sources, dest)
         out.write_bytes(data)
         return [out]
     return []

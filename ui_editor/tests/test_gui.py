@@ -606,6 +606,10 @@ class TestCanvasClipboardAndContextMenu(unittest.TestCase):
         self.assertIsNotNone(self.doc)
 
     def tearDown(self):
+        # 本组创建的 QMimeData 归剪贴板所有；在 QApplication/解释器
+        # 析构前清掉测试数据，避免 offscreen 后端的销毁顺序崩溃。
+        # 仅测试清理，不在产品退出时清空用户剪贴板。
+        self._app.clipboard().clear()
         if self.window.doc is not None:
             self.window.doc.dirty = False
         self.window.close()

@@ -38,6 +38,7 @@ from ..core.assets import AssetResolver
 from ..core.catalog import known_layout_paths
 from ..core.model import LayoutDocument, Widget
 from ..core.mxhash import mx_hash
+from ..core.output_paths import guard_output
 from ..core.pack import FlsPack
 from ..core.painters import PaintContext
 from ..core.script_index import ScriptIndex, get_default_index
@@ -637,7 +638,8 @@ class MainWindow(QMainWindow):
         tmp_out = str(out_path)
         extras = self._referenced_staged_images()
         info = pack_build.patch_pack_copy(
-            src_pack, res_path, plain, tmp_out, extra_entries=extras)
+            src_pack, res_path, plain, tmp_out, extra_entries=extras,
+            protected_paths=self._pack_sources())
         report: dict = {"out": tmp_out, "bytes": info["bytes"],
                         "mode": info["mode"],
                         "images_added": len(info["images_added"]),
@@ -678,9 +680,8 @@ class MainWindow(QMainWindow):
                 changed = 0
                 unexpected = 0
                 for entry_id in before.entry_ids:
-                    # 快速补丁不挪动其他条目：span 未变即可断定
-                    # 存储字节未变，跳过读取（允许变化的条目即便
-                    # span 未变也要比内容，可能只是等长改字）
+                    # core 已在发布前逐字节验证未改条目；此处只
+                    # 统计变化，不再把 span 相同当作保真证据。
                     if (entry_id not in allowed
                             and before.span_of(entry_id)
                             == after.span_of(entry_id)):
@@ -737,16 +738,6 @@ class MainWindow(QMainWindow):
             "资源包 (*.fls);;所有文件 (*)")
         if not path:
             return
-        if Path(path) == Path(src_pack):
-            answer = QMessageBox.warning(
-                self, "要覆盖原包吗？",
-                "你选了原包本身。强烈建议改存为新文件，并保留原包备份。\n"
-                "确定要直接覆盖原包吗？",
-                QMessageBox.StandardButton.Yes
-                | QMessageBox.StandardButton.No)
-            if answer != QMessageBox.StandardButton.Yes:
-                return
-        overwritten = Path(path) == Path(src_pack)
         self._update_status("正在写回资源包并校验…")
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         try:
@@ -768,9 +759,7 @@ class MainWindow(QMainWindow):
             images_note = (
                 f"\n一并写入新图 {report.get('images_added', 0)} 张、"
                 f"替换图片 {report.get('images_replaced', 0)} 张。")
-        tail = ("已直接覆盖原文件——请确认你手边留有原包备份。"
-                if overwritten else
-                "原包未被修改。安装时请在完整客户端副本上操作：先备份"
+        tail = ("原包未被修改。安装时请在完整客户端副本上操作：先备份"
                 "原包，再把新包改名替换，最后进游戏验证该界面。")
         entries_note = ""
         if report.get("entries_after") is not None:
@@ -806,21 +795,36 @@ class MainWindow(QMainWindow):
                 "布局文件 (*.dlg);;所有文件 (*)")
             if not path:
                 return False
+        if not self._write_to(str(path)):
+            return False
         self.doc.source_path = str(path)
         self.doc.source_pack = None
-        self._write_to(str(path))
+        self._update_title()
         return True
 
-    def _write_to(self, path: str) -> None:
+    def _pack_sources(self) -> list[Path]:
+        sources = self.resolver.pack_paths
+        if self.doc and self.doc.source_pack:
+            sources.append(Path(self.doc.source_pack[0]))
+        # 同一客户端资源目录中尚未挂载的包也不能被另存覆盖。
+        directories = {source.parent for source in sources}
+        for directory in directories:
+            sources.extend(path for path in directory.iterdir()
+                           if path.suffix.lower() == ".fls")
+        return sources
+
+    def _write_to(self, path: str) -> bool:
         data = dlg_codec.dump_bytes(self.doc.to_dicts())
         try:
+            guard_output(path, self._pack_sources())
             Path(path).write_bytes(data)
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             QMessageBox.warning(self, "保存失败", str(exc))
-            return
+            return False
         self.doc.dirty = False
         self._update_title()
         self._update_status(f"已保存：{path}")
+        return True
 
     def export_png(self) -> None:
         if self.doc is None:
@@ -829,6 +833,14 @@ class MainWindow(QMainWindow):
             self, "导出 PNG", self.doc.display_name + ".png",
             "PNG 图片 (*.png)")
         if not path:
+            return
+        sources = self._pack_sources()
+        if self.doc.source_path:
+            sources.append(Path(self.doc.source_path))
+        try:
+            guard_output(path, sources)
+        except (OSError, ValueError) as exc:
+            QMessageBox.warning(self, "导出失败", str(exc))
             return
         image = self.view.export_image()
         if image.save(path):

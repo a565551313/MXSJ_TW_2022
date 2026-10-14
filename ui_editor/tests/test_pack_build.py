@@ -7,7 +7,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from ui_editor.core import dlg_codec  # noqa: E402
-from ui_editor.core.assets import unpack_packed_text  # noqa: E402
 from ui_editor.core.mxhash import mx_hash  # noqa: E402
 from ui_editor.core.pack import FlsPack  # noqa: E402
 from ui_editor.core.pack_build import (  # noqa: E402
@@ -18,6 +17,7 @@ from ui_editor.core.pack_build import (  # noqa: E402
     patch_pack_copy,
     patch_raw_entry_in_file,
     replace_dlg_entry,
+    unpack_packed_text,  # noqa: E402
 )
 
 
@@ -170,17 +170,17 @@ class TestPatchPackCopy(unittest.TestCase):
             id_b = mx_hash("dialog/b.dlg".encode("gbk"))
             self.assertEqual(after[id_b].stored, before[id_b].stored)
 
-    def test_patch_same_file_directly(self):
+    def test_patch_same_file_is_rejected(self):
         import tempfile
+
+        from ui_editor.core.errors import PackError
 
         with tempfile.TemporaryDirectory() as tmp:
             pack = Path(tmp) / "only.fls"
             pack.write_bytes(self.original)
-            info = patch_pack_copy(pack, "dialog/a.dlg", _dlg("短"), pack)
-            self.assertEqual(info["mode"], "inplace")
-            self.assertEqual(pack.stat().st_size, len(self.original))
-            self.assertEqual(self._read_title(pack, "dialog/a.dlg"), "短")
-            self.assertEqual(self._read_title(pack, "dialog/b.dlg"), "乙")
+            with self.assertRaises(PackError):
+                patch_pack_copy(pack, "dialog/a.dlg", _dlg("短"), pack)
+            self.assertEqual(pack.read_bytes(), self.original)
 
     def test_reject_unknown_before_copying(self):
         import tempfile
