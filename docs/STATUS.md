@@ -353,7 +353,10 @@
   不动用户interface.fls/布局/协议，不绕过流程，不接注册接口。Windows/表单交互待实机。
   源码包已完成CRC/逐文件回读，ZIP `registration_phase2_font1.zip`，24,199,085B，
   MD5 `766b458916c391b872972a371038badf`，SHA256 `438994935eb3fa6af77c2ac4ee06d5d5f0b1602d2f050ee73f9e189b03ce9a7a`。
-  尚未上传，待当轮明确确认；不能拿此字体修正冒充全部原生验收。
+  源码 `254e934` 已推送。用户本轮明确选择上传，已上传
+  [registration_phase2_font1.zip](https://drive.google.com/file/d/1YtpqnvZFYxDJeK9biN3rLyFcr8WYurf9/view)
+  到My Drive根目录；返回大小/MD5与本地一致，未改权限/删除旧包，未再次下载核验。
+  不能拿此字体修正冒充全部原生验收。
 
 ## 4. 等待外部输入
 
