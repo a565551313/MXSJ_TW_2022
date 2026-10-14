@@ -38,9 +38,12 @@ src/script_editor/core/{archives,compiler,project,inspection,services,vm/{py25,p
 
 本轮先提交设计检查点并推送，再开始M1。后续提交必须明示已实现/未实现/实际跑过测试。
 
-## 实施状态（2026-10-15，M2支持子集）
+## 实施状态（2026-10-15，M3功能接线）
 
-M1基础已于13e9129推送（GUI实测仍被系统库阻塞）。M2严格双VM转换、原生新包后端、
-独立回读/完整CPython marshal读取与实验CLI已实现，详情见M2_NATIVE_BUILD.md。
-支持子集/明确拒绝条件不是所有原模块通用编辑；GUI写包、项目承接新包/差异清单留到M3，
-Windows两套内置运行时及实机仍属M4，未将它们标为完成。
+M1基础13e9129、M2核心efbb654已推送。M3推进至0.3.0.dev1：
+可信源码快照、原文件名bytes、真实预编译/native全字节往返、单条清单/引用线索、
+新包发布与关联重基、schema2与schema1兼容、GUI新包/项目续编接线已实现。
+详见[M3_WORKFLOW.md](M3_WORKFLOW.md)与[M2支持子集](M2_NATIVE_BUILD.md)。
+核心双编译器/真实双包两轮构建已离线通过，GUI交互测试因缺系统库仍未执行，
+故M3尚未完整验收。未挂载校验布局/控件，不自动接线/新增模块；
+M4的Windows内置双运行时/EXE/实机仍未交付，不能拿Linux验证替代。

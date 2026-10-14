@@ -13,7 +13,7 @@ def raw_string(value):
     return b"s" + struct.pack("<I", len(value)) + value
 
 
-def minimal_pyc(vm, value=1, code=b"d\0\0S", lnotab=b""):
+def minimal_pyc(vm, value=1, code=b"d\0\0S", lnotab=b"", filename=b"authored.py"):
     empty = b"(" + bytes(4)
     root = (
         b"c"
@@ -22,7 +22,7 @@ def minimal_pyc(vm, value=1, code=b"d\0\0S", lnotab=b""):
         + b"(\1\0\0\0i"
         + struct.pack("<i", value)
         + empty * 4
-        + raw_string(b"authored.py")
+        + raw_string(filename)
         + raw_string(b"<module>")
         + struct.pack("<I", 1)
         + raw_string(lnotab)
@@ -37,10 +37,10 @@ def xor(payload, keys, bounds):
     )
 
 
-def script_fixture(expanded_size=512, two_modules=False):
+def script_fixture(expanded_size=512, two_modules=False, filename=b"authored.py"):
     keys = [1, 11, 21, 31, 41]
     bounds = [expanded_size * i // 5 for i in range(1, 5)]
-    native = py25.encode(minimal_pyc("py25"))
+    native = py25.encode(minimal_pyc("py25", filename=filename))
     stored = zlib.compress(
         xor(native + bytes(expanded_size - len(native)), keys, bounds)
     )
@@ -67,8 +67,12 @@ def script_fixture(expanded_size=512, two_modules=False):
     return bytes(data), catalog
 
 
-def data_fixture():
-    payloads = [b"", py27.encode(minimal_pyc("py27")), b"opaque resource"]
+def data_fixture(filename=b"authored.py"):
+    payloads = [
+        b"",
+        py27.encode(minimal_pyc("py27", filename=filename)),
+        b"opaque resource",
+    ]
     names = ["lib\\", "lib\\sample.pyo", "config.txt"]
     data = bytearray(b"FLS\0" + bytes(range(60)) + b"BEFORE")
     rows = []

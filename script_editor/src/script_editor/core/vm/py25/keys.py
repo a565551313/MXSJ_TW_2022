@@ -61,6 +61,15 @@ class KeyProfile:
         )
 
 
+def read_catalog(path: Path) -> bytes:
+    # Bounded even if the file grows; do not allocate a whole untrusted catalog.
+    with path.open("rb") as stream:
+        raw = stream.read(16 * 1024 * 1024 + 1)
+    if len(raw) > 16 * 1024 * 1024:
+        raise ValueError("XOR catalog exceeds 16MiB safety limit")
+    return raw
+
+
 def load_profile(
     archive: ArchiveDocument,
     index: int,
@@ -77,7 +86,7 @@ def load_profile(
         raise ValueError("not a script container entry")
     if archive.fingerprint() != archive_sha256:
         raise ValueError("source package digest pin mismatch")
-    raw = catalog.read_bytes()
+    raw = read_catalog(catalog)
     if len(raw) > 16 * 1024 * 1024 or sha(raw) != catalog_sha256:
         raise ValueError("XOR catalog digest pin mismatch")
     info = json.loads(raw.decode("utf-8-sig"))[str(index)]

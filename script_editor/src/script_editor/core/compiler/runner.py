@@ -111,7 +111,7 @@ def bundled_compiler(vm: str, root: Path) -> Compiler:
 def compile_standard(
     compiler: Compiler,
     source: str,
-    filename: str,
+    filename: str | bytes,
     destination: Path,
     protected: tuple[Path, ...] = (),
 ) -> str:
@@ -135,7 +135,9 @@ def compile_standard(
         src.write_bytes(source.encode("utf-8"))
         # ASCII descriptor lets a legacy runtime handle Unicode source filenames.
         logical = work / "filename.txt"
-        logical.write_bytes(filename.encode("utf-8"))
+        logical.write_bytes(
+            filename if isinstance(filename, bytes) else filename.encode("utf-8")
+        )
         _run(compiler.executable, [str(helper), str(src), str(pyc), str(logical)], work)
         data = pyc.read_bytes()
     if len(data) < 9 or data[:4] != PROFILES[compiler.vm].magic:

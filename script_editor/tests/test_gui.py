@@ -12,9 +12,11 @@ try:
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication, QMessageBox
 
-    from script_editor.gui.window import Window
 except ImportError as exc:
     QT_ERROR = str(exc)
+
+if not QT_ERROR:
+    from script_editor.gui.window import Window
 
 
 @unittest.skipIf(bool(QT_ERROR), "GUI未执行：" + QT_ERROR)

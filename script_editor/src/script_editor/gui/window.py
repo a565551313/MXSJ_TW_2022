@@ -26,12 +26,12 @@ from PySide6.QtWidgets import (
 from .. import __version__
 from ..core.archives.document import ArchiveDocument
 from ..core.compiler.profiles import PROFILES
-from ..core.compiler.runner import bundled_compiler, compile_standard, inspect_compiler
 from ..core.inspection.encoding import byte_literal
-from ..core.project.document import Binding, load_project, save_project
 from ..core.services.files import read_source, save_source
+from .build_actions import BuildActions
 from .code_editor import CodeEditor
 from .jobs import Job
+from .project_actions import ProjectActions
 
 
 class SourceTab(QWidget):
@@ -52,16 +52,18 @@ class SourceTab(QWidget):
         layout.addWidget(self.editor)
 
 
-class Window(QMainWindow):
+class Window(ProjectActions, BuildActions, QMainWindow):
     def __init__(self, runtime_root: Path):
         super().__init__()
         self.runtime_root = runtime_root
         self.archives: list[ArchiveDocument] = []
-        self.bindings: list[Binding] = []
+        self.bindings = []
+        self.catalogs = []
+        self.built_texts = {}
         self.project_dirty = False
         self.compilers = {}
         self.jobs = set()
-        self.setWindowTitle(f"MXSJ 脚本编辑器 {__version__} · 基础版（原生写包未启用）")
+        self.setWindowTitle(f"MXSJ 脚本编辑器 {__version__} · M3实验版")
         self.resize(1180, 760)
         self.tree = QTreeWidget()
         self.tree.setHeaderLabels(["包 / 条目（内容尚未解码验证）", "存储字节"])
@@ -92,7 +94,7 @@ class Window(QMainWindow):
         splitter.setSizes([260, 650, 270])
         body = QWidget()
         box = QVBoxLayout(body)
-        banner = QLabel("M1 · 源码保存 ≠ 游戏写包；反编译稿不能当作可信源码")
+        banner = QLabel("M3 · 源码保存 ≠ 游戏写包；反编译稿不能当作可信源码")
         banner.setWordWrap(True)
         box.addWidget(banner)
         box.addWidget(splitter)
@@ -138,10 +140,14 @@ class Window(QMainWindow):
         build.addAction("选择/检查当前VM的标准编译器…", self.select_compiler)
         build.addAction("检查当前VM的内置编译器", self.check_bundled)
         build.addAction("仅编译为标准.pyc…", self.compile)
-        native = build.addAction("生成原生新包（M2核心已实现，界面待接入）")
-        native.setEnabled(False)
+        build.addAction("选择当前包的XOR目录…", self.configure_catalog)
+        self.native_action = build.addAction(
+            "生成原生新包：预编译与清单…", self.preview_native
+        )
         self.tree.itemSelectionChanged.connect(self.show_entry)
-        self.statusBar().showMessage("就绪 · 无原生写包能力")
+        self.tabs.currentChanged.connect(self.refresh_native_action)
+        self.refresh_native_action()
+        self.statusBar().showMessage("就绪 · 原生写包需关联源码并通过清单确认")
 
     def fail(self, message):
         QMessageBox.warning(self, "操作未完成", str(message))
@@ -151,15 +157,23 @@ class Window(QMainWindow):
             return
         job = Job(function)
         self.jobs.add(job)
+        actions = [
+            (action, action.isEnabled()) for action in self.findChildren(QAction)
+        ]
         self.centralWidget().setEnabled(False)
         self.menuBar().setEnabled(False)
+        for action, _ in actions:
+            action.setEnabled(False)
         self.statusBar().showMessage("后台处理中…")
 
         def finish(result, error=False):
             self.jobs.discard(job)
             self.centralWidget().setEnabled(True)
             self.menuBar().setEnabled(True)
-            self.statusBar().showMessage("就绪 · 无原生写包能力")
+            for action, enabled in actions:
+                action.setEnabled(enabled)
+            self.refresh_native_action()
+            self.statusBar().showMessage("就绪 · 原生写包需关联源码并通过清单确认")
             if error:
                 self.fail(result)
             else:
@@ -168,23 +182,33 @@ class Window(QMainWindow):
                 except Exception as exc:
                     self.fail(exc)
 
-        job.signals.done.connect(lambda result: finish(result))
-        job.signals.failed.connect(lambda error: finish(error, True))
+        job.signals.done.connect(
+            lambda result: finish(result), Qt.ConnectionType.QueuedConnection
+        )
+        job.signals.failed.connect(
+            lambda error: finish(error, True), Qt.ConnectionType.QueuedConnection
+        )
         QThreadPool.globalInstance().start(job)
 
     def add_archive(self, document):
         if any(a.path == document.path for a in self.archives):
             document.close()
             return
-        self.archives.append(document)
         root = QTreeWidgetItem([f"{document.path.name} / {document.vm}（候选VM）", ""])
         root.setToolTip(0, str(document.path))
-        self.tree.addTopLevelItem(root)
+        root.setData(0, Qt.ItemDataRole.UserRole + 1, document)
         for entry in document.entries:
             child = QTreeWidgetItem([entry.identity, str(entry.size)])
             child.setData(0, Qt.ItemDataRole.UserRole, (document, entry.index))
             root.addChild(child)
-        self.filter_tree(self.filter.text())
+        self.tree.addTopLevelItem(root)
+        self.archives.append(document)
+        try:
+            self.filter_tree(self.filter.text())
+        except Exception:
+            self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(root))
+            self.archives.remove(document)
+            raise
 
     def open_archive(self):
         name, _ = QFileDialog.getOpenFileName(
@@ -206,11 +230,26 @@ class Window(QMainWindow):
         return item.data(0, Qt.ItemDataRole.UserRole) if item else None
 
     def show_entry(self):
+        self.refresh_native_action()
         selected = self.selected()
         if selected:
             archive, index = selected
             try:
                 metadata = archive.entry_metadata(index)
+                binding = next(
+                    (
+                        b
+                        for b in self.bindings
+                        if b.archive == archive.path and b.index == index
+                    ),
+                    None,
+                )
+                if binding:
+                    metadata["source_status"] = "user-associated-not-game-verified"
+                    metadata["source_path"] = str(binding.source)
+                    metadata["built_source_sha256"] = (
+                        binding.built_source_sha256 or "未知"
+                    )
             except Exception as exc:
                 self.info.setPlainText(str(exc))
                 return
@@ -218,10 +257,10 @@ class Window(QMainWindow):
                 str(archive.path)
                 + "\n"
                 + json.dumps(metadata, ensure_ascii=False, indent=2)
-                + "\n索引识别≠已验证模块。无原生解码/可编译源码。"
+                + "\n索引识别≠已验证模块。仅显式关联可信源码才可构建；不自动生成源码。"
             )
 
-    def add_source(self, path, vm="py25", reference=False):
+    def add_source(self, path, vm="py25", reference=False, text=None):
         path = path.resolve()
         for i in range(self.tabs.count()):
             if self.tabs.widget(i).path == path:
@@ -229,7 +268,9 @@ class Window(QMainWindow):
                     raise ValueError("该文件已按另一来源类型打开，请先关闭原标签")
                 self.tabs.setCurrentIndex(i)
                 return
-        tab = SourceTab(path, read_source(path), vm, reference)
+        tab = SourceTab(
+            path, read_source(path) if text is None else text, vm, reference
+        )
         label = ("[参考] " if reference else "") + path.name
         self.tabs.addTab(tab, label)
         self.tabs.setCurrentWidget(tab)
@@ -241,6 +282,8 @@ class Window(QMainWindow):
             )
 
         tab.editor.document().modificationChanged.connect(changed)
+        tab.vm.currentIndexChanged.connect(self.refresh_native_action)
+        self.refresh_native_action()
 
     def open_source(self):
         name, _ = QFileDialog.getOpenFileName(
@@ -288,6 +331,8 @@ class Window(QMainWindow):
         return tab
 
     def save_tab(self, tab):
+        if self.jobs:
+            raise ValueError("后台任务期间不能保存源码")
         if tab.reference:
             raise ValueError("参考稿不能保存为可信源码")
         save_source(tab.path, tab.editor.toPlainText(), [a.path for a in self.archives])
@@ -326,154 +371,6 @@ class Window(QMainWindow):
         if self.confirm_tab(tab):
             self.tabs.removeTab(index)
             tab.deleteLater()
-
-    def associate(self):
-        try:
-            tab = self.editable()
-            selected = self.selected()
-            if not selected:
-                raise ValueError("请选中包条目")
-            archive, index = selected
-            if tab.vm.currentData() != archive.vm:
-                raise ValueError("源码的候选VM与条目不同，请先显式确认VM")
-            if (
-                QMessageBox.question(
-                    self,
-                    "确认来源（不证明与原模块一致）",
-                    "关联仅记录您的源码选择，不验证反编译准确性。继续？",
-                    defaultButton=QMessageBox.StandardButton.No,
-                )
-                != QMessageBox.StandardButton.Yes
-            ):
-                return
-
-            def complete(binding):
-                self.bindings = [
-                    b
-                    for b in self.bindings
-                    if (b.archive, b.index) != (archive.path, index)
-                ] + [binding]
-                self.project_dirty = True
-                self.info.setPlainText(
-                    "已记录用户关联，未通过原生回读验证。请保存项目。"
-                )
-
-            self.task(lambda: Binding.associate(archive, index, tab.path), complete)
-        except Exception as exc:
-            self.fail(exc)
-
-    def save_project(self):
-        name, _ = QFileDialog.getSaveFileName(
-            self,
-            "保存关联项目（不复制包或源码）",
-            "",
-            "Script project (*.mxscript.json)",
-        )
-        if name:
-            try:
-                path = Path(name)
-                if not name.endswith(".mxscript.json"):
-                    path = Path(name + ".mxscript.json")
-                save_project(path, self.bindings)
-                self.project_dirty = False
-                return True
-            except Exception as exc:
-                self.fail(exc)
-        return False
-
-    def confirm_project(self):
-        if not self.project_dirty:
-            return True
-        reply = QMessageBox.question(
-            self,
-            "项目关联未保存",
-            "保存当前源码关联项目？",
-            QMessageBox.StandardButton.Save
-            | QMessageBox.StandardButton.Discard
-            | QMessageBox.StandardButton.Cancel,
-            QMessageBox.StandardButton.Cancel,
-        )
-        if reply == QMessageBox.StandardButton.Cancel:
-            return False
-        if reply == QMessageBox.StandardButton.Save:
-            return self.save_project()
-        return True
-
-    def open_project(self):
-        if not self.confirm_project():
-            return
-        name, _ = QFileDialog.getOpenFileName(
-            self, "打开项目并检查包指纹", "", "Script project (*.mxscript.json)"
-        )
-        if name:
-
-            def complete(bindings):
-                self.bindings = bindings
-                self.project_dirty = False
-                for binding in bindings:
-                    if not any(a.path == binding.archive for a in self.archives):
-                        self.add_archive(ArchiveDocument(binding.archive))
-                    self.add_source(binding.source, binding.vm)
-
-            self.task(lambda: load_project(Path(name)), complete)
-
-    def select_compiler(self):
-        try:
-            vm = self.current().vm.currentData()
-            name, _ = QFileDialog.getOpenFileName(
-                self, f"选择标准CPython {PROFILES[vm].version}"
-            )
-            if name:
-                self.task(
-                    lambda: inspect_compiler(Path(name), vm), self.register_compiler
-                )
-        except Exception as exc:
-            self.fail(exc)
-
-    def register_compiler(self, compiler):
-        self.compilers[compiler.vm] = compiler
-        self.info.setPlainText(
-            f"{compiler.vm} / CPython {compiler.version} / "
-            f"{compiler.bits}bit\n{compiler.executable}\n"
-            f"SHA256 {compiler.sha256}\n仅编译，不执行目标模块。"
-        )
-
-    def check_bundled(self):
-        try:
-            vm = self.current().vm.currentData()
-            self.task(
-                lambda: bundled_compiler(vm, self.runtime_root), self.register_compiler
-            )
-        except Exception as exc:
-            self.fail(exc)
-
-    def compile(self):
-        try:
-            tab = self.editable()
-            compiler = self.compilers.get(tab.vm.currentData())
-            if compiler is None:
-                raise ValueError("当前VM没有已验证的编译器；请先检查内置或显式选择")
-            name, _ = QFileDialog.getSaveFileName(
-                self, "仅生成标准pyc；不能直接用于游戏", "", "Standard bytecode (*.pyc)"
-            )
-            if not name:
-                return
-            target = Path(name if name.lower().endswith(".pyc") else name + ".pyc")
-            text = tab.editor.toPlainText()
-            protected = tuple(
-                [a.path for a in self.archives]
-                + [self.tabs.widget(i).path for i in range(self.tabs.count())]
-            )
-            self.task(
-                lambda: compile_standard(
-                    compiler, text, str(tab.path), target, protected
-                ),
-                lambda digest: self.info.setPlainText(
-                    f"标准.pyc编译成功（未写原生包）\nSHA256 {digest}"
-                ),
-            )
-        except Exception as exc:
-            self.fail(exc)
 
     def encode(self, codec):
         try:

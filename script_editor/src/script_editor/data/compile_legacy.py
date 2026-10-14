@@ -15,7 +15,8 @@ def main():
     stream = open(filename_path, "rb")
     try:
         # CPython 2.5 compile() coerces Unicode filename through ASCII.
-        # Use explicit UTF-8 bytes for co_filename, never the system codepage.
+        # Preserve original filename bytes (or caller-supplied UTF-8), never
+        # implicitly transcode using the system codepage.
         filename = stream.read()
     finally:
         stream.close()

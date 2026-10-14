@@ -17,6 +17,7 @@ MAX_MARSHAL = 64 * 1024 * 1024
 class Atom:
     tag: bytes
     raw: bytes
+    value: bytes | None = None
 
 
 @dataclass(frozen=True)
@@ -41,6 +42,7 @@ class Reader:
         if len(data) > MAX_MARSHAL:
             raise ValueError("marshal exceeds 64MiB safety limit")
         self.data, self.pos, self.native27 = data, 0, native27
+        self.intern_values = []
         self.interns = 0
         self.nodes = 0
 
@@ -65,13 +67,16 @@ class Reader:
             raise ValueError("marshal nesting/node limit")
         start = self.pos
         tag = self.take(1)
+        resolved = None
         if tag in (b"N", b"F", b"T", b"S", b"."):
             pass
         elif tag in (b"i", b"I", b"g", b"y"):
             self.take({b"i": 4, b"I": 8, b"g": 8, b"y": 16}[tag])
         elif tag == b"R":
-            if self.uint() >= self.interns:
+            index = self.uint()
+            if index >= self.interns:
                 raise ValueError("invalid marshal intern reference")
+            resolved = self.intern_values[index]
         elif tag == b"l":
             count = abs(struct.unpack("<i", self.take(4))[0])
             digits = self.take(count * 2)
@@ -79,8 +84,10 @@ class Reader:
                 raise ValueError("invalid marshal long digit")
         elif tag in (b"s", b"t", b"u"):
             value = self.take(self.uint())
+            resolved = value
             if tag == b"t":
                 self.interns += 1
+                self.intern_values.append(value)
             if tag == b"u":
                 value.decode("utf-8")
         elif tag in (b"f", b"x"):
@@ -115,7 +122,7 @@ class Reader:
             return Code(header, code, fields, firstline, lnotab, extra)
         else:
             raise ValueError(f"unknown marshal tag {tag!r} at {start}")
-        return Atom(tag, self.data[start : self.pos])
+        return Atom(tag, self.data[start : self.pos], resolved)
 
 
 def parse(data: bytes, *, native27=False, zero_padding=False) -> Code:
