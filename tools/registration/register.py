@@ -21,10 +21,49 @@
 #      密碼/郵箱四框 + 上一步/確認註冊/返回首頁三按鈕）-> 樁提示。
 #      單帳號/密碼 6~16 位字母數字；勾選五帳號時基礎帳號 6~14 位，
 #      產生原帳號、_1、_2、_3、_4，共用密碼/郵箱。真註冊仍待服務端。
-import C_sys
-import combdialog
-import combmacro
-import interface
+def _Diag(text):
+    """ASCII 階段日誌：每個原生呼叫前/後各寫一筆並關檔。
+
+    不記錄表單值或異常文字；日誌寫入失敗不阻止 UI。
+    同步原生呼叫若不返回，只能保留最後階段，不能靠 except 救回死鎖。
+    """
+    try:
+        try:
+            f = open("photo\\register_diag.txt", "ab")
+        except IOError:
+            # 測試副本缺 photo 目錄時退回遊戲工作目錄，不創建/覆蓋資源。
+            f = open("register_diag.txt", "ab")
+        try:
+            f.write((str(text) + "\n").encode("ascii", "replace"))
+        finally:
+            f.close()
+    except Exception:
+        pass
+
+
+def _ImportRuntime():
+    # 首次點擊可能卡在模塊導入，不能等類定義完才開始寫日誌。
+    _Diag("module import C_sys begin")
+    import C_sys
+
+    _Diag("module import C_sys ready")
+    _Diag("module import combdialog begin")
+    import combdialog
+
+    _Diag("module import combdialog ready")
+    _Diag("module import combmacro begin")
+    import combmacro
+
+    _Diag("module import combmacro ready")
+    _Diag("module import interface begin")
+    import interface
+
+    _Diag("module import interface ready")
+    return C_sys, combdialog, combmacro, interface
+
+
+_Diag("phase2-diag1 module begin")
+C_sys, combdialog, combmacro, interface = _ImportRuntime()
 
 g_AccountInfo = {}
 g_CDKey = "1234567890123456"
@@ -285,20 +324,6 @@ TERMS_FALLBACK = [
 ]
 
 
-def _Diag(text):
-    """第一期診斷：把註冊流程的關鍵節點寫到 photo\\register_diag.txt。
-
-    客戶端會吞掉 OnMessage 裡的腳本異常（界面上只是「沒反應」），
-    沒有這支日誌就無從定位。純 ASCII 寫入，永不拋錯。
-    """
-    try:
-        f = open("photo\\register_diag.txt", "ab")
-        f.write((str(text) + "\n").encode("ascii", "replace"))
-        f.close()
-    except Exception:
-        pass
-
-
 def _PlayBtnSound():
     import sound
 
@@ -332,13 +357,27 @@ class CRegTermsPanel(combdialog.CCombPanel):
     """
 
     def __init__(self, parent):
+        _Diag("terms layout begin")
         combdialog.CCombPanel.__init__(self, parent, "login/regterms.dlg")
+        _Diag("terms layout ready")
+        _Diag("terms import chatoutput begin")
         import chatoutput
 
+        _Diag("terms import chatoutput ready")
+        _Diag("terms source begin")
         result = _LoadTermsLines()
+        _Diag("terms source ready")
+        _Diag("terms anchor begin")
         output = self.GetObject("loc_msg")
         (w, h) = output.GetSize()
         (x, y) = output.GetPos()
+        _Diag("terms anchor ready")
+        _Diag("terms geometry w=%s h=%s" % (w, h))
+        # 原 COutput.__init__ 將可用行寬設為 w-20（entry 4832 pc78..88）。
+        # 非正行寬/高度不送進原生排版；這是防禦，不代表本次卡屏根因。
+        if w <= 20 or h <= 0:
+            raise ValueError("invalid terms geometry")
+        _Diag("terms output create begin")
         self.m_PublicTxtBox = chatoutput.COutput(
             self,
             w,
@@ -349,12 +388,22 @@ class CRegTermsPanel(combdialog.CCombPanel):
             txt_font=interface.FontLT14_3,
             txt_color=interface.COLOR_1,
         )
+        _Diag("terms output create ready")
+        _Diag("terms output position begin")
         self.m_PublicTxtBox.SetPos(x, y)
+        _Diag("terms output position ready")
+        _Diag("terms output cursor begin")
         self.m_PublicTxtBox.SetChatCursor(0)
+        _Diag("terms output cursor ready")
+        _Diag("terms output reset begin")
         self.m_PublicTxtBox.ResetFromCursor()
+        _Diag("terms output reset ready")
+        _Diag("terms output scroll begin")
         self.m_PublicTxtBox.ScrollTo(0)
+        _Diag("terms output scroll ready")
 
     def OnMessage(self, msgid):
+        _Diag("terms msgid=%s" % (msgid,))
         _PlayBtnSound()
         if msgid == 1:
             Step(1)
@@ -418,31 +467,46 @@ class CRegFormPanel(combdialog.CCombPanel):
     """
 
     def __init__(self, parent):
+        _Diag("form layout begin")
         combdialog.CCombPanel.__init__(self, parent, "login/regform.dlg")
+        _Diag("form layout ready")
+        _Diag("form import C_object begin")
         import C_object
 
+        _Diag("form import C_object ready")
+        _Diag("form account begin")
         self.m_AccountEdit = combmacro.CEDIT(
             CRegAccountEdit, "account", self, 0, interface.FONT_EDIT, linecolor=0
         )
         self.m_AccountEdit.SetLimit(16)
+        _Diag("form account ready")
+        _Diag("form password begin")
         self.m_PwdEdit = combmacro.CEDIT(
             CRegPwdEdit, "pwd", self, 0, interface.FONT_EDIT, linecolor=0
         )
         self.m_PwdEdit.SetLimit(16)
         self.m_PwdEdit.m_IsPassword = True
+        _Diag("form password ready")
+        _Diag("form confirmation begin")
         self.m_PwdEdit2 = combmacro.CEDIT(
             CRegPwdEdit, "pwd2", self, 0, interface.FONT_EDIT, linecolor=0
         )
         self.m_PwdEdit2.SetLimit(16)
         self.m_PwdEdit2.m_IsPassword = True
+        _Diag("form confirmation ready")
+        _Diag("form email begin")
         self.m_EmailEdit = combmacro.CEDIT(
             interface.CEdit, "email", self, 0, interface.FONT_EDIT, linecolor=0
         )
         self.m_EmailEdit.SetLimit(50)
+        _Diag("form email ready")
+        _Diag("form tab begin")
         self.m_AccountEdit.SetNextEdit(self.m_PwdEdit)
         self.m_PwdEdit.SetNextEdit(self.m_PwdEdit2)
         self.m_PwdEdit2.SetNextEdit(self.m_EmailEdit)
         self.m_EmailEdit.SetNextEdit(self.m_AccountEdit)
+        _Diag("form tab ready")
+        _Diag("form hint begin")
         self.m_Text = combmacro.CRICHTEXT(
             C_object.CRichTextObject,
             "txt",
@@ -451,17 +515,24 @@ class CRegFormPanel(combdialog.CCombPanel):
             interface.FONT_EDIT,
             interface.COLOR_EDIT,
         )
+        _Diag("form hint ready")
+        _Diag("form checkbox begin")
         self.m_FiveCheck = combmacro.CIMGCHECKBOX(
             interface.CImageCheckBox, "chk_five", self, IMG_FIVE_CHECK, True, 4
         )
         # 原生工廠綁 .dlg 錨點，放大命中區使方框/文字都可點擊。
         (w, h) = self.GetObject("chk_five").GetSize()
         self.m_FiveCheck.SetSize(w, h)
+        _Diag("form checkbox ready")
         self.m_RegistrationRequests = []
         # 只有日後真實請求送出時才可設置 pending；留樁不設置，不能假報成功。
         self.m_PendingAccounts = None
+        _Diag("form defaults begin")
         self.SetRegisterFive(False)
+        _Diag("form defaults ready")
+        _Diag("form focus begin")
         self.m_AccountEdit.Active(True)
+        _Diag("form focus ready")
 
     def SetRegisterFive(self, enabled):
         self.m_FiveCheck.SetCheck(bool(enabled))
@@ -595,19 +666,64 @@ class CRegFormPanel(combdialog.CCombPanel):
 _PANELS = [CRegTermsPanel, CRegFormPanel]
 
 
+def _RecoverEntry():
+    # 首頁的原入口先 Show(False)，僅對會返回的 Python 異常作盡力回復。
+    # 不清除仍正常顯示的舊註冊頁，不聲稱能撤銷部分原生構造或中止原生阻塞。
+    _Diag("entry recovery begin")
+    try:
+        C_sys.InputSecrecy(0)
+        _Diag("entry recovery secrecy ready")
+    except Exception:
+        _Diag("entry recovery secrecy failed")
+    try:
+        _Diag("entry recovery home begin")
+        import mainpage
+
+        mainpage.Show(True)
+        _Diag("entry recovery home ready")
+    except Exception:
+        _Diag("entry recovery home failed")
+
+
 def Step(n):
     global g_RegisterPanel
-    g_RegisterPanel = _PANELS[n](interface.DialogPanel)
+    _Diag("step=%s begin" % (n,))
+    try:
+        panel = _PANELS[n](interface.DialogPanel)
+    except Exception:
+        import sys
+
+        _Diag("step=%s EXC type=%s" % (n, sys.exc_info()[0].__name__))
+        if g_RegisterPanel is None:
+            _RecoverEntry()
+        return False
+    # 構造完成才發布；回上一頁/下一頁失敗時，原頁引用保持不動。
+    g_RegisterPanel = panel
+    _Diag("step=%s ready" % (n,))
+    return True
 
 
 def Show(s):
     global g_RegisterPanel
     if s:
-        C_sys.InputSecrecy(1)
-        Step(0)
+        _Diag("phase2-diag1 show open begin")
+        try:
+            _Diag("input secrecy on begin")
+            C_sys.InputSecrecy(1)
+            _Diag("input secrecy on ready")
+            return Step(0)
+        except Exception:
+            import sys
+
+            _Diag("show EXC type=%s" % (sys.exc_info()[0].__name__,))
+            if g_RegisterPanel is None:
+                _RecoverEntry()
+            return False
     else:
+        _Diag("show close begin")
         g_RegisterPanel = None
         C_sys.InputSecrecy(0)
+        _Diag("show close ready")
 
 
 # --- 舊版對外雜項接口：保留簽名，避免其他模塊引用時出錯 ---
@@ -637,3 +753,6 @@ def ClearRegCode():
             shutil.rmtree(path)
     except Exception:
         pass
+
+
+_Diag("phase2-diag1 module ready")

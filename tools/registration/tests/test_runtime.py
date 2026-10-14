@@ -15,7 +15,7 @@ PYTHON25 = os.environ.get("MXSJ_PYTHON25")
 
 @unittest.skipUnless(PYTHON25, "set MXSJ_PYTHON25 to the CPython 2.5.6 interpreter")
 class RegistrationRuntimeTest(unittest.TestCase):
-    def test_authored_module_under_native_python_version(self):
+    def compile_and_run(self, *arguments):
         with tempfile.TemporaryDirectory() as temp:
             cwd = Path(temp)
             pyc = cwd / "register.pyc"
@@ -32,20 +32,36 @@ class RegistrationRuntimeTest(unittest.TestCase):
                 cwd=cwd,
             )
             self.assertEqual(compiled.returncode, 0, compiled.stdout + compiled.stderr)
-            run = subprocess.run(
-                [PYTHON25, str(HERE / "harness.py2"), str(pyc)],
+            return subprocess.run(
+                [PYTHON25, str(HERE / "harness.py2"), str(pyc), *arguments],
                 capture_output=True,
                 text=True,
                 check=False,
                 cwd=cwd,
             )
-            self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
-            self.assertIn("ALL HARNESS CHECKS PASSED", run.stdout)
-            self.assertIn(
-                "five candidate names + shared credentials + honest stub OK", run.stdout
-            )
-            self.assertIn("future full-success popup guard", run.stdout)
-            self.assertIn("no credentials in diagnostic log OK", run.stdout)
+
+    def test_authored_module_under_native_python_version(self):
+        run = self.compile_and_run()
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        self.assertIn("ALL HARNESS CHECKS PASSED", run.stdout)
+        self.assertIn(
+            "five candidate names + shared credentials + honest stub OK", run.stdout
+        )
+        self.assertIn("future full-success popup guard", run.stdout)
+        self.assertIn("no credentials in diagnostic log OK", run.stdout)
+        self.assertIn(
+            "entry stage markers + native boundary ordering OK", run.stdout
+        )
+        self.assertIn(
+            "entry failures + geometry guard + atomic publication"
+            " + private logging OK",
+            run.stdout,
+        )
+
+    def test_initial_layout_exception_recovers_home(self):
+        run = self.compile_and_run("--entry-failure-probe")
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        self.assertIn("initial layout exception recovery OK", run.stdout)
 
 
 class RegistrationOutputGuardTest(unittest.TestCase):

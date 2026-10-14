@@ -7,6 +7,12 @@ import sys
 import types
 
 EVENTS = []
+FAULTS = {}
+
+
+def trip(stage):
+    if FAULTS.get(stage):
+        raise ValueError('Preview42')  # never log exception text
 
 
 def mod(name, **attrs):
@@ -25,6 +31,8 @@ class FakeObj(object):
         self.text = ''
 
     def GetSize(self):
+        if self.name == 'loc_msg' and 'terms.size' in FAULTS:
+            return FAULTS['terms.size']
         return self.size
 
     def GetPos(self):
@@ -83,6 +91,7 @@ class FakePanel(object):
     }
 
     def __init__(self, parent, dlgpath):
+        trip(dlgpath + '.load')
         self.dlgpath = dlgpath
         self.objects = dict((name, FakeObj(name)) for name in self.NAMES[dlgpath])
         if dlgpath == 'login/regform.dlg':
@@ -90,6 +99,7 @@ class FakePanel(object):
         EVENTS.append(('Panel', dlgpath))
 
     def GetObject(self, name):
+        trip(name + '.lookup')
         return self.objects[name]  # unknown names fail rather than invent objects
 
     def Topmost(self):
@@ -146,23 +156,33 @@ def fake_image_checkbox(cls, name, parent, filename, manual, msgid):
 
 class FakeOutput(object):
     def __init__(self, parent, w, h, x, y, lines, txt_font=None, txt_color=None):
+        trip('output.create')
         self.lines = lines
         EVENTS.append(('COutput', lines))
 
     def SetPos(self, x, y):
-        pass
+        trip('output.position')
 
     def ScrollTo(self, n):
+        trip('output.scroll')
         EVENTS.append(('ScrollTo', n))
 
     def SetChatCursor(self, n):
+        trip('output.cursor')
         EVENTS.append(('ChatCursor', n))
 
     def ResetFromCursor(self):
+        trip('output.reset')
         EVENTS.append(('ResetFromCursor',))
 
 
-mod('C_sys', InputSecrecy=lambda f: EVENTS.append(('InputSecrecy', f)))
+def fake_input_secrecy(flag):
+    if flag:
+        trip('secrecy')
+    EVENTS.append(('InputSecrecy', flag))
+
+
+mod('C_sys', InputSecrecy=fake_input_secrecy)
 mod('combdialog', CCombPanel=FakePanel)
 mod('combmacro', CEDIT=fake_cedit, CRICHTEXT=fake_richtext,
     CIMGCHECKBOX=fake_image_checkbox)
@@ -191,6 +211,17 @@ code = marshal.loads(source.read()[8:])
 source.close()
 g = {'__name__': 'register'}
 exec code in g
+
+# Independent regression: old source raises instead of recovering. Kept before
+# marker assertions so the baseline failure is not merely a missing log token.
+if '--entry-failure-probe' in sys.argv:
+    FAULTS['login/regterms.dlg.load'] = True
+    assert g['Show'](True) is False
+    assert g['g_RegisterPanel'] is None
+    assert ('mainpage.Show', True) in EVENTS
+    assert ('InputSecrecy', 0) in EVENTS
+    print 'initial layout exception recovery OK'
+    sys.exit(0)
 
 # 1. Terms: native layout and cursor protocol, missing servicedata fallback.
 g['Show'](True)
@@ -408,4 +439,88 @@ g['ModuleReset']()
 assert g['g_AccountInfo'] == {} and g['g_RegisterPanel'] is None
 assert g['g_ConfirmDlg'] is None
 print 'back/home + supplied terms + original confirm + reset OK'
+# 10. Entry markers precede every potentially blocking native boundary.
+# These probes test our authored control flow only, not a native engine hang.
+diag = open('photo\\register_diag.txt', 'rb').read()
+markers = (
+    'phase2-diag1 module begin', 'module import C_sys begin',
+    'module import C_sys ready', 'module import combdialog begin',
+    'module import combdialog ready', 'module import combmacro begin',
+    'module import combmacro ready', 'module import interface begin',
+    'module import interface ready', 'phase2-diag1 module ready',
+    'phase2-diag1 show open begin', 'input secrecy on begin',
+    'input secrecy on ready', 'step=0 begin', 'terms layout begin',
+    'terms layout ready', 'terms import chatoutput begin',
+    'terms import chatoutput ready', 'terms source begin', 'terms source ready',
+    'terms anchor begin', 'terms anchor ready', 'terms geometry w=400 h=300',
+    'terms output create begin', 'terms output create ready',
+    'terms output position begin', 'terms output position ready',
+    'terms output cursor begin', 'terms output cursor ready',
+    'terms output reset begin', 'terms output reset ready',
+    'terms output scroll begin', 'terms output scroll ready', 'step=0 ready',
+)
+positions = [diag.index(marker) for marker in markers]
+assert positions == sorted(positions), positions
+print 'entry stage markers + native boundary ordering OK'
+
+# 11. Initial-entry exceptions restore home/secrecy best-effort; failed
+# transitions retain the already published panel. No fake hang timeout claim.
+g['ModuleReset']()
+for stage in ('secrecy', 'login/regterms.dlg.load', 'loc_msg.lookup',
+              'output.create', 'output.position', 'output.cursor',
+              'output.reset', 'output.scroll'):
+    FAULTS[stage] = True
+    del EVENTS[:]
+    assert g['Show'](True) is False, stage
+    assert g['g_RegisterPanel'] is None, stage
+    assert ('mainpage.Show', True) in EVENTS, stage
+    assert ('InputSecrecy', 0) in EVENTS, stage
+    FAULTS.clear()
+for size in ((0, 300), (20, 300), (400, 0), (-1, 300)):
+    FAULTS['terms.size'] = size
+    del EVENTS[:]
+    assert g['Show'](True) is False, size
+    assert not any(e[0] == 'COutput' for e in EVENTS), size
+    assert ('mainpage.Show', True) in EVENTS, size
+    FAULTS.clear()
+assert g['Show'](True) is True
+previous = g['g_RegisterPanel']
+FAULTS['login/regform.dlg.load'] = True
+del EVENTS[:]
+assert g['Step'](1) is False
+assert g['g_RegisterPanel'] is previous
+assert not any(e[0] == 'mainpage.Show' for e in EVENTS)
+FAULTS.clear()
+assert g['Step'](1) is True
+previous = g['g_RegisterPanel']
+FAULTS['output.reset'] = True
+assert g['Step'](0) is False
+assert g['g_RegisterPanel'] is previous
+FAULTS.clear()
+diag = open('photo\\register_diag.txt', 'rb').read()
+assert 'step=0 EXC type=ValueError' in diag
+assert 'step=1 EXC type=ValueError' in diag
+assert 'show EXC type=ValueError' in diag
+assert 'entry recovery home ready' in diag
+for secret in ('Preview42', 'preview@example.invalid', 'account_4'):
+    assert secret not in diag
+# A write failure cannot make the UI fail; the logger closes each marker.
+original_open = g.get('open')
+def photo_missing_open(path, mode):
+    if path.startswith('photo\\'):
+        raise IOError('photo unavailable')
+    return open(path, mode)
+g['open'] = photo_missing_open
+g['_Diag']('fallback path marker')
+assert 'fallback path marker' in open('register_diag.txt', 'rb').read()
+def failing_log_open(*args):
+    raise IOError('Preview42')
+g['open'] = failing_log_open
+g['_Diag']('safe marker')
+assert g['Show'](True) is True
+if original_open is None:
+    del g['open']
+else:
+    g['open'] = original_open
+print 'entry failures + geometry guard + atomic publication + private logging OK'
 print 'ALL HARNESS CHECKS PASSED'
