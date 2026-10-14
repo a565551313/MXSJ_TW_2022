@@ -1139,7 +1139,7 @@
   "source_profile": "server/docs/csv_checks/batch_001_profiles.json",
   "status": "review_candidate_not_native_verified",
   "tool_and_evidence_sha256": {
-    "server/docs/csv_checks/agent_e_reproduction.json": "d9c2d3702085040a945fbb1ad662655b587ab960d12ba5be1a964b25fef7d0ce",
+    "server/docs/csv_checks/agent_e_reproduction.json": "67053d42ecb59ab0947d52ee1d74c3457bf36e98732ca6b78b9e89ffbc9ee6da",
     "server/docs/csv_checks/batch_001_profiles.json": "3908e0ce4296d555cc0fc2b3bcacf7e8c554adc73434e2ef195c1492d9b445a3",
     "server/tools/export_review_csv.py": "68f84f457cf1a76216afac22036c9e72345b69d23a3322a9ae7a57cabe6b3807",
     "server/tools/map_npc_reproduction.py": "cc5e9349bfb60ca4b2c432505c1f2476939e4c57d829c75cd6cf252a2edd25ca",
@@ -1147,7 +1147,7 @@
     "server/tools/script_literal_reader.py": "cc676ff94432753cdaca80ab322c188871ca31493aa81702f2c1469f034232b3",
     "server/tools/survey_csv_readiness.py": "d4224b47c68dd6f7f073ba4b362f4c6c5d7c0a0b32d53ca5ef4fa67df696c8f5",
     "server/tools/verify_client_data_boundaries.py": "8b1a117160e1354f1d66ff4f7976669550b43d0231ac520805ea7c6fbbc6eca1",
-    "tools/decompiler/batch_decompile.py": "7490dbab6fe70dc65b905338195bd275697afb15be51bae4ef9f67a14b54551d",
+    "tools/decompiler/batch_decompile.py": "242543f8264e72524fea18a19887b8a46ff655511df5ff0f842a4af91965bf25",
     "tools/fls_batch_decoder.py": "eaadba011aeb45bd976b25ddf2c234ca20e8ad8dc89c20144a53ef44e6df721f"
   }
 }
