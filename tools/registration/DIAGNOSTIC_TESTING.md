@@ -1,5 +1,31 @@
 # 第二期入口卡屏诊断包 phase2-diag1
 
+## 最新：phase2-diag2（2026-10-15）
+
+协议已经实机显示；同意消息1已到脚本；表单布局构造ready，账号框阶段抛AttributeError。
+用户确认account/CBox正确。本次不再动interface.fls、布局内容、协议按钮或字段名。
+
+新包仅换测试副本 `data/script.fls`，先退出并单独备份当前script。保留用户现在的
+interface.fls不变。打开协议，点一次同意；只需回传这次 `photo/register_diag.txt`
+（备用工作目录同名）里 `phase2-diag2` 后的末尾约30行，不填真实账号/密码。
+
+| 最后标记 | 定位范围，不是预先认定的根因 |
+|---|---|
+| `form edit account anchor missing` | 运行时该布局没有返回锚点；编辑器有同名不等于运行时取到同一对象 |
+| `factory resolve begin` 后异常 | 获取combmacro.CEDIT属性 |
+| `font resolve begin` 后异常 | 获取interface.FONT_EDIT属性 |
+| `factory call begin` 后异常 | 原生CreateEdit/子类构造内部；按frame/pc定位，不乱换工厂 |
+| `factory call ready` 后 `limit begin` 异常 | 返回对象的SetLimit调用 |
+| `step=1 frame=... line=... pc=...` | 仅代码元数据，不含局部变量/对象值 |
+| `step=1 missing_attribute=...` | 缺失名同时存在于静态co_names才输出；否则隐藏，不打印任意异常文本 |
+
+这不是最终修复宣告。六类故障注入（含私密异常文字不泄漏/原协议引用保留）和
+只读原生接口证据通过，26项回归通过。原diag1不能区分这些断点，独立旧源探针失败。
+相比按旧源码重建的diag1仅4007改变，另外5001条压缩负载全等；相对原包仍仅337/4007。
+不接注册接口，不绕过协议，不重新打包用户布局，不承诺中止原生同步阻塞。
+
+以下为diag1历史说明，其“条款构造失败”的断点已被新的实机结果接续。
+
 ## 目的与边界
 
 2026-10-14 用户确认：网盘 `registration_phase2.zip` 的脚本；两个新布局

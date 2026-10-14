@@ -63,6 +63,14 @@ class RegistrationRuntimeTest(unittest.TestCase):
         self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
         self.assertIn("initial layout exception recovery OK", run.stdout)
 
+    def test_form_edit_attribute_failures_are_separated_without_values(self):
+        for scenario in ("factory-resolve", "font-resolve", "factory-call", "limit",
+                         "private-error", "missing-anchor"):
+            with self.subTest(scenario=scenario):
+                run = self.compile_and_run("--form-edit-failure-probe", scenario)
+                self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+                self.assertIn("form edit diagnostic probe OK: " + scenario, run.stdout)
+
 
 class RegistrationOutputGuardTest(unittest.TestCase):
     def test_inputs_and_their_hardlink_aliases_cannot_be_overwritten(self):

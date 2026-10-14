@@ -56,8 +56,9 @@ class FakeObj(object):
 
 
 class FakeEdit(FakeObj):
-    def __init__(self, name):
-        FakeObj.__init__(self, name)
+    def __init__(self, parent, color, font, x, y, width, height,
+                 linecolor=None, overstriking=False):
+        FakeObj.__init__(self, 'native_edit', (width, height), (x, y))
         self.m_IsPassword = False
         self.limit = None
         self.next_edit = None
@@ -107,8 +108,14 @@ class FakePanel(object):
 
 
 def fake_cedit(cls, name, parent, color, font, linecolor=0):
-    parent.GetObject(name)
-    edit = cls(name)  # really exercise the authored AddChar subclass
+    obj = parent.GetObject(name)
+    x, y = obj.GetPos()
+    width, height = obj.GetSize()
+    # Native entry3564 CreateEdit pc93..143 calls the subclass with 9 args;
+    # retain the API boundary instead of accepting a synthetic cls(name).
+    edit = cls(parent, color, font, x + 5, y + (height - 14) / 2,
+               width - 10, 14, linecolor, False)
+    edit.name = name
     parent.objects[name] = edit
     return edit
 
@@ -221,6 +228,61 @@ if '--entry-failure-probe' in sys.argv:
     assert ('mainpage.Show', True) in EVENTS
     assert ('InputSecrecy', 0) in EVENTS
     print 'initial layout exception recovery OK'
+    sys.exit(0)
+
+# Independent probe: diagnose each distinct AttributeError boundary while
+# preserving the already-visible terms panel. No recovered game code is run.
+if '--form-edit-failure-probe' in sys.argv:
+    scenario = sys.argv[-1]
+    assert g['Show'](True) is True
+    previous = g['g_RegisterPanel']
+    if scenario == 'factory-resolve':
+        del sys.modules['combmacro'].CEDIT
+        expected = 'factory resolve begin'
+        missing = 'CEDIT'
+    elif scenario == 'font-resolve':
+        del sys.modules['interface'].FONT_EDIT
+        expected = 'font resolve begin'
+        missing = 'FONT_EDIT'
+    elif scenario == 'factory-call':
+        def bad_factory(*args, **kwargs):
+            return object().GetSize()
+        sys.modules['combmacro'].CEDIT = bad_factory
+        expected = 'factory call begin'
+        missing = 'GetSize'
+    elif scenario == 'limit':
+        sys.modules['combmacro'].CEDIT = lambda *a, **kw: object()
+        expected = 'limit begin'
+        missing = 'SetLimit'
+    elif scenario == 'private-error':
+        def private_factory(*args, **kwargs):
+            raise AttributeError("'Preview42-secret@example.invalid' object"
+                                 " has no attribute 'Private_SecretValue'")
+        sys.modules['combmacro'].CEDIT = private_factory
+        expected = 'factory call begin'
+        missing = None  # Not in static co_names; arbitrary text is withheld.
+    elif scenario == 'missing-anchor':
+        original_lookup = FakePanel.GetObject
+        def missing_lookup(self, name):
+            if name == 'account':
+                return None
+            return original_lookup(self, name)
+        FakePanel.GetObject = missing_lookup
+        expected = 'anchor missing'
+        missing = None
+    else:
+        raise AssertionError(scenario)
+    previous.OnMessage(1)
+    assert g['g_RegisterPanel'] is previous
+    diag = open('photo\\register_diag.txt', 'rb').read()
+    assert 'form edit account ' + expected in diag, diag
+    assert 'step=1 frame=register.py:' in diag, diag
+    if missing is not None:
+        assert 'step=1 missing_attribute=' + missing in diag, diag
+    else:
+        assert 'missing_attribute=' not in diag, diag
+    assert 'Preview42' not in diag and 'secret@example.invalid' not in diag
+    print 'form edit diagnostic probe OK: ' + scenario
     sys.exit(0)
 
 # 1. Terms: native layout and cursor protocol, missing servicedata fallback.
@@ -443,12 +505,12 @@ print 'back/home + supplied terms + original confirm + reset OK'
 # These probes test our authored control flow only, not a native engine hang.
 diag = open('photo\\register_diag.txt', 'rb').read()
 markers = (
-    'phase2-diag1 module begin', 'module import C_sys begin',
+    'phase2-diag2 module begin', 'module import C_sys begin',
     'module import C_sys ready', 'module import combdialog begin',
     'module import combdialog ready', 'module import combmacro begin',
     'module import combmacro ready', 'module import interface begin',
-    'module import interface ready', 'phase2-diag1 module ready',
-    'phase2-diag1 show open begin', 'input secrecy on begin',
+    'module import interface ready', 'phase2-diag2 module ready',
+    'phase2-diag2 show open begin', 'input secrecy on begin',
     'input secrecy on ready', 'step=0 begin', 'terms layout begin',
     'terms layout ready', 'terms import chatoutput begin',
     'terms import chatoutput ready', 'terms source begin', 'terms source ready',

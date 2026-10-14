@@ -14,6 +14,22 @@
 原生跳转仍待实际游戏验证；23项注册回归只作历史证据，不是编辑器新版本验收。
 这不是已接通的注册服务；服务端仍无注册接口，不会创建真实账号。
 
+## 2026-10-15 当前实机断点：账号输入框 AttributeError
+
+用户已用新版编辑器保存，确认协议页可进入、同意消息为1；日志已走到
+`form layout ready` / `form account begin` 后 `step=1 EXC type=AttributeError`。
+用户进一步确认实际表单占位 `sName=account`、`sWidgetType=CBox`，不再要求
+改正确名字、重导布局或怀疑同意接线。
+
+phase2-diag2 是**定位版，不是声称修好版**：保持原生CEDIT接口和全部用户布局，
+拆分运行时anchor、工厂解析、FONT_EDIT解析、工厂调用、SetLimit标记。
+异常只补静态代码位置/PC及受co_names白名单约束的缺失属性名，不记录对象repr、
+完整异常文字、帐号/密码/邮箱或局部变量。构造失败仍保留协议页。
+详见 [诊断步骤](DIAGNOSTIC_TESTING.md) 顶部最新章节。
+原CEDIT→CreateEdit别名、七形参/九参数子类构造、原CEdit.SetLimit已逐code object
+只读核对；不执行恢复游戏模块。离线桩也改用九参数构造，不再假装cls(name)即原生。
+本轮26项通过（真CPython2.5.6），仍不能凭AttributeError类型确定实际缺失属性。
+
 ## 用户定的行为
 
 - 协议页：`login/service.dlg` 逐字拷贝为 `login/regterms.dlg`，

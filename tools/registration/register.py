@@ -41,6 +41,42 @@ def _Diag(text):
         pass
 
 
+def _DiagFailure(stage):
+    """Log code locations and a static missing attribute, never exception values."""
+    try:
+        import sys
+
+        kind, error, trace = sys.exc_info()
+        _Diag("%s EXC type=%s" % (stage, kind.__name__))
+        names = set()
+        count = 0
+        while trace is not None and count < 12:
+            code = trace.tb_frame.f_code
+            names.update(code.co_names)
+            filename = code.co_filename.replace("\\", "/").split("/")[-1]
+            if filename not in ("register.py", "combmacro.py", "interface.py",
+                                "pubinterface.py", "combdialog.py"):
+                filename = "other"
+            _Diag("%s frame=%s:%s line=%s pc=%s" % (
+                stage, filename, code.co_name, trace.tb_lineno, trace.tb_lasti))
+            trace = trace.tb_next
+            count += 1
+        # Python 2.5 has no AttributeError.name. Only emit a name already present
+        # in static co_names, not arbitrary exception text or object repr/values.
+        if kind is AttributeError and len(error.args) == 1:
+            text = error.args[0]
+            marker = " has no attribute '"
+            if isinstance(text, str) and marker in text and text.endswith("'"):
+                attribute = text.rsplit(marker, 1)[1][:-1]
+                if (attribute in names and 0 < len(attribute) <= 64
+                        and all(c in "abcdefghijklmnopqrstuvwxyz"
+                                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+                                for c in attribute)):
+                    _Diag("%s missing_attribute=%s" % (stage, attribute))
+    except Exception:
+        _Diag("%s exception metadata unavailable" % (stage,))
+
+
 def _ImportRuntime():
     # 首次點擊可能卡在模塊導入，不能等類定義完才開始寫日誌。
     _Diag("module import C_sys begin")
@@ -62,7 +98,7 @@ def _ImportRuntime():
     return C_sys, combdialog, combmacro, interface
 
 
-_Diag("phase2-diag1 module begin")
+_Diag("phase2-diag2 module begin")
 C_sys, combdialog, combmacro, interface = _ImportRuntime()
 
 g_AccountInfo = {}
@@ -459,6 +495,30 @@ class CRegPwdEdit(interface.CEdit):
             usermacro.PROMPT_MSG(PROMPT_PWD_ALNUM)
 
 
+def _CreateFormEdit(parent, edit_class, name, limit):
+    """Same native CEDIT call; separate lookup, font, factory and limit markers."""
+    stage = "form edit %s" % (name,)
+    _Diag("%s anchor begin" % (stage,))
+    anchor = parent.GetObject(name)
+    if anchor is None:
+        _Diag("%s anchor missing" % (stage,))
+        raise ValueError("missing form edit anchor")
+    _Diag("%s anchor ready" % (stage,))
+    _Diag("%s factory resolve begin" % (stage,))
+    factory = combmacro.CEDIT
+    _Diag("%s factory resolve ready" % (stage,))
+    _Diag("%s font resolve begin" % (stage,))
+    font = interface.FONT_EDIT
+    _Diag("%s font resolve ready" % (stage,))
+    _Diag("%s factory call begin" % (stage,))
+    edit = factory(edit_class, name, parent, 0, font, linecolor=0)
+    _Diag("%s factory call ready" % (stage,))
+    _Diag("%s limit begin" % (stage,))
+    edit.SetLimit(limit)
+    _Diag("%s limit ready" % (stage,))
+    return edit
+
+
 class CRegFormPanel(combdialog.CCombPanel):
     """表單頁（login/regform.dlg）：msgid 1=上一步（回協議），
     2=確認註冊（校驗後留樁），3=返回首頁，4=切換註冊五個帳號。
@@ -475,30 +535,26 @@ class CRegFormPanel(combdialog.CCombPanel):
 
         _Diag("form import C_object ready")
         _Diag("form account begin")
-        self.m_AccountEdit = combmacro.CEDIT(
-            CRegAccountEdit, "account", self, 0, interface.FONT_EDIT, linecolor=0
+        self.m_AccountEdit = _CreateFormEdit(
+            self, CRegAccountEdit, "account", 16
         )
-        self.m_AccountEdit.SetLimit(16)
         _Diag("form account ready")
         _Diag("form password begin")
-        self.m_PwdEdit = combmacro.CEDIT(
-            CRegPwdEdit, "pwd", self, 0, interface.FONT_EDIT, linecolor=0
+        self.m_PwdEdit = _CreateFormEdit(
+            self, CRegPwdEdit, "pwd", 16
         )
-        self.m_PwdEdit.SetLimit(16)
         self.m_PwdEdit.m_IsPassword = True
         _Diag("form password ready")
         _Diag("form confirmation begin")
-        self.m_PwdEdit2 = combmacro.CEDIT(
-            CRegPwdEdit, "pwd2", self, 0, interface.FONT_EDIT, linecolor=0
+        self.m_PwdEdit2 = _CreateFormEdit(
+            self, CRegPwdEdit, "pwd2", 16
         )
-        self.m_PwdEdit2.SetLimit(16)
         self.m_PwdEdit2.m_IsPassword = True
         _Diag("form confirmation ready")
         _Diag("form email begin")
-        self.m_EmailEdit = combmacro.CEDIT(
-            interface.CEdit, "email", self, 0, interface.FONT_EDIT, linecolor=0
+        self.m_EmailEdit = _CreateFormEdit(
+            self, interface.CEdit, "email", 50
         )
-        self.m_EmailEdit.SetLimit(50)
         _Diag("form email ready")
         _Diag("form tab begin")
         self.m_AccountEdit.SetNextEdit(self.m_PwdEdit)
@@ -691,9 +747,7 @@ def Step(n):
     try:
         panel = _PANELS[n](interface.DialogPanel)
     except Exception:
-        import sys
-
-        _Diag("step=%s EXC type=%s" % (n, sys.exc_info()[0].__name__))
+        _DiagFailure("step=%s" % (n,))
         if g_RegisterPanel is None:
             _RecoverEntry()
         return False
@@ -706,7 +760,7 @@ def Step(n):
 def Show(s):
     global g_RegisterPanel
     if s:
-        _Diag("phase2-diag1 show open begin")
+        _Diag("phase2-diag2 show open begin")
         try:
             _Diag("input secrecy on begin")
             C_sys.InputSecrecy(1)
@@ -755,4 +809,4 @@ def ClearRegCode():
         pass
 
 
-_Diag("phase2-diag1 module ready")
+_Diag("phase2-diag2 module ready")
