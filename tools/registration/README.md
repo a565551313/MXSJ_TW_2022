@@ -102,9 +102,17 @@
 | reg2.dlg | reg.zip，旧风格作废 | 64be77d148f853a99ba5f47c9e6d722012a4e77462c66263df1ee93b08ef043a |
 | service.dlg | Drive `1KaFXbFxU-VOJ5OJ0UIS7rINmn9uhJagS` | 820f09a8cd4e8ff80494cffdfc6de042550f897f7747c6345de793fa68b46d26 |
 
-条款文本仍取 `servicedata.SERVICE_MSG`；该模块不在本版 script.fls 中，
-缺失时用明确标注的占位条款，不能把复制布局说成已拿到正式条款文本。
-`CConfirm` 仍原样引用 `servicedata.CONFIRM_MSG`，既有流程不改。
+条款文本仍取 `servicedata.SERVICE_MSG`；该模块缺失时用明确标注的占位条款，
+不能把复制布局说成已拿到正式条款文本。`CConfirm` 仍原样引用 `servicedata.CONFIRM_MSG`，
+既有流程不改。
+
+> **[勘误 2026-10-15]** 本 README 曾记「`servicedata` 不在本版 script.fls 中」，现已推翻：
+> 该模块在包内，条目 `1931` 的自报路径为 `script\data\servicedata.py`，且已完整反编译
+> （`SERVICE_MSG` 11,602 B 正式条款全文、`SERVICE_MSG2` 9,055 B「線上遊戲定型化契約範本」，
+> 另有 `main.g_LangVersion != 0` 分支的 AMS 版）。真客户端 `script/login/register.py`、
+> `loginin.py` 本来就以裸名 `import servicedata` 取用，故**运行期并非缺失**；
+> 之前的误判来自 catalog 索引对无名字条目检索不到。把测试包条款从占位换成正式文本
+> 需要重建 `out/script.fls` 并跑本目录的回归，尚未执行。
 
 ## 构建与回归（仓库侧，不要求用户安装解释器）
 

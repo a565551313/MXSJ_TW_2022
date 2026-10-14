@@ -122,6 +122,13 @@ raw.decode('gbk')     # UnicodeDecodeError @9 ← 简中系统：解不动，显
 | 无产物 | 26（其中 23 条历史标记即 `fail`/`suspect`） |
 | 产出体积 / 文件数 | 62 MB / 4987 个 `.py` |
 
+**[勘误 2026-10-15]** 上表「无产物 26」是按索引 `current_filename` 清点得到的，其中
+13 条其实早有产物（9 条落 `script/unknown/`，4 条因文件名取自包内自报路径而落在真实模块
+路径下），另有 9 条已由 `tools/decompiler/recover_entries.py` 救回，真正解不出的只剩 4 条
+（`1954`、`3066`、`4166`、`4691`）。语料现为 **5000 个 `.py` + 1 个 `.pyc` / 66 MB**：
+完整反编译 4444、52 字节占位 547、本轮恢复产物 9。逐条根因见
+`notes/opcode_mapping_and_decompilation.md` §4.5。**教训：清点产物必须扫目录，不能按 catalog 名匹配。**
+
 **[事实]** 两个条目对 uncompyle6 是病态的：`script/core/preload/preload_mov.py`（entry 2371，
 >900 s 未收敛）、`script/data/wingtypeposdata.py`（entry 2679，894 s 后仍失败）。
 整池并行会被这类条目堵死，故本轮改为「一条一子进程 + 超时」驱动。
