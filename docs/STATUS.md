@@ -23,7 +23,7 @@
 | 只读复核链（catalog / API / web） | H/I/J 已收尾 | 可运行，只读 | catalog 34/34；review_api 27/27；验收套件 68 通过 + 2 跳过（需 uvicorn 在 PATH 上）；网页未装 node_modules 未跑 |
 | 地图编辑器 | 一期 + PR #27 修复 + 10-14 补齐约定（`bootstrap.py`、`启动地图编辑器.bat`、`build_exe.bat`、ruff 0） | GIRB 300/429 扇区仍解不出（明确失败）；Windows EXE 未实机构建/冒烟 | **88/88** 通过（含 6 条 bootstrap 测试；GUI 冒烟在沙箱用 Qt offscreen + 桩 libGL 跑过）；ruff 0；wincompat 0/0 |
 | 资源编辑器 | 0.3.3 + 10-14 补 `build_exe.bat` / spec / `run.py` / requirements | 写回目录不变量 P0 已修；Windows 实机与 EXE 未验 | **37/37** 通过（10-14 起沙箱以 Qt offscreen + 桩 libGL 跑齐 GUI 组）；spec 干跑 onedir/onefile 通过 |
-| UI 编辑器 | 0.5.3 + 10-14 补 `build_exe.bat` / spec / `run.py` / requirements | M3.3 九宫格未做；Windows 实机与 EXE 未验 | **94 通过 + 1 跳过**（含 0.5.3 两条原生回归：缩放回调已删标签不崩、挂账图无引用须明示未写入）；ruff 0；wincompat 0/0 |
+| UI 编辑器 | 0.5.3 + 10-14 补 `build_exe.bat` / spec / `run.py` / requirements | M3.3 九宫格未做；EXE 未验（0.5.3 已由用户在真实 Windows 实机跑通加图存包主流程） | **94 通过 + 1 跳过**（含 0.5.3 两条原生回归：缩放回调已删标签不崩、挂账图无引用须明示未写入）；ruff 0；wincompat 0/0 |
 | 游戏服务端（`mxsj_server`） | 契约 v0.1 + 设计文档 | **无运行代码**；账号/网关/数据库/地图/战斗均未开始 | 架构测试 150 跑，**1 FAIL + 1 ERROR**（见 §3.1） |
 | `mock_server.py` | 历史 Mock，协议号已按客户端修正 | 从未与真机联调；PR #25 顺带改的帧长度 3→2 未单独评审 | 未运行 |
 | 文档 | 10-14 整理：AGENTS.md / STATUS.md / 归档目录；README 已刷新；新增 `docs/PYTHON_TOOL_CONVENTIONS.md`（工具开发约定） | — | 仓库内相对链接全部可解析（脚本校验） |
