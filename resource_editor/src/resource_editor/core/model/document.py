@@ -200,6 +200,12 @@ class PackDocument:
             return self._names.get(origin)
         return None
 
+    def known_resource_paths(self) -> list[str]:
+        """仅列当前包已识别/本次导入的真名，排除目录和无名条目。"""
+        return sorted({name for index in range(self.count)
+                       if (name := self.true_name(index))
+                       and not name.endswith(("/", "\\"))}, key=str.casefold)
+
     def label(self, index: int) -> str:
         """条目显示名：data.fls 用文件名；0SLF 优先真名，未识别出真名时回退序号。"""
         if self.archive.kind == KIND_FLSDATA:

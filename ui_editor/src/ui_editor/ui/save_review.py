@@ -26,6 +26,7 @@ class SaveReviewDialog(QDialog):
         *,
         to_pack: bool,
         parent=None,
+        layout_notice: str = "",
     ):
         super().__init__(parent)
         self.setWindowTitle("保存前改动清单")
@@ -38,6 +39,8 @@ class SaveReviewDialog(QDialog):
             "布局按树位置比较，重排/移动会表现为字段与增删差异；未知字段也列出。\n"
             "散装布局不会嵌入图片；静态未发现引用不等于无引用。取消不改变编辑状态。"
         )
+        if layout_notice:
+            summary.setText(summary.text() + "\n" + layout_notice)
         summary.setWordWrap(True)
         layout.addWidget(summary)
         tabs = QTabWidget()

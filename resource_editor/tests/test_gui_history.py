@@ -104,7 +104,7 @@ class TestGuiHistory(unittest.TestCase):
         second.write_bytes(b"addition")
         with (
             mock.patch(
-                "resource_editor.gui.main_window.QInputDialog.getText",
+                "resource_editor.gui.main_window.MainWindow._choose_resource_path",
                 side_effect=[("same/old.bin", True), ("same/new.bin", True)],
             ),
             mock.patch(
@@ -125,7 +125,7 @@ class TestGuiHistory(unittest.TestCase):
         first = self.root / "first.bin"
         first.write_bytes(b"new")
         with mock.patch(
-            "resource_editor.gui.main_window.QInputDialog.getText",
+            "resource_editor.gui.main_window.MainWindow._choose_resource_path",
             side_effect=[("new/first.bin", True), ("new/missing.bin", True)],
         ):
             w._import_files_by_path([str(first), str(self.root / "missing.bin")])

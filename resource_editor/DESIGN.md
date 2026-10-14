@@ -1,5 +1,14 @@
 # 资源编辑器设计方案（已确认，2026-10-13）
 
+## 0.4.1 包内路径选择
+
+- `core/resource_paths.py` 零 Qt 相对 GBK 路径验证；`PackDocument.known_resource_paths`
+  仅从仍在槽位中的真名生成候选，排除目录/未识别条目，不枚举虚构路径。
+- `gui/resource_path_dialog.py` editable QComboBox + 包含匹配、忽略大小写的
+  QCompleter；普通/批量 0SLF 按路径导入与转精灵导入共用。已有地址默认 No，
+  保持既有替换确认、批量一步历史与原子新包保存。FLSDATA 普通文件名导入不变。
+
+
 ## 0.4.0 增量编辑与改动清单
 
 - `core/history.py` 为零 Qt 有界命令时间线，50 步/64 MiB 增量预算（超大单步

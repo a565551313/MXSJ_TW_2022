@@ -125,11 +125,18 @@ class LayoutDocument:
         self.source_path: str | None = None
         self.source_pack: tuple[str, str] | None = None
         self.dirty = False
+        self.pending_pack_import = False  # 未落到新包，即使撤销至导入状态仍待保存
         # 撤销/重做时间线：to_dicts() 快照列表，_h_index 指当前状态
         self._history: list[list[dict]] = []
         self._h_index = -1
         self._last_merge_key = None
         self._saved_state = self._snapshot()
+
+    def begin_pack_import(self, previous: list[dict]) -> None:
+        """导入以原包内容为清单基线；新增布局以空列表为基线。"""
+        self._saved_state = copy.deepcopy(previous)
+        self.pending_pack_import = True
+        self.dirty = True
 
     def mark_saved(self) -> None:
         """仅成功写入后建立清单基线；保留撤销时间线。"""

@@ -177,7 +177,7 @@ class TestOpenFromPack(unittest.TestCase):
             pack_path.write_bytes(_mini_pack_bytes("data/junk.bin"))
             count = self.window.open_pack_file(str(pack_path))
             self.assertEqual(count, 0)
-            self.assertEqual(self.window.resource_panel.root_count(), 0)
+            self.assertEqual(self.window.resource_panel.root_count(), 1)
 
     def test_open_pack_layout_after_tree_add(self):
         import tempfile
@@ -359,7 +359,7 @@ class TestResourceDirFilterAndSearch(unittest.TestCase):
             visit(tree.topLevelItem(i))
         return texts
 
-    def test_resource_dir_skips_pack_without_layouts(self):
+    def test_resource_dir_includes_pack_without_layouts(self):
         import tempfile
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -368,7 +368,7 @@ class TestResourceDirFilterAndSearch(unittest.TestCase):
             (Path(tmp) / "item.fls").write_bytes(
                 _mini_pack_bytes("data/junk.bin"))
             self.window.open_resource_dir(tmp)
-            self.assertEqual(self.window.resource_panel.root_count(), 1)
+            self.assertEqual(self.window.resource_panel.root_count(), 2)
             self.assertTrue(any(
                 "ui.fls" in t for t in self._visible_texts()))
 

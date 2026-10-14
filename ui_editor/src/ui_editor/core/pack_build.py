@@ -450,8 +450,49 @@ def patch_raw_entry_in_file(pack_path, entry_id: int,
     return {"mode": "added", "target_index": pos, "bytes": size}
 
 
+def _create_layout_copy(src: Path, out: Path, path: str, plain: bytes,
+                        extras: dict[str, bytes]) -> dict:
+    """缺失布局明文新增（同资源编辑器）；不猜造 XOR 密钥，实机待验。"""
+    layout_id = mx_hash(path.encode("gbk"))
+    with FlsPack(src) as pack:
+        existing = set(pack.entry_ids)
+    writes = {layout_id: plain}
+    for name, data in extras.items():
+        entry_id = mx_hash(name.encode("gbk"))
+        if entry_id in writes:
+            raise PackError("布局/附加资源路径哈希冲突")
+        writes[entry_id] = data
+    try:
+        shutil.copyfile(src, out)
+        _, _, _, _, _, records = _read_index(src)
+        if any(record[1] == 0 for record in records):
+            raise _RebuildNeeded("原目录种子需要规范化")
+        for entry_id, data in writes.items():
+            patch_raw_entry_in_file(out, entry_id, data)
+        mode = "added"
+    except _RebuildNeeded:
+        rows = parse_archive(src.read_bytes())
+        for row in rows:
+            if row.entry_id in writes:
+                row.stored = writes.pop(row.entry_id)
+        rows.extend(RawEntry(entry_id, fresh_r1(entry_id), data)
+                    for entry_id, data in writes.items())
+        out.write_bytes(build_archive(rows))
+        mode = "rebuild"
+    return {"mode": mode, "layout_added": True,
+            "images_added": [n for n in extras
+                             if mx_hash(n.encode("gbk")) not in existing],
+            "images_replaced": [n for n in extras
+                                if mx_hash(n.encode("gbk")) in existing],
+            "changed_ids": sorted({layout_id} | {
+                mx_hash(n.encode("gbk")) for n in extras
+                if mx_hash(n.encode("gbk")) in existing}),
+            "bytes": out.stat().st_size, "out": str(out)}
+
+
 def _patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
-                    out_path, extra_entries: dict | None = None) -> dict:
+                    out_path, extra_entries: dict | None = None,
+                    allow_create: bool = False) -> dict:
     """把 res_path 条目的新内容落到 out_path，返回补丁报告。
 
     内部构建器：out 必须是调用方独占的临时副本；不对外调用。
@@ -470,6 +511,10 @@ def _patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
     """
     src, out = Path(archive_path), Path(out_path)
     extras = dict(extra_entries or {})
+    if allow_create:
+        with FlsPack(src) as pack:
+            if not pack.contains(res_path):
+                return _create_layout_copy(src, out, res_path, new_plain, extras)
     plan = _plan_patch(src, res_path, new_plain)  # 先只读侦察，失败不落盘
     src_ids = [_RECORD.unpack_from(plan.dir_data, i * DIR_RECORD_SIZE)[0]
                for i in range(plan.count)]
@@ -531,7 +576,7 @@ def _verify_copy(src: Path, out: Path, res_path: str, new_plain: bytes,
         ids = after.entry_ids
         if len(set(ids)) != len(ids) or ids != sorted(ids):
             raise PackError("新包条目编号重复或目录未升序")
-        if set(ids) != set(before.entry_ids) | set(extra_ids):
+        if set(ids) != set(before.entry_ids) | set(extra_ids) | {layout_id}:
             raise PackError("新包条目集合与预期不符")
         # 独立比对负载，即使偏移/长度没变化也不能跳过。
         with open(src, "rb") as fin, open(out, "rb") as fout:
@@ -559,11 +604,14 @@ def _verify_copy(src: Path, out: Path, res_path: str, new_plain: bytes,
 
 def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
                     out_path, extra_entries: dict | None = None,
-                    protected_paths: Iterable[str | Path] = ()) -> dict:
+                    protected_paths: Iterable[str | Path] = (),
+                    allow_create: bool = False) -> dict:
     """只生成新包：禁止源包/别名，临时副本验证后原子发布。
 
     构建、补丁或校验失败均不改变源包和已有输出。protected_paths
     由 GUI 传入其余已挂载资源，以防输出覆盖另一个源包。
+    allow_create 默认关闭；显式开启后仅接受预检合格的 .dlg，缺失时
+    明文新增（零 XOR 密钥），已有布局仍沿原密钥替换。客户端实机待验。
     """
     src, out = Path(archive_path), Path(out_path)
     sources = [src, *protected_paths]
@@ -571,13 +619,20 @@ def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
     tmp: Path | None = None
     try:
         guard_output(out, sources)
-        _plan_patch(src, res_path, new_plain)  # 输入无效时不创建输出
+        if allow_create:
+            from .layout_import import prepare_layout_import, validate_layout_path
+
+            res_path = validate_layout_path(res_path)
+            with FlsPack(src) as pack:
+                prepare_layout_import(pack, res_path, new_plain)
+        else:
+            _plan_patch(src, res_path, new_plain)  # 输入无效时不创建输出
         with tempfile.NamedTemporaryFile(
             prefix=f".{out.name}.", suffix=".tmp", dir=out.parent,
             delete=False,
         ) as fh:
             tmp = Path(fh.name)
-        info = _patch_pack_copy(src, res_path, new_plain, tmp, extras)
+        info = _patch_pack_copy(src, res_path, new_plain, tmp, extras, allow_create)
         _verify_copy(src, tmp, res_path, new_plain, extras)
         guard_output(out, sources)
         os.replace(tmp, out)

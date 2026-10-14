@@ -58,6 +58,7 @@ from .preview.audio_preview import AudioPreview
 from .preview.sprite_view import MODE_CANVAS, MODE_FRAME, SpriteView
 from .preview.text_hex import HexPreview, TextPreview
 from .qtutil import pil_to_qimage
+from .resource_path_dialog import ResourcePathDialog
 from .save_review import SaveReviewDialog
 from .workers import Job
 
@@ -975,6 +976,16 @@ class MainWindow(QMainWindow):
         if path:
             self._import_files_by_path([path])
 
+    def _choose_resource_path(self, filename: str) -> tuple[str, bool]:
+        doc = self._doc
+        if doc is None:
+            return "", False
+        default = (doc.true_name(self._current)
+                   if 0 <= self._current < doc.count else None) or filename
+        dialog = ResourcePathDialog(filename, doc.known_resource_paths(), default, self)
+        ok = dialog.exec() == QDialog.Accepted
+        return dialog.path, ok
+
     def import_frames_as_sprite(self) -> None:
         """选一至多张帧图，转成游戏精灵后按路径导入。
 
@@ -988,12 +999,7 @@ class MainWindow(QMainWindow):
             "图片 (*.png *.jpg *.jpeg *.bmp *.tga *.gif);;所有文件 (*)")
         if not files:
             return
-        res_path, ok = QInputDialog.getText(
-            self, "帧图转精灵导入",
-            "输入这个精灵在游戏里的资源路径\n"
-            "（如 combdialog4\\新登陆界面\\我的动画.png；\n"
-            "游戏靠这个名字找图，填错了就找不到）：",
-            text=Path(files[0]).name)
+        res_path, ok = self._choose_resource_path(Path(files[0]).name)
         if not ok or not res_path.strip():
             return
         res_path = res_path.strip()
@@ -1012,7 +1018,8 @@ class MainWindow(QMainWindow):
             answer = QMessageBox.question(
                 self, "这个路径已在包里",
                 f"路径 {res_path} 已经是条目 {existing}。\n"
-                "要用转好的精灵替换它的内容吗？")
+                "要用转好的精灵替换它的内容吗？",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if answer != QMessageBox.Yes:
                 return
             doc.replace_content(existing, data)
@@ -1033,12 +1040,7 @@ class MainWindow(QMainWindow):
         with doc.edit_group("按路径批量导入"):
             for path in paths:
                 filename = Path(path).name
-                res_path, ok = QInputDialog.getText(
-                    self, "按路径导入",
-                    f"输入 {filename} 在游戏里的资源路径\n"
-                    "（如 combdialog4\\新登陆界面\\底板800.png；\n"
-                    "游戏靠这个名字找图，填错了就找不到）：",
-                    text=filename)
+                res_path, ok = self._choose_resource_path(filename)
                 if not ok or not res_path.strip():
                     skipped += 1
                     continue
@@ -1054,7 +1056,8 @@ class MainWindow(QMainWindow):
                     answer = QMessageBox.question(
                         self, "这个路径已在包里",
                         f"路径 {res_path} 已经是条目 {existing}。\n"
-                        f"要用 {filename} 替换它的内容吗？")
+                        f"要用 {filename} 替换它的内容吗？",
+                        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                     if answer != QMessageBox.Yes:
                         skipped += 1
                         continue
