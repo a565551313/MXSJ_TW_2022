@@ -1,3 +1,3 @@
-"""Standalone dual-VM script editor; M1 foundation, native build not enabled."""
+"""Standalone dual-VM editor; experimental M2 native API, GUI build not enabled."""
 
-__version__ = "0.1.0.dev1"
+__version__ = "0.2.0.dev1"

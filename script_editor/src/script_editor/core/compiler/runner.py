@@ -144,3 +144,16 @@ def compile_standard(
         raise CompilerError("编译产物时间戳不符")
     atomic_write(destination, data, (*protected, compiler.executable, helper))
     return hashlib.sha256(data).hexdigest()
+
+
+def audit_standard(compiler: Compiler, pyc: bytes) -> None:
+    """Marshal-read only authored output with the exact runtime, no target exec."""
+    if pyc[:4] != PROFILES[compiler.vm].magic:
+        raise CompilerError("audit VM/magic mismatch")
+    if inspect_compiler(compiler.executable, compiler.vm) != compiler:
+        raise CompilerError("compiler changed before marshal audit")
+    with tempfile.TemporaryDirectory(prefix="mxscript-audit-") as temp:
+        work = Path(temp)
+        path = work / "authored.pyc"
+        path.write_bytes(pyc)
+        _run(compiler.executable, [str(DATA / "audit_legacy.py"), str(path)], work)

@@ -58,7 +58,7 @@ copy /y "runtimes\manifest.json" "dist\MXSJScriptEditor\runtimes\manifest.json" 
 echo.
 REM no %CD% inside the parentheses: a ")" in the folder name would break cmd parsing
 echo Done: dist\MXSJScriptEditor\MXSJScriptEditor.exe
-echo NOTE: compiler manifest is empty; native game package build is disabled.
+echo NOTE: compiler manifest is empty; native package GUI build is disabled.
 echo Double-click the EXE to check it opens a window; see README for the manual checklist.
 pause
 exit /b 0

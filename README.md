@@ -382,6 +382,13 @@ python ui_editor/bootstrap.py [布局文件|目录|资源包]
 
 Windows 用户可直接双击 `resource_editor/启动编辑器.bat`、`ui_editor/启动UI编辑器.bat`（自动检查并安装依赖，失败原因写入同目录启动日志）。GUI 测试需要桌面环境；无 `libGL` 的无头环境只能跑核心测试。设计决策与路线见各自 `DESIGN.md` 和 [UI 编辑器二期设计](notes/ui_editor_phase2_design.md)。
 
+### 8.4 独立脚本编辑器（`script_editor/`，0.2.0.dev1实验版）
+
+用户要求的独立工具，支持`script.fls`/`data.fls`双包；标准2.5.6/2.7.13编译与严格双VM原生转换、
+仅生成新文件、独立完整回读及未改条目保留已在Linux离线回归。GUI仍为基础界面，原生写包按钮未接入。
+Windows随包编译器/EXE尚未验收，不能称完整可用发行版；详见[工具README](script_editor/README.md)
+与[实验原生构建说明](script_editor/M2_NATIVE_BUILD.md)，最新实测以[STATUS](docs/STATUS.md)为准。
+
 ## 9. 客户端注册界面预览
 
 ### 9.1 当前版本和交互范围

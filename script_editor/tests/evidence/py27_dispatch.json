@@ -1,0 +1,217 @@
+{
+  "schema": 1,
+  "input": {
+    "file": "exe/python27.dll",
+    "sha256": "66f90925ffdc7ba5e8be39771137770555f668baa7d14fcb776d08b0b8d28892"
+  },
+  "index_table_rva": "0x12da94",
+  "jump_table_rva": "0x12d8ec",
+  "rows": [
+    {
+      "native": 66,
+      "standard_py27": null,
+      "name": "UNKNOWN",
+      "index": 105,
+      "handler": "0x1e12d52c",
+      "head_hex": "52ff7508e86ba9f9ff83c404506824a0221eff15e082161e83c04050ff154082",
+      "calls_first_160_bytes": [
+        {
+          "at": "0x1e12d530",
+          "target": "0x1e0c7ea0",
+          "export": "PyFrame_GetLineNumber"
+        },
+        {
+          "at": "0x1e12d559",
+          "target": "0x1e13d570",
+          "export": "PyErr_SetString"
+        },
+        {
+          "at": "0x1e12d584",
+          "target": "0x1e13d570",
+          "export": "PyErr_SetString"
+        }
+      ]
+    },
+    {
+      "native": 93,
+      "standard_py27": 133,
+      "name": "BUILD_SLICE",
+      "index": 63,
+      "handler": "0x1e12d36b",
+      "head_hex": "83fb0375088b7efc83ee04eb0233ff8b5efc8b46f883ee04575350897c242c89",
+      "calls_first_160_bytes": [
+        {
+          "at": "0x1e12d392",
+          "target": "0x1e0e2180",
+          "export": "PySlice_New"
+        }
+      ]
+    },
+    {
+      "native": 121,
+      "standard_py27": 134,
+      "name": "MAKE_CLOSURE",
+      "index": 68,
+      "handler": "0x1e12d249",
+      "head_hex": "8b4d088b46fcff711883ee045089442464e891c0f9ff8b4c246483c408ff098b",
+      "calls_first_160_bytes": [
+        {
+          "at": "0x1e12d25a",
+          "target": "0x1e0c92f0",
+          "export": "PyFunction_New"
+        },
+        {
+          "at": "0x1e12d294",
+          "target": "0x1e0c9650",
+          "export": "PyFunction_SetClosure"
+        },
+        {
+          "at": "0x1e12d2cb",
+          "target": "0x1e0efa90",
+          "export": "PyTuple_New"
+        }
+      ]
+    },
+    {
+      "native": 124,
+      "standard_py27": 107,
+      "name": "COMPARE_OP",
+      "index": 69,
+      "handler": "0x1e12aa81",
+      "head_hex": "8b7efc8b4ef883ee04817f0408d6261e89742418897c2420894c245c75788179",
+      "calls_first_160_bytes": [
+        {
+          "at": "0x1e12ab1c",
+          "target": "0x1e130130",
+          "export": null
+        }
+      ]
+    },
+    {
+      "native": 135,
+      "standard_py27": 108,
+      "name": "IMPORT_NAME",
+      "index": 71,
+      "handler": "0x1e12cad1",
+      "head_hex": "8b44243868809b221e8b7c980c8b5d08897c2424ff7314e863d3f8ff83c40889",
+      "calls_first_160_bytes": [
+        {
+          "at": "0x1e12cae8",
+          "target": "0x1e0b9e50",
+          "export": "PyDict_GetItemString"
+        },
+        {
+          "at": "0x1e12cb03",
+          "target": "0x1e13d570",
+          "export": "PyErr_SetString"
+        },
+        {
+          "at": "0x1e12cb2e",
+          "target": "0x1e0cac80",
+          "export": "PyInt_AsLong"
+        },
+        {
+          "at": "0x1e12cb5e",
+          "target": "0x1e0efdd0",
+          "export": "PyTuple_Pack"
+        }
+      ]
+    },
+    {
+      "native": 137,
+      "standard_py27": 105,
+      "name": "BUILD_MAP",
+      "index": 73,
+      "handler": "0x1e12c9a2",
+      "head_hex": "53e888abf8ff8bd083c404891683c6048954240c89742418e9fee7ffff8b5ef8",
+      "calls_first_160_bytes": [
+        {
+          "at": "0x1e12c9a3",
+          "target": "0x1e0b7530",
+          "export": "_PyDict_NewPresized"
+        },
+        {
+          "at": "0x1e12c9d6",
+          "target": "0x1e0b7770",
+          "export": "PyDict_SetItem"
+        },
+        {
+          "at": "0x1e12ca23",
+          "target": "0x1e0b7770",
+          "export": "PyDict_SetItem"
+        }
+      ]
+    },
+    {
+      "native": 155,
+      "standard_py27": 109,
+      "name": "IMPORT_FROM",
+      "index": 78,
+      "handler": "0x1e12cc92",
+      "head_hex": "8b4424388b4efc8b7c980c8bd7897c2420e8383600008bd0891683c604895424",
+      "calls_first_160_bytes": [
+        {
+          "at": "0x1e12cca3",
+          "target": "0x1e1302e0",
+          "export": null
+        },
+        {
+          "at": "0x1e12cce5",
+          "target": "0x1e0cab80",
+          "export": "PyInt_FromLong"
+        }
+      ]
+    },
+    {
+      "native": 183,
+      "standard_py27": 104,
+      "name": "BUILD_SET",
+      "index": 89,
+      "handler": "0x1e12c8da",
+      "head_hex": "33d2b980fb261ee86a2efbff8bd08954240c85d20f84b30b00008bd38954244c",
+      "calls_first_160_bytes": [
+        {
+          "at": "0x1e12c8e1",
+          "target": "0x1e0df750",
+          "export": null
+        },
+        {
+          "at": "0x1e12c921",
+          "target": "0x1e0e1ee0",
+          "export": "PySet_Add"
+        }
+      ]
+    },
+    {
+      "native": 230,
+      "standard_py27": 106,
+      "name": "LOAD_ATTR",
+      "index": 98,
+      "handler": "0x1e12cab3",
+      "head_hex": "8b4424388b7c980c8b5efc5753897c2428e8f7edfaff83c408e9cfe6ffff8b44",
+      "calls_first_160_bytes": [
+        {
+          "at": "0x1e12cac4",
+          "target": "0x1e0db8c0",
+          "export": "PyObject_GetAttr"
+        },
+        {
+          "at": "0x1e12cae8",
+          "target": "0x1e0b9e50",
+          "export": "PyDict_GetItemString"
+        },
+        {
+          "at": "0x1e12cb03",
+          "target": "0x1e13d570",
+          "export": "PyErr_SetString"
+        },
+        {
+          "at": "0x1e12cb2e",
+          "target": "0x1e0cac80",
+          "export": "PyInt_AsLong"
+        }
+      ]
+    }
+  ],
+  "scope": "Read-only binary dispatch samples. IMPORT_NAME obtains __import__ from builtins; IMPORT_FROM calls helper 0x1e1302e0. CPython2.7.13 Lib/opcode.py is the standard number authority. No game module execution. Old note addresses/semantic comments must not be used as golden values."
+}

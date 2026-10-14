@@ -5,7 +5,8 @@ from PyInstaller.utils.hooks import collect_submodules
 # No onefile switch: legacy runtimes need a persistent audited external folder.
 a = Analysis(
     ["run.py"], pathex=["src"], binaries=[],
-    datas=[("src/script_editor/data/compile_legacy.py", "script_editor/data")],
+    datas=[("src/script_editor/data/compile_legacy.py", "script_editor/data"),
+        ("src/script_editor/data/audit_legacy.py", "script_editor/data")],
     hiddenimports=collect_submodules(
         "script_editor", filter=lambda n: not n.startswith("script_editor.data")
     ), hookspath=[],

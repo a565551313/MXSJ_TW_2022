@@ -14,7 +14,7 @@
 本模块以"解压后内容"为条目内容视图，存储字节为 raw-deflate 流。
 打开方式有两种：:func:`parse` 全量读入内存（小包/测试用）；
 :func:`parse_index` 只读头部与中央目录（惰性打开用）。
-此独立基础版没有写包入口；不判断条目是否是有效脚本。
+本模块不提供写包入口；受限构建仅走native_build服务，不自动认定条目为脚本。
 """
 
 from __future__ import annotations

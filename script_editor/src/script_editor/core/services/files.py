@@ -11,7 +11,7 @@ from pathlib import Path
 def guard_output(path: Path, protected: Iterable[Path] = ()) -> Path:
     path = Path(path).absolute()
     if path.suffix.lower() == ".fls":
-        raise ValueError("本阶段禁止写入任何FLS包")
+        raise ValueError("普通文档IO禁止写FLS；须使用受限原生构建入口")
     if path.is_symlink():
         raise ValueError("拒绝覆盖符号链接")
     for source in protected:

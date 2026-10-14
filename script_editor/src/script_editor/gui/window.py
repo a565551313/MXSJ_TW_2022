@@ -138,7 +138,7 @@ class Window(QMainWindow):
         build.addAction("选择/检查当前VM的标准编译器…", self.select_compiler)
         build.addAction("检查当前VM的内置编译器", self.check_bundled)
         build.addAction("仅编译为标准.pyc…", self.compile)
-        native = build.addAction("生成原生新包（待双VM独立回读验证）")
+        native = build.addAction("生成原生新包（M2核心已实现，界面待接入）")
         native.setEnabled(False)
         self.tree.itemSelectionChanged.connect(self.show_entry)
         self.statusBar().showMessage("就绪 · 无原生写包能力")

@@ -37,3 +37,10 @@ src/script_editor/core/{archives,compiler,project,inspection,services,vm/{py25,p
 资源包名字不足以判VM；按容器头识别并校验内容，无法识别的data.fls非脚本项保持只读资源。
 
 本轮先提交设计检查点并推送，再开始M1。后续提交必须明示已实现/未实现/实际跑过测试。
+
+## 实施状态（2026-10-15，M2支持子集）
+
+M1基础已于13e9129推送（GUI实测仍被系统库阻塞）。M2严格双VM转换、原生新包后端、
+独立回读/完整CPython marshal读取与实验CLI已实现，详情见M2_NATIVE_BUILD.md。
+支持子集/明确拒绝条件不是所有原模块通用编辑；GUI写包、项目承接新包/差异清单留到M3，
+Windows两套内置运行时及实机仍属M4，未将它们标为完成。
