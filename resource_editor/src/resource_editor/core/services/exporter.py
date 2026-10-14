@@ -6,7 +6,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from ..codecs import detect
+from ..codecs import detect, wav
 from ..codecs.sprite import Sprite, decode_sprite
 from ..model.document import PackDocument
 from ..names import unpack_dlg_text
@@ -37,7 +37,7 @@ def _dlg_plain(content: bytes) -> bytes | None:
 
 def _is_wav(content: bytes) -> bool:
     """内容是否为 RIFF WAV（sound.fls 里整份存入的标准音频文件）。"""
-    return content[:4] == b"RIFF" and content[8:12] == b"WAVE"
+    return wav.is_wav(content)
 
 
 def export_entry(doc: PackDocument, index: int, out_dir: Path) -> list[Path]:

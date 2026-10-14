@@ -108,5 +108,27 @@ class TestGuiSmoke(unittest.TestCase):
         win.close()
 
 
+@unittest.skipUnless(HAS_QT, "PySide6 不可用")
+class TestAudioPreview(unittest.TestCase):
+    """音频预览页：WAV 出信息与播放钮，无后端时降级不崩。"""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def test_audio_page(self):
+        from test_wav import _wav
+
+        from resource_editor.gui.preview.audio_preview import AudioPreview
+
+        page = AudioPreview()
+        page.set_content(_wav(1, 8820))  # 0.1 秒 PCM
+        self.assertIn("PCM", page._info.text())
+        self.assertIn("WAV", page._info.text())
+        # 播放后端在/不在都不许崩；停止恒可安全调用
+        page.stop_playback()
+        page.close()
+
+
 if __name__ == "__main__":
     unittest.main()

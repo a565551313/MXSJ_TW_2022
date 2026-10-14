@@ -6,6 +6,7 @@ import zlib
 from enum import Enum
 
 from .sprite import SPRITE_MAGICS
+from .wav import is_wav
 
 
 class EntryKind(Enum):
@@ -16,6 +17,7 @@ class EntryKind(Enum):
     JSON = "json"              # JSON 文本（magicres5 配置/图集）
     TEXT = "text"              # 纯文本（含 IG 重定向记录）
     SCRIPT = "script"          # zlib 包装的脚本数据（内层仍含 XOR，不解碼）
+    AUDIO = "audio"            # RIFF WAV 音频（sound.fls 整份存入）
     BINARY = "binary"          # 未识别二进制（含 effect 未破译条目）
 
 
@@ -25,6 +27,7 @@ KIND_LABELS = {
     EntryKind.JSON: "JSON",
     EntryKind.TEXT: "文本",
     EntryKind.SCRIPT: "脚本数据",
+    EntryKind.AUDIO: "音频",
     EntryKind.BINARY: "二进制",
 }
 
@@ -48,6 +51,8 @@ def _sniff(content: bytes, complete: bool) -> EntryKind:
         return EntryKind.SPRITE
     if content[:4] == b"\x89PNG":
         return EntryKind.PNG
+    if is_wav(content):
+        return EntryKind.AUDIO
     is_zlib = (len(content) >= 2 and content[0] == 0x78
                and (content[0] * 256 + content[1]) % 31 == 0)
     if is_zlib:

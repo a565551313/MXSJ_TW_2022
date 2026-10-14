@@ -50,6 +50,7 @@ from .file_tree import DirectoryPanel
 from .grid_panel import EntryGridPanel
 from .inspector import Inspector
 from .preview.animation_bar import AnimationBar
+from .preview.audio_preview import AudioPreview
 from .preview.sprite_view import MODE_CANVAS, MODE_FRAME, SpriteView
 from .preview.text_hex import HexPreview, TextPreview
 from .qtutil import pil_to_qimage
@@ -163,6 +164,8 @@ class MainWindow(QMainWindow):
         self._preview_stack.addWidget(self._text_preview)
         self._hex_preview = HexPreview(splitter)
         self._preview_stack.addWidget(self._hex_preview)
+        self._audio_preview = AudioPreview(splitter)
+        self._preview_stack.addWidget(self._audio_preview)
 
         self._inspector = Inspector(splitter)
         self._inspector.frame_chosen.connect(self._on_frame_chosen)
@@ -494,6 +497,7 @@ class MainWindow(QMainWindow):
         self._current = index
         kind = doc.entry_kind(index)
         self._anim_bar.stop()
+        self._audio_preview.stop_playback()
         if kind is EntryKind.SPRITE:
             self._show_sprite(index)
         elif kind is EntryKind.PNG:
@@ -509,6 +513,11 @@ class MainWindow(QMainWindow):
             self._inspector.set_entry(doc, index, None)
             self._text_preview.set_content(doc.content(index))
             self._preview_stack.setCurrentIndex(1)
+        elif kind is EntryKind.AUDIO:
+            self._sprite = None
+            self._inspector.set_entry(doc, index, None)
+            self._audio_preview.set_content(doc.content(index))
+            self._preview_stack.setCurrentIndex(3)
         else:
             self._sprite = None
             self._inspector.set_entry(doc, index, None)

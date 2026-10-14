@@ -36,6 +36,7 @@ _KIND_COLORS = {
     EntryKind.JSON: QColor(230, 159, 34),
     EntryKind.TEXT: QColor(120, 120, 130),
     EntryKind.SCRIPT: QColor(142, 68, 173),
+    EntryKind.AUDIO: QColor(214, 90, 120),
     EntryKind.BINARY: QColor(96, 96, 104),
 }
 
