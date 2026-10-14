@@ -260,8 +260,16 @@ def main() -> int:
         assert banned not in names_all, f"banned name present: {banned}"
     for need in ("CRegTermsPanel", "CRegFormPanel", "CConfirm", "Show", "Step"):
         assert any(need in f for f in funcs), f"missing function: {need}"
-    stub = "伺服器尚未開放註冊，請稍後再試"
-    assert any(stub in t for t in texts), "stub text missing"
+    raw_consts = set()
+    for path, code in walk_codes(root_code):
+        for c in code.consts:
+            if isinstance(c, (bytes, bytearray)):
+                raw_consts.add(bytes(c))
+    stub = "伺服器尚未開放註冊，請稍後再試".encode("big5")
+    assert stub in raw_consts, "stub Big5 bytes missing"
+    assert not any(isinstance(c, str) and "伺服器" in c
+                   for path, code in walk_codes(root_code)
+                   for c in code.consts), "stub leaked as unicode"
     print("[+] verify OK: only 337/4007 changed; mainpage diff = 9 bytes;")
     print("    register round-trips with terms/form panels and stub text;")
     print("    no network call names remain.")

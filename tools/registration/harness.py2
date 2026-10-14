@@ -114,8 +114,8 @@ panel = g['g_RegisterPanel']
 assert isinstance(panel, g['CRegTermsPanel']), type(panel)
 assert ('InputSecrecy', 1) in EVENTS
 cout = [e for e in EVENTS if e[0] == 'COutput'][-1]
-assert u'會員服務條款' in cout[1][0], cout[1]
-print 'terms fallback OK:', cout[1][0].encode('utf-8')
+assert cout[1][0] == '\xb7|\xad\xfb\xaaA\xb0\xc8\xb1\xf8\xb4\xda', cout[1]
+print 'terms fallback OK (Big5 bytes)'
 
 # 2. 同意 -> 表單頁
 panel.OnMessage(1)
@@ -135,18 +135,23 @@ def submit():
     return boxes[-1][1]
 
 form.m_PwdEdit.text = 'abc'
-assert submit() == u'請輸入正確格式的密碼'
+assert submit() == '\xbd\xd0\xbf\xe9\xa4J\xa5\xbf\xbdT\xae\xe6\xa6\xa1\xaa\xba\xb1K\xbdX'
 form.m_PwdEdit.text = 'abc def!'
-assert submit() == u'登錄密碼僅可由字母或者數字組成,長度為6~16位。'
+assert submit() == g['MSG_PWD_ALNUM']
 form.m_PwdEdit.text = 'abcdef'
 form.m_PwdEdit2.text = 'abcdeg'
-assert submit() == u'兩次輸入的密碼不匹配'
+assert submit() == g['MSG_PWD_MISMATCH']
 form.m_PwdEdit2.text = 'abcdef'
 form.m_EmailEdit.text = 'not-an-email'
-assert submit() == u'請輸入正確格式的郵箱'
+assert submit() == g['MSG_EMAIL_FORMAT']
 form.m_EmailEdit.text = 'test@example.com'
 msg = submit()
-assert msg == u'伺服器尚未開放註冊，請稍後再試', msg
+assert msg == g['MSG_STUB'], msg
+try:
+    diag = open('photo/register_diag.txt').read()
+except IOError:
+    diag = open('photo\\register_diag.txt').read()  # Linux: backslash is literal
+assert 'form msgid=2' in diag and 'stub box shown' in diag, diag
 assert g['g_AccountInfo']['Email'] == 'test@example.com'
 print 'form validation + stub OK'
 

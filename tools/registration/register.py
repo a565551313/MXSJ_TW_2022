@@ -58,10 +58,10 @@ def ShowError(err, ecode=0, errmsg=''):
         if errmsg:
             msg = errmsg + '-%d' % err
         else:
-            msg = u'\u672a\u77e5\u932f\u8aa4(%d)' % err
+            msg = MSG_UNKNOWN_ERR + '-%d' % err
     else:
         msg = dc_error_code.ERROR_MSG[err]
-    commondialog.ShowNewMessageBox(msg, u'\u78ba\u5b9a')
+    commondialog.ShowNewMessageBox(msg, BTN_OK)
 
 
 # ---------------------------------------------------------------------------
@@ -119,18 +119,40 @@ class CConfirm(combdialog.CCombPanel):
 # ---------------------------------------------------------------------------
 
 # servicedata 缺失時的佔位條款（正式條款待補，見文件頭第 3 點）。
+# UI 文字一律用 Big5 字節串（與原版模塊常量逐字節同編碼）。實機教訓：
+# 傳 unicode 給原生彈框會在其內部做字節拼接時解碼失敗、靜默無反應。
+BTN_OK = '\xbdT\xa9w'  # 確定
+MSG_PWD_FORMAT = '\xbd\xd0\xbf\xe9\xa4J\xa5\xbf\xbdT\xae\xe6\xa6\xa1\xaa\xba\xb1K\xbdX'  # 請輸入正確格式的密碼
+MSG_PWD_ALNUM = '\xb5n\xbf\xfd\xb1K\xbdX\xb6\xc8\xa5i\xa5\xd1\xa6r\xa5\xc0\xa9\xce\xaa\xcc\xbc\xc6\xa6r\xb2\xd5\xa6\xa8,\xaa\xf8\xab\xd7\xac\xb06~16\xa6\xec\xa1C'  # 登錄密碼僅可由字母或者數字組成,長度為6~16位。
+MSG_PWD_MISMATCH = '\xa8\xe2\xa6\xb8\xbf\xe9\xa4J\xaa\xba\xb1K\xbdX\xa4\xa3\xa4\xc7\xb0t'  # 兩次輸入的密碼不匹配
+MSG_EMAIL_FORMAT = '\xbd\xd0\xbf\xe9\xa4J\xa5\xbf\xbdT\xae\xe6\xa6\xa1\xaa\xba\xb6l\xbdc'  # 請輸入正確格式的郵箱
+MSG_STUB = '\xa6\xf8\xaaA\xbe\xb9\xa9|\xa5\xbc\xb6}\xa9\xf1\xb5\xf9\xa5U\xa1A\xbd\xd0\xb5y\xab\xe1\xa6A\xb8\xd5'  # 伺服器尚未開放註冊，請稍後再試
+MSG_UNKNOWN_ERR = '\xa5\xbc\xaa\xbe\xbf\xf9\xbb~'  # 未知錯誤
+MSG_SUBMIT_ERR = '\xb5\xf9\xa5U\xb4\xa3\xa5\xe6\xa5X\xbf\xf9\xa1A\xbd\xd0\xa6^\xb3\xf8\xba\xde\xb2z\xad\xfb'  # 註冊提交出錯，請回報管理員
+
+# servicedata 缺失時的佔位條款（Big5 字節串，正式條款待補，見文件頭）。
 TERMS_FALLBACK = [
-    u'\u6703\u54e1\u670d\u52d9\u689d\u6b3e',
-    u'',
-    u'\uff08\u6e2c\u8a66\u4f54\u4f4d\uff09\u539f\u689d\u6b3e\u6587\u672c'
-    u'\u7531 servicedata \u6a21\u7d44\u63d0\u4f9b\uff0c',
-    u'\u672c\u6e2c\u8a66\u5305\u672a\u5305\u542b\u8a72\u6a21\u7d44'
-    u'\uff0c\u6b63\u5f0f\u689d\u6b3e\u5f85\u88dc\u3002',
-    u'',
-    u'\u9ede\u300c\u6211\u540c\u610f\u300d\u7e7c\u7e8c\u586b\u5beb'
-    u'\u8a3b\u518a\u8cc7\u6599\uff0c\u9ede\u300c\u6211\u62d2\u7d55\u300d'
-    u'\u8fd4\u56de\u3002',
+    '\xb7|\xad\xfb\xaaA\xb0\xc8\xb1\xf8\xb4\xda',
+    '',
+    '\xa1]\xb4\xfa\xb8\xd5\xa6\xfb\xa6\xec\xa1^\xad\xec\xb1\xf8\xb4\xda\xa4\xe5\xa5\xbb\xa5\xd1 servicedata \xbc\xd2\xb2\xd5\xb4\xa3\xa8\xd1\xa1A',
+    '\xa5\xbb\xb4\xfa\xb8\xd5\xa5]\xa5\xbc\xa5]\xa7t\xb8\xd3\xbc\xd2\xb2\xd5\xa1A\xa5\xbf\xa6\xa1\xb1\xf8\xb4\xda\xab\xdd\xb8\xc9\xa1C',
+    '',
+    '\xc2I\xa1u\xa7\xda\xa6P\xb7N\xa1v\xc4~\xc4\xf2\xb6\xf1\xbcg\xb5\xf9\xa5U\xb8\xea\xae\xc6\xa1A\xc2I\xa1u\xa7\xda\xa9\xda\xb5\xb4\xa1v\xaa\xf0\xa6^\xa1C',
 ]
+
+
+def _Diag(text):
+    """第一期診斷：把註冊流程的關鍵節點寫到 photo\\register_diag.txt。
+
+    客戶端會吞掉 OnMessage 裡的腳本異常（界面上只是「沒反應」），
+    沒有這支日誌就無從定位。純 ASCII 寫入，永不拋錯。
+    """
+    try:
+        f = open('photo\\register_diag.txt', 'a')
+        f.write(str(text) + '\n')
+        f.close()
+    except Exception:
+        pass
 
 # 步驟圖（GBK 字節路徑，與舊版常量逐字節一致，勿改編碼）。
 IMG_STEP_TERMS = 'combdialog/\xd4\xd3\xcd\xbc/\xcd\xac\xd2\xe2\xcc\xf5\xbf\xee.igs'
@@ -249,32 +271,44 @@ class CRegFormPanel(combdialog.CCombPanel):
         pwd = self.m_PwdEdit.GetText()
         if len(pwd) < 6 or len(pwd) > 16:
             self.m_PwdEdit.Active(True)
-            return u'請輸入正確格式的密碼'
+            return MSG_PWD_FORMAT
         if not pwd.isalnum():
             self.m_PwdEdit.Active(True)
-            return u'登錄密碼僅可由字母或者數字組成,長度為6~16位。'
+            return MSG_PWD_ALNUM
         if pwd != self.m_PwdEdit2.GetText():
             self.m_PwdEdit2.Active(True)
-            return u'兩次輸入的密碼不匹配'
+            return MSG_PWD_MISMATCH
         email = self.m_EmailEdit.GetText().strip()
         if not self.CheckEmail(email):
             self.m_EmailEdit.Active(True)
-            return u'請輸入正確格式的郵箱'
+            return MSG_EMAIL_FORMAT
         return None
 
     def DoSubmit(self):
         import commondialog
-        msg = self.DoCheck()
-        if msg is not None:
-            commondialog.ShowNewMessageBox(msg, u'確定')
-            return
-        g_AccountInfo['Password'] = self.m_PwdEdit.GetText()
-        g_AccountInfo['Email'] = self.m_EmailEdit.GetText().strip()
-        # 服务端注册接口未就绪：先留桩，明示未接通（用户定的文案）。
-        commondialog.ShowNewMessageBox(
-            u'伺服器尚未開放註冊，請稍後再試', u'確定')
+        _Diag('submit start')
+        try:
+            msg = self.DoCheck()
+            _Diag('check done fail=%s' % (msg is not None))
+            if msg is not None:
+                commondialog.ShowNewMessageBox(msg, BTN_OK)
+                _Diag('fail box shown')
+                return
+            g_AccountInfo['Password'] = self.m_PwdEdit.GetText()
+            g_AccountInfo['Email'] = self.m_EmailEdit.GetText().strip()
+            # 服務端註冊接口未就緒：先留樁，明示未接通（用戶定的文案）。
+            commondialog.ShowNewMessageBox(MSG_STUB, BTN_OK)
+            _Diag('stub box shown')
+        except Exception:
+            import sys
+            _Diag('EXC %r' % (sys.exc_info()[1],))
+            try:
+                commondialog.ShowMessageBox(MSG_SUBMIT_ERR, BTN_OK)
+            except Exception:
+                _Diag('err box failed too')
 
     def OnMessage(self, msgid):
+        _Diag('form msgid=%s' % (msgid,))
         _PlayBtnSound()
         if msgid == 1:
             Step(0)
