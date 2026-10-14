@@ -1,0 +1,175 @@
+# -*- coding: utf-8 -*-
+# Run under CPython 2.5.6. Stubs the client modules and drives the new
+# register module through its whole flow.
+import marshal
+import sys
+import types
+
+EVENTS = []
+
+def mod(name, **attrs):
+    m = types.ModuleType(name)
+    for k, v in attrs.items():
+        setattr(m, k, v)
+    sys.modules[name] = m
+    return m
+
+class FakeObj(object):
+    def __init__(self, name):
+        self.name = name
+    def GetSize(self):
+        return (400, 300)
+    def GetPos(self):
+        return (10, 10)
+    def SetShow(self, flag):
+        EVENTS.append(('SetShow', self.name, flag))
+    def SetPos(self, x, y):
+        pass
+    def SetFrame(self, n):
+        pass
+    def Topmost(self):
+        pass
+
+class FakeEdit(object):
+    def __init__(self, name):
+        self.name = name
+        self.text = ''
+        self.m_IsPassword = False
+    def SetLimit(self, n):
+        pass
+    def SetNextEdit(self, other):
+        pass
+    def Active(self, flag):
+        EVENTS.append(('Active', self.name, flag))
+    def GetText(self):
+        return self.text
+    def SetText(self, t):
+        self.text = t
+
+class FakePanel(object):
+    def __init__(self, parent, dlgpath):
+        self.dlgpath = dlgpath
+        self.objects = {}
+        EVENTS.append(('Panel', dlgpath))
+    def GetObject(self, name):
+        if name not in self.objects:
+            self.objects[name] = FakeObj(name)
+        return self.objects[name]
+    def Topmost(self):
+        pass
+
+def fake_cedit(cls, name, parent, color, font, linecolor=0):
+    e = FakeEdit(name)
+    parent.objects[name] = e
+    return e
+
+class FakeCOutput(object):
+    def __init__(self, parent, w, h, x, y, lines, txt_font=None, txt_color=None):
+        self.lines = lines
+        EVENTS.append(('COutput', lines))
+    def SetPos(self, x, y):
+        pass
+    def Refresh(self):
+        pass
+    def ScrollTo(self, n):
+        pass
+    def SetChatCursor(self, n):
+        pass
+    def ResetFromCursor(self):
+        pass
+
+class FakeImage(object):
+    def __init__(self, parent, path, pack):
+        EVENTS.append(('CImage', path))
+    def SetPos(self, x, y):
+        pass
+    def SetFrame(self, n):
+        pass
+
+mod('C_sys', InputSecrecy=lambda f: EVENTS.append(('InputSecrecy', f)))
+mod('combdialog', CCombPanel=FakePanel)
+mod('combmacro', CEDIT=fake_cedit)
+mod('interface', DialogPanel=FakeObj('DialogPanel'), CEdit=object,
+    CRichTextObject=object, CBaseObject=lambda p: None,
+    FONT_EDIT=1, FontLT12_1=2, FontLT14_3=3, COLOR_1=4, COLOR_5=5)
+mod('ui', CImage=FakeImage)
+mod('sound', Play=lambda p: EVENTS.append(('Play', p)))
+mod('sounddefine', PATH_BTN_SOUND='action/button.wav')
+mod('commondialog',
+    ShowNewMessageBox=lambda msg, btn: EVENTS.append(('MsgBox', msg, btn)),
+    ShowMessageBox=lambda msg, btn: EVENTS.append(('MsgBox', msg, btn)))
+mod('mainpage', Show=lambda f: EVENTS.append(('mainpage.Show', f)))
+mod('chatoutput', COutput=FakeCOutput)
+mod('netlogin', C2SConfirmRegInfo=lambda: EVENTS.append(('C2SConfirmRegInfo',)))
+mod('selectrole', g_SelectRoleDlg=None)
+mod('dc_error_code', ERROR_MSG={})
+
+code = marshal.loads(open('/home/user/MXSJ_TW_2022/tools/registration/out/register_compiled.pyc', 'rb').read()[8:])
+g = {'__name__': 'register'}
+exec code in g
+
+# 1. 開條款頁（無 servicedata -> 佔位條款）
+g['Show'](True)
+panel = g['g_RegisterPanel']
+assert isinstance(panel, g['CRegTermsPanel']), type(panel)
+assert ('InputSecrecy', 1) in EVENTS
+cout = [e for e in EVENTS if e[0] == 'COutput'][-1]
+assert u'會員服務條款' in cout[1][0], cout[1]
+print 'terms fallback OK:', cout[1][0].encode('utf-8')
+
+# 2. 同意 -> 表單頁
+panel.OnMessage(1)
+form = g['g_RegisterPanel']
+assert isinstance(form, g['CRegFormPanel']), type(form)
+hidden = [e[1] for e in EVENTS if e[0] == 'SetShow' and e[2] is False]
+for need in ('email2', 'edt_Code', 'txt_Mail2', 'img_Mail2Bg', 'txt_Code', 'txt_CodeBg', 'txt_RefershCode', 'youxiang'):
+    assert need in hidden, need
+print 'form panel OK, hidden:', hidden
+
+# 3. 校驗流程
+def submit():
+    del EVENTS[:]
+    form.OnMessage(2)
+    boxes = [e for e in EVENTS if e[0] == 'MsgBox']
+    assert boxes, 'no message box'
+    return boxes[-1][1]
+
+form.m_PwdEdit.text = 'abc'
+assert submit() == u'請輸入正確格式的密碼'
+form.m_PwdEdit.text = 'abc def!'
+assert submit() == u'登錄密碼僅可由字母或者數字組成,長度為6~16位。'
+form.m_PwdEdit.text = 'abcdef'
+form.m_PwdEdit2.text = 'abcdeg'
+assert submit() == u'兩次輸入的密碼不匹配'
+form.m_PwdEdit2.text = 'abcdef'
+form.m_EmailEdit.text = 'not-an-email'
+assert submit() == u'請輸入正確格式的郵箱'
+form.m_EmailEdit.text = 'test@example.com'
+msg = submit()
+assert msg == u'伺服器尚未開放註冊，請稍後再試', msg
+assert g['g_AccountInfo']['Email'] == 'test@example.com'
+print 'form validation + stub OK'
+
+# 4. 上一步回條款，再拒絕回首頁
+form.OnMessage(1)
+assert isinstance(g['g_RegisterPanel'], g['CRegTermsPanel'])
+del EVENTS[:]
+g['g_RegisterPanel'].OnMessage(3)
+assert ('mainpage.Show', True) in EVENTS
+assert ('InputSecrecy', 0) in EVENTS
+assert g['g_RegisterPanel'] is None
+print 'back/home flow OK'
+
+# 5. CConfirm（帶 servicedata 樁）
+mod('servicedata', SERVICE_MSG='x條款一\ny條款二', CONFIRM_MSG='z確認一\nw確認二')
+g['ShowConfirmDlg'](0)
+dlg = g['g_ConfirmDlg']
+assert isinstance(dlg, g['CConfirm'])
+cout = [e for e in EVENTS if e[0] == 'COutput'][-1]
+assert cout[1] == ['\xe7\xa2\xba\xe8\xaa\x8d\xe4\xb8\x80', '\xe7\xa2\xba\xe8\xaa\x8d\xe4\xba\x8c'], cout[1]
+del EVENTS[:]
+dlg.OnMessage(1)
+assert ('C2SConfirmRegInfo',) in EVENTS
+assert g['g_ConfirmDlg'] is None
+print 'confirm dlg OK'
+print 'ALL HARNESS CHECKS PASSED'
