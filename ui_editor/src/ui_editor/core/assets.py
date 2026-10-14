@@ -112,6 +112,14 @@ class AssetResolver:
         found = set(self.scan_layouts(pack_path))
         return [p for p in known_layout_paths() if p not in found]
 
+    @property
+    def has_sources(self) -> bool:
+        return bool(self._packs or self._loose_dirs)
+
+    def resource_exists(self, name: str) -> bool:
+        """只查当前挂载来源与待入包图；不解码负载，供静态诊断使用。"""
+        return self._staged_lookup(name) is not None or self._exists(name)
+
     def _exists(self, name: str) -> bool:
         """资源是否真在某个包/散装目录里（只查索引与文件存在性）。"""
         for pack in self._packs:

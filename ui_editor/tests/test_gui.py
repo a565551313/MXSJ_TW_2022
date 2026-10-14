@@ -4,6 +4,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -51,7 +52,9 @@ class TestMainWindowFlow(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             target = str(Path(tmp) / "out.dlg")
-            self.assertTrue(w.save_as(target))
+            with mock.patch("ui_editor.ui.main_window.SaveReviewDialog.exec",
+                            return_value=1):
+                self.assertTrue(w.save_as(target))
             from ui_editor.core import dlg_codec
             from ui_editor.core.model import LayoutDocument
             dicts, _ = dlg_codec.parse_bytes(Path(target).read_bytes())

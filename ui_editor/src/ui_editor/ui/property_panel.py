@@ -8,6 +8,8 @@
 
 from __future__ import annotations
 
+from html import escape
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QApplication,
@@ -78,6 +80,8 @@ class PropertyPanel(QWidget):
         self._getters: dict[str, object] = {}
         # 主窗口注入资源解析器：文件字段优先从资源包里选
         self.assets = None
+        # 修改前同步护栏：返回 False 则不触碰 props、不发 changed。
+        self.before_change = None
 
         root = QVBoxLayout(self)
         self._header = QLabel("未选中控件")
@@ -109,6 +113,15 @@ class PropertyPanel(QWidget):
         self._widget = widget
         self._rebuild()
 
+    def refresh_label(self, widget: Widget) -> None:
+        """改名后同步标题，不销毁正在提交的属性编辑器。"""
+        if widget is not self._widget:
+            return
+        child_note = f"，子控件 {len(widget.children)} 个"
+        self._header.setText(
+            f"<b>{escape(widget.wtype)}</b>　"
+            f"{escape(widget.name or '(未命名)')}{child_note}")
+
     def refresh_values(self, widget: Widget) -> None:
         """画布拖动后同步数值（不重建面板，避免打断编辑）。"""
         if widget is not self._widget or self._building:
@@ -124,16 +137,17 @@ class PropertyPanel(QWidget):
 
     # -- 构建 -------------------------------------------------------
     def _rebuild(self) -> None:
+        # removeRow 可能触发旧编辑器失焦，必须先挡住提交。
+        self._building = True
         while self._form.rowCount():
             self._form.removeRow(0)
         self._getters = {}
         widget = self._widget
         if widget is None:
             self._header.setText("未选中控件")
+            self._building = False
             return
-        child_note = f"，子控件 {len(widget.children)} 个"
-        self._header.setText(
-            f"<b>{widget.wtype}</b>　{widget.name or '(未命名)'}{child_note}")
+        self.refresh_label(widget)
         self._building = True
         try:
             for key in self._ordered_keys(widget):
@@ -171,31 +185,47 @@ class PropertyPanel(QWidget):
         layout.addWidget(delete)
         self._form.addRow(key, row)
 
-    def _commit(self, key: str, value: object) -> None:
+    def _allowed(self, key: str, value: object) -> bool:
+        if self._widget is None:
+            return False
+        return (self.before_change is None
+                or self.before_change(self._widget, key, value))
+
+    def _commit(self, key: str, value: object) -> bool:
         if self._building or self._widget is None:
-            return
+            return False
         if self._widget.props.get(key) == value and key in self._widget.props:
-            return
+            return True
+        if not self._allowed(key, value):
+            self._rebuild()  # 撤回编辑器中的候选文本
+            return False
         self._widget.props[key] = value
         self.changed.emit(self._widget, key)
+        return True
 
     def _remove_property(self, key: str) -> None:
-        if self._widget is None:
+        if self._building or self._widget is None or key in _CORE_KEYS:
             return
-        self._widget.props.pop(key, None)
+        if key not in self._widget.props or not self._allowed(key, None):
+            return
+        self._widget.props.pop(key)
         self.changed.emit(self._widget, key)
         self._rebuild()
 
     def _add_property(self) -> None:
-        if self._widget is None:
+        if self._widget is None or self._building:
             return
         key = self._new_key.text().strip()
         if not key:
             return
-        self._widget.props[key] = _guess_scalar(self._new_value.text())
+        if key == "lChildren":
+            QMessageBox.warning(self, "不能直接修改子树",
+                                "请在控件树中新增/删除子控件。")
+            return
+        if not self._commit(key, _guess_scalar(self._new_value.text())):
+            return
         self._new_key.clear()
         self._new_value.clear()
-        self.changed.emit(self._widget, key)
         self._rebuild()
 
     # -- 各类型编辑器 -------------------------------------------------

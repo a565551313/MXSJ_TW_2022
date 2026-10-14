@@ -14,16 +14,18 @@ from pathlib import Path
 
 from PIL import Image
 from PySide6.QtCore import QPoint, QSettings, QSize, Qt, QThreadPool
-from PySide6.QtGui import QAction, QIcon, QImage, QPixmap, QShortcut
+from PySide6.QtGui import QAction, QIcon, QImage, QKeySequence, QPixmap, QShortcut
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
+    QDialog,
     QDockWidget,
     QFileDialog,
     QHBoxLayout,
     QInputDialog,
     QLabel,
     QLineEdit,
+    QListWidget,
     QMainWindow,
     QMenu,
     QMessageBox,
@@ -39,9 +41,11 @@ from PySide6.QtWidgets import (
 )
 
 from .. import __version__
+from ..core.changes import counts
 from ..core.codecs.detect import EntryKind
 from ..core.codecs.sprite import Sprite, decode_sprite, encode_sprite
 from ..core.model.document import PackDocument
+from ..core.output_paths import guard_output
 from ..core.services import exporter
 from ..core.services.saver import save_document
 from . import icons
@@ -54,6 +58,7 @@ from .preview.audio_preview import AudioPreview
 from .preview.sprite_view import MODE_CANVAS, MODE_FRAME, SpriteView
 from .preview.text_hex import HexPreview, TextPreview
 from .qtutil import pil_to_qimage
+from .save_review import SaveReviewDialog
 from .workers import Job
 
 _ZOOM_ITEMS = [("适应窗口", None), ("50%", 0.5), ("100%", 1.0), ("200%", 2.0),
@@ -94,6 +99,8 @@ class MainWindow(QMainWindow):
         self._render_cache: OrderedDict[int, tuple] = OrderedDict()
         self._thumb_cache: OrderedDict[tuple[str, int], QImage] = OrderedDict()
         self._busy = False
+        self._blocking_job = None
+        self._preview_epoch = 0
         # 任务回调注册表：以 JobSignals 为键，经槽函数在 GUI 线程分发
         self._job_callbacks: dict[object, tuple] = {}
 
@@ -133,6 +140,13 @@ class MainWindow(QMainWindow):
         if per_page:
             self._grid.set_per_page(per_page)
         self.setCentralWidget(self._grid)
+        self._history_list = QListWidget()
+        self._history_list.setToolTip(
+            "当前包的只读时间线；用 Ctrl+Z / Ctrl+Y 逐步回退/重做。最多 50 步，"
+            "64 MiB 增量预算（超大单步保留一条）；批量导入算一步。")
+        history_dock = QDockWidget("操作历史（当前包）", self)
+        history_dock.setWidget(self._history_list)
+        self.addDockWidget(Qt.BottomDockWidgetArea, history_dock)
 
         right = QDockWidget("预览与检查", self)
         right.setWidget(self._build_right_panel())
@@ -257,12 +271,15 @@ class MainWindow(QMainWindow):
         self._act_import_sprite = self._action(
             "帧图转精灵导入…", None, self.import_frames_as_sprite)
         self._act_delete = self._action("删除条目", None, self.delete_entry)
-        self._act_undo = self._action("撤销条目修改", None, self.undo_entry)
+        self._act_undo = self._action("撤销", "Ctrl+Z", self.undo_entry)
+        self._act_redo = self._action("重做", "Ctrl+Y", self.redo_entry)
+        self._act_redo.setShortcuts(
+            [QKeySequence("Ctrl+Y"), QKeySequence("Ctrl+Shift+Z")])
         self._act_revert = self._action("还原条目", None, self.revert_entry)
         for act in (self._act_replace_img, self._act_replace_raw, self._act_add,
                     self._act_add_multi, self._act_import_path,
                     self._act_import_sprite,
-                    self._act_delete, self._act_undo, self._act_revert):
+                    self._act_delete, self._act_undo, self._act_redo, self._act_revert):
             edit_menu.addAction(act)
 
         about = self._action("关于", None, self._show_about)
@@ -382,6 +399,8 @@ class MainWindow(QMainWindow):
 
     def open_pack(self, path: str) -> None:
         """把资源包打开到中间网格（已打开过的直接切换，不重读）。"""
+        if self._busy:
+            return
         key = _key_of(path)
         if key in self._docs:
             self._activate_pack(key)
@@ -414,6 +433,7 @@ class MainWindow(QMainWindow):
     def _activate_pack(self, key: str) -> None:
         doc = self._docs[key]
         self._current_key = key
+        self._preview_epoch += 1
         self._current = -1
         self._sprite = None
         self._render_cache.clear()
@@ -442,6 +462,8 @@ class MainWindow(QMainWindow):
         if not entries:
             return
 
+        epoch = self._preview_epoch
+
         def job(_progress):
             thumbs: dict[int, QImage] = {}
             for i in entries:
@@ -464,7 +486,8 @@ class MainWindow(QMainWindow):
 
         j = Job(job, "生成缩略图")
         self._register_job(
-            j, lambda thumbs: self._on_thumbnails(key, thumbs),
+            j, lambda thumbs: self._on_thumbnails(key, thumbs)
+            if epoch == self._preview_epoch and not self._busy else None,
             on_error=lambda _t: None)
 
     def _apply_cached_icons(self) -> None:
@@ -536,6 +559,8 @@ class MainWindow(QMainWindow):
             self._apply_sprite_bundle(index, cached)
             return
 
+        epoch = self._preview_epoch
+
         def job(_progress):
             sprite = decode_sprite(doc.content(index))
             frames = [pil_to_qimage(sprite.render_frame(fi))
@@ -549,7 +574,10 @@ class MainWindow(QMainWindow):
 
         j = Job(job, "解码精灵")
         self._register_job(
-            j, lambda bundle: self._on_sprite_decoded(index, bundle))
+            j, lambda bundle: self._on_sprite_decoded(index, bundle)
+            if epoch == self._preview_epoch and not self._busy else None,
+            on_error=lambda text: self._on_job_error(text)
+            if epoch == self._preview_epoch and not self._busy else None)
 
     def _on_sprite_decoded(self, index: int, bundle) -> None:
         self._render_cache[index] = bundle
@@ -594,7 +622,7 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------------------------------- 编辑 ----
     def replace_images(self) -> None:
-        if self._doc is None or self._sprite is None or self._current < 0:
+        if self._busy or self._doc is None or self._sprite is None or self._current < 0:
             return
         self._open_replace_images_dialog(
             self._current, self._sprite,
@@ -664,12 +692,12 @@ class MainWindow(QMainWindow):
         self._after_entry_changed(index)
 
     def replace_raw(self) -> None:
-        if self._doc is None or self._current < 0:
+        if self._busy or self._doc is None or self._current < 0:
             return
         self._replace_raw_at(self._current)
 
     def _replace_raw_at(self, index: int) -> None:
-        if self._doc is None or not 0 <= index < self._doc.count:
+        if self._busy or self._doc is None or not 0 <= index < self._doc.count:
             return
         path, _ = QFileDialog.getOpenFileName(self, "选择原始数据文件")
         if not path:
@@ -685,7 +713,7 @@ class MainWindow(QMainWindow):
         self._after_entry_changed(index)
 
     def add_entry(self) -> None:
-        if self._doc is None:
+        if self._busy or self._doc is None:
             return
         path, _ = QFileDialog.getOpenFileName(self, "选择要新增的文件")
         if not path:
@@ -703,7 +731,7 @@ class MainWindow(QMainWindow):
         self._reload_grid(select=index)
 
     def delete_entry(self) -> None:
-        if self._doc is None or self._current < 0:
+        if self._busy or self._doc is None or self._current < 0:
             return
         index = self._current
         if QMessageBox.question(
@@ -721,23 +749,53 @@ class MainWindow(QMainWindow):
         nxt = min(index, self._doc.count - 1)
         self._reload_grid(select=nxt)
 
-    def undo_entry(self) -> None:
-        if self._doc is None or self._current < 0:
+    def _entry_identity(self, index: int):
+        doc = self._doc
+        assert doc is not None
+        meta = doc.archive.extra_metas[index]
+        return meta.entry_id if doc.kind == "0slf" else meta.name
+
+    def _apply_history(self, redo: bool) -> None:
+        doc = self._doc
+        if doc is None or self._busy:
             return
-        if self._doc.undo(self._current):
-            self.log(f"条目 {self._current} 已撤销一次修改")
-            self._after_entry_changed(self._current)
-        else:
-            self.log("该条目没有可撤销的修改")
+        identity = (self._entry_identity(self._current)
+                    if 0 <= self._current < doc.count else None)
+        label = doc.history.redo_label if redo else doc.history.undo_label
+        if not (doc.redo() if redo else doc.undo()):
+            return
+        self._render_cache.clear()
+        self._thumb_cache.clear()
+        select = next((i for i in range(doc.count)
+                       if self._entry_identity(i) == identity), -1)
+        if select < 0 and doc.count:
+            select = min(max(self._current, 0), doc.count - 1)
+        self._reload_grid(select=select)
+        self.log(f"{'重做' if redo else '撤销'}：{label}")
+
+    def undo_entry(self) -> None:
+        focus = self.focusWidget()
+        if isinstance(focus, (QLineEdit, QPlainTextEdit)) and not focus.isReadOnly():
+            focus.undo()
+            return
+        self._apply_history(False)
+
+    def redo_entry(self) -> None:
+        focus = self.focusWidget()
+        if isinstance(focus, (QLineEdit, QPlainTextEdit)) and not focus.isReadOnly():
+            focus.redo()
+            return
+        self._apply_history(True)
 
     def revert_entry(self) -> None:
-        if self._doc is None or self._current < 0:
+        if self._busy or self._doc is None or self._current < 0:
             return
         self._doc.revert(self._current)
         self.log(f"条目 {self._current} 已还原为打开时状态")
         self._after_entry_changed(self._current)
 
     def _after_entry_changed(self, index: int) -> None:
+        self._preview_epoch += 1
         assert self._doc is not None and self._current_key is not None
         self._render_cache.pop(index, None)
         self._thumb_cache.pop((self._current_key, index), None)
@@ -750,6 +808,13 @@ class MainWindow(QMainWindow):
         self._update_actions()
 
     def _reload_grid(self, select: int = -1) -> None:
+        self._preview_epoch += 1
+        # 所有旧下标缓存与未完成解码结果一起失效。
+        self._render_cache.clear()
+        if self._current_key:
+            self._thumb_cache = OrderedDict(
+                (key, value) for key, value in self._thumb_cache.items()
+                if key[0] != self._current_key)
         doc = self._doc
         assert doc is not None and self._current_key is not None
         kinds = [doc.entry_kind(i) for i in range(doc.count)]
@@ -762,12 +827,19 @@ class MainWindow(QMainWindow):
             self._select_entry(select)
         elif doc.count == 0:
             self._current = -1
+            self._sprite = None
+            self._anim_bar.set_frame_count(0)
+            self._audio_preview.stop_playback()
+            self._sprite_view.clear()
+            self._text_preview.set_content(b"")
+            self._hex_preview.set_content(b"")
+            self._preview_stack.setCurrentIndex(0)
             self._inspector.clear()
         self._update_actions()
 
     # ---------------------------------------------------------- 导出 ----
     def export_current(self) -> None:
-        if self._doc is None or self._current < 0:
+        if self._busy or self._doc is None or self._current < 0:
             return
         out = QFileDialog.getExistingDirectory(self, "选择导出目录")
         if not out:
@@ -781,7 +853,7 @@ class MainWindow(QMainWindow):
         )
 
     def export_all_sprites(self) -> None:
-        if self._doc is None:
+        if self._busy or self._doc is None:
             return
         out = QFileDialog.getExistingDirectory(self, "选择导出目录")
         if not out:
@@ -829,7 +901,7 @@ class MainWindow(QMainWindow):
 
     def export_entries(self, indexes: list[int], what: str = "条目") -> None:
         """按真名目录树批量导出（右键/文件菜单共用）。"""
-        if self._doc is None or not indexes:
+        if self._busy or self._doc is None or not indexes:
             return
         out = QFileDialog.getExistingDirectory(self, "选择导出目录")
         if not out:
@@ -863,7 +935,7 @@ class MainWindow(QMainWindow):
         0SLF 包逐个问资源路径并按路径导入（名字对了游戏才找得
         到）；data.fls 逐个问包内文件名后新增。
         """
-        if self._doc is None:
+        if self._busy or self._doc is None:
             return
         paths, _ = QFileDialog.getOpenFileNames(
             self, "选择要导入的文件（可多选）")
@@ -875,27 +947,29 @@ class MainWindow(QMainWindow):
             return
         added: list[int] = []
         skipped = 0
-        for path in paths:
-            name, ok = QInputDialog.getText(
-                self, "多选导入",
-                f"为 {Path(path).name} 输入包内文件名：",
-                text=Path(path).name)
-            if not ok or not name:
-                skipped += 1
-                continue
-            try:
-                added.append(doc.add_entry(Path(path).read_bytes(), name))
-            except Exception as exc:
-                self.log(f"导入 {path} 失败：{exc}")
-                skipped += 1
+        with doc.edit_group("多选导入"):
+            for path in paths:
+                name, ok = QInputDialog.getText(
+                    self, "多选导入",
+                    f"为 {Path(path).name} 输入包内文件名：",
+                    text=Path(path).name)
+                if not ok or not name:
+                    skipped += 1
+                    continue
+                try:
+                    added.append(doc.add_entry(Path(path).read_bytes(), name))
+                except Exception as exc:
+                    self.log(f"导入 {path} 失败：{exc}")
+                    skipped += 1
         if added:
             self._reload_grid(select=added[-1])
         self.log(f"多选导入完成：新增 {len(added)} 条"
                  + (f"，跳过 {skipped} 个" if skipped else ""))
+        self._update_actions()
 
     def import_by_path(self) -> None:
         """按路径导入（单个文件）：名字算编号，游戏才查得到。"""
-        if self._doc is None or self._doc.kind != "0slf":
+        if self._busy or self._doc is None or self._doc.kind != "0slf":
             return
         path, _ = QFileDialog.getOpenFileName(self, "选择要导入的文件")
         if path:
@@ -907,7 +981,7 @@ class MainWindow(QMainWindow):
         多张图按文件名顺序（01、02…）合成多帧动画；一张图就是
         单帧精灵。锚点取左上角，适合界面图与简单动画。
         """
-        if self._doc is None or self._doc.kind != "0slf":
+        if self._busy or self._doc is None or self._doc.kind != "0slf":
             return
         files, _ = QFileDialog.getOpenFileNames(
             self, "选择帧图片（多选 = 多帧动画，按文件名顺序）", "",
@@ -956,46 +1030,48 @@ class MainWindow(QMainWindow):
         added: list[int] = []
         replaced: list[int] = []
         skipped = 0
-        for path in paths:
-            filename = Path(path).name
-            res_path, ok = QInputDialog.getText(
-                self, "按路径导入",
-                f"输入 {filename} 在游戏里的资源路径\n"
-                "（如 combdialog4\\新登陆界面\\底板800.png；\n"
-                "游戏靠这个名字找图，填错了就找不到）：",
-                text=filename)
-            if not ok or not res_path.strip():
-                skipped += 1
-                continue
-            res_path = res_path.strip()
-            try:
-                data = Path(path).read_bytes()
-            except OSError as exc:
-                self.log(f"读取 {path} 失败：{exc}")
-                skipped += 1
-                continue
-            existing = doc.index_by_path(res_path)
-            if existing is not None:
-                answer = QMessageBox.question(
-                    self, "这个路径已在包里",
-                    f"路径 {res_path} 已经是条目 {existing}。\n"
-                    f"要用 {filename} 替换它的内容吗？")
-                if answer != QMessageBox.Yes:
+        with doc.edit_group("按路径批量导入"):
+            for path in paths:
+                filename = Path(path).name
+                res_path, ok = QInputDialog.getText(
+                    self, "按路径导入",
+                    f"输入 {filename} 在游戏里的资源路径\n"
+                    "（如 combdialog4\\新登陆界面\\底板800.png；\n"
+                    "游戏靠这个名字找图，填错了就找不到）：",
+                    text=filename)
+                if not ok or not res_path.strip():
                     skipped += 1
                     continue
-                doc.replace_content(existing, data)
-                replaced.append(existing)
-                self._after_entry_changed(existing)
-                self.log(f"已按路径替换条目 {existing}：{res_path}")
-                continue
-            index = doc.add_entry_for_path(data, res_path)
-            added.append(index)
-            self.log(f"已按路径导入条目 {index}：{res_path}")
+                res_path = res_path.strip()
+                try:
+                    data = Path(path).read_bytes()
+                except OSError as exc:
+                    self.log(f"读取 {path} 失败：{exc}")
+                    skipped += 1
+                    continue
+                existing = doc.index_by_path(res_path)
+                if existing is not None:
+                    answer = QMessageBox.question(
+                        self, "这个路径已在包里",
+                        f"路径 {res_path} 已经是条目 {existing}。\n"
+                        f"要用 {filename} 替换它的内容吗？")
+                    if answer != QMessageBox.Yes:
+                        skipped += 1
+                        continue
+                    doc.replace_content(existing, data)
+                    replaced.append(existing)
+                    self._after_entry_changed(existing)
+                    self.log(f"已按路径替换条目 {existing}：{res_path}")
+                    continue
+                index = doc.add_entry_for_path(data, res_path)
+                added.append(index)
+                self.log(f"已按路径导入条目 {index}：{res_path}")
         if added:
             self._reload_grid(select=added[-1])
         self.log(f"按路径导入完成：新增 {len(added)} 条、"
                  f"替换 {len(replaced)} 条"
                  + (f"，跳过 {skipped} 个" if skipped else ""))
+        self._update_actions()
 
     # ---------------------------------------------------------- 保存 ----
     def _protected_sources(self) -> list[Path]:
@@ -1007,7 +1083,7 @@ class MainWindow(QMainWindow):
         return sources
 
     def save_file(self, save_as: bool) -> None:
-        if self._doc is None or self._busy:
+        if self._busy or self._doc is None:
             return
         doc = self._doc
         old_key = self._current_key
@@ -1031,6 +1107,13 @@ class MainWindow(QMainWindow):
             return
         target = Path(path)
         protected = self._protected_sources()
+        try:
+            guard_output(target, protected)
+        except (OSError, ValueError) as exc:
+            QMessageBox.warning(self, "保存失败", str(exc))
+            return
+        if SaveReviewDialog(doc.changes(), target, self).exec() != QDialog.Accepted:
+            return
 
         def job(progress):
             return save_document(doc, target, progress, protected)
@@ -1089,25 +1172,45 @@ class MainWindow(QMainWindow):
         self._pool.start(job)
 
     def _dispatch_finished(self, result) -> None:
-        self._busy = False
-        self._progress.hide()
-        on_finished, _on_err = self._job_callbacks.pop(
-            self.sender(), (None, None))
+        sender = self.sender()
+        if sender is self._blocking_job:
+            self._busy = False
+            self._blocking_job = None
+            self._preview_epoch += 1
+            self._grid.setEnabled(True)
+            self._dir_panel.setEnabled(True)
+            self._progress.hide()
+        on_finished, _on_err = self._job_callbacks.pop(sender, (None, None))
         if on_finished is not None:
             on_finished(result)
+        self._update_actions()
 
     def _dispatch_error(self, text: str) -> None:
-        self._busy = False
-        self._progress.hide()
+        sender = self.sender()
+        if sender is self._blocking_job:
+            self._busy = False
+            self._blocking_job = None
+            self._preview_epoch += 1
+            self._grid.setEnabled(True)
+            self._dir_panel.setEnabled(True)
+            self._progress.hide()
         _on_fin, on_error = self._job_callbacks.pop(
-            self.sender(), (None, self._on_job_error))
+            sender, (None, self._on_job_error))
         on_error(text)
+        self._update_actions()
 
     def _run_job(self, job: Job, on_finished) -> None:
         """带忙碌状态与进度条的任务启动（打开/保存/导出用）。"""
+        if self._busy:
+            return
         self._busy = True
+        self._blocking_job = job.signals
+        self._preview_epoch += 1
+        self._grid.setEnabled(False)
+        self._dir_panel.setEnabled(False)
         self._progress.setRange(0, 0)
         self._progress.show()
+        self._update_actions()
         self._register_job(job, on_finished)
 
     def _on_progress(self, done: int, total: int) -> None:
@@ -1122,7 +1225,7 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------------------------------- 状态 ----
     def _update_actions(self) -> None:
-        has_doc = self._doc is not None
+        has_doc = self._doc is not None and not self._busy
         has_entry = has_doc and self._current >= 0
         is_sprite = (
             has_entry and self._doc is not None
@@ -1144,15 +1247,30 @@ class MainWindow(QMainWindow):
             has_doc and self._doc is not None
             and self._doc.kind == "0slf")
         self._act_delete.setEnabled(has_entry)
-        self._act_undo.setEnabled(has_entry)
+        self._act_undo.setEnabled(has_doc and self._doc.can_undo)
+        self._act_redo.setEnabled(has_doc and self._doc.can_redo)
+        doc = self._doc
+        self._act_undo.setText("撤销" + (f"：{doc.history.undo_label}"
+                                      if doc and doc.can_undo else ""))
+        self._act_redo.setText("重做" + (f"：{doc.history.redo_label}"
+                                      if doc and doc.can_redo else ""))
+        self._history_list.clear()
+        if doc:
+            for step in doc.history.applied:
+                self._history_list.addItem("已应用 · " + step.label)
+            for step in reversed(doc.history.undone):
+                self._history_list.addItem("待重做 · " + step.label)
+        for action in (self._act_workspace, self._act_open, self._act_refresh):
+            action.setEnabled(not self._busy)
         self._act_revert.setEnabled(has_entry)
         if has_doc:
             assert self._doc is not None
-            dirty = self._doc.dirty_count
+            summary = counts(self._doc.changes())
             self._status_label.setText(
                 f"{self._doc.path.name if self._doc.path else '未命名'} · "
                 f"{self._doc.count} 个条目 · 容器 {self._doc.kind} · "
-                f"已修改 {dirty} 条")
+                f"新增 {summary['新增']} · 修改 {summary['修改']} · "
+                f"删除 {summary['删除']}")
 
     def _show_about(self) -> None:
         QMessageBox.about(
@@ -1173,6 +1291,10 @@ class MainWindow(QMainWindow):
         super().keyPressEvent(event)
 
     def closeEvent(self, event) -> None:  # noqa: N802 (Qt 命名)
+        if self._busy:
+            self.log("操作进行中，请等待打开/保存/导出完成后再关闭。")
+            event.ignore()
+            return
         modified = [doc.path.name if doc.path else "未命名"
                     for doc in self._docs.values() if doc.is_modified]
         if modified:
@@ -1186,6 +1308,7 @@ class MainWindow(QMainWindow):
                 event.ignore()
                 return
         self._settings.setValue("per_page", self._grid.per_page)
+        self._preview_epoch += 1  # 关闭后旧预览结果/错误不再回灌窗口
         for doc in self._docs.values():
             doc.close()
         super().closeEvent(event)

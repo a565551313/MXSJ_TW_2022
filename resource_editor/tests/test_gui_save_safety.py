@@ -63,6 +63,9 @@ class TestGuiSaveSafety(unittest.TestCase):
                             "resource_editor.gui.main_window."
                             "QFileDialog.getSaveFileName",
                             return_value=(str(target), ""),
+                        ), mock.patch(
+                            "resource_editor.gui.main_window.SaveReviewDialog.exec",
+                            return_value=1,
                         ):
                             window.save_file(False)
                         self.assertEqual(source.read_bytes(), original)
