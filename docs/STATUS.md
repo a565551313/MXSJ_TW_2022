@@ -325,7 +325,9 @@
   相比按旧源码重建的diag1仅4007压缩负载改变，另外5001条全等。
 - 仓库外 `/home/user/registration-phase2-diag2-delivery/data/script.fls`，
   SHA256 `4022b90e3568248317a8c6799c4fc8e61f641a538668616d7b7d51f345f39f09`。
-  是诊断版，实际缺失属性及表单显示尚未解决/验收；本轮未上传，待明确授权。
+  是诊断版，实际缺失属性及表单显示尚未解决/验收；代码 `839c0c4` 已推送。
+  用户本轮明确选择上传，已上传 [registration_phase2_diag2.zip](https://drive.google.com/file/d/1ELUEuF4mGD_4AE4EiYMF5K6wgYDDIYDc/view) 到My Drive根目录；
+  返回大小/MD5与本地一致，未改权限/删除旧包，未再次下载核验。
   ZIP `registration_phase2_diag2.zip`，24,201,007B，MD5 `611eab945260ee28628703aa6caf0c29`，
   SHA256 `4ee6b9c8aa2e840527bc3075ae94e3cef56aa19de2df0fd0dd592cd02ae88b78`；
   ZIP CRC/逐文件回读通过，未含模板或interface.fls。
@@ -356,7 +358,7 @@
 
 | 日期 | 变更 |
 |---|---|
-| 2026-10-15 | 用户已进入协议，同意消息1到达、表单layout ready，但账号框初始化AttributeError；用户确认account/CBox。新增diag2拆解原生输入框调用、受限缺失属性/代码位置日志；只读原生工厂签名核对并纠正桩的cls(name)错误边界。真2.5.6 26/26、旧源定位探针先失败、新包marshal回读/桩冒烟/5001条与diag1等值、ruff与wincompat通过。不动用户布局，不声称已修好，未上传待授权。 |
+| 2026-10-15 | 用户已进入协议，同意消息1到达、表单layout ready，但账号框初始化AttributeError；用户确认account/CBox。新增diag2拆解原生输入框调用、受限缺失属性/代码位置日志；只读原生工厂签名核对并纠正桩的cls(name)错误边界。真2.5.6 26/26、旧源定位探针先失败、新包marshal回读/桩冒烟/5001条与diag1等值、ruff与wincompat通过。不动用户布局，不声称已修好；本轮用户明确授权后上传Drive，大小/MD5与本地一致，详§3.14。 |
 | 2026-10-14 | 用户否决一次性两路径助手作为终局，资源0.4.3/UI0.8.3修正常新增/修改/连续保存：统一原生路径XOR，旧明文/错key目标显式保存迁移，严格原生发布验证，不覆模板，不碰script；独立旧行为两FAIL→两PASS，资源118/118、UI203通过+1跳过、注册23/23，ruff/wincompat/启动自检通过。Windows与协议→表单仍待验，源码包已获当轮授权上传Drive，大小/MD5一致，交付链接见 §3.13。 |
 | 2026-10-14 | 用户日志确认diag1已不再冻窗，但条款CCombPanel构造抛Exception、回首页，未跳转。静态追真实LoadFile方法表/机器码发现路径XOR公式；旧0x461340实际ReadFls，明文头自解是编辑器技巧而非原生。新增标准库两布局存储修复助手（保留用户明文字节，原包只读、整包逐字校验、新包独占发布、不改script），23/23回归含真2.5.6/静态PE/存储安全探针、ruff通过。只修确定存储缺陷，实际用户两条状态/Windows/条款跳转仍待验；编辑器通用新增未修，详 §3.12。 |
 | 2026-10-14 | 用户明确“你传网盘”，上传现有已校验 registration_phase2_diag1.zip 到 My Drive 根目录（ID `1YxoYNmpTejl7qk86K9ELg_b1bvYJcGk8`）。上传返回大小/MD5 与本地相等；未改权限/删除旧包，未再次下载核验。只换 script，不重导 interface，仍是卡屏诊断版、原生根因待最后阶段日志。详 §3.11。 |
