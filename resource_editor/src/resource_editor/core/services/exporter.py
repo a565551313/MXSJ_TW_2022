@@ -23,20 +23,53 @@ def export_sprite_frames(sprite: Sprite, out_dir: Path, stem: str) -> list[Path]
     return paths
 
 
+def _dlg_plain(content: bytes) -> bytes | None:
+    """内容（无真名时）若为 XOR .dlg 布局，返回解出的明文。
+
+    只认文件头反推后完整命中的明文（首行 ``# -*- coding:``），
+    频率法兜底结果不作数，避免把普通二进制误判成布局导出。
+    """
+    plain = unpack_dlg_text(content)
+    if plain is not None and plain.startswith(b"# -*- coding:"):
+        return plain
+    return None
+
+
+def _is_wav(content: bytes) -> bool:
+    """内容是否为 RIFF WAV（sound.fls 里整份存入的标准音频文件）。"""
+    return content[:4] == b"RIFF" and content[8:12] == b"WAVE"
+
+
 def export_entry(doc: PackDocument, index: int, out_dir: Path) -> list[Path]:
-    """按条目类型导出单个条目，返回生成的文件列表。"""
+    """按条目类型导出单个条目，返回生成的文件列表。
+
+    精灵解码失败时回退导出原始字节 ``.bin``——原包自带、本机
+    解码器未覆盖的精灵变体不该连原始数据都拿不出来（样本回传
+    定点补解码器就靠这条路）。
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
     kind = doc.entry_kind(index)
     stem = f"{Path(doc.path).stem if doc.path else 'pack'}_{index:04d}"
     content = doc.content(index)
+    plain = _dlg_plain(content)
+    if plain is not None:
+        path = out_dir / f"{stem}.dlg"
+        path.write_bytes(plain)
+        return [path]
     if kind is detect.EntryKind.SPRITE:
-        return export_sprite_frames(decode_sprite(content), out_dir, stem)
+        try:
+            return export_sprite_frames(decode_sprite(content), out_dir, stem)
+        except Exception:
+            path = out_dir / f"{stem}.bin"
+            path.write_bytes(content)
+            return [path]
     if kind is detect.EntryKind.PNG:
         path = out_dir / f"{stem}.png"
         Image.open(io.BytesIO(content)).save(path)
         return [path]
     ext = {detect.EntryKind.JSON: ".json", detect.EntryKind.TEXT: ".txt"}
-    path = out_dir / f"{stem}{ext.get(kind, '.bin')}"
+    suffix = ".wav" if _is_wav(content) else ext.get(kind, ".bin")
+    path = out_dir / f"{stem}{suffix}"
     path.write_bytes(content)
     return [path]
 
@@ -91,10 +124,15 @@ def export_entries(doc: PackDocument, indexes: list[int],
             kind = doc.entry_kind(index)
             content = doc.content(index)
             name = doc.true_name(index)
+            dlg_plain = None
             if name and name.lower().endswith(".dlg"):
-                plain = unpack_dlg_text(content)  # 布局导出明文
-                if plain is not None:
-                    content = plain
+                dlg_plain = unpack_dlg_text(content)  # 布局导出明文
+            elif not name:
+                # 无真名的条目也按内容认布局：路径字典没收录的
+                # .dlg（新版布局等）存储字节同样是 XOR 文本
+                dlg_plain = _dlg_plain(content)
+            if dlg_plain is not None:
+                content = dlg_plain
             parts = _safe_parts(name) if name else []
             if parts:
                 parent = out_dir.joinpath(*parts[:-1])
@@ -102,18 +140,31 @@ def export_entries(doc: PackDocument, indexes: list[int],
             else:
                 parent = out_dir / "unnamed"
                 leaf = f"{pack_stem}_{index:04d}"
+                if dlg_plain is not None:
+                    leaf += ".dlg"
             parent.mkdir(parents=True, exist_ok=True)
-            if kind is detect.EntryKind.SPRITE:
+            if kind is detect.EntryKind.SPRITE and dlg_plain is None:
                 stem = leaf.rsplit(".", 1)[0] if "." in leaf else leaf
                 target = parent / f"{stem}_f00.png"
                 if target in used:
                     stem = f"{stem}_{index:04d}"
-                paths = export_sprite_frames(
-                    decode_sprite(content), parent, stem)
-                used.update(paths)
-                files += len(paths)
+                try:
+                    sprite = decode_sprite(content)
+                except Exception:
+                    # 解不开的原始精灵回退原始字节，不整条丢失
+                    target = parent / f"{stem}.bin"
+                    if target in used:
+                        target = parent / f"{stem}_{index:04d}.bin"
+                    target.write_bytes(content)
+                    used.add(target)
+                    files += 1
+                else:
+                    paths = export_sprite_frames(sprite, parent, stem)
+                    used.update(paths)
+                    files += len(paths)
             else:
-                ext = _KIND_EXT.get(kind, ".bin")
+                ext = ".wav" if _is_wav(content) else _KIND_EXT.get(
+                    kind, ".bin")
                 filename = leaf if "." in leaf else leaf + ext
                 target = parent / filename
                 if target in used:

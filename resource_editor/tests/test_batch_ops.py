@@ -10,9 +10,10 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from test_names import DLG_PATH, IMG_REF, _archive  # noqa: E402
+from test_names import DLG_PATH, IMG_REF, _archive, _dlg_stored  # noqa: E402
 
 from resource_editor.core import names  # noqa: E402
+from resource_editor.core.containers import fls0slf  # noqa: E402
 from resource_editor.core.model.document import PackDocument  # noqa: E402
 from resource_editor.core.mxhash import mx_hash  # noqa: E402
 from resource_editor.core.services import exporter  # noqa: E402
@@ -48,6 +49,66 @@ class TestExportEntries(unittest.TestCase):
                 self.assertEqual(len(unnamed), 1)
                 self.assertEqual(unnamed[0].read_bytes(), payloads[i_rest])
             doc.close()
+
+
+class TestExportFallbacks(unittest.TestCase):
+    """导出兜底：解不开的精灵回退原始字节、无名 .dlg 按内容导出。
+
+    真实 interface.fls 的条目 1163（本机解码器未覆盖的精灵变体）
+    曾因导出先试解码而连原始字节都导不出来，样本回传无门。
+    """
+
+    def _doc(self, payload: bytes, entry_id: int) -> PackDocument:
+        raw = fls0slf.build(
+            [payload], [fls0slf.EntryMeta(entry_id=entry_id, r1=3)])
+        return PackDocument.from_bytes(raw)
+
+    def test_broken_sprite_exports_raw_bin(self):
+        import struct
+
+        # 魔数是精灵、帧目录却远超数据长度（1163 的失败形态）
+        payload = struct.pack("<2sHHHHHH", b"I0", 1, 300, 8, 8, 0, 0)
+        payload += b"\x00" * 32
+        doc = self._doc(payload, 0x12345678)
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            report = exporter.export_entries(doc, [0], out)
+            self.assertEqual(report["failed"], [])
+            self.assertEqual(report["entries"], 1)
+            got = list((out / "unnamed").glob("*_0000.bin"))
+            self.assertEqual(len(got), 1)
+            self.assertEqual(got[0].read_bytes(), payload)
+        doc.close()
+
+    def test_wav_exports_with_wav_extension(self):
+        import struct
+
+        payload = (b"RIFF" + struct.pack("<I", 28) + b"WAVE"
+                   b"fmt " + struct.pack("<IHHIIHH", 16, 1, 1, 44100,
+                                         88200, 2, 16)
+                   + b"data" + struct.pack("<I", 0))
+        doc = self._doc(payload, 0x0BADF00E)
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            report = exporter.export_entries(doc, [0], out)
+            self.assertEqual(report["failed"], [])
+            got = list((out / "unnamed").glob("*_0000.wav"))
+            self.assertEqual(len(got), 1)
+            self.assertEqual(got[0].read_bytes(), payload)
+        doc.close()
+
+    def test_unnamed_dlg_exports_decrypted(self):
+        doc = self._doc(_dlg_stored(), 0x0BADF00D)
+        with mock.patch.object(names, "_KNOWN_CACHE", {}):
+            with tempfile.TemporaryDirectory() as tmp:
+                out = Path(tmp)
+                report = exporter.export_entries(doc, [0], out)
+                self.assertEqual(report["failed"], [])
+                got = list((out / "unnamed").glob("*_0000.dlg"))
+                self.assertEqual(len(got), 1)
+                self.assertTrue(got[0].read_bytes().startswith(
+                    b"# -*- coding: gbk -*-"))
+        doc.close()
 
 
 try:

@@ -28,6 +28,35 @@ Corpus check: all **807/807** sprite entries in skill/skill2/passive/effect
 parse with `data_end == entry length` and no row overrun; rendered icons
 and multi-frame effects match the in-game art.
 
+## Truecolor variants: T4 / T5 (2026-10-14, from real item.fls)
+
+Four unnamed entries exported from the user's real `item.fls`
+(idx 225/236/625/639) turned out to be a direct-color sibling of
+the family above:
+
+* Same 14-byte header, frame dir, `totalLines == sum(frameH)` and
+  the same row token grammar — but **no palette at all**: wherever
+  the indexed grammar carries a 1-byte palette index, T4/T5 carry a
+  **3-byte RGB** pixel (RUN = cnt/alpha-byte/RGB, SINGLE = RGB with
+  alpha in the token, LIT = cnt×RGB, REP = RGB).
+* Line-length table is **u8 for T4, u16 for T5** (the I0 vs I1
+  split, respectively). All four samples parse with
+  `data_end == entry length` exactly, and rendering them produces
+  clean item illustrations (weapons / wings / spellbook) — colors
+  verified in RGB byte order.
+* Implemented in both decoders: `resource_editor/core/codecs/sprite.py`
+  (0.3.6) and `ui_editor/core/sprite.py` (`Sprite.direct`,
+  `_decode_row_direct`). Encoder still only writes I0/T0/I1.
+
+Also identified while classifying the same export batch (not
+sprites, export raw as-is): `interface.fls` entries starting with
+`0x1C` + a 27-char hash string are **Spine skeleton binaries**
+(versions `3.4.02` / `3.6.52`, big-endian floats, `imagesPath`
+`./images/`, root bone first; attachments named e.g. `tx_2_8_2_17`,
+`Btxx_18_houtoufa`), and large `sound.fls` entries are RIFF WAV
+(PCM / GSM610 tag 49 / IMA-ADPCM tag 17) plus tiny GBK text
+redirect records like `1 weapon3\士兵攻击.wav`.
+
 ## Non-sprite entries in the same packs
 
 * **PNG**: 26 entries each in skill.fls / skill2.fls, 31 in magicres5.fls

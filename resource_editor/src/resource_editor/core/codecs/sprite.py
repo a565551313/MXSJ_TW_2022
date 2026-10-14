@@ -1,7 +1,10 @@
-"""I0 / T0 / I1 精灵编解码。
+"""I0 / T0 / I1 / T4 / T5 精灵编解码。
 
-格式规格见 ``tools/data-parser/I0_SPRITE_FORMAT.md``，解码已对全部
-807 个精灵字节级验证。编码器为其逆过程：
+格式规格见 ``tools/data-parser/I0_SPRITE_FORMAT.md``，I0/T0/I1
+解码已对全部 807 个精灵字节级验证。T4/T5 是 2026-10-14 在真实
+``item.fls`` 样本上定版的真彩变体：无调色板，行内 token 之后跟
+的不是调色板索引而是 3 字节 RGB；行长 T4 用 u8、T5 用 u16。
+编码器为其逆过程：
 
 * 调色板：可沿用原精灵调色板（颜色最近邻映射），或从新图新建
   256 色（Pillow 中位切分量化）；I0/I1 量化到 RGB565，T0 保持 RGB888。
@@ -20,7 +23,9 @@ from PIL import Image
 
 from ..errors import CodecError, EncodeError
 
-SPRITE_MAGICS = (b"I0", b"T0", b"I1")
+SPRITE_MAGICS = (b"I0", b"T0", b"I1", b"T4", b"T5")
+# 真彩变体：无调色板，token 后跟 3 字节 RGB 像素
+DIRECT_MAGICS = (b"T4", b"T5")
 OPAQUE = 255
 
 
@@ -54,6 +59,7 @@ class Sprite:
     frames: list[tuple[int, int, int, int]]  # (key_x, key_y, w, h)
     palette: list[tuple[int, int, int]]
     frame_rows: list[list[bytes]] = field(default_factory=list)
+    direct: bool = False  # T4/T5：像素为 3 字节 RGB，无调色板
 
     @property
     def frame_count(self) -> int:
@@ -96,6 +102,47 @@ class Sprite:
                 px.extend([(0, 0)] * min(b & 0x3F, width - len(px)))
         return px
 
+    @staticmethod
+    def _decode_row_direct(
+        line: bytes, width: int
+    ) -> list[tuple[tuple[int, int, int], int]]:
+        """解真彩（T4/T5）一行 token 流为 ((r, g, b), alpha8) 列表。
+
+        与调色板版算子一一对应，只是索引字节换成 3 字节 RGB。
+        """
+        px: list[tuple[tuple[int, int, int], int]] = []
+        i, n = 0, len(line)
+        while i < n and len(px) < width:
+            b = line[i]
+            i += 1
+            if b == 0x00:  # 行结束
+                break
+            if b < 0x20:  # RUN：cnt, alpha, RGB
+                cnt = b & 0x1F
+                alpha = _level_to_alpha(line[i])
+                color = (line[i + 1], line[i + 2], line[i + 3])
+                i += 4
+                px.extend([(color, alpha)] * min(cnt, width - len(px)))
+            elif b < 0x40:  # SINGLE：RGB，alpha 在 token 内
+                color = (line[i], line[i + 1], line[i + 2])
+                px.append((color, _level_to_alpha(b & 0x1F)))
+                i += 3
+            elif b < 0x80:  # LIT：cnt 个不透明 RGB
+                for _ in range(b & 0x3F):
+                    if len(px) < width:
+                        px.append(((line[i], line[i + 1], line[i + 2]),
+                                   OPAQUE))
+                    i += 3
+            elif b < 0xC0:  # REP：cnt 个同色不透明像素
+                cnt = b & 0x3F
+                color = (line[i], line[i + 1], line[i + 2])
+                px.extend([(color, OPAQUE)] * min(cnt, width - len(px)))
+                i += 3
+            else:  # SKIP：cnt 个透明像素
+                px.extend([((0, 0, 0), 0)]
+                          * min(b & 0x3F, width - len(px)))
+        return px
+
     def render_frame(self, fi: int) -> Image.Image:
         """渲染单帧为 RGBA 图（帧本地尺寸）。"""
         _kx, _ky, fw, fh = self.frames[fi]
@@ -103,6 +150,12 @@ class Sprite:
         pix = img.load()
         pal = self.palette
         for y, line in enumerate(self.frame_rows[fi]):
+            if self.direct:
+                for x, ((r, g, b), a) in enumerate(
+                        self._decode_row_direct(line, fw)):
+                    if a:
+                        pix[x, y] = (r, g, b, a)
+                continue
             for x, (idx, a) in enumerate(self._decode_row(line, fw)):
                 if a:
                     r, g, b = pal[idx]
@@ -135,19 +188,20 @@ def decode_sprite(data: bytes) -> Sprite:
         raise CodecError(f"精灵头解析失败：{exc}") from exc
     if total_lines != sum(f[3] for f in frames):
         raise CodecError("totalLines 与帧高之和不符")
-    len_fmt = "<H" if magic == "I1" else "<B"
+    len_fmt = "<H" if magic in ("I1", "T5") else "<B"
     len_size = struct.calcsize(len_fmt)
     lens = [
         struct.unpack_from(len_fmt, data, off + i * len_size)[0]
         for i in range(total_lines)
     ]
     off += total_lines * len_size
-    pal_size = 768 if magic == "T0" else 512
+    direct = data[:2] in DIRECT_MAGICS
+    pal_size = 0 if direct else (768 if magic == "T0" else 512)
     pal_raw = data[off:off + pal_size]
     if len(pal_raw) < pal_size:
         raise CodecError("调色板数据不完整")
     off += pal_size
-    palette = _decode_palette(magic, pal_raw)
+    palette = [] if direct else _decode_palette(magic, pal_raw)
     frame_rows: list[list[bytes]] = []
     pos = off
     li = 0
@@ -163,7 +217,7 @@ def decode_sprite(data: bytes) -> Sprite:
     return Sprite(
         magic=magic, version=version, canvas_w=w, canvas_h=h,
         center_x=cx, center_y=cy, frames=frames,
-        palette=palette, frame_rows=frame_rows,
+        palette=palette, frame_rows=frame_rows, direct=direct,
     )
 
 
