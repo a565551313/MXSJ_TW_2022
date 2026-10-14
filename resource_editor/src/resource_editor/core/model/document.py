@@ -54,7 +54,8 @@ class PackDocument:
         self._slots: list[_Slot] = [
             _Slot(origin=i) for i in range(archive.orig_count)
         ]
-        self._kind_cache: dict[int, detect.EntryKind] = {}
+        self._kind_epoch = 0
+        self._kind_cache: dict[int, tuple[int, detect.EntryKind]] = {}
         self._names: dict[int, str] | None = None  # 原始序号→真名
         self.history = History()
 
@@ -123,13 +124,23 @@ class PackDocument:
             return self.archive.content_len(slot.origin)
         return len(self.content(index))
 
+    def _invalidate_kinds(self) -> None:
+        self._kind_epoch += 1
+        self._kind_cache.clear()
+
     def entry_kind(self, index: int) -> detect.EntryKind:
-        """条目类型（只嗅探头部，结果缓存；改动条目自动失效）。"""
-        kind = self._kind_cache.get(index)
-        if kind is None:
+        """只嗅探头部；缓存带编辑代际，旧后台读头不能回灌修改后的类型。"""
+        while True:
+            epoch = self._kind_epoch
+            cached = self._kind_cache.get(index)
+            if cached is not None and cached[0] == epoch:
+                return cached[1]
             kind = detect.sniff_prefix(self._content_head(index))
-            self._kind_cache[index] = kind
-        return kind
+            if epoch != self._kind_epoch:
+                continue
+            # 即便在检查/存入间发生切换，旧代际缓存也不会被下次查询使用。
+            self._kind_cache[index] = (epoch, kind)
+            return kind
 
     def _content_head(self, index: int) -> bytes:
         """内容视图的前 512 字节（嗅探用，尽量不读全条）。"""
@@ -233,7 +244,7 @@ class PackDocument:
 
         def apply(state):
             slot.stored, slot.dirty = state
-            self._kind_cache.clear()
+            self._invalidate_kinds()
 
         apply(after)
         self.history.record(
@@ -278,14 +289,14 @@ class PackDocument:
     def _insert_slot(self, index: int, slot: _Slot, meta) -> None:
         self._slots.insert(index, slot)
         self.archive.extra_metas.insert(index, meta)
-        self._kind_cache.clear()
+        self._invalidate_kinds()
 
     def _remove_slot(self, slot: _Slot) -> None:
         index = next(i for i, candidate in enumerate(self._slots)
                      if candidate is slot)
         del self._slots[index]
         del self.archive.extra_metas[index]
-        self._kind_cache.clear()
+        self._invalidate_kinds()
 
     def _restore_slot(self, index: int, slot: _Slot, meta,
                       previous: _Slot | None, following: _Slot | None) -> None:
@@ -422,7 +433,7 @@ class PackDocument:
             if self.archive is archive:
                 self._slots = slots
                 archive.extra_metas = metas
-                self._kind_cache.clear()
+                self._invalidate_kinds()
             raise
 
     def changed_indexes(self) -> set[int]:
@@ -451,7 +462,7 @@ class PackDocument:
             return
         self._slots = [self._slots[i] for i in order]
         self.archive.extra_metas = [metas[i] for i in order]
-        self._kind_cache.clear()
+        self._invalidate_kinds()
 
     def write_to(
         self,
@@ -506,5 +517,5 @@ class PackDocument:
             for i, meta in enumerate(self.archive.extra_metas)
         ]
         self._names = None
-        self._kind_cache.clear()
+        self._invalidate_kinds()
         self.history.clear()

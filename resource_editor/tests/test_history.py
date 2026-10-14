@@ -365,3 +365,25 @@ class TestDocumentHistory(unittest.TestCase):
             self.assertTrue(doc.archive.extra_metas[0].is_dir)
             self.assertEqual(doc.archive.extra_metas[1].w2, 12)
             self.assertEqual(doc.changes(), [])
+
+    def test_type_sniff_finishing_after_edit_cannot_cache_old_content_kind(self):
+        from resource_editor.core.codecs import detect
+
+        doc = make_doc()
+        self.addCleanup(doc.close)
+        original_sniff = detect.sniff_prefix
+        changed = False
+
+        def delayed_sniff(prefix):
+            nonlocal changed
+            if not changed:
+                changed = True
+                # 模拟后台读头已开始、主线程修改后旧嗅探才返回。
+                doc.replace_content(0, b"\x89PNG\r\n\x1a\n")
+            return original_sniff(prefix)
+
+        with mock.patch.object(detect, "sniff_prefix", side_effect=delayed_sniff):
+            self.assertEqual(doc.entry_kind(0), detect.EntryKind.PNG)
+        self.assertEqual(doc.entry_kind(0), detect.EntryKind.PNG)
+        doc.undo()
+        self.assertEqual(doc.entry_kind(0), detect.EntryKind.TEXT)
