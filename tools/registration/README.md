@@ -131,10 +131,19 @@ Python 3 构建器/测试按仓库 ruff 规则检查；两份必须在 2.5.6 运
 只豁免 `UP` 现代化规则（`.format`、f-string 和删除 coding 声明会破坏原解释器）。
 `harness.py2` 由真 2.5.6 执行，不能以 Python 3 能否解析它判断游戏兼容性。
 
+## 第二期测试包（2026-10-14 已授权上传）
+
+- 源码提交：`22a3fab`，已推送当前会话分支，未合入 master。
+- [下载 registration_phase2.zip](https://drive.google.com/file/d/1FQjI8tiFSYAihlHUzwJN2GNNZWy5CBy7/view)（Google Drive，未改分享权限）。
+- 大小：24,189,000 字节；ZIP MD5：`56c583afa4fa58b7fa8f47efb5a802c3`。
+- ZIP SHA-256：`0541062f45a74bfbda99b62022d30c3929feb0e0979069d36b06d513d3cec97b`。
+- 包内有新 script.fls、两张新布局、测试说明、SHA256SUMS。
+  本包只测界面/校验/候选资料，不发送真实注册请求；顺延规则还只是已定方案。
+
 ## 第二期 Windows 验收
 
 只在**游戏测试副本**操作，备份旧 `script.fls` 和 `interface.fls`，勿改原安装包。
-测试包将包含 `data/script.fls`、`interface_import/login/` 下两份新布局及测试说明。
+测试包包含 `data/script.fls`、`interface_import/login/` 下两份新布局及测试说明。
 
 1. 资源编辑器打开测试副本的 `interface.fls`，分别按路径导入：
    `regterms.dlg` 填完整路径 **`login/regterms.dlg`**；
