@@ -63,6 +63,12 @@ class RegistrationRuntimeTest(unittest.TestCase):
         self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
         self.assertIn("initial layout exception recovery OK", run.stdout)
 
+    def test_native_font_without_invented_legacy_aliases(self):
+        run = self.compile_and_run("--native-font-probe")
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        self.assertIn("native font: no legacy aliases + four edits + hint"
+                      " + terms transition OK", run.stdout)
+
     def test_form_edit_attribute_failures_are_separated_without_values(self):
         for scenario in ("factory-resolve", "font-resolve", "factory-call", "limit",
                          "private-error", "missing-anchor"):

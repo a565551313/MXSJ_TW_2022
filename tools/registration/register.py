@@ -98,7 +98,7 @@ def _ImportRuntime():
     return C_sys, combdialog, combmacro, interface
 
 
-_Diag("phase2-diag2 module begin")
+_Diag("phase2-font1 module begin")
 C_sys, combdialog, combmacro, interface = _ImportRuntime()
 
 g_AccountInfo = {}
@@ -508,7 +508,9 @@ def _CreateFormEdit(parent, edit_class, name, limit):
     factory = combmacro.CEDIT
     _Diag("%s factory resolve ready" % (stage,))
     _Diag("%s font resolve begin" % (stage,))
-    font = interface.FONT_EDIT
+    # Stock register/CRegPanel2/CreateEdits uses this native font. FONT_EDIT
+    # is a legacy name from chgpwd that is absent in this client's interface.
+    font = interface.FontLT14_3
     _Diag("%s font resolve ready" % (stage,))
     _Diag("%s factory call begin" % (stage,))
     edit = factory(edit_class, name, parent, 0, font, linecolor=0)
@@ -568,8 +570,8 @@ class CRegFormPanel(combdialog.CCombPanel):
             "txt",
             self,
             HINT_FORM,
-            interface.FONT_EDIT,
-            interface.COLOR_EDIT,
+            interface.FontLT14_3,
+            0,  # Native black, same as the form edits; no legacy COLOR_EDIT alias.
         )
         _Diag("form hint ready")
         _Diag("form checkbox begin")
@@ -760,7 +762,7 @@ def Step(n):
 def Show(s):
     global g_RegisterPanel
     if s:
-        _Diag("phase2-diag2 show open begin")
+        _Diag("phase2-font1 show open begin")
         try:
             _Diag("input secrecy on begin")
             C_sys.InputSecrecy(1)
@@ -809,4 +811,4 @@ def ClearRegCode():
         pass
 
 
-_Diag("phase2-diag2 module ready")
+_Diag("phase2-font1 module ready")

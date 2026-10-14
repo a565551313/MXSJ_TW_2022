@@ -60,6 +60,20 @@ class NativeEditContractTest(unittest.TestCase):
         self.assertIn(b"GetPosOfDlg", edit["names"])
         self.assertIn(b"GetSize", edit["names"])
 
+    def test_original_registration_uses_fontlt14_3_for_native_edit_factory(self):
+        tree = self.code_tree(4007)
+        self.assertEqual(tree["filename"], b"script\\login\\register.py")
+        edits = dict(builder.code_objects(tree))["CRegPanel2/CreateEdits"]
+        seq = builder.normalized(edits["code"])
+        by_pc = {pc: (op, arg) for pc, op, arg in seq}
+        self.assertEqual(by_pc[0], (116, edits["names"].index(b"combmacro")))
+        self.assertEqual(by_pc[3], (105, edits["names"].index(b"CEDIT")))
+        self.assertEqual(by_pc[18], (116, edits["names"].index(b"interface")))
+        self.assertEqual(by_pc[21], (105, edits["names"].index(b"FontLT14_3")))
+        # This source has no native FONT_EDIT dependency; its known edit font
+        # also already worked in the user's terms COutput at runtime.
+        self.assertNotIn(b"FONT_EDIT", edits["names"])
+
     def test_native_cedit_setlimit_is_real_not_an_invented_stub_method(self):
         tree = self.code_tree(3854)
         self.assertEqual(tree["filename"], b"script\\interface.py")

@@ -59,6 +59,8 @@ class FakeEdit(FakeObj):
     def __init__(self, parent, color, font, x, y, width, height,
                  linecolor=None, overstriking=False):
         FakeObj.__init__(self, 'native_edit', (width, height), (x, y))
+        self.color = color
+        self.font = font
         self.m_IsPassword = False
         self.limit = None
         self.next_edit = None
@@ -124,6 +126,7 @@ def fake_richtext(cls, name, parent, text, font, color):
     obj = parent.GetObject(name)
     obj.SetText(text)
     EVENTS.append(('RichText', name, text))
+    EVENTS.append(('RichTextStyle', name, font, color))
     return obj
 
 
@@ -196,7 +199,7 @@ mod('combmacro', CEDIT=fake_cedit, CRICHTEXT=fake_richtext,
 mod('C_object', CRichTextObject=object)
 mod('interface', DialogPanel=FakeObj('DialogPanel'), CEdit=FakeEdit,
     CImageCheckBox=FakeImageCheckBox, CBaseObject=lambda p: None,
-    FONT_EDIT=1, FontLT14_3=3, COLOR_1=4, COLOR_EDIT=6)
+    FontLT14_3=3, COLOR_1=4)
 mod('usermacro', PROMPT_MSG=lambda text: EVENTS.append(('Prompt', text)))
 mod('sound', Play=lambda path: EVENTS.append(('Play', path)))
 mod('sounddefine', PATH_BTN_SOUND='action/button.wav')
@@ -230,6 +233,34 @@ if '--entry-failure-probe' in sys.argv:
     print 'initial layout exception recovery OK'
     sys.exit(0)
 
+# User's actual failure: the native module has no FONT_EDIT alias. Do not
+# supply invented aliases in the default fixture or silently fall back to them.
+if '--native-font-probe' in sys.argv:
+    native_interface = sys.modules['interface']
+    assert not hasattr(native_interface, 'FONT_EDIT')
+    assert not hasattr(native_interface, 'COLOR_EDIT')
+    assert g['Show'](True) is True
+    previous = g['g_RegisterPanel']
+    previous.OnMessage(1)
+    form = g['g_RegisterPanel']
+    assert isinstance(form, g['CRegFormPanel']), 'native aliases missing: still on terms'
+    for edit in (form.m_AccountEdit, form.m_PwdEdit, form.m_PwdEdit2,
+                 form.m_EmailEdit):
+        assert edit.font == native_interface.FontLT14_3
+        assert edit.color == 0
+    assert ('RichTextStyle', 'txt', native_interface.FontLT14_3, 0) in EVENTS
+    # Even if a different build injects legacy aliases, do not choose them.
+    native_interface.FONT_EDIT = object()
+    native_interface.COLOR_EDIT = object()
+    assert g['Step'](0) is True
+    g['g_RegisterPanel'].OnMessage(1)
+    form = g['g_RegisterPanel']
+    assert isinstance(form, g['CRegFormPanel'])
+    assert form.m_AccountEdit.font == native_interface.FontLT14_3
+    assert ('RichTextStyle', 'txt', native_interface.FontLT14_3, 0) in EVENTS
+    print 'native font: no legacy aliases + four edits + hint + terms transition OK'
+    sys.exit(0)
+
 # Independent probe: diagnose each distinct AttributeError boundary while
 # preserving the already-visible terms panel. No recovered game code is run.
 if '--form-edit-failure-probe' in sys.argv:
@@ -241,9 +272,9 @@ if '--form-edit-failure-probe' in sys.argv:
         expected = 'factory resolve begin'
         missing = 'CEDIT'
     elif scenario == 'font-resolve':
-        del sys.modules['interface'].FONT_EDIT
+        del sys.modules['interface'].FontLT14_3
         expected = 'font resolve begin'
-        missing = 'FONT_EDIT'
+        missing = 'FontLT14_3'
     elif scenario == 'factory-call':
         def bad_factory(*args, **kwargs):
             return object().GetSize()
@@ -505,12 +536,12 @@ print 'back/home + supplied terms + original confirm + reset OK'
 # These probes test our authored control flow only, not a native engine hang.
 diag = open('photo\\register_diag.txt', 'rb').read()
 markers = (
-    'phase2-diag2 module begin', 'module import C_sys begin',
+    'phase2-font1 module begin', 'module import C_sys begin',
     'module import C_sys ready', 'module import combdialog begin',
     'module import combdialog ready', 'module import combmacro begin',
     'module import combmacro ready', 'module import interface begin',
-    'module import interface ready', 'phase2-diag2 module ready',
-    'phase2-diag2 show open begin', 'input secrecy on begin',
+    'module import interface ready', 'phase2-font1 module ready',
+    'phase2-font1 show open begin', 'input secrecy on begin',
     'input secrecy on ready', 'step=0 begin', 'terms layout begin',
     'terms layout ready', 'terms import chatoutput begin',
     'terms import chatoutput ready', 'terms source begin', 'terms source ready',

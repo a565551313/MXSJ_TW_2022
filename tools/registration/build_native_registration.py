@@ -290,8 +290,13 @@ def main() -> int:
     assert b"mainpage" in std_main
 
     dec_reg_new = decrypt_entry(out_by_idx[ENTRY_REGISTER], keys_db)
-    std_reg = transpile(
-        dec_reg_new, zlib.decompress(out_by_idx[ENTRY_REGISTER]["comp"]), info_reg
+    # Known authored bytes must not go through heuristic seam repair: that
+    # solver may "repair" a valid LOAD_FAST into STORE_NAME near an old bound.
+    from authored_marshal import restore_authored_pyc
+
+    std_reg = restore_authored_pyc(
+        dec_reg_new, pack.obfuscate_py25_pyc_bytes(pyc_bytes),
+        batch.transpile_py25_code,
     )
     assert std_reg[8:] == pyc_bytes[8:], "compiled marshal round-trip mismatch"
     roundtrip_path = args.output.parent / "register_roundtrip.pyc"

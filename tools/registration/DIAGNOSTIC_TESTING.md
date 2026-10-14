@@ -1,5 +1,8 @@
 # 第二期入口卡屏诊断包 phase2-diag1
 
+> **最新实机已定位FONT_EDIT缺失**：使用 [phase2-font1字体修复说明](FONT_FIX_TESTING.md)。
+> 以下diag2记录为定位历史，不要重下diag2当字体修复版。
+
 ## 最新：phase2-diag2（2026-10-15）
 
 协议已经实机显示；同意消息1已到脚本；表单布局构造ready，账号框阶段抛AttributeError。
