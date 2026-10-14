@@ -1,180 +1,411 @@
 # -*- coding: utf-8 -*-
-# Run under CPython 2.5.6. Stubs the client modules and drives the new
-# register module through its whole flow.
+# Run with CPython 2.5.6, never with Python 3. Only execute our authored module;
+# original game code objects are inspected/disassembled, never executed.
 import marshal
+import os
 import sys
 import types
 
 EVENTS = []
 
+
 def mod(name, **attrs):
-    m = types.ModuleType(name)
-    for k, v in attrs.items():
-        setattr(m, k, v)
-    sys.modules[name] = m
-    return m
+    module = types.ModuleType(name)
+    for key, value in attrs.items():
+        setattr(module, key, value)
+    sys.modules[name] = module
+    return module
+
 
 class FakeObj(object):
-    def __init__(self, name):
+    def __init__(self, name, size=(400, 300), pos=(10, 10)):
         self.name = name
+        self.size = size
+        self.pos = pos
+        self.text = ''
+
     def GetSize(self):
-        return (400, 300)
+        return self.size
+
     def GetPos(self):
-        return (10, 10)
+        return self.pos
+
     def SetShow(self, flag):
         EVENTS.append(('SetShow', self.name, flag))
+
+    def SetText(self, text):
+        self.text = text
+        EVENTS.append(('SetText', self.name, text))
+
     def SetPos(self, x, y):
-        pass
-    def SetFrame(self, n):
-        pass
+        self.pos = (x, y)
+
+    def SetSize(self, w, h):
+        self.size = (w, h)
+
     def Topmost(self):
         pass
 
-class FakeEdit(object):
+
+class FakeEdit(FakeObj):
     def __init__(self, name):
-        self.name = name
-        self.text = ''
+        FakeObj.__init__(self, name)
         self.m_IsPassword = False
-    def SetLimit(self, n):
-        pass
+        self.limit = None
+        self.next_edit = None
+
+    def SetLimit(self, limit):
+        # Verified native CEdit.SetLimit: only stores m_Limit; no truncation.
+        self.limit = limit
+
     def SetNextEdit(self, other):
-        pass
+        self.next_edit = other
+
     def Active(self, flag):
         EVENTS.append(('Active', self.name, flag))
+
     def GetText(self):
         return self.text
-    def SetText(self, t):
-        self.text = t
+
+    def SetText(self, text):
+        self.text = text
+
+    def AddChar(self, char):
+        if self.limit is None or len(self.text) + len(char) <= self.limit:
+            self.text += char
+
 
 class FakePanel(object):
+    NAMES = {
+        'login/regterms.dlg': ('loc_msg',),
+        'login/regform.dlg': ('account', 'pwd', 'pwd2', 'email', 'txt', 'chk_five'),
+        'login/confirm.dlg': ('output',),
+    }
+
     def __init__(self, parent, dlgpath):
         self.dlgpath = dlgpath
-        self.objects = {}
+        self.objects = dict((name, FakeObj(name)) for name in self.NAMES[dlgpath])
+        if dlgpath == 'login/regform.dlg':
+            self.objects['chk_five'] = FakeObj('chk_five', (224, 24), (328, 410))
         EVENTS.append(('Panel', dlgpath))
+
     def GetObject(self, name):
-        if name not in self.objects:
-            self.objects[name] = FakeObj(name)
-        return self.objects[name]
+        return self.objects[name]  # unknown names fail rather than invent objects
+
     def Topmost(self):
         pass
 
-def fake_cedit(cls, name, parent, color, font, linecolor=0):
-    e = FakeEdit(name)
-    parent.objects[name] = e
-    return e
 
-class FakeCOutput(object):
+def fake_cedit(cls, name, parent, color, font, linecolor=0):
+    parent.GetObject(name)
+    edit = cls(name)  # really exercise the authored AddChar subclass
+    parent.objects[name] = edit
+    return edit
+
+
+def fake_richtext(cls, name, parent, text, font, color):
+    obj = parent.GetObject(name)
+    obj.SetText(text)
+    EVENTS.append(('RichText', name, text))
+    return obj
+
+
+class FakeImageCheckBox(FakeObj):
+    # Signature and event ordering verified from interface.CImageCheckBox.
+    def __init__(self, parent, filename, x, y, manual, msgid, width=0, height=0):
+        FakeObj.__init__(self, 'five_checkbox', (width, height), (x, y))
+        self.parent = parent
+        self.filename = filename
+        self.manual = manual
+        self.msgid = msgid
+        self.selected = False
+        self.frame = 0
+
+    def IsSelected(self):
+        return self.selected
+
+    def SetCheck(self, checked):
+        self.selected = bool(checked)
+        self.frame = 1 if checked else 0
+
+    def LeftUp(self):
+        # Native LeftUp dispatches the message BEFORE its automatic toggle.
+        self.parent.OnMessage(self.msgid)
+        if not self.manual:
+            self.SetCheck(not self.selected)
+
+
+def fake_image_checkbox(cls, name, parent, filename, manual, msgid):
+    anchor = parent.GetObject(name)
+    x, y = anchor.GetPos()
+    obj = cls(parent, filename, x, y, manual, msgid)
+    anchor.m_Real = [obj]
+    EVENTS.append(('ImageCheckBox', name, filename, manual, msgid))
+    return obj
+
+
+class FakeOutput(object):
     def __init__(self, parent, w, h, x, y, lines, txt_font=None, txt_color=None):
         self.lines = lines
         EVENTS.append(('COutput', lines))
+
     def SetPos(self, x, y):
-        pass
-    def Refresh(self):
-        pass
-    def ScrollTo(self, n):
-        pass
-    def SetChatCursor(self, n):
-        pass
-    def ResetFromCursor(self):
         pass
 
-class FakeImage(object):
-    def __init__(self, parent, path, pack):
-        EVENTS.append(('CImage', path))
-    def SetPos(self, x, y):
-        pass
-    def SetFrame(self, n):
-        pass
+    def ScrollTo(self, n):
+        EVENTS.append(('ScrollTo', n))
+
+    def SetChatCursor(self, n):
+        EVENTS.append(('ChatCursor', n))
+
+    def ResetFromCursor(self):
+        EVENTS.append(('ResetFromCursor',))
+
 
 mod('C_sys', InputSecrecy=lambda f: EVENTS.append(('InputSecrecy', f)))
 mod('combdialog', CCombPanel=FakePanel)
-mod('combmacro', CEDIT=fake_cedit)
-mod('interface', DialogPanel=FakeObj('DialogPanel'), CEdit=object,
-    CRichTextObject=object, CBaseObject=lambda p: None,
-    FONT_EDIT=1, FontLT12_1=2, FontLT14_3=3, COLOR_1=4, COLOR_5=5)
-mod('ui', CImage=FakeImage)
-mod('sound', Play=lambda p: EVENTS.append(('Play', p)))
+mod('combmacro', CEDIT=fake_cedit, CRICHTEXT=fake_richtext,
+    CIMGCHECKBOX=fake_image_checkbox)
+mod('C_object', CRichTextObject=object)
+mod('interface', DialogPanel=FakeObj('DialogPanel'), CEdit=FakeEdit,
+    CImageCheckBox=FakeImageCheckBox, CBaseObject=lambda p: None,
+    FONT_EDIT=1, FontLT14_3=3, COLOR_1=4, COLOR_EDIT=6)
+mod('usermacro', PROMPT_MSG=lambda text: EVENTS.append(('Prompt', text)))
+mod('sound', Play=lambda path: EVENTS.append(('Play', path)))
 mod('sounddefine', PATH_BTN_SOUND='action/button.wav')
 mod('commondialog',
     ShowNewMessageBox=lambda msg, btn: EVENTS.append(('MsgBox', msg, btn)),
     ShowMessageBox=lambda msg, btn: EVENTS.append(('MsgBox', msg, btn)))
-mod('mainpage', Show=lambda f: EVENTS.append(('mainpage.Show', f)))
-mod('chatoutput', COutput=FakeCOutput)
+mod('mainpage', Show=lambda flag: EVENTS.append(('mainpage.Show', flag)))
+mod('chatoutput', COutput=FakeOutput)
 mod('netlogin', C2SConfirmRegInfo=lambda: EVENTS.append(('C2SConfirmRegInfo',)))
 mod('selectrole', g_SelectRoleDlg=None)
 mod('dc_error_code', ERROR_MSG={})
 
-code = marshal.loads(open('/home/user/MXSJ_TW_2022/tools/registration/out/register_compiled.pyc', 'rb').read()[8:])
+if not os.path.isdir('photo'):
+    os.mkdir('photo')
+code_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), 'out', 'register_compiled.pyc')
+source = open(code_path, 'rb')
+code = marshal.loads(source.read()[8:])
+source.close()
 g = {'__name__': 'register'}
 exec code in g
 
-# 1. 開條款頁（無 servicedata -> 佔位條款）
+# 1. Terms: native layout and cursor protocol, missing servicedata fallback.
 g['Show'](True)
 panel = g['g_RegisterPanel']
-assert isinstance(panel, g['CRegTermsPanel']), type(panel)
+assert isinstance(panel, g['CRegTermsPanel'])
+assert panel.dlgpath == 'login/regterms.dlg'
 assert ('InputSecrecy', 1) in EVENTS
+assert ('ScrollTo', 0) in EVENTS
+assert ('ChatCursor', 0) in EVENTS
+assert ('ResetFromCursor',) in EVENTS
 cout = [e for e in EVENTS if e[0] == 'COutput'][-1]
-assert cout[1][0] == '\xb7|\xad\xfb\xaaA\xb0\xc8\xb1\xf8\xb4\xda', cout[1]
-print 'terms fallback OK (Big5 bytes)'
+assert cout[1] == g['TERMS_FALLBACK']
+assert all(isinstance(line, str) for line in cout[1])
+print 'terms fallback + native cursor protocol OK'
 
-# 2. 同意 -> 表單頁
+# 2. Form: real subclass stubs, tab order, password masking, default unchecked.
 panel.OnMessage(1)
 form = g['g_RegisterPanel']
-assert isinstance(form, g['CRegFormPanel']), type(form)
-hidden = [e[1] for e in EVENTS if e[0] == 'SetShow' and e[2] is False]
-for need in ('email2', 'edt_Code', 'txt_Mail2', 'img_Mail2Bg', 'txt_Code', 'txt_CodeBg', 'txt_RefershCode', 'youxiang'):
-    assert need in hidden, need
-print 'form panel OK, hidden:', hidden
+assert isinstance(form, g['CRegFormPanel'])
+assert form.dlgpath == 'login/regform.dlg'
+assert not form.m_FiveCheck.IsSelected()
+assert form.m_FiveCheck.manual is True
+assert form.m_FiveCheck.msgid == 4
+assert form.m_FiveCheck.filename == g['IMG_FIVE_CHECK']
+assert form.m_FiveCheck.GetSize() == (224, 24)
+assert form.m_AccountEdit.limit == 16
+assert form.m_EmailEdit.limit == 50
+assert form.m_PwdEdit.m_IsPassword and form.m_PwdEdit2.m_IsPassword
+for edit, next_edit in ((form.m_AccountEdit, form.m_PwdEdit),
+                        (form.m_PwdEdit, form.m_PwdEdit2),
+                        (form.m_PwdEdit2, form.m_EmailEdit),
+                        (form.m_EmailEdit, form.m_AccountEdit)):
+    assert edit.next_edit is next_edit
+assert form.m_Text.text == g['HINT_FORM']
+for key, value in g.items():
+    if key.startswith(('MSG_', 'BTN_', 'PROMPT_', 'HINT_', 'IMG_')):
+        assert isinstance(value, str), (key, type(value))
+print 'form + native checkbox binding + Big5 byte constants OK'
 
-# 3. 校驗流程
+# 3. AddChar: base accounts/passwords ASCII alnum only, no manual underscore.
+for edit, prompt in ((form.m_AccountEdit, g['PROMPT_ACC_ALNUM']),
+                     (form.m_PwdEdit, g['PROMPT_PWD_ALNUM'])):
+    edit.SetText('')
+    edit.AddChar('A')
+    for bad_char in ('_', ' ', '!', u'\u4e2d', u'\u00e9'):
+        del EVENTS[:]
+        edit.AddChar(bad_char)
+        assert edit.GetText() == 'A'
+        assert ('Prompt', prompt) in EVENTS
+print 'ASCII input filtering OK'
+
+
+def fill_valid(account='account'):
+    form.m_AccountEdit.SetText(account)
+    form.m_PwdEdit.SetText('Preview42')
+    form.m_PwdEdit2.SetText('Preview42')
+    form.m_EmailEdit.SetText('preview@example.invalid')
+
+
 def submit():
     del EVENTS[:]
     form.OnMessage(2)
     boxes = [e for e in EVENTS if e[0] == 'MsgBox']
-    assert boxes, 'no message box'
-    return boxes[-1][1]
+    assert len(boxes) == 1, boxes
+    assert isinstance(boxes[0][1], str)
+    return boxes[0][1]
 
-form.m_PwdEdit.text = 'abc'
-assert submit() == '\xbd\xd0\xbf\xe9\xa4J\xa5\xbf\xbdT\xae\xe6\xa6\xa1\xaa\xba\xb1K\xbdX'
-form.m_PwdEdit.text = 'abc def!'
+# 4. Single validation: boundary lengths, ASCII only, matching passwords/email.
+for account in ('', 'abcde', 'a' * 17, 'account_1', 'abc def', u'\u4e2d' * 6):
+    fill_valid(account)
+    assert submit() == g['MSG_ACC_FORMAT']
+    assert form.m_RegistrationRequests == []
+for account in ('AbC123', 'a' * 16):
+    fill_valid(account)
+    assert submit() == g['MSG_STUB']
+    assert [r['Account'] for r in form.m_RegistrationRequests] == [account]
+    assert g['g_AccountInfo']['Account'] == account
+for password in ('abcde', 'a' * 17):
+    fill_valid()
+    form.m_PwdEdit.SetText(password)
+    assert submit() == g['MSG_PWD_FORMAT']
+fill_valid()
+form.m_PwdEdit.SetText('abc def!')
 assert submit() == g['MSG_PWD_ALNUM']
-form.m_PwdEdit.text = 'abcdef'
-form.m_PwdEdit2.text = 'abcdeg'
+fill_valid()
+form.m_PwdEdit2.SetText('Preview43')
 assert submit() == g['MSG_PWD_MISMATCH']
-form.m_PwdEdit2.text = 'abcdef'
-form.m_EmailEdit.text = 'not-an-email'
-assert submit() == g['MSG_EMAIL_FORMAT']
-form.m_EmailEdit.text = 'test@example.com'
-msg = submit()
-assert msg == g['MSG_STUB'], msg
-try:
-    diag = open('photo/register_diag.txt').read()
-except IOError:
-    diag = open('photo\\register_diag.txt').read()  # Linux: backslash is literal
-assert 'form msgid=2' in diag and 'stub box shown' in diag, diag
-assert g['g_AccountInfo']['Email'] == 'test@example.com'
-print 'form validation + stub OK'
+for email in ('bad-email', 'a@bc', 'a' * 45 + '@abcde'):
+    fill_valid()
+    form.m_EmailEdit.SetText(email)
+    assert submit() == g['MSG_EMAIL_FORMAT']
+fill_valid()
+form.m_EmailEdit.SetText('a' * 44 + '@abcde')  # 50-byte boundary
+assert submit() == g['MSG_STUB']
+fill_valid()
+form.m_EmailEdit.SetText(' preview@example.invalid ')
+assert submit() == g['MSG_STUB']
+assert g['g_AccountInfo']['Email'] == 'preview@example.invalid'
+assert form.m_PendingAccounts is None
+print 'single registration validation + boundaries + stub OK'
 
-# 4. 上一步回條款，再拒絕回首頁
+# 5. True native event ordering: no double-toggle; no truncation on mode change.
+fill_valid('a' * 16)
+form.m_FiveCheck.LeftUp()
+assert form.m_FiveCheck.IsSelected() and form.m_FiveCheck.frame == 1
+assert form.m_AccountEdit.limit == 14
+assert form.m_AccountEdit.GetText() == 'a' * 16
+assert form.m_Text.text == g['HINT_FORM_FIVE']
+assert submit() == g['MSG_ACC_BATCH_FORMAT']
+assert form.m_RegistrationRequests == []
+form.m_FiveCheck.LeftUp()
+assert not form.m_FiveCheck.IsSelected() and form.m_FiveCheck.frame == 0
+assert form.m_AccountEdit.limit == 16
+assert form.m_AccountEdit.GetText() == 'a' * 16
+assert submit() == g['MSG_STUB']
+form.m_FiveCheck.LeftUp()
+for account in ('abcde', 'a' * 15, 'a' * 16, 'account_1'):
+    fill_valid(account)
+    assert submit() == g['MSG_ACC_BATCH_FORMAT']
+print 'checkbox single-toggle + 6..14 validation + no truncation OK'
+
+# 6. Five candidates, shared password/email; explicitly NOT registered.
+for base in ('account', 'A0bC12', 'a' * 14):
+    fill_valid(base)
+    expected = [base, base + '_1', base + '_2', base + '_3', base + '_4']
+    msg = submit()
+    requests = form.m_RegistrationRequests
+    assert [r['Account'] for r in requests] == expected
+    assert len(set(expected)) == 5 and max(map(len, expected)) <= 16
+    assert all(r['Password'] == 'Preview42' for r in requests)
+    assert all(r['Email'] == 'preview@example.invalid' for r in requests)
+    assert msg == g['MSG_STUB'] + g['MSG_BATCH_PLAN'] + '#r'.join(expected)
+    assert form.m_PendingAccounts is None
+    assert g['g_AccountInfo']['Account'] == base
+    assert not form.OnRegistrationComplete(expected)  # stub cannot arm success
+    assert len([e for e in EVENTS if e[0] == 'MsgBox']) == 1
+assert g['BuildRegistrationAccounts']('account') == ['account']
+for invalid, five in (('abcde', False), ('account_1', False), ('a' * 17, False),
+                       ('a' * 15, True), (u'\u4e2d' * 6, True)):
+    try:
+        g['BuildRegistrationAccounts'](invalid, five)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError('invalid candidate accepted')
+print 'five candidate names + shared credentials + honest stub OK'
+
+# 7. Future completion hook: only complete confirmed set can show success.
+# Simulate the future transport arming pending AFTER a real request is sent.
+# This is not a real server test and the shipped stub never arms this state.
+expected = g['BuildRegistrationAccounts']('account', True)
+form.m_PendingAccounts = tuple(expected)
+for wrong in (expected[:4], [expected[0]] * 5, expected[1:] + ['other12'],
+              '#r'.join(expected), None):
+    del EVENTS[:]
+    assert not form.OnRegistrationComplete(wrong)
+    assert not any(e[0] == 'MsgBox' for e in EVENTS)
+del EVENTS[:]
+assert form.OnRegistrationComplete(list(reversed(expected)))
+boxes = [e for e in EVENTS if e[0] == 'MsgBox']
+assert boxes == [('MsgBox', g['MSG_COMPLETE_HEADER'] % 5 + '#r'.join(expected),
+                  g['BTN_OK'])]
+assert form.m_PendingAccounts is None
+assert not form.OnRegistrationComplete(expected)  # stale/duplicate response
+form.m_PendingAccounts = ('account',)
+assert form.OnRegistrationComplete(['account'])
+print 'future full-success popup guard (simulated server reply only) OK'
+
+# 8. Exception fallback and diagnostic privacy.
+original_box = sys.modules['commondialog'].ShowNewMessageBox
+
+def failing_box(msg, button):
+    raise ValueError('Preview42')  # deliberately put a fake password in exception
+
+sys.modules['commondialog'].ShowNewMessageBox = failing_box
+fill_valid()
+assert submit() == g['MSG_SUBMIT_ERR']
+sys.modules['commondialog'].ShowNewMessageBox = original_box
+diag = open('photo\\register_diag.txt', 'rb').read()
+assert 'form msgid=2' in diag and 'stub box shown' in diag
+assert 'prepared count=5' in diag and 'EXC type=ValueError' in diag
+for secret in ('Preview42', 'preview@example.invalid', 'account_4'):
+    assert secret not in diag
+print 'exception fallback + no credentials in diagnostic log OK'
+
+# 9. Navigation and original confirmation interface.
+form.m_PendingAccounts = tuple(expected)
 form.OnMessage(1)
+assert form.m_PendingAccounts is None
 assert isinstance(g['g_RegisterPanel'], g['CRegTermsPanel'])
+form.m_PendingAccounts = tuple(expected)  # even accidentally retained old state
+assert not form.OnRegistrationComplete(expected)  # no callback to abandoned form
+g['g_RegisterPanel'].OnMessage(1)
+form2 = g['g_RegisterPanel']
+assert not form2.m_FiveCheck.IsSelected()
 del EVENTS[:]
-g['g_RegisterPanel'].OnMessage(3)
+form2.OnMessage(3)
+assert ('mainpage.Show', True) in EVENTS and g['g_RegisterPanel'] is None
+g['Show'](True)
+del EVENTS[:]
+g['g_RegisterPanel'].OnMessage(2)
 assert ('mainpage.Show', True) in EVENTS
-assert ('InputSecrecy', 0) in EVENTS
-assert g['g_RegisterPanel'] is None
-print 'back/home flow OK'
-
-# 5. CConfirm（帶 servicedata 樁）
-mod('servicedata', SERVICE_MSG='x條款一\ny條款二', CONFIRM_MSG='z確認一\nw確認二')
+assert ('InputSecrecy', 0) in EVENTS and g['g_RegisterPanel'] is None
+mod('servicedata', SERVICE_MSG='xterm1\nyterm2', CONFIRM_MSG='zconfirm1\nwconfirm2')
+g['Show'](True)
+assert g['g_RegisterPanel'].m_PublicTxtBox.lines == ['term1', 'term2']
 g['ShowConfirmDlg'](0)
-dlg = g['g_ConfirmDlg']
-assert isinstance(dlg, g['CConfirm'])
-cout = [e for e in EVENTS if e[0] == 'COutput'][-1]
-assert cout[1] == ['\xe7\xa2\xba\xe8\xaa\x8d\xe4\xb8\x80', '\xe7\xa2\xba\xe8\xaa\x8d\xe4\xba\x8c'], cout[1]
+confirm = g['g_ConfirmDlg']
+assert isinstance(confirm, g['CConfirm'])
+assert confirm.m_PublicTxtBox.lines == ['confirm1', 'confirm2']
 del EVENTS[:]
-dlg.OnMessage(1)
-assert ('C2SConfirmRegInfo',) in EVENTS
+confirm.OnMessage(1)
+assert ('C2SConfirmRegInfo',) in EVENTS and g['g_ConfirmDlg'] is None
+g['ModuleReset']()
+assert g['g_AccountInfo'] == {} and g['g_RegisterPanel'] is None
 assert g['g_ConfirmDlg'] is None
-print 'confirm dlg OK'
+print 'back/home + supplied terms + original confirm + reset OK'
 print 'ALL HARNESS CHECKS PASSED'

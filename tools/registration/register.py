@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# login/register 模塊原生重寫版（第一期：管道驗證）
+# login/register 模塊原生重寫版（第二期：現行風格表單）
 #
 # 本文件是 script.fls 條目 4007（script\login\register.py）的權威源碼，
 # 由 tools/registration/build_native_registration.py 用 CPython 2.5.6 編譯、
@@ -15,17 +15,19 @@
 #      selectrole、mainpage 的既有調用不受影響。
 #   3. 條款文本原由外部模塊 servicedata.SERVICE_MSG 提供；該模塊不在本
 #      版本 script.fls 內，缺失時退回本文件內的佔位條款（正式條款待補）。
-#   4. 規格（用戶 2026-10-14 拍板）：先過條款頁 -> 表單（密碼/確認密碼/
-#      郵箱，第一期沿用舊 reg2.dlg 版式，郵箱即帳號；獨立帳號框待第二期
-#      改版 layout 後加入）-> 樁提示。
+#   4. 規格（用戶 2026-10-14 拍板）：先過協議頁（login/regterms.dlg，
+#      服務條款 dlg 的拷貝，寫法照 loginin.CServiceMessageDialog）->
+#      表單（login/regform.dlg，照改密頁現行風格新作：帳號/密碼/確認
+#      密碼/郵箱四框 + 上一步/確認註冊/返回首頁三按鈕）-> 樁提示。
+#      單帳號/密碼 6~16 位字母數字；勾選五帳號時基礎帳號 6~14 位，
+#      產生原帳號、_1、_2、_3、_4，共用密碼/郵箱。真註冊仍待服務端。
 import C_sys
 import combdialog
 import combmacro
 import interface
-import ui
 
 g_AccountInfo = {}
-g_CDKey = '1234567890123456'
+g_CDKey = "1234567890123456"
 g_ConfirmDlg = None
 g_RegisterPanel = None
 
@@ -36,29 +38,55 @@ def ModuleReset():
     global g_ConfirmDlg
     global g_RegisterPanel
     g_AccountInfo = {}
-    g_CDKey = '1234567890123456'
+    g_CDKey = "1234567890123456"
     g_ConfirmDlg = None
     g_RegisterPanel = None
 
 
 def IsValid(txt):
-    _invalid = ('"', "'", '/', '\\', '=', '+', '|', ';', ':', '[', ']', '{',
-                '}', '?', '*', ',', '(', ')', '&', '^', '%', '$', '#', '!',
-                '~', '`')
+    _invalid = (
+        '"',
+        "'",
+        "/",
+        "\\",
+        "=",
+        "+",
+        "|",
+        ";",
+        ":",
+        "[",
+        "]",
+        "{",
+        "}",
+        "?",
+        "*",
+        ",",
+        "(",
+        ")",
+        "&",
+        "^",
+        "%",
+        "$",
+        "#",
+        "!",
+        "~",
+        "`",
+    )
     for c in _invalid:
         if c in txt:
             return False
     return True
 
 
-def ShowError(err, ecode=0, errmsg=''):
+def ShowError(err, ecode=0, errmsg=""):
     import commondialog
     import dc_error_code
+
     if err not in dc_error_code.ERROR_MSG:
         if errmsg:
-            msg = errmsg + '-%d' % err
+            msg = errmsg + "-%d" % err
         else:
-            msg = MSG_UNKNOWN_ERR + '-%d' % err
+            msg = MSG_UNKNOWN_ERR + "-%d" % err
     else:
         msg = dc_error_code.ERROR_MSG[err]
     commondialog.ShowNewMessageBox(msg, BTN_OK)
@@ -67,6 +95,7 @@ def ShowError(err, ecode=0, errmsg=''):
 # ---------------------------------------------------------------------------
 # 帳號確認框（login/confirm.dlg）：netlogin/selectrole 既有流程，原樣保留。
 # ---------------------------------------------------------------------------
+
 
 def ShowConfirmDlg(flag):
     global g_ConfirmDlg
@@ -77,19 +106,26 @@ def ShowConfirmDlg(flag):
 
 
 class CConfirm(combdialog.CCombPanel):
-
     def __init__(self, parent):
-        combdialog.CCombPanel.__init__(self, parent, 'login/confirm.dlg')
+        combdialog.CCombPanel.__init__(self, parent, "login/confirm.dlg")
         self.Topmost()
         import chatoutput
         import servicedata
-        result = [line[1:] for line in servicedata.CONFIRM_MSG.split('\n')]
-        output = self.GetObject('output')
+
+        result = [line[1:] for line in servicedata.CONFIRM_MSG.split("\n")]
+        output = self.GetObject("output")
         (w, h) = output.GetSize()
         (x, y) = output.GetPos()
         self.m_PublicTxtBox = chatoutput.COutput(
-            self, w, h, 0, 0, result, txt_font=interface.FontLT14_3,
-            txt_color=interface.COLOR_1)
+            self,
+            w,
+            h,
+            0,
+            0,
+            result,
+            txt_font=interface.FontLT14_3,
+            txt_color=interface.COLOR_1,
+        )
         self.m_PublicTxtBox.SetPos(x, y)
         self.m_PublicTxtBox.SetChatCursor(0)
         self.m_PublicTxtBox.ResetFromCursor()
@@ -100,44 +136,152 @@ class CConfirm(combdialog.CCombPanel):
             import selectrole
             import sound
             import sounddefine
+
             sound.Play(sounddefine.PATH_BTN_SOUND)
             netlogin.C2SConfirmRegInfo()
             if selectrole.g_SelectRoleDlg:
                 interface.SetDefaultButton(
-                    selectrole.g_SelectRoleDlg.GetObject('btn_Login'))
+                    selectrole.g_SelectRoleDlg.GetObject("btn_Login")
+                )
             ShowConfirmDlg(1)
         elif msgid == 2:
             import main
             import sound
             import sounddefine
+
             sound.Play(sounddefine.PATH_BTN_SOUND)
             main.CloseGame()
 
 
 # ---------------------------------------------------------------------------
-# 註冊第一期：條款頁（login/reg1.dlg） + 表單頁（login/reg2.dlg）
+# 註冊第二期：協議頁（regterms.dlg） + 四字段/五帳號表單（regform.dlg）
 # ---------------------------------------------------------------------------
 
 # servicedata 缺失時的佔位條款（正式條款待補，見文件頭第 3 點）。
 # UI 文字一律用 Big5 字節串（與原版模塊常量逐字節同編碼）。實機教訓：
 # 傳 unicode 給原生彈框會在其內部做字節拼接時解碼失敗、靜默無反應。
-BTN_OK = '\xbdT\xa9w'  # 確定
-MSG_PWD_FORMAT = '\xbd\xd0\xbf\xe9\xa4J\xa5\xbf\xbdT\xae\xe6\xa6\xa1\xaa\xba\xb1K\xbdX'  # 請輸入正確格式的密碼
-MSG_PWD_ALNUM = '\xb5n\xbf\xfd\xb1K\xbdX\xb6\xc8\xa5i\xa5\xd1\xa6r\xa5\xc0\xa9\xce\xaa\xcc\xbc\xc6\xa6r\xb2\xd5\xa6\xa8,\xaa\xf8\xab\xd7\xac\xb06~16\xa6\xec\xa1C'  # 登錄密碼僅可由字母或者數字組成,長度為6~16位。
-MSG_PWD_MISMATCH = '\xa8\xe2\xa6\xb8\xbf\xe9\xa4J\xaa\xba\xb1K\xbdX\xa4\xa3\xa4\xc7\xb0t'  # 兩次輸入的密碼不匹配
-MSG_EMAIL_FORMAT = '\xbd\xd0\xbf\xe9\xa4J\xa5\xbf\xbdT\xae\xe6\xa6\xa1\xaa\xba\xb6l\xbdc'  # 請輸入正確格式的郵箱
-MSG_STUB = '\xa6\xf8\xaaA\xbe\xb9\xa9|\xa5\xbc\xb6}\xa9\xf1\xb5\xf9\xa5U\xa1A\xbd\xd0\xb5y\xab\xe1\xa6A\xb8\xd5'  # 伺服器尚未開放註冊，請稍後再試
-MSG_UNKNOWN_ERR = '\xa5\xbc\xaa\xbe\xbf\xf9\xbb~'  # 未知錯誤
-MSG_SUBMIT_ERR = '\xb5\xf9\xa5U\xb4\xa3\xa5\xe6\xa5X\xbf\xf9\xa1A\xbd\xd0\xa6^\xb3\xf8\xba\xde\xb2z\xad\xfb'  # 註冊提交出錯，請回報管理員
+# 確定
+BTN_OK = "\xbdT\xa9w"
+# 請輸入正確格式的密碼
+MSG_PWD_FORMAT = "\xbd\xd0\xbf\xe9\xa4J\xa5\xbf\xbdT\xae\xe6\xa6\xa1\xaa\xba\xb1K\xbdX"
+# 登錄密碼僅可由字母或者數字組成,長度為6~16位。
+MSG_PWD_ALNUM = (
+    "\xb5n\xbf\xfd\xb1K\xbdX\xb6\xc8\xa5i"
+    "\xa5\xd1\xa6r\xa5\xc0\xa9\xce\xaa\xcc\xbc\xc6"
+    "\xa6r\xb2\xd5\xa6\xa8,\xaa\xf8\xab\xd7\xac"
+    "\xb06~16\xa6\xec\xa1C"
+)
+# 兩次輸入的密碼不匹配
+MSG_PWD_MISMATCH = (
+    "\xa8\xe2\xa6\xb8\xbf\xe9\xa4J\xaa\xba\xb1K\xbdX\xa4\xa3\xa4\xc7\xb0t"
+)
+# 請輸入正確格式的郵箱
+MSG_EMAIL_FORMAT = (
+    "\xbd\xd0\xbf\xe9\xa4J\xa5\xbf\xbdT\xae\xe6\xa6\xa1\xaa\xba\xb6l\xbdc"
+)
+# 伺服器尚未開放註冊，請稍後再試
+MSG_STUB = (
+    "\xa6\xf8\xaaA\xbe\xb9\xa9|\xa5\xbc\xb6}"
+    "\xa9\xf1\xb5\xf9\xa5U\xa1A\xbd\xd0\xb5y"
+    "\xab\xe1\xa6A\xb8\xd5"
+)
+# 未知錯誤
+MSG_UNKNOWN_ERR = "\xa5\xbc\xaa\xbe\xbf\xf9\xbb~"
+# 註冊提交出錯，請回報管理員
+MSG_SUBMIT_ERR = (
+    "\xb5\xf9\xa5U\xb4\xa3\xa5\xe6\xa5X\xbf\xf9"
+    "\xa1A\xbd\xd0\xa6^\xb3\xf8\xba\xde\xb2z"
+    "\xad\xfb"
+)
+# 請輸入正確格式的帳號
+MSG_ACC_FORMAT = (
+    "\xbd\xd0\xbf\xe9\xa4J\xa5\xbf\xbdT\xae\xe6\xa6\xa1\xaa\xba\xb1b\xb8\xb9"
+)
+# 帳號只能為數字或字母
+PROMPT_ACC_ALNUM = (
+    "#Y\xb1b\xb8\xb9\xa5u\xaf\xe0\xac\xb0\xbc\xc6\xa6r\xa9\xce\xa6r\xa5\xc0"
+)
+# 密碼只能為數字或字母
+PROMPT_PWD_ALNUM = "#Y\xb1K\xbdX\xa5u\xaf\xe0\xac\xb0\xbc\xc6\xa6r\xa9\xce\xa6r\xa5\xc0"
+# 單帳號模式提示
+HINT_FORM = (
+    "\xb3\xe6\xb1b\xb8\xb9\xbc\xd2\xa6\xa1\xa1G"
+    "#r\xb1b\xb8\xb9\xa9M\xb1K\xbdX"
+    "\xac\xb06~16\xa6\xec\xa6r\xa5\xc0"
+    "\xa9\xce\xbc\xc6\xa6r\xa1F\xbd\xd0\xb6\xf1"
+    "\xbcg\xb1`\xa5\xce\xb6l\xbdc\xa1C"
+    "#r\xa4\xc4\xbf\xef\xa4U\xa4\xe8\xa5i"
+    "\xa4@\xa6\xb8\xb5\xf9\xa5U\xa4\xad\xad\xd3"
+    "\xb1b\xb8\xb9\xa1C"
+)
+
+# 五帳號模式的基礎帳號須為6~14位字母或數字，請縮短帳號以預留_1至_4後綴。
+MSG_ACC_BATCH_FORMAT = (
+    "\xa4\xad\xb1b\xb8\xb9\xbc\xd2\xa6\xa1\xaa\xba"
+    "\xb0\xf2\xc2\xa6\xb1b\xb8\xb9\xb6\xb7\xac\xb0"
+    "6~14\xa6\xec\xa6r\xa5\xc0\xa9\xce"
+    "\xbc\xc6\xa6r\xa1A\xbd\xd0\xc1Y\xb5u"
+    "\xb1b\xb8\xb9\xa5H\xb9w\xafd_1"
+    "\xa6\xdc_4\xab\xe1\xba\xf3\xa1C"
+)
+
+# 五帳號模式提示：6~14 位基礎帳號、原帳號及 _1~_4、共用密碼和郵箱。
+HINT_FORM_FIVE = (
+    "\xa4\xad\xb1b\xb8\xb9\xbc\xd2\xa6\xa1\xa1G"
+    "#r\xb0\xf2\xc2\xa6\xb1b\xb8\xb96~"
+    "14\xa6\xec\xa6r\xa5\xc0\xa9\xce\xbc\xc6"
+    "\xa6r\xa1A\xb1K\xbdX6~16"
+    "\xa6\xec\xa1C#r\xb2\xa3\xa5\xcd\xad\xec"
+    "\xb1b\xb8\xb9\xa4\xce_1\xa6\xdc_4"
+    "\xab\xe1\xba\xf3\xa1A\xa4\xad\xad\xd3\xb1b"
+    "\xb8\xb9\xa6@\xa5\xce\xb1K\xbdX\xa9M"
+    "\xb6l\xbdc\xa1C"
+)
+
+# #r#r以下為待註冊的五個帳號（尚未註冊）：#r
+MSG_BATCH_PLAN = (
+    "#r#r\xa5H\xa4U\xac\xb0\xab\xdd"
+    "\xb5\xf9\xa5U\xaa\xba\xa4\xad\xad\xd3\xb1b"
+    "\xb8\xb9\xa1]\xa9|\xa5\xbc\xb5\xf9\xa5U"
+    "\xa1^\xa1G#r"
+)
+
+# 註冊完成！以下%d個帳號已建立：#r
+MSG_COMPLETE_HEADER = (
+    "\xb5\xf9\xa5U\xa7\xb9\xa6\xa8\xa1I\xa5H"
+    "\xa4U%d\xad\xd3\xb1b\xb8\xb9\xa4w"
+    "\xab\xd8\xa5\xdf\xa1G#r"
+)
+
+# 原生登入註冊勾選框皮膚（GBK 路徑，ui_res_style1 實證）
+IMG_FIVE_CHECK = (
+    "combdialog/\xb5"
+    "\xc7\xc2\xbc\xd7\xa2\xb2\xe1/\xb0\xb4\xc5\xa5"
+    "/\xb9\xb4\xd1\xa1\xbf\xf2.igs"
+)
 
 # servicedata 缺失時的佔位條款（Big5 字節串，正式條款待補，見文件頭）。
 TERMS_FALLBACK = [
-    '\xb7|\xad\xfb\xaaA\xb0\xc8\xb1\xf8\xb4\xda',
-    '',
-    '\xa1]\xb4\xfa\xb8\xd5\xa6\xfb\xa6\xec\xa1^\xad\xec\xb1\xf8\xb4\xda\xa4\xe5\xa5\xbb\xa5\xd1 servicedata \xbc\xd2\xb2\xd5\xb4\xa3\xa8\xd1\xa1A',
-    '\xa5\xbb\xb4\xfa\xb8\xd5\xa5]\xa5\xbc\xa5]\xa7t\xb8\xd3\xbc\xd2\xb2\xd5\xa1A\xa5\xbf\xa6\xa1\xb1\xf8\xb4\xda\xab\xdd\xb8\xc9\xa1C',
-    '',
-    '\xc2I\xa1u\xa7\xda\xa6P\xb7N\xa1v\xc4~\xc4\xf2\xb6\xf1\xbcg\xb5\xf9\xa5U\xb8\xea\xae\xc6\xa1A\xc2I\xa1u\xa7\xda\xa9\xda\xb5\xb4\xa1v\xaa\xf0\xa6^\xa1C',
+    ("\xb7|\xad\xfb\xaaA\xb0\xc8\xb1\xf8\xb4\xda"),
+    "",
+    (
+        "\xa1]\xb4\xfa\xb8\xd5\xa6\xfb\xa6\xec\xa1^"
+        "\xad\xec\xb1\xf8\xb4\xda\xa4\xe5\xa5\xbb\xa5\xd1"
+        " servicedata"
+        " \xbc\xd2\xb2\xd5\xb4\xa3\xa8\xd1\xa1A"
+    ),
+    (
+        "\xa5\xbb\xb4\xfa\xb8\xd5\xa5]\xa5\xbc\xa5]"
+        "\xa7t\xb8\xd3\xbc\xd2\xb2\xd5\xa1A\xa5\xbf"
+        "\xa6\xa1\xb1\xf8\xb4\xda\xab\xdd\xb8\xc9\xa1C"
+    ),
+    "",
+    (
+        "\xc2I\xa1u\xa7\xda\xa6P\xb7N\xa1v"
+        "\xc4~\xc4\xf2\xb6\xf1\xbcg\xb5\xf9\xa5U"
+        "\xb8\xea\xae\xc6\xa1A\xc2I\xa1u\xa7\xda"
+        "\xa9\xda\xb5\xb4\xa1v\xaa\xf0\xa6^\xa1C"
+    ),
 ]
 
 
@@ -148,63 +292,67 @@ def _Diag(text):
     沒有這支日誌就無從定位。純 ASCII 寫入，永不拋錯。
     """
     try:
-        f = open('photo\\register_diag.txt', 'a')
-        f.write(str(text) + '\n')
+        f = open("photo\\register_diag.txt", "ab")
+        f.write((str(text) + "\n").encode("ascii", "replace"))
         f.close()
     except Exception:
         pass
 
-# 步驟圖（GBK 字節路徑，與舊版常量逐字節一致，勿改編碼）。
-IMG_STEP_TERMS = 'combdialog/\xd4\xd3\xcd\xbc/\xcd\xac\xd2\xe2\xcc\xf5\xbf\xee.igs'
-IMG_STEP_FORM = 'combdialog/\xd4\xd3\xcd\xbc/\xcc\xee\xd0\xb4\xd7\xca\xc1\xcf.igs'
-
 
 def _PlayBtnSound():
     import sound
-    sound.Play('action/button.wav')
+
+    sound.Play("action/button.wav")
 
 
 def _ReturnHome():
     Show(False)
     try:
         import mainpage
+
         mainpage.Show(True)
     except Exception:
         import main
+
         main.doreturn(interface.CBaseObject(None))
 
 
 def _LoadTermsLines():
     try:
         import servicedata
-        return [line[1:] for line in servicedata.SERVICE_MSG.split('\n')]
+
+        return [line[1:] for line in servicedata.SERVICE_MSG.split("\n")]
     except Exception:
         return list(TERMS_FALLBACK)
 
 
 class CRegTermsPanel(combdialog.CCombPanel):
-    """條款頁：msgid 1=我同意（進表單），其餘=返回首頁。"""
+    """協議頁：login/regterms.dlg（服務條款 dlg 的拷貝），寫法照
+    loginin.CServiceMessageDialog。msgid 1=我同意（進表單），其餘=回首頁。
+    """
 
     def __init__(self, parent):
-        combdialog.CCombPanel.__init__(self, parent, 'login/reg1.dlg')
+        combdialog.CCombPanel.__init__(self, parent, "login/regterms.dlg")
         import chatoutput
+
         result = _LoadTermsLines()
-        output = self.GetObject('output')
+        output = self.GetObject("loc_msg")
         (w, h) = output.GetSize()
         (x, y) = output.GetPos()
         self.m_PublicTxtBox = chatoutput.COutput(
-            self, w, h, 0, 0, result, txt_font=interface.FontLT12_1,
-            txt_color=interface.COLOR_1)
+            self,
+            w,
+            h,
+            0,
+            0,
+            result,
+            txt_font=interface.FontLT14_3,
+            txt_color=interface.COLOR_1,
+        )
         self.m_PublicTxtBox.SetPos(x, y)
-        self.m_PublicTxtBox.Refresh()
+        self.m_PublicTxtBox.SetChatCursor(0)
+        self.m_PublicTxtBox.ResetFromCursor()
         self.m_PublicTxtBox.ScrollTo(0)
-        try:
-            self.m_ImgStep = ui.CImage(self, IMG_STEP_TERMS, 'interface')
-            (x, y) = self.GetObject('reginfo1').GetPos()
-            self.m_ImgStep.SetPos(x, y)
-            self.m_ImgStep.SetFrame(1)
-        except Exception:
-            self.m_ImgStep = None
 
     def OnMessage(self, msgid):
         _PlayBtnSound()
@@ -215,64 +363,139 @@ class CRegTermsPanel(combdialog.CCombPanel):
         return True
 
 
-class CRegFormPanel(combdialog.CCombPanel):
-    """表單頁：msgid 1=上一步（回條款），2=確認（校驗後留樁）。
+_ACCOUNT_CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-    舊 reg2.dlg 無獨立帳號框，郵箱即帳號（原版式如此）；2980 連結與
-    圖形驗證碼在新流程中不出現，相關佔位控件一律隱藏。
+
+def _IsAsciiAlnum(txt):
+    if not txt:
+        return False
+    for char in txt:
+        if char not in _ACCOUNT_CHARS:
+            return False
+    return True
+
+
+def BuildRegistrationAccounts(account, register_five=False):
+    """只生成候選名稱，不代表註冊成功；下劃線僅由自動後綴產生。"""
+    maximum = 14 if register_five else 16
+    if len(account) < 6 or len(account) > maximum or not _IsAsciiAlnum(account):
+        raise ValueError("invalid base account")
+    accounts = [account]
+    if register_five:
+        accounts.extend([account + "_%d" % n for n in range(1, 5)])
+    return accounts
+
+
+class CRegAccountEdit(interface.CEdit):
+    """帳號輸入框：只允許數字或字母（照 chgpwd.CPwdEdit 的打法）。"""
+
+    def AddChar(self, c):
+        if _IsAsciiAlnum(c):
+            interface.CEdit.AddChar(self, c)
+        else:
+            import usermacro
+
+            usermacro.PROMPT_MSG(PROMPT_ACC_ALNUM)
+
+
+class CRegPwdEdit(interface.CEdit):
+    """密碼輸入框：只允許數字或字母。"""
+
+    def AddChar(self, c):
+        if _IsAsciiAlnum(c):
+            interface.CEdit.AddChar(self, c)
+        else:
+            import usermacro
+
+            usermacro.PROMPT_MSG(PROMPT_PWD_ALNUM)
+
+
+class CRegFormPanel(combdialog.CCombPanel):
+    """表單頁（login/regform.dlg）：msgid 1=上一步（回協議），
+    2=確認註冊（校驗後留樁），3=返回首頁，4=切換註冊五個帳號。
+    四框：帳號/密碼/確認密碼/郵箱；勾選默認關閉。
+
     """
 
     def __init__(self, parent):
-        combdialog.CCombPanel.__init__(self, parent, 'login/reg2.dlg')
+        combdialog.CCombPanel.__init__(self, parent, "login/regform.dlg")
+        import C_object
+
+        self.m_AccountEdit = combmacro.CEDIT(
+            CRegAccountEdit, "account", self, 0, interface.FONT_EDIT, linecolor=0
+        )
+        self.m_AccountEdit.SetLimit(16)
         self.m_PwdEdit = combmacro.CEDIT(
-            interface.CEdit, 'pwd', self, 16777215, interface.FontLT14_3,
-            linecolor=16777215)
+            CRegPwdEdit, "pwd", self, 0, interface.FONT_EDIT, linecolor=0
+        )
         self.m_PwdEdit.SetLimit(16)
         self.m_PwdEdit.m_IsPassword = True
         self.m_PwdEdit2 = combmacro.CEDIT(
-            interface.CEdit, 'pwd2', self, 16777215, interface.FontLT14_3,
-            linecolor=16777215)
+            CRegPwdEdit, "pwd2", self, 0, interface.FONT_EDIT, linecolor=0
+        )
         self.m_PwdEdit2.SetLimit(16)
         self.m_PwdEdit2.m_IsPassword = True
         self.m_EmailEdit = combmacro.CEDIT(
-            interface.CEdit, 'email', self, 16777215, interface.FontLT14_3,
-            linecolor=16777215)
-        self.m_EmailEdit.SetLimit(32)
+            interface.CEdit, "email", self, 0, interface.FONT_EDIT, linecolor=0
+        )
+        self.m_EmailEdit.SetLimit(50)
+        self.m_AccountEdit.SetNextEdit(self.m_PwdEdit)
         self.m_PwdEdit.SetNextEdit(self.m_PwdEdit2)
         self.m_PwdEdit2.SetNextEdit(self.m_EmailEdit)
-        self.m_EmailEdit.SetNextEdit(self.m_PwdEdit)
-        # 舊流程的確認郵箱/圖形驗證碼佔位一律隱藏（版式上仍在 dlg 裡）。
-        for name in ('email2', 'edt_Code', 'txt_Mail2', 'img_Mail2Bg',
-                     'txt_Code', 'txt_CodeBg', 'txt_RefershCode', 'youxiang'):
-            try:
-                obj = self.GetObject(name)
-                if obj is not None:
-                    obj.SetShow(False)
-            except Exception:
-                pass
-        try:
-            self.m_ImgStep = ui.CImage(self, IMG_STEP_FORM, 'interface')
-            (x, y) = self.GetObject('reginfo2').GetPos()
-            self.m_ImgStep.SetPos(x, y)
-            self.m_ImgStep.SetFrame(1)
-        except Exception:
-            self.m_ImgStep = None
-        self.m_PwdEdit.Active(True)
+        self.m_EmailEdit.SetNextEdit(self.m_AccountEdit)
+        self.m_Text = combmacro.CRICHTEXT(
+            C_object.CRichTextObject,
+            "txt",
+            self,
+            HINT_FORM,
+            interface.FONT_EDIT,
+            interface.COLOR_EDIT,
+        )
+        self.m_FiveCheck = combmacro.CIMGCHECKBOX(
+            interface.CImageCheckBox, "chk_five", self, IMG_FIVE_CHECK, True, 4
+        )
+        # 原生工廠綁 .dlg 錨點，放大命中區使方框/文字都可點擊。
+        (w, h) = self.GetObject("chk_five").GetSize()
+        self.m_FiveCheck.SetSize(w, h)
+        self.m_RegistrationRequests = []
+        # 只有日後真實請求送出時才可設置 pending；留樁不設置，不能假報成功。
+        self.m_PendingAccounts = None
+        self.SetRegisterFive(False)
+        self.m_AccountEdit.Active(True)
+
+    def SetRegisterFive(self, enabled):
+        self.m_FiveCheck.SetCheck(bool(enabled))
+        if enabled:
+            self.m_AccountEdit.SetLimit(14)
+            self.m_Text.SetText(HINT_FORM_FIVE)
+        else:
+            self.m_AccountEdit.SetLimit(16)
+            self.m_Text.SetText(HINT_FORM)
+        # 已核對原版 SetLimit 只改 m_Limit，絕不截掉已有的輸入。
 
     def CheckEmail(self, email):
         if len(email) < 5 or len(email) > 50:
             return False
         import re
-        patt = re.compile('^[_\\.\\-a-z0-9A-Z]+@[_\\.\\-a-z0-9A-Z]+$')
+
+        patt = re.compile("^[_\\.\\-a-z0-9A-Z]+@[_\\.\\-a-z0-9A-Z]+$")
         return patt.match(email) is not None
 
     def DoCheck(self):
         """校验通过返回 None，否则返回要提示的文案（口径同旧版 DoCheck）。"""
+        account = self.m_AccountEdit.GetText()
+        register_five = self.m_FiveCheck.IsSelected()
+        maximum = 14 if register_five else 16
+        if len(account) < 6 or len(account) > maximum or not _IsAsciiAlnum(account):
+            self.m_AccountEdit.Active(True)
+            if register_five:
+                return MSG_ACC_BATCH_FORMAT
+            return MSG_ACC_FORMAT
         pwd = self.m_PwdEdit.GetText()
         if len(pwd) < 6 or len(pwd) > 16:
             self.m_PwdEdit.Active(True)
             return MSG_PWD_FORMAT
-        if not pwd.isalnum():
+        if not _IsAsciiAlnum(pwd):
             self.m_PwdEdit.Active(True)
             return MSG_PWD_ALNUM
         if pwd != self.m_PwdEdit2.GetText():
@@ -286,35 +509,86 @@ class CRegFormPanel(combdialog.CCombPanel):
 
     def DoSubmit(self):
         import commondialog
-        _Diag('submit start')
+
+        _Diag("submit start")
+        self.m_RegistrationRequests = []
+        self.m_PendingAccounts = None
         try:
             msg = self.DoCheck()
-            _Diag('check done fail=%s' % (msg is not None))
+            _Diag("check done fail=%s" % (msg is not None))
             if msg is not None:
                 commondialog.ShowNewMessageBox(msg, BTN_OK)
-                _Diag('fail box shown')
+                _Diag("fail box shown")
                 return
-            g_AccountInfo['Password'] = self.m_PwdEdit.GetText()
-            g_AccountInfo['Email'] = self.m_EmailEdit.GetText().strip()
-            # 服務端註冊接口未就緒：先留樁，明示未接通（用戶定的文案）。
-            commondialog.ShowNewMessageBox(MSG_STUB, BTN_OK)
-            _Diag('stub box shown')
+            accounts = BuildRegistrationAccounts(
+                self.m_AccountEdit.GetText(), self.m_FiveCheck.IsSelected()
+            )
+            pwd = self.m_PwdEdit.GetText()
+            email = self.m_EmailEdit.GetText().strip()
+            self.m_RegistrationRequests = [
+                {"Account": account, "Password": pwd, "Email": email}
+                for account in accounts
+            ]
+            # 保留 loginin 用的單個預填帳號接口，第一個仍是基礎帳號。
+            g_AccountInfo["Account"] = accounts[0]
+            g_AccountInfo["Password"] = pwd
+            g_AccountInfo["Email"] = email
+            _Diag("prepared count=%d" % len(accounts))
+            # 未接服務端，不設 pending，不調完成回調；文案明示尚未註冊。
+            msg = MSG_STUB
+            if len(accounts) == 5:
+                msg += MSG_BATCH_PLAN + "#r".join(accounts)
+            commondialog.ShowNewMessageBox(msg, BTN_OK)
+            _Diag("stub box shown")
         except Exception:
             import sys
-            _Diag('EXC %r' % (sys.exc_info()[1],))
+
+            _Diag("EXC type=%s" % sys.exc_info()[0].__name__)
             try:
                 commondialog.ShowMessageBox(MSG_SUBMIT_ERR, BTN_OK)
             except Exception:
-                _Diag('err box failed too')
+                _Diag("err box failed too")
+
+    def OnRegistrationComplete(self, registered_accounts):
+        """預留給真實服務端回覆：五個全成功才報五個；留樁永遠不走此路。
+
+        接通時須在送出真實請求後記錄 m_PendingAccounts（帳號列表，不含密碼）。
+        只接收完整成功列表；部分成功、重複、陌生/過期回覆均不能報全成功。
+        """
+        expected = self.m_PendingAccounts
+        if self is not g_RegisterPanel:
+            return False
+        if not expected or not isinstance(registered_accounts, (list, tuple)):
+            return False
+        if len(expected) not in (1, 5):
+            return False
+        if len(registered_accounts) != len(expected):
+            return False
+        if sorted(registered_accounts) != sorted(expected):
+            return False
+        import commondialog
+
+        msg = MSG_COMPLETE_HEADER % len(expected) + "#r".join(expected)
+        commondialog.ShowNewMessageBox(msg, BTN_OK)
+        self.m_PendingAccounts = None
+        _Diag("registration complete count=%d" % len(expected))
+        return True
 
     def OnMessage(self, msgid):
-        _Diag('form msgid=%s' % (msgid,))
+        _Diag("form msgid=%s" % (msgid,))
         _PlayBtnSound()
         if msgid == 1:
+            self.m_PendingAccounts = None
             Step(0)
         elif msgid == 2:
             self.DoSubmit()
-        # msgid 3（2980 連結）/4（驗證碼刷新）已不建立控件，忽略。
+        elif msgid == 3:
+            self.m_PendingAccounts = None
+            _ReturnHome()
+        elif msgid == 4:
+            # CImageCheckBox.LeftUp 先發消息，再自動翻轉；manual=True 交給
+            # 本處翻轉一次，避免一次點擊勾上又自動取消。
+            self.SetRegisterFive(not self.m_FiveCheck.IsSelected())
         return True
 
 
@@ -338,6 +612,7 @@ def Show(s):
 
 # --- 舊版對外雜項接口：保留簽名，避免其他模塊引用時出錯 ---
 
+
 def ShowRegisterCheckCode(imgbytes, vregval):
     # 图形验证码流程已删除，保留空接口。
     return None
@@ -354,9 +629,11 @@ def SetCheckCode(checkcode):
 def ClearRegCode():
     try:
         import os
-        path = 'photo\\register'
+
+        path = "photo\\register"
         if os.path.exists(path):
             import shutil
+
             shutil.rmtree(path)
     except Exception:
         pass

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""註冊界面原生重做（第一期）打包器。
+"""註冊界面原生重做（第二期，含五帳號勾選）打包器。
 
 產出一個新的 script.fls（原包不動），只改兩條：
   * 條目 337（login/mainpage）：9 字節定寬補丁——把「申請會員」分支的
@@ -12,6 +12,7 @@
 337 只差那 9 字節且可轉譯、4007 轉譯回的代碼對象/常量符合源碼、
 無網絡調用名殘留、其餘條目負載全等。
 """
+
 from __future__ import annotations
 
 import argparse
@@ -21,6 +22,7 @@ import json
 import struct
 import subprocess
 import sys
+import tempfile
 import zlib
 from pathlib import Path
 
@@ -60,7 +62,7 @@ def read_entries(arch: bytes):
     for idx in range(count):
         raw = struct.unpack_from("<IIII", arch, idx_offset + idx * 16)
         dec = pack.decode_0slf_entry(idx, raw)
-        comp = arch[dec["data_offset"]: dec["data_offset"] + dec["comp_len"]]
+        comp = arch[dec["data_offset"] : dec["data_offset"] + dec["comp_len"]]
         rows.append({"idx": idx, "raw": raw, "dec": dec, "comp": comp})
     return rows
 
@@ -71,8 +73,9 @@ def decrypt_entry(row, keys_db) -> bytes:
     keys, bounds = info["keys"], info["bounds"]
     pts = [0] + list(bounds) + [len(exp)]
     return b"".join(
-        bytes(exp[pts[i]: pts[i + 1]]).translate(batch.XTABS[keys[i]])
-        for i in range(5))
+        bytes(exp[pts[i] : pts[i + 1]]).translate(batch.XTABS[keys[i]])
+        for i in range(5)
+    )
 
 
 def encode_ins(std_op: int, arg: int | None) -> bytes:
@@ -84,6 +87,7 @@ def encode_ins(std_op: int, arg: int | None) -> bytes:
 
 def code_objects(tree_root):
     """Yield (path, code-object-dict) from MarshalReader output."""
+
     def walk(node, prefix=""):
         if not (isinstance(node, dict) and "code" in node):
             return
@@ -92,6 +96,7 @@ def code_objects(tree_root):
         yield path, node
         for value in node["consts"]:
             yield from walk(value, path)
+
     yield from walk(tree_root)
 
 
@@ -103,7 +108,7 @@ def normalized(code: bytes):
         if raw not in batch.PY25_MAP:
             raise ValueError(f"unknown duoyi opcode 0x{raw:02x} at {at}")
         size = 3 if raw >= 0x5F else 1
-        arg = int.from_bytes(code[at + 1: at + 3], "little") if size == 3 else None
+        arg = int.from_bytes(code[at + 1 : at + 3], "little") if size == 3 else None
         result.append((at, batch.PY25_MAP[raw], arg))
         at += size
     return result
@@ -121,9 +126,11 @@ def patch_mainpage(duoyi_marshal: bytes) -> bytes:
     code = bytes(co["code"])
     names = co["names"]
     varnames = co["varnames"]
-    expect = (encode_ins(STD_LOAD_FAST, varnames.index(b"misc"))
-              + encode_ins(STD_LOAD_ATTR, names.index(b"IsTWServer"))
-              + encode_ins(STD_CALL_FUNCTION, 0))
+    expect = (
+        encode_ins(STD_LOAD_FAST, varnames.index(b"misc"))
+        + encode_ins(STD_LOAD_ATTR, names.index(b"IsTWServer"))
+        + encode_ins(STD_CALL_FUNCTION, 0)
+    )
     if len(expect) != 9 or code[102:111] != expect:
         raise ValueError("TW predicate fingerprint mismatch at 102")
     replacement = encode_ins(STD_LOAD_GLOBAL, names.index(b"False"))
@@ -131,8 +138,13 @@ def patch_mainpage(duoyi_marshal: bytes) -> bytes:
     new_code = code[:102] + replacement + code[111:]
     seq = normalized(new_code)
     starts = {at for at, _, _ in seq} | {len(new_code)}
-    limits = (len(co["consts"]), len(co["names"]), len(co["varnames"]),
-              len(co["freevars"]) + len(co["cellvars"]), len(new_code))
+    limits = (
+        len(co["consts"]),
+        len(co["names"]),
+        len(co["varnames"]),
+        len(co["freevars"]) + len(co["cellvars"]),
+        len(new_code),
+    )
     if not batch.check_py25_co_code(new_code, limits)[0]:
         raise ValueError("patched co_code failed validation")
     for at, op, arg in seq:
@@ -143,7 +155,7 @@ def patch_mainpage(duoyi_marshal: bytes) -> bytes:
     start = duoyi_marshal.index(code)
     if duoyi_marshal.count(code) != 1:
         raise ValueError("co_code bytes not unique in marshal")
-    patched = duoyi_marshal[:start] + new_code + duoyi_marshal[start + len(code):]
+    patched = duoyi_marshal[:start] + new_code + duoyi_marshal[start + len(code) :]
     return patched, start + 102, start + 111
 
 
@@ -156,8 +168,8 @@ def build_archive(arch: bytes, rows, replacements: dict[int, bytes]) -> bytes:
         doff = len(out)
         out.extend(comp)
         nt = pack.encode_0slf_dir_entry(
-            row["idx"], row["raw"][0], row["raw"][1], len(comp), doff,
-            row["dec"]["f1"])
+            row["idx"], row["raw"][0], row["raw"][1], len(comp), doff, row["dec"]["f1"]
+        )
         new_dir.extend(struct.pack("<IIII", *nt))
     new_idx_offset = len(out)
     out.extend(new_dir)
@@ -174,14 +186,28 @@ def transpile(dec: bytes, exp: bytes, info) -> bytes:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--archive", type=Path, default=ROOT / "data/script.fls")
-    ap.add_argument("--keys", type=Path,
-                    default=ROOT / "tools/decompiler/script_fls_keys.json")
-    ap.add_argument("--python25", type=Path, required=True,
-                    help="CPython 2.5.6 interpreter (see build_python25.sh)")
-    ap.add_argument("--source", type=Path, default=Path(__file__).with_name("register.py"))
-    ap.add_argument("--output", type=Path,
-                    default=Path(__file__).with_name("out") / "script.fls")
+    ap.add_argument(
+        "--keys", type=Path, default=ROOT / "tools/decompiler/script_fls_keys.json"
+    )
+    ap.add_argument(
+        "--python25",
+        type=Path,
+        required=True,
+        help="CPython 2.5.6 interpreter (see build_python25.sh)",
+    )
+    ap.add_argument(
+        "--source", type=Path, default=Path(__file__).with_name("register.py")
+    )
+    ap.add_argument(
+        "--output", type=Path, default=Path(__file__).with_name("out") / "script.fls"
+    )
     args = ap.parse_args()
+    for source in (args.archive, args.keys, args.source):
+        aliases_source = args.output.resolve() == source.resolve()
+        if args.output.exists() and source.exists():
+            aliases_source = aliases_source or args.output.samefile(source)
+        if aliases_source:
+            raise SystemExit(f"refusing to overwrite an input file: {source}")
 
     arch = args.archive.read_bytes()
     if sha256(arch) != BASE_SHA256:
@@ -194,8 +220,14 @@ def main() -> int:
     pyc_path = args.output.parent / "register_compiled.pyc"
     pyc_path.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
-        [str(args.python25), str(Path(__file__).with_name("compile_with_py25.py")),
-         str(args.source), str(pyc_path)], check=True)
+        [
+            str(args.python25),
+            str(Path(__file__).with_name("compile_with_py25.py")),
+            str(args.source),
+            str(pyc_path),
+        ],
+        check=True,
+    )
     pyc_bytes = pyc_path.read_bytes()
 
     # 2) 兩條替換負載
@@ -203,15 +235,21 @@ def main() -> int:
     orig_exp_reg = zlib.decompress(by_idx[ENTRY_REGISTER]["comp"])
     new_exp_reg = pack.encrypt_5seg_xor(
         pack.obfuscate_py25_pyc_bytes(pyc_bytes),
-        info_reg["keys"], info_reg["bounds"], orig_len=len(orig_exp_reg))
+        info_reg["keys"],
+        info_reg["bounds"],
+        orig_len=len(orig_exp_reg),
+    )
 
     info_main = keys_db[str(ENTRY_MAINPAGE)]
     duoyi_main = decrypt_entry(by_idx[ENTRY_MAINPAGE], keys_db)
     patched_main, win_lo, win_hi = patch_mainpage(duoyi_main)
     orig_exp_main = zlib.decompress(by_idx[ENTRY_MAINPAGE]["comp"])
     new_exp_main = pack.encrypt_5seg_xor(
-        patched_main, info_main["keys"], info_main["bounds"],
-        orig_len=len(orig_exp_main))
+        patched_main,
+        info_main["keys"],
+        info_main["bounds"],
+        orig_len=len(orig_exp_main),
+    )
 
     replacements = {
         ENTRY_REGISTER: zlib.compress(new_exp_reg, 9),
@@ -223,22 +261,44 @@ def main() -> int:
 
     # 3) 驗證
     out_rows = read_entries(out)
+    assert len(out_rows) == len(rows), "entry count changed"
+    assert [r["raw"][0] for r in out_rows] == [r["raw"][0] for r in rows], (
+        "entry identities/order changed"
+    )
     out_by_idx = {r["idx"]: r for r in out_rows}
-    changed = [i for i in by_idx
-               if zlib.decompress(by_idx[i]["comp"]) != zlib.decompress(out_by_idx[i]["comp"])]
+    for index, row in by_idx.items():
+        if index not in (ENTRY_MAINPAGE, ENTRY_REGISTER):
+            assert row["comp"] == out_by_idx[index]["comp"], (
+                f"untouched compressed payload changed: {index}"
+            )
+    changed = [
+        i
+        for i in by_idx
+        if zlib.decompress(by_idx[i]["comp"]) != zlib.decompress(out_by_idx[i]["comp"])
+    ]
     assert changed == [ENTRY_MAINPAGE, ENTRY_REGISTER], f"unexpected changed: {changed}"
 
     dec_main_new = decrypt_entry(out_by_idx[ENTRY_MAINPAGE], keys_db)
     diffs = [i for i in range(len(duoyi_main)) if duoyi_main[i] != dec_main_new[i]]
-    assert diffs and all(win_lo <= i < win_hi for i in diffs), "mainpage diff out of window"
+    assert diffs and all(win_lo <= i < win_hi for i in diffs), (
+        "mainpage diff out of window"
+    )
     assert dec_main_new == patched_main, "mainpage round-trip mismatch"
-    std_main = transpile(dec_main_new, zlib.decompress(out_by_idx[ENTRY_MAINPAGE]["comp"]), info_main)
+    std_main = transpile(
+        dec_main_new, zlib.decompress(out_by_idx[ENTRY_MAINPAGE]["comp"]), info_main
+    )
     assert b"mainpage" in std_main
 
     dec_reg_new = decrypt_entry(out_by_idx[ENTRY_REGISTER], keys_db)
-    std_reg = transpile(dec_reg_new, zlib.decompress(out_by_idx[ENTRY_REGISTER]["comp"]), info_reg)
+    std_reg = transpile(
+        dec_reg_new, zlib.decompress(out_by_idx[ENTRY_REGISTER]["comp"]), info_reg
+    )
+    assert std_reg[8:] == pyc_bytes[8:], "compiled marshal round-trip mismatch"
+    roundtrip_path = args.output.parent / "register_roundtrip.pyc"
+    roundtrip_path.write_bytes(std_reg)
     sys.path.insert(0, str(ROOT / "tools/script_link"))
-    from build_script_index import parse_pyc, walk_codes, decode_text
+    from build_script_index import parse_pyc, walk_codes
+
     root_code = parse_pyc(std_reg)
     names_all = set()
     funcs = set()
@@ -258,20 +318,45 @@ def main() -> int:
                     pass
     for banned in (b"CHttpObject", b"gameurl", b"REGISTER_URL", b"OpenUrl"):
         assert banned not in names_all, f"banned name present: {banned}"
-    for need in ("CRegTermsPanel", "CRegFormPanel", "CConfirm", "Show", "Step"):
+    for need in (
+        "CRegTermsPanel",
+        "CRegFormPanel",
+        "CConfirm",
+        "Show",
+        "Step",
+        "BuildRegistrationAccounts",
+        "SetRegisterFive",
+        "OnRegistrationComplete",
+    ):
         assert any(need in f for f in funcs), f"missing function: {need}"
     raw_consts = set()
-    for path, code in walk_codes(root_code):
+    for _path, code in walk_codes(root_code):
         for c in code.consts:
             if isinstance(c, (bytes, bytearray)):
                 raw_consts.add(bytes(c))
     stub = "伺服器尚未開放註冊，請稍後再試".encode("big5")
     assert stub in raw_consts, "stub Big5 bytes missing"
-    assert not any(isinstance(c, str) and "伺服器" in c
-                   for path, code in walk_codes(root_code)
-                   for c in code.consts), "stub leaked as unicode"
+    assert not any(
+        isinstance(c, str) and "伺服器" in c
+        for path, code in walk_codes(root_code)
+        for c in code.consts
+    ), "stub leaked as unicode"
+    for path in (b"login/regterms.dlg", b"login/regform.dlg"):
+        assert path in raw_consts, f"layout path missing: {path!r}"
+    for name in (b"CIMGCHECKBOX", b"CImageCheckBox", b"SetCheck", b"IsSelected"):
+        assert name in names_all, f"native checkbox API missing: {name!r}"
+    with tempfile.TemporaryDirectory(prefix="mx-registration-smoke-") as cwd:
+        subprocess.run(
+            [
+                str(args.python25.resolve()),
+                str(Path(__file__).with_name("harness.py2")),
+                str(roundtrip_path.resolve()),
+            ],
+            cwd=cwd,
+            check=True,
+        )
     print("[+] verify OK: only 337/4007 changed; mainpage diff = 9 bytes;")
-    print("    register round-trips with terms/form panels and stub text;")
+    print("    full compiled marshal round-trip + packed-module Py2.5 smoke OK;")
     print("    no network call names remain.")
     return 0
 

@@ -1,63 +1,153 @@
-# 注册界面原生重做（第一期：管道验证）
+# 注册原生重做：第二期（现行风格 + 注册五个账号）
 
-## 这是什么
+## 当前做到哪里
 
-把旧运营商时代的注册脚本换成我们自己写的、合乎游戏原生规范的实现，
-作为 UI 编辑器 x script.fls 联动的第一个实战。本期只求**管道跑通**：
-首页点「申請會員」-> 条款页 -> 表单页 -> 点确认只弹桩提示
-「伺服器尚未開放註冊，請稍後再試」，不发任何网络请求。
+第一期 1.1 的入口、条款、表单校验、桩提示、返回流程已由用户实机确认。
+第二期改用现行风格并加五账号勾选：**Linux 离线回归通过，Windows 实机未验**。
+这不是已接通的注册服务；服务端仍无注册接口，不会创建真实账号。
 
-## 做法（全部原生）
+## 用户定的行为
 
-| 环节 | 做法 |
-|---|---|
-| 入口 | 首页 mainpage（条目 337）「申請會員」分支本就有走 register 的原生代码，只是被服谓词挡住；打一个 9 字节定宽补丁把该谓词换成 False（与旧 v1 已实机验证的补丁逐字节相同） |
-| 脚本 | `login/register`（条目 4007）整模块换成本目录 `register.py`：条款页 `CRegTermsPanel`（reg1.dlg）+ 表单页 `CRegFormPanel`（reg2.dlg），`CCombPanel` 按名取件、`OnMessage` 分发、`Show/Step` 开关，与改密表单 `chgpwd` 同一套路 |
-| 对外接口 | `Show`/`ShowConfirmDlg`/`CConfirm`/`g_AccountInfo`/`g_ConfirmDlg` 等 loginin、netlogin、selectrole、mainpage 在用的接口全部保留，帐号确认框行为原样 |
-| 布局 | 本期不动 interface.fls：复用旧 `login/reg1.dlg`/`login/reg2.dlg`；2980 链接与图形验证码的占位控件在脚本里隐藏，步骤图沿用旧图 |
-| 打包 | 先 `build_python25.sh` 自建 CPython 2.5.6，再 `build_native_registration.py`：编译 -> 混淆 -> 5 段 XOR 加密 -> 重打包；原包只读、产物另存、只改 337/4007 两条、其余 5000 条负载逐字节不变，构建后自动逐项校验 |
+- 协议页：`login/service.dlg` 逐字拷贝为 `login/regterms.dlg`，
+  脚本按 `loginin.CServiceMessageDialog` 的 `loc_msg`/COutput 写法显示条款。
+- 表单：照原生改密页 `chgpwd.dlg` 派生 `login/regform.dlg`。
+  四框为帐号、密码、确认密码、邮箱；三个按钮为上一步、確認註冊、返回首頁。
+- 邮箱下方加原生勾选框「註冊五個帳號」，默认**不勾选**，方框和文字都可点。
+- 不勾选：一个帐号，帐号和密码均为 6～16 位 ASCII 字母/数字。
+- 勾选：基础帐号为 **6～14 位**（用户已选定），生成恰好五个：
+  `account`、`account_1`、`account_2`、`account_3`、`account_4`。
+  第一项不加后缀、没有 `_0`；后四项加后缀后最长仍为 16 位。
+- 五份注册资料共用同一密码和邮箱，密码仍为 6～16 位字母/数字。
+  下划线只用于自动后缀，基础帐号输入框仍不接受下划线。
+- 邮箱沿原校验口径：5～50 位，`^[_.\-a-z0-9A-Z]+@[_.\-a-z0-9A-Z]+$`；
+  输入框限制同步为 50。不是完整 RFC 邮件地址校验。
+- 切换勾选后，长度限制和提示同步改变。已经填了 15～16 位再勾选，
+  原输入不截断；提交会要求缩短基础帐号，不会偷偷改名。
 
-## 第一期实机教训（1.1 已修）
+### 当前测试包的提交提示（不是成功提示）
 
-1. **UI 文字必须用 Big5 字节串**：脚本里所有提示/按钮文字在原版都是
-   Big5 编码的字节串；1.0 传了 unicode，原生弹框在内部做字节拼接时
-   解码失败且被客户端吞掉异常，界面上表现为点「下一步」没反应。
-   1.1 起源码内所有 UI 文案一律写成 Big5 字节字面量（见 MSG_* 常量）。
-2. **诊断日志**：表单每次收到消息、提交的每个阶段都会追加写到
-   客户端目录 `photo\register_diag.txt`（纯 ASCII、写失败静默）。
-   客户端会吞脚本异常，以后再遇「没反应」先看这个文件。
+单帐号仍弹「伺服器尚未開放註冊，請稍後再試」。五帐号在这句之后列出
+五个**待注册**名称，并明确标「尚未註冊」。不发网络请求、不报注册成功，
+提示和日志都不显示密码。
 
-## 与旧版的已知差异（记账）
+### 完成弹窗已预留，真实注册仍待服务端
 
-1. 旧 reg2.dlg 没有独立帐号框，**邮箱即帐号**（原版式如此）；用户定的
-   「帐号+密码+确认+邮箱」四字段要等第二期改版 layout 后实现。
-2. 条款文本原由外部模块 `servicedata.SERVICE_MSG` 提供，该模块不在本
-   版本 script.fls 里；缺失时用源码内的**占位条款**（正式条款待补）。
-   `CConfirm` 仍按原样引用 `servicedata.CONFIRM_MSG`（既有流程，不动）。
-3. 条款页所有非「同意」按钮统一返回首页（旧版 msgid 2 是关闭游戏，
-   那是把注册当入口页时代的语义；现在从首页进入，返回首页才对）。
-4. 旧版的输入框子类（限字母数字、焦点提示气泡）第一期未复刻：改在
-   提交时校验密码为字母数字；提示气泡第二期随 layout 一起补。
-5. 删除的旧流程：HTTP 注册、2980 邮箱/手机验证、图形验证码、
-   `gameurl`/`net.CHttpObject`/`OpenUrl`——构建校验会断言这些名字
-   不出现在新模块里。
+`CRegFormPanel.OnRegistrationComplete(registered_accounts)` 是预留回调。
+只有真实请求送出后由传输层设置 `m_PendingAccounts`、服务端确认完整成功集合，
+才显示「註冊完成！以下5個帳號已建立」并逐行列出五个帐号。
 
-## 第二期（待用户导出模板后）
+当前桩路径不设置 pending、不调用此回调，因此本包绝不假报成功。
+部分成功、重复名称、错误名单、未提交/过期回覆、旧表单回覆均不能报全成功。
+离线回归对成功回调使用的是**模拟回覆**，不是服务端联调证据。
+将来接通时仍需实现：真实注册接口、批次/事务、同邮箱五帐号规则、下划线
+后缀支持、重名及部分失败处理；不能覆盖已有帐号或擅自改变编号。
 
-请用资源编辑器打开真实 interface.fls 按真名导出并回传：
-`login/chgpwd.dlg`、`login/reg1.dlg`、`login/reg2.dlg`、`login/confirm.dlg`。
-拿到后：给表单加上独立帐号框（改 reg2.dlg 或仿 chgpwd 新建布局）、
-补焦点提示气泡、条款定版，再出第二期测试包。
+## 批量发送与重名：已定后续规则（接口仍未实现）
 
-## 用法
+2026-10-14 用户选定「一条发送＋重名顺延」。当前实际代码仍只在内存
+准备固定候选；没有网络请求、数据库查重或真实顺延实现。
+
+服务端接通时按以下规则做：
+
+1. 客户端提交一条批量业务请求：基础帐号、注册数量 1/5、共用密码/邮箱、
+   本批编号。不是连续五次单帐号请求，也不是仅靠一个勾选标记猜名单。
+2. 五帐号模式由服务器按原帐号、`_1`、`_2`……递增，跳过已经注册的名称，
+   不覆盖旧帐号。比如原帐号和 `_1` 已被占用，实际可返回 `_2`～`_6`。
+3. 最多尝试到 `_99`，且每个最终帐号仍不得超过 16 位；14 位基础帐号
+   只能尝试原名及 `_1`～`_9`，`_10` 已超长；13 位及更短才可到 `_99`。
+4. 找齐五个可用名称才整批创建；找不齐则整批不创建、提示换基础帐号。
+   查重和创建必须遵守服务器唯一性/事务约束，不能客户端先查再发五次。
+5. 服务器成功回覆实际创建的五个帐号；弹窗和登录预填均用实际结果，
+   不继续使用客户端示意候选。所有五个共用同一密码和邮箱。
+6. 同一批编号重试返回该批原结果，不能因为断网/双击额外再创建五个。
+   服务端需要校验批次与请求资料的一致性；本规则没有实现成运行代码。
+7. 不勾选时仍只注册一个；单帐号重名不擅自顺延改名。
+
+还要做：当前 `OnRegistrationComplete` 校验固定 pending 名单，接通顺延接口前
+必须调整为核验批次、实际成功数量及合法的服务端分配名单，并覆盖重名、范围
+耗尽、并发冲突和重试测试。现有离线成功模拟不是这些服务端行为的验收证据。
+这定义的是业务规则，不是已经确定的原生封包格式；协议号、编码与传输接线
+仍要在真实注册接口阶段核实，不在本轮偷偷实现或连网。
+
+## 原生依据与编码纪律
+
+- 游戏模块 `register.py` 是自写源码，不执行反编译稿；用 CPython **2.5.6** 编译。
+  `Show`/`Step`/`ShowConfirmDlg`/`CConfirm`/`g_AccountInfo` 等对外接口保留。
+- 编辑框使用原生 `combmacro.CEDIT` + `SetLimit`/`m_IsPassword`/`SetNextEdit`，
+  提示区使用 `CRICHTEXT`；输入子类的 `AddChar` 过滤非法字符。
+- 勾选用原生工厂（签名已按原 code object 反汇编核对）：
+  `CIMGCHECKBOX(box_class, objname, parent, filename, manual, msgid)`，
+  绑定布局的 `chk_five`，`box_class=interface.CImageCheckBox`，消息号 4。
+- `CImageCheckBox.LeftUp` **先发消息，再自动翻转**；所以设 `manual=True`，
+  注册页收到 4 时只翻转一次，防止一次点击刚勾上又取消。
+- 皮肤使用原生资源 `combdialog/登录注册/按钮/勾选框.igs`（GBK 路径，
+  原 `data/ui_res_style1.py` 含此字节常量）；没有自造图片、包外图或烤字按钮。
+  真实包是否有该皮肤以及显示/点击效果仍需 Windows 实机验。
+- 已核对原 `CEdit.SetLimit` 只写 `m_Limit`，`GetText` 不按限长截取已有资料。
+- 所有 UI 出口文案为 **Big5 字节串**。1.0 曾传 unicode 导致原生弹框
+  静默失败，1.1 已实机证实修复；不可现代化成 Unicode/f-string。
+- `.dlg` 的显示文字为 Big5、资源路径为 GBK，不能整份重编码。
+  生成器只转义控制字节/引号/反斜杠，原字节往返与编辑器解码文案均有测试。
+- `photo\register_diag.txt` 只记流程、数量、异常类型，不记录帐号、密码或邮箱。
+
+## 源码与模板
+
+`templates/` 的五个文件来自用户导出，回归钉住 SHA-256 防止损坏/乱码母版：
+
+| 文件 | 来源 | SHA-256 |
+|---|---|---|
+| chgpwd.dlg | reg.zip | b20859a172a51cfecc3059f86618d8a28a40d84fbf99c343c11ac1a3d7408c7e |
+| confirm.dlg | reg.zip | b53ac5347d413d76cdb7e4b0a58b5cc413826fda956425ba490ef965d3c2130c |
+| reg1.dlg | reg.zip，仅历史参考 | 244a6507decb4e300b0e02fe5d46f1beb6bd1450a3c2da55239f90009fe1c1da |
+| reg2.dlg | reg.zip，旧风格作废 | 64be77d148f853a99ba5f47c9e6d722012a4e77462c66263df1ee93b08ef043a |
+| service.dlg | Drive `1KaFXbFxU-VOJ5OJ0UIS7rINmn9uhJagS` | 820f09a8cd4e8ff80494cffdfc6de042550f897f7747c6345de793fa68b46d26 |
+
+条款文本仍取 `servicedata.SERVICE_MSG`；该模块不在本版 script.fls 中，
+缺失时用明确标注的占位条款，不能把复制布局说成已拿到正式条款文本。
+`CConfirm` 仍原样引用 `servicedata.CONFIRM_MSG`，既有流程不改。
+
+## 构建与回归（仓库侧，不要求用户安装解释器）
 
 ```sh
-sh tools/registration/build_python25.sh            # 一次性，产物在 /tmp/py25build
+# 参数可换成仓库外的持久目录；/tmp 会随沙箱重建而丢失。
+sh tools/registration/build_python25.sh /home/user/py25build
+python3 tools/registration/build_regform_dlg.py
 python3 tools/registration/build_native_registration.py \
-    --python25 /tmp/py25build/cpython-2.5.6/python
-# 产物：tools/registration/out/script.fls（git 忽略，不入库）
+    --python25 /home/user/py25build/cpython-2.5.6/python
+MXSJ_PYTHON25=/home/user/py25build/cpython-2.5.6/python \
+    python3 -m unittest discover -s tools/registration/tests -v
+ruff check tools/registration
+python3 tools/devkit/check_windows_compat.py tools/registration
 ```
 
-测试方法（用户在已还原原包的测试副本上）：把产物改名 script.fls 放回
-data 目录启动游戏，首页点「申請會員」应出现条款页；同意进表单；
-乱填应报格式错；填对点确认应弹「伺服器尚未開放註冊，請稍後再試」。
+构建器只读原包，拒绝输入/输出同名或硬链接别名；新包默认在 `out/`（Git 忽略）。
+只改条目 337（首页入口 9 字节窗口）及 4007（整个注册模块），其余 5000 条
+**压缩负载逐字节不变**；条目数、身份与顺序保持原样。
+新注册模块解密/转译后完整 marshal 与编译前逐字节相等，再直接对从新包
+读回的模块运行真 2.5.6 离线冒烟，任何失败都不得交付。
+
+本目录含嵌入式游戏源码和仓库侧离线构建器，不是新增的桌面编辑器/EXE 产品。
+Python 3 构建器/测试按仓库 ruff 规则检查；两份必须在 2.5.6 运行的 `.py`
+只豁免 `UP` 现代化规则（`.format`、f-string 和删除 coding 声明会破坏原解释器）。
+`harness.py2` 由真 2.5.6 执行，不能以 Python 3 能否解析它判断游戏兼容性。
+
+## 第二期 Windows 验收
+
+只在**游戏测试副本**操作，备份旧 `script.fls` 和 `interface.fls`，勿改原安装包。
+测试包将包含 `data/script.fls`、`interface_import/login/` 下两份新布局及测试说明。
+
+1. 资源编辑器打开测试副本的 `interface.fls`，分别按路径导入：
+   `regterms.dlg` 填完整路径 **`login/regterms.dlg`**；
+   `regform.dlg` 填完整路径 **`login/regform.dlg`**，不能只填文件名。
+2. 保存成新的 `interface_patched.fls`，确认写后逐条校验通过。
+   将这个新包复制到测试副本并命名 `data/interface.fls`（旧包先备份）。
+3. 将测试包的 `data/script.fls` 复制到测试副本对应位置，启动游戏点「申請會員」。
+4. 验协议页/四框/三按钮/Tab/密码遮挡；勾选方框和文字应都可切换且只切换一次。
+5. 用假资料 `account` / `Preview42` / `preview@example.invalid`：
+   不勾只提示尚未开放；勾上列出 account、account_1～account_4 并注明尚未注册。
+   先填 15～16 位再勾，提交应提醒缩短而不是截断原输入。
+6. 若打不开/点了没反应，只回传失败步骤及脱敏的诊断/截图，不要发送真实密码。
+
+这轮还要实证：新增的明文 `.dlg` 条目是否被原生游戏正确加载。
+真实五帐号创建与真实成功回覆不在本阶段 Windows 验收范围内。
+提交推送、Drive 上传仍需用户逐轮明确授权；没有授权不得发布。
