@@ -23,7 +23,7 @@
 | 只读复核链（catalog / API / web） | H/I/J 已收尾 | 可运行，只读 | catalog 34/34；review_api 27/27；验收套件 68 通过 + 2 跳过（需 uvicorn 在 PATH 上）；网页未装 node_modules 未跑 |
 | 地图编辑器 | 一期 + PR #27 修复 + 10-14 补齐约定（`bootstrap.py`、`启动地图编辑器.bat`、`build_exe.bat`、ruff 0） | GIRB 300/429 扇区仍解不出（明确失败）；Windows EXE 未实机构建/冒烟 | **88/88** 通过（含 6 条 bootstrap 测试；GUI 冒烟在沙箱用 Qt offscreen + 桩 libGL 跑过）；ruff 0；wincompat 0/0 |
 | 资源编辑器 | 0.3.5 + 10-14 补 `build_exe.bat` / spec / `run.py` / requirements | 写回目录不变量 P0 已修；精灵解码器对真实 interface.fls 两条原始精灵（条目 1163/52227）未覆盖——0.3.4 起未改动者只提示不拦保存，待用户导出该两条样本后定点补解码；Windows EXE 未验 | **40/40** 通过（含 0.3.5 工具栏冒烟）；spec 干跑 onedir/onefile 通过 |
-| UI 编辑器 | 0.6.0 + 10-14 补 `build_exe.bat` / spec / `run.py` / requirements | M3.3 九宫格未做；EXE 未验（0.5.3 已由用户在真实 Windows 实机跑通加图存包主流程；0.6.0 画布右键/复制粘贴/等比缩放/控件锁定待用户手感确认）；下一大功能已定：与 `script.fls` 联动（离线索引→代码现造控件的真皮肤渲染→加控件自动接线/改名护栏→脚本编辑与写回），第一个实战为注册界面原生重做，见 §5 | **112 通过 + 1 跳过**（含画布剪贴板/右键菜单、等比缩放、控件锁定共 18 条新测）；ruff 0；wincompat 0/0 |
+| UI 编辑器 | 0.7.0 + 10-14 补 `build_exe.bat` / spec / `run.py` / requirements | M3.3 九宫格未做；EXE 未验（0.5.3 已由用户在真实 Windows 实机跑通加图存包主流程；0.6.0 画布右键/复制粘贴/等比缩放/控件锁定待用户手感确认）；与 `script.fls` 联动第一期已落地（静态索引随包、打开布局自动关联脚本、左栏「脚本」页、代码现造按钮按真皮肤渲染；控件树每行带锁定小图标（默认开锁，点切换，与画布锁定同步，顺带修复控件树点击选中失效的反查缺陷），真包效果待用户用真实 `interface.fls` 验证（仓库无此包）；联动后续（自动接线/脚本写回）与注册界面原生重做见 §5 | **120 通过 + 1 跳过**（含脚本联动 7 条、控件树锁定 1 条新测）；ruff 0；wincompat 0/0 |
 | 游戏服务端（`mxsj_server`） | 契约 v0.1 + 设计文档 | **无运行代码**；账号/网关/数据库/地图/战斗均未开始 | 架构测试 150 跑，**1 FAIL + 1 ERROR**（见 §3.1） |
 | `mock_server.py` | 历史 Mock，协议号已按客户端修正 | 从未与真机联调；PR #25 顺带改的帧长度 3→2 未单独评审 | 未运行 |
 | 文档 | 10-14 整理：AGENTS.md / STATUS.md / 归档目录；README 已刷新；新增 `docs/PYTHON_TOOL_CONVENTIONS.md`（工具开发约定） | — | 仓库内相对链接全部可解析（脚本校验） |
@@ -80,7 +80,7 @@
 ## 5. 下一步（优先级）
 
 1. 修 §3.1（单独一个小提交），让架构套件与 `--check` 回绿。
-2. **UI 编辑器 × script.fls 联动 + 注册界面原生重做**（用户 2026-10-14 定的方向，合并为一条线）：① 离线扫描已还原脚本（4,442/5,002）生成「布局⇄脚本」索引，打开布局自动关联脚本；② 代码现造的按钮（如 login 的占位锚点）按真皮肤渲染，不再显示默认占位；③ 加控件自动接线（GetObject 认领 + OnMessage 骨架 + 空闲消息号）、改名/删除引用护栏；④ 脚本可在编辑器内查看/编辑，保存时布局与脚本一起出新包（写回管线 `tools/decompiler/pack_and_encrypt.py` 已验证往返逐字节一致；编辑后源码编译依赖 CPython 2.5.6，Windows 侧打包方式待攻关，不行先走「编辑器出补丁、仓库侧打包」）；⑤ 第一个实战：注册界面按原生重做（原生 `.dlg` + 原生脚本套路，参照 `chgpwd` 类原生表单；提交先留桩并明示未接通）。硬边界：546 个 stub + 12 个转译失败的脚本无源码、不可联动编辑，须明确标记；写脚本前先拿无害小改动做真机验证。
+2. **UI 编辑器 × script.fls 联动 + 注册界面原生重做**（用户 2026-10-14 定的方向，合并为一条线）：① ✅（0.7.0）离线索引生成器 `tools/script_link/build_script_index.py`：不跑反编译、直接转译+解析 Py2.5 marshal/字节码挖掘，4,987/5,002 个模块挖成（15 条基线转译失败未做边界修复），关联 2,920 个布局、13,162 个被取用名、19 个高置信代码皮肤锚点；随包 `script_index.json`（1.3 MB，查询层 `core/script_index.py`）。② ✅（0.7.0）代码现造的按钮（如 login 的占位锚点）按真皮肤渲染，不再显示默认占位（`painters._paint_code_skin`；皮肤覆盖仅限高置信工厂模式，其余代码控件仍占位）；左栏「脚本」页显示引用模块/被取用控件/锚点与皮肤详情，点名字回画布选中；打开布局状态栏报关联计数；③ 加控件自动接线（GetObject 认领 + OnMessage 骨架 + 空闲消息号）、改名/删除引用护栏；④ 脚本可在编辑器内查看/编辑，保存时布局与脚本一起出新包（写回管线 `tools/decompiler/pack_and_encrypt.py` 已验证往返逐字节一致；编辑后源码编译依赖 CPython 2.5.6，Windows 侧打包方式待攻关，不行先走「编辑器出补丁、仓库侧打包」）；⑤ 第一个实战：注册界面按原生重做（原生 `.dlg` + 原生脚本套路，参照 `chgpwd` 类原生表单；提交先留桩并明示未接通）。硬边界：546 个 stub + 12 个转译失败的脚本无源码、不可联动编辑，须明确标记；写脚本前先拿无害小改动做真机验证。
 3. 判定 §3.2，统一 `notes/` 与编辑器文档。
 4. 三个编辑器在 Windows 实机跑 CONVENTIONS §5.3 冒烟（启动 bat → `build_exe.bat` → 双击 EXE），把结果回填 §2 / §3.5；沙箱侧 10-14 已把完整测试（含 GUI 组）跑绿，不再需要「有桌面的机器跑测试」这一步。
 5. 二进制清理（需授权）与 LICENSE/权利说明。
@@ -90,6 +90,7 @@
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-14 | UI 编辑器 0.7.0（脚本联动第一期 + 控件树锁定图标）：控件树改为两列、每行第二列小锁（默认开锁图标，点切换、与画布锁定双向同步；顺带修好控件树点击选中的反查失效）。新增索引生成器 `tools/script_link/`（基线转译+marshal/字节码挖掘 4,987/5,002 模块、2,920 布局、生成用时约 10 秒、5 条合成测试）；编辑器侧 `core/script_index.py` 查询层 + 随包 `data/script_index.json`；打开布局自动关联脚本（状态栏报数、左栏新增「脚本」页、点控件名回画布选中），代码现造按钮按真皮肤渲染（`_paint_code_skin`，取不到图回落占位）。119 通过 + 1 跳过、ruff 0、wincompat 0/0、从 zip 复跑绿；真包皮肤效果待用户用真实 `interface.fls` 验证（仓库无此包）。联动后续：脚本源码查看/编辑、加控件自动接线、脚本写回（§5 第 2 项），注册界面原生重做为第一个实战。 |
 | 2026-10-14 | 三个编辑器补齐工具约定 ①②：`map_editor` 新增 `bootstrap.py` + `启动地图编辑器.bat`、`tests/test_bootstrap.py`，ruff 74→0（定点改：E501 换行、`itertools.pairwise`、`zip(strict=True)`、`Iterator` 真实导入、`assertRaises(FlsError)` 等），`build.bat` 改名 `build_exe.bat` 并重写为纯 ASCII，spec 补 `exclude_binaries`，修 `test_cli_and_isolation` 读到开发者真实配置的隔离漏洞；`resource_editor` / `ui_editor` 各加 `build_exe.bat`、`<tool>.spec`、`run.py`、`requirements*.txt`、`.gitignore`（`build/` `dist/` `启动日志.txt`）。沙箱用桩库跑通 Qt offscreen：三套测试 88 / 37 / 92+1 跳过全绿；三份 spec onedir + onefile 干跑通过。**Windows 实机未验**（§3.5 ③）。 |
 | 2026-10-14 | 用户实机确认：UI 编辑器 0.5.3 在真实 `interface.fls` 上加图存包成功、使用无报错——P0 写回修复 + 0.5.3 保存明示两轮闭环（§4 该行 UI 侧销项；资源编辑器同路径与 EXE 路径仍待验）。 |
 | 2026-10-14 | 用户立「原生优先」规矩并写入 `AGENTS.md` §4（第 12、13 条）：原生能实现的必须按原生规范做；原生做不到、只能用替代方式的，必须反复向用户确认并获明确同意才能做。同时用户判定注册预览 v3.3 不规范（代码 overlay 拼控件、整图烤字按钮、包外散图）并作废——待其在 Windows 测试副本还原原包（`script.fls.before-registration-preview` 改回，SHA-256 `8b6e9266…`）并移除 `photo/registration_preview_v3`，勿再分发 v3/v3.2/v3.3。重做方向已定（§5 第 2 项）：注册界面按原生重做（原生 `.dlg` + 原生脚本套路，提交先留桩），与 UI 编辑器 × script.fls「一步到位」联动合并为一条线，注册界面为第一个实战。本轮发布：UI 编辑器 0.6.0（右键/复制粘贴/等比/锁定，Drive `1PHmkw04IIwRCdFT9Q58qfgxRS9WLrKUN`，MD5 `dd661dc6e60222c33a5ab4e0b6d0fd05`）与资源编辑器 0.3.5（工具栏，Drive `1ylUzM_i82-lzfaEp3WVx37gsNtNie4bo`，MD5 `ef29abe85fd1b7d7f1e0e00620f7eb31`）已提交推送并上传网盘。 |
