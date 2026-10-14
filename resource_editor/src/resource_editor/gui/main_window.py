@@ -91,7 +91,8 @@ class MainWindow(QMainWindow):
         self.resize(1240, 800)
         self._settings = QSettings("MXSJ", "resource_editor")
         self._docs: dict[str, PackDocument] = {}
-        self._kinds_map: dict[str, list[EntryKind]] = {}
+        self._kinds_map: dict[str, list[EntryKind | None]] = {}
+        self._inventory_jobs: set[str] = set()
         self._current_key: str | None = None
         self._workspace: Path | None = None
         self._current = -1
@@ -412,24 +413,55 @@ class MainWindow(QMainWindow):
 
         def job(progress):
             doc = PackDocument.open(p)
-            kinds = []
-            for i in range(doc.count):
-                kinds.append(doc.entry_kind(i))
-                if i % 250 == 0:
-                    progress(i, doc.count)
-            named = doc.resolve_names()  # 顺带把能认出的真名认了
+            named = doc.resolve_names(quick=True)
             progress(doc.count, doc.count)
-            return doc, kinds, named
+            return doc, [None] * doc.count, named
 
         def done(result) -> None:
             doc, kinds, named = result
             self._docs[key] = doc
             self._kinds_map[key] = kinds
             suffix = f"（识别真名 {named} 条）" if named else ""
-            self.log(f"已打开 {doc.path}：{doc.count} 个条目{suffix}")
+            self.log(f"已打开 {doc.path}：{doc.count} 个条目{suffix}；"
+                     "已显示索引，分类和引用真名在后台补齐。")
             self._activate_pack(key)
+            self._schedule_inventory(key)
 
         self._run_job(Job(job, "打开资源包"), done)
+
+    def _schedule_inventory(self, key: str) -> None:
+        """索引先显示，完整扫描最多每包一个后台任务，不阻塞打开。"""
+        if key in self._inventory_jobs:
+            return
+        doc = self._docs.get(key)
+        if doc is None:
+            return
+        epoch, archive = doc._kind_epoch, doc.archive
+        self._inventory_jobs.add(key)
+
+        def job(_progress):
+            kinds = [doc.entry_kind(i) for i in range(doc.count)]
+            return kinds, doc.resolve_names()
+
+        def finish(result=None):
+            self._inventory_jobs.discard(key)
+            if self._docs.get(key) is not doc:
+                return
+            if doc._kind_epoch != epoch or doc.archive is not archive:
+                if not self._busy:
+                    self._schedule_inventory(key)
+                return
+            if result is None:
+                self.log("后台识别失败；仍可按页浏览或选择条目。")
+                return
+            kinds, named = result
+            self._kinds_map[key] = kinds
+            if key == self._current_key and not self._busy:
+                self._grid.update_inventory(kinds)
+                self.log(f"后台识别完成：{doc.count} 个类型，{named} 个真名。")
+
+        self._register_job(Job(job, "后台识别资源"), finish,
+                           on_error=lambda _text: finish())
 
     def _activate_pack(self, key: str) -> None:
         doc = self._docs[key]
@@ -818,9 +850,10 @@ class MainWindow(QMainWindow):
                 if key[0] != self._current_key)
         doc = self._doc
         assert doc is not None and self._current_key is not None
-        kinds = [doc.entry_kind(i) for i in range(doc.count)]
+        kinds = [None] * doc.count
         self._kinds_map[self._current_key] = kinds
         self._grid.set_document(doc, kinds)
+        self._schedule_inventory(self._current_key)
         self._sync_doc_marks()
         if 0 <= select < doc.count:
             self._current = -1
@@ -1127,8 +1160,7 @@ class MainWindow(QMainWindow):
                 self._kinds_map.pop(old_key, None)
             new_key = _key_of(target)
             self._docs[new_key] = doc
-            self._kinds_map[new_key] = [doc.entry_kind(i)
-                                        for i in range(doc.count)]
+            self._kinds_map[new_key] = [None] * doc.count
             self._current_key = new_key
             if save_as:
                 self.set_workspace(target.parent)

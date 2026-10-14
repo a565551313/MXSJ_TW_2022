@@ -191,10 +191,11 @@ class TestGuiImport(unittest.TestCase):
             mock.patch.object(panel._tree, "itemAt", return_value=root),
             mock.patch("ui_editor.ui.panels.QMenu") as menu,
         ):
+            action = mock.Mock()
+            menu.return_value.addAction.side_effect = [action, mock.Mock()]
             panel._show_context_menu(QPoint())
-            action = menu.return_value.addAction.return_value
             self.assertEqual(
-                menu.return_value.addAction.call_args.args[0], "导入布局文件…"
+                menu.return_value.addAction.call_args_list[0].args[0], "导入布局文件…"
             )
             action.triggered.connect.call_args.args[0]()
         self.assertEqual(seen, [str(self.src)])

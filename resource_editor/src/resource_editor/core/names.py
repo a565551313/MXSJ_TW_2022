@@ -153,7 +153,8 @@ def extract_resource_paths(data: bytes) -> list[str]:
 
 def build_name_map(entry_ids: list[int],
                    read_stored: Callable[[int], bytes],
-                   known: dict[int, str] | None = None) -> dict[int, str]:
+                   known: dict[int, str] | None = None,
+                   *, references: bool = True) -> dict[int, str]:
     """为一张目录表算出 {原始序号: 显示名}，未命中的不入表。
 
     ``read_stored(原始序号)`` 供扒取阶段读取种子 .dlg 的存储
@@ -172,6 +173,8 @@ def build_name_map(entry_ids: list[int],
             result[index] = path
             if path.lower().endswith(".dlg"):
                 seeds.append(index)
+    if not references:
+        return result
     for index in seeds:
         try:
             plain = unpack_dlg_text(read_stored(index))

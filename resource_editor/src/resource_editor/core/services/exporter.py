@@ -146,6 +146,7 @@ def export_entries(doc: PackDocument, indexes: list[int],
     失败不中断整批，结果以 {"entries", "files", "failed"} 汇报。
     """
     out_dir.mkdir(parents=True, exist_ok=True)
+    doc.resolve_names()  # 用户显式导出时，后台/按需补全真名，保留目录导出语义
     sources = _source_paths(doc, protected_paths)
     pack_stem = Path(doc.path).stem if doc.path else "pack"
     used: set[Path] = set()

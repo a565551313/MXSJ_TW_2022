@@ -7,7 +7,7 @@
 """
 from __future__ import annotations
 
-from PySide6.QtCore import QPoint, QSize, Qt, Signal
+from PySide6.QtCore import QItemSelectionModel, QPoint, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
@@ -41,7 +41,7 @@ _KIND_COLORS = {
 }
 
 
-def _placeholder_icon(kind: EntryKind) -> QIcon:
+def _placeholder_icon(kind: EntryKind | None) -> QIcon:
     """按类型生成占位图标（真实缩略图未就绪时显示）。"""
     pix = QPixmap(72, 72)
     color = _KIND_COLORS.get(kind, QColor(96, 96, 104))
@@ -52,7 +52,7 @@ def _placeholder_icon(kind: EntryKind) -> QIcon:
     font.setPixelSize(15)
     font.setBold(True)
     painter.setFont(font)
-    painter.drawText(pix.rect(), Qt.AlignCenter, KIND_LABELS.get(kind, "?"))
+    painter.drawText(pix.rect(), Qt.AlignCenter, KIND_LABELS.get(kind, "待识别"))
     painter.end()
     return QIcon(pix)
 
@@ -68,7 +68,7 @@ class EntryGridPanel(QWidget):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._doc: PackDocument | None = None
-        self._kinds: list[EntryKind] = []
+        self._kinds: list[EntryKind | None] = []
         self._view: list[int] = []
         self._page = 0
         self._per_page = DEFAULT_PAGE_SIZE
@@ -161,7 +161,7 @@ class EntryGridPanel(QWidget):
         layout.addWidget(self._list, 1)
 
     # ---------------------------------------------------------- 接口 ----
-    def set_document(self, doc: PackDocument, kinds: list[EntryKind]) -> None:
+    def set_document(self, doc: PackDocument, kinds: list[EntryKind | None]) -> None:
         """切换当前包（保留已有过滤与每页设置，页码自动夹紧）。"""
         self._doc = doc
         self._kinds = list(kinds)
@@ -171,6 +171,20 @@ class EntryGridPanel(QWidget):
         if self._select_mode:
             self.selection_changed.emit(0)
         self._rebuild_view()
+
+    def update_inventory(self, kinds: list[EntryKind | None]) -> None:
+        """后台补分类/名字，保留当前页与多选集合。"""
+        selected = self._list.currentItem()
+        index = selected.data(_ROLE_INDEX) if selected is not None else -1
+        self._kinds = list(kinds)
+        self._rebuild_view()
+        for item in self._page_items():
+            if item.data(_ROLE_INDEX) == index:
+                if self._select_mode:
+                    self._list.setCurrentItem(item, QItemSelectionModel.NoUpdate)
+                else:
+                    self._list.setCurrentItem(item)
+                break
 
     def refresh_header(self) -> None:
         doc = self._doc
@@ -352,7 +366,7 @@ class EntryGridPanel(QWidget):
                              else _placeholder_icon(self._kinds[index]))
                 item.setToolTip(
                     f"#{index} {self._doc.label(index) if self._doc else ''} · "
-                    f"{KIND_LABELS.get(self._kinds[index], '')}")
+                    f"{KIND_LABELS.get(self._kinds[index], '待识别')}")
                 if self._select_mode and index in self._selected_set:
                     item.setSelected(True)
         finally:

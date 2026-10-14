@@ -64,6 +64,7 @@ class ResourceTreePanel(QWidget):
     """
 
     open_pack_layout = Signal(str, str)  # (包路径, 资源路径)
+    open_pack_path = Signal(str)
     import_pack_layout = Signal(str)    # 包根右键导入
     open_loose_file = Signal(str)        # 散装 .dlg 路径
     choose_resource_dir = Signal()
@@ -108,6 +109,8 @@ class ResourceTreePanel(QWidget):
         menu = QMenu(self)
         action = menu.addAction("导入布局文件…")
         action.triggered.connect(lambda: self.import_pack_layout.emit(data[1]))
+        open_action = menu.addAction("按包内路径打开布局…")
+        open_action.triggered.connect(lambda: self.open_pack_path.emit(data[1]))
         menu.exec(self._tree.viewport().mapToGlobal(pos))
 
     def clear_pending(self) -> None:
@@ -165,6 +168,24 @@ class ResourceTreePanel(QWidget):
         self._tree.addTopLevelItem(root)
         root.setExpanded(False)
         self._roots[key] = root
+
+    def add_known_layout(self, pack_path: str, res_path: str) -> None:
+        """补入经包内回读验证的路径，不拆根节点，不挂幽灵叶子。"""
+        self.add_pack(pack_path, [res_path])
+        root = self._roots[("pack", pack_path)]
+        data = ("pack", pack_path, res_path)
+        for i in range(root.childCount()):
+            if root.child(i).data(0, Qt.ItemDataRole.UserRole) == data:
+                return
+        leaf = QTreeWidgetItem([res_path])
+        leaf.setData(0, Qt.ItemDataRole.UserRole, data)
+        _style_leaf(leaf, res_path)
+        root.addChild(leaf)
+        present = sum(not root.child(i).font(0).italic()
+                      and root.child(i).data(0, Qt.ItemDataRole.UserRole)[0] == "pack"
+                      for i in range(root.childCount()))
+        root.setText(0, f"{Path(pack_path).name}（{present} 个布局）")
+        self._apply_search(self._search.text())
 
     def add_loose_dir(self, dir_path: str | Path) -> None:
         """把一个散装 .dlg 目录挂到树上（只保留 .dlg 与含它的目录）。"""

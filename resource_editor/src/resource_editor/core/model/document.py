@@ -57,6 +57,7 @@ class PackDocument:
         self._kind_epoch = 0
         self._kind_cache: dict[int, tuple[int, detect.EntryKind]] = {}
         self._names: dict[int, str] | None = None  # 原始序号→真名
+        self._name_references_ready = False
         self.history = History()
 
     # ---------------------------------------------------------- 打开 ----
@@ -161,25 +162,23 @@ class PackDocument:
         return self.archive.stored_head(slot.origin, 512)
 
     # ---------------------------------------------------- 真名识别 ----
-    def resolve_names(self) -> int:
-        """为 0SLF 条目识别真名，返回识别出的条数（幂等）。
-
-        字典命中给 .dlg 条目命名，再读这些布局扒出其引用的图片
-        路径反查目录（详见 core.names）。识别需读种子条目负载，
-        打开大包时应由后台任务调用；label() 首次被问到也会惰性
-        触发。识别失败绝不影响文档可用性。
-        """
+    def resolve_names(self, *, quick: bool = False) -> int:
+        """quick 仅按索引匹配字典，零负载 IO；完整引用扫描由后台执行。"""
         if self.archive.kind != "0slf":
             return 0
-        if self._names is None:
+        if self._names is None or (not quick and not self._name_references_ready):
+            archive = self.archive
             try:
-                entry_ids = [meta.entry_id
-                             for meta in self.archive.original_metas]
-                self._names = _names.build_name_map(
-                    entry_ids, self.archive.read_stored)
+                result = _names.build_name_map(
+                    [meta.entry_id for meta in archive.original_metas],
+                    archive.read_stored, references=not quick)
             except Exception:
-                self._names = {}
-        return len(self._names)
+                return self.named_count
+            # 保存后换基线时，旧归档的名字不能写到新下标。
+            if self.archive is archive:
+                self._names = result
+                self._name_references_ready = not quick
+        return self.named_count
 
     @property
     def named_count(self) -> int:
@@ -194,7 +193,7 @@ class PackDocument:
         slot = self._slots[index]
         if slot.path_name:
             return slot.path_name
-        self.resolve_names()
+        self.resolve_names(quick=True)
         origin = slot.origin
         if origin is not None and self._names:
             return self._names.get(origin)
@@ -213,7 +212,7 @@ class PackDocument:
         slot = self._slots[index]
         if slot.path_name:
             return slot.path_name
-        self.resolve_names()
+        self.resolve_names(quick=True)
         origin = slot.origin
         if origin is not None and self._names:
             name = self._names.get(origin)
@@ -523,5 +522,6 @@ class PackDocument:
             for i, meta in enumerate(self.archive.extra_metas)
         ]
         self._names = None
+        self._name_references_ready = False
         self._invalidate_kinds()
         self.history.clear()

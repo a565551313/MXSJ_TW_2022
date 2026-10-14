@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QApplication,
     QDialog,
     QFileDialog,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QMainWindow,
@@ -43,7 +44,7 @@ from ..core.diagnostics import (
     reference_impacts,
     widget_at_path,
 )
-from ..core.layout_import import prepare_layout_import
+from ..core.layout_import import prepare_layout_import, validate_layout_path
 from ..core.model import LayoutDocument, Widget
 from ..core.mxhash import mx_hash
 from ..core.output_paths import guard_output
@@ -69,6 +70,15 @@ class MainWindow(QMainWindow):
         super().__init__()
         self._settings = QSettings("MXSJ", "UIEditor")
         self.resolver = AssetResolver()
+        paths = self._settings.value("known_layout_paths", [])
+        if isinstance(paths, str):
+            paths = [paths]
+        if isinstance(paths, (list, tuple)):
+            for path in paths:
+                try:
+                    self.resolver.remember_layout(path)
+                except (ValueError, TypeError, AttributeError):
+                    pass  # 损坏设置不阻塞启动，也不加入候选
         self.styles = StyleBook()
         self.ctx = PaintContext(assets=self.resolver, styles=self.styles)
         self.script_index: ScriptIndex = get_default_index()
@@ -360,6 +370,7 @@ class MainWindow(QMainWindow):
         self.resource_panel.open_pack_layout.connect(
             self._open_pack_layout)
         self.resource_panel.import_pack_layout.connect(self.import_pack_layout)
+        self.resource_panel.open_pack_path.connect(self.open_pack_path)
         self.resource_panel.open_loose_file.connect(self.open_layout_file)
         self.resource_panel.choose_resource_dir.connect(
             self.open_resource_dir_dialog)
@@ -586,6 +597,39 @@ class MainWindow(QMainWindow):
             self._update_status(
                 f"已挂载 {Path(path).name}：识别到 {count} 个布局，"
                 "在左侧资源树双击（可先按名称搜索）即可打开。")
+
+    def _remember_layout(self, path: str) -> None:
+        self.resolver.remember_layout(path)
+        paths = sorted(set(self.resolver._session_layouts.values()), key=str.casefold)
+        self._settings.setValue("known_layout_paths", paths)
+        self._settings.sync()
+
+    def open_pack_path(self, pack_path: str) -> None:
+        path, ok = QInputDialog.getText(
+            self, "按包内路径打开布局",
+            "填写导入时的完整路径（如 login/regform.dlg）。\n"
+            "只读核查，不会再次导入或改写资源包：")
+        if not ok:
+            return
+        try:
+            path = validate_layout_path(path)
+            result = self.resolver.fetch_pack_dlg(pack_path, path)
+            if result is None:
+                raise ValueError("该包中找不到可解析布局；"
+                                 "请核对保存的新包和当时填写的路径。")
+            doc = LayoutDocument.from_dicts(*result)
+        except Exception as exc:
+            QMessageBox.warning(self, "按路径打开失败", str(exc))
+            return
+        if not self._confirm_discard():
+            return
+        doc.source_pack = (pack_path, path)
+        self._remember_layout(path)
+        self.resource_panel.add_known_layout(pack_path, path)
+        self._set_document(doc)
+        self.resource_panel._search.clear()
+        self.resource_panel.expand_pack(pack_path)
+        self.resource_panel.reveal_selection(("pack", pack_path, path))
 
     def import_pack_layout(self, pack_path: str) -> None:
         """本地 .dlg 导入到单一编辑文档，实际写入只在生成新包时。"""
@@ -882,7 +926,7 @@ class MainWindow(QMainWindow):
         report["ok"] = True
         # 状态迁移：已验证落盘，标记干净并让后续保存续写新包
         self.resolver.mount_pack(tmp_out, priority=True)
-        self.resolver.remember_layout(res_path)
+        self._remember_layout(res_path)
         self._add_pack_to_tree(tmp_out, self.resolver.scan_layouts(tmp_out))
         self.doc.pending_pack_import = False
         self.resource_panel.clear_pending()
