@@ -34,6 +34,8 @@ class PaintContext:
     styles: StyleBook = field(default_factory=StyleBook)
     show_names: bool = True
     button_state: str = "normal"  # 按钮状态预览：normal/pressed/hover/disabled
+    # 代码皮肤绑定：控件名 -> SkinRef（脚本在原地现造的按钮，静态推断）
+    code_skins: dict = field(default_factory=dict)
     _pixmaps: dict[tuple[str, int], QPixmap] = field(default_factory=dict)
 
     def pixmap(self, name: str, frame: int = 0) -> QPixmap | None:
@@ -375,8 +377,31 @@ def _simulate_state_overlay(p: QPainter, rect: QRectF,
         p.fillRect(rect, QColor(128, 128, 128, 110))
 
 
+def _paint_code_skin(p: QPainter, w: Widget, ctx: PaintContext) -> bool:
+    """脚本在占位控件原地现造按钮时，按代码皮肤画（静态索引推断）。
+
+    布局里这类控件只是锚点：游戏里真按钮由脚本用皮肤图现造。索引
+    给了绑定且皮肤图取得到才接管绘制，取不到图时回落原画法。
+    """
+    binding = ctx.code_skins.get(w.name)
+    if binding is None:
+        return False
+    pixmap = ctx.pixmap(binding.skin, 0)
+    if pixmap is None:
+        return False
+    rect = _rect(w, ctx)
+    p.drawPixmap(rect, pixmap, QRectF(pixmap.rect()))
+    _simulate_state_overlay(p, rect, ctx)
+    if binding.text:
+        _draw_text(p, rect, binding.text, _font(w, ctx, 13),
+                   QColor(245, 247, 252), 1)
+    return True
+
+
 def _paint_button(p: QPainter, w: Widget, ctx: PaintContext) -> None:
     rect = _rect(w, ctx)
+    if _paint_code_skin(p, w, ctx):
+        return
     name = str(w.props.get("sFileName", "") or "")
     pixmap = ctx.pixmap(name) if name else None
     if pixmap is not None:
@@ -399,6 +424,8 @@ def _paint_button(p: QPainter, w: Widget, ctx: PaintContext) -> None:
 
 def _paint_text_button(p: QPainter, w: Widget, ctx: PaintContext) -> None:
     rect = _rect(w, ctx)
+    if _paint_code_skin(p, w, ctx):
+        return
     name = str(w.props.get("sFileName", "") or "")
     pixmap = ctx.pixmap(name) if name else None
     if pixmap is not None:

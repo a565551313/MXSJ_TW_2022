@@ -40,11 +40,13 @@ from ..core.model import LayoutDocument, Widget
 from ..core.mxhash import mx_hash
 from ..core.pack import FlsPack
 from ..core.painters import PaintContext
+from ..core.script_index import ScriptIndex, get_default_index
 from ..core.styles import StyleBook
 from . import icons
 from .canvas import CanvasView, LayoutScene
 from .panels import PalettePanel, ResourceTreePanel, WidgetTreePanel
 from .property_panel import PropertyPanel
+from .script_panel import ScriptPanel
 
 
 class MainWindow(QMainWindow):
@@ -56,6 +58,7 @@ class MainWindow(QMainWindow):
         self.resolver = AssetResolver()
         self.styles = StyleBook()
         self.ctx = PaintContext(assets=self.resolver, styles=self.styles)
+        self.script_index: ScriptIndex = get_default_index()
         self.doc: LayoutDocument | None = None
         self._selected: Widget | None = None
         self._selection_anchor: list[int] | None = None
@@ -70,6 +73,7 @@ class MainWindow(QMainWindow):
 
         self.resource_panel = ResourceTreePanel()
         self.tree_panel = WidgetTreePanel()
+        self.script_panel = ScriptPanel()
         self.props_panel = PropertyPanel()
         self.props_panel.assets = self.resolver  # 文件字段从包里选
         self.palette_panel = PalettePanel()
@@ -95,6 +99,7 @@ class MainWindow(QMainWindow):
         left_tabs = QTabWidget()
         left_tabs.addTab(self.resource_panel, "资源树")
         left_tabs.addTab(self.tree_panel, "控件树")
+        left_tabs.addTab(self.script_panel, "脚本")
         left_layout.addWidget(left_tabs)
         left.setWidget(left_host)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, left)
@@ -337,6 +342,9 @@ class MainWindow(QMainWindow):
             self.open_resource_dir_dialog)
         self.resource_panel.choose_loose_dir.connect(
             self.open_layout_dir_dialog)
+        self.script_panel.name_chosen.connect(self._select_by_name)
+        self.tree_panel.lock_toggled.connect(
+            lambda widget, on: self._apply_lock([widget], on))
         self.tree_panel.widget_selected.connect(self._select_from_tree)
         self.tree_panel.add_child_requested.connect(self._add_child_from_tree)
         self.tree_panel.add_root_requested.connect(self._add_root_from_tree)
@@ -375,11 +383,39 @@ class MainWindow(QMainWindow):
             self.view.fit_content()
         self._update_title()
         count = len(doc.all_widgets()) if doc else 0
+        link_note = self._apply_script_link(doc)
         self._update_status(
             f"已打开 {doc.display_name if doc else '—'}：{count} 个控件。"
             f"{self.resolver.summary}；"
             f"样式表："
-            f"{'已加载 ui.lst' if self.styles.loaded else '未加载（默认字体）'}")
+            f"{'已加载 ui.lst' if self.styles.loaded else '未加载（默认字体）'}"
+            f"{link_note}")
+
+    # -- 脚本联动（静态索引） ---------------------------------------
+    def _doc_layout_path(self, doc: LayoutDocument | None) -> str | None:
+        """当前文档对应的布局资源路径（包内路径优先，其次散装反查）。"""
+        if doc is None:
+            return None
+        if doc.source_pack:
+            return doc.source_pack[1]
+        if doc.source_path:
+            return self.script_index.match_loose_path(doc.source_path)
+        return None
+
+    def _apply_script_link(self, doc: LayoutDocument | None) -> str:
+        """按文档路径挂上脚本关联（面板+代码皮肤），返回状态栏注记。"""
+        path = self._doc_layout_path(doc)
+        link = self.script_index.for_layout(path) if path else None
+        self.ctx.code_skins = (
+            {name: refs[0] for name, refs in link.skins.items() if refs}
+            if link else {})
+        self.script_panel.set_link(path, link)
+        if link is None:
+            return ""
+        claimed = len(set(link.objects) | set(link.skins))
+        return (f"；脚本关联：{len(link.modules)} 个模块引用此布局，"
+                f"{claimed} 个控件被脚本取用、{len(link.skins)} 个"
+                "按代码皮肤预览（静态推断，见左侧「脚本」页）")
 
     def open_layout_file(self, path: str) -> None:
         if not self._confirm_discard():
@@ -1076,13 +1112,17 @@ class MainWindow(QMainWindow):
 
     def _toggle_lock(self, on: bool) -> None:
         widgets = self._selected_widgets()
-        if not widgets:
-            return
+        if widgets:
+            self._apply_lock(widgets, on)
+
+    def _apply_lock(self, widgets: list, on: bool) -> None:
+        """把锁定状态应用到一组控件（工具栏/右键/控件树共用）。"""
         for widget in widgets:
             widget.locked = on
             item = self.scene.item_for(widget)
             if item is not None:
                 item.apply_lock()
+            self.tree_panel.set_lock_icon(widget)
         self._sync_lock_action()
         names = "、".join(w.name or "(无名)" for w in widgets[:3])
         if len(widgets) > 3:
@@ -1114,6 +1154,7 @@ class MainWindow(QMainWindow):
             item = self.scene.item_for(widget)
             if item is not None:
                 item.apply_lock()
+        self.tree_panel.refresh_locks()
 
     def build_canvas_context_menu(self, widget: Widget | None) -> QMenu:
         """画布右键菜单（不在此处 exec，便于测试与复用）。"""
@@ -1164,6 +1205,8 @@ class MainWindow(QMainWindow):
             if anchor is not None:
                 self._selection_anchor = anchor
         self.props_panel.set_widget(widget)
+        if hasattr(self, "script_panel"):
+            self.script_panel.set_widget(widget)
         self.tree_panel.select_widget(widget)
         if self._syncing_selection or not sync_scene:
             return
@@ -1181,6 +1224,15 @@ class MainWindow(QMainWindow):
 
     def _select_from_tree(self, widget: Widget | None) -> None:
         self._select_widget(widget)
+
+    def _select_by_name(self, name: str) -> None:
+        """脚本面板点名字：按 sName 在画布上选中对应控件。"""
+        if self.doc is None:
+            return
+        for widget in self.doc.all_widgets():
+            if widget.name == name:
+                self._select_widget(widget)
+                return
 
     def _on_scene_selection(self) -> None:
         if self._syncing_selection or self._loading:

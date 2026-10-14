@@ -227,9 +227,14 @@ class ResourceTreePanel(QWidget):
 
 
 class WidgetTreePanel(QWidget):
-    """布局的控件层级树，与画布/属性面板联动选择。"""
+    """布局的控件层级树，与画布/属性面板联动选择。
+
+    每行第二列是锁定开关：灰色开锁=未锁定，橙色挂锁=已锁定，
+    点击切换，与画布的锁定（工具栏/Ctrl+L/右键菜单）同一状态。
+    """
 
     widget_selected = Signal(object)
+    lock_toggled = Signal(object, bool)  # (控件, 目标锁定状态)
     add_child_requested = Signal()
     add_root_requested = Signal()
     promote_requested = Signal()
@@ -267,7 +272,11 @@ class WidgetTreePanel(QWidget):
         layout.addLayout(bar)
         self._tree = QTreeWidget()
         self._tree.setHeaderHidden(True)
+        self._tree.setColumnCount(2)
+        self._tree.setColumnWidth(1, 24)
+        self._tree.header().setStretchLastSection(False)
         self._tree.currentItemChanged.connect(self._on_current_changed)
+        self._tree.itemClicked.connect(self._on_item_clicked)
         layout.addWidget(self._tree, 1)
         self._items: dict[int, QTreeWidgetItem] = {}
         self._widgets: dict[int, Widget] = {}
@@ -284,10 +293,11 @@ class WidgetTreePanel(QWidget):
 
         def add(parent_item: QTreeWidgetItem | QTreeWidget, widget: Widget):
             label = f"{widget.name or '(未命名)'} · {widget.wtype}"
-            item = QTreeWidgetItem(parent_item, [label])
+            item = QTreeWidgetItem(parent_item, [label, ""])
             item.setData(0, Qt.ItemDataRole.UserRole, id(widget))
             self._items[id(widget)] = item
             self._widgets[id(widget)] = widget
+            self._apply_lock_icon(item, widget)
             for child in widget.children:
                 add(item, child)
             item.setExpanded(True)
@@ -299,6 +309,38 @@ class WidgetTreePanel(QWidget):
         item = self._items.get(id(widget))
         if item is not None:
             item.setText(0, f"{widget.name or '(未命名)'} · {widget.wtype}")
+
+    # -- 锁定小图标（第二列，与画布锁定同一状态） ------------------
+    def _apply_lock_icon(self, item: QTreeWidgetItem,
+                         widget: Widget) -> None:
+        from . import icons
+
+        if widget.locked:
+            item.setIcon(1, icons.icon_lock())
+            item.setToolTip(1, "已锁定（点此解锁）")
+        else:
+            item.setIcon(1, icons.icon_lock_open())
+            item.setToolTip(1, "未锁定（点此锁定）")
+
+    def set_lock_icon(self, widget: Widget) -> None:
+        """画布侧改了锁定后，把树上这一行的图标同步过来。"""
+        item = self._items.get(id(widget))
+        if item is not None:
+            self._apply_lock_icon(item, widget)
+
+    def refresh_locks(self) -> None:
+        """全树刷新锁图标（撤销重建对象后用新对象状态对齐）。"""
+        for widget_id, item in self._items.items():
+            widget = self._widgets.get(widget_id)
+            if widget is not None:
+                self._apply_lock_icon(item, widget)
+
+    def _on_item_clicked(self, item: QTreeWidgetItem, column: int) -> None:
+        if column != 1 or item is None:
+            return
+        widget = self._find(item.data(0, Qt.ItemDataRole.UserRole))
+        if widget is not None:
+            self.lock_toggled.emit(widget, not widget.locked)
 
     def select_widget(self, widget: Widget | None) -> None:
         self._current = widget
@@ -324,19 +366,7 @@ class WidgetTreePanel(QWidget):
     def _find(self, widget_id: int | None) -> Widget | None:
         if widget_id is None:
             return None
-        for item_id, tree_item in self._items.items():
-            if item_id == widget_id:
-                stack = [tree_item]
-                while stack:
-                    node = stack.pop()
-                    if node is tree_item:
-                        return self._widget_of(node)
-                    stack.extend(node.child(i) for i in range(node.childCount()))
-        return None
-
-    def _widget_of(self, item: QTreeWidgetItem) -> Widget | None:
-        # 控件对象由主窗口维护映射，这里借助 UserRole 的 id 反查其表
-        return getattr(item, "_widget_ref", None)
+        return self._widgets.get(widget_id)
 
 
 class PalettePanel(QWidget):

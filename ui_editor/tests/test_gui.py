@@ -750,6 +750,105 @@ class TestCanvasClipboardAndContextMenu(unittest.TestCase):
         self.window.hide()
 
 
+class TestScriptLinkGui(unittest.TestCase):
+    """脚本联动第一期：开布局自动关联、面板详情、代码皮肤绘制。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        import tempfile
+
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+        self._tmp = tempfile.TemporaryDirectory()
+        pack_path = Path(self._tmp.name) / "interface_mini.fls"
+        pack_path.write_bytes(_mini_pack_bytes("dialog/cateroom.dlg"))
+        self.window.open_pack_file(str(pack_path))
+        self.window._open_pack_layout(
+            str(pack_path), "dialog/cateroom.dlg")
+        self.doc = self.window.doc
+        self.assertIsNotNone(self.doc)
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+        self._tmp.cleanup()
+
+    def _fake_index(self):
+        from ui_editor.core.script_index import ScriptIndex
+        return ScriptIndex({
+            "modules": [[7, "script/fake/panel.py"]],
+            "layouts": {"dialog/cateroom.dlg": {
+                "m": [0],
+                "o": {"root": [[0, "CFakePanel", "__init__", 0]],
+                      "prev": [[0, "CFakePanel", "__init__", 1]]},
+                "s": {"prev": [[0, "CFakePanel", "__init__",
+                                "CFakeButton", "fake/btn.igs", "上一頁", 5]]},
+            }},
+        })
+
+    def test_open_layout_links_script_and_panel(self):
+        w = self.window
+        w.script_index = self._fake_index()
+        note = w._apply_script_link(w.doc)
+        self.assertIn("1 个模块引用此布局", note)
+        self.assertIsNotNone(w.script_panel._link)
+        self.assertIn("prev", w.ctx.code_skins)
+        self.assertEqual(w.ctx.code_skins["prev"].skin, "fake/btn.igs")
+        names = {w.script_panel._names.item(i).text()
+                 for i in range(w.script_panel._names.count())}
+        self.assertTrue(any(n.startswith("prev") for n in names))
+        self.assertTrue(any(n.startswith("root") for n in names))
+        root = w.doc.roots[0]
+        w._select_widget(root)
+        self.assertIn("被脚本按名取用", w.script_panel._detail.text())
+        w._select_by_name("root")
+        self.assertIs(w._selected, root)
+        self.assertIn("代码皮肤", w.statusBar().currentMessage() + note)
+
+    def test_code_skin_paints_pixmap(self):
+        from PySide6.QtGui import QColor, QImage, QPainter, QPixmap
+
+        from ui_editor.core.model import Widget
+        from ui_editor.core.painters import _paint_code_skin
+        from ui_editor.core.script_index import SkinRef
+
+        pixmap = QPixmap(20, 10)
+        pixmap.fill(QColor(200, 30, 30))
+
+        class _Ctx:
+            code_skins = {"prev": SkinRef(
+                module="m.py", entry=1, cls="C", func="__init__",
+                factory="CFakeButton", skin="fake/btn.igs",
+                text="", msgid=5)}
+            button_state = "normal"
+            show_names = False
+
+            def pixmap(self, name, frame=0):
+                return pixmap if name == "fake/btn.igs" else None
+
+        widget = Widget({"sWidgetType": "CButton", "sName": "prev",
+                         "iWidth": 20, "iHeight": 10})
+        image = QImage(20, 10, QImage.Format.Format_ARGB32)
+        image.fill(QColor(0, 0, 0))
+        painter = QPainter(image)
+        self.assertTrue(_paint_code_skin(painter, widget, _Ctx()))
+        painter.end()
+        self.assertEqual(QColor(image.pixel(10, 5)).red(), 200)
+        # 没有绑定的控件不接管
+        other = Widget({"sWidgetType": "CButton", "sName": "other",
+                        "iWidth": 20, "iHeight": 10})
+        painter = QPainter(image)
+        self.assertFalse(_paint_code_skin(painter, other, _Ctx()))
+        painter.end()
+
+
 class TestWidgetLockGui(unittest.TestCase):
     """控件锁定：锁后拖不动/缩不了/删不掉，解锁恢复；撤销不丢锁。"""
 
@@ -881,6 +980,34 @@ class TestWidgetLockGui(unittest.TestCase):
         self.assertIn(button.name, fresh)
         self.assertTrue(fresh[button.name].locked)
         self.assertEqual(fresh[button.name].x, 10)
+
+    def test_tree_lock_column_toggles_and_syncs(self):
+        w = self.window
+        button = self._add_button()
+        panel = w.tree_panel
+        tree = panel._tree
+        self.assertEqual(tree.columnCount(), 2)
+        item = panel._items[id(button)]
+        self.assertFalse(item.icon(1).isNull())  # 默认开锁图标
+        self.assertIn("未锁定", item.toolTip(1))
+        # 点名字列选中：控件树选中要真同步到主窗口（顺带回归）
+        tree.setCurrentItem(item)
+        self._app.processEvents()
+        self.assertIs(w._selected, button)
+        # 点锁列：锁定，且画布工具栏勾选与图标同步
+        panel._on_item_clicked(item, 1)
+        self.assertTrue(button.locked)
+        self.assertIn("已锁定", item.toolTip(1))
+        self.assertTrue(w._act_lock.isChecked())
+        # 再点一次解锁
+        panel._on_item_clicked(item, 1)
+        self.assertFalse(button.locked)
+        self.assertIn("未锁定", item.toolTip(1))
+        # 从工具栏锁定，树图标也要跟着变
+        w._act_lock.trigger()
+        self.assertTrue(button.locked)
+        self.assertIn("已锁定", panel._items[id(button)].toolTip(1))
+        w._act_lock.trigger()
 
     def test_locked_parent_children_still_draggable(self):
         from PySide6.QtWidgets import QGraphicsItem

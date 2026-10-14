@@ -264,6 +264,22 @@ def icon_lock() -> QIcon:
     return _end(pixmap, p)
 
 
+def icon_lock_open() -> QIcon:
+    """未锁定：灰色打开的挂锁（锁梁翘起一头）。"""
+    pixmap, p = _begin()
+    p.setPen(_pen("#8a94a6", 2.0))
+    p.setBrush(Qt.BrushStyle.NoBrush)
+    p.drawArc(QRectF(9, 2.5, 10, 11), 20 * 16, 160 * 16)  # 梁口朝下打开
+    p.drawLine(QPointF(18.6, 8.5), QPointF(18.6, 11.5))
+    p.setPen(_pen("#8a94a6", 1.6))
+    p.setBrush(QColor("#c9d1de"))
+    p.drawRoundedRect(QRectF(5.5, 11, 17, 12), 2.5, 2.5)  # 锁身
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor("#8a94a6"))
+    p.drawEllipse(QRectF(12.6, 15, 2.8, 2.8))
+    return _end(pixmap, p)
+
+
 def icon_aspect() -> QIcon:
     """等比缩放：同比例大小两框 + 对角双向箭头。"""
     pixmap, p = _begin()
