@@ -58,7 +58,7 @@ class Config:
         return config_dir() / CONFIG_FILENAME
 
     @classmethod
-    def load(cls, path: Path | str | None = None) -> "Config":
+    def load(cls, path: Path | str | None = None) -> Config:
         p = Path(path) if path else config_dir() / CONFIG_FILENAME
         try:
             raw = json.loads(p.read_text(encoding="utf-8"))

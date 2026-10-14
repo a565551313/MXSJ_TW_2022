@@ -34,7 +34,8 @@ def find_client_root() -> Path | None:
 
 CLIENT_ROOT = find_client_root()
 SAMPLES = CLIENT_ROOT / "map" if CLIENT_ROOT else PROJECT / "no-samples"
-SCRIPT_FLS = CLIENT_ROOT / "data" / "script.fls" if CLIENT_ROOT else PROJECT / "no-script.fls"
+SCRIPT_FLS = (CLIENT_ROOT / "data" / "script.fls" if CLIENT_ROOT
+              else PROJECT / "no-script.fls")
 
 
 def reference_png_dir() -> Path | None:

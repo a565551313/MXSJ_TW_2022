@@ -5,3 +5,4 @@ build/
 dist/
 *.spec.bak
 out/
+启动日志.txt

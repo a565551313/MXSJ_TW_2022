@@ -1,0 +1,8 @@
+extend = "../../ruff.toml"
+
+[lint.per-file-ignores]
+# These two files run inside CPython 2.5.6, not Python 3. Keep the coding
+# declaration, byte-string literals and percent formatting; .format/f-strings
+# and other UP modernizations do not exist in the embedded interpreter.
+"register.py" = ["UP"]
+"compile_with_py25.py" = ["UP"]

@@ -5,7 +5,7 @@
     python run.py --scan "D:/Games/MXSJ"                # 终端列出全部地图
     python run.py --scan . --export-json 2101:out.json  # 导出结构 JSON
 
-Packaged on Windows by build.bat -> dist/MapEditor/MapEditor.exe
+Packaged on Windows by build_exe.bat -> dist/MapEditor/MapEditor.exe
 """
 from __future__ import annotations
 

@@ -1,0 +1,3 @@
+# Windows 批处理必须是 CRLF，无论在哪个平台 checkout（docs/PYTHON_TOOL_CONVENTIONS.md §3）。
+*.bat text eol=crlf
+*.cmd text eol=crlf

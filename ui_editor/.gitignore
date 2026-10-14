@@ -1,0 +1,8 @@
+.venv/
+.ruff_cache/
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec.bak
+启动日志.txt

@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import sys
-from pathlib import Path
 
 from .client.config import Config
 from .client.discovery import DiscoveryError
@@ -24,7 +23,8 @@ def build_parser() -> argparse.ArgumentParser:
         prog="map-editor",
         description="《夢想世界》地图编辑器 — 只需指定客户端目录，自动发现全部地图。")
     p.add_argument("--client-root", help="客户端根目录（会递归搜索 *.map）")
-    p.add_argument("--scene-table", help="场景名表 JSON（默认使用内置的 TW v2.27.2 表）")
+    p.add_argument("--scene-table",
+                   help="场景名表 JSON（默认使用内置的 TW v2.27.2 表）")
     p.add_argument("--cli", action="store_true",
                    help="不开图形界面，只在终端列出地图（默认行为，除非指定 --gui）")
     p.add_argument("--gui", action="store_true", help="启动图形界面")
@@ -47,7 +47,8 @@ def _print_table(vm: EditorViewModel) -> None:
     print("-" * 68)
     for r in vm.rows:
         if r.broken:
-            print(f"{r.key:<8}{(r.name or '—'):<20}{'解析失败':<14}{'':>6}{'':>6}  {r.error}")
+            print(f"{r.key:<8}{(r.name or '—'):<20}{'解析失败':<14}"
+                  f"{'':>6}{'':>6}  {r.error}")
             continue
         try:
             vm.open_map(r)
@@ -109,7 +110,8 @@ def _print_girb_report(vm: EditorViewModel) -> None:
         flag = "" if r["failed"] == 0 else "  ← 有失败"
         print(f"{r['key']:<8}{(r['name'] or '—'):<20}{r['size']:<14}"
               f"{r['sectors']:>6}{r['decoded']:>6}{r['failed']:>6}"
-              f"{r['distinct_values']:>6}  {r['girb_len_min']}~{r['girb_len_max']}{flag}")
+              f"{r['distinct_values']:>6}  "
+              f"{r['girb_len_min']}~{r['girb_len_max']}{flag}")
         if r["failed"]:
             bad.append(r["key"])
     print()
@@ -118,7 +120,8 @@ def _print_girb_report(vm: EditorViewModel) -> None:
               f"{' '.join(bad)}")
     else:
         print("[ok] 全部地图的 GIRB 均完整解出。")
-    print("    说明：解出的扇区一律是 2400 字节 = 1200 个 u16 = 40x30 格（8x8 像素/格）。")
+    print("    说明：解出的扇区一律是 2400 字节 = 1200 个 u16 = 40x30 格"
+          "（8x8 像素/格）。")
 
 
 def _girb_dump(vm: EditorViewModel, spec: str) -> int:
@@ -201,7 +204,8 @@ def main(argv: list[str] | None = None) -> int:
         return run(vm)
 
     if not root:
-        print("[错误] 需要 --scan 或已记住的客户端目录（--client-root）", file=sys.stderr)
+        print("[错误] 需要 --scan 或已记住的客户端目录（--client-root）",
+              file=sys.stderr)
         return 2
     code = run_cli(vm, root, args.export_json, args.export_png)
     if args.girb_report:

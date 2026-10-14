@@ -967,17 +967,494 @@ def _worker_data_fls(task: tuple[str, bytes, str, str | None, str, bool]) -> dic
         return {"path": str(out_py), "rel": rel_path, "ok": False, "engine": "error", "error": str(exc)}
 
 
+def _decode_segments(exp: bytes, keys: list[int], bounds: list[int]) -> bytes:
+    pts = [0] + list(bounds) + [len(exp)]
+    return b"".join(
+        exp[pts[i] : pts[i + 1]].translate(XTABS[keys[i]]) for i in range(5)
+    )
+
+
+def _decode_pieces(exp: bytes, pieces: list[tuple[int, int]]) -> bytes:
+    """按 [(起始偏移, 密钥), ...] 分段解密（段数不限）。"""
+    pieces = sorted(pieces)
+    pts = [start for start, _ in pieces] + [len(exp)]
+    return b"".join(
+        exp[pts[i] : pts[i + 1]].translate(XTABS[pieces[i][1]])
+        for i in range(len(pieces))
+    )
+
+
+class _WalkFail(Exception):
+    """严格步进在 pos 处撞上结构不可能的对象。"""
+
+    def __init__(self, pos: int):
+        super().__init__(pos)
+        self.pos = pos
+
+
+def _strict_walk(data: bytes) -> int:
+    """按标准 Python 2.5 marshal 语法严格步进（每步做边界检查）。
+
+    完整走完返回 len(data)；否则抛 _WalkFail(第一个不可能对象的偏移)。
+    转译器的 pos 计数在长度字段异常时会飞出界外、无法当作进度，
+    本函数专供接缝修复当“哪套边界更可信”的裁判。
+    """
+    n = len(data)
+    pos = 0
+
+    def take(k: int) -> None:
+        nonlocal pos
+        if pos + k > n:
+            raise _WalkFail(pos)
+        pos += k
+
+    def u32() -> int:
+        nonlocal pos
+        if pos + 4 > n:
+            raise _WalkFail(pos)
+        v = struct.unpack_from("<I", data, pos)[0]
+        pos += 4
+        return v
+
+    def walk() -> None:
+        nonlocal pos
+        if pos >= n:
+            raise _WalkFail(pos)
+        start = pos
+        t = data[pos]
+        pos += 1
+        tc = chr(t)
+        if tc in "0NFTS.":
+            return
+        if tc in ("i", "R"):
+            take(4)
+            return
+        if tc in ("I", "g"):
+            take(8)
+            return
+        if tc == "l":
+            digits = struct.unpack_from("<i", data, pos)[0] \
+                if pos + 4 <= n else 0
+            take(4 + abs(digits) * 2)
+            return
+        if tc in ("s", "t", "u"):
+            ln = u32()
+            if ln > n - pos:
+                raise _WalkFail(start)
+            take(ln)
+            return
+        if tc in ("f", "x"):
+            if pos >= n:
+                raise _WalkFail(pos)
+            take(1 + data[pos])
+            return
+        if tc in ("(", "[", "<", ">"):
+            cnt = u32()
+            if cnt > n - pos:
+                raise _WalkFail(start)
+            for _ in range(cnt):
+                walk()
+            return
+        if tc == "{":
+            while True:
+                if pos >= n:
+                    raise _WalkFail(pos)
+                if data[pos] == ord("0"):
+                    pos += 1
+                    return
+                walk()
+                walk()
+        if tc == "c":
+            take(16)
+            walk()  # co_code
+            for _ in range(5):  # consts/names/varnames/freevars/cellvars
+                walk()
+            walk()  # co_filename
+            walk()  # co_name
+            take(4)  # co_firstlineno
+            walk()  # co_lnotab
+            return
+        raise _WalkFail(start)
+
+    walk()
+    return pos
+
+
+def _strict_progress(dec: bytes) -> int:
+    """完整步进给满分 len(dec)+1，否则给第一个失败对象的偏移。"""
+    try:
+        return _strict_walk(dec) + 1
+    except _WalkFail as exc:
+        return exc.pos
+
+
+def _transpile_once(
+    dec: bytes, exp: bytes, keys: list[int], bounds: list[int]
+) -> tuple[bytes | None, str | None]:
+    """转译一次；成功返回 (pyc, co_filename)。"""
+    tr = Py25MarshalTranspiler(dec, exp, keys, bounds)
+    try:
+        tr.transpile_object()
+    except Exception:
+        return None, None
+    if tr.pos != len(dec):
+        return None, None
+    return bytes(tr.out), tr.filename
+
+
+def _decompile_ok(pyc: bytes, engine: str, decode_big5: bool) -> bool:
+    ok, _used, _src = decompile_pyc_bytes(
+        pyc, engine=engine, decode_big5=decode_big5)
+    return ok
+
+
+def _repair_by_shifting(
+    exp: bytes, keys: list[int], bounds: list[int],
+    engine: str, decode_big5: bool,
+) -> tuple[bytes, str | None, list[int], list[int]] | None:
+    """第 1 层修复：目录密钥可信、仅分段边界有偏差时逐缝移位。
+
+    背景：script_fls_keys.json 的边界可有偏差（catalog 解法个位数、
+    fallback 解法可达上千），缝口附近若干字节会被邻段密钥解密；
+    一旦落在字符串长度/元组计数等结构字段上，步进即脱轨。以严格
+    步进的完成度为裁判，逐缝在 ±1600 内按“离目录值由近及远”试
+    移并取完成度最佳者，多缝损坏时多轮推进。仅在内存中进行，
+    密钥数据库保持不变。转译尝试总次数按条目大小封顶，防止在
+    无望的大条目上空耗。
+    """
+    cur = list(bounds)
+    best = _strict_progress(_decode_segments(exp, keys, cur))
+    per_seam = max(400, min(4000, 64_000_000 // max(1, len(exp))))
+    for _round in range(5):
+        improved = False
+        for bi in range(4):
+            attempts_left = per_seam
+            lo = max(1, cur[bi] - 1600)
+            hi = min(len(exp) - 1, cur[bi] + 1600)
+            order = sorted(range(lo, hi + 1), key=lambda c: abs(c - cur[bi]))
+            seam_best = (best, cur[bi])
+            for cand_pos in order:
+                if cand_pos == cur[bi] or attempts_left <= 0:
+                    continue
+                cand = list(cur)
+                cand[bi] = cand_pos
+                if any(cand[i] >= cand[i + 1] for i in range(3)):
+                    continue
+                attempts_left -= 1
+                cand_dec = _decode_segments(exp, keys, cand)
+                pyc, fname = _transpile_once(cand_dec, exp, keys, cand)
+                if pyc is not None:
+                    if _decompile_ok(pyc, engine, decode_big5):
+                        return pyc, fname, list(keys), cand
+                    continue
+                score = _strict_progress(cand_dec)
+                if score > seam_best[0]:
+                    seam_best = (score, cand_pos)
+            if seam_best[0] > best:
+                best, cur[bi] = seam_best
+                improved = True
+        if not improved:
+            return None
+    return None
+
+
+def _pieces_to_keys_bounds(
+    pieces: list[tuple[int, int]], total: int
+) -> tuple[list[int], list[int]] | None:
+    """把逐段求解结果规整为转译器要求的 5 键 4 界形式。
+
+    不足 5 段时在最长一段的中点补一个同钥虚分段点（解密结果
+    不变）；超过 5 段则放弃。
+    """
+    pieces = sorted(pieces)
+    while len(pieces) < 5:
+        starts = [start for start, _ in pieces] + [total]
+        spans = [(starts[i + 1] - starts[i], i) for i in range(len(pieces))]
+        span, idx = max(spans)
+        if span < 2:
+            return None
+        pieces.insert(idx + 1, (pieces[idx][0] + span // 2, pieces[idx][1]))
+    if len(pieces) > 5:
+        return None
+    return [k for _, k in pieces], [start for start, _ in pieces[1:]]
+
+
+def _try_keys_at(
+    exp: bytes, pieces: list[tuple[int, int]], f: int
+) -> tuple[int, int] | None:
+    """在偏移 f 处逐一试 256 把钥匙，返回能续跑最远的 (f, 密钥)。"""
+    best = (f, -1)
+    for k in range(256):
+        if k == pieces[-1][1]:
+            continue
+        run = _strict_progress(_decode_pieces(exp, pieces + [(f, k)]))
+        if run > best[0]:
+            best = (run, k)
+    # 尾巴不足 5 字节时，完成度 len+1 也要认（不能被 +4 门槛误杀）
+    if best[1] >= 0 and (best[0] > f + 4 or best[0] > len(exp)):
+        return f, best[1]
+    return None
+
+
+def _resolve_segments(
+    exp: bytes,
+) -> tuple[list[int], list[int]] | None:
+    """第 2 层修复：目录 (密钥, 边界) 整套不可信时从零逐段求解。
+
+    模块流必以代码对象标签 'c' 开头，故第一把钥匙 = exp[0]^0x63。
+    其后每当严格步进在 f 处脱轨，就在 f 处试遍 256 把钥匙、取续跑
+    最远者作为下一段密钥（结构良好的续跑绵延数千字节，随机钥匙
+    数百字节内必脱轨，故判别可靠）；若直接换钥无效，再在 f 附近
+    小窗口内联合试 (分段点, 密钥)。
+    """
+    if not exp:
+        return None
+    pieces: list[tuple[int, int]] = [(0, exp[0] ^ 0x63)]
+    for _stage in range(6):
+        dec = _decode_pieces(exp, pieces)
+        f = _strict_progress(dec)
+        if f > len(exp):
+            return _pieces_to_keys_bounds(pieces, len(exp))
+        found = _try_keys_at(exp, pieces, f)
+        if found is None and len(exp) <= 32768:
+            win_best: tuple[int, tuple[int, int] | None] = (f, None)
+            for sw in range(max(1, f - 32), min(len(exp) - 1, f + 9)):
+                base = [pc for pc in pieces if pc[0] < sw]
+                hit = _try_keys_at(exp, base, sw)
+                if hit is not None:
+                    run = _strict_progress(
+                        _decode_pieces(exp, base + [hit]))
+                    if run > win_best[0]:
+                        win_best = (run, hit)
+            found = win_best[1]
+        if found is None:
+            return None
+        # 插入点可能早于上一投机段：弹掉其后的段，保持有序
+        pieces = [pc for pc in pieces if pc[0] < found[0]] + [found]
+    if _strict_progress(_decode_pieces(exp, pieces)) > len(exp):
+        return _pieces_to_keys_bounds(pieces, len(exp))
+    return None
+
+
+def _refs_valid(data: bytes) -> bool:
+    """校验驻留字符串引用：每个 'R' 的下标必须小于此前 't' 的个数。"""
+    interned = 0
+    pos = 0
+    n = len(data)
+
+    def walk() -> bool:
+        nonlocal pos, interned
+        if pos >= n:
+            return False
+        t = data[pos]
+        pos += 1
+        tc = chr(t)
+        if tc in "0NFTS.":
+            return True
+        if tc == "i":
+            pos += 4
+            return True
+        if tc == "R":
+            if pos + 4 > n:
+                return False
+            ref = struct.unpack_from("<i", data, pos)[0]
+            pos += 4
+            return 0 <= ref < interned
+        if tc in ("I", "g"):
+            pos += 8
+            return True
+        if tc == "l":
+            if pos + 4 > n:
+                return False
+            dg = struct.unpack_from("<i", data, pos)[0]
+            pos += 4 + abs(dg) * 2
+            return True
+        if tc in ("s", "t", "u"):
+            if pos + 4 > n:
+                return False
+            ln = struct.unpack_from("<I", data, pos)[0]
+            pos += 4 + ln
+            if pos > n:
+                return False
+            if tc == "t":
+                interned += 1
+            return True
+        if tc in ("f", "x"):
+            if pos >= n:
+                return False
+            pos += 1 + data[pos]
+            return pos <= n
+        if tc in ("(", "[", "<", ">"):
+            if pos + 4 > n:
+                return False
+            cnt = struct.unpack_from("<I", data, pos)[0]
+            pos += 4
+            return all(walk() for _ in range(cnt))
+        if tc == "{":
+            while True:
+                if pos >= n or data[pos] == ord("0"):
+                    pos += 1
+                    return pos <= n
+                if not (walk() and walk()):
+                    return False
+        if tc == "c":
+            pos += 16
+            for _ in range(8):
+                if not walk():
+                    return False
+            pos += 4
+            return walk()
+        return False
+
+    try:
+        return walk() and pos == n
+    except (IndexError, struct.error):
+        return False
+
+
+def _gbk_score(raw: bytes) -> int:
+    """GBK/ASCII 文本合理性打分（缝口取舍时用）。"""
+    score = 0
+    i = 0
+    while i < len(raw):
+        b = raw[i]
+        if b < 0x80:
+            score += 1 if (b in (9, 10, 13) or b >= 0x20) else -2
+            i += 1
+        elif 0x81 <= b <= 0xFE and i + 1 < len(raw) \
+                and 0x40 <= raw[i + 1] <= 0xFE and raw[i + 1] != 0x7F:
+            score += 3
+            i += 2
+        else:
+            score -= 3
+            i += 1
+    return score
+
+
+def _refine_seams(
+    exp: bytes, keys: list[int], bounds: list[int]
+) -> list[int]:
+    """缝口精修：步行裁判只能定位到“第一个坏对象”，真缝可能在
+    其前数十字节内（藏在定长小对象或字符串尾部）。在每条缝
+    ±(-64..+8) 内逐一试，取同时通过严格步进与驻留引用校验、
+    且缝口两侧 GBK 文本最连贯的位置。"""
+    bounds = list(bounds)
+    for bi in range(4):
+        cur = bounds[bi]
+        k_prev, k_next = keys[bi], keys[bi + 1]
+        span = 64 if len(exp) <= 65536 else 16
+        lo = max((bounds[bi - 1] if bi else 0) + 1, cur - span)
+        hi = cur + 8
+        if bi < 3:
+            hi = min(hi, bounds[bi + 1] - 1)
+        best: tuple[tuple[int, int], int] | None = None
+        for cand in range(lo, hi + 1):
+            trial = list(bounds)
+            trial[bi] = cand
+            dec = _decode_segments(exp, keys, trial)
+            if _strict_progress(dec) <= len(exp):
+                continue
+            if not _refs_valid(dec):
+                continue
+            win = exp[max(0, cand - 48) : cand].translate(XTABS[k_prev]) \
+                + exp[cand : cand + 48].translate(XTABS[k_next])
+            rank = (_gbk_score(win), -abs(cand - cur))
+            if best is None or rank > best[0]:
+                best = (rank, cand)
+        if best is not None:
+            bounds[bi] = best[1]
+    return bounds
+
+
+def _beam_resolve(
+    exp: bytes, width: int = 200, eval_budget: int = 120000
+) -> tuple[list[int], list[int]] | None:
+    """第 2 层兜底：光束搜索逐段求解。
+
+    逐段贪心会被“假长跑”带偏（错钥也能多走几十字节），光束
+    按完成度全局保留最优的若干状态，微分段（十字节级）也能
+    在下一步冲线时胜出。仅用于中小条目（步行评估成本可控）。
+    """
+    n = len(exp)
+    if n > 65536:
+        return None
+    eval_budget = min(eval_budget, max(1500, 24_000_000 // max(1, n)))
+    start = [(0, exp[0] ^ 0x63)]
+    beam = [(_strict_progress(_decode_pieces(exp, start)), start)]
+    seen = {tuple(start)}
+    left = eval_budget
+    for _stage in range(5):
+        nxt: list[tuple[int, list[tuple[int, int]]]] = []
+        for f, pieces in beam:
+            if f > n:
+                return _pieces_to_keys_bounds(pieces, n)
+            if len(pieces) >= 5:
+                continue
+            cur_key = pieces[-1][1]
+            for k in range(256):
+                if k == cur_key or left <= 0:
+                    continue
+                left -= 1
+                cand = pieces + [(f, k)]
+                run = _strict_progress(_decode_pieces(exp, cand))
+                if run > f + 4 or run > n:
+                    nxt.append((run, cand))
+        if not nxt or left <= 0:
+            return None
+        nxt.sort(key=lambda t: (t[0], -len(t[1])), reverse=True)
+        beam = []
+        for run, cand in nxt:
+            sig = tuple(cand)
+            if sig in seen:
+                continue
+            seen.add(sig)
+            if run > n:
+                return _pieces_to_keys_bounds(cand, n)
+            beam.append((run, cand))
+            if len(beam) >= width:
+                break
+    return None
+
+
+def _transpile_with_repair(
+    exp: bytes, keys: list[int], bounds: list[int],
+    engine: str, decode_big5: bool,
+) -> tuple[bytes, str | None, list[int], list[int], bool] | None:
+    """转译入口：基线 → 第 1 层移缝修复 → 第 2 层整套重解。
+
+    三者均以“完整转译 + 成功反编译”为验收。成功返回
+    (pyc, co_filename, 实际密钥, 实际边界, 是否经修复)。
+    """
+    dec = _decode_segments(exp, keys, bounds)
+    pyc, fname = _transpile_once(dec, exp, keys, bounds)
+    if pyc is not None:
+        return pyc, fname, list(keys), list(bounds), False
+    shifted = _repair_by_shifting(exp, keys, bounds, engine, decode_big5)
+    if shifted is not None:
+        return *shifted, True
+    solved = _resolve_segments(exp)
+    if solved is None:
+        solved = _beam_resolve(exp)
+    if solved is not None:
+        skeys, sbounds = solved
+        sbounds = _refine_seams(exp, skeys, sbounds)
+        dec = _decode_segments(exp, skeys, sbounds)
+        pyc, fname = _transpile_once(dec, exp, skeys, sbounds)
+        if pyc is not None and _decompile_ok(pyc, engine, decode_big5):
+            return pyc, fname, skeys, sbounds, True
+    return None
+
+
 def _worker_script_fls(
     task: tuple[int, int, bytes, list[int], list[int], str, str | None, str, bool]
 ) -> dict[str, Any]:
     idx, entry_id, exp, keys, bounds, out_dir, pyc_dir, engine, decode_big5 = task
-    pts = [0] + bounds + [len(exp)]
-    dec = b"".join(exp[pts[i] : pts[i + 1]].translate(XTABS[keys[i]]) for i in range(5))
     try:
-        tr = Py25MarshalTranspiler(dec, exp, keys, bounds)
-        tr.transpile_object()
-        pyc_data = bytes(tr.out)
-        rel_path = tr.filename or f"script/unknown/entry_{idx:04d}_{entry_id:08x}.py"
+        got = _transpile_with_repair(exp, keys, bounds, engine, decode_big5)
+        if got is None:
+            raise ValueError("Python 2.5 marshal transpile failed")
+        pyc_data, fname, _rkeys, _rbounds, repaired = got
+        rel_path = fname or f"script/unknown/entry_{idx:04d}_{entry_id:08x}.py"
         if not rel_path.endswith(".py"):
             rel_path += ".py"
         out_py = Path(out_dir) / rel_path
@@ -986,12 +1463,15 @@ def _worker_script_fls(
             p_pyc = Path(pyc_dir) / Path(rel_path).with_suffix(".pyc")
             p_pyc.parent.mkdir(parents=True, exist_ok=True)
             p_pyc.write_bytes(pyc_data)
-        ok, used_eng, src = decompile_pyc_bytes(pyc_data, engine=engine, decode_big5=decode_big5)
+        ok, used_eng, src = decompile_pyc_bytes(
+            pyc_data, engine=engine, decode_big5=decode_big5)
         out_py.write_text(src, encoding="utf-8")
-        return {"idx": idx, "path": str(out_py), "rel": rel_path, "ok": ok, "engine": used_eng}
+        return {"idx": idx, "path": str(out_py), "rel": rel_path, "ok": ok,
+                "engine": used_eng, "repaired": repaired}
     except Exception as exc:
         rel_path = f"script/failed/entry_{idx:04d}_{entry_id:08x}.py"
-        return {"idx": idx, "path": rel_path, "rel": rel_path, "ok": False, "engine": "marshal_err", "error": str(exc)}
+        return {"idx": idx, "path": rel_path, "rel": rel_path, "ok": False,
+                "engine": "marshal_err", "error": str(exc)}
 
 
 def process_data_fls(
@@ -1114,7 +1594,9 @@ def process_script_fls(
         results = [_worker_script_fls(t) for t in tasks]
 
     ok_cnt = sum(1 for r in results if r["ok"])
-    print(f"[script.fls] Transpiled & decompiled {ok_cnt}/{len(results)} modules in {time.time() - t0:.2f}s")
+    fixed_cnt = sum(1 for r in results if r.get("repaired"))
+    print(f"[script.fls] Transpiled & decompiled {ok_cnt}/{len(results)} modules in {time.time() - t0:.2f}s"
+          + (f" (其中 {fixed_cnt} 条靠边界修复救回)" if fixed_cnt else ""))
     return {"total": len(results), "ok": ok_cnt, "results": results}
 
 

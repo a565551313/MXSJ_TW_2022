@@ -1,0 +1,3 @@
+# Client layout assets mix Big5 text and GBK paths. Preserve exported bytes,
+# including line endings/spacing; Python tests verify the source SHA-256.
+*.dlg binary

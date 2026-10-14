@@ -27,12 +27,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paths import PROJECT, SAMPLES                    # noqa: E402
+from _paths import PROJECT, SAMPLES  # noqa: E402
 
 if str(PROJECT) not in sys.path:
     sys.path.insert(0, str(PROJECT))
 
-from map_editor.cli import _bare_double_click_launch, main   # noqa: E402
+from map_editor.cli import _bare_double_click_launch, main  # noqa: E402
 
 SRC = PROJECT / "src" / "map_editor"
 QT_ALLOWED = {Path("ui") / "widgets.py"}
@@ -64,7 +64,7 @@ class TestQtIsolation(unittest.TestCase):
         self.assertGreater(checked, 8, "expected to scan the whole package")
         self.assertEqual(offenders, {}, "these modules must not import Qt")
 
-    def test_widgets_module_is_the_only_qt_consumer_and_is_syntactically_valid(self) -> None:
+    def test_widgets_is_the_only_qt_consumer_and_is_valid(self) -> None:
         target = SRC / "ui" / "widgets.py"
         self.assertTrue(target.is_file())
         self.assertTrue(self._qt_imports(target), "widgets.py should import PySide6")
@@ -85,7 +85,8 @@ class TestQtIsolation(unittest.TestCase):
             "        return None\n"
             "sys.meta_path.insert(0, Blocker())\n"
             f"sys.path.insert(0, {src_dir!r})\n"
-            "import map_editor.core, map_editor.client.discovery, map_editor.client.config\n"
+            "import map_editor.core, map_editor.client.discovery\n"
+            "import map_editor.client.config\n"
             "import map_editor.client.scene_table, map_editor.client.scriptfls\n"
             "import map_editor.ui.viewmodel, map_editor.cli\n"
             "try:\n"
@@ -95,7 +96,8 @@ class TestQtIsolation(unittest.TestCase):
             "    pass\n"
             "print('MODEL_LAYER_OK')\n"
         )
-        proc = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+        proc = subprocess.run([sys.executable, "-c", code],
+                              capture_output=True, text=True)
         self.assertIn("MODEL_LAYER_OK", proc.stdout, proc.stderr)
         importlib.invalidate_caches()
 
@@ -146,7 +148,6 @@ class TestCliEndToEnd(unittest.TestCase):
             self.assertEqual(im.size, (2000, 1500))
 
     def test_missing_root_is_a_usage_error(self) -> None:
-        os.environ.pop("MAP_EDITOR_HOME", None)
         code, _out, err = self._main("--scan", str(self.tmp / "does-not-exist"))
         self.assertEqual(code, 2)
         self.assertIn("错误", err)
@@ -158,8 +159,12 @@ class TestCliEndToEnd(unittest.TestCase):
 
     def test_main_still_errors_in_dev_mode_with_no_arguments(self) -> None:
         """Unpackaged (``python run.py`` with no args) keeps the documented
-        CLI-first default -- only a frozen EXE should auto-open the GUI."""
-        os.environ.pop("MAP_EDITOR_HOME", None)
+        CLI-first default -- only a frozen EXE should auto-open the GUI.
+
+        Keeps the isolated ``MAP_EDITOR_HOME`` from ``setUp``: reading the
+        developer's real config here made the test fail as soon as the editor
+        had been used once with ``--client-root`` (a remembered root turns
+        "no arguments" into a successful scan)."""
         self.assertFalse(getattr(sys, "frozen", False))
         code, _out, err = self._main()
         self.assertEqual(code, 2)
@@ -289,12 +294,13 @@ class TestGirbDump(unittest.TestCase):
         self.assertEqual(code, 0)
         text = out.getvalue()
         self.assertIn("### 1034", text)
-        lines = [l for l in text.splitlines() if l.startswith("s") and " len=" in l]
+        lines = [ln for ln in text.splitlines()
+                 if ln.startswith("s") and " len=" in ln]
         self.assertEqual(len(lines), 2)
-        hexes = [l for l in text.splitlines()
-                 if l and all(c in "0123456789abcdef" for c in l)]
+        hexes = [ln for ln in text.splitlines()
+                 if ln and all(c in "0123456789abcdef" for c in ln)]
         self.assertEqual(len(hexes), 2)
-        for hdr, body in zip(lines, hexes):
+        for hdr, body in zip(lines, hexes, strict=True):
             declared = int(hdr.split("len=")[1])
             self.assertEqual(len(body), declared * 2)   # 2 hex chars per byte
 

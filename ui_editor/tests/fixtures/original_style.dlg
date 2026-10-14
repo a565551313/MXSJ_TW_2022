@@ -1,0 +1,52 @@
+# -*- coding: gbk -*-
+# MD5: 0123456789abcdef0123456789abcdef
+
+UI_INFO = [
+	{
+		"sWidgetType": "CMainFrame", 
+		"sName": "Ö÷¿ò", 
+		"iX": 0, 
+		"iY": 0, 
+		"iWidth": 400, 
+		"iHeight": 300, 
+		"sTitle": "´ú¸Õ¹ï¸Ü®Ø", 
+		"lChildren": [], 
+	}, 
+	{
+		"sWidgetType": "CButton", 
+		"sName": "´_¶¨âo", 
+		"iX": 10, 
+		"iY": 20, 
+		"iWidth": 80, 
+		"iHeight": 24, 
+		"sFileName": "combdialog\\°´Å¥\\´_¶¨.png", 
+		"sText": "½T©w", 
+		"lNormalColor": [
+			255, 
+			255, 
+			255, 
+		], 
+		"tTextOffset": (
+			2, 
+			1, 
+		), 
+	}, 
+	{
+		"sWidgetType": "CBox", 
+		"sName": "ºÐ", 
+		"iX": 0, 
+		"iY": 0, 
+		"lChildren": [
+			{
+				"sWidgetType": "CText", 
+				"sText": "²Ä¤@¦æ\n²Ä¤G¦æ", 
+			}, 
+		], 
+	}, 
+	{
+		"sWidgetType": "CImage", 
+		"sName": "ˆD", 
+		"fScaleX": 1.5, 
+	}, 
+]
+

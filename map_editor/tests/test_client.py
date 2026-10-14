@@ -18,14 +18,18 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _paths import CLIENT_ROOT, SAMPLES, SCRIPT_FLS   # noqa: E402
+from _paths import CLIENT_ROOT, SAMPLES, SCRIPT_FLS  # noqa: E402
 
-from map_editor.client.config import Config, config_dir            # noqa: E402
-from map_editor.client.discovery import DiscoveryError, discover   # noqa: E402
-from map_editor.client.scene_table import SceneTable               # noqa: E402
-from map_editor.client.scriptfls import FlsArchive, decode_directory  # noqa: E402
-from map_editor.core.mapfile import MAGIC                          # noqa: E402
-from map_editor.ui.viewmodel import LAYERS, EditorViewModel        # noqa: E402
+from map_editor.client.config import Config, config_dir  # noqa: E402
+from map_editor.client.discovery import DiscoveryError, discover  # noqa: E402
+from map_editor.client.scene_table import SceneTable  # noqa: E402
+from map_editor.client.scriptfls import (  # noqa: E402
+    FlsArchive,
+    FlsError,
+    decode_directory,
+)
+from map_editor.core.mapfile import MAGIC  # noqa: E402
+from map_editor.ui.viewmodel import LAYERS, EditorViewModel  # noqa: E402
 
 REPO = CLIENT_ROOT or Path("/nonexistent")
 needs_samples = unittest.skipUnless(SAMPLES.is_dir(), f"no samples at {SAMPLES}")
@@ -58,7 +62,7 @@ class TestDiscovery(TmpCase):
         self.fake_map("patch/2024/sub/2111.map")
         self.fake_map("weird place/2112.map")
         (self.tmp / "map" / "not_a_map.map").write_bytes(b"JUNK" + b"\x00" * 64)
-        (self.tmp / "readme.txt").write_text("hello")
+        (self.tmp / "readme.txt").write_text("hello", encoding="utf-8")
 
         layout = discover(self.tmp)
         self.assertEqual([m.scene_key for m in layout.maps], ["2101", "2111", "2112"])
@@ -68,7 +72,7 @@ class TestDiscovery(TmpCase):
         with self.assertRaises(DiscoveryError):
             discover(self.tmp / "nope")
         f = self.tmp / "afile"
-        f.write_text("x")
+        f.write_text("x", encoding="utf-8")
         with self.assertRaises(DiscoveryError):
             discover(f)
 
@@ -189,7 +193,7 @@ class TestFlsArchive(unittest.TestCase):
 
     def test_out_of_range_entry(self) -> None:
         with FlsArchive(SCRIPT_FLS) as arc:
-            with self.assertRaises(Exception):
+            with self.assertRaises(FlsError):
                 arc.record(arc.count)
 
     def test_directory_transform_is_pure(self) -> None:
@@ -287,6 +291,7 @@ class TestViewModel(TmpCase):
         is untouched byte-for-byte -- not just "still parses".
         """
         import hashlib
+
         from map_editor.ui.viewmodel import ExportBlockedError
 
         src = SAMPLES / "2101.map"
@@ -302,6 +307,7 @@ class TestViewModel(TmpCase):
     def test_export_json_refuses_any_discovered_map_not_only_the_open_one(self) -> None:
         """The guard must cover every scanned map, not just the open document."""
         import hashlib
+
         from map_editor.ui.viewmodel import ExportBlockedError
 
         other = SAMPLES / "2111.map"
@@ -424,6 +430,7 @@ class TestCollisionLayer(TmpCase):
     def test_cli_girb_report_runs(self) -> None:
         import io
         from contextlib import redirect_stdout
+
         from map_editor.cli import main
         out = io.StringIO()
         with redirect_stdout(out):

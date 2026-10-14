@@ -1,6 +1,8 @@
 # 梦想世界(MXSJ)台湾版 2022 客户端逆向 — 文档索引
 
 > ⛔ **2026-10-12 客户端侧现状以 [`report/client-status-20261012.md`](report/client-status-20261012.md) 为准。**
+> 项目级入口在根目录 [`AGENTS.md`](../../AGENTS.md) 与 [`docs/STATUS.md`](../../docs/STATUS.md)。
+> 2026-10-14 整理：本目录 10-09/10-10 的交接与分派文档（`HANDOVER-20261010.md`、`HANDOFF-agent-20261010.md`、`QUICK_START.md`、`TASK_DISPATCH.md`、`DISPATCH_OVERVIEW.md`、`发给其他会话的指令.md`、`report/handoff-20261009.md`）已移至 [`docs/archive/work-20261010/`](../../docs/archive/work-20261010/)，下文对它们的引用均指归档位置。
 > 本索引中与该文冲突的内容已过期，至少包括：`tools/mock_server.py` 已被**仓库根目录**的
 > `mock_server.py` 取代；命令字 0x0001/0x0002/0x0003/0x0010/0x00FF 不成立（命令字是单字节 1..242，
 > 权威表见 `artifacts/protocol_table/protocol_opcodes.csv`）；帧格式不是 `uint16_be 总长 + 命令字`，
@@ -17,9 +19,10 @@
 
 | 文档 | 说明 |
 |------|------|
-| [**HANDOVER-20261010.md**](HANDOVER-20261010.md) | ⭐ **项目交接文档** — 完整进度、文件路径、工具手册、FAQ |
-| [**QUICK_START.md**](QUICK_START.md) | 5 分钟快速上手 |
-| [**report/verification-20261010.md**](report/verification-20261010.md) | ⭐ **2026-10-10 核对报告**：哪些说法已核实、哪些不成立（先读） |
+| [**report/client-status-20261012.md**](report/client-status-20261012.md) | ⭐ **客户端侧权威现状**：协议号表来源、帧格式判定、过期工具清单（先读） |
+| [**report/verification-20261010.md**](report/verification-20261010.md) | 2026-10-10 核对报告：哪些说法已核实、哪些不成立 |
+| [HANDOVER-20261010.md](../../docs/archive/work-20261010/HANDOVER-20261010.md)（已归档） | 10-10 交接文档：当时的进度、文件路径、工具手册、FAQ；工具手册部分仍有参考价值 |
+| [QUICK_START.md](../../docs/archive/work-20261010/QUICK_START.md)（已归档） | 10-10 快速上手；其命令字/帧格式结论已被 client-status 推翻 |
 
 ---
 
@@ -48,7 +51,8 @@ report/
 ├── verification-20261010.md           # ⭐ 2026-10-10 核对报告
 ├── final-summary-20261010.md          # 项目最终总结（任务A）（含修正提示）
 ├── analysis.md                        # 综合分析报告
-└── handoff-20261009.md                # 旧交接文档（2026-10-09）
+└── client-status-20261012.md          # ⭐ 客户端侧权威现状（2026-10-12）
+    （handoff-20261009.md 已归档至 docs/archive/work-20261010/）
 
 notes/
 ├── co_code_analysis/                  # 任务A：字节码破解
@@ -137,11 +141,12 @@ task-briefs/
 
 | 你想找... | 去这里 |
 |----------|--------|
-| 项目整体进度 | `HANDOVER-20261010.md` 第 2 节 |
+| 当前项目状态 | 根目录 `docs/STATUS.md` |
+| 2026-10-10 时的整体进度 | 归档 `docs/archive/work-20261010/HANDOVER-20261010.md` 第 2 节 |
 | 某个任务的详细报告 | 见上表"报告"列 |
-| 工具怎么用 | `HANDOVER-20261010.md` 第 6 节 |
-| 文件路径 | `HANDOVER-20261010.md` 第 5 节 |
-| 映射表 v4.3 纠正 | `HANDOVER-20261010.md` 第 7.1 节 |
+| 工具怎么用 | 归档 `HANDOVER-20261010.md` 第 6 节；过期工具清单见 `report/client-status-20261012.md` §5 |
+| 文件路径 | 归档 `HANDOVER-20261010.md` 第 5 节 |
+| 映射表 v4.3 纠正 | 归档 `HANDOVER-20261010.md` 第 7.1 节；完整 opcode 表见根目录 `notes/opcode_mapping_and_decompilation.md` |
 | 协议命令字 | `notes/protocol-commands-values.md` |
 | 协议命令目录（28个家族） | `notes/task-b-脚本分析/artifacts/protocol-commands-catalog.md` |
 | 商城协议 | `notes/task-b-脚本分析/artifacts/mall-protocol-analysis.md` |
@@ -149,8 +154,9 @@ task-briefs/
 | 地图格式 | `notes/task-c-地图分析/map-format-analysis.md` |
 | 加密算法 | `notes/crypto-analysis-complete.md` + `notes/protocol-artifacts/im_crypto.py` |
 | 命令字数值 | `notes/protocol-commands-values.md` |
-| 混淆key候选 | `HANDOVER-20261010.md` 附录 |
-| 常见问题 FAQ | `HANDOVER-20261010.md` 第 9 节 |
+| 混淆key候选 | 归档 `HANDOVER-20261010.md` 附录 |
+| 常见问题 FAQ | 归档 `HANDOVER-20261010.md` 第 9 节 |
+| 协议号权威表（412 条） | `artifacts/protocol_table/protocol_opcodes.csv`（来源 `script.fls` entry 3970） |
 
 ---
 
@@ -158,6 +164,8 @@ task-briefs/
 
 | 日期 | 更新内容 |
 |------|---------|
+| 2026-10-14 | 文档整理：交接/分派类文档归档至 `docs/archive/work-20261010/`，本索引改为指向归档位置与 client-status |
+| 2026-10-12 | 新增 `report/client-status-20261012.md`，取代本索引中与之冲突的内容 |
 | 2026-10-10 | 创建 INDEX.md 和 HANDOVER-20261010.md；更新 QUICK_START.md |
 | 2026-10-10 | 全面核对：新增 `report/verification-20261010.md`、`evidence/E-VERIFY-001.md`；修正 HANDOVER、workitems（WI-009 改回 in_progress，WI-012 改为 partial，新增 WI-013–017）、QUICK_START、INDEX；补全浅克隆历史；未删除任何文件 |
 | 2026-10-10 | 合并任务C（PR #3）和任务B收尾（cherry-pick PR #4） |

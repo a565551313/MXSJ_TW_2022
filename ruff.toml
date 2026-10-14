@@ -1,0 +1,13 @@
+# 仓库默认的 ruff 配置（见 docs/PYTHON_TOOL_CONVENTIONS.md §1）。
+# 各工具目录自己的 pyproject.toml 里的 [tool.ruff] 会覆盖这里；没有的（tools/*.py、tools/devkit、server/…）用这份。
+line-length = 88
+target-version = "py310"
+extend-exclude = [
+    "tools/decompiler/output",   # 反编译输出：机器生成，不是源码
+    "node_modules",
+    "dist",
+    "build",
+]
+
+[lint]
+select = ["E", "W", "F", "I", "UP", "B"]

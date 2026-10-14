@@ -1,0 +1,10 @@
+[Font]
+宋體 12 400 0
+新細明體 14 700 1
+[NewFont]
+宋體 12 400 0
+[TBStyle_000]
+ButtonFont=1
+ButtonNormalColor=255 255 180 255 171 121
+[TBStyle_001]
+ButtonFont=0
