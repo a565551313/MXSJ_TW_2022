@@ -267,6 +267,14 @@
   明文/零密钥新增不兼容。通用新路径加密与按原生key验证是后续必要修正；
   已正确加密的现有路径再由UI沿原密钥写仍可保留该形式，但游戏仍需回读验证。
   原包/key DB/两张模板均不改，不改337/4007，不写真实注册接口。
+- 修复助手源码提交 `ec6511d912d3ddb9c2d588588ab5371f61ca301e` 已推送。
+  仓库外 ZIP `/home/user/registration-layout-storage-fix-delivery/registration_layout_storage_fix.zip`
+  12,855 B，MD5 `a93a452ffd09504d5c965935bb253875`，SHA-256
+  `37b1efee63edd9337f799fc7cc0c4db2ac2b84d08c88a21af7f918faeb7591fa`。
+  六文件仅助手/BAT/说明/静态依据/manifest/校验和，无FLS/模板/key DB/编译器。
+  CRC/源码字节/解包读回/交付副本ruff、合成包独立CLI执行及既有输出拒绝通过；
+  Windows静态检查0/0。此时本地打包完成、未上传，须按现有发布约束获本轮上传授权。
+
 
 ## 4. 等待外部输入
 
