@@ -112,6 +112,16 @@
 - `GS2C_PROP_CHANGE` 与 `GS2C_NPC_CHAT_EXT` 在客户端表里同为 152（客户端自身冲突）；链路帧 `0xFF` 续读长度是 **2 字节**。
 - `script.fls` 模块导入不走路径哈希（未解）；`.dlg` 每条目 4 字节 XOR 密钥的派生公式未定位（靠固定文件头反推）。
 - 仓库里**没有任何真实客户端抓包字节**；所有协议结论来自静态分析。
+- 真机「窗口标题/聊天乱码」多半**不是资源损坏**：客户端只有 `SetWindowTextA`，脚本层
+  `SetSysCaption` 零转换，标题与 IM 层文字由**系统 ANSI 代码页**解释（详见
+  `notes/title_and_chat_encoding.md`）。别去改 `data/data.fls` 里 `core/gamecode.pyo` 的
+  `SYSCODE='gbk'`——它是编译期常量且与日志路径共用，正路是 cp950（Locale Emulator / 系统区域）。
+- 本版本 `interface.GCODE = BIG5`，但 `GetGameRegion()` 被 `script/delegate.py` 覆盖成 `'cn'`，
+  即台服构建用的是**简中屏蔽词子集**（表现是命中变 `*`，不是乱码）。做简体化时别用简繁转换
+  掩盖解码错误（`裏`/`羣` 等在 cp950 不可编码，会静默丢字）。
+- `tools/decompiler/batch_decompile.py` 整池并行会被个别超大字节码模块（实测 entry 2371
+  `preload_mov`、2679 `wingtypeposdata`）堵死——uncompyle6 在几千常量的数据表上指数级爆炸。
+  补跑全量请用「一条一子进程 + 超时」驱动；产物 62 MB 级别，不要入库。
 - `tools/decompiler/output/` 下的 `.py` 是反编译输出，有缺失和错误，不是源码。
 
 ## 8. 术语

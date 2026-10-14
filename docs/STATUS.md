@@ -1,6 +1,6 @@
 # 项目当前状态（STATUS）
 
-> **快照日期：2026-10-14**（Asia/Shanghai）。本文是唯一的“当前状态”文件：每轮工作结束时更新本文，不要再新建交接文档。
+> **快照日期：2026-10-15**（Asia/Shanghai）。本文是唯一的“当前状态”文件：每轮工作结束时更新本文，不要再新建交接文档。
 > 长期规则见 [`AGENTS.md`](../AGENTS.md)；项目总览见 [`README.md`](../README.md)；历史快照在 [`archive/`](archive/README.md)。
 > 表中“实测”均为本次在 Linux 沙箱（Python 3.11.2、Node 22、无 `libGL.so.1`）实际运行的结果，不是转抄。
 
@@ -18,7 +18,7 @@
 
 | 组件 | 版本/阶段 | 状态 | 本次实测 |
 |---|---|---|---|
-| 逆向研究（`notes/`, `work/`） | 结案：双 VM opcode 表、0SLF 目录/路径哈希、`.dlg` 2,706/2,901、协议号表 412 条、帧续读 2 字节 | 稳定；未决项见 AGENTS §7 | 锁定输入 SHA 匹配 |
+| 逆向研究（`notes/`, `work/`） | 结案：双 VM opcode 表、0SLF 目录/路径哈希、`.dlg` 2,706/2,901、协议号表 412 条、帧续读 2 字节；10-15 新增标题/聊天编码链路与 `GCODE=BIG5`/`GetGameRegion()='cn'` 结案（`notes/title_and_chat_encoding.md`） | 稳定；未决项见 AGENTS §7 | 锁定输入 SHA 匹配；`script.fls` 全量反编译补跑 4401/5002 完整（生成物不入库） |
 | 注册 UI 补丁（`tools/client_patches/`，历史） | v3.3 已作废 | 用户判定旧 overlay/整图烤字按钮/包外散图不符合原生规范，**勿再分发 v3/v3.2/v3.3**；新实现见下行 | 90/90 仅历史证据，不作为新实现验收依据 |
 | 注册原生重做（`tools/registration/`） | 第二期候选：现行风格 + 五账号勾选 | 第一期 1.1 已实机全通。第二期服务条款布局已收齐并逐字拷贝为 `regterms.dlg`；`regform.dlg` 照现行 chgpwd 风格生成（四框/三按钮/原生「註冊五個帳號」）。默认单账号 6~16 位；用户选定五账号模式基础账号 6~14 位，生成原账号及 `_1`~`_4`，密码/邮箱相同。**无真实注册接口**：仅生成候选、明示尚未注册；全成功提示回调已预留但桩不调用。后续已定单条批量＋服务器重名顺延，真实接口/顺延结果回调调整未实现。新 script.fls SHA-256 `17a94c77…`；第二期源码提交 `22a3fab` 已推送、测试包已上传（Drive `1FQjI8tiFSYAihlHUzwJN2GNNZWy5CBy7`，ZIP MD5 `56c583af…`）；Windows 未验（见 §4） | **13/13** 回归通过（含真 2.5.6 编译/运行桩件）；新包读回完整 marshal 逐字节相等、再冒烟全绿；只改 337/4007、其余 5000 条压缩负载全等；ruff 0（嵌入式 2.5 文件仅豁免 UP）；wincompat 0/0 |
 | 只读复核链（catalog / API / web） | H/I/J 已收尾 | 可运行，只读 | catalog 34/34；review_api 27/27；验收套件 68 通过 + 2 跳过（需 uvicorn 在 PATH 上）；网页未装 node_modules 未跑 |
@@ -92,6 +92,7 @@
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-15 | 真机「窗口标题 + 聊天乱码」定位**结案**（`notes/title_and_chat_encoding.md`）：客户端只有 `SetWindowTextA`（`SetWindowTextW` 计数 0），`misc.SetSysCaption → C_sys.SetCaption` 零转换，`TITLE_NAME_MX` 实为 **Big5 字节**，登录后标题再由「游戏名 + `server.ini` 服务器名 + 服务端下发角色名」三段拼接；`imwin7.dll` 全程按 ACP（`GetACP`/`MultiByteToWideChar`/`CharNextA`）处理输入与剪贴板 → 判定为**系统 ANSI 码页问题，非资源损坏**，首选用 Locale Emulator 以 cp950 单进程启动验证。为查证而把 `data/script.fls` **全量补反编译**：5002 条目 → 完整 4401 / 部分 28 / 明确失败 547（对应已知 546 stub 一类）/ 无产物 26，产出 62 MB 4987 文件；因 uncompyle6 在 `preload_mov`(2371)、`wingtypeposdata`(2679) 上指数级爆炸会堵死 worker 池，改用「一条一子进程＋超时」驱动（脚本在仓库外，未改被证据钉死的 `batch_decompile.py`）。**生成物按约定不入库**。顺带查实 `GetGameRegion()` 两处定义（`pubdelegate_v2.py:216` 与被 `@Override` 覆盖的 `delegate.py:227`）**均返回 `'cn'`**，即台服构建启用简中屏蔽词子集；已排除「cn/tw 表是码位表因而致乱码」的假设——`DATA` 实测为 0..3863 连续序号表，其影响是命中变 `*`/被拦，不是乱码。本轮只读解析、未执行任何游戏模块，未改客户端原包与三编辑器代码。 |
 | 2026-10-14 | 注册第二期授权执行**已完成**：源码/原生布局/真实母版/回归测试/批量顺延方案/记账以提交 `22a3fab` 推送到固定分支 `arena/23e52686-mxsj-tw-2022`（未合入 master）；`registration_phase2.zip` 已上传 Google Drive，文件 ID `1FQjI8tiFSYAihlHUzwJN2GNNZWy5CBy7`，[下载](https://drive.google.com/file/d/1FQjI8tiFSYAihlHUzwJN2GNNZWy5CBy7/view)，24,189,000 B，ZIP MD5 `56c583afa4fa58b7fa8f47efb5a802c3`、SHA-256 `0541062f45a74bfbda99b62022d30c3929feb0e0979069d36b06d513d3cec97b`。上传返回的文件大小/MD5 与本地逐字节校验包一致，未改分享权限。只发第二期界面测试包，真实注册/查重/顺延/事务仍未实现；Windows 仍待用户按包内说明导入 `login/regterms.dlg` / `login/regform.dlg` 至 interface.fls 新包并实机验证。 |
 | 2026-10-14 | 用户明确授权「提交推送上传」，注册第二期出货执行中。交付前重新跑 13/13 回归、ruff 0、wincompat 0 ERROR/0 WARNING；重建两张布局与 script.fls（SHA-256 `17a94c77…`），新包读回完整 marshal 比对及真 2.5.6 冒烟全绿，原 5000 条压缩负载全等。按工作区重新打包 `registration_phase2.zip`（24,189,000 B，MD5 `56c583afa4fa58b7fa8f47efb5a802c3`），逐文件解包字节比对和 ZIP CRC 通过；测试说明补充已定的「单条批量＋重名顺延」仍属待服务端实现规则。只交付原生注册 UI/校验/候选名单，不创建真实账号、不假报成功；Windows 新布局/勾选皮肤仍待用户实机。准备提交推送当前固定分支并上传网盘，完成后补编号。 |
 | 2026-10-14 | 用户通过选项选定后续注册规则：**一条批量请求＋服务器跳过重名顺延**。请求带基础账号、数量 1/5、共用密码/邮箱及批次编号；五账号模式按原名、`_1`、`_2`…查找，最多 `_99` 且最终最长 16 位（14 位基础仅到 `_9`）。凑满五个才整批创建，凑不满就整批不创建；服务端唯一性/事务及同批重试返回原结果防止重复建五个；成功弹窗/登录预填使用服务器实际名单。单账号重名不擅自改名。**这是已定业务规则，不是已实现接口**：现运行源码仍不发送/查重/顺延，当前固定 pending 名单回调须在接口接通前调整，需补重名/耗尽/并发/重试验收。仅更新 README/STATUS，未改运行源码、未提交/推送/上传；选择方案不等于发布授权。本轮既有客户端离线回归复跑 13/13、ruff 0、wincompat 0/0（不作为顺延/事务/幂等服务端验收证据）。 |
