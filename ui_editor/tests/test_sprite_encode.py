@@ -52,5 +52,55 @@ class TestSpriteEncode(unittest.TestCase):
             self.assertEqual(decoded.frame_count, 4)
 
 
+class TestDirectColorSprites(unittest.TestCase):
+    """T4/T5 真彩精灵（无调色板、token 后跟 RGB；与资源编辑器同源）。
+
+    2026-10-14 在真实 item.fls 样本上定版，UI 编辑器挂载
+    item.fls 取图时同样会碰到，先解码再喂 QImage 的路径须通。
+    """
+
+    @staticmethod
+    def _bytes(magic: bytes) -> bytes:
+        import struct
+
+        rows = [
+            bytes([0xC1, 0x42, 255, 0, 0, 0, 255, 0,
+                   0x30, 0, 0, 255, 0x00]),
+            bytes([0x02, 31, 10, 20, 30, 0x82, 200, 100, 50, 0x00]),
+        ]
+        pad = (-sum(len(r) for r in rows)) % 4
+        rows[-1] += b"\x00" * pad
+        lens = [len(r) for r in rows]
+        out = struct.pack("<2sHHHHHH", magic, 1, 1, 4, 2, 0, 0)
+        out += struct.pack("<HHHH", 0, 0, 4, 2)
+        out += struct.pack("<I", 2)
+        if magic == b"T5":
+            out += b"".join(struct.pack("<H", n) for n in lens)
+        else:
+            out += bytes(lens)
+        return out + b"".join(rows)
+
+    def test_t4_t5_decode(self):
+        for magic in (b"T4", b"T5"):
+            with self.subTest(magic=magic):
+                data = self._bytes(magic)
+                self.assertTrue(sprite.is_sprite(data))
+                decoded = sprite.decode_sprite(data)
+                self.assertEqual(decoded.frame_count, 1)
+                frame = decoded.frames[0]
+                self.assertEqual((frame.width, frame.height), (4, 2))
+                rgba = frame.rgba
+
+                def px(x, y, rgba=rgba):
+                    i = (y * 4 + x) * 4
+                    return tuple(rgba[i:i + 4])
+
+                self.assertEqual(px(0, 0), (0, 0, 0, 0))
+                self.assertEqual(px(1, 0), (255, 0, 0, 255))
+                self.assertEqual(px(3, 0), (0, 0, 255, 16 * 255 // 31))
+                self.assertEqual(px(0, 1), (10, 20, 30, 255))
+                self.assertEqual(px(3, 1), (200, 100, 50, 255))
+
+
 if __name__ == "__main__":
     unittest.main()

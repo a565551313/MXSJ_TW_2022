@@ -1,13 +1,15 @@
-"""``I0`` / ``T0`` / ``I1`` 精灵解码（输出逐帧 RGBA 字节）。
+"""``I0`` / ``T0`` / ``I1`` / ``T4`` / ``T5`` 精灵解码（输出逐帧 RGBA 字节）。
 
 格式已经字节级验证（见仓库 ``tools/data-parser/i0_sprite.py``），
 此处移植为不依赖 Pillow 的实现，解码结果直接喂 ``QImage``。
 
 布局：14 字节头 ``<2sHHHHHH``（魔数、版本、帧数、画布宽高、中心
 点）；帧目录每帧 ``<HHHH``（关键点 x/y、帧宽高）；u32 总行数；
-行长表（I0/T0 每行 u8，I1 每行 u16）；调色板（T0 为 256×RGB888，
-I0/I1 为 256×RGB565）；随后是逐帧逐行的 RLE 像素流（每帧数据
-按 4 字节对齐，填充计入末行长度）。
+行长表（I0/T0/T4 每行 u8，I1/T5 每行 u16）；调色板（T0 为
+256×RGB888，I0/I1 为 256×RGB565；T4/T5 无调色板，行内 token
+后跟 3 字节 RGB 真彩像素，2026-10-14 在真实 item.fls 上定版）；
+随后是逐帧逐行的 RLE 像素流（每帧数据按 4 字节对齐，填充计入
+末行长度）。
 
 行内算子（低位为计数/等级）：``0x00`` 行尾；``0x01–0x1F`` RUN
 （半透明色块）；``0x20–0x3F`` SINGLE（单像素半透明）；
@@ -23,7 +25,8 @@ from dataclasses import dataclass
 
 from .errors import SpriteError
 
-MAGICS = (b"I0", b"T0", b"I1")
+MAGICS = (b"I0", b"T0", b"I1", b"T4", b"T5")
+DIRECT_MAGICS = (b"T4", b"T5")  # 真彩变体：无调色板，像素为 RGB 三字节
 
 __all__ = ["SpriteFrame", "Sprite", "is_sprite", "decode_sprite"]
 
@@ -57,6 +60,7 @@ class _SpriteParser:
         if not is_sprite(data):
             raise SpriteError("不是 I0/T0/I1 精灵")
         self.data = data
+        self.direct = data[:2] in DIRECT_MAGICS
         (self.magic, _ver, self.frame_count, self.canvas_w, self.canvas_h,
          _cx, _cy) = struct.unpack_from("<2sHHHHHH", data, 0)
         off = 14
@@ -68,17 +72,18 @@ class _SpriteParser:
         off += 4
         if total_lines != sum(f[3] for f in self.frame_dims):
             raise SpriteError("总行数与帧高之和不一致")
-        len_size = 2 if self.magic == b"I1" else 1
+        len_size = 2 if self.magic in (b"I1", b"T5") else 1
         fmt = "<H" if len_size == 2 else "<B"
         self.lens = [
             struct.unpack_from(fmt, data, off + i * len_size)[0]
             for i in range(total_lines)
         ]
         off += total_lines * len_size
-        pal_size = 768 if self.magic == b"T0" else 512
+        pal_size = 0 if self.direct else (768 if self.magic == b"T0" else 512)
         if off + pal_size > len(data):
             raise SpriteError("调色板越界")
-        self.palette = self._decode_palette(data[off:off + pal_size])
+        self.palette = ([] if self.direct
+                        else self._decode_palette(data[off:off + pal_size]))
         off += pal_size
         self.rows_offset = off
 
@@ -151,6 +156,53 @@ def _decode_row(line: bytes, width: int) -> list[tuple[int, int]]:
     return px
 
 
+def _decode_row_direct(
+    line: bytes, width: int
+) -> list[tuple[tuple[int, int, int], int]]:
+    """解真彩（T4/T5）一行，返回 [((r, g, b), alpha8), ...]。
+
+    算子与调色板版一一对应，只是索引字节换成 3 字节 RGB。
+    """
+    px: list[tuple[tuple[int, int, int], int]] = []
+    i, n = 0, len(line)
+    while i < n and len(px) < width:
+        b = line[i]
+        i += 1
+        if b == 0x00:  # 行尾
+            break
+        elif b < 0x20:  # RUN：cnt, alpha, RGB
+            if i + 3 >= n:
+                break
+            cnt = b & 0x1F
+            alpha = line[i] * 255 // 31
+            color = (line[i + 1], line[i + 2], line[i + 3])
+            i += 4
+            px.extend([(color, alpha)] * min(cnt, width - len(px)))
+        elif b < 0x40:  # SINGLE：RGB，alpha 在 token 内
+            if i + 2 >= n:
+                break
+            px.append(((line[i], line[i + 1], line[i + 2]),
+                       (b & 0x1F) * 255 // 31))
+            i += 3
+        elif b < 0x80:  # LIT：不透明 RGB 序列
+            for _ in range(b & 0x3F):
+                if i + 2 >= n:
+                    break
+                if len(px) < width:
+                    px.append(((line[i], line[i + 1], line[i + 2]), 255))
+                i += 3
+        elif b < 0xC0:  # REP：不透明单色重复
+            if i + 2 >= n:
+                break
+            cnt = b & 0x3F
+            color = (line[i], line[i + 1], line[i + 2])
+            px.extend([(color, 255)] * min(cnt, width - len(px)))
+            i += 3
+        else:  # SKIP：透明像素
+            px.extend([((0, 0, 0), 0)] * min(b & 0x3F, width - len(px)))
+    return px
+
+
 def decode_sprite(data: bytes) -> Sprite:
     """把精灵字节解码为逐帧 RGBA，失败抛 :class:`SpriteError`。"""
     parser = _SpriteParser(data)
@@ -160,9 +212,13 @@ def decode_sprite(data: bytes) -> Sprite:
         buf = bytearray(fw * fh * 4)
         for y, line in enumerate(all_rows[fi]):
             base = y * fw * 4
-            for x, (idx, alpha) in enumerate(_decode_row(line, fw)):
+            if parser.direct:
+                row = _decode_row_direct(line, fw)
+            else:
+                row = [((parser.palette[idx]), alpha)
+                       for idx, alpha in _decode_row(line, fw)]
+            for x, ((r, g, b), alpha) in enumerate(row):
                 if alpha:
-                    r, g, b = parser.palette[idx]
                     off = base + x * 4
                     buf[off] = r
                     buf[off + 1] = g
