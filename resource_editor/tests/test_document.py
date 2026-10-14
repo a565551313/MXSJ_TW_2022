@@ -70,5 +70,48 @@ class TestDocumentFlsData(unittest.TestCase):
         self.assertEqual(rebuilt.content(1), b"bbb" * 50)
 
 
+class TestSaveWithDecoderGapSprites(unittest.TestCase):
+    """原包自带解码器覆盖外的精灵，未改动不得拦下整包保存。
+
+    回归背景（真实 interface.fls）：仅新增一条无关条目，保存必
+    填的逐条试解码却栽在两条原包精灵上（大头精灵/行数变体），
+    整包保存被拒。字节逐字比对才是硬闸门；未改动的精灵解不开
+    只记 sprite_undecodable 提示，被改动/新增的才拦截。
+    """
+
+    FAKE_SPRITE = b"I0" + b"\xff" * 10  # 精灵魔数但体是坏的
+
+    def _make_doc(self) -> PackDocument:
+        payloads = [b"plain", self.FAKE_SPRITE, b"other"]
+        metas = [fls0slf.EntryMeta(entry_id=i, r1=0) for i in range(3)]
+        return PackDocument.from_bytes(fls0slf.build(payloads, metas))
+
+    def test_untouched_gap_sprite_does_not_block_save(self):
+        from resource_editor.core.errors import SaveError  # noqa: F401
+
+        doc = self._make_doc()
+        doc.add_entry_for_path(b"NEWPNG", "interface\\新增圖.png")
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "saved.fls"
+            report = save_document(doc, out)  # 不得抛 SaveError
+            self.assertTrue(report.ok, msg="; ".join(report.messages))
+            self.assertEqual(report.sprite_undecodable, 1)
+            reopened = PackDocument.open(out)
+            self.assertEqual(reopened.stored(1), self.FAKE_SPRITE)
+            reopened.close()
+        doc.close()
+
+    def test_modified_gap_sprite_blocks_save(self):
+        from resource_editor.core.errors import SaveError
+
+        doc = self._make_doc()
+        doc.replace_content(1, self.FAKE_SPRITE + b"v2")  # 改动后成图条目
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "saved.fls"
+            with self.assertRaises(SaveError):
+                save_document(doc, out)
+        doc.close()
+
+
 if __name__ == "__main__":
     unittest.main()

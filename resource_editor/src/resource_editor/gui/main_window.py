@@ -964,9 +964,12 @@ class MainWindow(QMainWindow):
             self._grid.refresh_header()
             backup = target.with_suffix(target.suffix + ".bak")
             note = f"，原文件备份为 {backup.name}" if backup.exists() else ""
+            gap = (f"，另有 {report.sprite_undecodable} 条原包精灵超出"
+                   "本机解码器覆盖（字节原样保留，不影响保存）"
+                   if report.sprite_undecodable else "")
             self.log(
                 f"已保存到 {target}（校验通过，试解码精灵 "
-                f"{report.sprite_checked} 个{note}）")
+                f"{report.sprite_checked} 个{note}{gap}）")
             self.setWindowTitle(f"{target.name} — MXSJ 资源编辑器")
             self._sync_doc_marks()
             self._update_actions()

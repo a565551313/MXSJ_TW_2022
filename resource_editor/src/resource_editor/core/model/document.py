@@ -309,6 +309,17 @@ class PackDocument:
         self._kind_cache.clear()
 
     # ---------------------------------------------------------- 保存 ----
+    def changed_indexes(self) -> set[int]:
+        """内容与原包不同（或新增）的条目下标集合。
+
+        写后校验据此区分责任：被改动/新增的精灵试解码失败要拦，
+        未改动的原始精灵解不开只是本机解码器未覆盖其变体——字节
+        逐字未动，不拦保存。下标以当前槽位顺序为准（保存对齐
+        后即文件顺序），故须在 write_to 之后调用。
+        """
+        return {i for i, slot in enumerate(self._slots)
+                if slot.stored is not None}
+
     def _sort_slots_for_write(self) -> None:
         """保存对齐（仅 0SLF）：槽位与目录元数据按 entry_id 升序排列。
 

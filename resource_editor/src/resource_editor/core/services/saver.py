@@ -33,7 +33,8 @@ def save_document(
             doc.write_to(out, progress)
     except OSError as exc:
         raise SaveError(f"写入临时文件失败：{exc}") from exc
-    report = verify_saved(tmp, doc.count, doc.stored)
+    report = verify_saved(tmp, doc.count, doc.stored,
+                          changed=doc.changed_indexes())
     if not report.ok:
         tmp.unlink(missing_ok=True)
         raise SaveError("保存前校验未通过：" + "；".join(report.messages))
