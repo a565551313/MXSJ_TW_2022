@@ -82,6 +82,22 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class TestInsertWidget(unittest.TestCase):
+    """粘贴落点：克隆挂进指定父级/顶层，下标与父指针正确。"""
+
+    def test_insert_clone_under_parent_and_roots(self):
+        doc = LayoutDocument.from_dicts(sample_dicts(), "x" * 32)
+        frame, box = doc.roots
+        clone = box.children[0].clone()
+        doc.insert_widget(clone, parent=frame)
+        self.assertIs(clone.parent, frame)
+        self.assertEqual(frame.children, [clone])
+        top = frame.clone()
+        doc.insert_widget(top, index=0)
+        self.assertIsNone(top.parent)
+        self.assertIs(doc.roots[0], top)
+
+
 class TestHistory(unittest.TestCase):
     """撤销/重做快照时间线：逐步回退、合并、截断重做、上限。"""
 
@@ -144,3 +160,29 @@ class TestHistory(unittest.TestCase):
         while doc.undo():
             steps += 1
         self.assertEqual(steps, doc.HISTORY_LIMIT - 1)
+
+
+class TestWidgetLock(unittest.TestCase):
+    """控件锁定是编辑器专属状态：默认解锁、不写进 .dlg 字典。"""
+
+    def test_lock_defaults_off_and_stays_out_of_dict(self):
+        widget = Widget({"sName": "bg", "sWidgetType": "CImage"})
+        self.assertFalse(widget.locked)
+        widget.locked = True
+        data = widget.to_dict()
+        self.assertNotIn("locked", data)
+        self.assertEqual(Widget.from_dict(data).locked, False)
+
+    def test_clone_and_history_rebuild_start_unlocked(self):
+        doc = LayoutDocument.from_dicts(
+            [{"sName": "frame", "sWidgetType": "CMainFrame",
+              "lChildren": []}], None)
+        frame = doc.roots[0]
+        frame.locked = True
+        self.assertFalse(frame.clone().locked)
+        doc.reset_history()
+        frame.set_geometry(x=5)
+        doc.checkpoint()
+        self.assertTrue(doc.undo())
+        # 快照重建出的对象不带锁定（窗口层按路径恢复，不靠模型）
+        self.assertFalse(doc.roots[0].locked)

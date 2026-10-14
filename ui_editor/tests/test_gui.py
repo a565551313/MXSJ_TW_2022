@@ -583,6 +583,441 @@ class TestSaveWithUnreferencedStagedImage(unittest.TestCase):
                 self.assertFalse(pack.contains("newdir\\未用上的圖.png"))
 
 
+class TestCanvasClipboardAndContextMenu(unittest.TestCase):
+    """画布右键菜单与复制/粘贴/删除：剪贴板往返、多选删除、撤销恢复。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        import tempfile
+
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+        self._tmp = tempfile.TemporaryDirectory()
+        pack_path = Path(self._tmp.name) / "interface_mini.fls"
+        pack_path.write_bytes(_mini_pack_bytes("dialog/cateroom.dlg"))
+        self.window.open_pack_file(str(pack_path))
+        self.window._open_pack_layout(
+            str(pack_path), "dialog/cateroom.dlg")
+        self.doc = self.window.doc
+        self.assertIsNotNone(self.doc)
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+        self._tmp.cleanup()
+
+    def _add_button(self, parent=None):
+        widget = self.doc.new_widget("CButton", parent=parent)
+        self.window._refresh_structure()
+        return widget
+
+    def _select(self, *widgets):
+        self.window.scene.clearSelection()
+        for w in widgets:
+            item = self.window.scene.item_for(w)
+            self.assertIsNotNone(item)
+            item.setSelected(True)
+        self._app.processEvents()
+
+    def test_copy_paste_offsets_and_undo(self):
+        button = self._add_button(parent=self.doc.roots[0])
+        self.doc.checkpoint()  # 与窗口「添加控件」流程一致：落一步
+        self._select(button)
+        self.window.copy_selected_widgets()
+        from PySide6.QtGui import QGuiApplication
+        mime = QGuiApplication.clipboard().mimeData()
+        self.assertTrue(mime.hasFormat(self.window._MIME_WIDGETS))
+        self.assertTrue(self.window._act_paste.isEnabled())
+        before = len(self.doc.roots[0].children)
+        self.window.paste_widgets()
+        siblings = self.doc.roots[0].children
+        self.assertEqual(len(siblings), before + 1)
+        pasted = siblings[siblings.index(button) + 1]
+        self.assertEqual(pasted.name, button.name)
+        self.assertEqual((pasted.x, pasted.y), (button.x + 16, button.y + 16))
+        self.assertTrue(self.doc.undo())  # 整组粘贴一步可撤销
+        self.assertEqual(len(self.doc.roots[0].children), before)
+
+    def test_paste_without_selection_goes_to_roots(self):
+        button = self._add_button(parent=self.doc.roots[0])
+        self._select(button)
+        self.window.copy_selected_widgets()
+        self.window.scene.clearSelection()
+        self.window._selected = None
+        n_roots = len(self.doc.roots)
+        self.window.paste_widgets()
+        self.assertEqual(len(self.doc.roots), n_roots + 1)
+
+    def test_delete_multiple_and_undo(self):
+        parent = self.doc.roots[0]
+        b1 = self._add_button(parent=parent)
+        b2 = self._add_button(parent=parent)
+        self.doc.checkpoint()  # 添加落一步，删除才能单独撤销
+        self._select(b1, b2)
+        self.window.delete_selected()  # 无子控件，不弹确认
+        names = {w.name for w in parent.children}
+        self.assertNotIn(b1.name, names)
+        self.assertNotIn(b2.name, names)
+        self.assertTrue(self.doc.undo())
+        fresh = {w.name for w in self.doc.roots[0].children}  # 撤销后是新对象树
+        self.assertIn(b1.name, fresh)
+        self.assertIn(b2.name, fresh)
+
+    def test_delete_parent_with_children_confirms(self):
+        from unittest import mock
+
+        from PySide6.QtWidgets import QMessageBox
+
+        frame = self.doc.roots[0]
+        self._add_button(parent=frame)  # 给 frame 加一个子控件触发确认分支
+        self._select(frame)
+        with mock.patch.object(
+                QMessageBox, "question",
+                return_value=QMessageBox.StandardButton.No):
+            self.window.delete_selected()
+        self.assertIn(frame, self.doc.roots)  # 选了 No，什么都不删
+        with mock.patch.object(
+                QMessageBox, "question",
+                return_value=QMessageBox.StandardButton.Yes):
+            self.window.delete_selected()
+        self.assertNotIn(frame, self.doc.roots)
+        self.assertEqual(self.doc.to_dicts(), [])  # 子控件一并删除
+
+    def test_context_menu_actions_and_enablement(self):
+        button = self._add_button(parent=self.doc.roots[0])
+        menu = self.window.build_canvas_context_menu(button)
+        actions = menu.actions()
+        self.assertIn(self.window._act_copy, actions)
+        self.assertIn(self.window._act_paste, actions)
+        self.assertIn(self.window._act_delete, actions)
+        self.assertTrue(self.window._act_copy.isEnabled())  # 右击已选中它
+        self.window.scene.clearSelection()
+        self.window._selected = None
+        self.window.build_canvas_context_menu(None)
+        self.assertFalse(self.window._act_copy.isEnabled())  # 无选择则禁用
+
+    def test_edit_keys_act_on_text_when_input_focused(self):
+        """焦点在文本框时 Ctrl+C/Delete 作用于文字，不得动控件。"""
+        from PySide6.QtGui import QGuiApplication
+        from PySide6.QtWidgets import QLineEdit
+
+        button = self._add_button(parent=self.doc.roots[0])
+        self._select(button)
+        self.window.show()
+        edit = QLineEdit(self.window)
+        self.window.statusBar().addWidget(edit)  # 入布局、真可见才抢得到焦点
+        edit.show()
+        edit.setText("hello")
+        edit.selectAll()
+        self.window.activateWindow()
+        edit.setFocus()
+        self._app.processEvents()
+        self.assertIs(self.window._focused_text_editor(), edit)
+        self.window._edit_copy()
+        clipboard = QGuiApplication.clipboard()
+        self.assertEqual(clipboard.text(), "hello")
+        self.assertFalse(clipboard.mimeData().hasFormat(
+            self.window._MIME_WIDGETS))
+        self.window._edit_delete()
+        self.assertEqual(edit.text(), "")  # 删的是选中的文字
+        self.assertIn(button, self.doc.roots[0].children)  # 控件毫发无损
+        self.window.hide()
+
+    def test_view_context_event_reports_widget(self):
+        from PySide6.QtGui import QContextMenuEvent
+
+        button = self._add_button(parent=self.doc.roots[0])
+        view = self.window.view
+        self.window.show()
+        self._app.processEvents()
+        item = self.window.scene.item_for(button)
+        center = item.sceneBoundingRect().center()
+        local = view.mapFromScene(center)
+        global_pos = view.viewport().mapToGlobal(local)
+        seen = []
+        view.context_menu_handler = lambda gp, w: seen.append(w)
+        event = QContextMenuEvent(
+            QContextMenuEvent.Reason.Mouse, local, global_pos)
+        view.contextMenuEvent(event)
+        self.assertEqual(seen, [button])
+        self.window.hide()
+
+
+class TestWidgetLockGui(unittest.TestCase):
+    """控件锁定：锁后拖不动/缩不了/删不掉，解锁恢复；撤销不丢锁。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        import tempfile
+
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+        self._tmp = tempfile.TemporaryDirectory()
+        pack_path = Path(self._tmp.name) / "interface_mini.fls"
+        pack_path.write_bytes(_mini_pack_bytes("dialog/cateroom.dlg"))
+        self.window.open_pack_file(str(pack_path))
+        self.window._open_pack_layout(
+            str(pack_path), "dialog/cateroom.dlg")
+        self.doc = self.window.doc
+        self.assertIsNotNone(self.doc)
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+        self._tmp.cleanup()
+
+    def _add_button(self, parent=None):
+        widget = self.doc.new_widget(
+            "CButton", parent=parent or self.doc.roots[0])
+        widget.set_geometry(x=10, y=10, width=100, height=50)
+        self.window._refresh_structure()
+        return widget
+
+    def _drag_handle(self, widget, dx, dy):
+        from PySide6.QtCore import QEvent, QPointF
+        from PySide6.QtWidgets import QGraphicsSceneMouseEvent
+
+        item = self.window.scene.item_for(widget)
+        item.setSelected(True)
+        start_scene = item.mapToScene(QPointF(100, 50))
+
+        def _event(etype, scene_pos):
+            ev = QGraphicsSceneMouseEvent(etype)
+            ev.setPos(QPointF(100, 50))
+            ev.setScenePos(scene_pos)
+            return ev
+
+        item.mousePressEvent(
+            _event(QEvent.Type.GraphicsSceneMousePress, start_scene))
+        item.mouseMoveEvent(_event(
+            QEvent.Type.GraphicsSceneMouseMove,
+            start_scene + QPointF(dx, dy)))
+        item.mouseReleaseEvent(
+            _event(QEvent.Type.GraphicsSceneMouseRelease,
+                   start_scene + QPointF(dx, dy)))
+
+    def test_toolbar_toggle_lock_flags_and_no_dirty(self):
+        from PySide6.QtWidgets import QGraphicsItem, QToolBar
+
+        w = self.window
+        button = self._add_button()
+        w._select_widget(button)
+        self.assertIn(w._act_lock,
+                      w.findChildren(QToolBar)[0].actions())
+        self.assertEqual(w._act_lock.iconText(), "锁定")
+        self.assertFalse(w._act_lock.icon().isNull())
+        self.assertEqual(w._act_lock.shortcut().toString(), "Ctrl+L")
+        self.assertTrue(w._act_lock.isEnabled())
+        w.doc.dirty = False  # 模拟已保存基线，看锁定是否会乱标脏
+        w._act_lock.trigger()
+        self.assertTrue(button.locked)
+        self.assertTrue(w._act_lock.isChecked())
+        item = w.scene.item_for(button)
+        self.assertFalse(item.flags()
+                         & QGraphicsItem.GraphicsItemFlag.ItemIsMovable)
+        self.assertTrue(item.flags()
+                        & QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+        self.assertFalse(w.doc.dirty)   # 锁定只是编辑器状态，不标脏
+        self.assertFalse(w.doc.can_undo)  # 也不进撤销时间线
+        w._act_lock.trigger()
+        self.assertFalse(button.locked)
+        self.assertFalse(w._act_lock.isChecked())
+        item = w.scene.item_for(button)
+        self.assertTrue(item.flags()
+                        & QGraphicsItem.GraphicsItemFlag.ItemIsMovable)
+
+    def test_locked_cannot_resize_or_delete_until_unlocked(self):
+        w = self.window
+        button = self._add_button()
+        w._select_widget(button)
+        w._act_lock.trigger()
+        self._drag_handle(button, 50, 10)  # 拖右下把手：应纹丝不动
+        self.assertEqual((button.width, button.height), (100, 50))
+        w.delete_selected()  # 锁着删不掉
+        self.assertIn(button, self.doc.roots[0].children)
+        self.assertIn("锁定", w.statusBar().currentMessage())
+        w._act_lock.trigger()  # 解锁后删得掉
+        w.delete_selected()
+        self.assertNotIn(button.name,
+                         {c.name for c in self.doc.roots[0].children})
+
+    def test_parent_with_locked_child_cannot_be_deleted(self):
+        w = self.window
+        frame = self.doc.roots[0]
+        button = self._add_button(parent=frame)
+        w._select_widget(button)
+        w._act_lock.trigger()
+        w._select_widget(frame)
+        w.delete_selected()
+        self.assertIn(frame, self.doc.roots)
+        self.assertIn(button, frame.children)
+
+    def test_lock_survives_undo_and_context_menu_has_it(self):
+        w = self.window
+        button = self._add_button()
+        self.doc.checkpoint()
+        w._select_widget(button)
+        w._act_lock.trigger()
+        menu = w.build_canvas_context_menu(button)
+        self.assertIn(w._act_lock, menu.actions())
+        button.set_geometry(x=60)
+        self.doc.checkpoint()
+        w.undo()  # 历史重建对象，锁定按路径恢复
+        fresh = {c.name: c for c in self.doc.roots[0].children}
+        self.assertIn(button.name, fresh)
+        self.assertTrue(fresh[button.name].locked)
+        self.assertEqual(fresh[button.name].x, 10)
+
+    def test_locked_parent_children_still_draggable(self):
+        from PySide6.QtWidgets import QGraphicsItem
+
+        w = self.window
+        frame = self.doc.roots[0]
+        button = self._add_button(parent=frame)
+        w._select_widget(frame)
+        w._act_lock.trigger()
+        self.assertTrue(frame.locked)
+        self.assertFalse(button.locked)
+        item = w.scene.item_for(button)
+        self.assertTrue(item.flags()
+                        & QGraphicsItem.GraphicsItemFlag.ItemIsMovable)
+        self._drag_handle(button, 50, 10)  # 子控件照常缩放
+        self.assertEqual((button.width, button.height), (150, 60))
+
+
+class TestAspectResize(unittest.TestCase):
+    """等比缩放：工具栏开关、边/角把手按原比例缩放、Shift 临时等比。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        import tempfile
+
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+        self._tmp = tempfile.TemporaryDirectory()
+        pack_path = Path(self._tmp.name) / "interface_mini.fls"
+        pack_path.write_bytes(_mini_pack_bytes("dialog/cateroom.dlg"))
+        self.window.open_pack_file(str(pack_path))
+        self.window._open_pack_layout(
+            str(pack_path), "dialog/cateroom.dlg")
+        self.doc = self.window.doc
+        self.assertIsNotNone(self.doc)
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+        self._tmp.cleanup()
+
+    def _add_button(self):
+        widget = self.doc.new_widget("CButton", parent=self.doc.roots[0])
+        widget.set_geometry(x=10, y=10, width=100, height=50)
+        self.window._refresh_structure()
+        return widget
+
+    def _drag_handle(self, widget, handle_pos, dx, dy, modifiers=None):
+        from PySide6.QtCore import QEvent, QPointF, Qt
+        from PySide6.QtWidgets import QGraphicsSceneMouseEvent
+
+        if modifiers is None:
+            modifiers = Qt.KeyboardModifier.NoModifier
+        item = self.window.scene.item_for(widget)
+        item.setSelected(True)
+        start_scene = item.mapToScene(QPointF(*handle_pos))
+
+        def _event(etype, scene_pos):
+            ev = QGraphicsSceneMouseEvent(etype)
+            ev.setPos(QPointF(*handle_pos))
+            ev.setScenePos(scene_pos)
+            ev.setModifiers(modifiers)
+            return ev
+
+        item.mousePressEvent(
+            _event(QEvent.Type.GraphicsSceneMousePress, start_scene))
+        item.mouseMoveEvent(_event(
+            QEvent.Type.GraphicsSceneMouseMove,
+            start_scene + QPointF(dx, dy)))
+        item.mouseReleaseEvent(
+            _event(QEvent.Type.GraphicsSceneMouseRelease,
+                   start_scene + QPointF(dx, dy)))
+
+    def test_aspect_math(self):
+        from ui_editor.ui.canvas import aspect_resize
+
+        # 角把手：宽的相对变化更大，按宽定比例（100x50 原点不动）
+        self.assertEqual(aspect_resize("se", 10, 20, 100, 50, 50, 10),
+                         (10, 20, 150, 75))
+        # 角把手：高的相对变化更大，底边固定（上拉 30 → 高 80 宽 160）
+        self.assertEqual(aspect_resize("ne", 10, 20, 100, 50, -20, -30),
+                         (10, -10, 160, 80))
+        # 右边把手：高度跟宽走，垂直居中
+        self.assertEqual(aspect_resize("e", 10, 20, 100, 50, 30, 0),
+                         (10, 12.5, 130, 65))
+        # 左边把手：右边固定（往右拖 20 → 宽 80 高 40）
+        self.assertEqual(aspect_resize("w", 10, 20, 100, 50, 20, 0),
+                         (30, 25, 80, 40))
+        # 顶边把手：宽度跟高走，水平居中（下压 10 → 高 40 宽 80）
+        self.assertEqual(aspect_resize("n", 10, 20, 100, 50, 0, 10),
+                         (20, 30, 80, 40))
+        # 缩到极小仍保比例且不低于 8px
+        x, y, w, h = aspect_resize("se", 10, 20, 100, 50, -98, -48)
+        self.assertEqual((w, h), (16, 8))
+        self.assertEqual(w / h, 2.0)
+        # 原尺寸非法时原样返回，不除零
+        self.assertEqual(aspect_resize("se", 1, 2, 0, 50, 5, 5),
+                         (1, 2, 0, 50))
+
+    def test_toolbar_toggle_and_drag_keeps_ratio(self):
+        from PySide6.QtWidgets import QToolBar
+
+        w = self.window
+        button = self._add_button()
+        bars = w.findChildren(QToolBar)
+        self.assertIn(w._act_aspect, bars[0].actions())
+        self.assertEqual(w._act_aspect.iconText(), "等比")
+        self.assertFalse(w._act_aspect.icon().isNull())
+        self.assertFalse(w.scene.keep_aspect)
+        # 关着：自由缩放（拖右下角 +50/+10 → 150x60，比例变了）
+        self._drag_handle(button, (100, 50), 50, 10)
+        self.assertEqual((button.width, button.height), (150, 60))
+        button.set_geometry(x=10, y=10, width=100, height=50)
+        self.window.scene.refresh_widget(button)
+        # 打开等比：同样拖法 → 150x75（保持 2:1）
+        w._act_aspect.trigger()
+        self.assertTrue(w.scene.keep_aspect)
+        self._drag_handle(button, (100, 50), 50, 10)
+        self.assertEqual((button.width, button.height), (150, 75))
+
+    def test_shift_temporarily_keeps_ratio(self):
+        from PySide6.QtCore import Qt
+
+        button = self._add_button()
+        self.assertFalse(self.window.scene.keep_aspect)
+        self._drag_handle(button, (100, 50), 50, 10,
+                          modifiers=Qt.KeyboardModifier.ShiftModifier)
+        self.assertEqual((button.width, button.height), (150, 75))
+
+
 class TestZoomCallbackAfterTeardown(unittest.TestCase):
     """窗口销毁中画布补发缩放信号不得炸（0.5.0 原生反馈的崩溃）。
 

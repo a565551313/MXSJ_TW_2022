@@ -246,3 +246,46 @@ def icon_button_state() -> QIcon:
     p.setBrush(QColor(0, 0, 0, 80))
     p.drawRoundedRect(QRectF(14, 8.5, 9.5, 11), 3, 3)
     return _end(pixmap, p)
+
+
+def icon_lock() -> QIcon:
+    """锁定：橙色挂锁。"""
+    pixmap, p = _begin()
+    p.setPen(_pen("#7a4d12", 2.0))
+    p.setBrush(Qt.BrushStyle.NoBrush)
+    p.drawArc(QRectF(9, 3.5, 10, 11), 0, 180 * 16)  # 锁梁
+    p.setPen(_pen("#7a4d12", 1.6))
+    p.setBrush(QColor("#f2b04a"))
+    p.drawRoundedRect(QRectF(5.5, 11, 17, 12), 2.5, 2.5)  # 锁身
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor("#7a4d12"))
+    p.drawEllipse(QRectF(12.6, 15, 2.8, 2.8))  # 锁孔
+    p.drawRect(QRectF(13.4, 16.5, 1.2, 3.4))
+    return _end(pixmap, p)
+
+
+def icon_aspect() -> QIcon:
+    """等比缩放：同比例大小两框 + 对角双向箭头。"""
+    pixmap, p = _begin()
+    p.setPen(_pen("#2f6fb4", 1.7))
+    p.setBrush(Qt.BrushStyle.NoBrush)
+    p.drawRect(QRectF(3.5, 5.5, 17, 12))     # 大框
+    p.setBrush(QColor("#bcd6f5"))
+    p.drawRect(QRectF(3.5, 5.5, 10, 7))      # 同比例小框（共左上角）
+    p.setPen(_pen("#1a9e4b", 1.9))
+    p.drawLine(QPointF(13.5, 20.5), QPointF(23.5, 12.5))  # 对角线
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor("#1a9e4b"))
+    head = QPainterPath()  # 大端箭头
+    head.moveTo(24.5, 10.2)
+    head.lineTo(19.6, 11.8)
+    head.lineTo(22.8, 15.2)
+    head.closeSubpath()
+    p.drawPath(head)
+    head = QPainterPath()  # 小端箭头
+    head.moveTo(12.5, 22.8)
+    head.lineTo(17.4, 21.2)
+    head.lineTo(14.2, 17.8)
+    head.closeSubpath()
+    p.drawPath(head)
+    return _end(pixmap, p)

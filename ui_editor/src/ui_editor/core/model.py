@@ -28,15 +28,20 @@ def _int_prop(props: dict, key: str) -> int:
 
 
 class Widget:
-    """一个控件：属性字典 + 子控件列表 + 父指针。"""
+    """一个控件：属性字典 + 子控件列表 + 父指针。
 
-    __slots__ = ("props", "children", "parent")
+    ``locked`` 是编辑器专属状态（布局时防手滑），只存在内存里：
+    不进 ``props``、不写回 .dlg，复制/粘贴出的克隆默认未锁定。
+    """
+
+    __slots__ = ("props", "children", "parent", "locked")
 
     def __init__(self, props: dict | None = None,
                  parent: Widget | None = None) -> None:
         self.props: dict = dict(props or {})
         self.children: list[Widget] = []
         self.parent = parent
+        self.locked = False
 
     # -- 常用属性 -------------------------------------------------
     @property
@@ -221,6 +226,18 @@ class LayoutDocument:
         props = copy.deepcopy(DEFAULT_PROPS[wtype])
         widget = Widget(props, parent)
         widget.name = self.unique_name(wtype)
+        siblings = parent.children if parent is not None else self.roots
+        if index is None:
+            siblings.append(widget)
+        else:
+            siblings.insert(index, widget)
+        self.dirty = True
+        return widget
+
+    def insert_widget(self, widget: Widget, parent: Widget | None = None,
+                      index: int | None = None) -> Widget:
+        """把已有控件（克隆/粘贴来的）挂进文档，返回该控件。"""
+        widget.parent = parent
         siblings = parent.children if parent is not None else self.roots
         if index is None:
             siblings.append(widget)

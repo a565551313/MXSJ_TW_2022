@@ -27,6 +27,55 @@ from ..core.painters import PaintContext
 
 _HANDLE = 7.0  # 选中把手边长（图元本地坐标）
 _HANDLES = ("nw", "n", "ne", "e", "se", "s", "sw", "w")
+_MIN_SIZE = 8.0  # 控件缩放下限（与自由缩放一致）
+
+
+def aspect_resize(handle: str, x0: float, y0: float, w0: float, h0: float,
+                  dx: float, dy: float) -> tuple[float, float, float, float]:
+    """等比缩放：返回保持宽高比的新 (x, y, w, h)。
+
+    角把手按拖动幅度相对更大的一轴定比例；边把手由拖动轴推另一轴，
+    垂直/水平方向以中心为锚。被拖边的对边固定，最小 8px 仍保比例。
+    """
+    if w0 <= 0 or h0 <= 0:
+        return x0, y0, w0, h0
+    ratio = w0 / h0
+    cand_w, cand_h = w0, h0
+    if "e" in handle:
+        cand_w = w0 + dx
+    if "w" in handle:
+        cand_w = w0 - dx
+    if "s" in handle:
+        cand_h = h0 + dy
+    if "n" in handle:
+        cand_h = h0 - dy
+    if len(handle) == 2:  # 角：变化相对更大的一轴说了算
+        if abs(cand_w - w0) / w0 >= abs(cand_h - h0) / h0:
+            cand_h = cand_w / ratio
+        else:
+            cand_w = cand_h * ratio
+    elif "e" in handle or "w" in handle:
+        cand_h = cand_w / ratio
+    else:
+        cand_w = cand_h * ratio
+    w, h = cand_w, cand_h
+    if w < _MIN_SIZE:
+        w, h = _MIN_SIZE, _MIN_SIZE / ratio
+    if h < _MIN_SIZE:
+        h, w = _MIN_SIZE, _MIN_SIZE * ratio
+    if "w" in handle:
+        x = x0 + w0 - w  # 右边固定
+    elif handle in ("n", "s"):
+        x = x0 + (w0 - w) / 2  # 水平居中
+    else:
+        x = x0
+    if "n" in handle:
+        y = y0 + h0 - h  # 底边固定
+    elif handle in ("e", "w"):
+        y = y0 + (h0 - h) / 2  # 垂直居中
+    else:
+        y = y0
+    return x, y, w, h
 
 
 class WidgetItem(QGraphicsItem):
@@ -48,16 +97,27 @@ class WidgetItem(QGraphicsItem):
         self._resize_start: tuple[float, float, float, float, QPointF] \
             | None = None
         self.setPos(widget.x, widget.y)
-        self.setFlags(
-            QGraphicsItem.GraphicsItemFlag.ItemIsSelectable
-            | QGraphicsItem.GraphicsItemFlag.ItemIsMovable
-            | QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges
-        )
+        self.apply_lock()
         self.child_items: list[WidgetItem] = []
         for child in widget.children:
             item = WidgetItem(child, ctx, on_geometry, on_commit)
             item.setParentItem(self)
             self.child_items.append(item)
+
+    def apply_lock(self) -> None:
+        """按锁定状态刷新图元标志并重绘。
+
+        锁定后仍可选中（为了能解锁），但不可拖动；徽标与把手在
+        :meth:`paint` 中按状态处理。父控件锁定不影响子图元。
+        """
+        flags = (
+            QGraphicsItem.GraphicsItemFlag.ItemIsSelectable
+            | QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges
+        )
+        if not self.widget.locked:
+            flags |= QGraphicsItem.GraphicsItemFlag.ItemIsMovable
+        self.setFlags(flags)
+        self.update()
 
     # -- 几何同步 ---------------------------------------------------
     def boundingRect(self) -> QRectF:
@@ -146,11 +206,29 @@ class WidgetItem(QGraphicsItem):
                                 Qt.PenStyle.DashLine))
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawRect(rect)
-            painter.setBrush(QColor(80, 200, 255))
-            painter.setPen(Qt.PenStyle.NoPen)
-            for cx, cy in self._handle_points():
-                painter.drawRect(QRectF(cx - _HANDLE / 2, cy - _HANDLE / 2,
-                                        _HANDLE, _HANDLE))
+            if not self.widget.locked:
+                painter.setBrush(QColor(80, 200, 255))
+                painter.setPen(Qt.PenStyle.NoPen)
+                for cx, cy in self._handle_points():
+                    painter.drawRect(QRectF(cx - _HANDLE / 2,
+                                            cy - _HANDLE / 2,
+                                            _HANDLE, _HANDLE))
+        if self.widget.locked:
+            self._paint_lock_badge(painter)
+
+    def _paint_lock_badge(self, painter: QPainter) -> None:
+        """右上角橙色小挂锁：未选中也看得见这件控件锁住了。"""
+        painter.save()
+        bx, by = self._width - 17.0, 3.0
+        painter.setPen(QPen(QColor("#7a4d12"), 1.2))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawArc(QRectF(bx + 2.5, by, 8, 9), 0, 180 * 16)
+        painter.setBrush(QColor("#f2b04a"))
+        painter.drawRoundedRect(QRectF(bx, by + 5, 13, 9), 2, 2)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor("#7a4d12"))
+        painter.drawEllipse(QRectF(bx + 5.2, by + 8.0, 2.6, 2.6))
+        painter.restore()
 
     def _handle_points(self) -> list[tuple[float, float]]:
         w, h = self._width, self._height
@@ -158,7 +236,7 @@ class WidgetItem(QGraphicsItem):
                 (w, h), (w / 2, h), (0, h), (0, h / 2)]
 
     def _handle_at(self, pos: QPointF) -> str | None:
-        if not self.isSelected():
+        if not self.isSelected() or self.widget.locked:
             return None
         tol = _HANDLE
         for name, (cx, cy) in zip(_HANDLES, self._handle_points(),
@@ -190,22 +268,28 @@ class WidgetItem(QGraphicsItem):
         dx, dy = delta.x(), delta.y()
         handle = self._resize_handle
         x, y, w, h = x0, y0, w0, h0
-        if "e" in handle:
-            w = w0 + dx
-        if "s" in handle:
-            h = h0 + dy
-        if "w" in handle:
-            x, w = x0 + dx, w0 - dx
-        if "n" in handle:
-            y, h = y0 + dy, h0 - dy
-        if w < 8:
+        scene = self.scene()
+        keep_aspect = bool(getattr(scene, "keep_aspect", False)) or bool(
+            event.modifiers() & Qt.KeyboardModifier.ShiftModifier)
+        if keep_aspect:
+            x, y, w, h = aspect_resize(handle, x0, y0, w0, h0, dx, dy)
+        else:
+            if "e" in handle:
+                w = w0 + dx
+            if "s" in handle:
+                h = h0 + dy
             if "w" in handle:
-                x -= 8 - w
-            w = 8
-        if h < 8:
+                x, w = x0 + dx, w0 - dx
             if "n" in handle:
-                y -= 8 - h
-            h = 8
+                y, h = y0 + dy, h0 - dy
+            if w < 8:
+                if "w" in handle:
+                    x -= 8 - w
+                w = 8
+            if h < 8:
+                if "n" in handle:
+                    y -= 8 - h
+                h = 8
         self.widget.set_geometry(x=int(round(x)), y=int(round(y)),
                                  width=int(round(w)), height=int(round(h)))
         self.prepareGeometryChange()
@@ -254,6 +338,7 @@ class LayoutScene(QGraphicsScene):
         self.document: LayoutDocument | None = None
         self._items: dict[int, WidgetItem] = {}
         self.show_grid = False  # 网格+标尺（视图菜单/工具栏开关）
+        self.keep_aspect = False  # 等比缩放（视图菜单/工具栏开关）
         self._guides_x: list[float] = []  # 场景坐标参考线（拖动吸附）
         self._guides_y: list[float] = []
 
@@ -364,6 +449,17 @@ class CanvasView(QGraphicsView):
         self.setDragMode(QGraphicsView.DragMode.NoDrag)
         self.setTransformationAnchor(
             QGraphicsView.ViewportAnchor.AnchorUnderMouse)
+        # 主窗口注入的右键菜单处理器：handler(global_pos, 命中的控件|None)
+        self.context_menu_handler = None
+
+    def contextMenuEvent(self, event) -> None:  # noqa: N802
+        if self.context_menu_handler is None:
+            super().contextMenuEvent(event)
+            return
+        item = self.itemAt(event.pos())
+        widget = getattr(item, "widget", None) if item is not None else None
+        self.context_menu_handler(event.globalPos(), widget)
+        event.accept()
 
     def wheelEvent(self, event) -> None:  # noqa: N802
         factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15
