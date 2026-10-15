@@ -29,6 +29,10 @@ def main():
     )
     shutil.copyfile(root / "recovery_worker.spec", sources / "recovery_worker.spec")
     shutil.copytree(root / "licenses/recovery", sources / "licenses")
+    from script_editor.recovery_dependencies import checked_recovery_source
+
+    archive = checked_recovery_source(root)
+    shutil.copyfile(archive, sources / archive.name)
     # Keep full upstream sources with the independent binary, not just URLs.
     subprocess.run(
         [
@@ -40,8 +44,7 @@ def main():
             "--no-binary=:all:",
             "--dest",
             str(sources),
-            "uncompyle6==3.9.3",
-            "xdis==6.1.8",
+            "xdis==6.3.0",
             "spark-parser==1.9.0",
             "six==1.17.0",
             "click==8.5.0",

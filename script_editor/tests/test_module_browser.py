@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import os
 import subprocess
 import tempfile
@@ -136,6 +137,42 @@ class ModuleBrowserTests(unittest.TestCase):
                     self.assertIn((b"u", value.encode("utf-8")), values)
                     self.assertIn((b"s", b"\xff"), values)
 
+    def test_collection_values_and_all_256_bytes_survive_recovery(self):
+        values = {
+            "numbers": [7, 9, 10, 5, 8, 4, 2, 1],
+            "labels": ["1", "0", "x", "9"],
+            "pairs": {"a": 7, "b": 9},
+        }
+        raw = bytes(range(256))
+        for vm in ("py25", "py27"):
+            with self.subTest(vm=vm):
+                compiler = self.compiler(vm)
+                source = "\n".join(
+                    name + " = " + repr(value) for name, value in values.items()
+                )
+                source += "\npayload = " + repr(raw).removeprefix("b") + "\n"
+                original, rebuilt = (
+                    self.root / (vm + "-collections.pyc"),
+                    self.root / (vm + "-collections-new.pyc"),
+                )
+                compile_standard(compiler, source, b"collections.py", original)
+                report = recover_standard(original.read_bytes(), vm)
+                self.assertTrue(report["complete"], report["diagnostics"])
+                tree = ast.parse(report["source"])
+                recovered = {
+                    n.targets[0].id: ast.literal_eval(n.value)
+                    for n in tree.body
+                    if isinstance(n, ast.Assign)
+                }
+                for name, value in values.items():
+                    self.assertEqual(recovered[name], value)
+                compile_standard(compiler, report["source"], b"collections.py", rebuilt)
+                for path in (original, rebuilt):
+                    constants = parse(path.read_bytes()[8:]).fields[0].items
+                    self.assertTrue(
+                        any(isinstance(n, Atom) and n.value == raw for n in constants)
+                    )
+
     def test_missing_catalog_opens_diagnostic_not_fake_source(self):
         state = make_state(self.root)
         with ArchiveDocument(state.bindings[0].archive) as archive:
@@ -201,6 +238,35 @@ class ModuleBrowserTests(unittest.TestCase):
 
 
 class RealModuleBrowserTests(unittest.TestCase):
+    def test_real_registration_correct_lists_do_not_bypass_fixed_capacity(self):
+        repo = os.environ.get("MXSJ_M2_REPO")
+        compiler_path = os.environ.get("MXSJ_PY25")
+        if not repo or not compiler_path:
+            self.skipTest("opt-in real package and actual compiler required")
+        root = Path(repo)
+        with (
+            ArchiveDocument(root / "data/script.fls") as archive,
+            tempfile.TemporaryDirectory() as tmp,
+        ):
+            catalog = bundled_catalog(archive, root / "script_editor")
+            report = read_module(archive, 4007, catalog)
+            self.assertTrue(report.complete, report.diagnostics)
+            self.assertIn("A = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3", report.source)
+            self.assertIn("code = ['1', '0', 'x', '9'", report.source)
+            path = Path(tmp) / "register.py"
+            save_new_source(path, report.source)
+            binding = replace(
+                Binding.associate(archive, 4007, path),
+                source_kind="recovered-reviewed",
+                recovery_sha256=report.standard_sha256,
+                filename_hex=report.filename_hex,
+            )
+            compiler = inspect_compiler(Path(compiler_path), "py25")
+            with self.assertRaisesRegex(ValueError, "fixed XOR length"):
+                prepare_build(
+                    Snapshot(binding, report.source, "py25"), compiler, catalog
+                )
+
     def test_real_script_and_data_recover_edit_without_original_authored_source(self):
         repo = os.environ.get("MXSJ_M2_REPO")
         if not repo or not all(
@@ -208,7 +274,7 @@ class RealModuleBrowserTests(unittest.TestCase):
         ):
             self.skipTest("opt-in real packages and actual standard compilers required")
         root = Path(repo)
-        for vm, name, index in (("py25", "script.fls", 4007), ("py27", "data.fls", 75)):
+        for vm, name, index in (("py25", "script.fls", 4001), ("py27", "data.fls", 75)):
             with self.subTest(vm=vm), tempfile.TemporaryDirectory() as temporary:
                 work = Path(temporary)
                 compiler = inspect_compiler(Path(os.environ["MXSJ_" + vm.upper()]), vm)
@@ -223,10 +289,10 @@ class RealModuleBrowserTests(unittest.TestCase):
                     # Source presentation alone does not certify semantics.
                     source = report.source
                     if vm == "py25":
-                        self.assertIn("1234567890123456", source)
+                        self.assertIn("Kindle Paperwhite", source)
                         # Isolated constant edit frees space inside the ORIGINAL
                         # fixed envelope. Never rescale boundaries or trim lnotab.
-                        source = source.replace("1234567890123456", "0")
+                        source = source.replace("Kindle Paperwhite", "K")
                     else:
                         source += "\nRECOVERY_EDITED = True\n"
                     path = work / "reviewed.py"

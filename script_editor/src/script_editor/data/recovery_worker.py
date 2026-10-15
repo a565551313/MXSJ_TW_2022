@@ -91,12 +91,26 @@ def source_syntax(text, vm):
 
 
 def recover(path, vm):
+    import xdis.unmarshal as legacy_unmarshal
     from uncompyle6.main import decompile_file
     from uncompyle6.semantics.pysource import SourceWalker
     from xdis.bytecode import Bytecode
     from xdis.cross_types import UnicodeForPython3
 
-    # xdis6.1.8's Unicode repr drops the first two characters and mishandles
+    # xdis6.3 defaults to UTF-8 errors=ignore, which silently drops legacy
+    # non-UTF8 byte constants. Retain the raw bytes on decode failure, as the
+    # older reader did. This process-local input adaptation changes no bytes.
+    def lossless_legacy_string(value):
+        if isinstance(value, bytes):
+            try:
+                return value.decode("utf-8")
+            except UnicodeDecodeError:
+                return value
+        return value
+
+    legacy_unmarshal.compat_str = lossless_legacy_string
+
+    # xdis's legacy Unicode repr drops the first two characters and mishandles
     # quotes/non-BMP text. Fix literal RENDERING in this separate process only;
     # never change constants or third-party installed files.
     def unicode_repr(value):
@@ -119,7 +133,7 @@ def recover(path, vm):
 
     if path.stat().st_size > 64 * 1024 * 1024 + 8:
         raise ValueError("standard pyc exceeds 64MiB limit")
-    version, _, _, code, is_pypy, *_ = load_module(str(path))
+    version, _, _, code, implementation, *_ = load_module(str(path))
     if tuple(version[:2]) != {"py25": (2, 5), "py27": (2, 7)}[vm]:
         raise ValueError("standard pyc VM mismatch")
     listing, diagnostics = BoundedText(), []
@@ -129,7 +143,13 @@ def recover(path, vm):
             raise ValueError("code nesting limit")
         listing.write(f"\n{'  ' * depth}{co.co_name!r}\n")
         listing.write(
-            Bytecode(co, get_opcode_module(version, "pypy" if is_pypy else None)).dis()
+            Bytecode(
+                co,
+                get_opcode_module(
+                    version,
+                    implementation,
+                ),
+            ).dis()
         )
         for child in co.co_consts:
             if hasattr(child, "co_code"):

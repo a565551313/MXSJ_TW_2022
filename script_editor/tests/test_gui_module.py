@@ -110,6 +110,16 @@ class GuiModuleTests(unittest.TestCase):
         self.assertFalse(sentinel.exists())
         self.assertFalse(self.window.bindings)
 
+    def test_old_recovery_text_is_preserved_with_explicit_warning(self):
+        text = "# uncompyle6 version 3.9.3\n# user edits kept\nx = 42\n"
+        tab = self.window.add_source(
+            self.root / "old.py", text=text, source_kind="recovered-draft"
+        )
+        self.assertEqual(tab.editor.toPlainText(), text)
+        self.assertFalse(tab.editor.isReadOnly())
+        self.assertIn("保留修改", tab.legacy_warning.text())
+        self.assertFalse(self.window.bindings)
+
     def test_unbound_missing_catalog_opens_entry_tab_with_reason(self):
         self.install(make_state(self.root))
         self.window.catalogs = []

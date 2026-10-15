@@ -54,6 +54,13 @@ class SourceTab(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 6, 8, 2)
         layout.addLayout(header)
+        if "# uncompyle6 version 3.9.3" in text[:1024]:
+            warning = self.legacy_warning = QLabel(
+                "旧恢复引擎可能把集合常量值写成下标。请保留修改，重新从包恢复后对比合并并核验；不自动覆盖此稿。"
+            )
+            warning.setWordWrap(True)
+            warning.setTextFormat(Qt.TextFormat.PlainText)
+            layout.addWidget(warning)
         layout.addWidget(path_label)
         layout.addWidget(self.editor, 1)
 

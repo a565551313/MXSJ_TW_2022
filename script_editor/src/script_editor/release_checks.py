@@ -9,10 +9,12 @@ from pathlib import Path
 
 from .core.compiler.distribution import audit_runtimes
 from .core.services.bundled_catalog import audit_catalogs
+from .recovery_dependencies import checked_recovery_source
 
 # Independent game/DLL materials are deliberately not part of a standalone tool.
 # Only these exact opt-in tests may be absent from a release build environment.
 OPTIONAL_MATERIAL_TESTS = {
+    "test_module_browser.RealModuleBrowserTests.test_real_registration_correct_lists_do_not_bypass_fixed_capacity",
     "test_module_browser.RealModuleBrowserTests.test_real_script_and_data_recover_edit_without_original_authored_source",
     "test_native_evidence.DispatchEvidence.test_current_dll_dispatch_without_executing_it",
     "test_native_legacy.RealMaterialBuild.test_actual_script_register_source",
@@ -66,6 +68,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     root = args.root.resolve(strict=True)
     try:
+        checked_recovery_source(root)
         audit_catalogs(root)
         audit_runtimes(root, execute=True)
     except (OSError, ValueError) as exc:
@@ -94,6 +97,7 @@ def main(argv=None):
         for name, reason in blocked:
             print(f"Release blocked by skipped test: {name}: {reason}")
         # Detect standard-library bytecode writes or other runtime changes by tests.
+        checked_recovery_source(root)
         audit_catalogs(root)
         audit_runtimes(root, execute=True)
         return 0 if result.wasSuccessful() and not blocked else 1

@@ -1,6 +1,6 @@
 PySide6==6.10.3
-uncompyle6==3.9.3
-xdis==6.1.8
+./third_party/uncompyle6-91298ba80e322cfb8736ab8a697509527297a7a9.tar.gz
+xdis==6.3.0
 spark-parser==1.9.0
 six==1.17.0
 click==8.5.0

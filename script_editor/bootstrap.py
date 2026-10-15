@@ -26,16 +26,16 @@ MIN_PYTHON = (3, 10)
 MAX_PYTHON = (3, 15)
 sys.path.insert(0, str(HERE / "src"))
 from script_editor import GUI_VERSION  # noqa: E402 - bootstrap local source path
+from script_editor.recovery_dependencies import (  # noqa: E402
+    RECOVERY_REQUIREMENTS,
+    RECOVERY_VERSIONS,
+    SOURCE_SHA256,
+    checked_recovery_source,
+    installed_recovery_source_matches,
+)
 
-# (导入名, pip 安装名)：缺哪个装哪个
-REQUIREMENTS = [
-    ("PySide6", f"PySide6=={GUI_VERSION}"),
-    ("uncompyle6", "uncompyle6==3.9.3"),
-    ("xdis", "xdis==6.1.8"),
-    ("spark_parser", "spark-parser==1.9.0"),
-    ("six", "six==1.17.0"),
-    ("click", "click==8.5.0"),
-]
+GUI_REQUIREMENTS = [("PySide6", f"PySide6=={GUI_VERSION}")]
+REQUIREMENTS = GUI_REQUIREMENTS + RECOVERY_REQUIREMENTS
 
 # 依次尝试的下载源：None=官方源，后面是国内镜像（官方慢/连不上时兜底）
 MIRRORS: list[tuple[str | None, str]] = [
@@ -54,11 +54,16 @@ def find_missing(
 ) -> list[tuple[str, str]]:
     """返回当前环境缺失的 (导入名, pip 名) 列表。"""
     missing = []
-    for import_name, pip_name in requirements or REQUIREMENTS:
+    for import_name, pip_name in REQUIREMENTS if requirements is None else requirements:
         try:
             if import_name != "PySide6":
-                distribution, expected = pip_name.split("==")
-                if importlib.metadata.version(distribution) != expected:
+                distribution = import_name.replace("_", "-")
+                if importlib.metadata.version(distribution) != RECOVERY_VERSIONS[
+                    import_name
+                ] or (
+                    import_name == "uncompyle6"
+                    and not installed_recovery_source_matches()
+                ):
                     missing.append((import_name, pip_name))
                 continue
             module = __import__(import_name)
@@ -69,7 +74,7 @@ def find_missing(
     return missing
 
 
-def install_packages(pip_names: list[str]) -> bool:
+def install_packages(pip_names: list[str], requirements=None) -> bool:
     """逐个下载源尝试安装，装完复检；全部成功返回 True。"""
     try:
         subprocess.run(
@@ -84,31 +89,45 @@ def install_packages(pip_names: list[str]) -> bool:
             cmd += ["-i", url]
         _say(f"正在安装 {'、'.join(pip_names)}（{label}）…")
         result = subprocess.run(cmd)
-        if result.returncode == 0 and not find_missing():
+        if result.returncode == 0 and not find_missing(requirements):
             return True
         _say(f"该下载源未成功（返回码 {result.returncode}），换下一个源重试…")
-    return not find_missing()
+    return not find_missing(requirements)
 
 
 def ensure_dependencies() -> bool:
-    """检查并补齐运行依赖。"""
-    missing = find_missing()
+    """Qt is required to open; recovery installation failure never hides the GUI."""
+    missing_gui = find_missing(GUI_REQUIREMENTS)
+    if missing_gui and not install_packages(
+        [p for _, p in missing_gui], GUI_REQUIREMENTS
+    ):
+        _say(
+            "Qt安装失败，无法打开界面；请查看pip具体错误（可能为版本/依赖/网络问题）。"
+        )
+        return False
+    missing = find_missing(RECOVERY_REQUIREMENTS)
     if not missing:
-        _say("依赖检查通过：Qt及独立恢复引擎依赖已安装（接着检查内置编译器）。")
+        _say("依赖检查通过：Qt及独立恢复引擎已就绪。")
         return True
-    names = "、".join(import_name for import_name, _ in missing)
-    _say(f"检测到缺少或版本不符的依赖：{names}，现在自动安装（只需这一次）…")
-    if install_packages([pip_name for _imp, pip_name in missing]):
-        _say("依赖安装完成。")
-        return True
-    _say("")
-    _say("自动安装失败。可能原因：没有网络，或公司/校园网拦截。")
-    _say("可手动在命令行执行下面这行再重试：")
     _say(
-        f"    {sys.executable} -m pip install "
-        + " ".join(pip_name for _imp, pip_name in missing)
+        "正在安装支持当前Python的恢复引擎；使用包内固定提交源码，不使用旧版xdis6.1.8。"
     )
-    return False
+    try:
+        source = checked_recovery_source(HERE)
+        # Install the complete consistent set together, not a partially upgraded engine.
+        pins = [source.as_uri() + "#sha256=" + SOURCE_SHA256] + [
+            p for name, p in RECOVERY_REQUIREMENTS if name != "uncompyle6"
+        ]
+        if install_packages(pins, RECOVERY_REQUIREMENTS):
+            _say("恢复引擎安装完成。")
+            return True
+    except (OSError, ValueError) as exc:
+        _say(str(exc))
+    _say("恢复引擎未就绪，仍打开已有编辑器界面；包内恢复可能暂不可用。")
+    _say(
+        "请保留上面的具体错误；版本冲突不是换镜像就能解决，也不要强制忽略Python版本限制。"
+    )
+    return True
 
 
 def _log_failure(exc_text: str) -> None:
@@ -146,6 +165,9 @@ def main(argv: list[str] | None = None) -> int:
         _say(f"详情见 {LOG_PATH}；不反复安装Python包掩盖系统库问题。")
         return 2
     if check_only:
+        if find_missing(RECOVERY_REQUIREMENTS):
+            _say("完整自检失败：恢复引擎未就绪；普通启动仍可打开界面。")
+            return 2
         from script_editor.core.compiler.distribution import audit_runtimes
 
         try:

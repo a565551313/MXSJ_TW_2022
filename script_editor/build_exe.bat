@@ -21,6 +21,7 @@ if errorlevel 1 (
     exit /b 1
 )
 set "PYTHONPATH=src"
+%PY% -c "from pathlib import Path; from script_editor.recovery_dependencies import checked_recovery_source; checked_recovery_source(Path.cwd())" || goto :fail
 echo [1/5] Auditing both standard Windows runtimes before any build ...
 %PY% -m script_editor.runtime_cli audit --root . || goto :fail
 
