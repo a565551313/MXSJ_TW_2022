@@ -1,6 +1,6 @@
 # 项目当前状态（STATUS）
 
-> **最新源码：0.6.0.dev6已修script包路径导航，打开包/项目后台读取路径，ID留详情。新增15项通过（5 GUI）；原包真实Qt读取4951/5002路径，其余明确失败。新完整ZIP尚未交付：取回dev5完整包的连接器下载失败。当前网盘仍为§3.38的dev5，不冒称已更新。**
+> **0.6.0.dev6交付中：路径导航修复已推送；已重建双Windows编译器/pycdc并通过静态审计，完整回归325项中309通过、16许可外部材料跳过，60 GUI通过，41 required齐全。完整源码ZIP待真实解压副本与网盘上传重读核验。Windows/用户完整c727/游戏仍未验收。**
 
 > **当前双引擎集成轮（2026-10-15）**：固定分支 `arena/61deb9e5-mxsj-tw-2022`，起点 `8212b26`（PR #33 已合并）。用户授权开始编辑器集成；不重跑全量语料，不修改已验的启动器/注册脚本，不自行合并或重复上传。先提交推送本检查点再实现。
 > 已只读下载并核 SHA：小样 `1V9g9BF1uYLc6DslljTpXPCgUDRloMlJy`（446,379 B，`a778c5fd6d3624e91ed0786382c17f9f8e156c9529f3d19fb43bc19dee1689dc`）及双失败补样 `1pH5mx1IdAF1Y51lYYoFQqw2Ob0gkxbuM`（58,020 B，`4920b41cb962241e0d4bf1b98123666de78ecd96094102b5a24ecde6cef0b797`），内容留仓库外，未执行其脚本。对接采用 `(archive_sha256, entry_index)`，1288 排除不恢复；小样 u6=3.9.3/xdis=6.1.8 只作研究证据，不回退编辑器已修的 3.14 依赖。
@@ -1161,7 +1161,14 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
 - [机器证据](evidence/script_editor_module_paths_20261015.json)。代码已推送固定分支；
   未合master、未改游戏原包/分享权限。本轮取回dev5完整源码ZIP时，连接器download_file返回
   `Could not retrieve the file from the connector`；不重复失败调用、不交缺编译器替代ZIP。
-  **当前网盘仍是dev5；dev6完整源码包尚未打包上传，交付未完成。**
+  此为上轮源码修复时状态。本轮用户要求提交推送上传，未重复失败调用；按固定配方重建双Windows
+  编译器（156/178官方core单元）与Windows pycdc，标准库及许可与旧件一致、PE32/摘要核验通过，
+  更新运行时清单；二进制仍不入Git，不混入Linux测试程序。
+- 本轮已重建实际Linux双标准VM与pycdc并使用固定来源uncompyle6重新跑全套：
+  **325项中309通过、16许可外部语料/缓存跳过，60 GUI通过**（12.653s），41 required全执行。
+  不沿用上轮缺VM时的55次跳过或dev5的历史数字；Windows执行/EXE及游戏仍待用户测试。
+  [本轮构建核验](evidence/script_editor_dev6_delivery_build_20261015.json)。
+  完整独立源码ZIP待CRC/全文件摘要、真实解压副本回归与上传后独立重读核对后最终记账。
 
 ## 4. 等待外部输入
 
