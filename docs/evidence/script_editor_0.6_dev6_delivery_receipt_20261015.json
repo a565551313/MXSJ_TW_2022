@@ -1,0 +1,125 @@
+{
+  "file": "/home/user/script-editor-dev6/deliveries/MXSJ_ScriptEditor_0.6.0.dev6_source_with_compilers.zip",
+  "version": "0.6.0.dev6",
+  "source_commit": "3791d0cc83e3d3178d7652cdd744fc516932aac3",
+  "files": 187,
+  "bytes": 39409837,
+  "sha256": "6ac9e6bf51dd4b7613418320fcd054c5c9b2e4e073489602130295130837c38e",
+  "md5": "a1af71f85fe056d3dc8e2d6d7d9ef6e0",
+  "zip_crc": "passed",
+  "manifest_checks": "all file lengths and hashes passed",
+  "windows_runtimes": {
+    "schema": 1,
+    "status": "static-only",
+    "native_game_acceptance": "not-tested",
+    "provenance": "local manifest declarations; not a signature/build proof",
+    "compilers": [
+      {
+        "vm": "py25",
+        "manifest_sha256": "e79dfef3502b4eb9ee80e58b5f201c7a0f5b8fabbd9c4e6d163e8b3b256364fe",
+        "files": {
+          "BUILD.json": "b9f03d7b511b16109cd16f2039f277b954603c38f98b83e8f4b98cd24e692603",
+          "LICENSE-CPython.txt": "d7e55eb310561c8b6a74b43f96cf6b9e8047c2d1c94b6b24086edb847ae1c4aa",
+          "LICENSE-LLVM.txt": "b5efebcaca80879234098e52d1725e6d9eb8fb96a19fce625d39184b705f7b6d",
+          "LICENSE-MinGW.txt": "99a69660981156c21336fdb5661f89341b013c94e4bf9e1c7467b4745718397f",
+          "LICENSE-Zig.txt": "5c537d6853e005298a285d508cff9ac7192cea23576c840d485b2b586a7ff177",
+          "LICENSE-zlib.txt": "365db9b693fda6c66ddd97d81ae3eb17be32c890909553973a77439d85900494",
+          "python.exe": "d7ad9eb0179a5f293090d51a28a0434190a220cfb517b396825ee64daef091e1",
+          "python25.dll": "c0e00559dbc644f7a08c15b47a7444fe7e9af08c38b3d774b3eb23dc9e2dbc8c",
+          "python25.zip": "d76ef15d923d1d51d5ba0f6fca5907b97059b7815a6670b05e1535bc7c80a3df"
+        },
+        "execution": "not-executed"
+      },
+      {
+        "vm": "py27",
+        "manifest_sha256": "e79dfef3502b4eb9ee80e58b5f201c7a0f5b8fabbd9c4e6d163e8b3b256364fe",
+        "files": {
+          "BUILD.json": "c9a22a7a94dd287e13e80ff551d031a2154876f86cca45732284b59b2b1b1dcc",
+          "LICENSE-CPython.txt": "8129570d0752f342973e176c87123b7b7199b6f8a907a4b6704d4473b3dd2d3b",
+          "LICENSE-LLVM.txt": "b5efebcaca80879234098e52d1725e6d9eb8fb96a19fce625d39184b705f7b6d",
+          "LICENSE-MinGW.txt": "99a69660981156c21336fdb5661f89341b013c94e4bf9e1c7467b4745718397f",
+          "LICENSE-Zig.txt": "5c537d6853e005298a285d508cff9ac7192cea23576c840d485b2b586a7ff177",
+          "LICENSE-zlib.txt": "53a466b504371dcdda1504c90d8121d4823921f03554c3526995fb2bae7159f9",
+          "python.exe": "d26e9d59659be8473e4ba26ba20154432d0313e014bfbb716d9fc794ffdece67",
+          "python27.dll": "06368f5d921fca9c7528105cb1cd3b2be89e5b63156a3ad0916e1daba51beeaf",
+          "python27.zip": "341973e08fd04a530d395225826513a073818bca6e6f19327dc41c42736ca265"
+        },
+        "execution": "not-executed"
+      }
+    ]
+  },
+  "catalogs": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "file": "script-original.json",
+      "sha256": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+    },
+    {
+      "archive_sha256": "c7276deb0af7142c1b249d24299b884cd7320c0e84375cc6ac55f166df1d9ed1",
+      "file": "script-original.json",
+      "sha256": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+    }
+  ],
+  "pycdc_staging": "Windows binary, license, full corresponding source and build notices verified and staged; not Windows execution",
+  "windows_binary_provenance": "rebuilt with pinned Zig0.13.0 and included SHA-pinned upstream sources this turn; compiler/marshal/opcode sources unchanged",
+  "windows_execution": false,
+  "game_files_included": false,
+  "date": "2026-10-15",
+  "source_tests": {
+    "tests": 325,
+    "passed": 309,
+    "permitted_external_material_skips": 16,
+    "failures": 0,
+    "seconds": 12.653,
+    "required_test_count": 41,
+    "required_missing": [],
+    "required_skipped": [],
+    "gui_passed": 60,
+    "log_sha256": "2cf2ebb284127a6bf7da31064d5e619fae507f63de90d07c7290423088d455c4",
+    "skipped_ids": [
+      "test_corpus_import.RealCorpusImportTests.test_124_and_4861_keep_editable_candidates_without_verified_origin",
+      "test_corpus_import.RealCorpusImportTests.test_2371_local_repair_delta_not_misrepresented_as_verified",
+      "test_corpus_import.RealCorpusImportTests.test_eight_real_repairs_match_exact_pyc_and_original_catalog_unchanged",
+      "test_corpus_import.RealCorpusImportTests.test_real_large_entry_1182_is_not_blocked_by_live_process_output_limit",
+      "test_corpus_import.RealCorpusImportTests.test_real_repaired_4305_compile_publish_reopen_without_execution",
+      "test_data_corpus.RealDataCorpusTests.test_every_real_data_entry_candidate_has_exact_strict_origin",
+      "test_data_corpus.RealDataCorpusTests.test_real_data_corpus_probe_compile_publish_reopen_does_not_execute",
+      "test_data_corpus.RealDataCorpusTests.test_real_uuid_direct_browser_opens_without_prebuilt_corpus",
+      "test_data_corpus.RealDataCorpusTests.test_real_uuid_negative_longs_remain_exact_not_replaced_or_nopped",
+      "test_gui_data_corpus.RealDataCorpusGuiTests.test_all_121_real_data_scripts_open_as_editable_vm27_tabs",
+      "test_recovery_candidates.ActualCorpusTests.test_original_archive_path_uses_secondary_after_primary_timeout",
+      "test_recovery_candidates.ActualCorpusTests.test_real_both_fail_has_no_fake_source",
+      "test_recovery_candidates.ActualCorpusTests.test_real_complete_pair_keeps_two_candidates_and_origin",
+      "test_recovery_candidates.ActualCorpusTests.test_real_non_utf8_candidates_keep_exact_engine_bytes",
+      "test_recovery_candidates.ActualCorpusTests.test_real_partial_source_is_editable_but_never_complete",
+      "test_recovery_candidates.ActualCorpusTests.test_real_pathological_primary_times_out_secondary_still_recovers"
+    ],
+    "scope": "actual Linux Qt offscreen, real CPython2.5.6/2.7.13 compiler/marshal workers; actual uncompyle6 and Linux pycdc smoke; Windows supplied binaries are cross-built and statically verified, not executed"
+  },
+  "actual_zip_extraction_tests": {
+    "tests": 325,
+    "passed": 309,
+    "permitted_skips": 16,
+    "required_present_and_executed": 41,
+    "unexpected_skips": 0,
+    "gui_passed": 60,
+    "seconds": 12.484,
+    "log_sha256": "a502cc60fb22861c0b41e73b17a455c2cc28b9c8f897d61da709ca3cf0c562b6",
+    "zip_payload_files_still_exact_after_tests": 186,
+    "windows_execution": false,
+    "user_complete_c727_tested": false
+  },
+  "remote": {
+    "id": "1BS9py9F5-z_MWr4zfZp214HUBW3Fo-8q",
+    "name": "MXSJ_ScriptEditor_0.6.0.dev6_source_with_compilers.zip",
+    "parent_id": "1Oknzs5ftrOHpf_jy0vQasYRtJCPoBQmO",
+    "parent_name": "script_editor",
+    "size": 39409837,
+    "md5": "a1af71f85fe056d3dc8e2d6d7d9ef6e0",
+    "url": "https://drive.google.com/file/d/1BS9py9F5-z_MWr4zfZp214HUBW3Fo-8q/view",
+    "verification": "separate get_file after upload: name, parent, size, MD5 all match; no re-download claim"
+  },
+  "permissions_changed": false,
+  "old_files_overwritten": false,
+  "game_files_uploaded": false
+}

@@ -1,6 +1,6 @@
 # 项目当前状态（STATUS）
 
-> **0.6.0.dev6交付中：路径导航修复已推送；已重建双Windows编译器/pycdc并通过静态审计，完整回归325项中309通过、16许可外部材料跳过，60 GUI通过，41 required齐全。完整源码ZIP待真实解压副本与网盘上传重读核验。Windows/用户完整c727/游戏仍未验收。**
+> **0.6.0.dev6完整源码包已交付到网盘script_editor目录，上传后重读目录/大小/MD5一致。路径导航修复已推送，含重建双Windows编译器/pycdc及源码许可；源码和真正ZIP解压副本均325项中309通过、16许可外部材料跳过，60 GUI通过，41 required齐全。详§3.39。Windows/用户完整c727/游戏仍未验收。**
 
 > **当前双引擎集成轮（2026-10-15）**：固定分支 `arena/61deb9e5-mxsj-tw-2022`，起点 `8212b26`（PR #33 已合并）。用户授权开始编辑器集成；不重跑全量语料，不修改已验的启动器/注册脚本，不自行合并或重复上传。先提交推送本检查点再实现。
 > 已只读下载并核 SHA：小样 `1V9g9BF1uYLc6DslljTpXPCgUDRloMlJy`（446,379 B，`a778c5fd6d3624e91ed0786382c17f9f8e156c9529f3d19fb43bc19dee1689dc`）及双失败补样 `1pH5mx1IdAF1Y51lYYoFQqw2Ob0gkxbuM`（58,020 B，`4920b41cb962241e0d4bf1b98123666de78ecd96094102b5a24ecde6cef0b797`），内容留仓库外，未执行其脚本。对接采用 `(archive_sha256, entry_index)`，1288 排除不恢复；小样 u6=3.9.3/xdis=6.1.8 只作研究证据，不回退编辑器已修的 3.14 依赖。
@@ -19,7 +19,7 @@
 | 项 | 值 |
 |---|---|
 | 工作分支 | `arena/61deb9e5-mxsj-tw-2022`（当前会话，固定名称；旧分支叙述仅历史） |
-| 基线 | 当前会话从 `8212b26`（PR #33）开始；第二段开工前检查点 `5998c1b` 已推送，第二段已推送`e72aac9`，当前0.6.0.dev3数据包增量见§3.33，源码交付`6ba9276`及网盘见§3.34；未合master |
+| 基线 | 当前会话从 `8212b26`（PR #33）开始；第二段开工前检查点 `5998c1b` 已推送，第二段已推送`e72aac9`，历史dev3数据包增量见§3.33；当前dev6路径修复`1ad79ce`、源码交付`3791d0c`及网盘见§3.39；未合master |
 | `master` | 当前会话起始含PR #32/#33；本轮未改master，未查询最新远程顶端 |
 | 最近 PR | 会话起点为PR #33合并提交；本轮未开PR |
 | 合并授权 | 无。合入 master / 发布生产需要用户当轮明确授权 |
@@ -28,7 +28,7 @@
 
 | 组件 | 版本/阶段 | 状态 | 本次实测 |
 |---|---|---|---|
-| 独立脚本编辑器（`script_editor/`） | 0.6.0.dev5 自动XOR关联修复完整源码包已交付 | script全量候选/严格参数，data121脚本全量可编辑打开、双VM项目续编 | 交付副本289/289（54 GUI）零跳过；data121逐一实际GUI打开；双Windows工具静态闭包通过并已网盘交付；Windows/全量安全回包未验，详§3.33—3.34 |
+| 独立脚本编辑器（`script_editor/`） | 0.6.0.dev6 路径导航完整源码包已交付 | script路径优先、旧项目/参数确认/新包路径索引，严格恢复与双VM续编不放宽 | 源码/真实ZIP解压副本均325项中309通过、16许可外部材料跳过，60 GUI通过；原包路径4951/5002，51明确不可读；双Windows工具本轮重建/静态核验，未Windows/用户全包/游戏验收，详§3.39 |
 | 逆向研究（`notes/`, `work/`） | 结案：双 VM opcode 表、0SLF 目录/路径哈希、`.dlg` 2,706/2,901、协议号表 412 条、帧续读 2 字节；10-15 新增标题/聊天编码链路与 `GCODE=BIG5`/`GetGameRegion()='cn'` 结案（`notes/title_and_chat_encoding.md`） | 稳定；未决项见 AGENTS §7 | 锁定输入 SHA 匹配；`script.fls` 全量反编译补跑 4401/5002 完整（生成物不入库） |
 | 注册 UI 补丁（`tools/client_patches/`，历史） | v3.3 已作废 | 用户判定旧 overlay/整图烤字按钮/包外散图不符合原生规范，**勿再分发 v3/v3.2/v3.3**；新实现见下行 | 90/90 仅历史证据，不作为新实现验收依据 |
 | 注册原生重做（`tools/registration/`） | 采用 PR #32；用户已确认该版测试无问题 | 保留对方注册源码，不以旧 font1/diag 版本覆盖；尚未接真实注册服务端 | 集成后 42/42 回归；真 2.5.6 重建 SHA `f0253c95…` 与对方记录一致，仅改 337/4007；详 §3.29 |
@@ -54,6 +54,7 @@
 - 两者不能同时成立。修复同时改了排序与 `r1≠0`，真正起作用的可能只是 `r1≠0`（0 疑为哨兵）。需用反汇编回头判定，再统一文档与 docstring。
 
 ### 3.3 环境限制（不是缺陷）
+- **本轮脚本编辑器dev6环境已补齐**：真实Qt6.10.3离屏测试，使用固定GitHub来源真实Linux系统ELF库而非空符号桩；双标准VM与Linux pycdc实际构建/运行。以下10-14旧环境描述仅历史，不能代替本轮证据；这些Linux测试材料不进入Windows源码交付包。
 - 沙箱无 `libGL.so.1` / `libEGL` / `libxkbcommon` / `libdbus-1`，也不能 `apt`。10-14 起的变通：用 gcc 生成只导出空符号的桩库放到 `LD_LIBRARY_PATH`（`libdbus-1.so.3` 需版本节点 `LIBDBUS_1_3`，`libxkbcommon.so.0` 需 `V_0.5.0`），再加 `QT_QPA_PLATFORM=offscreen`，PySide6 6.12 即可离屏开窗，三个编辑器的 GUI 测试组都能跑。桩库只在沙箱，**不入库**；它能证明「代码不会在导入/建窗时崩」，不能替代 Windows 实机。
 - 沙箱 Python 没有 `libpython3.11.so`（Debian 未装 `libpython3.11`），PyInstaller 分析会直接退出；同样用一个空桩 `libpython3.11.so.1.0` 绕过即可完成 spec 干跑（产物不可运行，只验证 hiddenimports/datas）。GitHub release 资产域不可达，装不了 python-build-standalone。
 - 复核验收套件原样执行文档中的 `python3 …` 启动命令，依赖必须装在该 `python3` 可见的位置。
@@ -1168,7 +1169,16 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
   **325项中309通过、16许可外部语料/缓存跳过，60 GUI通过**（12.653s），41 required全执行。
   不沿用上轮缺VM时的55次跳过或dev5的历史数字；Windows执行/EXE及游戏仍待用户测试。
   [本轮构建核验](evidence/script_editor_dev6_delivery_build_20261015.json)。
-  完整独立源码ZIP待CRC/全文件摘要、真实解压副本回归与上传后独立重读核对后最终记账。
+  完整独立源码ZIP已交付：
+  [MXSJ_ScriptEditor_0.6.0.dev6_source_with_compilers.zip](https://drive.google.com/file/d/1BS9py9F5-z_MWr4zfZp214HUBW3Fo-8q/view)，
+  指定script_editor文件夹 `1Oknzs5ftrOHpf_jy0vQasYRtJCPoBQmO`，39,409,837 B、187文件，
+  源提交`3791d0cc83e3d3178d7652cdd744fc516932aac3`，
+  SHA256 `6ac9e6bf51dd4b7613418320fcd054c5c9b2e4e073489602130295130837c38e`，
+  MD5 `a1af71f85fe056d3dc8e2d6d7d9ef6e0`。
+  ZIP CRC/逐文件长度摘要、双Windows运行时及pycdc/参数暂存核验通过；真正解压后完整回归
+  同样325项中309通过、16许可跳过、60 GUI通过、41 required在场并执行（12.484s）。
+  测试后186个payload文件仍匹配原包清单；上传后独立get_file核对名称/父目录/大小/MD5一致。
+  旧包和权限未动、未上传游戏；[最终回执](evidence/script_editor_0.6_dev6_delivery_receipt_20261015.json)。
 
 ## 4. 等待外部输入
 
@@ -1182,7 +1192,7 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
 
 ## 5. 下一步（优先级）
 
-当前用户请求已执行：0.6.0.dev5完整独立源码修复包已提交、推送、上传指定script_editor目录并重读核验（§3.38），等Windows/客户端测试反馈；
+当前用户请求已执行：0.6.0.dev6完整独立源码修复包已提交、推送、上传指定script_editor目录并重读核验（§3.39），等Windows/客户端测试反馈；
 包内恢复编辑仍是主目标，不回退为要求用户自有.py的工具。
 0.5开发工作流已实测，匹配参数的交付授权已获得；独立源码新包已上传并复查，不宣称全面完成，继续补覆盖率/固定长度/Windows验证，
 不把阶段版或旧0.4.1网盘包当满足用户目标的成品。
