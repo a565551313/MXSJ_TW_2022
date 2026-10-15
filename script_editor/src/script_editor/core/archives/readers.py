@@ -70,17 +70,27 @@ class FileReader:
 
     def __init__(self, path: str | Path):
         self._fd = os.open(path, _OPEN_FLAGS)
-        self._size = os.fstat(self._fd).st_size
         self._closed = False
         self._lock = threading.Lock()
+        try:
+            self._opened_revision = self._descriptor_revision(self._fd)
+            self._size = self._opened_revision[2]
+        except Exception:
+            self.close()
+            raise
 
     @property
     def size(self) -> int:
         return self._size
 
     @property
-    def revision(self) -> tuple:
-        info = os.fstat(self._fd)
+    def opened_revision(self) -> tuple:
+        """Immutable snapshot captured with the size, before parsing can begin."""
+        return self._opened_revision
+
+    @staticmethod
+    def _descriptor_revision(fd: int) -> tuple:
+        info = os.fstat(fd)
         return (
             info.st_dev,
             info.st_ino,
@@ -88,6 +98,28 @@ class FileReader:
             info.st_mtime_ns,
             info.st_ctime_ns,
         )
+
+    @property
+    def revision(self) -> tuple:
+        with self._lock:
+            if self._closed:
+                raise ValueError("资源包读取句柄已关闭")
+            return self._descriptor_revision(self._fd)
+
+    @staticmethod
+    def path_revision(path: str | Path) -> tuple:
+        """Reopen the path and use the SAME fstat API as the original handle.
+
+        Windows CPython can expose birth time through stat(path).st_ctime,
+        but change time through fstat(fd).st_ctime. Comparing those directly
+        rejects an unchanged file. A fresh handle also checks which file the
+        path currently names; inspecting only the original handle misses swaps.
+        """
+        fd = os.open(path, _OPEN_FLAGS)
+        try:
+            return FileReader._descriptor_revision(fd)
+        finally:
+            os.close(fd)
 
     def _read_some(self, size: int, offset: int) -> bytes:
         """在 offset 处至多读 size 字节（允许短读，调用方循环补齐）。"""

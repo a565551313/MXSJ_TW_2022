@@ -23,7 +23,7 @@ class ArchiveDocument:
     def __init__(self, path: str | Path):
         self.path = Path(path).resolve(strict=True)
         self.reader = FileReader(self.path)
-        self._revision = self.reader.revision
+        self._revision = self.reader.opened_revision
         self._fingerprint = None
         try:
             magic = self.reader.read_at(0, 4)
@@ -55,15 +55,11 @@ class ArchiveDocument:
             raise
 
     def _assert_unchanged(self):
-        info = self.path.stat()
-        current = (
-            info.st_dev,
-            info.st_ino,
-            info.st_size,
-            info.st_mtime_ns,
-            info.st_ctime_ns,
-        )
-        if current != self._revision or self.reader.revision != self._revision:
+        if (
+            self.reader.revision != self._revision
+            or FileReader.path_revision(self.path) != self._revision
+            or self.reader.revision != self._revision
+        ):
             raise ContainerError(
                 "源包打开后发生变化或被替换，请重新打开；拒绝使用旧索引"
             )

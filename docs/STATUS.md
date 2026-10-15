@@ -4,7 +4,7 @@
 > 长期规则见 [`AGENTS.md`](../AGENTS.md)；项目总览见 [`README.md`](../README.md)；历史快照在 [`archive/`](archive/README.md)。
 > 旧会话组件实测不代表本轮全部复跑。当前编辑器增强会话固定分支 `arena/51e31d38-mxsj-tw-2022`：会话起始基线 `fa1387162e60625c0a064403647abe8f65155acb`（PR #31），本期在安全修复 `9ee68e3` 上继续。功能代码 `f224f16`、类型缓存代际修复 `bf2bfc3` 已推送；未开 PR/合并/发布。此前阶段复跑两编辑器及其自检/静态检查；当前轮只复跑脚本编辑器，其它组件表格保留历史证据。本轮续增资源 0.4.1 路径下拉与 UI 0.8.1 包树右键导入，提交记录见本分支顶端；最新续修为资源0.4.3/UI0.8.3通用原生布局写入，当前范围见 §3.13 / §6；旧一次性助手被用户否决为最终方案。
 
-> **本轮最新（2026-10-15）**：按用户“提交推送上传”，0.4.0.dev1工作区重整源码＋双Windows编译器ZIP已传Drive并重读大小/MD5核对一致，源码钉`0216b58`（功能`4655c77`）。仓库149/149全过（26 GUI）；独立解压143过＋6外部游戏材料测试按设计跳过，GUI无skip。包含两套18文件编译器/标准库/许可/完整SHA、启动与自构建EXE脚本；不含游戏包/keys/探针、不改分享权限。**Windows执行、EXE和客户端仍待用户实机，非已验收Windows发行版**。最新下载/回执见§3.24。
+> **本轮最新（2026-10-15）**：用户实机反馈0.4.0刚打开包就报“源包变化”。已定位跨API修订比较错误：Windows CPython部分版本stat(path)的ctime兼容出生时间，fstat(fd)却取ChangeTime。0.4.1改为原句柄/路径新句柄统一fstat，保留身份/大小/时间保护，补初始快照和句柄清理。新增5项回归，旧码复现误报后修复，Linux154/154全过（26 GUI）；正在准备新源码＋双编译器包，Windows实机修复效果仍待确认，勿让用户反复试0.4.0。详§3.25。
 
 ## 1. 分支与集成
 
@@ -659,6 +659,31 @@ bootstrap现在真实加载Qt后正确退出2：非Windows禁止执行Windows运
 Windows端先完整解压到新目录，运行“检查内置编译器.bat”，再运行“启动脚本编辑器.bat”；
 需要EXE时用户运行build_exe.bat，实际双VM/严格GUI检查不通过仍禁止构建。
 Windows双编译器执行、桌面、EXE/客户端验收仍待；不把Linux结果或静态审计冒充通过。
+
+### 3.25 Windows刚打开即误报源包变化修复（2026-10-15，0.4.1.dev1）
+
+用户在0.4.0实机看到“源包打开后发生变化或被替换”，进一步确认**刚打开就报**。
+不能据此认定用户改包。排查并对照官方CPython3.13/3.14源码：
+`Modules/posixmodule.c`的win32_xstat把ctime重映射成birthtime；
+`Python/fileutils.c`的_Py_fstat_noraise经FileBasicInfo保留实际ChangeTime。
+因此ArchiveDocument将path.stat()与reader的fstat五元组直接比较会误报；
+用户Python精确版本尚未知，但代码问题与触发症状一致，不需要先让用户反复重新打开。
+源码依据：[CPython3.13 posixmodule](https://github.com/python/cpython/blob/v3.13.0/Modules/posixmodule.c)、
+[fileutils](https://github.com/python/cpython/blob/v3.13.0/Python/fileutils.c)。
+
+修复：
+- FileReader的大小/初始修订同次fstat捕获，ArchiveDocument不在初始化中重新把变化当新基线。
+- 新增path_revision：重新只读/二进制打开当前路径，同一fstat接口核对身份、大小、mtime/ctime，
+  临时描述符在finally关闭；原句柄前后复核仍在，不能只看旧句柄或去掉inode/时间检查。
+- revision与close共用锁，初始化快照失败也释放原描述符；不改源包、不改编译器或GUI工作流。
+- 版本0.4.1.dev1；新的Windows差异回归列入build_exe严格必跑集合。
+
+新增5项：模拟路径/句柄ctime/身份命名差异的不变文件、相同元数据下路径身份改变、
+句柄变而路径快照伪装未变、FileReader打开后初始化前变动、临时快照失败释放句柄。
+先跑旧码，ctime/身份差异两子用例复现同一ContainerError，且打开后重设基线用例未拒绝；
+修后5/5通过。其它新API相关旧码失败不冒充已有行为缺陷证据。
+完整Linux154/154（26 GUI、真实双Linux compiler/只读材料）全执行通过，4.238s。
+模拟Windows差异不是Windows实机执行。待新包完成上传后补回执；不重新给0.4.0链接当修复版。
 
 ## 4. 等待外部输入
 

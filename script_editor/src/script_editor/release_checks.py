@@ -22,6 +22,7 @@ OPTIONAL_MATERIAL_TESTS = {
 
 
 REQUIRED_RELEASE_TESTS = {
+    "test_archive_revision.ArchiveRevisionTests.test_path_stat_and_fstat_differences_do_not_reject_unchanged_package",
     "test_gui.GuiTests.test_large_tree_uses_supported_qt_without_none_reference_corruption",
     "test_gui.GuiTests.test_workspace_toolbar_shares_real_actions_and_welcome",
     "test_gui.GuiTests.test_search_case_whole_word_unicode_and_single_undo",
