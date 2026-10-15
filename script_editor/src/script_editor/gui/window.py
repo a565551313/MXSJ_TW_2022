@@ -6,56 +6,29 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QThreadPool
 from PySide6.QtGui import QAction, QTextCursor
 from PySide6.QtWidgets import (
-    QComboBox,
+    QDockWidget,
     QFileDialog,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
     QMainWindow,
     QMessageBox,
-    QPushButton,
-    QSplitter,
-    QTabWidget,
-    QTextEdit,
-    QTreeWidget,
     QTreeWidgetItem,
-    QVBoxLayout,
-    QWidget,
 )
 
 from .. import __version__
 from ..core.archives.document import ArchiveDocument
-from ..core.compiler.profiles import PROFILES
 from ..core.inspection.encoding import byte_literal
 from ..core.services.files import read_source, save_source
 from .build_actions import BuildActions
-from .code_editor import CodeEditor
 from .jobs import Job
 from .project_actions import ProjectActions
+from .source_tab import SourceTab
+from .workspace import Workspace
 
 
-class SourceTab(QWidget):
-    def __init__(self, path: Path, text: str, vm="py25", reference=False):
-        super().__init__()
-        self.path = path
-        self.reference = reference
-        self.editor = CodeEditor()
-        self.editor.setPlainText(text)
-        self.editor.setReadOnly(reference)
-        self.editor.document().setModified(False)
-        self.vm = QComboBox()
-        for key, profile in PROFILES.items():
-            self.vm.addItem(profile.label, key)
-        self.vm.setCurrentIndex(self.vm.findData(vm))
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.vm)
-        layout.addWidget(self.editor)
-
-
-class Window(ProjectActions, BuildActions, QMainWindow):
-    def __init__(self, runtime_root: Path):
+class Window(Workspace, ProjectActions, BuildActions, QMainWindow):
+    def __init__(self, runtime_root: Path, settings=None):
         super().__init__()
         self.runtime_root = runtime_root
+        self.settings = settings
         self.archives: list[ArchiveDocument] = []
         self.bindings = []
         self.catalogs = []
@@ -63,94 +36,35 @@ class Window(ProjectActions, BuildActions, QMainWindow):
         self.project_dirty = False
         self.compilers = {}
         self.jobs = set()
-        self.setWindowTitle(f"MXSJ 脚本编辑器 {__version__} · 实验版")
-        self.resize(1180, 760)
-        self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(["包 / 条目（内容尚未解码验证）", "存储字节"])
-        self.filter = QLineEdit()
-        self.filter.setPlaceholderText("筛选条目ID或data路径")
-        self.filter.textChanged.connect(self.filter_tree)
-        left = QWidget()
-        layout = QVBoxLayout(left)
-        layout.addWidget(self.filter)
-        layout.addWidget(self.tree)
-        self.tabs = QTabWidget()
-        self.tabs.setTabsClosable(True)
-        self.tabs.tabCloseRequested.connect(self.close_tab)
-        self.info = QTextEdit()
-        self.info.setReadOnly(True)
-        self.info.setAcceptRichText(False)
-        self.info.setPlainText(
-            "原包只读。当前仅索引容器，不代表已验证所有条目均为脚本。\n"
-            "无源码条目只读；仅手工打开自己确认来源的UTF-8源码。\n"
-            "关联仅记录用户选择，不自动证明与原条目语义一致。\n"
-            "标准.pyc不是原生脚本载荷，不能放进游戏。\n"
-            "启动后自动检查两套内置编译器；缺件/损坏的VM禁止编译。"
+        self.setWindowTitle(f"MXSJ 脚本工作台 {__version__} · 实验版")
+        screen = self.screen().availableGeometry()
+        self.resize(
+            min(1440, max(960, screen.width() - 60)),
+            min(900, max(640, screen.height() - 80)),
         )
-        splitter = QSplitter()
-        splitter.addWidget(left)
-        splitter.addWidget(self.tabs)
-        splitter.addWidget(self.info)
-        splitter.setSizes([260, 650, 270])
-        body = QWidget()
-        box = QVBoxLayout(body)
-        banner = QLabel("双VM · 源码保存 ≠ 游戏写包；反编译稿不能当作可信源码")
-        banner.setWordWrap(True)
-        box.addWidget(banner)
-        box.addWidget(splitter)
-        search = QHBoxLayout()
-        self.find = QLineEdit()
-        self.find.setPlaceholderText("查找（字面文本）")
-        self.replacement = QLineEdit()
-        self.replacement.setPlaceholderText("替换文本")
-        search.addWidget(self.find)
-        search.addWidget(self.replacement)
-        for name, callback in [
-            ("下一个", self.find_next),
-            ("替换全部", self.replace_all),
-        ]:
-            button = QPushButton(name)
-            button.clicked.connect(callback)
-            search.addWidget(button)
-        box.addLayout(search)
-        self.setCentralWidget(body)
-        file_menu = self.menuBar().addMenu("文件")
-        for text, shortcut, fn in [
-            ("打开脚本包索引…", "Ctrl+O", self.open_archive),
-            ("打开已确认来源的UTF-8源码…", "Ctrl+Shift+O", self.open_source),
-            ("打开参考文本（只读，不编译）…", "", self.open_reference),
-            ("保存当前源码", "Ctrl+S", self.save_current),
-            ("关联当前源码到选中条目…", "", self.associate),
-            ("保存项目…", "", self.save_project),
-            ("打开项目…", "", self.open_project),
-        ]:
-            action = QAction(text, self)
-            if shortcut:
-                action.setShortcut(shortcut)
-            action.triggered.connect(fn)
-            file_menu.addAction(action)
-        edit = self.menuBar().addMenu("编码")
-        for text, codec in [
-            ("选中文案→Big5字节字面量…", "big5"),
-            ("选中路径→GBK字节字面量…", "gbk"),
-        ]:
-            action = edit.addAction(text)
-            action.triggered.connect(lambda checked=False, c=codec: self.encode(c))
-        build = self.menuBar().addMenu("编译")
-        build.addAction("选择/检查当前VM的标准编译器…", self.select_compiler)
-        build.addAction("重新检查两套内置编译器", self.initialize_compilers)
-        build.addAction("检查当前VM的内置编译器", self.check_bundled)
-        build.addAction("仅编译为标准.pyc…", self.compile)
-        build.addAction("选择当前包的XOR目录…", self.configure_catalog)
-        self.native_action = build.addAction(
-            "生成原生新包：预编译与清单…", self.preview_native
-        )
+        self.build_workspace()
+        self.build_menus()
         self.tree.itemSelectionChanged.connect(self.show_entry)
         self.tabs.currentChanged.connect(self.refresh_native_action)
         self.refresh_native_action()
-        self.statusBar().showMessage("就绪 · 原生写包需关联源码并通过清单确认")
+        self.statusBar().showMessage("就绪 · 原包只读，所有写包生成新文件")
+        if settings is not None:
+            try:
+                geometry, state = (
+                    settings.value("geometry"),
+                    settings.value("workspace"),
+                )
+                if geometry is not None:
+                    self.restoreGeometry(geometry)
+                if state is not None:
+                    self.restoreState(state, 1)
+            except (TypeError, ValueError):
+                pass  # Damaged local preferences cannot prevent opening source.
 
     def fail(self, message):
+        self.info.setPlainText(str(message))
+        self.output_tabs.setCurrentWidget(self.info)
+        self.output_dock.show()
         QMessageBox.warning(self, "操作未完成", str(message))
 
     def task(self, function, complete):
@@ -161,6 +75,11 @@ class Window(ProjectActions, BuildActions, QMainWindow):
         actions = [
             (action, action.isEnabled()) for action in self.findChildren(QAction)
         ]
+        dock_states = [
+            (dock, dock.isEnabled()) for dock in self.findChildren(QDockWidget)
+        ]
+        for dock, _ in dock_states:
+            dock.setEnabled(False)
         self.centralWidget().setEnabled(False)
         self.menuBar().setEnabled(False)
         for action, _ in actions:
@@ -170,6 +89,8 @@ class Window(ProjectActions, BuildActions, QMainWindow):
         def finish(result, error=False):
             self.jobs.discard(job)
             self.centralWidget().setEnabled(True)
+            for dock, enabled in dock_states:
+                dock.setEnabled(enabled)
             self.menuBar().setEnabled(True)
             for action, enabled in actions:
                 action.setEnabled(enabled)
@@ -204,6 +125,8 @@ class Window(ProjectActions, BuildActions, QMainWindow):
             root.addChild(child)
         self.tree.addTopLevelItem(root)
         self.archives.append(document)
+        root.setExpanded(True)
+        self.workspace_refresh()
         try:
             self.filter_tree(self.filter.text())
         except Exception:
@@ -221,10 +144,15 @@ class Window(ProjectActions, BuildActions, QMainWindow):
     def filter_tree(self, text):
         for i in range(self.tree.topLevelItemCount()):
             root = self.tree.topLevelItem(i)
+            scope = self.archive_selector.currentData()
+            root.setHidden(
+                bool(scope and root.data(0, Qt.ItemDataRole.UserRole + 1).path != scope)
+            )
             for j in range(root.childCount()):
                 item = root.child(j)
                 item.setHidden(text.casefold() not in item.text(0).casefold())
-            root.setExpanded(bool(text))
+            if text:
+                root.setExpanded(True)
 
     def selected(self):
         item = self.tree.currentItem()
@@ -283,6 +211,11 @@ class Window(ProjectActions, BuildActions, QMainWindow):
             )
 
         tab.editor.document().modificationChanged.connect(changed)
+        tab.editor.document().modificationChanged.connect(self.refresh_native_action)
+        tab.editor.undoAvailable.connect(self.refresh_native_action)
+        tab.editor.redoAvailable.connect(self.refresh_native_action)
+        tab.editor.textChanged.connect(self.analysis_timer.start)
+        tab.editor.cursorPositionChanged.connect(self.update_cursor)
         tab.vm.currentIndexChanged.connect(self.refresh_native_action)
         self.refresh_native_action()
 
@@ -392,30 +325,44 @@ class Window(ProjectActions, BuildActions, QMainWindow):
         except Exception as exc:
             self.fail(exc)
 
-    def find_next(self):
-        if self.tabs.currentWidget() and self.find.text():
-            editor = self.current().editor
-            if not editor.find(self.find.text()):
+    def find_next(self, backwards=False):
+        tab = self.tabs.currentWidget()
+        if tab and self.find.text():
+            editor = tab.editor
+            flags = self.search_flags(backwards)
+            if not editor.find(self.find.text(), flags):
                 cursor = editor.textCursor()
-                cursor.movePosition(QTextCursor.MoveOperation.Start)
+                cursor.movePosition(
+                    QTextCursor.MoveOperation.End
+                    if backwards
+                    else QTextCursor.MoveOperation.Start
+                )
                 editor.setTextCursor(cursor)
-                editor.find(self.find.text())
+                if not editor.find(self.find.text(), flags):
+                    self.statusBar().showMessage("未找到匹配文本", 3500)
 
     def replace_all(self):
-        if (
-            self.tabs.currentWidget()
-            and self.find.text()
-            and not self.current().reference
-        ):
-            editor = self.current().editor
-            text = editor.toPlainText()
-            changed = text.replace(self.find.text(), self.replacement.text())
-            if changed != text:
-                cursor = editor.textCursor()
-                cursor.beginEditBlock()
-                cursor.select(QTextCursor.SelectionType.Document)
-                cursor.insertText(changed)
-                cursor.endEditBlock()
+        tab = self.tabs.currentWidget()
+        if not tab or tab.reference or self.jobs or not self.find.text():
+            return
+        document = tab.editor.document()
+        cursor = QTextCursor(document)
+        matches = []
+        while True:
+            cursor = document.find(self.find.text(), cursor, self.search_flags())
+            if cursor.isNull():
+                break
+            matches.append((cursor.selectionStart(), cursor.selectionEnd()))
+        edit = QTextCursor(document)
+        edit.beginEditBlock()
+        for start, end in reversed(matches):
+            edit.setPosition(start)
+            edit.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
+            edit.insertText(self.replacement.text())
+        edit.endEditBlock()
+        self.statusBar().showMessage(
+            f"已替换 {len(matches)} 处 · Ctrl+Z 一次撤销", 3500
+        )
 
     def closeEvent(self, event):
         if self.jobs or not all(
@@ -426,6 +373,10 @@ class Window(ProjectActions, BuildActions, QMainWindow):
         if not self.confirm_project():
             event.ignore()
             return
+        self.analysis_timer.stop()
+        if self.settings is not None:
+            self.settings.setValue("geometry", self.saveGeometry())
+            self.settings.setValue("workspace", self.saveState(1))
         for archive in self.archives:
             archive.close()
         event.accept()

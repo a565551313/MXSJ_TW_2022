@@ -22,6 +22,9 @@ OPTIONAL_MATERIAL_TESTS = {
 
 
 REQUIRED_RELEASE_TESTS = {
+    "test_gui.GuiTests.test_large_tree_uses_supported_qt_without_none_reference_corruption",
+    "test_gui.GuiTests.test_workspace_toolbar_shares_real_actions_and_welcome",
+    "test_gui.GuiTests.test_search_case_whole_word_unicode_and_single_undo",
     "test_gui.GuiTests.test_window_native_build_disabled",
     "test_gui_workflow.GuiWorkflowTests.test_real_worker_callback_runs_on_gui_thread_and_restores_actions",
     "test_gui_workflow.GuiWorkflowTests.test_project_adoption_rolls_back_partial_widgets",

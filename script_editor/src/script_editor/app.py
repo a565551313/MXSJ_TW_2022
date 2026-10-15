@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import __version__
+from . import GUI_VERSION, __version__
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -14,7 +14,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--version", action="version", version=__version__)
     args = sys.argv[1:] if argv is None else argv
     parser.parse_args(args)
-    from PySide6.QtCore import QTimer
+    import PySide6
+
+    if PySide6.__version__ != GUI_VERSION:
+        raise SystemExit(f"需要PySide6=={GUI_VERSION}；请通过bootstrap.py修复依赖。")
+    from PySide6.QtCore import QSettings, QTimer
     from PySide6.QtWidgets import QApplication
 
     from .gui.window import Window
@@ -25,7 +29,7 @@ def main(argv: list[str] | None = None) -> int:
         else Path(__file__).resolve().parents[2]
     )
     application = QApplication.instance() or QApplication([sys.argv[0]])
-    window = Window(root)
+    window = Window(root, settings=QSettings("MXSJ", "ScriptEditor"))
     window.show()
     QTimer.singleShot(0, window.initialize_compilers)
     return application.exec()

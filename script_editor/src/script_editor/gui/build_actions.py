@@ -50,6 +50,9 @@ class BuildActions:
                 bool(binding and binding.vm in self.compilers and not self.jobs)
             )
 
+        if hasattr(self, "workspace_refresh"):
+            self.workspace_refresh()
+
     def configure_catalog(self):
         archive = self.selected_archive()
         if not archive or archive.vm != "py25":

@@ -22,10 +22,13 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 LOG_PATH = HERE / "启动日志.txt"
 MIN_PYTHON = (3, 10)
+MAX_PYTHON = (3, 15)
+sys.path.insert(0, str(HERE / "src"))
+from script_editor import GUI_VERSION  # noqa: E402 - bootstrap local source path
 
 # (导入名, pip 安装名)：缺哪个装哪个
 REQUIREMENTS = [
-    ("PySide6", "PySide6>=6.4"),
+    ("PySide6", f"PySide6=={GUI_VERSION}"),
 ]
 
 # 依次尝试的下载源：None=官方源，后面是国内镜像（官方慢/连不上时兜底）
@@ -47,7 +50,9 @@ def find_missing(
     missing = []
     for import_name, pip_name in requirements or REQUIREMENTS:
         try:
-            __import__(import_name)
+            module = __import__(import_name)
+            if import_name == "PySide6" and module.__version__ != GUI_VERSION:
+                missing.append((import_name, pip_name))
         except ImportError:
             missing.append((import_name, pip_name))
     return missing
@@ -81,7 +86,7 @@ def ensure_dependencies() -> bool:
         _say("依赖检查通过：PySide6 已安装（接着检查内置编译器）。")
         return True
     names = "、".join(import_name for import_name, _ in missing)
-    _say(f"检测到缺少依赖：{names}，现在自动安装（只需这一次）…")
+    _say(f"检测到缺少或版本不符的依赖：{names}，现在自动安装（只需这一次）…")
     if install_packages([pip_name for _imp, pip_name in missing]):
         _say("依赖安装完成。")
         return True
@@ -111,13 +116,12 @@ def main(argv: list[str] | None = None) -> int:
 
     _say("MXSJ 脚本编辑器 · 启动自检")
     _say(f"Python {sys.version.split()[0]}：{sys.executable}")
-    if sys.version_info < MIN_PYTHON:
+    if not MIN_PYTHON <= sys.version_info < MAX_PYTHON:
         _say(
-            f"Python 版本过低：需要 {MIN_PYTHON[0]}.{MIN_PYTHON[1]} 以上，"
-            f"当前是 {sys.version.split()[0]}。"
+            f"Python版本不在支持范围：需要3.10至3.14，当前是 {sys.version.split()[0]}。"
         )
         _say(
-            "请到 https://www.python.org/downloads/ 安装新版 Python，"
+            "请到 https://www.python.org/downloads/ 安装Python 3.10—3.14，"
             "安装时勾选 “Add python.exe to PATH”。"
         )
         return 2
@@ -130,7 +134,6 @@ def main(argv: list[str] | None = None) -> int:
         _say("PySide6已安装但QtWidgets加载失败（系统动态库可能缺失）。")
         _say(f"详情见 {LOG_PATH}；不反复安装Python包掩盖系统库问题。")
         return 2
-    sys.path.insert(0, str(HERE / "src"))
     if check_only:
         from script_editor.core.compiler.distribution import audit_runtimes
 

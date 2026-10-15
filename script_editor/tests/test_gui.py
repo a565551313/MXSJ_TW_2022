@@ -10,8 +10,10 @@ from fixtures import data_bytes, script_bytes
 
 QT_ERROR = ""
 try:
-    from PySide6.QtCore import Qt
-    from PySide6.QtWidgets import QApplication, QMessageBox
+    from PySide6.QtCore import QSettings, Qt
+    from PySide6.QtGui import QTextCursor
+    from PySide6.QtTest import QTest
+    from PySide6.QtWidgets import QApplication, QMessageBox, QToolBar, QTreeWidgetItem
 
 except ImportError as exc:
     QT_ERROR = str(exc)
@@ -41,6 +43,152 @@ class GuiTests(unittest.TestCase):
         self.window.deleteLater()
         self.app.processEvents()
         self.temp.cleanup()
+
+    def test_large_tree_uses_supported_qt_without_none_reference_corruption(self):
+        from PySide6 import __version__ as qt_version
+
+        from script_editor import GUI_VERSION
+
+        self.assertEqual(qt_version, GUI_VERSION)
+        # Reproduces the 6.12.0 / Python3.11 failure without touching game data.
+        root = QTreeWidgetItem(["6000 records"])
+        for i in range(6000):
+            child = QTreeWidgetItem([str(i)])
+            child.setData(0, Qt.ItemDataRole.UserRole, ("record", i))
+            root.addChild(child)
+        self.assertEqual(root.childCount(), 6000)
+
+    def test_package_selector_switches_independent_vm_without_rebinding_source(self):
+        self.test_two_archives_have_separate_identity_and_vm()
+        self.window.add_source(self.source)
+        original_vm = self.window.current().vm.currentData()
+        self.window.archive_selector.setCurrentIndex(2)
+        self.assertTrue(self.window.tree.topLevelItem(0).isHidden())
+        self.assertFalse(self.window.tree.topLevelItem(1).isHidden())
+        self.assertEqual(self.window.selected_archive().vm, "py27")
+        self.assertEqual(self.window.current().vm.currentData(), original_vm)
+        self.assertFalse(self.window.native_action.isEnabled())
+        self.window.archive_selector.setCurrentIndex(0)
+        self.assertFalse(self.window.tree.topLevelItem(0).isHidden())
+
+    def test_workspace_toolbar_shares_real_actions_and_welcome(self):
+        toolbar = self.window.findChild(QToolBar, "mainToolbar")
+        self.assertIn(self.window.native_action, toolbar.actions())
+        self.assertIs(self.window.pages.currentWidget(), self.window.welcome)
+        self.assertFalse(self.window.ui_actions["save"].isEnabled())
+        self.window.add_source(self.source)
+        self.assertIs(self.window.pages.currentWidget(), self.window.tabs)
+        self.assertTrue(self.window.ui_actions["save"].isEnabled())
+        self.assertFalse(self.window.native_action.isEnabled())
+        self.window.close_tab(0)
+        self.assertIs(self.window.pages.currentWidget(), self.window.welcome)
+
+    def test_outline_reference_jump_and_real_opened_source_diff(self):
+        text = "class Panel:\n def show(self):\n  self.GetObject('account')\n"
+        self.source.write_text(text, encoding="utf-8")
+        self.window.add_source(self.source)
+        self.window.analyze_source()
+        self.assertEqual(self.window.symbols.topLevelItemCount(), 1)
+        self.assertEqual(self.window.symbols.topLevelItem(0).childCount(), 1)
+        self.assertEqual(self.window.references.topLevelItemCount(), 1)
+        self.window.jump_item(self.window.references.topLevelItem(0))
+        self.assertEqual(self.window.current().editor.textCursor().blockNumber(), 2)
+        self.window.current().editor.insertPlainText("# changed\n")
+        self.window.analyze_source()
+        self.assertIn("+# changed", self.window.diff.toPlainText())
+        self.window.save_tab(self.window.current())
+        self.window.analyze_source()
+        self.assertIn("+# changed", self.window.diff.toPlainText())
+        self.assertEqual(self.window.current().opened_text, text)
+
+    def test_search_case_whole_word_unicode_and_single_undo(self):
+        self.window.add_source(self.source, text="😀 x xx X x\n")
+        self.window.find.setText("x")
+        self.window.replacement.setText("測試")
+        self.window.whole_words.setChecked(True)
+        self.window.replace_all()
+        editor = self.window.current().editor
+        self.assertEqual(editor.toPlainText(), "😀 測試 xx X 測試\n")
+        editor.undo()
+        self.assertEqual(editor.toPlainText(), "😀 x xx X x\n")
+        self.window.match_case.setChecked(False)
+        self.window.replace_all()
+        self.assertEqual(editor.toPlainText(), "😀 測試 xx 測試 測試\n")
+
+    def test_current_replacement_does_not_replace_partial_word(self):
+        self.window.add_source(self.source, text="xx x")
+        self.window.find.setText("x")
+        self.window.replacement.setText("new")
+        self.window.whole_words.setChecked(True)
+        cursor = self.window.current().editor.textCursor()
+        cursor.setPosition(0)
+        cursor.setPosition(1, QTextCursor.MoveMode.KeepAnchor)
+        self.window.current().editor.setTextCursor(cursor)
+        self.window.replace_current()
+        self.assertEqual(self.window.current().editor.toPlainText(), "xx x")
+        self.window.replace_current()
+        self.assertEqual(self.window.current().editor.toPlainText(), "xx new")
+
+    def test_reference_toolbar_and_indentation_cannot_change_text(self):
+        self.window.add_source(self.source, reference=True)
+        editor = self.window.current().editor
+        original = editor.toPlainText()
+        for key in ("save", "associate", "standard", "big5", "gbk", "undo", "redo"):
+            self.assertFalse(self.window.ui_actions[key].isEnabled(), key)
+        editor.indent_selection()
+        self.window.edit_command("undo")
+        self.assertEqual(editor.toPlainText(), original)
+        self.assertFalse(self.window.current().vm.isEnabled())
+
+    def test_smart_indent_and_block_indent_are_undoable(self):
+        self.window.add_source(self.source, text="def show():")
+        editor = self.window.current().editor
+        editor.moveCursor(QTextCursor.MoveOperation.End)
+        QTest.keyClick(editor, Qt.Key.Key_Return)
+        self.assertEqual(editor.toPlainText(), "def show():\n    ")
+        editor.undo()
+        self.assertEqual(editor.toPlainText(), "def show():")
+        editor.setPlainText("a\nb\n")
+        cursor = editor.textCursor()
+        cursor.select(QTextCursor.SelectionType.Document)
+        editor.setTextCursor(cursor)
+        editor.indent_selection()
+        self.assertEqual(editor.toPlainText(), "    a\n    b\n")
+        editor.undo()
+        self.assertEqual(editor.toPlainText(), "a\nb\n")
+
+    def test_highlighting_keeps_comments_inside_strings_and_multiline_state(self):
+        self.window.add_source(
+            self.source,
+            text='x = "# not a comment"\ns = """begin\nreturn # string\nend"""\n',
+        )
+        document = self.window.current().editor.document()
+        self.window.current().editor.highlight.rehighlight()
+        first = document.firstBlock()
+        self.assertEqual(document.findBlockByLineNumber(1).userState(), 2)
+        self.assertEqual(document.findBlockByLineNumber(2).userState(), 2)
+        self.assertEqual(document.findBlockByLineNumber(3).userState(), 0)
+        string_color = next(
+            r.format.foreground().color().name()
+            for r in first.layout().formats()
+            if r.start <= 6 < r.start + r.length
+        )
+        self.assertEqual(string_color, "#287148")
+
+    def test_dock_layout_persists_only_with_explicit_settings(self):
+        settings = QSettings(
+            str(self.root / "test-settings.ini"), QSettings.Format.IniFormat
+        )
+        first = Window(self.root, settings=settings)
+        first.property_dock.hide()
+        first.close()
+        second = Window(self.root, settings=settings)
+        self.assertTrue(second.property_dock.isHidden())
+        second.reset_workspace()
+        self.assertFalse(second.property_dock.isHidden())
+        second.close()
+        first.deleteLater()
+        second.deleteLater()
 
     def test_startup_checks_both_vms_without_open_tab(self):
         def compiler(vm, root):
