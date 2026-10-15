@@ -105,7 +105,8 @@ def recover_standard(pyc: bytes, vm: str, *, timeout=30):
             or not all(isinstance(d, str) for d in result["diagnostics"])
         ):
             raise ValueError(
-                "invalid recovery result：恢复引擎版本或输出协议不符，请完整解压/重新构建新版"
+                "invalid recovery result：恢复引擎版本或输出协议不符，"
+                "请完整解压/重新构建新版"
             )
         if (
             len(result["source"]) > 3 * 1024 * 1024
