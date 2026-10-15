@@ -91,9 +91,9 @@ ruff check .
 可另设`MXSJ_M2_REPO`显式启用真实原包和DLL的只读证据测试；默认不寻找仓库路径。
 全部生成物只写临时目录，真实材料只读，特别是data.fls验证探针**不可拿去替换客户端**。
 
-Windows双击`build_exe.bat`：venv → 依赖 → 测试 → PyInstaller onedir。
-输出`dist/MXSJScriptEditor/MXSJScriptEditor.exe`；无参数开窗。
-该构建目前只复制空运行时清单，**不是包含两套编译器的正式发行包**。
+Windows双击`build_exe.bat`：双运行时实际审计 → venv/依赖 → 严格测试 → PyInstaller onedir → 运行时复制复验。
+条件满足后才输出`dist/MXSJScriptEditor/MXSJScriptEditor.exe`；无参数开窗。
+**当前清单为空，发行构建会失败；源码GUI测试请用启动bat，不要用build_exe.bat代替启动。**
 本轮未构建EXE，也未做Linux冻结干跑；Windows检查清单见仓库开发约定。
 
 ## 后续硬闸
