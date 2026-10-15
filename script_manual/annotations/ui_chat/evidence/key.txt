@@ -1,0 +1,312 @@
+D / 3232 key 静态审阅摘录
+报告类型：metadata；带来源摘要的有限静态摘录，不是原始源码或完整恢复稿。
+手册底座提交：cc5c1bad7a806078794eca1ab7482230a18ef9d5
+固定包 SHA256：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72
+引擎：uncompyle6 3.9.3 / xdis 6.1.8 / spark-parser 1.9.0；Python 3.11.2。
+摘录规则：L 后数字是外置候选原始 1-based 闭区间行号；冒号后是原行的JSON字符串（可解码还原空格/转义）；未更名、补分支或修乱码。
+手册 evidence.start_line/end_line 则指本报告实际行号；两套行号不可混用。
+只读取允许条目的负载；1288 仅目录元数据用于排除范围断言；无负载提取/解压/恢复。
+decompile_ok、baseline、progress=100% 都不是语义/严格可逆/可执行证明；转译器可能局部修补。
+没有导入、eval、exec、运行恢复出来的游戏模块；没有客户端/Windows/网络/实机记录。
+完整候选留仓库外；本报告按 AGENT_TASKS 的“小审阅报告”约定提交，不接入 PR34 清单或编辑器引擎。
+
+[key_state] entry=3232；co_filename=script/key.py
+原候选 SHA256=b55d17dbd67f31e46d33f5d6d4403c19dd049c97f21890d13c08c2835015d88c；字节=6540；行=270
+标准 pyc SHA256=a8974e49894c5dae2aad30c50289fa82878d003637ebfdc8fb0f61bc2f66f6fd；stored payload SHA256=33aad7875f8a90dc6a1057ebb109ca783e5a46b6fe9a2ce4a26c751dd3473d86
+原候选行范围：1..31（闭区间）
+L00001: "# uncompyle6 version 3.9.3"
+L00002: "# Python bytecode version base 2.5 (62131)"
+L00003: "# Decompiled from: Python 3.11.2 (main, Apr  8 2026, 01:58:00) [GCC 12.2.0]"
+L00004: "# Embedded file name: script\\key.py"
+L00005: "from defines import *"
+L00006: "import C_sys"
+L00007: "g_F11Down = False"
+L00008: "g_CheckJDY = False"
+L00009: "g_SysCallback = {}"
+L00010: "g_HotkeyTable = {}"
+L00011: "g_CanUseHotKey = []"
+L00012: ""
+L00013: "def SetEnableHotKey(keys):"
+L00014: "    global g_CanUseHotKey"
+L00015: "    if keys not in g_CanUseHotKey:"
+L00016: "        g_CanUseHotKey.append(keys)"
+L00017: "    return"
+L00018: ""
+L00019: ""
+L00020: "def RemoveEnableHotKey(keys):"
+L00021: "    if keys in g_CanUseHotKey:"
+L00022: "        g_CanUseHotKey.remove(keys)"
+L00023: "    return"
+L00024: ""
+L00025: ""
+L00026: "def CheckKeysCanUse(keys):"
+L00027: "    import defines"
+L00028: "    if len(g_CanUseHotKey) == 0:"
+L00029: "        return True"
+L00030: "    IgnoreKeys = [(defines.LEFT_BUTTON_DOWN,), (defines.LEFT_BUTTON_UP,), (defines.VK_CTRL, defines.VK_V), (defines.VK_ALT, defines.VK_F1)]"
+L00031: "    return keys in IgnoreKeys or keys in g_CanUseHotKey"
+
+[key_label] entry=3232；co_filename=script/key.py
+原候选 SHA256=b55d17dbd67f31e46d33f5d6d4403c19dd049c97f21890d13c08c2835015d88c；字节=6540；行=270
+标准 pyc SHA256=a8974e49894c5dae2aad30c50289fa82878d003637ebfdc8fb0f61bc2f66f6fd；stored payload SHA256=33aad7875f8a90dc6a1057ebb109ca783e5a46b6fe9a2ce4a26c751dd3473d86
+原候选行范围：34..53（闭区间）
+L00034: "def hotkey2txt(hk):"
+L00035: "    s = ''"
+L00036: "    for k in hk:"
+L00037: "        try:"
+L00038: "            s += KEY2TXT[k] + ' + '"
+L00039: "        except:"
+L00040: "            return '.'"
+L00041: ""
+L00042: "    return s[:-3]"
+L00043: ""
+L00044: ""
+L00045: "def Hotkey2YellowTxt(hk):"
+L00046: "    s = ''"
+L00047: "    for k in hk:"
+L00048: "        try:"
+L00049: "            s += '#Y' + KEY2TXT[k] + '#n' + ' + '"
+L00050: "        except:"
+L00051: "            return '.'"
+L00052: ""
+L00053: "    return s[:-3]"
+
+[key_mouse] entry=3232；co_filename=script/key.py
+原候选 SHA256=b55d17dbd67f31e46d33f5d6d4403c19dd049c97f21890d13c08c2835015d88c；字节=6540；行=270
+标准 pyc SHA256=a8974e49894c5dae2aad30c50289fa82878d003637ebfdc8fb0f61bc2f66f6fd；stored payload SHA256=33aad7875f8a90dc6a1057ebb109ca783e5a46b6fe9a2ce4a26c751dd3473d86
+原候选行范围：56..77（闭区间）
+L00056: "def Function():"
+L00057: "    return"
+L00058: ""
+L00059: ""
+L00060: "def RegisterRightButtonHotKey(func=None):"
+L00061: "    if func is None:"
+L00062: "        C_sys.RegisterHotKey(RIGHT_BUTTON_DOWN)"
+L00063: "        C_sys.RegisterHotKey(RIGHT_BUTTON_UP)"
+L00064: "    else:"
+L00065: "        C_sys.RegisterHotKey(RIGHT_BUTTON_DOWN, Function)"
+L00066: "        C_sys.RegisterHotKey(RIGHT_BUTTON_UP, func)"
+L00067: "    return"
+L00068: ""
+L00069: ""
+L00070: "def RegisterLeftButtonHotKey(func=None):"
+L00071: "    if func is None:"
+L00072: "        C_sys.RegisterHotKey(LEFT_BUTTON_DOWN)"
+L00073: "        C_sys.RegisterHotKey(LEFT_BUTTON_UP)"
+L00074: "    else:"
+L00075: "        C_sys.RegisterHotKey(LEFT_BUTTON_DOWN, Function)"
+L00076: "        C_sys.RegisterHotKey(LEFT_BUTTON_UP, func)"
+L00077: "    return"
+
+[key_functor_set] entry=3232；co_filename=script/key.py
+原候选 SHA256=b55d17dbd67f31e46d33f5d6d4403c19dd049c97f21890d13c08c2835015d88c；字节=6540；行=270
+标准 pyc SHA256=a8974e49894c5dae2aad30c50289fa82878d003637ebfdc8fb0f61bc2f66f6fd；stored payload SHA256=33aad7875f8a90dc6a1057ebb109ca783e5a46b6fe9a2ce4a26c751dd3473d86
+原候选行范围：80..103（闭区间）
+L00080: "class CFunctor:"
+L00081: ""
+L00082: "    def __init__(self, key):"
+L00083: "        self.m_Keys2Callback = {}"
+L00084: "        self.m_Key = key"
+L00085: "        return"
+L00086: ""
+L00087: "    def Set(self, keys, callback, args):"
+L00088: "        if callback is None:"
+L00089: "            if keys in self.m_Keys2Callback:"
+L00090: "                del self.m_Keys2Callback[keys]"
+L00091: "                if len(keys) == 1 and keys[0] == VK_SPACE:"
+L00092: "                    import chatinput"
+L00093: "                    chatinput.g_IgnoreSpace = False"
+L00094: "            if len(self.m_Keys2Callback) == 0:"
+L00095: "                return True"
+L00096: "        else:"
+L00097: "            self.m_Keys2Callback[keys] = ("
+L00098: "             callback, args)"
+L00099: "            if len(keys) == 1 and keys[0] == VK_SPACE:"
+L00100: "                import chatinput"
+L00101: "                chatinput.g_IgnoreSpace = True"
+L00102: "        return"
+L00103: ""
+
+[key_functor_call] entry=3232；co_filename=script/key.py
+原候选 SHA256=b55d17dbd67f31e46d33f5d6d4403c19dd049c97f21890d13c08c2835015d88c；字节=6540；行=270
+标准 pyc SHA256=a8974e49894c5dae2aad30c50289fa82878d003637ebfdc8fb0f61bc2f66f6fd；stored payload SHA256=33aad7875f8a90dc6a1057ebb109ca783e5a46b6fe9a2ce4a26c751dd3473d86
+原候选行范围：104..133（闭区间）
+L00104: "    def __call__(self, *args):"
+L00105: "        try:"
+L00106: "            import hero"
+L00107: "            if not hero.GetHeroShow():"
+L00108: "                return"
+L00109: "        except:"
+L00110: "            pass"
+L00111: ""
+L00112: "        for (ks, v) in self.m_Keys2Callback.items():"
+L00113: "            if not CheckKeysCanUse(ks):"
+L00114: "                continue"
+L00115: "            call = True"
+L00116: "            for k in ks:"
+L00117: "                if self.m_Key != k:"
+L00118: "                    if not C_sys.IsKeyDown(k):"
+L00119: "                        call = False"
+L00120: "                        break"
+L00121: ""
+L00122: "            if call:"
+L00123: "                import dlgsysopt, hotkeycounter"
+L00124: "                hotkeycounter.RecordKeyCount(ks)"
+L00125: "                if dlgsysopt.g_EditKeyMode:"
+L00126: "                    if type(ks) == tuple:"
+L00127: "                        for hotkeys in dlgsysopt.g_HotKeys.values():"
+L00128: "                            if hotkeys == ks:"
+L00129: "                                return"
+L00130: ""
+L00131: "                v[0](*(v[1] + args))"
+L00132: ""
+L00133: "        return"
+
+[key_registration] entry=3232；co_filename=script/key.py
+原候选 SHA256=b55d17dbd67f31e46d33f5d6d4403c19dd049c97f21890d13c08c2835015d88c；字节=6540；行=270
+标准 pyc SHA256=a8974e49894c5dae2aad30c50289fa82878d003637ebfdc8fb0f61bc2f66f6fd；stored payload SHA256=33aad7875f8a90dc6a1057ebb109ca783e5a46b6fe9a2ce4a26c751dd3473d86
+原候选行范围：136..179（闭区间）
+L00136: "def RegisterHotKey(keys, func=None, *args):"
+L00137: "    global g_HotkeyTable"
+L00138: "    if type(keys) == int:"
+L00139: "        keys = ("
+L00140: "         keys,)"
+L00141: "    for k in keys:"
+L00142: "        if k != VK_SHIFT and k != VK_CTRL and k != VK_ALT:"
+L00143: "            hk = g_HotkeyTable.get(k)"
+L00144: "            if not hk:"
+L00145: "                hk = CFunctor(k)"
+L00146: "                g_HotkeyTable[k] = hk"
+L00147: "                C_sys.RegisterHotKey(k, hk)"
+L00148: "            if hk.Set(keys, func, args):"
+L00149: "                del g_HotkeyTable[k]"
+L00150: "                C_sys.RegisterHotKey(k)"
+L00151: ""
+L00152: "    return"
+L00153: ""
+L00154: ""
+L00155: "def RegisterHotKeyEx(keys, func=None, *args):"
+L00156: "    if type(keys) == int:"
+L00157: "        keys = ("
+L00158: "         keys,)"
+L00159: "    for k in keys:"
+L00160: "        hk = g_HotkeyTable.get(k)"
+L00161: "        if not hk:"
+L00162: "            hk = CFunctor(k)"
+L00163: "            g_HotkeyTable[k] = hk"
+L00164: "            C_sys.RegisterHotKey(k, hk)"
+L00165: "        if hk.Set(keys, func, args):"
+L00166: "            del g_HotkeyTable[k]"
+L00167: "            C_sys.RegisterHotKey(k)"
+L00168: ""
+L00169: "    return"
+L00170: ""
+L00171: ""
+L00172: "def RegisterAltHotKey(key, func=None, *args):"
+L00173: "    RegisterHotKey((VK_ALT, key), func, *args)"
+L00174: "    return"
+L00175: ""
+L00176: ""
+L00177: "def RegisterCtrlHotKey(key, func=None, *args):"
+L00178: "    RegisterHotKey((VK_CTRL, key), func, *args)"
+L00179: "    return"
+
+[key_query] entry=3232；co_filename=script/key.py
+原候选 SHA256=b55d17dbd67f31e46d33f5d6d4403c19dd049c97f21890d13c08c2835015d88c；字节=6540；行=270
+标准 pyc SHA256=a8974e49894c5dae2aad30c50289fa82878d003637ebfdc8fb0f61bc2f66f6fd；stored payload SHA256=33aad7875f8a90dc6a1057ebb109ca783e5a46b6fe9a2ce4a26c751dd3473d86
+原候选行范围：182..212（闭区间）
+L00182: "def IsHotKey(char):"
+L00183: "    hk = g_HotkeyTable.get(char)"
+L00184: "    if hk:"
+L00185: "        for keys in hk.m_Keys2Callback.keys():"
+L00186: "            for k in keys:"
+L00187: "                if k == VK_SHIFT or k == VK_CTRL or k == VK_ALT:"
+L00188: "                    if not C_sys.IsKeyDown(k):"
+L00189: "                        break"
+L00190: "                elif k != char:"
+L00191: "                    break"
+L00192: "            else:"
+L00193: "                return True"
+L00194: ""
+L00195: "    return False"
+L00196: ""
+L00197: ""
+L00198: "def GetCallFunc(char, index):"
+L00199: "    if IsHotKey(char):"
+L00200: "        hk = g_HotkeyTable.get(char)"
+L00201: "        if index == 1:"
+L00202: "            keys = ("
+L00203: "             VK_ALT, char)"
+L00204: "        elif index == 2:"
+L00205: "            keys = ("
+L00206: "             VK_CTRL, char)"
+L00207: "        else:"
+L00208: "            keys = ("
+L00209: "             char,)"
+L00210: "        if hk.m_Keys2Callback.get(keys):"
+L00211: "            return hk.m_Keys2Callback[keys][0]"
+L00212: "    return"
+
+[key_f11] entry=3232；co_filename=script/key.py
+原候选 SHA256=b55d17dbd67f31e46d33f5d6d4403c19dd049c97f21890d13c08c2835015d88c；字节=6540；行=270
+标准 pyc SHA256=a8974e49894c5dae2aad30c50289fa82878d003637ebfdc8fb0f61bc2f66f6fd；stored payload SHA256=33aad7875f8a90dc6a1057ebb109ca783e5a46b6fe9a2ce4a26c751dd3473d86
+原候选行范围：215..225（闭区间）
+L00215: "def AddKey(key):"
+L00216: "    global g_CheckJDY"
+L00217: "    global g_F11Down"
+L00218: "    if key == -VK_F11:"
+L00219: "        g_F11Down = True"
+L00220: "    if key == VK_F11:"
+L00221: "        if not g_F11Down:"
+L00222: "            g_CheckJDY = True"
+L00223: "        else:"
+L00224: "            g_F11Down = False"
+L00225: "    return"
+
+[key_sys_corrupt] entry=3232；co_filename=script/key.py
+原候选 SHA256=b55d17dbd67f31e46d33f5d6d4403c19dd049c97f21890d13c08c2835015d88c；字节=6540；行=270
+标准 pyc SHA256=a8974e49894c5dae2aad30c50289fa82878d003637ebfdc8fb0f61bc2f66f6fd；stored payload SHA256=33aad7875f8a90dc6a1057ebb109ca783e5a46b6fe9a2ce4a26c751dd3473d86
+原候选行范围：228..241（闭区间）
+L00228: "def RegisterS%/HotKey(mod, key, callback):"
+L00229: "    key = ord(key)"
+L00230: "    for id in xrange(256):"
+L00231: "        if id not in g_SysCallback:"
+L00232: "            g_SysCallback[id] = callback"
+L00233: "            break"
+L00234: ""
+L00235: "    C_sys.RegisterS%/HotKey(1, key, mod, id)"
+L00236: "    return id"
+L00237: ""
+L00238: ""
+L00239: "def OnSysHotKey(id):"
+L00240: "    g_SysCallback[id]()"
+L00241: "    return"
+
+[key_sys_query] entry=3232；co_filename=script/key.py
+原候选 SHA256=b55d17dbd67f31e46d33f5d6d4403c19dd049c97f21890d13c08c2835015d88c；字节=6540；行=270
+标准 pyc SHA256=a8974e49894c5dae2aad30c50289fa82878d003637ebfdc8fb0f61bc2f66f6fd；stored payload SHA256=33aad7875f8a90dc6a1057ebb109ca783e5a46b6fe9a2ce4a26c751dd3473d86
+原候选行范围：244..267（闭区间）
+L00244: "def IsSysHotKey(hk):"
+L00245: "    if len(hk) == 1:"
+L00246: "        key = hk[0]"
+L00247: "        mod = MOD_SINGLE"
+L00248: "    elif len(hk) == 2:"
+L00249: "        (mkey, key) = hk"
+L00250: "        mod = MODKEY2MOD.get(mkey, MOD_SINGLE)"
+L00251: "    elif len(hk) == 3:"
+L00252: "        (mkey1, mkey2, key) = hk"
+L00253: "        mod1 = MODKEY2MOD.get(mkey1, MOD_SINGLE)"
+L00254: "        mod2 = MODKEY2MOD.get(mkey2, MOD_SINGLE)"
+L00255: "        mod = mod1 | mod2"
+L00256: "    return C_sys.IsSysHotKey(key, mod)"
+L00257: ""
+L00258: ""
+L00259: "def CheckSysHotKey():"
+L00260: "    import dlgsysopt"
+L00261: "    result = []"
+L00262: "    for (name, hotkey) in dlgsysopt.g_HotKeys.items():"
+L00263: "        if hotkey:"
+L00264: "            if IsSysHotKey(hotkey):"
+L00265: "                result.append(name)"
+L00266: ""
+L00267: "    return result"
