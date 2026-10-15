@@ -419,6 +419,52 @@ python3 tools/decompiler/batch_decompile.py data/script.fls /tmp/full_script_py 
 
 ---
 
+### 4.6 第二反編譯引擎 `pycdc` 的交叉覆核（2026-10-15）
+
+`tools/decompiler/crosscheck_pycdc.py` 把 pycdc 接成第二引擎，用來複核「轉譯成功、uncompyle6 失敗」的 547 個 52 字節佔位與 §4.5 的殘餘。前提與 §4.5 相同：不改 `batch_decompile.py`（SHA 被釘），複用 `recover_entries` 的路徑清洗與轉譯梯；pycdc 一律放子進程帶超時；`--write` 只寫 `<out>/pycdc/` 這棵獨立樹，已存在就跳過，**絕不覆蓋 uncompyle6 的產物**。
+
+構建配方（沙箱實測約 2 分鐘，只需要被放行的 github）：pycdc 是純 C++，**不需要 flex/bison**；Debian 缺的 cmake 可用 `pip install cmake` 取（輪子自帶真二進制）。
+
+```sh
+/home/user/dec-venv/bin/pip install cmake          # 或任何自帶 cmake 的環境
+git clone -q --depth 1 https://github.com/zrax/pycdc
+cmake -S pycdc -B pycdc/build && cmake --build pycdc/build -j4
+
+python3 tools/decompiler/crosscheck_pycdc.py --out <語料目錄> \
+    --accounting accounting.json --class failed --jobs 4 --timeout 25 \
+    --write --keep-pyc <pyc 目錄> [--ladder]
+```
+
+#### 5,002 條的雙引擎矩陣
+
+| 行=uncompyle6 現有產物 | pycdc ok | 只拿到部分 | pycdc 崩 | 無 pyc | 合計 |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| `full`（完整源碼） | 4,312 | 0 | 75 | 0 | 4,387 |
+| `recovered`（§4.5 產物） | 2 | 0 | 0 | 0 | 2 |
+| `stub`（52 字節佔位） | **465** | 23 | 56 | 0 | 544 |
+| `absent`（無產物） | 53 | 0 | 1 | 0 | 54 |
+| 未拿到 pyc（未開 `--ladder`） | 0 | 0 | 0 | 15 | 15 |
+| **合計** | **4,832** | 23 | 132 | 15 | 5,002 |
+
+* pycdc **淨補 546 條**讀得懂的源碼（541 條直接命中 + 5 條要開 `--ladder`；那 5 條正是 §4.4 記的 `63`、`64`、`1013`、`1528`、`1854`），全語料 10.4 秒跑完 547 條。
+* 反向也有：75 條 uncompyle6 出得了、pycdc 直接崩（`vector::_M_range_check: __n … >= this->size()`、`std::bad_cast`）⇒ **單一引擎的成敗不構成結論**，兩邊要各留一份。
+* 定論殘餘：把 pycdc、uncompyle6、§4.5 修復梯全開之後仍**零產物的是 61 條**（56 條佔位 + 1 條無產物 + 4 條連轉譯都過不了：`1954`、`3066`、`4166`、`4691`）；清單寫在語料目錄 `residual_no_source.json`。覆蓋率 **4,941 / 5,002 = 98.78%**。
+
+#### 「反編譯成功」不等於「可回編譯」
+
+用 `tools/registration/build_python25.sh` 自建的真 CPython 2.5.6（照跑即通，`Python 2.5.6`）對全部產物做 `compile()`，這是本輪最該記下來的一筆：
+
+| 產物集 | 原樣可編譯 | 剝掉模組頂層 `return` 後 | 仍失敗 |
+| :--- | ---: | ---: | ---: |
+| uncompyle6 全語料 4,998 檔 | 550（11.0%） | **3,770（75.4%）** | 1,228 |
+| pycdc 交叉覆核 512 檔 | 248（48.4%） | 248（沒有這個偽影） | 264 |
+
+1. **系統性偽影**：這些 `.pyo` 的模組碼物件以 `RETURN_VALUE` 收尾，uncompyle6 如實還原成模組頂層一句 `return`，而模組級 `return` 不是合法 Python——3,220 個檔案**只因為這一行**編譯不過。走「編輯後回編譯」管線（STATUS §5.2 ④）時必須先剝掉它，否則第一步就 `SyntaxError: 'return' outside function`。
+2. 仍失敗的 1,228 檔分類：真語法錯 1,159、含 NUL 位元組 35（§4.5 那類 `\x00` 汙染已經滲進源碼常量）、編碼宣告與實際位元組不符 27、縮進 6。
+3. pycdc 那 264 檔失敗**不是**本工具把非 UTF-8 位元組轉義成 `\xNN` 造成的：拿未轉義原文重測，0 檔被修好，仍是 pycdc 自己寫錯（例：`script/usermacro.py:147` invalid syntax）。
+
+所以 pycdc 產物的定位是**「能讀、能互證，不能直接回編譯」**；要進回編譯管線的候選必須兩邊都過 `compile()` 再挑。工具側另有一處必須記住的事：pycdc 會把 GBK 字節原樣吐出來，用 `text=True` 收管道會在 `UnicodeDecodeError` 上崩掉整批——本工具改成二進制捕獲 + `backslashreplace` 轉義，並在報告與產物頭註記「已轉義」，這條也有回歸測試兜著。
+
 ---
 
 ## 5. 正向字節碼混淆、5段式 XOR 加密與 `.fls` 重打包管線 (`tools/decompiler/pack_and_encrypt.py`)

@@ -112,6 +112,7 @@
 - `GS2C_PROP_CHANGE` 与 `GS2C_NPC_CHAT_EXT` 在客户端表里同为 152（客户端自身冲突）；链路帧 `0xFF` 续读长度是 **2 字节**。
 - `script.fls` 模块导入不走路径哈希（未解）；`.dlg` 每条目 4 字节 XOR 密钥的派生公式未定位（靠固定文件头反推）。
 - 仓库里**没有任何真实客户端抓包字节**；所有协议结论来自静态分析。
+- 反编译产物 ≠ 可回编译源码（2026-10-15 用自建 CPython 2.5.6 实测）：这批 `.pyo` 的模块码对象以 RETURN_VALUE 收尾，uncompyle6 如实还原成模块顶层一句 `return`，于是 4,998 个产物里有 3,220 个**只因这一行** `compile()` 不过（剥掉后 75.4% 可编译）。走「编辑后回编译」管线前必须先剥它，并对候选文件做一次 `compile()` 校验；第二引擎 pycdc 的产物没有这个伪影，但自身语法错误率更高（48.4% 可编译），只用于阅读与交叉印证（详见 `notes/opcode_mapping_and_decompilation.md` §4.6）。
 - 清点 `script.fls` 的反编译产物**必须扫目录**，别按 `script_entries.jsonl` 的 `current_filename` 匹配：12 个条目的包内自报文件名带位元污染（含 `\x00`/`?`/`*`），`batch_decompile` 写文件时会抛 `OSError` 而**静默零产物**；catalog 无名条目则落在 `script/unknown/`。2026-10-15 复核：所谓「26 条无产物」= 13 条清点误差 + 9 条可救 + 4 条无解。定点恢复用 `tools/decompiler/recover_entries.py`（只读复用 `batch_decompile`，它的 SHA 被 `agent_e_reproduction.json` 锁定，不要改）。
 - 「某模块不在 `script.fls` 里」这类结论要先回查条目自报路径再下判断：`servicedata` 曾被判缺失，实际是无名条目 `1931` → `script/data/servicedata.py`，真条款全文一直在包内，而客户端就是裸名 `import servicedata`（`script/data` 在 import 路径上）。
 - 真机「窗口标题/聊天乱码」多半**不是资源损坏**：客户端只有 `SetWindowTextA`，脚本层
