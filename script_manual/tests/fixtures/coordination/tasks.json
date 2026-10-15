@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 337,
+      "owner": "C",
+      "domain": "login",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4293,
+      "owner": "C",
+      "domain": "login",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": [
+        "E",
+        "F"
+      ]
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4007,
+      "owner": "C",
+      "domain": "login",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4806,
+      "owner": "C",
+      "domain": "login",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 219,
+      "owner": "D",
+      "domain": "ui_chat",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3854,
+      "owner": "D",
+      "domain": "ui_chat",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3232,
+      "owner": "D",
+      "domain": "ui_chat",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4832,
+      "owner": "D",
+      "domain": "ui_chat",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3176,
+      "owner": "E",
+      "domain": "network",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2170,
+      "owner": "E",
+      "domain": "network",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 871,
+      "owner": "E",
+      "domain": "network",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 516,
+      "owner": "E",
+      "domain": "network",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 697,
+      "owner": "F",
+      "domain": "battle",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1406,
+      "owner": "F",
+      "domain": "battle",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1612,
+      "owner": "F",
+      "domain": "battle",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 8,
+      "owner": "F",
+      "domain": "battle",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3038,
+      "owner": "G",
+      "domain": "gameplay",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 717,
+      "owner": "G",
+      "domain": "gameplay",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1129,
+      "owner": "G",
+      "domain": "gameplay",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 949,
+      "owner": "G",
+      "domain": "gameplay",
+      "state": "assigned",
+      "priority": "pilot",
+      "collaborators": []
+    }
+  ]
+}

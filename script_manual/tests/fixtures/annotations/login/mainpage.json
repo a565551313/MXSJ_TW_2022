@@ -1,0 +1,274 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 337,
+  "path": "script/login/mainpage.py",
+  "owner": "C",
+  "domain": "login",
+  "author": "A（样板；交C复核）",
+  "source_status": "historical_unverified_origin",
+  "purpose": {
+    "text": "登录首页控制：公告显示与刷新、登录/注册入口、首页链接和显示隐藏。",
+    "confidence": "inferred",
+    "evidence": [
+      "page",
+      "messages",
+      "refresh"
+    ]
+  },
+  "keywords": [
+    "公告",
+    "刷新公告失败",
+    "登录首页",
+    "新闻",
+    "news.txt",
+    "公告弹窗"
+  ],
+  "functions": [
+    {
+      "name": "CMainPage.__init__",
+      "signature": "(self, parent)",
+      "kind": "method",
+      "summary": {
+        "text": "加载首页布局，初始化首页控件及版本信息。",
+        "confidence": "inferred",
+        "evidence": [
+          "page"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMainPage._WriteTxtBox",
+      "signature": "(self, arr)",
+      "kind": "method",
+      "summary": {
+        "text": "将文本行交给公告显示控件。",
+        "confidence": "inferred",
+        "evidence": [
+          "write"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMainPage.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "按消息分发登录、注册、公告、链接等操作。",
+        "confidence": "inferred",
+        "evidence": [
+          "messages"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "msgid == 10",
+          "effect": {
+            "text": "显示本地或内存中的公告内容。",
+            "confidence": "inferred",
+            "evidence": [
+              "messages"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 30",
+          "effect": {
+            "text": "读取公告/客服地址并发起刷新请求。",
+            "confidence": "inferred",
+            "evidence": [
+              "messages"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "refreshbulletin",
+      "signature": "(data, succeed)",
+      "kind": "function",
+      "summary": {
+        "text": "处理公告请求结果，保存正文或提示失败。",
+        "confidence": "inferred",
+        "evidence": [
+          "refresh"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "refreshService",
+      "signature": "(data, succeed)",
+      "kind": "function",
+      "summary": {
+        "text": "处理客服说明请求并写入本地文本。",
+        "confidence": "inferred",
+        "evidence": [
+          "service"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Show",
+      "signature": "(s, autoupdate=True)",
+      "kind": "function",
+      "summary": {
+        "text": "控制首页显示隐藏及安排自动刷新。",
+        "confidence": "inferred",
+        "evidence": [
+          "show"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "layout",
+      "target": "login/mainpage.dlg",
+      "summary": {
+        "text": "首页布局与公告区域。",
+        "confidence": "inferred",
+        "evidence": [
+          "page"
+        ]
+      }
+    },
+    {
+      "kind": "file",
+      "target": "news.txt",
+      "summary": {
+        "text": "本地公告正文，刷新成功时会被写入。",
+        "confidence": "inferred",
+        "evidence": [
+          "refresh"
+        ]
+      }
+    },
+    {
+      "kind": "config",
+      "target": "update.ini → [Setting]/[HK] → News",
+      "summary": {
+        "text": "按语言版本选择公告地址。",
+        "confidence": "inferred",
+        "evidence": [
+          "messages"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4007
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4806
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "刷新公告失败在哪里触发？",
+      "answer": {
+        "text": "先看refreshbulletin：候选代码在请求失败或缺少HTTP头结束分隔符时提示刷新失败；实际网络原因须日志验证。",
+        "confidence": "inferred",
+        "evidence": [
+          "refresh"
+        ]
+      }
+    },
+    {
+      "question": "想修改公告正文、地址或布局分别找哪里？",
+      "answer": {
+        "text": "正文news.txt，地址update.ini的News配置，布局login/mainpage.dlg；在线刷新成功会覆盖本地正文。",
+        "confidence": "inferred",
+        "evidence": [
+          "page",
+          "messages",
+          "refresh"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "A提供的格式样板，不是C/H已验收成果。",
+    "来源是仓库旧反编译候选；与冻结原包payload的源码对应、控制流和运行行为尚未验证。",
+    "不适用于所有派生包，不执行源码、不自动改游戏文件。",
+    "仅列6个重点函数，未覆盖此候选的全部类/函数；calls空表示尚未整理，不表示无调用。"
+  ],
+  "sources": [
+    {
+      "id": "legacy_mainpage",
+      "path": "tools/decompiler/output/script_fls/script/login/mainpage.py",
+      "sha256": "984cbe6ac7d2ed0a1479d2bcb72ea34a2fc89756017d1d95ab0f9f2195e925ac",
+      "kind": "recovered_source",
+      "note": "uncompyle6 3.9.3历史恢复候选，非原始源码；需C复核当前固定语料与包来源。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "page",
+      "source_id": "legacy_mainpage",
+      "start_line": 50,
+      "end_line": 85
+    },
+    {
+      "id": "write",
+      "source_id": "legacy_mainpage",
+      "start_line": 99,
+      "end_line": 109
+    },
+    {
+      "id": "messages",
+      "source_id": "legacy_mainpage",
+      "start_line": 111,
+      "end_line": 257
+    },
+    {
+      "id": "refresh",
+      "source_id": "legacy_mainpage",
+      "start_line": 260,
+      "end_line": 283
+    },
+    {
+      "id": "service",
+      "source_id": "legacy_mainpage",
+      "start_line": 286,
+      "end_line": 302
+    },
+    {
+      "id": "show",
+      "source_id": "legacy_mainpage",
+      "start_line": 305,
+      "end_line": 329
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4806
+      },
+      "symbol": "loginin.Show",
+      "summary": {
+        "text": "候选OnMessage(1)调用loginin.Show(True)，进入登录界面；上游调用者尚待C核实。",
+        "confidence": "inferred",
+        "evidence": [
+          "messages"
+        ]
+      }
+    }
+  ]
+}

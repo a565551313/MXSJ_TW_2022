@@ -1,5 +1,7 @@
 # 项目当前状态（STATUS）
 
+> **E网络预审＋A夹具修复（2026-10-15）**：已在仓库外审查`ec97941`（4网络说明），独立定点恢复5条并复现871/516正文与旧稿字节一致；格式/摘要/行号与ruff通过，但OnError条件、选服后隐藏面板、DoConnect成功链表述及时间头SHA复现需修，**E尚未合入/H未审**。A手册升0.1.0.dev2，固定单元夹具与生产内容分离；本地、E覆盖、C+E覆盖三组均78/78（11 GUI、零跳过），不代表C/E内容验收。正式数据仍20种子/1样板/0 H通过，详§3.42。
+
 > **C首批提交预审（2026-10-15）**：收到`arena/160274ce-mxsj-tw-2022`的`559386b`（4份登录域说明）。仅在仓库外审查，SHA/行号/schema通过，但发现错模块跳转、登录提交/账号保存混淆、无关证据引用、Python2证据.py导致ruff 38项及疑似有损文本需澄清，**尚未合入/接纳，H未审**。A另负责修测试夹具对生产数量/来源的耦合，不以改计数冒充内容通过。详§3.41。
 
 > **最新：A「总控与脚本手册工具」第一版底座（2026-10-15）**：独立 `script_manual/` 0.1.0.dev1 已建立固定来源/JSON Schema/唯一归属任务卡、只读PySide6查看器、单HTML离线搜索导出和H独立摘要绑定审核。**目前仅20条历史路径种子、1份公告待复核样板、H通过0；不是全量分析。** 75/75（11 GUI，零跳过）、ruff含spec 0、自检0、Windows静态0/0/0，真实Chromium断网file://冒烟通过；Windows/EXE/游戏未验，Linux spec因宿主缺libpython未完成。B–H任务与边界见 `script_manual/docs/AGENT_TASKS.md`，详§3.40。本轮不改编辑器/游戏、不上传、不合本工作线。
@@ -32,7 +34,7 @@
 
 | 组件 | 版本/阶段 | 状态 | 本次实测 |
 |---|---|---|---|
-| 脚本开发手册（`script_manual/`） | A底座0.1.0.dev1；20条历史目录种子/1说明样板/0 H通过 | 版本指纹、主键归属、证据分级、H摘要绑定、独立Qt/离线HTML；B–H未代为开展 | 75/75含11 GUI；真实Chromium离线14项检查；ruff含spec 0、自检0、wincompat 0/0/0；Windows与EXE待验，Linux打包缺宿主libpython，详§3.40 |
+| 脚本开发手册（`script_manual/`） | A底座0.1.0.dev2；正式数据仍20历史种子/1样板/0 H通过 | 固定单元夹具与生产结构冒烟分离；C/E仅仓库外预审，均待修改及H审核 | A/E覆盖/C+E覆盖各78/78含11 GUI零跳过；ruff含spec 0、自检0、wincompat 0/0/0；Windows/EXE/游戏待验，详§3.42 |
 | 独立脚本编辑器（`script_editor/`） | 0.6.0.dev6 路径导航完整源码包已交付 | script路径优先、旧项目/参数确认/新包路径索引，严格恢复与双VM续编不放宽 | 源码/真实ZIP解压副本均325项中309通过、16许可外部材料跳过，60 GUI通过；原包路径4951/5002，51明确不可读；双Windows工具本轮重建/静态核验，未Windows/用户全包/游戏验收，详§3.39 |
 | 逆向研究（`notes/`, `work/`） | 结案：双 VM opcode 表、0SLF 目录/路径哈希、`.dlg` 2,706/2,901、协议号表 412 条、帧续读 2 字节；10-15 新增标题/聊天编码链路与 `GCODE=BIG5`/`GetGameRegion()='cn'` 结案（`notes/title_and_chat_encoding.md`） | 稳定；未决项见 AGENTS §7 | 锁定输入 SHA 匹配；`script.fls` 全量反编译补跑 4401/5002 完整（生成物不入库） |
 | 注册 UI 补丁（`tools/client_patches/`，历史） | v3.3 已作废 | 用户判定旧 overlay/整图烤字按钮/包外散图不符合原生规范，**勿再分发 v3/v3.2/v3.3**；新实现见下行 | 90/90 仅历史证据，不作为新实现验收依据 |
@@ -1205,6 +1207,15 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
 - 阻塞：mainpage的selectserver.Show错误绑定4806(loginin，selectserver旧catalog为4844)；LoginOk被误写为保存账号（候选实际246–265提交C2SLoginIn，OnLogin 657–661才SaveAccount）；LoginOk/ShowLogin及跨模块问答等多处引用范围不支持结论；main.py的Python2证据以.py入工具目录使ruff报38项；与A保字节转义稿比较出现字符丢失形态，需原始输出/解码后处理证据澄清。旧候选来源状态升级也须补来源关联。
 - A责任：初稿也误串mainpage→loginin，C虽改文字仍未改身份，A承认种子错误；测试夹具直接读生产内容，A后续拆分固定夹具与内容冒烟。catalog子集20项完成，8个失败报告含subTest；全套GUI复验因夹具缺新增证据出现模态窗口，超时后A终止自有测试进程，**没有完整回归结论**。不将所有测试问题推给C，不通过改数字凑绿。
 - 持久预审：`docs/evidence/script_manual_C_559386b_A_review_20261015.md`。这是A集成预审，不是H独立审核记录。当前正式底座仍20历史种子/1说明样板/0 H通过，C修订后再交A/H/E/F；未开/合PR、未上传、未改游戏或编辑器。
+
+### 3.42 E网络ec97941预审与A测试夹具隔离dev2（2026-10-15）
+
+- E分支`arena/14596f40-mxsj-tw-2022`提交`ec97941f386c7e199e2f7fb39f49f0cf71b2959a`仅network域6文件，157类/函数记录、42分支。只fetch，在仓库外构建覆盖副本；没有切分支/合入/改E正文，也未发现该head打开PR。validate含证据SHA/行号通过，20目录/5说明/0 H通过，3970未编入为唯一关联警告；ruff与隔离wincompat通过，真实Qt与离线Chromium另做E内容冒烟。
+- A独立venv使用Python3.11.2/u6 3.9.3/xdis6.1.8，定点只读恢复3176/2170/871/516/4293，全部baseline/source；871/516去掉6行恢复头后与仓库旧稿**原字节相同**，其余恢复行数与E报告一致并抽查关键片段。未执行游戏脚本，未处理1288，未裁决原生帧/服务端行为；原包/keys SHA不变。
+- 待E修：报告把OnError隐藏窗口前提写反（实际not IsQuickConnect且not CanQuickConnect），JSON瞬连分支应补未在瞬连中的守卫；SetServerRoleInfo实际OnLogin后Show(False)隐藏登录面板，不是回登录界面；DoConnect成功回调未引用的限制需贯彻到摘要和main协审；生成时间位于恢复头，H重跑不能直接匹配整文件SHA，应补工具/依赖与归一化正文/pyc摘要；计时单位表述保持一致。报告修改后须同步所有JSON的SHA/行号。
+- A自修0.1.0.dev2：开工前先推送检查点；tests/fixtures冻结schema v1样本，单元夹具不再复制生产annotations/inventory/reviews，新增缺生产数据仍可单测、生产数量无假设结构冒烟、非法生产数据仍拒绝3项回归。未改schema/归属/任务表或C/E正文，也不是把断言1改成4/5。
+- 回归：A当前数据、仓库外E覆盖、仓库外C+E同时覆盖，均78/78、零跳过、11真实Qt offscreen。旧夹具E副本复现75项：58通过/3失败/3错误/11GUI跳过，不能说75实过；旧失败/错误主要为夹具/数量耦合。新单元绿灯不消除C的.py ruff问题或C/E事实问题。A ruff显式含spec 0、wincompat 0/0/0（58文件/26源码脚本）、bootstrap自检0、当前来源复验0。Windows/EXE/游戏未验；此前Linux打包缺宿主libpython的边界不变。
+- 持久证据：`docs/evidence/script_manual_E_ec97941_A_review_20261015.md`与`script_manual_0.1.0_dev2_validation_20261015.json`。E需小修再交A/H，C仍按§3.41修订；二者均未并入正式数据，现行预览也不冒充已集成。
 
 ## 4. 等待外部输入
 

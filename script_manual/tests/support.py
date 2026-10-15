@@ -17,8 +17,12 @@ class Fixture(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.repo = Path(self.temporary.name) / "中文 space"
         self.root = self.repo / "手册"
-        for name in ("schema", "coordination", "inventory", "annotations", "reviews"):
-            shutil.copytree(TOOL / name, self.root / name)
+        # Production annotations/inventory must never define unit-test expectations.
+        shutil.copytree(TOOL / "schema", self.root / "schema")
+        shutil.copytree(TOOL / "tests/fixtures", self.root, dirs_exist_ok=True)
+        for domain in ("login", "ui_chat", "network", "battle", "gameplay"):
+            (self.root / "annotations" / domain).mkdir(parents=True, exist_ok=True)
+        (self.root / "reviews").mkdir(exist_ok=True)
         self.annotation = self.root / "annotations/login/mainpage.json"
         self.record = self.get(self.annotation)
         source = self.repo / self.record["sources"][0]["path"]

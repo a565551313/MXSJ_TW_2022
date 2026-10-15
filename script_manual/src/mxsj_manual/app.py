@@ -12,7 +12,7 @@ from .paths import application_root
 
 
 def parser():
-    result = argparse.ArgumentParser(description="MXSJ 只读脚本手册 0.1.0.dev1")
+    result = argparse.ArgumentParser(description=f"MXSJ 只读脚本手册 {__version__}")
     result.add_argument("--version", action="version", version=__version__)
     result.add_argument("--content", type=Path, default=application_root())
     commands = result.add_subparsers(dest="command")

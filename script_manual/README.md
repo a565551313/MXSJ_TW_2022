@@ -1,4 +1,4 @@
-# 客户端脚本开发手册 — 0.1.0.dev1
+# 客户端脚本开发手册 — 0.1.0.dev2
 
 独立、只读的脚本字典工具。**JSON 是唯一底稿**，PySide6 查看器和离线单 HTML 共用校验/索引层，不导入或执行游戏脚本，不修改游戏包、脚本编辑器或启动器。
 
@@ -44,6 +44,8 @@ python script_manual/bootstrap.py --check-only
 ruff check script_manual
 python tools/devkit/check_windows_compat.py script_manual --strict
 ```
+
+单元测试使用 `tests/fixtures/` 固定样本，不从生产annotations/inventory构造期望值；真实数据另有不假定说明数量的结构冒烟，集成时仍须单独跑 `validate --verify-evidence`。冻结夹具不是新的权威底稿，勿随Agent交付自动改数量。
 
 core测试不依赖Qt/游戏包；GUI测试在可用PySide6环境执行。`MXSJ_MANUAL_REQUIRE_GUI=1` 可禁止因Qt缺失而跳过GUI测试，Windows构建脚本已设置。离线浏览器验收是单独的开发检查，不要求用户安装浏览器自动化依赖。
 
