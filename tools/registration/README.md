@@ -159,6 +159,22 @@ Python 3 构建器/测试按仓库 ruff 规则检查；两份必须在 2.5.6 运
 - 包内有新 script.fls、两张新布局、测试说明、SHA256SUMS。
   本包只测界面/校验/候选资料，不发送真实注册请求；顺延规则还只是已定方案。
 
+### 第二期 b 测试包（2026-10-15 已授权上传）
+
+- 源码提交：`421ab91`（会话分支 `arena/19a59906-mxsj-tw-2022`，未合入 `master`）。
+- [下载 registration_phase2b_terms_confirm.zip](https://drive.google.com/file/d/1k5dE9pt9NQL-ywhh27U_lM6JfcAEQD7b/view)（Google Drive，未改分享权限）。
+- 大小 24,190,980 字节；ZIP MD5 `e5177426ce0982e85fee6feae0f02655`；
+  ZIP SHA-256 `c30a638719497d4850057c3717f303e9ef48e1c502f6b5f871579d179773d3f0`。
+- 内容：`data/script.fls`（`ed0f4126c0b5d353…`，24,262,648 B）、
+  `interface_import/login/regterms.dlg` 与 `regform.dlg`（与 phase2 **逐字节相同**，
+  已导入过且没动过的话可跳过 TESTING 第 1 节）、`测试说明-TESTING.md`、`README.txt`、
+  `SHA256SUMS.txt`。
+- 与 phase2 的唯一差异是 `data/script.fls`：条款页改读包内真文本（勘误「模块缺失」误判）、
+  `CConfirm` 改走 `_LoadConfirmLines()` 明示兜底（本版归档无 `CONFIRM_MSG` 定义）。
+- **可复现性**：沙箱在 2026-10-15 重置，`out/` 属 Git 忽略项随之外消失；按上文「构建与回归」
+  命令重建后 `script.fls` 的 SHA-256 与重置前逐字节一致 ⇒ 构建是确定性的。
+  结论：**要留档的出货包必须传网盘或入库，不能只靠 `out/`**。
+
 ## 第二期 Windows 验收
 
 只在**游戏测试副本**操作，备份旧 `script.fls` 和 `interface.fls`，勿改原安装包。

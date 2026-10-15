@@ -121,6 +121,7 @@
 | 2026-10-14 | 文档整理：新增 `AGENTS.md`、`docs/STATUS.md`、`docs/archive/`（归档 14 个过期快照：根目录 `AGENT_HANDOFF.md`、`work/` 下 10-09/10-10 交接与分派文档、地图编辑器交接报告、`CLIENT_DATA_AGENT_HANDOFF.md`、4 份 route-scope 残留）；v3.3 事实表抽成 `tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md`；刷新 `README.md`（补两个编辑器、修正测试计数、状态移到本文）、`server/README.md`、`tools/client_patches/README.md`、`work/.../INDEX.md`。未改任何代码、测试、数据与二进制。 |
 | 2026-10-13 | 资源编辑器 0.3.3 / UI 编辑器 0.5.2：写回目录不变量 P0 修复；decoder 分段参数修复（引发 §3.1）。 |
 | 2026-10-12 | PR #26/#27 合入 master：复核链、注册 UI v3.3、网关设计、地图编辑器及其修复。 |
+| 2026-10-15 | **沙箱重置 → 重建并出货注册测试包**：`/home/user` 下的 CPython 2.5.6、uncompyle6 venv、79 MB 反编译语料与 `tools/registration/out/` 全部消失；本地 `.git` 退回 `fa13871`。按 §1-2「先对比远程」处置：`git fetch` + 确认工作区与远端 tip `421ab91` 之间**只有 515 个缺失、零内容差异**，故 `git reset --hard` 无损对齐；再用 `build_python25.sh`（走 codeload，允许名单内）重建 2.5.6、重跑构建器 → `out/script.fls` SHA-256 与重置前**逐字节一致**（`ed0f4126…`），13/13 回归与 ruff 仍全绿。**出货记录**：包 `registration_phase2b_terms_confirm.zip`（24,190,980 B，MD5 `e5177426…`，SHA-256 `c30a6387…`）已传网盘根目录 `0AM2SnEVIISYdUk9PVA`，id `1k5dE9pt9NQL-ywhh27U_lM6JfcAEQD7b`，未改分享权限；含 `data/script.fls` + 两张 `.dlg` + `TESTING.md`。教训：生成物只在 `out/` 会随沙箱重置消失，要留档就得上传 |
 
 ## 7. 如何更新本文
 
