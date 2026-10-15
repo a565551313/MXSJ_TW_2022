@@ -45,7 +45,7 @@
       "entry_index": 219,
       "owner": "D",
       "domain": "ui_chat",
-      "state": "assigned",
+      "state": "submitted",
       "priority": "pilot",
       "collaborators": []
     },
@@ -54,7 +54,7 @@
       "entry_index": 3854,
       "owner": "D",
       "domain": "ui_chat",
-      "state": "assigned",
+      "state": "submitted",
       "priority": "pilot",
       "collaborators": []
     },
@@ -63,7 +63,7 @@
       "entry_index": 3232,
       "owner": "D",
       "domain": "ui_chat",
-      "state": "assigned",
+      "state": "submitted",
       "priority": "pilot",
       "collaborators": []
     },
@@ -72,7 +72,7 @@
       "entry_index": 4832,
       "owner": "D",
       "domain": "ui_chat",
-      "state": "assigned",
+      "state": "submitted",
       "priority": "pilot",
       "collaborators": []
     },
@@ -117,7 +117,7 @@
       "entry_index": 697,
       "owner": "F",
       "domain": "battle",
-      "state": "assigned",
+      "state": "blocked",
       "priority": "pilot",
       "collaborators": []
     },
@@ -126,7 +126,7 @@
       "entry_index": 1406,
       "owner": "F",
       "domain": "battle",
-      "state": "assigned",
+      "state": "blocked",
       "priority": "pilot",
       "collaborators": []
     },
@@ -135,7 +135,7 @@
       "entry_index": 1612,
       "owner": "F",
       "domain": "battle",
-      "state": "assigned",
+      "state": "blocked",
       "priority": "pilot",
       "collaborators": []
     },
@@ -144,7 +144,7 @@
       "entry_index": 8,
       "owner": "F",
       "domain": "battle",
-      "state": "assigned",
+      "state": "blocked",
       "priority": "pilot",
       "collaborators": []
     },
