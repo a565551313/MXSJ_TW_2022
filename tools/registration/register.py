@@ -13,8 +13,13 @@
 #   2. 保留對外接口 Show / ShowConfirmDlg / CConfirm / g_AccountInfo /
 #      g_ConfirmDlg / g_RegisterPanel / ModuleReset，loginin、netlogin、
 #      selectrole、mainpage 的既有調用不受影響。
-#   3. 條款文本原由外部模塊 servicedata.SERVICE_MSG 提供；該模塊不在本
-#      版本 script.fls 內，缺失時退回本文件內的佔位條款（正式條款待補）。
+#   3. 條款文本取外部模塊 servicedata.SERVICE_MSG。2026-10-15 實測更正：
+#      該模塊在本版 script.fls 內（條目 1931 自報 script\data\servicedata.py，
+#      SERVICE_MSG/SERVICE_MSG2 兩套按 main.g_LangVersion 切換），所以真機走的是
+#      正式條款；缺失兜底只在離線桩件環境生效。但歸檔裡的 servicedata **沒有**
+#      CONFIRM_MSG（其 pyc 名字表只有兩個 SERVICE_*，兩側歸檔亦無任何定義者），
+#      舊客戶端 CConfirm 直接取該屬性屬構造即報錯的死路，故本文件為確認框另設
+#      CONFIRM_FALLBACK 明示兜底；包內一旦補上該常量，自動改用原文。
 #   4. 規格（用戶 2026-10-14 拍板）：先過協議頁（login/regterms.dlg，
 #      服務條款 dlg 的拷貝，寫法照 loginin.CServiceMessageDialog）->
 #      表單（login/regform.dlg，照改密頁現行風格新作：帳號/密碼/確認
@@ -110,9 +115,8 @@ class CConfirm(combdialog.CCombPanel):
         combdialog.CCombPanel.__init__(self, parent, "login/confirm.dlg")
         self.Topmost()
         import chatoutput
-        import servicedata
 
-        result = [line[1:] for line in servicedata.CONFIRM_MSG.split("\n")]
+        result = _LoadConfirmLines()
         output = self.GetObject("output")
         (w, h) = output.GetSize()
         (x, y) = output.GetPos()
@@ -285,6 +289,26 @@ TERMS_FALLBACK = [
 ]
 
 
+# 本版歸檔沒有 servicedata.CONFIRM_MSG（實測：entry 1931 的 pyc 名字表只有
+# SERVICE_MSG / SERVICE_MSG2，兩個歸檔裡也都找不到任何定義者），所以確認框必須
+# 有明示兜底，否則 CConfirm 構造即 AttributeError——舊客戶端就是這條死路。
+CONFIRM_FALLBACK = [
+    "\xbdT\xbb{\xb5\xf9\xa5U",
+    "",
+    (
+        "\xbdT\xa9w\xadn\xb5\xf9\xa5U\xb3o\xad\xd3\xb1b\xb8\xb9\xb6\xdc"
+        "\xa1H"
+    ),
+    "",
+    (
+        "\xa1]\xa5\xbb\xaa\xa9\xa5\xbb\xc2k\xc0\xc9\xa5\xbc\xb4\xa3\xa8"
+        "\xd1 servicedata.CONFIRM_MSG\xa1A\xa6\xb9\xac\xb0\xa9\xfa\xa5"
+        "\xdc\xb0\xc2\xa9\xb3\xa4\xe5\xae\xd7\xa1F\xb8\xc9\xa4W\xab\xe1"
+        "\xa6\xdb\xb0\xca\xa7\xef\xa5\xce\xad\xec\xa4\xe5\xa1C\xa1^"
+    ),
+]
+
+
 def _Diag(text):
     """第一期診斷：把註冊流程的關鍵節點寫到 photo\\register_diag.txt。
 
@@ -324,6 +348,20 @@ def _LoadTermsLines():
         return [line[1:] for line in servicedata.SERVICE_MSG.split("\n")]
     except Exception:
         return list(TERMS_FALLBACK)
+
+
+def _LoadConfirmLines():
+    """確認框正文：優先取包內 servicedata.CONFIRM_MSG。
+
+    本版歸檔裡沒有這個常量（實測見 CONFIRM_FALLBACK 上方註釋），所以缺失時
+    退回明示兜底；舊客戶端那種「不判空直接取屬性」的寫法會導致構造即
+    AttributeError，這裡不再照抄。包內一旦補上該常量，自動改用原文。"""
+    try:
+        import servicedata
+
+        return [line[1:] for line in servicedata.CONFIRM_MSG.split("\n")]
+    except Exception:
+        return list(CONFIRM_FALLBACK)
 
 
 class CRegTermsPanel(combdialog.CCombPanel):

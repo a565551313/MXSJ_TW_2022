@@ -45,6 +45,9 @@ class RegistrationRuntimeTest(unittest.TestCase):
                 "five candidate names + shared credentials + honest stub OK", run.stdout
             )
             self.assertIn("future full-success popup guard", run.stdout)
+            self.assertIn(
+                "faithful archive: real terms + confirm fallback", run.stdout
+            )
             self.assertIn("no credentials in diagnostic log OK", run.stdout)
 
 

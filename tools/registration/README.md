@@ -102,17 +102,28 @@
 | reg2.dlg | reg.zip，旧风格作废 | 64be77d148f853a99ba5f47c9e6d722012a4e77462c66263df1ee93b08ef043a |
 | service.dlg | Drive `1KaFXbFxU-VOJ5OJ0UIS7rINmn9uhJagS` | 820f09a8cd4e8ff80494cffdfc6de042550f897f7747c6345de793fa68b46d26 |
 
-条款文本仍取 `servicedata.SERVICE_MSG`；该模块缺失时用明确标注的占位条款，
-不能把复制布局说成已拿到正式条款文本。`CConfirm` 仍原样引用 `servicedata.CONFIRM_MSG`，
-既有流程不改。
+条款文本取 `servicedata.SERVICE_MSG`；该模块在本版 `script.fls` 内（见下方勘误），
+所以**真机走的是正式条款全文**，只有离线桩件环境（harness 不装该模块时）才退回
+`TERMS_FALLBACK` 明示占位。`CConfirm` 需要的 `servicedata.CONFIRM_MSG` 经实测
+**归档里不存在**，因此本包不再照抄旧客户端那句裸取属性，改走 `_LoadConfirmLines()`：
+包内一旦补上该常量就自动改用原文，否则用 `CONFIRM_FALLBACK` 明示兜底文案。
 
 > **[勘误 2026-10-15]** 本 README 曾记「`servicedata` 不在本版 script.fls 中」，现已推翻：
 > 该模块在包内，条目 `1931` 的自报路径为 `script\data\servicedata.py`，且已完整反编译
 > （`SERVICE_MSG` 11,602 B 正式条款全文、`SERVICE_MSG2` 9,055 B「線上遊戲定型化契約範本」，
 > 另有 `main.g_LangVersion != 0` 分支的 AMS 版）。真客户端 `script/login/register.py`、
 > `loginin.py` 本来就以裸名 `import servicedata` 取用，故**运行期并非缺失**；
-> 之前的误判来自 catalog 索引对无名字条目检索不到。把测试包条款从占位换成正式文本
-> 需要重建 `out/script.fls` 并跑本目录的回归，尚未执行。
+> 之前的误判来自 catalog 索引对无名字条目检索不到。
+> 2026-10-15 已据此重建 `out/script.fls`（`sha256=ed0f4126c0b5d3533b157cd1b8002b9d570f3c1e152c61f7c60dcd48de5a5a5f`，
+> 24,262,648 B）并跑完本目录 13 项回归（11 布局 + 2 运行时，全通过）。
+>
+> **[同轮新增] `CONFIRM_MSG` 是旧包自带的死路**：`servicedata` 的 pyc 名字表只有
+> `SERVICE_MSG`/`SERVICE_MSG2`，两归档共 4,941 个可读模块里**没有任何一个定义**
+> `CONFIRM_MSG`，唯一引用者就是 `script/login/register.py:142` 且没有 try。
+> 原 harness 的 `servicedata` 桩件恰好提供了这个常量，所以历次「CConfirm 流程走通」
+> 覆盖的是桩件世界、不是真归档。现 harness 增加 9a 段（忠实本版：有 `SERVICE_MSG`、
+> 无 `CONFIRM_MSG` → 条款取真文本、确认框落兜底、构造不抛，并按字节核对）与 9b 对照组
+> （补上常量后必须自动改用原文），`test_runtime.py` 断言 9a 的输出行。
 
 ## 构建与回归（仓库侧，不要求用户安装解释器）
 
