@@ -17,4 +17,16 @@ python build_recovery_engine.py --output recovery_engines/pycdc
 
 输出新目录（拒绝覆盖），包含 pycdc[.exe]、GPL-3.0 许可证、完整对应源码归档及来源/二进制 SHA 清单。
 生成的二进制不入 Git。清单提供交付完整性核对，不是数字签名/沙箱；不要加载来历不明的引擎。
-当前尚未验证 Windows 构建、运行及 EXE 分发；不能把只含源码的 Git 克隆当成双引擎完整发行包。
+0.6.0.dev3完整源码交付ZIP附真实交叉构建的Windows x86 pycdc.exe（不进Git），
+仅依赖Windows 10/11系统UCRT/kernel32；未在Windows执行，不代表EXE构建或游戏验收。
+维护者也可用固定Zig0.13.0从Linux重建（普通用户不需要Zig）：
+
+```sh
+python -m pip install ziglang==0.13.0
+python build_windows_recovery_engine.py --work NEW_WORK --output NEW_OUTPUT
+```
+
+BUILD-NOTICES.txt包含Zig/MinGW/libc++/libc++abi/libunwind许可证与完整构建配方；
+其SHA进入manifest，加载及EXE暂存均校验并保留，不能只拷贝二进制丢掉运行时声明。
+Windows编译出现13条Zig libunwind别名属性警告，构建退出0；没有以此冒充零警告运行验收。
+Git纯克隆仍不含二进制，不能等同于完整源码交付ZIP。

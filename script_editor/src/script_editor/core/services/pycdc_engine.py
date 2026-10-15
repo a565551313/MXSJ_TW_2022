@@ -110,6 +110,10 @@ def discover_pycdc(root=None):
         raise ValueError("pycdc GPL许可证缺失或摘要不匹配")
     if hashlib.sha256(source).hexdigest() != SOURCE_SHA256:
         raise ValueError("pycdc完整对应源码缺失或摘要不匹配")
+    if "build_notices_sha256" in info or (root / "BUILD-NOTICES.txt").exists():
+        notices = checked_file(root / "BUILD-NOTICES.txt", 256 * 1024)
+        if hashlib.sha256(notices).hexdigest() != info.get("build_notices_sha256"):
+            raise ValueError("pycdc构建/静态运行时许可声明摘要不匹配")
     return engine
 
 
@@ -129,6 +133,12 @@ def stage_pycdc(source_root, destination):
         ),
         "manifest.json": checked_file(root / "manifest.json", 16384),
     }
+    manifest = json.loads(files["manifest.json"])
+    if "build_notices_sha256" in manifest:
+        notices = checked_file(root / "BUILD-NOTICES.txt", 256 * 1024)
+        if hashlib.sha256(notices).hexdigest() != manifest["build_notices_sha256"]:
+            raise ValueError("pycdc构建/静态运行时许可声明已变化")
+        files["BUILD-NOTICES.txt"] = notices
     target.mkdir(parents=True, exist_ok=False)
     (target / "corresponding-source").mkdir()
     for name, content in files.items():

@@ -334,6 +334,34 @@ class EngineIntegrityTests(unittest.TestCase):
         with self.assertRaises(FileExistsError):
             stage_pycdc(self.root / "source", destination)
 
+    def test_build_runtime_notices_hash_and_staging_preserved(self):
+        from script_editor.core.services.pycdc_engine import stage_pycdc
+
+        notices = b"test-only runtime notices and build recipe"
+        (self.root / "BUILD-NOTICES.txt").write_bytes(notices)
+        self.manifest["build_notices_sha256"] = hashlib.sha256(notices).hexdigest()
+        self.save_manifest()
+        install = self.root / "application" / "recovery_engines" / "pycdc"
+        shutil.copytree(
+            self.root / "corresponding-source", install / "corresponding-source"
+        )
+        for name in (
+            self.binary.name,
+            "manifest.json",
+            "LICENSE.txt",
+            "BUILD-NOTICES.txt",
+        ):
+            shutil.copyfile(self.root / name, install / name)
+        target = self.root / "staged"
+        target.mkdir()
+        stage_pycdc(self.root / "application", target)
+        self.assertEqual(
+            (target / "recovery_engines/pycdc/BUILD-NOTICES.txt").read_bytes(), notices
+        )
+        (install / "BUILD-NOTICES.txt").write_bytes(b"changed")
+        with self.assertRaises(ValueError):
+            discover_pycdc(install)
+
     def test_nonobject_or_deep_manifest_is_rejected_cleanly(self):
         for content in ("[]", "[" * 1200 + "0" + "]" * 1200):
             with self.subTest(content=content[:30]):

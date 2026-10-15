@@ -1020,6 +1020,22 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
 **未完成**：Windows构建/运行、EXE依赖闭包、客户端语义与全条目安全回包。未新打包/上传，旧网盘0.5.1不含本轮修复；
 不自行合master。下一次交付仍须完整独立源码、双Windows编译器与GPL第二引擎闭包。
 
+### 3.34 0.6.0.dev3完整源码交付收尾（2026-10-15）
+
+用户授权“那你提交推送上传”；data功能提交`a00df3d`已推送，先补真实交付文件再上传。
+- 已从固定CPython官方源码交叉重建Windows x86 2.5.6/2.7.13，更新实际交付manifest，
+  两套EXE/DLL/标准库/许可的静态PE及逐文件SHA核验通过；不是Linux文件改名。
+- 从固定pycdc源码真实交叉生成Windows x86程序，只导入Windows 10/11系统UCRT/kernel32；
+  GPL完整源归档、许可、静态CRT/LLVM许可及完整构建配方随包。13条Zig libunwind属性警告，构建退出0。
+  新增构建声明摘要校验/EXE暂存保留及对应回归，不允许暂存时丢弃运行时声明。
+- 完整回归**289/289、54 GUI、零跳过**；ruff、Windows静态109源码/脚本0发现、diff检查通过。
+  主恢复引擎固定源码及xdis/spark-parser/six/click对应源码、双CPython官方源码也附交付，
+  一键启动/EXE构建脚本和固定原包匹配参数保留；首次Qt/安装构建依赖仍需联网，不是离线安装器。
+- 证据：[交付构建静态核验](evidence/script_editor_0.6_dev3_delivery_build_20261015.json)。
+  交付ZIP/网盘回执将在上传与重读核验后记入，不预报上传完成。
+- Windows启动、双compiler实际运行、Windows EXE构建及游戏语义仍待用户实测；
+  不附游戏包或研究语料，不改mxLauncher/注册，不开PR/合master或更改网盘分享权限。
+
 ## 4. 等待外部输入
 
 | 事项 | 等谁 | 阻塞什么 |
