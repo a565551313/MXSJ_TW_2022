@@ -21,7 +21,10 @@ python3 tools/decompiler/crosscheck_pycdc.py --out <语料目录> \
     --write --keep-pyc <pyc目录> --ladder
 ```
 
-工具不改 `batch_decompile.py` 一行（它的 SHA-256 被
+工具不改 `batch_decompile.py` 一行（它的 SHA-256 被全量重建（uncompyle6 那 5,000 份 + pycdc 交叉复核）见
+[`docs/DECOMPILE_CORPUS.md`](../../../../docs/DECOMPILE_CORPUS.md)；本目录只是已入库的那批。
+
+
 `server/docs/csv_checks/agent_e_reproduction.json` 钉住），而是复用 `recover_entries.py`
 的路径清洗与转译梯。细节见 `notes/opcode_mapping_and_decompilation.md` §4.5–§4.6。
 

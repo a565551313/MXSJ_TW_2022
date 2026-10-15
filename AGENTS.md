@@ -27,6 +27,7 @@
 |---|---|---|
 | `AGENTS.md` / `README.md` / `docs/STATUS.md` | 规则 / 项目总览 / 当前状态 | 本文 |
 | `docs/archive/` | 已被取代的历史快照（只读，有横幅） | [`docs/archive/README.md`](docs/archive/README.md) |
+| `docs/DECOMPILE_CORPUS.md` | 全量反编译语料（79 MB / 5,517 份 `.py`）**要不要建、怎么建**：30 秒决策表、实测过的重建配方、4 个已复现的坑 | [`notes/opcode_mapping_and_decompilation.md`](notes/opcode_mapping_and_decompilation.md) §4.5–§4.6 |
 | `docs/PYTHON_TOOL_CONVENTIONS.md` | Python 工具 / 编辑器开发约定（PEP 8、PySide6、自检启动脚本、一键 EXE、Windows 交付检查） | 本文 §5 |
 | `notes/` | 逆向**结案**笔记：双 VM opcode 表、0SLF 路径哈希与 `.dlg`、游戏数据 | 各文件自述 |
 | `work/dream-world-connect-login-map/` | 早期研究区（297 份笔记、证据、报告、专项工具）；客户端侧权威现状 = `report/client-status-20261012.md` | [`INDEX.md`](work/dream-world-connect-login-map/INDEX.md) |
@@ -122,7 +123,8 @@
 - 本版本 `interface.GCODE = BIG5`，但 `GetGameRegion()` 被 `script/delegate.py` 覆盖成 `'cn'`，
   即台服构建用的是**简中屏蔽词子集**（表现是命中变 `*`，不是乱码）。做简体化时别用简繁转换
   掩盖解码错误（`裏`/`羣` 等在 cp950 不可编码，会静默丢字）。
-- `tools/decompiler/batch_decompile.py` 整池并行会被个别超大字节码模块（实测 entry 2371
+- `tools/decompiler/batch_decompile.py` 整池并行会被个别超大字节码模块- **别默认全量反编译语料存在**：它按红线只写在仓库外，沙箱重置就没。要判断「某符号在整档有没有定义者」这类否定命题，先按 [`docs/DECOMPILE_CORPUS.md`](docs/DECOMPILE_CORPUS.md) §2 的秒级捷径（单条救回 + 数标识符，实测 2.3 s/条）；只有语义级全档检索才花小时级重建全量。该文 §4 的坑 P1（用错解释器会把 5,002 条全写成 52 字节占位且退出码 0）是本轮实测出来的。
+（实测 entry 2371
   `preload_mov`、2679 `wingtypeposdata`）堵死——uncompyle6 在几千常量的数据表上指数级爆炸。
   补跑全量请用「一条一子进程 + 超时」驱动；产物 62 MB 级别，不要入库。
 - `tools/decompiler/output/` 下的 `.py` 是反编译输出，有缺失和错误，不是源码。
