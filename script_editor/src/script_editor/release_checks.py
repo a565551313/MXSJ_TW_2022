@@ -14,6 +14,11 @@ from .recovery_dependencies import checked_recovery_source
 # Independent game/DLL materials are deliberately not part of a standalone tool.
 # Only these exact opt-in tests may be absent from a release build environment.
 OPTIONAL_MATERIAL_TESTS = {
+    "test_data_corpus.RealDataCorpusTests.test_every_real_data_entry_candidate_has_exact_strict_origin",
+    "test_data_corpus.RealDataCorpusTests.test_real_data_corpus_probe_compile_publish_reopen_does_not_execute",
+    "test_data_corpus.RealDataCorpusTests.test_real_uuid_negative_longs_remain_exact_not_replaced_or_nopped",
+    "test_data_corpus.RealDataCorpusTests.test_real_uuid_direct_browser_opens_without_prebuilt_corpus",
+    "test_gui_data_corpus.RealDataCorpusGuiTests.test_all_121_real_data_scripts_open_as_editable_vm27_tabs",
     "test_corpus_import.RealCorpusImportTests.test_eight_real_repairs_match_exact_pyc_and_original_catalog_unchanged",
     "test_corpus_import.RealCorpusImportTests.test_124_and_4861_keep_editable_candidates_without_verified_origin",
     "test_corpus_import.RealCorpusImportTests.test_2371_local_repair_delta_not_misrepresented_as_verified",
@@ -38,6 +43,10 @@ OPTIONAL_MATERIAL_TESTS = {
 
 
 REQUIRED_RELEASE_TESTS = {
+    "test_gui_data_corpus.DataCorpusGuiTests.test_data_manifest_import_is_not_blocked_by_script_only_guard",
+    "test_gui_data_corpus.DataCorpusGuiTests.test_data_generation_action_builds_and_associates_vm27_corpus",
+    "test_data_corpus.DataCorpusTests.test_full_build_directory_exclusion_strict_pyc_and_exact_raw_roundtrip",
+    "test_data_corpus.ActualSignedLongRecoveryTests.test_both_real_vms_negative_long_recovery_recompiles_exact_constants",
     "test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_project_restores_unsaved_text_candidates_diagnostics_and_vm",
     "test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_unverified_external_pyc_cannot_reach_native_prepare",
     "test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_verify_catalog_action_writes_new_file_and_leaves_original_untouched",

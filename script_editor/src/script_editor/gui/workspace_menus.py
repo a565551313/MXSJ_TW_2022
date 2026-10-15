@@ -60,6 +60,9 @@ class WorkspaceMenus:
         corpus = self.menuBar().addMenu("恢复语料")
         self.action(corpus, "import_corpus", "导入全量候选清单…", self.import_corpus)
         self.action(
+            corpus, "data_corpus", "生成data全量候选清单…", self.generate_data_corpus
+        )
+        self.action(
             corpus, "corpus_entry", "另开当前条目的语料候选", self.open_corpus_module
         )
         self.action(

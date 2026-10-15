@@ -1,6 +1,6 @@
 # 项目当前状态（STATUS）
 
-> **本轮最新：0.6.0.dev2 第二段已实现语料候选导入、8条严格修复参数另存、schema3草稿/候选/编辑缓冲区续编；Linux/Python3.11.2 264/264零跳过（48 GUI），详 §3.32。未新打包/上传，Windows/客户端未验，未合主线。固定分支 `arena/61deb9e5-mxsj-tw-2022`。**
+> **本轮最新：0.6.0.dev3已补齐data全量候选生成/导入/项目续编；固定data的121脚本全部严格解码、至少一候选语法通过，并实际GUI可编辑打开（另12目录）。完整288/288零跳过，54 GUI，详§3.33。script第二段见§3.32。未新打包上传、未合主线，Windows/客户端未验。固定分支 `arena/61deb9e5-mxsj-tw-2022`。**
 
 > **当前双引擎集成轮（2026-10-15）**：固定分支 `arena/61deb9e5-mxsj-tw-2022`，起点 `8212b26`（PR #33 已合并）。用户授权开始编辑器集成；不重跑全量语料，不修改已验的启动器/注册脚本，不自行合并或重复上传。先提交推送本检查点再实现。
 > 已只读下载并核 SHA：小样 `1V9g9BF1uYLc6DslljTpXPCgUDRloMlJy`（446,379 B，`a778c5fd6d3624e91ed0786382c17f9f8e156c9529f3d19fb43bc19dee1689dc`）及双失败补样 `1pH5mx1IdAF1Y51lYYoFQqw2Ob0gkxbuM`（58,020 B，`4920b41cb962241e0d4bf1b98123666de78ecd96094102b5a24ecde6cef0b797`），内容留仓库外，未执行其脚本。对接采用 `(archive_sha256, entry_index)`，1288 排除不恢复；小样 u6=3.9.3/xdis=6.1.8 只作研究证据，不回退编辑器已修的 3.14 依赖。
@@ -19,7 +19,7 @@
 | 项 | 值 |
 |---|---|
 | 工作分支 | `arena/61deb9e5-mxsj-tw-2022`（当前会话，固定名称；旧分支叙述仅历史） |
-| 基线 | 当前会话从 `8212b26`（PR #33）开始；第二段开工前检查点 `5998c1b` 已推送，当前0.6.0.dev2源码见§3.32，未合并/发布 |
+| 基线 | 当前会话从 `8212b26`（PR #33）开始；第二段开工前检查点 `5998c1b` 已推送，第二段已推送`e72aac9`，当前0.6.0.dev3数据包增量见§3.33，未合并/发布 |
 | `master` | 当前会话起始含PR #32/#33；本轮未改master，未查询最新远程顶端 |
 | 最近 PR | 会话起点为PR #33合并提交；本轮未开PR |
 | 合并授权 | 无。合入 master / 发布生产需要用户当轮明确授权 |
@@ -28,7 +28,7 @@
 
 | 组件 | 版本/阶段 | 状态 | 本次实测 |
 |---|---|---|---|
-| 独立脚本编辑器（`script_editor/`） | 0.6.0.dev2 开发版；已交付仍为0.5.1 | 双引擎/全量语料导入、严格参数另存、schema3编辑续编；不动原包 | 本轮264/264（48 GUI）零跳过，真实双VM/pycdc/选中语料启用，ruff/Windows静态检查通过；Windows和全量安全回包未验，未新交付，详§3.32 |
+| 独立脚本编辑器（`script_editor/`） | 0.6.0.dev3 开发版；已交付仍0.5.1 | script全量候选/严格参数，data121脚本全量可编辑打开、双VM项目续编 | 本轮288/288（54 GUI）零跳过；data121逐一实际GUI打开，ruff/Windows静态检查通过；未新交付，Windows/全量安全回包未验，详§3.33 |
 | 逆向研究（`notes/`, `work/`） | 结案：双 VM opcode 表、0SLF 目录/路径哈希、`.dlg` 2,706/2,901、协议号表 412 条、帧续读 2 字节；10-15 新增标题/聊天编码链路与 `GCODE=BIG5`/`GetGameRegion()='cn'` 结案（`notes/title_and_chat_encoding.md`） | 稳定；未决项见 AGENTS §7 | 锁定输入 SHA 匹配；`script.fls` 全量反编译补跑 4401/5002 完整（生成物不入库） |
 | 注册 UI 补丁（`tools/client_patches/`，历史） | v3.3 已作废 | 用户判定旧 overlay/整图烤字按钮/包外散图不符合原生规范，**勿再分发 v3/v3.2/v3.3**；新实现见下行 | 90/90 仅历史证据，不作为新实现验收依据 |
 | 注册原生重做（`tools/registration/`） | 采用 PR #32；用户已确认该版测试无问题 | 保留对方注册源码，不以旧 font1/diag 版本覆盖；尚未接真实注册服务端 | 集成后 42/42 回归；真 2.5.6 重建 SHA `f0253c95…` 与对方记录一致，仅改 337/4007；详 §3.29 |
@@ -983,6 +983,42 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
 
 **未完成/下一步**：更广结构差异与安全回包覆盖验收；Windows构建/运行、EXE依赖闭包与客户端实机。
 本轮未新打包上传网盘，不把Linux测试当Windows验收；下一次交付仍须独立源码、双Windows编译器与GPL第二引擎闭包。
+
+### 3.33 data.fls全量可打开补齐（2026-10-15）
+
+用户明确“data.fls也要啊”；不能用“支持2.7编译”代替包内源码打开覆盖。
+本轮从已推送`e72aac9`继续，版本0.6.0.dev3，不改原包/原表/启动器/注册，不重跑script研究全量。
+
+- 实际检查固定data SHA `5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c`：
+  133条=12目录+121脚本，121全部严格CRC/长度/native解码成功。
+- 新`core/services/data_corpus.py`只处理data，调用既有独立双引擎生成全量候选缓存；
+  CLI`script_editor.data_corpus`、GUI“恢复语料→生成data全量候选清单…”接线。
+  新目录不可覆盖，原包只读；构建中断/取消留INCOMPLETE、不发布可用清单；可选标准2.7.13逐候选编译检查。
+- VM2.7清单显式archive_vm、entry index、路径身份和目录标记；复用有界SHA/路径约束，
+  不错套script entry_id/五段参数/2.5 magic或语法记录。导入/候选页/项目快照与离线续编均已接通。
+- 首轮120/121可读，data82 `lib\uuid.pyo`被xdis6.3的unsigned long位数读取和pycdc失败阻断。
+  修复仅位于独立GPL worker：按signed32读取位数、校验15bit digits与边界，保留每个整数的值/符号。
+  不修改原始pyc、opcode、原codec或安装的第三方文件；主GUI仍不导入GPL解析库。
+  真实2.5.6和2.7.13编译→恢复→再编译，正负大long的原始marshal常量对照通过。
+- 复测**121/121均有可编辑候选，121/121至少一候选通过标准2.7.13语法检查**。
+  主引擎121完整启发式；pycdc84完整/37失败，有原诊断，不说双引擎全部成功。
+  共220份有主体候选中198语法通过/22不通过；不以此替代业务语义验证。
+- 实际逐一在Qt offscreen GUI打开121个data脚本，全部可编辑、VM=py27、严格原包来源匹配。
+  原字节/compat渲染性质/trace/诊断保留；项目保存与重开保留data修改、VM及语料引用，不自动采用。
+  uuid也实际通过不依赖缓存的普通read_module直接打开。
+- 真实data75用**测试专用小源码**编译→新包→完整standard读回，原嵌入文件名保留，另132条存储负载全等，
+  目标未执行。不是121条全恢复源码回包或客户端业务验收。
+- 本轮新增24项，完整**288/288，零跳过，54 GUI**；真实双compiler/pycdc、script材料与全data缓存启用。
+  ruff通过，Windows静态检查108源码/脚本，0 error/warning/info；git diff --check通过。
+  发行门新增data关键GUI/生成/负long双VM测试，5条真实data材料测试为明确外部可选项。
+  新生成清单1067个artifact引用均用产品读取器重核SHA/长度；输入script/data/keys/launcher SHA全部未改。
+
+证据：[data覆盖与回归摘要](evidence/script_editor_data_corpus_20261015.json)。
+仓库外缓存`/home/user/script-editor-next/.cache/data-corpus-v2`，日志`data-corpus-v2-build.log`、`data-full-tests.log`；
+候选源码/原字节与Linux工具不入Git。源码工具支持自行生成，不依赖另一个agent交语料。
+
+**未完成**：Windows构建/运行、EXE依赖闭包、客户端语义与全条目安全回包。未新打包/上传，旧网盘0.5.1不含本轮修复；
+不自行合master。下一次交付仍须完整独立源码、双Windows编译器与GPL第二引擎闭包。
 
 ## 4. 等待外部输入
 

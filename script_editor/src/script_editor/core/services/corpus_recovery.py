@@ -11,6 +11,7 @@ from ..vm.compression import inflate
 from ..vm.marshal_tree import Code, parse
 from ..vm.py25 import codec
 from ..vm.py25.keys import KeyProfile, read_catalog
+from ..vm.py27 import codec as py27
 from .module_browser import ModuleReport
 from .recovery_candidates import DRAFT_HEADER, RecoveryCandidate, best_candidate
 
@@ -23,6 +24,8 @@ def standard_ref(row):
 
 def verified_parameters(index, archive, catalog):
     """Return a NEW catalog's bytes, never mutate or silently install original keys."""
+    if archive.vm != "py25":
+        raise ValueError("data使用独立VM2.7，无需也不能套用script五段参数")
     catalog.verify(archive)
     raw = read_catalog(catalog.path)
     original = json.loads(raw)
@@ -89,12 +92,14 @@ def corpus_report(index, archive, entry, catalog=None):
 
 
 def _corpus_report(index, archive, entry, catalog):
-    if entry == 1288:
+    if archive.vm == "py25" and entry == 1288:
         # The standard browser enforces exclusion before payload/preview.
         from .module_browser import read_module
 
         return read_module(archive, entry, catalog)
     row = index.row(archive, entry)
+    if archive.entries[entry].directory:
+        raise ValueError("data目录不是脚本，请选择.pyo条目")
     ref = standard_ref(row)
     candidates, notes = (
         [],
@@ -103,11 +108,22 @@ def _corpus_report(index, archive, entry, catalog):
             "阅读/编辑与安全发布分离；不沿用研究转译器的NOP/局部修补。",
         ],
     )
+    if archive.vm == "py27":
+        diagnostics = row.get("diagnostics", [])
+        if not isinstance(diagnostics, list) or any(
+            not isinstance(v, str) for v in diagnostics
+        ):
+            raise ValueError("data语料诊断结构非法")
+        notes.extend(diagnostics)
     standard_sha, filename, verified = "", "", False
     candidate_sha = ""
     if ref is not None:
         pyc = index.artifact(row, ref, 64 * 1024 * 1024)
-        if pyc[:8] != codec.MAGIC + bytes(4):
+        if (
+            pyc[:4] != (codec.MAGIC if archive.vm == "py25" else py27.MAGIC)
+            or len(pyc) < 9
+            or (archive.vm == "py25" and pyc[4:8] != bytes(4))
+        ):
             raise ValueError("语料pyc头不符")
         candidate_sha = hashlib.sha256(pyc).hexdigest()
         code = parse(pyc[8:])
@@ -144,7 +160,13 @@ def _corpus_report(index, archive, entry, catalog):
                 line.strip() and not line.lstrip().startswith("#")
                 for line in text.splitlines()
             ):
-                source = DRAFT_HEADER + "# MXSJ-RECOVERY-VM: py25\n" + text
+                source = (
+                    text
+                    if text.startswith(
+                        DRAFT_HEADER + f"# MXSJ-RECOVERY-VM: {archive.vm}\n"
+                    )
+                    else DRAFT_HEADER + f"# MXSJ-RECOVERY-VM: {archive.vm}\n" + text
+                )
         if status not in {"complete", "partial", "failed", "timeout"}:
             raise ValueError("未知语料状态")
         diagnostics = list(notes)
@@ -160,16 +182,24 @@ def _corpus_report(index, archive, entry, catalog):
                 data["engine_version"],
                 status,
                 source,
-                tuple(diagnostics),
+                tuple(diagnostics + data.get("diagnostics", [])),
                 raw,
                 stderr,
-                "corpus-engine-bytes",
+                data.get("raw_kind", "corpus-engine-bytes"),
+                data.get("binary_sha256", ""),
+                data.get("source_sha256", ""),
+                index.artifact(row, data["trace_stdout"])
+                if "trace_stdout" in data
+                else b"",
                 evidence={
                     "manifest_sha256": index.ref.sha256,
+                    "historical_process_status": data.get(
+                        "process_status", data["status"]
+                    ),
                     "stdout": data["stdout"],
                     "stderr": data["stderr"],
                     "historical_selected_syntax": selected.get("syntax_checks", {})
-                    .get("2.5.6", {})
+                    .get("2.5.6" if archive.vm == "py25" else "2.7.13", {})
                     .get("result")
                     if source
                     else None,

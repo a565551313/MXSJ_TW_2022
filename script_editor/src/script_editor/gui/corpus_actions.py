@@ -25,8 +25,8 @@ class CorpusActions:
 
     def import_corpus(self):
         archive = self.selected_archive()
-        if not archive or archive.vm != "py25":
-            self.fail("先选择script.fls；该批语料不覆盖data.fls")
+        if not archive:
+            self.fail("请先选择script.fls或data.fls；清单必须匹配当前包")
             return
         name, _ = QFileDialog.getOpenFileName(
             self,
@@ -63,7 +63,12 @@ class CorpusActions:
         self.info.setPlainText(
             f"语料清单已关联 {len(corpus.offsets)} 条；SHA256 {corpus.ref.sha256}\n"
             "双击未打开条目会读取语料候选；已有稿不覆盖。\n"
-            "右键可另开语料候选；修复参数须单独核验并另存目录，未自动应用。"
+            + (
+                "右键可另开语料候选；修复参数须单独核验并另存目录，未自动应用。"
+                if corpus.ref.archive
+                in {a.path for a in self.archives if a.vm == "py25"}
+                else "data按VM2.7严格解码，不套用script五段参数；采用前仍须编译核验。"
+            )
         )
 
     def corpus_for(self, archive):
@@ -96,9 +101,64 @@ class CorpusActions:
 
         self.task(prepare, complete)
 
+    def generate_data_corpus(self):
+        archive = self.selected_archive()
+        if not archive or archive.vm != "py27" or self.jobs:
+            self.fail("请先选择data.fls；此入口只处理VM2.7，不重跑script语料")
+            return
+        name, _ = QFileDialog.getSaveFileName(
+            self,
+            "选择全新data候选目录（不得存在，不执行目标脚本）",
+            "data-corpus",
+            "All (*)",
+        )
+        if not name:
+            return
+        try:
+            destination = Path(name)
+            self.assert_writable_target(destination)
+            if destination.exists() or destination.is_symlink():
+                raise ValueError("请选择尚不存在的data候选目录")
+        except (OSError, ValueError) as exc:
+            self.fail(exc)
+            return
+        cancel = Event()
+        compiler = self.compilers.get("py27")
+
+        def prepare():
+            from ..core.services.data_corpus import build_data_corpus
+            from ..core.services.pycdc_engine import discover_pycdc
+
+            return build_data_corpus(
+                archive,
+                destination,
+                pycdc=discover_pycdc(),
+                compiler=compiler,
+                cancel=cancel,
+            )
+
+        def complete(result):
+            corpus, summary = result
+            if not summary["counts"].get("editable_candidates", 0):
+                self.info.setPlainText(
+                    "未生成可编辑候选，未自动关联缓存；请检查恢复引擎。\n"
+                    + json.dumps(summary, ensure_ascii=False, indent=2)
+                )
+                return
+            self.adopt_corpus(corpus)
+            self.info.appendPlainText(
+                "data候选生成结果（非语义/回包验收）：\n"
+                + json.dumps(summary, ensure_ascii=False, indent=2)
+            )
+
+        self.task(prepare, complete, cancel=cancel)
+
     def export_verified_catalog(self):
         archive = self.selected_archive()
         if not archive or self.jobs:
+            return
+        if archive.vm != "py25":
+            self.fail("data无需五段参数；可直接生成或导入VM2.7候选清单")
             return
         catalog = self.catalog_for(archive)
         if catalog is None:

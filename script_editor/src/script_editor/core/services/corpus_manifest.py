@@ -95,13 +95,13 @@ class CorpusIndex:
     def row(self, archive, index):
         if (
             archive.path != self.ref.archive
-            or archive.vm != "py25"
+            or archive.vm not in {"py25", "py27"}
             or archive.fingerprint() != self.ref.fingerprint
         ):
             raise ValueError("语料与原包指纹/VM不符")
         if type(index) is not int or not 0 <= index < len(self.offsets):
             raise ValueError("非法语料条目")
-        if index == 1288:
+        if archive.vm == "py25" and index == 1288:
             raise ValueError("excluded_by_policy：不读取1288产物")
         # Verify the complete manifest, not just mtime/size or a displayed name.
         check = hashlib.sha256()
@@ -127,7 +127,9 @@ class CorpusIndex:
 
     def artifact(self, row, ref, limit=8 * 1024 * 1024):
         prefix = f"full/entries/{row['entry_index']:04d}/"
-        if row["entry_index"] == 1288 or not ref["path"].startswith(prefix):
+        if (
+            row.get("archive_vm", "py25") == "py25" and row["entry_index"] == 1288
+        ) or not ref["path"].startswith(prefix):
             raise ValueError("语料产物不属于此entry")
         digest(ref["sha256"])
         if type(ref["bytes"]) is not int or not 0 <= ref["bytes"] <= limit:
@@ -141,11 +143,11 @@ class CorpusIndex:
 def load_corpus(archive, path, *, expected_sha=None, cancel=None):
     path = Path(path).absolute()
     if (
-        archive.vm != "py25"
+        archive.vm not in {"py25", "py27"}
         or path.name != "manifest.audited.jsonl"
         or path.parent.name != "full"
     ):
-        raise ValueError("请选择script.fls对应的full/manifest.audited.jsonl")
+        raise ValueError("请选择此script/data包对应的full/manifest.audited.jsonl")
     root = path.parent.parent.resolve(strict=True)
     path = artifact_path(root, "full/manifest.audited.jsonl")
     if path.is_symlink() or not path.is_file():
@@ -174,6 +176,7 @@ def load_corpus(archive, path, *, expected_sha=None, cancel=None):
                     or row["archive_sha256"] != fingerprint
                     or row["schema_version"] != 1
                     or row["index_base"] != 0
+                    or row.get("archive_vm", "py25") != archive.vm
                 ):
                     raise ValueError("语料条目顺序/身份/格式不符")
                 if (
@@ -189,21 +192,37 @@ def load_corpus(archive, path, *, expected_sha=None, cancel=None):
                         "failed",
                         "timeout",
                         "excluded_by_policy",
+                        "directory",
                     }
                 ):
                     raise ValueError("语料状态/引擎/产物结构非法")
-                if index == 1288:
+                if archive.vm == "py25" and index == 1288:
                     if (
                         row["status"] != "excluded_by_policy"
                         or row["engines"]
                         or row["artifacts"]
                     ):
                         raise ValueError("1288只能有政策排除记录")
-                elif (
-                    row.get("transpile", {}).get("entry_id")
-                    != archive.index.metas[index].entry_id
-                ):
-                    raise ValueError("语料容器entry_id不符")
+                elif archive.vm == "py25":
+                    if (
+                        row.get("transpile", {}).get("entry_id")
+                        != archive.index.metas[index].entry_id
+                    ):
+                        raise ValueError("语料容器entry_id不符")
+                    if row["status"] in {"excluded_by_policy", "directory"}:
+                        raise ValueError("非排除条目状态非法")
+                else:
+                    if row.get("entry_identity") != archive.entries[index].identity:
+                        raise ValueError("data语料entry路径身份不符")
+                    directory = archive.entries[index].directory
+                    if (
+                        row.get("directory") is not directory
+                        or (row["status"] == "directory") != directory
+                        or row["status"] == "excluded_by_policy"
+                    ):
+                        raise ValueError("data语料目录/脚本类型不符")
+                    if directory and (row["engines"] or row["artifacts"]):
+                        raise ValueError("data目录不能包含脚本产物")
                 for ref in references(row):
                     if not ref["path"].startswith(f"full/entries/{index:04d}/"):
                         raise ValueError("跨entry产物引用")
@@ -216,9 +235,14 @@ def load_corpus(archive, path, *, expected_sha=None, cancel=None):
                     artifact_path(root, ref["path"], check=False)
             except (KeyError, TypeError, RecursionError, AttributeError) as exc:
                 raise ValueError("语料记录结构非法") from exc
-            if index != 1288 and row.get("transpile", {}).get("stage") not in (
-                None,
-                "baseline",
+            if (
+                archive.vm == "py25"
+                and index != 1288
+                and row.get("transpile", {}).get("stage")
+                not in (
+                    None,
+                    "baseline",
+                )
             ):
                 repairs.append(index)
             offsets.append((total, len(raw), hashlib.sha256(raw).hexdigest()))

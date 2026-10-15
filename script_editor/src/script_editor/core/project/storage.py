@@ -252,7 +252,7 @@ def load_state(path: Path) -> ProjectState:
                 _digest(row["fingerprint"])
                 _digest(row["sha256"])
                 if (
-                    a.vm != "py25"
+                    a.vm not in {"py25", "py27"}
                     or a.fingerprint() != row["fingerprint"]
                     or any(c.archive == a.path for c in corpora)
                 ):
