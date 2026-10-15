@@ -1,0 +1,2402 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 697,
+  "path": "script/core/war.py",
+  "owner": "F",
+  "domain": "battle",
+  "author": "F",
+  "source_status": "historical_unverified_origin",
+  "purpose": {
+    "text": "战斗核心调度与表现：指令队列/回合状态、单位增删与动作、动画/音效/特效播放、Boss与宠物处理，以及战斗开始/结束回调。",
+    "confidence": "inferred",
+    "evidence": [
+      "catalog"
+    ]
+  },
+  "keywords": [
+    "战斗",
+    "核心",
+    "war",
+    "指令",
+    "回合",
+    "动画",
+    "Boss",
+    "宠物"
+  ],
+  "functions": [
+    {
+      "name": "ModuleReset",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ModuleReset；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetReplayWar",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 SetReplayWar；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetReplayWar",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetReplayWar；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetWarMgr",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetWarMgr；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetHeroID",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetHeroID；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetWarriorList",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetWarriorList；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "__init__",
+      "signature": null,
+      "kind": "method",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 __init__；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CCmd",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 CCmd；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetProcess",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 SetProcess；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Process",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Process；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Wait",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Wait；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "StartBout",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 StartBout；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ClearUsedCmd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ClearUsedCmd；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "NextServerCmd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 NextServerCmd；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "NextCmd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 NextCmd；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CmdIsAction",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 CmdIsAction；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CmdFind",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 CmdFind；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CmdFindProtector",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 CmdFindProtector；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CmdFindAttackSpecialAddon",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 CmdFindAttackSpecialAddon；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetWarriorCnt",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetWarriorCnt；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "AddWarriorCnt",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 AddWarriorCnt；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ClearWarriorCnt",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ClearWarriorCnt；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ClearTurn",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ClearTurn；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetTurn",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetTurn；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ForceEnd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ForceEnd；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetStateInfo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetStateInfo；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetPerformName",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetPerformName；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CmdFindPerformName",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 CmdFindPerformName；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetMpFpInfo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetMpFpInfo；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CreateSame",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 CreateSame；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetAnimeObject",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetAnimeObject；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Play",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Play；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "PlayAni",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 PlayAni；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "PlayTraceAni",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 PlayTraceAni；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "FrameTimer",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 FrameTimer；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CheckAuto",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 CheckAuto；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnWarStart",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 OnWarStart；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnWarEnd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 OnWarEnd；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnTurnCountChanged",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 OnTurnCountChanged；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Start",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Start；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CmdFindAttackEndByID",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 CmdFindAttackEndByID；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CmdFindAttackNormalByID",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 CmdFindAttackNormalByID；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetNewMagicInfo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetNewMagicInfo；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Add",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Add；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetPlace",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetPlace；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "RemoveRecordPlace",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 RemoveRecordPlace；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "NormalAdd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 NormalAdd；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "DelTargetLine",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 DelTargetLine；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "WarriorWalkTo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 WarriorWalkTo；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "WarriorMultiWalkTo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 WarriorMultiWalkTo；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "WarriorSwap",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 WarriorSwap；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "WarJuben",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 WarJuben；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ChgShape",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ChgShape；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ChgShapeByArg",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ChgShapeByArg；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetWarriorName",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 SetWarriorName；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetBossWarriorSelect",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 SetBossWarriorSelect；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "IsAllide",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 IsAllide；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetWarriorClass",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetWarriorClass；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetWarriorGrade",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetWarriorGrade；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetWarriorPlace",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetWarriorPlace；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Delete",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Delete；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Flash",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Flash；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Rush",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Rush；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "DoDieAction",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 DoDieAction；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetAttackInfo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetAttackInfo；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetMagicInfo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetMagicInfo；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetOrderPos",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetOrderPos；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "AttackNormal",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 AttackNormal；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Protect",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Protect；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "IsWarriorNeedGoback",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 IsWarriorNeedGoback；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "AttackNormalEnd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 AttackNormalEnd；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "AttackNormalEnd_Old",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 AttackNormalEnd_Old；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "AttackConverg",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 AttackConverg；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Shield",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Shield；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ServerShout",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ServerShout；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ExtraEffect",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ExtraEffect；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "State",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 State；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "HPPercent",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 HPPercent；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "MPPercent",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 MPPercent；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "FPPercent",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 FPPercent；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OpenDecideTime",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 OpenDecideTime；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "PerformAtPos",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 PerformAtPos；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Perform",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Perform；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ChangeDir",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ChangeDir；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "PlayMagicAction",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 PlayMagicAction；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowSpecialEffect",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ShowSpecialEffect；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Catch",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Catch；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Addon",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Addon；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SpecialAddon",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 SpecialAddon；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "DoAddonAction",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 DoAddonAction；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Weather",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Weather；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "PlayerChat",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 PlayerChat；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Summon",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Summon；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Turn",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Turn；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetCurTurnCount",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetCurTurnCount；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ChangeTimer",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ChangeTimer；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "End",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 End；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ServerCmd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ServerCmd；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Timer",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Timer；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetReplayVer",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 SetReplayVer；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Replay",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Replay；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetRecordWarType",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 SetRecordWarType；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ChgAction",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ChgAction；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetBoss",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetBoss；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "AddBossWeapon",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 AddBossWeapon；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "DelBossWeapon",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 DelBossWeapon；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CreateBossIcon",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 CreateBossIcon；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetBossWeaponID",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetBossWeaponID；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetBossWeapon",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetBossWeapon；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetVictimPos",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetVictimPos；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetHitEffectPos",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetHitEffectPos；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "BeHurt",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 BeHurt；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "BossBeginHit",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 BossBeginHit；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "BeginHitByArg",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 BeginHitByArg；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "RefreshAddonPos",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 RefreshAddonPos；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "BossSetAddon",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 BossSetAddon；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "BossWarriorTurn",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 BossWarriorTurn；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Fadeout",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Fadeout；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "BossDelAddon",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 BossDelAddon；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "BossAttackNormal",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 BossAttackNormal；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "BossPerform",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 BossPerform；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "BossGetMagicInfo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 BossGetMagicInfo；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "BossCmdFind",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 BossCmdFind；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "BossState",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 BossState；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetRealWarriorID",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetRealWarriorID；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "BossDelete",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 BossDelete；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "BossTurn",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 BossTurn；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "BossDel",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 BossDel；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "BossHitOver",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 BossHitOver；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "PerformName",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 PerformName；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "MpChange",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 MpChange；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "FpChange",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 FpChange；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowGraspTips",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ShowGraspTips；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "IsNextBout",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 IsNextBout；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnPetDel",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 OnPetDel；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnPetDead",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 OnPetDead；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnPetRestore",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 OnPetRestore；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnPerform",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 OnPerform；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnWarriorAdd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 OnWarriorAdd；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CWarMgr",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 CWarMgr；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetBackGround",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetBackGround；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "TransformShape",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 TransformShape；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetHpBarShowInfo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 SetHpBarShowInfo；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetWarriorNameColor",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 SetWarriorNameColor；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowWarriorHpBar",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ShowWarriorHpBar；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ClearHpBarShowInfo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ClearHpBarShowInfo；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetWarriorShowHpBarValue",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetWarriorShowHpBarValue；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetWarType",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetWarType；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "IsSkillInCmdList",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 IsSkillInCmdList；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "IsPVPWar",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 IsPVPWar；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "module",
+      "target": "warturn",
+      "summary": {
+        "text": "回合状态存储与跳放（外部模块）。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "magicperform",
+      "summary": {
+        "text": "战斗表现命令子模块。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1406
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "战斗指令队列在哪里？",
+      "answer": {
+        "text": "CCmd/Process/NextCmd/NextServerCmd/ClearUsedCmd 等函数管理指令队列；真实状态机需 warturn.py 与实机验证。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog"
+        ]
+      }
+    },
+    {
+      "question": "战斗动画/音效在哪里？",
+      "answer": {
+        "text": "Play/PlayAni/PlayTraceAni/PlayMagicAction/ShowSpecialEffect 等负责表现；具体资源与参数需 recovered source 或实机。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "来源仅为历史解码器函数名列表与 v4 解码元数据；无 recovered source 或行级代码。",
+    "未执行或 import 任何游戏脚本；函数签名、分支、调用关系均为推测，需 recovered source 或实机验证。",
+    "无 recovered source：pycdc 输出中未包含 entry 697；仅历史函数名列表（catalog/decode-results），未做语义核对。",
+    "函数签名未知（null）；类/方法边界未确认；重复名称（如 PlayTraceAni/FrameTimer/__init__）未区分所属类。",
+    "真实战斗计算（伤害、命中、AI、状态结算）尚未证实；本说明仅基于函数名与外部 battle-logic-analysis 笔记。"
+  ],
+  "sources": [
+    {
+      "id": "catalog",
+      "path": "server/docs/catalog/script_entries.jsonl",
+      "sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+      "kind": "metadata",
+      "note": "历史函数名目录，entry 697，marshal_transpiled_filename_checked，semantic_review not_reviewed。"
+    },
+    {
+      "id": "decoder",
+      "path": "work/dream-world-connect-login-map/notes/task-b-脚本分析/artifacts/fullrun/decode-results-final.jsonl",
+      "sha256": "25781bd230432d03b9870440cf76b96c792d09282b3f2721c8fe6f5bf3e3f03f",
+      "kind": "metadata",
+      "note": "v4 解码结果，entry 697，status ok，source 字段仅为引擎标记。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "catalog",
+      "source_id": "catalog",
+      "start_line": 698,
+      "end_line": 698
+    },
+    {
+      "id": "decoder",
+      "source_id": "decoder",
+      "start_line": 698,
+      "end_line": 698
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1406
+      },
+      "symbol": "netwar.S2C*",
+      "summary": {
+        "text": "netwar 下发的 S2C* 消息构造 war.CCmd 并交由本模块 Process/NextCmd 消费。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4293
+      },
+      "symbol": "main.SetWarLoop",
+      "summary": {
+        "text": "战斗开始时切换主循环（由 netwar 调用，本模块提供指令消费）。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog"
+        ]
+      }
+    }
+  ]
+}

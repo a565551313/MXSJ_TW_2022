@@ -1,0 +1,446 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 8,
+  "path": "script/pubscript/pubskill/e_warctrl.py",
+  "owner": "F",
+  "domain": "battle",
+  "author": "F",
+  "source_status": "historical_unverified_origin",
+  "purpose": {
+    "text": "战斗技能播放控制：技能播放器（CPlayCtrl）与战斗控制器（CWarCtrl）管理技能播放、暂停、计时与攻击计数。",
+    "confidence": "inferred",
+    "evidence": [
+      "catalog"
+    ]
+  },
+  "keywords": [
+    "战斗",
+    "技能",
+    "播放",
+    "控制",
+    "CWarCtrl",
+    "CPlayCtrl"
+  ],
+  "functions": [
+    {
+      "name": "ModuleReset",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 ModuleReset；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetWarCtrl",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetWarCtrl；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "RemoveSkill",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 RemoveSkill；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetSkillPause",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 SetSkillPause；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetSkillPlayCtrl",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetSkillPlayCtrl；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "__init__",
+      "signature": null,
+      "kind": "method",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 __init__；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "PlaySkill",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 PlaySkill；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetPause",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 SetPause；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetPlayCtrl",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetPlayCtrl；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "_removeSkill",
+      "signature": null,
+      "kind": "method",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 _removeSkill；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "StartTimer",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 StartTimer；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnUpdate",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 OnUpdate；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "_OnUpdate",
+      "signature": null,
+      "kind": "method",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 _OnUpdate；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CWarCtrl",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 CWarCtrl；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetCmdCount",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetCmdCount；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetAttackCount",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetAttackCount；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetCurFrame",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 GetCurFrame；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "AddAttackCount",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 AddAttackCount；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "IsEnd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 IsEnd；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Release",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 Release；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "TriggerSignal",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 TriggerSignal；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CPlayCtrl",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 CPlayCtrl；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "module",
+      "target": "war",
+      "summary": {
+        "text": "战斗核心模块。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 697
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1406
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "技能播放在哪里控制？",
+      "answer": {
+        "text": "CPlayCtrl/CWarCtrl 的 PlaySkill/SetPause/OnUpdate/StartTimer 等；具体时序需 recovered source 或实机。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "来源仅为历史解码器函数名列表与 v4 解码元数据；无 recovered source 或行级代码。",
+    "未执行或 import 任何游戏脚本；函数签名、分支、调用关系均为推测，需 recovered source 或实机验证。",
+    "无 recovered source：pycdc 输出中未包含 entry 8；仅历史函数名列表。",
+    "类/方法边界未确认；重复名称（__init__/SetPause/RemoveSkill/OnUpdate）未区分所属类。"
+  ],
+  "sources": [
+    {
+      "id": "catalog",
+      "path": "server/docs/catalog/script_entries.jsonl",
+      "sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+      "kind": "metadata",
+      "note": "历史函数名目录，entry 8，marshal_transpiled_filename_checked，semantic_review not_reviewed。"
+    },
+    {
+      "id": "decoder",
+      "path": "work/dream-world-connect-login-map/notes/task-b-脚本分析/artifacts/fullrun/decode-results-final.jsonl",
+      "sha256": "25781bd230432d03b9870440cf76b96c792d09282b3f2721c8fe6f5bf3e3f03f",
+      "kind": "metadata",
+      "note": "v4 解码结果，entry 8，status ok，source 字段仅为引擎标记。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "catalog",
+      "source_id": "catalog",
+      "start_line": 9,
+      "end_line": 9
+    },
+    {
+      "id": "decoder",
+      "source_id": "decoder",
+      "start_line": 9,
+      "end_line": 9
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 697
+      },
+      "symbol": "war",
+      "summary": {
+        "text": "技能播放控制服务于战斗核心。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog"
+        ]
+      }
+    }
+  ]
+}
