@@ -43,6 +43,10 @@ OPTIONAL_MATERIAL_TESTS = {
 
 
 REQUIRED_RELEASE_TESTS = {
+    "test_script_layouts.ScriptLayoutTests.test_all_four_directory_positions_and_grow_shrink_multi_noop",
+    "test_script_layouts.ScriptLayoutTests.test_native_build_post_directory_full_codec_readback",
+    "test_script_layouts.ScriptLayoutTests.test_post_directory_reopen_can_continue_editing_without_losing_first_edit",
+    "test_script_layouts.ScriptLayoutTests.test_header_directory_overlap_and_actual_eof_overflow_remain_rejected",
     "test_gui_data_corpus.DataCorpusGuiTests.test_data_manifest_import_is_not_blocked_by_script_only_guard",
     "test_gui_data_corpus.DataCorpusGuiTests.test_data_generation_action_builds_and_associates_vm27_corpus",
     "test_data_corpus.DataCorpusTests.test_full_build_directory_exclusion_strict_pyc_and_exact_raw_roundtrip",

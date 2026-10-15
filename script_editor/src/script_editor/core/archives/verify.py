@@ -27,29 +27,25 @@ def envelope(old, new, modified):
         if (a.index, a.identity, a.directory) != (b.index, b.identity, b.directory):
             raise ValueError("entry identity/order changed")
     if old.kind == "0slf":
-        order = sorted(range(len(old.entries)), key=lambda i: old.index.spans[i].offset)
-        if order != sorted(order, key=lambda i: new.index.spans[i].offset):
-            raise ValueError("script physical order changed")
-        old_cursor = new_cursor = 0
-        for pos, i in enumerate(order):
-            a, b = old.index.spans[i], new.index.spans[i]
-            if pos == 0:
-                _gap(old, 0, 8, new, 0, 8)
-                _gap(old, 12, a.offset, new, 12, b.offset)
-            else:
-                _gap(old, old_cursor, a.offset, new, new_cursor, b.offset)
-            old_cursor, new_cursor = a.offset + a.length, b.offset + b.length
-        od = struct.unpack("<I", old.reader.read_at(8, 4))[0]
-        nd = struct.unpack("<I", new.reader.read_at(8, 4))[0]
-        _gap(old, old_cursor, od, new, new_cursor, nd)
-        _gap(
-            old,
-            od + len(order) * 16,
-            old.reader.size,
-            new,
-            nd + len(order) * 16,
-            new.reader.size,
-        )
+
+        def regions(document):
+            directory = struct.unpack("<I", document.reader.read_at(8, 4))[0]
+            result = [
+                (span.offset, span.length, i)
+                for i, span in enumerate(document.index.spans)
+            ]
+            result.append((directory, len(document.entries) * 16, -1))
+            return sorted(result, key=lambda region: (region[0], region[1], region[2]))
+
+        old_regions, new_regions = regions(old), regions(new)
+        if [r[2] for r in old_regions] != [r[2] for r in new_regions]:
+            raise ValueError("script physical region order changed")
+        _gap(old, 0, 8, new, 0, 8)  # Only the directory pointer @8 may change.
+        old_cursor = new_cursor = 12
+        for (oa, ol, _), (na, nl, _) in zip(old_regions, new_regions, strict=True):
+            _gap(old, old_cursor, oa, new, new_cursor, na)
+            old_cursor, new_cursor = oa + ol, na + nl
+        _gap(old, old_cursor, old.reader.size, new, new_cursor, new.reader.size)
     else:
         _gap(
             old,
