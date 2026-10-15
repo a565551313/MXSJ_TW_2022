@@ -1112,7 +1112,7 @@
       "path": "tools/decompiler/output/script_fls/script/login/register.py",
       "sha256": "bc2b5bff78d3feb473227767e9172eba21346f7fd6adad67687eb9ec97eba18d",
       "kind": "recovered_source",
-      "note": "uncompyle6 3.9.3 historical recovered candidate; C reviewed fixed package entry 4007."
+      "note": "uncompyle6 3.9.3 recovered candidate; association basis: script.fls entry 4007, co_filename=script\\login\\register.py, input SHA 8b6e9266...; C reviewed fixed package. Not original source."
     }
   ],
   "evidence": [

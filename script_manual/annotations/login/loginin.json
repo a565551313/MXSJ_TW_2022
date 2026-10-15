@@ -186,10 +186,10 @@
       "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "登录按钮确认后调用：保存账号并由netserver/netlogin连接。",
+        "text": "登录提交：读取账号/密码，校验非空与密码长度>=6、账号不能纯数字，设置g_User/g_LoginEmail，调用netlogin.C2SLoginIn(user,password)，并设置netlogin.g_LoginErrorCallback=LoginInErr。不保存账号。",
         "confidence": "static_reviewed",
         "evidence": [
-          "show"
+          "loginok"
         ]
       },
       "calls": [],
@@ -393,10 +393,10 @@
         {
           "condition": "msgid == 2",
           "effect": {
-            "text": "勾选协议后LoginOk并播放按钮音。",
+            "text": "勾选协议后调用LoginOk()提交登录；LoginOk校验输入并调用netlogin.C2SLoginIn，设置错误回调LoginInErr；成功后的账号保存由OnLogin()执行。",
             "confidence": "static_reviewed",
             "evidence": [
-              "loginin"
+              "loginok"
             ]
           }
         },
@@ -501,7 +501,7 @@
       "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "保存当前账号。",
+        "text": "账号保存：LoginIn非空时调用LoginIn.SaveAccount()，把当前账号写入历史列表。",
         "confidence": "static_reviewed",
         "evidence": [
           "show"
@@ -557,10 +557,10 @@
       "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "TW按g_LangVersion选择SERVICE_MSG/SERVICE_MSG2，否则直接ShowService。",
+        "text": "TW按g_LangVersion选择SERVICE_MSG/SERVICE_MSG2并创建服务消息框；非TW直接ShowService(True)。",
         "confidence": "static_reviewed",
         "evidence": [
-          "service"
+          "showlogin"
         ]
       },
       "calls": [],
@@ -1099,7 +1099,7 @@
       "path": "tools/decompiler/output/script_fls/script/login/loginin.py",
       "sha256": "dd90527be51d315b6a0e6cafce32f4ad08e74040153d3fbc141c239cac550929",
       "kind": "recovered_source",
-      "note": "uncompyle6 3.9.3 historical recovered candidate; C reviewed fixed package entry 4806."
+      "note": "uncompyle6 3.9.3 recovered candidate; association basis: script.fls entry 4806, co_filename=script\\login\\loginin.py, input SHA 8b6e9266...; C reviewed fixed package. Not original source."
     }
   ],
   "evidence": [
@@ -1168,6 +1168,18 @@
       "source_id": "legacy_loginin",
       "start_line": 1197,
       "end_line": 1436
+    },
+    {
+      "id": "loginok",
+      "source_id": "legacy_loginin",
+      "start_line": 246,
+      "end_line": 267
+    },
+    {
+      "id": "showlogin",
+      "source_id": "legacy_loginin",
+      "start_line": 701,
+      "end_line": 708
     }
   ],
   "relationships": [

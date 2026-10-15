@@ -476,7 +476,7 @@
       "path": "tools/decompiler/output/script_fls/script/login/mainpage.py",
       "sha256": "984cbe6ac7d2ed0a1479d2bcb72ea34a2fc89756017d1d95ab0f9f2195e925ac",
       "kind": "recovered_source",
-      "note": "uncompyle6 3.9.3 historical recovered candidate; C reviewed fixed package entry 337."
+      "note": "uncompyle6 3.9.3 recovered candidate; association basis: script.fls entry 337, co_filename=script\\login\\mainpage.py, input SHA 8b6e9266...; C reviewed fixed package. Not original source."
     }
   ],
   "evidence": [
@@ -527,17 +527,12 @@
     {
       "direction": "downstream",
       "kind": "calls",
-      "module": {
-        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
-        "entry_index": 4806
-      },
+      "module": null,
       "symbol": "selectserver.Show",
       "summary": {
-        "text": "OnMessage(1)隐藏首页并显示选服界面。",
-        "confidence": "static_reviewed",
-        "evidence": [
-          "messages"
-        ]
+        "text": "OnMessage(1) hides homepage and calls selectserver.Show(True); selectserver.py old catalog entry 4844 is unconfirmed in this seed, so module identity is not asserted.",
+        "confidence": "inferred",
+        "evidence": []
       }
     },
     {

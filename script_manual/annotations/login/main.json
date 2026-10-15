@@ -441,6 +441,7 @@
         "text": "Start/StartStep1初始化；Loop默认MainLoop；WarLoop调用MainLoop并处理战斗；SetWarLoop/SetMainLoop切换；CloseGame/ExitGame/RealExit/doexit/doreturn处理退出与重登录。",
         "confidence": "static_reviewed",
         "evidence": [
+          "globals",
           "start",
           "mainloop",
           "warloop",
@@ -452,30 +453,31 @@
     {
       "question": "公告失败在哪触发，正文/地址/布局分别改哪里？",
       "answer": {
-        "text": "公告逻辑在entry 337 mainpage.py：refreshbulletin失败弹窗；正文news.txt，地址update.ini，布局login/mainpage.dlg。",
+        "text": "公告失败触发与正文/地址/布局修改见entry 337：refreshbulletin在HTTP失败或缺少头分隔符时弹“刷新公告失敗”；正文news.txt，地址update.ini，布局login/mainpage.dlg。main.py仅负责Loop/启动，不负责公告正文。",
         "confidence": "static_reviewed",
         "evidence": [
-          "mainloop"
+          "mp_refresh",
+          "mp_layout"
         ]
       }
     },
     {
       "question": "登录按钮点击后经过哪些函数和模块？",
       "answer": {
-        "text": "登录入口在loginin.OnMessage(2)->LoginOk；连接由netserver/netlogin处理；E协审。",
+        "text": "登录提交见entry 4806：CLoginIn.OnMessage(2)->LoginOk()校验输入并调用netlogin.C2SLoginIn，设置LoginInErr错误回调；账号保存在OnLogin()->LoginIn.SaveAccount()。main.py不直接处理登录提交。",
         "confidence": "static_reviewed",
         "evidence": [
-          "mainloop"
+          "loginok2"
         ]
       }
     },
     {
       "question": "注册逻辑与布局分别在哪里？",
       "answer": {
-        "text": "逻辑在entry 4007 register.py；布局login/reg*.dlg；首页入口mainpage.OnMessage(2)。",
+        "text": "注册逻辑与布局见entry 4007：register.py各CRegPanel*与HTTP回调；布局login/reg*.dlg/confirm.dlg；首页入口mainpage.OnMessage(2)。main.py不直接处理注册。",
         "confidence": "static_reviewed",
         "evidence": [
-          "mainloop"
+          "reg_flow"
         ]
       }
     }
@@ -489,10 +491,31 @@
   "sources": [
     {
       "id": "recovered_main",
-      "path": "script_manual/annotations/login/main_entry4293_recovered.py",
+      "path": "script_manual/annotations/login/main_entry4293_recovered.py.txt",
       "sha256": "f048f22c053bed8c6b85cf088f91f4098a6f1b9e70fe2ca10bd70c5ffa2244f5",
       "kind": "recovered_source",
-      "note": "uncompyle6 3.9.4.dev0 recovered candidate from fixed package entry 4293; stored as C-owned evidence excerpt/full module due to no repo copy."
+      "note": "uncompyle6 3.9.4.dev0 recovered candidate; association basis: script.fls entry 4293, id=0xd93f1735, co_filename=script\\main.py, keys=[234,15,89,63,82], bounds=[9772,19571,29383,39151], input SHA 8b6e9266...; recovery command: recover_entries.py --entries 4293 --engine uncompyle6 --decompile-timeout 120; copied byte-for-byte to this .py.txt evidence file (SHA unchanged). Not original source."
+    },
+    {
+      "id": "mainpage_src",
+      "path": "tools/decompiler/output/script_fls/script/login/mainpage.py",
+      "sha256": "984cbe6ac7d2ed0a1479d2bcb72ea34a2fc89756017d1d95ab0f9f2195e925ac",
+      "kind": "recovered_source",
+      "note": "uncompyle6 3.9.3 recovered candidate; association basis: script.fls entry 337, co_filename=script\\login\\mainpage.py, input SHA 8b6e9266...; C reviewed fixed package."
+    },
+    {
+      "id": "register_src",
+      "path": "tools/decompiler/output/script_fls/script/login/register.py",
+      "sha256": "bc2b5bff78d3feb473227767e9172eba21346f7fd6adad67687eb9ec97eba18d",
+      "kind": "recovered_source",
+      "note": "uncompyle6 3.9.3 recovered candidate; association basis: script.fls entry 4007, co_filename=script\\login\\register.py, input SHA 8b6e9266...; C reviewed fixed package."
+    },
+    {
+      "id": "loginin_src",
+      "path": "tools/decompiler/output/script_fls/script/login/loginin.py",
+      "sha256": "dd90527be51d315b6a0e6cafce32f4ad08e74040153d3fbc141c239cac550929",
+      "kind": "recovered_source",
+      "note": "uncompyle6 3.9.3 recovered candidate; association basis: script.fls entry 4806, co_filename=script\\login\\loginin.py, input SHA 8b6e9266...; C reviewed fixed package."
     }
   ],
   "evidence": [
@@ -555,6 +578,30 @@
       "source_id": "recovered_main",
       "start_line": 1114,
       "end_line": 1124
+    },
+    {
+      "id": "mp_refresh",
+      "source_id": "mainpage_src",
+      "start_line": 260,
+      "end_line": 283
+    },
+    {
+      "id": "mp_layout",
+      "source_id": "mainpage_src",
+      "start_line": 50,
+      "end_line": 86
+    },
+    {
+      "id": "reg_flow",
+      "source_id": "register_src",
+      "start_line": 307,
+      "end_line": 543
+    },
+    {
+      "id": "loginok2",
+      "source_id": "loginin_src",
+      "start_line": 246,
+      "end_line": 267
     }
   ],
   "relationships": [
