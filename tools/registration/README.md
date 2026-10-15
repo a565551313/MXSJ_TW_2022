@@ -150,6 +150,37 @@ Python 3 构建器/测试按仓库 ruff 规则检查；两份必须在 2.5.6 运
 只豁免 `UP` 现代化规则（`.format`、f-string 和删除 coding 声明会破坏原解释器）。
 `harness.py2` 由真 2.5.6 执行，不能以 Python 3 能否解析它判断游戏兼容性。
 
+### 换基线重做（客户机现行的 script.fls ≠ 仓库 `data/script.fls`）
+
+默认基线钉死在 `data/script.fls`（`BASE_SHA256 = 8b6e9266…`）。要拿用户在跑的
+那份归档重做，必须显式给两条参数，缺一不可：
+
+```sh
+python3 tools/registration/build_native_registration.py \
+    --archive google_drive/script1015.fls \
+    --base-sha256 77b3eac611f52cf8ac750fe1adf57d672e3f3e85f51fa5f9c81980e1d6564466 \
+    --python25 /home/user/py25build/cpython-2.5.6/python \
+    --report out/build_report.json
+```
+
+- SHA 不符就退出，同时把**实测 SHA 和可直接复制的 `--base-sha256` 参数**打出来；
+  不做「差不多就放行」。
+- 337 是幂等敏感的：补丁窗口已是 patched 形态（基线本身就是上一版工具产物）→
+  打 `[note] … 原樣保留`，实际改动变成 `[4007]`；窗口既非未补形态也非已补形态 →
+  `ValueError: TW predicate fingerprint mismatch`，拒绝盲目重打包。三态判定与
+  两条分支各有单测（`tests/test_build_base.py`，7 项，0.2 秒内跑完）。
+- 4007 是整模块替换，天然覆盖旧内容，与基线新旧无关。
+- `--report` 只在验证全通过后落盘：记基线/密钥表/源码/产物四者 SHA、条目数、
+  337 处理方式与实际改动条目，可直接粘进出货登记。
+
+2026-10-15 实测：网盘 `script1015.fls`（24,264,943 B，SHA-256 `77b3eac6…`，
+MD5 `f85917c2…`）与仓库基线逐条比对——**5,002 条里只有 337、4007 两条不同**，
+其余 5,000 条压缩负载逐字节相同。337 与我们的 9 字节补丁逐字节一致；4007 是
+A 案**之前**的旧 register（`CConfirm` 仍裸取 `servicedata.CONFIRM_MSG`，即那条
+AttributeError 死路，并多带 `_DiagFailure`/`_ImportRuntime`/`_RecoverEntry`/
+`_CreateFormEdit` 调试脚手架）。以它为基线重建，产物 SHA-256 仍是 `ed0f4126…`
+（与已出货那颗逐字节相同）——即这份网盘归档不含任何我们无法复现的内容。
+
 ## 第二期测试包（2026-10-14 已授权上传）
 
 - 源码提交：`22a3fab`，已推送当前会话分支，未合入 master。
