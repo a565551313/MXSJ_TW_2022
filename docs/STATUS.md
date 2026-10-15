@@ -734,7 +734,7 @@ GPL worker单独spec/EXE，主GUI明确排除其引擎；build_exe新增独立�
   Unicode以正确u+ascii转义，不改常量值，兼容future_unicode_literals，不修改安装的库文件。
   新增中文/引号/反斜杠/非BMP/字节常量的真实双VM编译并解析marshal核对值，不只是断言能编译。
 
-真实回归：新增13项，合计**167/167全执行通过，30 GUI，无skip**，7.985s。
+真实回归：新增13项，合计**167/167全执行通过，30 GUI，无skip**，8.438s。
 - 合成合法模块由真实双compiler编译，包内恢复/编辑/两轮读取和来源项目重开；带副作用sentinel但绝不执行。
 - Qt真实worker从未关联条目进入可编辑草稿，取消另存/拒绝采用/明确采用/F6发布及项目重开，双VM均过。
 - 真实原包script下标4007和data75直接恢复（不取作者.py），编辑后回编/新包回读通过；未改5001/132逐条全等。
@@ -742,6 +742,9 @@ GPL worker单独spec/EXE，主GUI明确排除其引擎；build_exe新增独立�
   验证在原边界内可写。**这不是任意模块任意改动都能写回的证据，更不能隐藏固定长度限制**。
 - 失败/缺catalog/资源条目、VM/marshal拒绝、timeout、发布竞态及未核验关联拒绝均有回归。
 ruff0、92文件格式通过；严格兼容109条目/86源码脚本，ERROR/WARNING/INFO均0。
+实际调用发行入口`python -m script_editor.release_checks --root script_editor`，返回2并明确
+`Release blocked: Windows运行时执行验收只能在真实Windows进行`；未伪装平台/替换发行编译器绕过，
+因此167项是Linux开发环境测试通过，不是Windows发行检查通过。
 真实Qt恢复视图已抓图并查看：`/home/user/script-editor-recovery-workspace.png`，实际双包、原4007恢复草稿可编辑、
 无源码关联、无目标执行/写包；编译器为显式Linux开发版，不是Windows实测证据。
 
