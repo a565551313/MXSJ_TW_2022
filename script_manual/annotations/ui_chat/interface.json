@@ -1,0 +1,1087 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 3854,
+  "path": "script/interface.py",
+  "owner": "D",
+  "domain": "ui_chat",
+  "author": "D",
+  "source_status": "recovered_complete_not_original",
+  "purpose": {
+    "text": "跨业务UI公共基础候选：重导出pubinterface/gamelayout/gamestring/key符号，管理样式/字体/颜色、鼠标事件适配、点击消息与回调、窗口捕获/拖动以及通用输入框。它提供机制，不负责mainmenu各业务目标或chatinput发消息规则；C_sys和导入基类的原生实现未由本稿验证。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "if_exports",
+      "if_style",
+      "if_message_process",
+      "if_click",
+      "if_edit_char",
+      "support_chatinput_send",
+      "d_provenance"
+    ]
+  },
+  "keywords": [
+    "界面公共基础",
+    "业务界面边界",
+    "事件分发",
+    "消息号",
+    "RIGHT_BUTTON_MESSAGE",
+    "字符输入",
+    "IME",
+    "CClickBox签名",
+    "字体",
+    "Big5"
+  ],
+  "functions": [
+    {
+      "name": "InitStyle",
+      "signature": "(iStyleIdx)",
+      "kind": "function",
+      "summary": {
+        "text": "清字体缓存，设STYLE与颜色标记替换函数，再从fontdata/colordata动态导出字体和COLOR_n全局名。不可只grep本文件就宣布某个字体常量存在或不存在。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_style"
+        ]
+      },
+      "calls": [
+        "fontdata.GetFontInfo",
+        "fontdata.GetFont",
+        "gamefont.InitDefaultFontName",
+        "colordata.GetColorInfo"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CBase.MessageProcess",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "向对象SetMouseMessage和SetButtonMessage登记局部适配函数：鼠标入/出转Enter/Leave；按钮先触发commoncb，再按滚轮/左右按下松开分派。原生对象何时注入这些事件未审核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_message_process"
+        ]
+      },
+      "calls": [
+        "self.SetMouseMessage",
+        "self.SetButtonMessage",
+        "commoncb.TriggerCB",
+        "StartRightButtonTimer",
+        "ReleaseRightButtonTimer",
+        "obj.LeftDown",
+        "obj.LeftUp",
+        "obj.OnHand",
+        "obj.RightDown",
+        "obj.RightUp",
+        "obj.MouseWheelDown",
+        "obj.MouseWheelUp"
+      ],
+      "branches": [
+        {
+          "condition": "MouseMessage: mouse_in为真/假",
+          "effect": {
+            "text": "分别调用obj.Enter()/obj.Leave()；obj的具体派生类型由运行期决定。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_message_process"
+            ]
+          }
+        },
+        {
+          "condition": "hero存在且not hero.GetHeroShow()",
+          "effect": {
+            "text": "ButtonMessage提前返回；hero导入/检查异常被except吞掉后继续。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_message_process"
+            ]
+          }
+        },
+        {
+          "condition": "button >= MOUSEWHEEL_DOWN",
+          "effect": {
+            "text": "调用obj.MouseWheelDown(button-MOUSEWHEEL_DOWN)。常量数值/实际原生消息编码不在此证据内。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_message_process"
+            ]
+          }
+        },
+        {
+          "condition": "前一条件不匹配且button >= MOUSEWHEEL_UP",
+          "effect": {
+            "text": "调用obj.MouseWheelUp(button-MOUSEWHEEL_UP)。按候选判断顺序解读，不凭名称倒换。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_message_process"
+            ]
+          }
+        },
+        {
+          "condition": "button == LEFT_BUTTON_DOWN",
+          "effect": {
+            "text": "安排右键计时器并记点击态，同步游标；没有手持对象时设左按对象并调用obj.LeftDown。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_message_process"
+            ]
+          }
+        },
+        {
+          "condition": "button == LEFT_BUTTON_UP and handobj.IsHand()",
+          "effect": {
+            "text": "释放计时器，同步游标，调用obj.OnHand；不是统一LeftUp。随后清左按状态。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_message_process"
+            ]
+          }
+        },
+        {
+          "condition": "LEFT_BUTTON_UP的帮助按钮形态分支",
+          "effect": {
+            "text": "尝试向父链查CDialogBase.m_DlgHelpID并dlghelp.Show；异常时退回obj.LeftUp。部分路径文本有解码异常，不据此改资源名。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_message_process"
+            ]
+          }
+        },
+        {
+          "condition": "其余LEFT_BUTTON_UP",
+          "effect": {
+            "text": "调用obj.LeftUp后清状态；候选还有一次性SetIgnoreLButtonUp逻辑，实际引擎效果未验。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_message_process"
+            ]
+          }
+        },
+        {
+          "condition": "button == RIGHT_BUTTON_DOWN / RIGHT_BUTTON_UP",
+          "effect": {
+            "text": "调用obj.RightDown/RightUp并同步对应游标状态。业务消息号处理仍由对象派生方法决定。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_message_process"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CBase.Enable",
+      "signature": "(self, enable)",
+      "kind": "method",
+      "summary": {
+        "text": "启用时重新MessageProcess登记回调；禁用时将鼠标/按钮回调设None，并保存m_EnableFlag。这是事件入口开关，不证明隐藏/禁用期间所有业务回调被取消。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_enable"
+        ]
+      },
+      "calls": [
+        "self.MessageProcess",
+        "self.SetMouseMessage",
+        "self.SetButtonMessage"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CPanel.GetSize",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "返回world.WINDOW_WIDTH/WINDOW_HEIGHT；CPanel是公共父容器，不是某个业务布局的固定尺寸。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_enable"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CHoldObject.DoHoldLeftDown",
+      "signature": "(self, iHoldX, iHoldY)",
+      "kind": "method",
+      "summary": {
+        "text": "保存Hold弱引用与偏移，置顶，Capture(1,1)，IgnoreSonMessage(True)。配对DoHoldLeftUp释放捕获与忽略子消息状态，改拖动需成对核对。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_hold"
+        ]
+      },
+      "calls": [
+        "CShadowObject",
+        "self.Topmost",
+        "self.Capture",
+        "self.IgnoreSonMessage"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CHoldObject.DoHoldLeftUp",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "Hold存在时清空并Capture(0)、IgnoreSonMessage(False)。不代表其他capturemgr/手持物路径已统一释放。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_hold"
+        ]
+      },
+      "calls": [
+        "self.Capture",
+        "self.IgnoreSonMessage"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CDialogBase.OpenUI",
+      "signature": "(cls, *args, **kwargs)",
+      "kind": "method",
+      "summary": {
+        "text": "读取oParent/dConfig，缺配置时用类dOpenUIConfig，把cls、父节点、args列表和配置交给popupmgr.GetPopupMgr().OpenUI。最终创建类型/内容取决于cls及运行期配置，不能猜成某个业务窗。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_dialog"
+        ]
+      },
+      "calls": [
+        "popupmgr.GetPopupMgr",
+        "popupmgr.GetPopupMgr().OpenUI"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CDialogBase.GetDialogSize",
+      "signature": "(cls)",
+      "kind": "method",
+      "summary": {
+        "text": "若没有s_DialogSize则经combdialog.GetUIInfo(cls.sUIName)取布局元信息；从CMainFrame或loc_bg取尺寸，否则(0,0)，并缓存。没有确认cls.sUIName的动态实际值。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_dialog"
+        ]
+      },
+      "calls": [
+        "combdialog.GetUIInfo"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CClickObject.GetUIRootNode",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "先尝试m_oWrfUIRootNode弱引用，未设/失效则返回GetParent。消息接收者不一定是直接父对象。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_click"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CClickObject.LeftUp",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "优先按非零m_MsgID向UI根节点OnMessage发消息；无消息号才考虑m_LeftUpCB，再向父LeftUp冒泡。不能假定设了回调就一定会触发。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_click"
+        ]
+      },
+      "calls": [
+        "self.GetUIRootNode",
+        "oParent.OnMessage",
+        "self.CheckHoldObject",
+        "self.m_LeftUpCB",
+        "oParent.LeftUp"
+      ],
+      "branches": [
+        {
+          "condition": "m_MsgID非零且根节点有OnMessage",
+          "effect": {
+            "text": "调用oParent.OnMessage(m_MsgID)后CheckHoldObject；根节点无OnMessage则提前返回，不回退到m_LeftUpCB。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_click"
+            ]
+          }
+        },
+        {
+          "condition": "m_MsgID为0且m_LeftUpCB存在",
+          "effect": {
+            "text": "调用m_LeftUpCB()，具体目标由注册处决定，未绑定成固定业务函数。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_click"
+            ]
+          }
+        },
+        {
+          "condition": "前述均不匹配且父对象有LeftUp",
+          "effect": {
+            "text": "冒泡调用直接父对象LeftUp。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_click"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CClickObject.RightUp",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "非零msgid且根有OnMessage时发msgid+RIGHT_BUTTON_MESSAGE；否则优先右键回调再父RightUp。偏移常量在候选为10000000000L，不是网络协议号。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_click",
+          "if_default_button"
+        ]
+      },
+      "calls": [
+        "self.GetUIRootNode",
+        "oParent.OnMessage",
+        "self.m_RightUpCB",
+        "oParent.RightUp"
+      ],
+      "branches": [
+        {
+          "condition": "m_MsgID非零且根有OnMessage",
+          "effect": {
+            "text": "发叠加右键偏移的消息，业务接收者需自行识别该编码。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_click",
+              "if_default_button"
+            ]
+          }
+        },
+        {
+          "condition": "没有有效消息分支且m_RightUpCB存在",
+          "effect": {
+            "text": "调用运行期注册的m_RightUpCB；不能只凭回调字段名猜目标。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_click"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CClickBox.__init__",
+      "signature": "(self, parent, w, h, color=0, alpha=256, msgid=0)",
+      "kind": "method",
+      "summary": {
+        "text": "先建CBoxObject矩形，再初始化CClickObject。参数是宽高而不是图片路径；这是候选签名核对，不是以桩件构造成功来证明。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_click"
+        ]
+      },
+      "calls": [
+        "CBoxObject.__init__",
+        "CClickObject.__init__"
+      ],
+      "branches": []
+    },
+    {
+      "name": "DefaultButtonClick",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "仅GetActiveEdit()为None时尝试取默认按钮弱引用并LeftUp。存在输入焦点时不会统一替业务输入框发送消息。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_default_button"
+        ]
+      },
+      "calls": [
+        "GetActiveEdit",
+        "btn.LeftUp"
+      ],
+      "branches": []
+    },
+    {
+      "name": "IMECharInput",
+      "signature": "(char)",
+      "kind": "function",
+      "summary": {
+        "text": "候选仅在-char==VK_TAB时调用本模块OnHotKey(-char)；OnHotKey当前正文只有return。不能凭名称宣称所有IME文字都在此处理。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_character_route"
+        ]
+      },
+      "calls": [
+        "OnHotKey"
+      ],
+      "branches": []
+    },
+    {
+      "name": "OnHotKey",
+      "signature": "(char)",
+      "kind": "function",
+      "summary": {
+        "text": "本候选只有return，无通用快捷键分发实现；真正的注册/组合键匹配在key模块。不得补猜此空入口会打开某窗口。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_character_route"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CharInput",
+      "signature": "(char)",
+      "kind": "function",
+      "summary": {
+        "text": "取g_ActiveEdit弱引用；空格命中key.IsHotKey且支持OnHotKey，或输入框忽略Alt/Ctrl、或修饰键按下时转edit.OnHotKey；否则普通输入转edit.CharInput，另有内部版本回退。与key注册事件流并行，原生先后次序未知。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_character_route"
+        ]
+      },
+      "calls": [
+        "key.IsHotKey",
+        "edit.OnHotKey",
+        "edit.CharInput",
+        "innerversion.IsInnerVer"
+      ],
+      "branches": [
+        {
+          "condition": "活动输入框不存在/弱引用无效",
+          "effect": {
+            "text": "没有目标输入框可转发；不能据此认定事件进入默认编辑框。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_character_route"
+            ]
+          }
+        },
+        {
+          "condition": "char == 32 and key.IsHotKey(char) and hasattr(edit, OnHotKey)",
+          "effect": {
+            "text": "转edit.OnHotKey(char)，不是在这里直接调用已注册的CFunctor。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_character_route"
+            ]
+          }
+        },
+        {
+          "condition": "edit有OnHotKey且忽略Alt/Ctrl或Alt/Ctrl按下",
+          "effect": {
+            "text": "转输入框自己的OnHotKey；具体派生方法动态未知。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_character_route"
+            ]
+          }
+        },
+        {
+          "condition": "Alt/Ctrl均未按下",
+          "effect": {
+            "text": "调用edit.CharInput(char)。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_character_route"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CEdit.__init__",
+      "signature": "(self, parent, iColor, font, x, y, w, h, linecolor=0, overstriking=False)",
+      "kind": "method",
+      "summary": {
+        "text": "构造通用编辑矩形、光标与初始编辑状态；外部应传本版本实际字体ID，不能从其他分支复制字体常量。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_edit_signature",
+          "if_style"
+        ]
+      },
+      "calls": [
+        "CBoxObject.__init__",
+        "self.MessageProcess",
+        "CCaret"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CEdit.Active",
+      "signature": "(self, bActive)",
+      "kind": "method",
+      "summary": {
+        "text": "候选中维护g_ActiveEdit、旧焦点、选择态、IME和光标闪烁，调用活动态变更回调。Active(False)后仍落到赋值的文本形态可疑，本稿不保证其反编译控制流或失焦语义正确。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_edit_focus"
+        ]
+      },
+      "calls": [
+        "CShadowObject",
+        "C_sys.EnableIME",
+        "edt.OnLostFocus",
+        "self.CreatePyCommand",
+        "self.m_oActiveTypeChangeCB"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CEdit.CharInput",
+      "signature": "(self, c)",
+      "kind": "method",
+      "summary": {
+        "text": "按整数输入：高位字节暂存/双字节拼接、普通可见字节AddChar，负虚拟键码分派编辑命令。它不是Unicode高层文本API，更不是聊天发送器。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_edit_char",
+          "if_edit_base_commands"
+        ]
+      },
+      "calls": [
+        "self.AddChar",
+        "self.MsgHome",
+        "self.MsgEnd",
+        "self.MsgLeft",
+        "self.MsgRight",
+        "self.MsgDelete",
+        "self.MsgBack",
+        "self.MsgEnter",
+        "self.MsgEscape",
+        "self.MsgTab",
+        "self.MsgUp",
+        "self.MsgDown"
+      ],
+      "branches": [
+        {
+          "condition": "self.m_LastChar >= 128",
+          "effect": {
+            "text": "若新c在0..255，拼接两个chr交AddChar，再清缓存并返回；不能据此推断任意UTF8输入正确。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_edit_char"
+            ]
+          }
+        },
+        {
+          "condition": "128 <= c < 256且无待配字节",
+          "effect": {
+            "text": "保存m_LastChar并返回，等待后续字节。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_edit_char"
+            ]
+          }
+        },
+        {
+          "condition": "c in self.m_InvalidChar",
+          "effect": {
+            "text": "不接受此字符。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_edit_char"
+            ]
+          }
+        },
+        {
+          "condition": "32 <= c < 256",
+          "effect": {
+            "text": "调用AddChar(chr(c))。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_edit_char"
+            ]
+          }
+        },
+        {
+          "condition": "c为-VK_HOME/-END/-LEFT/-RIGHT/-DELETE/-BACK",
+          "effect": {
+            "text": "分别分派光标或删除方法；不在这里处理菜单功能。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_edit_char"
+            ]
+          }
+        },
+        {
+          "condition": "c为-VK_ENTER/-ESCAPE/-TAB/-UP/-DOWN",
+          "effect": {
+            "text": "分别调用MsgEnter/MsgEscape/MsgTab/MsgUp/MsgDown；基类Enter/Escape仅打印，Tab才按m_NextEdit切焦点。聊天发送必须看chatinput子类。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "if_edit_char",
+              "if_edit_base_commands"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CEdit.EditCopy",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "密码模式直接返回；否则只将已选的m_Data文本写剪贴板，不复制未选择内容。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_edit_copy_paste"
+        ]
+      },
+      "calls": [
+        "C_sys.SetClipboardData"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CEdit.EditPaste",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "读剪贴板，按permission.IsOpenNewChatShortCut分支处理#copy/base64和链接/普通文本，截到换行前；支持AddTxtObj时可走链接对象。不能把这是通用编辑框的规则误写成服务器审核/聊天过滤。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_edit_copy_paste"
+        ]
+      },
+      "calls": [
+        "C_sys.GetClipboardData",
+        "permission.IsOpenNewChatShortCut",
+        "self.AddTxtObj",
+        "self.AddText"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetInitPath",
+      "signature": "(path)",
+      "kind": "function",
+      "summary": {
+        "text": "规范分隔符，去尾反斜线；非.igs且pngbuttonframedata识别帧时追加0.png。这只是路径选择，不验证资源包中存在该图片。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_resource_path"
+        ]
+      },
+      "calls": [
+        "pngbuttonframedata.GetButtonFrame"
+      ],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "module",
+      "target": "pubinterface / gamelayout / gamestring / key",
+      "summary": {
+        "text": "文件头使用星号导入；因此名字可能来自这些模块或InitStyle动态注入，不能只凭本文件缺定义判缺失。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_exports",
+          "if_style"
+        ]
+      }
+    },
+    {
+      "kind": "config",
+      "target": "interface.UIPath=interface；ITEM_PATH=item；SKILL_PATH=skillicon；GCODE=BIG5",
+      "summary": {
+        "text": "这些是候选中的直接常量赋值。GCODE并不证明Windows标题/剪贴板/native C_sys内部如何转换编码。",
+        "confidence": "extracted",
+        "evidence": [
+          "if_exports"
+        ]
+      }
+    },
+    {
+      "kind": "config",
+      "target": "fontdata / gamefont / colordata / STYLE",
+      "summary": {
+        "text": "InitStyle动态发布字体、颜色和富文本颜色替换函数；本稿未确认FONT_EDIT等具体导出集合。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_style"
+        ]
+      }
+    },
+    {
+      "kind": "layout",
+      "target": "CDialogBase.sUIName → combdialog.GetUIInfo",
+      "summary": {
+        "text": "具体类提供的布局名为动态入口；默认sUIName为空串，没有统一固定.dlg可替换；布局数据读取/存在性未核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_dialog"
+        ]
+      }
+    },
+    {
+      "kind": "image",
+      "target": "GetInitPath / pngbuttonframedata.GetButtonFrame / UIPath",
+      "summary": {
+        "text": "支持IGS/PNG帧路径的公共选择机制。资源名、帧数、包内容和新旧样式必须分别验证，不将字符串当已找到文件。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_resource_path"
+        ]
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 219
+      },
+      "symbol": "mainmenu.CMainMenu",
+      "summary": {
+        "text": "业务组合层继承CPanel并调用公共控件。mainmenu的菜单目标不能在本公共层按名字臆造。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_construct"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4832
+      },
+      "symbol": "chatoutput.COutput / CChannelOutput",
+      "summary": {
+        "text": "聊天输出复用CBoxObject/CBase/MessageProcess等公共能力，自行负责聊天筛选、内容和点击语义。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_output_base",
+          "chat_channel_prepare"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3232
+      },
+      "symbol": "key.IsHotKey / from key import *",
+      "summary": {
+        "text": "字符路由查询key快捷键表；interface.OnHotKey空函数不等于key.CFunctor分发缺失。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_exports",
+          "if_character_route",
+          "key_functor_call"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": null,
+      "symbol": null,
+      "summary": {
+        "text": "通过SetMouseMessage/SetButtonMessage登记的引擎事件由何原生函数/消息泵注入，具体实现未知；本稿只确认脚本侧回调登记，不补猜WM消息地址。",
+        "confidence": "inferred",
+        "evidence": [
+          "if_message_process"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "message",
+      "module": null,
+      "symbol": null,
+      "summary": {
+        "text": "CClickObject.GetUIRootNode/回调字段、CEdit派生类与CDialogBase.OpenUI的cls均依赖运行期对象；实际处理函数未知，需到构造/注册处另核。",
+        "confidence": "inferred",
+        "evidence": [
+          "if_click",
+          "if_dialog",
+          "if_character_route"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 219
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3232
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4832
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4293
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "界面公共基础和具体业务界面的边界是什么？",
+      "answer": {
+        "text": "本文件管输入、点击、捕获、拖动、基础控件、样式资源的共同机制；mainmenu管主界面组合，combtnmenu/delegatebtnmenu管菜单业务，chatinput.CChatInput重写输入发送，chatoutput管输出。要改某个按钮/发送规则优先到业务模块，不在公共LeftUp或CEdit.MsgEnter里硬编码业务。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_message_process",
+          "if_click",
+          "if_edit_base_commands",
+          "menu_construct",
+          "support_chatinput_send"
+        ]
+      }
+    },
+    {
+      "question": "按钮点击没反应/触发错功能，检查哪里？",
+      "answer": {
+        "text": "先核实际控件类与签名：CClickBox(parent,w,h,color=0,alpha=256,msgid=0)不是图片按钮签名。再查Enable登记、非零msgid优先于左键回调、GetUIRootNode弱引用、接收者OnMessage与右键大偏移。本轮仅静态核对，不能用桩件成功替代实机。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_click",
+          "if_enable",
+          "if_default_button"
+        ]
+      }
+    },
+    {
+      "question": "修改正文、URL、布局、图片或字体，入口分别是什么？",
+      "answer": {
+        "text": "interface没有统一业务正文/URL；到具体业务的文本、链接构造处查。通用布局只看到sUIName→combdialog.GetUIInfo，具体.dlg由子类/组件给出。图片查GetInitPath/UIPath与style，字体/颜色查InitStyle的数据来源。未检查目标包内容，不能保证某字体常量或图片存在，也不应靠改GCODE掩盖解码错误。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_exports",
+          "if_style",
+          "if_dialog",
+          "if_resource_path"
+        ]
+      }
+    },
+    {
+      "question": "快捷键与文字输入冲突，应改哪条链？",
+      "answer": {
+        "text": "组合键登记/条件/回调查key.RegisterHotKey和CFunctor；文本/IME/编辑命令查interface.CharInput与CEdit.CharInput，聊天发送再到chatinput子类。native两条回调的先后、焦点状态、空格占用和Alt/Ctrl应实机分别回归；本稿不承诺统一事件顺序。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_character_route",
+          "if_edit_char",
+          "key_functor_call",
+          "key_functor_set",
+          "support_chatinput_send"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "5675行仅表示本轮候选有完整输出形状，不表示全部函数已解释/原样可编译/引擎语义正确。仅摘录公共事件、点击、对话框、编辑路径；列表、滚动条、绘制等大部分变体未逐函数讲解。",
+    "CEdit.Active(False)候选fall-through可疑，不能把其失焦解释当真实缺陷或正确实现；字体导出列表、pubinterface/C_sys原生实现、IME输入顺序和文本编码边界未核。",
+    "若干中文资源字符串像乱码，未做简繁替换/修名；未读取interface.fls布局/图片payload。报告只引用确认的路径机制，不宣称资源存在。",
+    "只解释列出的重点函数/分支，不是全模块穷尽清单；calls是候选中的静态符号线索，空列表不代表没有调用。",
+    "来源是固定包本轮定点转译/恢复候选，而非原始源码；报告中保留候选全文SHA和原行号。转译器的baseline/decompile_ok不证明严格可逆、语法或行为正确。",
+    "从仓库外完整候选制作有限metadata审阅报告；JSON的sources.sha256及证据行号绑定报告原字节，不伪称验证了外置全文语义。完整候选未搬入Git；复现方法和各SHA见provenance.txt。",
+    "没有实机/Windows/游戏/真实网络验证，所有runtime_verified数量为0；未导入/执行恢复稿，未修改游戏包、编辑器、启动器；1288排除且未读其payload。",
+    "仅适用archive_sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72；不能外推注册派生包、PR34清单或其他引擎候选。",
+    "未自行审核通过；交H逐份独立审核、A集成。部分协审模块不在20条种子inventory中，关联身份可核但导航会警告；只由B/A补目录，不在本工作包改总表。"
+  ],
+  "sources": [
+    {
+      "id": "provenance",
+      "path": "script_manual/annotations/ui_chat/evidence/provenance.txt",
+      "sha256": "41b341949b2c7c9c086a7d46b2083137f3a5f1a5c006563dcc55d972fdea7998",
+      "kind": "metadata",
+      "note": "本轮白名单/ranged I/O定点提取回执、输入/工具/候选/pyc摘要、引擎及可重现核心。不是PR34审计manifest或实机验证。"
+    },
+    {
+      "id": "report_chatoutput",
+      "path": "script_manual/annotations/ui_chat/evidence/chatoutput.txt",
+      "sha256": "d3af89258166a961d4774e64500048a610ea01d904431802f1e53684d49bd4b4",
+      "kind": "metadata",
+      "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    },
+    {
+      "id": "report_interface",
+      "path": "script_manual/annotations/ui_chat/evidence/interface.txt",
+      "sha256": "f77a860eb09e3cd633987da3d179b4639b4d1194522e927cdfd6841f366c7f87",
+      "kind": "metadata",
+      "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    },
+    {
+      "id": "report_key",
+      "path": "script_manual/annotations/ui_chat/evidence/key.txt",
+      "sha256": "fba55fa88c872e1d1b1a499d63373369e475e87cc4f9907a3344385780c00860",
+      "kind": "metadata",
+      "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    },
+    {
+      "id": "report_mainmenu",
+      "path": "script_manual/annotations/ui_chat/evidence/mainmenu.txt",
+      "sha256": "9eaed517871aac63f1523dc3b29c4cc0adf628e31b385395723882dc0a0068d7",
+      "kind": "metadata",
+      "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    },
+    {
+      "id": "report_support",
+      "path": "script_manual/annotations/ui_chat/evidence/support.txt",
+      "sha256": "f7896042c8b14af9303ff523e61b468f6fe0daadee124f9ea13bdbfce21ba1d9",
+      "kind": "metadata",
+      "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "chat_channel_prepare",
+      "source_id": "report_chatoutput",
+      "start_line": 225,
+      "end_line": 324
+    },
+    {
+      "id": "chat_output_base",
+      "source_id": "report_chatoutput",
+      "start_line": 68,
+      "end_line": 153
+    },
+    {
+      "id": "d_provenance",
+      "source_id": "provenance",
+      "start_line": 1,
+      "end_line": 78
+    },
+    {
+      "id": "if_character_route",
+      "source_id": "report_interface",
+      "start_line": 123,
+      "end_line": 168
+    },
+    {
+      "id": "if_click",
+      "source_id": "report_interface",
+      "start_line": 484,
+      "end_line": 576
+    },
+    {
+      "id": "if_default_button",
+      "source_id": "report_interface",
+      "start_line": 87,
+      "end_line": 121
+    },
+    {
+      "id": "if_dialog",
+      "source_id": "report_interface",
+      "start_line": 357,
+      "end_line": 482
+    },
+    {
+      "id": "if_edit_base_commands",
+      "source_id": "report_interface",
+      "start_line": 820,
+      "end_line": 852
+    },
+    {
+      "id": "if_edit_char",
+      "source_id": "report_interface",
+      "start_line": 681,
+      "end_line": 757
+    },
+    {
+      "id": "if_edit_copy_paste",
+      "source_id": "report_interface",
+      "start_line": 759,
+      "end_line": 818
+    },
+    {
+      "id": "if_edit_focus",
+      "source_id": "report_interface",
+      "start_line": 605,
+      "end_line": 679
+    },
+    {
+      "id": "if_edit_signature",
+      "source_id": "report_interface",
+      "start_line": 578,
+      "end_line": 603
+    },
+    {
+      "id": "if_enable",
+      "source_id": "report_interface",
+      "start_line": 285,
+      "end_line": 310
+    },
+    {
+      "id": "if_exports",
+      "source_id": "report_interface",
+      "start_line": 13,
+      "end_line": 43
+    },
+    {
+      "id": "if_hold",
+      "source_id": "report_interface",
+      "start_line": 312,
+      "end_line": 355
+    },
+    {
+      "id": "if_message_process",
+      "source_id": "report_interface",
+      "start_line": 208,
+      "end_line": 283
+    },
+    {
+      "id": "if_resource_path",
+      "source_id": "report_interface",
+      "start_line": 170,
+      "end_line": 206
+    },
+    {
+      "id": "if_style",
+      "source_id": "report_interface",
+      "start_line": 45,
+      "end_line": 85
+    },
+    {
+      "id": "key_functor_call",
+      "source_id": "report_key",
+      "start_line": 130,
+      "end_line": 163
+    },
+    {
+      "id": "key_functor_set",
+      "source_id": "report_key",
+      "start_line": 101,
+      "end_line": 128
+    },
+    {
+      "id": "menu_construct",
+      "source_id": "report_mainmenu",
+      "start_line": 217,
+      "end_line": 277
+    },
+    {
+      "id": "support_chatinput_send",
+      "source_id": "report_support",
+      "start_line": 658,
+      "end_line": 710
+    }
+  ]
+}

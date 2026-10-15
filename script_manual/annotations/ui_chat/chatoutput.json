@@ -1,0 +1,1212 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 4832,
+  "path": "script/chatoutput.py",
+  "owner": "D",
+  "domain": "ui_chat",
+  "author": "D",
+  "source_status": "recovered_complete_not_original",
+  "purpose": {
+    "text": "聊天显示与状态管理候选：缓存带#s标记的聊天串，按频道/锁定筛选，处理特殊表情延迟、气泡/头像或富文本视图、滚动、链接点击、聊天框内外置切换和场景漂字。上游netchat已做频道/人物链接等组装与部分过滤；本模块不是网络协议解析器，也不是通用interface基础控件。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "chat_append",
+      "chat_channel_prepare",
+      "chat_create_text",
+      "chat_switch",
+      "chat_base_scroll_anomaly",
+      "support_netchat_format",
+      "d_provenance"
+    ]
+  },
+  "keywords": [
+    "聊天输出",
+    "格式化链",
+    "频道筛选",
+    "#s",
+    "特殊表情",
+    "气泡",
+    "富文本",
+    "滚动锁",
+    "聊天内外置",
+    "链接点击",
+    "聊天历史",
+    "漂字"
+  ],
+  "functions": [
+    {
+      "name": "AddChat",
+      "signature": "(chat)",
+      "kind": "function",
+      "summary": {
+        "text": "先IsBan，再wrapui.HandleSpecialEmote得到(real_chat,chat,delay)，把real_chat存g_Chats。无当前输出对象则立即返回；有对象时安排延迟替换、表情雨、主/副窗Add1Chat及CHAT_ADD回调。不能把收到文字等同已显示。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_append"
+        ]
+      },
+      "calls": [
+        "IsBan",
+        "wrapui.HandleSpecialEmote",
+        "AddDelayCall",
+        "NewAddDelayCall",
+        "ShowFaceRain",
+        "commoncb.TriggerCB"
+      ],
+      "branches": [
+        {
+          "condition": "IsBan(chat)",
+          "effect": {
+            "text": "直接返回，不追加缓存。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_append"
+            ]
+          }
+        },
+        {
+          "condition": "not g_CurChatOutput",
+          "effect": {
+            "text": "已经g_Chats.append(real_chat)，但不走显示、延迟或CHAT_ADD通知。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_append"
+            ]
+          }
+        },
+        {
+          "condition": "delay为真且存在当前窗",
+          "effect": {
+            "text": "保存缓存索引，按permission.GetSpecialVersion选两种定时器；回调替换同索引内容并刷新可见对象。索引/对象生命周期安全未实机验证。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_append",
+              "chat_delay"
+            ]
+          }
+        },
+        {
+          "condition": "g_CurPartChatOutput存在",
+          "effect": {
+            "text": "副窗也Add1Chat(g_ChatLock)，与主窗共享本次传入锁值；不凭g_PartChatLock变量名宣称独立锁正确。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_append"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "IsBan",
+      "signature": "(chat)",
+      "kind": "function",
+      "summary": {
+        "text": "仅对#s(17)前缀尝试从下一段#s提取ID并查IsBanBarrage。不是通用屏蔽词/编码修复器。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_append"
+        ]
+      },
+      "calls": [
+        "IsBanBarrage"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BanBarrage",
+      "signature": "(ID)",
+      "kind": "function",
+      "summary": {
+        "text": "把int(ID)记录为time.time()+600，IsBanBarrage查询时过期删除；只核此局部超时表，不推断服务器禁言。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_append"
+        ]
+      },
+      "calls": [
+        "time.time"
+      ],
+      "branches": []
+    },
+    {
+      "name": "COutput.__init__",
+      "signature": "(self, parent, w, h, color, alpha, chats=None, txt_font=None, txt_color=0, path=None)",
+      "kind": "method",
+      "summary": {
+        "text": "基础输出框保存聊天数组、游标、字体、滚动状态并MessageProcess；TEXTCLASS是wrapinterface.WrapRichText。当前频道输出子类另外覆盖文本对象创建，勿混同两条渲染路径。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_output_base",
+          "chat_create_text"
+        ]
+      },
+      "calls": [
+        "interface.CBoxObject.__init__",
+        "self.ChangeBoxAlpha",
+        "self.SetFontInfo",
+        "self.SetSize",
+        "self.MessageProcess"
+      ],
+      "branches": []
+    },
+    {
+      "name": "COutput.ResetFromCursor",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "基础路径从游标向前构造TEXTCLASS富文本，累计高度，最后_DrawSentence与ResetScrollBar；属于底层输出变体，不是CChannelOutput缓存对象路径的完整替代描述。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_output_base"
+        ]
+      },
+      "calls": [
+        "self.TEXTCLASS",
+        "self._DrawSentence",
+        "self.ResetScrollBar"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CChannelOutput.GetChannel",
+      "signature": "(self, chat)",
+      "kind": "method",
+      "summary": {
+        "text": "按开头^#s(数字)解析频道；命中COMMON_CHANNEL则转映射，否则用m_Chn2Real（13→16），异常/未匹配返回16。常量真实业务含义需chatdefines另外核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_channel_prepare"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CChannelOutput._RefreshChats",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "扫m_Chats，用GetChannel、IsMark、DealCanShow生成全局缓存索引m_SelChats；不是复制纯文本列表，也不是发送接收开关。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_channel_prepare"
+        ]
+      },
+      "calls": [
+        "self.GetChannel",
+        "self.IsMark",
+        "self.DealCanShow"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CChannelOutput.DealCanShow",
+      "signature": "(self, iChannel, sChat)",
+      "kind": "method",
+      "summary": {
+        "text": "仅在频道名是組隊、全选掩码且同时含MAKE_TEAM_FLAG/SYSTEM_MSG_FLAG时返回False，否则True。不能据此概括所有频道过滤或敏感词过滤。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_channel_prepare"
+        ]
+      },
+      "calls": [
+        "channel.GetChannelName"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CChannelOutput.Add1Chat",
+      "signature": "(self, islock)",
+      "kind": "method",
+      "summary": {
+        "text": "取g_Chats最后一条做频道筛选，允许时追加全局索引；未锁则游标到尾并重排，锁定则只更新滚动条。缓存存在不意味着当前筛选下可见。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_channel_prepare"
+        ]
+      },
+      "calls": [
+        "self.GetChannel",
+        "self.IsMark",
+        "self.DealCanShow",
+        "self.SetChatCursor",
+        "self.ResetFromCursor",
+        "self.ResetScrollBar"
+      ],
+      "branches": [
+        {
+          "condition": "not IsMark(chn) or not DealCanShow(chn,last_chat)",
+          "effect": {
+            "text": "直接返回，m_SelChats不加入。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_channel_prepare"
+            ]
+          }
+        },
+        {
+          "condition": "not islock",
+          "effect": {
+            "text": "游标设为已选聊天尾端并ResetFromCursor。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_channel_prepare"
+            ]
+          }
+        },
+        {
+          "condition": "islock",
+          "effect": {
+            "text": "只ResetScrollBar，不自动滚到底部。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_channel_prepare"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CChannelOutput.CreateTextObj",
+      "signature": "(self, idx)",
+      "kind": "method",
+      "summary": {
+        "text": "从选中索引取原聊天，移除SYSTEM_MSG_FLAG，netchat.GetBubbleType拆气泡标记；按头像显示/强制类型选气泡或CChatWrapRichText，内容做#B→#Y替换。具体类构造行为未全量核对。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_create_text"
+        ]
+      },
+      "calls": [
+        "netchat.GetBubbleType",
+        "netchat.GetPlayerChatInfo",
+        "self.CheckShowBubble",
+        "self.CheckMustShowBubble",
+        "self.GetBubbleClsByType",
+        "clsBubbleDlg",
+        "oBubble.CreateAvatarIcon",
+        "oBubble.UpdateContent",
+        "dlgchatwndbubble.CChatWrapRichText"
+      ],
+      "branches": [
+        {
+          "condition": "self.CheckShowBubble(iBubbleType)且头像框/头像数据有效",
+          "effect": {
+            "text": "GetPlayerChatInfo拆人物信息后创建气泡、头像并UpdateContent；按hero.g_ID比较传入本人标志。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_create_text"
+            ]
+          }
+        },
+        {
+          "condition": "头像信息不满足但CheckMustShowBubble(iBubbleType)",
+          "effect": {
+            "text": "仍按GetBubbleClsByType创建气泡；候选强制类型是7，不能从数字推定所有业务名。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_create_text"
+            ]
+          }
+        },
+        {
+          "condition": "其他情况",
+          "effect": {
+            "text": "创建dlgchatwndbubble.CChatWrapRichText；CChatOutput构造把m_bShowAvatar设False，不代表类型7永远不会显示气泡。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_create_text",
+              "chat_buttons"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CChannelOutput.ResetFromCursor",
+      "signature": "(self, bForce=False)",
+      "kind": "method",
+      "summary": {
+        "text": "以m_SelChats索引和高度限制选择可见范围，通过CreateTextObjForIndex复用/重建对象，丢弃不在当前范围的对象，更新游标、绘制和滚动条；不是把全部历史永久做成控件。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_visible"
+        ]
+      },
+      "calls": [
+        "self.CreateTextObjForIndex",
+        "self._DrawSentence",
+        "self.ResetScrollBar"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CChannelOutput.MarkChannel",
+      "signature": "(self, channel, bOpen)",
+      "kind": "method",
+      "summary": {
+        "text": "0..31按位更新全局g_MarkValue；其他channel选择g_MarkZero/g_MarkFull。它是显示筛选掩码，不是hero.g_Prop.m_Switch接收规则。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_scroll",
+          "chat_messages"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CChannelOutput.IsMark",
+      "signature": "(self, channel)",
+      "kind": "method",
+      "summary": {
+        "text": "有效频道返回IsEnableChannel(channel)或g_MarkValue相应位；无效/全部值比较g_MarkFull。部分频道被IsEnableChannel直接放行，不能简化成只有位掩码检查。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_scroll"
+        ]
+      },
+      "calls": [
+        "self.IsEnableChannel"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CChannelOutput.CheckChatLock",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "将g_ChatLock设为当前游标是否不在筛选尾部，并ResetLock；鼠标滚轮和滚动条可以改变它。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_scroll"
+        ]
+      },
+      "calls": [
+        "ResetLock"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CChatOutput.OnChannels",
+      "signature": "(self, chn, ismust=False)",
+      "kind": "method",
+      "summary": {
+        "text": "创建频道按钮（消息基数300），处理全部/单频道显示筛选，重算选中索引并更新接收状态按钮。右键接收开关在OnMessage的另一分支，不是这里同一动作。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_channels",
+          "chat_buttons",
+          "chat_messages"
+        ]
+      },
+      "calls": [
+        "CreateChannels",
+        "self.CreateBtn",
+        "self.MarkChannel",
+        "self._RefreshChats",
+        "self.UpdateSwitch"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CChatOutput.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "聊天输出工具按钮、缩放、频道显示筛选与接收开关的集中分发；消息号是本地UI编码，不是网络协议号。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_messages",
+          "chat_buttons"
+        ]
+      },
+      "calls": [
+        "SwitchChatWnd",
+        "SwitchLock",
+        "dlgchathistory.ShowSwitch",
+        "warnotify.ShowSwitch",
+        "SaveFlagWarWnd",
+        "SetFontPad",
+        "self.RefreshSizePos",
+        "self.OnHongbaoNotice",
+        "channel.SetChannel",
+        "self.OnChannels",
+        "self.ResetFromCursor",
+        "netchat.C2SChgChannelSwitch"
+      ],
+      "branches": [
+        {
+          "condition": "msgid == 1",
+          "effect": {
+            "text": "调用SwitchChatWnd切内外置聊天。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_messages"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 4",
+          "effect": {
+            "text": "调用SwitchLock切滚动锁。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_messages"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 5",
+          "effect": {
+            "text": "调用dlgchathistory.ShowSwitch；不是本模块实现记录持久化。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_messages"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 6",
+          "effect": {
+            "text": "调用warnotify.ShowSwitch并SaveFlagWarWnd反转标志。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_messages"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 15",
+          "effect": {
+            "text": "调用SetFontPad；字体实际选择在chatwnd及配置侧。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_messages"
+            ]
+          }
+        },
+        {
+          "condition": "msgid in (2,3,7,8)",
+          "effect": {
+            "text": "按鼠标与interface.HoldX/HoldY算尺寸/位置偏移；受顶部20与MIN/MAX_SIZE限制后RefreshSizePos。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_messages",
+              "chat_buttons"
+            ]
+          }
+        },
+        {
+          "condition": "msgid in (11,12,13,14)",
+          "effect": {
+            "text": "宽度-16/+16、高度+16/-16，经过同样边界检查后刷新；BTN_LIST还用于按钮布局。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_messages",
+              "chat_buttons"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 20",
+          "effect": {
+            "text": "调用OnHongbaoNotice；这里只见调用入口，红包服务端行为不在本轮范围。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_messages"
+            ]
+          }
+        },
+        {
+          "condition": "40 <= msgid <= 60",
+          "effect": {
+            "text": "取ch=msgid-40，只允许0/1/2/3/4/5/6/9，调用channel.SetChannel，其他返回。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_messages"
+            ]
+          }
+        },
+        {
+          "condition": "m_ChannelMsgBase <= msgid < RIGHT_BUTTON_MESSAGE",
+          "effect": {
+            "text": "OnChannels(msgid-base)，游标置尾后重排；这是左键显示筛选路径。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_messages"
+            ]
+          }
+        },
+        {
+          "condition": "msgid >= m_ChannelMsgBase + RIGHT_BUTTON_MESSAGE",
+          "effect": {
+            "text": "取对应频道按钮；非-1/17/18频道按btn.IsClose切hero.m_Switch位，世界频道联动CH_CHUANYIN，再netchat.C2SChgChannelSwitch。仅确认发调用，不宣称服务端采纳。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "chat_messages"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CChatOutput.LeftUp",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "先_GetLinkID；没有链接则命中底层游戏对象或地图并转LeftUp，有链接则调用CChannelOutput.LeftUp（继承的COutput链接路径）。新对象缓存与m_Sentences之间如何衔接未完整确认，不能保证所有新气泡链接正确命中。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_clickthrough",
+          "chat_base_links"
+        ]
+      },
+      "calls": [
+        "self._GetLinkID",
+        "C_sys.GetObjects",
+        "obj.LeftUp",
+        "map.g_Map.LeftUp",
+        "CChannelOutput.LeftUp"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CChatOutput.RightUp",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "同样区分链接与场景穿透；链接路径使用富文本m_LinkObj对应对象OnRightUp。具体链接对象目标运行期未知，不根据URL/角色名猜目标。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_clickthrough",
+          "chat_base_links"
+        ]
+      },
+      "calls": [
+        "self._GetLinkID",
+        "C_sys.GetObjects",
+        "obj.RightUp",
+        "map.g_Map.RightUp",
+        "CChannelOutput.RightUp"
+      ],
+      "branches": []
+    },
+    {
+      "name": "Show",
+      "signature": "(s)",
+      "kind": "function",
+      "summary": {
+        "text": "在interface.MainPanel构造聊天输出、恢复/限幅尺寸和位置、创建表情雨、频道/锁及战斗通知状态。候选未按s做显隐分支；不能把Show(False)写成安全销毁。位置字符串有eval，手册没有执行。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_show",
+          "chat_buttons"
+        ]
+      },
+      "calls": [
+        "GetClientLocalSize",
+        "CChatOutput",
+        "ratio.GetPosByRate",
+        "facerain.GetFaceRainClass",
+        "SwitchPartChatWnd",
+        "ResetLock"
+      ],
+      "branches": []
+    },
+    {
+      "name": "SwitchChatWnd",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "全屏且当前非外置CChatWnd时返回；否则内置关窗后chatwnd.Show，或外置关闭后重建本模块并恢复筛选/游标，最后保存按分辨率的ChatWnd开关并刷新红包/运财相关状态。实际native外窗、焦点、编码未验。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_switch"
+        ]
+      },
+      "calls": [
+        "chatwnd.Show",
+        "g_CurChatOutput.CloseWindow",
+        "Show",
+        "cfg.SaveData"
+      ],
+      "branches": []
+    },
+    {
+      "name": "PageUp",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "当前输出存在时调用LineUp；main登记VK_PAGEUP到本函数，不是直接按整屏高度移动的实现证明。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_switch",
+          "upstream_main_default"
+        ]
+      },
+      "calls": [
+        "g_CurChatOutput.LineUp"
+      ],
+      "branches": []
+    },
+    {
+      "name": "PageDown",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "当前输出存在时调用LineDown；滚动步长由滚动条/对象实现决定。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_switch",
+          "upstream_main_default"
+        ]
+      },
+      "calls": [
+        "g_CurChatOutput.LineDown"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CChatFloat.CreateTextObj",
+      "signature": "(self, text, w, ignore_delay=False)",
+      "kind": "method",
+      "summary": {
+        "text": "场景漂字另走HandleSpecialEmote与可选延迟重建，再wrapinterface.WrapRichText按字体/普通色/链接色生成；不是必须通过聊天框AddChat的同一调用路径。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_float"
+        ]
+      },
+      "calls": [
+        "wrapui.HandleSpecialEmote",
+        "AddDelayCall",
+        "wrapinterface.WrapRichText"
+      ],
+      "branches": []
+    },
+    {
+      "name": "ChatsRecordFilter",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "在g_Chats中倒序删除除候选频道3/5/11/13外的记录；这是内存保留过滤，不是写日志到磁盘。何时调用/是否配合外置历史控件未核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_history"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetClientLocalSize",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "读mx.ini/Game/ChatPanelSize，按逗号解析整数；没有值时返回DEFAULT_SIZE。本函数不执行eval，但Show的位置恢复另有eval。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_history",
+          "chat_show"
+        ]
+      },
+      "calls": [
+        "cfg.GetData"
+      ],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "config",
+      "target": "mx.ini → Game → ChatPanelSize / ChatPanelPos / ChatBg / ChatFontNew / ChatWnd*",
+      "summary": {
+        "text": "尺寸/位置/背景/字体/内外置使用不同键；Show限幅到MIN_SIZE(250,100)、MAX_SIZE(600,500)。本稿不访问或写用户配置，也不执行候选eval。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_channel_prepare",
+          "chat_buttons",
+          "chat_font_config",
+          "chat_show",
+          "chat_switch",
+          "chat_history"
+        ]
+      }
+    },
+    {
+      "kind": "config",
+      "target": "style: chatoutput.COutput、chatoutput.CChannelOutput、chatoutput.CChatOutput、chatoutput.Show/chatoutput.show",
+      "summary": {
+        "text": "文本X偏移、滚动条高度、默认尺寸、按钮偏移、显示背景路径等走style.Get*；候选大小写原样保留，不擅自合并配置section。实际style数据未载入。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_output_base",
+          "chat_scroll",
+          "chat_buttons",
+          "chat_show"
+        ]
+      }
+    },
+    {
+      "kind": "image",
+      "target": "mainmenu/outside.igs、chg_font.igs、chathistory.igs、warnotify.igs、scrolllock.igs、inside.igs、pageup.igs、pagedown.igs",
+      "summary": {
+        "text": "BTN_LIST中的工具按钮皮肤通过style.GetPath使用，并绑定1/15/5/6/4/11/12/13/14本地消息；只证字符串和映射，不证包内资源存在。",
+        "confidence": "extracted",
+        "evidence": [
+          "chat_buttons"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "netchat / wrapui / wrapinterface / dlgchatwndbubble / chatwnd / channel",
+      "summary": {
+        "text": "上游文本组装、特殊标记/链接处理、基础富文本、气泡、外置窗口和频道状态分属不同模块；不能全部归为chatoutput格式化。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "support_netchat_format",
+          "support_wrap_richtext",
+          "chat_append",
+          "chat_create_text",
+          "chat_switch"
+        ]
+      }
+    },
+    {
+      "kind": "layout",
+      "target": "聊天框主要在代码中构造；气泡/外置布局未知",
+      "summary": {
+        "text": "本证据可见CChatOutput/ResizeBox/OutputBox与按钮代码，不给出一个已确认的总chatoutput.dlg；dlgchatwndbubble/chatwnd各自布局未审。不要按模块名编造.dlg。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_buttons",
+          "chat_show",
+          "chat_create_text"
+        ]
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "data_flow",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3257
+      },
+      "symbol": "netchat.ChatMsgNotify / S2CMessage / S2CPlayerChat1",
+      "summary": {
+        "text": "已核调用点：通知/系统消息进入AddChat；玩家路径构造#s(频道)及人物链接、读取接收关闭标志后才可能AddChat。仅摘录链路，不把所有过滤/包解析行为都归本模块。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "support_netchat_notify",
+          "support_netchat_format"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 219
+      },
+      "symbol": "mainmenu.SwitchChatWnd",
+      "summary": {
+        "text": "主菜单构造/恢复阶段先Show(True)再视配置决定SwitchChatWnd。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_show"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4293
+      },
+      "symbol": "main.RegisterChatHotKey",
+      "summary": {
+        "text": "VK_PAGEUP/PAGEDOWN被登记给本模块PageUp/PageDown，实际登记和条件判断由key管理。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "upstream_main_default"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3854
+      },
+      "symbol": "interface.CBoxObject / CBase / MainPanel",
+      "summary": {
+        "text": "复用基础容器、输入事件和主面板；聊天筛选与渲染策略仍在本模块/气泡模块。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_output_base",
+          "chat_show"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3257
+      },
+      "symbol": "netchat.GetBubbleType / GetPlayerChatInfo",
+      "summary": {
+        "text": "渲染前从标记串拆气泡/人物资料；GetBubbleType还经wrapui.CBubbleType处理，旧#&(数字)形式另有回退。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_create_text",
+          "support_netchat_format"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2589
+      },
+      "symbol": "wrapinterface.WrapRichText",
+      "summary": {
+        "text": "基础COutput.TEXTCLASS与场景漂字明确使用此类；协审构造中先wrapui.ReplaceLink，再ui.CSpeChangeRichTextObject，再建立m_LinkObj。当前CChannelOutput默认还可能走CChatWrapRichText/气泡，未把它们硬写成同类。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_output_base",
+          "chat_float",
+          "support_wrap_richtext"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": null,
+      "symbol": "wrapui.HandleSpecialEmote / dlgchatwndbubble.CChatWrapRichText",
+      "summary": {
+        "text": "本轮未恢复这两个模块的实现，只确认调用符号/参数和返回值用途；特殊表情算法、CChatWrapRichText内部渲染/链接对象的具体实现未知。",
+        "confidence": "inferred",
+        "evidence": [
+          "chat_append",
+          "chat_create_text"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": null,
+      "symbol": null,
+      "summary": {
+        "text": "富文本m_LinkObj[id]、facerain.GetFaceRainClass()与当前外置输出对象取决于运行期注册/工厂；完整动态目标未知，不按名字补具体行为。",
+        "confidence": "inferred",
+        "evidence": [
+          "chat_base_links",
+          "chat_show",
+          "chat_switch"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 219
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3854
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3232
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4293
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "一条聊天从格式化到显示经过哪些地方？",
+      "answer": {
+        "text": "已见玩家路径为netchat.S2CPlayerChat1构造#s频道/人物链接并检查接收条件→chatoutput.AddChat的局部弹幕屏蔽与HandleSpecialEmote→g_Chats→CChannelOutput筛选索引/游标→CreateTextObj去SYSTEM_MSG_FLAG、拆气泡/人物信息、#B转#Y→气泡或CChatWrapRichText→可见对象排版/滚动。基础输出或场景漂字另用WrapRichText→wrapui.ReplaceLink→ui富文本对象。当前显示层与底层原生绘制是否完全相符未验，不能把所有路径简化成一次AddText。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "support_netchat_format",
+          "chat_append",
+          "chat_channel_prepare",
+          "chat_create_text",
+          "chat_visible",
+          "chat_float",
+          "support_wrap_richtext"
+        ]
+      }
+    },
+    {
+      "question": "频道左键筛选与右键接收开关有什么区别？",
+      "answer": {
+        "text": "左键从base300进入OnChannels，改g_MarkValue并重建显示索引；右键带RIGHT_BUTTON_MESSAGE大偏移，按hero.m_Switch改接收位并调用netchat.C2SChgChannelSwitch，世界频道还联动传音位。后者只是客户端发调用，服务端是否采纳待实机/协议核验；不要把隐藏历史等同拒收。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_messages",
+          "chat_channels",
+          "chat_scroll"
+        ]
+      }
+    },
+    {
+      "question": "想改正文、URL、链接显示、布局/皮肤、字体分别在哪里？",
+      "answer": {
+        "text": "正文先追上游netchat/具体通知调用，不在chatoutput找唯一正文文件；本模块只缓存并转换标记。没有确认统一URL配置，链接对象由wrapui.ReplaceLink/相关注册构造，需跟到具体链接类，不能猜。布局/尺寸查CChatOutput.BTN_LIST、Show、RefreshSizePos与style，皮肤是mainmenu/*.igs；字体查GetDefaultFont读ChatFontNew，背景查ChatBg。气泡/外置窗口属于其他模块，未核布局包内容。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "support_netchat_notify",
+          "support_netchat_format",
+          "support_wrap_richtext",
+          "chat_buttons",
+          "chat_font_config",
+          "chat_channel_prepare",
+          "chat_show"
+        ]
+      }
+    },
+    {
+      "question": "聊天收到但不显示/不滚动，优先检查哪里？",
+      "answer": {
+        "text": "区分AddChat是否被局部屏蔽、无当前输出时是否只追加缓存、频道是否IsMark/DealCanShow、是否g_ChatLock锁定、是否有特殊表情延迟、气泡类型7强制分支、是否切到chatwnd。修改缓存/删除/延迟逻辑还要核全局索引和当前窗口生命周期，不能把一次刷新成功当所有状态正确。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "chat_append",
+          "chat_channel_prepare",
+          "chat_create_text",
+          "chat_lock",
+          "chat_switch"
+        ]
+      }
+    },
+    {
+      "question": "怎样回归快捷键、点击与布局风险？",
+      "answer": {
+        "text": "PageUp/Down来自main登记；工具按钮走本地OnMessage。分别验证内/外置、新旧style、多分辨率、最小/最大尺寸、频道左右键、锁定后新消息、延迟表情期间清历史/切窗、富文本链接与场景点击穿透。候选Show忽略s且使用eval恢复位置，本轮未执行；不能将Show(False)当关闭接口或把配置字符串拿来eval做分析。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "upstream_main_default",
+          "chat_messages",
+          "chat_clickthrough",
+          "chat_show",
+          "chat_history"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "2472行仅为完整输出形状；仅解释显示主链/重点UI消息，不完整覆盖红包/运财/所有频道选择、浮动动画定时、全部滚动条与重绘变体。",
+    "COutput.BarChange候选存在可疑break形态；CChatOutput._GetLinkID/继承点击依赖m_Sentences，而新频道绘制维护m_oTextObjs，其衔接未完整确认，不能声称所有链接或滚动行为正确。",
+    "wrapui内部替换/链接注册、dlgchatwndbubble类实现、chatwnd原生外窗、style实际值、持久聊天历史、真实消息流和系统码页未核；未知不等于缺少功能。",
+    "Show(s)没有按s分支且候选用eval恢复位置，BTN_LIST位置也见eval；没有执行这些路径，没有把配置/动态表达式作为数据求值。",
+    "只解释列出的重点函数/分支，不是全模块穷尽清单；calls是候选中的静态符号线索，空列表不代表没有调用。",
+    "来源是固定包本轮定点转译/恢复候选，而非原始源码；报告中保留候选全文SHA和原行号。转译器的baseline/decompile_ok不证明严格可逆、语法或行为正确。",
+    "从仓库外完整候选制作有限metadata审阅报告；JSON的sources.sha256及证据行号绑定报告原字节，不伪称验证了外置全文语义。完整候选未搬入Git；复现方法和各SHA见provenance.txt。",
+    "没有实机/Windows/游戏/真实网络验证，所有runtime_verified数量为0；未导入/执行恢复稿，未修改游戏包、编辑器、启动器；1288排除且未读其payload。",
+    "仅适用archive_sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72；不能外推注册派生包、PR34清单或其他引擎候选。",
+    "未自行审核通过；交H逐份独立审核、A集成。部分协审模块不在20条种子inventory中，关联身份可核但导航会警告；只由B/A补目录，不在本工作包改总表。"
+  ],
+  "sources": [
+    {
+      "id": "provenance",
+      "path": "script_manual/annotations/ui_chat/evidence/provenance.txt",
+      "sha256": "41b341949b2c7c9c086a7d46b2083137f3a5f1a5c006563dcc55d972fdea7998",
+      "kind": "metadata",
+      "note": "本轮白名单/ranged I/O定点提取回执、输入/工具/候选/pyc摘要、引擎及可重现核心。不是PR34审计manifest或实机验证。"
+    },
+    {
+      "id": "report_chatoutput",
+      "path": "script_manual/annotations/ui_chat/evidence/chatoutput.txt",
+      "sha256": "d3af89258166a961d4774e64500048a610ea01d904431802f1e53684d49bd4b4",
+      "kind": "metadata",
+      "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    },
+    {
+      "id": "report_mainmenu",
+      "path": "script_manual/annotations/ui_chat/evidence/mainmenu.txt",
+      "sha256": "9eaed517871aac63f1523dc3b29c4cc0adf628e31b385395723882dc0a0068d7",
+      "kind": "metadata",
+      "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    },
+    {
+      "id": "report_support",
+      "path": "script_manual/annotations/ui_chat/evidence/support.txt",
+      "sha256": "f7896042c8b14af9303ff523e61b468f6fe0daadee124f9ea13bdbfce21ba1d9",
+      "kind": "metadata",
+      "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "chat_append",
+      "source_id": "report_chatoutput",
+      "start_line": 920,
+      "end_line": 986
+    },
+    {
+      "id": "chat_base_links",
+      "source_id": "report_chatoutput",
+      "start_line": 155,
+      "end_line": 197
+    },
+    {
+      "id": "chat_base_scroll_anomaly",
+      "source_id": "report_chatoutput",
+      "start_line": 199,
+      "end_line": 223
+    },
+    {
+      "id": "chat_buttons",
+      "source_id": "report_chatoutput",
+      "start_line": 534,
+      "end_line": 602
+    },
+    {
+      "id": "chat_channel_prepare",
+      "source_id": "report_chatoutput",
+      "start_line": 225,
+      "end_line": 324
+    },
+    {
+      "id": "chat_channels",
+      "source_id": "report_chatoutput",
+      "start_line": 691,
+      "end_line": 735
+    },
+    {
+      "id": "chat_clickthrough",
+      "source_id": "report_chatoutput",
+      "start_line": 827,
+      "end_line": 897
+    },
+    {
+      "id": "chat_create_text",
+      "source_id": "report_chatoutput",
+      "start_line": 326,
+      "end_line": 376
+    },
+    {
+      "id": "chat_delay",
+      "source_id": "report_chatoutput",
+      "start_line": 988,
+      "end_line": 1015
+    },
+    {
+      "id": "chat_float",
+      "source_id": "report_chatoutput",
+      "start_line": 1132,
+      "end_line": 1193
+    },
+    {
+      "id": "chat_font_config",
+      "source_id": "report_chatoutput",
+      "start_line": 604,
+      "end_line": 648
+    },
+    {
+      "id": "chat_history",
+      "source_id": "report_chatoutput",
+      "start_line": 1195,
+      "end_line": 1267
+    },
+    {
+      "id": "chat_lock",
+      "source_id": "report_chatoutput",
+      "start_line": 899,
+      "end_line": 918
+    },
+    {
+      "id": "chat_messages",
+      "source_id": "report_chatoutput",
+      "start_line": 737,
+      "end_line": 825
+    },
+    {
+      "id": "chat_output_base",
+      "source_id": "report_chatoutput",
+      "start_line": 68,
+      "end_line": 153
+    },
+    {
+      "id": "chat_scroll",
+      "source_id": "report_chatoutput",
+      "start_line": 452,
+      "end_line": 532
+    },
+    {
+      "id": "chat_show",
+      "source_id": "report_chatoutput",
+      "start_line": 1017,
+      "end_line": 1074
+    },
+    {
+      "id": "chat_switch",
+      "source_id": "report_chatoutput",
+      "start_line": 1076,
+      "end_line": 1130
+    },
+    {
+      "id": "chat_visible",
+      "source_id": "report_chatoutput",
+      "start_line": 378,
+      "end_line": 450
+    },
+    {
+      "id": "d_provenance",
+      "source_id": "provenance",
+      "start_line": 1,
+      "end_line": 78
+    },
+    {
+      "id": "menu_show",
+      "source_id": "report_mainmenu",
+      "start_line": 78,
+      "end_line": 126
+    },
+    {
+      "id": "support_netchat_format",
+      "source_id": "report_support",
+      "start_line": 515,
+      "end_line": 614
+    },
+    {
+      "id": "support_netchat_notify",
+      "source_id": "report_support",
+      "start_line": 495,
+      "end_line": 513
+    },
+    {
+      "id": "support_wrap_richtext",
+      "source_id": "report_support",
+      "start_line": 616,
+      "end_line": 656
+    },
+    {
+      "id": "upstream_main_default",
+      "source_id": "report_support",
+      "start_line": 13,
+      "end_line": 45
+    }
+  ]
+}

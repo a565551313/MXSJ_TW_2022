@@ -1,0 +1,847 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 3232,
+  "path": "script/key.py",
+  "owner": "D",
+  "domain": "ui_chat",
+  "author": "D",
+  "source_status": "recovered_partial",
+  "purpose": {
+    "text": "脚本侧快捷键登记、组合键匹配和回调分发：RegisterHotKey把非修饰键绑定到C_sys.RegisterHotKey(k,CFunctor)，CFunctor按允许表、角色显示状态、当前按键和快捷键编辑模式筛选后调用登记的回调。它不定义所有业务键位，也不证明原生消息泵如何调用这些对象；物理键配置与业务绑定可在main/dlgsysopt侧改变。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "key_state",
+      "key_registration",
+      "key_functor_call",
+      "upstream_main_menu",
+      "d_provenance"
+    ]
+  },
+  "keywords": [
+    "快捷键",
+    "热键",
+    "按键接收",
+    "组合键",
+    "分发",
+    "C_sys.RegisterHotKey",
+    "CFunctor",
+    "白名单",
+    "空格",
+    "快捷键编辑模式"
+  ],
+  "functions": [
+    {
+      "name": "SetEnableHotKey",
+      "signature": "(keys)",
+      "kind": "function",
+      "summary": {
+        "text": "把未存在的keys追加到g_CanUseHotKey；这是允许列表，不是注册动作。必须传与后续匹配相同的键集合表示。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_state"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "RemoveEnableHotKey",
+      "signature": "(keys)",
+      "kind": "function",
+      "summary": {
+        "text": "仅在列表中存在时移除。列表最后清空后CheckKeysCanUse恢复全开放，不是“全部禁用”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_state"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CheckKeysCanUse",
+      "signature": "(keys)",
+      "kind": "function",
+      "summary": {
+        "text": "空允许表返回True；非空表时仍放行四个固定例外或表中keys。不是所有热键的全局总开关。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_state"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "len(g_CanUseHotKey) == 0",
+          "effect": {
+            "text": "直接返回True。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "key_state"
+            ]
+          }
+        },
+        {
+          "condition": "允许表非空",
+          "effect": {
+            "text": "候选固定例外：(LEFT_BUTTON_DOWN,)、(LEFT_BUTTON_UP,)、(VK_CTRL,VK_V)、(VK_ALT,VK_F1)；其余仅keys精确属于g_CanUseHotKey时放行。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "key_state"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CFunctor.Set",
+      "signature": "(self, keys, callback, args)",
+      "kind": "method",
+      "summary": {
+        "text": "管理组合键→(callback,args)映射。callback=None时删除；映射变空返回True让外层撤原生登记；单独空格登记/撤销会修改chatinput.g_IgnoreSpace。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_functor_set"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "callback is None",
+          "effect": {
+            "text": "删除已存在keys；单键空格被删除时设g_IgnoreSpace=False；表空返回True。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "key_functor_set"
+            ]
+          }
+        },
+        {
+          "condition": "callback非None",
+          "effect": {
+            "text": "保存(callback,args)；单键空格时设g_IgnoreSpace=True。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "key_functor_set"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CFunctor.__call__",
+      "signature": "(self, *args)",
+      "kind": "method",
+      "summary": {
+        "text": "C_sys登记对象的脚本分发入口。先试角色显示态，再逐条匹配允许表与其他成员键；匹配后计数，并按dlgsysopt.g_EditKeyMode屏蔽正在编辑的业务键，最后拼接登记参数与事件参数调用。普通dict遍历无优先级承诺，可匹配多个回调。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_functor_call"
+        ]
+      },
+      "calls": [
+        "hero.GetHeroShow",
+        "CheckKeysCanUse",
+        "C_sys.IsKeyDown",
+        "hotkeycounter.RecordKeyCount",
+        "v[0]"
+      ],
+      "branches": [
+        {
+          "condition": "hero导入成功且not hero.GetHeroShow()",
+          "effect": {
+            "text": "提前返回；hero检查异常被except吞掉，继续往下。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "key_functor_call"
+            ]
+          }
+        },
+        {
+          "condition": "not CheckKeysCanUse(ks)",
+          "effect": {
+            "text": "跳过该组合，不是撤销原生注册。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "key_functor_call"
+            ]
+          }
+        },
+        {
+          "condition": "ks中非self.m_Key的任一键未按下",
+          "effect": {
+            "text": "该组合不调用；没有检查“不属于ks的多余修饰键均未按下”，勿推断为严格互斥匹配。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "key_functor_call"
+            ]
+          }
+        },
+        {
+          "condition": "匹配且dlgsysopt.g_EditKeyMode且tuple ks命中任意配置hotkey",
+          "effect": {
+            "text": "先RecordKeyCount，然后直接return整个__call__，不是只continue当前组合。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "key_functor_call"
+            ]
+          }
+        },
+        {
+          "condition": "匹配且未被编辑模式拦截",
+          "effect": {
+            "text": "调用v[0](*(v[1]+args))；v[0]来自登记处，是动态对象，不能仅凭字段推定业务。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "key_functor_call"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "RegisterHotKey",
+      "signature": "(keys, func=None, *args)",
+      "kind": "function",
+      "summary": {
+        "text": "int转单元素tuple；对每个非SHIFT/CTRL/ALT成员创建或复用CFunctor，并首次通过C_sys.RegisterHotKey绑定；Set返回True时删表并只传k撤回登记。组合包含多个非修饰键时会在多个k上登记，不保证一次触发。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_registration"
+        ]
+      },
+      "calls": [
+        "CFunctor",
+        "hk.Set",
+        "C_sys.RegisterHotKey"
+      ],
+      "branches": [
+        {
+          "condition": "type(keys) == int",
+          "effect": {
+            "text": "转换为(keys,)；不对其他输入类型做同样规范化。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "key_registration"
+            ]
+          }
+        },
+        {
+          "condition": "k是VK_SHIFT/VK_CTRL/VK_ALT",
+          "effect": {
+            "text": "本函数跳过等于这三个正码常量的成员；负码不在此排除条件内，原生正负码来源未核。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "key_registration"
+            ]
+          }
+        },
+        {
+          "condition": "g_HotkeyTable中尚无k",
+          "effect": {
+            "text": "创建CFunctor(k)，存表并C_sys.RegisterHotKey(k,hk)。具体原生回调约定未审核。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "key_registration"
+            ]
+          }
+        },
+        {
+          "condition": "hk.Set(keys,func,args)返回True",
+          "effect": {
+            "text": "删除该k的CFunctor并C_sys.RegisterHotKey(k)，即脚本侧撤回模式。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "key_registration"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "RegisterHotKeyEx",
+      "signature": "(keys, func=None, *args)",
+      "kind": "function",
+      "summary": {
+        "text": "与RegisterHotKey相似，但不跳过SHIFT/CTRL/ALT。main战斗分支使用它登记正/负修饰键到world.WarCtrl*；正负码如何由引擎产生尚未核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_registration",
+          "upstream_main_menu"
+        ]
+      },
+      "calls": [
+        "CFunctor",
+        "hk.Set",
+        "C_sys.RegisterHotKey"
+      ],
+      "branches": []
+    },
+    {
+      "name": "RegisterAltHotKey",
+      "signature": "(key, func=None, *args)",
+      "kind": "function",
+      "summary": {
+        "text": "只包装RegisterHotKey((VK_ALT,key),func,*args)；不是独立OS热键注册流程。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_registration"
+        ]
+      },
+      "calls": [
+        "RegisterHotKey"
+      ],
+      "branches": []
+    },
+    {
+      "name": "RegisterCtrlHotKey",
+      "signature": "(key, func=None, *args)",
+      "kind": "function",
+      "summary": {
+        "text": "只包装RegisterHotKey((VK_CTRL,key),func,*args)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_registration"
+        ]
+      },
+      "calls": [
+        "RegisterHotKey"
+      ],
+      "branches": []
+    },
+    {
+      "name": "IsHotKey",
+      "signature": "(char)",
+      "kind": "function",
+      "summary": {
+        "text": "查询char桶并检查组合中的修饰键状态及非修饰键是否等于char，匹配则True；它不执行回调，未调用CheckKeysCanUse或角色/编辑模式门禁，因此不能当“现在允许触发”的同义词。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_query",
+          "key_functor_call"
+        ]
+      },
+      "calls": [
+        "C_sys.IsKeyDown"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetCallFunc",
+      "signature": "(char, index)",
+      "kind": "function",
+      "summary": {
+        "text": "先IsHotKey，再以index=1选Alt、2选Ctrl、其他选单键tuple，从桶中取callback；不运行它，也不枚举所有多修饰键组合。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_query"
+        ]
+      },
+      "calls": [
+        "IsHotKey"
+      ],
+      "branches": []
+    },
+    {
+      "name": "hotkey2txt",
+      "signature": "(hk)",
+      "kind": "function",
+      "summary": {
+        "text": "用KEY2TXT拼接键名与加号；遇映射异常返回单个句点，不产生键位绑定。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_label"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Hotkey2YellowTxt",
+      "signature": "(hk)",
+      "kind": "function",
+      "summary": {
+        "text": "与hotkey2txt相同但给每个键名加#Y/#n富文本色码；未知键也返回句点。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_label"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "RegisterRightButtonHotKey",
+      "signature": "(func=None)",
+      "kind": "function",
+      "summary": {
+        "text": "func为None时以单参数登记模式处理右键down/up；有func时down登记空Function，up登记func。原生“单参数”效果仅按候选用法记录，不冒称引擎已验。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_mouse"
+        ]
+      },
+      "calls": [
+        "C_sys.RegisterHotKey"
+      ],
+      "branches": []
+    },
+    {
+      "name": "RegisterLeftButtonHotKey",
+      "signature": "(func=None)",
+      "kind": "function",
+      "summary": {
+        "text": "同上，作用于左键down/up；这条直接C_sys登记路径没有经过CFunctor允许表。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_mouse"
+        ]
+      },
+      "calls": [
+        "C_sys.RegisterHotKey"
+      ],
+      "branches": []
+    },
+    {
+      "name": "AddKey",
+      "signature": "(key)",
+      "kind": "function",
+      "summary": {
+        "text": "只记录F11正/负码序列：-VK_F11设g_F11Down，VK_F11按先前标志决定g_CheckJDY或清标志。调用此函数的原生/脚本入口未确认，不以JDY名字猜用途。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_f11"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnSysHotKey",
+      "signature": "(id)",
+      "kind": "function",
+      "summary": {
+        "text": "直接调用g_SysCallback[id]()，本候选没有ID存在性检查；注册helper标识符已损坏，不能把系统热键回调完整接线宣称已确认。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_sys_corrupt"
+        ]
+      },
+      "calls": [
+        "g_SysCallback[id]"
+      ],
+      "branches": []
+    },
+    {
+      "name": "IsSysHotKey",
+      "signature": "(hk)",
+      "kind": "function",
+      "summary": {
+        "text": "按长度1/2/3构造MOD_SINGLE或映射/按位或的mod，调用C_sys.IsSysHotKey(key,mod)。未覆盖其他长度、映射值或原生检测正确性。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_sys_query"
+        ]
+      },
+      "calls": [
+        "C_sys.IsSysHotKey"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CheckSysHotKey",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "遍历dlgsysopt.g_HotKeys，收集IsSysHotKey返回真的业务名；这只是查询列表，不是拦截/卸载系统热键。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_sys_query"
+        ]
+      },
+      "calls": [
+        "IsSysHotKey"
+      ],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "module",
+      "target": "C_sys.RegisterHotKey / C_sys.IsKeyDown / C_sys.IsSysHotKey",
+      "summary": {
+        "text": "脚本到原生的注册与状态查询边界。原生模块无此轮实现证据，线程/事件顺序/消息码映射未知。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_registration",
+          "key_functor_call",
+          "key_sys_query"
+        ]
+      }
+    },
+    {
+      "kind": "config",
+      "target": "dlgsysopt.g_HotKeys / dlgsysopt.g_EditKeyMode",
+      "summary": {
+        "text": "main用此字典绑定业务；CFunctor的编辑模式判断也读它。本工作包没有确认默认物理键值、持久化文件或冲突解决顺序。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "upstream_main_menu",
+          "key_functor_call"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "chatinput.g_IgnoreSpace",
+      "summary": {
+        "text": "单键空格登记/撤销会改变此标志；不能只改快捷键表而忽略聊天输入空格占用。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_functor_set"
+        ]
+      }
+    },
+    {
+      "kind": "config",
+      "target": "KEY2TXT / MODKEY2MOD / VK_*（defines星号导入线索）",
+      "summary": {
+        "text": "候选在from defines import *后引用这些键名、映射和虚拟码；未恢复defines确认完整导出集合或数值。key没有已确认的布局/皮肤/业务URL入口。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_state",
+          "key_label",
+          "key_sys_query"
+        ]
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4293
+      },
+      "symbol": "main.RegisterDefaultHotKey / RegisterChatHotKey / SwitchHotKey",
+      "summary": {
+        "text": "主模块登记关闭/ESC/ENTER、聊天翻页/快捷聊天和可配置菜单/战斗键；SwitchHotKey会先撤旧配置再重绑，不能把一次看到的键位写成永恒默认。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "upstream_main_default",
+          "upstream_main_menu"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3854
+      },
+      "symbol": "interface.CharInput / from key import *",
+      "summary": {
+        "text": "公共字符入口查询IsHotKey，输入框自身OnHotKey与CFunctor执行是不同路径；原生注入先后未知。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "if_exports",
+          "if_character_route"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 219
+      },
+      "symbol": "CMainMenu.OnHotKeyMsg（经mainmenumsg）",
+      "summary": {
+        "text": "可配置菜单快捷键经CFunctor回调main.SwitchHotKey里的mainmenumsg，再到主菜单信号桥；这是已见的一组回调，不是key所有回调的统一目标。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "upstream_main_menu",
+          "menu_hotkey"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4832
+      },
+      "symbol": "chatoutput.PageUp / PageDown（由main登记）",
+      "summary": {
+        "text": "main明确把VK_PAGEUP/PAGEDOWN登记给聊天翻页，key仅负责调用登记对象。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "upstream_main_default",
+          "chat_switch"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": null,
+      "symbol": "C_sys.RegisterHotKey",
+      "summary": {
+        "text": "原生接收函数的实现/消息泵地址未知。静态只确认以(k,hk)登记可调用对象以及以(k)撤回的脚本模式，不能把OS WM_HOTKEY链或调用线程写死。",
+        "confidence": "inferred",
+        "evidence": [
+          "key_registration"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": null,
+      "symbol": null,
+      "summary": {
+        "text": "CFunctor的v[0]与OnSysHotKey的g_SysCallback[id]都是运行期登记值，完整目标集合未知；不按函数名字猜业务。",
+        "confidence": "inferred",
+        "evidence": [
+          "key_functor_call",
+          "key_sys_corrupt"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4293
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3854
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 219
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4832
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "快捷键从哪里接收、判断和分发？",
+      "answer": {
+        "text": "脚本登记边界是C_sys.RegisterHotKey(k,hk)，hk是CFunctor；回调入口__call__依次核角色显示、允许表、其他组合成员IsKeyDown、编辑模式，再v[0](*(登记args+事件args))。业务登记查main.Register*/SwitchHotKey与dlgsysopt.g_HotKeys；原生最早消息泵和回调线程仍未知。别把interface.OnHotKey空函数当总入口，也别把IsHotKey查询当执行门禁。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_registration",
+          "key_functor_call",
+          "key_query",
+          "if_character_route",
+          "upstream_main_menu"
+        ]
+      }
+    },
+    {
+      "question": "要改某个业务快捷键或新增组合键，改哪层？",
+      "answer": {
+        "text": "物理键配置/业务目标在dlgsysopt/main侧查；本文件只应改共享登记/匹配规则。RegisterHotKey跳过修饰键，Ex不跳过；传None的撤销须和原keys表示一致，且tuple顺序是字典键的一部分。不要擅自固定未核默认键值；多非修饰键、多匹配、编辑模式和焦点冲突待实机。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_registration",
+          "key_functor_set",
+          "key_functor_call",
+          "upstream_main_menu"
+        ]
+      }
+    },
+    {
+      "question": "聊天空格或Alt/Ctrl冲突在哪里核查？",
+      "answer": {
+        "text": "先查CFunctor.Set对单空格的g_IgnoreSpace，再查interface.CharInput分流到派生输入框OnHotKey；若是翻页，main直接登记chatoutput.PageUp/PageDown。两条事件流的消费/顺序没有实机证据，不通过猜调用顺序修复。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_functor_set",
+          "if_character_route",
+          "upstream_main_default"
+        ]
+      }
+    },
+    {
+      "question": "显示文字、URL、布局和系统热键入口能否直接在这里修改？",
+      "answer": {
+        "text": "键名提示查hotkey2txt/Hotkey2YellowTxt及defines.KEY2TXT；没有本模块统一正文/URL或.dlg。系统热键helper在本候选中是损坏的RegisterS%/HotKey，不能按历史名擅自恢复；需先取得另一份带摘要候选或核原生结构，再决定修改。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "key_label",
+          "key_state",
+          "key_sys_corrupt"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "3232候选L228/L235的RegisterS%/HotKey不是合法Python标识符，虽decompile_ok仍标recovered_partial；未把历史catalog的RegisterSysHotKey当作已恢复事实，也未编辑正文修名。",
+    "系统热键登记helper、AddKey调用方、C_sys原生输入泵/正负键码产生规则、CFunctor事件参数与调用线程未确认。OnSysHotKey存在不证明OS系统热键已接线。",
+    "dlgsysopt默认键表和持久化配置未逐字段核对；keys输入类型和tuple顺序会影响匹配，多组合触发次序/多余修饰键不能承诺互斥。",
+    "只解释列出的重点函数/分支，不是全模块穷尽清单；calls是候选中的静态符号线索，空列表不代表没有调用。",
+    "来源是固定包本轮定点转译/恢复候选，而非原始源码；报告中保留候选全文SHA和原行号。转译器的baseline/decompile_ok不证明严格可逆、语法或行为正确。",
+    "从仓库外完整候选制作有限metadata审阅报告；JSON的sources.sha256及证据行号绑定报告原字节，不伪称验证了外置全文语义。完整候选未搬入Git；复现方法和各SHA见provenance.txt。",
+    "没有实机/Windows/游戏/真实网络验证，所有runtime_verified数量为0；未导入/执行恢复稿，未修改游戏包、编辑器、启动器；1288排除且未读其payload。",
+    "仅适用archive_sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72；不能外推注册派生包、PR34清单或其他引擎候选。",
+    "未自行审核通过；交H逐份独立审核、A集成。部分协审模块不在20条种子inventory中，关联身份可核但导航会警告；只由B/A补目录，不在本工作包改总表。"
+  ],
+  "sources": [
+    {
+      "id": "provenance",
+      "path": "script_manual/annotations/ui_chat/evidence/provenance.txt",
+      "sha256": "41b341949b2c7c9c086a7d46b2083137f3a5f1a5c006563dcc55d972fdea7998",
+      "kind": "metadata",
+      "note": "本轮白名单/ranged I/O定点提取回执、输入/工具/候选/pyc摘要、引擎及可重现核心。不是PR34审计manifest或实机验证。"
+    },
+    {
+      "id": "report_chatoutput",
+      "path": "script_manual/annotations/ui_chat/evidence/chatoutput.txt",
+      "sha256": "d3af89258166a961d4774e64500048a610ea01d904431802f1e53684d49bd4b4",
+      "kind": "metadata",
+      "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    },
+    {
+      "id": "report_interface",
+      "path": "script_manual/annotations/ui_chat/evidence/interface.txt",
+      "sha256": "f77a860eb09e3cd633987da3d179b4639b4d1194522e927cdfd6841f366c7f87",
+      "kind": "metadata",
+      "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    },
+    {
+      "id": "report_key",
+      "path": "script_manual/annotations/ui_chat/evidence/key.txt",
+      "sha256": "fba55fa88c872e1d1b1a499d63373369e475e87cc4f9907a3344385780c00860",
+      "kind": "metadata",
+      "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    },
+    {
+      "id": "report_mainmenu",
+      "path": "script_manual/annotations/ui_chat/evidence/mainmenu.txt",
+      "sha256": "9eaed517871aac63f1523dc3b29c4cc0adf628e31b385395723882dc0a0068d7",
+      "kind": "metadata",
+      "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    },
+    {
+      "id": "report_support",
+      "path": "script_manual/annotations/ui_chat/evidence/support.txt",
+      "sha256": "f7896042c8b14af9303ff523e61b468f6fe0daadee124f9ea13bdbfce21ba1d9",
+      "kind": "metadata",
+      "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "chat_switch",
+      "source_id": "report_chatoutput",
+      "start_line": 1076,
+      "end_line": 1130
+    },
+    {
+      "id": "d_provenance",
+      "source_id": "provenance",
+      "start_line": 1,
+      "end_line": 78
+    },
+    {
+      "id": "if_character_route",
+      "source_id": "report_interface",
+      "start_line": 123,
+      "end_line": 168
+    },
+    {
+      "id": "if_exports",
+      "source_id": "report_interface",
+      "start_line": 13,
+      "end_line": 43
+    },
+    {
+      "id": "key_f11",
+      "source_id": "report_key",
+      "start_line": 250,
+      "end_line": 264
+    },
+    {
+      "id": "key_functor_call",
+      "source_id": "report_key",
+      "start_line": 130,
+      "end_line": 163
+    },
+    {
+      "id": "key_functor_set",
+      "source_id": "report_key",
+      "start_line": 101,
+      "end_line": 128
+    },
+    {
+      "id": "key_label",
+      "source_id": "report_key",
+      "start_line": 49,
+      "end_line": 72
+    },
+    {
+      "id": "key_mouse",
+      "source_id": "report_key",
+      "start_line": 74,
+      "end_line": 99
+    },
+    {
+      "id": "key_query",
+      "source_id": "report_key",
+      "start_line": 214,
+      "end_line": 248
+    },
+    {
+      "id": "key_registration",
+      "source_id": "report_key",
+      "start_line": 165,
+      "end_line": 212
+    },
+    {
+      "id": "key_state",
+      "source_id": "report_key",
+      "start_line": 13,
+      "end_line": 47
+    },
+    {
+      "id": "key_sys_corrupt",
+      "source_id": "report_key",
+      "start_line": 266,
+      "end_line": 283
+    },
+    {
+      "id": "key_sys_query",
+      "source_id": "report_key",
+      "start_line": 285,
+      "end_line": 312
+    },
+    {
+      "id": "menu_hotkey",
+      "source_id": "report_mainmenu",
+      "start_line": 419,
+      "end_line": 438
+    },
+    {
+      "id": "upstream_main_default",
+      "source_id": "report_support",
+      "start_line": 13,
+      "end_line": 45
+    },
+    {
+      "id": "upstream_main_menu",
+      "source_id": "report_support",
+      "start_line": 47,
+      "end_line": 124
+    }
+  ]
+}
