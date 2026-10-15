@@ -72,6 +72,8 @@
 
 ### G — 角色、物品、任务与NPC
 
+> 2026-10-16 用户报告G停工，A承接下列四篇的有限说明。owner=G仅保留任务包归属，author必须明确A代写；这不是G独立提交。A不对自己代写稿创建A_delegate accepted，须另一个实际审核者复核。其他C–F返修仍由原owner承担。
+
 只改 `annotations/gameplay/`。
 
 | entry | 路径 |

@@ -28,6 +28,8 @@ B把完整目录替换这个单文件，保留20个初始身份（路径若确�
 
 权威格式是 `schema/contract.schema.json` 的 `$defs.annotation`，未知字段拒绝，不接受散落Markdown作为第二套底稿。示例 `examples/annotation.json`；文件名任意但必须唯一主键且放在正确领域目录。
 
+2026-10-16 G停工后，其固定四篇由A代写：任务包owner仍G，author明确实际作者A，不伪称G提交；独立复核尚未完成，A不得用自己的代审身份自批这四篇。此例外不接管C–F正文返修。
+
 必填：schema_version=1、身份、与目录完全一致的path、owner、domain、author、source_status、purpose、keywords、functions、resources、relationships、related_modules、modification_guides、limitations、sources、evidence。没有资料的列表可为空，**不要编造**。
 
 - `purpose` / 函数summary / 分支effect / 资源summary / 修改问答answer均为 **Claim**：`text`、`confidence`、`evidence`。

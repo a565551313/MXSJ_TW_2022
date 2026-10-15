@@ -1,0 +1,656 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 949,
+  "path": "script/char/npc.py",
+  "owner": "G",
+  "domain": "gameplay",
+  "author": "A（G停工后代写；待其他实际审核者复核，A不自批）",
+  "source_status": "recovered_complete_not_original",
+  "purpose": {
+    "text": "场景NPC对象与点击/任务标记候选：近邻查找、普通NPC和客户端任务NPC点击分流、距离/移动门禁、NPC工厂及任务需求标记。对话正文与协议解包不在本模块，发送调用不证明对话或任务成功。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "npc_GetAroundNpc",
+      "npc_GetNpcSignFileName",
+      "npc_CNpc_RefreshSign",
+      "npc_CNpc_ClickNpc",
+      "npc_CNpc_LeftUp",
+      "npc_CNpc_RightUp",
+      "npc_CClientNpc_SetLeftUpCB",
+      "npc_CClientNpc_LeftUp",
+      "npc_CreateNpc",
+      "npc_ManageNpcSign",
+      "npc_NpcNeed",
+      "npc_UpNpcNeedByNpcTask"
+    ]
+  },
+  "keywords": [
+    "NPC",
+    "点击NPC",
+    "NPC对话入口",
+    "任务标记",
+    "附近NPC",
+    "NPC重叠",
+    "寻路接近"
+  ],
+  "functions": [
+    {
+      "name": "GetAroundNpc",
+      "signature": "(x, y, iDist=90)",
+      "kind": "function",
+      "summary": {
+        "text": "遍历world.g_Objects，取CNpc或CGoodsBase中可见、未带m_SummonFlag/m_SaleTitle且落在非对称矩形范围的首个对象；不是最近距离排序。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_GetAroundNpc"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "多个对象符合范围",
+          "effect": {
+            "text": "返回遍历首个，未计算全体最短距离。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_GetAroundNpc"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetNpcSignFileName",
+      "signature": "(sign)",
+      "kind": "function",
+      "summary": {
+        "text": "高8位非0时把类型1/2映射attention/ask、低8位颜色0..3映射gray/blue/red/yellow，组成npcsign2/%s_%s.spr；高位为0返回空串，未知键未见兜底。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_GetNpcSignFileName"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNpc.RefreshSign",
+      "signature": "(self, sign=0)",
+      "kind": "method",
+      "summary": {
+        "text": "sign=0先询问cmpautorefreshnpcsign；有类型高位时建标记精灵，特定任务和角色编号组合还建样式相关箭头，最终sign高位为0时清标记/箭头引用。仅核路径字符串和调用，不证资源存在或真正释放。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_CNpc_RefreshSign"
+        ]
+      },
+      "calls": [
+        "GetNpcSignFileName",
+        "interface.CSpriteObject",
+        "cmpautorefreshnpcsign.GetNpcSignBySchedule"
+      ],
+      "branches": [
+        {
+          "condition": "最终sign高位为0",
+          "effect": {
+            "text": "将m_SignImage和m_ArrowIgs设None，不冒称所有原生对象已释放。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CNpc_RefreshSign"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CNpc.ClickNpc",
+      "signature": "(self, bCheck=True)",
+      "kind": "method",
+      "summary": {
+        "text": "暂存bCheck到重叠检查标志，可见时调用self.LeftUp，正常返回后置True；没有try/finally，不能保证异常时也恢复。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_CNpc_ClickNpc"
+        ]
+      },
+      "calls": [
+        "self.LeftUp"
+      ],
+      "branches": [
+        {
+          "condition": "GetShow()为假",
+          "effect": {
+            "text": "不调用LeftUp，但末尾仍设m_bCheckOverlap=True。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CNpc_ClickNpc"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CNpc.LeftUp",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "先记栈/点击日志，依剧本婚礼、通用点击回调、主角召唤兽/孩子、摊位/穿透等分流；普通路径按地图/节流/距离/重叠检查决定发送NpcLook或走近。业务分支不可简化为点击就打开对话。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_CNpc_LeftUp"
+        ]
+      },
+      "calls": [
+        "walker.CWalker.LeftUp",
+        "self.GetNormalClickObj",
+        "map.StopMove",
+        "netnpc.C2SNpcLook",
+        "hero.WalkTo"
+      ],
+      "branches": [
+        {
+          "condition": "IsLimitClick()且非自动点击",
+          "effect": {
+            "text": "提前return；自动点击可绕过此处限制。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CNpc_LeftUp"
+            ]
+          }
+        },
+        {
+          "condition": "world通用条件和左键回调均满足",
+          "effect": {
+            "text": "转walker.CWalker.LeftUp并return，不走后续NpcLook。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CNpc_LeftUp"
+            ]
+          }
+        },
+        {
+          "condition": "带m_SummonFlag",
+          "effect": {
+            "text": "向GetNormalClickObj返回对象穿透LeftUp，然后return。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CNpc_LeftUp"
+            ]
+          }
+        },
+        {
+          "condition": "地图不允许点击NPC且非自动，或距上次点击小于0.5且非自动",
+          "effect": {
+            "text": "提前return；此处自动点击门禁与右键不同。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CNpc_LeftUp"
+            ]
+          }
+        },
+        {
+          "condition": "dist < iDis*map.CELLSIZE 且开启重叠检查且重叠数>1",
+          "effect": {
+            "text": "打开重叠NPC选择界面并return，不直接发送当前NpcLook。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CNpc_LeftUp"
+            ]
+          }
+        },
+        {
+          "condition": "近距离且前面分支均放行",
+          "effect": {
+            "text": "在RANDOM_VALUE分支未提前返回的情况下，先发送移动追踪调用，再C2SNpcLook；之后通知日程/科举等模块。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CNpc_LeftUp"
+            ]
+          }
+        },
+        {
+          "condition": "不在近距离且map.AllowMove()",
+          "effect": {
+            "text": "按与NPC连线算接近点，调用hero.WalkTo；这次不发送NpcLook。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CNpc_LeftUp"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CNpc.RightUp",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "摊位/限制点击时return；召唤物穿透右键；普通路径用1的时间比较节流，虚拟编号>NPCMOD时先随机颜色再SetDesc，最后C2SNpcRBClick。右键不是左键距离对话链。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_CNpc_RightUp"
+        ]
+      },
+      "calls": [
+        "self.GetNormalClickObj",
+        "self.SetDesc",
+        "netnpc.C2SNpcRBClick"
+      ],
+      "branches": [
+        {
+          "condition": "IsSale()或IsLimitClick()",
+          "effect": {
+            "text": "直接return，没有像左键那样用m_AutoClick绕过此限制的条件。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CNpc_RightUp"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CClientNpc.SetLeftUpCB",
+      "signature": "(self, oLeftUpCB)",
+      "kind": "method",
+      "summary": {
+        "text": "非空回调若不是misc.Functor则包装，保存为m_oLeftUpCB；只登记对象，不猜其运行期目标。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_CClientNpc_SetLeftUpCB"
+        ]
+      },
+      "calls": [
+        "misc.Functor"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CClientNpc.LeftUp",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "先检查忽略点击和自定义回调，再处理通用点击、地图/节流、距离；近距离m_TaskID=0发NpcLook，否则发NpcTask(taskid,sequence)，远处可WalkTo。与普通CNpc路径不能混写。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_CClientNpc_LeftUp"
+        ]
+      },
+      "calls": [
+        "self.m_oLeftUpCB",
+        "walker.CWalker.LeftUp",
+        "netnpc.C2SNpcLook",
+        "netnpc.C2SNpcTask",
+        "hero.WalkTo"
+      ],
+      "branches": [
+        {
+          "condition": "m_bIgnoreClick为真",
+          "effect": {
+            "text": "直接return，连自定义回调也不调用。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CClientNpc_LeftUp"
+            ]
+          }
+        },
+        {
+          "condition": "自定义m_oLeftUpCB存在且调用结果为真",
+          "effect": {
+            "text": "提前return；为假才继续内置点击链。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CClientNpc_LeftUp"
+            ]
+          }
+        },
+        {
+          "condition": "dist<10*CELLSIZE且m_TaskID==0",
+          "effect": {
+            "text": "移动追踪后调用C2SNpcLook。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CClientNpc_LeftUp"
+            ]
+          }
+        },
+        {
+          "condition": "dist<10*CELLSIZE且m_TaskID!=0",
+          "effect": {
+            "text": "调用C2SNpcTask(m_TaskID,m_Sequence)，不冒称任务已完成。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CClientNpc_LeftUp"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CreateNpc",
+      "signature": "(x, y, id, charidx, desc=0, iNpcType=0, classtype=CNpc, bIsSale=False, iIsUseNewRes=None)",
+      "kind": "function",
+      "summary": {
+        "text": "默认classtype可被4024/4025、effectnpcdata和传送点条件依次覆盖，再构造于map.g_Map、设位置和可选Z偏移。三处是连续if，后面的选择可覆盖前面的；各动态类的参数兼容未核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_CreateNpc"
+        ]
+      },
+      "calls": [
+        "effectnpcdata.IsEffectNpc",
+        "classtype",
+        "obj.SetPos",
+        "charpartdata.GetNpcChangeZ"
+      ],
+      "branches": [
+        {
+          "condition": "多个类别条件依次命中",
+          "effect": {
+            "text": "后赋值的classtype生效，不能当作互斥elif列表。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CreateNpc"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "ManageNpcSign",
+      "signature": "(npcId, taskId, sign)",
+      "kind": "function",
+      "summary": {
+        "text": "按sign高位类型更新NPC→任务→sign表：已有表且类型0时DelNpcTaskSign，否则写值；不存在表且类型非0才新建，最后UpdateNpcSign。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_ManageNpcSign"
+        ]
+      },
+      "calls": [
+        "DelNpcTaskSign",
+        "UpdateNpcSign"
+      ],
+      "branches": []
+    },
+    {
+      "name": "NpcNeed",
+      "signature": "(npcId, taskId, type, shape)",
+      "kind": "function",
+      "summary": {
+        "text": "把(type,shape,have=0)需求字典追加到NPC/任务列表；类型1调用物品特殊形状计数，类型2遍历宠物按候选key/出生标志过滤计数，随后UpdateNpcSign。重复登记未见去重。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_NpcNeed"
+        ]
+      },
+      "calls": [
+        "item.GetItemNumBySpecialShape",
+        "UpdateNpcSign"
+      ],
+      "branches": []
+    },
+    {
+      "name": "UpNpcNeedByNpcTask",
+      "signature": "(npcId, taskId, type, shape, have=1)",
+      "kind": "function",
+      "summary": {
+        "text": "遍历该NPC/任务需求，类型匹配且(形状相同或task.IsTaskItem为真)时把have增加并夹到至少0，处理首条后True；无命中返回None。不是给所有需求同增。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_UpNpcNeedByNpcTask"
+        ]
+      },
+      "calls": [
+        "task.IsTaskItem"
+      ],
+      "branches": [
+        {
+          "condition": "type匹配且（shape相同或task.IsTaskItem为真）",
+          "effect": {
+            "text": "更新首条have=max(have+增量,0)后True；IsTaskItem可能在空需求时True，需联看模型。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_UpNpcNeedByNpcTask"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "kind": "image",
+      "target": "npcsign2/{attention|ask}_{gray|blue|red|yellow}.spr",
+      "summary": {
+        "text": "高8位类型与低8位颜色组合路径，未知键没有本函数兜底；资源包存在性未核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_GetNpcSignFileName"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "cmpautorefreshnpcsign / netnpc / dlgnpc",
+      "summary": {
+        "text": "标记来源、网络交互与对话UI分属其他模块；本稿不把NPC类当对话正文或协议解析实现。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_CNpc_RefreshSign",
+          "npc_CNpc_LeftUp",
+          "npc_CClientNpc_LeftUp"
+        ]
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "data_flow",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3038
+      },
+      "symbol": "hero.g_Hero.GetPos",
+      "summary": {
+        "text": "点击距离使用主角客户端对象位置；坐标单位和原生可见性仍未知。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_CNpc_LeftUp",
+          "npc_CClientNpc_LeftUp"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1129
+      },
+      "symbol": "task.IsTaskItem",
+      "summary": {
+        "text": "需求增减用任务模型形状匹配作为OR条件，不是服务器任务提交。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_UpNpcNeedByNpcTask",
+          "task_IsTaskItem"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": null,
+      "symbol": "netnpc.C2SNpcLook / C2SNpcTask / C2SNpcRBClick",
+      "summary": {
+        "text": "三种发送入口来自不同对象/按钮和门禁；服务端包格式和受理结果未在本稿确认。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_CNpc_LeftUp",
+          "npc_CNpc_RightUp",
+          "npc_CClientNpc_LeftUp"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3038
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1129
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "点NPC没反应或只走近不对话，查哪里？",
+      "answer": {
+        "text": "先确认实际是CNpc还是CClientNpc，检查自定义回调消费、剧本/婚礼、自动点击、地图门禁、节流、距离及重叠选择。普通LeftUp远距离只WalkTo；客户端版近距离还按m_TaskID分NpcLook/NpcTask，不能把两个实现拼成同一条必达链。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_CNpc_LeftUp",
+          "npc_CClientNpc_LeftUp",
+          "npc_CNpc_ClickNpc"
+        ]
+      }
+    },
+    {
+      "question": "任务标记、所需物品数量想改，改哪里？",
+      "answer": {
+        "text": "图标编码看GetNpcSignFileName和RefreshSign；任务标记登记看ManageNpcSign，需求登记看NpcNeed，增减看UpNpcNeedByNpcTask与task.IsTaskItem的宽松空表行为。汇总标记选择尚未完整解释，不保证改一处就正确显示；服务端任务状态另核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_GetNpcSignFileName",
+          "npc_CNpc_RefreshSign",
+          "npc_ManageNpcSign",
+          "npc_NpcNeed",
+          "npc_UpNpcNeedByNpcTask",
+          "task_IsTaskItem"
+        ]
+      }
+    },
+    {
+      "question": "对话正文、URL、布局、NPC造型分别在哪里改？",
+      "answer": {
+        "text": "本稿确认的是对象/点击/标记入口，不提供已确认的统一对话.dlg或业务URL。对话后续需追netnpc/dlgnpc；NPC类选择看CreateNpc，造型资源与布局/正文不是一回事。标记图片路径只证脚本字符串，未检查资源包内容。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_CreateNpc",
+          "npc_CNpc_LeftUp",
+          "npc_GetNpcSignFileName"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "1235行候选仅解释本稿12个入口；摊位、召唤兽/孩子、传送点、死亡/特效、自动检测与全部标记聚合未穷尽。",
+    "客户端NPC与普通NPC的LeftUp不同：客户端版先处理自定义回调和任务ID分支，未证明能互换。CreateNpc动态类的全部构造签名、原生基类及对象生命周期未统一核对。",
+    "DISTANCE_CLICK、NPCMOD、map.CELLSIZE、misc.Time及服务器协议字段/号表未独立验证；0.5/1只按候选时间比较常数记录，不据此承诺实际响应间隔。",
+    "作者是A代写，不是G会话提交或独立审核。所有Claim等级只是作者静态核对；未创建本稿accepted审核，修改后仍须独立复核。",
+    "来源为冻结script.fls的u6 3.9.3/xdis6.1.8定点恢复候选，baseline/decompile_ok仅证明输出形状，不证明可逆、可回编或语义正确；模块顶层return等反编译形态未修写。",
+    "函数/关键分支只覆盖已列子集；calls为空不代表无调用，运行期回调/工厂/原生实现未解，不能从函数名推断效果。",
+    "sources是带候选全文/去六头SHA及原行号的小摘录，不伪装完整源码。全候选/pyc及构建产物留仓库外；没有执行/导入游戏模块、没有读取布局/资源payload、没有实机/Windows/服务端或runtime_verified结论。",
+    "仅适用本archive_sha256；1288排除不定点恢复，不适用于用户修改包、其他引擎或PR34语料；相关模块未编目录的警告不代表不存在。"
+  ],
+  "sources": [
+    {
+      "id": "excerpt_npc",
+      "path": "script_manual/annotations/gameplay/evidence/npc_candidate_excerpt.txt",
+      "sha256": "3657f5eaf3bb78e9e8875110c743b42b69362050772a0ff6907a7a948c5a4986",
+      "kind": "metadata",
+      "note": "A代写有限候选摘录；全文/去六头正文SHA和原候选行号在报告头。仅静态来源，非完整源码、非原生/运行期报告。"
+    },
+    {
+      "id": "excerpt_task",
+      "path": "script_manual/annotations/gameplay/evidence/task_candidate_excerpt.txt",
+      "sha256": "9b0b94d5339f33e4d6cf7138ff10c5c4b2a0c56012f2c3cc938a86fd2ff667ca",
+      "kind": "metadata",
+      "note": "A代写有限候选摘录；全文/去六头正文SHA和原候选行号在报告头。仅静态来源，非完整源码、非原生/运行期报告。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "npc_CClientNpc_LeftUp",
+      "source_id": "excerpt_npc",
+      "start_line": 199,
+      "end_line": 241
+    },
+    {
+      "id": "npc_CClientNpc_SetLeftUpCB",
+      "source_id": "excerpt_npc",
+      "start_line": 191,
+      "end_line": 198
+    },
+    {
+      "id": "npc_CNpc_ClickNpc",
+      "source_id": "excerpt_npc",
+      "start_line": 68,
+      "end_line": 75
+    },
+    {
+      "id": "npc_CNpc_LeftUp",
+      "source_id": "excerpt_npc",
+      "start_line": 76,
+      "end_line": 162
+    },
+    {
+      "id": "npc_CNpc_RefreshSign",
+      "source_id": "excerpt_npc",
+      "start_line": 36,
+      "end_line": 67
+    },
+    {
+      "id": "npc_CNpc_RightUp",
+      "source_id": "excerpt_npc",
+      "start_line": 163,
+      "end_line": 190
+    },
+    {
+      "id": "npc_CreateNpc",
+      "source_id": "excerpt_npc",
+      "start_line": 242,
+      "end_line": 259
+    },
+    {
+      "id": "npc_GetAroundNpc",
+      "source_id": "excerpt_npc",
+      "start_line": 9,
+      "end_line": 22
+    },
+    {
+      "id": "npc_GetNpcSignFileName",
+      "source_id": "excerpt_npc",
+      "start_line": 23,
+      "end_line": 35
+    },
+    {
+      "id": "npc_ManageNpcSign",
+      "source_id": "excerpt_npc",
+      "start_line": 260,
+      "end_line": 276
+    },
+    {
+      "id": "npc_NpcNeed",
+      "source_id": "excerpt_npc",
+      "start_line": 277,
+      "end_line": 311
+    },
+    {
+      "id": "npc_UpNpcNeedByNpcTask",
+      "source_id": "excerpt_npc",
+      "start_line": 312,
+      "end_line": 323
+    },
+    {
+      "id": "task_IsTaskItem",
+      "source_id": "excerpt_task",
+      "start_line": 181,
+      "end_line": 194
+    }
+  ]
+}

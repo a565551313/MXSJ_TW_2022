@@ -153,7 +153,7 @@
       "entry_index": 3038,
       "owner": "G",
       "domain": "gameplay",
-      "state": "assigned",
+      "state": "submitted",
       "priority": "pilot",
       "collaborators": []
     },
@@ -162,7 +162,7 @@
       "entry_index": 717,
       "owner": "G",
       "domain": "gameplay",
-      "state": "assigned",
+      "state": "submitted",
       "priority": "pilot",
       "collaborators": []
     },
@@ -171,7 +171,7 @@
       "entry_index": 1129,
       "owner": "G",
       "domain": "gameplay",
-      "state": "assigned",
+      "state": "submitted",
       "priority": "pilot",
       "collaborators": []
     },
@@ -180,7 +180,7 @@
       "entry_index": 949,
       "owner": "G",
       "domain": "gameplay",
-      "state": "assigned",
+      "state": "submitted",
       "priority": "pilot",
       "collaborators": []
     }
