@@ -10,7 +10,9 @@ import contextlib
 import importlib.metadata
 import io
 import json
+import sys
 import tokenize
+import traceback
 from pathlib import Path
 
 LIMIT = 2 * 1024 * 1024
@@ -114,6 +116,31 @@ def source_syntax(text, vm):
     )
 
 
+def install_legacy_long_reader():
+    """xdis6.3 reads the signed marshal-long digit count as unsigned.
+
+    Compatibility adapter in this isolated GPL worker only. Preserve every
+    integer value/sign; do not alter the input pyc, opcodes or game constants.
+    CPython2 marshal.c uses a signed 32-bit count and unsigned 15-bit digits.
+    """
+    import xdis.unmarshal
+
+    class SignedLongUnmarshaller(xdis.unmarshal.VersionIndependentUnmarshaller):
+        def t_long(self, save_ref, bytes_for_s=False):
+            count = self.read_int32()
+            if abs(count) > 32 * 1024 * 1024:
+                raise ValueError("marshal long exceeds input safety limit")
+            value = 0
+            for index in range(abs(count)):
+                digit = self.read_int16()
+                if not 0 <= digit < 32768:
+                    raise ValueError("invalid marshal long digit")
+                value += digit << (index * 15)
+            return self.r_ref(-value if count < 0 else value, save_ref)
+
+    xdis.unmarshal.VersionIndependentUnmarshaller = SignedLongUnmarshaller
+
+
 def recover(path, vm):
     validate_engine()
     import xdis.unmarshal as legacy_unmarshal
@@ -153,6 +180,7 @@ def recover(path, vm):
             original_load_const(walker, node)
 
     SourceWalker.n_LOAD_CONST = load_const
+    install_legacy_long_reader()
     from xdis.load import load_module
     from xdis.op_imports import get_opcode_module
 
@@ -183,23 +211,28 @@ def recover(path, vm):
     try:
         walk(code)
     except Exception as exc:
+        traceback.print_exc(file=sys.stderr)
         diagnostics.append(f"反汇编未完整生成：{type(exc).__name__}: {str(exc)[:300]}")
     source, complete = BoundedText(), True
     try:
         decompile_file(str(path), outstream=source)
     except Exception as exc:
         complete = False
+        traceback.print_exc(file=sys.stderr)
         diagnostics.append(f"源码恢复未完成：{type(exc).__name__}: {str(exc)[:300]}")
-    text = source.getvalue()
+    raw_source = source.getvalue()
+    text = raw_source
     if text.strip():
         try:
             text, notes = source_syntax(text, vm)
             diagnostics.extend(notes)
         except (tokenize.TokenError, IndentationError, SyntaxError) as exc:
+            traceback.print_exc(file=sys.stderr)
             complete = False
             diagnostics.append(f"恢复稿词法不完整：{type(exc).__name__}")
     return {
         "source": text,
+        "raw_source": raw_source,
         "complete": complete,
         "disassembly": listing.getvalue(),
         "diagnostics": diagnostics,
@@ -212,20 +245,25 @@ def main(argv=None):
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--vm", required=True, choices=("py25", "py27"))
     args = parser.parse_args(argv)
+    captured_out, captured_err = BoundedText(), BoundedText()
     try:
         # Parser debug prints stay inside this process, never global GUI stdout.
         with (
-            contextlib.redirect_stdout(BoundedText()),
-            contextlib.redirect_stderr(BoundedText()),
+            contextlib.redirect_stdout(captured_out),
+            contextlib.redirect_stderr(captured_err),
         ):
             result = recover(args.input, args.vm)
     except Exception as exc:
+        with contextlib.redirect_stderr(captured_err):
+            traceback.print_exc()
         result = {
             "source": "",
             "complete": False,
             "disassembly": "",
             "diagnostics": [f"恢复引擎失败：{type(exc).__name__}: {str(exc)[:300]}"],
         }
+    result["worker_stdout"] = captured_out.getvalue()
+    result["worker_stderr"] = captured_err.getvalue()
     result["engine_protocol"] = ENGINE_PROTOCOL
     args.output.write_text(json.dumps(result, ensure_ascii=True), encoding="utf-8")
     return 0

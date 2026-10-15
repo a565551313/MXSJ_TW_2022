@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-15",
+  "input_drive_id": "12960oayaA6CKHg1i58B94_6VYLlDS8k6",
+  "input_name": "script-open-diagnostic-1792062154408995100.json",
+  "user_environment": {
+    "platform": "win32",
+    "python": "3.14.7"
+  },
+  "user_archive": {
+    "bytes": 48449597,
+    "sha256": "c7276deb0af7142c1b249d24299b884cd7320c0e84375cc6ac55f166df1d9ed1",
+    "entries": 5002,
+    "directory_start": 24184785,
+    "directory_end": 24264817,
+    "first_payload_offset": 24264817,
+    "first_payload_length": 214,
+    "stable_during_diagnostic": true,
+    "v1_invalid_count": 5002,
+    "directory_sha256": "0ed363a99e5813fdbae3a8fb61bef2e35504fe43faa747fdfce4eb44a64a9823"
+  },
+  "cause": "parser required every payload to precede directory; first supplied payload begins exactly at directory end, inside actual file",
+  "full_user_archive_available": false,
+  "replayed_user_directory_rows": 8,
+  "replay_model": "eight exact raw rows, reduced count 8; not full 5002-entry user file",
+  "baseline_replay": "old 0.6.0.dev3 parser produces exact entry 0 out-of-bounds error",
+  "fix": [
+    "allow file-bounded payloads on either side of table; reject header/directory overlap",
+    "stream directory as a reserved region; rewrite offsets after both sides known",
+    "verify physical region order, opaque gaps and suffix independently",
+    "diagnostic v2 distinguishes pre-directory from actual valid storage region"
+  ],
+  "tests": {
+    "passed": 56,
+    "skipped": 0,
+    "new_layout_tests": 8,
+    "layout_variants": 4,
+    "write_variants_per_layout": 4,
+    "native_codec_test": "standard CPython audit mocked explicitly; complete codec readback still performed",
+    "log_sha256": "5cfaa9c1ffa8f1d26c83d0d71f8bc97d45045f68b8b13845240bc9ce785d5eea"
+  },
+  "scale_verification": {
+    "origin": "constructed from repository original, NOT user full archive",
+    "original_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "model_bytes": 48647407,
+    "model_count": 5002,
+    "results": [
+      {
+        "kind": "original",
+        "entries": 5002,
+        "status": "bounds-pass",
+        "byte_exact_noop": true,
+        "invalid_count": 0,
+        "file_bytes": 24454082,
+        "sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72"
+      },
+      {
+        "kind": "post-directory-model",
+        "entries": 5002,
+        "status": "bounds-pass",
+        "byte_exact_noop": true,
+        "invalid_count": 0,
+        "file_bytes": 48647407,
+        "sha256": "1aeba56be698daf023c9499d91300dde4a6b87ecffbe578200ce7887987fa496"
+      }
+    ]
+  },
+  "windows_execution": "not-tested",
+  "full_user_archive_recovery": "not-tested",
+  "game_semantics": "not-tested",
+  "new_drive_release": "not-uploaded",
+  "catalog_scope": "derived archive SHA is not automatically authorized by original-package pin"
+}

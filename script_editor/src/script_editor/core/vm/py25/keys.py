@@ -2,7 +2,7 @@
 
 No directory discovery or boundary estimation. Catalog is factual decode data
 (not an account credential); callers supply both digest pins, including the
-explicitly authorized bundled catalog selected by an exact original-package SHA.
+bundled catalog selected by an exact original/registered-test-package SHA.
 """
 
 from __future__ import annotations

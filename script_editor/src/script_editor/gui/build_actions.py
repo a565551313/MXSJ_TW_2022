@@ -144,6 +144,7 @@ class BuildActions:
                 or tab.vm.currentData() != plan.snapshot.vm
             ):
                 raise ValueError("清单已过期，请重新预编译确认")
+            self.assert_writable_target(destination)
             state = ProjectState(tuple(self.bindings), tuple(self.catalogs))
             protected = tuple(a.path for a in self.archives) + tuple(
                 self.tabs.widget(i).path for i in range(self.tabs.count())
@@ -307,6 +308,7 @@ class BuildActions:
             if not name:
                 return
             target = Path(name if name.lower().endswith(".pyc") else name + ".pyc")
+            self.assert_writable_target(target)
             text = tab.editor.toPlainText()
             filename = str(tab.path)
             protected = tuple(

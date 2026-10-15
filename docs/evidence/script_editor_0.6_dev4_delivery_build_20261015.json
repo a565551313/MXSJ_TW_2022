@@ -1,0 +1,189 @@
+{
+  "version": "0.6.0.dev4",
+  "date": "2026-10-15",
+  "fix_commit": "77dc861",
+  "purpose": "post-directory script payload compatibility; complete source delivery with Windows runtimes and pycdc",
+  "targeted_tests": {
+    "passed": 80,
+    "skipped": 0,
+    "scope": "56 layout/core/native-codec tests plus 24 runtime bundle guard tests",
+    "full_gui_vm_baseline_rerun": false,
+    "log_sha256": "3eab7627194183eac3e359a847a296b047090d8110f818e94fd4287ede8bd8c5"
+  },
+  "runtime_audit": {
+    "schema": 1,
+    "status": "static-only",
+    "native_game_acceptance": "not-tested",
+    "provenance": "local manifest declarations; not a signature/build proof",
+    "compilers": [
+      {
+        "vm": "py25",
+        "manifest_sha256": "70fdc1a29376228db9fe26d2dbf8deb7b3e23cb005f8d4c2e584a2f8a96351ed",
+        "files": {
+          "BUILD.json": "b9f03d7b511b16109cd16f2039f277b954603c38f98b83e8f4b98cd24e692603",
+          "LICENSE-CPython.txt": "d7e55eb310561c8b6a74b43f96cf6b9e8047c2d1c94b6b24086edb847ae1c4aa",
+          "LICENSE-LLVM.txt": "b5efebcaca80879234098e52d1725e6d9eb8fb96a19fce625d39184b705f7b6d",
+          "LICENSE-MinGW.txt": "99a69660981156c21336fdb5661f89341b013c94e4bf9e1c7467b4745718397f",
+          "LICENSE-Zig.txt": "5c537d6853e005298a285d508cff9ac7192cea23576c840d485b2b586a7ff177",
+          "LICENSE-zlib.txt": "365db9b693fda6c66ddd97d81ae3eb17be32c890909553973a77439d85900494",
+          "python.exe": "e4733af00fcc659c0eb189d341d9047de55b29fda0a4311596ccc4a59f2932c7",
+          "python25.dll": "874d39330ac42686a771b5679ea642eecc837a23881bef5abc21c115003a7d67",
+          "python25.zip": "d76ef15d923d1d51d5ba0f6fca5907b97059b7815a6670b05e1535bc7c80a3df"
+        },
+        "execution": "not-executed"
+      },
+      {
+        "vm": "py27",
+        "manifest_sha256": "70fdc1a29376228db9fe26d2dbf8deb7b3e23cb005f8d4c2e584a2f8a96351ed",
+        "files": {
+          "BUILD.json": "c9a22a7a94dd287e13e80ff551d031a2154876f86cca45732284b59b2b1b1dcc",
+          "LICENSE-CPython.txt": "8129570d0752f342973e176c87123b7b7199b6f8a907a4b6704d4473b3dd2d3b",
+          "LICENSE-LLVM.txt": "b5efebcaca80879234098e52d1725e6d9eb8fb96a19fce625d39184b705f7b6d",
+          "LICENSE-MinGW.txt": "99a69660981156c21336fdb5661f89341b013c94e4bf9e1c7467b4745718397f",
+          "LICENSE-Zig.txt": "5c537d6853e005298a285d508cff9ac7192cea23576c840d485b2b586a7ff177",
+          "LICENSE-zlib.txt": "53a466b504371dcdda1504c90d8121d4823921f03554c3526995fb2bae7159f9",
+          "python.exe": "69a20c787233394079e227314eab9ecce51497ad26cca5b0a2ec4b552d996392",
+          "python27.dll": "b77c03a08162799f7a5c38ca5f3af4fc2f7bbef3fdbce0a69741d8729cb458af",
+          "python27.zip": "341973e08fd04a530d395225826513a073818bca6e6f19327dc41c42736ca265"
+        },
+        "execution": "not-executed"
+      }
+    ]
+  },
+  "pycdc_manifest": {
+    "schema_version": 1,
+    "platform": "win32",
+    "executable": "pycdc.exe",
+    "source_commit": "b4289760970dbc399684f1e155ec6d1ea1cc787e",
+    "source_sha256": "d7d8c53d37a1a586097145b532fca02535db2f2f0999b3b1e910133c9941bf31",
+    "binary_sha256": "84be5072092925ce6b3adb41142fa703b19851bf246a577ace39b459df76ba6c",
+    "build_notices_sha256": "ff24bb2cc2770c679828fc296c7c1e2137390e80b971903650b2fdaddff0788c"
+  },
+  "pe_imports": {
+    "pycdc-win/pycdc.exe": {
+      "format": "pei-i386",
+      "sha256": "84be5072092925ce6b3adb41142fa703b19851bf246a577ace39b459df76ba6c",
+      "imports": [
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-private-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "KERNEL32.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-environment-l1-1-0.dll",
+        "api-ms-win-crt-time-l1-1-0.dll",
+        "api-ms-win-crt-locale-l1-1-0.dll",
+        "api-ms-win-crt-multibyte-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll"
+      ],
+      "executed": false
+    },
+    "runtimes/py25/win-x86/python.exe": {
+      "format": "pei-i386",
+      "sha256": "e4733af00fcc659c0eb189d341d9047de55b29fda0a4311596ccc4a59f2932c7",
+      "imports": [
+        "python25.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "KERNEL32.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-environment-l1-1-0.dll",
+        "api-ms-win-crt-time-l1-1-0.dll"
+      ],
+      "executed": false
+    },
+    "runtimes/py27/win-x86/python.exe": {
+      "format": "pei-i386",
+      "sha256": "69a20c787233394079e227314eab9ecce51497ad26cca5b0a2ec4b552d996392",
+      "imports": [
+        "python27.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "KERNEL32.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-environment-l1-1-0.dll",
+        "api-ms-win-crt-time-l1-1-0.dll"
+      ],
+      "executed": false
+    },
+    "runtimes/py25/win-x86/python25.dll": {
+      "format": "pei-i386",
+      "sha256": "874d39330ac42686a771b5679ea642eecc837a23881bef5abc21c115003a7d67",
+      "imports": [
+        "ADVAPI32.dll",
+        "SHELL32.dll",
+        "USER32.dll",
+        "api-ms-win-crt-conio-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll",
+        "api-ms-win-crt-environment-l1-1-0.dll",
+        "api-ms-win-crt-filesystem-l1-1-0.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-locale-l1-1-0.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-multibyte-l1-1-0.dll",
+        "api-ms-win-crt-private-l1-1-0.dll",
+        "api-ms-win-crt-process-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "api-ms-win-crt-time-l1-1-0.dll",
+        "api-ms-win-crt-utility-l1-1-0.dll",
+        "KERNEL32.dll"
+      ],
+      "executed": false
+    },
+    "runtimes/py27/win-x86/python27.dll": {
+      "format": "pei-i386",
+      "sha256": "b77c03a08162799f7a5c38ca5f3af4fc2f7bbef3fdbce0a69741d8729cb458af",
+      "imports": [
+        "ADVAPI32.dll",
+        "SHELL32.dll",
+        "USER32.dll",
+        "api-ms-win-crt-conio-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll",
+        "api-ms-win-crt-environment-l1-1-0.dll",
+        "api-ms-win-crt-filesystem-l1-1-0.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-locale-l1-1-0.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-multibyte-l1-1-0.dll",
+        "api-ms-win-crt-private-l1-1-0.dll",
+        "api-ms-win-crt-process-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "api-ms-win-crt-time-l1-1-0.dll",
+        "KERNEL32.dll"
+      ],
+      "executed": false
+    }
+  },
+  "cross_build_warnings": "13 Zig libunwind alias attributes warnings; exit 0",
+  "dependency_sources": {
+    "xdis-6.3.0.tar.gz": {
+      "bytes": 795994,
+      "sha256": "e78e3e7a0e2d31ac64c084afc782a0a233da06ac05002c42a0e17000ac51dcaa"
+    },
+    "six-1.17.0.tar.gz": {
+      "bytes": 34031,
+      "sha256": "ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81"
+    },
+    "spark_parser-1.9.0.tar.gz": {
+      "bytes": 80108,
+      "sha256": "dc66d48c4265c4133db41a9c5fe9c1c502b3b20167df158a0f234cd31712cf64"
+    },
+    "click-8.5.0.tar.gz": {
+      "bytes": 382235,
+      "sha256": "ba0d2089de75ea0310e2dde03160e6ca10009947fb95a182f9b54021bb272e34"
+    }
+  },
+  "windows_execution": "not-tested",
+  "full_user_c727_archive_recovery": "not-tested",
+  "game_semantics": "not-tested",
+  "no_game_files_in_delivery": true
+}

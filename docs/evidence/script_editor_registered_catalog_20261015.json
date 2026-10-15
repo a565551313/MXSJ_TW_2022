@@ -1,0 +1,230 @@
+{
+  "version": "0.6.0.dev5",
+  "date": "2026-10-15",
+  "reported_user_digest": "c7276deb0af7142c1b249d24299b884cd7320c0e84375cc6ac55f166df1d9ed1",
+  "cause": "exact original-only catalog registration blocked all native recovery on the known test derivative",
+  "association": "same authorized catalog, exact original or registered derivative SHA only; each entry strictly decoded; no trust promotion",
+  "asset_sha256": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+  "tests": {
+    "discovered": 310,
+    "passed": 294,
+    "skipped": [
+      [
+        "test_corpus_import.RealCorpusImportTests.test_124_and_4861_keep_editable_candidates_without_verified_origin",
+        "skipped 'opt-in full audited corpus required'"
+      ],
+      [
+        "test_corpus_import.RealCorpusImportTests.test_2371_local_repair_delta_not_misrepresented_as_verified",
+        "skipped 'opt-in full audited corpus required'"
+      ],
+      [
+        "test_corpus_import.RealCorpusImportTests.test_eight_real_repairs_match_exact_pyc_and_original_catalog_unchanged",
+        "skipped 'opt-in full audited corpus required'"
+      ],
+      [
+        "test_corpus_import.RealCorpusImportTests.test_real_large_entry_1182_is_not_blocked_by_live_process_output_limit",
+        "skipped 'opt-in full audited corpus required'"
+      ],
+      [
+        "test_corpus_import.RealCorpusImportTests.test_real_repaired_4305_compile_publish_reopen_without_execution",
+        "skipped 'opt-in full audited corpus required'"
+      ],
+      [
+        "test_data_corpus.RealDataCorpusTests.test_every_real_data_entry_candidate_has_exact_strict_origin",
+        "skipped 'opt-in actual data corpus required'"
+      ],
+      [
+        "test_data_corpus.RealDataCorpusTests.test_real_data_corpus_probe_compile_publish_reopen_does_not_execute",
+        "skipped 'opt-in actual data corpus required'"
+      ],
+      [
+        "test_data_corpus.RealDataCorpusTests.test_real_uuid_direct_browser_opens_without_prebuilt_corpus",
+        "skipped 'opt-in actual data corpus required'"
+      ],
+      [
+        "test_data_corpus.RealDataCorpusTests.test_real_uuid_negative_longs_remain_exact_not_replaced_or_nopped",
+        "skipped 'opt-in actual data corpus required'"
+      ],
+      [
+        "test_gui_data_corpus.RealDataCorpusGuiTests.test_all_121_real_data_scripts_open_as_editable_vm27_tabs",
+        "skipped 'opt-in actual data corpus required'"
+      ],
+      [
+        "test_recovery_candidates.ActualCorpusTests.test_original_archive_path_uses_secondary_after_primary_timeout",
+        "skipped 'opt-in corpus samples/pycdc required'"
+      ],
+      [
+        "test_recovery_candidates.ActualCorpusTests.test_real_both_fail_has_no_fake_source",
+        "skipped 'opt-in corpus samples/pycdc required'"
+      ],
+      [
+        "test_recovery_candidates.ActualCorpusTests.test_real_complete_pair_keeps_two_candidates_and_origin",
+        "skipped 'opt-in corpus samples/pycdc required'"
+      ],
+      [
+        "test_recovery_candidates.ActualCorpusTests.test_real_non_utf8_candidates_keep_exact_engine_bytes",
+        "skipped 'opt-in corpus samples/pycdc required'"
+      ],
+      [
+        "test_recovery_candidates.ActualCorpusTests.test_real_partial_source_is_editable_but_never_complete",
+        "skipped 'opt-in corpus samples/pycdc required'"
+      ],
+      [
+        "test_recovery_candidates.ActualCorpusTests.test_real_pathological_primary_times_out_secondary_still_recovers",
+        "skipped 'opt-in corpus samples/pycdc required'"
+      ]
+    ],
+    "gui_passed": 55,
+    "gui_skipped": 1,
+    "seconds": 10.23,
+    "log_sha256": "40f4993bc337491f4617ba8e78180aa428ff6c4696b2bae2eb4237b0ddf6ebcb",
+    "missing_required": [],
+    "unexpected_skips": []
+  },
+  "new_tests": 7,
+  "gui_route": "controlled SHA/catalog fixture route, actual Qt and CPython2.5 compile, strict native decode and actual primary recovery worker; NOT full user archive",
+  "project_route": "missing association filled if verified; untouched failure tabs retried; editable dirty text/undo retained; explicit project catalog not replaced",
+  "original_screenshot_entry_probe": {
+    "scope": "repository ORIGINAL archive, not user c727 payloads",
+    "entries": [
+      {
+        "index": 7,
+        "standard_pyc_sha256": "f67bf4fb8eed9346a20268e9e18c088889c7980cb12a0690452daa227793bbad",
+        "has_source": true,
+        "source_characters": 1465,
+        "complete": true,
+        "selected_engine": "uncompyle6",
+        "source_sha256": "f44b1252ec98d32f444385811275edfb5349e738a81846897b25d76f7a33d6a0",
+        "candidates": [
+          {
+            "engine": "uncompyle6",
+            "status": "complete",
+            "has_source": true
+          },
+          {
+            "engine": "pycdc",
+            "status": "complete",
+            "has_source": true
+          }
+        ]
+      },
+      {
+        "index": 13,
+        "standard_pyc_sha256": "7ac2240e6536c5f50856c5215547cb8f3ebb19dc4d9463d18c469570cbfac12e",
+        "has_source": true,
+        "source_characters": 51710,
+        "complete": true,
+        "selected_engine": "uncompyle6",
+        "source_sha256": "4e2a361a5691df504959c8ccc100426ee2d66e396948313c431e72365953e2c7",
+        "candidates": [
+          {
+            "engine": "uncompyle6",
+            "status": "complete",
+            "has_source": true
+          },
+          {
+            "engine": "pycdc",
+            "status": "failed",
+            "has_source": true
+          }
+        ]
+      },
+      {
+        "index": 2359,
+        "standard_pyc_sha256": "a5f78ad3c3ce15dfa1a882cba9f21d5adb8a3f963045841993686754416d4feb",
+        "has_source": true,
+        "source_characters": 4239,
+        "complete": true,
+        "selected_engine": "uncompyle6",
+        "source_sha256": "b495193edf0298842d62a2d2044fef864a278db85d7f0bb27c7f30383dfe2089",
+        "candidates": [
+          {
+            "engine": "uncompyle6",
+            "status": "complete",
+            "has_source": true
+          },
+          {
+            "engine": "pycdc",
+            "status": "complete",
+            "has_source": true
+          }
+        ]
+      },
+      {
+        "index": 2368,
+        "standard_pyc_sha256": "235ccb718a5999a7bab8deb284bd2b42645c845afa7fb8fd304478a2da6d4dc1",
+        "has_source": true,
+        "source_characters": 4019,
+        "complete": true,
+        "selected_engine": "uncompyle6",
+        "source_sha256": "52a06c11a6e75a0e5e84f46e73a9dcbf287b87e6c3043514ee25160ebefa74c0",
+        "candidates": [
+          {
+            "engine": "uncompyle6",
+            "status": "complete",
+            "has_source": true
+          },
+          {
+            "engine": "pycdc",
+            "status": "complete",
+            "has_source": true
+          }
+        ]
+      }
+    ],
+    "original_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72"
+  },
+  "qt_test_environment": {
+    "repo": "eXtern-OS/eXternOS-Base",
+    "commit": "ec0e026a2b09225b5a85369c3627aedaf6dc2a5f",
+    "libraries": [
+      {
+        "name": "libGL.so.1",
+        "path": "squashfs-root/usr/lib/x86_64-linux-gnu/libGL.so.1.0.0",
+        "git_blob": "63abe2ec0f83ece40928ffe7b56943d68adf0da0",
+        "sha256": "9d5d5b0e7691fb158c535d892ceb3efb18101f906bb389ebff3299884a9415c9",
+        "bytes": 567624
+      },
+      {
+        "name": "libGLX.so.0",
+        "path": "squashfs-root/usr/lib/x86_64-linux-gnu/libGLX.so.0.0.0",
+        "git_blob": "9fa9f8394eee6db7fbce55294341b7af8964e977",
+        "sha256": "49014a53a095e06895628bffb5530dae963ccdc803f8752d587d77e08e793f01",
+        "bytes": 68144
+      },
+      {
+        "name": "libGLdispatch.so.0",
+        "path": "squashfs-root/usr/lib/x86_64-linux-gnu/libGLdispatch.so.0.0.0",
+        "git_blob": "0887ca59e896478f6dd72a77ee8ea971ece23da9",
+        "sha256": "2ac91fdda3fd504f2368855bb15d9f5a14ed66a3966774c3eb8965bb8e6af7ba",
+        "bytes": 612792
+      },
+      {
+        "name": "libEGL.so.1",
+        "path": "squashfs-root/usr/lib/x86_64-linux-gnu/libEGL.so.1.0.0",
+        "git_blob": "c6a778c22080f8addb7b975c6faa13c717457b6b",
+        "sha256": "12f84b62738df3a799d85e8b49a0a990526fb2ee86e08fc9e5a8109c73c9c6e1",
+        "bytes": 80448
+      },
+      {
+        "name": "libxkbcommon.so.0",
+        "path": "squashfs-root/usr/lib/x86_64-linux-gnu/libxkbcommon.so.0.0.0",
+        "git_blob": "4c75e2251b68e714bcda482a16f384d8b101bfdf",
+        "sha256": "9bc7b4d7c398c0ff85568e146eb26c1581686a4569e196b31c3e41b3da1a67ba",
+        "bytes": 256424
+      },
+      {
+        "name": "libdbus-1.so.3",
+        "path": "squashfs-root/lib/x86_64-linux-gnu/libdbus-1.so.3.19.4",
+        "git_blob": "d9ad0097405bb1ad91d71358a6f6d238e9b454c7",
+        "sha256": "faadeebe757f55c6dc3cf6d859fabc3c3fd06f48b59949a459a23d8b619844f9",
+        "bytes": 313496
+      }
+    ],
+    "scope": "Linux Qt offscreen test environment only; not shipped"
+  },
+  "windows_components": "reuse exact audited Windows x86 compiler and pycdc bundle from dev4; no Linux binaries shipped",
+  "full_user_c727_archive_available": false,
+  "windows_execution": "not-tested",
+  "client_semantics": "not-tested"
+}

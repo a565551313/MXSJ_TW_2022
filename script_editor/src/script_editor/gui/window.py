@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QMainWindow,
     QMessageBox,
+    QPushButton,
     QTreeWidgetItem,
 )
 
@@ -19,6 +20,7 @@ from ..core.inspection.encoding import byte_literal
 from ..core.services.bundled_catalog import bundled_catalog
 from ..core.services.files import read_source, save_source
 from .build_actions import BuildActions
+from .corpus_actions import CorpusActions
 from .jobs import Job
 from .module_actions import ModuleActions
 from .project_actions import ProjectActions
@@ -26,7 +28,9 @@ from .source_tab import SourceTab
 from .workspace import Workspace
 
 
-class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow):
+class Window(
+    Workspace, ModuleActions, ProjectActions, BuildActions, CorpusActions, QMainWindow
+):
     def __init__(self, runtime_root: Path, settings=None):
         super().__init__()
         self.runtime_root = runtime_root
@@ -34,6 +38,9 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
         self.archives: list[ArchiveDocument] = []
         self.bindings = []
         self.catalogs = []
+        self.corpora = {}
+        self.corpus_refs = []
+        self.saved_workspace = {}
         self.built_texts = {}
         self.module_names = {}
         self.project_dirty = False
@@ -70,7 +77,7 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
         self.output_dock.show()
         QMessageBox.warning(self, "操作未完成", str(message))
 
-    def task(self, function, complete):
+    def task(self, function, complete, *, cancel=None):
         if self.jobs:
             return
         job = Job(function)
@@ -88,9 +95,17 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
         for action, _ in actions:
             action.setEnabled(False)
         self.statusBar().showMessage("后台处理中…")
+        cancel_button = None
+        if cancel is not None:
+            cancel_button = QPushButton("取消恢复（保留已有编辑）")
+            cancel_button.clicked.connect(lambda: cancel.set())
+            self.statusBar().addPermanentWidget(cancel_button)
 
         def finish(result, error=False):
             self.jobs.discard(job)
+            if cancel_button is not None:
+                self.statusBar().removeWidget(cancel_button)
+                cancel_button.deleteLater()
             self.centralWidget().setEnabled(True)
             for dock, enabled in dock_states:
                 dock.setEnabled(enabled)
@@ -99,6 +114,9 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
                 action.setEnabled(enabled)
             self.refresh_native_action()
             self.statusBar().showMessage("就绪 · 原生写包需关联源码并通过清单确认")
+            if cancel is not None and cancel.is_set():
+                self.statusBar().showMessage("恢复已取消；原包及已有编辑未修改")
+                return
             if error:
                 self.fail(result)
             else:
@@ -169,8 +187,8 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
                     self.catalogs.append(catalog)
                     self.project_dirty = True
                     self.info.setPlainText(
-                        "已按完整原包指纹自动匹配内置解码参数，并核对参数SHA256。"
-                        "\n双击条目尝试恢复编辑；此匹配不等于全部模块均已支持。"
+                        "已按完整包指纹自动匹配内置解码参数，并核对参数SHA256。"
+                        "\n原包/已登记测试派生包均逐条严格解码；双击条目尝试恢复编辑。\n匹配参数不等于源码可信或全部模块均已支持。"
                     )
                 elif warning:
                     self.info.setPlainText("内置参数不可用，原包仍可浏览：" + warning)
@@ -263,8 +281,10 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
         tab.editor.undoAvailable.connect(self.refresh_native_action)
         tab.editor.redoAvailable.connect(self.refresh_native_action)
         tab.editor.textChanged.connect(self.analysis_timer.start)
+        tab.editor.textChanged.connect(lambda: setattr(self, "project_dirty", True))
         tab.editor.cursorPositionChanged.connect(self.update_cursor)
         tab.vm.currentIndexChanged.connect(self.refresh_native_action)
+        tab.vm.currentIndexChanged.connect(lambda: setattr(self, "project_dirty", True))
         tab.adopt_button.clicked.connect(self.adopt_recovery)
         self.refresh_tab_title(tab)
         self.refresh_native_action()
@@ -352,6 +372,7 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
                 raise ValueError("已取消另存恢复草稿，编辑内容保留")
             if saved:
                 return
+        self.assert_writable_target(tab.path)
         save_source(
             tab.path,
             tab.editor.toPlainText(),
@@ -368,6 +389,8 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
     def confirm_tab(self, tab):
         if not tab.editor.document().isModified():
             return True
+        if self.saved_workspace.get(tab.path) == tab.editor.toPlainText():
+            return True  # Current buffer is durably saved inside the project.
         reply = QMessageBox.question(
             self,
             "源码未保存",
@@ -392,6 +415,7 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
         if self.confirm_tab(tab):
             self.tabs.removeTab(index)
             tab.deleteLater()
+            self.project_dirty = True
 
     def encode(self, codec):
         try:

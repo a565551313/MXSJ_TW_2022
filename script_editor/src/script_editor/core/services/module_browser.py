@@ -10,11 +10,19 @@ import json
 import subprocess
 import sys
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from ..inspection.native import inspect_module
 from ..vm.marshal_tree import parse
+from .pycdc_engine import discover_pycdc
+from .recovery_candidates import (
+    RecoveryCandidate,
+    best_candidate,
+    primary_candidate,
+    pycdc_candidate,
+)
+from .recovery_process import RecoveryCancelled, RecoveryProcessError, run_bounded
 
 
 @dataclass(frozen=True)
@@ -31,6 +39,23 @@ class ModuleReport:
     disassembly: str
     diagnostics: tuple[str, ...]
     stored_preview: str
+    candidates: tuple[RecoveryCandidate, ...] = ()
+    selected_engine: str = "uncompyle6"
+    corpus_manifest_sha256: str = ""
+    candidate_pyc_sha256: str = ""
+    origin_verified: bool = True
+
+    def for_candidate(self, index):
+        candidate = self.candidates[index]
+        if not candidate.source:
+            raise ValueError("此候选没有源码主体，请查看诊断")
+        return replace(
+            self,
+            source=candidate.source,
+            complete=candidate.complete,
+            diagnostics=candidate.diagnostics,
+            selected_engine=candidate.engine,
+        )
 
     def metadata(self):
         return {
@@ -46,10 +71,15 @@ class ModuleReport:
             "source_status": "recovered-draft-not-original-not-reviewed",
             "diagnostics": list(self.diagnostics),
             "stored_preview_hex": self.stored_preview,
+            "selected_engine": self.selected_engine,
+            "corpus_manifest_sha256": self.corpus_manifest_sha256,
+            "candidate_pyc_sha256": self.candidate_pyc_sha256,
+            "origin_verified": self.origin_verified,
+            "candidates": [c.metadata() for c in self.candidates],
         }
 
 
-def recover_standard(pyc: bytes, vm: str, *, timeout=30):
+def _recover_primary(pyc: bytes, vm: str, *, timeout=30, cancel=None):
     if vm not in {"py25", "py27"}:
         raise ValueError("unknown recovery VM")
     if (
@@ -76,18 +106,37 @@ def recover_standard(pyc: bytes, vm: str, *, timeout=30):
         source, output = root / "standard.pyc", root / "result.json"
         source.write_bytes(pyc)
         try:
-            completed = subprocess.run(
-                [*command, "--input", str(source), "--output", str(output), "--vm", vm],
-                cwd=root,
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                timeout=timeout,
-                check=False,
-                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-            )
+            arguments = [
+                *command,
+                "--input",
+                str(source),
+                "--output",
+                str(output),
+                "--vm",
+                vm,
+            ]
+            if cancel is not None:
+                bounded = run_bounded(
+                    arguments, timeout=timeout, cancel=cancel, cwd=root
+                )
+                if bounded.status == "cancelled":
+                    raise RecoveryCancelled("恢复已取消；原包及已有编辑未修改")
+                if bounded.status != "finished":
+                    raise RecoveryProcessError(bounded.status)
+                completed = subprocess.CompletedProcess(arguments, bounded.returncode)
+            else:
+                completed = subprocess.run(
+                    arguments,
+                    cwd=root,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=timeout,
+                    check=False,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                )
         except subprocess.TimeoutExpired as exc:
-            raise ValueError("恢复引擎超过时间限制；模块未执行、原包未修改") from exc
+            raise RecoveryProcessError("timeout") from exc
         if completed.returncode or not output.is_file():
             raise ValueError(f"恢复引擎失败，退出码{completed.returncode}")
         with output.open("rb") as stream:
@@ -113,10 +162,93 @@ def recover_standard(pyc: bytes, vm: str, *, timeout=30):
             or len(result["disassembly"]) > 3 * 1024 * 1024
         ):
             raise ValueError("recovery text exceeds limit")
+        for key in ("raw_source", "worker_stdout", "worker_stderr"):
+            if key in result and (
+                not isinstance(result[key], str) or len(result[key]) > 2 * 1024 * 1024
+            ):
+                raise ValueError("invalid bounded recovery diagnostic")
         return result
 
 
-def read_module(archive, index, catalog=None):
+def recover_standard(pyc: bytes, vm: str, *, timeout=30, pycdc=None, cancel=None):
+    # Validate before discovery/copying/executing either parser.
+    if vm not in {"py25", "py27"} or pyc[:4] != {
+        "py25": bytes.fromhex("b3f20d0a"),
+        "py27": bytes.fromhex("03f30d0a"),
+    }.get(vm):
+        raise ValueError("recovery magic/VM mismatch")
+    parse(pyc[8:])
+    if cancel is not None and cancel.is_set():
+        raise RecoveryCancelled("恢复已取消")
+    notes = []
+    if pycdc is None:
+        try:
+            pycdc = discover_pycdc()
+        except (OSError, ValueError, TypeError) as exc:
+            notes.append("第二引擎未启用：" + str(exc))
+    try:
+        result = _recover_primary(pyc, vm, timeout=timeout, cancel=cancel)
+        primary = primary_candidate(result)
+    except RecoveryCancelled:
+        raise
+    except (OSError, ValueError) as exc:
+        if pycdc is None:
+            raise
+        result = {"disassembly": "", "diagnostics": []}
+        primary = RecoveryCandidate(
+            "uncompyle6",
+            "3.9.4.dev0",
+            getattr(exc, "status", "failed"),
+            "",
+            (str(exc),),
+        )
+    candidates = [primary]
+    if pycdc is not None:
+        try:
+            candidates.append(
+                pycdc_candidate(pycdc, pyc, vm, timeout=timeout, cancel=cancel)
+            )
+        except RecoveryCancelled:
+            raise
+        except (OSError, ValueError) as exc:
+            candidates.append(
+                RecoveryCandidate(
+                    "pycdc", str(pycdc.source_commit), "failed", "", (str(exc),)
+                )
+            )
+    else:
+        notes.append("未安装通过清单校验的第二引擎；当前仅使用uncompyle6。")
+    selected = best_candidate(candidates)
+    return {
+        **result,
+        "source": selected.source,
+        "complete": selected.complete,
+        "diagnostics": [*selected.diagnostics, *notes],
+        "candidates": tuple(candidates),
+        "selected_engine": selected.engine,
+    }
+
+
+def read_module(archive, index, catalog=None, *, pycdc=None, cancel=None, timeout=30):
+    if archive.vm == "py25" and index == 1288:
+        # Policy exclusion precedes payload, source name, preview and recovery.
+        archive._assert_unchanged()
+        return ModuleReport(
+            archive.path,
+            archive.fingerprint(),
+            index,
+            archive.entries[index].identity,
+            archive.vm,
+            "",
+            "",
+            "",
+            False,
+            "",
+            ("excluded_by_policy：1288不生成源码、pyc或存储预览。",),
+            "",
+            (),
+            "",
+        )
     metadata = archive.entry_metadata(index)
     oversized = archive.entries[index].size > 64 * 1024 * 1024
     if oversized:
@@ -136,7 +268,9 @@ def read_module(archive, index, catalog=None):
         standard, name, _ = inspect_module(archive, index, catalog)
         filename = name.hex()
         standard_sha = hashlib.sha256(standard).hexdigest()
-        result = recover_standard(standard, archive.vm)
+        result = recover_standard(
+            standard, archive.vm, pycdc=pycdc, cancel=cancel, timeout=timeout
+        )
     except (OSError, ValueError, KeyError) as exc:
         result["diagnostics"] = [f"不能恢复此条目：{exc}"]
     archive._assert_unchanged()
@@ -153,4 +287,6 @@ def read_module(archive, index, catalog=None):
         result["disassembly"],
         tuple(result["diagnostics"]),
         stored[:256].hex(" "),
+        result.get("candidates", ()),
+        result.get("selected_engine", ""),
     )

@@ -107,7 +107,7 @@ def ensure_dependencies() -> bool:
         return False
     missing = find_missing(RECOVERY_REQUIREMENTS)
     if not missing:
-        _say("依赖检查通过：Qt及独立恢复引擎已就绪。")
+        _say("依赖检查通过：Qt及主恢复引擎已就绪。")
         return True
     _say(
         "正在安装支持当前Python的恢复引擎；使用包内固定提交源码，不使用旧版xdis6.1.8。"
@@ -127,6 +127,27 @@ def ensure_dependencies() -> bool:
     _say(
         "请保留上面的具体错误；版本冲突不是换镜像就能解决，也不要强制忽略Python版本限制。"
     )
+    return True
+
+
+def check_secondary_engine() -> bool:
+    """Optional for opening drafts, mandatory for a complete dual-engine check."""
+    from script_editor.core.services.pycdc_engine import discover_pycdc
+
+    try:
+        engine = discover_pycdc()
+    except (OSError, ValueError, TypeError) as exc:
+        _say(f"第二恢复引擎未通过校验：{exc}；已有稿仍可打开。")
+        return False
+    if engine is None:
+        _say("第二恢复引擎尚未安装；主引擎和已有编辑仍可用。")
+        _say("源码开发目录由维护者运行 build_recovery_engine.py 准备本机引擎；")
+        _say(
+            "Windows 完整源码发行包必须预装对应程序/许可证/完整源码，"
+            "不自动下载未知程序。"
+        )
+        return False
+    _say("第二恢复引擎清单/程序/许可证/完整源码校验通过；尚非恢复正确性验收。")
     return True
 
 
@@ -160,6 +181,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     if install_only:
         return 2 if find_missing(RECOVERY_REQUIREMENTS) else 0
+    secondary_ready = check_secondary_engine()
     try:
         __import__("PySide6.QtWidgets")
     except (ImportError, importlib.metadata.PackageNotFoundError):
@@ -170,6 +192,9 @@ def main(argv: list[str] | None = None) -> int:
     if check_only:
         if find_missing(RECOVERY_REQUIREMENTS):
             _say("完整自检失败：恢复引擎未就绪；普通启动仍可打开界面。")
+            return 2
+        if not secondary_ready:
+            _say("完整自检失败：第二恢复引擎未就绪；普通启动仍可打开界面。")
             return 2
         from script_editor.core.compiler.distribution import audit_runtimes
 

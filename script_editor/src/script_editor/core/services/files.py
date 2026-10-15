@@ -53,14 +53,19 @@ def save_new_source(path: Path, text: str, protected: Iterable[Path] = ()) -> No
     """Publish a new .py without overwriting any existing path, including races."""
     if path.suffix.lower() != ".py":
         raise ValueError("源码必须保存为.py")
+    publish_new(path, text.encode("utf-8"), protected)
+
+
+def publish_new(path: Path, data: bytes, protected: Iterable[Path] = ()) -> None:
+    """Atomic no-clobber publication of a new document; never an input alias."""
     protected = tuple(protected)
     path = guard_output(path, protected)
     if path.exists() or path.is_symlink():
-        raise FileExistsError("请选择尚不存在的源码文件名，不覆盖已有文件")
+        raise FileExistsError("请选择尚不存在的文件名，不覆盖已有文件")
     fd, temporary = tempfile.mkstemp(prefix=".mxsource-", dir=path.parent)
     try:
         with os.fdopen(fd, "wb") as stream:
-            stream.write(text.encode("utf-8"))
+            stream.write(data)
             stream.flush()
             os.fsync(stream.fileno())
         guard_output(path, protected)

@@ -21,3 +21,12 @@ PEP610来源摘要及版本，不能把相同dev版本的其他提交误当已�
 GUI进程不导入GPL引擎；独立worker进程中适配xdis6.3的implementation枚举接口，并保留
 非UTF8字节常量（不使用其errors=ignore丢字节）；旧Unicode显示适配仍在。没有修改已安装上游文件、
 目标常量值或VM/opcode/加密边界。Windows独立EXE构建的对应源码归档也使用本文件，非失配的PyPI3.9.3。
+
+## 第二引擎 pycdc（独立 GPL-3.0 可执行程序）
+
+官方仓库 https://github.com/zrax/pycdc ，固定提交
+`b4289760970dbc399684f1e155ec6d1ea1cc787e`。
+完整源码归档 `pycdc-b4289760970dbc399684f1e155ec6d1ea1cc787e.tar.gz`，373,111 B，
+SHA256 `d7d8c53d37a1a586097145b532fca02535db2f2f0999b3b1e910133c9941bf31`。
+归档包含上游 GPL-3.0 许可证；由 `build_recovery_engine.py` 校验后独立构建、复制许可证和生成二进制清单。
+此引擎不替换 uncompyle6/xdis 固定依赖，不导入主 GUI，不执行目标模块。

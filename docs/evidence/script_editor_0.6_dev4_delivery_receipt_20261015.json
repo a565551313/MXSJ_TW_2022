@@ -1,0 +1,36 @@
+{
+  "file": "/home/user/script-editor-dev4/deliveries/MXSJ_ScriptEditor_0.6.0.dev4_source_with_compilers.zip",
+  "version": "0.6.0.dev4",
+  "source_commit": "3f708a098fb67d67a867d9090b49f5a159c9a549",
+  "files": 179,
+  "bytes": 39326132,
+  "sha256": "974c0bdcd7f454517aba2932eab4df0335aa26c81330ff03131a58a0a59369ac",
+  "md5": "876b1df8d3b57f0d10964c4a75d64374",
+  "zip_crc": "passed",
+  "manifest_checks": "all-file hashes and lengths passed",
+  "windows_runtime_audit": "static-only; both runtimes passed",
+  "pycdc_staging": "Windows metadata, binary/source/license/notices integrity verified; no execution",
+  "remote": {
+    "id": "1Si8vmiddOC43jAAyNO1zZjlPvpgPSL_3",
+    "name": "MXSJ_ScriptEditor_0.6.0.dev4_source_with_compilers.zip",
+    "parent_id": "1Oknzs5ftrOHpf_jy0vQasYRtJCPoBQmO",
+    "parent_name": "script_editor",
+    "bytes": 39326132,
+    "md5": "876b1df8d3b57f0d10964c4a75d64374",
+    "web_view_link": "https://drive.google.com/file/d/1Si8vmiddOC43jAAyNO1zZjlPvpgPSL_3/view",
+    "verified": "separate get_file after upload; name,parent,size,MD5 match local",
+    "permissions_changed": false,
+    "old_files_replaced": false
+  },
+  "extracted_zip_tests": {
+    "passed": 80,
+    "skipped": 0,
+    "seconds": 0.308,
+    "log_sha256": "9e967a0eb759ce6e06b427718358ef44312e63ed824b813f7675f2901aec8df6",
+    "scope": "56 layout/core/native-codec tests plus 24 runtime bundle guard tests; no full GUI/actual-VM baseline rerun"
+  },
+  "windows_execution": "not-tested",
+  "full_user_c727_archive_recovery": "not-tested",
+  "game_semantics": "not-tested",
+  "game_files_uploaded": false
+}

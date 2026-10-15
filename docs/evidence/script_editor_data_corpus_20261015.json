@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "date": "2026-10-15",
+  "version": "0.6.0.dev3",
+  "base_commit": "e72aac9",
+  "branch": "arena/61deb9e5-mxsj-tw-2022",
+  "scope": "data.fls VM2.7 opening/candidate caching; Linux, not Windows/client acceptance",
+  "tests": {
+    "count": 288,
+    "gui_count": 54,
+    "failures": 0,
+    "skips": 0,
+    "host": "Python 3.11.2/Linux; Qt6.10.3 offscreen",
+    "log_sha256": "87c48eff66cd6f8ec6df893865219dd498b7bc4474448e14338854408acb916b",
+    "required_ids_present": true
+  },
+  "full_data_build": {
+    "schema": 1,
+    "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+    "archive_vm": "py27",
+    "entries": 133,
+    "counts": {
+      "directory": 12,
+      "strict_decoded": 121,
+      "complete": 121,
+      "editable_candidates": 121,
+      "entries_with_syntax_pass": 121,
+      "both_engines": 121
+    },
+    "candidate_syntax": {
+      "pass": 198,
+      "fail": 22
+    },
+    "compiler": "2.7.13",
+    "target_executed": false,
+    "semantic_verification": false
+  },
+  "manifest_sha256": "0bd4e5367cc37dc2cb867460e98fc3d147a7d523bf4b8337ddfdb580ea17b8e9",
+  "artifact_references_rehashed": 1067,
+  "actual_gui_opened_scripts": 121,
+  "directories_not_treated_as_scripts": 12,
+  "negative_long_fix": {
+    "location": "separate GPL recovery worker only",
+    "upstream": "xdis6.3.0 unsigned t_long count",
+    "preserves_original_pyc_bytes": true,
+    "preserves_signed_integer_values": true,
+    "uuid_entry": 82,
+    "uuid_identity": "lib\\uuid.pyo",
+    "direct_no_cache_open_tested": true
+  },
+  "native_publish_smoke": {
+    "entry": 75,
+    "source": "test-only small probe, not full recovered game logic",
+    "vm": "py27",
+    "unchanged_entry_payloads": 132,
+    "full_standard_readback": true,
+    "embedded_filename_preserved": true,
+    "target_execution_sentinel_absent": true
+  },
+  "input_sha256": {
+    "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "data/data.fls": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+    "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+    "mxLauncher.exe": "3eeba17e7be96fcc43374c4f533d21048d3af20a6519b413ac2b46dc89183b63"
+  },
+  "not_claimed": [
+    "all-module game semantics",
+    "all-entry native publishing correctness",
+    "Windows/EXE/client runtime acceptance"
+  ],
+  "new_delivery_uploaded": false,
+  "merged": false,
+  "per_engine_status": {
+    "uncompyle6": {
+      "complete": 121
+    },
+    "pycdc": {
+      "complete": 84,
+      "failed": 37
+    }
+  },
+  "per_engine_candidate_syntax": {
+    "uncompyle6": {
+      "pass": 121
+    },
+    "pycdc": {
+      "pass": 77,
+      "fail": 22
+    }
+  },
+  "static_checks": {
+    "ruff": "passed",
+    "git_diff_check": "passed",
+    "windows_static": {
+      "scanned_files": 108,
+      "errors": 0,
+      "warnings": 0,
+      "info": 0
+    }
+  }
+}

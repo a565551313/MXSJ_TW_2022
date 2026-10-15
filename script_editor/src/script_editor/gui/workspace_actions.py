@@ -338,6 +338,7 @@ class WorkspaceActions:
         menu.addAction(
             "重新读取未恢复条目", lambda: self.open_package_module(reload=True)
         )
+        menu.addAction("另开语料候选（保留当前稿）", self.open_corpus_module)
         associate = menu.addAction("关联当前源码到此条目…", self.associate)
         associate.setEnabled(
             bool(
