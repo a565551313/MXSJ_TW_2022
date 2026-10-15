@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 2170,
+  "annotation_sha256": "3c32bc2397114566c1fe35dcb32036ff695f33e9da4b0f734f0145f198e323e9",
+  "reviewer": "A_delegate",
+  "delegation": "2026-10-16用户明确授权：“H宕机了你审吧”。A总控代审，非独立H会话；不含领域正文或master合并授权。",
+  "decision": "changes_requested",
+  "note": "有限静态说明：24类/函数、7关键分支；含职责、资源/关联、修改问答与局限核对。退修：C1 总摘要称无代理“按电信/网通各发一次”，但else依据IsDianXin二选一target_idx=0或1，只有一次ConnectAttempt。其分支描述已经写对，摘要仍与之矛盾。 修订：将无代理摘要改为二选一发一次，保留有代理前两条各一次以及三处Fail双回调/Success未引用的缺失说明。 实际审核者为A代审，非独立H。详docs/evidence/script_manual_DE_A_delegated_review_20261016.md。"
+}

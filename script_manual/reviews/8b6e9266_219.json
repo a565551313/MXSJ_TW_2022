@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 219,
+  "annotation_sha256": "a88bd387abcc8e0edcb3f6a1dd0258a922ef149332c3f16f66e63238f8cee48d",
+  "reviewer": "A_delegate",
+  "delegation": "2026-10-16用户明确授权：“H宕机了你审吧”。A总控代审，非独立H会话；不含领域正文或master合并授权。",
+  "decision": "changes_requested",
+  "note": "有限静态说明：17类/函数、17关键分支；含职责、资源/关联、修改问答与局限核对。退修：D1 PushCall被写成主界面存在时立即func，否则排队；冻结候选本函数仅无条件_g_Callback.append((func,args))，没有主界面判断或直接调用。Recall还出现cl = [_[1] for x in _g_Callback]的变量不对应形态，不能直接保证逐个回调成功。 修订：把PushCall改为候选字面的无条件排队，移除不存在的func直接调用；Recall只说明声明的回调/清队列代码并登记推导式异常及执行成败待核。不要修写候选或按历史实现补逻辑。 实际审核者为A代审，非独立H。详docs/evidence/script_manual_DE_A_delegated_review_20261016.md。"
+}

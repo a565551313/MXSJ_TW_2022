@@ -1,5 +1,7 @@
 # 项目当前状态（STATUS）
 
+> **已合并现有成果并重新分给全新agent（2026-10-16）**：按用户授权，PR38/35/36/37及D固定提交均已合A，master未动。现**5135登记/20说明/3有限通过/5退修review/12待审/1排除**，合并不等于验收；B签名、C/F内容问题仍在。八份原A代审按原字节SHA核对后已激活，G不自批。全新N1–N7独立任务卡已备好，**不是恢复旧会话，均尚待用户启动**：[复制任务卡入口](../script_manual/coordination/NEW_AGENTS_START_20261016.md)。详§3.48。
+
 > **G停工后A代写四篇已落盘（2026-10-16）**：固定包四条均baseline可读候选，两轮去六头正文4/4逐字节一致。新增hero/dlgitem/task/npc有限说明，**51函数/62分支**，含修改问答、上下游和951行可核摘录；任务模型变量/推导式异常等照实保留。实际author=A代写，不伪称G、不自批。正式现为**20种子/5说明/0通过**；其他领域PR未合。82项=71过+11 Qt缺libGL跳过，来源/ruff/静态/HTML与jsdom脚本验证通过（非浏览器/实机）。详§3.47。
 
 > **A代审首批完成（2026-10-16）**：用户明确授权“H宕机了你审吧”，不再等20篇或独立H。固定D1f6fdd3/E60c5739八篇的240条类/函数、118关键分支逐项审核：**interface/key/chatoutput三篇有限通过；mainmenu及E四篇退修，11项P2**。八份实际A_delegate审核记录已绑定原JSON SHA，暂存template避免正式孤立review；不是伪填H。工具dev3显示身份/授权/意见，原字节改变仍stale。**未合领域/目录，正式仍20种子/1说明/0通过**；外置A20种子+D/E覆盖20/9/3。两组各82项=71通过+11 Qt缺libGL跳过/0失败，jsdom脚本冒烟通过（非浏览器/Qt/实机）。PR37/38已纠正base到A。详§3.46，旧“等20篇”安排失效。
@@ -44,7 +46,7 @@
 
 | 组件 | 版本/阶段 | 状态 | 本次实测 |
 |---|---|---|---|
-| 脚本开发手册（`script_manual/`） | A工具0.1.0.dev3；正式20种子/5说明/0通过 | A代写G四篇51函数/62分支待非作者复核；D/E代审3有限通过、5退修仍未合；B/C/F待修 | 82项=71过+11 Qt缺libGL跳过；四候选正文双跑一致、951摘录行匹配；来源/ruff/静态/HTML与jsdom脚本通过；非全量/实机验收，详§3.47 |
+| 脚本开发手册（`script_manual/`） | dev3；合并态5135登记/20说明/3有限通过/1排除 | 5份有退修review、12待审（C/F仍有问题）；全新N1–N7任务卡待用户启动，不复用旧会话/PR | 82项=71过+11 Qt缺libGL跳过；严格来源/full、ruff含spec、静态/完整HTML与jsdom验证通过；合并非语义/实机验收，详§3.48 |
 | 独立脚本编辑器（`script_editor/`） | 0.6.0.dev6 路径导航完整源码包已交付 | script路径优先、旧项目/参数确认/新包路径索引，严格恢复与双VM续编不放宽 | 源码/真实ZIP解压副本均325项中309通过、16许可外部材料跳过，60 GUI通过；原包路径4951/5002，51明确不可读；双Windows工具本轮重建/静态核验，未Windows/用户全包/游戏验收，详§3.39 |
 | 逆向研究（`notes/`, `work/`） | 结案：双 VM opcode 表、0SLF 目录/路径哈希、`.dlg` 2,706/2,901、协议号表 412 条、帧续读 2 字节；10-15 新增标题/聊天编码链路与 `GCODE=BIG5`/`GetGameRegion()='cn'` 结案（`notes/title_and_chat_encoding.md`） | 稳定；未决项见 AGENTS §7 | 锁定输入 SHA 匹配；`script.fls` 全量反编译补跑 4401/5002 完整（生成物不入库） |
 | 注册 UI 补丁（`tools/client_patches/`，历史） | v3.3 已作废 | 用户判定旧 overlay/整图烤字按钮/包外散图不符合原生规范，**勿再分发 v3/v3.2/v3.3**；新实现见下行 | 90/90 仅历史证据，不作为新实现验收依据 |
@@ -1389,3 +1391,16 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 - 正式schema/来源SHA/行号校验过，现**20种子/5说明/0通过**，未使用B问题全量目录或声称full通过；其他领域PR仍未合，D/E三份有限通过仍在固定模板等待授权集成与原字节核对。
 - unittest82项=71通过+11 Qt缺libGL.so.1跳过/0失败；ruff含spec、Windows静态全0；外置HTML构建和jsdom26.1.0执行真实页面脚本通过，四中文词命中正确模块且均显示A作者/待审。非真实浏览器、Qt、Windows/EXE、游戏、原生或服务端验收。
 - 报告`docs/evidence/script_manual_G_A_draft_20261016.md`；机器收据`docs/evidence/script_manual_G_A_draft_validation_20261016.json`，含stored/pyc/candidate/正文/JSON摘要、两轮复现与测试产物指纹。未改原包/参数/编辑器/启动器，未上传或合任何领域PR。
+
+
+## 3.48 用户授权先合并再重新分配给全新agent（2026-10-16）
+
+- 用户明确要求先合现有成果，再按合并后实际进展分给全新agent，不是原会话。A开工前9880457已推且干净；仅在固定A分支操作，不合master。
+- `gh pr merge 38/35/36/37 --merge`分别执行成功并读回merged；对应合并7a0a05a/82d42b3/ccf602c/dbf3406。D无PR，按授权以固定1f6fdd3非快进merge为7d32e5340b0ab4168f725d238d767ad6232f715d并推A；G四篇已在9880457，无重复合入。
+- 激活八份此前真实A_delegate审核前，逐个比较合入正文原JSON SHA全部相同；三有限通过interface/key/chatoutput，mainmenu和四网络五退修。旧templates不改、只载canonical `reviews/8b6e9266_<entry>.json`，没有给G自批或新造H记录。
+- 当前**5135登记/20说明/3通过/5退修review/12pending/1排除**；无关联警告。C155/30、D83/75、E157/43、F259/10、G51/62，共705函数记录/220分支；F173条多为名称底稿，不能说全部解释完。inventory128382只是结构记录，B的70/48签名和4条fallback仍需修，full/schema通过不闭合语义。
+- 全新任务：N1目录，N2登录/main，N3主菜单D1及保护已过三篇，N4四网络10项，N5战斗补解释/证据，N6接管A代写gameplay，N7全新独立H角色按批复核。七份自包含卡在`script_manual/coordination/new_agents_20261016/N1.md`至N7.md，入口`NEW_AGENTS_START_20261016.md`，机器分派`reassignment_20261016.json`。全部awaiting_new_agent_start，不冒称已启动/联系；原逻辑owner仅兼容目录归属，新作者/审核note记实际新会话。
+- 新人各用系统给的固定分支先合A基线，不能切旧B–H分支，不能再更新已合PR35–38，只开新PR到A。领域只改自己路径，N7只审不代写，main仅N2；N3避免改共用来源让三份有效审核失效。A保留工具/schema/总表/状态。
+- 此轮并行先修当前20篇及目录，不再等20篇齐备，也不扩5000模块/下载全量79MB语料。N7可先审G四篇，随新PR就绪独立核定原字节SHA；未合正文的review暂存template以免孤立记录。
+- 合并态严格来源/full验证通过；82项=71通过+11 Qt缺libGL.so.1跳过/0失败；ruff含spec、Windows静态全0；完整20说明单HTML与jsdom脚本验证通过。无真实浏览器/Qt、Windows/EXE、游戏/原生/实服验收；生成站点/依赖留仓库外。
+- 报告`docs/evidence/script_manual_integration_reassignment_20261016.md`；同名JSON收据含合并ID、激活SHA、分域/审核统计、任务卡指纹和本轮验证。原包/参数/分析基线未变，仅baseline注释说明现目录来源与待修边界。

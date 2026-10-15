@@ -2,7 +2,7 @@
 
 独立、只读的脚本字典工具。**JSON 是唯一底稿**，PySide6 查看器和离线单 HTML 共用校验/索引层，不导入或执行游戏脚本，不修改游戏包、脚本编辑器或启动器。
 
-本版是 **A 总控底座**，不是全量分析：20 条历史路径种子目录、C–G 各4个任务、1份公告模块格式样板及G停工后由A代写的4篇有限说明（均待复核）；全量目录交 B，领域说明交 C–G，复核原交 H；2026-10-16 用户授权 H 宕机期间由 A 代审，记录实际身份而非伪称独立审核。当前进度和测试以 [`../docs/STATUS.md`](../docs/STATUS.md) 为准。
+本轮已按用户授权把现有成果合到 **A集成分支（不是master）**：5135条目录登记、20份说明、3份有限通过、5份有退修审核、12份无有效审核。**合并不等于验收**：B目录签名仍有已知错误，F多条仅名称底稿，其他说明也有有限范围/待修项。历史A代审实际标A_delegate，不冒称独立H。用户决定重新分配给**全新agent**，直接复制 [N1–N7新任务卡](coordination/NEW_AGENTS_START_20261016.md)；不再复用旧会话或旧PR。当前进度和测试以 [`../docs/STATUS.md`](../docs/STATUS.md) 最新§3.48为准。
 
 ## 开始使用
 
@@ -23,11 +23,13 @@ PYTHONPATH=script_manual/src python -m mxsj_manual build --verify-evidence --rep
 - 输出目录**必须不存在且在仓库/手册输入目录之外**；重复导出用新目录，绝不覆盖旧站点。
 - `index.html` 双击可用，无服务端、网络请求或外部字体；可以整目录拷到别的电脑。`BUILD.json` 记录工具版本、输入文件摘要、覆盖数及 HTML 摘要。生成失败保留 `INCOMPLETE.txt`，不得分发未完成目录。
 - `--verify-evidence` **仅**复核注释引用的文本字节 SHA256 和行号；不检查原始包、不做语义验证。冻结原包指纹另见 `coordination/baseline.json`。未加此选项时，页面明确标记证据“本次未校验”。不要求分发原包或79 MB语料。
-- `--require-full-inventory` 可与 validate/build 配合，要求冻结包**全部登记条目**齐全（含目录、不可读及政策排除元记录）。现阶段20条会明确失败，不冒充全量。总量5135是5002+133条登记，并非5135份可执行源码。
+- `--require-full-inventory` 可与 validate/build 配合，要求冻结包**全部登记条目**齐全（含目录、不可读及政策排除元记录）。本轮5135条登记可通过此结构闸门，但B签名/回执待修，不能据此宣称元数据语义全部正确。总量5135是5002+133条登记，并非5135份可执行源码。
 - `--content PATH` 在子命令**之前**指定另一份完整数据目录；目录必须包含同版schema、coordination、inventory、annotations、reviews。
 - 搜索多个词取交集，路径反斜杠会归一化；功能关键词只能搜到已经编写的说明。搜不到不代表功能不存在。
 
 ## 给并行 Agent 的入口
+
+**新一轮只按 [NEW_AGENTS_START_20261016.md](coordination/NEW_AGENTS_START_20261016.md) 的N1–N7卡分配给新会话**。下列契约/逻辑owner映射继续生效，但旧B–H分支与“更新原PR”不再是新人操作指令。
 
 1. 先读 [`docs/CONTRACT.md`](docs/CONTRACT.md) — 字段、证据与版本规则。
 2. 读 [`docs/AGENT_TASKS.md`](docs/AGENT_TASKS.md) — 权限边界和各任务卡。

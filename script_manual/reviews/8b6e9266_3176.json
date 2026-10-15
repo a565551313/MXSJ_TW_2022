@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 3176,
+  "annotation_sha256": "e00bd3e82ff47faf1d93b4f29a4916a54c484ce252c84a023850619ba9039a1d",
+  "reviewer": "A_delegate",
+  "delegation": "2026-10-16用户明确授权：“H宕机了你审吧”。A总控代审，非独立H会话；不含领域正文或master合并授权。",
+  "decision": "changes_requested",
+  "note": "有限静态说明：52类/函数、23关键分支；含职责、资源/关联、修改问答与局限核对。退修：N1 说明把记录m_NetHead放在原生PacketPrepare之前；候选顺序是先CNetClient.PacketPrepare(self,a)，再self.m_NetHead=a。 修订：按候选纠正调用顺序；不要据此承诺原生发送/回调行为。 N2 “每轮2包”漏掉帧率缩放。候选先写一次原生2，但随后UNPACK_PACKET_NUM_PER_PROCESS=2/iRate并再次回写；例如iRate=2时末次设值是1。 修订：区分初次写2和最后按帧率缩放回写，不把最终预算恒定写成2；原生是否采纳未验。 N3 GetServerName候选含serverinfo = [_[1] for x in s.splitlines() if x.strip() != '']，表达式不随循环变量x取行，不能无条件解释为正常读取各服务器记录后匹配。另类级已注明低优先队列赋值异常，但Loop函数摘要仍写“否则低”，容易把已知未结控制流当作可用路径。 修订：明确GetServerName候选推导式异常、正常查名行为待核；Loop函数摘要同步限定“声明的高/低选择意图”，不把低优先路径写成已确认能消费。可保留两段候选字面，不要求修复游戏。 实际审核者为A代审，非独立H。详docs/evidence/script_manual_DE_A_delegated_review_20261016.md。"
+}

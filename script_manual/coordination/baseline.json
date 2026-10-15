@@ -30,6 +30,6 @@
   "inventory_seed_source": {
     "path": "server/docs/catalog/script_entries.jsonl",
     "sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
-    "note": "仅20条历史目录种子；保留旧catalog定位，不代表本轮逐条读原包；历史函数名不作为已验证签名。"
+    "note": "历史20条种子的旧catalog定位来源，保留用于回归；现行全目录已合B的5135登记，来源见inventory/B_extraction_receipt.json。全目录的签名/拒绝fallback记录仍待新N1修复；历史函数名不作为已验证签名。分析repository_commit/原包指纹未改变，不把本注释更新称为语义验收。"
   }
 }

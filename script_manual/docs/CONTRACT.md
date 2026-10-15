@@ -46,6 +46,8 @@ B把完整目录替换这个单文件，保留20个初始身份（路径若确�
 
 ## 4. 任务归属与H审核
 
+2026-10-16现有成果经用户授权已合A；新执行会话按 `coordination/reassignment_20261016.json` 的N1–N7分派。C–G及H是逻辑任务包/审核角色，不等于旧会话。新作者在author记实际新会话，H角色note记实际N7；旧A_delegate历史身份不变，合并不改变审核判断。
+
 `coordination/tasks.json` 由A唯一维护，主负责人/domain固定映射：C/login、D/ui_chat、E/network、F/battle、G/gameplay。跨域只有一个owner，其他人通过协审报告向owner/A反馈，不重复建档。
 
 正文作者不能把自己设成审核通过。常规独立复核由H提交，用户明确授权时由A以A_delegate代审，在 `reviews/*.json` 单独提交 `$defs.review`：schema_version、身份、annotation_sha256（**实际JSON文件原字节SHA**）、reviewer="H"（或用户明确授权的 `A_delegate`）、decision(accepted/changes_requested)、note。`reviews/example.json.template` 仅示意，不加载。
