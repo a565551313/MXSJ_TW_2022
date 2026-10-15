@@ -177,7 +177,9 @@ strings -a -n 5 mxLauncher.exe | grep -Ei 'ResLib|update\.ini|bk%d|Fonts|MX_SPLA
 ## 9. 已落地：把皮膚圖上的繁字改成簡體（「讓它別再亂碼/別再繁體」的最短路徑）
 
 2026-10-15 使用者選了 §8 的方案 ③（文字從「字」變成「圖」，與码页彻底脱鉤），並要求先看效果。已做完，
-產物在沙箱 `/home/user/scratch/`（**未入庫、未覆蓋原檔**）：`PNG_1_simplified.png`、`mxLauncher_simplified.exe`。
+產物在沙箱 `/home/user/scratch/`（**未入庫、未覆蓋原檔**）：`PNG_1_simplified.png`、`mxLauncher_simplified.exe`
+（1,646,592 B，sha256 `ca3bac9f95c92de3…`）。八個標籤的框與配色已固化成 `tools/data-parser/skin_labels.launcher.json`
+（**入庫**，因為沙箱重啟會把 `scratch/` 清掉：2026-10-15 就發生過一次，靠這個檔 5 分鐘重建完並驗證 PNG sha256 逐位元組相同）。
 
 做了什麼：啟動器整個版面其實是 `.rsrc` 裡那張 PNG（`PNG_1`，982x553，545,162 B，語言標 **2052 簡中**），
 「新手指引／官方網站／官方論壇／遊戲資料／進入遊戲／檢查更新／下載進度：／更新進度：」八個標籤是**畫死在圖裡**的。
@@ -186,7 +188,7 @@ strings -a -n 5 mxLauncher.exe | grep -Ei 'ResLib|update\.ini|bk%d|Fonts|MX_SPLA
 | 步驟 | 指令 |
 |---|---|
 | 1 抽出皮膚 | `python3 tools/data-parser/pe_resource_dump.py mxLauncher.exe --dump out` |
-| 2 改字（並湊長度） | `python3 tools/data-parser/skin_label_patch.py out/PNG_1.png new.png --labels labels.json --font Fonts/FZLanTingYuan-DB-GBK.ttf --pad-to 545162` |
+| 2 改字（並湊長度） | `python3 tools/data-parser/skin_label_patch.py out/PNG_1.png new.png --labels tools/data-parser/skin_labels.launcher.json --font Fonts/FZLanTingYuan-DB-GBK.ttf --pad-to 545162` |
 | 3 原位寫回 | `python3 tools/data-parser/pe_resource_patch.py mxLauncher.exe mxLauncher_new.exe --type PNG --name 1 --payload new.png --strip-signature` |
 
 **關鍵手法**（都寫進腳本了，換別張圖也能用）：
