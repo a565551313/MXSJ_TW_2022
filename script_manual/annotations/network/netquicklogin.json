@@ -1,0 +1,756 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 871,
+  "path": "script/netquicklogin.py",
+  "owner": "E",
+  "domain": "network",
+  "author": "E（网络）",
+  "source_status": "recovered_complete_not_original",
+  "purpose": {
+    "text": "断线瞬连（快速重登）：保存一次性LoginKey、按子型收发快速登录协议、断线后周期重试连接并在Hello后交main恢复会话。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "q_struct_r",
+      "q_proto_r"
+    ]
+  },
+  "keywords": [
+    "瞬连",
+    "快速登录",
+    "LoginKey",
+    "断线重连",
+    "QUICKLOGIN",
+    "重登"
+  ],
+  "functions": [
+    {
+      "name": "ModuleReset",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "重置瞬连全局：LoginKey、计时器、连接对象、可瞬连标志、点击/失败标志与维护标志。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_state"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetHasClickQuickLogin",
+      "signature": "(bClick)",
+      "kind": "function",
+      "summary": {
+        "text": "记录用户已点击瞬连。",
+        "confidence": "extracted",
+        "evidence": [
+          "q_src_state"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetQuickLoginFail",
+      "signature": "(bFail)",
+      "kind": "function",
+      "summary": {
+        "text": "设置瞬连失败标志，供RefreshErrorMsg提示。",
+        "confidence": "extracted",
+        "evidence": [
+          "q_src_state"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "RefreshErrorMsg",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "若有瞬连失败标志，清标志并弹提示'重新連接失敗，請重新登錄'。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_state"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CLoginKey",
+      "signature": "(netobj)",
+      "kind": "function",
+      "summary": {
+        "text": "子型1接收：UnpackInt(4)取key、UnpackInt(1)取itype，保存g_LoginKey。字段宽度是本文件字面证据，服务端发送时机未证实。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_key"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CForceLoginOut",
+      "signature": "(netobj)",
+      "kind": "function",
+      "summary": {
+        "text": "子型2接收：读1字节，清LoginKey，剧本播放中则停剧本。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_key"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CQuickLoginFail",
+      "signature": "(netobj)",
+      "kind": "function",
+      "summary": {
+        "text": "子型3接收：恢复800x600、置失败标志、main.Restart回登录。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_key"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CDelLoginKey",
+      "signature": "(netobj)",
+      "kind": "function",
+      "summary": {
+        "text": "子型4接收：清LoginKey，剧本中则停剧本。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_key"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CQuickLogin",
+      "signature": "(netobj)",
+      "kind": "function",
+      "summary": {
+        "text": "GS2C_QUICKLOGIN（号表12）入口：先UnpackInt(1)子型，再按FUNC_DICT{1:LoginKey,2:ForceLoginOut,3:QuickLoginFail,4:DelLoginKey}分发，未知子型只打印。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_key"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "isub在FUNC_DICT(1..4)",
+          "effect": {
+            "text": "调用对应子处理并继续按其字段宽度解包。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "q_src_key"
+            ]
+          }
+        },
+        {
+          "condition": "isub不在FUNC_DICT",
+          "effect": {
+            "text": "只打印'找不到函數'，不抛错不断线，后续字节如何对齐未知。",
+            "confidence": "inferred",
+            "evidence": [
+              "q_src_key"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "C2SSendLoginKey",
+      "signature": "(key)",
+      "kind": "function",
+      "summary": {
+        "text": "客户端发送：以C2GS_QUICKLOGIN（号表13）起包，子型1(1字节)+key(4字节)后PacketSend；只证明客户端发送，不证明服务端受理。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_key"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SRequestQuickLogin",
+      "signature": "(key, pid)",
+      "kind": "function",
+      "summary": {
+        "text": "客户端发送：同号起包，子型2+key(4字节)+pid(4字节，缺省netserver.GetPlayerID())。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_key"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CQuickNet",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "瞬连专用连接对象（net.CNet子类）：注册1号Hello、失败只清连接对象等待下一轮重试。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CQuickNet.__init__",
+      "signature": "(self, proxy, ip, port)",
+      "kind": "method",
+      "summary": {
+        "text": "保存代理，m_Hello=False，注册m_NetFunction[1]=S2CHello（本模块版）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CQuickNet.OnConnectFail",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "打印并清g_ConnectObj（不弹框，下个偶数周期重试）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CQuickNet.OnError",
+      "signature": "(self, msg=None)",
+      "kind": "method",
+      "summary": {
+        "text": "打印并清g_ConnectObj。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CQuickNet.ConnectServer",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "有代理先连代理并NakedSend目标IP 4字节+端口4字节，无代理直连。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CHello",
+      "signature": "(netobj)",
+      "kind": "function",
+      "summary": {
+        "text": "瞬连Hello回调：清连接对象与连接计时器，调main.RestartQuickLogin(g_LoginKey, hero.g_ID)恢复会话；开头print_stack为调试形态待核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "NormalLogout",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "正常登出时若有LoginKey且有网络对象，先C2SSendLoginKey发送key再清本地key。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetMaintainFlag",
+      "signature": "(bMaintain)",
+      "kind": "function",
+      "summary": {
+        "text": "设置维护标志g_MaintainFlag（本文件内未见读取点，用途缺失）。",
+        "confidence": "inferred",
+        "evidence": [
+          "q_src_state"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Connect",
+      "signature": "(showdlg=True, sReason='')",
+      "kind": "function",
+      "summary": {
+        "text": "瞬连入口：从selectserver取上次代理/地址，可选弹重连中对话框（取消→清计时器+ShowError），再StartConnectTimer周期重试。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "showdlg为真",
+          "effect": {
+            "text": "弹'網絡異常斷開，嘗試重新連接中'框，取消回调清计时器并ShowError；sReason参数在本体内未见使用，触发原因靠调用方区分。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "q_src_conn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClearConnectTimer",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "释放并清空重连计时器g_Timer。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "IsQuickConnect",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "返回g_Timer对象本身作真值判定（正在瞬连重试中）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CanQuickConnect",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "需g_LoginKey且hero.g_ID同时存在才可瞬连。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "StartConnectTimer",
+      "signature": "(proxy, ip, port)",
+      "kind": "function",
+      "summary": {
+        "text": "以CreatePyCommand(30, done)周期重试：i>60放弃ShowError，偶数次且无连接对象时新建CQuickNet连接；30/60单位依赖原生，未证实为秒。",
+        "confidence": "inferred",
+        "evidence": [
+          "q_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "i > 60",
+          "effect": {
+            "text": "放弃重试并net.ShowError。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "q_src_conn"
+            ]
+          }
+        },
+        {
+          "condition": "i为偶数且g_ConnectObj为空",
+          "effect": {
+            "text": "新建CQuickNet并ConnectServer尝试一次。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "q_src_conn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "ProcessServerCmd",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "若有瞬连连接对象则驱动其ProcessServerCmd收包；供main每帧调用。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "StartQuickTimer",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "声明在QUICKLOGIN_SECOND=10后以DoQuickLoginConnect为回调建计时器——但按恢复稿字面，g_oStartQucikTimer为None时不启动（初始即None），真实是否生效待核。",
+        "confidence": "inferred",
+        "evidence": [
+          "q_src_late"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "g_oStartQucikTimer为真（恢复稿字面）",
+          "effect": {
+            "text": "才新建Timer(10, DoQuickLoginConnect)；初始/ModuleReset均为None且本文件无置真点，可能条件写反或反编译丢线。",
+            "confidence": "inferred",
+            "evidence": [
+              "q_src_late"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DoQuickLoginConnect",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "计时器回调：仅当g_bCanDoQuickLogin为真时清标志、Connect(False)并显示loading。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_late"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ClearQuickTimer",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "清可瞬连标志并释放快速计时器。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_late"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetCanQuickLogin",
+      "signature": "(bCanDoQuickLogin)",
+      "kind": "function",
+      "summary": {
+        "text": "设置g_bCanDoQuickLogin标志（由S2CPropInit等外部链置位，具体调用方不在样板内）。",
+        "confidence": "inferred",
+        "evidence": [
+          "q_src_late"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "protocol",
+      "target": "GS2C_QUICKLOGIN=12 / C2GS_QUICKLOGIN=13 (entry 3970号表)",
+      "summary": {
+        "text": "接收经net分发表符号注册、发送以符号起包；数值来自号表交叉，子型与字段宽度是本文件字面证据。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_gs2c",
+          "q_c2gs"
+        ]
+      }
+    },
+    {
+      "kind": "config",
+      "target": "QUICKLOGIN_SECOND = 10 与重连计数30/60",
+      "summary": {
+        "text": "计时参数字面值；真实时间单位依赖原生CreatePyCommand/Timer，未实测。",
+        "confidence": "inferred",
+        "evidence": [
+          "q_conn_r"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "selectserver.g_Proxy / g_LastVisit（上次连接地址）",
+      "summary": {
+        "text": "Connect取上次代理与ip/port重试；selectserver不在E样板内，数据来源未核对。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_conn"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3176
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 516
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4293
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "想改瞬连的协议子型或LoginKey字段，改哪里？",
+      "answer": {
+        "text": "接收看S2CQuickLogin的FUNC_DICT与各子处理UnpackInt宽度，发送看C2SSendLoginKey/C2SRequestQuickLogin的PacketAddI宽度；协议号本身在entry 3970。字段改动必须与服务端一致，服务端受理未证实，须联调/实机验证。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_key"
+        ]
+      }
+    },
+    {
+      "question": "重连间隔/次数想改，改哪里？",
+      "answer": {
+        "text": "周期在StartConnectTimer的CreatePyCommand(30,...)与i>60上限、延迟在StartQuickTimer的QUICKLOGIN_SECOND=10；但单位未证实且StartQuickTimer有条件异常待核，先核原生计时语义再改，不要按字面当秒。",
+        "confidence": "inferred",
+        "evidence": [
+          "q_src_conn"
+        ]
+      }
+    },
+    {
+      "question": "断线后不弹瞬连框/不重连，先查什么？",
+      "answer": {
+        "text": "查CanQuickConnect（LoginKey与hero.g_ID缺一不可）、g_LoginKey是否被S2CDelLoginKey/ForceLoginOut清掉、net.OnError的m_IsRelogin/m_IsExit抑制，以及main侧触发源（窗口改动也会调Connect）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_state"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "仓库内候选与本轮仓库外新恢复稿diff仅差恢复头6行（SHA见证据报告§4），仍非原始源码；完整恢复不等于行为正确，无实机验证下LoginKey的服务端有效期/受理规则未知。",
+    "StartQuickTimer条件异常（初始None却要求为真才启动）未回码对象复核，可能是原文写反或反编译丢线；DoDgwQuickLogin在main侧被调用但本文件无此定义（见协审报告），DGW瞬连流程缺失。",
+    "计时常数30/60/10/15（对话框计数）的单位依赖原生调度，未实测；S2CHello开头的print_stack调试形态是否原文如此待核。",
+    "g_MaintainFlag只写未见读、SetCanQuickLogin的置位调用方（S2CPropInit链）在样板外，均只登记符号不推断用途；无runtime_verified结论。"
+  ],
+  "sources": [
+    {
+      "id": "quick_src",
+      "path": "tools/decompiler/output/script_fls/script/netquicklogin.py",
+      "sha256": "36def1780a9bb229e98b850339eee91827ed6f6f972f330f52fa3f23183597b9",
+      "kind": "recovered_source",
+      "note": "uncompyle6历史恢复候选（无恢复头），与本轮仓库外定点恢复稿diff仅差6行头，已逐行核对；非原始源码。"
+    },
+    {
+      "id": "e_review",
+      "path": "script_manual/annotations/network/evidence_review_e_network.md",
+      "sha256": "4735b665278c12f9ec01172fe04764d44e39d9178b3d78d403dc00baff742b1c",
+      "kind": "recovered_source",
+      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块另见报告§4交叉核对；报告§1含工具/依赖版本、处理选项与去头正文摘要比对规则，本模块去头正文摘要与仓库内候选SHA一致。"
+    },
+    {
+      "id": "catalog",
+      "path": "server/docs/catalog/script_entries.jsonl",
+      "sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+      "kind": "metadata",
+      "note": "历史目录种子元数据（entry 871 行）；function_names_origin自述为历史解码未在本轮复核，仅作函数名交叉核对，不作语义证据。"
+    },
+    {
+      "id": "protocol_table",
+      "path": "work/dream-world-connect-login-map/artifacts/protocol_table/protocol_opcodes.json",
+      "sha256": "a464a9cf66d66de01b8ed6272ea7529217c5d1631f94509bd7ca773077a9c9d9",
+      "kind": "metadata",
+      "note": "entry 3970 script/protocol.py 号表产物（work研究区，自述marshal线性遍历未执行游戏代码，412赋值/409整型）；仅供协议号数值交叉，数值不在E样板源码内，不证明服务端行为。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "q_id",
+      "source_id": "e_review",
+      "start_line": 325,
+      "end_line": 397
+    },
+    {
+      "id": "q_struct_r",
+      "source_id": "e_review",
+      "start_line": 337,
+      "end_line": 350
+    },
+    {
+      "id": "q_proto_r",
+      "source_id": "e_review",
+      "start_line": 351,
+      "end_line": 373
+    },
+    {
+      "id": "q_conn_r",
+      "source_id": "e_review",
+      "start_line": 374,
+      "end_line": 397
+    },
+    {
+      "id": "q_catalog",
+      "source_id": "catalog",
+      "start_line": 872,
+      "end_line": 872
+    },
+    {
+      "id": "q_gs2c",
+      "source_id": "protocol_table",
+      "start_line": 239,
+      "end_line": 239
+    },
+    {
+      "id": "q_c2gs",
+      "source_id": "protocol_table",
+      "start_line": 62,
+      "end_line": 62
+    },
+    {
+      "id": "q_hello",
+      "source_id": "protocol_table",
+      "start_line": 228,
+      "end_line": 228
+    },
+    {
+      "id": "q_src_key",
+      "source_id": "quick_src",
+      "start_line": 58,
+      "end_line": 131
+    },
+    {
+      "id": "q_src_conn",
+      "source_id": "quick_src",
+      "start_line": 133,
+      "end_line": 265
+    },
+    {
+      "id": "q_src_state",
+      "source_id": "quick_src",
+      "start_line": 18,
+      "end_line": 62
+    },
+    {
+      "id": "q_src_late",
+      "source_id": "quick_src",
+      "start_line": 266,
+      "end_line": 307
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "message",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3176
+      },
+      "symbol": "net.NET_FUNCTION_NAME[GS2C_QUICKLOGIN] -> S2CQuickLogin",
+      "summary": {
+        "text": "主通道按GS2C_QUICKLOGIN符号把收包动态分发到本模块S2CQuickLogin。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_proto_r"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4293
+      },
+      "symbol": "main.RestartQuickLogin",
+      "summary": {
+        "text": "瞬连Hello后交main恢复会话（保存/恢复状态后重建连接）；main正文由C负责，见协审报告。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_conn"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 516
+      },
+      "symbol": "netserver.GetPlayerID",
+      "summary": {
+        "text": "C2SRequestQuickLogin缺省pid取选服阶段保存的玩家ID。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_src_key"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3176
+      },
+      "symbol": "net.CNet.OnError -> netquicklogin.Connect",
+      "summary": {
+        "text": "主通道连接错误在可瞬连时调用本模块Connect发起重连。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "q_conn_r"
+        ]
+      }
+    }
+  ]
+}
