@@ -144,3 +144,32 @@ md5sum mxLauncher.exe patch/mx.bin          # 相同 ⇒ mx.bin 就是启动器�
 python3 -c "print(open('update.ini',encoding='utf-8').read())"
 strings -a -n 5 mxLauncher.exe | grep -Ei 'ResLib|update\.ini|bk%d|Fonts|MX_SPLASH'
 ```
+
+## 8. 启动器自己的「文本乱码」：已定位到码页，不是渲染 bug
+
+结论：**`mxLauncher.exe` 是 ANSI 建的档，它把所有文字都过一遍「系统 ANSI 码页」**，
+所以在非 936（GBK）的系统上，资源里的简体字必然出问题；这跟游戏内文本是两套原因，别一起治。
+
+实测依据（都是正面证据，不是「strings 搜不到」那种否定推断）：
+
+- USER32 导入表只有 A 系：`CreateWindowExA`、`SetWindowTextA`、``GetWindowTextA`、
+  `DrawTextA`、`MessageBoxA`、`DefWindowProcA`；全表 **A 系 113 个 / W 系 10 个**。
+- 同表里存在 `GetACP`、`MultiByteToWideChar`、`WideCharToMultiByte`；串里**没有**
+  `big5` / `cp936` / `CP_UTF8` 之类字样 ⇒ 它不自己指定码页，完全跟随系统 ANSI 码页。
+- 资源侧的文字是 UTF-16（`.rsrc` 的 DIALOG 模板里就是「梦想世界更新程序」「确定」），
+  载入时 `UTF-16 → CP_ACP → UTF-16` 往返：CP_ACP=936 无损；CP950 会丢字或**变成另一个字**；
+  CP1252 直接变 `?`。
+- 字体是另一层：版式用 `MS Shell Dlg`，简中系统映射到宋体（含简体），繁中系统映射到
+  PMingLiU（**无简体字形 ⇒ 码页对了也还是方块**）。启动器自己只 `AddFontResourceA`
+  注册 `Fonts\FZLanTingYuan-DB-GBK.ttf` 给它的自绘控件用，管不到对话框字体。
+
+三种解法（成本从低到高，前两种都不用动 exe）：
+
+| 做法 | 效果 | 代价 |
+|---|---|---|
+| 系统「非 Unicode 程序的语言」= 中文(简体,中国)，重新登录 | 根治：A 系程序全走 936 | 影响整机其它程序 |
+| 用按程序模拟区域的工具（SLEA/NTLEA/AppLocale 一类）启 `mxLauncher.exe` | 只给这个进程换码页 | 多一层启动器；需 Windows 实机验 |
+| 把「字」从文字变成图：改 `.rsrc` 的 DIALOG 字串（清空/改英文）+ 皮肤 PNG 上重画简体字 | 与系统码页彻底无关，任何机器都一样 | 要写回 `.rsrc`（改前备份原 exe）；工作量小 |
+
+> 待办若要继续：写回 `.rsrc` 需要一个「替换资源载荷」的工具（读取器 `pe_resource_dump.py`
+> 已有；写回要处理对齐与 `SizeofResource`，并保留原签名失效的事实——改完必然没有 Authenticode）。
