@@ -450,6 +450,23 @@ python3 tools/decompiler/crosscheck_pycdc.py --out <語料目錄> \
 * 反向也有：75 條 uncompyle6 出得了、pycdc 直接崩（`vector::_M_range_check: __n … >= this->size()`、`std::bad_cast`）⇒ **單一引擎的成敗不構成結論**，兩邊要各留一份。
 * 定論殘餘：把 pycdc、uncompyle6、§4.5 修復梯全開之後仍**零產物的是 61 條**（56 條佔位 + 1 條無產物 + 4 條連轉譯都過不了：`1954`、`3066`、`4166`、`4691`）；清單寫在語料目錄 `residual_no_source.json`。覆蓋率 **4,941 / 5,002 = 98.78%**。
 
+#### 工具側硬化（2026-10-15，只改可見性、不改轉譯與解密）
+
+`tools/decompiler/batch_decompile.py` 補了三個護欄（`test_batch_decompile.py` 21 項）：
+
+1. 開跑前 `preflight()` 探測引擎：解釋器裡沒有 `uncompyle6` 時**直接拒絕**（以前會靜默把
+   5,002 條全寫成 52 字節佔位且退出碼 0）；要舊行為得顯式加 `--allow-missing-engine`。
+2. pycdc 不再只認硬編碼 `/usr/local/bin/pycdc`：`--pycdc` → `$MXSJ_PYCDC` → 舊路徑 → `PATH`，
+   且 `--engine pycdc` 而引擎不在時拒絕開跑；每輪打印一行 `[engines] …（解釋器 …）`。
+3. 轉譯失敗的條目現在在 `script/failed/entry_XXXX_<id>.py` 留 `TRANSMAP FAILED` 明示標記
+   （`uncompyle6_state()` 判為 `unknown`，既不算佔位也不算可用源碼）；`--report <json>` 順帶
+   產出清點表，鍵名直接對齊下游（`failed` 給 crosscheck、`missing` 給 recover）。
+
+**對賬面的影響**：本節上面的矩陣與「5,000 份 `.py`」「61 條零產物」都是**舊口徑**的觀測值，
+仍然成立；用新版工具重跑全量時 `.py` 檔案數會變成 5,002（多出的是明示標記），
+佔位數與成色不變。比較時請用 `[engines]`/`--report` 的分類，不要只數檔案個數。
+單條超時隔離（`2371`、`2679`）仍是待辦。
+
 #### 入庫與分發（2026-10-15，用戶明確授權）
 
 - 倉庫內：`tools/decompiler/output/script_fls_pycdc/`（**499** 個 pycdc 產物 + `manifest.json` +

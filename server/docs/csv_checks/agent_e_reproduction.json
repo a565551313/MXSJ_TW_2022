@@ -2073,7 +2073,7 @@
   },
   "shared_decoder": {
    "path": "tools/decompiler/batch_decompile.py",
-   "sha256": "242543f8264e72524fea18a19887b8a46ff655511df5ff0f842a4af91965bf25",
+   "sha256": "a74742231e04c018c3f63452cfc859c20c6404fd73891eae9076bfcf8185b4e8",
    "used_read_only_for": [
     "PY25_MAP opcode table",
     "XTABS xor tables"

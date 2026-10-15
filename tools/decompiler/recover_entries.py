@@ -6,7 +6,9 @@
 
 1. **落盘命名**：模块自身的 ``co_filename`` 含 ``\\x00`` 等非法字符（历史 5 段 XOR
    边界偏移破坏了它自己的文件名字符串），``write_text`` 抛 ``OSError``；``except``
-   分支只返回记录、不写文件，于是连占位产物都没有。
+   分支只返回记录、不写文件，于是连占位产物都没有。（2026-10-15 起 ``except``
+   会在 ``script/failed/`` 留一份 ``TRANSMAP FAILED`` 明示标记，条目不再静默
+   消失；但真正救回仍要靠本工具的路径清洗与转译梯。）
 2. **闸门过严**：``_transpile_with_repair`` 要求「完整转译 **且** uncompyle6 成功」
    才算命中；反编译失败/病态慢（实测 ``script/core/preload/preload_mov.py``
    >900 s 不收敛）时，已解出的密钥与完整 pyc 被整条丢弃。

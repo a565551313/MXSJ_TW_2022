@@ -46,7 +46,7 @@ data/script.fls ──转译──▶ .pyc ──uncompyle6（主）──▶ 5,
 
 ```sh
 cd /home/user/MXSJ_TW_2022
-export PY=/home/user/dec-venv/bin/python        # §3.1 之前先备好，理由见坑 P1
+export PY=/home/user/dec-venv/bin/python        # 没有它会直接拒绝开跑（坑 P1 已工程化）
 OUT=/home/user/mxsj-dec/probe && mkdir -p "$OUT"
 ```
 
@@ -113,19 +113,27 @@ git -C /home/user/pycdc fetch -q --depth 1 origin b4289760970dbc399684f1e155ec6d
 $PY -m pip install -q cmake                             # 缺 cmake 时才需要
 cmake -S /home/user/pycdc -B /home/user/pycdc/build -DCMAKE_BUILD_TYPE=Release
 cmake --build /home/user/pycdc/build -j2
-ln -sf /home/user/pycdc/build/pycdc /usr/local/bin/pycdc   # 沙箱里该目录可写，无需 sudo；理由见坑 P2
+
+# 之后有两种接法（2026-10-15 起两条都可用）：
+$PY tools/decompiler/batch_decompile.py … --pycdc /home/user/pycdc/build/pycdc
+#   或 export MXSJ_PYCDC=/home/user/pycdc/build/pycdc   （子进程也会继承）
+# /usr/local/bin/pycdc 仍是兜底默认值，老环境照旧工作；不接也没关系，
+# 工具现在会打印 [engines] uncompyle6=… pycdc=缺失 并拒绝在“选了 pycdc 却没有它”时开跑。
 ```
 
 ### 3.3 跑主引擎（后台 + 先看小批）
 
 ```sh
 OUT=/home/user/mxsj-dec/full && mkdir -p "$OUT"
-$PY tools/decompiler/batch_decompile.py data/script.fls "$OUT" --limit 40 --workers 2   # 验路：应 40/40
+ACC=/home/user/mxsj-dec/accounting.json            # §3.4 两个下游工具都要它，这里一次生成
+$PY tools/decompiler/batch_decompile.py data/script.fls "$OUT" --limit 40 --workers 2 \
+    --report "$ACC"                                # 验路：应 40/40
 nohup $PY tools/decompiler/batch_decompile.py data/script.fls "$OUT" --workers 2 \
-    > /home/user/mxsj-dec/full.log 2>&1 &
+    --report "$ACC" > /home/user/mxsj-dec/full.log 2>&1 &
 ```
 
-- 验路那步**必须看数字**：`40/40` 才算环境对了；`0/40` 就是坑 P1。
+- 验路那步**必须看两行**：`40/40`，以及 `[engines] uncompyle6=ok pycdc=…`。
+  `pycdc=缺失` 时 `--engine auto` 只会有主引擎的结果（这是历史账面的口径）。
 - 没跑完的部分用 `recover_entries.py` 补（它带梯），别指望 `batch_decompile` 兜住全部——
   它对 baseline 转译失败的条目**静默不写文件**（坑 P3）。
 
@@ -143,54 +151,43 @@ $PY tools/decompiler/crosscheck_pycdc.py --out "$OUT" \
     --report /home/user/mxsj-dec/cross_failed.json
 ```
 
-> **`accounting.json` 没有生成器**（已知缺口，别去找 `--account` 参数——它不存在）。它是当时用一次性
-> 脚本扫语料目录得到的清点表，结构就是 `{"failed": [条目号…], "missing": [条目号…]}`，分类规则
-> 照抄 `crosscheck_pycdc.uncompyle6_state()`：文件缺失 = `missing`/`absent`、正文含
-> `Decompilation failed` = `stub`/`failed`、含 `uncompyle6 version` = `full`。要么先补这段脚本，
-> 要么直接绕开：用 `--entries 1954,3066,4166,4691` 指定条目（该参数优先于 `--accounting`）。
+> **清点表现在由 §3.3 的 `--report` 直接产出**（2026-10-15）。键名就是这两个工具吃的名字：
+> `crosscheck_pycdc.py --class failed` 读 `"failed"`、`recover_entries.py --missing-report` 读
+> `"missing"`，另附 `inputs.sha256`（钉住跑的是哪个归档）与 `engines`（钉住当时到底有哪些引擎）。
+> 临时只查几条时不必跑全量：`--entries 1954,3066,4166,4691` 优先于 `--accounting`。
+> 历史账面上的 `accounting.json` 是一次性脚本产物，字段名与新版一致，可以混用。
 
 ### 3.5 验收：数字必须对上
 
 | 检查 | 期望 |
 | :--- | :--- |
-| `find "$OUT" -name '*.py' \| wc -l` | **5,000**（另有 1 个 `.pyc`） |
+| `find "$OUT" -name '*.py' 2>/dev/null \| wc -l` | 历史账面 **5,000**；2026-10-15 起每次跑完是 **5,002**（见 §4 P3：转译失败条目现在会留 `script/failed/` 标记） |
 | 占位数 `grep -rl "Decompilation failed" "$OUT" --include='*.py' \| wc -l` | **547**（救回/复核后应下降） |
 | 双引擎矩阵（notes §4.6） | `full 4,387` / `recovered 2` / `stub 544` / `absent 54` / 未拿到 pyc `15`，合计 5,002 |
-| 仍零产物 | **61 条**；`1954`/`3066`/`4166`/`4691` 连转译都过不去 |
+| 仍零产物 | 历史账面 **61 条**；`1954`/`3066`/`4166`/`4691` 连转译都过不去（现在会在 `script/failed/` 留下明示标记，正文首行是 `TRANSMAP FAILED`，`uncompyle6_state()` 判为 `unknown` —— 既不算占位也不算可用源码） |
 | 规模 | 约 79 MB / 2,338,388 行 |
 
 对不上就是**跑的过程出问题**（环境缺引擎、被超时切断、目录被覆盖），不是归档变了——归档有 SHA 钉着。
 
-## 4. 四个坑（不照做会白跑，均已实测）
+## 4. 坑的现况：3 条已工程化关闭，1 条仍开放
 
-**P1 · 用错解释器 → 全档 52 字节占位，而且不打错字。**
-`batch_decompile.py` 是 `import uncompyle6.main`（不是子进程、不看 `PATH`）。实测同一条 entry 0：
+2026-10-15 之前这三条只能靠人记住；现在 `batch_decompile.py` 会自己拦下来（`test_batch_decompile.py`
+共 21 项覆盖）。下面左列是原来的现象，右列是现在的行为。
 
+| 坑 | 原来的现象 | 现在 |
+| :--- | :--- | :--- |
+| **P1 解释器选错** | 用系统 `python3`（没装 uncompyle6）跑全量，5,002 条**全部**写成 52 字节占位，退出码仍是 0 | `preflight()` 探针发现引擎不可用就直接 `SystemExit`，并把该跑哪条命令写在错误信息里；确有其事要照旧行为时加 `--allow-missing-engine`（此时仍会打 `[warn]` 列出条目号） |
+| **P2 pycdc 路径** | 回退只认硬编码 `/usr/local/bin/pycdc`，自建在别处 = 静默不用第二引擎 | `resolve_pycdc_bin()`：`--pycdc <路径>` → `$MXSJ_PYCDC` → `/usr/local/bin/pycdc`（兼容保留）→ `PATH`；`--engine pycdc` 而引擎不在时**拒绝开跑**；每次跑完打一行 `[engines] uncompyle6=… pycdc=…（解释器 …）` |
+| **P3 静默零产出** | 转译失败只返回记录、不落文件，事后分不清「没跑到」和「解不动」；且 `--entry <文本>` 走 catalog 的 filename 列，12+ 条无名条目（含 1931）必漏 | 现在在 `script/failed/entry_XXXX_<id>.py` 留一份 `TRANSMAP FAILED` 明示标记（不与任何真实模块路径同名 ⇒ 不会覆盖已有产物），摘要打条目号；`--report` 同时给出 `missing` 列表 |
+| **P4 单条超时隔离** | 个别超大字节码条目（实测 `2371 preload_mov`、`2679 wingtypeposdata`）让 uncompyle6 指数级爆炸，把 worker 堵死 | **仍开放**（notes §4.5 记着）。对策：`--workers` 大于 1、跳过这两条，或给 `decompile_pyc_bytes()` 的 uncompyle6 分支也加超时（pycdc 分支已有 30 s）。别据此判定 `script.fls` 解密失败 |
+
+**跑之前 5 秒自检**（能同时排掉 P1/P2）：
+
+```sh
+$PY -c "import uncompyle6; print('主引擎 ok')"
+$PY tools/decompiler/batch_decompile.py data/script.fls /tmp/probe --limit 2 --workers 1 | tail -2
+#   期望 2/2 + 一行 [engines]；0/2 或那行写着「缺失」就别往下跑
 ```
-python3        … --entry 0   → Transpiled & decompiled 0/1，写出 52 B：# Decompilation failed in both …
-$PY（本仓库 venv）… --entry 0  → 1/1，写出 316 B 真源码
-```
-
-所以没装引擎的 `python3` 跑全量会得到 **5,002 个占位**且**退出码为 0**；`uncompyle6_state()`
-还会把它们全判成 `stub`，看起来像「归档本来就这样」。**每次先做法 A/验路那步确认 `N/N`。**
-
-**P2 · `--engine auto` 的 pycdc 回退只认硬编码的 `/usr/local/bin/pycdc`。**
-`decompile_pyc_bytes()` 里写死 `pycdc_bin = "/usr/local/bin/pycdc"` + `os.path.exists()` 判断，
-**没有 `--pycdc` 参数**（`crosscheck_pycdc.py` 才有）。不建那个软链，auto 就静默只用 uncompyle6，
-547 个占位原样复现——那不是 pycdc 不行，是它没被调用。想显式控制就单独跑 §3.4②。
-
-**P3 · `batch_decompile` 对转译失败的条目静默零产出，且 `--entry` 语义有讲究。**
-`--entry 1931` 实测 `0/1` 且**不落任何文件**（baseline 转译失败，需修复梯）；而
-`--entry servicedata` 是 `0/0`——按文本过滤走的是 `script-catalog.csv` 的 `filename` 列，
-**catalog 有 12+ 条无名（1931 即其一），按名字过滤必漏**。数字是 catalog 序号 `idx`，
-不打包内 `entry_id`。要单条就用法 A。
-
-**P4 · 没有 `--offset` / `--resume`，重跑会覆盖。**
-`batch_decompile.py` 无 skip-if-exists 守卫（只有 `crosscheck_pycdc --write` 有）：
-所以**别把全量直接跑进 `tools/decompiler/output/`**（会覆盖已入库产物），跑进 `$OUT` 再挑回仓库；
-分段只能按 `--entry <路径子串>` 切。个别超大字节码条目（实测 `2371 preload_mov`、`2679 wingtypeposdata`）
-会把 uncompyle6 拖到指数级——「单条超时隔离」至今是待办（notes §4.5），所以只能跳过或等，
-**不要据此判定 `script.fls` 解密失败**。
 
 ## 5. 使用约定（三条，别绕过）
 
@@ -233,5 +230,10 @@ $PY（本仓库 venv）… --entry 0  → 1/1，写出 316 B 真源码
 - 改动 `batch_decompile.py` / `crosscheck_pycdc.py` / `recover_entries.py` 的 CLI 或默认路径后，
   **本文与 `tools/decompiler/output/script_fls_pycdc/README.md` 同轮更新**（参数名、硬编码路径、
   验收数字都可能变）。
-- 把坑 P1/P2/P3 修成工程化（引擎探测失败要非零退出、pycdc 路径改成参数或 `PATH`、失败条目
-  落盘 `script/failed/`）时，删掉对应坑段并在 `docs/STATUS.md` §6 记一行，别只改代码。
+- §4 的 P1/P2/P3 已于 2026-10-15 关闭（`preflight()` / `resolve_pycdc_bin()` / `script/failed/` 标记 +
+  `--report`），对应回归在 `tools/decompiler/test_batch_decompile.py`。以后若把这些护栏放宽或删掉，
+  必须同时把 §4 改回「坑」并说明为什么可以静默。**P4 仍是待办**。
+- 改这三个工具的 CLI 或默认路径属于**行为变更**：`batch_decompile.py` 的 SHA 被
+  `server/docs/csv_checks/agent_e_reproduction.json` 与 `batch_001/manifest.json` 双重钉住，
+  必须按 `docs/STATUS.md` §3.1 的两步刷新（重生成证据 → 干跑对比只拷 `manifest.json`），
+  并逐字段确认只有哈希在动。
