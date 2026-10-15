@@ -1,0 +1,62 @@
+{
+  "kind": "A_prepared_H_queue_not_an_H_review",
+  "a_tool_base_commit": "94e6d33c703dbf985de6b37468962f95fbae4818",
+  "owner_submission": {
+    "pr": 36,
+    "commit": "60c573956f12a739712e4b24ddf1fb852f71bff0",
+    "scope": "script_manual/annotations/network/ only"
+  },
+  "annotations": [
+    {
+      "path": "script_manual/annotations/network/connect.json",
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2170,
+      "sha256": "3c32bc2397114566c1fe35dcb32036ff695f33e9da4b0f734f0145f198e323e9",
+      "function_count": 24,
+      "branch_count": 7
+    },
+    {
+      "path": "script_manual/annotations/network/net.json",
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3176,
+      "sha256": "e00bd3e82ff47faf1d93b4f29a4916a54c484ce252c84a023850619ba9039a1d",
+      "function_count": 52,
+      "branch_count": 23
+    },
+    {
+      "path": "script_manual/annotations/network/netquicklogin.json",
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 871,
+      "sha256": "9c2a8cd021148264f1069469fdb366e1857d4ebc3c80004f3cbb2c3ea52ce678",
+      "function_count": 29,
+      "branch_count": 6
+    },
+    {
+      "path": "script_manual/annotations/network/netserver.json",
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 516,
+      "sha256": "0eca5474ea815ad5269c4659db590344ec504399aa2778ef3db2eca41d961621",
+      "function_count": 52,
+      "branch_count": 7
+    }
+  ],
+  "validation_receipt": "docs/evidence/script_manual_E_60c5739_A_validation_20261016.json",
+  "receipt_sha256": "995c16bec1cb56df3315198a8891953de6fe0e46bbaf9c8ea4a6507eff19bdd9",
+  "gate": "20 pilot annotations and B inputs still pending; H remains downstream",
+  "instructions": [
+    "Do not switch branches or cherry-pick owner code into H branch",
+    "Create an external snapshot of A tool base plus E six-file overlay; copy sources to evidence repository preserving raw bytes",
+    "Independently recover five candidates with locked versions and check stable header against fixed keys database plus exact body digest",
+    "Produce review JSON only in reviews/ on H fixed branch, bound to each annotation raw-byte SHA",
+    "Validate H review JSON against the external E overlay (E is not merged in A yet)",
+    "Do not self-edit E annotations, create accepted decisions as A, or infer runtime_verified from decompilation"
+  ],
+  "unresolved_for_H": [
+    "2/3 byte frame-length conflict: Python candidate is not a native framing verdict",
+    "queue low-priority assignment anomaly",
+    "DoConnect.Success unreferenced / Fail registered in both callback slots",
+    "StartQuickTimer condition anomaly",
+    "3970 inventory link pending B",
+    "main collaborator report is guidance to C, not an E-owned main annotation"
+  ]
+}

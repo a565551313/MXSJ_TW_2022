@@ -1,0 +1,412 @@
+{
+  "date_local": "2026-10-16",
+  "reviewer_role": "A integration pre-review, NOT H",
+  "verdict": "previous_five_findings_closed_ready_for_H_queue",
+  "a_tool_base_commit": "94e6d33c703dbf985de6b37468962f95fbae4818",
+  "e_pr": 36,
+  "e_head_commit": "60c573956f12a739712e4b24ddf1fb852f71bff0",
+  "c_overlay_commit": "242fd8c941997f22a47f06069554cebba20d79a3",
+  "environment": {
+    "python": "3.11.2",
+    "python_build": [
+      "main",
+      "Apr  8 2026 01:58:00"
+    ],
+    "packages": [
+      "attrs==26.1.0",
+      "click==8.5.0",
+      "jsonschema==4.25.1",
+      "jsonschema-specifications==2025.9.1",
+      "PySide6==6.10.3",
+      "PySide6_Addons==6.10.3",
+      "PySide6_Essentials==6.10.3",
+      "referencing==0.37.0",
+      "rpds-py==2026.9.1",
+      "ruff==0.17.0",
+      "shiboken6==6.10.3",
+      "six==1.17.0",
+      "spark-parser==1.9.0",
+      "typing_extensions==4.16.0",
+      "uncompyle6==3.9.3",
+      "xdis==6.1.8"
+    ],
+    "qt_gui_unavailable": "PySide6 installed; importing QtWidgets raises ImportError: libGL.so.1 missing"
+  },
+  "inputs_sha256": {
+    "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+    "tools/decompiler/recover_entries.py": "152dbc28864a10c8b7188df7ae91c8039b0b8c0b056d98591e407b897e39c458",
+    "tools/decompiler/batch_decompile.py": "a74742231e04c018c3f63452cfc859c20c6404fd73891eae9076bfcf8185b4e8",
+    "server/docs/catalog/script_entries.jsonl": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+    "work/dream-world-connect-login-map/artifacts/protocol_table/protocol_opcodes.json": "a464a9cf66d66de01b8ed6272ea7529217c5d1631f94509bd7ca773077a9c9d9"
+  },
+  "a_tool_and_seed_files_sha256": {
+    "script_manual/.gitattributes": "1e866c9057e4081e7abf0645afa2a94dc9a8601acaac8bcf1ec16e21bdd96b71",
+    "script_manual/.gitignore": "27430c3412eb379163b5c24be6f00711393878d64e709e93d42f0260848c7626",
+    "script_manual/README.md": "0f87226a3cb788d45e41f7ad9850e897c89aff7059c7bae2814cecc6e7925534",
+    "script_manual/annotations/battle/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "script_manual/annotations/gameplay/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "script_manual/annotations/login/mainpage.json": "b8a96ab7d52bebfd9f8e2efca9172a5a0f5d8978902a9482f7632ffbc8bc2f54",
+    "script_manual/annotations/network/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "script_manual/annotations/ui_chat/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "script_manual/bootstrap.py": "02fcebe2831ace9828f29e24491e3d050ea366ac31e47ddcfc554765986860a3",
+    "script_manual/browser_tests/.gitignore": "4d56952b0fb13bf8f9b6c13a6d4c34a075bac3af447636a1df4335d7576e2f97",
+    "script_manual/browser_tests/README.md": "d4046aa2682d0541d0f2b0b15f17c5d18a3f606ee091c614c3608bb0489c6fb7",
+    "script_manual/browser_tests/check.cjs": "a875fd8a3c7fc4e609d31855b67d68332149f9f714f36918136192e55b8d2b3a",
+    "script_manual/browser_tests/package-lock.json": "23f1251e375923980f4c9c3a881b32b3e6cec36f958c53b543554f35421f6f1b",
+    "script_manual/browser_tests/package.json": "96d91a82eedcd23e89db6ffbb54b37b50ed7aab67ef2e4c24d05a8e601cab4ad",
+    "script_manual/build_exe.bat": "333627d36ab84e5a29b0f649a1eaea7a011e1ab1ddd275641b52f442dcea7adc",
+    "script_manual/coordination/baseline.json": "55f23e7298d0d2481123a384095192cbfe1d559c029f4ded923c2911f63d06c9",
+    "script_manual/coordination/tasks.json": "88f665da9e0f233378a9771b63c14c8f5ea877c4fe43313a75c8347a913ad67c",
+    "script_manual/docs/AGENT_TASKS.md": "7411d869991c8fd5cedaa028496a8e3a2f1e617a0ac0e3ab3a99235bafeed868",
+    "script_manual/docs/CONTRACT.md": "f31b36a9ab74f25483af5c9e0cad46a345fb885f36ab539109abe13388a8090e",
+    "script_manual/examples/annotation.json": "b8a96ab7d52bebfd9f8e2efca9172a5a0f5d8978902a9482f7632ffbc8bc2f54",
+    "script_manual/inventory/modules.jsonl": "de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b",
+    "script_manual/pyproject.toml": "4cccf04383806799de19fa53396ab6c2660cf2f44be38c1f3086d401c02b60a8",
+    "script_manual/requirements-dev.txt": "cdceae1c61f1b266c83dd02ee9d22411d6d7fdece8fb57d39821f6d9156116ab",
+    "script_manual/requirements.txt": "566183b3ceac03dc6a91f17e970f86512fcc0a13af02af7f09ee5e2396ad391a",
+    "script_manual/reviews/README.md": "063344fc9d407040d0f7c7509ec3df708596b6f8dd015dd8b9e0bf78afb2a7f2",
+    "script_manual/reviews/example.json.template": "548d75588d1bf178bf6ab5b72a65edbf9cc371a483941783b4e01347040270b8",
+    "script_manual/run.py": "1d967263ed8f5396ba753713ecc5574118e554e1d13c0c391345d2c82feba4c8",
+    "script_manual/schema/contract.schema.json": "6eba29e2154296c021f5f173de79347e3c0ce71a55d4804c3e812790347b1a2d",
+    "script_manual/script_manual.spec": "30b5617fe5149f573ccaffdc2c05f1ef2e9a5d1a2b62e7d4ec4bafc101a3f840",
+    "script_manual/src/mxsj_manual/__init__.py": "f5a95f54ee9cb78cde22c3ae0aaa511ab64c7d7ee08d108457ec0cccb311528b",
+    "script_manual/src/mxsj_manual/__main__.py": "d1c3cc2e79bbc48d3518877b62746ee6fbcfca9468982bdf5a63ec0916844f49",
+    "script_manual/src/mxsj_manual/app.py": "c1c48c84f7de1c943fe79a0e3c40c94a655e3db00ca6fdd3b94496e5444d4538",
+    "script_manual/src/mxsj_manual/assets/manual.js": "be9f40f44255f9ebbf82812684e1ac9fc5ee31c6327afd654c674b08e977b80f",
+    "script_manual/src/mxsj_manual/assets/style.css": "4f3e13fadb11f8500a6daebdfcf8321e90db3349a6fe0f5121c0daa6d53b5010",
+    "script_manual/src/mxsj_manual/core/__init__.py": "6911a9aed3c3e66c34388c030dd310cce8d41e3cbc8b0c9efc450e5e917b4af0",
+    "script_manual/src/mxsj_manual/core/catalog.py": "7ba7360c8363116a0aea8888cc58db4a9aaae31253224d959a7479b7b3518db0",
+    "script_manual/src/mxsj_manual/core/export.py": "ed90d047a0697050ef05cbdaad05da00c0925174cadfb3fd73b4154eb162a915",
+    "script_manual/src/mxsj_manual/core/io.py": "17d76d9a57bc92374a515368a175d18fdb2e1f712390df5e9355e5f6426c37c9",
+    "script_manual/src/mxsj_manual/core/render.py": "914e12000d76bff00a15b1bc2badffe6de4351f01d508dc47acde37b4ded2e84",
+    "script_manual/src/mxsj_manual/core/store.py": "268de19d3663a6238302d525e91d191f88c13a08d6e0d45a012c715e2511e670",
+    "script_manual/src/mxsj_manual/core/validation.py": "b699fb0952861b6bdcc681ea8cf94f3ec107f3ae2ee4942aaccdb4ccc199263e",
+    "script_manual/src/mxsj_manual/gui/__init__.py": "d02977c56d6396d662c60e42af2900d16c897a4dc20a416344bcc945f5a7a6a5",
+    "script_manual/src/mxsj_manual/gui/jobs.py": "eaf9c95ab7c0a09dfeb4f8e22ef53dc0d2fbb74dd8c2c618007dfed54cad17d9",
+    "script_manual/src/mxsj_manual/gui/models.py": "db5e364d29b0c2b317fca0f8e68d2fdb52afbe65e29f575f28f2b850ca6b5097",
+    "script_manual/src/mxsj_manual/gui/window.py": "0fa0b4d7873a80bda710969cc815a1ee1561550cd9b22548ff13f048ddb5942c",
+    "script_manual/src/mxsj_manual/paths.py": "e650beba61c06665f9ba95eb10e100bdca8b323087edd1dcbe8032da0b6ec2cc",
+    "script_manual/tests/fixtures/annotations/login/mainpage.json": "b8a96ab7d52bebfd9f8e2efca9172a5a0f5d8978902a9482f7632ffbc8bc2f54",
+    "script_manual/tests/fixtures/coordination/baseline.json": "55f23e7298d0d2481123a384095192cbfe1d559c029f4ded923c2911f63d06c9",
+    "script_manual/tests/fixtures/coordination/tasks.json": "88f665da9e0f233378a9771b63c14c8f5ea877c4fe43313a75c8347a913ad67c",
+    "script_manual/tests/fixtures/inventory/modules.jsonl": "de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b",
+    "script_manual/tests/support.py": "4cbf15a020aa17f3faee46e38d099b448b1700bb0b74adf59ca3a306ca1bf73e",
+    "script_manual/tests/test_bootstrap.py": "8e05330bf1dd390ccfed20db0a20b4780a7e3f5461ace6bd9b871e13a0df8ba6",
+    "script_manual/tests/test_catalog.py": "a38a1f795d3d91236dccd9beea117658148de798bec162fecfc3f92eb4b3930c",
+    "script_manual/tests/test_fixture_isolation.py": "cd36485b06a7841fefbbfeda7ba933a28241939527b524b51e62234f4333e886",
+    "script_manual/tests/test_gui.py": "874c523d9787f7b3d81b1d0d1aede3e105353262ae4cb3f13bd902b941192cdf",
+    "script_manual/tests/test_reviews_export.py": "90244c57a677dc15efe786537cff7a159e4d44c0232d70d90a76659339ce11bd",
+    "script_manual/tests/test_validation.py": "a36df81079a05e09097ff8bd57a5516ca83f9a9c9922ee6d6a6420bc00cde355",
+    "script_manual/启动脚本手册.bat": "a1852a72b738f99821693d5d724dc7f8cf2f74db43a0769f2851ecc64b91c41c"
+  },
+  "e_submission_files_sha256": {
+    "script_manual/annotations/network/connect.json": "3c32bc2397114566c1fe35dcb32036ff695f33e9da4b0f734f0145f198e323e9",
+    "script_manual/annotations/network/evidence_review_e_network.md": "4735b665278c12f9ec01172fe04764d44e39d9178b3d78d403dc00baff742b1c",
+    "script_manual/annotations/network/main_network_review_for_c.md": "440baa6ceeb2d79dc69371a668a83e1159a73c80b20ed61748713c457ca0353b",
+    "script_manual/annotations/network/net.json": "e00bd3e82ff47faf1d93b4f29a4916a54c484ce252c84a023850619ba9039a1d",
+    "script_manual/annotations/network/netquicklogin.json": "9c2a8cd021148264f1069469fdb366e1857d4ebc3c80004f3cbb2c3ea52ce678",
+    "script_manual/annotations/network/netserver.json": "0eca5474ea815ad5269c4659db590344ec504399aa2778ef3db2eca41d961621"
+  },
+  "annotations_for_H": [
+    {
+      "path": "script_manual/annotations/network/connect.json",
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2170,
+      "sha256": "3c32bc2397114566c1fe35dcb32036ff695f33e9da4b0f734f0145f198e323e9",
+      "function_count": 24,
+      "branch_count": 7
+    },
+    {
+      "path": "script_manual/annotations/network/net.json",
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3176,
+      "sha256": "e00bd3e82ff47faf1d93b4f29a4916a54c484ce252c84a023850619ba9039a1d",
+      "function_count": 52,
+      "branch_count": 23
+    },
+    {
+      "path": "script_manual/annotations/network/netquicklogin.json",
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 871,
+      "sha256": "9c2a8cd021148264f1069469fdb366e1857d4ebc3c80004f3cbb2c3ea52ce678",
+      "function_count": 29,
+      "branch_count": 6
+    },
+    {
+      "path": "script_manual/annotations/network/netserver.json",
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 516,
+      "sha256": "0eca5474ea815ad5269c4659db590344ec504399aa2778ef3db2eca41d961621",
+      "function_count": 52,
+      "branch_count": 7
+    }
+  ],
+  "independent_recovery": {
+    "command": "python tools/decompiler/recover_entries.py --out <outside-repository>/recovered --entries 3176,2170,871,516,4293 --decompile-timeout 120 --report <outside-repository>/recovery-report.json",
+    "decode_big5": true,
+    "game_modules_executed": false,
+    "report_sha256": "4ccf25a3619dded5497e24a18e3b88ca64e119f81e614bda0961e2ee2ceb688f",
+    "body_digest_matches_E_report": 5,
+    "candidates": [
+      {
+        "entry_index": 3176,
+        "entry_id": 2691519347,
+        "clen": 17485,
+        "doff": 21172656,
+        "co_filename": "script/net.py",
+        "pyc_len": 42742,
+        "stage": "baseline",
+        "repaired": false,
+        "keys_used": [
+          29,
+          142,
+          48,
+          3,
+          82
+        ],
+        "bounds_used": [
+          8665,
+          17320,
+          25990,
+          34644
+        ],
+        "rel_path": "script/net.py",
+        "raw_sha256_this_run": "24e8c77dc5fa1530b1e6a707f0b22aef3b7331f81f28041ffccb2769d37999d0",
+        "body_sha256_remove_exact_first_six_lines": "4cad123e0121c3c18cf24a6af59d1827da28517478b5c92e90f98bf664092c50",
+        "line_count_with_header": 1364,
+        "stable_header_lines_1_2_3_4_6": [
+          "# MXSJ 恢复产物 · script.fls entry 3176 (id=0xa06d5373)",
+          "# co_filename(原始)='script/net.py'",
+          "# 转译阶段=baseline  密钥修复=False",
+          "# keys=[29, 142, 48, 3, 82] bounds=[8665, 17320, 25990, 34644]",
+          "# 输入 sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72"
+        ],
+        "stable_header_sha256_preserving_line_endings": "9e79c9349e05d8060dacd83cb99596d4d00517723aac93d44ca5ce8e46af5958",
+        "header_and_keys_database_independently_checked": true
+      },
+      {
+        "entry_index": 2170,
+        "entry_id": 1832585054,
+        "clen": 4322,
+        "doff": 1259095,
+        "co_filename": "script/connect.py",
+        "pyc_len": 8329,
+        "stage": "baseline",
+        "repaired": false,
+        "keys_used": [
+          58,
+          209,
+          11,
+          19,
+          141
+        ],
+        "bounds_used": [
+          1671,
+          3425,
+          5170,
+          6849
+        ],
+        "rel_path": "script/connect.py",
+        "raw_sha256_this_run": "3353d7f86481b25dc1f11bda1f52f5aebe6deed77d4ef3998d8f513cd59ae0f9",
+        "body_sha256_remove_exact_first_six_lines": "0a46ea6fb77879332c53531a1a746556782b9fc48a1fb01f6330e97c8c775e24",
+        "line_count_with_header": 295,
+        "stable_header_lines_1_2_3_4_6": [
+          "# MXSJ 恢复产物 · script.fls entry 2170 (id=0x6d3b075e)",
+          "# co_filename(原始)='script/connect.py'",
+          "# 转译阶段=baseline  密钥修复=False",
+          "# keys=[58, 209, 11, 19, 141] bounds=[1671, 3425, 5170, 6849]",
+          "# 输入 sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72"
+        ],
+        "stable_header_sha256_preserving_line_endings": "f94b3854a858a91b13ddaecd76b5f63ef17dec9b53dc099008d1108f7607602e",
+        "header_and_keys_database_independently_checked": true
+      },
+      {
+        "entry_index": 871,
+        "entry_id": 696666009,
+        "clen": 4481,
+        "doff": 15474892,
+        "co_filename": "script/netquicklogin.py",
+        "pyc_len": 8966,
+        "stage": "baseline",
+        "repaired": false,
+        "keys_used": [
+          26,
+          169,
+          206,
+          111,
+          150
+        ],
+        "bounds_used": [
+          1865,
+          3708,
+          5524,
+          7416
+        ],
+        "rel_path": "script/netquicklogin.py",
+        "raw_sha256_this_run": "a30575d6f9e7feb6b620932b65f3eea4e80a10e70030effc6ba14be69a6cf0be",
+        "body_sha256_remove_exact_first_six_lines": "36def1780a9bb229e98b850339eee91827ed6f6f972f330f52fa3f23183597b9",
+        "line_count_with_header": 313,
+        "stable_header_lines_1_2_3_4_6": [
+          "# MXSJ 恢复产物 · script.fls entry 871 (id=0x29864799)",
+          "# co_filename(原始)='script/netquicklogin.py'",
+          "# 转译阶段=baseline  密钥修复=False",
+          "# keys=[26, 169, 206, 111, 150] bounds=[1865, 3708, 5524, 7416]",
+          "# 输入 sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72"
+        ],
+        "stable_header_sha256_preserving_line_endings": "912eae28719caa174dcae35af5c4f395b0ce15b84954ca743214c1691f406eb1",
+        "header_and_keys_database_independently_checked": true,
+        "body_byte_identical_to_repository_candidate": true
+      },
+      {
+        "entry_index": 516,
+        "entry_id": 406718548,
+        "clen": 7690,
+        "doff": 16321274,
+        "co_filename": "script/login/netserver.py",
+        "pyc_len": 17242,
+        "stage": "baseline",
+        "repaired": false,
+        "keys_used": [
+          177,
+          68,
+          48,
+          65,
+          32
+        ],
+        "bounds_used": [
+          3460,
+          6912,
+          10485,
+          13948
+        ],
+        "rel_path": "script/login/netserver.py",
+        "raw_sha256_this_run": "fcf12963c6a0add7b761cbf35d0b6a429aef2cc258fa0fde02b2da5cfd80bf78",
+        "body_sha256_remove_exact_first_six_lines": "1fccc33d2d20540680c6af62e2bfdcf850291a855ed4bf626374262b8702c94b",
+        "line_count_with_header": 584,
+        "stable_header_lines_1_2_3_4_6": [
+          "# MXSJ 恢复产物 · script.fls entry 516 (id=0x183e0854)",
+          "# co_filename(原始)='script/login/netserver.py'",
+          "# 转译阶段=baseline  密钥修复=False",
+          "# keys=[177, 68, 48, 65, 32] bounds=[3460, 6912, 10485, 13948]",
+          "# 输入 sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72"
+        ],
+        "stable_header_sha256_preserving_line_endings": "5829a0aaa94c382acb7896dd2b2aea1e1b9a7082f317db5b195b8377d9869d1d",
+        "header_and_keys_database_independently_checked": true,
+        "body_byte_identical_to_repository_candidate": true
+      },
+      {
+        "entry_index": 4293,
+        "entry_id": 3644790581,
+        "clen": 22151,
+        "doff": 16890366,
+        "co_filename": "script/main.py",
+        "pyc_len": 48492,
+        "stage": "baseline",
+        "repaired": false,
+        "keys_used": [
+          234,
+          15,
+          89,
+          63,
+          82
+        ],
+        "bounds_used": [
+          9772,
+          19571,
+          29383,
+          39151
+        ],
+        "rel_path": "script/main.py",
+        "raw_sha256_this_run": "21cd8969d3273c7052f32cfabfcc8996b8bf4aa63e7791d5a991fec5d7fd0256",
+        "body_sha256_remove_exact_first_six_lines": "bf5051dc501a38128b4cf33dcdd17d5e2e99f2f274838af6e672e14d9edb05dc",
+        "line_count_with_header": 1579,
+        "stable_header_lines_1_2_3_4_6": [
+          "# MXSJ 恢复产物 · script.fls entry 4293 (id=0xd93f1735)",
+          "# co_filename(原始)='script/main.py'",
+          "# 转译阶段=baseline  密钥修复=False",
+          "# keys=[234, 15, 89, 63, 82] bounds=[9772, 19571, 29383, 39151]",
+          "# 输入 sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72"
+        ],
+        "stable_header_sha256_preserving_line_endings": "e3b0ad45a6ad56c63bec0b314cd17a315a8b34ebd9550d4470aa00a45277d95b",
+        "header_and_keys_database_independently_checked": true
+      }
+    ],
+    "entry_1288_targeted_or_recovered": false
+  },
+  "validation": {
+    "e_overlay": {
+      "expected_entries": 5135,
+      "indexed": 20,
+      "annotated": 5,
+      "accepted": 0
+    },
+    "c_e_overlay": {
+      "expected_entries": 5135,
+      "indexed": 20,
+      "annotated": 8,
+      "accepted": 0
+    },
+    "warnings": [
+      "Entry 3970 linked by E is not yet in the seed inventory; B full inventory pending"
+    ],
+    "ruff_including_spec": "passed",
+    "windows_static": {
+      "paths": 69,
+      "scripts": 26,
+      "errors": 0,
+      "warnings": 0,
+      "info": 0
+    },
+    "offline_builds": {
+      "E": {
+        "html_sha256": "b0f586449a4d69cd997b3b6b2c2bffc771ea9e6ffe0f317394a0f53d9c758fc0"
+      },
+      "C_and_E_draft": {
+        "html_sha256": "c14fe98d9963f620750322fb3e7bc92b34a049a5980c5c8f46bdea2a3288b1cd"
+      }
+    },
+    "tests": {
+      "A": {
+        "run": 78,
+        "passed": 67,
+        "skipped_gui": 11,
+        "failures": 0,
+        "errors": 0,
+        "log_sha256": "1e039e89b1eb344ee5f537a6458cc1a8985a07371e43267488d92b1d1af37af5"
+      },
+      "A_plus_E": {
+        "run": 78,
+        "passed": 67,
+        "skipped_gui": 11,
+        "failures": 0,
+        "errors": 0,
+        "log_sha256": "fec78a505ef37d6c274c792b68e07c85c7f20a1b32363e2dd76400ffd291912b"
+      },
+      "A_plus_C_plus_E": {
+        "run": 78,
+        "passed": 67,
+        "skipped_gui": 11,
+        "failures": 0,
+        "errors": 0,
+        "log_sha256": "67c91565bda03eb8d400aa5c344f42417df9d2e4ae848149446746da9f13e70b"
+      },
+      "A_after_coordination_update": {
+        "run": 78,
+        "passed": 67,
+        "skipped_gui": 11,
+        "failures": 0,
+        "errors": 0,
+        "log_sha256": "7e5b360dfc135e1c19fe56ec4f8092a25190cc1dc3bfc4a4e310395bc2ac945f"
+      }
+    }
+  },
+  "not_verified": [
+    "11 Qt tests: missing system libGL.so.1",
+    "Windows and EXE",
+    "runtime client, native packet framing and real server behaviour",
+    "full semantics of all 157 functions (H independent review pending)"
+  ],
+  "h_review_state": "not_started; queue prepared; wait for complete 20-pilot set under agreed workflow",
+  "merged": false
+}

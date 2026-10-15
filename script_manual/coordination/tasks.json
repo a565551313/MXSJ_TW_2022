@@ -6,7 +6,7 @@
       "entry_index": 337,
       "owner": "C",
       "domain": "login",
-      "state": "assigned",
+      "state": "blocked",
       "priority": "pilot",
       "collaborators": []
     },
@@ -15,7 +15,7 @@
       "entry_index": 4293,
       "owner": "C",
       "domain": "login",
-      "state": "assigned",
+      "state": "blocked",
       "priority": "pilot",
       "collaborators": [
         "E",
@@ -27,7 +27,7 @@
       "entry_index": 4007,
       "owner": "C",
       "domain": "login",
-      "state": "assigned",
+      "state": "blocked",
       "priority": "pilot",
       "collaborators": []
     },
@@ -36,7 +36,7 @@
       "entry_index": 4806,
       "owner": "C",
       "domain": "login",
-      "state": "assigned",
+      "state": "blocked",
       "priority": "pilot",
       "collaborators": []
     },
@@ -81,7 +81,7 @@
       "entry_index": 3176,
       "owner": "E",
       "domain": "network",
-      "state": "assigned",
+      "state": "submitted",
       "priority": "pilot",
       "collaborators": []
     },
@@ -90,7 +90,7 @@
       "entry_index": 2170,
       "owner": "E",
       "domain": "network",
-      "state": "assigned",
+      "state": "submitted",
       "priority": "pilot",
       "collaborators": []
     },
@@ -99,7 +99,7 @@
       "entry_index": 871,
       "owner": "E",
       "domain": "network",
-      "state": "assigned",
+      "state": "submitted",
       "priority": "pilot",
       "collaborators": []
     },
@@ -108,7 +108,7 @@
       "entry_index": 516,
       "owner": "E",
       "domain": "network",
-      "state": "assigned",
+      "state": "submitted",
       "priority": "pilot",
       "collaborators": []
     },
