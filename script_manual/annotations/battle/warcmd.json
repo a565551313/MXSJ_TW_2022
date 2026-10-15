@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 1612,
+  "path": "script/core/magicperform/warcmd.py",
+  "owner": "F",
+  "domain": "battle",
+  "author": "F",
+  "source_status": "historical_unverified_origin",
+  "purpose": {
+    "text": "战斗表现命令工厂：CreateCmdObject 创建战斗表现命令对象（对应 warcmd 子模块 attackpre/enermyhurt/spare 等）。",
+    "confidence": "inferred",
+    "evidence": [
+      "catalog"
+    ]
+  },
+  "keywords": [
+    "战斗",
+    "表现",
+    "命令",
+    "warcmd",
+    "CreateCmdObject"
+  ],
+  "functions": [
+    {
+      "name": "CreateCmdObject",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "历史解码器列出的函数/类名 CreateCmdObject；具体行为未从 recovered source 核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog",
+          "decoder"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "module",
+      "target": "core/magicperform/warcmd/*",
+      "summary": {
+        "text": "warcmd 子模块：warcmdattackpre/warcmdenermyhurt/warcmdspare（不同 entry）。",
+        "confidence": "extracted",
+        "evidence": [
+          "catalog"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 697
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1406
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 8
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "表现命令在哪里创建？",
+      "answer": {
+        "text": "CreateCmdObject（entry 1612）；子命令实现在 warcmdattackpre/enermyhurt/spare 等不同 entry。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "来源仅为历史解码器函数名列表与 v4 解码元数据；无 recovered source 或行级代码。",
+    "未执行或 import 任何游戏脚本；函数签名、分支、调用关系均为推测，需 recovered source 或实机验证。",
+    "无 recovered source：pycdc 输出中未包含 entry 1612；仅历史函数名 CreateCmdObject。",
+    "CreateCmdObject 的参数与返回类型未知。"
+  ],
+  "sources": [
+    {
+      "id": "catalog",
+      "path": "server/docs/catalog/script_entries.jsonl",
+      "sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+      "kind": "metadata",
+      "note": "历史函数名目录，entry 1612，marshal_transpiled_filename_checked，semantic_review not_reviewed。"
+    },
+    {
+      "id": "decoder",
+      "path": "work/dream-world-connect-login-map/notes/task-b-脚本分析/artifacts/fullrun/decode-results-final.jsonl",
+      "sha256": "25781bd230432d03b9870440cf76b96c792d09282b3f2721c8fe6f5bf3e3f03f",
+      "kind": "metadata",
+      "note": "v4 解码结果，entry 1612，status ok，source 字段仅为引擎标记。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "catalog",
+      "source_id": "catalog",
+      "start_line": 1613,
+      "end_line": 1613
+    },
+    {
+      "id": "decoder",
+      "source_id": "decoder",
+      "start_line": 1613,
+      "end_line": 1613
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 697
+      },
+      "symbol": "war",
+      "summary": {
+        "text": "表现命令服务于战斗核心。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog"
+        ]
+      }
+    }
+  ]
+}

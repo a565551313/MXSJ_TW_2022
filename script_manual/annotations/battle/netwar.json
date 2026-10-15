@@ -1,0 +1,1529 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 1406,
+  "path": "script/netwar.py",
+  "owner": "F",
+  "domain": "battle",
+  "author": "F",
+  "source_status": "recovered_complete_not_original",
+  "purpose": {
+    "text": "战斗网络消息层：客户端发送战斗操作（C2S*）与服务端下发战斗状态/指令（S2C*），负责战斗开始/回合/结束的网络编解码与主循环切换。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "start",
+      "end",
+      "turn"
+    ]
+  },
+  "keywords": [
+    "战斗",
+    "网络",
+    "S2C",
+    "C2S",
+    "回合",
+    "战斗开始",
+    "战斗结束",
+    "观战",
+    "录像"
+  ],
+  "functions": [
+    {
+      "name": "ModuleReset",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "重置网络战斗模块全局：g_WarTimes/g_WarVersion/g_WarLocation。",
+        "confidence": "extracted",
+        "evidence": [
+          "globals"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarPerform",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarLook",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarAttack",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarDefend",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarEscape",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarItem",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarSummon",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarProtect",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarCatch",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SChild",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2STurnEnd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarSummAttack",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarSummPerform",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarSummGuard",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarSummEscape",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarSummItem",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarSummProtect",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarExitWatch",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarBackCommand",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ReduceWarTime",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "递减全局战斗次数 g_WarTimes。",
+        "confidence": "extracted",
+        "evidence": [
+          "globals"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ReleaseVersion",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "战斗版本号读写。",
+        "confidence": "inferred",
+        "evidence": [
+          "globals"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetWarVersion",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "战斗版本号读写。",
+        "confidence": "inferred",
+        "evidence": [
+          "globals"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetWarLocation",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "战斗地点坐标读写，测试地点覆盖。",
+        "confidence": "inferred",
+        "evidence": [
+          "start"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ReleaseWarLocation",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "战斗地点坐标读写，测试地点覆盖。",
+        "confidence": "inferred",
+        "evidence": [
+          "start"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetWarLocation",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "战斗地点坐标读写，测试地点覆盖。",
+        "confidence": "inferred",
+        "evidence": [
+          "start"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarStart",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "extracted",
+        "evidence": [
+          "start"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "warenteranimation.GetWarEnterAniMgr().GetIsShowingAni()",
+          "effect": {
+            "text": "战斗入场动画正在播放时直接返回，不立即启动战斗循环。",
+            "confidence": "extracted",
+            "evidence": [
+              "start"
+            ]
+          }
+        },
+        {
+          "condition": "bIsSureWarType and not bIsServerRecord and not bIsClientRecord",
+          "effect": {
+            "text": "特定战斗类型且非录像时，设置入场动画显示状态。",
+            "confidence": "inferred",
+            "evidence": [
+              "start"
+            ]
+          }
+        },
+        {
+          "condition": "juben.IsPlayJuben()",
+          "effect": {
+            "text": "若正在播放剧情，先停止剧情再进入战斗。",
+            "confidence": "extracted",
+            "evidence": [
+              "start"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "WarStartCloseDlg",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "战斗开始时关闭剧情/NPC/ artifact/地图等窗口。",
+        "confidence": "extracted",
+        "evidence": [
+          "close"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarMask",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarOPCmd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "IsWarEnd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "判断当前无进行中战斗（g_WarTimes==0）。",
+        "confidence": "extracted",
+        "evidence": [
+          "globals"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarEnd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "extracted",
+        "evidence": [
+          "end"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "recordvideo.GetVideoMgr().CheckNxtVideo()",
+          "effect": {
+            "text": "若有下一个录像片段，直接返回不结束。",
+            "confidence": "extracted",
+            "evidence": [
+              "end"
+            ]
+          }
+        },
+        {
+          "condition": "IsWarEnd()",
+          "effect": {
+            "text": "当前已无战斗时直接返回。",
+            "confidence": "extracted",
+            "evidence": [
+              "end"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "S2CWarTurn",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "extracted",
+        "evidence": [
+          "turn"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "not netobj.UnpackInt(1)",
+          "effect": {
+            "text": "lastcmd=False，表示非最后指令。",
+            "confidence": "extracted",
+            "evidence": [
+              "turn"
+            ]
+          }
+        },
+        {
+          "condition": "not war.GetReplayWar()",
+          "effect": {
+            "text": "非录像时隐藏战斗UI。",
+            "confidence": "extracted",
+            "evidence": [
+              "turn"
+            ]
+          }
+        },
+        {
+          "condition": "war.g_HeroID is None and warui.g_MagicKeyDlg",
+          "effect": {
+            "text": "英雄ID未就绪时隐藏魔法快捷键对话框。",
+            "confidence": "inferred",
+            "evidence": [
+              "turn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "S2CChangeTimer",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarAdd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "extracted",
+        "evidence": [
+          "add"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarDel",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarAttackNormal",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GS2CWarShape",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "战斗网络消息处理函数（详见 recovered source）。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarAttackNormalEnd",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarAttackConverg",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarProtect",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarPerform",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": [
+          "perform"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarWState",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarOtherPerform",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": [
+          "perform"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CServerShout",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CChangeDirection",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CPlayMagic",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CMultiWalkTo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarNotifyExt",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CDelTargetLine",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarPerformAtPos",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarJuben",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CShowPassWarBtn",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarriorSwap",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarriorHpColor",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarriorNameColor",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarMPFP",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarAddon",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarSpecialAddon",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarWeather",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarPlayerChat",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarHPPercent",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarMPFPPercent",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarDecideWinnerTime",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarSummon",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarSummonCatch",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarONACT",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CBackCommand",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CPerformName",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SWarSpecial",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarSign",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SSendSign",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2SLookWarrior",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarChildSkill",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarCalledPet",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "extracted",
+        "evidence": [
+          "calledpet"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "ob and isinstance(ob, pet.CChild)",
+          "effect": {
+            "text": "激活宠物为子单位时更新等级与技能。",
+            "confidence": "extracted",
+            "evidence": [
+              "calledpet"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "S2CChangeAction",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWalkTo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarExtInfo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CShowSpecialWatchPanel",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CUpdateSpecialWatchPanelPetInfo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CUpdateSpecialWatchPanelDrugInfo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CUpdateSpecialWatchPanelSpInfo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CUpdateRecordShowInfo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CUpateRecordInfo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CUpdateControlPoint",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "inferred",
+        "evidence": []
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CWarRecordInfo",
+      "signature": null,
+      "kind": "function",
+      "summary": {
+        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
+        "confidence": "extracted",
+        "evidence": [
+          "recordinfo"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "oFunc = g_WarRecordInfoFunc.get(iSub)",
+          "effect": {
+            "text": "按子类型1-9分发到对应处理函数。",
+            "confidence": "extracted",
+            "evidence": [
+              "recordinfo"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "kind": "module",
+      "target": "war",
+      "summary": {
+        "text": "核心战斗模块：指令队列、状态、动画。",
+        "confidence": "inferred",
+        "evidence": [
+          "start"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "net",
+      "summary": {
+        "text": "网络封包发送/接收基础。",
+        "confidence": "extracted",
+        "evidence": [
+          "c2s"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "warturn",
+      "summary": {
+        "text": "回合状态存储与跳放。",
+        "confidence": "inferred",
+        "evidence": [
+          "turn"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "warrecord",
+      "summary": {
+        "text": "战斗录像记录。",
+        "confidence": "extracted",
+        "evidence": [
+          "start",
+          "end"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "warenteranimation",
+      "summary": {
+        "text": "战斗入场动画管理。",
+        "confidence": "extracted",
+        "evidence": [
+          "start"
+        ]
+      }
+    },
+    {
+      "kind": "protocol",
+      "target": "C2GS_*/S2C war messages",
+      "summary": {
+        "text": "大量战斗协议号，详见 net 模块常量。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 697
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4293
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 8
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1612
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "战斗开始链路在哪里？",
+      "answer": {
+        "text": "S2CWarStart 解析场景/布阵/类型/坐标/背景/版本/回合，切换 main 主循环为战斗循环（main.SetWarLoop），创建 Start 指令并入队。",
+        "confidence": "extracted",
+        "evidence": [
+          "start"
+        ]
+      }
+    },
+    {
+      "question": "战斗结束链路在哪里？",
+      "answer": {
+        "text": "S2CWarEnd 递减战斗次数，构造 End 指令，恢复地图视图与网络缓存。",
+        "confidence": "extracted",
+        "evidence": [
+          "end"
+        ]
+      }
+    },
+    {
+      "question": "新回合如何处理？",
+      "answer": {
+        "text": "S2CWarTurn 存储上回合状态，构造 Turn 指令，递增回合计数。",
+        "confidence": "extracted",
+        "evidence": [
+          "turn"
+        ]
+      }
+    },
+    {
+      "question": "想修改战斗网络消息字段？",
+      "answer": {
+        "text": "在对应 S2C*/C2S* 函数中调整 UnpackInt/PacketAddI 的类型与长度；协议号在 net 模块。",
+        "confidence": "inferred",
+        "evidence": [
+          "c2s",
+          "start"
+        ]
+      }
+    },
+    {
+      "question": "战斗主循环切换链路（协审 main.py）在哪里？",
+      "answer": {
+        "text": "S2CWarStart 调用 main.SetWarLoop() 将主循环切为战斗循环，并 war.SetProcess(war.NextCmd)；S2CWarEnd 后需恢复非战斗循环。本意见供 C/A 在 main.py 正文统一，F 不重复建档 main.py。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "start",
+          "end"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "来源为 pycdc 交叉复核恢复候选，非原始源码；uncompyle6 为 stub；语义未与原包行为对照。",
+    "仅对 S2CWarStart/S2CWarEnd/S2CWarTurn 等关键分支做了条件拆分；其余 80+ 函数仅按名称/前缀概括，calls 为空表示未整理。",
+    "真实战斗计算（伤害、命中、AI）在 war.py/warturn.py 等模块，本模块只负责网络消息编解码与战斗循环切换。",
+    "函数签名多为 null，因恢复源未提供可靠参数注解。",
+    "协审意见（交 C/A）：main.py 战斗切换链路仅确认 S2CWarStart->main.SetWarLoop 与 war.SetProcess(war.NextCmd)；完整主循环恢复/异常路径需 C 在 main.py 正文核对，F 不重复建立 main.py 正文。"
+  ],
+  "sources": [
+    {
+      "id": "pycdc_netwar",
+      "path": "tools/decompiler/output/script_fls_pycdc/script/netwar.py",
+      "sha256": "2a050ae3a139b4e19029166377a6a60c5cd72d092f4c044427a07a56445028e0",
+      "kind": "recovered_source",
+      "note": "pycdc 交叉复核产物，entry 1406，uncompyle6 stub；输入 script.fls SHA 8b6e..."
+    },
+    {
+      "id": "catalog_netwar",
+      "path": "server/docs/catalog/script_entries.jsonl",
+      "sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+      "kind": "metadata",
+      "note": "历史函数名目录，entry 1406，marshal_transpiled_filename_checked，semantic_review not_reviewed。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "imports",
+      "source_id": "pycdc_netwar",
+      "start_line": 1,
+      "end_line": 27
+    },
+    {
+      "id": "globals",
+      "source_id": "pycdc_netwar",
+      "start_line": 22,
+      "end_line": 26
+    },
+    {
+      "id": "c2s",
+      "source_id": "pycdc_netwar",
+      "start_line": 37,
+      "end_line": 157
+    },
+    {
+      "id": "start",
+      "source_id": "pycdc_netwar",
+      "start_line": 195,
+      "end_line": 272
+    },
+    {
+      "id": "close",
+      "source_id": "pycdc_netwar",
+      "start_line": 273,
+      "end_line": 286
+    },
+    {
+      "id": "end",
+      "source_id": "pycdc_netwar",
+      "start_line": 307,
+      "end_line": 336
+    },
+    {
+      "id": "turn",
+      "source_id": "pycdc_netwar",
+      "start_line": 337,
+      "end_line": 374
+    },
+    {
+      "id": "add",
+      "source_id": "pycdc_netwar",
+      "start_line": 382,
+      "end_line": 427
+    },
+    {
+      "id": "perform",
+      "source_id": "pycdc_netwar",
+      "start_line": 476,
+      "end_line": 555
+    },
+    {
+      "id": "calledpet",
+      "source_id": "pycdc_netwar",
+      "start_line": 881,
+      "end_line": 899
+    },
+    {
+      "id": "recordinfo",
+      "source_id": "pycdc_netwar",
+      "start_line": 1080,
+      "end_line": 1086
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 697
+      },
+      "symbol": "war",
+      "summary": {
+        "text": "导入 war 模块，调用 war.CCmd/war.Start 等战斗指令与状态。",
+        "confidence": "extracted",
+        "evidence": [
+          "start"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4293
+      },
+      "symbol": "main",
+      "summary": {
+        "text": "S2CWarStart 调用 main.SetWarLoop() 切换主循环为战斗循环。",
+        "confidence": "extracted",
+        "evidence": [
+          "start"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4293
+      },
+      "symbol": "main.SetWarLoop",
+      "summary": {
+        "text": "战斗开始时切换主循环。",
+        "confidence": "extracted",
+        "evidence": [
+          "start"
+        ]
+      }
+    }
+  ]
+}
