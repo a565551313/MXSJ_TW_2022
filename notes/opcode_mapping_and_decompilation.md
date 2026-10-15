@@ -381,10 +381,116 @@ python3 tools/decompiler/batch_decompile.py data/script.fls /tmp/full_script_py 
 
 #### 已知邊界
 
-- 尚未救回的 6 個重點條目為 `1954`、`3066`、`4166`、`4305`、`4691`、`4928`。其共同困難是分段點可藏在對 Marshal 步進不透明的長字串或 `co_code` 內，或需要比目前窗口更精確的內容層定位；`4928` 已能完成結構重解與轉譯，但仍被 uncompyle6 深層檢查拒絕。
+- 尚未救回的 6 個重點條目為 `1954`、`3066`、`4166`、`4305`、`4691`、`4928`。其共同困難是分段點可藏在對 Marshal 步進不透明的長字串或 `co_code` 內，或需要比目前窗口更精確的內容層定位；`4928` 已能完成結構重解與轉譯，但仍被 uncompyle6 深層檢查拒絕。**（2026-10-15 勘誤：`4305`、`4928` 已由 §4.5 的定點恢復救回，未救回者現為 `1954`、`3066`、`4166`、`4691` 四條。）**
 - 若要繼續攻克，應另行研究以 GBK 文本統計、字串內容連續性與 `co_code` 操作碼合理性聯合評分的「內容驅動金鑰恢復」，不要把目前以結構為主的裁判硬擴成無界搜尋。
 - entries `2371`、`2679` 應在後續工程化時加入**單條反編譯超時隔離**，或在具備 pycdc 的環境作第二引擎對照；不要因這兩個 uncompyle6 病理案而誤判 `script.fls` 解密失敗。
 - CLI 的成功摘要會以「其中 N 條靠邊界修復救回」標示經修復條目數量；`script_fls_keys.json` 保持原封不動。
+
+### 4.5 定點恢復 `tools/decompiler/recover_entries.py`（2026-10-15）
+
+用戶要求「把沒反編譯的反編譯出來」後，重點處理 §4.4 帳目裡那 12 條 `轉譯階段失敗` 與清點中顯示「無產物」的 26 條。工具**以 import 方式複用** `batch_decompile`（其 SHA-256 被 `agent_e_reproduction.json` 鎖定，不得改動），與主批量的差別只有三點：
+
+1. **不用 `_decompile_ok` 否決整條**：轉譯拿到的 pyc 一律保留，反編譯成敗另記一欄，避免「金鑰已解對卻整條丟棄」。
+2. **逐路徑分量清洗 `co_filename`**：歸檔內的自報檔名本身也帶位元汙染（含 `\x00`、`?`、`*` 等），主批量會因此在寫檔時拋 `OSError` 而**靜默零產物**。清洗後仍不像正常包內路徑的，收進 `script/mangled/entry_XXXX_ID.py` 並保留原名。
+3. **反編譯放子進程並帶 `--decompile-timeout`**（預設 120 秒）：一個病理案不再拖住整批；反編譯失敗時改寫 marshal 結構摘要，並在旁邊留 `.pyc` 供後續換引擎重試。
+
+四級梯子為 `baseline → 縫口精修 → 邊界移位 → solve/beam`，其中「縫口精修對 catalog 金鑰先試一次」是本輪新增：`4305` 的嚴格步進其實已 100% 走通，只是縫位未細化導致 marshal 校驗失敗，精修後直接得到可用源碼。
+
+#### 26 條的真實根因（推翻「解不開」）
+
+| 類別 | 條目 | 處理 |
+| :--- | :--- | :--- |
+| 清点誤差：產物一直存在 | `508`、`955`、`1438`、`2005`、`2187`、`2330`、`3143`、`3341`、`3614`（落 `script/unknown/`）＋ `1931`、`2643`、`2984`、`4133`（落真實模組路徑） | 只需重算。前 9 條因索引 `current_filename` 為 `null`、後 4 條因檔名取自包內自報路徑，按目錄名比對時都被漏掉 |
+| `co_filename` 含非法字元 → 寫檔異常 | `880`、`2310`、`3122`、`3794`、`4305`、`4741` | 清洗路徑後落盤，得 6 份完整源碼 |
+| 已解出但被反編譯閘門丟棄 | `3505`、`4928`（部分源碼＋結構摘要）、`2371`（僅結構摘要＋`.pyc`） | 保留 pyc 與摘要，不再假裝成功 |
+| 目前真的解不開 | `1954`（進度 322/340）、`3066`（414/916）、`4166`（1523/1599，僅差 76 位元組）、`4691`（17025/82936） | 老實標 `untranspilable`；`4166` 是最有希望的下個目標 |
+
+全語料最終帳目：**5,000 個 `.py` ＋ 1 個 `.pyc`（66 MB）= 4,444 完整反編譯 ＋ 9 本輪恢復產物 ＋ 547 個 52 位元組失敗佔位**；`data/script.fls` 與 `script_fls_keys.json` 全程唯讀（SHA-256 `8b6e9266…` / `43bb090d…` 複核未變）。回歸：`python -m unittest discover -s tools/decompiler -p "test_*.py"` 25 項通過，`ruff`（倉庫 `ruff.toml`）對兩個新檔 0 錯。
+
+```sh
+/home/user/dec-venv/bin/python tools/decompiler/recover_entries.py \
+    --out <倉庫外语料目錄> --entries 880,2310,4305 \
+    --report <恢復報告.json> [--dry-run] [--decompile-timeout 150]
+```
+
+#### 順帶解決的註冊線疑案：`servicedata` 其實在包內
+
+本輪最有意外的收獲。`tools/registration/README.md` 與 `docs/STATUS.md` 先前記「原 `servicedata` 模組不在本版 `script.fls` 內」，故條款走佔位文字；實際該模組**一直存在**，條目 `1931` 解出的自報路徑即 `script\data\servicedata.py`（86,579 位元組，已完整反編譯）：`if main.g_LangVersion == 0:` 分支給出 `SERVICE_MSG`（11,602 位元組，首行 `#cd95927夢想世界遊戲服務條款#n`，末段含「因服務條款所生之爭議，以台灣台北地方法院為第一審管轄法院」）與 `SERVICE_MSG2`（9,055 位元組「線上遊戲定型化契約範本」），`else` 分支另有一份 7,264 位元組的 AMS 版條款。誤判原因是 `catalog` 裡這條沒有名字，按名字索引查不到；而 `script/login/register.py:171`、`script/login/loginin.py:696` 本來就寫 `import servicedata`（與 14 個模組 `import defines` 同構，說明 `script/data` 在 import 路徑上），可見真客戶端能取到它。**後續（未做）**：把註冊測試包的條款從佔位改成直接取包內 `servicedata`，需重建 `out/script.fls` 並跑 `tools/registration` 的 13 項回歸，另輪授權。
+
+---
+
+### 4.6 第二反編譯引擎 `pycdc` 的交叉覆核（2026-10-15）
+
+`tools/decompiler/crosscheck_pycdc.py` 把 pycdc 接成第二引擎，用來複核「轉譯成功、uncompyle6 失敗」的 547 個 52 字節佔位與 §4.5 的殘餘。前提與 §4.5 相同：不改 `batch_decompile.py`（SHA 被釘），複用 `recover_entries` 的路徑清洗與轉譯梯；pycdc 一律放子進程帶超時；`--write` 只寫 `<out>/pycdc/` 這棵獨立樹，已存在就跳過，**絕不覆蓋 uncompyle6 的產物**。
+
+構建配方（沙箱實測約 2 分鐘，只需要被放行的 github）：pycdc 是純 C++，**不需要 flex/bison**；Debian 缺的 cmake 可用 `pip install cmake` 取（輪子自帶真二進制）。
+
+```sh
+/home/user/dec-venv/bin/pip install cmake          # 或任何自帶 cmake 的環境
+git clone -q --depth 1 https://github.com/zrax/pycdc
+cmake -S pycdc -B pycdc/build && cmake --build pycdc/build -j4
+
+python3 tools/decompiler/crosscheck_pycdc.py --out <語料目錄> \
+    --accounting accounting.json --class failed --jobs 4 --timeout 25 \
+    --write --keep-pyc <pyc 目錄> [--ladder]
+```
+
+#### 5,002 條的雙引擎矩陣
+
+| 行=uncompyle6 現有產物 | pycdc ok | 只拿到部分 | pycdc 崩 | 無 pyc | 合計 |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| `full`（完整源碼） | 4,312 | 0 | 75 | 0 | 4,387 |
+| `recovered`（§4.5 產物） | 2 | 0 | 0 | 0 | 2 |
+| `stub`（52 字節佔位） | **465** | 23 | 56 | 0 | 544 |
+| `absent`（無產物） | 53 | 0 | 1 | 0 | 54 |
+| 未拿到 pyc（未開 `--ladder`） | 0 | 0 | 0 | 15 | 15 |
+| **合計** | **4,832** | 23 | 132 | 15 | 5,002 |
+
+* pycdc **淨補 546 條**讀得懂的源碼（541 條直接命中 + 5 條要開 `--ladder`；那 5 條正是 §4.4 記的 `63`、`64`、`1013`、`1528`、`1854`），全語料 10.4 秒跑完 547 條。
+* 反向也有：75 條 uncompyle6 出得了、pycdc 直接崩（`vector::_M_range_check: __n … >= this->size()`、`std::bad_cast`）⇒ **單一引擎的成敗不構成結論**，兩邊要各留一份。
+* 定論殘餘：把 pycdc、uncompyle6、§4.5 修復梯全開之後仍**零產物的是 61 條**（56 條佔位 + 1 條無產物 + 4 條連轉譯都過不了：`1954`、`3066`、`4166`、`4691`）；清單寫在語料目錄 `residual_no_source.json`。覆蓋率 **4,941 / 5,002 = 98.78%**。
+
+#### 工具側硬化（2026-10-15，只改可見性、不改轉譯與解密）
+
+`tools/decompiler/batch_decompile.py` 補了三個護欄（`test_batch_decompile.py` 21 項）：
+
+1. 開跑前 `preflight()` 探測引擎：解釋器裡沒有 `uncompyle6` 時**直接拒絕**（以前會靜默把
+   5,002 條全寫成 52 字節佔位且退出碼 0）；要舊行為得顯式加 `--allow-missing-engine`。
+2. pycdc 不再只認硬編碼 `/usr/local/bin/pycdc`：`--pycdc` → `$MXSJ_PYCDC` → 舊路徑 → `PATH`，
+   且 `--engine pycdc` 而引擎不在時拒絕開跑；每輪打印一行 `[engines] …（解釋器 …）`。
+3. 轉譯失敗的條目現在在 `script/failed/entry_XXXX_<id>.py` 留 `TRANSMAP FAILED` 明示標記
+   （`uncompyle6_state()` 判為 `unknown`，既不算佔位也不算可用源碼）；`--report <json>` 順帶
+   產出清點表，鍵名直接對齊下游（`failed` 給 crosscheck、`missing` 給 recover）。
+
+**對賬面的影響**：本節上面的矩陣與「5,000 份 `.py`」「61 條零產物」都是**舊口徑**的觀測值，
+仍然成立；用新版工具重跑全量時 `.py` 檔案數會變成 5,002（多出的是明示標記），
+佔位數與成色不變。比較時請用 `[engines]`/`--report` 的分類，不要只數檔案個數。
+單條超時隔離（`2371`、`2679`）仍是待辦。
+
+#### 入庫與分發（2026-10-15，用戶明確授權）
+
+- 倉庫內：`tools/decompiler/output/script_fls_pycdc/`（**499** 個 pycdc 產物 + `manifest.json` +
+  `README.md`；uncompyle6 側已有完整源碼的 18 個重複項刻意不重複入庫）、`output/script_fls/`
+  併入 §4.5 救回的 **9** 個產物。`manifest.json` 逐檔記 `entry` / `status` / `lines` /
+  `escaped_bytes` / `py25`（`raw`、`top_return_only`、`no`）與 `uncompyle6` 成色，並釘住三個鎖定輸入的 SHA-256。
+- 倉庫外：全量語料與全部報告打包為 `MXSJ_script_fls_pycdc_recovered_20261015.zip`
+  （2,364,954 B，MD5 `c566766dc3a2ea96415711ac19851bd0`，Drive `1B588Ib1AlxycyzEXU9W4jZxiVe5xNFbd`）。
+  61 條「兩引擎 + 修復梯全開仍零源碼」的清單在包內 `reports/residual_no_source.json`。
+
+#### 「反編譯成功」不等於「可回編譯」
+
+用 `tools/registration/build_python25.sh` 自建的真 CPython 2.5.6（照跑即通，`Python 2.5.6`）對全部產物做 `compile()`，這是本輪最該記下來的一筆：
+
+| 產物集 | 原樣可編譯 | 剝掉模組頂層 `return` 後 | 仍失敗 |
+| :--- | ---: | ---: | ---: |
+| uncompyle6 全語料 4,998 檔 | 550（11.0%） | **3,770（75.4%）** | 1,228 |
+| pycdc 交叉覆核 512 檔 | 248（48.4%） | 248（沒有這個偽影） | 264 |
+
+1. **系統性偽影**：這些 `.pyo` 的模組碼物件以 `RETURN_VALUE` 收尾，uncompyle6 如實還原成模組頂層一句 `return`，而模組級 `return` 不是合法 Python——3,220 個檔案**只因為這一行**編譯不過。走「編輯後回編譯」管線（STATUS §5.2 ④）時必須先剝掉它，否則第一步就 `SyntaxError: 'return' outside function`。
+2. 仍失敗的 1,228 檔分類：真語法錯 1,159、含 NUL 位元組 35（§4.5 那類 `\x00` 汙染已經滲進源碼常量）、編碼宣告與實際位元組不符 27、縮進 6。
+3. pycdc 那 264 檔失敗**不是**本工具把非 UTF-8 位元組轉義成 `\xNN` 造成的：拿未轉義原文重測，0 檔被修好，仍是 pycdc 自己寫錯（例：`script/usermacro.py:147` invalid syntax）。
+
+所以 pycdc 產物的定位是**「能讀、能互證，不能直接回編譯」**；要進回編譯管線的候選必須兩邊都過 `compile()` 再挑。工具側另有一處必須記住的事：pycdc 會把 GBK 字節原樣吐出來，用 `text=True` 收管道會在 `UnicodeDecodeError` 上崩掉整批——本工具改成二進制捕獲 + `backslashreplace` 轉義，並在報告與產物頭註記「已轉義」，這條也有回歸測試兜著。
 
 ---
 

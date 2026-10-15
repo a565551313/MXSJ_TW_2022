@@ -1,0 +1,19 @@
+# pycdc 交叉复核产物 · script.fls entry 1736
+# co_filename(原始)='script/data/juben/task13714.py'
+# uncompyle6 状态=stub  转译阶段=baseline
+# 生成时间=2026-10-14T23:55:56Z
+# 输入 sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72
+# 注：引擎原样输出的非 UTF-8 字节已转义为 \xNN。
+# Source Generated with Decompyle++
+# File: entry_1736.pyc (Python 2.5)
+
+
+def GetJubenData(juben\xb1\xbc):
+    return JUBENDATA.get(juben\xb1\xbc)
+
+JUBENDATA = {
+    1: [
+        [
+            '\xc0\xa3\xab\xcc\xb9\xef\xa5\xd5',
+            0,
+            'P N(4005,\xb5\xa6\xa6E)\n\xa6\xb9\xb3B\xa9\xf1\xa4@\xad\xd3\xbc@\xa5\xbb\xa1A\xa4\xba\xaee\xac\xb0\xa1G#Y\xaa\xb1\xaea\xc5X\xa8\xab\xa4F\xb7N\xb9\xcf\xbf\xd1\xae`\xb5L\xb6d\xa4H\xaa\xba\xa5\xc1\xb2\xb3\xa1A\xa4\xaf\xb8q\xbcC\xa7\xd4\xa4\xa3\xa6\xed\xaf\xb8\xa5X\xa8\xd3\xab\xfc\xb4\xa7\xb1\xd0\xb2\xa7\xb3\xe4\xd4\xaf\xb1P\xbc\xb07z']] }

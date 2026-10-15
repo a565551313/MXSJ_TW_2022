@@ -74,7 +74,7 @@
 | 资源编辑器 | `.fls` 惰性浏览、精灵预览/替换、按路径导入、音频预览、新包原子保存与导出保护 | 0.3.8；保存后真名关联已修；Windows/进游戏验证仍待验；script.fls 条目只浏览不解码 |
 | UI 编辑器 | `.dlg` 布局编解码、画布编辑/吸附/对齐、撤销重做、按钮态与脚本静态索引、校验后写出新包 | 0.7.1；写包/导出源资源保护已修；九宫格（M3.3）未做；完整 `.dlg` 语料库未入库 |
 | 0SLF 路径哈希 / `.dlg` 提取 | 引擎自研哈希复刻、2,706/2,901 `.dlg` 定位解码、`ui.lst` 样式表 | script.fls 模块导入不走此哈希；`.dlg` 原生路径 XOR 已定位，见 [补充结案](notes/native_dlg_path_cipher.md) |
-| 注册 UI | v3.3 离线候选，三个字段、本地校验、按钮与光标修正 | 无真实注册/保存；Windows 原生验收待完成 |
+| 注册 UI | 采用 PR #32 的原生注册实现、确认文案兜底及字体/异常恢复 | 用户确认该版测试无问题；尚无真实注册服务端，不创建真实账号 |
 | 游戏服务端 | 21 个一级责任区、类型契约、81 个细分工作包 | 业务运行、账号数据库、地图与战斗闭环未实现 |
 | 网关/安全/GM | 可拆分设计、职责、权限、审计和故障边界 | 设计文档，不是已经启动的安全服务 |
 | 根目录 Mock | 历史协议/客户端联调实验脚本 | 不作为正式服务端；默认不启动，先检查副作用 |
@@ -382,12 +382,15 @@ python ui_editor/bootstrap.py [布局文件|目录|资源包]
 
 Windows 用户可直接双击 `resource_editor/启动编辑器.bat`、`ui_editor/启动UI编辑器.bat`（自动检查并安装依赖，失败原因写入同目录启动日志）。GUI 测试需要桌面环境；无 `libGL` 的无头环境只能跑核心测试。设计决策与路线见各自 `DESIGN.md` 和 [UI 编辑器二期设计](notes/ui_editor_phase2_design.md)。
 
-### 8.4 独立脚本编辑器（`script_editor/`，0.2.0.dev1实验版）
+### 8.4 独立脚本编辑器（`script_editor/`，0.5.1.dev1）
 
-用户要求的独立工具，支持`script.fls`/`data.fls`双包；标准2.5.6/2.7.13编译与严格双VM原生转换、
-仅生成新文件、独立完整回读及未改条目保留已在Linux离线回归。GUI仍为基础界面，原生写包按钮未接入。
-Windows随包编译器/EXE尚未验收，不能称完整可用发行版；详见[工具README](script_editor/README.md)
-与[实验原生构建说明](script_editor/M2_NATIVE_BUILD.md)，最新实测以[STATUS](docs/STATUS.md)为准。
+独立 PySide6 工具，支持 `script.fls` / `data.fls` 双包浏览、包内脚本恢复草稿、
+多标签编辑及项目续编；源码保存与生成新包分离，恢复稿须人工核验采用后才进入原生编译流程。
+支持标准 CPython 2.5.6 / 2.7.13 编译、严格双 VM 转换、完整回读及未改条目校验，原包只读。
+已交付的源码 ZIP 包含双 Windows 编译器及获授权的固定原包匹配参数；
+Git 不存放生成的编译器二进制，仅克隆仓库需按运行时文档重建，不能冒充完整交付 ZIP。
+0.5.1 修复 Python 3.14 依赖兼容问题；Windows EXE / 客户端执行仍待验收。
+入口：[工具 README](script_editor/README.md)，最新交付和测试见 [STATUS](docs/STATUS.md)。
 
 ## 9. 客户端注册界面预览
 
@@ -604,6 +607,10 @@ REVIEW_API_BASE=http://127.0.0.1:8000 npx vitest run src/api/liveBackend.test.ts
 | 处理地图问题 | [PR25_REVIEW.md](map_editor/PR25_REVIEW.md)、[编辑器说明](map_editor/README.md) |
 | 编辑资源包 / UI 布局 | [resource_editor/README.md](resource_editor/README.md)、[ui_editor/README.md](ui_editor/README.md)、[0SLF 路径哈希与 .dlg](notes/fls_path_hash_and_dlg.md) |
 | 看懂字节码 / 反编译 | [opcode 映射与反编译报告](notes/opcode_mapping_and_decompilation.md) |
+| 要重建/使用全量反编译语料 | [反编译语料重建配方](docs/DECOMPILE_CORPUS.md)（要不要建、怎么建、4 个坑） |
+| 想知道客户端 `mx.exe` / `mxmain.dll` / `mxLauncher.exe` 能逆向到什么程度 | [客户端二进制可逆性实测](notes/client_binary_reversibility.md)（出不了源码；54% 镜像是加密壳；原生类名不在明文里） |
+| 要抽客户端/启动器的图与版式（皮肤、光标、对话框、字串） | `python3 tools/data-parser/pe_resource_dump.py mxLauncher.exe --dump out/rsrc`；资源包主体在 `data/*.fls` 与 `update.ini`，见[可逆性实测 §6–§7](notes/client_binary_reversibility.md) |
+| 要改启动器皮肤上的文字（繁→简）并写回 exe | `skin_label_patch.py` 改图 + `--pad-to` 凑长度，再用 `pe_resource_patch.py` 原位写回 `.rsrc`；步骤与边界见[可逆性实测 §9](notes/client_binary_reversibility.md) |
 | 修改注册预览 | [客户端补丁说明](tools/client_patches/README.md)、[v3.3 修正](tools/client_patches/REGISTRATION_CONTROL_FIX_V3_3.md)、[v3.3 交付事实表](tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md) |
 | 设计接入与运维 | [GATEWAY.md](server/docs/GATEWAY.md)、[GATEWAY_SECURITY_GM.md](server/docs/GATEWAY_SECURITY_GM.md) |
 | 了解历史研究 | [work 索引](work/dream-world-connect-login-map/INDEX.md)，客户端侧权威现状 [client-status-20261012.md](work/dream-world-connect-login-map/report/client-status-20261012.md) |

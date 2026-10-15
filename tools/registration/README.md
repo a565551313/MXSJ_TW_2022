@@ -1,5 +1,7 @@
 # 注册原生重做：第二期（现行风格 + 注册五个账号）
 
+> **2026-10-15 合并取舍（最新用户确认）**：PR #32 的 `mxLauncher.exe` 相关方案与注册 `script.fls` 修改以对方版本为准；用户已确认注册脚本测试没有问题。独立 `script_editor/` 以本分支 0.5.1.dev1 为准，不以旧历史记录回退。下文旧测试状态和交付说明保留为历史，不覆盖本次确认。此前启动器生成工具的路径/写入边界审查问题仍单独记录，不能当作已修复。
+
 ## 当前做到哪里
 
 第一期 1.1 的入口、条款、表单校验、桩提示、返回流程已由用户实机确认。
@@ -141,9 +143,28 @@ phase2-diag2 是**定位版，不是声称修好版**：保持原生CEDIT接口�
 | reg2.dlg | reg.zip，旧风格作废 | 64be77d148f853a99ba5f47c9e6d722012a4e77462c66263df1ee93b08ef043a |
 | service.dlg | Drive `1KaFXbFxU-VOJ5OJ0UIS7rINmn9uhJagS` | 820f09a8cd4e8ff80494cffdfc6de042550f897f7747c6345de793fa68b46d26 |
 
-条款文本仍取 `servicedata.SERVICE_MSG`；该模块不在本版 script.fls 中，
-缺失时用明确标注的占位条款，不能把复制布局说成已拿到正式条款文本。
-`CConfirm` 仍原样引用 `servicedata.CONFIRM_MSG`，既有流程不改。
+条款文本取 `servicedata.SERVICE_MSG`；该模块在本版 `script.fls` 内（见下方勘误），
+所以**真机走的是正式条款全文**，只有离线桩件环境（harness 不装该模块时）才退回
+`TERMS_FALLBACK` 明示占位。`CConfirm` 需要的 `servicedata.CONFIRM_MSG` 经实测
+**归档里不存在**，因此本包不再照抄旧客户端那句裸取属性，改走 `_LoadConfirmLines()`：
+包内一旦补上该常量就自动改用原文，否则用 `CONFIRM_FALLBACK` 明示兜底文案。
+
+> **[勘误 2026-10-15]** 本 README 曾记「`servicedata` 不在本版 script.fls 中」，现已推翻：
+> 该模块在包内，条目 `1931` 的自报路径为 `script\data\servicedata.py`，且已完整反编译
+> （`SERVICE_MSG` 11,602 B 正式条款全文、`SERVICE_MSG2` 9,055 B「線上遊戲定型化契約範本」，
+> 另有 `main.g_LangVersion != 0` 分支的 AMS 版）。真客户端 `script/login/register.py`、
+> `loginin.py` 本来就以裸名 `import servicedata` 取用，故**运行期并非缺失**；
+> 之前的误判来自 catalog 索引对无名字条目检索不到。
+> 2026-10-15 已据此重建 `out/script.fls`（`sha256=ed0f4126c0b5d3533b157cd1b8002b9d570f3c1e152c61f7c60dcd48de5a5a5f`，
+> 24,262,648 B）并跑完本目录 13 项回归（11 布局 + 2 运行时，全通过）。
+>
+> **[同轮新增] `CONFIRM_MSG` 是旧包自带的死路**：`servicedata` 的 pyc 名字表只有
+> `SERVICE_MSG`/`SERVICE_MSG2`，两归档共 4,941 个可读模块里**没有任何一个定义**
+> `CONFIRM_MSG`，唯一引用者就是 `script/login/register.py:142` 且没有 try。
+> 原 harness 的 `servicedata` 桩件恰好提供了这个常量，所以历次「CConfirm 流程走通」
+> 覆盖的是桩件世界、不是真归档。现 harness 增加 9a 段（忠实本版：有 `SERVICE_MSG`、
+> 无 `CONFIRM_MSG` → 条款取真文本、确认框落兜底、构造不抛，并按字节核对）与 9b 对照组
+> （补上常量后必须自动改用原文），`test_runtime.py` 断言 9a 的输出行。
 
 ## 构建与回归（仓库侧，不要求用户安装解释器）
 
@@ -153,6 +174,9 @@ sh tools/registration/build_python25.sh /home/user/py25build
 python3 tools/registration/build_regform_dlg.py
 python3 tools/registration/build_native_registration.py \
     --python25 /home/user/py25build/cpython-2.5.6/python
+# 打成出货包（生成 SHA256SUMS + 回显 zip 的 SHA-256/MD5，并自检一遍）
+python3 tools/registration/make_release.py --stage <备好的目录> --zip <输出.zip>
+python3 tools/registration/make_release.py --check <输出.zip>
 MXSJ_PYTHON25=/home/user/py25build/cpython-2.5.6/python \
     python3 -m unittest discover -s tools/registration/tests -v
 ruff check tools/registration
@@ -170,6 +194,37 @@ Python 3 构建器/测试按仓库 ruff 规则检查；两份必须在 2.5.6 运
 只豁免 `UP` 现代化规则（`.format`、f-string 和删除 coding 声明会破坏原解释器）。
 `harness.py2` 由真 2.5.6 执行，不能以 Python 3 能否解析它判断游戏兼容性。
 
+### 换基线重做（客户机现行的 script.fls ≠ 仓库 `data/script.fls`）
+
+默认基线钉死在 `data/script.fls`（`BASE_SHA256 = 8b6e9266…`）。要拿用户在跑的
+那份归档重做，必须显式给两条参数，缺一不可：
+
+```sh
+python3 tools/registration/build_native_registration.py \
+    --archive google_drive/script1015.fls \
+    --base-sha256 77b3eac611f52cf8ac750fe1adf57d672e3f3e85f51fa5f9c81980e1d6564466 \
+    --python25 /home/user/py25build/cpython-2.5.6/python \
+    --report out/build_report.json
+```
+
+- SHA 不符就退出，同时把**实测 SHA 和可直接复制的 `--base-sha256` 参数**打出来；
+  不做「差不多就放行」。
+- 337 是幂等敏感的：补丁窗口已是 patched 形态（基线本身就是上一版工具产物）→
+  打 `[note] … 原樣保留`，实际改动变成 `[4007]`；窗口既非未补形态也非已补形态 →
+  `ValueError: TW predicate fingerprint mismatch`，拒绝盲目重打包。三态判定与
+  两条分支各有单测（`tests/test_build_base.py`，7 项，0.2 秒内跑完）。
+- 4007 是整模块替换，天然覆盖旧内容，与基线新旧无关。
+- `--report` 只在验证全通过后落盘：记基线/密钥表/源码/产物四者 SHA、条目数、
+  337 处理方式与实际改动条目，可直接粘进出货登记。
+
+2026-10-15 实测：网盘 `script1015.fls`（24,264,943 B，SHA-256 `77b3eac6…`，
+MD5 `f85917c2…`）与仓库基线逐条比对——**5,002 条里只有 337、4007 两条不同**，
+其余 5,000 条压缩负载逐字节相同。337 与我们的 9 字节补丁逐字节一致；4007 是
+A 案**之前**的旧 register（`CConfirm` 仍裸取 `servicedata.CONFIRM_MSG`，即那条
+AttributeError 死路，并多带 `_DiagFailure`/`_ImportRuntime`/`_RecoverEntry`/
+`_CreateFormEdit` 调试脚手架）。以它为基线重建，产物 SHA-256 仍是 `ed0f4126…`
+（与已出货那颗逐字节相同）——即这份网盘归档不含任何我们无法复现的内容。
+
 ## 原第二期测试包（2026-10-14 已授权上传，现为卡屏排查基线）
 
 - 源码提交：`22a3fab`，已推送当前会话分支，未合入 master。
@@ -179,6 +234,82 @@ Python 3 构建器/测试按仓库 ruff 规则检查；两份必须在 2.5.6 运
 - 此链接是已报告卡屏的原包，**不是 phase2-diag1**，勿重下它当修复版。
 - 包内有新 script.fls、两张新布局、测试说明、SHA256SUMS。
   本包只测界面/校验/候选资料，不发送真实注册请求；顺延规则还只是已定方案。
+
+### 第二期 b 测试包（2026-10-15 已授权上传）
+
+- 源码提交：`421ab91`（会话分支 `arena/19a59906-mxsj-tw-2022`，未合入 `master`）。
+- [下载 registration_phase2b_terms_confirm.zip](https://drive.google.com/file/d/1k5dE9pt9NQL-ywhh27U_lM6JfcAEQD7b/view)（Google Drive，未改分享权限）。
+- 大小 24,190,980 字节；ZIP MD5 `e5177426ce0982e85fee6feae0f02655`；
+  ZIP SHA-256 `c30a638719497d4850057c3717f303e9ef48e1c502f6b5f871579d179773d3f0`。
+- 内容：`data/script.fls`（`ed0f4126c0b5d353…`，24,262,648 B）、
+  `interface_import/login/regterms.dlg` 与 `regform.dlg`（与 phase2 **逐字节相同**，
+  已导入过且没动过的话可跳过 TESTING 第 1 节）、`测试说明-TESTING.md`、`README.txt`、
+  `SHA256SUMS.txt`。
+- 与 phase2 的唯一差异是 `data/script.fls`：条款页改读包内真文本（勘误「模块缺失」误判）、
+  `CConfirm` 改走 `_LoadConfirmLines()` 明示兜底（本版归档无 `CONFIRM_MSG` 定义）。
+- **可复现性**：沙箱在 2026-10-15 重置，`out/` 属 Git 忽略项随之外消失；按上文「构建与回归」
+  命令重建后 `script.fls` 的 SHA-256 与重置前逐字节一致 ⇒ 构建是确定性的。
+  结论：**要留档的出货包必须传网盘或入库，不能只靠 `out/`**。
+
+### 第二期 b · 以 `script1015.fls`（用户网盘）为基线重做（2026-10-15 已授权上传）
+
+- 源码提交：`744c5e2`（会话分支 `arena/19a59906-mxsj-tw-2022`，未合入 `master`）。
+- [下载 registration_phase2b_on_script1015base.zip](https://drive.google.com/file/d/1KDEq1eiF_RJMM4l7pDvorScuMAIo_Ojo/view)
+  （Google Drive，未改分享权限）。
+- 大小 24,190,255 字节；ZIP MD5 `f3bdaf9a6c678385618298b2e8e7833d`；
+  ZIP SHA-256 `437fd798540553f293dfef773c168a7900325b5fe80487656225edc7f19bfbc2`
+  （上传后已核对 Drive 侧 MD5 与本地一致）。
+- 基线换成 `script1015.fls`（24,264,943 B，SHA-256 `77b3eac6…`）：实测只改 4007，
+  337 因基线已含同一补丁而「原样保留」；产物 `data/script.fls` 仍是
+  `ed0f4126c0b5d353…`，**与上一包逐字节相同** ⇒ 已经在测 phase2b 的人不用换包。
+- 比 phase2b 多一个 `build_report.json`（基线/密钥表/源码/产物四者 SHA、`mainpage.state`、
+  `changed_entries`），换基线出货时拿它对账；成员其余同 phase2b。
+- 那份归档里的旧 `register`（4007）比我们的版本多 `_DiagFailure`/`_ImportRuntime`/
+  `_RecoverEntry`/`_CreateFormEdit` 与分步 diag，但 `CConfirm` 仍是会 `AttributeError`
+  的死路。用户已选定：不保留这套脚手架，直接以当前 A 案版本覆盖。
+
+> **打包坑（已由 `make_release.py` 堵上）**：`find | xargs sha256sum > SHA256SUMS.txt`
+> 会先把目标文件建成**空文件**再被 `find` 收进去，于是清单里多一行「空文件的哈希」
+> 自称是 `SHA256SUMS.txt` 本身——这行永远校验不过。本轮之前手工打的包（含
+> `registration_phase2b_on_script1015base.zip`）就带这一行；除它以外全部有效，
+> 拿不准就只核 `data/script.fls` 那一行。`make_release.py` 生成时排除自身，
+> `--check` 会拒绝含自指行的清单。
+
+### 2026-10-15 实机回归：协议页点「我同意」进不去表单页（已修）
+
+现象：装 `ed0f4126…` 那颗包后，条款页能开，点「我同意」毫无反应。
+
+排查（不猜，逐条比字节）：把用户网盘那份 `script1015.fls` 里能进到表单页的 4007
+模块解出来反汇编，与我们出货的 4007 逐函数对比。结论是**两条**：
+
+1. 表单单框的字体常量不同。旧版（实机走通过）用 `interface.FontLT14_3`；
+   我这版照 `chgpwd.py` 用了 `interface.FONT_EDIT`，提示框颜色同理用 `COLOR_EDIT`。
+   这两个名字的存在性只有「归档里别的模块用了」这一条间接证据——**离线桩件
+   恰好定义了它们**（`harness.py2` 里 `FONT_EDIT=1`），所以桩件世界永远测不出来。
+2. 旧版在 `Show`/`Step` 外面套了 try/except + `_DiagFailure` + `_RecoverEntry`，
+   每个环节写 `_Diag` 标记；我做「清理调试脚手架」时把这套一起删了 ⇒
+   客户端吞异常后就变成「点了没反应」，日志里也什么都没有。
+
+修法（不是简单回退）：
+
+- `_EditFont()` / `_HintColor()`：仍优先照原版 `chgpwd.py` 的 `interface.FONT_EDIT`
+  /`COLOR_EDIT`，取不到就退回实机验证过的 `FontLT14_3` / `0`，并把选了哪个写进日志
+  ⇒ 常量存在与否都不会再把界面打死，同时还能告诉我们本版客户端到底有没有。
+- `_CreateFormEdit()`：按 chgpwd 的 `CEDIT` 调用建框，但先 `parent.GetObject(名字)`，
+  查不到就写 `anchor missing` 再抛 ⇒ 「.dlg 没导入/路径填错」这种最常见的现场错误
+  从此有明确名字（`regform.dlg` 里确有 account/pwd/pwd2/email/txt/chk_five 六个锚点，
+  已核对，加这个检查不会误伤正常路径）。
+- `Step()`/`Show()`：异常一律接住 ⇒ 记 `_DiagFailure`（只记类型名，绝不记异常值）
+  + `_RecoverEntry()`（解除输入遮蔽、回首页）+ 弹 `MSG_UNKNOWN_ERR`。
+  规则写死在这里：**绝不允许出现「点了什么都没发生」**。
+- 构建器加守卫：`_CreateFormEdit`/`_DiagFailure`/`_RecoverEntry` 三个函数名一旦从
+  模块里消失，`build_native_registration.py` 直接拒绝出货（防的就是这次这种「清理」）。
+- `harness.py2` 新增两个残酷世界（`MXSJ_HARNESS_MODE=no_font_edit|missing_layout`），
+  `test_runtime.py` 各跑一次断言：缺常量必须照常开页、缺版式必须「有弹框 + 回首项 +
+  日志点名」，两种情况都不许把异常漏给客户端。
+
+产物：`script.fls` 24,264,817 B，SHA-256 `f0253c9536d95e0a…`（4007 负载仍是 44,362 B
+定长，编译后 pyc 20,748 B，无需缩 `co_lnotab`）。
 
 ## 原第二期 Windows 验收步骤（下列明文导入方式已被存储修复说明取代）
 
