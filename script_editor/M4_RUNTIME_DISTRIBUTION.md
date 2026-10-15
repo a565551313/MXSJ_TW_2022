@@ -1,8 +1,10 @@
-# M4准备 · Windows双运行时整套审计与发行检查（0.3.1.dev1）
+# M4 · Windows双运行时整套审计与发行检查（0.3.2.dev1）
 
-**已实现检查代码；未交付Windows运行时或EXE，M4没有完成。**
-当前manifest仍空，不能执行内置编译。M3的14项真实GUI测试也仍缺系统库未执行。
-本轮没有上传、自动下载二进制、使用游戏DLL、修改PATH或提交编译器/FLS。
+**已补齐真实Windows x86双编译器并纳入源码交付ZIP；Windows执行、GUI/EXE及客户端验收仍未完成。**
+官方CPython源码经Zig0.13.0交叉构建，2.5.6为156个core编译单元、2.7.13为178个，均0失败。
+4个EXE/DLL均为真实PE32/i386，不是合成测试PE；完整标准库、许可和SHA已齐。
+仅MinGW平台适配，compiler/opcode/marshal实现未改，不使用游戏DLL。
+编译器生成物不入Git，随完整源码ZIP交付；普通用户不需要重建它们。
 
 ## 1. 为什么补这一层
 
@@ -19,7 +21,7 @@
 - 许可中必须有CPython；随包MSVCR/MSVCP/VCRUNTIME时必须有Microsoft CRT许可记录。
 - schema1空清单仍作为不可用状态识别；**schema1非空的EXE-only清单拒绝，不静默降级**。
 
-## 2. schema2（格式说明，不是可用清单）
+## 2. schema2（当前随包清单）
 
 顶层：`schema: 2`与`compilers: [...]`。发行必须恰有py25/py27两套；
 GUI单独检查某VM时可只检查该VM，不能据此声称完整双VM发行。
@@ -73,33 +75,52 @@ python -m script_editor.runtime_cli stage --root . --destination dist/MXSJScript
 这是发行构建，不能再用空manifest构建一个看似免安装的目录。
 开发查看GUI仍可直接运行bootstrap/run.py；缺编译器就禁编译，不替换成系统Python。
 
-## 5. 已核对来源事实与未解决条件
+## 5. 本次来源与构建
 
-本地已从官方CPython源码编译出的**Linux**2.5.6/2.7.13继续只用于Linux回归。
-2026-10-15只读GitHub refs确认（不是Windows二进制验证）：
+2026-10-15实际下载并校验的官方归档：
 
-| 版本 | 官方tag的commit | 本地已下载codeload源码SHA256 |
+| 版本 | 官方tag的commit | codeload源码SHA256 |
 |---|---|---|
 | 2.5.6 | 11a859d70dffc8da51d346dabd1fe6a635825ae5 | c68b9e84e9a302d120e5ec3ada6ef9fceb84d7768cea63dedb3074c6ed47bcfa |
-| 2.7.13 | 9c1426de7521299f70eb5483e7e25d1c2a73dbbd | 0e3cfac947d2a6c7ac6938d2457861bf4590ae4a30b00ab74647f40c542d7b84 |
+| 2.7.13 | 9c1426de7521299f70eb5483e7e25d1c2a73dbbd | ae1dc735e2990bf8de8e73c3f77b35d4f69502570957c743a7e8618a652fe08a |
 
 来源URL为`https://codeload.github.com/python/cpython/tar.gz/refs/tags/v2.5.6`及`v2.7.13`。
-这些是现有源码包的hash，**不能填作Windows EXE/DLL/ZIP的hash**。
-2.5.6源码PCbuild是旧vcproj，2.7.13为vcxproj；不能假设当前Windows runner拿到源码就能构建。
+纠正旧文档的2.7.13归档SHA；二进制/ZIP各自的实际SHA另列manifest，不混用源码归档SHA。
 
-尚未解决：Windows构建机/匹配旧工具链、真正标准x86双运行时及CRT再发行许可、逐文件实际哈希，
-PyInstaller父进程DLL搜索路径对legacy子进程的影响、中文/空格/跨盘路径与旧ANSI argv，
-NTFS文件锁/硬链接、DPI/快捷键/退出、EXE双击、客户端加载与注册业务。
-另未解析所有PE动态导入/LoadLibrary依赖闭包；Windows构建机预装依赖可能掩盖漏件，
-仍须在没有开发环境的干净Windows上验证，不能仅靠清单数量宣称依赖闭包完整。
-沙箱没有Windows/Wine执行环境，四个Qt依赖仍缺libGL/libEGL/libxkbcommon/libdbus。
-没有用伪造库或合成PE冒充真实运行时验收。
+维护者重建（需要联网及磁盘空间；普通用户无需运行）：
 
-## 6. 本轮测试范围
+```text
+python -m pip install ziglang==0.13.0
+python build_runtimes.py --work NEW_WORK_DIRECTORY --destination NEW_RUNTIME_DIRECTORY --jobs 4
+```
 
-24项新增运行时测试使用**明确的合成PE头/测试标准库内容及mock probe**，
-只验证拒绝规则、整套文件pin重核验、精确复制/失败清理/竞态、CLI退出码和发行skip规则。
-不是标准Windows运行时、没有启动这些合成EXE。
-标准库ZIP宜用ZIP_STORED；若用压缩ZIP，必须把相应标准zlib依赖及其许可完整纳入运行时，不能依赖系统模块。
-既有真实Linux双编译器和双包两轮M3工作流仍全量回归；实际计数见STATUS。
-只有补齐真实Windows执行与桌面验收后，才能把M4和免安装发行标为完成。
+两个目录都必须尚不存在，避免覆盖；脚本校验归档、拒绝目录穿越/链接、
+按官方VC工程源列表编译、链接真实EXE/DLL，再生成标准库、5份原许可、BUILD.json与整套SHA清单。
+可审查代码和固定来源重建，但不宣称不同宿主/时间生成的PE逐位一致。
+
+平台适配：posixmodule.c的Windows分支允许MinGW；dynload_win.c私有strcasecmp重命名避免SDK冲突；
+2.7 signalmodule.c的Windows.h改成windows.h适配大小写敏感文件系统。
+每处被修改源文件的前后SHA都记在BUILD.json。没有改编译器语法、opcode表或marshal。
+
+每VM根目录9个文件（EXE、DLL、ZIP、BUILD及5许可），18个文件均做整套校验。
+标准库ZIP为ZIP_STORED纯.py，排除test/tests/idlelib/lib-tk；不承诺通用Python2外部扩展。
+目标为**Windows10/11系统UCRT**，实际PE导入为系统KERNEL32/ADVAPI32/SHELL32/USER32及
+api-ms-win-crt-*。不随包复制微软CRT，不支持XP/Win7；许可原文包括CPython/Zig/MinGW/LLVM/zlib。
+
+## 6. 启动检查与验收边界
+
+GUI开窗后自动后台检查两VM，显示版本/魔数/32bit/整套SHA结果，无需先打开源码。
+缺件或损坏只禁该VM编译，仍可阅读/编辑源码；错误显示在诊断区，不伪造“已通过”。
+`检查内置编译器.bat`和`bootstrap.py --check-only`做完整编译/marshal检查；后一项也检查Qt加载。
+
+静态审计已通过，但不把交叉构建、模拟PE测试、Linux编译回归或Wine兼容层测试当真实Windows验收。
+曾尝试push触发Windows CI，run 38662087057在分配任何job前startup_failure，
+没有Windows执行结果；未保留无法启动的试验工作流，不以CI配置代替通过证据。
+
+仍须验证：真正Windows启动和双编译/marshal；中文/空格/跨盘路径与旧ANSI argv；
+没有开发环境的干净Win10/11上的系统依赖；PyInstaller父进程DLL路径、NTFS文件锁、
+DPI/快捷键/退出、EXE自构建/双击、客户端加载与注册业务。
+本包不含原游戏包、keys、注册补丁或离线探针，不改变account/CBox或用户布局。
+
+测试标准和mock审计护栏保持：合成PE/mock仅证明拒绝规则，不是运行时来源证明。
+只有真实Windows执行与桌面验收补齐后，才能把M4和免安装发行标为完成。

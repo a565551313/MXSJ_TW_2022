@@ -14,6 +14,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--version", action="version", version=__version__)
     args = sys.argv[1:] if argv is None else argv
     parser.parse_args(args)
+    from PySide6.QtCore import QTimer
     from PySide6.QtWidgets import QApplication
 
     from .gui.window import Window
@@ -26,4 +27,5 @@ def main(argv: list[str] | None = None) -> int:
     application = QApplication.instance() or QApplication([sys.argv[0]])
     window = Window(root)
     window.show()
+    QTimer.singleShot(0, window.initialize_compilers)
     return application.exec()

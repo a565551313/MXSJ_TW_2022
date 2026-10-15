@@ -63,7 +63,7 @@ class Window(ProjectActions, BuildActions, QMainWindow):
         self.project_dirty = False
         self.compilers = {}
         self.jobs = set()
-        self.setWindowTitle(f"MXSJ 脚本编辑器 {__version__} · M3实验版")
+        self.setWindowTitle(f"MXSJ 脚本编辑器 {__version__} · 实验版")
         self.resize(1180, 760)
         self.tree = QTreeWidget()
         self.tree.setHeaderLabels(["包 / 条目（内容尚未解码验证）", "存储字节"])
@@ -85,7 +85,7 @@ class Window(ProjectActions, BuildActions, QMainWindow):
             "无源码条目只读；仅手工打开自己确认来源的UTF-8源码。\n"
             "关联仅记录用户选择，不自动证明与原条目语义一致。\n"
             "标准.pyc不是原生脚本载荷，不能放进游戏。\n"
-            "内置编译器空清单时禁用；可显式选择标准开发编译器。"
+            "启动后自动检查两套内置编译器；缺件/损坏的VM禁止编译。"
         )
         splitter = QSplitter()
         splitter.addWidget(left)
@@ -94,7 +94,7 @@ class Window(ProjectActions, BuildActions, QMainWindow):
         splitter.setSizes([260, 650, 270])
         body = QWidget()
         box = QVBoxLayout(body)
-        banner = QLabel("M3 · 源码保存 ≠ 游戏写包；反编译稿不能当作可信源码")
+        banner = QLabel("双VM · 源码保存 ≠ 游戏写包；反编译稿不能当作可信源码")
         banner.setWordWrap(True)
         box.addWidget(banner)
         box.addWidget(splitter)
@@ -138,6 +138,7 @@ class Window(ProjectActions, BuildActions, QMainWindow):
             action.triggered.connect(lambda checked=False, c=codec: self.encode(c))
         build = self.menuBar().addMenu("编译")
         build.addAction("选择/检查当前VM的标准编译器…", self.select_compiler)
+        build.addAction("重新检查两套内置编译器", self.initialize_compilers)
         build.addAction("检查当前VM的内置编译器", self.check_bundled)
         build.addAction("仅编译为标准.pyc…", self.compile)
         build.addAction("选择当前包的XOR目录…", self.configure_catalog)

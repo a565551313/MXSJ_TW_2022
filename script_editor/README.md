@@ -1,6 +1,7 @@
-# MXSJ 独立脚本编辑器 0.3.1.dev1
+# MXSJ 独立脚本编辑器 0.3.2.dev1
 
-**M3 实验功能＋M4发行检查准备：GUI交互未实际验收，Windows双编译器/EXE尚未交付。**
+**独立源码测试包，已补齐两套 Windows x86 标准编译器；用户可自行构建 EXE。**
+Windows 桌面、编译器实际启动和客户端加载仍需实机验证，未标为验收完成。
 不是已验收的 Windows 发行版，也不保证任意原始模块都可编辑。
 本目录可以独立复制，不在运行时导入 UI/资源编辑器或仓库 `tools`。
 Python ≥3.10；GUI 使用 PySide6≥6.4；核心不依赖 Qt。
@@ -43,7 +44,9 @@ python bootstrap.py --check-only
 
 自检会补安装 Python3 GUI 依赖，并在官方源失败时提供镜像回退。
 已安装PySide6但缺系统Qt动态库时会明确失败并写`启动日志.txt`，不会假报GUI就绪。
-`--check-only`不等于旧版编译器/原生游戏验收。
+`--check-only`现在检查GUI加载、两套编译器精确版本/魔数、真实编译及完整marshal回读，失败返回2。
+也可双击`检查内置编译器.bat`，仅检查双编译器而不安装GUI依赖；检查不执行目标源码。
+这些检查不等于客户端游戏验收。
 
 开发环境也可以安装本目录后运行 `mxsj-script-editor`，或：
 
@@ -57,25 +60,28 @@ PYTHONPATH=src python -m script_editor --version
    来源确认选“否”则只读打开。参考稿不可编译，不能靠改扩展名证明正确。
 3. 在源码标签显式选择VM；可关联到选中条目，保存项目用于下次续编。
    项目保存仅保存关联，**不会代替源码保存**。源码/包/项目同一盘时可相对路径整体迁移。
-4. 编译 → 检查内置编译器，或显式选择自己安装的标准开发编译器 → 仅编译为标准.pyc。
+4. 启动会在后台检查两套内置编译器；诊断区应显示2/2可用，无需安装Python2或手动选EXE。
+   可在编译菜单重新检查；“仅编译为标准.pyc”只输出标准字节码。
    标准.pyc单独导出仍使用源码路径UTF-8字节；native构建保留原模块嵌入文件名原始bytes。
 5. script包先选择匹配的XOR研究目录，再关联条目与可信源码。使用“生成原生新包：预编译与清单”，
    通过后确认输出到新名字；成功自动承接新包，编辑区未保存文字与撤销保持。
    请另存源码/项目；取消、预编译或发布失败不自动保存源码。只有SHA没有旧源码文本时不伪造逐行diff。
 
-## 内置编译器：尚未交付
+## 内置双编译器
 
-`runtimes/manifest.json`当前为空，缺失时禁用编译，不回退系统Python/PATH。
-本轮Linux实际调用标准2.5.6与2.7.13做编译、无执行与完整marshal读取测试；
-**没有Windows x86运行时/EXE实测，不宣称免安装Windows包可用。**
-后续按`runtimes/README.md`补真实来源、整套文件哈希、许可证、依赖、Windows实测。
-不拿游戏DLL充当标准编译器。
+- `runtimes/py25/win-x86`：CPython 2.5.6，标准魔数`b3f20d0a`，用于script。
+- `runtimes/py27/win-x86`：CPython 2.7.13，标准魔数`03f30d0a`，用于data。
+- 每套包含真实x86 `python.exe`、对应DLL、ZIP_STORED纯Python标准库、5份许可与BUILD.json。
+  schema2清单包含全部18个运行时文件的实际SHA256、官方源码URL/commit/归档SHA。
+- 面向Windows 10/11，依赖操作系统UCRT和系统DLL，不支持XP/Win7；没有打包微软CRT或游戏DLL。
+  是源码编译/marshal用途的最小运行时，不是含全部外部扩展的通用Python2发行版。
+- 官方源码交叉构建，只有MinGW平台适配；compiler/opcode/marshal实现未改。
+  `build_runtimes.py`供维护者从固定来源重建，不是普通启动或构建EXE的前置操作。
+- 整套文件SHA/PE32/来源许可检查在注册、编译、回读前后复核；不回退系统Python/PATH。
+  缺件/篡改/版本错误会禁用相应编译入口。Git不存放这些生成的二进制，完整源码交付ZIP中包含。
 
-0.3.1新增schema2整套文件SHA/PE32/来源许可审计与注册后复验，不再只查EXE。
-发行构建要求两套运行时实际编译/marshal通过，GUI/真实编译器测试不可skip，
-复制后再检查；空清单现在直接阻止发行构建，而不是复制成残缺的发行目录。
-详见[M4准备与未解决条件](M4_RUNTIME_DISTRIBUTION.md)。
-这些代码不代表已拿到真实Windows编译器，静态审计也不是Windows执行验收。
+已完成真实PE构建及静态清单审计；**尚未在真实Windows执行，不宣称桌面/EXE/客户端验收通过。**
+详见[运行时构建记录与剩余实机检查](M4_RUNTIME_DISTRIBUTION.md)。
 
 ## 测试与构建
 
@@ -93,7 +99,8 @@ ruff check .
 
 Windows双击`build_exe.bat`：双运行时实际审计 → venv/依赖 → 严格测试 → PyInstaller onedir → 运行时复制复验。
 条件满足后才输出`dist/MXSJScriptEditor/MXSJScriptEditor.exe`；无参数开窗。
-**当前清单为空，发行构建会失败；源码GUI测试请用启动bat，不要用build_exe.bat代替启动。**
+源码GUI测试请用启动bat；准备自行生成EXE时才运行`build_exe.bat`。
+双编译器/Qt测试失败时严格阻断，不能跳过检查构建残缺EXE。
 本轮未构建EXE，也未做Linux冻结干跑；Windows检查清单见仓库开发约定。
 
 ## 后续硬闸

@@ -3,6 +3,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from fixtures import data_bytes, script_bytes
@@ -40,6 +41,44 @@ class GuiTests(unittest.TestCase):
         self.window.deleteLater()
         self.app.processEvents()
         self.temp.cleanup()
+
+    def test_startup_checks_both_vms_without_open_tab(self):
+        def compiler(vm, root):
+            return SimpleNamespace(
+                vm=vm,
+                version="2.5.6" if vm == "py25" else "2.7.13",
+                bits=32,
+                executable=root / vm / "python.exe",
+            )
+
+        with patch(
+            "script_editor.gui.build_actions.bundled_compiler", side_effect=compiler
+        ) as probe:
+            with patch.object(
+                self.window, "task", side_effect=lambda fn, done: done(fn())
+            ):
+                self.window.initialize_compilers()
+        self.assertEqual(
+            [call.args[0] for call in probe.call_args_list], ["py25", "py27"]
+        )
+        self.assertEqual(set(self.window.compilers), {"py25", "py27"})
+        self.assertIn("2/2", self.window.statusBar().currentMessage())
+        self.assertFalse(self.window.native_action.isEnabled())
+
+    def test_failed_startup_clears_stale_compilers_but_keeps_source_available(self):
+        self.window.compilers["py25"] = object()
+        with patch(
+            "script_editor.gui.build_actions.bundled_compiler",
+            side_effect=ValueError("bad inventory"),
+        ):
+            with patch.object(
+                self.window, "task", side_effect=lambda fn, done: done(fn())
+            ):
+                self.window.initialize_compilers()
+        self.assertEqual(self.window.compilers, {})
+        self.assertIn("bad inventory", self.window.info.toPlainText())
+        self.window.add_source(self.source)
+        self.assertFalse(self.window.current().editor.isReadOnly())
 
     def test_window_native_build_disabled(self):
         self.window.show()

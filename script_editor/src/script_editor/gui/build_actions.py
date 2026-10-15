@@ -235,6 +235,46 @@ class BuildActions:
             f"SHA256 {compiler.sha256}\n{audit}\n仅编译，不执行目标模块。"
         )
 
+    def initialize_compilers(self):
+        """Check both pinned runtimes without requiring an open source tab.
+
+        Failures stay in the diagnostic pane; reading/editing source remains
+        available. Only successfully checked VMs become compile candidates.
+        """
+        root = self.runtime_root
+
+        def check():
+            ready, errors = [], {}
+            for vm in PROFILES:
+                try:
+                    ready.append(bundled_compiler(vm, root))
+                except (OSError, ValueError) as exc:
+                    errors[vm] = str(exc)
+            return ready, errors
+
+        def complete(result):
+            ready, errors = result
+            self.compilers.clear()
+            lines = ["双VM内置编译器启动自检（版本 / 魔数 / x86 / 整套SHA）"]
+            for compiler in ready:
+                self.compilers[compiler.vm] = compiler
+                lines.append(
+                    f"通过：{compiler.vm} / CPython {compiler.version} / "
+                    f"{compiler.bits}bit\n{compiler.executable}"
+                )
+            for vm, error in errors.items():
+                lines.append(f"不可用：{vm}：{error}")
+            lines.append(
+                "仅编译，不执行目标模块。完整编译/marshal验收："
+                "运行bootstrap.py --check-only或检查内置编译器.bat。\n"
+                "保存.py不等于写游戏包；原生写包仍需可信源码关联和清单确认。"
+            )
+            self.info.setPlainText("\n\n".join(lines))
+            self.refresh_native_action()
+            self.statusBar().showMessage(f"内置编译器自检：{len(ready)}/2可用")
+
+        self.task(check, complete)
+
     def check_bundled(self):
         try:
             vm = self.current().vm.currentData()

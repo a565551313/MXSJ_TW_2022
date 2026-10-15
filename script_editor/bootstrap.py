@@ -78,7 +78,7 @@ def ensure_dependencies() -> bool:
     """检查并补齐运行依赖。"""
     missing = find_missing()
     if not missing:
-        _say("依赖检查通过：PySide6 已安装（不代表旧版编译器已安装）。")
+        _say("依赖检查通过：PySide6 已安装（接着检查内置编译器）。")
         return True
     names = "、".join(import_name for import_name, _ in missing)
     _say(f"检测到缺少依赖：{names}，现在自动安装（只需这一次）…")
@@ -130,11 +130,24 @@ def main(argv: list[str] | None = None) -> int:
         _say("PySide6已安装但QtWidgets加载失败（系统动态库可能缺失）。")
         _say(f"详情见 {LOG_PATH}；不反复安装Python包掩盖系统库问题。")
         return 2
+    sys.path.insert(0, str(HERE / "src"))
     if check_only:
-        _say("GUI依赖已就绪；旧版编译器仍须独立检查。")
+        from script_editor.core.compiler.distribution import audit_runtimes
+
+        try:
+            report = audit_runtimes(HERE, execute=True)
+        except (OSError, ValueError) as exc:
+            _say(f"内置编译器检查未通过：{exc}")
+            _log_failure(traceback.format_exc())
+            return 2
+        for compiler in report["compilers"]:
+            _say(
+                f"通过：{compiler['vm']} / CPython {compiler['version']} / "
+                f"{compiler['bits']}bit；仅编译和marshal回读，未执行目标模块。"
+            )
+        _say("GUI加载及双编译器完整自检通过；不代表客户端加载/业务验收。")
         return 0
 
-    sys.path.insert(0, str(HERE / "src"))
     from script_editor.app import main as app_main
 
     _say("正在打开编辑器界面…")
