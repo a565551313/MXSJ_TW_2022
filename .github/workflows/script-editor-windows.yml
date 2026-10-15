@@ -1,0 +1,41 @@
+name: Script editor Windows compilers
+on:
+  push:
+    branches: [arena/51e31d38-mxsj-tw-2022]
+    paths:
+      - 'script_editor/**'
+      - '.github/workflows/script-editor-windows.yml'
+permissions:
+  contents: read
+jobs:
+  compilers-and-tests:
+    runs-on: windows-2022
+    timeout-minutes: 25
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: utf-8
+      PYTHONPATH: script_editor/src
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned cross toolchain and GUI dependencies
+        run: python -m pip install ziglang==0.13.0 -r script_editor/requirements-dev.txt
+      - name: Build both exact CPython versions from pinned official sources
+        run: python script_editor/build_runtimes.py --work "$env:RUNNER_TEMP\compiler-build" --destination "$env:RUNNER_TEMP\runtimes" --jobs 4
+      - name: Install freshly built runtime inventories
+        run: Copy-Item "$env:RUNNER_TEMP\runtimes\*" script_editor/runtimes -Recurse -Force
+      - name: Genuine Windows compile and marshal smoke
+        run: python -m script_editor.runtime_cli audit --root script_editor > runtime-audit.json
+      - name: Real GUI and dual-compiler native-package regression
+        run: python -m script_editor.release_checks --root script_editor
+      - name: Preserve compiler receipt and binaries, no game packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: standard-windows-x86-compilers
+          path: |
+            script_editor/runtimes
+            runtime-audit.json
+          retention-days: 7
