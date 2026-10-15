@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "date": "2026-10-15",
+  "scope": "script_editor 0.6.0.dev2 stage2; Linux only; not a Windows/client acceptance",
+  "base_commit": "5998c1b",
+  "branch": "arena/61deb9e5-mxsj-tw-2022",
+  "tests": {
+    "count": 264,
+    "gui_count": 48,
+    "failures": 0,
+    "skips": 0,
+    "host": "CPython 3.11.2/Linux; Qt 6.10.3 offscreen",
+    "log_sha256": "d5210e7b294d09ee0c567c52257052bebfa876406c7b26e6469995ef0c7b7d80",
+    "all_required_release_test_ids_present": true,
+    "lint": "ruff check script_editor: passed",
+    "windows_static": "104 files, zero findings; not runtime acceptance"
+  },
+  "actual_compilers": [
+    "CPython 2.5.6 Linux",
+    "CPython 2.7.13 Linux"
+  ],
+  "secondary_engine": {
+    "schema_version": 1,
+    "platform": "linux",
+    "executable": "pycdc",
+    "source_commit": "b4289760970dbc399684f1e155ec6d1ea1cc787e",
+    "source_sha256": "d7d8c53d37a1a586097145b532fca02535db2f2f0999b3b1e910133c9941bf31",
+    "binary_sha256": "84573109081562e70ace38b6850f581276dcc33401be6d23e55e0486c8d4eeb4"
+  },
+  "corpus": {
+    "manifest_bytes": 74417377,
+    "manifest_sha256": "e06efa990600ec1ca3f4f57c475596c10203c40d36a989ce43fe1192fa890535",
+    "entries": 5002,
+    "accepted_repairs": [
+      63,
+      1013,
+      1528,
+      1854,
+      1931,
+      2643,
+      2984,
+      4305
+    ],
+    "rejected_repairs": [
+      64,
+      1954,
+      3066,
+      4133,
+      4166,
+      4691,
+      4928
+    ],
+    "non_verified_origin_candidates_tested": [
+      124,
+      2371,
+      4861
+    ],
+    "large_entry": 1182,
+    "large_stdout_bytes": 4239260,
+    "full_decompilation_rerun": false
+  },
+  "native_roundtrip": {
+    "entry": 4305,
+    "edited_source": "test-only small probe, not recovered game logic",
+    "strict_catalog_verified": true,
+    "compile_then_publish_then_full_standard_readback": true,
+    "unchanged_entry_payloads": 5001,
+    "embedded_filename_preserved": true,
+    "compiled_target_not_executed": true
+  },
+  "input_sha256": {
+    "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "data/data.fls": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+    "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+    "mxLauncher.exe": "3eeba17e7be96fcc43374c4f533d21048d3af20a6519b413ac2b46dc89183b63"
+  },
+  "not_accepted": [
+    "Windows native builds/run",
+    "EXE dependency closure",
+    "client game semantics",
+    "all-entry safe publishing coverage"
+  ],
+  "delivered": false,
+  "merged": false
+}

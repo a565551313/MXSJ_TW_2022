@@ -41,6 +41,9 @@ class ModuleReport:
     stored_preview: str
     candidates: tuple[RecoveryCandidate, ...] = ()
     selected_engine: str = "uncompyle6"
+    corpus_manifest_sha256: str = ""
+    candidate_pyc_sha256: str = ""
+    origin_verified: bool = True
 
     def for_candidate(self, index):
         candidate = self.candidates[index]
@@ -69,6 +72,9 @@ class ModuleReport:
             "diagnostics": list(self.diagnostics),
             "stored_preview_hex": self.stored_preview,
             "selected_engine": self.selected_engine,
+            "corpus_manifest_sha256": self.corpus_manifest_sha256,
+            "candidate_pyc_sha256": self.candidate_pyc_sha256,
+            "origin_verified": self.origin_verified,
             "candidates": [c.metadata() for c in self.candidates],
         }
 

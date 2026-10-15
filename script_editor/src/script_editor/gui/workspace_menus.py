@@ -57,6 +57,17 @@ class WorkspaceMenus:
         self.action(
             file_menu, "project", "打开项目…", self.open_project, None, sp.SP_DirIcon
         )
+        corpus = self.menuBar().addMenu("恢复语料")
+        self.action(corpus, "import_corpus", "导入全量候选清单…", self.import_corpus)
+        self.action(
+            corpus, "corpus_entry", "另开当前条目的语料候选", self.open_corpus_module
+        )
+        self.action(
+            corpus,
+            "verified_keys",
+            "核验修复参数并另存新目录…",
+            self.export_verified_catalog,
+        )
         edit = self.menuBar().addMenu("编辑")
         self.action(
             edit,

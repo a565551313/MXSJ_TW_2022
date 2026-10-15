@@ -20,6 +20,7 @@ from ..core.inspection.encoding import byte_literal
 from ..core.services.bundled_catalog import bundled_catalog
 from ..core.services.files import read_source, save_source
 from .build_actions import BuildActions
+from .corpus_actions import CorpusActions
 from .jobs import Job
 from .module_actions import ModuleActions
 from .project_actions import ProjectActions
@@ -27,7 +28,9 @@ from .source_tab import SourceTab
 from .workspace import Workspace
 
 
-class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow):
+class Window(
+    Workspace, ModuleActions, ProjectActions, BuildActions, CorpusActions, QMainWindow
+):
     def __init__(self, runtime_root: Path, settings=None):
         super().__init__()
         self.runtime_root = runtime_root
@@ -35,6 +38,9 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
         self.archives: list[ArchiveDocument] = []
         self.bindings = []
         self.catalogs = []
+        self.corpora = {}
+        self.corpus_refs = []
+        self.saved_workspace = {}
         self.built_texts = {}
         self.module_names = {}
         self.project_dirty = False
@@ -275,8 +281,10 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
         tab.editor.undoAvailable.connect(self.refresh_native_action)
         tab.editor.redoAvailable.connect(self.refresh_native_action)
         tab.editor.textChanged.connect(self.analysis_timer.start)
+        tab.editor.textChanged.connect(lambda: setattr(self, "project_dirty", True))
         tab.editor.cursorPositionChanged.connect(self.update_cursor)
         tab.vm.currentIndexChanged.connect(self.refresh_native_action)
+        tab.vm.currentIndexChanged.connect(lambda: setattr(self, "project_dirty", True))
         tab.adopt_button.clicked.connect(self.adopt_recovery)
         self.refresh_tab_title(tab)
         self.refresh_native_action()
@@ -364,6 +372,7 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
                 raise ValueError("已取消另存恢复草稿，编辑内容保留")
             if saved:
                 return
+        self.assert_writable_target(tab.path)
         save_source(
             tab.path,
             tab.editor.toPlainText(),
@@ -380,6 +389,8 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
     def confirm_tab(self, tab):
         if not tab.editor.document().isModified():
             return True
+        if self.saved_workspace.get(tab.path) == tab.editor.toPlainText():
+            return True  # Current buffer is durably saved inside the project.
         reply = QMessageBox.question(
             self,
             "源码未保存",
@@ -404,6 +415,7 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
         if self.confirm_tab(tab):
             self.tabs.removeTab(index)
             tab.deleteLater()
+            self.project_dirty = True
 
     def encode(self, codec):
         try:

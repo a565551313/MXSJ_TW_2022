@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mxsj-script-editor"
-version = "0.6.0.dev1"
+version = "0.6.0.dev2"
 description = "MXSJ dual-VM package editor with unverified recovery drafts"
 readme = "README.md"
 requires-python = ">=3.10,<3.15"

@@ -14,6 +14,11 @@ from .recovery_dependencies import checked_recovery_source
 # Independent game/DLL materials are deliberately not part of a standalone tool.
 # Only these exact opt-in tests may be absent from a release build environment.
 OPTIONAL_MATERIAL_TESTS = {
+    "test_corpus_import.RealCorpusImportTests.test_eight_real_repairs_match_exact_pyc_and_original_catalog_unchanged",
+    "test_corpus_import.RealCorpusImportTests.test_124_and_4861_keep_editable_candidates_without_verified_origin",
+    "test_corpus_import.RealCorpusImportTests.test_2371_local_repair_delta_not_misrepresented_as_verified",
+    "test_corpus_import.RealCorpusImportTests.test_real_repaired_4305_compile_publish_reopen_without_execution",
+    "test_corpus_import.RealCorpusImportTests.test_real_large_entry_1182_is_not_blocked_by_live_process_output_limit",
     "test_recovery_candidates.ActualCorpusTests.test_original_archive_path_uses_secondary_after_primary_timeout",
     # Research samples are external test evidence, never a product dependency.
     "test_recovery_candidates.ActualCorpusTests.test_real_partial_source_is_editable_but_never_complete",
@@ -33,6 +38,11 @@ OPTIONAL_MATERIAL_TESTS = {
 
 
 REQUIRED_RELEASE_TESTS = {
+    "test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_project_restores_unsaved_text_candidates_diagnostics_and_vm",
+    "test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_unverified_external_pyc_cannot_reach_native_prepare",
+    "test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_verify_catalog_action_writes_new_file_and_leaves_original_untouched",
+    "test_workspace_state.WorkspaceStateTests.test_unsaved_draft_report_and_exact_raw_bytes_roundtrip",
+    "test_corpus_import.CorpusImportTests.test_repair_parameters_require_exact_strict_byte_equality",
     "test_recovery_candidates.ActualEngineSmoke.test_both_real_vms_second_engine_compile_without_execution",
     "test_gui_recovery_candidates.CandidateGuiTests.test_other_candidate_opens_fresh_tab_without_overwriting_dirty_edits",
     "test_gui_recovery_candidates.CandidateGuiTests.test_cancel_button_stops_recovery_and_keeps_dirty_buffer",

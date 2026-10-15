@@ -85,20 +85,58 @@ class ModuleActions:
             self.refresh_native_action()
 
         cancel = Event()
+
+        def recover():
+            if any(r.archive == archive.path for r in self.corpus_refs):
+                from ..core.services.corpus_recovery import corpus_report
+
+                try:
+                    return corpus_report(
+                        self.corpus_for(archive), archive, index, catalog
+                    )
+                except (OSError, ValueError) as exc:
+                    result = read_module(archive, index, catalog, cancel=cancel)
+                    return replace(
+                        result,
+                        diagnostics=("语料不可用：" + str(exc), *result.diagnostics),
+                    )
+            return read_module(archive, index, catalog, cancel=cancel)
+
         self.task(
-            lambda: read_module(archive, index, catalog, cancel=cancel),
+            recover,
             complete,
             cancel=cancel,
         )
 
     def open_recovery_candidate(self, report):
         # A fresh tab, never mutate/replace a user's current candidate or edits.
+        suffix = (
+            "." + report.corpus_manifest_sha256[:12]
+            if report.corpus_manifest_sha256
+            else ""
+        )
         virtual = report.archive.parent / (
-            f".{report.archive.name}.{report.index}.{report.selected_engine}.recovered.py"
+            f".{report.archive.name}.{report.index}.{report.selected_engine}{suffix}.recovered.py"
         )
         for i in range(self.tabs.count()):
             existing = self.tabs.widget(i)
-            if existing.path == virtual.resolve():
+            origin = existing.recovery
+            same_origin = origin is not None and (
+                origin.archive,
+                origin.fingerprint,
+                origin.index,
+                origin.selected_engine,
+                origin.corpus_manifest_sha256,
+                origin.candidate_pyc_sha256,
+            ) == (
+                report.archive,
+                report.fingerprint,
+                report.index,
+                report.selected_engine,
+                report.corpus_manifest_sha256,
+                report.candidate_pyc_sha256,
+            )
+            if existing.path == virtual.resolve() or same_origin:
                 self.tabs.setCurrentWidget(existing)
                 return existing
         tab = self.add_source(
@@ -126,6 +164,7 @@ class ModuleActions:
             c.path for c in self.catalogs
         )
         protected += tuple(b.source for b in self.bindings)
+        self.assert_writable_target(path)
         save_new_source(path, tab.editor.toPlainText(), protected)
         tab.path, tab.draft_saved = path, True
         tab.path_label.setToolTip(str(path))
@@ -173,6 +212,17 @@ class ModuleActions:
                 from ..core.inspection.native import inspect_module
 
                 standard, filename, _ = inspect_module(archive, index, catalog)
+                if origin and (
+                    (origin.corpus_manifest_sha256 and not origin.candidate_pyc_sha256)
+                    or (
+                        origin.candidate_pyc_sha256
+                        and hashlib.sha256(standard).hexdigest()
+                        != origin.candidate_pyc_sha256
+                    )
+                ):
+                    raise ValueError(
+                        "外部语料pyc与原包严格来源不同；可编辑草稿，但不能据此采用发布"
+                    )
                 binding = replace(
                     Binding.associate(archive, index, tab.path),
                     filename_hex=filename.hex(),

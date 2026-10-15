@@ -56,10 +56,10 @@ class Binding:
             raise ValueError("项目与当前包指纹/模块身份不符，拒绝套用源码关联")
 
 
-def save_project(path: Path, bindings: list[Binding], catalogs=()):
+def save_project(path: Path, bindings: list[Binding], catalogs=(), **workspace):
     from .storage import save_state
 
-    save_state(path, bindings, catalogs)
+    save_state(path, bindings, catalogs, **workspace)
 
 
 def load_project(path: Path) -> list[Binding]:

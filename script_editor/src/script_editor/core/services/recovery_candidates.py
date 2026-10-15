@@ -26,6 +26,7 @@ class RecoveryCandidate:
     binary_sha256: str = ""
     source_sha256: str = ""
     trace_stdout: bytes = b""
+    evidence: dict | None = None
 
     @property
     def complete(self):
@@ -34,6 +35,7 @@ class RecoveryCandidate:
     def metadata(self):
         return {
             "engine": self.engine,
+            "external_evidence": self.evidence,
             "version": self.version,
             "status": self.status,
             "completion_is_heuristic": True,

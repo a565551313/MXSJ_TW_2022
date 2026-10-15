@@ -88,6 +88,15 @@ class SourceTab(QWidget):
             f"{report.archive.name} · #{report.index} · {report.identity}\n"
             + repr(bytes.fromhex(report.filename_hex))
         )
+        if report.corpus_manifest_sha256:
+            status = (
+                "与语料pyc全字节相等"
+                if report.origin_verified
+                else "未核验/不匹配，须先接通严格来源；不能直接采用"
+            )
+            self.path_label.setText(
+                self.path_label.text() + "\n载入时原包严格来源：" + status
+            )
         body = QTabWidget()
         self.layout().removeWidget(self.editor)
         body.addTab(self.editor, "恢复草稿" if report.source else "读取结果")
