@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 from ..core.project.document import Binding
 from ..core.services.files import save_new_source
 from ..core.services.module_browser import read_module
+from ..core.services.module_paths import display_module_path
 from ..core.services.workflow import Snapshot, prepare_build
 
 
@@ -73,9 +74,12 @@ class ModuleActions:
             tab.attach_report(report)
             tab.candidate_requested.connect(self.open_recovery_candidate)
             if report.filename_hex:
-                self.module_names[(report.archive, report.index)] = repr(
-                    bytes.fromhex(report.filename_hex)
-                )
+                try:
+                    self.module_names[(report.archive, report.index)] = (
+                        display_module_path(bytes.fromhex(report.filename_hex))
+                    )
+                except ValueError:
+                    pass  # An invalid name must not discard a recovered draft.
             if report.source:
                 tab.editor.document().setModified(True)
             self.info.setPlainText(

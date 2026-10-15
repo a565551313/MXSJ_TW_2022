@@ -90,24 +90,40 @@ class WorkspaceActions:
                 f"{archive.path.name} / {archive.vm} · "
                 f"{len(archive.entries)} 条（候选VM）",
             )
+            if archive.kind == "0slf":
+                count = sum(
+                    (archive.path, e.index) in self.module_names
+                    for e in archive.entries
+                )
+                root.setToolTip(
+                    0,
+                    f"{archive.path}\n已读取路径 {count}/{len(archive.entries)}；"
+                    "路径不代表源码已恢复或可信",
+                )
             for j in range(root.childCount()):
                 child = root.child(j)
                 entry = archive.entries[j]
-                label = (
-                    f"#{entry.index}  · ID {entry.identity}"
-                    if archive.kind == "0slf"
-                    else f"#{entry.index}  · {entry.identity}"
-                )
                 embedded = self.module_names.get((archive.path, entry.index))
-                if embedded:
-                    label += f"  {embedded}"
+                label = (
+                    embedded or f"[路径未读取] 条目 #{entry.index}"
+                    if archive.kind == "0slf"
+                    else entry.identity.replace("\\", "/")
+                )
                 binding = bindings.get((archive.path, entry.index))
                 if binding:
                     label += f" ← {binding.source.name}"
                 child.setText(0, label)
                 child.setToolTip(
                     0,
-                    f"身份：{entry.identity}\n"
+                    f"条目：#{entry.index} · ID {entry.identity}\n"
+                    + (
+                        "内嵌模块路径：" + embedded + "\n"
+                        if embedded
+                        else archive.module_path_errors.get(entry.index, "路径尚未读取")
+                        + "\n"
+                        if archive.kind == "0slf"
+                        else "包内路径：" + entry.identity + "\n"
+                    )
                     + (
                         str(binding.source)
                         if binding
@@ -115,6 +131,7 @@ class WorkspaceActions:
                     ),
                 )
                 child.setIcon(0, file_icon)
+        self.filter_tree(self.filter.text())
 
     def select_archive_scope(self, *_):
         self.tree.setCurrentItem(None)
@@ -158,6 +175,12 @@ class WorkspaceActions:
             rows += [
                 ("原包", str(archive.path)),
                 ("条目", archive.entries[index].identity),
+                (
+                    "包内路径",
+                    self.module_names.get((archive.path, index), "路径未读取")
+                    if archive.kind == "0slf"
+                    else archive.entries[index].identity,
+                ),
                 ("包 VM", archive.vm),
             ]
         if not selected:

@@ -19,6 +19,7 @@ from ..core.archives.document import ArchiveDocument
 from ..core.inspection.encoding import byte_literal
 from ..core.services.bundled_catalog import bundled_catalog
 from ..core.services.files import read_source, save_source
+from ..core.services.module_paths import index_script_paths
 from .build_actions import BuildActions
 from .corpus_actions import CorpusActions
 from .jobs import Job
@@ -146,6 +147,15 @@ class Window(
             root.addChild(child)
         self.tree.addTopLevelItem(root)
         self.archives.append(document)
+        self.module_names = {
+            key: name
+            for key, name in self.module_names.items()
+            if key[0] != document.path
+        }
+        self.module_names.update(
+            ((document.path, index), name)
+            for index, name in document.module_paths.items()
+        )
         root.setExpanded(True)
         self.workspace_refresh()
         try:
@@ -167,7 +177,13 @@ class Window(
                     catalog = bundled_catalog(document, self.runtime_root)
                 except (OSError, ValueError) as exc:
                     # A broken/missing optional asset must not hide the package.
+                    index_script_paths(document, None)
                     return document, None, str(exc)
+                except Exception:
+                    document.close()
+                    raise
+                try:
+                    index_script_paths(document, catalog)
                 except Exception:
                     document.close()
                     raise
@@ -209,7 +225,13 @@ class Window(
             )
             for j in range(root.childCount()):
                 item = root.child(j)
-                item.setHidden(text.casefold() not in item.text(0).casefold())
+                archive, index = item.data(0, Qt.ItemDataRole.UserRole)
+                searchable = (
+                    (item.text(0) + f" #{index} " + archive.entries[index].identity)
+                    .replace("\\", "/")
+                    .casefold()
+                )
+                item.setHidden(text.replace("\\", "/").casefold() not in searchable)
             if text:
                 root.setExpanded(True)
 
@@ -224,6 +246,13 @@ class Window(
             archive, index = selected
             try:
                 metadata = archive.entry_metadata(index)
+                if archive.kind == "0slf":
+                    metadata["module_path"] = self.module_names.get(
+                        (archive.path, index), ""
+                    )
+                    metadata["path_diagnostic"] = archive.module_path_errors.get(
+                        index, ""
+                    )
                 binding = next(
                     (
                         b

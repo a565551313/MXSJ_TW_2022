@@ -43,6 +43,12 @@ OPTIONAL_MATERIAL_TESTS = {
 
 
 REQUIRED_RELEASE_TESTS = {
+    "test_module_paths.ModulePathTests.test_all_paths_without_decompiler_and_bad_entries_are_independent",
+    "test_module_paths.ModulePathTests.test_catalog_tamper_rejects_whole_index",
+    "test_gui_module_paths.ModulePathGuiTests.test_open_shows_paths_before_any_double_click_no_binding_or_source",
+    "test_gui_module_paths.ModulePathGuiTests.test_project_reopen_also_indexes_paths_without_touching_dirty_buffer",
+    "test_gui_module_paths.ModulePathGuiTests.test_manual_catalog_confirmation_reindexes_existing_unknown_package",
+    "test_gui_module_paths.ModulePathGuiTests.test_declining_catalog_never_publishes_scanned_names",
     "test_gui_module.GuiModuleTests.test_old_missing_xor_project_gets_pin_and_retries_without_overwriting_edits",
     "test_bundled_catalog.RegisteredPackagePinTests.test_actual_production_map_registers_exact_user_digest_and_unknown_stays_off",
     "test_bundled_catalog.BundledCatalogTests.test_registered_test_digest_does_not_bypass_damaged_payload_validation",

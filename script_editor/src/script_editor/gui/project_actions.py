@@ -13,6 +13,7 @@ from ..core.project.storage import load_state
 from ..core.project.workspace import EditorState
 from ..core.services.bundled_catalog import bundled_catalog
 from ..core.services.files import read_source
+from ..core.services.module_paths import index_script_paths
 
 
 class ProjectActions:
@@ -183,6 +184,9 @@ class ProjectActions:
                         catalog = None
                     if catalog is not None:
                         catalogs.append(catalog)
+                index_script_paths(
+                    archive, next((c for c in catalogs if c.archive == path), None)
+                )
             return replace(state, catalogs=tuple(catalogs)), texts, documents
         except Exception:
             for archive in documents:
@@ -195,6 +199,7 @@ class ProjectActions:
         old_item = self.tree.currentItem()
         old_tabs = {self.tabs.widget(i) for i in range(self.tabs.count())}
         old_archives = set(self.archives)
+        old_names = dict(self.module_names)
         try:
             # One source tab has one explicit VM; reject conflicts before mutation.
             source_vms = {}
@@ -274,6 +279,8 @@ class ProjectActions:
                 if root.data(0, Qt.ItemDataRole.UserRole + 1) not in old_archives:
                     self.tree.takeTopLevelItem(i)
             self.archives[:] = [a for a in self.archives if a in old_archives]
+            self.module_names = old_names
+            self._navigation_revision = None
             if old_tab is not None:
                 self.tabs.setCurrentWidget(old_tab)
             if old_item is not None:
@@ -284,6 +291,19 @@ class ProjectActions:
             for archive in documents:
                 if archive not in self.archives:
                     archive.close()
+        for document in documents:
+            active = next(a for a in self.archives if a.path == document.path)
+            active.module_paths = document.module_paths
+            active.module_path_errors = document.module_path_errors
+            self.module_names = {
+                key: name
+                for key, name in self.module_names.items()
+                if key[0] != document.path
+            }
+            self.module_names.update(
+                ((document.path, index), name)
+                for index, name in document.module_paths.items()
+            )
         self.bindings, self.catalogs = list(state.bindings), list(state.catalogs)
         self.built_texts.clear()
         self.corpus_refs = list(state.corpora)
