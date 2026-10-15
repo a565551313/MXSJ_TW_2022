@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import codecs
 import hashlib
-import json
 import re
 import struct
 import subprocess
@@ -14,6 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..services.files import atomic_write, guard_output
+from .bundles import BundleError, BundlePin, digest_file, load_bundle
 from .profiles import PROFILES
 
 PROBE = (
@@ -35,6 +35,11 @@ class Compiler:
     version: str
     bits: int
     sha256: str
+    bundle: BundlePin | None = None
+
+    @property
+    def protected(self):
+        return self.bundle.protected if self.bundle else (self.executable,)
 
 
 def _run(executable: Path, args: list[str], cwd: Path):
@@ -56,56 +61,55 @@ def _run(executable: Path, args: list[str], cwd: Path):
     return result.stdout
 
 
-def inspect_compiler(executable: Path, vm: str) -> Compiler:
+def _verify_bundle(bundle):
+    if bundle is not None:
+        try:
+            bundle.verify()
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            raise CompilerError(f"内置编译器整套审计失败：{exc}") from exc
+
+
+def inspect_compiler(
+    executable: Path, vm: str, *, bundle: BundlePin | None = None
+) -> Compiler:
     profile = PROFILES[vm]
+    _verify_bundle(bundle)
+    if bundle is not None and (
+        bundle.vm != vm or bundle.executable.resolve() != Path(executable).resolve()
+    ):
+        raise CompilerError("内置编译器来源关联不符")
     executable = Path(executable).resolve(strict=True)
     with tempfile.TemporaryDirectory(prefix="mxscript-probe-") as temp:
         output = _run(executable, ["-c", PROBE], Path(temp))
+    _verify_bundle(bundle)
     expected = f"{profile.version} {profile.magic.hex()} "
     if output not in {(expected + "32").encode(), (expected + "64").encode()}:
         raise CompilerError(f"必须使用标准CPython {profile.version}，版本或魔数不符")
     bits = int(output.split()[-1])
     if sys.platform == "win32" and bits != 32:
         raise CompilerError("Windows发行版要求x86编译器")
+    executable_sha = digest_file(executable)
+    if bundle is not None and executable_sha != dict(bundle.files)["python.exe"]:
+        raise CompilerError("内置编译器EXE在探测后发生变化")
     return Compiler(
         executable,
         vm,
         profile.version,
         bits,
-        hashlib.sha256(executable.read_bytes()).hexdigest(),
+        executable_sha,
+        bundle,
     )
 
 
 def bundled_compiler(vm: str, root: Path) -> Compiler:
-    """Manifest has actual artifacts only. Empty manifest means unavailable."""
+    """Verify every runtime file before invoking its exact standard compiler."""
+    if sys.platform != "win32":
+        raise CompilerError("内置运行时仅供Windows x86；此平台不能执行")
     try:
-        manifest = json.loads(
-            (root / "runtimes" / "manifest.json").read_text(encoding="utf-8-sig")
-        )
-    except (OSError, ValueError) as exc:
-        raise CompilerError("内置编译器清单缺失或无效；编译禁用") from exc
-    if (
-        not isinstance(manifest, dict)
-        or manifest.get("schema") != 1
-        or not isinstance(manifest.get("compilers"), list)
-    ):
-        raise CompilerError("不支持的编译器清单格式；编译禁用")
-    candidates = [
-        item
-        for item in manifest["compilers"]
-        if item["vm"] == vm and item["platform"] == sys.platform
-    ]
-    if len(candidates) != 1:
-        raise CompilerError("未安装/未验证此VM的内置编译器；编译禁用")
-    item = candidates[0]
-    base = (root / "runtimes").resolve()
-    exe = (base / item["executable"]).resolve(strict=True)
-    if not exe.is_relative_to(base):
-        raise CompilerError("编译器清单路径越界")
-    # Check digest BEFORE launching any executable named by a manifest.
-    if hashlib.sha256(exe.read_bytes()).hexdigest() != item["sha256"]:
-        raise CompilerError("内置编译器SHA256不匹配")
-    return inspect_compiler(exe, vm)
+        pin = load_bundle(vm, root)
+    except BundleError as exc:
+        raise CompilerError(str(exc)) from exc
+    return inspect_compiler(pin.executable, vm, bundle=pin)
 
 
 def compile_standard(
@@ -124,8 +128,8 @@ def compile_standard(
             raise CompilerError(
                 "编辑器源码是UTF-8；请显式修正文件头编码，不做整文件Big5/GBK转码"
             )
-    guard_output(destination, (*protected, compiler.executable))
-    fresh = inspect_compiler(compiler.executable, compiler.vm)
+    guard_output(destination, (*protected, *compiler.protected))
+    fresh = inspect_compiler(compiler.executable, compiler.vm, bundle=compiler.bundle)
     if fresh != compiler:
         raise CompilerError("编译器在检查后发生变化，拒绝编译")
     helper = DATA / "compile_legacy.py"
@@ -138,13 +142,15 @@ def compile_standard(
         logical.write_bytes(
             filename if isinstance(filename, bytes) else filename.encode("utf-8")
         )
+        _verify_bundle(compiler.bundle)
         _run(compiler.executable, [str(helper), str(src), str(pyc), str(logical)], work)
         data = pyc.read_bytes()
+        _verify_bundle(compiler.bundle)
     if len(data) < 9 or data[:4] != PROFILES[compiler.vm].magic:
         raise CompilerError("编译产物魔数或头长度不符")
     if data[4:8] != struct.pack("<I", 0):
         raise CompilerError("编译产物时间戳不符")
-    atomic_write(destination, data, (*protected, compiler.executable, helper))
+    atomic_write(destination, data, (*protected, *compiler.protected, helper))
     return hashlib.sha256(data).hexdigest()
 
 
@@ -152,10 +158,15 @@ def audit_standard(compiler: Compiler, pyc: bytes) -> None:
     """Marshal-read only authored output with the exact runtime, no target exec."""
     if pyc[:4] != PROFILES[compiler.vm].magic:
         raise CompilerError("audit VM/magic mismatch")
-    if inspect_compiler(compiler.executable, compiler.vm) != compiler:
+    if (
+        inspect_compiler(compiler.executable, compiler.vm, bundle=compiler.bundle)
+        != compiler
+    ):
         raise CompilerError("compiler changed before marshal audit")
     with tempfile.TemporaryDirectory(prefix="mxscript-audit-") as temp:
         work = Path(temp)
         path = work / "authored.pyc"
         path.write_bytes(pyc)
+        _verify_bundle(compiler.bundle)
         _run(compiler.executable, [str(DATA / "audit_legacy.py"), str(path)], work)
+        _verify_bundle(compiler.bundle)

@@ -1,25 +1,16 @@
 @echo off
 chcp 65001 >nul
-REM ------------------------------------------------------------
-REM  MXSJ Script Editor - one-click EXE build (Windows only)
-REM
-REM  Result:          dist\MXSJScriptEditor\MXSJScriptEditor.exe
-REM  Steps: check Python -> .venv -> requirements-dev.txt -> unittest
-REM         -> pyinstaller script_editor.spec
-REM  This file is ASCII on purpose; all Chinese text lives in Python.
-REM ------------------------------------------------------------
+REM Windows onedir release: both audited x86 standard runtimes are mandatory.
+REM This builds the editor only; it never creates/distributes game packages.
 setlocal
 cd /d "%~dp0"
 set "PYTHONUTF8=1"
 set "PYTHONIOENCODING=utf-8"
-
 set "PY="
 where py >nul 2>nul && set "PY=py -3"
 if not defined PY where python >nul 2>nul && set "PY=python"
 if not defined PY (
     echo [ERROR] Python 3.10+ not found.
-    echo         Install it from https://www.python.org/downloads/
-    echo         and tick "Add python.exe to PATH" in the installer.
     pause
     exit /b 1
 )
@@ -29,42 +20,37 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
+set "PYTHONPATH=src"
+echo [1/5] Auditing both standard Windows runtimes before any build ...
+%PY% -m script_editor.runtime_cli audit --root . || goto :fail
 
 if not exist ".venv\Scripts\python.exe" (
-    echo [1/4] Creating virtual environment .venv ...
+    echo [2/5] Creating virtual environment .venv ...
     %PY% -m venv .venv || goto :fail
 ) else (
-    echo [1/4] Reusing virtual environment .venv
+    echo [2/5] Reusing virtual environment .venv
 )
 set "VPY=.venv\Scripts\python.exe"
-
-echo [2/4] Installing dependencies from requirements-dev.txt ...
-REM pip self-upgrade is best effort (offline / locked-down machines must not fail here)
+echo [3/5] Installing dependencies and running strict release checks ...
 "%VPY%" -m pip install --upgrade pip >nul 2>nul
 "%VPY%" -m pip install -r requirements-dev.txt || goto :fail
+REM GUI/compiler skips are fatal; only explicitly opt-in game-material tests may skip.
+"%VPY%" -m script_editor.release_checks --root . || goto :fail
 
-echo [3/4] Running unit tests ...
-set "PYTHONPATH=src"
-set "QT_QPA_PLATFORM=offscreen"
-"%VPY%" -m unittest discover -s tests || goto :fail
-set "PYTHONPATH="
-set "QT_QPA_PLATFORM="
-
-echo [4/4] Building with PyInstaller ...
+echo [4/5] Building with PyInstaller ...
 "%VPY%" -m PyInstaller --noconfirm --clean script_editor.spec || goto :fail
-
-if not exist "dist\MXSJScriptEditor\runtimes" mkdir "dist\MXSJScriptEditor\runtimes"
-copy /y "runtimes\manifest.json" "dist\MXSJScriptEditor\runtimes\manifest.json" >nul || goto :fail
+echo [5/5] Copying exact runtime inventories and rechecking staged bytes ...
+"%VPY%" -m script_editor.runtime_cli stage --root . --destination "dist\MXSJScriptEditor" > "dist\MXSJScriptEditor\runtime-audit.json" || goto :fail
+set "PYTHONPATH="
 echo.
-REM no %CD% inside the parentheses: a ")" in the folder name would break cmd parsing
-echo Done: dist\MXSJScriptEditor\MXSJScriptEditor.exe
-echo NOTE: compiler manifest is empty; native package GUI build is disabled.
-echo Double-click the EXE to check it opens a window; see README for the manual checklist.
+echo Built: dist\MXSJScriptEditor\MXSJScriptEditor.exe
+echo Runtime compile/marshal checks passed. GUI EXE and game acceptance still need manual tests.
 pause
 exit /b 0
 
 :fail
 echo.
-echo [FAILED] A step above returned an error. Nothing usable was built.
+echo [FAILED] Release blocked. Do not distribute partial or stale build output.
+echo Both genuine standard x86 runtimes, their licenses and file hashes are required.
 pause
 exit /b 1

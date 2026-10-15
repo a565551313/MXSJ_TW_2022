@@ -8,7 +8,9 @@ from . import __version__
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="MXSJ脚本编辑器（M1基础版）")
+    parser = argparse.ArgumentParser(
+        description="MXSJ脚本编辑器（实验版；Windows发行尚未验收）"
+    )
     parser.add_argument("--version", action="version", version=__version__)
     args = sys.argv[1:] if argv is None else argv
     parser.parse_args(args)

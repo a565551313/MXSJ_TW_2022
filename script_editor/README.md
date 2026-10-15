@@ -1,6 +1,6 @@
-# MXSJ 独立脚本编辑器 0.3.0.dev1
+# MXSJ 独立脚本编辑器 0.3.1.dev1
 
-**M3 实验版：双VM可信源码预编译、清单、GUI新包接线与项目续编已实现；GUI交互尚未实际验收。**
+**M3 实验功能＋M4发行检查准备：GUI交互未实际验收，Windows双编译器/EXE尚未交付。**
 不是已验收的 Windows 发行版，也不保证任意原始模块都可编辑。
 本目录可以独立复制，不在运行时导入 UI/资源编辑器或仓库 `tools`。
 Python ≥3.10；GUI 使用 PySide6≥6.4；核心不依赖 Qt。
@@ -70,6 +70,12 @@ PYTHONPATH=src python -m script_editor --version
 **没有Windows x86运行时/EXE实测，不宣称免安装Windows包可用。**
 后续按`runtimes/README.md`补真实来源、整套文件哈希、许可证、依赖、Windows实测。
 不拿游戏DLL充当标准编译器。
+
+0.3.1新增schema2整套文件SHA/PE32/来源许可审计与注册后复验，不再只查EXE。
+发行构建要求两套运行时实际编译/marshal通过，GUI/真实编译器测试不可skip，
+复制后再检查；空清单现在直接阻止发行构建，而不是复制成残缺的发行目录。
+详见[M4准备与未解决条件](M4_RUNTIME_DISTRIBUTION.md)。
+这些代码不代表已拿到真实Windows编译器，静态审计也不是Windows执行验收。
 
 ## 测试与构建
 

@@ -47,3 +47,12 @@ M1基础13e9129、M2核心efbb654已推送。M3推进至0.3.0.dev1：
 核心双编译器/真实双包两轮构建已离线通过，GUI交互测试因缺系统库仍未执行，
 故M3尚未完整验收。未挂载校验布局/控件，不自动接线/新增模块；
 M4的Windows内置双运行时/EXE/实机仍未交付，不能拿Linux验证替代。
+
+### M4准备增量（0.3.1.dev1，仍未交付）
+
+新增schema2整套运行时文件清单、EXE/DLL/PYD的PE32/x86、来源/许可记录、
+每次编译和marshal审计前后复核；发行复制按清单且复验，不把空manifest复制成假完整发行。
+Windows发行构建前要求真实双VM smoke，测试不允许GUI/真实编译器skip。
+详见[M4_RUNTIME_DISTRIBUTION.md](M4_RUNTIME_DISTRIBUTION.md)。
+此增量的审计测试使用合成PE与明确mock，只证明拒绝规则，不是Windows运行时证据；
+Windows旧工具链/双运行时/CRT许可/文件哈希/EXE实机均未补齐，M3 GUI也未验收。

@@ -221,12 +221,18 @@ class BuildActions:
             self.fail(exc)
 
     def register_compiler(self, compiler):
+        audit = (
+            f"整套文件审计：{len(compiler.bundle.files)} 文件；"
+            f"清单SHA256 {compiler.bundle.manifest_sha256}"
+            if compiler.bundle
+            else "显式开发编译器：仅版本/魔数/EXE SHA，不是随包发行审计"
+        )
         self.compilers[compiler.vm] = compiler
         self.refresh_native_action()
         self.info.setPlainText(
             f"{compiler.vm} / CPython {compiler.version} / "
             f"{compiler.bits}bit\n{compiler.executable}\n"
-            f"SHA256 {compiler.sha256}\n仅编译，不执行目标模块。"
+            f"SHA256 {compiler.sha256}\n{audit}\n仅编译，不执行目标模块。"
         )
 
     def check_bundled(self):
