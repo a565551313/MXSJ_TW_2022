@@ -450,6 +450,16 @@ python3 tools/decompiler/crosscheck_pycdc.py --out <語料目錄> \
 * 反向也有：75 條 uncompyle6 出得了、pycdc 直接崩（`vector::_M_range_check: __n … >= this->size()`、`std::bad_cast`）⇒ **單一引擎的成敗不構成結論**，兩邊要各留一份。
 * 定論殘餘：把 pycdc、uncompyle6、§4.5 修復梯全開之後仍**零產物的是 61 條**（56 條佔位 + 1 條無產物 + 4 條連轉譯都過不了：`1954`、`3066`、`4166`、`4691`）；清單寫在語料目錄 `residual_no_source.json`。覆蓋率 **4,941 / 5,002 = 98.78%**。
 
+#### 入庫與分發（2026-10-15，用戶明確授權）
+
+- 倉庫內：`tools/decompiler/output/script_fls_pycdc/`（**499** 個 pycdc 產物 + `manifest.json` +
+  `README.md`；uncompyle6 側已有完整源碼的 18 個重複項刻意不重複入庫）、`output/script_fls/`
+  併入 §4.5 救回的 **9** 個產物。`manifest.json` 逐檔記 `entry` / `status` / `lines` /
+  `escaped_bytes` / `py25`（`raw`、`top_return_only`、`no`）與 `uncompyle6` 成色，並釘住三個鎖定輸入的 SHA-256。
+- 倉庫外：全量語料與全部報告打包為 `MXSJ_script_fls_pycdc_recovered_20261015.zip`
+  （2,364,954 B，MD5 `c566766dc3a2ea96415711ac19851bd0`，Drive `1B588Ib1AlxycyzEXU9W4jZxiVe5xNFbd`）。
+  61 條「兩引擎 + 修復梯全開仍零源碼」的清單在包內 `reports/residual_no_source.json`。
+
 #### 「反編譯成功」不等於「可回編譯」
 
 用 `tools/registration/build_python25.sh` 自建的真 CPython 2.5.6（照跑即通，`Python 2.5.6`）對全部產物做 `compile()`，這是本輪最該記下來的一筆：
