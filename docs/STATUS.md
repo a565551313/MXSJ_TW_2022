@@ -1,5 +1,7 @@
 # 项目当前状态（STATUS）
 
+> **C首批提交预审（2026-10-15）**：收到`arena/160274ce-mxsj-tw-2022`的`559386b`（4份登录域说明）。仅在仓库外审查，SHA/行号/schema通过，但发现错模块跳转、登录提交/账号保存混淆、无关证据引用、Python2证据.py导致ruff 38项及疑似有损文本需澄清，**尚未合入/接纳，H未审**。A另负责修测试夹具对生产数量/来源的耦合，不以改计数冒充内容通过。详§3.41。
+
 > **最新：A「总控与脚本手册工具」第一版底座（2026-10-15）**：独立 `script_manual/` 0.1.0.dev1 已建立固定来源/JSON Schema/唯一归属任务卡、只读PySide6查看器、单HTML离线搜索导出和H独立摘要绑定审核。**目前仅20条历史路径种子、1份公告待复核样板、H通过0；不是全量分析。** 75/75（11 GUI，零跳过）、ruff含spec 0、自检0、Windows静态0/0/0，真实Chromium断网file://冒烟通过；Windows/EXE/游戏未验，Linux spec因宿主缺libpython未完成。B–H任务与边界见 `script_manual/docs/AGENT_TASKS.md`，详§3.40。本轮不改编辑器/游戏、不上传、不合本工作线。
 
 > **0.6.0.dev6完整源码包已交付到网盘script_editor目录，上传后重读目录/大小/MD5一致。路径导航修复已推送，含重建双Windows编译器/pycdc及源码许可；源码和真正ZIP解压副本均325项中309通过、16许可外部材料跳过，60 GUI通过，41 required齐全。详§3.39。Windows/用户完整c727/游戏仍未验收。**
@@ -1195,6 +1197,14 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
 - **下一阶段**：按`script_manual/docs/AGENT_TASKS.md`向B–H分派固定版本底座；B提交目录和提取回执，C–G先完成20个样板、H逐份复核，A统一集成再扩域/串功能链。其他Agent只改自有目录，不改schema/总任务/导航/根STATUS。
 - **持久证据**：`docs/evidence/script_manual_0.1.0_dev1_validation_20261015.json`含工具源文件摘要、75项统计、真实浏览器记录、导出回执、原包/参数前后匹配及未验边界；不是网盘上传回执。
 - **补记此前PR34授权已履行**：纯文档38行人工审查后已合，merge `8afb53a14fe9c939d61ea3ab71ed64f0bf682af1`，2026-10-15T13:09:05Z，评论 https://github.com/a565551313/MXSJ_TW_2022/pull/34#issuecomment-6192827624 。核对10卷远程metadata/回执与固定工具SHA，无CI配置；本会话未下载150 MB重验185048文件。该授权不扩展至本编辑器/手册工作线。
+
+### 3.41 C登录域559386b的A预审：需修改，未集成（2026-10-15）
+
+- 用户转交C分支`arena/160274ce-mxsj-tw-2022`及提交`559386b3a44015d4bf7a4b4f0651b09d3257b87b`。A只fetch对象并在仓库外覆盖副本审查，没有切分支、cherry-pick、merge、改正式annotations或现行预览；查询没有该head的打开PR。4份说明有155条类/函数记录、30消息分支，不代表全部已核对。
+- 通过范围：只改login域5文件；隔离证据镜像下validate（含SHA/行范围）退出0，20目录/4说明/0 H通过。机器格式校验不等于事实正确。
+- 阻塞：mainpage的selectserver.Show错误绑定4806(loginin，selectserver旧catalog为4844)；LoginOk被误写为保存账号（候选实际246–265提交C2SLoginIn，OnLogin 657–661才SaveAccount）；LoginOk/ShowLogin及跨模块问答等多处引用范围不支持结论；main.py的Python2证据以.py入工具目录使ruff报38项；与A保字节转义稿比较出现字符丢失形态，需原始输出/解码后处理证据澄清。旧候选来源状态升级也须补来源关联。
+- A责任：初稿也误串mainpage→loginin，C虽改文字仍未改身份，A承认种子错误；测试夹具直接读生产内容，A后续拆分固定夹具与内容冒烟。catalog子集20项完成，8个失败报告含subTest；全套GUI复验因夹具缺新增证据出现模态窗口，超时后A终止自有测试进程，**没有完整回归结论**。不将所有测试问题推给C，不通过改数字凑绿。
+- 持久预审：`docs/evidence/script_manual_C_559386b_A_review_20261015.md`。这是A集成预审，不是H独立审核记录。当前正式底座仍20历史种子/1说明样板/0 H通过，C修订后再交A/H/E/F；未开/合PR、未上传、未改游戏或编辑器。
 
 ## 4. 等待外部输入
 
