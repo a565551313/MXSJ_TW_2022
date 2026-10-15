@@ -77,8 +77,18 @@ _99 且每个最终账号不超过 16 位；凑足五个才整批创建，同一
 这套接口/查重/顺延/事务规则仍待服务端实现，本测试包不实现也不验收这些能力。
 包里列出的 account～account_4 只是未查重的候选，未来成功弹窗要用服务端实际名单。
 
-如果打不开或点了没反应，只告诉我失败在哪一步，附脱敏截图/诊断即可。
-诊断在测试副本 `photo/register_diag.txt`，新版不记录账号、密码或邮箱。
+如果打不开或点了没反应：本版**不会再静默**——会弹一个「不詳的錯誤」框、自动退回首页，
+并把最后走到的那一步写进测试副本 `photo/register_diag.txt`。把那个文件发我就能定位，
+不用你描述现象。常见几行对照：
+
+- `form edit account anchor missing` → `login/regform.dlg` 没导入进 `interface.fls`，
+  或导入时游戏路径填成了 `regform.dlg`（必须是完整的 `login/regform.dlg`）。
+- `terms anchor missing` → 同上，缺 `login/regterms.dlg`。
+- `font fallback FontLT14_3` → 本版客户端没有 `interface.FONT_EDIT`，已自动改用
+  旧版实机用过的字体名；这条只是记账，不是失败。
+- `step=1 failed type=...` → 建表单页时抛的异常类型（只有类型名，不含你输入的内容）。
+
+诊断不记录账号、密码或邮箱。
 不要发送整个游戏目录、真实密码或账号数据库。
 
 还原：退出游戏，将之前备份的 script.fls 和 interface.fls 恢复到测试副本。

@@ -133,6 +133,9 @@ sh tools/registration/build_python25.sh /home/user/py25build
 python3 tools/registration/build_regform_dlg.py
 python3 tools/registration/build_native_registration.py \
     --python25 /home/user/py25build/cpython-2.5.6/python
+# 打成出货包（生成 SHA256SUMS + 回显 zip 的 SHA-256/MD5，并自检一遍）
+python3 tools/registration/make_release.py --stage <备好的目录> --zip <输出.zip>
+python3 tools/registration/make_release.py --check <输出.zip>
 MXSJ_PYTHON25=/home/user/py25build/cpython-2.5.6/python \
     python3 -m unittest discover -s tools/registration/tests -v
 ruff check tools/registration
@@ -222,6 +225,49 @@ AttributeError 死路，并多带 `_DiagFailure`/`_ImportRuntime`/`_RecoverEntry
 - 那份归档里的旧 `register`（4007）比我们的版本多 `_DiagFailure`/`_ImportRuntime`/
   `_RecoverEntry`/`_CreateFormEdit` 与分步 diag，但 `CConfirm` 仍是会 `AttributeError`
   的死路。用户已选定：不保留这套脚手架，直接以当前 A 案版本覆盖。
+
+> **打包坑（已由 `make_release.py` 堵上）**：`find | xargs sha256sum > SHA256SUMS.txt`
+> 会先把目标文件建成**空文件**再被 `find` 收进去，于是清单里多一行「空文件的哈希」
+> 自称是 `SHA256SUMS.txt` 本身——这行永远校验不过。本轮之前手工打的包（含
+> `registration_phase2b_on_script1015base.zip`）就带这一行；除它以外全部有效，
+> 拿不准就只核 `data/script.fls` 那一行。`make_release.py` 生成时排除自身，
+> `--check` 会拒绝含自指行的清单。
+
+### 2026-10-15 实机回归：协议页点「我同意」进不去表单页（已修）
+
+现象：装 `ed0f4126…` 那颗包后，条款页能开，点「我同意」毫无反应。
+
+排查（不猜，逐条比字节）：把用户网盘那份 `script1015.fls` 里能进到表单页的 4007
+模块解出来反汇编，与我们出货的 4007 逐函数对比。结论是**两条**：
+
+1. 表单单框的字体常量不同。旧版（实机走通过）用 `interface.FontLT14_3`；
+   我这版照 `chgpwd.py` 用了 `interface.FONT_EDIT`，提示框颜色同理用 `COLOR_EDIT`。
+   这两个名字的存在性只有「归档里别的模块用了」这一条间接证据——**离线桩件
+   恰好定义了它们**（`harness.py2` 里 `FONT_EDIT=1`），所以桩件世界永远测不出来。
+2. 旧版在 `Show`/`Step` 外面套了 try/except + `_DiagFailure` + `_RecoverEntry`，
+   每个环节写 `_Diag` 标记；我做「清理调试脚手架」时把这套一起删了 ⇒
+   客户端吞异常后就变成「点了没反应」，日志里也什么都没有。
+
+修法（不是简单回退）：
+
+- `_EditFont()` / `_HintColor()`：仍优先照原版 `chgpwd.py` 的 `interface.FONT_EDIT`
+  /`COLOR_EDIT`，取不到就退回实机验证过的 `FontLT14_3` / `0`，并把选了哪个写进日志
+  ⇒ 常量存在与否都不会再把界面打死，同时还能告诉我们本版客户端到底有没有。
+- `_CreateFormEdit()`：按 chgpwd 的 `CEDIT` 调用建框，但先 `parent.GetObject(名字)`，
+  查不到就写 `anchor missing` 再抛 ⇒ 「.dlg 没导入/路径填错」这种最常见的现场错误
+  从此有明确名字（`regform.dlg` 里确有 account/pwd/pwd2/email/txt/chk_five 六个锚点，
+  已核对，加这个检查不会误伤正常路径）。
+- `Step()`/`Show()`：异常一律接住 ⇒ 记 `_DiagFailure`（只记类型名，绝不记异常值）
+  + `_RecoverEntry()`（解除输入遮蔽、回首页）+ 弹 `MSG_UNKNOWN_ERR`。
+  规则写死在这里：**绝不允许出现「点了什么都没发生」**。
+- 构建器加守卫：`_CreateFormEdit`/`_DiagFailure`/`_RecoverEntry` 三个函数名一旦从
+  模块里消失，`build_native_registration.py` 直接拒绝出货（防的就是这次这种「清理」）。
+- `harness.py2` 新增两个残酷世界（`MXSJ_HARNESS_MODE=no_font_edit|missing_layout`），
+  `test_runtime.py` 各跑一次断言：缺常量必须照常开页、缺版式必须「有弹框 + 回首项 +
+  日志点名」，两种情况都不许把异常漏给客户端。
+
+产物：`script.fls` 24,264,817 B，SHA-256 `f0253c9536d95e0a…`（4007 负载仍是 44,362 B
+定长，编译后 pyc 20,748 B，无需缩 `co_lnotab`）。
 
 ## 第二期 Windows 验收
 

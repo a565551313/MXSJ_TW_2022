@@ -7,6 +7,8 @@ import sys
 import types
 
 EVENTS = []
+MODE = os.environ.get('MXSJ_HARNESS_MODE', '')
+BROKEN_FORM = [False]  # 第 10 節拿來模擬「regform.dlg 沒導入」的世界
 
 
 def mod(name, **attrs):
@@ -90,6 +92,8 @@ class FakePanel(object):
         EVENTS.append(('Panel', dlgpath))
 
     def GetObject(self, name):
+        if self.dlgpath == "login/regform.dlg" and BROKEN_FORM[0]:
+            return None  # 客戶端對查不到的控件返回 None，不是報錯
         return self.objects[name]  # unknown names fail rather than invent objects
 
     def Topmost(self):
@@ -167,9 +171,15 @@ mod('combdialog', CCombPanel=FakePanel)
 mod('combmacro', CEDIT=fake_cedit, CRICHTEXT=fake_richtext,
     CIMGCHECKBOX=fake_image_checkbox)
 mod('C_object', CRichTextObject=object)
-mod('interface', DialogPanel=FakeObj('DialogPanel'), CEdit=FakeEdit,
-    CImageCheckBox=FakeImageCheckBox, CBaseObject=lambda p: None,
-    FONT_EDIT=1, FontLT14_3=3, COLOR_1=4, COLOR_EDIT=6)
+IFACE = dict(DialogPanel=FakeObj('DialogPanel'), CEdit=FakeEdit,
+             CImageCheckBox=FakeImageCheckBox, CBaseObject=lambda p: None,
+             FONT_EDIT=1, FontLT14_3=3, COLOR_1=4, COLOR_EDIT=6)
+if MODE == 'no_font_edit':
+    # 歸檔裡別的模組用了 FONT_EDIT/COLOR_EDIT，不等於本版客戶端一定有；
+    # 少給這兩個名字，正是這輪實機回歸的世界。
+    del IFACE['FONT_EDIT']
+    del IFACE['COLOR_EDIT']
+mod('interface', **IFACE)
 mod('usermacro', PROMPT_MSG=lambda text: EVENTS.append(('Prompt', text)))
 mod('sound', Play=lambda path: EVENTS.append(('Play', path)))
 mod('sounddefine', PATH_BTN_SOUND='action/button.wav')
@@ -430,4 +440,36 @@ g['ModuleReset']()
 assert g['g_AccountInfo'] == {} and g['g_RegisterPanel'] is None
 assert g['g_ConfirmDlg'] is None
 print 'back/home + supplied terms + original confirm + reset OK'
+# 10. 「我同意」開表單頁這件事本身不能靜默失敗（2026-10-15 實機回歸：協議頁點
+#     同意後沒反應）。用兩種殘酷世界驗證：本版客戶端可能沒有 interface.FONT_EDIT；
+#     以及 regform.dlg 根本沒導入進 interface.fls（錨點查不到）。
+g['ModuleReset']()
+BROKEN_FORM[0] = MODE == 'missing_layout'
+del EVENTS[:]
+g['Show'](True)
+terms10 = g['g_RegisterPanel']
+del EVENTS[:]
+terms10.OnMessage(1)  # 「我同意」
+diag10 = open('photo\\register_diag.txt', 'rb').read()
+if MODE == 'missing_layout':
+    assert g['g_RegisterPanel'] is None, 'broken layout must not leave a half panel'
+    assert ('mainpage.Show', True) in EVENTS, EVENTS
+    assert ('InputSecrecy', 0) in EVENTS, EVENTS
+    boxes = [e for e in EVENTS if e[0] == 'MsgBox']
+    assert boxes and boxes[0][1] == g['MSG_UNKNOWN_ERR'], EVENTS
+    assert 'form edit account anchor missing' in diag10, diag10[-400:]
+    assert 'step=1 failed type=ValueError' in diag10, diag10[-400:]
+    print 'missing regform layout: logged, popup shown, recovered home OK'
+elif MODE == 'no_font_edit':
+    assert isinstance(g['g_RegisterPanel'], g['CRegFormPanel']), EVENTS
+    assert 'font fallback FontLT14_3' in diag10, diag10[-400:]
+    assert 'hint color fallback 0' in diag10, diag10[-400:]
+    assert 'form edit email ready' in diag10, diag10[-400:]
+    print 'client without FONT_EDIT/COLOR_EDIT: falls back and still opens OK'
+else:
+    assert isinstance(g['g_RegisterPanel'], g['CRegFormPanel']), EVENTS
+    assert 'font FONT_EDIT' in diag10, diag10[-400:]
+    assert 'form edit email ready' in diag10, diag10[-400:]
+    assert 'step=1 ready' in diag10, diag10[-400:]
+    print 'terms agree opens form page with step diags OK'
 print 'ALL HARNESS CHECKS PASSED'

@@ -51,6 +51,50 @@ class RegistrationRuntimeTest(unittest.TestCase):
             self.assertIn("no credentials in diagnostic log OK", run.stdout)
 
 
+class RegistrationBrokenClientWorldTest(unittest.TestCase):
+    """真客戶端可能比桩件世界殘酷：缺常量、版式沒導入都不能「點了沒反應」。"""
+
+    @staticmethod
+    def _run(pyc: Path, cwd: Path, mode: str) -> str:
+        env = dict(os.environ, MXSJ_HARNESS_MODE=mode)
+        run = subprocess.run(
+            [PYTHON25, str(HERE / "harness.py2"), str(pyc)],
+            capture_output=True,
+            text=True,
+            check=False,
+            cwd=cwd,
+            env=env,
+        )
+        assert run.returncode == 0, run.stdout + run.stderr
+        return run.stdout
+
+    def test_missing_constants_and_missing_layout_fail_loudly(self):
+        with tempfile.TemporaryDirectory() as temp:
+            cwd = Path(temp)
+            pyc = cwd / "register.pyc"
+            compiled = subprocess.run(
+                [
+                    PYTHON25,
+                    str(HERE / "compile_with_py25.py"),
+                    str(HERE / "register.py"),
+                    str(pyc),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+                cwd=cwd,
+            )
+            self.assertEqual(compiled.returncode, 0, compiled.stdout + compiled.stderr)
+            for mode, line in (
+                ("no_font_edit", "falls back and still opens OK"),
+                ("missing_layout", "logged, popup shown, recovered home OK"),
+            ):
+                with self.subTest(mode=mode):
+                    out = self._run(pyc, cwd, mode)
+                    self.assertIn(line, out)
+                    self.assertIn("ALL HARNESS CHECKS PASSED", out)
+
+
 class RegistrationOutputGuardTest(unittest.TestCase):
     def test_inputs_and_their_hardlink_aliases_cannot_be_overwritten(self):
         with tempfile.TemporaryDirectory() as temp:

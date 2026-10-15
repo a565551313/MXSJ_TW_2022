@@ -391,6 +391,11 @@ def main() -> int:
         "BuildRegistrationAccounts",
         "SetRegisterFive",
         "OnRegistrationComplete",
+        # 2026-10-15 實機回歸教訓：清理調試脚手架時把「開頁失敗的兜底與日誌」
+        # 一起刪了，結果客戶端吞異常、點同意沒反應。這三個名字不得消失。
+        "_CreateFormEdit",
+        "_DiagFailure",
+        "_RecoverEntry",
     ):
         assert any(need in f for f in funcs), f"missing function: {need}"
     raw_consts = set()

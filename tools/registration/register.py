@@ -323,6 +323,77 @@ def _Diag(text):
         pass
 
 
+def _DiagFailure(where):
+    """記「哪裡炸了」，只記異常類型名，絕不記異常值（可能含玩家輸入）。"""
+    try:
+        import sys
+
+        exc = sys.exc_info()[0]
+        name = exc is not None and exc.__name__ or "unknown"
+        _Diag("%s failed type=%s" % (where, name))
+    except Exception:
+        _Diag("%s failed (no metadata)" % where)
+
+
+def _RecoverEntry():
+    """開頁失敗時把客戶端撈回來：解除輸入遮蔽、回首頁。
+
+    半開的註冊界面會讓人以為號還能不能填，所以寧可退回首頁也不能卡在這裡。
+    每一步都單獨兜底，回收本身出錯也不能再拋。
+    """
+    _Diag("entry recovery begin")
+    try:
+        C_sys.InputSecrecy(0)
+        _Diag("entry recovery secrecy ready")
+    except Exception:
+        _Diag("entry recovery secrecy failed")
+    try:
+        import mainpage
+
+        mainpage.Show(True)
+        _Diag("entry recovery home ready")
+    except Exception:
+        _Diag("entry recovery home failed")
+
+
+def _EditFont():
+    """編輯框字體：照 chgpwd.py 用 interface.FONT_EDIT；萬一本版客戶端沒這個
+    常量，退回舊版實機走通時用的 FontLT14_3，並把實際選了哪個寫進日誌。"""
+    font = getattr(interface, "FONT_EDIT", None)
+    if font is None:
+        _Diag("font fallback FontLT14_3")
+        return interface.FontLT14_3
+    _Diag("font FONT_EDIT")
+    return font
+
+
+def _HintColor():
+    """提示文字顏色：同理，取不到 COLOR_EDIT 就用原版別的頁面用的 0。"""
+    color = getattr(interface, "COLOR_EDIT", None)
+    if color is None:
+        _Diag("hint color fallback 0")
+        return 0
+    return color
+
+
+def _CreateFormEdit(parent, edit_class, name, limit, font):
+    """按 chgpwd.py 的 CEDIT 調用建編輯框，但先確認版式錨點在不在。
+
+    regform.dlg 沒導入/導入路徑填錯時，原生工厂只會讓界面「點了沒反應」；
+    這裡先查 GetObject，缺就留一條明確的 anchor missing 記錄再拋。
+    """
+    _Diag("form edit %s anchor begin" % name)
+    if parent.GetObject(name) is None:
+        _Diag("form edit %s anchor missing" % name)
+        raise ValueError("missing form edit anchor")
+    _Diag("form edit %s factory begin" % name)
+    edit = combmacro.CEDIT(edit_class, name, parent, 0, font, linecolor=0)
+    _Diag("form edit %s factory ready" % name)
+    edit.SetLimit(limit)
+    _Diag("form edit %s ready" % name)
+    return edit
+
+
 def _PlayBtnSound():
     import sound
 
@@ -370,13 +441,23 @@ class CRegTermsPanel(combdialog.CCombPanel):
     """
 
     def __init__(self, parent):
+        _Diag("terms layout begin")
         combdialog.CCombPanel.__init__(self, parent, "login/regterms.dlg")
+        _Diag("terms layout ready")
         import chatoutput
 
         result = _LoadTermsLines()
+        _Diag("terms anchor begin")
         output = self.GetObject("loc_msg")
+        if output is None:
+            _Diag("terms anchor missing")
+            raise ValueError("missing terms anchor loc_msg")
         (w, h) = output.GetSize()
         (x, y) = output.GetPos()
+        if w <= 0 or h <= 0:
+            _Diag("terms geometry invalid %sx%s" % (w, h))
+            raise ValueError("invalid terms geometry")
+        _Diag("terms anchor ready")
         self.m_PublicTxtBox = chatoutput.COutput(
             self,
             w,
@@ -391,6 +472,7 @@ class CRegTermsPanel(combdialog.CCombPanel):
         self.m_PublicTxtBox.SetChatCursor(0)
         self.m_PublicTxtBox.ResetFromCursor()
         self.m_PublicTxtBox.ScrollTo(0)
+        _Diag("terms ready")
 
     def OnMessage(self, msgid):
         _PlayBtnSound()
@@ -456,38 +538,31 @@ class CRegFormPanel(combdialog.CCombPanel):
     """
 
     def __init__(self, parent):
+        _Diag("form layout begin")
         combdialog.CCombPanel.__init__(self, parent, "login/regform.dlg")
+        _Diag("form layout ready")
         import C_object
 
-        self.m_AccountEdit = combmacro.CEDIT(
-            CRegAccountEdit, "account", self, 0, interface.FONT_EDIT, linecolor=0
-        )
-        self.m_AccountEdit.SetLimit(16)
-        self.m_PwdEdit = combmacro.CEDIT(
-            CRegPwdEdit, "pwd", self, 0, interface.FONT_EDIT, linecolor=0
-        )
-        self.m_PwdEdit.SetLimit(16)
+        font = _EditFont()
+        self.m_AccountEdit = _CreateFormEdit(self, CRegAccountEdit, "account", 16, font)
+        self.m_PwdEdit = _CreateFormEdit(self, CRegPwdEdit, "pwd", 16, font)
         self.m_PwdEdit.m_IsPassword = True
-        self.m_PwdEdit2 = combmacro.CEDIT(
-            CRegPwdEdit, "pwd2", self, 0, interface.FONT_EDIT, linecolor=0
-        )
-        self.m_PwdEdit2.SetLimit(16)
+        self.m_PwdEdit2 = _CreateFormEdit(self, CRegPwdEdit, "pwd2", 16, font)
         self.m_PwdEdit2.m_IsPassword = True
-        self.m_EmailEdit = combmacro.CEDIT(
-            interface.CEdit, "email", self, 0, interface.FONT_EDIT, linecolor=0
-        )
-        self.m_EmailEdit.SetLimit(50)
+        self.m_EmailEdit = _CreateFormEdit(self, interface.CEdit, "email", 50, font)
+        _Diag("form tab begin")
         self.m_AccountEdit.SetNextEdit(self.m_PwdEdit)
         self.m_PwdEdit.SetNextEdit(self.m_PwdEdit2)
         self.m_PwdEdit2.SetNextEdit(self.m_EmailEdit)
         self.m_EmailEdit.SetNextEdit(self.m_AccountEdit)
+        _Diag("form tab ready")
         self.m_Text = combmacro.CRICHTEXT(
             C_object.CRichTextObject,
             "txt",
             self,
             HINT_FORM,
-            interface.FONT_EDIT,
-            interface.COLOR_EDIT,
+            font,
+            _HintColor(),
         )
         self.m_FiveCheck = combmacro.CIMGCHECKBOX(
             interface.CImageCheckBox, "chk_five", self, IMG_FIVE_CHECK, True, 4
@@ -634,18 +709,46 @@ _PANELS = [CRegTermsPanel, CRegFormPanel]
 
 
 def Step(n):
+    """切頁。客戶端會把 OnMessage 裡的腳本異常吞掉（界面只是「沒反應」），
+
+    所以這里必須自己接住：留日誌、給玩家一個明說「開不了」的彈框，再把人
+    回收回首頁。絕不允許出現「點了什麼都沒發生」。
+    """
     global g_RegisterPanel
-    g_RegisterPanel = _PANELS[n](interface.DialogPanel)
+    _Diag("step=%s begin" % n)
+    try:
+        panel = _PANELS[n](interface.DialogPanel)
+    except Exception:
+        _DiagFailure("step=%s" % n)
+        g_RegisterPanel = None
+        _RecoverEntry()
+        try:
+            import commondialog
+
+            commondialog.ShowNewMessageBox(MSG_UNKNOWN_ERR, BTN_OK)
+        except Exception:
+            _DiagFailure("step=%s box" % n)
+        return
+    g_RegisterPanel = panel
+    _Diag("step=%s ready" % n)
 
 
 def Show(s):
     global g_RegisterPanel
     if s:
-        C_sys.InputSecrecy(1)
-        Step(0)
+        _Diag("show begin")
+        try:
+            C_sys.InputSecrecy(1)
+            Step(0)
+            _Diag("show ready")
+        except Exception:
+            _DiagFailure("show")
+            g_RegisterPanel = None
+            _RecoverEntry()
     else:
         g_RegisterPanel = None
         C_sys.InputSecrecy(0)
+        _Diag("show closed")
 
 
 # --- 舊版對外雜項接口：保留簽名，避免其他模塊引用時出錯 ---
