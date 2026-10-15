@@ -187,8 +187,8 @@ class Window(
                     self.catalogs.append(catalog)
                     self.project_dirty = True
                     self.info.setPlainText(
-                        "已按完整原包指纹自动匹配内置解码参数，并核对参数SHA256。"
-                        "\n双击条目尝试恢复编辑；此匹配不等于全部模块均已支持。"
+                        "已按完整包指纹自动匹配内置解码参数，并核对参数SHA256。"
+                        "\n原包/已登记测试派生包均逐条严格解码；双击条目尝试恢复编辑。\n匹配参数不等于源码可信或全部模块均已支持。"
                     )
                 elif warning:
                     self.info.setPlainText("内置参数不可用，原包仍可浏览：" + warning)

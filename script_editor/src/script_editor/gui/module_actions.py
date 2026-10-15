@@ -35,7 +35,14 @@ class ModuleActions:
         if existing is not None:
             self.tabs.setCurrentWidget(existing)
             if not reload:
-                return
+                if (
+                    existing.source_kind != "module-unavailable"
+                    or existing.editor.document().isModified()
+                    or self.catalog_for(archive) is None
+                ):
+                    return
+                # Retry an untouched old failure tab after catalog association
+                # becomes available. Never replace an editable recovery draft.
             if existing.source_kind != "module-unavailable":
                 self.fail(
                     "已有恢复稿/源码保留，不能重新读取覆盖编辑。请先另存并关闭该标签。"

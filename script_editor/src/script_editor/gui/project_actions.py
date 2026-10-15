@@ -11,6 +11,7 @@ from ..core.inspection.native import inspect_module
 from ..core.project.document import Binding, save_project
 from ..core.project.storage import load_state
 from ..core.project.workspace import EditorState
+from ..core.services.bundled_catalog import bundled_catalog
 from ..core.services.files import read_source
 
 
@@ -144,8 +145,7 @@ class ProjectActions:
             return
         self.task(lambda: self.prepare_project(Path(name)), self.adopt_project)
 
-    @staticmethod
-    def prepare_project(path):
+    def prepare_project(self, path):
         state = load_state(path)
         snapshots = {e.path: e.text for e in state.editors}
         texts = {
@@ -155,6 +155,7 @@ class ProjectActions:
             for b in state.bindings
         }
         documents = []
+        catalogs = list(state.catalogs)
         try:
             paths = (
                 {b.archive for b in state.bindings}
@@ -171,7 +172,18 @@ class ProjectActions:
                 for catalog in state.catalogs:
                     if catalog.archive == path:
                         catalog.verify(archive)
-            return state, texts, documents
+                if not any(c.archive == path for c in catalogs):
+                    # Older projects can have entry-information tabs but no XOR
+                    # reference. Add only a valid exact-pin asset; never replace
+                    # an explicit project association or block draft restoration
+                    # because the optional bundled asset is unavailable.
+                    try:
+                        catalog = bundled_catalog(archive, self.runtime_root)
+                    except (OSError, ValueError):
+                        catalog = None
+                    if catalog is not None:
+                        catalogs.append(catalog)
+            return replace(state, catalogs=tuple(catalogs)), texts, documents
         except Exception:
             for archive in documents:
                 archive.close()

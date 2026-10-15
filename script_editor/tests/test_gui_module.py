@@ -227,3 +227,99 @@ class GuiModuleTests(unittest.TestCase):
         self.assertFalse(tab.editor.isReadOnly())
         self.assertFalse(self.window.bindings)
         self.assertFalse(self.window.native_action.isEnabled())
+
+    def test_registered_test_package_auto_binds_then_real_worker_opens_editable_draft(
+        self,
+    ):
+        # Controlled full-SHA simulation (not the user's actual archive).
+        # Real Qt, strict native decode, real CPython2.5 compile and real primary
+        # recovery worker run; only the file-picker and SHA/catalog fixture route
+        # are substituted to exercise the registered-package opening path.
+        state, compiler, sentinel = browser_tests.ModuleBrowserTests.make_original(
+            self, "py25"
+        )
+        original = state.catalogs[0]
+        registered = "c7276deb0af7142c1b249d24299b884cd7320c0e84375cc6ac55f166df1d9ed1"
+        folder = self.root / "decoding"
+        folder.mkdir()
+        asset = folder / "script-original.json"
+        asset.write_bytes(original.path.read_bytes())
+        self.window.register_compiler(compiler)
+        with (
+            patch(
+                "script_editor.core.services.bundled_catalog.BUNDLED_CATALOGS",
+                {registered: (asset.name, original.sha256)},
+            ),
+            patch.object(ArchiveDocument, "fingerprint", return_value=registered),
+            patch.object(
+                QFileDialog, "getOpenFileName", return_value=(str(original.archive), "")
+            ),
+        ):
+            self.window.open_archive()
+            self.wait_jobs()
+            self.assertEqual(len(self.window.catalogs), 1)
+            self.assertEqual(self.window.catalogs[0].fingerprint, registered)
+            self.assertIn("已登记测试派生包", self.window.info.toPlainText())
+            self.window.tree.setCurrentItem(self.window.tree.topLevelItem(0).child(0))
+            self.window.open_associated()
+            self.wait_jobs()
+            tab = self.window.current()
+            self.assertEqual(
+                tab.source_kind, "recovered-draft", tab.recovery.diagnostics
+            )
+            self.assertFalse(tab.editor.isReadOnly())
+            self.assertIn("calculate", tab.editor.toPlainText())
+            self.assertFalse(tab.recovery.metadata()["compiled_and_reviewed"])
+            self.assertFalse(self.window.bindings)
+            self.assertFalse(self.window.native_action.isEnabled())
+            self.assertFalse(sentinel.exists())
+
+    def test_old_missing_xor_project_gets_pin_and_retries_without_overwriting_edits(
+        self,
+    ):
+        state, compiler, sentinel = browser_tests.ModuleBrowserTests.make_original(
+            self, "py25"
+        )
+        original = state.catalogs[0]
+        registered = "c7276deb0af7142c1b249d24299b884cd7320c0e84375cc6ac55f166df1d9ed1"
+        folder = self.root / "decoding"
+        folder.mkdir()
+        asset = folder / "script-original.json"
+        asset.write_bytes(original.path.read_bytes())
+        self.window.register_compiler(compiler)
+        with (
+            patch(
+                "script_editor.core.services.bundled_catalog.BUNDLED_CATALOGS",
+                {registered: (asset.name, original.sha256)},
+            ),
+            patch.object(ArchiveDocument, "fingerprint", return_value=registered),
+        ):
+            self.install(state)
+            self.window.catalogs = []  # Model the 0.6.0.dev4 missing-association state.
+            self.window.open_associated()
+            self.wait_jobs()
+            failed = self.window.current()
+            self.assertEqual(failed.source_kind, "module-unavailable")
+            project = self.root / "old-missing-xor.mxscript.json"
+            with patch.object(
+                QFileDialog, "getSaveFileName", return_value=(str(project), "")
+            ):
+                self.assertTrue(self.window.save_project())
+            prepared = self.window.prepare_project(project)
+            self.assertEqual(len(prepared[0].catalogs), 1)
+            self.window.adopt_project(prepared)
+            self.window.tree.setCurrentItem(self.window.tree.topLevelItem(0).child(0))
+            self.window.open_associated()  # No separate manual reload or XOR dialog.
+            self.wait_jobs()
+            tab = self.window.current()
+            self.assertEqual(
+                tab.source_kind, "recovered-draft", tab.recovery.diagnostics
+            )
+            self.assertIn("calculate", tab.editor.toPlainText())
+            tab.editor.insertPlainText("# KEEP MY EDIT\n")
+            edited = tab.editor.toPlainText()
+            self.window.open_associated()
+            self.assertIs(self.window.current(), tab)
+            self.assertEqual(tab.editor.toPlainText(), edited)
+            self.assertTrue(tab.editor.document().isUndoAvailable())
+            self.assertFalse(sentinel.exists())

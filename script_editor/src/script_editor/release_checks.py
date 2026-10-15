@@ -43,6 +43,10 @@ OPTIONAL_MATERIAL_TESTS = {
 
 
 REQUIRED_RELEASE_TESTS = {
+    "test_gui_module.GuiModuleTests.test_old_missing_xor_project_gets_pin_and_retries_without_overwriting_edits",
+    "test_bundled_catalog.RegisteredPackagePinTests.test_actual_production_map_registers_exact_user_digest_and_unknown_stays_off",
+    "test_bundled_catalog.BundledCatalogTests.test_registered_test_digest_does_not_bypass_damaged_payload_validation",
+    "test_gui_module.GuiModuleTests.test_registered_test_package_auto_binds_then_real_worker_opens_editable_draft",
     "test_script_layouts.ScriptLayoutTests.test_all_four_directory_positions_and_grow_shrink_multi_noop",
     "test_script_layouts.ScriptLayoutTests.test_native_build_post_directory_full_codec_readback",
     "test_script_layouts.ScriptLayoutTests.test_post_directory_reopen_can_continue_editing_without_losing_first_edit",
