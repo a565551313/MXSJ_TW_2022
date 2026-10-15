@@ -76,6 +76,40 @@ class GuiModuleTests(unittest.TestCase):
         )
         # Deliberately NO source files or bindings installed in the editor.
 
+    def test_open_archive_auto_pins_catalog_then_recovers_without_manual_source(self):
+        state, compiler, sentinel = browser_tests.ModuleBrowserTests.make_original(
+            self, "py25"
+        )
+        original = state.catalogs[0]
+        folder = self.root / "decoding"
+        folder.mkdir()
+        asset = folder / "script-original.json"
+        asset.write_bytes(original.path.read_bytes())
+        self.window.register_compiler(compiler)
+        with (
+            patch(
+                "script_editor.core.services.bundled_catalog.BUNDLED_CATALOGS",
+                {original.fingerprint: (asset.name, original.sha256)},
+            ),
+            patch.object(
+                QFileDialog, "getOpenFileName", return_value=(str(original.archive), "")
+            ),
+        ):
+            self.window.open_archive()
+            self.wait_jobs()
+        self.assertEqual(len(self.window.archives), 1)
+        self.assertEqual(self.window.catalogs[0].path, asset)
+        self.assertFalse(self.window.bindings)
+        self.assertIn("自动匹配", self.window.info.toPlainText())
+        self.window.tree.setCurrentItem(self.window.tree.topLevelItem(0).child(0))
+        self.window.open_associated()
+        self.wait_jobs()
+        self.assertEqual(self.window.current().source_kind, "recovered-draft")
+        self.assertFalse(self.window.current().editor.isReadOnly())
+        self.assertIn("calculate", self.window.current().editor.toPlainText())
+        self.assertFalse(sentinel.exists())
+        self.assertFalse(self.window.bindings)
+
     def test_unbound_missing_catalog_opens_entry_tab_with_reason(self):
         self.install(make_state(self.root))
         self.window.catalogs = []

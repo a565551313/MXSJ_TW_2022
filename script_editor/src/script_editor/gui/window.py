@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 from .. import __version__
 from ..core.archives.document import ArchiveDocument
 from ..core.inspection.encoding import byte_literal
+from ..core.services.bundled_catalog import bundled_catalog
 from ..core.services.files import read_source, save_source
 from .build_actions import BuildActions
 from .jobs import Job
@@ -141,7 +142,45 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
             self, "打开script.fls或data.fls", "", "FLS (*.fls)"
         )
         if name:
-            self.task(lambda: ArchiveDocument(Path(name)), self.add_archive)
+
+            def prepare():
+                document = ArchiveDocument(Path(name))
+                try:
+                    catalog = bundled_catalog(document, self.runtime_root)
+                except (OSError, ValueError) as exc:
+                    # A broken/missing optional asset must not hide the package.
+                    return document, None, str(exc)
+                except Exception:
+                    document.close()
+                    raise
+                return document, catalog, ""
+
+            def complete(result):
+                document, catalog, warning = result
+                if any(a.path == document.path for a in self.archives):
+                    document.close()
+                    return
+                try:
+                    self.add_archive(document)
+                except Exception:
+                    document.close()
+                    raise
+                if catalog is not None:
+                    self.catalogs.append(catalog)
+                    self.project_dirty = True
+                    self.info.setPlainText(
+                        "已按完整原包指纹自动匹配内置解码参数，并核对参数SHA256。"
+                        "\n双击条目尝试恢复编辑；此匹配不等于全部模块均已支持。"
+                    )
+                elif warning:
+                    self.info.setPlainText("内置参数不可用，原包仍可浏览：" + warning)
+                elif document.vm == "py25":
+                    self.info.setPlainText(
+                        "此script包指纹不在内置参数授权匹配范围；未自动套用。"
+                        "\n派生包请打开对应项目；其他包请显式选择已核实的解码参数JSON。"
+                    )
+
+            self.task(prepare, complete)
 
     def filter_tree(self, text):
         for i in range(self.tree.topLevelItemCount()):

@@ -43,6 +43,7 @@ echo [4/5] Building with PyInstaller ...
 "%VPY%" stage_recovery.py --destination "dist\MXSJScriptEditor" || goto :fail
 echo [5/5] Copying exact runtime inventories and rechecking staged bytes ...
 "%VPY%" -m script_editor.runtime_cli stage --root . --destination "dist\MXSJScriptEditor" > "dist\MXSJScriptEditor\runtime-audit.json" || goto :fail
+"%VPY%" -m script_editor.catalog_cli stage --root . --destination "dist\MXSJScriptEditor" || goto :fail
 set "PYTHONPATH="
 echo.
 echo Built: dist\MXSJScriptEditor\MXSJScriptEditor.exe

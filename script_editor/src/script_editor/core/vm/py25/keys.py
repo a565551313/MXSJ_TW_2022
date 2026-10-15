@@ -1,7 +1,8 @@
 """Bind an external catalog to exact package and stored-entry digests.
 
-No global/default catalog path, discovery or boundary estimation. Catalog is a
-research input (not an account credential); caller must supply both digest pins.
+No directory discovery or boundary estimation. Catalog is factual decode data
+(not an account credential); callers supply both digest pins, including the
+explicitly authorized bundled catalog selected by an exact original-package SHA.
 """
 
 from __future__ import annotations

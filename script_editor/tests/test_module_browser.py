@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import os
 import subprocess
 import tempfile
@@ -15,11 +14,11 @@ from script_editor.core.archives.document import ArchiveDocument
 from script_editor.core.compiler.runner import compile_standard, inspect_compiler
 from script_editor.core.project.document import Binding
 from script_editor.core.project.storage import (
-    CatalogRef,
     ProjectState,
     load_state,
     save_state,
 )
+from script_editor.core.services.bundled_catalog import bundled_catalog
 from script_editor.core.services.files import save_new_source
 from script_editor.core.services.module_browser import read_module, recover_standard
 from script_editor.core.services.workflow import Snapshot, prepare_build, publish_build
@@ -215,15 +214,8 @@ class RealModuleBrowserTests(unittest.TestCase):
                 compiler = inspect_compiler(Path(os.environ["MXSJ_" + vm.upper()]), vm)
                 with ArchiveDocument(root / "data" / name) as archive:
                     before = archive.fingerprint()
-                    catalog = None
-                    if vm == "py25":
-                        path = root / "tools/decompiler/script_fls_keys.json"
-                        catalog = CatalogRef(
-                            archive.path,
-                            before,
-                            path,
-                            hashlib.sha256(path.read_bytes()).hexdigest(),
-                        )
+                    catalog = bundled_catalog(archive, root / "script_editor")
+                    self.assertEqual(catalog is not None, vm == "py25")
                     report = read_module(archive, index, catalog)
                     self.assertTrue(report.complete, report.diagnostics)
                     self.assertGreater(len(report.disassembly), 1000)

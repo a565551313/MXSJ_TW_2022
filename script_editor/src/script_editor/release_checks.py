@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 from .core.compiler.distribution import audit_runtimes
+from .core.services.bundled_catalog import audit_catalogs
 
 # Independent game/DLL materials are deliberately not part of a standalone tool.
 # Only these exact opt-in tests may be absent from a release build environment.
@@ -23,6 +24,7 @@ OPTIONAL_MATERIAL_TESTS = {
 
 
 REQUIRED_RELEASE_TESTS = {
+    "test_gui_module.GuiModuleTests.test_open_archive_auto_pins_catalog_then_recovers_without_manual_source",
     "test_module_browser.ModuleBrowserTests.test_both_real_vms_package_recover_edit_compile_publish_reopen",
     "test_gui_module.GuiModuleTests.test_both_vms_real_unbound_open_edit_review_publish_and_project_reopen",
     "test_archive_revision.ArchiveRevisionTests.test_path_stat_and_fstat_differences_do_not_reject_unchanged_package",
@@ -64,6 +66,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     root = args.root.resolve(strict=True)
     try:
+        audit_catalogs(root)
         audit_runtimes(root, execute=True)
     except (OSError, ValueError) as exc:
         print(f"Release blocked: {exc}")
@@ -91,6 +94,7 @@ def main(argv=None):
         for name, reason in blocked:
             print(f"Release blocked by skipped test: {name}: {reason}")
         # Detect standard-library bytecode writes or other runtime changes by tests.
+        audit_catalogs(root)
         audit_runtimes(root, execute=True)
         return 0 if result.wasSuccessful() and not blocked else 1
     except (OSError, ValueError) as exc:
