@@ -44,7 +44,7 @@ placeholder="例如：公告、login/mainpage、refreshbulletin">
 <button id="previous">上一页</button><span id="page"></span>
 <button id="next">下一页</button>
 </div><p class="notice">仅供只读静态分析；不执行游戏脚本。
-完整恢复不等于原始源码，作者静态核对不等于实机验证；H审核单独记录。</p>
+完整恢复不等于原始源码，作者静态核对不等于实机验证；审核者及授权单独记录。</p>
 <p id="warnings"></p></aside><main id="detail"></main></div>
 <script id="manual-data" type="application/json">{data}</script>
 <script>{javascript}</script></body></html>'''

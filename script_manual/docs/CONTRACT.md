@@ -46,16 +46,26 @@ B把完整目录替换这个单文件，保留20个初始身份（路径若确�
 
 `coordination/tasks.json` 由A唯一维护，主负责人/domain固定映射：C/login、D/ui_chat、E/network、F/battle、G/gameplay。跨域只有一个owner，其他人通过协审报告向owner/A反馈，不重复建档。
 
-正文作者不能把自己设成审核通过。H在 `reviews/*.json` 独立提交 `$defs.review`：schema_version、身份、annotation_sha256（**实际JSON文件原字节SHA**）、reviewer="H"、decision(accepted/changes_requested)、note。`reviews/example.json.template` 仅示意，不加载。
+正文作者不能把自己设成审核通过。常规独立复核由H提交，用户明确授权时由A以A_delegate代审，在 `reviews/*.json` 单独提交 `$defs.review`：schema_version、身份、annotation_sha256（**实际JSON文件原字节SHA**）、reviewer="H"（或用户明确授权的 `A_delegate`）、decision(accepted/changes_requested)、note。`reviews/example.json.template` 仅示意，不加载。
 
 手册目录自带LF属性规则，bat例外为CRLF，防止Windows Git换行转换令正文审核失效。手动改写换行仍算字节变化。旧候选若在目录外被Git转换换行，摘要不匹配就应拒绝；须恢复来源原字节或提交新SHA并重审，不能放宽字节校验。
 
-审核不是密码学签名；协作权限由工作流保障。A检查H身份/证据范围后集成。正文改动一个字节则审核变 `stale_review`，不再计入H通过，须H重审。通过不代表游戏实机通过，也不替代源码来源状态。H可接受一份明确标缺失的有限说明，但不能据此把整个模块/全体函数说成已解释。
+审核不是密码学签名；协作权限由工作流保障。A检查H身份/证据范围后集成。正文改动一个字节则审核变 `stale_review`，不再计入审核通过，须实际审核者重审。通过不代表游戏实机通过，也不替代源码来源状态。H可接受一份明确标缺失的有限说明，但不能据此把整个模块/全体函数说成已解释。
+
+### 4.1 用户授权A代审（2026-10-16）
+
+用户原话“**H宕机了你审吧**”授权A接手审核；不是独立H会话，也不是作者自批。
+`reviewer="A_delegate"` 必须另填非空 `delegation`，写明授权来源和非独立身份。
+该字段是工作流记录，不是认证凭据。H记录继续兼容；领域作者C–G仍不得作为reviewer。
+查看器、离线页和导出数据必须显示实际身份、授权、审核意见和绑定SHA；总数称“审核通过”，不得把A记录标成H通过。
+A不能为缺少正文的正式目录放孤立审核；本轮8份记录先存 `coordination/delegated_reviews_20261016/*.json.template`，不参与正式统计。
+待领域正文经授权集成后，**逐个核对原字节SHA** 再激活至 `reviews/*.json`；不是自动merge授权。
+不再要求等20篇齐备才能审核已有提交；保留有限范围和原生/运行期未知，不冒充全模块验收。
 
 ## 5. 集成闸门与只读边界
 
 - 包指纹/条目范围/VM、重复身份、任务归属、路径漂移、正文跨目录、未知字段、悬空证据、反向或越界行号、过期审核分别处理；重复/硬错误退出2，过期审核显式警告并降为未通过。
 - 常规加载不读取原游戏包；`--verify-evidence --repository` 只只读核对引用文本的SHA/行号，不import/eval/exec，不请求公告URL。
 - 外部schema引用、JSON重复键/NaN、符号链接、路径穿越拒绝。单正文≤2MiB、全部说明/审核≤32MiB、目录≤16MiB、HTML≤64MiB，超限分批而非静默截断。
-- 索引不完整允许预览，但要公开登记/说明/H通过三种数。只有`--require-full-inventory`通过才说明“全部条目建档”，仍不代表全体函数解释完。
+- 索引不完整允许预览，但要公开登记/说明/审核通过三种数。只有`--require-full-inventory`通过才说明“全部条目建档”，仍不代表全体函数解释完。
 - 离线页面只用textContent；原生富文本转义所有数据；不以游戏路径生成文件；不远程加载内容。输出只创建仓库外的新目录，绝不覆盖输入或旧输出。

@@ -11,10 +11,10 @@ CONFIDENCE = {
 }
 REVIEWS = {
     "unannotated": "尚未编写",
-    "pending": "待H审核",
-    "accepted": "H审核通过",
-    "changes_requested": "H要求修改",
-    "stale_review": "H审核已过期",
+    "pending": "待审核",
+    "accepted": "审核通过",
+    "changes_requested": "要求修改",
+    "stale_review": "审核已过期",
 }
 SOURCE_STATUS = {
     "metadata_only": "仅元数据",
@@ -37,13 +37,32 @@ def claim_html(claim):
     )
 
 
+def review_label(row):
+    label = REVIEWS[row["review_status"]]
+    review = row.get("review")
+    if review:
+        label += "（A代审）" if review["reviewer"] == "A_delegate" else "（H）"
+    return label
+
+
 def detail_html(row, section="overview"):
     annotation = row["annotation"]
     head = (
         f"<h2>{text(row['path'] or '路径不可用')}</h2>"
-        f"<p>{text(REVIEWS[row['review_status']])} · 负责人 {text(row['owner'])}"
+        f"<p>{text(review_label(row))} · 负责人 {text(row['owner'])}"
         f" · {text(row['vm'])} · 条目 {row['entry_index']}</p>"
     )
+    review = row.get("review")
+    if review:
+        head += (
+            "<h3>审核记录（过期时不计通过）</h3><p>"
+            + text(review["note"])
+            + "</p><p>授权："
+            + text(review.get("delegation", "H独立审核流程"))
+            + "</p><p>审核绑定正文SHA256："
+            + text(review["annotation_sha256"])
+            + "</p>"
+        )
     if annotation is None:
         return head + (
             "<p>这里只登记了目录元数据，尚未解释模块功能。</p>"

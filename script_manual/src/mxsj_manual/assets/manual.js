@@ -4,11 +4,13 @@
   const $ = (id) => document.getElementById(id);
   const reviews = {
     unannotated: "尚未编写",
-    pending: "待H审核",
-    accepted: "H审核通过",
-    changes_requested: "H要求修改",
+    pending: "待审核",
+    accepted: "审核通过",
+    changes_requested: "要求修改",
     stale_review: "审核过期",
   };
+  const reviewLabel = (row) => reviews[row.review_status] +
+    (row.review ? (row.review.reviewer === "A_delegate" ? "（A代审）" : "（H）") : "");
   const confidence = {
     extracted: "自动提取",
     inferred: "推测待核实",
@@ -40,7 +42,7 @@
   };
   const info = data.coverage;
   $("stats").textContent =
-    `目录 ${info.indexed}/${info.expected_entries} · 已写说明 ${info.annotated} · H通过 ${info.accepted} · 已登记排除 ${info.excluded}`;
+    `目录 ${info.indexed}/${info.expected_entries} · 已写说明 ${info.annotated} · 审核通过 ${info.accepted} · 已登记排除 ${info.excluded}`;
   $("version").textContent =
     `${data.baseline.analysis_id} · 固定源码提交 ${data.baseline.repository_commit.slice(0, 12)}`;
   $("warnings").textContent = data.warnings.join("\n");
@@ -75,7 +77,7 @@
       append(
         button,
         "small",
-        `${row.vm} · ${row.domain} · ${reviews[row.review_status]}`,
+        `${row.vm} · ${row.domain} · ${reviewLabel(row)}`,
       );
       button.onclick = () => changeModule(row);
     }
@@ -125,9 +127,15 @@
     append(
       panel,
       "p",
-      `${reviews[row.review_status]} · 负责人 ${row.owner} · ${row.vm} · 条目 ${row.entry_index}`,
+      `${reviewLabel(row)} · 负责人 ${row.owner} · ${row.vm} · 条目 ${row.entry_index}`,
       "status",
     );
+    if (row.review) {
+      append(panel, "h3", "审核记录（过期时不计通过）");
+      append(panel, "p", row.review.note);
+      append(panel, "p", `授权：${row.review.delegation || "H独立审核流程"}`);
+      append(panel, "small", `审核绑定正文SHA256: ${row.review.annotation_sha256}`);
+    }
     append(panel, "small", `archive SHA256: ${row.archive_sha256}`);
     if (!a) {
       append(
@@ -145,7 +153,7 @@
       append(
         panel,
         "small",
-        "以下证据级别由作者标注，尚未通过有效H复核；字节/行号校验不验证解释正确。",
+        "以下证据级别由作者标注，尚未通过有效复核（H或授权A代审）；字节/行号校验不验证解释正确。",
       );
     const tabs = append(panel, "nav", undefined, "tabs");
     for (const [id, label] of [

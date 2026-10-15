@@ -85,7 +85,7 @@ def _compose(store, inventory, tasks, annotations, reviews, repository):
             decision = review[0]
             if decision["annotation_sha256"] != annotation_hash:
                 status = "stale_review"
-                warnings.append("说明已变化，H审核过期：" + key)
+                warnings.append("说明已变化，审核过期：" + key)
             else:
                 status = decision["decision"]
         if annotation:
@@ -106,6 +106,7 @@ def _compose(store, inventory, tasks, annotations, reviews, repository):
             "annotation": annotation,
             "annotation_sha256": annotation_hash,
             "review_status": status,
+            "review": review[0] if review else None,
             "evidence_status": "verified_bytes_and_lines"
             if repository is not None and annotation
             else "not_checked_in_this_load",

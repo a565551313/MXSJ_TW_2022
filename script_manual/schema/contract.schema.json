@@ -763,7 +763,10 @@
           "pattern": "^[0-9a-f]{64}$"
         },
         "reviewer": {
-          "const": "H"
+          "enum": [
+            "H",
+            "A_delegate"
+          ]
         },
         "decision": {
           "enum": [
@@ -775,6 +778,11 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 8192
+        },
+        "delegation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
         }
       },
       "required": [
@@ -785,6 +793,22 @@
         "reviewer",
         "decision",
         "note"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "reviewer": {
+                "const": "A_delegate"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "delegation"
+            ]
+          }
+        }
       ]
     }
   }

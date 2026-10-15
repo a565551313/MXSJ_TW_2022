@@ -45,7 +45,7 @@
       "entry_index": 219,
       "owner": "D",
       "domain": "ui_chat",
-      "state": "submitted",
+      "state": "blocked",
       "priority": "pilot",
       "collaborators": []
     },
@@ -81,7 +81,7 @@
       "entry_index": 3176,
       "owner": "E",
       "domain": "network",
-      "state": "submitted",
+      "state": "blocked",
       "priority": "pilot",
       "collaborators": []
     },
@@ -90,7 +90,7 @@
       "entry_index": 2170,
       "owner": "E",
       "domain": "network",
-      "state": "submitted",
+      "state": "blocked",
       "priority": "pilot",
       "collaborators": []
     },
@@ -99,7 +99,7 @@
       "entry_index": 871,
       "owner": "E",
       "domain": "network",
-      "state": "submitted",
+      "state": "blocked",
       "priority": "pilot",
       "collaborators": []
     },
@@ -108,7 +108,7 @@
       "entry_index": 516,
       "owner": "E",
       "domain": "network",
-      "state": "submitted",
+      "state": "blocked",
       "priority": "pilot",
       "collaborators": []
     },

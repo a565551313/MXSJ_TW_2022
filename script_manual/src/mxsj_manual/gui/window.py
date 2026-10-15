@@ -182,7 +182,7 @@ class ManualWindow(QMainWindow):
         coverage = catalog.coverage()
         self.coverage.setText(
             f"阶段样板 · 目录 {coverage['indexed']}/{coverage['expected_entries']} · "
-            f"已写说明 {coverage['annotated']} · H通过 {coverage['accepted']} · "
+            f"已写说明 {coverage['annotated']} · 审核通过 {coverage['accepted']} · "
             "自动提取 / 推测 / 作者静态核对 / 实机记录分别标注，不能互相替代。"
         )
         self.domain.blockSignals(True)

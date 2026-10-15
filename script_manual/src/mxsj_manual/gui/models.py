@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QAbstractTableModel, Qt
 
-from ..core.render import REVIEWS
+from ..core.render import review_label
 
 
 class ModuleModel(QAbstractTableModel):
@@ -34,7 +34,7 @@ class ModuleModel(QAbstractTableModel):
         return [
             row["path"] or f"路径不可读 · #{row['entry_index']}",
             row["owner"],
-            REVIEWS[row["review_status"]],
+            review_label(row),
         ][index.column()]
 
     def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):

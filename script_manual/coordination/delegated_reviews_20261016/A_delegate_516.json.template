@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 516,
+  "annotation_sha256": "0eca5474ea815ad5269c4659db590344ec504399aa2778ef3db2eca41d961621",
+  "reviewer": "A_delegate",
+  "delegation": "2026-10-16用户明确授权：“H宕机了你审吧”。A总控代审，非独立H会话；不含领域正文或master合并授权。",
+  "decision": "changes_requested",
+  "note": "有限静态说明：52类/函数、7关键分支；含职责、资源/关联、修改问答与局限核对。退修：S1 类级摘要仍写“未握手前不走主通道分发”，但OnServerCmd只检查hasattr(self,'m_Hello')，并非真值；创建测连对象时已设m_Hello=False，仍满足属性存在条件。方法分支已经正确提示不要写成已握手，但未贯彻到类说明。 修订：统一类摘要、同名类对照问答和方法说明为属性存在门闸；不能把False过滤或握手完成当作此函数保证。 S2 说明称记录m_iCmd后调基类；实际候选先net.CNet.PacketPrepare(self,icmd)，再self.m_iCmd=icmd。 修订：纠正先后顺序，与net.CNet.PacketPrepare各自层次分开。 S3 “时间戳差<=1200即跳过刷新”遗漏tm>now分支。例如tm=101、now=100，差为-1却命中tm>now并刷新。候选float解析失败又落except而不进else，不能将tm=None的理想兜底补成已确认流程。 修订：照候选写全permission门禁及else里的(tm is None or tm>now or now-tm>1200)；跳过条件需排除未来时间戳，区分解析异常路径。HTTP拉文案仍在外层执行，保持来源说明。 S4 分支只整理“首轮自动代理再扩一轮”，但候选递归条件是(self.m_Time-1 != 0) or g_AutoProxy；递增后m_Time=2且非自动代理同样再次Connect，不能让修改指南读成仅首轮自动扩一轮。 修订：给出完整递归谓词和m_Time先自增的顺序，登记后续轮数也可立即递归的字面行为/疑点。不要按意图改成AND或把候选修好后冒称原文。 实际审核者为A代审，非独立H。详docs/evidence/script_manual_DE_A_delegated_review_20261016.md。"
+}

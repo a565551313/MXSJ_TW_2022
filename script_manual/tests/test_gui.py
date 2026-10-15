@@ -69,7 +69,7 @@ class GuiTests(Fixture):
         self.assertIn("msgid == 30", functions)
         self.assertIn("news.txt", resources)
         self.assertIn("SHA256", evidence)
-        self.assertIn("待H审核", overview)
+        self.assertIn("待审核", overview)
 
     def test_unknown_module_does_not_fake_explanation(self):
         self.search("script/main.py")
