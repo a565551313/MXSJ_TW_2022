@@ -1082,6 +1082,22 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
 - [机器证据](evidence/script_editor_post_directory_20261015.json)。不自动扩展原包XOR表的SHA白名单。
   用户现有修改/项目、原游戏包不动；Windows/用户全包/客户端仍待测；**源码修复尚未更新网盘整包**。
 
+### 3.37 0.6.0.dev4完整源码修复包交付准备（2026-10-15）
+
+用户明确要求上传到网盘`script_editor`目录（Drive ID `1Oknzs5ftrOHpf_jy0vQasYRtJCPoBQmO`），
+不传My Drive根目录，不交缺编译器的纯Git源码或需要覆盖旧目录的零散补丁。
+修复源码`77dc861`已推送；版本升0.6.0.dev4，GUI标题可明确区分旧0.6.0.dev3。
+
+- 双Windows x86标准CPython2.5.6/2.7.13及Windows pycdc均从固定官方源码真实交叉重建。
+  compiler manifest更新为实际产物摘要，PE/系统DLL导入/许可和对应源码静态核验通过。
+- 本次80/80零跳过（56核心＋24runtime bundle），ruff及Windows静态113源码/脚本0发现。
+  本环境未重跑此前完整GUI/真实双VM289历史基线，不把它当0.6.0.dev4当前验收。
+- 新说明明确目录后负载修复、保留项目续编、派生c727包不自动套原包XOR表；
+  首次Qt/Python构建依赖仍需联网；不含编辑器预构建EXE或游戏包。
+- [构建核验](evidence/script_editor_0.6_dev4_delivery_build_20261015.json)。
+  完整ZIP CRC/逐文件摘要、交付副本回归和远端上传重读结果将完成后补记，未预报上传成功。
+- Windows实际加载、EXE构建、完整用户c727包恢复及客户端语义仍未验；不改分享权限，不合master。
+
 ## 4. 等待外部输入
 
 | 事项 | 等谁 | 阻塞什么 |
