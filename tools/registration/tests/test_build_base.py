@@ -45,7 +45,8 @@ class TwPredicateWindowTest(unittest.TestCase):
 
     def replacement_bytes(self) -> bytes:
         rep = build.encode_ins(build.STD_LOAD_GLOBAL, 0)
-        return rep + build.encode_ins(build.STD_NOP, None) * (build.TW_PATCH_LEN - len(rep))
+        pad = build.encode_ins(build.STD_NOP, None) * (build.TW_PATCH_LEN - len(rep))
+        return rep + pad
 
     def test_clean_baseline_is_reported_patchable(self):
         code = fake_code(b"\x00" * build.TW_PATCH_AT, self.window_bytes(), b"\x00" * 8)
@@ -54,7 +55,7 @@ class TwPredicateWindowTest(unittest.TestCase):
         self.assertEqual(len(replacement), build.TW_PATCH_LEN)
 
     def test_already_patched_baseline_is_recognised(self):
-        """客户机现行的基线常是上一版产物：窗口已是补丁形态，必须判成 patched 而非报错。"""
+        """客户机基线常是上一版产物：窗口已是补丁形态，必须判成 patched。"""
         code = fake_code(
             b"\x00" * build.TW_PATCH_AT, self.replacement_bytes(), b"\x00" * 8
         )
@@ -70,7 +71,7 @@ class TwPredicateWindowTest(unittest.TestCase):
         self.assertIn("拒絕盲目重打包", str(ctx.exception))
 
 
-@unittest.skipUnless(ARCHIVE.is_file() and KEYS.is_file(), "data/script.fls 或 keys 不在")
+@unittest.skipUnless(ARCHIVE.is_file() and KEYS.is_file(), "缺 data/script.fls")
 class MainpageRealArchiveTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -86,9 +87,10 @@ class MainpageRealArchiveTest(unittest.TestCase):
         )
         info = self.keys_db[str(idx)]
         pts = [0] + list(info["bounds"]) + [len(exp)]
+        tabs = build.batch.XTABS
+        keys = info["keys"]
         return b"".join(
-            bytes(exp[pts[j] : pts[j + 1]]).translate(build.batch.XTABS[info["keys"][j]])
-            for j in range(5)
+            bytes(exp[pts[j] : pts[j + 1]]).translate(tabs[keys[j]]) for j in range(5)
         )
 
     def test_repo_baseline_mainpage_still_needs_the_patch(self):

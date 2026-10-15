@@ -149,9 +149,9 @@ def tw_predicate_window(code: bytes, names, varnames) -> tuple[str, bytes]:
     if window == replacement:
         return "patched", replacement
     raise ValueError(
-        "TW predicate fingerprint mismatch at %d: got %s —— 基線不是本工具"
-        "認得的 mainpage（既非未補形態也非已補形態），拒絕盲目重打包"
-        % (TW_PATCH_AT, window.hex())
+        "TW predicate fingerprint mismatch at "
+        f"{TW_PATCH_AT}: got {window.hex()} —— 基線不是本工具認得的 mainpage"
+        "（既非未補形態也非已補形態），拒絕盲目重打包"
     )
 
 

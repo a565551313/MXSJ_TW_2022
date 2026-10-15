@@ -206,6 +206,23 @@ AttributeError 死路，并多带 `_DiagFailure`/`_ImportRuntime`/`_RecoverEntry
   命令重建后 `script.fls` 的 SHA-256 与重置前逐字节一致 ⇒ 构建是确定性的。
   结论：**要留档的出货包必须传网盘或入库，不能只靠 `out/`**。
 
+### 第二期 b · 以 `script1015.fls`（用户网盘）为基线重做（2026-10-15 已授权上传）
+
+- 源码提交：`744c5e2`（会话分支 `arena/19a59906-mxsj-tw-2022`，未合入 `master`）。
+- [下载 registration_phase2b_on_script1015base.zip](https://drive.google.com/file/d/1KDEq1eiF_RJMM4l7pDvorScuMAIo_Ojo/view)
+  （Google Drive，未改分享权限）。
+- 大小 24,190,255 字节；ZIP MD5 `f3bdaf9a6c678385618298b2e8e7833d`；
+  ZIP SHA-256 `437fd798540553f293dfef773c168a7900325b5fe80487656225edc7f19bfbc2`
+  （上传后已核对 Drive 侧 MD5 与本地一致）。
+- 基线换成 `script1015.fls`（24,264,943 B，SHA-256 `77b3eac6…`）：实测只改 4007，
+  337 因基线已含同一补丁而「原样保留」；产物 `data/script.fls` 仍是
+  `ed0f4126c0b5d353…`，**与上一包逐字节相同** ⇒ 已经在测 phase2b 的人不用换包。
+- 比 phase2b 多一个 `build_report.json`（基线/密钥表/源码/产物四者 SHA、`mainpage.state`、
+  `changed_entries`），换基线出货时拿它对账；成员其余同 phase2b。
+- 那份归档里的旧 `register`（4007）比我们的版本多 `_DiagFailure`/`_ImportRuntime`/
+  `_RecoverEntry`/`_CreateFormEdit` 与分步 diag，但 `CConfirm` 仍是会 `AttributeError`
+  的死路。用户已选定：不保留这套脚手架，直接以当前 A 案版本覆盖。
+
 ## 第二期 Windows 验收
 
 只在**游戏测试副本**操作，备份旧 `script.fls` 和 `interface.fls`，勿改原安装包。
