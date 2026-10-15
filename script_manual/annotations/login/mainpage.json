@@ -5,15 +5,15 @@
   "path": "script/login/mainpage.py",
   "owner": "C",
   "domain": "login",
-  "author": "A（样板；交C复核）",
-  "source_status": "historical_unverified_origin",
+  "author": "C",
+  "source_status": "recovered_complete_not_original",
   "purpose": {
-    "text": "登录首页控制：公告显示与刷新、登录/注册入口、首页链接和显示隐藏。",
-    "confidence": "inferred",
+    "text": "登录首页控制：公告显示与刷新、登录/注册/退出入口、首页链接、版本信息与密码保护；TW/HK差异与Logo显示。",
+    "confidence": "static_reviewed",
     "evidence": [
-      "page",
+      "cls",
       "messages",
-      "refresh"
+      "show"
     ]
   },
   "keywords": [
@@ -22,18 +22,82 @@
     "登录首页",
     "新闻",
     "news.txt",
-    "公告弹窗"
+    "公告弹窗",
+    "注册",
+    "退出",
+    "密码保护",
+    "update.ini"
   ],
   "functions": [
+    {
+      "name": "_CBulletinButton",
+      "signature": "(self, parent, filename, x, y, txt, msgid=0)",
+      "kind": "class",
+      "summary": {
+        "text": "公告标签按钮控件：未选中时鼠标进入/按下切换帧，选中后锁定高亮。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "button"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMainPage",
+      "signature": "(self, parent)",
+      "kind": "class",
+      "summary": {
+        "text": "登录首页面板：加载login/mainpage.dlg，按TW/HK/非TW分支显示控件、版本文本、公告输出框、TG ID、URL热区。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "cls"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
     {
       "name": "CMainPage.__init__",
       "signature": "(self, parent)",
       "kind": "method",
       "summary": {
-        "text": "加载首页布局，初始化首页控件及版本信息。",
-        "confidence": "inferred",
+        "text": "初始化首页：TW分支隐藏noname15/noname2并显示新Logo；非TW隐藏noname10；读取update.ini Version；尝试读取tg.id并显示TG ID。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "page"
+          "cls"
+        ]
+      },
+      "calls": [
+        "misc.IsTWServer",
+        "cfg.GetData",
+        "interface.CImage"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CMainPage.OnButtonEnter",
+      "signature": "(self, btn)",
+      "kind": "method",
+      "summary": {
+        "text": "鼠标进入msgID=50的密码保护按钮时显示键盘监听风险提示。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "button"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMainPage.OnButtonLeave",
+      "signature": "(self, btn)",
+      "kind": "method",
+      "summary": {
+        "text": "离开msgID=50按钮时清除提示。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "button"
         ]
       },
       "calls": [],
@@ -44,13 +108,15 @@
       "signature": "(self, arr)",
       "kind": "method",
       "summary": {
-        "text": "将文本行交给公告显示控件。",
-        "confidence": "inferred",
+        "text": "把文本行数组交给chatoutput.COutput公告显示控件并滚动到顶部。",
+        "confidence": "static_reviewed",
         "evidence": [
           "write"
         ]
       },
-      "calls": [],
+      "calls": [
+        "chatoutput.COutput"
+      ],
       "branches": []
     },
     {
@@ -58,19 +124,96 @@
       "signature": "(self, msgid)",
       "kind": "method",
       "summary": {
-        "text": "按消息分发登录、注册、公告、链接等操作。",
-        "confidence": "inferred",
+        "text": "首页消息分发：1登录/选服，2注册或打开网页，3关闭游戏，4重启启动器，10/11/12公告/历史/客服，20 Logo，21 BBS，22 gameplayer，30刷新公告。",
+        "confidence": "static_reviewed",
         "evidence": [
           "messages"
         ]
       },
-      "calls": [],
+      "calls": [
+        "selectserver.Show",
+        "register.Show",
+        "main.CloseGame",
+        "net.OpenUrl",
+        "os.execlp",
+        "os.spawnl"
+      ],
       "branches": [
         {
-          "condition": "msgid == 10",
+          "condition": "msgid == 1",
           "effect": {
-            "text": "显示本地或内存中的公告内容。",
-            "confidence": "inferred",
+            "text": "隐藏首页，显示选服界面并播放按钮音。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "messages"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 2",
+          "effect": {
+            "text": "TW服务器按g_LangVersion打开注册URL；非TW隐藏首页并显示register注册页。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "messages"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 3",
+          "effect": {
+            "text": "调用main.CloseGame关闭游戏。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "messages"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 4",
+          "effect": {
+            "text": "关闭游戏后os.execlp重启mxLauncher.exe。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "messages"
+            ]
+          }
+        },
+        {
+          "condition": "msgid in (10,11,12)",
+          "effect": {
+            "text": "切换公告/历史/客服按钮启用状态，读取news.txt/history.txt/service.txt并写入公告输出框；客服文本替换BBS链接。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "messages"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 20",
+          "effect": {
+            "text": "按TW/HK打开Logo URL。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "messages"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 21",
+          "effect": {
+            "text": "按TW/HK打开BBS URL。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "messages"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 22",
+          "effect": {
+            "text": "启动gameplayer.exe。",
+            "confidence": "static_reviewed",
             "evidence": [
               "messages"
             ]
@@ -79,8 +222,8 @@
         {
           "condition": "msgid == 30",
           "effect": {
-            "text": "读取公告/客服地址并发起刷新请求。",
-            "confidence": "inferred",
+            "text": "限流180秒后按update.ini读取News/Service地址并发起HTTP刷新；显示“获取公告中”对话框。",
+            "confidence": "static_reviewed",
             "evidence": [
               "messages"
             ]
@@ -93,22 +236,56 @@
       "signature": "(data, succeed)",
       "kind": "function",
       "summary": {
-        "text": "处理公告请求结果，保存正文或提示失败。",
-        "confidence": "inferred",
+        "text": "公告HTTP回调：succeed=False或响应头分隔符缺失时弹“刷新公告失敗”；成功后取正文写news.txt，失败时缓存g_News，并通知首页OnMessage(10)。",
+        "confidence": "static_reviewed",
         "evidence": [
           "refresh"
         ]
       },
-      "calls": [],
-      "branches": []
+      "calls": [
+        "commondialog.ShowMessageBox",
+        "commondialog.HideMessageBox"
+      ],
+      "branches": [
+        {
+          "condition": "not succeed",
+          "effect": {
+            "text": "弹“刷新公告失敗”。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "refresh"
+            ]
+          }
+        },
+        {
+          "condition": "data.find('\\r\\n\\r\\n') == -1",
+          "effect": {
+            "text": "弹“刷新公告失敗”。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "refresh"
+            ]
+          }
+        },
+        {
+          "condition": "open('news.txt','wb')失败",
+          "effect": {
+            "text": "把body.split('\\r\\n')缓存到g_News。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "refresh"
+            ]
+          }
+        }
+      ]
     },
     {
       "name": "refreshService",
       "signature": "(data, succeed)",
       "kind": "function",
       "summary": {
-        "text": "处理客服说明请求并写入本地文本。",
-        "confidence": "inferred",
+        "text": "客服说明HTTP回调：成功且找到头分隔符时写service.txt；失败静默返回。",
+        "confidence": "static_reviewed",
         "evidence": [
           "service"
         ]
@@ -121,13 +298,17 @@
       "signature": "(s, autoupdate=True)",
       "kind": "function",
       "summary": {
-        "text": "控制首页显示隐藏及安排自动刷新。",
-        "confidence": "inferred",
+        "text": "显示/隐藏首页；显示时创建CMainPage，设置默认按钮，设置系统标题，若上次刷新超过1800秒则延迟60帧自动刷新。",
+        "confidence": "static_reviewed",
         "evidence": [
           "show"
         ]
       },
-      "calls": [],
+      "calls": [
+        "CMainPage",
+        "interface.SetDefaultButton",
+        "misc.SetSysCaption"
+      ],
       "branches": []
     }
   ],
@@ -136,10 +317,10 @@
       "kind": "layout",
       "target": "login/mainpage.dlg",
       "summary": {
-        "text": "首页布局与公告区域。",
-        "confidence": "inferred",
+        "text": "首页布局与公告输出、按钮、URL热区。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "page"
+          "cls"
         ]
       }
     },
@@ -147,26 +328,88 @@
       "kind": "file",
       "target": "news.txt",
       "summary": {
-        "text": "本地公告正文，刷新成功时会被写入。",
-        "confidence": "inferred",
+        "text": "本地公告正文；刷新成功时覆盖，读取失败时使用g_News缓存。",
+        "confidence": "static_reviewed",
         "evidence": [
+          "messages",
           "refresh"
         ]
       }
     },
     {
-      "kind": "config",
-      "target": "update.ini → [Setting]/[HK] → News",
+      "kind": "file",
+      "target": "history.txt",
       "summary": {
-        "text": "按语言版本选择公告地址。",
-        "confidence": "inferred",
+        "text": "历史消息文本，供首页历史标签读取。",
+        "confidence": "static_reviewed",
         "evidence": [
           "messages"
+        ]
+      }
+    },
+    {
+      "kind": "file",
+      "target": "service.txt",
+      "summary": {
+        "text": "客服说明文本，供首页客服标签读取。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "messages",
+          "service"
+        ]
+      }
+    },
+    {
+      "kind": "file",
+      "target": "tg.id",
+      "summary": {
+        "text": "可选TG ID文件，存在时显示在首页左上角。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "cls"
+        ]
+      }
+    },
+    {
+      "kind": "config",
+      "target": "update.ini → [Setting]/[HK] → News/Service/Version",
+      "summary": {
+        "text": "按TW/HK选择公告与客服URL及版本显示。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "cls",
+          "messages"
+        ]
+      }
+    },
+    {
+      "kind": "sound",
+      "target": "action/button.wav",
+      "summary": {
+        "text": "按钮点击音效。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "messages"
+        ]
+      }
+    },
+    {
+      "kind": "image",
+      "target": "combdialog4/陔腎翻賜醱/載陔んLOGO.png",
+      "summary": {
+        "text": "TW Logo图片，仅TW LangVersion 0时显示。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "cls"
         ]
       }
     }
   ],
   "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4293
+    },
     {
       "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
       "entry_index": 4007
@@ -180,31 +423,52 @@
     {
       "question": "刷新公告失败在哪里触发？",
       "answer": {
-        "text": "先看refreshbulletin：候选代码在请求失败或缺少HTTP头结束分隔符时提示刷新失败；实际网络原因须日志验证。",
-        "confidence": "inferred",
+        "text": "refreshbulletin：HTTP失败(succeed=False)或响应缺少\\r\\n\\r\\n头分隔符时弹“刷新公告失敗”；网络/URL问题需日志与抓包验证。",
+        "confidence": "static_reviewed",
         "evidence": [
           "refresh"
         ]
       }
     },
     {
-      "question": "想修改公告正文、地址或布局分别找哪里？",
+      "question": "修改公告正文、地址、布局分别在哪里？",
       "answer": {
-        "text": "正文news.txt，地址update.ini的News配置，布局login/mainpage.dlg；在线刷新成功会覆盖本地正文。",
-        "confidence": "inferred",
+        "text": "正文：news.txt（刷新成功覆盖，失败缓存g_News）；地址：update.ini的Setting/HK的News与Service；布局：login/mainpage.dlg；触发：OnMessage(30)与Show的自动刷新。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "page",
+          "cls",
           "messages",
-          "refresh"
+          "refresh",
+          "show"
+        ]
+      }
+    },
+    {
+      "question": "登录按钮点击后经过哪些函数和模块？",
+      "answer": {
+        "text": "OnMessage(1)隐藏首页并调用selectserver.Show(True)；非TW注册入口OnMessage(2)调用register.Show(True)；登录提交链在loginin/OnLogin与netserver/netlogin，需E/F协审。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "messages"
+        ]
+      }
+    },
+    {
+      "question": "注册逻辑与布局分别在哪里？",
+      "answer": {
+        "text": "逻辑在script/login/register.py（entry 4007），布局login/reg*.dlg/confirm.dlg；首页仅负责入口切换。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "messages"
         ]
       }
     }
   ],
   "limitations": [
-    "A提供的格式样板，不是C/H已验收成果。",
-    "来源是仓库旧反编译候选；与冻结原包payload的源码对应、控制流和运行行为尚未验证。",
-    "不适用于所有派生包，不执行源码、不自动改游戏文件。",
-    "仅列6个重点函数，未覆盖此候选的全部类/函数；calls空表示尚未整理，不表示无调用。"
+    "来源为uncompyle6 3.9.3反编译候选，非原始源码；控制流和运行行为未实机验证。",
+    "calls为静态引用线索，动态import/字符串调用未全部解析。",
+    "仅列出重点函数，未覆盖候选全部函数/分支。",
+    "TW/HK与g_LangVersion分支仅静态观察，未实机验证。"
   ],
   "sources": [
     {
@@ -212,15 +476,21 @@
       "path": "tools/decompiler/output/script_fls/script/login/mainpage.py",
       "sha256": "984cbe6ac7d2ed0a1479d2bcb72ea34a2fc89756017d1d95ab0f9f2195e925ac",
       "kind": "recovered_source",
-      "note": "uncompyle6 3.9.3历史恢复候选，非原始源码；需C复核当前固定语料与包来源。"
+      "note": "uncompyle6 3.9.3 recovered candidate; association basis: script.fls entry 337, co_filename=script\\login\\mainpage.py, input SHA 8b6e9266...; C reviewed fixed package. Not original source."
     }
   ],
   "evidence": [
     {
-      "id": "page",
+      "id": "button",
+      "source_id": "legacy_mainpage",
+      "start_line": 11,
+      "end_line": 49
+    },
+    {
+      "id": "cls",
       "source_id": "legacy_mainpage",
       "start_line": 50,
-      "end_line": 85
+      "end_line": 86
     },
     {
       "id": "write",
@@ -257,14 +527,58 @@
     {
       "direction": "downstream",
       "kind": "calls",
+      "module": null,
+      "symbol": "selectserver.Show",
+      "summary": {
+        "text": "OnMessage(1) hides homepage and calls selectserver.Show(True); selectserver.py old catalog entry 4844 is unconfirmed in this seed, so module identity is not asserted.",
+        "confidence": "inferred",
+        "evidence": []
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
       "module": {
         "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
-        "entry_index": 4806
+        "entry_index": 4007
       },
-      "symbol": "loginin.Show",
+      "symbol": "register.Show",
       "summary": {
-        "text": "候选OnMessage(1)调用loginin.Show(True)，进入登录界面；上游调用者尚待C核实。",
-        "confidence": "inferred",
+        "text": "非TW OnMessage(2)隐藏首页并显示注册页。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "messages"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4293
+      },
+      "symbol": "main.CloseGame",
+      "summary": {
+        "text": "OnMessage(3/4)关闭游戏；Show设置标题。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "messages",
+          "show"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4007
+      },
+      "symbol": "mainpage.Show",
+      "summary": {
+        "text": "注册页取消/完成时调用mainpage.Show(True)返回首页。",
+        "confidence": "static_reviewed",
         "evidence": [
           "messages"
         ]

@@ -1,0 +1,1248 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 4806,
+  "path": "script/login/loginin.py",
+  "owner": "C",
+  "domain": "login",
+  "author": "C",
+  "source_status": "recovered_complete_not_original",
+  "purpose": {
+    "text": "登录界面控制：账号/密码输入、历史账号、密码保护、服务条款、自动登录、邮箱/路径/密码对话框、音乐与链接。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "top",
+      "loginin",
+      "show"
+    ]
+  },
+  "keywords": [
+    "登录",
+    "loginin",
+    "账号",
+    "密码",
+    "密码保护",
+    "服务条款",
+    "自动登录",
+    "邮箱验证码"
+  ],
+  "functions": [
+    {
+      "name": "KeyDisturb",
+      "signature": "(c)",
+      "kind": "function",
+      "summary": {
+        "text": "键盘扰动函数，用于密码保护。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ClearChar",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "清空字符输入状态。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetLoginEmail",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "获取登录邮箱。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CheckHide",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "检查窗口隐藏状态。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetHasSelServer",
+      "signature": "(flag)",
+      "kind": "function",
+      "summary": {
+        "text": "设置是否已选服务器。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "StartDYAutoLogin",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "启动多益自动登录流程。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowDYAutoLogin2",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "显示自动登录对话框2。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "DYAutoLogin2",
+      "signature": "(account, pwd, is_lpd)",
+      "kind": "function",
+      "summary": {
+        "text": "执行自动登录账号密码。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "DYAutoLoginOK",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "自动登录成功处理。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "HideDYAutoLogin",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "隐藏自动登录对话框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CDYAutoLoginDlg",
+      "signature": "(self)",
+      "kind": "class",
+      "summary": {
+        "text": "自动登录对话框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "LoginOk",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "登录提交：读取账号/密码，校验非空与密码长度>=6、账号不能纯数字，设置g_User/g_LoginEmail，调用netlogin.C2SLoginIn(user,password)，并设置netlogin.g_LoginErrorCallback=LoginInErr。不保存账号。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginok"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "LoginInErr",
+      "signature": "(err_id, err_msg)",
+      "kind": "function",
+      "summary": {
+        "text": "登录错误回调：显示错误信息。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "show"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CUserEdit",
+      "signature": "(self, parent, color, font, x, y, w, h)",
+      "kind": "class",
+      "summary": {
+        "text": "账号输入/下拉框：支持历史账号列表与选择。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CPasswordEdit",
+      "signature": "(self)",
+      "kind": "class",
+      "summary": {
+        "text": "密码输入框：回车触发登录。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRichClickText",
+      "signature": "(self, parent, x, y, text, normal_color, active_color, font, msgid=0)",
+      "kind": "class",
+      "summary": {
+        "text": "可点击富文本链接。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CLoginIn",
+      "signature": "(self, parent)",
+      "kind": "class",
+      "summary": {
+        "text": "登录面板：加载login_new/newlogin_800.dlg，创建账号/密码输入、URL区域、音乐按钮、账号列表。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CLoginIn.__init__",
+      "signature": "(self, parent)",
+      "kind": "method",
+      "summary": {
+        "text": "初始化登录界面、TW/HK密码保护、动画、账号列表、注册结果回填。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CLoginIn.OnButtonEnter",
+      "signature": "(self, btn)",
+      "kind": "method",
+      "summary": {
+        "text": "密码保护按钮提示。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CLoginIn.OnButtonLeave",
+      "signature": "(self, btn)",
+      "kind": "method",
+      "summary": {
+        "text": "清除密码保护提示。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CLoginIn.RefreshAccountList",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "刷新历史账号列表。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CLoginIn.SaveAccount",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "保存当前账号到历史列表。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CLoginIn.OneoffLogin",
+      "signature": "(self, user, password, is_lpd=False)",
+      "kind": "method",
+      "summary": {
+        "text": "一键登录：设置用户/密码并随机连接服务器。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CLoginIn.OneoffLogin2",
+      "signature": "(self, user, password, is_lpd=False)",
+      "kind": "method",
+      "summary": {
+        "text": "一键登录2：支持本地密码标记。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CLoginIn.SetMusicBtn",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "根据音乐音量切换音乐按钮图。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CLoginIn.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "登录页消息分发：2登录，1返回选服，3关闭，10 Logo，22取回账号，23修改密码，24协议，50密码保护，71音乐。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "msgid == 2",
+          "effect": {
+            "text": "勾选协议后调用LoginOk()提交登录；LoginOk校验输入并调用netlogin.C2SLoginIn，设置错误回调LoginInErr；成功后的账号保存由OnLogin()执行。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "loginok"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 1",
+          "effect": {
+            "text": "隐藏登录，显示选服，断开网络。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "loginin"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 3",
+          "effect": {
+            "text": "main.CloseGame。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "loginin"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 10",
+          "effect": {
+            "text": "按TW/HK打开Logo URL。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "loginin"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 22",
+          "effect": {
+            "text": "隐藏登录并显示getaccount。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "loginin"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 23",
+          "effect": {
+            "text": "非TW时显示aboutpwd。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "loginin"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 24",
+          "effect": {
+            "text": "打开DYT_XIEYI_URL。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "loginin"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 50",
+          "effect": {
+            "text": "切换mainpage.g_PwdProtect并SetProtect。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "loginin"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 71",
+          "effect": {
+            "text": "切换音乐音量并播放登录音乐。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "loginin"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Show",
+      "signature": "(s)",
+      "kind": "function",
+      "summary": {
+        "text": "显示/隐藏登录面板；显示时创建CLoginIn并设置默认按钮与InputSecrecy。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "show"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnLogin",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "账号保存：LoginIn非空时调用LoginIn.SaveAccount()，把当前账号写入历史列表。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "show"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CServiceMessageDialog",
+      "signature": "(self, parent, msg, nextfunc)",
+      "kind": "class",
+      "summary": {
+        "text": "服务条款消息框：加载service.dlg并显示文本。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "service"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CServiceMessageDialog.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "1继续nextfunc；2返回选服并断开。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "service"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowService",
+      "signature": "(bFlag)",
+      "kind": "function",
+      "summary": {
+        "text": "创建服务消息框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "service"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowLogin",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "TW按g_LangVersion选择SERVICE_MSG/SERVICE_MSG2并创建服务消息框；非TW直接ShowService(True)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "showlogin"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CClickRichText",
+      "signature": "(self, parent, x, y, w, text, normal_color, active_color, font, msgid=0, Enable_color=8421504)",
+      "kind": "class",
+      "summary": {
+        "text": "富文本点击控件。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "click"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CEmailCodeDlg",
+      "signature": "(self, email)",
+      "kind": "class",
+      "summary": {
+        "text": "邮箱验证码对话框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "emailcode"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CEmailCodeDlg.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "邮箱验证码对话框消息处理。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "emailcode"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowEmailCodeDlg",
+      "signature": "(email='')",
+      "kind": "function",
+      "summary": {
+        "text": "显示邮箱验证码对话框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "emailcode"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CFinallyPathDlg",
+      "signature": "(self, predlg=0)",
+      "kind": "class",
+      "summary": {
+        "text": "最终路径/账号确认对话框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "finally"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CFinallyPathDlg.Confirm",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "确认路径/账号。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "finally"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CFinallyPathDlg.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "最终路径对话框消息处理。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "finally"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowFinallyPathDlg",
+      "signature": "(predlg)",
+      "kind": "function",
+      "summary": {
+        "text": "显示最终路径对话框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "finally"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CUsePasswordDlg",
+      "signature": "(self)",
+      "kind": "class",
+      "summary": {
+        "text": "使用密码对话框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "usepwd"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CUsePasswordDlg.Confirm",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "确认使用密码。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "usepwd"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CUsePasswordDlg.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "使用密码对话框消息处理。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "usepwd"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowUsePasswordDlg",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "显示使用密码对话框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "usepwd"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CConfirmDlg",
+      "signature": "(self)",
+      "kind": "class",
+      "summary": {
+        "text": "确认对话框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "confirm"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CConfirmDlg.Confirm",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "确认操作。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "confirm"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CConfirmDlg.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "确认对话框消息处理。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "confirm"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowConfirmDlg",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "显示确认对话框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "confirm"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CSetPwd",
+      "signature": "(self, email)",
+      "kind": "class",
+      "summary": {
+        "text": "设置密码对话框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "setpwd"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CSetPwd.DoCheck",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "密码校验。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "setpwd"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CSetPwd.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "设置密码对话框消息处理。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "setpwd"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowSetDYT",
+      "signature": "(email)",
+      "kind": "function",
+      "summary": {
+        "text": "显示设置多益通密码。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "setpwd"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CloseUpgrade",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "关闭升级提示。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "private"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowPrivate",
+      "signature": "(info)",
+      "kind": "function",
+      "summary": {
+        "text": "显示隐私/协议信息。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "private"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CPrivateDlg",
+      "signature": "(self, info)",
+      "kind": "class",
+      "summary": {
+        "text": "隐私对话框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "private"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CPrivateDlg.IdentityCheck",
+      "signature": "(self, identity)",
+      "kind": "method",
+      "summary": {
+        "text": "身份证校验。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "private"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CPrivateDlg.DoCheck",
+      "signature": "(self, )",
+      "kind": "method",
+      "summary": {
+        "text": "隐私表单校验。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "private"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CPrivateDlg.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "隐私对话框消息处理。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "private"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "HintExistSameEmail",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "提示邮箱已存在。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "private"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetAccountList",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "读取历史账号列表。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "private"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SaveAccount",
+      "signature": "(account)",
+      "kind": "function",
+      "summary": {
+        "text": "保存账号到本地列表。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "private"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "layout",
+      "target": "login_new/newlogin_800.dlg",
+      "summary": {
+        "text": "登录主布局。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      }
+    },
+    {
+      "kind": "layout",
+      "target": "login/service.dlg",
+      "summary": {
+        "text": "服务条款消息框布局。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "service"
+        ]
+      }
+    },
+    {
+      "kind": "file",
+      "target": "nocheck",
+      "summary": {
+        "text": "若存在则自动填入测试密码11111111。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      }
+    },
+    {
+      "kind": "config",
+      "target": "mainpage.g_PwdProtect",
+      "summary": {
+        "text": "密码保护开关。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      }
+    },
+    {
+      "kind": "sound",
+      "target": "action/button.wav",
+      "summary": {
+        "text": "按钮音效。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 337
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4007
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4293
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "登录按钮点击后经过哪些函数和模块？",
+      "answer": {
+        "text": "CLoginIn.OnMessage(2)在勾选协议后调用LoginOk；LoginOk保存账号；网络连接由netserver.RandomConnect与netlogin处理，E协审。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin",
+          "show"
+        ]
+      }
+    },
+    {
+      "question": "注册逻辑与布局分别在哪里？",
+      "answer": {
+        "text": "注册入口在mainpage.OnMessage(2)；逻辑/布局在register.py与login/reg*.dlg；注册成功回填loginin账号列表。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      }
+    },
+    {
+      "question": "main.py如何启动、运行主循环、切换战斗和退出？",
+      "answer": {
+        "text": "见entry 4293：Start/StartStep1初始化；Loop默认MainLoop；SetWarLoop切换WarLoop；CloseGame/ExitGame/RealExit/doexit/doreturn处理退出与重登录。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "show"
+        ]
+      }
+    },
+    {
+      "question": "密码保护在哪里切换？",
+      "answer": {
+        "text": "CLoginIn.OnMessage(50)切换mainpage.g_PwdProtect并SetProtect；提示文本在OnButtonEnter/Leave。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "来源为uncompyle6 3.9.3反编译候选，非原始源码；控制流和运行行为未实机验证。",
+    "loginin模块较大，本说明只覆盖重点类/函数，未覆盖全部辅助函数。",
+    "calls为静态引用线索，动态调用未全部解析。",
+    "网络登录链路需E协审，战斗切换需F协审。"
+  ],
+  "sources": [
+    {
+      "id": "legacy_loginin",
+      "path": "tools/decompiler/output/script_fls/script/login/loginin.py",
+      "sha256": "dd90527be51d315b6a0e6cafce32f4ad08e74040153d3fbc141c239cac550929",
+      "kind": "recovered_source",
+      "note": "uncompyle6 3.9.3 recovered candidate; association basis: script.fls entry 4806, co_filename=script\\login\\loginin.py, input SHA 8b6e9266...; C reviewed fixed package. Not original source."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "top",
+      "source_id": "legacy_loginin",
+      "start_line": 1,
+      "end_line": 204
+    },
+    {
+      "id": "loginin",
+      "source_id": "legacy_loginin",
+      "start_line": 422,
+      "end_line": 641
+    },
+    {
+      "id": "show",
+      "source_id": "legacy_loginin",
+      "start_line": 642,
+      "end_line": 663
+    },
+    {
+      "id": "service",
+      "source_id": "legacy_loginin",
+      "start_line": 664,
+      "end_line": 700
+    },
+    {
+      "id": "click",
+      "source_id": "legacy_loginin",
+      "start_line": 712,
+      "end_line": 803
+    },
+    {
+      "id": "emailcode",
+      "source_id": "legacy_loginin",
+      "start_line": 804,
+      "end_line": 888
+    },
+    {
+      "id": "finally",
+      "source_id": "legacy_loginin",
+      "start_line": 889,
+      "end_line": 990
+    },
+    {
+      "id": "usepwd",
+      "source_id": "legacy_loginin",
+      "start_line": 999,
+      "end_line": 1058
+    },
+    {
+      "id": "confirm",
+      "source_id": "legacy_loginin",
+      "start_line": 1059,
+      "end_line": 1114
+    },
+    {
+      "id": "setpwd",
+      "source_id": "legacy_loginin",
+      "start_line": 1115,
+      "end_line": 1196
+    },
+    {
+      "id": "private",
+      "source_id": "legacy_loginin",
+      "start_line": 1197,
+      "end_line": 1436
+    },
+    {
+      "id": "loginok",
+      "source_id": "legacy_loginin",
+      "start_line": 246,
+      "end_line": 267
+    },
+    {
+      "id": "showlogin",
+      "source_id": "legacy_loginin",
+      "start_line": 701,
+      "end_line": 708
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 337
+      },
+      "symbol": "mainpage.Show",
+      "summary": {
+        "text": "返回首页时调用mainpage.Show(True)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4007
+      },
+      "symbol": "register.g_AccountInfo",
+      "summary": {
+        "text": "注册成功后回填账号。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4293
+      },
+      "symbol": "main.CloseGame",
+      "summary": {
+        "text": "关闭游戏。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "message",
+      "module": null,
+      "symbol": "netserver.RandomConnect/netlogin",
+      "summary": {
+        "text": "登录连接由netserver/netlogin处理，E协审。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "loginin"
+        ]
+      }
+    }
+  ]
+}
