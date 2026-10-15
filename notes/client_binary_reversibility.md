@@ -207,3 +207,10 @@ strings -a -n 5 mxLauncher.exe | grep -Ei 'ResLib|update\.ini|bk%d|Fonts|MX_SPLA
    繁中系統上還是會花屏 —— 那條線要嘛改系统区域、要嘛 SLEA/NTLEA（§8 方案 ①②）。順手掃了一遍：除皮膚圖外
    沒有任何資源文字是繁體（比對時只撞出一個「想」，繁簡同字），所以**圖改完，繁體就到此為止**。
 2. logo「新夢想世界」是手繪圖形不是字，要一起換就得重畫那塊圖（另活）。
+2. logo「新夢想世界」是手繪圖形不是字，要一起換就得重畫那塊圖（另活）。
+
+**出貨登記**（要 Windows 實測的人用）：網盤根目錄 `mxLauncher_simplified_skin_20261015.zip`
+（id `1wDhec2aTxuTiLCxeSXzfwR45F7JrK2Y8`，2,216,548 B，zip md5 `a2da701f891dc395f7939d134e822b71`）——
+內含 `mxLauncher_simplified.exe`（改名蓋掉 `mxLauncher.exe` 即可，原檔 MD5 `b1ce8c9f11ff6596c680f0b3d8bd9dd9` 供比對）、
+原始/改後皮膚圖、上下對比圖、`README.txt`（含「簽名已剝、花屏另解」那段）與三步腳本。檔名全 ASCII（中文名在 zip 裡會因
+UTF-8 旗標缺失在 Windows 解壓成亂碼，已避開）。
