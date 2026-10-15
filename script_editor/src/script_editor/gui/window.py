@@ -19,12 +19,13 @@ from ..core.inspection.encoding import byte_literal
 from ..core.services.files import read_source, save_source
 from .build_actions import BuildActions
 from .jobs import Job
+from .module_actions import ModuleActions
 from .project_actions import ProjectActions
 from .source_tab import SourceTab
 from .workspace import Workspace
 
 
-class Window(Workspace, ProjectActions, BuildActions, QMainWindow):
+class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow):
     def __init__(self, runtime_root: Path, settings=None):
         super().__init__()
         self.runtime_root = runtime_root
@@ -33,6 +34,7 @@ class Window(Workspace, ProjectActions, BuildActions, QMainWindow):
         self.bindings = []
         self.catalogs = []
         self.built_texts = {}
+        self.module_names = {}
         self.project_dirty = False
         self.compilers = {}
         self.jobs = set()
@@ -175,6 +177,8 @@ class Window(Workspace, ProjectActions, BuildActions, QMainWindow):
                 )
                 if binding:
                     metadata["source_status"] = "user-associated-not-game-verified"
+                    metadata["source_kind"] = binding.source_kind
+                    metadata["recovery_sha256"] = binding.recovery_sha256
                     metadata["source_path"] = str(binding.source)
                     metadata["built_source_sha256"] = (
                         binding.built_source_sha256 or "未知"
@@ -186,19 +190,26 @@ class Window(Workspace, ProjectActions, BuildActions, QMainWindow):
                 str(archive.path)
                 + "\n"
                 + json.dumps(metadata, ensure_ascii=False, indent=2)
-                + "\n索引识别≠已验证模块。仅显式关联可信源码才可构建；不自动生成源码。"
+                + "\n双击读取包内模块并尝试恢复；草稿可编辑另存，写包前须检查并采用。"
             )
 
-    def add_source(self, path, vm="py25", reference=False, text=None):
+    def add_source(self, path, vm="py25", reference=False, text=None, source_kind=None):
         path = path.resolve()
         for i in range(self.tabs.count()):
             if self.tabs.widget(i).path == path:
-                if self.tabs.widget(i).reference != reference:
+                if self.tabs.widget(i).reference != reference or (
+                    source_kind is not None
+                    and self.tabs.widget(i).source_kind != source_kind
+                ):
                     raise ValueError("该文件已按另一来源类型打开，请先关闭原标签")
                 self.tabs.setCurrentIndex(i)
-                return
+                return self.tabs.widget(i)
         tab = SourceTab(
-            path, read_source(path) if text is None else text, vm, reference
+            path,
+            read_source(path) if text is None else text,
+            vm,
+            reference,
+            source_kind,
         )
         label = ("[参考] " if reference else "") + path.name
         self.tabs.addTab(tab, label)
@@ -206,9 +217,7 @@ class Window(Workspace, ProjectActions, BuildActions, QMainWindow):
         self.tabs.setTabToolTip(self.tabs.indexOf(tab), str(path))
 
         def changed(dirty):
-            self.tabs.setTabText(
-                self.tabs.indexOf(tab), label + (" *" if dirty else "")
-            )
+            self.refresh_tab_title(tab)
 
         tab.editor.document().modificationChanged.connect(changed)
         tab.editor.document().modificationChanged.connect(self.refresh_native_action)
@@ -217,14 +226,43 @@ class Window(Workspace, ProjectActions, BuildActions, QMainWindow):
         tab.editor.textChanged.connect(self.analysis_timer.start)
         tab.editor.cursorPositionChanged.connect(self.update_cursor)
         tab.vm.currentIndexChanged.connect(self.refresh_native_action)
+        tab.adopt_button.clicked.connect(self.adopt_recovery)
+        self.refresh_tab_title(tab)
         self.refresh_native_action()
+        return tab
+
+    def refresh_tab_title(self, tab):
+        prefix = {
+            "reference": "[参考] ",
+            "recovered-draft": "[恢复草稿] ",
+            "recovered-reviewed": "[恢复源码] ",
+            "module-unavailable": "[条目信息] ",
+        }.get(tab.source_kind, "")
+        label = (
+            prefix
+            + tab.path.name
+            + (" *" if tab.editor.document().isModified() else "")
+        )
+        self.tabs.setTabText(self.tabs.indexOf(tab), label)
+        self.tabs.setTabToolTip(self.tabs.indexOf(tab), str(tab.path))
 
     def open_source(self):
         name, _ = QFileDialog.getOpenFileName(
-            self, "打开自己的UTF-8源码；不要选反编译稿", "", "Python (*.py)"
+            self, "打开UTF-8源码或已另存的恢复草稿", "", "Python (*.py)"
         )
         if name:
             try:
+                text = read_source(Path(name))
+                if "MXSJ-RECOVERED-DRAFT" in "\n".join(text.splitlines()[:3]):
+                    vm = (
+                        "py27"
+                        if "# MXSJ-RECOVERY-VM: py27" in text.splitlines()[:3]
+                        else "py25"
+                    )
+                    self.add_source(
+                        Path(name), vm=vm, text=text, source_kind="recovered-draft"
+                    )
+                    return
                 reply = QMessageBox.question(
                     self,
                     "确认源码来源",
@@ -269,7 +307,17 @@ class Window(Workspace, ProjectActions, BuildActions, QMainWindow):
             raise ValueError("后台任务期间不能保存源码")
         if tab.reference:
             raise ValueError("参考稿不能保存为可信源码")
-        save_source(tab.path, tab.editor.toPlainText(), [a.path for a in self.archives])
+        if tab.source_kind == "recovered-draft":
+            saved = self.save_draft(tab)
+            if saved is None:
+                raise ValueError("已取消另存恢复草稿，编辑内容保留")
+            if saved:
+                return
+        save_source(
+            tab.path,
+            tab.editor.toPlainText(),
+            [a.path for a in self.archives] + [c.path for c in self.catalogs],
+        )
         tab.editor.document().setModified(False)
 
     def save_current(self):

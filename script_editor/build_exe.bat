@@ -39,6 +39,8 @@ REM GUI/compiler skips are fatal; only explicitly opt-in game-material tests may
 
 echo [4/5] Building with PyInstaller ...
 "%VPY%" -m PyInstaller --noconfirm --clean script_editor.spec || goto :fail
+"%VPY%" -m PyInstaller --noconfirm --clean recovery_worker.spec || goto :fail
+"%VPY%" stage_recovery.py --destination "dist\MXSJScriptEditor" || goto :fail
 echo [5/5] Copying exact runtime inventories and rechecking staged bytes ...
 "%VPY%" -m script_editor.runtime_cli stage --root . --destination "dist\MXSJScriptEditor" > "dist\MXSJScriptEditor\runtime-audit.json" || goto :fail
 set "PYTHONPATH="

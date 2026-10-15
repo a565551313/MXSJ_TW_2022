@@ -111,6 +111,15 @@ def load_state(path: Path) -> ProjectState:
             bytes.fromhex(filename)
             if baseline:
                 _digest(baseline)
+            kind = row.get("source_kind", "authored")
+            recovery_sha = row.get("recovery_sha256", "")
+            if not isinstance(kind, str) or kind not in {
+                "authored",
+                "recovered-reviewed",
+            }:
+                raise ValueError("不支持的源码来源类型，未核验草稿不能写入关联")
+            if recovery_sha or kind == "recovered-reviewed":
+                _digest(recovery_sha)
             binding = Binding(
                 a.path,
                 row["fingerprint"],
@@ -120,6 +129,8 @@ def load_state(path: Path) -> ProjectState:
                 source,
                 filename,
                 baseline,
+                kind,
+                recovery_sha,
             )
             binding.verify(a)
             key = (a.path, binding.index)

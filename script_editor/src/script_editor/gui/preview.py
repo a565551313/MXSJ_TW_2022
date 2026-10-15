@@ -21,7 +21,7 @@ class BuildPreview(QDialog):
         summary = QLabel(
             f"来源包：{binding.archive}\nVM：{binding.vm} · 下标：{binding.index} · "
             f"身份：{binding.identity}\n"
-            f"源码：{binding.source}\n编辑区未保存：{unsaved}\n"
+            f"源码：{binding.source}\n来源类型：{binding.source_kind}\n编辑区未保存：{unsaved}\n"
             f"存储负载：{plan.old_stored_size} → {plan.new_stored_size} B · "
             f"实际变化：{plan.payload_changed}\n"
             "仅替换上述一个条目，其余逐条校验。尚未验证业务语义/游戏运行，不会新增模块。"
@@ -33,6 +33,7 @@ class BuildPreview(QDialog):
             (
                 "来源/摘要",
                 f"包SHA256：{binding.fingerprint}\n"
+                f"恢复来源标准pyc SHA：{binding.recovery_sha256 or '不适用'}\n"
                 f"上次入包源码SHA：{binding.built_source_sha256 or '未知'}\n"
                 f"本次源码SHA：{plan.source_sha256}\n"
                 f"标准pyc SHA：{plan.standard_sha256}\n"

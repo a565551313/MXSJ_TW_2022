@@ -10,7 +10,7 @@ a = Analysis(
     hiddenimports=collect_submodules(
         "script_editor", filter=lambda n: not n.startswith("script_editor.data")
     ), hookspath=[],
-    runtime_hooks=[], excludes=["tkinter", "matplotlib", "numpy", "pytest"],
+    runtime_hooks=[], excludes=["tkinter", "matplotlib", "numpy", "pytest", "uncompyle6", "xdis", "spark_parser"],
     noarchive=False,
 )
 pyz = PYZ(a.pure)

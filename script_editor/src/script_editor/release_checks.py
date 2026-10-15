@@ -12,6 +12,7 @@ from .core.compiler.distribution import audit_runtimes
 # Independent game/DLL materials are deliberately not part of a standalone tool.
 # Only these exact opt-in tests may be absent from a release build environment.
 OPTIONAL_MATERIAL_TESTS = {
+    "test_module_browser.RealModuleBrowserTests.test_real_script_and_data_recover_edit_without_original_authored_source",
     "test_native_evidence.DispatchEvidence.test_current_dll_dispatch_without_executing_it",
     "test_native_legacy.RealMaterialBuild.test_actual_script_register_source",
     "test_native_legacy.RealMaterialBuild.test_actual_data_offline_probe",
@@ -22,6 +23,8 @@ OPTIONAL_MATERIAL_TESTS = {
 
 
 REQUIRED_RELEASE_TESTS = {
+    "test_module_browser.ModuleBrowserTests.test_both_real_vms_package_recover_edit_compile_publish_reopen",
+    "test_gui_module.GuiModuleTests.test_both_vms_real_unbound_open_edit_review_publish_and_project_reopen",
     "test_archive_revision.ArchiveRevisionTests.test_path_stat_and_fstat_differences_do_not_reject_unchanged_package",
     "test_gui.GuiTests.test_large_tree_uses_supported_qt_without_none_reference_corruption",
     "test_gui.GuiTests.test_workspace_toolbar_shares_real_actions_and_welcome",

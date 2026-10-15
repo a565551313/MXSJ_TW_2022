@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mxsj-script-editor"
-version = "0.4.1.dev1"
-description = "MXSJ standalone dual-VM script editor foundation"
+version = "0.5.0.dev1"
+description = "MXSJ dual-VM package editor with unverified recovery drafts"
 readme = "README.md"
 requires-python = ">=3.10,<3.15"
-license = { text = "Proprietary" }
-dependencies = ["PySide6==6.10.3"]
+license = { text = "Mixed: editor proprietary; separate recovery_worker.py GPL-3.0-or-later; see licenses/recovery" }
+dependencies = ["PySide6==6.10.3", "uncompyle6==3.9.3", "xdis==6.1.8", "spark-parser==1.9.0", "six==1.17.0", "click==8.5.0"]
 
 [project.gui-scripts]
 mxsj-script-editor = "script_editor.app:main"

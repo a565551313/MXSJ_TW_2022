@@ -37,7 +37,11 @@ class WorkspaceActions:
             self.ui_actions[key].setEnabled(bool(tab and not self.jobs))
         self.compiler_status.setText(f"编译器 {len(self.compilers)}/2 已探测")
         self.file_status.setText(
-            "只读参考"
+            "恢复草稿（可编辑，待核验）"
+            if tab and tab.source_kind == "recovered-draft"
+            else "条目详情（尚不能恢复）"
+            if tab and tab.source_kind == "module-unavailable"
+            else "只读参考"
             if tab and tab.reference
             else "UTF-8 源码"
             if tab
@@ -52,6 +56,7 @@ class WorkspaceActions:
         revision = (
             tuple((b.archive, b.index, b.source) for b in self.bindings),
             tuple(a.path for a in self.archives),
+            tuple(self.module_names.items()),
         )
         if getattr(self, "_navigation_revision", None) == revision:
             return
@@ -93,6 +98,9 @@ class WorkspaceActions:
                     if archive.kind == "0slf"
                     else f"#{entry.index}  · {entry.identity}"
                 )
+                embedded = self.module_names.get((archive.path, entry.index))
+                if embedded:
+                    label += f"  {embedded}"
                 binding = bindings.get((archive.path, entry.index))
                 if binding:
                     label += f" ← {binding.source.name}"
@@ -100,7 +108,11 @@ class WorkspaceActions:
                 child.setToolTip(
                     0,
                     f"身份：{entry.identity}\n"
-                    + (str(binding.source) if binding else "无可信源码关联 · 只读"),
+                    + (
+                        str(binding.source)
+                        if binding
+                        else "双击读取包内模块并尝试恢复；未关联源码"
+                    ),
                 )
                 child.setIcon(0, file_icon)
 
@@ -165,7 +177,7 @@ class WorkspaceActions:
             rows += [
                 ("源码", str(tab.path)),
                 ("编译 VM", tab.vm.currentData()),
-                ("来源", "只读参考" if tab.reference else "用户确认的源码"),
+                ("来源", tab.mode_label.text()),
                 ("未保存", "是" if tab.editor.document().isModified() else "否"),
                 ("编码", "UTF-8"),
                 ("行数", str(tab.editor.blockCount())),
@@ -308,15 +320,13 @@ class WorkspaceActions:
         )
         if binding:
             try:
-                self.add_source(binding.source, vm=binding.vm)
+                self.add_source(
+                    binding.source, vm=binding.vm, source_kind=binding.source_kind
+                )
             except (OSError, ValueError) as exc:
                 self.fail(exc)
         else:
-            self.info.setPlainText(
-                "此条目没有已确认的源码关联。请打开自己的源码并核对后关联；不会把反编译稿冒充可编辑源码。"
-            )
-            self.output_tabs.setCurrentWidget(self.info)
-            self.output_dock.show()
+            self.open_package_module()
 
     def package_menu(self, point):
         item = self.tree.itemAt(point)
@@ -324,7 +334,10 @@ class WorkspaceActions:
             return
         self.tree.setCurrentItem(item)
         menu = QMenu(self)
-        menu.addAction("打开已关联源码", self.open_associated)
+        menu.addAction("打开条目 / 恢复源码", self.open_associated)
+        menu.addAction(
+            "重新读取未恢复条目", lambda: self.open_package_module(reload=True)
+        )
         associate = menu.addAction("关联当前源码到此条目…", self.associate)
         associate.setEnabled(
             bool(

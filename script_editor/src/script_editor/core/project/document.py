@@ -18,6 +18,8 @@ class Binding:
     source: Path
     filename_hex: str = ""
     built_source_sha256: str = ""
+    source_kind: str = "authored"
+    recovery_sha256: str = ""
 
     @classmethod
     def associate(cls, archive: ArchiveDocument, index: int, source: Path):
@@ -36,6 +38,13 @@ class Binding:
         )
 
     def verify(self, archive: ArchiveDocument):
+        if self.source_kind not in {"authored", "recovered-reviewed"}:
+            raise ValueError("未核验恢复稿/参考稿不能作为可发布源码关联")
+        if self.source_kind == "recovered-reviewed" and (
+            len(self.recovery_sha256) != 64
+            or any(c not in "0123456789abcdef" for c in self.recovery_sha256)
+        ):
+            raise ValueError("恢复源码缺少原标准字节码来源摘要")
         if (
             archive.path != self.archive.resolve()
             or archive.vm != self.vm

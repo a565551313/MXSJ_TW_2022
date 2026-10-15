@@ -97,7 +97,7 @@ class ArchiveDocument:
             "identity": entry.identity,
             "vm": self.vm,
             "stored_bytes": entry.size,
-            "source_status": "无可信源码 / 只读",
+            "source_status": "尚未关联源码（原包只读，可尝试恢复工作草稿）",
         }
         if self.kind == "0slf":
             m = self.index.metas[index]

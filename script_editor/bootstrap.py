@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import importlib.metadata
 import subprocess
 import sys
 import traceback
@@ -29,6 +30,11 @@ from script_editor import GUI_VERSION  # noqa: E402 - bootstrap local source pat
 # (导入名, pip 安装名)：缺哪个装哪个
 REQUIREMENTS = [
     ("PySide6", f"PySide6=={GUI_VERSION}"),
+    ("uncompyle6", "uncompyle6==3.9.3"),
+    ("xdis", "xdis==6.1.8"),
+    ("spark_parser", "spark-parser==1.9.0"),
+    ("six", "six==1.17.0"),
+    ("click", "click==8.5.0"),
 ]
 
 # 依次尝试的下载源：None=官方源，后面是国内镜像（官方慢/连不上时兜底）
@@ -50,10 +56,15 @@ def find_missing(
     missing = []
     for import_name, pip_name in requirements or REQUIREMENTS:
         try:
+            if import_name != "PySide6":
+                distribution, expected = pip_name.split("==")
+                if importlib.metadata.version(distribution) != expected:
+                    missing.append((import_name, pip_name))
+                continue
             module = __import__(import_name)
             if import_name == "PySide6" and module.__version__ != GUI_VERSION:
                 missing.append((import_name, pip_name))
-        except ImportError:
+        except (ImportError, importlib.metadata.PackageNotFoundError):
             missing.append((import_name, pip_name))
     return missing
 
@@ -83,7 +94,7 @@ def ensure_dependencies() -> bool:
     """检查并补齐运行依赖。"""
     missing = find_missing()
     if not missing:
-        _say("依赖检查通过：PySide6 已安装（接着检查内置编译器）。")
+        _say("依赖检查通过：Qt及独立恢复引擎依赖已安装（接着检查内置编译器）。")
         return True
     names = "、".join(import_name for import_name, _ in missing)
     _say(f"检测到缺少或版本不符的依赖：{names}，现在自动安装（只需这一次）…")
@@ -129,7 +140,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     try:
         __import__("PySide6.QtWidgets")
-    except ImportError:
+    except (ImportError, importlib.metadata.PackageNotFoundError):
         _log_failure(traceback.format_exc())
         _say("PySide6已安装但QtWidgets加载失败（系统动态库可能缺失）。")
         _say(f"详情见 {LOG_PATH}；不反复安装Python包掩盖系统库问题。")

@@ -17,6 +17,9 @@ class ProjectActions:
     def associate(self):
         try:
             tab = self.editable()
+            if tab.source_kind == "recovered-draft":
+                self.adopt_recovery()
+                return
             selected = self.selected()
             if not selected:
                 raise ValueError("请选中条目")
@@ -119,7 +122,7 @@ class ProjectActions:
             QMessageBox.question(
                 self,
                 "确认项目来源",
-                "确认项目关联的都是您自己的真实源码，而非反编译稿？",
+                "确认项目源码来源可信，恢复源码已由您检查/修复并明确采用？",
                 defaultButton=QMessageBox.StandardButton.No,
             )
             != QMessageBox.StandardButton.Yes
@@ -165,7 +168,9 @@ class ProjectActions:
                     raise ValueError("同一源码被关联到不同VM；请拆分为两个源码文件")
                 for tab in old_tabs:
                     if tab.path == binding.source and (
-                        tab.reference or tab.vm.currentData() != binding.vm
+                        tab.reference
+                        or tab.source_kind != binding.source_kind
+                        or tab.vm.currentData() != binding.vm
                     ):
                         raise ValueError(
                             "已打开的源码类型/VM与项目冲突；请先关闭冲突标签"
@@ -178,7 +183,12 @@ class ProjectActions:
                     archive._assert_unchanged()
                     self.add_archive(archive)
             for binding in state.bindings:
-                self.add_source(binding.source, binding.vm, text=texts[binding.source])
+                self.add_source(
+                    binding.source,
+                    binding.vm,
+                    text=texts[binding.source],
+                    source_kind=binding.source_kind,
+                )
         except Exception:
             # Roll back only widgets/readers created in this attempt. Existing
             # dirty buffers, undo history, associations and baselines stay intact.

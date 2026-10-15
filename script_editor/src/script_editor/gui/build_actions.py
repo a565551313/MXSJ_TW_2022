@@ -28,7 +28,12 @@ class BuildActions:
 
     def active_binding(self):
         selected, tab = self.selected(), self.tabs.currentWidget()
-        if not selected or not tab or tab.reference:
+        if (
+            not selected
+            or not tab
+            or tab.reference
+            or tab.source_kind == "recovered-draft"
+        ):
             return None
         archive, index = selected
         return next(
@@ -88,6 +93,9 @@ class BuildActions:
                 ref
             ]
             self.project_dirty = True
+            tab = self.tabs.currentWidget()
+            if tab and tab.source_kind == "module-unavailable" and self.selected():
+                self.open_package_module(reload=True)
 
         self.task(prepare, complete)
 

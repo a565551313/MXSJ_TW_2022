@@ -47,3 +47,23 @@ def save_source(path: Path, text: str, protected: Iterable[Path] = ()) -> None:
     if path.suffix.lower() != ".py":
         raise ValueError("源码必须保存为.py；源码与包输出分离")
     atomic_write(path, text.encode("utf-8"), protected)
+
+
+def save_new_source(path: Path, text: str, protected: Iterable[Path] = ()) -> None:
+    """Publish a new .py without overwriting any existing path, including races."""
+    if path.suffix.lower() != ".py":
+        raise ValueError("源码必须保存为.py")
+    protected = tuple(protected)
+    path = guard_output(path, protected)
+    if path.exists() or path.is_symlink():
+        raise FileExistsError("请选择尚不存在的源码文件名，不覆盖已有文件")
+    fd, temporary = tempfile.mkstemp(prefix=".mxsource-", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(text.encode("utf-8"))
+            stream.flush()
+            os.fsync(stream.fileno())
+        guard_output(path, protected)
+        os.link(temporary, path)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
