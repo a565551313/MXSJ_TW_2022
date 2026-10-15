@@ -91,3 +91,56 @@ objdump -p mx.exe | grep -A600 "The Import Tables" | grep "DLL Name" | sort -u
 strings -a mx.exe | grep -c '^\.?AV'        # RTTI 类名数
 strings -a mx.exe | grep -c CCombPanel      # 关键负面结果：0
 ```
+
+## 6. 启动器资源：已经整份抽出来了（2026-10-15）
+
+工務已落成工具，**不要手工再解一次**：`tools/data-parser/pe_resource_dump.py`
+（只用标准库；输入档全程唯讀；解不动的就留原字节 + 在 manifest 记 `note`，不猜）。
+回归测试 `tools/data-parser/test_pe_resource_dump.py`（12 项：自建最小 PE + 真档核对）。
+
+`mxLauncher.exe`（1,659,992 B，SHA-256 `3eeba17e7be96fcc…`）→ **86 条资源**：
+
+| 资源型别 | 条数 | 抽出来是什么 |
+|---|---|---|
+| BITMAP | 30 | 32bpp DIB（补上 BMP 头即成 `.bmp`）：按钮/进度条切片，151×48、151×42 这类尺寸 |
+| 具名型別 `PNG` | 1 | **545,162 B / 982×553 的整套启动器皮肤**：`新夢想世界 Online` logo、四个页签（新手指引/官方網站/官方論壇/遊戲資料）、新闻区、`進入遊戲`/`檢查更新`、下载与更新两条进度条。PNG 里带 Photoshop CC 2015 的 XMP 元数据 ⇒ **皮肤是 2015 年重画的**，而版式里的版权字串还停在 `Copyright (C) 2008` |
+| CURSOR + GROUP_CURSOR | 16 + 15 | 组装成 15 个 `.cur`（MFC 自订光标，每项 1~2 张图） |
+| ICON + GROUP_ICON | 1 + 1 | 1 个 `.ico`（程序图标，主图 67,624 B） |
+| STRING | 14 块 | 82 条字串：id 117 = `关于 mxstartup(&A)...`，其余多为 MFC 内建（61456+） |
+| DIALOG | 5 | **全部解出**：`100`「梦想世界更新程序」235×55（4 控件，`确定`按钮）；`102` 415×307、18 控件，**id 1000 是 WebBrowser ActiveX**（CLSID `{8856F961-…}`）⇒ 新闻/广告是 IE 控件承载，不是自绘；`179` 空模板；`30721`/`30734` 是 MFC 内建（AFX）模板 |
+| VERSION | 1 | `file_version = 128.0.1.0` —— **别拿它当版本号**：`update.ini` 写的是 `2.27.2`，串里另有 `1.5.4`，三者互不相干 |
+| MANIFEST | 1 | 空 `assembly`（既没有 UAC 声明也没有 comctl32 版本依赖） |
+| 型別 240 | 1 | 170 B 自定义块，未解出，按原样落地 |
+
+自检规则：版式必须**刚好吃掉整个 buffer**，否则退回 `.bin` 并记原因；所以「解出来了」这件事本身是可证的。
+
+## 7. 但「资源包」的主体不在 exe 里
+
+启动器内嵌的只是**它自己的皮肤与版式**。真正的游戏资源与更新链路在客户端目录：
+
+- 游戏资源：`data/*.fls` 共 7 个（`script.fls` 24,454,082、`magicres5.fls` 21,544,668、
+  `skill2.fls`、`effect.fls`、`skill.fls`、`passive.fls`、`data.fls`）——这条线已有
+  `tools/decompiler/`（反解）与 `tools/data-parser/repack_fls.py`（回填），**跟 PE 资源无关**。
+- 皮肤外掛：串里有 `bk%d.png` 与 `resource\updaterbk.res`；本仓库 `resource/` 只剩一个空的
+  `history.his` ⇒ 实机找不到就退回内嵌那张 PNG，**所以上表抽出来的图就是玩家看到的图**。
+- 更新/下载：`update.ini`（UTF-8）`[Setting] Version=2.27.2`、`UpdateURL=http://mxupdate.lager.com.tw/httpupdate.txt`、
+  `FileInfoURL=https://mxconfig.duoyi.com/filemd5.txt`（**服务器侧的 MD5 清单**）、
+  `[Download] DLServerUrl=http://dtminiclient.lager.com.tw/mini/mx/`；另有 `[HK]` 段（港版另一组 URL）。
+- 下载器也不在 exe 里：`ResLib.dll`（399,216 B，内嵌 libcurl，**没有导出表**，只导入 6 个 DLL；
+  日志格式串 `rid:%d fid:%u uid:%u url:%s httpcode:%d`、`Range: bytes=%I64u-`）；
+  `exe/ResLib.dll` 是**另一颗**（MD5 不同），别当同一份。
+- 自我更新：`patch/mx.bin` 与 `mxLauncher.exe` **MD5 相同**（`b1ce8c9f11ff6596c680f0b3d8bd9dd9`）
+  ⇒ `mx.bin` 就是「新版启动器自己」，配 `patch/mxupd.exe` + `%s.tmp` + `mxpatch_shadow`/`mxpatch_run` 完成替换。
+- 字体：串里 `AddFontResourceA` + `%s\Fonts\FZLanTingYuan-DB-GBK.ttf` ⇒ 仓库 `Fonts/` 那 4 个 ttf
+  是启动器注册给 UI 用的（**注意是 GBK 版 latin‑ting‑yuan**，与繁中显示那条线直接相关）。
+
+### 复现
+
+```sh
+python3 tools/data-parser/pe_resource_dump.py mxLauncher.exe --summary
+python3 tools/data-parser/pe_resource_dump.py mxLauncher.exe --dump /tmp/launch_rsrc \
+    --json /tmp/launch_rsrc/summary.json
+md5sum mxLauncher.exe patch/mx.bin          # 相同 ⇒ mx.bin 就是启动器本体
+python3 -c "print(open('update.ini',encoding='utf-8').read())"
+strings -a -n 5 mxLauncher.exe | grep -Ei 'ResLib|update\.ini|bk%d|Fonts|MX_SPLASH'
+```
