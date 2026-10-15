@@ -35,6 +35,7 @@ set "VPY=.venv\Scripts\python.exe"
 echo [3/5] Installing dependencies and running strict release checks ...
 "%VPY%" -m pip install --upgrade pip >nul 2>nul
 "%VPY%" -m pip install -r requirements-dev.txt || goto :fail
+"%VPY%" bootstrap.py --install-only || goto :fail
 REM GUI/compiler skips are fatal; only explicitly opt-in game-material tests may skip.
 "%VPY%" -m script_editor.release_checks --root . || goto :fail
 

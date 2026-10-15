@@ -146,3 +146,14 @@ class RecoveryBootstrapTests(unittest.TestCase):
             ),
         ):
             self.assertEqual(bootstrap.main(["--check-only"]), 2)
+
+    def test_install_only_returns_failure_if_engine_missing_without_opening_gui(self):
+        with (
+            patch.object(bootstrap, "ensure_dependencies", return_value=True),
+            patch.object(
+                bootstrap, "find_missing", return_value=bootstrap.RECOVERY_REQUIREMENTS
+            ),
+            patch("script_editor.app.main") as app,
+        ):
+            self.assertEqual(bootstrap.main(["--install-only"]), 2)
+            app.assert_not_called()

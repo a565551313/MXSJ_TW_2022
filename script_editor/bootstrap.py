@@ -141,8 +141,9 @@ def _log_failure(exc_text: str) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
+    install_only = "--install-only" in args
     check_only = "--check-only" in args
-    args = [a for a in args if a != "--check-only"]
+    args = [a for a in args if a not in {"--check-only", "--install-only"}]
 
     _say("MXSJ 脚本编辑器 · 启动自检")
     _say(f"Python {sys.version.split()[0]}：{sys.executable}")
@@ -157,6 +158,8 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     if not ensure_dependencies():
         return 2
+    if install_only:
+        return 2 if find_missing(RECOVERY_REQUIREMENTS) else 0
     try:
         __import__("PySide6.QtWidgets")
     except (ImportError, importlib.metadata.PackageNotFoundError):

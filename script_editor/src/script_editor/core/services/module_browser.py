@@ -97,13 +97,16 @@ def recover_standard(pyc: bytes, vm: str, *, timeout=30):
         result = json.loads(raw)
         if (
             not isinstance(result, dict)
+            or result.get("engine_protocol") != "mxsj-recovery/2"
             or not isinstance(result.get("source"), str)
             or not isinstance(result.get("disassembly"), str)
             or type(result.get("complete")) is not bool
             or not isinstance(result.get("diagnostics"), list)
             or not all(isinstance(d, str) for d in result["diagnostics"])
         ):
-            raise ValueError("invalid recovery result")
+            raise ValueError(
+                "invalid recovery result：恢复引擎版本或输出协议不符，请完整解压/重新构建新版"
+            )
         if (
             len(result["source"]) > 3 * 1024 * 1024
             or len(result["disassembly"]) > 3 * 1024 * 1024

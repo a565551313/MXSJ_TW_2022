@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import ast
+import json
 import os
 import subprocess
 import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from test_workflow import make_state
@@ -172,6 +174,48 @@ class ModuleBrowserTests(unittest.TestCase):
                     self.assertTrue(
                         any(isinstance(n, Atom) and n.value == raw for n in constants)
                     )
+
+    def test_wrong_engine_cannot_recover_even_if_gui_was_allowed_to_open(self):
+        from script_editor.data.recovery_worker import recover
+        from script_editor.recovery_dependencies import RECOVERY_VERSIONS
+
+        with patch(
+            "importlib.metadata.version",
+            side_effect=lambda name: (
+                "6.1.8" if name == "xdis" else RECOVERY_VERSIONS[name.replace("-", "_")]
+            ),
+        ):
+            with self.assertRaisesRegex(ValueError, "依赖版本"):
+                recover(self.root / "NEVER_READ_TARGET.pyc", "py25")
+
+    def test_stale_worker_protocol_cannot_be_mistaken_for_current_engine(self):
+        compiler = self.compiler("py25")
+        path = self.root / "protocol.pyc"
+        compile_standard(compiler, "x=1\n", b"protocol.py", path)
+
+        def old_worker(command, **kwargs):
+            output = Path(command[command.index("--output") + 1])
+            output.write_text(
+                json.dumps(
+                    {
+                        "source": "x=1\n",
+                        "complete": True,
+                        "disassembly": "old",
+                        "diagnostics": [],
+                    }
+                ),
+                encoding="utf8",
+            )
+            return SimpleNamespace(returncode=0)
+
+        with (
+            patch(
+                "script_editor.core.services.module_browser.subprocess.run",
+                side_effect=old_worker,
+            ),
+            self.assertRaisesRegex(ValueError, "recovery result"),
+        ):
+            recover_standard(path.read_bytes(), "py25")
 
     def test_missing_catalog_opens_diagnostic_not_fake_source(self):
         state = make_state(self.root)

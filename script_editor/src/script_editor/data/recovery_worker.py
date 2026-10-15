@@ -7,12 +7,36 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import importlib.metadata
 import io
 import json
 import tokenize
 from pathlib import Path
 
 LIMIT = 2 * 1024 * 1024
+
+
+ENGINE_PROTOCOL = "mxsj-recovery/2"
+SOURCE_SHA256 = "9e60958d4b0386e3976331ba6236ef2a1a986b2a162f3ddb9a8db424ae2e4d87"
+
+
+def validate_engine():
+    versions = {
+        "uncompyle6": "3.9.4.dev0",
+        "xdis": "6.3.0",
+        "spark-parser": "1.9.0",
+        "six": "1.17.0",
+        "click": "8.5.0",
+    }
+    for name, version in versions.items():
+        if importlib.metadata.version(name) != version:
+            raise ValueError(
+                "恢复引擎依赖版本不符，请运行新版bootstrap或完整重新构建EXE：" + name
+            )
+    info = importlib.metadata.distribution("uncompyle6").read_text("direct_url.json")
+    data = json.loads(info or "{}")
+    if data.get("archive_info", {}).get("hashes", {}).get("sha256") != SOURCE_SHA256:
+        raise ValueError("恢复引擎源码来源摘要不符，请重新运行新版启动器安装固定源码")
 
 
 class BoundedText(io.StringIO):
@@ -91,6 +115,7 @@ def source_syntax(text, vm):
 
 
 def recover(path, vm):
+    validate_engine()
     import xdis.unmarshal as legacy_unmarshal
     from uncompyle6.main import decompile_file
     from uncompyle6.semantics.pysource import SourceWalker
@@ -201,6 +226,7 @@ def main(argv=None):
             "disassembly": "",
             "diagnostics": [f"恢复引擎失败：{type(exc).__name__}: {str(exc)[:300]}"],
         }
+    result["engine_protocol"] = ENGINE_PROTOCOL
     args.output.write_text(json.dumps(result, ensure_ascii=True), encoding="utf-8")
     return 0
 
