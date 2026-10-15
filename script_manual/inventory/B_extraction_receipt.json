@@ -1,0 +1,703 @@
+{
+  "agent": "B",
+  "task": "full inventory extraction for two pinned archives",
+  "baseline_analysis_id": "mxsj-original-20261015-v1",
+  "inputs": {
+    "script_fls": {
+      "path": "data/script.fls",
+      "sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72"
+    },
+    "data_fls": {
+      "path": "data/data.fls",
+      "sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c"
+    },
+    "xor_catalog": {
+      "path": "tools/decompiler/script_fls_keys.json",
+      "sha256": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+      "also_at": "script_editor/decoding/script-original.json (same sha)"
+    },
+    "historical_catalog_fallback_only": {
+      "path": "server/docs/catalog/script_entries.jsonl",
+      "sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+      "role": "historical path fallback + sample comparison only; its function names were never copied into results"
+    },
+    "decompiled_corpus": "not used; marshal metadata is read directly from originals, PR34 corpus stays external_reference_not_loaded"
+  },
+  "tools": {
+    "python": "3.11.2",
+    "extractor": {
+      "path": "script_manual/inventory/extract_inventory.py",
+      "sha256": "662c6fbf2a09d29c333658acbe954d390243f6ea469c7cb00eaba2f1751a9bb8"
+    },
+    "reused_modules_sha256": {
+      "script_editor/src/script_editor/core/archives/document.py": "29d43305c362159eb01f59afcfc072046928e88c7cd92de1e5334da5d60e32f4",
+      "script_editor/src/script_editor/core/archives/fls0slf.py": "458a8f3ce0e99fd479d9550e11b6870f0b39c574f567a91af23b80945cf4dc6e",
+      "script_editor/src/script_editor/core/archives/flsdata.py": "eb5077648a14a0399b8d4c246826bbead4127864e44bd2f5408bda92948c89fa",
+      "script_editor/src/script_editor/core/archives/readers.py": "4f3e1a277649e30ec2277182dd101b7a92b66b45e1bacb032d7d11e35ab20438",
+      "script_editor/src/script_editor/core/services/module_paths.py": "c023634550a52da5e2b10a3e7d22c696456b626af3f25c41f2cd2a65207b8603",
+      "script_editor/src/script_editor/core/vm/compression.py": "b54a4b6b92211792abe79933a6d81185a3fa4ebcd60d45831d2883c361438719",
+      "script_editor/src/script_editor/core/vm/marshal_tree.py": "e45fd1cf3a0011fe286bf1f8cb80af7722d9db9547f9a4ffc97e90353f2ce888",
+      "script_editor/src/script_editor/core/vm/tables.py": "ff8c94b461e50f9a7905708f8505d7a50bbfdae1dbed7120aeea949f60e10118",
+      "script_editor/src/script_editor/core/vm/py25/codec.py": "fac4db00a566ea2005cdb1bb87935ee9a7df5082098014e2fae2a2f60ce59eda",
+      "script_editor/src/script_editor/core/vm/py25/keys.py": "0e4a6433a6c11c8b6c1192b894f5faad1a2099e97a68f3e39be6440ef9e8f0ac",
+      "script_editor/src/script_editor/core/vm/py27/codec.py": "b283f56e712fcf24a6cde591cff9090c1a391a74548c2ad77f8b519f6427e462",
+      "script_editor/src/script_editor/core/vm/py27/forward.py": "2a1c74fab70ae1d4546ba676c7bc269ed8c23936250241e6b2756ff4f8468d59",
+      "script_editor/src/script_editor/core/vm/py27/inverse.py": "aab033aff3f08a20d6b3abbee36dae6c84e12a74bd5b30c6fd994b504558847e"
+    }
+  },
+  "commands": [
+    "python3 script_manual/inventory/extract_inventory.py --sample",
+    "python3 script_manual/inventory/extract_inventory.py --full",
+    "PYTHONPATH=script_manual/src <venv>/python -m mxsj_manual validate --require-full-inventory"
+  ],
+  "method": {
+    "script": "0SLF index -> inflate -> pinned 5-segment XOR -> bounded marshal tree; path=co_filename, names from nested code objects",
+    "data": "FLS0 central directory names are the registered paths; payload inflated, native VM27 converted with audited inverse, then same marshal walk; directories keep directory status",
+    "kind": "parent standard bytecode LOAD_CONST + MAKE_FUNCTION/MAKE_CLOSURE, BUILD_CLASS within window => class; class child function => method; undecodable parent => header-flag fallback",
+    "signature": "argcount/varnames/flags only; null when unconfirmed; class signature always null; default values not rendered",
+    "excluded_1288": "payload bytes never read, decrypted or parsed; only the policy meta-record is emitted",
+    "execution": "no game module imported/executed; no decompiler run"
+  },
+  "script_counts": {
+    "signatures": 116172,
+    "kind_function": 28822,
+    "structurally_read": 4950,
+    "functions_total": 125973,
+    "kind_class": 9730,
+    "kind_method": 87421,
+    "parent_bytecode_undecodable": 1986,
+    "signature_unavailable": 71,
+    "kind_fallback": 1668,
+    "suspect_names": 231,
+    "historical": 37,
+    "fallback_rejected_control_chars": 4,
+    "unreadable": 14,
+    "excluded_by_policy": 1
+  },
+  "data_counts": {
+    "directory": 12,
+    "embedded_filename_match": 121,
+    "signatures": 2191,
+    "kind_function": 997,
+    "structurally_read": 121,
+    "functions_total": 2409,
+    "kind_class": 218,
+    "kind_method": 1194,
+    "suspect_names": 10
+  },
+  "script_failures": [
+    {
+      "entry_index": 63,
+      "reason": "ValueError: code tuple metadata invalid",
+      "fallback": "script/dialog/newwarui/wardecidewinnertime/dgtwardecidetime.py"
+    },
+    {
+      "entry_index": 64,
+      "reason": "ValueError: unknown marshal tag b'A' at 6438",
+      "fallback": "script/data/countyrolesettingdata.py"
+    },
+    {
+      "entry_index": 281,
+      "reason": "ValueError: code tuple metadata invalid",
+      "fallback": "script/mxgame/activity/countrycontest/arena/model/mdctrycontest1v1arena.py"
+    },
+    {
+      "entry_index": 495,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": "script/data/mubanhaodata.py"
+    },
+    {
+      "entry_index": 513,
+      "reason": "ValueError: negative code header field",
+      "fallback": "script/mxgame/appearance/view/gift/appearancegiftview.py"
+    },
+    {
+      "entry_index": 880,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": ""
+    },
+    {
+      "entry_index": 933,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": "script/data/juben/task13112.py"
+    },
+    {
+      "entry_index": 1013,
+      "reason": "ValueError: unknown marshal tag b'a' at 8759",
+      "fallback": "script/mxgame/activity/keju/dlgkejupoetry.py"
+    },
+    {
+      "entry_index": 1073,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": "script/mxgame/activity/mx2019party/netmx2019party.py"
+    },
+    {
+      "entry_index": 1102,
+      "reason": "ValueError: code tuple metadata invalid",
+      "fallback": "script/debug/taiwanspecial.py"
+    },
+    {
+      "entry_index": 1341,
+      "reason": "ValueError: negative code header field",
+      "fallback": "script/mxgame/activity/2021springactivity/view/dlg2021springfuniu.py"
+    },
+    {
+      "entry_index": 1514,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": "script/data/petornamentdata.py"
+    },
+    {
+      "entry_index": 1528,
+      "reason": "ValueError: unknown marshal tag b'a' at 1753",
+      "fallback": "script/pubscript/pubguard/eprotecttest.py"
+    },
+    {
+      "entry_index": 1771,
+      "reason": "ValueError: negative code header field",
+      "fallback": "script/mxgame/activity/insidewar/insidesummonskill/mdinsidesummonskill.py"
+    },
+    {
+      "entry_index": 1854,
+      "reason": "ValueError: unknown marshal tag b'A' at 492",
+      "fallback": "script/data/newcatchfishdata_group.py"
+    },
+    {
+      "entry_index": 1931,
+      "reason": "ValueError: unknown marshal tag b'2' at 11699",
+      "fallback": ""
+    },
+    {
+      "entry_index": 1954,
+      "reason": "ValueError: transformed code/lnotab must be raw marshal strings",
+      "fallback": "script/mxgame/activity/mxkitchen/mxkitchendefine.py"
+    },
+    {
+      "entry_index": 2310,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": ""
+    },
+    {
+      "entry_index": 2330,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": ""
+    },
+    {
+      "entry_index": 2643,
+      "reason": "ValueError: unknown marshal tag b'D' at 5937",
+      "fallback": ""
+    },
+    {
+      "entry_index": 2766,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": "script/data/shenchongfudata.py"
+    },
+    {
+      "entry_index": 2874,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": "script/data/qixilabeldata.py"
+    },
+    {
+      "entry_index": 2934,
+      "reason": "ValueError: transformed code/lnotab must be raw marshal strings",
+      "fallback": "script/mxgame/nethuodong/activity/nethdcardgame.py"
+    },
+    {
+      "entry_index": 2984,
+      "reason": "ValueError: unknown marshal tag b'\\n' at 424",
+      "fallback": ""
+    },
+    {
+      "entry_index": 3045,
+      "reason": "ValueError: code tuple metadata invalid",
+      "fallback": "script/gamecode/gamefile.py"
+    },
+    {
+      "entry_index": 3053,
+      "reason": "ValueError: negative code header field",
+      "fallback": "script/mxgame/marriage/view/dlgmarriageresponseconfirm.py"
+    },
+    {
+      "entry_index": 3066,
+      "reason": "ValueError: unknown marshal tag b'z' at 414",
+      "fallback": ""
+    },
+    {
+      "entry_index": 3078,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": ""
+    },
+    {
+      "entry_index": 3122,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": ""
+    },
+    {
+      "entry_index": 3142,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": "script/data/backdecorationdata.py"
+    },
+    {
+      "entry_index": 3193,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": "script/mxgame/activity/shenyuan/netshenyuan.py"
+    },
+    {
+      "entry_index": 3309,
+      "reason": "ValueError: code tuple metadata invalid",
+      "fallback": "script/mxgame/sibling/view/dlgsiblingvote.py"
+    },
+    {
+      "entry_index": 3493,
+      "reason": "ValueError: code tuple metadata invalid",
+      "fallback": "script/protocol/csmizong.py"
+    },
+    {
+      "entry_index": 3605,
+      "reason": "ValueError: code tuple metadata invalid",
+      "fallback": "script/dialog/dlgweponshape.py"
+    },
+    {
+      "entry_index": 4133,
+      "reason": "ValueError: unknown marshal tag b'\\xd7' at 1780",
+      "fallback": ""
+    },
+    {
+      "entry_index": 4145,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": "script/mxgame/racinggift/netnewserverrace.py"
+    },
+    {
+      "entry_index": 4166,
+      "reason": "ValueError: transformed code/lnotab must be raw marshal strings",
+      "fallback": ""
+    },
+    {
+      "entry_index": 4208,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": "script/mxgame/activity/motherday/testmotherday.py"
+    },
+    {
+      "entry_index": 4281,
+      "reason": "ValueError: negative code header field",
+      "fallback": "script/data/hidenpctaskdata.py"
+    },
+    {
+      "entry_index": 4305,
+      "reason": "ValueError: impossible marshal container count",
+      "fallback": ""
+    },
+    {
+      "entry_index": 4352,
+      "reason": "ValueError: code tuple metadata invalid",
+      "fallback": "script/mxgame/makeequip/delegate/opengasinterface.py"
+    },
+    {
+      "entry_index": 4362,
+      "reason": "ValueError: transformed code/lnotab must be raw marshal strings",
+      "fallback": "script/dialog/dlgstorehouse.py"
+    },
+    {
+      "entry_index": 4435,
+      "reason": "ValueError: negative code header field",
+      "fallback": "script/mxgame/makeequip/view/dlgmakeequippreview.py"
+    },
+    {
+      "entry_index": 4476,
+      "reason": "ValueError: code tuple metadata invalid",
+      "fallback": "script/mxgame/activity/groupbbq/model/mdgroupbbqrecord.py"
+    },
+    {
+      "entry_index": 4540,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": "script/dialog/presentcenter/model/mdlimitedtimeoffer.py"
+    },
+    {
+      "entry_index": 4575,
+      "reason": "ValueError: transformed code/lnotab must be raw marshal strings",
+      "fallback": "script/dialog/dlgmulhorse.py"
+    },
+    {
+      "entry_index": 4691,
+      "reason": "ValueError: unknown marshal tag b'\\xcd' at 17025",
+      "fallback": ""
+    },
+    {
+      "entry_index": 4702,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": "script/mxgame/statistic/syscmdstatistic.py"
+    },
+    {
+      "entry_index": 4844,
+      "reason": "ValueError: code tuple metadata invalid",
+      "fallback": "script/login/selectserver.py"
+    },
+    {
+      "entry_index": 4928,
+      "reason": "ValueError: unknown marshal tag b'\\xa7' at 84065",
+      "fallback": ""
+    },
+    {
+      "entry_index": 4943,
+      "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
+      "fallback": "script/data/juben/task13475.py"
+    }
+  ],
+  "data_failures": [],
+  "duplicate_paths_kept": [],
+  "self_checks": {
+    "total_records_5135": true,
+    "unique_keys": true,
+    "excluded_1288_exact": true,
+    "no_control_char_paths": true,
+    "max_functions_per_entry": 1407,
+    "seed20_paths_preserved": true
+  },
+  "suspect_name_examples": [
+    {
+      "entry_index": 37,
+      "name": "CConsignmallGuildSummonDialog.OnHotBoxL=ave"
+    },
+    {
+      "entry_index": 54,
+      "name": "OnOpenS*!dFlower"
+    },
+    {
+      "entry_index": 70,
+      "name": "m[_B]@FmQmmake_encoder"
+    },
+    {
+      "entry_index": 115,
+      "name": "GS2CSelec[}JXN]K"
+    },
+    {
+      "entry_index": 142,
+      "name": "CPetCombineDlg.Q~ws`BwfQs~~Psqy"
+    },
+    {
+      "entry_index": 212,
+      "name": "gjAS}AEVciftTest"
+    },
+    {
+      "entry_index": 242,
+      "name": "CNewGiveMainFirendDgt.OnSelectO^line"
+    },
+    {
+      "entry_index": 248,
+      "name": "CMakeDialog.OnEnter.<genexpr>"
+    },
+    {
+      "entry_index": 248,
+      "name": "CMakeDialog.CheckValid.<genexpr>"
+    },
+    {
+      "entry_index": 249,
+      "name": "CDrawLotsModel.GetPvUnDGKCoZG]X"
+    },
+    {
+      "entry_index": 311,
+      "name": "CNewChushenDlg.InitBujR~ountEdit"
+    },
+    {
+      "entry_index": 317,
+      "name": "CFriendPayDlg.CInputBox.BcAb~yKbnx~"
+    },
+    {
+      "entry_index": 321,
+      "name": "YY\\{irsunGiftModel"
+    },
+    {
+      "entry_index": 346,
+      "name": "GetJubenDat:"
+    },
+    {
+      "entry_index": 361,
+      "name": "format_exception_only.<genexpr>"
+    },
+    {
+      "entry_index": 364,
+      "name": "CDgtOneKeyFumo.VGetBtnToPageD5?t"
+    },
+    {
+      "entry_index": 374,
+      "name": "CBpGetExpPreviewDgt.zMNZM[@zM_IrdDesc"
+    },
+    {
+      "entry_index": 377,
+      "name": "CGroupContext.vTEvC^upDlg"
+    },
+    {
+      "entry_index": 429,
+      "name": "GetDaH]"
+    },
+    {
+      "entry_index": 470,
+      "name": "CDgtRecommandContent.\\xfe\\xdc\\xcd\\xef\\xd0\\xdc\\xce"
+    }
+  ],
+  "duplicate_qualified_names": [
+    {
+      "entry_index": 2,
+      "name": "CLeftDelegate.RefreshBtn.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 2,
+      "name": "CMidleDelegate.RefreshUnLearnSkill.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 2,
+      "name": "CMidleDelegate.sortSkill.<lambda>",
+      "count": 4
+    },
+    {
+      "entry_index": 15,
+      "name": "CPointViewDialog.RefreshAllData.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 94,
+      "name": "CloseWindow",
+      "count": 2
+    },
+    {
+      "entry_index": 94,
+      "name": "CGoldItem.LeftUp",
+      "count": 2
+    },
+    {
+      "entry_index": 117,
+      "name": "<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 233,
+      "name": "ismemberdescriptor",
+      "count": 2
+    },
+    {
+      "entry_index": 233,
+      "name": "isgetsetdescriptor",
+      "count": 2
+    },
+    {
+      "entry_index": 233,
+      "name": "<lambda>",
+      "count": 6
+    },
+    {
+      "entry_index": 244,
+      "name": "GetAllFurnish.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 302,
+      "name": "CYardPlantBagMgr.UpdateAllPlant.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 313,
+      "name": "CHistoryDlg.CreateList.<lambda>",
+      "count": 3
+    },
+    {
+      "entry_index": 349,
+      "name": "b",
+      "count": 2
+    },
+    {
+      "entry_index": 349,
+      "name": "u",
+      "count": 2
+    },
+    {
+      "entry_index": 369,
+      "name": "Test",
+      "count": 2
+    },
+    {
+      "entry_index": 455,
+      "name": "CAvatarDelegate.SortChestPhotoList.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 487,
+      "name": "PlayAni.Play",
+      "count": 2
+    },
+    {
+      "entry_index": 501,
+      "name": "CRoomListDlg.SortTable.<lambda>",
+      "count": 4
+    },
+    {
+      "entry_index": 672,
+      "name": "MakeTimeMonthDayT",
+      "count": 2
+    },
+    {
+      "entry_index": 711,
+      "name": "<lambda>",
+      "count": 3
+    },
+    {
+      "entry_index": 733,
+      "name": "CGroupApplyModel.SortNo.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 733,
+      "name": "CGroupApplyModel.SortName.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 733,
+      "name": "CGroupApplyModel.SortLv.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 733,
+      "name": "CGroupApplyModel.SortAmount.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 733,
+      "name": "CGroupApplyModel.SortPride.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 739,
+      "name": "count.<genexpr>",
+      "count": 2
+    },
+    {
+      "entry_index": 739,
+      "name": "get_leaking_objects.<genexpr>",
+      "count": 2
+    },
+    {
+      "entry_index": 950,
+      "name": "CAllStartGameTeamListDgt.Cal4Up2TeamInfo.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 1019,
+      "name": "CGoodVoiceMgr.SortList.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 1069,
+      "name": "CNewGroupMgr.GetSortFuncByProp.<lambda>",
+      "count": 10
+    },
+    {
+      "entry_index": 1080,
+      "name": "CMagicDialog.GetReadyMagicLst.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 1118,
+      "name": "CGroupMgr.GetSortFuncByProp.<lambda>",
+      "count": 9
+    },
+    {
+      "entry_index": 1129,
+      "name": "<lambda>",
+      "count": 13
+    },
+    {
+      "entry_index": 1194,
+      "name": "CSKBNewSetDialog.InitClass.<lambda>",
+      "count": 3
+    },
+    {
+      "entry_index": 1194,
+      "name": "CSKBNewSetDialog.SortShowLst.<lambda>",
+      "count": 3
+    },
+    {
+      "entry_index": 1257,
+      "name": "CChpFakeRole.CreateFiveHorsePlayer.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 1260,
+      "name": "rmtree.onerror",
+      "count": 2
+    },
+    {
+      "entry_index": 1275,
+      "name": "CTimeChecker.OnClientTurnEnd",
+      "count": 2
+    },
+    {
+      "entry_index": 1285,
+      "name": "CSelecter.CMyEdit.Active",
+      "count": 2
+    },
+    {
+      "entry_index": 1330,
+      "name": "CQiXiTaskListDgt.UpdateInfo.<genexpr>",
+      "count": 3
+    },
+    {
+      "entry_index": 1419,
+      "name": "CNewGroupAuthorityManageDlg.OnMessage",
+      "count": 2
+    },
+    {
+      "entry_index": 1419,
+      "name": "CNewGroupAuthorityManageDlg.SortTable.<lambda>",
+      "count": 3
+    },
+    {
+      "entry_index": 1526,
+      "name": "CGmCommandDlg.RefreshList.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 1540,
+      "name": "<lambda>",
+      "count": 20
+    },
+    {
+      "entry_index": 1572,
+      "name": "TestBlackList.<lambda>",
+      "count": 3
+    },
+    {
+      "entry_index": 1582,
+      "name": "CSiblingSortButtonItem.GetPlayerID",
+      "count": 2
+    },
+    {
+      "entry_index": 1647,
+      "name": "<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 1649,
+      "name": "Introduce2Group.<lambda>",
+      "count": 2
+    },
+    {
+      "entry_index": 1667,
+      "name": "RefreshSF.Call",
+      "count": 2
+    }
+  ],
+  "duplicate_qualified_name_count": 193,
+  "cross_check_note": "script_editor 0.6 evidence reports 4951 readable paths on this archive without the manual policy exclusion; this run reports 4950 structurally_read plus the excluded 1288 meta-record, a difference of exactly one, consistent with never reading the 1288 payload (inference, not a re-read of 1288)",
+  "modules_jsonl_sha256": "35203710d79acd08b080e9d08fa1357ea9f8c29464a64eeb1a34aa27e36a9efd",
+  "sample_regression": {
+    "path": "script_manual/inventory/sample_regression.json",
+    "sha256": "7a538b1d3da1164829ac14b4672f1fc0a3c4b79fc17551a02dfeb29579f1854a"
+  },
+  "known_limits": [
+    "kind fallback entries are counted in kind_fallback, not hidden",
+    "suspect_names counts identifiers failing ^[A-Za-z_][A-Za-z0-9_]*$ (possible marshal seam garbling near XOR bounds); bytes are kept as read and never repaired from the historical catalog",
+    "signatures omit default-value expressions",
+    "duplicate qualified names are preserved (e.g. repeated <lambda>)",
+    "structural read proves names/paths exist in the pinned archive; it does not prove decompiled behavior or runtime correctness"
+  ]
+}
