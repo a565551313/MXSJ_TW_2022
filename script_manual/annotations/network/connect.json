@@ -8,7 +8,7 @@
   "author": "E（网络）",
   "source_status": "recovered_complete_not_original",
   "purpose": {
-    "text": "选服/跨服场景的多路尝试连接层：对多个候选地址并发发起连接尝试、以1号Hello定胜出者，并生成跨服代理候选；账号登录本体在Hello之后转netlogin，不在本文件。",
+    "text": "选服/跨服场景的多路尝试连接层：同时向多个候选地址（直连或代理）发起尝试，跨服CMXNet以先回Hello者胜出并接管g_Net；DoConnect尝试的真实成功链因内嵌Success未被引用而待核（三处ConnectAttempt按字面都传Fail，见证据报告§3.2）；账号登录本体在Hello之后转netlogin，不在本文件。",
     "confidence": "static_reviewed",
     "evidence": [
       "con_struct",
@@ -249,7 +249,7 @@
       "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "尝试胜出回调：按IP取出并删除尝试记录，调用成功callback(netobj)。",
+        "text": "尝试Hello处理：按IP取出并删除尝试记录，调用登记的callback(netobj)；DoConnect登记的成功与失败回调按字面均为Fail，真实胜出落点待核。",
         "confidence": "static_reviewed",
         "evidence": [
           "con_proto"
@@ -263,7 +263,7 @@
       "signature": "(ip, port, proxy, callback, frame, error_callback)",
       "kind": "function",
       "summary": {
-        "text": "建CAttemptNet、以IP为键登记(成功回调,失败回调,对象)并发起ConnectServer。",
+        "text": "建CAttemptNet、以IP为键登记(成功回调,失败回调,对象)并发起ConnectServer；DoConnect三处调用按字面都传Fail作两个回调，见DoConnect异常说明。",
         "confidence": "static_reviewed",
         "evidence": [
           "con_proto"
@@ -291,7 +291,7 @@
       "signature": "(idx, pwd, proxy_port_ip_list, proxy)",
       "kind": "function",
       "summary": {
-        "text": "跨服重连尝试编排：按代理有无与电信/网通判定选候选并发起ConnectAttempt，成功/失败最终落到main.RestarConfirm/RestarConfirmEx。",
+        "text": "重连尝试总入口：g_DelaySecond<=0直接main.RestarConfirmEx（字面失败/兜底落点）；有代理对候选表前两条、无代理按电信/网通各发一次ConnectAttempt尝试。内嵌Success（函数体声明为ClearAttempt后main.RestarConfirm）在本稿未被任何调用点引用，三处ConnectAttempt按字面都把Fail同时传作成功与失败回调，故真实尝试成功链待核，不得把RestarConfirm写成已确认成功落点（A预审统一口径）。",
         "confidence": "static_reviewed",
         "evidence": [
           "con_proto"
@@ -302,7 +302,7 @@
         {
           "condition": "g_DelaySecond <= 0",
           "effect": {
-            "text": "直接main.RestarConfirmEx，不再尝试。",
+            "text": "直接main.RestarConfirmEx，不再尝试（字面失败/兜底落点）。",
             "confidence": "static_reviewed",
             "evidence": [
               "con_proto"
@@ -312,7 +312,7 @@
         {
           "condition": "有代理",
           "effect": {
-            "text": "对候选表前两条各发一次尝试（回调均传Fail，见异常说明）。",
+            "text": "对候选表前两条各发一次ConnectAttempt(..., Fail, Fail)尝试；按字面成功回调也传Fail，真实胜出落点待核。",
             "confidence": "static_reviewed",
             "evidence": [
               "con_proto"
@@ -322,7 +322,7 @@
         {
           "condition": "无代理",
           "effect": {
-            "text": "按IsDianXin(net.g_Net.m_IP)选电信(0)/网通(1)候选发一次尝试。",
+            "text": "按IsDianXin(net.g_Net.m_IP)选电信(0)/网通(1)候选发一次ConnectAttempt(..., Fail, Fail)尝试；真实胜出落点待核。",
             "confidence": "static_reviewed",
             "evidence": [
               "con_proto"
@@ -346,7 +346,7 @@
       "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "内嵌成功回调（恢复稿中未见调用点）：本应ClearAttempt、记代理并main.RestarConfirm；是否可达待核。",
+        "text": "内嵌成功回调（恢复稿中未被任何调用点引用）：函数体声明为ClearAttempt、记代理并main.RestarConfirm；属候选声明，真实成功链待核，不得写成已确认落点。",
         "confidence": "inferred",
         "evidence": [
           "con_proto"
@@ -533,9 +533,9 @@
     {
       "id": "e_review",
       "path": "script_manual/annotations/network/evidence_review_e_network.md",
-      "sha256": "08133a8d25e7f8841976b52217d7a68fb1ebf2645a89667beedb61e46114feb3",
+      "sha256": "4735b665278c12f9ec01172fe04764d44e39d9178b3d78d403dc00baff742b1c",
       "kind": "recovered_source",
-      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块候选SHA 002200b5022b23b77bb0e0034cc5d4bb962d32dbb4879f817dffbf54c4ea8b55，295行。"
+      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块候选当时整文件SHA 002200b5022b23b77bb0e0034cc5d4bb962d32dbb4879f817dffbf54c4ea8b55（含生成时间行，只作历史标识）；按报告§1规则去头正文SHA 0a46ea6fb77879332c53531a1a746556782b9fc48a1fb01f6330e97c8c775e24 可复核，295行。报告§1另含工具/依赖版本与处理选项。"
     },
     {
       "id": "catalog",
@@ -557,37 +557,37 @@
       "id": "con_method",
       "source_id": "e_review",
       "start_line": 9,
-      "end_line": 44
+      "end_line": 75
     },
     {
       "id": "con_id",
       "source_id": "e_review",
-      "start_line": 203,
-      "end_line": 276
+      "start_line": 242,
+      "end_line": 324
     },
     {
       "id": "con_struct",
       "source_id": "e_review",
-      "start_line": 211,
-      "end_line": 223
+      "start_line": 252,
+      "end_line": 266
     },
     {
       "id": "con_proto",
       "source_id": "e_review",
-      "start_line": 224,
-      "end_line": 268
+      "start_line": 267,
+      "end_line": 316
     },
     {
       "id": "con_err",
       "source_id": "e_review",
-      "start_line": 269,
-      "end_line": 276
+      "start_line": 317,
+      "end_line": 324
     },
     {
       "id": "con_cross",
       "source_id": "e_review",
-      "start_line": 435,
-      "end_line": 456
+      "start_line": 493,
+      "end_line": 515
     },
     {
       "id": "con_catalog",
@@ -641,7 +641,7 @@
       },
       "symbol": "main.RestarConfirmEx / RestarConfirm",
       "summary": {
-        "text": "main跨服链调用KuaFuConnect，尝试落点回main的RestarConfirm*；main正文由C负责，见协审报告。",
+        "text": "main跨服链调用KuaFuConnect；DoConnect的Fail落点为main.RestarConfirmEx，RestarConfirm仅为未被引用的Success体内候选声明；main正文由C负责，见协审报告。",
         "confidence": "static_reviewed",
         "evidence": [
           "con_cross"
@@ -657,7 +657,7 @@
       },
       "symbol": "main.RestarConfirm / RestarConfirmEx",
       "summary": {
-        "text": "尝试成功/失败的声明落点（但Success未引用异常使成功路径待核）。",
+        "text": "失败/兜底落点main.RestarConfirmEx已按字面登记；main.RestarConfirm仅出现在未被引用的Success函数体内，属候选声明、真实成功链待核。",
         "confidence": "inferred",
         "evidence": [
           "con_proto"

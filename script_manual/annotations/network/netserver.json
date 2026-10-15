@@ -72,7 +72,7 @@
       "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "按mx.ini refreshserver时间戳节流（>1200秒）刷新服务器列表，并经CHttpObject拉取update.ini BulletinURL的错误文案（serverid:文案行解析）。",
+        "text": "按mx.ini refreshserver时间戳节流（与misc.Time()时间戳作差>1200，单位为时间戳秒）刷新服务器列表，并经CHttpObject拉取update.ini BulletinURL的错误文案（serverid:文案行解析）。",
         "confidence": "static_reviewed",
         "evidence": [
           "s_src_state"
@@ -81,7 +81,7 @@
       "calls": [],
       "branches": [
         {
-          "condition": "距上次刷新<=1200秒或特殊/过度版本",
+          "condition": "时间戳差<=1200或特殊/过度版本",
           "effect": {
             "text": "跳过selectserver.Refresh，但仍发起HTTP文案拉取（getMsg回调解析失败吞ValueError）。",
             "confidence": "static_reviewed",
@@ -279,7 +279,7 @@
       "signature": "(infos)",
       "kind": "function",
       "summary": {
-        "text": "保存各服角色数；若当前连接带m_ServerInfo且目标可进或已有角色则直接TransferServer，否则回登录界面流程。",
+        "text": "保存各服角色数；当前连接带m_ServerInfo且目标可进或已有角色则直接TransferServer并return；否则依次调用loginin.OnLogin()与loginin.Show(False)，即调用OnLogin后隐藏登录面板（A预审后更正，旧稿误写“回登录界面”）；OnLogin的账号/保存语义与隐藏后界面去向不在本文件证据内。",
         "confidence": "static_reviewed",
         "evidence": [
           "s_src_proto"
@@ -847,7 +847,7 @@
       "kind": "config",
       "target": "mx.ini [Game] proxy 与 refreshserver",
       "summary": {
-        "text": "代理持久化与列表刷新节流（1200秒）；SetProxy写失败吞异常。",
+        "text": "代理持久化与列表刷新节流（与misc.Time()时间戳差>1200）；SetProxy写失败吞异常。",
         "confidence": "static_reviewed",
         "evidence": [
           "s_src_state"
@@ -955,9 +955,9 @@
     {
       "id": "e_review",
       "path": "script_manual/annotations/network/evidence_review_e_network.md",
-      "sha256": "08133a8d25e7f8841976b52217d7a68fb1ebf2645a89667beedb61e46114feb3",
+      "sha256": "4735b665278c12f9ec01172fe04764d44e39d9178b3d78d403dc00baff742b1c",
       "kind": "recovered_source",
-      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块另见报告§5交叉核对。"
+      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块另见报告§5交叉核对；报告§1含工具/依赖版本、处理选项与去头正文摘要比对规则，本模块去头正文摘要与仓库内候选SHA一致。"
     },
     {
       "id": "catalog",
@@ -978,26 +978,26 @@
     {
       "id": "s_id",
       "source_id": "e_review",
-      "start_line": 348,
-      "end_line": 434
+      "start_line": 398,
+      "end_line": 492
     },
     {
       "id": "s_struct_r",
       "source_id": "e_review",
-      "start_line": 358,
-      "end_line": 378
+      "start_line": 410,
+      "end_line": 430
     },
     {
       "id": "s_proto_r",
       "source_id": "e_review",
-      "start_line": 379,
-      "end_line": 397
+      "start_line": 431,
+      "end_line": 453
     },
     {
       "id": "s_cfg_r",
       "source_id": "e_review",
-      "start_line": 398,
-      "end_line": 434
+      "start_line": 454,
+      "end_line": 492
     },
     {
       "id": "s_catalog",
@@ -1068,7 +1068,7 @@
       },
       "symbol": "loginin.OnLogin / Show / GetSelectServer / CheckShowRefreshServer",
       "summary": {
-        "text": "选服完成后回登录界面、失败弹框后检查刷新；loginin正文由C负责，此处只登记调用符号。",
+        "text": "选服非转服分支依次调用loginin.OnLogin()、loginin.Show(False)（调用OnLogin后隐藏登录面板；OnLogin的账号/保存语义与隐藏后界面去向不在本文件证据内）、失败弹框后loginin.CheckShowRefreshServer检查刷新；loginin正文由C负责，此处只登记调用符号。",
         "confidence": "static_reviewed",
         "evidence": [
           "s_src_conn"

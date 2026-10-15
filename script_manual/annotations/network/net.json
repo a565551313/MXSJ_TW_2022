@@ -487,7 +487,7 @@
       "signature": "(self, msg=None)",
       "kind": "method",
       "summary": {
-        "text": "连接错误总入口：按是否已收到Hello、是否重登/退出中、是否可瞬连分别转连接失败、瞬连重连或ShowError弹框。",
+        "text": "连接错误分发（A预审后更正初判条件）：仅当当前不在瞬连中且不具备瞬连条件时先main.HideWindow(exit=False)隐藏窗口；未收到Hello走OnConnectFail，已标记重登/退出直接返回；最后仅在不在瞬连中时判定瞬连：能瞬连走netquicklogin.Connect(sReason=網絡中斷-2)，否则ShowError弹框。已在瞬连中时不再重复发起Connect、也不弹ShowError。",
         "confidence": "static_reviewed",
         "evidence": [
           "net_callback"
@@ -496,9 +496,19 @@
       "calls": [],
       "branches": [
         {
+          "condition": "not IsQuickConnect() and not CanQuickConnect()",
+          "effect": {
+            "text": "先main.HideWindow(exit=False)隐藏窗口；已在瞬连中或具备瞬连条件时不执行此隐藏（A预审更正，旧稿条件写反）。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "net_callback"
+            ]
+          }
+        },
+        {
           "condition": "未收到Hello（m_Hello为假）",
           "effect": {
-            "text": "转OnConnectFail（g_Net换FakeNet）。",
+            "text": "转OnConnectFail（g_Net换FakeNet）后return。",
             "confidence": "static_reviewed",
             "evidence": [
               "net_callback"
@@ -516,9 +526,9 @@
           }
         },
         {
-          "condition": "可瞬连（netquicklogin.CanQuickConnect）",
+          "condition": "else 且 not IsQuickConnect()",
           "effect": {
-            "text": "调netquicklogin.Connect(原因='網絡中斷-2')走瞬连；不可瞬连则ShowError弹退出/重新登录框。",
+            "text": "CanQuickConnect()为真走netquicklogin.Connect(sReason=網絡中斷-2)；为假记日志并ShowError(msg)弹退出/重新登录框。已在瞬连中时不再重复发起Connect。",
             "confidence": "static_reviewed",
             "evidence": [
               "net_callback"
@@ -942,7 +952,7 @@
       "signature": null,
       "kind": "class",
       "summary": {
-        "text": "加载期命令缓存队列：高/低双deque，0.016秒定时器每轮最多处理2条。",
+        "text": "加载期命令缓存队列：高/低双deque，以timer.Timer(0.016, ...)（字面量，单位未证实）驱动Loop，每轮最多处理2条。",
         "confidence": "static_reviewed",
         "evidence": [
           "net_callback"
@@ -1124,9 +1134,9 @@
     {
       "id": "e_review",
       "path": "script_manual/annotations/network/evidence_review_e_network.md",
-      "sha256": "08133a8d25e7f8841976b52217d7a68fb1ebf2645a89667beedb61e46114feb3",
+      "sha256": "4735b665278c12f9ec01172fe04764d44e39d9178b3d78d403dc00baff742b1c",
       "kind": "recovered_source",
-      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块候选SHA c8221fc806ed0af1cd4dcb4905cf29d4ba25e0cb7652be093405386d3a96c905，1364行。"
+      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块候选当时整文件SHA c8221fc806ed0af1cd4dcb4905cf29d4ba25e0cb7652be093405386d3a96c905（含生成时间行，只作历史标识）；按报告§1规则去头正文SHA 4cad123e0121c3c18cf24a6af59d1827da28517478b5c92e90f98bf664092c50 可复核，1364行。报告§1另含工具/依赖版本与处理选项。"
     },
     {
       "id": "catalog",
@@ -1148,49 +1158,49 @@
       "id": "net_method",
       "source_id": "e_review",
       "start_line": 9,
-      "end_line": 44
+      "end_line": 75
     },
     {
       "id": "net_id",
       "source_id": "e_review",
-      "start_line": 45,
-      "end_line": 202
+      "start_line": 76,
+      "end_line": 241
     },
     {
       "id": "net_struct",
       "source_id": "e_review",
-      "start_line": 54,
-      "end_line": 72
+      "start_line": 86,
+      "end_line": 104
     },
     {
       "id": "net_proto",
       "source_id": "e_review",
-      "start_line": 73,
-      "end_line": 102
+      "start_line": 105,
+      "end_line": 134
     },
     {
       "id": "net_frame",
       "source_id": "e_review",
-      "start_line": 103,
-      "end_line": 141
+      "start_line": 135,
+      "end_line": 174
     },
     {
       "id": "net_callback",
       "source_id": "e_review",
-      "start_line": 142,
-      "end_line": 190
+      "start_line": 175,
+      "end_line": 229
     },
     {
       "id": "net_config",
       "source_id": "e_review",
-      "start_line": 191,
-      "end_line": 202
+      "start_line": 230,
+      "end_line": 241
     },
     {
       "id": "net_cross",
       "source_id": "e_review",
-      "start_line": 435,
-      "end_line": 456
+      "start_line": 493,
+      "end_line": 515
     },
     {
       "id": "net_catalog",

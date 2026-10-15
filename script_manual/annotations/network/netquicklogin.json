@@ -594,9 +594,9 @@
     {
       "id": "e_review",
       "path": "script_manual/annotations/network/evidence_review_e_network.md",
-      "sha256": "08133a8d25e7f8841976b52217d7a68fb1ebf2645a89667beedb61e46114feb3",
+      "sha256": "4735b665278c12f9ec01172fe04764d44e39d9178b3d78d403dc00baff742b1c",
       "kind": "recovered_source",
-      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块另见报告§4交叉核对。"
+      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块另见报告§4交叉核对；报告§1含工具/依赖版本、处理选项与去头正文摘要比对规则，本模块去头正文摘要与仓库内候选SHA一致。"
     },
     {
       "id": "catalog",
@@ -617,26 +617,26 @@
     {
       "id": "q_id",
       "source_id": "e_review",
-      "start_line": 277,
-      "end_line": 347
+      "start_line": 325,
+      "end_line": 397
     },
     {
       "id": "q_struct_r",
       "source_id": "e_review",
-      "start_line": 287,
-      "end_line": 300
+      "start_line": 337,
+      "end_line": 350
     },
     {
       "id": "q_proto_r",
       "source_id": "e_review",
-      "start_line": 301,
-      "end_line": 323
+      "start_line": 351,
+      "end_line": 373
     },
     {
       "id": "q_conn_r",
       "source_id": "e_review",
-      "start_line": 324,
-      "end_line": 347
+      "start_line": 374,
+      "end_line": 397
     },
     {
       "id": "q_catalog",

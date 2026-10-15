@@ -4,7 +4,9 @@
 > 不重复 C 的 main.py 说明；C 取舍后由 C 统一写入 `annotations/login/`。
 > 方法同 E 网络包：仓库外定点恢复 entry 4293（见 evidence_review_e_network.md §1），
 > 只静态阅读，未执行/未 import/未连网；无实机结论，最高 static_reviewed。
-> 候选（仓库外）SHA-256 `fec23f35882aaac22a0929faf579213a07a3b95f1d950bcc86fa5321407f2504`，
+> 候选（仓库外）当时整文件 SHA-256 `fec23f35882aaac22a0929faf579213a07a3b95f1d950bcc86fa5321407f2504`
+> （含生成时间行，重跑必变，只作历史标识）；按 evidence_review §1 规则去头正文
+> SHA-256 `bf5051dc501a38128b4cf33dcdd17d5e2e99f2f274838af6e672e14d9edb05dc`（可复核）。
 > 1579 行，stage=baseline、decompile_ok；catalog 第 4294 行历史函数名与本稿一致。
 > 下文 `M<行>` 为恢复稿行号（含 6 行恢复头）。
 
@@ -39,12 +41,17 @@
    有代理先连代理并 NakedSend 目标 IP/端口，与 E 其它文件的代理裸发同构），
    或 DGW 分支；完成态由 871 的 Hello 回调触发（871 R180–R190）。
    C 应注明 `selectserver.CMXNet` 不是 516/2170 的同名类，E 未审 selectserver 本体。
-5. **跨服重连链**：M344–M388 `RestarConfirm`（注意原文拼写少一个 t）与
-   M391–M417 `RestarConfirmEx`——前者重建单个 `selectserver.CMXNet`
-   （`m_ReConnect/m_Idx/m_Pwd`）后 `netquicklogin.StartQuickTimer()`；
+5. **跨服重连链（成功链为候选，勿写成已确认落点）**：M344–M388 `RestarConfirm`
+   （注意原文拼写少一个 t）与 M391–M417 `RestarConfirmEx`——前者重建单个
+   `selectserver.CMXNet`（`m_ReConnect/m_Idx/m_Pwd`）后 `netquicklogin.StartQuickTimer()`；
    后者先置 FakeNet 再 `connect.KuaFuConnect(idx, pwd, proxy_port_ip_list)`
-   （2170 R221）多路并发。两者都是 2170 `DoConnect` 尝试成功/失败回调的落点，
-   E 在 connect 正文已登记；C 写 main 时只需给入口与状态，不要重述 2170 的尝试细节。
+   （2170 R221）多路并发。就 2170 `DoConnect` 而言，按恢复稿字面只有
+   「Fail→RestarConfirmEx」是注册的回调落点；`RestarConfirm` 只出现在未被引用的
+   内嵌 `Success` 函数体里（2170 R171–R177），属候选声明、真实成功链待核。
+   请 C 在 main 正文中统一按此口径写：可确认 main 侧两个函数的定义与
+   被 `Success/Fail` 函数体引用的事实，不得把 RestarConfirm 写成 DoConnect
+   已确认的成功落点（KuaFuConnect 经 CMXNet.S2CHello 的另一条链不受此限）。
+   E 在 connect 正文已同步此口径；C 只需给入口与状态，不要重述 2170 的尝试细节。
 6. **关机/退出链**：M73–M131 `CloseGame` 先 `netquicklogin.NormalLogout()`、
    给 `net.g_Net.m_IsExit = True`（net.py 的 OnError 据此抑制弹框，3176 R856 起），
    延迟 30 计数后才真正置 Quit；M746–M767 一带还有「发送未完成且 t<90」的等待/Restart
@@ -63,9 +70,16 @@
   且 871 netquicklogin.py 中不存在 `DoDgwQuickLogin` 定义（871 全文已读）。
   可能是反编译丢线、动态注入或原文缺陷；请 C 在正文中标「缺失待核」，
   不要补写 DGW 瞬连流程，F/其它协审如有 DGW 模块证据请回 A。
+- **选服角色信息落点反馈（E 516，请 C 统一登录链口径）**：516 的
+  `SetServerRoleInfo` 在非 TransferServer 分支实际依次调用
+  `loginin.OnLogin()` 与 `loginin.Show(False)`，即调用 OnLogin 后**隐藏**登录面板，
+  不是显示/回到登录界面（E 旧稿曾误写「回登录界面」，已更正）。请 C 在 loginin
+  正文中据此统一「OnLogin 的账号/保存语义、Show(False) 隐藏面板、隐藏后进入何界面」
+  三者的证据链；隐藏后的界面去向在 E 的 516 证据内缺失，不要从函数名推断。
 - **`StartQuickTimer` 条件疑点与 main 强相关**：main 在 M387、M416 两处调用
   `netquicklogin.StartQuickTimer()`，但 871 恢复稿中该函数只在
-  `g_oStartQucikTimer` 为真时才建 10 秒计时器、而该全局初始/重置均为 None
+  `g_oStartQucikTimer` 为真时才建字面 `QUICKLOGIN_SECOND=10` 的计时器
+  （首参单位未证实，不得径称 10 秒）、而该全局初始/重置均为 None
   （871 R272–R284、R16、R34）。按字面读，跨服重连后的「StartQuickTimer 备瞬连」
   可能不生效。E 已在 871 正文中登记为待核异常；请 C 在 main 正文中同步标风险，
   勿把该链写成已确认可用的重连保障，最终须回码对象或实机判定。

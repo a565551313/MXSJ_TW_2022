@@ -15,11 +15,42 @@
   `43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb`（已只读核对）。
 - 恢复命令（仓库外，只读输入）：
   `/home/user/dec-venv/bin/python tools/decompiler/recover_entries.py
-  --out /home/user/mxsj-e-net/rec --entries 3176,2170,871,516,4293
-  --report /home/user/mxsj-e-net/rec_report.json`
-  解释器 Python 3.11.2 + uncompyle6 3.9.3；5 条均 `stage=baseline`、
-  `密钥修复=False`、`decompile=decompile_ok`、`kind=source`。
+  --out <仓库外目录> --entries 3176,2170,871,516,4293
+  --report <仓库外目录>/rec_report.json`
+  处理选项：未传 `--engine`（工具默认 `uncompyle6`）、未传 `--no-big5`
+  （即 Big5 解码开启，为工具默认）、未传 `--dry-run`、
+  `--decompile-timeout` 为默认 120、`--script-fls`/`--keys-db` 为工具默认
+  （即仓库 `data/script.fls` 与 `tools/decompiler/script_fls_keys.json`）。
+  5 条均 `stage=baseline`、`密钥修复=False`、`decompile=decompile_ok`、`kind=source`。
   产物只留仓库外，不入库；本报告只记其摘要与行号。
+- 工具与依赖锁定（本修订轮实际重跑环境，与首轮一致）：
+  解释器 Python 3.11.2（main, Apr 8 2026, [GCC 12.2.0]）；
+  uncompyle6 3.9.3、xdis 6.1.8、spark-parser 1.9.0、click 8.5.0；
+  工具文件 SHA-256：`tools/decompiler/recover_entries.py`
+  `152dbc28864a10c8b7188df7ae91c8039b0b8c0b056d98591e407b897e39c458`、
+  `tools/decompiler/batch_decompile.py`（被前者复用的转译管线）
+  `a74742231e04c018c3f63452cfc859c20c6404fd73891eae9076bfcf8185b4e8`。
+  换工具/依赖版本重跑的结果不得与本表直接比对，须另记版本与摘要。
+- 可复现摘要规则（重要，针对恢复头含生成时间的问题）：
+  恢复文件前 6 行为工具恢复头（依次为条目/路径/阶段/密钥/生成时间/输入摘要，
+  见 `recover_entries.py` 的 `head` 列表），其中只有第 5 行「生成时间」随重跑变化，
+  其余 5 行由条目与输入决定。因此**整文件 SHA-256 只作 E 当时产物的历史标识，
+  重跑必然不同，不得要求 H 重跑后整文件一致**。可复核的比对分两步：
+  (1) 逐字核对恢复头第 1–4、6 行与下方各条记录的
+  entry/entry_id/co_filename/stage/keys/bounds/输入 SHA 是否一致（只许第 5 行时间不同）；
+  (2) 以字节为单位删除前 6 行（含第 6 行末尾换行）后，对剩余正文做 SHA-256，
+  与下表「正文摘要」比对。二者都合才算复现；不得以忽略正文任意差异的方式凑合。
+  下表「正文摘要」已在本修订轮用同一锁定环境实际重跑复现（重跑整文件 SHA
+  因生成时间行不同而不同，正文摘要与首轮推导值及 A 预审独立重跑值一致；
+  871/516 的正文摘要恰与仓库内既有候选文件的整文件 SHA 相同，
+  因仓库内候选就是无恢复头的同一正文）。
+  | entry | 当时整文件 SHA-256（历史标识，重跑必变） | 去头正文 SHA-256（可复核） | pyc 长 |
+  |---|---|---|---|
+  | 3176 | `c8221fc806ed0af1cd4dcb4905cf29d4ba25e0cb7652be093405386d3a96c905` | `4cad123e0121c3c18cf24a6af59d1827da28517478b5c92e90f98bf664092c50` | 42742 |
+  | 2170 | `002200b5022b23b77bb0e0034cc5d4bb962d32dbb4879f817dffbf54c4ea8b55` | `0a46ea6fb77879332c53531a1a746556782b9fc48a1fb01f6330e97c8c775e24` | 8329 |
+  | 871 | `bee5c1a93c2c90f86a8f021eae086d44fa34bbdeb24df171c87388ed811a90e3` | `36def1780a9bb229e98b850339eee91827ed6f6f972f330f52fa3f23183597b9` | 8966 |
+  | 516 | `569ceb2c7a3317b48cf95815bf5d16a77059e6fa1da66637fea3c29e964c5025` | `1fccc33d2d20540680c6af62e2bfdcf850291a855ed4bf626374262b8702c94b` | 17242 |
+  | 4293 | `fec23f35882aaac22a0929faf579213a07a3b95f1d950bcc86fa5321407f2504` | `bf5051dc501a38128b4cf33dcdd17d5e2e99f2f274838af6e672e14d9edb05dc` | 48492 |
 - 行号约定：`R` = 仓库外恢复文件的行号（含文件头 6 行恢复注释）。
   仓库内既有候选（871/516）无此 6 行头，故仓库内行号 = `R - 6`（已用 diff 实证，见 §4/§5）。
 - 交叉核对（本轮实际执行，均为只读）：
@@ -46,9 +77,10 @@
 
 - 身份：entry 3176，entry_id `2691519347`（0xa06d5373），存储长 17485，
   解出 pyc 长 42742，`co_filename='script/net.py'`（path_class=ok，未改名）。
-- 候选文件（仓库外）SHA-256
-  `c8221fc806ed0af1cd4dcb4905cf29d4ba25e0cb7652be093405386d3a96c905`，
-  1364 行（uncompyle6 3.9.3，Py2.5 字节码 62131）。
+- 候选文件（仓库外）当时整文件 SHA-256
+  `c8221fc806ed0af1cd4dcb4905cf29d4ba25e0cb7652be093405386d3a96c905`（历史标识），
+  去头正文 SHA-256 `4cad123e0121c3c18cf24a6af59d1827da28517478b5c92e90f98bf664092c50`
+  （按 §1 规则可复核），1364 行（uncompyle6 3.9.3，Py2.5 字节码 62131）。
 - 本节行号均为 R 行（恢复稿行号，下同）。
 
 ### 2.1 职责与结构（net）
@@ -133,7 +165,8 @@
   `UnpackString`（经 `pubtimeformat.ChangeTimeLink` 改写时间链接文本，
   R655–R659 / R896–R899）、`UnpackBinaryPS`（R928–R934）。
   原生收包状态机（`ProcessServerCmd` 本体）不在 Python 文本内。
-- 每帧处理节流：R28–R32 常数 `0.016` 秒/`8` 次/每次半帧/`4` 包，
+- 每帧处理节流：R28–R32 常数 `0.016`（字面参数，其时间单位在本文件内
+  未定义、未证实为秒）/`8` 次/每次半帧/`4` 包，
   `ResetUnpackParams`/`LowestUnpackParams` 按 `setfps.GetCurFrame()/30`
   缩放并回写原生 `SetProcessSvrCmdNumPerFrame`（R34–R70）。
   这与 4293 `main.py` 的 `NetMultiProcessServerCmd` 消费同一组常数
@@ -162,8 +195,8 @@
   `GetSpecialFunc`（R737–R749）取 `sSpecialFuncName` 特殊处理函数。
   预读不消费的语义依赖原生 `PreUnpack*` 实现，Python 层未定义。
 - 命令队列：`CNetServerCommandQueue`（R1290–R1362）双 deque 高/低优先，
-  `Start` 用 0.016 秒定时器 `Loop`，每轮最多处理 2 条（R1293、
-  R1317–R1343）。静态异常点（须 H/原生核对，不得当已证实 bug）：
+  `Start` 用 `timer.Timer(0.016, ...)`（字面首参 0.016，单位未证实）驱动
+  `Loop`，每轮最多处理 2 条（R1293、R1317–R1343）。静态异常点（须 H/原生核对，不得当已证实 bug）：
   `Loop` 中低优先分支写作 `self.m_oLQueue = oQueue`（此时 oQueue 为 None，
   疑似应为 `oQueue = self.m_oLQueue` 的反编译/原文笔误，R1323–R1343）；
   且 `HIGH_PRIORITY_CMD`/`LOW_PRIORITY_CMD` 在本文件内均为空集（R109–R110），
@@ -173,13 +206,19 @@
   语义以原生/whitewebsite 模块为准。
   `OnConnectFail`（R850–R854）把全局 `g_Net` 换成 `CFakeNet()`（空操作假对象，
   R996–R1010：把 CNet 全部公有方法替换为无返回值 FakeFunc）；
-  `OnError`（R856–R873）：若可瞬连则先 `main.HideWindow`、
-  未收到 Hello（`m_Hello` 假）转 `OnConnectFail`、已标记重登/退出则直接返回、
-  否则能瞬连走 `netquicklogin.Connect(sReason='網絡中斷-2')`、
-  不能则 `ShowError(msg)` 弹「退出/重新登录」框（R1013–R1046）。
+  `OnError`（R856–R873，本段为 A 预审后更正，旧稿曾把第一条条件写反）：
+  先判隐藏窗口——仅当 `not IsQuickConnect()` 且 `not CanQuickConnect()` 时
+  才 `main.HideWindow(exit=False)`（即当前不在瞬连中、且不具备瞬连条件时才隐藏，
+  不是「可瞬连则先隐藏」）；随后未收到 Hello（`m_Hello` 假）转 `OnConnectFail`
+  并返回、已标记重登（`m_IsRelogin`）或退出（`m_IsExit`）则直接返回；
+  最后仅当 `not IsQuickConnect()` 时才进入瞬连判定：`CanQuickConnect()` 为真走
+  `netquicklogin.Connect(sReason='網絡中斷-2')`，为假则记日志并
+  `ShowError(msg)` 弹「退出/重新登录」框（R1013–R1046）。
+  已经在瞬连中（`IsQuickConnect()` 为真）时不再重复发起 Connect、也不弹 ShowError。
   `DisconnectNet`（R1148–R1167）用 20 次计数定时器等
   `g_Net.IsSent()` 后 `Disconnect()` 再 `ShowError`。
-  `ShowError`/重登链含 10 秒延迟回调（R1021–R1035），属 UI 行为，未实机验证。
+  `ShowError`/重登链含计数到 10 的延迟回调（`CreatePyCommand(1, _relogin, 1, dlg)`，
+  R1021–R1035；首参 1 的时间单位未证实，不得径称秒），属 UI 行为，未实机验证。
 - HTTP 通道：`CHttpObject`（R1080–R1146）自拼
   `GET ... HTTP/1.1\r\nHost:...\r\nConnection: Close` 后 `NakedSend` 裸发，
   用 `CreatePyCommand(0, NetProcess)` 轮询 `Process()` 累积数据；
@@ -204,14 +243,18 @@
 
 - 身份：entry 2170，entry_id `1832585054`（0x6d3b075e），存储长 4322，
   解出 pyc 长 8329，`co_filename='script/connect.py'`（path_class=ok）。
-- 候选文件（仓库外）SHA-256
-  `002200b5022b23b77bb0e0034cc5d4bb962d32dbb4879f817dffbf54c4ea8b55`，295 行。
+- 候选文件（仓库外）当时整文件 SHA-256
+  `002200b5022b23b77bb0e0034cc5d4bb962d32dbb4879f817dffbf54c4ea8b55`（历史标识），
+  去头正文 SHA-256 `0a46ea6fb77879332c53531a1a746556782b9fc48a1fb01f6330e97c8c775e24`
+  （按 §1 规则可复核），295 行。
 - catalog 第 2171 行历史函数名与本稿定义集合一致（历史解码 ok）。
 
 ### 3.1 职责与结构（connect）
 
 - 职责判断：选服/跨服场景的「多路尝试连接」层——同时向多个候选地址发起
-  连接尝试，谁先回 Hello 谁胜出；并提供跨服（KuaFu）直连与代理候选列表生成。
+  连接尝试；其中 `CMXNet` 一路以先回 Hello 者为胜出（已注册 S2CHello），
+  `CAttemptNet/DoConnect` 一路的真实成功链待核（见 §3.2 成功链口径）；
+  并提供跨服（KuaFu）直连与代理候选列表生成。
   它不做账号登录本体（Hello 之后转 `netlogin.S2CHello`）。
 - 主要定义（R 行）：`CMXNet(net.CNet)` R17（`__init__` R19、`OnConnectFail` R30、
   `OnError` R38、`ConnectServer` R46）、模块函数 `S2CHello` R61、
@@ -250,12 +293,17 @@
   `main.RestarConfirmEx`；有代理时对候选表前两条各发一次尝试，
   无代理时按 `IsDianXin(net.g_Net.m_IP)` 选电信/网通候选（R200–R219 按
   `selectserver.ServerInfo()` 文本行判定，找不到默认 True）。
-  静态异常点（须核对，不得当已证实 bug）：内嵌 `Success`（R171–R177，
-  内容为 `ClearAttempt` 后 `main.RestarConfirm(...)`，且有
-  `selectserver.g_Proxy` 赋值）在本稿中未被任何调用点引用，
-  三处 `ConnectAttempt` 均把成功与失败回调都传为 `Fail`（R183–R198）；
-  这与函数名语义矛盾，可能是反编译丢线或原文即如此，须回原生码对象核对，
-  本包不断言真实胜出路径。
+  成功链口径（本段为 A 预审后统一，旧稿摘要与此处限制曾不一致）：
+  内嵌 `Success`（R171–R177，函数体声明为 `ClearAttempt` 后记代理并
+  `main.RestarConfirm(...)`）在本稿中未被任何调用点引用，
+  三处 `ConnectAttempt` 均把成功与失败回调都传为 `Fail`（即
+  `main.RestarConfirmEx`，R183–R198）。因此按恢复稿字面，能确认的只有
+  「Fail/失败与超时落到 RestarConfirmEx」与「Success 函数体里声明的
+  RestarConfirm 候选落点」；真实尝试成功时究竟走哪条链，属候选声明、待核，
+  不得在摘要、关系或协审中写成已确认的成功落点。可能是反编译丢线或原文即如此，
+  须回原生码对象核对，本包不断言真实胜出路径。
+  （注意区分：`KuaFuConnect` 用的 `CMXNet.S2CHello` 胜出链是另一条已注册的
+  处理，不受此异常影响，见上文成功回调与下文跨服段。）
 - 跨服：`KuaFuConnect`（R221–R231）/`NewKuaFuConnect`（R233–R245，后者先
   `GetKuaFuProxyLst` 重排候选）对每个 `(proxy, port, ip)` 建 `CMXNet`，
   置 `m_Hello=False, m_ReConnect=True, m_Idx, m_Pwd` 后 `ConnectServer`；
@@ -279,9 +327,11 @@
 - 身份：entry 871，entry_id `696666009`（0x29864799），存储长 4481，pyc 长 8966。
 - 仓库内来源：`tools/decompiler/output/script_fls/script/netquicklogin.py`，
   SHA-256 `36def1780a9bb229e98b850339eee91827ed6f6f972f330f52fa3f23183597b9`，307 行；
-  仓库外新恢复稿 SHA-256
-  `bee5c1a93c2c90f86a8f021eae086d44fa34bbdeb24df171c87388ed811a90e3`，313 行；
-  diff 仅多恢复头 6 行，其余逐行一致。下文 R 行为恢复稿行号，仓库内行号 = R-6。
+  仓库外新恢复稿当时整文件 SHA-256
+  `bee5c1a93c2c90f86a8f021eae086d44fa34bbdeb24df171c87388ed811a90e3`（历史标识），313 行；
+  按 §1 规则去头后的正文 SHA-256 为
+  `36def1780a9bb229e98b850339eee91827ed6f6f972f330f52fa3f23183597b9`，与仓库内候选
+  整文件一致；diff 仅多恢复头 6 行，其余逐行一致。下文 R 行为恢复稿行号，仓库内行号 = R-6。
 - catalog 第 872 行历史函数名与本稿定义集合一致。
 
 ### 4.1 职责与结构（quicklogin）
@@ -350,9 +400,11 @@
 - 身份：entry 516，entry_id `406718548`（0x183e0854），存储长 7690，pyc 长 17242。
 - 仓库内来源：`tools/decompiler/output/script_fls/script/login/netserver.py`，
   SHA-256 `1fccc33d2d20540680c6af62e2bfdcf850291a855ed4bf626374262b8702c94b`，578 行；
-  仓库外新恢复稿 SHA-256
-  `569ceb2c7a3317b48cf95815bf5d16a77059e6fa1da66637fea3c29e964c5025`，584 行；
-  diff 仅多恢复头 6 行。下文 R 行为恢复稿行号，仓库内行号 = R-6。
+  仓库外新恢复稿当时整文件 SHA-256
+  `569ceb2c7a3317b48cf95815bf5d16a77059e6fa1da66637fea3c29e964c5025`（历史标识），584 行；
+  按 §1 规则去头后的正文 SHA-256 为
+  `1fccc33d2d20540680c6af62e2bfdcf850291a855ed4bf626374262b8702c94b`，与仓库内候选
+  整文件一致；diff 仅多恢复头 6 行。下文 R 行为恢复稿行号，仓库内行号 = R-6。
 - catalog 第 517 行历史函数名与本稿定义集合一致。
 
 ### 5.1 职责与结构（netserver）
@@ -381,7 +433,11 @@
 - 接收：`S2CServerRoleInfo`（R260–R270）解包格式为
   计数 `UnpackInt(1)`，循环每项 `serverid=UnpackInt(4)` + `rolenum=UnpackInt(1)`，
   结果交 `SetServerRoleInfo`（R189–R201：若当前连接带 `m_ServerInfo` 且
-  目标服可进或已有角色信息则直接 `TransferServer`，否则回登录界面流程）。
+  目标服可进或已有角色信息则直接 `TransferServer` 并 return；
+  否则——含无 `m_ServerInfo` 的情形——依次调用 `loginin.OnLogin()` 与
+  `loginin.Show(False)`，即调用 OnLogin 后隐藏登录面板（本段为 A 预审后更正，
+  旧稿「回登录界面」与 `Show(False)` 相反；OnLogin 自身的账号/保存语义与
+  隐藏后进入何界面均不在本文件证据内，须 C 依 loginin 正文核对，不得从函数名推断）。
   该处理在 net.py 分发表中以符号 `GS2C_SELSERVER → netserver.S2CServerRoleInfo`
   注册（net.py 字典内）；3970 号表 `GS2C_SELSERVER=47`（数值来自号表）。
 - 发送：`C2STransferServer`（R272–R278）以符号 `net.C2GS_SELECT_SERVER`
@@ -402,14 +458,15 @@
   （R380–R396，用户指定代理优先、`auto` 时置 `g_AutoProxy`），
   对每台建 `CMXNet(iType=loginhello.TEST_HELLO)` 并发连接（有代理则
   先连代理再 `NakedSend` 目标 IP 4 字节 + 端口 4 字节小端，与 §3.2 同构），
-  弹连接中框、`m_Time += 1`、设 15 秒级超时命令
+  弹连接中框、`m_Time += 1`、设字面值 15 的超时命令
   `PROXY_CONNECT_TIMEOUT = 15`（类常数 R363，`SetTimeOutCmd` R468–R477
-  以 `CreatePyCommand(15, nexttest)` 再次 `Connect` 换批）；
+  以 `CreatePyCommand(self.PROXY_CONNECT_TIMEOUT, nexttest)` 再次 `Connect` 换批）；
   尾行 `if self.m_Time - 1 != 0 or g_AutoProxy: self.Connect()`（R465–R466）
   使首轮在自动代理时立即再扩一轮，属须留意的行为形态。
-  15 的单位依赖 CreatePyCommand 原生语义（netserver 连接管理器基类
-  为 `interface.CBaseObject`），本文件未定义，不得径称秒数已证实——
-  类名常数虽写作 TIMEOUT，亦只作字面登记。
+  该 15 的时间单位依赖 CreatePyCommand 原生语义（netserver 连接管理器基类
+  为 `interface.CBaseObject`），本文件未定义，不得径称秒——
+  类名常数虽写作 TIMEOUT，亦只作字面登记（本段已按 A 预审统一单位口径，
+  删除旧稿「15 秒级」表述）。
 - 全失败路径：`CConnectMgr.ConnectTestFail`（R326–R344）在
   `IsConnectTestFail()`（全部对象 `m_IsFail`，R354–R360）为真时，
   优先用 HTTP 拉到的 `g_ErrorAnsMsg`（按所选服名或 `default` 键）弹框，
@@ -426,7 +483,8 @@
   `ProcessServerCmd`（R573–R584）遍历管理器对象收包，任一 `m_Hello` 为真即 break。
 - 配置面：代理设置经 `SetProxy` 写 `mx.ini [Game] proxy`（R149–R159，
   写失败吞异常）；测连刷新节流读 `mx.ini [Game] refreshserver` 时间戳，
-  超 1200 秒才再刷（R68–R79）；错误文案 URL 读
+  与 `misc.Time()` 当前时间戳作差 >1200 才再刷（R68–R79；此处 1200 的依据是
+  时间戳差值、按时间戳的秒计，与 CreatePyCommand 类参数的未证实单位不同）；错误文案 URL 读
   `update.ini [Setting] BulletinURL` 经 `net.CHttpObject(web, 'get', getMsg)`
   拉取并按 `serverid:文案` 行解析（R81–R101，解析失败吞 ValueError）。
   服务器/代理候选本体来自 `selectserver.GetServerInfo()`（区名、ip、port、
@@ -449,8 +507,9 @@
   指向的约二百个目标模块/函数是否都存在于冻结包，未逐项验证；
   219 号 GS2C 语义名缺失；`loginhello`、`selectserver`、`netlogin`、
   `whitewebsite`、`dgw*` 等上下游模块不在 E 样板内，仅按调用符号登记；
-  所有计时常数（24 帧、30/60 计数、15、10、0.016 秒、CreatePyCommand 单位）
-  的真实时间含义依赖原生调度，未实机测定；三处静态异常点
+  所有计时字面值（24 帧、30/60 计数、15、10、0.016 等 CreatePyCommand/timer 参数）
+  的真实时间含义依赖原生调度、单位未证实，未实机测定（1200 的时间戳差值除外，
+  其依据见 §5.3）；三处静态异常点
   （队列低优先赋值、DoConnect 的 Success 未引用、StartQuickTimer 条件）
   未回码对象复核，可能是反编译错误而非原文缺陷；
   无任何实机/抓包证据，本包全部结论最高为 static_reviewed。
