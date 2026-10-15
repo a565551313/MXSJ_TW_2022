@@ -1,0 +1,18 @@
+[
+ {"text": "新手指引", "box": [334, 121, 416, 157], "fill_box": [324, 118, 514, 160],
+  "size": 20, "fill": "#ffffff", "stroke": "#4b5590", "stroke_width": 1, "fill_mode": "median"},
+ {"text": "官方网站", "box": [418, 121, 502, 157],
+  "size": 20, "fill": "#ffffff", "stroke": "#4b5590", "stroke_width": 1, "fill_mode": "median"},
+ {"text": "官方论坛", "box": [696, 121, 780, 157], "fill_box": [692, 118, 896, 160],
+  "size": 20, "fill": "#ffffff", "stroke": "#4b5590", "stroke_width": 1, "fill_mode": "median"},
+ {"text": "游戏资料", "box": [792, 121, 876, 157],
+  "size": 20, "fill": "#ffffff", "stroke": "#4b5590", "stroke_width": 1, "fill_mode": "median"},
+ {"text": "进入游戏", "box": [735, 371, 817, 402], "fill_box": [716, 368, 836, 404],
+  "size": 20, "fill": "#ffffff", "stroke_width": 0, "fill_mode": "lerp"},
+ {"text": "检查更新", "box": [735, 420, 817, 451], "fill_box": [716, 417, 836, 453],
+  "size": 20, "fill": "#ffffff", "stroke_width": 0, "fill_mode": "lerp"},
+ {"text": "下载进度：", "box": [340, 419, 404, 437],
+  "size": 11, "fill": "#31427e", "stroke_width": 0, "fill_mode": "median"},
+ {"text": "更新进度：", "box": [340, 437, 404, 455],
+  "size": 11, "fill": "#31427e", "stroke_width": 0, "fill_mode": "median"}
+]

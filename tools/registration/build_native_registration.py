@@ -11,6 +11,12 @@
 其餘 5000 條的壓縮負載逐字節原樣保留。構建後自動驗證：
 337 只差那 9 字節且可轉譯、4007 轉譯回的代碼對象/常量符合源碼、
 無網絡調用名殘留、其餘條目負載全等。
+
+基線：默認釘住 `data/script.fls`（`BASE_SHA256`）。要拿客戶端現行檔
+（例如已經打過補丁的舊出貨包）重做時，傳 `--archive <檔>` +
+`--base-sha256 <該檔 SHA>`；此時若 337 已是補丁形態，工具會明確提示
+「原樣保留」而不是重複寫入。`--report <path>` 在驗證通過後落一份 JSON
+構建記錄（基線/源碼/產物三者 SHA + 實際改動的條目號）。
 """
 
 from __future__ import annotations
@@ -23,6 +29,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import time
 import zlib
 from pathlib import Path
 
@@ -114,7 +121,42 @@ def normalized(code: bytes):
     return result
 
 
-def patch_mainpage(duoyi_marshal: bytes) -> bytes:
+TW_PATCH_AT = 102
+TW_PATCH_LEN = 9
+
+
+def tw_predicate_window(code: bytes, names, varnames) -> tuple[str, bytes]:
+    """判定 mainpage 的 IsTWServer 謂詞窗口現狀（純函數，便於單測）。
+
+    回傳 (狀態, 替換位元組)：
+      * `clean`   —— 基線未補，窗口正是 `misc.IsTWServer()` 調用，可以補；
+      * `patched` —— 基線已含**同一個** 9 字節補丁（即上一版本工具的產物），
+                     重補無意義，調用方應原樣保留；
+      其餘一律 raise：認不得的基線絕不靜默重打包。
+    """
+    expect = (
+        encode_ins(STD_LOAD_FAST, varnames.index(b"misc"))
+        + encode_ins(STD_LOAD_ATTR, names.index(b"IsTWServer"))
+        + encode_ins(STD_CALL_FUNCTION, 0)
+    )
+    replacement = encode_ins(STD_LOAD_GLOBAL, names.index(b"False"))
+    replacement += encode_ins(STD_NOP, None) * (TW_PATCH_LEN - len(replacement))
+    if len(expect) != TW_PATCH_LEN:
+        raise ValueError(f"TW predicate encoding is not {TW_PATCH_LEN} bytes")
+    window = code[TW_PATCH_AT : TW_PATCH_AT + TW_PATCH_LEN]
+    if window == expect:
+        return "clean", replacement
+    if window == replacement:
+        return "patched", replacement
+    raise ValueError(
+        "TW predicate fingerprint mismatch at "
+        f"{TW_PATCH_AT}: got {window.hex()} —— 基線不是本工具認得的 mainpage"
+        "（既非未補形態也非已補形態），拒絕盲目重打包"
+    )
+
+
+def patch_mainpage(duoyi_marshal: bytes) -> tuple[bytes, int, int, str]:
+    """回傳 (負載, 窗口起, 窗口迄, 狀態)。狀態：`patched` | `kept`。"""
     reader = decoder.MarshalReader(duoyi_marshal)
     tree_root = reader.read()
     if reader.pos != len(duoyi_marshal):
@@ -126,16 +168,10 @@ def patch_mainpage(duoyi_marshal: bytes) -> bytes:
     code = bytes(co["code"])
     names = co["names"]
     varnames = co["varnames"]
-    expect = (
-        encode_ins(STD_LOAD_FAST, varnames.index(b"misc"))
-        + encode_ins(STD_LOAD_ATTR, names.index(b"IsTWServer"))
-        + encode_ins(STD_CALL_FUNCTION, 0)
-    )
-    if len(expect) != 9 or code[102:111] != expect:
-        raise ValueError("TW predicate fingerprint mismatch at 102")
-    replacement = encode_ins(STD_LOAD_GLOBAL, names.index(b"False"))
-    replacement += encode_ins(STD_NOP, None) * (9 - len(replacement))
-    new_code = code[:102] + replacement + code[111:]
+    state, replacement = tw_predicate_window(code, names, varnames)
+    if state == "patched":
+        return duoyi_marshal, TW_PATCH_AT, TW_PATCH_AT + TW_PATCH_LEN, "kept"
+    new_code = code[:TW_PATCH_AT] + replacement + code[TW_PATCH_AT + TW_PATCH_LEN :]
     seq = normalized(new_code)
     starts = {at for at, _, _ in seq} | {len(new_code)}
     limits = (
@@ -156,7 +192,7 @@ def patch_mainpage(duoyi_marshal: bytes) -> bytes:
     if duoyi_marshal.count(code) != 1:
         raise ValueError("co_code bytes not unique in marshal")
     patched = duoyi_marshal[:start] + new_code + duoyi_marshal[start + len(code) :]
-    return patched, start + 102, start + 111
+    return patched, start + TW_PATCH_AT, start + TW_PATCH_AT + TW_PATCH_LEN, "patched"
 
 
 def build_archive(arch: bytes, rows, replacements: dict[int, bytes]) -> bytes:
@@ -201,6 +237,18 @@ def main() -> int:
     ap.add_argument(
         "--output", type=Path, default=Path(__file__).with_name("out") / "script.fls"
     )
+    ap.add_argument(
+        "--base-sha256",
+        default=BASE_SHA256,
+        help="允許的基線 SHA-256；默認釘住倉庫 data/script.fls。"
+        "換基線（例如用客戶端現行檔）時顯式傳入該檔的 SHA-256",
+    )
+    ap.add_argument(
+        "--report",
+        type=Path,
+        default=None,
+        help="驗證通過後寫出 JSON 構建記錄（基線/源碼/產物 SHA、337 處理方式）",
+    )
     args = ap.parse_args()
     for source in (args.archive, args.keys, args.source):
         aliases_source = args.output.resolve() == source.resolve()
@@ -210,8 +258,14 @@ def main() -> int:
             raise SystemExit(f"refusing to overwrite an input file: {source}")
 
     arch = args.archive.read_bytes()
-    if sha256(arch) != BASE_SHA256:
-        raise SystemExit(f"base archive sha256 mismatch: {sha256(arch)}")
+    base_sha = sha256(arch)
+    if base_sha != args.base_sha256:
+        raise SystemExit(
+            f"base archive sha256 mismatch: {base_sha}\n"
+            f"  期望 {args.base_sha256}（默認釘住倉庫 data/script.fls）\n"
+            f"  若確認要用這份基線：--base-sha256 {base_sha}"
+        )
+    print(f"[i] base {args.archive} sha256={base_sha}")
     keys_db = json.loads(args.keys.read_text(encoding="utf-8"))
     rows = read_entries(arch)
     by_idx = {r["idx"]: r for r in rows}
@@ -242,7 +296,7 @@ def main() -> int:
 
     info_main = keys_db[str(ENTRY_MAINPAGE)]
     duoyi_main = decrypt_entry(by_idx[ENTRY_MAINPAGE], keys_db)
-    patched_main, win_lo, win_hi = patch_mainpage(duoyi_main)
+    patched_main, win_lo, win_hi, main_state = patch_mainpage(duoyi_main)
     orig_exp_main = zlib.decompress(by_idx[ENTRY_MAINPAGE]["comp"])
     new_exp_main = pack.encrypt_5seg_xor(
         patched_main,
@@ -251,10 +305,17 @@ def main() -> int:
         orig_len=len(orig_exp_main),
     )
 
-    replacements = {
-        ENTRY_REGISTER: zlib.compress(new_exp_reg, 9),
-        ENTRY_MAINPAGE: zlib.compress(new_exp_main, 9),
-    }
+    replacements = {ENTRY_REGISTER: zlib.compress(new_exp_reg, 9)}
+    if main_state == "patched":
+        replacements[ENTRY_MAINPAGE] = zlib.compress(new_exp_main, 9)
+    else:
+        print(
+            f"[note] 基線 entry {ENTRY_MAINPAGE} 已含同一個 {TW_PATCH_LEN} 字節補丁"
+            f"（偏移 {win_lo}），本次原樣保留，不重複寫入。"
+        )
+    expected_changed = [
+        i for i in (ENTRY_MAINPAGE, ENTRY_REGISTER) if i in replacements
+    ]
     out = build_archive(arch, rows, replacements)
     args.output.write_bytes(out)
     print(f"[+] wrote {args.output} ({len(out)} bytes) sha256={sha256(out)}")
@@ -276,13 +337,16 @@ def main() -> int:
         for i in by_idx
         if zlib.decompress(by_idx[i]["comp"]) != zlib.decompress(out_by_idx[i]["comp"])
     ]
-    assert changed == [ENTRY_MAINPAGE, ENTRY_REGISTER], f"unexpected changed: {changed}"
+    assert changed == expected_changed, f"unexpected changed: {changed}"
 
     dec_main_new = decrypt_entry(out_by_idx[ENTRY_MAINPAGE], keys_db)
-    diffs = [i for i in range(len(duoyi_main)) if duoyi_main[i] != dec_main_new[i]]
-    assert diffs and all(win_lo <= i < win_hi for i in diffs), (
-        "mainpage diff out of window"
-    )
+    if main_state == "patched":
+        diffs = [i for i in range(len(duoyi_main)) if duoyi_main[i] != dec_main_new[i]]
+        assert diffs and all(win_lo <= i < win_hi for i in diffs), (
+            "mainpage diff out of window"
+        )
+    else:
+        assert dec_main_new == duoyi_main, "mainpage payload altered although kept"
     assert dec_main_new == patched_main, "mainpage round-trip mismatch"
     std_main = transpile(
         dec_main_new, zlib.decompress(out_by_idx[ENTRY_MAINPAGE]["comp"]), info_main
@@ -327,6 +391,11 @@ def main() -> int:
         "BuildRegistrationAccounts",
         "SetRegisterFive",
         "OnRegistrationComplete",
+        # 2026-10-15 實機回歸教訓：清理調試脚手架時把「開頁失敗的兜底與日誌」
+        # 一起刪了，結果客戶端吞異常、點同意沒反應。這三個名字不得消失。
+        "_CreateFormEdit",
+        "_DiagFailure",
+        "_RecoverEntry",
     ):
         assert any(need in f for f in funcs), f"missing function: {need}"
     raw_consts = set()
@@ -355,9 +424,53 @@ def main() -> int:
             cwd=cwd,
             check=True,
         )
-    print("[+] verify OK: only 337/4007 changed; mainpage diff = 9 bytes;")
+    main_note = (
+        f"entry {ENTRY_MAINPAGE} diff = {TW_PATCH_LEN} bytes"
+        if main_state == "patched"
+        else f"entry {ENTRY_MAINPAGE} 保留基線已補形態"
+    )
+    print(f"[+] verify OK: changed = {changed}; {main_note};")
     print("    full compiled marshal round-trip + packed-module Py2.5 smoke OK;")
     print("    no network call names remain.")
+
+    if args.report:
+        report = {
+            "kind": "registration_build",
+            "built_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "base": {
+                "path": str(args.archive.resolve()),
+                "bytes": len(arch),
+                "sha256": base_sha,
+                "entries": len(rows),
+                "pinned_by_default": BASE_SHA256,
+            },
+            "keys": {
+                "path": str(args.keys.resolve()),
+                "sha256": sha256(args.keys.read_bytes()),
+            },
+            "source": {
+                "path": str(args.source.resolve()),
+                "sha256": sha256(args.source.read_bytes()),
+            },
+            "python25": str(args.python25),
+            "compiled_pyc": {"bytes": len(pyc_bytes), "sha256": sha256(pyc_bytes)},
+            "mainpage": {
+                "entry": ENTRY_MAINPAGE,
+                "state": main_state,
+                "window": [win_lo, win_hi],
+            },
+            "changed_entries": changed,
+            "output": {
+                "path": str(args.output.resolve()),
+                "bytes": len(out),
+                "sha256": sha256(out),
+            },
+        }
+        args.report.parent.mkdir(parents=True, exist_ok=True)
+        args.report.write_text(
+            json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+        print(f"[+] report -> {args.report}")
     return 0
 
 

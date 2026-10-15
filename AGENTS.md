@@ -27,11 +27,13 @@
 |---|---|---|
 | `AGENTS.md` / `README.md` / `docs/STATUS.md` | 规则 / 项目总览 / 当前状态 | 本文 |
 | `docs/archive/` | 已被取代的历史快照（只读，有横幅） | [`docs/archive/README.md`](docs/archive/README.md) |
+| `notes/client_binary_reversibility.md` | 客户端 exe/dll 的可逆性边界（逐节熵、RTTI、导出）与三条路的成本；§6–§7 是启动器 `.rsrc` 抽取结果与「资源包主体在 `data/*.fls` / `update.ini`」的分界；**原生符号"搜不到"不等于"不存在"** | `notes/opcode_mapping_and_decompilation.md` |
+| `docs/DECOMPILE_CORPUS.md` | 全量反编译语料（79 MB / 5,517 份 `.py`）**要不要建、怎么建**：30 秒决策表、实测过的重建配方、4 个已复现的坑 | [`notes/opcode_mapping_and_decompilation.md`](notes/opcode_mapping_and_decompilation.md) §4.5–§4.6 |
 | `docs/PYTHON_TOOL_CONVENTIONS.md` | Python 工具 / 编辑器开发约定（PEP 8、PySide6、自检启动脚本、一键 EXE、Windows 交付检查） | 本文 §5 |
 | `notes/` | 逆向**结案**笔记：双 VM opcode 表、0SLF 路径哈希与 `.dlg`、游戏数据 | 各文件自述 |
 | `work/dream-world-connect-login-map/` | 早期研究区（297 份笔记、证据、报告、专项工具）；客户端侧权威现状 = `report/client-status-20261012.md` | [`INDEX.md`](work/dream-world-connect-login-map/INDEX.md) |
 | `tools/decompiler/` | 双 VM 字节码反编译、5 段 XOR 重打包；`output/` 是反编译文本（**不准确、不可执行，只作线索**） | `notes/opcode_mapping_and_decompilation.md` |
-| `tools/data-parser/` | `universal_fls_tool.py`、`mx_path_hash.py`、`extract_dlg.py`、`i0_sprite.py`、精灵格式说明 | `I0_SPRITE_FORMAT.md` |
+| `tools/data-parser/` | `universal_fls_tool.py`、`mx_path_hash.py`、`extract_dlg.py`、`i0_sprite.py`、`pe_resource_dump.py`（从 exe/dll 的 `.rsrc` 抽皮肤/光标/版式/字串）、`skin_label_patch.py` + `pe_resource_patch.py`（皮肤改字并原位写回）、精灵格式说明 | `I0_SPRITE_FORMAT.md` |
 | `tools/client_patches/` | 注册 UI 离线预览补丁（只改 entry 337/4007），构建器、测试、冻结资产、CPython 2.5 审计。**v3.3 已由用户判定不规范并作废（2026-10-14），待还原原包并按原生重做，不得再分发** | [`README.md`](tools/client_patches/README.md)、[`V3_3_DELIVERY_AND_ACCEPTANCE.md`](tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md) |
 | `tools/devkit/` | 开发自检工具箱：`check_windows_compat.py`（Windows 兼容静态检查，交付前必跑） | [`README.md`](tools/devkit/README.md) |
 | `tools/data-export/`、`tools/data_browser/`、`tools/dis_v43/`、`tools/*.py` | 历史数据导出/浏览/反汇编工具，仍可用但不是现行复核入口 | — |
@@ -112,6 +114,20 @@
 - `GS2C_PROP_CHANGE` 与 `GS2C_NPC_CHAT_EXT` 在客户端表里同为 152（客户端自身冲突）；链路帧 `0xFF` 续读长度是 **2 字节**。
 - `script.fls` 模块导入不走路径哈希（未解）；`.dlg` 每条目 4 字节 XOR 密钥的派生公式未定位（靠固定文件头反推）。
 - 仓库里**没有任何真实客户端抓包字节**；所有协议结论来自静态分析。
+- 反编译产物 ≠ 可回编译源码（2026-10-15 用自建 CPython 2.5.6 实测）：这批 `.pyo` 的模块码对象以 RETURN_VALUE 收尾，uncompyle6 如实还原成模块顶层一句 `return`，于是 4,998 个产物里有 3,220 个**只因这一行** `compile()` 不过（剥掉后 75.4% 可编译）。走「编辑后回编译」管线前必须先剥它，并对候选文件做一次 `compile()` 校验；第二引擎 pycdc 的产物没有这个伪影，但自身语法错误率更高（48.4% 可编译），只用于阅读与交叉印证（详见 `notes/opcode_mapping_and_decompilation.md` §4.6）。
+- 清点 `script.fls` 的反编译产物**必须扫目录**，别按 `script_entries.jsonl` 的 `current_filename` 匹配：12 个条目的包内自报文件名带位元污染（含 `\x00`/`?`/`*`），`batch_decompile` 写文件时会抛 `OSError` 而**静默零产物**；catalog 无名条目则落在 `script/unknown/`。2026-10-15 复核：所谓「26 条无产物」= 13 条清点误差 + 9 条可救 + 4 条无解。定点恢复用 `tools/decompiler/recover_entries.py`（只读复用 `batch_decompile`，它的 SHA 被 `agent_e_reproduction.json` 锁定，不要改）。
+- 「某模块不在 `script.fls` 里」这类结论要先回查条目自报路径再下判断：`servicedata` 曾被判缺失，实际是无名条目 `1931` → `script/data/servicedata.py`，真条款全文一直在包内，而客户端就是裸名 `import servicedata`（`script/data` 在 import 路径上）。
+- 真机「窗口标题/聊天乱码」多半**不是资源损坏**：客户端只有 `SetWindowTextA`，脚本层
+  `SetSysCaption` 零转换，标题与 IM 层文字由**系统 ANSI 代码页**解释（详见
+  `notes/title_and_chat_encoding.md`）。别去改 `data/data.fls` 里 `core/gamecode.pyo` 的
+  `SYSCODE='gbk'`——它是编译期常量且与日志路径共用，正路是 cp950（Locale Emulator / 系统区域）。
+- 本版本 `interface.GCODE = BIG5`，但 `GetGameRegion()` 被 `script/delegate.py` 覆盖成 `'cn'`，
+  即台服构建用的是**简中屏蔽词子集**（表现是命中变 `*`，不是乱码）。做简体化时别用简繁转换
+  掩盖解码错误（`裏`/`羣` 等在 cp950 不可编码，会静默丢字）。
+- `tools/decompiler/batch_decompile.py` 整池并行会被个别超大字节码模块- **别默认全量反编译语料存在**：它按红线只写在仓库外，沙箱重置就没。要判断「某符号在整档有没有定义者」这类否定命题，先按 [`docs/DECOMPILE_CORPUS.md`](docs/DECOMPILE_CORPUS.md) §2 的秒级捷径（单条救回 + 数标识符，实测 2.3 s/条）；只有语义级全档检索才花小时级重建全量。该文 §4 的坑 P1（用错解释器会把 5,002 条全写成 52 字节占位且退出码 0）是本轮实测出来的。
+（实测 entry 2371
+  `preload_mov`、2679 `wingtypeposdata`）堵死——uncompyle6 在几千常量的数据表上指数级爆炸。
+  补跑全量请用「一条一子进程 + 超时」驱动；产物 62 MB 级别，不要入库。
 - `tools/decompiler/output/` 下的 `.py` 是反编译输出，有缺失和错误，不是源码。
 
 ## 8. 术语

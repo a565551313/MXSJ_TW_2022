@@ -1,0 +1,4524 @@
+{
+ "schema_version": 1,
+ "kind": "第二反编译引擎 pycdc 的交叉复核产物（只用于阅读与互证）",
+ "generated_utc": "2026-10-15T00:11:21Z",
+ "engine": {
+  "name": "pycdc (Decompyle++)",
+  "source_commit": "b4289760970dbc399684f1e155ec6d1ea1cc787e",
+  "build": "cmake -S pycdc -B build -DCMAKE_BUILD_TYPE=Release; 见 notes/opcode_mapping_and_decompilation.md §4.6"
+ },
+ "generator": "tools/decompiler/crosscheck_pycdc.py（复用 recover_entries 的命名清洗与转译梯）",
+ "inputs": {
+  "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+  "tools/decompiler/batch_decompile.py": "242543f8264e72524fea18a19887b8a46ff655511df5ff0f842a4af91965bf25"
+ },
+ "why_these_files": "uncompyle6 对这些条目只留下 52 字节失败占位或根本没有产物；本目录里每一档都是「uncompyle6 侧没有可用源码」的那批的第二引擎副本。uncompyle6 已有完整源码的 18 条重复项不入库。",
+ "caveat": "用自建 CPython 2.5.6 逐档 compile() 实测：236 档原样可编译、263 档仍不合法。因此**不要**把本目录任何文件直接喂给回编译管线；需要回编的候选必须两引擎都过 compile()。非 ASCII 字节已由工具转义成 \\xNN（见 escaped_bytes），转义处不可逐字节还原。",
+ "summary": {
+  "files": 499,
+  "pycdc_ok": 475,
+  "pycdc_incomplete": 24,
+  "escaped_bytes": 141,
+  "py25_raw": 236,
+  "py25_no": 263
+ },
+ "residual_no_source": {
+  "count": 61,
+  "where": "随包上传的 residual_no_source.json（本仓库不复制）",
+  "note": "uncompyle6 + pycdc + recover_entries 修复梯全开后仍零产物的条目；其中 1954/3066/4166/4691 连转译都过不去。"
+ },
+ "files": [
+  {
+   "path": "script/architect.py",
+   "entry": 4861,
+   "status": "pycdc_ok",
+   "lines": 312,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/audio/audiomgr.py",
+   "entry": 2742,
+   "status": "pycdc_ok",
+   "lines": 1274,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/banword.py",
+   "entry": 528,
+   "status": "pycdc_ok",
+   "lines": 1434,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/blacklist/characteristic.py",
+   "entry": 560,
+   "status": "pycdc_ok",
+   "lines": 303,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/blacklist/multiclientcheck.py",
+   "entry": 132,
+   "status": "pycdc_ok",
+   "lines": 149,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/blacklist/processlib.py",
+   "entry": 4314,
+   "status": "pycdc_ok",
+   "lines": 66,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/blacklist/verifygame/dgtverifygameyuanbao.py",
+   "entry": 4744,
+   "status": "pycdc_ok",
+   "lines": 139,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/capturemgr.py",
+   "entry": 3543,
+   "status": "pycdc_ok",
+   "lines": 369,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/career.py",
+   "entry": 3685,
+   "status": "pycdc_ok",
+   "lines": 160,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/char/player.py",
+   "entry": 1208,
+   "status": "pycdc_ok",
+   "lines": 2879,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/char/shadow.py",
+   "entry": 3927,
+   "status": "pycdc_ok",
+   "lines": 277,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/co__on/logicaudio/logic_uploadaudio.py",
+   "entry": 3505,
+   "status": "pycdc_ok",
+   "lines": 96,
+   "escaped_bytes": true,
+   "uncompyle6": "recovered",
+   "py25": "no"
+  },
+  {
+   "path": "script/common/gamereg.py",
+   "entry": 2964,
+   "status": "pycdc_ok",
+   "lines": 66,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/common/logicaudio/logic_audiomgr.py",
+   "entry": 1155,
+   "status": "pycdc_ok",
+   "lines": 78,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/commonfriend.py",
+   "entry": 1223,
+   "status": "pycdc_ok",
+   "lines": 321,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/core/garth.py",
+   "entry": 3815,
+   "status": "pycdc_ok",
+   "lines": 1279,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/core/magicperform/warcmd/warcmdattackpre.py",
+   "entry": 803,
+   "status": "pycdc_ok",
+   "lines": 38,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/core/magicperform/warcmd/warcmdenermyhurt.py",
+   "entry": 2691,
+   "status": "pycdc_ok",
+   "lines": 109,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/core/magicperform/warcmd/warcmdspare.py",
+   "entry": 2397,
+   "status": "pycdc_ok",
+   "lines": 88,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/core/preload/myprofie.py",
+   "entry": 3699,
+   "status": "pycdc_ok",
+   "lines": 70,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/core/preload/preload_base.py",
+   "entry": 4756,
+   "status": "pycdc_ok",
+   "lines": 58,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/core/preload/preload_mov.py",
+   "entry": 2371,
+   "status": "pycdc_ok",
+   "lines": 132,
+   "escaped_bytes": false,
+   "uncompyle6": "recovered",
+   "py25": "no"
+  },
+  {
+   "path": "script/core/warweather.py",
+   "entry": 3443,
+   "status": "pycdc_ok",
+   "lines": 211,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/achievedata.py",
+   "entry": 2083,
+   "status": "pycdc_ok",
+   "lines": 38375,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/activityicondata.py",
+   "entry": 4998,
+   "status": "pycdc_ok",
+   "lines": 559,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/areaphonecodedata.py",
+   "entry": 124,
+   "status": "pycdc_incomplete",
+   "lines": 17,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/avatarcode.py",
+   "entry": 1240,
+   "status": "pycdc_ok",
+   "lines": 519,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/charpartdata.py",
+   "entry": 3935,
+   "status": "pycdc_ok",
+   "lines": 5075,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/cookdata.py",
+   "entry": 1381,
+   "status": "pycdc_ok",
+   "lines": 106,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/daobiaodata.py",
+   "entry": 1188,
+   "status": "pycdc_ok",
+   "lines": 19,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/datapresentcenter_2020returnward.py",
+   "entry": 1673,
+   "status": "pycdc_ok",
+   "lines": 255,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/duanwu2021cluesdata.py",
+   "entry": 318,
+   "status": "pycdc_ok",
+   "lines": 530,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/effectnpcdata.py",
+   "entry": 4675,
+   "status": "pycdc_ok",
+   "lines": 83,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/equipicondata.py",
+   "entry": 293,
+   "status": "pycdc_incomplete",
+   "lines": 18,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/flysworddata.py",
+   "entry": 1910,
+   "status": "pycdc_ok",
+   "lines": 225,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/fontdata.py",
+   "entry": 2286,
+   "status": "pycdc_ok",
+   "lines": 2828,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/furnishdata.py",
+   "entry": 4868,
+   "status": "pycdc_ok",
+   "lines": 655,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/gmcommanddata.py",
+   "entry": 1572,
+   "status": "pycdc_ok",
+   "lines": 4895,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/gradehidetitle.py",
+   "entry": 1979,
+   "status": "pycdc_incomplete",
+   "lines": 9,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/high_risk_word_data.py",
+   "entry": 1245,
+   "status": "pycdc_ok",
+   "lines": 1287,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/hsvpaldata.py",
+   "entry": 230,
+   "status": "pycdc_ok",
+   "lines": 1339,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/huodongreworditemdata.py",
+   "entry": 1898,
+   "status": "pycdc_ok",
+   "lines": 155,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/impressiondata.py",
+   "entry": 3694,
+   "status": "pycdc_incomplete",
+   "lines": 13,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/itemsounddata.py",
+   "entry": 4715,
+   "status": "pycdc_ok",
+   "lines": 13546,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/jianghushiliandata.py",
+   "entry": 308,
+   "status": "pycdc_ok",
+   "lines": 5106,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/jinglinginfodata.py",
+   "entry": 4472,
+   "status": "pycdc_ok",
+   "lines": 184,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task0.py",
+   "entry": 1187,
+   "status": "pycdc_ok",
+   "lines": 186,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/juben/task13112.py",
+   "entry": 933,
+   "status": "pycdc_ok",
+   "lines": 342,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task13153.py",
+   "entry": 2981,
+   "status": "pycdc_ok",
+   "lines": 578,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/juben/task13157.py",
+   "entry": 1823,
+   "status": "pycdc_ok",
+   "lines": 351,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/juben/task13161.py",
+   "entry": 628,
+   "status": "pycdc_ok",
+   "lines": 503,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task13163.py",
+   "entry": 2044,
+   "status": "pycdc_ok",
+   "lines": 518,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task13171.py",
+   "entry": 1144,
+   "status": "pycdc_ok",
+   "lines": 13,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/juben/task13181.py",
+   "entry": 3227,
+   "status": "pycdc_ok",
+   "lines": 742,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/juben/task13208.py",
+   "entry": 4398,
+   "status": "pycdc_ok",
+   "lines": 836,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/juben/task13345.py",
+   "entry": 653,
+   "status": "pycdc_incomplete",
+   "lines": 13,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task13356.py",
+   "entry": 3611,
+   "status": "pycdc_ok",
+   "lines": 585,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task13363.py",
+   "entry": 4669,
+   "status": "pycdc_ok",
+   "lines": 337,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/juben/task13372.py",
+   "entry": 3962,
+   "status": "pycdc_ok",
+   "lines": 2165,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task13378.py",
+   "entry": 1566,
+   "status": "pycdc_ok",
+   "lines": 915,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/juben/task13396.py",
+   "entry": 564,
+   "status": "pycdc_ok",
+   "lines": 1022,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task13398.py",
+   "entry": 4642,
+   "status": "pycdc_ok",
+   "lines": 1563,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/juben/task13437.py",
+   "entry": 1885,
+   "status": "pycdc_ok",
+   "lines": 426,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task13452.py",
+   "entry": 2900,
+   "status": "pycdc_ok",
+   "lines": 14,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task13471.py",
+   "entry": 3220,
+   "status": "pycdc_ok",
+   "lines": 327,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task13714.py",
+   "entry": 1736,
+   "status": "pycdc_ok",
+   "lines": 19,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/juben/task13741.py",
+   "entry": 775,
+   "status": "pycdc_ok",
+   "lines": 12073,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task13762.py",
+   "entry": 4496,
+   "status": "pycdc_ok",
+   "lines": 1320,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/juben/task13841.py",
+   "entry": 3538,
+   "status": "pycdc_ok",
+   "lines": 687,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task13922.py",
+   "entry": 3204,
+   "status": "pycdc_ok",
+   "lines": 896,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/juben/task33755.py",
+   "entry": 4946,
+   "status": "pycdc_ok",
+   "lines": 588,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/juben/task53018.py",
+   "entry": 753,
+   "status": "pycdc_ok",
+   "lines": 512,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task53178.py",
+   "entry": 3659,
+   "status": "pycdc_incomplete",
+   "lines": 13,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task53217.py",
+   "entry": 600,
+   "status": "pycdc_ok",
+   "lines": 1007,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/juben/task53219.py",
+   "entry": 980,
+   "status": "pycdc_incomplete",
+   "lines": 13,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/magicdata.py",
+   "entry": 4329,
+   "status": "pycdc_incomplete",
+   "lines": 185,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/magicexdescdata.py",
+   "entry": 3773,
+   "status": "pycdc_ok",
+   "lines": 222,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/magicperformdata.py",
+   "entry": 1235,
+   "status": "pycdc_ok",
+   "lines": 1563,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/map1323data.py",
+   "entry": 1090,
+   "status": "pycdc_ok",
+   "lines": 527,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/mapalbumdata.py",
+   "entry": 4116,
+   "status": "pycdc_ok",
+   "lines": 75,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/mapbgsummondata.py",
+   "entry": 2696,
+   "status": "pycdc_ok",
+   "lines": 395,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/minimapnpcpos_test.py",
+   "entry": 4897,
+   "status": "pycdc_ok",
+   "lines": 4896,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/mxcarddata.py",
+   "entry": 3664,
+   "status": "pycdc_incomplete",
+   "lines": 41,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/mxcardskilldata.py",
+   "entry": 4402,
+   "status": "pycdc_ok",
+   "lines": 65,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/mxitemdata.py",
+   "entry": 4924,
+   "status": "pycdc_ok",
+   "lines": 6861,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/newfurnituredata.py",
+   "entry": 244,
+   "status": "pycdc_incomplete",
+   "lines": 667,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/newgroupbuilddata.py",
+   "entry": 3880,
+   "status": "pycdc_ok",
+   "lines": 149,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/newgroupplaydata.py",
+   "entry": 3130,
+   "status": "pycdc_incomplete",
+   "lines": 13,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/newguideextenddata.py",
+   "entry": 4369,
+   "status": "pycdc_ok",
+   "lines": 529,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/newyeargift2021data.py",
+   "entry": 4672,
+   "status": "pycdc_ok",
+   "lines": 66,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/npcheightdata.py",
+   "entry": 3027,
+   "status": "pycdc_ok",
+   "lines": 420,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/officeradvantagedata.py",
+   "entry": 2254,
+   "status": "pycdc_ok",
+   "lines": 349,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/petskill.py",
+   "entry": 3205,
+   "status": "pycdc_incomplete",
+   "lines": 72,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/petzz.py",
+   "entry": 4305,
+   "status": "pycdc_ok",
+   "lines": 162,
+   "escaped_bytes": false,
+   "uncompyle6": "full",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/physicsmagicdata.py",
+   "entry": 3458,
+   "status": "pycdc_ok",
+   "lines": 48687,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/physicsmagicdata_check.py",
+   "entry": 2561,
+   "status": "pycdc_ok",
+   "lines": 38686,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/pingyinlibdata.py",
+   "entry": 4928,
+   "status": "pycdc_incomplete",
+   "lines": 7141,
+   "escaped_bytes": false,
+   "uncompyle6": "recovered",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/priceitemdata.py",
+   "entry": 4396,
+   "status": "pycdc_incomplete",
+   "lines": 13,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/rainbowdata.py",
+   "entry": 375,
+   "status": "pycdc_ok",
+   "lines": 69,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/rankdata.py",
+   "entry": 3609,
+   "status": "pycdc_ok",
+   "lines": 1362,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/rankrewarddata.py",
+   "entry": 694,
+   "status": "pycdc_ok",
+   "lines": 221,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/reddotdata.py",
+   "entry": 4574,
+   "status": "pycdc_ok",
+   "lines": 13,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/reputepriordata.py",
+   "entry": 4919,
+   "status": "pycdc_ok",
+   "lines": 57,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/richmandata.py",
+   "entry": 3019,
+   "status": "pycdc_ok",
+   "lines": 2511,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/scenesampledata.py",
+   "entry": 520,
+   "status": "pycdc_ok",
+   "lines": 228,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/shenyuandata.py",
+   "entry": 3209,
+   "status": "pycdc_ok",
+   "lines": 27,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/showtaskidinminimap.py",
+   "entry": 2815,
+   "status": "pycdc_incomplete",
+   "lines": 9,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/skillbookdata.py",
+   "entry": 3075,
+   "status": "pycdc_incomplete",
+   "lines": 23,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/skilldata.py",
+   "entry": 454,
+   "status": "pycdc_ok",
+   "lines": 790,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/specialannotationdata.py",
+   "entry": 4711,
+   "status": "pycdc_ok",
+   "lines": 658,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/teammatchdata.py",
+   "entry": 2018,
+   "status": "pycdc_ok",
+   "lines": 142,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/titlespritedata.py",
+   "entry": 1665,
+   "status": "pycdc_incomplete",
+   "lines": 18,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/walkerashiondata.py",
+   "entry": 2037,
+   "status": "pycdc_ok",
+   "lines": 111,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/wingcombinedata.py",
+   "entry": 3379,
+   "status": "pycdc_ok",
+   "lines": 379,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/wingtypeposdata.py",
+   "entry": 2679,
+   "status": "pycdc_ok",
+   "lines": 8597,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/xinfapriordata.py",
+   "entry": 4917,
+   "status": "pycdc_ok",
+   "lines": 109,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/data/yardtable/yardblockdata.py",
+   "entry": 4089,
+   "status": "pycdc_ok",
+   "lines": 3644,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/yardtable/yardmaptable.py",
+   "entry": 595,
+   "status": "pycdc_ok",
+   "lines": 111,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/data/yardtable/yardmapzoom1000.py",
+   "entry": 4000,
+   "status": "pycdc_incomplete",
+   "lines": 9,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/debug/crashrpt.py",
+   "entry": 1001,
+   "status": "pycdc_ok",
+   "lines": 322,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/debug/dlguiprofile.py",
+   "entry": 3780,
+   "status": "pycdc_ok",
+   "lines": 424,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/debug/getmagictime.py",
+   "entry": 1275,
+   "status": "pycdc_ok",
+   "lines": 399,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/debug/logupload.py",
+   "entry": 2769,
+   "status": "pycdc_ok",
+   "lines": 133,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/debug/walkerhidecheck.py",
+   "entry": 2545,
+   "status": "pycdc_ok",
+   "lines": 121,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/debug/warrecordupload.py",
+   "entry": 3873,
+   "status": "pycdc_ok",
+   "lines": 159,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/debug/yibugger/yibugobjgraph.py",
+   "entry": 739,
+   "status": "pycdc_ok",
+   "lines": 929,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/accountmarket/testpersonaccount.py",
+   "entry": 3100,
+   "status": "pycdc_ok",
+   "lines": 56,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/avaterload.py",
+   "entry": 1718,
+   "status": "pycdc_ok",
+   "lines": 346,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/choosespecialbook/dgtchoosespecialbook.py",
+   "entry": 1216,
+   "status": "pycdc_ok",
+   "lines": 50,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgbandip.py",
+   "entry": 4200,
+   "status": "pycdc_ok",
+   "lines": 244,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgbank.py",
+   "entry": 4324,
+   "status": "pycdc_ok",
+   "lines": 756,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgchildinfo.py",
+   "entry": 4433,
+   "status": "pycdc_ok",
+   "lines": 815,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgcombfire.py",
+   "entry": 406,
+   "status": "pycdc_ok",
+   "lines": 2142,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgcompose.py",
+   "entry": 2962,
+   "status": "pycdc_ok",
+   "lines": 2710,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgcookjuqing.py",
+   "entry": 4280,
+   "status": "pycdc_ok",
+   "lines": 459,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgequipreset.py",
+   "entry": 423,
+   "status": "pycdc_ok",
+   "lines": 341,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgexchangeflyride.py",
+   "entry": 728,
+   "status": "pycdc_ok",
+   "lines": 111,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgexitinfo.py",
+   "entry": 3108,
+   "status": "pycdc_ok",
+   "lines": 1309,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlggemtransfer.py",
+   "entry": 4492,
+   "status": "pycdc_ok",
+   "lines": 394,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlggive.py",
+   "entry": 4942,
+   "status": "pycdc_ok",
+   "lines": 1982,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlghelp.py",
+   "entry": 4355,
+   "status": "pycdc_ok",
+   "lines": 39,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgherochange.py",
+   "entry": 351,
+   "status": "pycdc_ok",
+   "lines": 541,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgidentify.py",
+   "entry": 1243,
+   "status": "pycdc_ok",
+   "lines": 406,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlginfo.py",
+   "entry": 3806,
+   "status": "pycdc_ok",
+   "lines": 1901,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgitemarrange.py",
+   "entry": 471,
+   "status": "pycdc_ok",
+   "lines": 312,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgitembill1.py",
+   "entry": 3279,
+   "status": "pycdc_ok",
+   "lines": 4144,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgitembillminibuy2.py",
+   "entry": 635,
+   "status": "pycdc_ok",
+   "lines": 245,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgjbdaobiao.py",
+   "entry": 3994,
+   "status": "pycdc_ok",
+   "lines": 290,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgjingdongcard.py",
+   "entry": 3210,
+   "status": "pycdc_ok",
+   "lines": 117,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgjudgebig.py",
+   "entry": 154,
+   "status": "pycdc_ok",
+   "lines": 618,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgkeju.py",
+   "entry": 381,
+   "status": "pycdc_ok",
+   "lines": 851,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgmake.py",
+   "entry": 4907,
+   "status": "pycdc_ok",
+   "lines": 606,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgmoveserver.py",
+   "entry": 451,
+   "status": "pycdc_ok",
+   "lines": 252,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgmulhorse.py",
+   "entry": 4575,
+   "status": "pycdc_ok",
+   "lines": 156,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgnewpetrefine.py",
+   "entry": 4020,
+   "status": "pycdc_ok",
+   "lines": 2499,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgpet.py",
+   "entry": 4048,
+   "status": "pycdc_ok",
+   "lines": 3258,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgpetcombine.py",
+   "entry": 4002,
+   "status": "pycdc_ok",
+   "lines": 444,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgpetupdate.py",
+   "entry": 4232,
+   "status": "pycdc_ok",
+   "lines": 1131,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgpickimg.py",
+   "entry": 1678,
+   "status": "pycdc_ok",
+   "lines": 733,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgpizza.py",
+   "entry": 4759,
+   "status": "pycdc_ok",
+   "lines": 1667,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgquiz.py",
+   "entry": 4906,
+   "status": "pycdc_ok",
+   "lines": 225,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgride.py",
+   "entry": 4449,
+   "status": "pycdc_ok",
+   "lines": 2437,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgshare.py",
+   "entry": 956,
+   "status": "pycdc_ok",
+   "lines": 217,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgshiwu.py",
+   "entry": 2693,
+   "status": "pycdc_ok",
+   "lines": 351,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgsmeltequip.py",
+   "entry": 477,
+   "status": "pycdc_ok",
+   "lines": 340,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgstorehouse.py",
+   "entry": 4362,
+   "status": "pycdc_ok",
+   "lines": 2458,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgsummonwar.py",
+   "entry": 1998,
+   "status": "pycdc_ok",
+   "lines": 425,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgtianqi.py",
+   "entry": 3250,
+   "status": "pycdc_ok",
+   "lines": 99,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgtrade.py",
+   "entry": 4762,
+   "status": "pycdc_ok",
+   "lines": 2120,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgvipsignin.py",
+   "entry": 1462,
+   "status": "pycdc_ok",
+   "lines": 516,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/dlgwarlocationeditor.py",
+   "entry": 4874,
+   "status": "pycdc_ok",
+   "lines": 975,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/dlgxiuwei.py",
+   "entry": 2297,
+   "status": "pycdc_ok",
+   "lines": 344,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/mail/delegate/dgtmailcenter.py",
+   "entry": 4750,
+   "status": "pycdc_ok",
+   "lines": 124,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/mainmenu/commapinfobar.py",
+   "entry": 4409,
+   "status": "pycdc_ok",
+   "lines": 992,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/mainmenu/delegate/delegatemapinfobar.py",
+   "entry": 518,
+   "status": "pycdc_ok",
+   "lines": 616,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/mainmenu/view/activityicon/springlotteryicon.py",
+   "entry": 617,
+   "status": "pycdc_ok",
+   "lines": 43,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/mubanhao/componentclass.py",
+   "entry": 252,
+   "status": "pycdc_ok",
+   "lines": 191,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/mubanhao/delegate/dgtmubanhaomain.py",
+   "entry": 4606,
+   "status": "pycdc_ok",
+   "lines": 138,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/mubanhao/model/mgrmubanhao.py",
+   "entry": 1958,
+   "status": "pycdc_ok",
+   "lines": 67,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/mubanhao/model/mgrshuxingpage.py",
+   "entry": 182,
+   "status": "pycdc_ok",
+   "lines": 77,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/mubanhao/mubanhaodefines.py",
+   "entry": 3197,
+   "status": "pycdc_ok",
+   "lines": 945,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/mubanhao/view/dlgshuxingpage.py",
+   "entry": 2882,
+   "status": "pycdc_ok",
+   "lines": 330,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/newtrade/delegate/dgtnewtrade.py",
+   "entry": 2621,
+   "status": "pycdc_ok",
+   "lines": 372,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/newwarui/newus_item/newwaruseitemdefine.py",
+   "entry": 880,
+   "status": "pycdc_ok",
+   "lines": 16,
+   "escaped_bytes": false,
+   "uncompyle6": "full",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/presentcenter/delegate/dgtdailylottery.py",
+   "entry": 4482,
+   "status": "pycdc_ok",
+   "lines": 72,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/presentcenter/view/dlgreturnofoldplayerfornewserver.py",
+   "entry": 3758,
+   "status": "pycdc_ok",
+   "lines": 261,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/presentcenter/view/dlgserverstartgift.py",
+   "entry": 4359,
+   "status": "pycdc_ok",
+   "lines": 440,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/presentcenter/view/presentcenterwidget.py",
+   "entry": 2413,
+   "status": "pycdc_ok",
+   "lines": 148,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/qixi/mdqixi/qixirangecheckctrl.py",
+   "entry": 3190,
+   "status": "pycdc_ok",
+   "lines": 198,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/qixi/qixitest.py",
+   "entry": 141,
+   "status": "pycdc_ok",
+   "lines": 68,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/skillmagic/combineskill/dgtcombineskill.py",
+   "entry": 4426,
+   "status": "pycdc_ok",
+   "lines": 129,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/skillmagic/getskilldefine.py",
+   "entry": 715,
+   "status": "pycdc_ok",
+   "lines": 103,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/dialog/skillmagic/pagebase.py",
+   "entry": 961,
+   "status": "pycdc_ok",
+   "lines": 87,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/dialog/sysopt/dgtnewsysopt/dgttimingcloseopt.py",
+   "entry": 216,
+   "status": "pycdc_ok",
+   "lines": 247,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/district.py",
+   "entry": 2652,
+   "status": "pycdc_ok",
+   "lines": 470,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/gamecode/gamepath.py",
+   "entry": 1206,
+   "status": "pycdc_ok",
+   "lines": 282,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/gamedebug.py",
+   "entry": 3327,
+   "status": "pycdc_ok",
+   "lines": 62,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/gamefont.py",
+   "entry": 3461,
+   "status": "pycdc_ok",
+   "lines": 167,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/handobj.py",
+   "entry": 3989,
+   "status": "pycdc_ok",
+   "lines": 593,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/history_encrypt.py",
+   "entry": 4064,
+   "status": "pycdc_ok",
+   "lines": 317,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/idletips.py",
+   "entry": 2654,
+   "status": "pycdc_ok",
+   "lines": 103,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/lib/base64.py",
+   "entry": 1254,
+   "status": "pycdc_ok",
+   "lines": 381,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/lib/bisect.py",
+   "entry": 2958,
+   "status": "pycdc_ok",
+   "lines": 113,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/lib/cProfile.py",
+   "entry": 1200,
+   "status": "pycdc_ok",
+   "lines": 201,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/lib/sre_constants.py",
+   "entry": 4533,
+   "status": "pycdc_ok",
+   "lines": 227,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/login/dlgnewaboutpwd.py",
+   "entry": 1017,
+   "status": "pycdc_ok",
+   "lines": 102,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mangled/entry_0449_155cbf62.py",
+   "entry": 449,
+   "status": "pycdc_ok",
+   "lines": 194,
+   "escaped_bytes": false,
+   "uncompyle6": "absent",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mangled/entry_4741_f288bd42.py",
+   "entry": 4741,
+   "status": "pycdc_ok",
+   "lines": 12,
+   "escaped_bytes": false,
+   "uncompyle6": "full",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mangled/entry_4800_f53de4e9.py",
+   "entry": 4800,
+   "status": "pycdc_ok",
+   "lines": 62,
+   "escaped_bytes": false,
+   "uncompyle6": "absent",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mapgame.py",
+   "entry": 1739,
+   "status": "pycdc_ok",
+   "lines": 446,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/maze/createmazemap.py",
+   "entry": 4772,
+   "status": "pycdc_ok",
+   "lines": 420,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/a_tivity/yardmatch/yardmatchtools.py",
+   "entry": 3794,
+   "status": "pycdc_ok",
+   "lines": 18,
+   "escaped_bytes": false,
+   "uncompyle6": "full",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/2018worldcup/dlgworldcup.py",
+   "entry": 4349,
+   "status": "pycdc_ok",
+   "lines": 952,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/2019double12shop/view/dlg2019double12shop.py",
+   "entry": 491,
+   "status": "pycdc_ok",
+   "lines": 745,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/2019znq/delegate/dgt2019znqhappy.py",
+   "entry": 2698,
+   "status": "pycdc_ok",
+   "lines": 104,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/2021duangwu/duangwu2021interface.py",
+   "entry": 3428,
+   "status": "pycdc_ok",
+   "lines": 129,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/2021duangwu/netduanwu2021.py",
+   "entry": 952,
+   "status": "pycdc_ok",
+   "lines": 210,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/2021springactivity/dgt/dgt2021springactivity.py",
+   "entry": 1510,
+   "status": "pycdc_ok",
+   "lines": 76,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/2021springjifu/netspringjifu.py",
+   "entry": 3828,
+   "status": "pycdc_ok",
+   "lines": 40,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/2021springjifu/view/dlgspringjifu.py",
+   "entry": 53,
+   "status": "pycdc_ok",
+   "lines": 362,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/2021summer/dgt/logicshow_dgtsummeractmain.py",
+   "entry": 1312,
+   "status": "pycdc_ok",
+   "lines": 50,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/acteye/view/dlgacteyerank.py",
+   "entry": 1846,
+   "status": "pycdc_ok",
+   "lines": 171,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/annualbeauty/delegate/beautycontestblog/dgtrecommandcontent.py",
+   "entry": 470,
+   "status": "pycdc_ok",
+   "lines": 81,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/annualbeauty/view/beautycontestblog/bloglistview.py",
+   "entry": 301,
+   "status": "pycdc_ok",
+   "lines": 330,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/annualbeauty/view/beautycontestblog/fusairecommendcontent.py",
+   "entry": 1955,
+   "status": "pycdc_ok",
+   "lines": 276,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/bestlover/dlg/dlgbestloversign.py",
+   "entry": 1787,
+   "status": "pycdc_ok",
+   "lines": 122,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/cookfight/dlgcookfight.py",
+   "entry": 696,
+   "status": "pycdc_ok",
+   "lines": 694,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/cookfight/netcookfight.py",
+   "entry": 3039,
+   "status": "pycdc_ok",
+   "lines": 111,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/countrycontest/arena/view/ctrycontestwidget.py",
+   "entry": 935,
+   "status": "pycdc_ok",
+   "lines": 255,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/countrycontest/ctrycontesttest.py",
+   "entry": 2738,
+   "status": "pycdc_incomplete",
+   "lines": 32,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/countrycontest/ctysetequip/dgtctysetequip_new.py",
+   "entry": 2563,
+   "status": "pycdc_ok",
+   "lines": 695,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/countrycontest/recruitment/model/mdctrycontestrecruitdetail.py",
+   "entry": 1358,
+   "status": "pycdc_ok",
+   "lines": 87,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/eliteorgwar/view/dlgeliteorgwarprogress.py",
+   "entry": 191,
+   "status": "pycdc_ok",
+   "lines": 108,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/fashionactive/dlgfashionactivepub.py",
+   "entry": 4561,
+   "status": "pycdc_ok",
+   "lines": 53,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/fightpig/fightpigrank.py",
+   "entry": 4967,
+   "status": "pycdc_ok",
+   "lines": 82,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/gameplaymethodselection/delegate/dgtplaymethodselection.py",
+   "entry": 2164,
+   "status": "pycdc_ok",
+   "lines": 131,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/gopenguin/situationpage/dlgsituationpage.py",
+   "entry": 738,
+   "status": "pycdc_ok",
+   "lines": 230,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/groupbbq/netnewgroupbbq.py",
+   "entry": 3316,
+   "status": "pycdc_ok",
+   "lines": 72,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/groupboss/netgroupboss.py",
+   "entry": 2667,
+   "status": "pycdc_ok",
+   "lines": 63,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/guildcavern/view/dlgguildcavernroll.py",
+   "entry": 1324,
+   "status": "pycdc_ok",
+   "lines": 361,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/heartychocolate/heartych_colatedefine.py",
+   "entry": 2310,
+   "status": "pycdc_ok",
+   "lines": 10,
+   "escaped_bytes": false,
+   "uncompyle6": "full",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/insidewar/insidewarrank/dgtinsidewarrank.py",
+   "entry": 1236,
+   "status": "pycdc_ok",
+   "lines": 40,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/insidewar/testinsidewar.py",
+   "entry": 693,
+   "status": "pycdc_ok",
+   "lines": 117,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/keju/dlgkejushootgame.py",
+   "entry": 2970,
+   "status": "pycdc_ok",
+   "lines": 382,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/keju/kejutest.py",
+   "entry": 4853,
+   "status": "pycdc_ok",
+   "lines": 153,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/labyrinth_treasure/view/dlglabyrinthtreasuremain.py",
+   "entry": 4465,
+   "status": "pycdc_ok",
+   "lines": 58,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/ladderrank/delegate/dgtrewardpreview.py",
+   "entry": 1287,
+   "status": "pycdc_ok",
+   "lines": 51,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/ladderrankallstar/delegate/dgtladderrankkfinals.py",
+   "entry": 2084,
+   "status": "pycdc_ok",
+   "lines": 177,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/ladderrankallstar/delegate/dgtseparategroup.py",
+   "entry": 183,
+   "status": "pycdc_ok",
+   "lines": 85,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/ladderrankallstar/model/mdallgameguess.py",
+   "entry": 687,
+   "status": "pycdc_ok",
+   "lines": 194,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/ladderrankallstar/view/dlgguesscoin.py",
+   "entry": 682,
+   "status": "pycdc_ok",
+   "lines": 292,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/mengxiang3activity/model/mdmengxiang3activity.py",
+   "entry": 1374,
+   "status": "pycdc_ok",
+   "lines": 78,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/mengxiang3activity/view/dlgpuzzle.py",
+   "entry": 4988,
+   "status": "pycdc_ok",
+   "lines": 294,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/mx2019party/dlgmx2019party.py",
+   "entry": 3212,
+   "status": "pycdc_ok",
+   "lines": 124,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/newcatchfish/newcatchfishmapobject.py",
+   "entry": 3431,
+   "status": "pycdc_ok",
+   "lines": 243,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/piaoliuping/dlgseamailtaskitem.py",
+   "entry": 1273,
+   "status": "pycdc_ok",
+   "lines": 34,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/qixi/dgteternallove.py",
+   "entry": 2515,
+   "status": "pycdc_ok",
+   "lines": 205,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/school/dgtschooladmission.py",
+   "entry": 1710,
+   "status": "pycdc_ok",
+   "lines": 65,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/sevendaybonus/dlgsevendaybonus.py",
+   "entry": 4939,
+   "status": "pycdc_ok",
+   "lines": 360,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/singlematch/dlgsingleoperate.py",
+   "entry": 3035,
+   "status": "pycdc_ok",
+   "lines": 293,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/summerdiscount/dgtsummerdiscount.py",
+   "entry": 1025,
+   "status": "pycdc_ok",
+   "lines": 189,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/summertrainpet/dlg/dlgselectpetdir.py",
+   "entry": 3486,
+   "status": "pycdc_ok",
+   "lines": 245,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/summertrainpet/model/mdtrainpet.py",
+   "entry": 3888,
+   "status": "pycdc_ok",
+   "lines": 71,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/survive/dlgsurvive.py",
+   "entry": 3465,
+   "status": "pycdc_ok",
+   "lines": 4511,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/timewheel/delegate/delegatetimewheelweituonew.py",
+   "entry": 2860,
+   "status": "pycdc_ok",
+   "lines": 445,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/timewheel/timewheelinterface.py",
+   "entry": 2070,
+   "status": "pycdc_ok",
+   "lines": 101,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/timewheel/view/dlgquickweekcard.py",
+   "entry": 621,
+   "status": "pycdc_ok",
+   "lines": 209,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/timewheel/view/dlgtimewheelmain.py",
+   "entry": 1529,
+   "status": "pycdc_ok",
+   "lines": 82,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/timewheel/view/taskitemview.py",
+   "entry": 4842,
+   "status": "pycdc_ok",
+   "lines": 453,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activity/yardmatch/delegate/dgtyardmatchsubpage.py",
+   "entry": 95,
+   "status": "pycdc_ok",
+   "lines": 77,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/activity/yardmatch/view/dlgyardmatchminicard.py",
+   "entry": 288,
+   "status": "pycdc_ok",
+   "lines": 43,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activityreward/model/mdactivityreward.py",
+   "entry": 4954,
+   "status": "pycdc_ok",
+   "lines": 1034,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/activityreward/model/mdseasonchallenge.py",
+   "entry": 3709,
+   "status": "pycdc_ok",
+   "lines": 111,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/album/dlgalbumbgsource.py",
+   "entry": 2025,
+   "status": "pycdc_ok",
+   "lines": 167,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/album/dlgalbumcharsource.py",
+   "entry": 554,
+   "status": "pycdc_ok",
+   "lines": 161,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/appearance/delegate/delegateoutward/delegateappearanceaura.py",
+   "entry": 390,
+   "status": "pycdc_ok",
+   "lines": 432,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/appearance/delegate/delegateoutward/dgtappearancehsv.py",
+   "entry": 2564,
+   "status": "pycdc_ok",
+   "lines": 846,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/appearance/model/mdappearancemagic.py",
+   "entry": 3403,
+   "status": "pycdc_ok",
+   "lines": 38,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/appearance/view/appearanceridepv.py",
+   "entry": 4251,
+   "status": "pycdc_ok",
+   "lines": 600,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/appearance/view/pagedecorate/appearanceavatarfrmview.py",
+   "entry": 3714,
+   "status": "pycdc_ok",
+   "lines": 661,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/appearance/view/pageoutward/newappearancefreecolorview.py",
+   "entry": 2405,
+   "status": "pycdc_ok",
+   "lines": 832,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/appearance/view/pageoutward/pageappearanceoutward.py",
+   "entry": 3766,
+   "status": "pycdc_ok",
+   "lines": 166,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/assembly/view/base/dlgbaseassembly.py",
+   "entry": 524,
+   "status": "pycdc_ok",
+   "lines": 128,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/auction/dlgauctionpreview.py",
+   "entry": 877,
+   "status": "pycdc_ok",
+   "lines": 919,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/auction/nethdidauction.py",
+   "entry": 4385,
+   "status": "pycdc_ok",
+   "lines": 136,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/autocheckcolor/logic_checkmgr.py",
+   "entry": 1299,
+   "status": "pycdc_ok",
+   "lines": 185,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/autoupgrade/delegate/dgtautoupgrade.py",
+   "entry": 4557,
+   "status": "pycdc_ok",
+   "lines": 95,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/avatar/dgtavatar.py",
+   "entry": 455,
+   "status": "pycdc_ok",
+   "lines": 1774,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/avatar/mdavatar.py",
+   "entry": 344,
+   "status": "pycdc_ok",
+   "lines": 169,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/baotu/netbaotu.py",
+   "entry": 3313,
+   "status": "pycdc_ok",
+   "lines": 81,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/consignmentsalecenter/consignmalltest.py",
+   "entry": 3460,
+   "status": "pycdc_ok",
+   "lines": 95,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/consignmentsalecenter/delegate/dgtconsignmallhuoli.py",
+   "entry": 875,
+   "status": "pycdc_ok",
+   "lines": 346,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/consignmentsalecenter/view/dlgconsignmallguildequip.py",
+   "entry": 1154,
+   "status": "pycdc_ok",
+   "lines": 216,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/consignmentsalecenter/view/showlogic_consignhuoli.py",
+   "entry": 3651,
+   "status": "pycdc_ok",
+   "lines": 42,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/dailyteam/logicshowdailyteam/showlogic_dgtdailyteaminfo.py",
+   "entry": 2969,
+   "status": "pycdc_ok",
+   "lines": 51,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/decorate/view/dlgdecoratemain.py",
+   "entry": 178,
+   "status": "pycdc_ok",
+   "lines": 117,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/delaywalker/model/delayloading.py",
+   "entry": 864,
+   "status": "pycdc_ok",
+   "lines": 256,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/editorcolor/lookcolor.py",
+   "entry": 4599,
+   "status": "pycdc_ok",
+   "lines": 1038,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/fakewar/fakewarcmd.py",
+   "entry": 1868,
+   "status": "pycdc_ok",
+   "lines": 269,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/fakewar/fakewarcontext.py",
+   "entry": 1692,
+   "status": "pycdc_ok",
+   "lines": 76,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/flyflag/flymgr.py",
+   "entry": 3718,
+   "status": "pycdc_ok",
+   "lines": 622,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/frametaskmgr.py",
+   "entry": 247,
+   "status": "pycdc_ok",
+   "lines": 214,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/furniturestore/view/dlgfurstoreqj.py",
+   "entry": 4624,
+   "status": "pycdc_ok",
+   "lines": 192,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/gameloginqueue/netloginqueue.py",
+   "entry": 1436,
+   "status": "pycdc_ok",
+   "lines": 70,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/gameshare/delegate/dgtgamesharetitle.py",
+   "entry": 4031,
+   "status": "pycdc_ok",
+   "lines": 275,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/gameshare/view/dlggameshareitem.py",
+   "entry": 2321,
+   "status": "pycdc_ok",
+   "lines": 292,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/gongji/mdgongji.py",
+   "entry": 3260,
+   "status": "pycdc_ok",
+   "lines": 250,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/goodvoice/delegate/dgtgoodvoice_main.py",
+   "entry": 326,
+   "status": "pycdc_ok",
+   "lines": 431,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/goodvoice/test_goodvoice.py",
+   "entry": 2795,
+   "status": "pycdc_ok",
+   "lines": 367,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/group/dlgchangeintro.py",
+   "entry": 3553,
+   "status": "pycdc_ok",
+   "lines": 69,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/group/dlggrouplearnxinfa.py",
+   "entry": 1646,
+   "status": "pycdc_ok",
+   "lines": 221,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/group/dlggroupmanage.py",
+   "entry": 3286,
+   "status": "pycdc_ok",
+   "lines": 249,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/group/dlggroupmoney.py",
+   "entry": 3831,
+   "status": "pycdc_ok",
+   "lines": 141,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/group/dlggroupsetprice.py",
+   "entry": 2588,
+   "status": "pycdc_ok",
+   "lines": 73,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/group/model/mdgroupapply.py",
+   "entry": 3449,
+   "status": "pycdc_ok",
+   "lines": 193,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/group/model/mdgroupcreate.py",
+   "entry": 1592,
+   "status": "pycdc_ok",
+   "lines": 64,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/group/model/mdgroupskillstudy.py",
+   "entry": 2299,
+   "status": "pycdc_ok",
+   "lines": 83,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/guide/dlgguidetips.py",
+   "entry": 2162,
+   "status": "pycdc_ok",
+   "lines": 411,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/imtools/dlgimnewgame.py",
+   "entry": 294,
+   "status": "pycdc_ok",
+   "lines": 99,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/inner/newgmcommanddata.py",
+   "entry": 2305,
+   "status": "pycdc_incomplete",
+   "lines": 9,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/innerprofile/uiprofilemgr.py",
+   "entry": 4498,
+   "status": "pycdc_ok",
+   "lines": 141,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/item/itemdefine.py",
+   "entry": 1766,
+   "status": "pycdc_ok",
+   "lines": 666,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/item/model/mditemguide.py",
+   "entry": 1297,
+   "status": "pycdc_incomplete",
+   "lines": 72,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/lottery/dlg2019newyearlottery.py",
+   "entry": 4688,
+   "status": "pycdc_ok",
+   "lines": 594,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/mail/model/mdmail.py",
+   "entry": 1523,
+   "status": "pycdc_ok",
+   "lines": 160,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/makeequip/builddefine.py",
+   "entry": 4648,
+   "status": "pycdc_ok",
+   "lines": 640,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/makeequip/delegate/delegateeightdiagrams/dgtremovegas.py",
+   "entry": 1045,
+   "status": "pycdc_ok",
+   "lines": 150,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/makeequip/delegate/delegaterebuild/dgtequipsmelting.py",
+   "entry": 3521,
+   "status": "pycdc_ok",
+   "lines": 230,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/makeequip/delegate/dgtconvenientpurchase.py",
+   "entry": 1068,
+   "status": "pycdc_ok",
+   "lines": 271,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/makeequip/delegate/dgteightdiagrams.py",
+   "entry": 3492,
+   "status": "pycdc_ok",
+   "lines": 226,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/makeequip/delegate/dgttransformattr.py",
+   "entry": 2720,
+   "status": "pycdc_ok",
+   "lines": 338,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/makeequip/model/mdbuild/mdbuildequipment.py",
+   "entry": 1335,
+   "status": "pycdc_ok",
+   "lines": 205,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/makeequip/view/viewbuild/buildequipmentlist.py",
+   "entry": 1841,
+   "status": "pycdc_ok",
+   "lines": 988,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/makeequip/view/viewdianhua/dlgdianhua.py",
+   "entry": 69,
+   "status": "pycdc_ok",
+   "lines": 132,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/makeequip/view/viewrebuild/dlgequipidentify.py",
+   "entry": 2177,
+   "status": "pycdc_ok",
+   "lines": 232,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/makeequip/view/widget/ownequiplistwidget.py",
+   "entry": 2728,
+   "status": "pycdc_ok",
+   "lines": 95,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/map/mapani.py",
+   "entry": 3102,
+   "status": "pycdc_ok",
+   "lines": 690,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/map/mapeffectmanager.py",
+   "entry": 2420,
+   "status": "pycdc_ok",
+   "lines": 130,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/map/maptools.py",
+   "entry": 2717,
+   "status": "pycdc_incomplete",
+   "lines": 26,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/myqnew/logicphotomgr.py",
+   "entry": 250,
+   "status": "pycdc_ok",
+   "lines": 59,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/myqnew/model/mdmyqmsglist.py",
+   "entry": 25,
+   "status": "pycdc_ok",
+   "lines": 255,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/myqnew/view/dlgmyqfilter.py",
+   "entry": 1681,
+   "status": "pycdc_ok",
+   "lines": 90,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/myqnew/view/myqitem.py",
+   "entry": 414,
+   "status": "pycdc_ok",
+   "lines": 1550,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/nethuodong/activity/nethdcarnivalplay.py",
+   "entry": 1648,
+   "status": "pycdc_ok",
+   "lines": 92,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/nethuodong/activity/nethddafuweng2v2.py",
+   "entry": 3417,
+   "status": "pycdc_ok",
+   "lines": 58,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/nethuodong/activity/nethdgetgift.py",
+   "entry": 1993,
+   "status": "pycdc_ok",
+   "lines": 48,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/nethuodong/activity/nethdrecruit.py",
+   "entry": 3863,
+   "status": "pycdc_ok",
+   "lines": 217,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/newchatshortcut/dlgchatshortcut_refer.py",
+   "entry": 4618,
+   "status": "pycdc_ok",
+   "lines": 98,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/newchild/dlgnewchildborn.py",
+   "entry": 2613,
+   "status": "pycdc_ok",
+   "lines": 664,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/newchild/view/dlgnewchildtrain.py",
+   "entry": 662,
+   "status": "pycdc_ok",
+   "lines": 260,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/newgive/newgiveinterface.py",
+   "entry": 3473,
+   "status": "pycdc_ok",
+   "lines": 171,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/newgroup/delegate/delegateapply/delegategrouprecommendfriend.py",
+   "entry": 3896,
+   "status": "pycdc_ok",
+   "lines": 61,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/newgroup/delegate/delegategroupmaindlg.py",
+   "entry": 1077,
+   "status": "pycdc_ok",
+   "lines": 76,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/newgroup/delegate/delegatemanage/delegategroupskillresearch.py",
+   "entry": 112,
+   "status": "pycdc_ok",
+   "lines": 113,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/newgroup/model/groupcashview.py",
+   "entry": 1171,
+   "status": "pycdc_ok",
+   "lines": 63,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/newgroup/model/mdgroupleaderupgrade.py",
+   "entry": 1349,
+   "status": "pycdc_ok",
+   "lines": 49,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/newgroup/view/dlggroupnotice.py",
+   "entry": 2180,
+   "status": "pycdc_ok",
+   "lines": 45,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/newgroup/view/dlgnogroupapply.py",
+   "entry": 226,
+   "status": "pycdc_ok",
+   "lines": 272,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/newgroup/view/pageapply/pagegroupapply.py",
+   "entry": 2062,
+   "status": "pycdc_ok",
+   "lines": 418,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/newgroup/view/pagemanage/dlggroupmanagenew.py",
+   "entry": 924,
+   "status": "pycdc_ok",
+   "lines": 141,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/newgroup/view/pagemanage/groupauthoritymanageview.py",
+   "entry": 3650,
+   "status": "pycdc_ok",
+   "lines": 260,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/newgroup/view/pagemanage/groupskillresearchview.py",
+   "entry": 458,
+   "status": "pycdc_ok",
+   "lines": 193,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/newgroup/view/pagewelfare/groupwelfarewagesview.py",
+   "entry": 4616,
+   "status": "pycdc_ok",
+   "lines": 162,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/newgroup/view/pagewelfare/pagegroupwelfare.py",
+   "entry": 4308,
+   "status": "pycdc_ok",
+   "lines": 98,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/newguide/dlgnewplayerguide.py",
+   "entry": 4555,
+   "status": "pycdc_ok",
+   "lines": 375,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/newguide/subdailog/dlgcollectequip.py",
+   "entry": 3641,
+   "status": "pycdc_ok",
+   "lines": 277,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/newserverreward/dlgnewserverreward.py",
+   "entry": 3432,
+   "status": "pycdc_ok",
+   "lines": 98,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/newsound/newmusicplaymgr.py",
+   "entry": 4327,
+   "status": "pycdc_ok",
+   "lines": 217,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/ornament/netornament.py",
+   "entry": 1709,
+   "status": "pycdc_ok",
+   "lines": 83,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/pay/view/dlgpayalipay.py",
+   "entry": 525,
+   "status": "pycdc_ok",
+   "lines": 97,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/pay/view/dlgpaypointchoose.py",
+   "entry": 2141,
+   "status": "pycdc_ok",
+   "lines": 350,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/pay/view/dlgpaywechat.py",
+   "entry": 2247,
+   "status": "pycdc_ok",
+   "lines": 85,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/pet/dlggraphupgrade.py",
+   "entry": 4858,
+   "status": "pycdc_ok",
+   "lines": 220,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/pet/lianyao/color/dlgpetcolor.py",
+   "entry": 4163,
+   "status": "pycdc_ok",
+   "lines": 601,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/pet/lianyao/talent/mdsummontalent.py",
+   "entry": 3347,
+   "status": "pycdc_ok",
+   "lines": 55,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/popup/popupdefine.py",
+   "entry": 3077,
+   "status": "pycdc_ok",
+   "lines": 725,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/prettynum/prettynumrefreshlogic.py",
+   "entry": 4118,
+   "status": "pycdc_ok",
+   "lines": 202,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/racinggift/view/dlgnewserverrace.py",
+   "entry": 4774,
+   "status": "pycdc_ok",
+   "lines": 292,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/recordiconfunc/previewhorse/dlgpreviewhorse.py",
+   "entry": 4909,
+   "status": "pycdc_ok",
+   "lines": 149,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/return/netreturnreward.py",
+   "entry": 2077,
+   "status": "pycdc_ok",
+   "lines": 208,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/return/showlogic_return/showlogic_dlgreturnmain.py",
+   "entry": 679,
+   "status": "pycdc_ok",
+   "lines": 45,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/return2020/dlg2020returnhelp.py",
+   "entry": 421,
+   "status": "pycdc_ok",
+   "lines": 223,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/return2020/md2020return.py",
+   "entry": 3883,
+   "status": "pycdc_ok",
+   "lines": 296,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/returncollectcards/dlgreturncollectcards.py",
+   "entry": 3808,
+   "status": "pycdc_ok",
+   "lines": 447,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/returncollectcards/mdreturncollectcards.py",
+   "entry": 3128,
+   "status": "pycdc_ok",
+   "lines": 155,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/serverbattle/delegate/allstart/dgtallstardrug.py",
+   "entry": 1016,
+   "status": "pycdc_ok",
+   "lines": 77,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/serverbattle/delegate/allstart/dgtallstarmathtablemain.py",
+   "entry": 1433,
+   "status": "pycdc_ok",
+   "lines": 78,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/serverbattle/serverbattleinterface.py",
+   "entry": 1775,
+   "status": "pycdc_incomplete",
+   "lines": 16,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/serverbattle/testtianxuan.py",
+   "entry": 2727,
+   "status": "pycdc_ok",
+   "lines": 2211,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/serverbattle/view/allstart/dlgsbteamlist.py",
+   "entry": 2789,
+   "status": "pycdc_ok",
+   "lines": 104,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/serverbattle/view/dlgteaminvitefrd.py",
+   "entry": 3995,
+   "status": "pycdc_ok",
+   "lines": 83,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/sevendaytarget/dlgsevendaypreview.py",
+   "entry": 394,
+   "status": "pycdc_ok",
+   "lines": 107,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/shitu/delegate/dgtshitu1.py",
+   "entry": 4475,
+   "status": "pycdc_ok",
+   "lines": 1158,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/shitu/delegate/dgtstshouyetudi.py",
+   "entry": 4613,
+   "status": "pycdc_ok",
+   "lines": 125,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/shitu/shitutest.py",
+   "entry": 106,
+   "status": "pycdc_ok",
+   "lines": 700,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/shitu/view/dlgstshouyetudi.py",
+   "entry": 2415,
+   "status": "pycdc_ok",
+   "lines": 186,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/sibling/delegate/dgtsiblingchat.py",
+   "entry": 1086,
+   "status": "pycdc_ok",
+   "lines": 78,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/skill/mdheroadditionalskill.py",
+   "entry": 1756,
+   "status": "pycdc_ok",
+   "lines": 51,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/skill/mdskillutilizationrate.py",
+   "entry": 314,
+   "status": "pycdc_ok",
+   "lines": 54,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/skill/netskill.py",
+   "entry": 2236,
+   "status": "pycdc_ok",
+   "lines": 210,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/summerreturn/view/dlgsummerreturnpreview.py",
+   "entry": 57,
+   "status": "pycdc_ok",
+   "lines": 53,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/systemhongbao/dlgsystemhongbaodetail.py",
+   "entry": 2959,
+   "status": "pycdc_ok",
+   "lines": 298,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/tasktrace/model/mdhuodongtrace.py",
+   "entry": 817,
+   "status": "pycdc_ok",
+   "lines": 218,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/tasktrace/view/tasktraceitem.py",
+   "entry": 1569,
+   "status": "pycdc_ok",
+   "lines": 695,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/team/dlgapplyteam.py",
+   "entry": 3817,
+   "status": "pycdc_ok",
+   "lines": 636,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/team/teamrecruit/dgtapplicationlist.py",
+   "entry": 2009,
+   "status": "pycdc_ok",
+   "lines": 86,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/team/teamrecruit/dlgrecruitpublish.py",
+   "entry": 4955,
+   "status": "pycdc_ok",
+   "lines": 374,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/team/teamrecruit/netteamrecruit.py",
+   "entry": 2889,
+   "status": "pycdc_ok",
+   "lines": 656,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/team/teamrecruit/teamrecruitdefine.py",
+   "entry": 2935,
+   "status": "pycdc_ok",
+   "lines": 12,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/tianji/model/mdtianjicompete.py",
+   "entry": 160,
+   "status": "pycdc_ok",
+   "lines": 66,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/tianmo/delegate/dgttianmohpbtn.py",
+   "entry": 3810,
+   "status": "pycdc_ok",
+   "lines": 44,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/tradecenter/tradecenterwidget.py",
+   "entry": 4539,
+   "status": "pycdc_ok",
+   "lines": 355,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/tradeguild/tradeguildmgr.py",
+   "entry": 4276,
+   "status": "pycdc_ok",
+   "lines": 561,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/warprepare/delegate/dgtchoosesameposequip.py",
+   "entry": 2600,
+   "status": "pycdc_ok",
+   "lines": 63,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/warprepare/view/dlgonekeyfumosummon.py",
+   "entry": 3361,
+   "status": "pycdc_ok",
+   "lines": 325,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/warprepare/view/dlgwarprepareshare.py",
+   "entry": 1974,
+   "status": "pycdc_ok",
+   "lines": 257,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/warprepare/view/dlgwarprepareswitchequip.py",
+   "entry": 828,
+   "status": "pycdc_ok",
+   "lines": 483,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/warui/dlgwarmagic.py",
+   "entry": 1195,
+   "status": "pycdc_ok",
+   "lines": 453,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/worldhongbao/dlgworldhongbao.py",
+   "entry": 4198,
+   "status": "pycdc_ok",
+   "lines": 323,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/worldhongbao/hongbaospecialtips.py",
+   "entry": 582,
+   "status": "pycdc_ok",
+   "lines": 98,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/xmxpintu/dlgxmxpintu.py",
+   "entry": 61,
+   "status": "pycdc_ok",
+   "lines": 340,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/yearvoice/view/dlgyearvoice_apply.py",
+   "entry": 158,
+   "status": "pycdc_ok",
+   "lines": 250,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxgame/yearvoice/view/dlgyearvoicesingeritem.py",
+   "entry": 4107,
+   "status": "pycdc_ok",
+   "lines": 227,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxgame/yearvoice/yearvoicereportctrl.py",
+   "entry": 1638,
+   "status": "pycdc_ok",
+   "lines": 73,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxui/cefwidget.py",
+   "entry": 3435,
+   "status": "pycdc_ok",
+   "lines": 162,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxui/component/showrolecomponent/selectrolecolor.py",
+   "entry": 3289,
+   "status": "pycdc_ok",
+   "lines": 157,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxui/itboxwidget.py",
+   "entry": 3256,
+   "status": "pycdc_ok",
+   "lines": 389,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxui/scrollwidget.py",
+   "entry": 3407,
+   "status": "pycdc_ok",
+   "lines": 439,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/mxui/sliderwidget.py",
+   "entry": 1828,
+   "status": "pycdc_ok",
+   "lines": 357,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/mxui/tablewidget.py",
+   "entry": 4507,
+   "status": "pycdc_ok",
+   "lines": 1008,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/netfriend.py",
+   "entry": 4238,
+   "status": "pycdc_ok",
+   "lines": 1303,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/netmail.py",
+   "entry": 2725,
+   "status": "pycdc_ok",
+   "lines": 384,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/netmazesuit.py",
+   "entry": 4175,
+   "status": "pycdc_ok",
+   "lines": 212,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/netwar.py",
+   "entry": 1406,
+   "status": "pycdc_ok",
+   "lines": 1086,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/numbereffect.py",
+   "entry": 3042,
+   "status": "pycdc_ok",
+   "lines": 94,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/param.py",
+   "entry": 1904,
+   "status": "pycdc_ok",
+   "lines": 1525,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/preloadres/preload_emote.py",
+   "entry": 4775,
+   "status": "pycdc_ok",
+   "lines": 105,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/protocol/c2sweituonew.py",
+   "entry": 2785,
+   "status": "pycdc_ok",
+   "lines": 584,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/protocol/cs2021newserveractivity.py",
+   "entry": 792,
+   "status": "pycdc_ok",
+   "lines": 44,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/protocol/cs2021summerlottery.py",
+   "entry": 4552,
+   "status": "pycdc_ok",
+   "lines": 89,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/protocol/csladderrankallstar.py",
+   "entry": 2865,
+   "status": "pycdc_ok",
+   "lines": 427,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/protocol/csmxkitchen.py",
+   "entry": 970,
+   "status": "pycdc_ok",
+   "lines": 152,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/protocol/cspintusecret.py",
+   "entry": 2347,
+   "status": "pycdc_ok",
+   "lines": 79,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/protocol/csracing.py",
+   "entry": 3114,
+   "status": "pycdc_ok",
+   "lines": 409,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/protocol/csyearvoice.py",
+   "entry": 2454,
+   "status": "pycdc_ok",
+   "lines": 457,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/protocol/openui/csyanzhiguan.py",
+   "entry": 2749,
+   "status": "pycdc_ok",
+   "lines": 520,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/pub2/pubtextcheck/pubtexttools.py",
+   "entry": 271,
+   "status": "pycdc_ok",
+   "lines": 213,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/pubscript/pubgetzminfo.py",
+   "entry": 3028,
+   "status": "pycdc_ok",
+   "lines": 107,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/pubscript/pubguard/hookdetect.py",
+   "entry": 1915,
+   "status": "pycdc_ok",
+   "lines": 77,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/pubscript/pubguard/memoryguard.py",
+   "entry": 1149,
+   "status": "pycdc_ok",
+   "lines": 67,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/pubscript/pubguard/scanprocessinterface.py",
+   "entry": 2064,
+   "status": "pycdc_ok",
+   "lines": 98,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/pubscript/pubregister/pubXMLTree.py",
+   "entry": 1029,
+   "status": "pycdc_ok",
+   "lines": 150,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/pubscript/pubregister/pubactfunction.py",
+   "entry": 4960,
+   "status": "pycdc_ok",
+   "lines": 510,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/pubscript/pubregister/pubphoneareanum.py",
+   "entry": 1176,
+   "status": "pycdc_incomplete",
+   "lines": 248,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/pubscript/pubregister/pubregister.py",
+   "entry": 2867,
+   "status": "pycdc_ok",
+   "lines": 248,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/pubscript/pubregister/pubxmlanalyser.py",
+   "entry": 573,
+   "status": "pycdc_ok",
+   "lines": 219,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/pubscript/pubskill/e_configspr.py",
+   "entry": 2516,
+   "status": "pycdc_ok",
+   "lines": 153,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/pyb2/pubbigdata/pubbigdax_value.py",
+   "entry": 3122,
+   "status": "pycdc_ok",
+   "lines": 10,
+   "escaped_bytes": false,
+   "uncompyle6": "full",
+   "py25": "raw"
+  },
+  {
+   "path": "script/rankmgr.py",
+   "entry": 2662,
+   "status": "pycdc_ok",
+   "lines": 137,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/reddotsys/dlgreddot.py",
+   "entry": 1659,
+   "status": "pycdc_ok",
+   "lines": 109,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/refreshmultihorsepos.py",
+   "entry": 3494,
+   "status": "pycdc_ok",
+   "lines": 60,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/reimport.py",
+   "entry": 1740,
+   "status": "pycdc_ok",
+   "lines": 167,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/render/render/renderbitmap.py",
+   "entry": 3889,
+   "status": "pycdc_ok",
+   "lines": 258,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/render/render/rendertask.py",
+   "entry": 796,
+   "status": "pycdc_ok",
+   "lines": 139,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/render/render/rendertest.py",
+   "entry": 1545,
+   "status": "pycdc_ok",
+   "lines": 89,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/sound.py",
+   "entry": 4652,
+   "status": "pycdc_ok",
+   "lines": 1018,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/taiwan/friend_fix.py",
+   "entry": 3009,
+   "status": "pycdc_ok",
+   "lines": 45,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/taiwan/group_fix.py",
+   "entry": 1803,
+   "status": "pycdc_ok",
+   "lines": 71,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/timecontrol.py",
+   "entry": 2747,
+   "status": "pycdc_ok",
+   "lines": 66,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/touchgame.py",
+   "entry": 4207,
+   "status": "pycdc_ok",
+   "lines": 373,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/usermacro.py",
+   "entry": 1539,
+   "status": "pycdc_ok",
+   "lines": 751,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/weibo.py",
+   "entry": 1864,
+   "status": "pycdc_ok",
+   "lines": 91,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/wrap/copylinkobj.py",
+   "entry": 4597,
+   "status": "pycdc_ok",
+   "lines": 125,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/wrap/wrapmath.py",
+   "entry": 3020,
+   "status": "pycdc_ok",
+   "lines": 537,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/wrap/wraprichtext.py",
+   "entry": 3118,
+   "status": "pycdc_ok",
+   "lines": 137,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/wrap/wrapuserlinklogic.py",
+   "entry": 1774,
+   "status": "pycdc_ok",
+   "lines": 72,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/yard/collectshow/view/dlghorseexhibition.py",
+   "entry": 110,
+   "status": "pycdc_ok",
+   "lines": 134,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/yard/dlgbuyhouse_new.py",
+   "entry": 2590,
+   "status": "pycdc_ok",
+   "lines": 160,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/yard/luckyfish/view/dlgfudaishareitem.py",
+   "entry": 4611,
+   "status": "pycdc_ok",
+   "lines": 81,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/yard/netyard_others.py",
+   "entry": 4941,
+   "status": "pycdc_ok",
+   "lines": 34,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/yard/yarddata/yardgridzoomlimitlogic.py",
+   "entry": 774,
+   "status": "pycdc_ok",
+   "lines": 120,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/yard/yarddata/yarduploaddatalogic.py",
+   "entry": 3303,
+   "status": "pycdc_ok",
+   "lines": 163,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/yard/yardedit/yardeditdelegate/delegateyardbrushfurniture.py",
+   "entry": 3351,
+   "status": "pycdc_ok",
+   "lines": 521,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/yard/yardedit/yardeditdelegate/delegateyardbrushhouse.py",
+   "entry": 4377,
+   "status": "pycdc_ok",
+   "lines": 155,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/yard/yardedit/yardeditmap/cmp_rendernide.py",
+   "entry": 1009,
+   "status": "pycdc_ok",
+   "lines": 150,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/yard/yardedit/yardeditmap/yardeditblockview.py",
+   "entry": 4936,
+   "status": "pycdc_ok",
+   "lines": 91,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/yard/yardedit/yardeditui/dlgyardanchoreditor.py",
+   "entry": 2639,
+   "status": "pycdc_ok",
+   "lines": 420,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/yard/yardedit/yardeditui/yardbrushlogic.py",
+   "entry": 2148,
+   "status": "pycdc_ok",
+   "lines": 437,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/yard/yardedit/yardeditui/yardbrushshape.py",
+   "entry": 168,
+   "status": "pycdc_ok",
+   "lines": 247,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/yard/yardedit/yardeditui/yardeditviewbrush_land.py",
+   "entry": 4196,
+   "status": "pycdc_ok",
+   "lines": 76,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/yard/yardedit/yardeditui/yardeditviewbrush_nide.py",
+   "entry": 2850,
+   "status": "pycdc_ok",
+   "lines": 101,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/yard/yardmap/delegate/delegateyardminimap.py",
+   "entry": 4950,
+   "status": "pycdc_ok",
+   "lines": 181,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/yard/yardmap/delegate/delegateyardminimapfurniture.py",
+   "entry": 899,
+   "status": "pycdc_ok",
+   "lines": 295,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/yard/yardmap/mainui/yardfurlistdlg.py",
+   "entry": 2687,
+   "status": "pycdc_ok",
+   "lines": 90,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/yard/yardmap/view/yardextraeff.py",
+   "entry": 1536,
+   "status": "pycdc_ok",
+   "lines": 167,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/yard/yardmap/view/yardmapanimal.py",
+   "entry": 2704,
+   "status": "pycdc_ok",
+   "lines": 552,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/yard/yardplayerhome/delegate/delegateyardhome_info.py",
+   "entry": 1522,
+   "status": "pycdc_ok",
+   "lines": 183,
+   "escaped_bytes": true,
+   "uncompyle6": "stub",
+   "py25": "no"
+  },
+  {
+   "path": "script/yard/yardplayerhome/delegate/logicshow_dgtyardhomeself.py",
+   "entry": 3940,
+   "status": "pycdc_ok",
+   "lines": 58,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  },
+  {
+   "path": "script/yard/yardplayerhome/yardhomecontext_new.py",
+   "entry": 4852,
+   "status": "pycdc_ok",
+   "lines": 128,
+   "escaped_bytes": false,
+   "uncompyle6": "stub",
+   "py25": "raw"
+  }
+ ]
+}

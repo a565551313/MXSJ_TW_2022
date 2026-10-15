@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import io
 import json
 import multiprocessing as mp
@@ -884,10 +885,122 @@ def decode_big5_literals(src: str) -> str:
     return "# -*- coding: utf-8 -*-\n" + out
 
 
+PYCDC_ENV = "MXSJ_PYCDC"
+PYCDC_LEGACY_DEFAULT = Path("/usr/local/bin/pycdc")
+DECOMPILE_FAIL_MARK = "Decompilation failed"
+
+
+def _sha256_of(path):
+    h = hashlib.sha256()
+    with Path(path).open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def resolve_pycdc_bin(explicit=None):
+    """Locate the pycdc executable; ``None`` when it is unavailable.
+
+    优先级：显式参数 -> ``$MXSJ_PYCDC`` -> ``/usr/local/bin/pycdc``（历史硬编码位置，
+    保留以兼容既有环境）-> ``PATH``。以前只认那个硬编码路径、且只用 ``os.path.exists()``
+    判一下，所以自建 pycdc 装在别处时 ``--engine auto`` 会**静默地**不使用第二引擎——
+    看起来像「pycdc 解不动」，其实它从未被调用过。
+    """
+    from shutil import which
+
+    candidates = []
+    if explicit:
+        candidates.append(Path(explicit))
+    env = os.environ.get(PYCDC_ENV)
+    if env:
+        candidates.append(Path(env))
+    candidates.append(PYCDC_LEGACY_DEFAULT)
+    found = which("pycdc")
+    if found:
+        candidates.append(Path(found))
+    for cand in candidates:
+        if cand.exists() and os.access(cand, os.X_OK):
+            return cand
+    return None
+
+
+def probe_engines(engine):
+    """Report which engines the *running interpreter* can actually use.
+
+    ``uncompyle6`` 是被 ``import`` 进来的，因此取决于跑本脚本的是哪个解释器：用系统
+    ``python3`` 而不是装好引擎的 venv 时，全部条目都会退化成 52 字节失败占位，而退出码
+    仍然是 0——事后从产物目录完全看不出那是环境问题。这里把它显式化。
+    """
+    from importlib.util import find_spec
+
+    try:
+        have_u6 = find_spec("uncompyle6") is not None
+    except (ImportError, ValueError):
+        have_u6 = False
+    pycdc = resolve_pycdc_bin()
+    return {
+        "requested": engine,
+        "uncompyle6_installed": bool(have_u6),
+        "uncompyle6_used": bool(have_u6) and engine in ("auto", "uncompyle6"),
+        "pycdc": str(pycdc) if pycdc else None,
+        "interpreter": sys.executable,
+    }
+
+
+def missing_engine_hint():
+    """给一句能照着做完的话（缺引擎时的失败信息）。"""
+    return "\n".join([
+        f"当前解释器 {sys.executable} 里没有 uncompyle6。",
+        "这样跑完所有条目只会写出 52 字节失败占位，",
+        "而退出码仍是 0（历史上骗过不少人）。",
+        "请用装好引擎的解释器重跑，例如：",
+        "  python3 -m venv /home/user/dec-venv",
+        "  /home/user/dec-venv/bin/pip install uncompyle6==3.9.3",
+        "  /home/user/dec-venv/bin/python tools/decompiler/batch_decompile.py ...",
+        "只要标准 .pyc、不要反编译源码：",
+        "加 --allow-missing-engine（或 --engine pycdc）。",
+    ])
+
+
+def preflight(engine, output, input_path, pycdc=None, allow_missing_engine=False):
+    """Fail loudly before burning a whole run on a broken environment.
+
+    两件事：(1) 产物目录不能落在 ``data/`` 或仓库根（AGENTS 4 第 1 条红线）；
+    (2) 解释器缺 uncompyle6 时默认拒绝开跑（仍有 pycdc 可用时降级为警告）。
+    """
+    out_dir = Path(output).resolve()
+    repo_root = Path(__file__).resolve().parents[2]
+    if out_dir == repo_root / "data" or repo_root / "data" in out_dir.parents:
+        raise SystemExit(f"拒绝把产物写进原包目录: {out_dir}")
+    if out_dir == repo_root:
+        raise SystemExit(f"拒绝把产物写进仓库根目录: {out_dir}")
+    if pycdc:
+        if not Path(pycdc).exists():
+            raise SystemExit(f"--pycdc 指向的档案不存在: {pycdc}")
+        os.environ[PYCDC_ENV] = str(Path(pycdc).resolve())
+    engines = probe_engines(engine)
+    if engine == "pycdc" and not engines["pycdc"]:
+        # 选了这个引擎却没有它，跑完只会得到失败占位——同一种静默失效，一并拒绝。
+        if not allow_missing_engine:
+            raise SystemExit(
+                f"--engine pycdc 但找不到可用的 pycdc。用 --pycdc <路径> 指定，"
+                f"或设 ${PYCDC_ENV}；自建方法见 docs/DECOMPILE_CORPUS.md §3.2。"
+            )
+    # --engine pycdc 不需要 uncompyle6，别为它报警
+    if engine != "pycdc" and not engines["uncompyle6_used"]:
+        if engine == "uncompyle6" or not engines["pycdc"]:
+            if not allow_missing_engine:
+                raise SystemExit(missing_engine_hint())
+        elif not allow_missing_engine:
+            print("[warn] " + missing_engine_hint())
+    return engines
+
+
 def decompile_pyc_bytes(
     pyc_data: bytes,
     engine: str = "auto",
     decode_big5: bool = True,
+    pycdc_bin_override=None,
 ) -> tuple[bool, str, str]:
     """
     Decompiles standard Python 2.5 / 2.7 `.pyc` bytes to Python source code.
@@ -916,8 +1029,9 @@ def decompile_pyc_bytes(
                     return False, "uncompyle6", f"# uncompyle6 failed: {e_u6}\n"
 
         if engine in ("auto", "pycdc"):
-            pycdc_bin = "/usr/local/bin/pycdc"
-            if os.path.exists(pycdc_bin):
+            pycdc_resolved = resolve_pycdc_bin(pycdc_bin_override)
+            pycdc_bin = str(pycdc_resolved) if pycdc_resolved else None
+            if pycdc_bin:
                 proc = subprocess.run(
                     [pycdc_bin, tmp_path],
                     capture_output=True,
@@ -1445,6 +1559,24 @@ def _transpile_with_repair(
     return None
 
 
+def _transpile_failure_marker(idx, entry_id, exc):
+    """转译失败条目的明示标记正文（写到 ``script/failed/`` 下）。
+
+    与 52 字节反编译占位区分开：那种是「pyc 拿到了、源码没解出来」，这种是「pyc
+    都没拿到」，处置也不同（后者要跑修复梯）。
+    """
+    body = [
+        "# -*- coding: utf-8 -*-",
+        f"# TRANSMAP FAILED entry={idx} id={entry_id:08x}",
+        f"# reason: {type(exc).__name__}: {exc}",
+        "# 这不是「pyc 已解出、源码没成」那种失败占位：这里连 pyc 都没拿到，",
+        "# 所以别按占位数统计它。处置是跑修复梯：",
+        "# 带修复梯的入口：recover_entries.py --entries",
+        f"#   tools/decompiler/recover_entries.py --out <仓库外目录> --entries {idx}",
+    ]
+    return "\n".join(body) + "\n"
+
+
 def _worker_script_fls(
     task: tuple[int, int, bytes, list[int], list[int], str, str | None, str, bool]
 ) -> dict[str, Any]:
@@ -1469,9 +1601,19 @@ def _worker_script_fls(
         return {"idx": idx, "path": str(out_py), "rel": rel_path, "ok": ok,
                 "engine": used_eng, "repaired": repaired}
     except Exception as exc:
+        # 以前这里只返回一条记录、不落任何文件，于是「转译失败」的条目在全量产物里
+        # 静默消失，事后无法从目录区分「没跑到」和「这条解不动」。现在写一个明示标记；
+        # 它落在 script/failed/ 下，不与任何真实模块路径同名 => 不会覆盖已有产物。
         rel_path = f"script/failed/entry_{idx:04d}_{entry_id:08x}.py"
+        try:
+            marker_path = Path(out_dir) / rel_path
+            marker_path.parent.mkdir(parents=True, exist_ok=True)
+            marker_path.write_text(_transpile_failure_marker(idx, entry_id, exc),
+                                   encoding="utf-8")
+        except OSError as exc_mk:
+            exc = f"{exc}; marker write failed: {exc_mk}"
         return {"idx": idx, "path": rel_path, "rel": rel_path, "ok": False,
-                "engine": "marshal_err", "error": str(exc)}
+                "engine": "marshal_err", "error": str(exc), "transpile_fail": True}
 
 
 def process_data_fls(
@@ -1535,6 +1677,7 @@ def process_script_fls(
     entry_filter: str | None,
     limit: int | None,
     workers: int,
+    report: Path | None = None,
 ) -> dict[str, Any]:
     """Processes `data/script.fls` (5,002 Python 2.5 modules)."""
     keys_file = Path(__file__).resolve().parent / "script_fls_keys.json"
@@ -1595,9 +1738,47 @@ def process_script_fls(
 
     ok_cnt = sum(1 for r in results if r["ok"])
     fixed_cnt = sum(1 for r in results if r.get("repaired"))
-    print(f"[script.fls] Transpiled & decompiled {ok_cnt}/{len(results)} modules in {time.time() - t0:.2f}s"
+    # failed = 拿到 pyc 但只得到失败占位；
+    # missing = 连转译都没过（已在 script/failed/ 留标记）。
+    # 键名对齐下游：crosscheck_pycdc.py 取 --class failed、
+    # recover_entries.py 取 "missing"，于是不再需要先跑一次性脚本。
+    failed = sorted(r["idx"] for r in results
+                    if not r["ok"] and not r.get("transpile_fail"))
+    missing = sorted(r["idx"] for r in results if r.get("transpile_fail"))
+    engines = probe_engines(engine)
+    print(f"[script.fls] Transpiled & decompiled {ok_cnt}/{len(results)} modules in "
+          f"{time.time() - t0:.2f}s"
           + (f" (其中 {fixed_cnt} 条靠边界修复救回)" if fixed_cnt else ""))
-    return {"total": len(results), "ok": ok_cnt, "results": results}
+    u6 = "ok" if engines["uncompyle6_used"] else "缺失"
+    pd = engines["pycdc"] or "缺失"
+    print(f"[engines] uncompyle6={u6} pycdc={pd}（解释器 {engines['interpreter']}）")
+    if missing:
+        print(f"[warn] {len(missing)} 条连转译都没过，已在 script/failed/ 留明示标记："
+              f"{', '.join(str(i) for i in missing[:12])}")
+    if failed:
+        print(f"[warn] {len(failed)} 条只拿到失败占位，"
+              f"可用 crosscheck_pycdc.py --class failed 复核："
+              f"{', '.join(str(i) for i in failed[:12])}")
+    payload = {
+        "schema_version": 1,
+        "kind": "script_fls_accounting",
+        "generated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "inputs": {"archive": str(input_path), "sha256": _sha256_of(input_path)},
+        "engines": engines,
+        "total": len(results),
+        "counts": {"ok": ok_cnt, "failed": len(failed), "missing": len(missing),
+                   "repaired": fixed_cnt},
+        "failed": failed,
+        "missing": missing,
+        "repaired": sorted(r["idx"] for r in results if r.get("repaired")),
+    }
+    if report is not None:
+        report = Path(report)
+        report.parent.mkdir(parents=True, exist_ok=True)
+        report.write_text(json.dumps(payload, ensure_ascii=False, indent=1) + "\n",
+                          encoding="utf-8")
+        print(f"[report] 清点表已写入 {report}")
+    return {"total": len(results), "ok": ok_cnt, "results": results, "census": payload}
 
 
 def main() -> None:
@@ -1612,7 +1793,25 @@ def main() -> None:
     parser.add_argument("--entry", type=str, default=None, help="Filter by entry index (e.g. 516) or path substring (e.g. netserver)")
     parser.add_argument("--limit", type=int, default=None, help="Max entries to process (for script.fls)")
     parser.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 4)), help="Parallel worker processes")
+    parser.add_argument("--pycdc", default=None,
+                        help="pycdc 可执行文件路径；缺省依次看 "
+                             f"${PYCDC_ENV}、{PYCDC_LEGACY_DEFAULT}、PATH")
+    parser.add_argument("--report", type=Path, default=None,
+                        help="把清点结果写成 JSON（含 failed/missing 条目号），"
+                             "可直接喂 crosscheck_pycdc.py 与 recover_entries.py；"
+                             "仅 script.fls 输入")
+    parser.add_argument("--allow-missing-engine", action="store_true",
+                        help="允许在缺 uncompyle6 的解释器下继续跑"
+                             "（默认拒绝：那样只会得到 52 字节占位）")
     args = parser.parse_args()
+
+    preflight(args.engine, args.output, args.input, args.pycdc,
+              args.allow_missing_engine)
+    if args.report is not None and not (
+        args.input.is_file() and args.input.open("rb").read(4) == b"0SLF"
+    ):
+        print("[warn] --report 只对 script.fls 生效，本次输入不是它，已忽略")
+        args.report = None
 
     args.output.mkdir(parents=True, exist_ok=True)
     if args.emit_pyc:
@@ -1634,6 +1833,7 @@ def main() -> None:
             args.entry,
             args.limit,
             args.workers,
+            report=args.report,
         )
     else:
         process_data_fls(

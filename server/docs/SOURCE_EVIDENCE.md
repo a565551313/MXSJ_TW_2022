@@ -4,6 +4,7 @@
 
 - `data/data.fls`：现有 `tools/decompiler/output/data_fls/` 有121个 .py；其中lib62、pub2 29，以客户端基础框架为主。
 - `data/script.fls`：5002个条目；现有源码输出目录只有52个 .py，不能称为全量源码已还原。
+> **[勘误 2026-10-15]** 上面这句在「入库口径」下仍成立，但数字要更新：`tools/decompiler/output/script_fls/`> 现有 **61** 个 `.py`（新增 9 个由 `tools/decompiler/recover_entries.py` 从「解密成功但从未落盘」救回），> 并新增子树 `output/script_fls_pycdc/`（**499** 个第二引擎 pycdc 产物 + `manifest.json` + `README.md`，> 其中 236 档原样可过真 CPython 2.5.6 的 `compile()`）。全量语料（4,941/5,002 条可读源码 = 98.78%）> 按约定不入库，随网盘包 `MXSJ_script_fls_pycdc_recovered_20261015.zip`（Drive > `1B588Ib1AlxycyzEXU9W4jZxiVe5xNFbd`，MD5 `c566766dc3a2ea96415711ac19851bd0`）分发；> 两引擎加修复梯后仍零源码的 61 条清单见包内 `reports/residual_no_source.json`。
 - 历史全量目录：`work/dream-world-connect-login-map/notes/task-b-脚本分析/artifacts/fullrun/decode-results-final.jsonl`。
 - 历史状态：ok4484、suspect246、fail272；这是旧解码器结果，**不是本次全量重验**。
 - 当前 script.fls SHA-256：`8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72`。

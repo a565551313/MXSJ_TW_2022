@@ -1,0 +1,4895 @@
+# pycdc 交叉复核产物 · script.fls entry 1572
+# co_filename(原始)='script/data/gmcommanddata.py'
+# uncompyle6 状态=stub  转译阶段=baseline
+# 生成时间=2026-10-14T23:55:56Z
+# 输入 sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72
+# Source Generated with Decompyle++
+# File: entry_1572.pyc (Python 2.5)
+
+import chardefine
+import dlgroleview
+import interface
+import combdialog
+import npc
+import re
+import testbaseobj
+
+def GetData():
+    import newcommandmgr
+    import gmcollectdata
+    oData = newcommandmgr.GetReGularData()
+    DATA.update(oData)
+    DATA.update(gmcollectdata.GetGmData())
+    dTestData = testbaseobj.GetCommond()
+    if dTestData:
+        dTestData.update(DATA)
+        return dTestData
+    
+    return DATA
+
+
+def FindCommand(sText):
+    import usermacro
+    data = GetData()
+    oTempList = []
+    for sCommand, dValue in data.items():
+        sEffect = dValue.get('\xab\xfc\xa5O\xae\xc4\xaaG', None)
+        if sEffect is None:
+            usermacro.SYSTEM_MSG('\xab\xfc\xa5O\xaew\xa4\xe5\xa5\xf3\xb2\xa7\xb1`\xa1A\xbd\xd0\xc1\xd9\xad\xectrunk\xa5\xd8\xbf\xfd\xa4Unewgmcommanddata.py\xa4\xe5\xa5\xf3\xa1I')
+            return []
+        
+        if sText in sEffect or sText in sCommand:
+            if sCommand not in oTempList:
+                oTempList.append((sCommand, dValue))
+            
+        sCommand not in oTempList
+    
+    return oTempList
+
+
+def Function(sCommand):
+    import usermacro
+    for sKey, dValue in GetData().items():
+        index = sCommand.find(sKey)
+        if index == -1:
+            continue
+        
+        if len(sCommand) > len(sKey) and sCommand[len(sKey)] != ' ':
+            continue
+        
+        if not dValue.has_key('func'):
+            return False
+        
+        Func = dValue.get('func', None)
+        if not Func:
+            usermacro.PROMPT_MSG('\xbd\xd0\xa6bgmcommanddata\xbc\xd2\xb6\xf4\xb8\xcc\xbcg\xab\xfc\xa5O\xaa\xba\xb9\xea\xb2{\xa8\xe7\xbc\xc6')
+            return True
+        
+        if Func:
+            
+            try:
+                ArgList = re.split(' |,|\xa1A', sCommand[len(sKey):])
+                Func(*ArgList[1:])
+                return True
+            LOG_EXC()
+            usermacro.PROMPT_MSG('\xab\xfc\xa5O\xa8\xe7\xbc\xc6\xbf\xf9\xbb~\xbd\xd0\xc0\xcb\xacd\xa1A\xbd\xd0\xbdT\xabO\xbf\xe9\xa4J\xaa\xba\xab\xfc\xa5O\xbbP\xb0\xd1\xbc\xc6\xa4\xa7\xb6\xa1\xa5u\xa6\xb3\xa4@\xad\xd3\xaa\xc5\xae\xe6')
+            return True
+
+            continue
+        usermacro.PROMPT_MSG('\xa4\xe8\xaak\xaf\xca\xa5\xa2\xbd\xd0\xc0\xcb\xacd')
+        return True
+    
+    return False
+
+
+def Popen(sCmd):
+    import mxsubprocess
+    oP = mxsubprocess.Popen(sCmd, stdout = mxsubprocess.PIPE, shell = True)
+    (sOutput, sErr) = oP.communicate()
+    if sErr:
+        raise Exception(sErr)
+    
+    return sOutput
+
+
+def TestWalker(sState, iDir, iWing, iHorse):
+    iDir = int(iDir)
+    iWing = int(iWing)
+    iHorse = int(iHorse)
+    import testgamewalker
+    testgamewalker.TestWalker(sState, iDir, iWing, iHorse)
+
+
+def TestShootGame(iGameID = 2, bShowBox = 0):
+    import dlgshootgame
+    dlgshootgame.Test(int(iGameID), int(bShowBox))
+
+
+def TestMagicPal():
+    import delegateapperancemagic
+    import usermacro
+    delegateapperancemagic.TEST = not (delegateapperancemagic.TEST)
+    if delegateapperancemagic.TEST:
+        usermacro.PROMPT_MSG('\xa4w\xb6}\xa9\xf1\xa9\xd2\xa6\xb3\xb9w\xc4\xfd\xa5\\\xaf\xe0')
+    else:
+        usermacro.PROMPT_MSG('\xa4w\xc3\xf6\xb3\xac\xa9\xd2\xa6\xb3\xb9w\xc4\xfd\xa5\\\xaf\xe0')
+
+
+def OpenFuncTest(sType, iID = '1001'):
+    import functionmgr
+    iFuncID = int(iID)
+    if sType == 'open':
+        functionmgr.GetFuncMgr().ShowFuncOpen(iFuncID)
+    elif sType == 'pre':
+        functionmgr.GetFuncMgr().ShowFuncPreview(iFuncID)
+    
+
+
+def AutoCM(iTime = 120):
+    import game
+    import commoncb
+    if game.GetSpecialFlag() is None:
+        import netcommon
+        omd = __import__(__name__)
+        commoncb.RegistCB('gmcommand', omd, 'AutoCM')
+        netcommon.C2SAskSpecialPlayer()
+        return None
+    
+    if game.CheckCanUseNG():
+        import autocm
+        autocm.CM(int(iTime))
+    
+
+
+def AutoCMNew(iTime = 120):
+    import game
+    import commoncb
+    if game.GetSpecialFlag() is None:
+        import netcommon
+        omd = __import__(__name__)
+        commoncb.RegistCB('gmcommand', omd, 'AutoCMNew')
+        netcommon.C2SAskSpecialPlayer()
+        return None
+    
+    if game.CheckCanUseNG():
+        import autocm_new
+        autocm_new.SetTestAutoCM(True)
+        autocm_new.CheckCM()
+    
+
+
+def Autofuben(iLevel = 90, iTime = 2):
+    import game
+    import commoncb
+    iLevel = int(iLevel)
+    iTime = int(iTime)
+    if game.CheckCanUseNG():
+        import autofuben
+        autofuben.StartFB(iLevel, iTime)
+        return None
+    
+    if game.GetSpecialFlag() is None:
+        import netcommon
+        omd = __import__(__name__)
+        commoncb.RegistCB('gmcommand', omd, 'Autofuben', iLevel)
+        netcommon.C2SAskSpecialPlayer()
+        return None
+    
+
+
+class CGetMXCCName(object):
+    
+    def __init__(self):
+        import pubhttps_v2
+        pubhttps_v2.CPost('http://localhost:38700/GetOnLineList', [
+            'Content-Type: application/json;charset=UTF-8'], '', CGetMXCCName.OnCallBack)
+
+    
+    def OnCallBack(cls, dResult, bSuccess):
+        import pubmisc_v2
+        import json
+        import sys
+        import commondialog
+        if bSuccess:
+            sys.path.append('Tools\\Uplog')
+            import mxnamedata
+            dResult = json.read(dResult)
+            sName = pubmisc_v2.ConventToGBKString(pubmisc_v2.unquote(dResult['data'][0]['nick']))
+            iCC = int(dResult['data'][0]['hxNum'])
+            sMail = dResult['data'][0]['mail']
+            iPos = sName.find('-\xb9\xda\xb7Q-')
+            sMsg = None
+            if iPos:
+                sType = sName[:iPos]
+                if sType == '\xb9C\xc0\xb8\xab\xe1\xba\xdd':
+                    return None
+                
+                sName = sName[iPos + 6:]
+                sMail = sMail[:sMail.find('@henhaoji.com')]
+                if iCC in mxnamedata.DATA:
+                    dData = mxnamedata.DATA[iCC]
+                    if dData['sName'] != sName or dData['sSVN'] != sMail:
+                        sMsg = '\xc0\xcb\xacd\xa8\xec\xa7A\xaa\xba\xa4\xf5\xacP\xabH\xae\xa7\xbb\xdd\xadn\xa7\xf3\xb7s\xa1A\xa5\xb4\xa5]\xb5\xa5\xb1\xc0\xb0e\xa5\\\xaf\xe0\xa5i\xaf\xe0\xb7|\xa5\xa2\xae\xc4\xa1A\xbd\xd0\xba\xc9\xa7\xd6\xa7\xf3\xb7s\xab\xc8\xa4\xe1\xba\xdd241\xaa\xed\xa1A\xa6\xb3\xba\xc3\xb0\xdd\xbd\xd0\xc1p\xc3\xb4\xab\xc8\xa4\xe1\xba\xdd\xb5{\xa7\xc7'
+                    
+                else:
+                    sMsg = '\xc0\xcb\xacd\xa8\xec\xa7A\xaa\xba\xa4\xf5\xacP\xabH\xae\xa7\xa4\xa3\xa6b\xab\xc8\xa4\xe1\xba\xdd241\xaa\xed\xa4\xa4\xa1A\xa5\xb4\xa5]\xb5\xa5\xb1\xc0\xb0e\xa5\\\xaf\xe0\xa5i\xaf\xe0\xb7|\xa5\xa2\xae\xc4\xa1A\xbd\xd0\xba\xc9\xa7\xd6\xb8\xc9\xa5R\xa1A\xa6\xb3\xba\xc3\xb0\xdd\xbd\xd0\xc1p\xc3\xb4\xab\xc8\xa4\xe1\xba\xdd\xb5{\xa7\xc7'
+                if sMsg:
+                    commondialog.ShowMessageBox(sMsg, ('\xbdT\xa9w', '\xa8\xfa\xae\xf8'), (None, None))
+                
+            
+        
+
+    OnCallBack = classmethod(OnCallBack)
+
+
+def ShowChgDlg(iYear = 0, iMonth = 0, iDay = 0):
+    import usermacro
+    import checkchangedialog
+    iYear = int(iYear)
+    iMonth = int(iMonth)
+    iDay = int(iDay)
+    if not iYear and not iMonth or not iDay:
+        usermacro.PROMPT_MSG('\xbf\xe9\xa4J\xb7\xc7\xbdT\xae\xc9\xb6\xa1')
+    
+    checkchangedialog.ShowLog((iYear, iMonth, iDay))
+
+
+def CheckRender(*args):
+    import renderdebug
+    renderdebug.RunRenderCommand(*args)
+
+
+def CefOpen(sUrl, iW = 600, iH = 500):
+    global g_oCef
+    import ui
+    import misc
+    
+    def Close(*args):
+        global g_oCef
+        g_oCef = None
+
+    g_oCef = ui.CCefVedioObj(int(iW), int(iH), sUrl, misc.Functor(Close))
+
+
+def TestRegister(sTest):
+    import dlgnewregister
+    import dlgnewaboutpwd
+    import dlgnewgetbackaccount
+    if sTest == '1':
+        dlgnewregister.CNewRegisterDlg.OpenUI()
+    elif sTest == '2':
+        dlgnewaboutpwd.CNewAboutPwdDlg.OpenUI()
+    elif sTest == '3':
+        dlgnewgetbackaccount.CNewGetBackAccountDlg.OpenUI()
+    
+
+
+def TestBlackList(sTest):
+    import innerversion
+    import usermacro
+    if innerversion.IsInnerVer():
+        iType = int(sTest.strip())
+        if iType == 10:
+            import eprotectguard
+            eprotectguard.SEND_TIME = 5
+            eprotectguard.GetGuardMgr().OnDetect(3, None)
+        elif iType == 1:
+            import blacklist
+            blacklist.CClickMapCheck.CLICK_SEND_SPACE = 5
+            blacklist.CClickMapCheck.TEST_FLAG = False
+            blacklist.g_ClickMapCheck.StartCheckClickMap()
+            blacklist.CClickMapCheck.TEST_FLAG = None
+        elif iType == 18:
+            import wgtest
+            wgtest.TestBlacklist(None, 18)
+        elif iType == 33:
+            import blacklist
+            oCls = blacklist.CCheckWorkGroup
+            oNeedCheck = blacklist.NeedCheck
+            oGetGroupFlag = oCls.GetGroupFlag
+            oLoginCount = oCls.GetLoginCount
+            sMsg = '['
+            for iIdx in xrange(21):
+                sMsg += '%s,' % (iIdx + 123456)
+            
+            sMsg += ']'
+            
+            blacklist.NeedCheck = lambda : True
+            oCls.GetGroupFlag = classmethod((lambda oCls: True))
+            oCls.GetLoginCount = (classmethod,)((lambda oCls: (21, sMsg)))
+            oCls.Check()
+            blacklist.NeedCheck = oNeedCheck
+            oCls.GetGroupFlag = oGetGroupFlag
+            oCls.GetLoginCount = oLoginCount
+        elif iType == 100:
+            usermacro.SYSTEM_MSG('#Y\xa4\xe4\xab\xf9\xaa\xba\xb0\xd1\xbc\xc6\xa6\xb31\xa1B10\xa1B18\xa1B33#n')
+        
+    
+
+g_BuffTimer = None
+
+def TestIconPos(iID, iX, iY, iW, iH):
+    import activityicondata
+    import model_activityicon
+    iID = int(iID)
+    iRealx = int(iX)
+    iRealy = int(iY)
+    iRealw = int(iW)
+    iRealh = int(iH)
+    activityicondata.DATA[iID]['tSize'] = (iRealx, iRealy)
+    activityicondata.DATA[iID]['tPos'] = (iRealw, iRealh)
+    model_activityicon.GetMgr().SetActivityIconData(iID, 1, { })
+
+
+def AutoAddon(iMinID = 0, iMaxID = 0):
+    global g_BuffTimer
+    import hero
+    import timer
+    import addondata
+    import warbugrecord
+    import testwar
+    import usermacro
+    import buffdata
+    import misc
+    iMinID = int(iMinID)
+    iMaxID = int(iMaxID)
+    if iMinID:
+        if iMaxID:
+            iAddonList = []
+            iAddonRange = addondata.GetAddonIDList()
+            for idx in range(iMinID, iMaxID + 1):
+                if idx in iAddonRange:
+                    iAddonList.append(idx)
+                    continue
+            
+        else:
+            iAddonList = [
+                iMinID]
+    else:
+        iAddonList = addondata.GetAddonIDList()
+    warbugrecord.GetMgr().StartWar()
+    testwar.Start(2001, 1000, 800, 0, 0)
+    testwar.Add('\xa4\xcd\xa4\xe8', 1, hero.GetProp('m_Shape'), 1, 2, 1, 0, 0, 61960)
+    testwar.Add('\xbc\xc4\xa4\xe8', 11, hero.GetProp('m_Shape'), 0, 2, 1, 0, 0, 61960)
+    
+    def AddAddon(iAddonList):
+        if not iAddonList:
+            return None
+        
+        iID = iAddonList.pop(0)
+        sName = buffdata.GetData(iID)['desc']
+        testwar.Addon(1, iID, 2)
+        testwar.Addon(11, iID, 2)
+        usermacro.NORMAL_MSG('%s<%s>' % (iID, sName))
+        testwar.Turn()
+
+    if g_BuffTimer:
+        g_BuffTimer.Release()
+    
+    AddAddon(iAddonList)
+    g_BuffTimer = timer.Timer(5, misc.Functor(AddAddon, iAddonList), -1)
+
+
+def PlayBGM(sIndex):
+    import sound
+    sFileName = '%s.ogg' % sIndex
+    sound.PlayOggMusic(sFileName, 'music')
+
+
+def PlayMusic(sPath, sStart = 0):
+    import C_audio
+    if '.' not in sPath:
+        sPath += '.ogg'
+    
+    if not sPath.startswith('music'):
+        sPath = 'music/%s' % sPath
+    
+    if int(sStart) == 1:
+        C_audio.PlayFile(sPath)
+    elif int(sStart) == 2:
+        C_audio.PausePlayFile(sPath)
+    else:
+        C_audio.StopPlayFile(sPath)
+
+
+def TestPlayAudio(iIndex = 1):
+    import audio
+    import os
+    sDir = os.path.abspath('.')
+    sPath = sDir + '\\' + audio.g_RecordDir
+    sFileNameList = os.listdir(sPath)
+    sAudioFile = sPath + '\\' + sFileNameList[int(iIndex) - 1]
+    audio.PlayChatAudio(sAudioFile)
+
+
+def TestTargetLine(sTxtName = '\xb8s\xa1P\xb8\xa8\xad^\xc4}\xaf\xc9', iSkillID = 1103, iSourceID = 0, iTargetID = 0):
+    import wartargetline
+    import world
+    import random
+    import warrior
+    iWarriorIDList = world.g_Objects.keys()
+    random.shuffle(iWarriorIDList)
+    iTmpSourceID = 0
+    iTmpTargetID = 0
+    for iWarriorID in iWarriorIDList:
+        oWarrior = world.GetObj(iWarriorID)
+        if isinstance(oWarrior, warrior.CWarrior):
+            if (iSourceID == 0 or int(iSourceID) == iWarriorID) and not (oWarrior.m_Allied):
+                iTmpSourceID = iWarriorID
+            
+            if (iTargetID == 0 or int(iTargetID) == iWarriorID) and oWarrior.m_Allied:
+                iTmpTargetID = iWarriorID
+            
+        oWarrior.m_Allied
+    
+    wartargetline.SetTargetLine(int(iTmpSourceID), int(iTmpTargetID), sTxtName, int(iSkillID))
+
+
+def SetTargetLineData(iSourePlace, iTargetPlace, iRatio, iAxisX, iAxisY, iCount):
+    import wartargetline
+    wartargetline.GetLineMgr().SetLineData(int(iSourePlace), int(iTargetPlace), eval(iRatio), int(iAxisX), int(iAxisY), int(iCount))
+
+
+def AutoEat():
+    import game
+    import commoncb
+    if game.GetSpecialFlag() is None:
+        import netcommon
+        omd = __import__(__name__)
+        commoncb.RegistCB('gmcommand', omd, 'AutoEat')
+        netcommon.C2SAskSpecialPlayer()
+        return None
+    
+    if game.CheckCanUseNG():
+        import autocm
+        autocm.AutoEat()
+    
+
+
+def AutoGetZyBaotu():
+    import game
+    import commoncb
+    if game.CheckCanUseNG():
+        return None
+    
+    if game.GetSpecialFlag() is None:
+        import netcommon
+        omd = __import__(__name__)
+        commoncb.RegistCB('gmcommand', omd, 'AutoGetZyBaotu')
+        netcommon.C2SAskSpecialPlayer()
+        return None
+    
+
+
+def ShowHsvEditor(iNum):
+    import coloreditor
+    import playercoloreditor
+    
+    try:
+        iNum = int(iNum)
+    except:
+        iNum = 0
+
+    if iNum == 1:
+        coloreditor.Show()
+    else:
+        playercoloreditor.Show()
+
+
+def TestPerformDemo(sName, iSkillID):
+    import dlgcomprehendskill
+    dlgcomprehendskill.TestZhaoshi(sName, iSkillID)
+
+
+def SceneMagic(sMagicID):
+    import scenemagic
+    scenemagic.PlaySceneMagic(int(sMagicID))
+
+
+def UseIt(sTime, sShape1, sShape2 = '0'):
+    import gwtest
+    t = int(sTime) * 60
+    if sShape1.isdigit():
+        gwtest.UseItem(t, int(sShape1), int(sShape2))
+    else:
+        gwtest.UseItemByName(t, sShape1, sShape2)
+
+
+def NpcBian(scharidx):
+    import world
+    import cursor
+    charidx = int(scharidx)
+    
+    def CommitUse(obj):
+        obj.m_StandSize = 0
+        del obj.m_StandSize
+        obj.ChangeShape(charidx, obj.m_CharDesc)
+        if hasattr(obj, 'RefreshSign'):
+            obj.RefreshSign(257)
+        
+        if hasattr(obj, 'm_Addons') and obj.m_Addons:
+            import addon
+            keys = obj.m_Addons.keys()
+            dct = { }
+            for aid in keys:
+                
+                try:
+                    waddon = addon.CreateForWar(obj, aid)
+                except:
+                    continue
+
+                old_addon = obj.m_Addons[aid][0]
+                new_addon = waddon[0]
+                if hasattr(old_addon, 'm_Turn'):
+                    new_addon.m_Turn = old_addon.m_Turn
+                    new_addon.m_ID = old_addon.m_ID
+                    new_addon.m_Series = old_addon.m_Series
+                
+                dct[aid] = waddon
+            
+            obj.m_Addons.update(dct)
+        
+        world.NormalSelect()
+
+    world.g_SelectTips = world.CSelectTips('\xbd\xd0\xa5\xce\xb9\xab\xbc\xd0\xc2I\xc0\xbb\xbe\xde\xa7@\xb9\xef\xb9\xb3#r\xa5k\xc1\xe4\xa8\xfa\xae\xf8\xbe\xde\xa7@')
+    world.SetMessageProcess(cursor.GIVE_ENTER_CURSOR, cursor.GIVE_LEAVE_CURSOR, (lambda x: True), CommitUse, world.NormalSelect)
+
+
+def CloneMyself(sNum):
+    import world
+    import player
+    import copy
+    import random
+    import hero
+    import interface
+    num = int(sNum)
+    num = min(num, 100)
+    pid = max(world.g_Objects) + 1
+    (x, y) = hero.g_Hero.GetPos()
+    charidx = hero.g_Hero.m_CharIdx
+    desc = copy.copy(hero.g_Prop.m_Desc)
+    for new_id in xrange(pid, pid + num):
+        add_x = random.randint(-100, 100)
+        add_y = random.randint(-100, 100)
+        obj = player.CreatePlayer(x + add_x, y + add_y, new_id, charidx, desc)
+        obj.SetName('%d' % new_id, new_id, 0, interface.COLOR_41)
+        obj.m_IgnoreMapDel = True
+    
+
+
+def JuBenEditor(sProcess):
+    import usermacro
+    import dlgjubeneditor
+    iProcess = int(sProcess)
+    if iProcess == 101:
+        dlgjubeneditor.Show()
+    elif iProcess == 102:
+        dlgjubeneditor.COprateMgr.ReleaseAll()
+    else:
+        sTips = '\xbf\xe9\xa4J\xab\xfc\xa5O\xa6\xb3\xbb~:#r\xbc@\xa5\xbb\xbds\xbf\xe8#r$jbbianji 101 \xa5\xb4\xb6}\xac\xc9\xad\xb1#r$jbbianji 102 \xc3\xf6\xb3\xac\xac\xc9\xad\xb1\xa1A\xa7R\xb0\xa3\xa9\xd2\xa6\xb3\xb3\xd0\xab\xd8\xaa\xbaNPC'
+        usermacro.TIPS_MSG(sTips)
+
+
+def ShowServerDebugInfo():
+    import dlgdebuginterface
+    dlgdebuginterface.ShowFollow(True)
+
+
+def WarLocation(sProcess):
+    import usermacro
+    import dlgwarlocationeditor
+    iProcess = int(sProcess)
+    if iProcess == 101:
+        dlgwarlocationeditor.COprateMgr.StartEditor()
+    elif iProcess == 102:
+        dlgwarlocationeditor.COprateMgr.ReleaseAll()
+    else:
+        sTips = '\xbf\xe9\xa4J\xab\xfc\xa5O\xa6\xb3\xbb~:#r\xbe\xd4\xb0\xab\xaf\xb8\xa6\xec\xbds\xbf\xe8#r$warlocation 101 \xa5\xb4\xb6}\xac\xc9\xad\xb1#r$warlocation 102 \xc3\xf6\xb3\xac\xac\xc9\xad\xb1'
+        usermacro.TIPS_MSG(sTips)
+
+
+def GetObjLst():
+    import cursor
+    import C_sys
+    (x, y) = cursor.GetCursorPos()
+    objlist = C_sys.GetObjects(x, y)
+    for i in objlist:
+        LOG_DEBUG('>>', i)
+    
+
+
+def WarBackGround(sIdx):
+    import warbackground
+    warbackground.Test(int(sIdx))
+
+
+def WarSwitch(sIdx):
+    import switchback
+    switchback.Test(int(sIdx))
+
+
+def MapSize():
+    import map
+    import usermacro
+    (x, y) = map.g_Map.GetSize()
+    id = map.g_Map.m_ID
+    usermacro.PROMPT_MSG('\xa6a\xb9\xcfID:%d \xa4\xd8\xa4o:%d,%d' % (id, x, y))
+
+
+def SetBuliding(city, building, direct):
+    import hero
+    (x, y) = hero.g_Hero.GetPos()
+    import architect
+    architect.CreateArchitect(x, y, 8001, '', int(city), int(building), int(direct), 3000)
+
+
+def OpenNewPay(iIsOther):
+    import dlgpay
+    iIsOther = int(iIsOther)
+    if iIsOther:
+        dlgpay.ShowForSelf()
+    else:
+        dlgpay.ShowForOther()
+
+
+def SetHuanhuaAlpha(sAlpha):
+    iAlpha = int(sAlpha)
+    import hero
+    import world
+    import mainmenu
+    if mainmenu.IsWar():
+        import war
+        warObj = world.GetObj(war.g_HeroID)
+        if hasattr(warObj, 'm_ShadowPet'):
+            warObj.m_ShadowPet.SetAlpha(iAlpha)
+        
+    else:
+        heroObj = hero.GetHeroObject()
+        if hasattr(heroObj, 'm_SummTeam'):
+            idList = heroObj.m_SummTeam
+            for iSummonID in idList:
+                summonObj = world.GetObj(iSummonID)
+                if hasattr(summonObj, 'm_SummonType') and summonObj.m_SummonType & 1:
+                    summonObj.SetAlpha(iAlpha)
+                    return None
+                    continue
+            
+        
+
+
+def AutoGoto():
+    import dlgmap
+    dlgmap.g_AutoGoto = not (dlgmap.g_AutoGoto)
+
+
+def CombFireIn(count):
+    filename = 'mapobject\\fire\\%d.txt' % int(count)
+    import dlgcombfire
+    if dlgcombfire.g_FireDlg:
+        dlgcombfire.InPut(count)
+        ct = 0
+        for it in dlgcombfire.g_FireDlg.m_Items:
+            if it.m_ID or it.m_SprID:
+                ct += 1
+                continue
+        
+        if ct == 0:
+            import usermacro
+            usermacro.PROMPT_MSG('\xbc\xd2\xaaO[%s]\xa5\xbc\xc5\xaa\xa8\xfa\xa5X\xa4\xba\xaee.' % filename)
+        else:
+            import usermacro
+            usermacro.PROMPT_MSG('\xa5\xb4\xb6}\xbc\xd2\xaaO[%s].' % filename)
+    else:
+        import usermacro
+        usermacro.PROMPT_MSG('\xa5\xb4\xb6}\xb7\xcf\xaa\xe1\xbe\xde\xa7@\xad\xb6\xad\xb1\xa4~\xaf\xe0\xb6i\xa6\xe6\xac\xdb\xc0\xb3\xbe\xde\xa7@.')
+
+
+def CombFireOut(count):
+    filename = 'mapobject\\fire\\%d.txt' % int(count)
+    import dlgcombfire
+    if dlgcombfire.g_FireDlg:
+        dlgcombfire.OutPut(int(count))
+        import usermacro
+        usermacro.PROMPT_MSG('\xbf\xe9\xa5X\xbc\xd2\xaaO[%s].' % filename)
+    else:
+        import usermacro
+        usermacro.PROMPT_MSG('\xa5\xb4\xb6}\xb7\xcf\xaa\xe1\xbe\xde\xa7@\xad\xb6\xad\xb1\xa4~\xaf\xe0\xb6i\xa6\xe6\xac\xdb\xc0\xb3\xbe\xde\xa7@.')
+
+
+def GetMagicTime(iSkillID = 0, iMaxSkillID = 0):
+    import getmagictime
+    getmagictime.GetSkillTime(int(iSkillID), int(iMaxSkillID))
+
+
+def BtnLog():
+    import clickcounter
+    clickcounter.ShowLog()
+
+
+def HotkeyLog():
+    import hotkeycounter
+    hotkeycounter.ShowLog()
+
+
+def NpcTalk():
+    import netnpc
+    import usermacro
+    netnpc.g_ShowNpcChatID = not (netnpc.g_ShowNpcChatID)
+    if netnpc.g_ShowNpcChatID:
+        usermacro.PROMPT_MSG('#R\xc5\xe3\xa5\xdcNPC\xb9\xef\xa5\xd5\xbds\xb8\xb9#n')
+    else:
+        usermacro.PROMPT_MSG('#R\xc1\xf4\xc2\xc3NPC\xb9\xef\xa5\xd5\xbds\xb8\xb9#n')
+
+
+def FindItem(name):
+    import itemdata
+    itemLst = []
+    for key, v in itemdata.DATA.iteritems():
+        if v[0].find(name) >= 0:
+            itemLst.append((key, v[0]))
+            continue
+    
+    return itemLst
+
+
+def ItemXX(name):
+    import usermacro
+    itemLst = FindItem(name)
+    for id, name in itemLst:
+        usermacro.NORMAL_MSG('id:%d#rname:%s' % (id, name))
+    
+    if len(itemLst):
+        import mainmenu
+        oChatInput = mainmenu.GetChatInputObj()
+        if oChatInput is not None:
+            oChatInput.SetText('$clone ')
+        
+    
+
+
+def Dance(count):
+    global g_wgobj
+    count = int(count)
+    
+    def _dance(ob, n):
+        import item
+        it = item.FindItem(25815)
+        if it is None:
+            return None
+        
+        import netitem
+        netitem.C2SItemUse(it.m_ID)
+        n -= 1
+        if n > 0:
+            return (n,)
+        
+
+    _dance(None, 1)
+    if count > 1:
+        import interface
+        g_wgobj = interface.CBaseObject(None)
+        g_wgobj.CreatePyCommand(5400, _dance, count - 1)
+    
+
+
+def SetProp():
+    import dlggm
+    dlggm.Show(True)
+
+
+def ShowTrack(iTrackID, iColor, iDist):
+    import hero
+    import charpath
+    import descinterface
+    iTrackID = int(iTrackID)
+    iColor = int(iColor)
+    iDist = int(iDist)
+    (iShape, dDesc) = charpath.GetHeroShow()
+    dDesc = descinterface.SetTrackInfo(dDesc, iTrackID, iColor)
+    hero.GetHeroObject().SetOrigDesc(dDesc)
+    hero.GetHeroObject().ChangeShape(iShape, dDesc)
+    hero.GetHeroObject().ShowTrack([
+        iTrackID,
+        iColor], iDist)
+
+
+def Aura(iAruaID, iColor):
+    import hero
+    import charpath
+    import descinterface
+    iAruaID = int(iAruaID)
+    iColor = int(iColor)
+    (iShape, dDesc) = charpath.GetHeroShow()
+    dDesc = descinterface.SetAuraID(dDesc, iAruaID, iColor)
+    hero.GetHeroObject().SetOrigDesc(dDesc)
+    hero.GetHeroObject().ChangeShape(iShape, dDesc)
+
+
+def Fairy(id):
+    import hero
+    hero.g_Hero.SetFairy(int(id))
+
+
+def Place(iid, shape, posx, posy):
+    iid = int(iid)
+    shape = int(shape)
+    posx = int(posx)
+    posy = int(posy)
+    import goods
+    if not hasattr(goods, 'g_TestDict'):
+        goods.g_TestDict = { }
+    
+    if iid in goods.g_TestDict:
+        del goods.g_TestDict[iid]
+    else:
+        import map
+        (posx, posy) = map.g_Map.ServerPos2ClientPos(posx, posy)
+        obj = goods.CreateGoods(posx, posy, iid, shape, 0, 0, 1)
+        obj.SetServerPos(posx, posy)
+        goods.g_TestDict[iid] = obj
+
+
+def Magic(magic_id):
+    magic_id = int(magic_id)
+    import hero
+    import map
+    import netmap
+    (x, y) = hero.g_Hero.GetPos()
+    netmap.PlayMagicEffect(map.g_Map, magic_id, x, y)
+
+
+def TestZhanMengFail():
+    import dlgaccountfriend
+    if hasattr(dlgaccountfriend, 'g_TestFlag'):
+        dlgaccountfriend.g_TestFlag = not (dlgaccountfriend.g_TestFlag)
+    
+    import usermacro
+    usermacro.PROMPT_MSG('\xb7\xed\xabe\xb4\xfa\xb8\xd5\xaa\xac\xbaA\xa1G%s' % {
+        True: '\xb6}',
+        False: '\xc3\xf6' }[dlgaccountfriend.g_TestFlag])
+
+
+def TestZhanMengFail1():
+    import nsnet
+    nsnet.g_TestFlag = not (nsnet.g_TestFlag)
+    import usermacro
+    usermacro.PROMPT_MSG('\xae\xf8\xae\xa7\xb4\xa3\xa5\xdc\xaa\xac\xbaA\xa1G%s' % {
+        True: '\xc4a\xafB\xb4\xa3\xa5\xdc\xc3\xf6\xb3\xac',
+        False: '\xc4a\xafB\xb4\xa3\xa5\xdc\xb6}\xb1\xd2' }[nsnet.g_TestFlag])
+
+
+def TransHero(sX, sY):
+    import map
+    import hero
+    x = int(sX)
+    y = int(sY)
+    (posx, posy) = map.g_Map.ServerPos2ClientPos(x, y)
+    hero.g_Hero.SetPos(posx, posy)
+
+
+def ResetSendMode():
+    import cfg
+    cfg.SaveData('mx.ini', 'Game', 'HasSendChatFont', False)
+
+
+def PrintProtocol():
+    import protocolprint
+    protocolprint.SwitchRecord()
+
+
+def GameProfile():
+    import gameprofile
+    gameprofile.GameProfile()
+
+
+def TestSpeStand(sAction):
+    import hero
+    obj = hero.g_Hero
+    if obj and sAction in ('0', '1'):
+        obj.SetSpeStand(int(sAction))
+    
+
+
+def UploadLog(sID, sKey1 = None, sKey2 = None):
+    import netchat
+    if sKey1 == 'all':
+        sMsg = 'uploadclientdata loginlog %s all' % sID
+    elif sKey2 is not None:
+        sMsg = 'uploadclientdata loginlog %s %s %s' % (sID, sKey1, sKey2)
+    else:
+        sMsg = 'uploadclientdata loginlog %s' % sID
+    netchat.C2SPlayerWizard(sMsg)
+
+
+def UploadRecord(sID, sKey1 = None, sKey2 = None):
+    import netchat
+    if sKey1 == 'all':
+        sMsg = 'uploadclientdata warrecord %s all' % sID
+    elif sKey2 is not None:
+        sMsg = 'uploadclientdata warrecord %s %s %s' % (sID, sKey1, sKey2)
+    else:
+        sMsg = 'uploadclientdata warrecord %s' % sID
+    netchat.C2SPlayerWizard(sMsg)
+
+
+def TianmingRecord():
+    import netchat
+    import heartbeatcheck
+    heartbeatcheck.g_DisconnectFlag = False
+    LOG('!!!heartbeat pause')
+    netchat.C2SPlayerWizard('tianmingrecord')
+
+
+def TestCrash():
+    global g_oParent
+    import C_object
+    import map
+    g_oParent = C_object.CBoxObject(None, 10, 10, 0, 0)
+    oTest = C_object.CMapHeroObject(g_oParent)
+    map.g_Map = None
+    
+    def AAA(*args):
+        oTest.CreateCommand(1, 'animation')
+        oTest.SetServerPos(0, 0)
+
+    g_oParent.CreatePyCommand(1, AAA)
+
+
+def BigMMagic(sIdx, sX = '', sY = ''):
+    import netmap
+    import hero
+    import map
+    if sX == '':
+        
+        try:
+            idx = int(sIdx)
+        except:
+            idx = 0
+
+        (x, y) = hero.g_Hero.GetPos()
+    else:
+        
+        try:
+            idx = int(sIdx)
+            x = int(sX)
+            y = int(sY)
+        except:
+            idx = 0
+            (x, y) = hero.g_Hero.GetPos()
+
+    (x, y) = map.g_Map.ClientPos2ServerPos(x, y)
+    print 'idx=%d,x=%d,y=%d' % (idx, x, y)
+    netmap.LoadMagic(idx, x, y)
+
+
+def Zhen(sIdx):
+    import war
+    import usermacro
+    
+    try:
+        war.g_TestLineup = int(sIdx)
+        usermacro.PROMPT_MSG('\xa7\xf3\xa7\xef\xb0}\xaak')
+    except:
+        pass
+
+
+
+def Ani(sIdx):
+    import netmap
+    import hero
+    import map
+    (x, y) = hero.g_Hero.GetPos()
+    (x, y) = map.g_Map.ClientPos2ServerPos(x, y)
+    netmap.PlayMapEffect(2, None, int(sIdx), x, y)
+
+
+def ClearKeyInfo():
+    import shortcut
+    import usermacro
+    shortcut.CShortcutMgr.ClearOffData()
+    usermacro.PROMPT_MSG('\xb2M\xb2z\xa6\xa8\xa5\\')
+
+
+def QuickLogin():
+    import netquicklogin
+    netquicklogin.Connect(False, '\xab\xfc\xa5O')
+
+
+def BlackList():
+    import pubblacklist
+    printList = [
+        ('\xba\xf4\xaf\xb8\xab\xcc\xbd\xaa\xa6W\xb3\xe6', pubblacklist.CParseBlackList.GetUrlBlacklist()),
+        ('\xb2\xe1\xa4\xd1\xa4\xba\xaee\xab\xcc\xbd\xaa\xa6W\xb3\xe6', pubblacklist.CParseBlackList.GetChatBlacklist()),
+        ('ID\xab\xcc\xbd\xaa\xa6W\xb3\xe6', pubblacklist.CParseBlackList.GetIDBlacklist()),
+        ('\xb5{\xa7\xc7\xab\xcc\xbd\xaa\xa6W\xb3\xe6', pubblacklist.CParseBlackList.GetProcessBlackLst()),
+        ('\xc1\xf4\xc2\xc3\xb5{\xa7\xc7\xab\xcc\xbd\xaa\xa6W\xb3\xe6', pubblacklist.CParseBlackList.GetHideNameBlacklist()),
+        ('\xb2\xe1\xa4\xd1\xab\xcc\xbd\xaa\xa6W\xb3\xe6', pubblacklist.CParseBlackList.GetChatBlacklistEx()),
+        ('\xaaA\xb0\xc8\xbe\xb9\xa6\xdb\xb0\xca\xb3B\xb2z\xaa\xba\xa5~\xb1\xbe', pubblacklist.CParseBlackList.GetProcBlackDct()),
+        ('\xb0O\xbf\xfdLog\xa8\xd1\xa4\xc0\xaaR\xaa\xba\xa5~\xb1\xbe', pubblacklist.CParseBlackList.GetProcLogBlackDct())]
+    
+    def PrintBlackList(name, blst):
+        print name, ':'
+        for i, data in enumerate(blst):
+            print i, ' --> ', data
+            if blst in (pubblacklist.CParseBlackList.GetProcBlackDct(), pubblacklist.CParseBlackList.GetProcLogBlackDct()):
+                for sCharact, sOption in blst[data].items():
+                    print sProc, ':(', sCharact, sOption, ')'
+                
+        
+
+    for name, lst in printList:
+        PrintBlackList(name, lst)
+    
+
+
+def CreateMultiHorsePlayer(sX, sChatIdx):
+    import misc
+    import hero
+    pos = int(sX)
+    chatIdx = int(sChatIdx)
+    pid = misc.RandInt(10000, 1000000)
+    hero.g_Hero.CreateMultiHorsePlayer(pid, chatIdx, None, pos)
+
+
+def Shaw(sX = '', sY = '', sLength = '10'):
+    import hero
+    import map
+    if sX != '':
+        (x, y) = map.g_Map.ServerPos2ClientPos(int(sX), int(sY))
+    else:
+        (x, y) = hero.g_Hero.GetPos()
+    map.g_Map.Shaw(x, y, int(sLength))
+
+
+def UIMix():
+    import innerversion
+    if innerversion.IsInnerVer():
+        import mixinfunc
+        mixinfunc.DoMixIn()
+    
+
+
+def ShowDlg():
+    global g_Dialog
+    path = GetDlg()
+    if not path:
+        return None
+    
+    g_Dialog = CDialog(path[1:])
+
+
+def CheckSourceName():
+    
+    def IsRightName(s):
+        lastchar = 0
+        icount = False
+        for i in xrange(len(s)):
+            char = s[i]
+            l = ord(char)
+            if l < 128:
+                if char.isalpha() and char.isdigit() or char in ('-', '_'):
+                    continue
+                
+                return False
+                continue
+            icount = not icount
+            if icount:
+                lastchar = l
+                continue
+            ih = lastchar & 255
+            il = l & 255
+            if not ih >= 176 and ih <= 247 and il >= 160 and il <= 254:
+                return False
+                continue
+        
+        return True
+
+    
+    def printErrorName(dirname, name):
+        global g_ErrorNameLst
+        g_ErrorNameLst = []
+        g_ErrorNameLst.append(name)
+        path = '%s/%s' % (dirname, name)
+        print 'ErrorName: ', path.replace('\\', '/')
+
+    import os
+    
+    def WalkFunc(arg, dirname, filenames):
+        if '.svn' in dirname:
+            return None
+        
+        for name in filenames:
+            if name.find('.') < 0:
+                if not IsRightName(name):
+                    printErrorName(dirname, name)
+                    continue
+                continue
+            
+            nslist = name.split('.')
+            if len(nslist) != 2:
+                printErrorName(dirname, name)
+                continue
+            
+            if not IsRightName(nslist[0]) or not IsRightName(nslist[1]):
+                printErrorName(dirname, name)
+                continue
+                continue
+        
+
+    
+    def WalkFunc1(arg, dirname, filenames):
+        if '.svn' in dirname:
+            return None
+        
+        for name in filenames:
+            if name.endswith('.igs') and name.endswith('.dlg') and name.endswith('.mgc') and name.endswith('.spr') or name.endswith('.pfm'):
+                f = open('%s/%s' % (dirname, name), 'rb')
+                lines = f.readlines()
+                for line in lines:
+                    for errorname in g_ErrorNameLst:
+                        if errorname in line:
+                            print errorname, line, name, dirname
+                            continue
+                    
+                
+                f.close()
+                continue
+        
+
+    sourceList = [
+        'char',
+        'data',
+        'effect',
+        'goods',
+        'interface',
+        'item',
+        'magic',
+        'map',
+        'mapobject',
+        'minimap',
+        'misc',
+        'music',
+        'passive',
+        'skill',
+        'sound',
+        'war']
+    for sorucrRoot in sourceList:
+        print 'runing sorucrRoot:%s Start' % sorucrRoot
+        os.path.walk(sorucrRoot, WalkFunc, ())
+        print 'runing sorucrRoot:%s End' % sorucrRoot
+    
+    for sorucrRoot in sourceList:
+        print 'runing checkname:%s Start' % sorucrRoot
+        os.path.walk(sorucrRoot, WalkFunc1, ())
+        print 'runing checkname:%s End' % sorucrRoot
+    
+
+
+def SetShadowBg(bShow):
+    import mainmenu
+    mainmenu.SetShadowBg(bShow)
+
+
+def SwitchMainmenu():
+    import mainmenu
+    import netquicklogin
+    bShow = not mainmenu.IsNewMainmenu()
+    
+    mainmenu.IsNewMainmenu = lambda : bShow
+    netquicklogin.Connect(False)
+
+
+def Server2ClientPos(sX, sY):
+    import map
+    import chatoutput
+    sx = int(sX)
+    sy = int(sY)
+    (cx, cy) = map.g_Map.ServerPos2ClientPos(sx, sy)
+    chatoutput.AddChat('#Yx = %d y = %d' % (cx, cy))
+
+
+def ShowCg(sIdx):
+    import cg
+    cgid = int(sIdx)
+    cg.ShowCgDlg(cgid)
+
+
+def PlayJuben(sTaskID, sJuBenID, startPos = '', endPos = ''):
+    import juben
+    iStartPos = iEndPos = 0
+    if startPos != '' and endPos != '':
+        taskID = int(sTaskID)
+        jubenID = int(sJuBenID)
+        iStartPos = int(startPos)
+        iEndPos = int(endPos)
+    elif startPos != '' and endPos == '':
+        taskID = int(sTaskID)
+        jubenID = int(sJuBenID)
+        iStartPos = int(startPos)
+    else:
+        taskID = int(sTaskID)
+        jubenID = int(sJuBenID)
+    juben.TestJuBen(taskID, jubenID, iStartPos, iEndPos)
+
+
+def AutoLogin(sAccount, sPassword = '11111111', iRoleID = None):
+    import permission
+    if not permission.IsOpenAutoLogin():
+        return None
+    
+    import main
+    import misc
+    import C_object
+    import netserver
+    (sArea, sServer) = netserver.g_LoginServer
+    
+    def AfterRestart(sAccount, sPassword, iRoleID, x, y):
+        import param
+        main.Old_AfterRestart(x, y)
+        if main.RestartTimes == 0:
+            if iRoleID is None:
+                iRoleID = sAccount
+                sAccount = '#' + sAccount
+            
+            param.AutoLogin(sArea, sServer, sAccount, sPassword, iRoleID)
+            main.AfterRestart = main.Old_AfterRestart
+            delattr(main, 'Old_AfterRestart')
+        
+
+    if not hasattr(main, 'Old_AfterRestart'):
+        main.Old_AfterRestart = main.AfterRestart
+        main.AfterRestart = misc.Functor(AfterRestart, sAccount, sPassword, iRoleID)
+    
+    main.doreturn(C_object.CBaseObject(None))
+
+
+def SetFilter():
+    import dlgsetfilter
+    dlgsetfilter.ShowFilterDlg()
+
+
+def CreateNpc(sNum):
+    import hero
+    num = int(sNum)
+    for idx in xrange(num):
+        (cx, cy) = hero.g_Hero.GetPos()
+        npcObj = npc.CreateNpc(cx, cy, idx + 100000, 111, {
+            'color': [
+                0,
+                0,
+                0],
+            'weapon': [
+                3,
+                1,
+                0],
+            'Realcolor': [
+                0,
+                0,
+                0],
+            'titleFlash': 0,
+            'fairy': [
+                [
+                    0,
+                    0],
+                [
+                    0,
+                    0]],
+            'wing': [
+                0] }, classtype = CTestNpc)
+        npcObj.Stop()
+    
+
+
+def ShowProtocolIdx():
+    import netprotocol
+    import chatoutput
+    chatoutput.AddChat('#R\xb7\xed\xabe\xa8\xf3\xc4\xb3\xb8\xb9\xa1G%s' % netprotocol.g_Idx)
+
+
+def JubenDaobiao():
+    import dlgjbdaobiao
+    dlgjbdaobiao.ShowDaoBiaoDlg()
+
+
+def ReloadModule():
+    import reimport
+    reimport.Hotimport()
+
+
+def ShowColor():
+    import lookcolor
+    lookcolor.ShowColorPreviewPanel()
+
+
+def ShowFont():
+    import lookcolor
+    lookcolor.ShowFontPreviewPanel()
+
+
+def ShowFontOffset():
+    import lookcolor
+    lookcolor.ShowCFontOffsetPanel(True)
+
+
+def NewMazeBlockEditor():
+    import dlgblockeditor
+    dlgblockeditor.ShowDlg()
+
+
+def OnCreateError(sArg):
+    import timer
+    print '===================>'
+    timer.DeleteSched('testerr')
+    exec 'thiserror=%s' % sArg
+
+
+def TestError(sArg = ''):
+    import timer
+    import misc
+    if sArg == '':
+        sArg = 'something'
+    
+    oFunc = misc.Functor(OnCreateError, sArg)
+    timer.Sched(0, 'testerr', oFunc)
+
+
+def WarBug(text):
+    import warbugrecord
+    iBugID = int(text)
+    warbugrecord.TestBug(iBugID)
+
+
+def KuafuErr(text):
+    import chatoutput
+    import main
+    
+    def Disconnect(*args):
+        import net
+        LOG_WARN('-----------------> \xab\xc8\xa4\xe1\xba\xdd\xb1j\xa8\xee\xc2_\xba\xf4')
+        net.g_Net.Disconnect()
+
+    
+    def RestartWithWrongPwd(idx, pwd, proxy_port_ip_list, serverid):
+        pwd2 = chr((ord(pwd[0]) + 1) % 255) + pwd[1:]
+        main._RestarConfirmEx(idx, pwd2, proxy_port_ip_list, serverid)
+
+    
+    def RestartWithWrongIP(idx, pwd, proxy_port_ip_list, serverid):
+        proxy_port_ip_list = (0, 9081, '10.10.10.10')
+        main._RestarConfirmEx(idx, pwd, proxy_port_ip_list, serverid)
+
+    
+    def RestartWithHelloDiconnect(idx, pwd, proxy_port_ip_list, serverid):
+        import loginhello
+        main._RestarConfirmEx(idx, pwd, proxy_port_ip_list, serverid)
+        loginhello.CPublicHelloMgr.C2SAnswerPublicHello = classmethod(Disconnect)
+
+    
+    def RestartWithLogininDisconnect(idx, pwd, proxy_port_ip_list, serverid):
+        import netlogin
+        main._RestarConfirmEx(idx, pwd, proxy_port_ip_list, serverid)
+        netlogin.C2SReConnect = Disconnect
+
+    
+    def RestartWithFinishDisconnect(idx, pwd, proxy_port_ip_list, serverid):
+        import netquicklogin
+        main._RestarConfirmEx(idx, pwd, proxy_port_ip_list, serverid)
+        netquicklogin.S2CQuickLogin = Disconnect
+
+    iOpID = int(text)
+    if iOpID == 100:
+        sHelpMsg = '#Y\xa5i\xbf\xef\xb6\xb5\xa1G#r1-\xbd\xe3\xb8\xb9\xc5\xe7\xb5\xfd\xa5\xa2\xb1\xd1#r2-ip\xb5L\xaak\xb3s\xb1\xb5#r3-\xb8\xf3\xaaA\xb9L\xb5{\xc2_\xb6}\xb3s\xb1\xb5\xa1]\xa6\xac\xa8\xechello\xae\xc9)#r4-\xb8\xf3\xaaA\xb9L\xb5{\xc2_\xb6}\xb3s\xb1\xb5\xa1]\xbd\xe3\xb8\xb9\xc5\xe7\xb5\xfd\xabe\xa1^#r5-\xb8\xf3\xaaA\xb9L\xb5{\xc2_\xb6}\xb3s\xb1\xb5\xa1]\xbd\xe3\xb8\xb9\xc5\xe7\xb5\xfd\xab\xe1\xa1^#n'
+        chatoutput.AddChat(sHelpMsg)
+        return None
+    
+    if not hasattr(main, '_RestarConfirmEx'):
+        main._RestarConfirmEx = main.RestarConfirmEx
+    
+    if iOpID == 1:
+        main.RestarConfirmEx = RestartWithWrongPwd
+    
+    if iOpID == 2:
+        main.RestarConfirmEx = RestartWithWrongIP
+    
+    if iOpID == 3:
+        main.RestarConfirmEx = RestartWithHelloDiconnect
+    
+    if iOpID == 4:
+        main.RestarConfirmEx = RestartWithLogininDisconnect
+    
+    if iOpID == 5:
+        main.RestarConfirmEx = RestartWithFinishDisconnect
+    
+    chatoutput.AddChat('#W\xab\xfc\xa5O$kuafuerr %d\xb0\xf5\xa6\xe6\xa7\xb9\xb2\xa6\xa1A\xbd\xd0\xb6i\xa6\xe6\xb8\xf3\xaaA\xc4\xb2\xb5o#n' % iOpID)
+
+dNewMagicData = { }
+
+def SwitchNewMagic(text):
+    import magicperformdata
+    import chatoutput
+    iMagicID = int(text)
+    dData = magicperformdata.PERFORMDATA
+    if iMagicID in dData:
+        dNewMagicData[iMagicID] = dData.pop(iMagicID)
+        chatoutput.AddChat('#W%s\xa4w\xa4\xc1\xb4\xab\xa6\xa8\xc2\xc2\xaak\xb3N#n' % iMagicID)
+    elif iMagicID in dNewMagicData:
+        dData[iMagicID] = dNewMagicData.pop(iMagicID)
+        chatoutput.AddChat('#W%s\xa4w\xa4\xc1\xb4\xab\xa6\xa8\xb7s\xaak\xb3N#n' % iMagicID)
+    else:
+        chatoutput.AddChat('#W\xa7\xe4\xa4\xa3\xa8\xec\xb8\xd3\xaak\xb3N(%s)#n' % iMagicID)
+
+
+class SwitchFPSBox(object):
+    '''\xc5\xe3\xa5\xdcFps\xaa\xba\xb9\xef\xb8\xdc\xae\xd8'''
+    S_FPSBoxTimer = None
+    S_FPSBosObject = None
+    S_IsShow = False
+    
+    def __init__(self):
+        import C_sys
+        
+        def SetTest(oRichText):
+            sTest = '\xb4V\xb2v\xa1G%d#r\xa5\xad\xa7\xa1\xa8C\xb4V\xae\xc9\xb6\xa1\xa1G%d' % (C_sys.GetFPS(), C_sys.GetFRT())
+            oRichText.SetText(sTest)
+            return ()
+
+        SwitchFPSBox.S_IsShow = not (SwitchFPSBox.S_IsShow)
+        if SwitchFPSBox.S_IsShow:
+            sTest = '\xb4V\xb2v\xa1G%d#r\xa5\xad\xa7\xa1\xa8C\xb4V\xae\xc9\xb6\xa1\xa1G%d' % (C_sys.GetFPS(), C_sys.GetFRT())
+            SwitchFPSBox.S_FPSBosObject = interface.CRichTextObject(None, 300, interface.FontLT16_2, sTest, 0)
+            SwitchFPSBox.S_FPSBosObject.SetZ(900000000)
+            SwitchFPSBox.S_FPSBosObject.SetPos(79, 108)
+            SwitchFPSBox.S_FPSBosObject.CreatePyCommand(0, SetTest)
+        else:
+            SwitchFPSBox.S_FPSBosObject.ReleaseCommand()
+            SwitchFPSBox.S_FPSBosObject = None
+
+
+
+def SetGameFps(text):
+    iFps = int(text)
+    import C_sys
+    import chatoutput
+    C_sys.SetFps(iFps)
+    chatoutput.AddChat('#W\xb7\xed\xabe\xb9C\xc0\xb8\xb4V\xb2v\xb3]\xb8m\xac\xb0\xa1G%d' % iFps)
+
+
+def SetUseNewHero(text):
+    iType = int(text)
+    import charpath
+    if iType:
+        charpath.SetUseNewRes(True, True)
+    else:
+        charpath.SetUseNewRes(False, True)
+
+
+def SetWorldLight(text):
+    import world
+    iLight = int(text)
+    objDct = world.GetAllObj()
+    for objID in objDct:
+        obj = objDct[objID]
+        if hasattr(obj, 'SetLight'):
+            obj.SetLight(iLight)
+            continue
+    
+    objDct = None
+
+
+class CHeroPalShow(interface.CPanel):
+    s_Dlg = None
+    
+    def __init__(self, sShape):
+        interface.CPanel.__init__(self, interface.DialogPanel)
+        self.MessageProcess()
+        self.m_oHeroList = []
+        self.m_Shape = int(sShape)
+        self.CreateBg()
+        self.CreateCloseBtn()
+        self.CreateHero()
+        CHeroPalShow.s_Dlg = self
+
+    
+    def CreateBg(self):
+        (w, h) = self.GetSize()
+        self.m_BG = interface.CClickBox(self, w, h, 15658734, 255, 0)
+        self.m_BG.SetZ(0)
+
+    
+    def CreateCloseBtn(self):
+        self.m_CloseBtn = interface.CButton(self, 'dialog/dial/close.igs', 0, 0, 1)
+        self.m_CloseBtn.SetZ(1)
+        interface.TopRight(self.m_CloseBtn)
+
+    
+    def CreateHero(self):
+        import walker
+        for i in range(8):
+            for j in range(2):
+                dDesc = {
+                    'weapon': [
+                        0,
+                        0,
+                        0],
+                    'color': [
+                        j * 8 + i] * 3,
+                    'wing': [
+                        0],
+                    'Realcolor': [
+                        0,
+                        0,
+                        0] }
+                self.m_oHeroList.append(walker.CFakeRole(self, 0, self.m_Shape, dDesc))
+                self.m_oHeroList[-1].SetPos(100 + i * 100, 200 + j * 200)
+                self.m_oHeroList[-1].SetZ(100)
+            
+        
+
+    
+    def ClosePanel(self):
+        CHeroPalShow.s_Dlg = None
+
+    
+    def OnMessage(self, iMsgID):
+        if iMsgID == 1:
+            self.ClosePanel()
+        
+
+
+
+class CCreatePlayerTest(object):
+    '''
+\timport gmcommanddata
+\tgmcommanddata.CCreatePlayerTest(25)
+\t'''
+    s_HeroList = []
+    s_Desc = {
+        'horse': [
+            20,
+            1,
+            2],
+        'color': [
+            7,
+            7,
+            11],
+        'weapon': [
+            1,
+            5,
+            0],
+        'Realcolor': [
+            7,
+            7,
+            11],
+        'titleFlash': 0,
+        'fairy': [
+            [
+                0,
+                0],
+            [
+                0,
+                0]],
+        'wing': [
+            10,
+            0] }
+    s_W = 50
+    
+    def __init__(self, iNum):
+        CCreatePlayerTest.s_HeroList = []
+        self.m_iNum = int(iNum)
+        self.CreateHero()
+
+    
+    def CreateHero(self):
+        import player
+        import math
+        import hero
+        CCreatePlayerTest.s_Desc = hero.GetProp('m_Desc', {
+            'horse': [
+                20,
+                1,
+                2],
+            'color': [
+                7,
+                7,
+                11],
+            'weapon': [
+                1,
+                5,
+                0],
+            'Realcolor': [
+                7,
+                7,
+                11],
+            'titleFlash': 0,
+            'fairy': [
+                [
+                    0,
+                    0],
+                [
+                    0,
+                    0]],
+            'wing': [
+                10,
+                0] })
+        (iPosX, iPosY) = hero.GetHeroPos()
+        for i in range(int((-1 / 2) * math.sqrt(self.m_iNum)), int((1 / 2) * math.sqrt(self.m_iNum)) + 1):
+            for j in range(int((-1 / 2) * math.sqrt(self.m_iNum)), int((1 / 2) * math.sqrt(self.m_iNum)) + 1):
+                CCreatePlayerTest.s_HeroList.append(player.CreatePlayer(iPosX + i * CCreatePlayerTest.s_W, iPosY + j * CCreatePlayerTest.s_W, 1000 + j + i * int(math.sqrt(self.m_iNum)), 111, CCreatePlayerTest.s_Desc))
+                CCreatePlayerTest.s_HeroList[-1].SetServerPos(0, 0)
+            
+        
+
+
+
+def SetNewShadowAlpha(iNum):
+    iNum = int(iNum)
+    import chardefine
+    chardefine.SHADOW_AL = min(max(iNum, 0), 255)
+
+
+def DownloadOldRes(iNum):
+    import oldresdownload
+    if int(iNum) == 0:
+        oldresdownload.CancelOldRes()
+    else:
+        oldresdownload.AskForOldRes()
+
+
+def OpenPlayMusic():
+    import testmusic
+    testmusic.ShowSwitch()
+
+
+def ChatPop(iPercent):
+    import cmdchatbubblelogic
+    
+    try:
+        iPercent = int(iPercent)
+    except:
+        iPercent = 0
+
+    pLogic = cmdchatbubblelogic.Get()
+    pLogic.SetPercent(iPercent)
+
+
+class CResLackTest(interface.CBaseObject):
+    s_oTest = None
+    
+    def __init__(self):
+        
+        def OnCreate(obj):
+            obj.s_oTest = None
+            raise SystemError('\xb8\xea\xb7\xbd\xb3\xf8\xbf\xf9')
+
+        interface.CBaseObject.__init__(self, None)
+        self.s_oTest = self
+        self.CreatePyCommand(0, OnCreate)
+
+
+
+def GetDlg():
+    global g_LastPath, g_LastPath
+    import C_sys
+    import os
+    cwd = os.getcwd()
+    
+    try:
+        start_path = g_LastPath
+    except:
+        g_LastPath = start_path = cwd + '\\interface'
+
+    path = C_sys.GetOpenFileName('\xbf\xef\xbe\xdcdlg\xa4\xe5\xa5\xf3', 'dlg\xa4\xe5\xa5\xf3(*.dlg)\x00*.dlg\x00', start_path)
+    g_LastPath = os.getcwd()
+    os.chdir(cwd)
+    sPathAry = path.split(interface.UIPath)
+    if len(sPathAry) > 2:
+        return interface.UIPath.join(sPathAry[1:])
+    else:
+        return sPathAry[-1]
+
+
+class CDialog(combdialog.CCombDialog):
+    
+    def __init__(self, path):
+        combdialog.CCombDialog.__init__(self, interface.DialogPanel, path)
+        interface.Center(self)
+        self.m_PathObj = txtobj = interface.CTextObject(self, path, interface.FontLT14_3, interface.COLOR_5)
+        (tw, th) = txtobj.GetSize()
+        (w, h) = self.GetSize()
+        txtobj.SetPos((w - tw) / 2, -th)
+
+    
+    def RightUp(self):
+        self.CloseWindow()
+
+    
+    def CloseWindow(self):
+        global g_Dialog
+        g_Dialog = None
+
+    
+    def OnMessage(self, msgid):
+        btn = self.GetObject('m_CloseBtn')
+        if btn and btn.m_MsgID == msgid:
+            self.CloseWindow()
+        
+
+
+
+class CTestNpc(npc.CNpc):
+    
+    def MoveTo(self, endx, endy, speed):
+        (startx, starty) = self.GetPos()
+        if endx == startx and endy == starty:
+            self.Stop()
+            return None
+        
+        args = {
+            'whole_path': 0,
+            'end_x': endx,
+            'end_y': endy,
+            'check_object': None,
+            'speed': speed,
+            'dist': 0 }
+        self.m_Target = (endx, endy)
+        self.m_Speed = speed
+        self.Walk()
+        self.m_MoveCmd = self.CreateCommand(0, 'walk', args)
+
+    
+    def Stop(self):
+        self.StopMoving()
+        self.m_Target = None
+        self.m_Speed = 0
+        self.OnRandom()
+
+    
+    def StopMoving(self):
+        if getattr(self, 'm_MoveCmd', None):
+            self.m_MoveCmd.Release()
+        
+        self.m_MoveCmd = None
+
+    
+    def OnRandom(self):
+        (x, y) = self.GetRandPos()
+        self.MoveTo(x, y, 25)
+
+    
+    def GetRandPos(self, rate = 1):
+        import random
+        import map
+        import world
+        (w, h) = map.g_Map.GetSize()
+        (x, y) = self.GetHeroPos()
+        width = world.WINDOW_WIDTH
+        height = world.WINDOW_HEIGHT
+        width = int(width * rate)
+        height = int(height * rate)
+        v1 = random.randint(0, width)
+        v2 = random.randint(0, height)
+        x = max(random.randint(0, 10), min(w - 1, (x - width / 2) + v1))
+        y = max(random.randint(0, 10), min(h - 1, (y - height / 2) + v2))
+        return (x, y)
+
+    
+    def GetHeroPos(self):
+        import hero
+        if hero.g_Hero:
+            return hero.g_Hero.GetPos()
+        
+
+
+
+def UpdateDaoBiao():
+    import param
+    oMgr = param.CExcelMgr.Get()
+    if oMgr:
+        pass
+    oMgr.Reload()
+
+g_Gla = 1
+
+def ChangeWingScal(ic):
+    global g_Gla
+    g_Gla = float(ic)
+    QuickLogin()
+
+
+def OpenSkillMagicDlg(nPage):
+    import dlgskillmagic
+    nPage = int(nPage)
+    dlgskillmagic.ShowDlg(nPage, None)
+
+
+def OpenYard(sPath):
+    import yardcontext
+    yardcontext.GetContext().OpenYardEdit()
+
+
+class CCreateNewPlayerTest(object):
+    '''
+\timport gmcommanddata
+\tgmcommanddata.CCreateNewPlayerTest(1)
+\t'''
+    s_HeroList = []
+    s_HeroShape = chardefine.HERO_SHAPE_LIST
+    s_HeroWeapon = []
+    s_HeroIndex = []
+    s_W = 30
+    
+    def __init__(self, iType1, iType2):
+        import time
+        CCreatePlayerTest.s_HeroList = []
+        import hero
+        (iPosX, iPosY) = hero.GetHeroPos()
+        iStartTime = time.time()
+        self.CreateHero(int(iType1), iPosX, iPosY)
+        self.CreateHero(int(iType2), iPosX + 15, iPosY + 15)
+        print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', time.time() - iStartTime
+
+    
+    def CreateHero(self, bType, iPosX, iPosY):
+        import player
+        import random
+        if bType == 1:
+            iIsUseNewRes = False
+        elif bType == 2:
+            iIsUseNewRes = True
+        else:
+            iIsUseNewRes = None
+        iX = 0
+        iY = 0
+        for i in chardefine.HERO_SHAPE_LIST:
+            for None in range(1, 7):
+                for k in range(1, 12):
+                    CCreatePlayerTest.s_HeroList.append(player.CreatePlayer(iPosX + iX * CCreateNewPlayerTest.s_W, iPosY + iY * CCreateNewPlayerTest.s_W, 0, i, {
+                        'weapon': [
+                            j,
+                            k,
+                            0],
+                        'color': [
+                            0,
+                            0,
+                            0],
+                        'wing': [
+                            0,
+                            0] }, iIsUseNewRes = iIsUseNewRes))
+                    iX += 1
+                    if iX >= 50:
+                        iX = 0
+                        iY += 1
+                        continue
+                    None(None, None, None, None, None, None, None, None, None, None)
+                
+            
+        
+
+
+
+class CShowWalkerTips(object):
+    
+    def __init__(self):
+        
+        def Enter(self):
+            import wrapinterface
+            self.OldEnter()
+            sMsg = '>>>>>>>>>>>>>>>>>>>>\nShape: %s\nDesc: %s\n\n' % (self.m_Shape, self.m_OrigDesc)
+            sDesc = ''
+            for a, b in self.m_OrigDesc.iteritems():
+                sDesc += '%s: %s#r' % (a, b)
+            
+            self.m_oTips = wrapinterface.CTextTips(None, -1, '#YShape#n:#n %s#r#YDesc:#n#r %s' % (self.m_Shape, sDesc), interface.FontLT14_3, direct = 1, edge_color = interface.COLOR_49)
+            self.m_oTips.SetOwner(self)
+            LOG_DEBUG(sMsg)
+
+        
+        def Leave(self):
+            self.OldLeave()
+            self.m_oTips = None
+
+        
+        def GoodsEnter(self):
+            import wrapinterface
+            self.OldEnter()
+            sMsg = '>>>>>>>>>>>>>>>>>>>>\nShape: %s\n' % self.m_iShape
+            self.m_oTips = wrapinterface.CTextTips(None, -1, '#YShape#n:#n %s#r' % self.m_iShape, interface.FontLT14_3, direct = 1, edge_color = interface.COLOR_49)
+            self.m_oTips.SetOwner(self)
+            LOG_DEBUG(sMsg)
+
+        
+        def GoodsLeave(self):
+            self.OldLeave()
+            self.m_oTips = None
+
+        import walker
+        cls = walker.CWalkerBase
+        if not hasattr(cls, 'OldEnter'):
+            cls.OldEnter = cls.Enter
+            cls.Enter = Enter
+        
+        if not hasattr(cls, 'OldLeave'):
+            cls.OldLeave = cls.Leave
+            cls.Leave = Leave
+        
+        import goods
+        cls = goods.CWorldGoods
+        if not hasattr(cls, 'OldEnter'):
+            cls.OldEnter = cls.Enter
+            cls.Enter = GoodsEnter
+        
+        if not hasattr(cls, 'OldLeave'):
+            cls.OldLeave = cls.Leave
+            cls.Leave = GoodsLeave
+        
+
+
+
+class CBlkCheck(object):
+    
+    def __init__(self, iType, iMapID):
+        import map
+        import maptools
+        import usermacro
+        iMapID = int(iMapID)
+        if iMapID == 0:
+            iMapID = map.GetCurrentMapID()
+        
+        if iMapID in map.NEW_RPL_MAP:
+            sFileName = map.NEW_RPL_MAP[iMapID]
+        else:
+            sFileName = '%.4d' % iMapID
+        sBlk = 'map/%s.blk' % sFileName
+        sSpa = 'map/%s.spa' % sFileName
+        sSBlk = 'map/%s_second.blk' % sFileName
+        (iBlkW, iBlkH, dBlk) = maptools.ReadBlk(sBlk)
+        (iSpaW, iSpaH, dSpa) = maptools.ReadBlk(sSpa)
+        (iSBlkW, iSBlkH, dSBlk) = maptools.ReadBlk(sSBlk)
+        if iType == '1':
+            if iBlkW != iSpaW or iBlkH != iSpaH:
+                usermacro.SYSTEM_MSG('blk\xa9Mspa\xa4j\xa4p\xa4\xa3\xb2\xc5')
+                LOG_DEBUG('>>>>>>>>>>>>>>>>>>>>>>>>>>', iMapID, iBlkW, iBlkH, iSpaW, iSpaH)
+                return None
+            
+            for i in range(1, iBlkH + 1):
+                for j in range(1, iBlkW + 1):
+                    if dBlk[i][j] != dSpa[i][j]:
+                        if dSpa[i][j] == 0:
+                            usermacro.SYSTEM_MSG('\xbf\xf9\xbb~\xc2I(%s, %s)' % (j, i))
+                        
+                    dSpa[i][j] == 0
+                
+            
+            usermacro.SYSTEM_MSG('\xb3B\xb2z\xa7\xb9\xb2\xa6')
+        elif iType == '2':
+            if iBlkW != iSBlkW or iBlkH != iSBlkH:
+                usermacro.SYSTEM_MSG('blk\xa9Msblk\xa4j\xa4p\xa4\xa3\xb2\xc5')
+                LOG_DEBUG('>>>>>>>>>>>>>>>>>>>>>>>>>>', iBlkW, iBlkH, iSBlkW, iSBlkH)
+                return None
+            
+            for i in range(1, iBlkH + 1):
+                for j in range(1, iBlkW + 1):
+                    if dBlk[i][j] != dSBlk[i][j]:
+                        if dSpa[i][j] == 0:
+                            usermacro.SYSTEM_MSG('\xbf\xf9\xbb~\xc2I(%s, %s)' % (j, i))
+                        
+                    dSpa[i][j] == 0
+                
+            
+            usermacro.SYSTEM_MSG('\xb3B\xb2z\xa7\xb9\xb2\xa6')
+        
+
+
+
+def StartPydevd(sIP = 'localhost', iPort = '12345'):
+    import nt
+    import exceptions
+    import innerversion
+    if not innerversion.IsInnerVer():
+        return None
+    
+    
+    def IsDir(path):
+        
+        try:
+            st = nt.stat(path)
+        except exceptions.OSError:
+            ose = None
+            return False
+
+        return st.st_mode & 61440 == 16384
+
+    
+    def ListDir(path):
+        lst = [
+            path]
+        for sub_path in nt.listdir(path):
+            if '.svn' in sub_path:
+                continue
+            
+            if 'pyFun' in sub_path:
+                continue
+            
+            dir_path = '%s/%s' % (path, sub_path)
+            if IsDir(dir_path):
+                lst.extend(ListDir(dir_path))
+                continue
+        
+        return lst
+
+    
+    try:
+        import pydevd
+        pydevd.Start(sIP, int(iPort))
+    except:
+        (None, None, (None, None))
+        import sys
+        import init
+        sys.path += ListDir('Tools/debug')
+        import pydevd
+        pydevd.Start(sIP, int(iPort))
+
+
+
+def EndPydevd():
+    import innerversion
+    if not innerversion.IsInnerVer():
+        return None
+    
+    
+    try:
+        import pydevd
+        pydevd.stoptrace()
+    except:
+        LOG_DEBUG('\xa5\xbc\xb3s\xb1\xb5')
+
+
+
+def StartYiBug():
+    import permission
+    if not permission.IsDYNetInit():
+        return None
+    
+    if not permission.IsDYNet():
+        return None
+    
+    import yibug
+    yibug.YBInit()
+
+
+def WingDataTransform():
+    import restool
+    restool.HorseInfoToTxt()
+
+
+def OpenNewGroupDlg():
+    import groupcontext
+    import groupdefines
+    pContext = groupcontext.Get()
+    pContext.OpenGroupDlg(groupdefines.E_GROUPPAGE_INFO)
+
+
+def StartBH(sName = None):
+    import behaviorc.product as behaviorc
+    if sName:
+        behaviorc.product.StartTestBH(sName)
+    else:
+        behaviorc.product.StopTestBH()
+
+
+class ShowItemInfo(object):
+    
+    def __init__(self):
+        
+        def Enter(self):
+            import log
+            self.OldEnter()
+            oItem = self.GetItem()
+            if oItem:
+                sMsg = '>>>>>>>>>>>>>>>>>>>>\n\nInfo: %s\n\n>>>>>>>>>>>>>>>>>>>>\n\n' % log.GetStr(oItem.__dict__)
+                LOG_DEBUG(sMsg)
+            
+
+        import dlgitem
+        cls = dlgitem.CInterfaceItem
+        if not hasattr(cls, 'OldEnter'):
+            cls.OldEnter = cls.Enter
+            cls.Enter = Enter
+        
+
+
+
+def AutoMG():
+    global A
+    import C_object
+    
+    def Start(*args):
+        import war
+        import netchat
+        war.OldStart(*args)
+        netchat.C2SPlayerWizard('win')
+
+    import war
+    if not hasattr(war, 'OldStart'):
+        war.OldStart = war.Start
+        war.Start = Start
+    
+    
+    def oFinishCA():
+        import autofindpath
+        import random
+        autofindpath.AutoWalkTo(random.randint(0, 1000), random.randint(0, 1000), oCallBackFunc = oFinishCB)
+
+    
+    def oFinishCB():
+        import autofindpath
+        import random
+        autofindpath.AutoWalkTo(random.randint(0, 1000), random.randint(0, 1000), oCallBackFunc = oFinishCA)
+
+    A = C_object.CBaseObject(None)
+    
+    def Bengin(*args):
+        oFinishCA()
+        return ()
+
+    A.CreatePyCommand(3600, Bengin)
+    import setfps
+    setfps.CSetFps.Use30GameFPS = setfps.CSetFps.Use60GameFPS
+    oFinishCA()
+
+
+def OpenMapEditor(*args):
+    import map
+    if not map.GetGameMapObject():
+        return None
+    
+    import dlgplaceobjeditor as d
+    d.Show()
+
+
+def TestGuide(sGuideID = 1):
+    import mdguide
+    mdguide.GetCGuideMgr().SetGuideID(int(str(sGuideID).strip()))
+
+
+def TestFurnitureeditor(*args):
+    import dlgyardeffecteditor
+    if args:
+        sPath = args[0]
+    else:
+        sPath = ''
+    dlgyardeffecteditor.Show(sPath)
+
+
+def TestAutoGotoYard(*args):
+    import testyard
+    
+    try:
+        fTime = float(args[0])
+    except:
+        fTime = 0.5
+
+    testyard.AutoGotoYard(fTime)
+
+
+def TestBanAvatar():
+    import avatarnewdata
+    import usermacro
+    avatarnewdata.CAN_SEE_UNVALID = not (avatarnewdata.CAN_SEE_UNVALID)
+    if avatarnewdata.CAN_SEE_UNVALID:
+        usermacro.PROMPT_MSG('\xb6}\xa9\xf1\xa4F\xab\xcc\xbd\xaa\xaa\xba\xc0Y\xb9\xb3\xa8q')
+    else:
+        usermacro.PROMPT_MSG('\xb8T\xa4\xee\xa4F\xab\xcc\xbd\xaa\xaa\xba\xc0Y\xb9\xb3\xad\xd7')
+
+
+def AutoTest(*args):
+    import behaviorc.mxautotest as behaviorc
+    behaviorc.mxautotest.StartAutoTest()
+
+
+def SwitchYardMapCursorPos(*args):
+    import delegateyardcursorpos
+    delegateyardcursorpos.SwitchShow()
+
+
+def ClientUpdate(*args):
+    global g_oOnlineUpdate
+    import onlinecodelist
+    g_oOnlineUpdate = onlinecodelist.GetClientUpdate()
+    g_oOnlineUpdate.ShowClientUpdateDlg()
+
+
+def ClientUpdateTest():
+    pass
+
+
+def ShowChpEditor():
+    import dlgchpeditor
+    dlgchpeditor.ShowChpEditor()
+
+
+def TestScript():
+    import game
+    import commoncb
+    if game.GetSpecialFlag() is None:
+        import netcommon
+        omd = __import__(__name__)
+        commoncb.RegistCB('gmcommand', omd, 'TestScript')
+        netcommon.C2SAskSpecialPlayer()
+        return None
+    
+    if game.CheckCanUseNG():
+        import sys
+        if 'testscript' in sys.modules:
+            del sys.modules['testscript']
+        
+        __import__('testscript')
+    
+
+
+def ChangeStyle(sStyle):
+    import netchat
+    import netnewcharres
+    
+    try:
+        iStyle = int(sStyle) - 1
+    except:
+        iStyle = -1
+
+    import usermacro
+    if iStyle not in range(0, 5):
+        usermacro.PROMPT_MSG('\xb0\xd1\xbc\xc6\xbf\xf9\xbb~')
+    
+    netnewcharres.C2SSwitchUIStyle(iStyle)
+    import netquicklogin
+    netquicklogin.Connect(False, '\xab\xfc\xa5O\xa4\xc1\xb4\xab\xad\xb7\xae\xe6')
+
+
+def BanReferencePrice():
+    import mdconsignmallsetitemprice
+    oModel = mdconsignmallsetitemprice.GetCConsignmallSetItemPriceModel()
+    oModel.m_bBanServerReferencePrice = not (oModel.m_bBanServerReferencePrice)
+
+
+def TestConsignmall(*args):
+    import consignmalltest
+    consignmalltest.TestSkill(args[0], int(args[1]))
+
+
+def TestNewSound(*args):
+    import audioobj
+    import usermacro
+    audioobj.TEST = not (audioobj.TEST)
+    if audioobj.TEST:
+        usermacro.PROMPT_MSG('\xa4w\xb6}\xb1\xd2\xb7s\xad\xb5\xae\xc4\xbc\xbd\xa9\xf1\xa5\xb4\xa6L')
+    else:
+        usermacro.PROMPT_MSG('\xa4w\xc3\xf6\xb3\xac\xb7s\xad\xb5\xae\xc4\xbc\xbd\xa9\xf1\xa5\xb4\xa6L')
+
+
+def ChangeCharRes(bIsNew):
+    import netchat
+    netchat.C2SPlayerWizard("import huodong;huodong.GetHuoDong('xmxresswitch').SetLogicType(Master,%s)" % bIsNew)
+
+
+def OpenChatTest(sOpen):
+    import cfg
+    import usermacro
+    if sOpen == '1':
+        usermacro.PROMPT_MSG('\xa4w\xb6}\xb1\xd2\xb2\xe1\xa4\xd1\xabH\xae\xa7\xc5\xe3\xa5\xdcid')
+    elif sOpen == '0':
+        usermacro.PROMPT_MSG('\xa4w\xc3\xf6\xb3\xac\xb2\xe1\xa4\xd1\xabH\xae\xa7\xc5\xe3\xa5\xdcid')
+    
+    cfg.SaveData('mx.ini', 'Game', 'chattest', sOpen)
+
+
+def OpenMagicTest():
+    import dlgtestmagicpreviewmain
+    dlgtestmagicpreviewmain.Show()
+
+
+def ShowWeather(sWeatherID):
+    import weather
+    sWeatherType = weather.WEATHERNORMAL
+    iWeatherID = int(sWeatherID)
+    weather.CWeatherMgr.ShowWeather(sWeatherType, iWeatherID)
+
+
+def TestNewTask():
+    import mainmenu
+    mainmenu.GetMainMenu().InitNewTaskFollow()
+
+
+def TestCreateRole(iShape, fScale = None, iXOffsetX = None, iYOffsetY = None):
+    import dailykejudata
+    import roleshapecreator
+    import innerversion
+    import misc
+    if not innerversion.IsInnerVer():
+        return None
+    
+    dData = misc.DeepCopy(dailykejudata.GetSummonData(iShape))
+    if fScale is not None:
+        dData['fScale'] = float(fScale)
+        if dData['fScale'] == 0:
+            dData['fScale'] = 1
+        
+    
+    if iXOffsetX is not None:
+        dData['iXOffset'] = int(iXOffsetX)
+    
+    if iYOffsetY is not None:
+        dData['iYOffset'] = int(iYOffsetY)
+    
+    dailykejudata.DATA[int(iShape)] = dData
+    iShape = int(iShape)
+    roleshapecreator.NO_UPLOAD_FLAG = True
+    roleshapecreator.Test(iShape)
+
+
+def HoldOnline():
+    import netlogin
+    import hero
+    import roleshapecreator
+    sAccount = netlogin.g_CurrAccount
+    iRoleID = hero.GetRealID()
+    roleshapecreator.HoldLogin(sAccount, iRoleID)
+
+
+def CheckMapAni():
+    
+    try:
+        import testmapani
+        testmapani.Test()
+    except:
+        pass
+
+
+
+def StartExplorer(sPath):
+    pass
+
+
+def TestHHS(sOpen):
+    import permission
+    import usermacro
+    bState = sOpen == '1'
+    usermacro.PROMPT_MSG('\xa4\xdb\xa4\xc6\xa5\xdb\xb4\xfa\xb8\xd5\xaa\xac\xbaA%s' % bState)
+    permission.SetHHSOpenState(bState)
+
+
+def TestMYQ():
+    import myqtest
+    myqtest.ShowMyMainDlg()
+
+
+def OpenUIEditor():
+    import dlguieditor
+    dlguieditor.CreateUIEditor()
+
+
+def OpenColorEditor():
+    import dlginnercoloreditor
+    dlginnercoloreditor.Show()
+
+
+def CheckJiaSu():
+    import pubblacklist
+    import usermacro
+    usermacro.PROMPT_MSG('\xb6}\xa9l\xc0\xcb\xacd\xa5[\xb3t')
+    pubblacklist.CheckFps2()
+
+
+def TestCoupleNumber(*sTextList):
+    import prettynumtitleview
+    sName = sTextList[0]
+    oCls = prettynumtitleview.CCoupleNumEff
+    if sName in ('HEART_OFFSET', 'FINAL_OFFSET'):
+        sX = sTextList[1]
+        sY = sTextList[2]
+        iX = int(sX)
+        iY = int(sY)
+        if not hasattr(oCls, 'old' + sName):
+            setattr(oCls, 'old' + sName, getattr(oCls, sName, None))
+        
+        (iOldX, iOldY) = getattr(oCls, 'old' + sName, None)
+        setattr(oCls, sName, (iX + iOldX, iY + iOldY))
+    elif sName in ('NEXT_TIME', 'NUM_SHOW_TIME'):
+        iValue = int(sTextList[1])
+        setattr(oCls, sName, iValue)
+    elif sName in ('\xb1\xa1\xabQ', '\xb6\xc0\xaa\xf7'):
+        sSubName = sTextList[1]
+        iTime = float(sTextList[2])
+        if sName == '\xb6\xc0\xaa\xf7':
+            dConfig = prettynumtitleview.ANI_TYPE_2CONFIG
+        else:
+            dConfig = prettynumtitleview.COUPLE_TYPE_2CONFIG
+        if sSubName == '\xba\xd9\xbf\xd7':
+            dConfig[prettynumtitleview.ANI_TITTLE]['next']['time'] = iTime
+        elif sSubName == '\xb0\xca\xb5e':
+            dConfig[prettynumtitleview.ANI_EFF]['next']['time'] = iTime
+        elif sSubName == '\xe8\xb0\xb8\xb9':
+            dConfig[prettynumtitleview.ANI_PRETTY_ID]['next']['time'] = iTime
+        
+    
+
+
+def TestMusicVolume(*sTextList):
+    import musicplaymgr
+    musicplaymgr.BASE_VOL = int(sTextList[0])
+
+
+def AutoTxtColorCheck(*sTextList):
+    import autocheckinterface
+    import test_combdialog
+    autocheckinterface.InitCheckMgr()
+    test_combdialog.Test()
+
+
+def SetYardBlockEditorArgs(*sTextList):
+    import dlgyardblockeditor
+    dlgyardblockeditor.g_LRTDArea = [ int(i) for i in sTextList ]
+    dlgyardblockeditor.ShowDlgF()
+
+
+def TestNewFrm(*sTextList):
+    (sFrmId,) = sTextList
+    iFrmId = int(sFrmId)
+    import avatar
+    avatar.g_iTestFrmId = iFrmId
+    import avatarfrmdatamgr
+    avatarfrmdatamgr.g_AvatarFrmDataMgr = None
+    QuickLogin()
+
+
+class CUpdateUIPath(object):
+    
+    def __init__(self):
+        self.UpdateUIPath()
+        self.ClearAllOpenDlg()
+
+    
+    def UpdateUIPath(self):
+        import usermacro
+        sCmd = 'svn update %s' % interface.UIPath
+        Popen(sCmd)
+        usermacro.PROMPT_MSG('\xa7\xf3\xb7s%s\xa6\xa8\xa5\\' % interface.UIPath)
+
+    
+    def ClearAllOpenDlg(self):
+        import combdialog
+        import sys
+        for sModule, oModule in sys.modules.iteritems():
+            for sName in dir(oModule):
+                oAttr = getattr(oModule, sName)
+                if isinstance(oAttr, combdialog.CCombDialog):
+                    if hasattr(oAttr, 'CloseWindow') and callable(oAttr.CloseWindow):
+                        oAttr.CloseWindow()
+                    
+                    setattr(oModule, sName, None)
+                    continue
+            
+        
+        import popupmgr
+        popupmgr.g_PopupMgr = None
+
+
+
+def TestGmFunc(sName):
+    import innerversion
+    if not innerversion.IsInnerVer():
+        return None
+    
+    import testbaseobj
+    testbaseobj.ShowTest(sName)
+
+
+def ShowUISelectDlg():
+    import innerversion
+    import autosimpleuiselect
+    if not innerversion.IsInnerVer():
+        return None
+    
+    autosimpleuiselect.ShowUISelectDlg()
+
+
+class CChangeBuyBPType(object):
+    s_bBuyBPType = False
+    
+    def __init__(self):
+        import permission
+        import usermacro
+        if permission.GetOverdoVersion():
+            CChangeBuyBPType.s_bBuyBPType = not (CChangeBuyBPType.s_bBuyBPType)
+            if CChangeBuyBPType.s_bBuyBPType:
+                LOG_DEBUG('\xb1z\xa4w\xb8g\xa4\xc1\xb4\xab\xa8\xecSG\xc1\xca\xb6RBP\xbc\xd2\xa6\xa1\xa1A\xaf\xac\xa7A\xa6n\xb9B')
+            else:
+                LOG_DEBUG('\xb1z\xa4w\xb8g\xa4\xc1\xb4\xab\xa8\xec\xa5\xbf\xb1`\xc1\xca\xb6RBP\xbc\xd2\xa6\xa1\xa1A\xaf\xac\xa7A\xa6n\xb9B')
+        
+
+    
+    def GetBuyBPType(cls):
+        return cls.s_bBuyBPType
+
+    GetBuyBPType = classmethod(GetBuyBPType)
+
+
+def ItemChange():
+    import mdpropitem
+    import usermacro
+    import itemdata
+    oChangeCtrl = mdpropitem.GetChangeCtrl()
+    if oChangeCtrl.GetOpenAddChange():
+        oChangeCtrl.EndAddChange()
+        sMsgList = []
+        dAllInfoData = { }
+        for sName, iQuantity in oChangeCtrl.GetOpenAddChangeList():
+            tKey = (sName, iQuantity)
+            if tKey in dAllInfoData:
+                dAllInfoData[tKey] += 1
+                continue
+            dAllInfoData[tKey] = 1
+        
+        for sName, iQuantity in dAllInfoData.iteritems():
+            iNum = None
+            sMsgList.append('%s*%s\t%s' % (sName, iQuantity, iNum))
+        
+        sMsg = '\n'.join(sMsgList)
+        LOG_DEBUG(sMsg)
+        fd = open('ItemChange.txt', 'w+')
+        fd.write(sMsg)
+        fd.close()
+        usermacro.PROMPT_MSG('\xa7\xb9\xa6\xa8\xb0O\xbf\xfd\xbc\xc6\xbe\xda')
+    else:
+        oChangeCtrl.StartAddChange()
+        usermacro.PROMPT_MSG('\xb6}\xa9l\xb0O\xbf\xfd\xbc\xc6\xbe\xda')
+
+
+def OpenTestBubble():
+    import dlgtestbubble
+    dlgtestbubble.ShowTestBubble()
+
+
+def OpenShowNewRoleView():
+    import dlgroleview
+    dlgroleview.Show()
+
+
+def Walk(iSpeed, iNum = 1):
+    import walktest
+    walktest.WalkText(float(iSpeed), int(iNum))
+
+
+def OpenMizongTest():
+    import activitybasetest
+    activitybasetest.TestXinfu()
+    activitybasetest.TestChunjie()
+    import dlg2021springactivitymain
+    dlg2021springactivitymain.DoShow(21006)
+
+
+def Qifu():
+    import dlgchunjieqifu_entry
+    dlgchunjieqifu_entry.CSpringFestivalEntryDlg.OpenUI()
+
+
+def starrank(iSub):
+    import testladderrankallstar
+    testladderrankallstar.TestInfo(iSub)
+
+
+def OpenUIProfile():
+    import mixinfunc
+    mixinfunc.DoMixIn()
+    mixinfunc.CMixInBase.OPEN_CREATTIMESTATICS = True
+    import dlguiprofile
+    dlguiprofile.ShowSwitch()
+
+
+def OpenMubanhaoDlg():
+    import dlgmubanhaomain
+    dlgmubanhaomain.OpenMubanhaoMainDlg()
+
+
+def OpenBtnLightEditor():
+    import testbtnlightshow
+    testbtnlightshow.Run()
+
+
+def FishPathTool(sState, sPoint = '200'):
+    import fishpathtool
+    if sState == '1':
+        fishpathtool.Start()
+    elif sState == '2':
+        fishpathtool.AddPoint()
+    elif sState == '3':
+        fishpathtool.ChangePoint(int(sPoint))
+    elif sState == '4':
+        fishpathtool.InputPath()
+    
+
+
+def OpenPubbleTool():
+    import dlgchatbubble
+    dlgchatbubble.OpenChatBubbleDlg()
+
+
+def ReplceAllFont(sNewFontName = '', sLinkFontName = ''):
+    import os
+    import fontdata
+    import gamefont
+    import interface
+    import usermacro
+    import combdialog
+    import misc
+    
+    def CreateFont(sFontName, iFontSize, iWeight = 400, bEdge = False, iEdgeRadius = 1, bGrad = False, bMono = False, iOffsetY = (0,)):
+        import gamefont
+        return gamefont.Old_CreateFont(sNewFontName, iFontSize, iWeight, bEdge, iEdgeRadius, bGrad, bMono, iOffsetY)
+
+    if not hasattr(gamefont, 'Old_CreateFont'):
+        gamefont.Old_CreateFont = gamefont.CreateFont
+    
+    if sNewFontName is None:
+        return None
+    
+    if sNewFontName.lower().endswith('ttf') or sNewFontName.lower().endswith('otf'):
+        gamefont.FONT_DICT[sNewFontName] = sNewFontName
+        if sNewFontName not in gamefont.FONTFROMFILE:
+            gamefont.FONTFROMFILE.append(sNewFontName)
+        
+        oOperateFun = CreateFont
+        sTip = '\xa5\xfe\xa7\xbd\xb8m\xb4\xab\xa6r\xc5\xe9\xa4\xe5\xa5\xf3\xa1G%s' % sNewFontName
+        if sLinkFontName:
+            pass
+        None if sLinkFontName.lower().endswith('ttf') or sLinkFontName.lower().endswith('otf') else sLinkFontName.lower().endswith('otf')
+        if sLinkFontName == '':
+            gamefont.LINK_FONT_INFO[sNewFontName] = None
+        
+    elif sNewFontName and sNewFontName in gamefont.FONT_DICT:
+        oOperateFun = CreateFont
+        sTip = '\xa5\xfe\xa7\xbd\xb8m\xb4\xab\xa6r\xc5\xe9\xa1G%s' % sNewFontName
+    else:
+        oOperateFun = gamefont.Old_CreateFont
+        lstFont = gamefont.FONT_DICT.keys()
+        sTip = '\xa4w\xc1\xd9\xad\xec\xc0q\xbb{\xb3]\xa9w\xa1A\xa5i\xbf\xef\xa6r\xc5\xe9\xa6\xb3\xa1G%s' % ' '.join(lstFont)
+    gamefont.CreateFont = oOperateFun
+    dFontInfo = fontdata.GetFontInfo()
+    gamefont.ClearFontInof()
+    for sFont in dFontInfo.keys():
+        iFontID = fontdata.GetFont(sFont)
+        setattr(interface, sFont, iFontID)
+    
+    combdialog.LoadConfig()
+    usermacro.SYSTEM_MSG(sTip)
+
+
+def GetAllFont():
+    import os
+    import gamefont
+    sFontList = gamefont.FONT_DICT.keys()
+    for _, _, lstFiles in os.walk('Fonts'):
+        [] += _[1]
+    
+    return sFontList
+
+
+def ShowSvnChange():
+    import dlgsvntool
+    dlgsvntool.OpenShowInfoDlg()
+
+
+def DrawTimeTest(iSize):
+    import testdrawmagic
+    testdrawmagic.GetTestDrawMagic().CreateTestImage(iSize)
+
+
+def HangUp(sType):
+    import detecthangup
+    import usermacro
+    
+    try:
+        iType = int(sType)
+    except ValueError:
+        usermacro.SYSTEM_MSG('\xb6\xf1\xa4J\xb0\xd1\xbc\xc6\xbf\xf9\xbb~\xa1A1: \xb5\xb2\xa7\xf4\xb1\xbe\xbe\xf7 0: \xb6}\xa9l\xb1\xbe\xbe\xf7')
+        return None
+
+    iReportType = None if iType else detecthangup.HANG_UP_BEGIN
+    detecthangup.GetDetector().Report(iReportType)
+
+
+def OpenRedSys():
+    import dlgredpointfoldersystem
+    dlgredpointfoldersystem.OpenMain()
+
+
+def CloseBlackRoomJudge():
+    import netmap
+    if not getattr(netmap, 'm_bIsCloseBlackRoomJudge', False):
+        netmap.m_bIsCloseBlackRoomJudge = True
+    else:
+        netmap.m_bIsCloseBlackRoomJudge = False
+    for sName in ('IsInBlackRoom', 'IsInAllBlackRoom'):
+        if not hasattr(netmap, 'old_%s' % sName):
+            setattr(netmap, 'old_%s' % sName, getattr(netmap, sName, None))
+        
+        if not getattr(netmap, 'm_bIsCloseBlackRoomJudge', False):
+            setattr(netmap, sName, (lambda : False))
+            continue
+        setattr(netmap, sName, getattr(netmap, 'old_%s' % sName, None))
+    
+
+
+def Chatmsg(sTxt = '', sType = '8'):
+    import chatoutput
+    import chatdefines
+    if not sTxt:
+        for iType in chatdefines.CH_NUM2NAME:
+            sType = str(iType)
+            
+            try:
+                chatoutput.AddChat('#s(%s)%s type:%s' % (sType, chatdefines.CH_NUM2NAME[iType], sType))
+            continue
+            continue
+
+        
+    else:
+        chatoutput.AddChat('#s(%s)%s' % (sType, sTxt))
+
+DATA = {
+    '$chatmsg': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa4\xa3\xa6P\xc0W\xb9D\xb2\xe1\xa4\xd1\xaa\xed\xb2{',
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        'func': Chatmsg,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4\xa3\xa6P\xc0W\xb9D\xb2\xe1\xa4\xd1\xaa\xed\xb2{',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 99 },
+    '$reddot': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xac\xf5\xc2I\xa8t\xb2\xce\xa4u\xa8\xe3',
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        'func': OpenRedSys,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xb4\xb6}\xac\xf5\xc2I\xa8t\xb2\xce\xa4u\xa8\xe3',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 99 },
+    '$hangup': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb1\xbe\xbe\xf7\xb4\xfa\xb8\xd5',
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        'func': HangUp,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb1\xbe\xbe\xf7\xb4\xfa\xb8\xd5',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 99 },
+    '$showsvnchange': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xc0\xf2\xa8\xfa\xa4u\xb3\xe6\xa7\xef\xc5\xdc',
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        'func': ShowSvnChange,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc0\xf2\xa8\xfa\xa4u\xb3\xe6\xa7\xef\xc5\xdc',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 99 },
+    '$drawtimetest': {
+        'func': DrawTimeTest,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 1,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xe8\xacV\xae\xc4\xb2v\xb4\xfa\xb8\xd5',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xe8\xacV\xae\xc4\xb2v\xb4\xfa\xb8\xd5' },
+    '$font': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5\xa6\xa6E',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb8m\xb4\xab\xa6r\xc5\xe9',
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        'func': ReplceAllFont,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xfe\xa7\xbd\xb8m\xb4\xab\xa6r\xc5\xe9',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 20 },
+    '$testmizong': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5\xa6\xa6E',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xb4\xb6}\xb0g\xc2\xdc\xac\xc9\xad\xb1',
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        'func': OpenMizongTest,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xb4\xb6}\xb0g\xc2\xdc\xac\xc9\xad\xb1',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 20 },
+    '$testqipao': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5\xa6\xa6E',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xb4\xb6}\xae\xf0\xaaw\xb9w\xc4\xfd\xac\xc9\xad\xb1',
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        'func': OpenTestBubble,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xb4\xb6}\xae\xf0\xaaw\xb9w\xc4\xfd\xac\xc9\xad\xb1',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 20 },
+    '$ItemChange': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb0O\xbf\xfd\xa4@\xacq\xae\xc9\xb6\xa1\xaa\xba\xb9D\xa8\xe3\xbcW\xa5[',
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        'func': ItemChange,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb0O\xbf\xfd\xa4@\xacq\xae\xc9\xb6\xa1\xaa\xba\xb9D\xa8\xe3\xbcW\xa5[',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 20 },
+    '$BPType': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa4\xc1\xb4\xab\xaf\xb5\xc4_\xbf\xfd\xaa\xba\xc1\xca\xb6R\xa4\xe8\xa6\xa1',
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        'func': CChangeBuyBPType,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4\xc1\xb4\xab\xaf\xb5\xc4_\xbf\xfd\xaa\xba\xc1\xca\xb6R\xa4\xe8\xa6\xa1',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 20 },
+    '$\xb3\xd0\xab\xd8UI': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xae\xda\xbe\xda\xac\xc9\xad\xb1\xb3\xd0\xab\xd8UI',
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        'func': ShowUISelectDlg,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8t\xb2\xce\xb4\xfa\xb8\xd5',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 20 },
+    '$\xa8t\xb2\xce\xb4\xfa\xb8\xd5': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5\xa6\xa6E',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa8t\xb2\xce\xb4\xfa\xb8\xd5',
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '\xa8t\xb2\xce\xa6W\xa6r',
+        'func': TestGmFunc,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8t\xb2\xce\xb4\xfa\xb8\xd5',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 20 },
+    '$\xa7\xf3\xb7sUI': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5\xa6\xa6E',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa7\xf3\xb7s\xb9C\xc0\xb8UI\xb8\xf4\xae|',
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        'func': CUpdateUIPath,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xf3\xb7s\xb9C\xc0\xb8UI\xb8\xf4\xae|',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 20 },
+    '$testnewfrm': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '7',
+        'func': TestNewFrm,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3]\xb8m\xb7s\xc0Y\xb9\xb3\xae\xd8\xb6}\xc3\xf6\xae\xc4\xaaG',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 20 },
+    '$setyardblockeditorargs': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '40 10 20 40',
+        'func': SetYardBlockEditorArgs,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc2X\xa4j\xb3\xc3\xa8\xe3\xa9\xb3\xaaO\xae\xe6\xa4l\xc2\\\xa9\xf1\xb0\xcf\xb0\xec',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 20 },
+    '$autotxtcolorcheck': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        'func': AutoTxtColorCheck,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa6r\xa6\xe2\xa6\xdb\xb0\xca\xc0\xcb\xb4\xfa',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 20 },
+    '$testmusicvolume': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '100',
+        'func': TestMusicVolume,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbd\xd5\xbe\xe3\xad\xb5\xbc\xd6\xad\xb5\xb6q\xabY\xbc\xc6',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 20 },
+    '$couplenumber': {
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 'HEART_OFFSET 0 0',
+        'func': TestCoupleNumber,
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbd\xd5\xbe\xe3\xb1\xa1\xabQ\xe8\xb0\xb8\xb9\xb0\xd1\xbc\xc6',
+        '\xab\xfc\xa5O\xc5v\xad\xad': 20 },
+    '$checkjs': {
+        'func': CheckJiaSu,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5\xa6\xa6E',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xc0\xcb\xacd\xa5[\xb3t',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc0\xcb\xacd\xa5[\xb3t' },
+    '$coloreditor': {
+        'func': OpenColorEditor,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5\xa6\xa6E',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xacV\xa6\xe2\xbds\xbf\xe8\xbe\xb9',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xacV\xa6\xe2\xbds\xbf\xe8\xbe\xb9' },
+    '$uieditor': {
+        'func': OpenUIEditor,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5\xa6\xa6E',
+        '\xab\xfc\xa5O\xb4y\xadz': 'ui\xbds\xbf\xe8\xbe\xb9',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': 'ui\xbds\xbf\xe8\xbe\xb9' },
+    '$hhs': {
+        'func': TestHHS,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5\xa6\xa6E',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xa4\xdb\xa4\xc6\xa5\xdb',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xa4\xdb\xa4\xc6\xa5\xdb' },
+    '$File': {
+        'func': StartExplorer,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xfc\xb3N',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb8\xea\xb7\xbd\xba\xde\xb2z\xbe\xb9',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb8\xea\xb7\xbd\xba\xde\xb2z\xbe\xb9' },
+    '$charstyle': {
+        'func': ChangeCharRes,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xfc\xb3N',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa4\xc1\xb4\xab\xb7s\xc2\xc2\xa4H\xaa\xab\xad\xb7\xae\xe6 1\xb7s\xaa\xa9 2\xc2\xc2\xaa\xa9',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4\xc1\xb4\xab\xb7s\xc2\xc2\xa4H\xaa\xab\xad\xb7\xae\xe6' },
+    '$style': {
+        'func': ChangeStyle,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 4,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xfc\xb3N',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xad\xd7\xa7\xef\xad\xb7\xae\xe6',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xad\xd7\xa7\xef\xad\xb7\xae\xe6' },
+    '$chp': {
+        'func': ShowChpEditor,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': 'chp\xbds\xbf\xe8\xbe\xb9',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': 'chp\xbds\xbf\xe8\xbe\xb9' },
+    '$automx': {
+        'func': AutoTest,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb9B\xa6\xe6\xa6\xdb\xb0\xca\xb4\xfa\xb8\xd5',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb9B\xa6\xe6\xa6\xdb\xb0\xca\xb4\xfa\xb8\xd5' },
+    '$bh': {
+        'func': StartBH,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb0\xf5\xa6\xe6\xa6\xe6\xac\xb0\xbe\xf0',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb0\xf5\xa6\xe6\xa6\xe6\xac\xb0\xbe\xf0' },
+    '$AutoMG': {
+        'func': AutoMG,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb0\xf5\xa6\xe6\xa6\xe6\xac\xb0\xbe\xf0',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb0\xf5\xa6\xe6\xa6\xe6\xac\xb0\xbe\xf0' },
+    '$showitemid': {
+        'func': ShowItemInfo,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xb4\xa6L\xb9D\xa8\xe3\xabH\xae\xa7',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xb4\xa6L\xb9D\xa8\xe3\xabH\xae\xa7' },
+    '$pydevd': {
+        'func': StartPydevd,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 'localhost 12345',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb6}\xb1\xd2\xbd\xd5\xb8\xd5',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb6}\xb1\xd2\xbd\xd5\xb8\xd5' },
+    '$dispydevd': {
+        'func': EndPydevd,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xc3\xf6\xb3\xac\xbd\xd5\xb8\xd5',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc3\xf6\xb3\xac\xbd\xd5\xb8\xd5' },
+    '$yibug': {
+        'func': StartYiBug,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb6}\xb1\xd2YiBug',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb6}\xb1\xd2YiBug' },
+    '$\xb7s\xaa\xa9\xa4H\xaa\xab\xbds\xbf\xe8': {
+        'func': OpenShowNewRoleView,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xfc\xb3N',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb7s\xaa\xa9\xa4H\xaa\xab\xbds\xbf\xe8',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb7s\xaa\xa9\xa4H\xaa\xab\xbds\xbf\xe8' },
+    '$Blk\xc0\xcb\xacd': {
+        'func': CBlkCheck,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1,0',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xfc\xb3N',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb0\xd1\xbc\xc61\xac\xb01\xc0\xcb\xacdblk\xa9Mspa,2\xc0\xcb\xacdblk\xa9Msblk#r\xb0\xd1\xbc\xc62\xac\xb0\xa6a\xb9\xcf\xbds\xb8\xb9,0\xac\xb0\xb7\xed\xabe\xa6a\xb9\xcf',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': 'Blk\xc0\xcb\xacd' },
+    '$\xa8\xa4\xa6\xe2\xb3y\xab\xac\xabH\xae\xa7': {
+        'func': CShowWalkerTips,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xfc\xb3N',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa8\xa4\xa6\xe2\xb3y\xab\xac\xabH\xae\xa7',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8\xa4\xa6\xe2\xb3y\xab\xac\xabH\xae\xa7' },
+    '$\xa4\xc1\xb4\xab\xaf\xcd\xbbH\xad\xbf\xbc\xc6': {
+        'func': ChangeWingScal,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1.0',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa4\xc1\xb4\xab\xaf\xcd\xbbH\xad\xbf\xbc\xc6',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '$\xa4\xc1\xb4\xab\xaf\xcd\xbbH\xad\xbf\xbc\xc6' },
+    '$\xb8\xea\xb7\xbd\xaf\xca\xa5\xa2\xbcu\xb5\xa1\xb4\xfa\xb8\xd5': {
+        'func': CResLackTest,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb8\xea\xb7\xbd\xaf\xca\xa5\xa2\xbcu\xb5\xa1\xb4\xfa\xb8\xd5' },
+    '$aa': {
+        'func': QuickLogin,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc0\xfe\xb3s' },
+    '$addrideexp': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '\xa6\xdb\xa4vID 10000',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa1\xf5\xbf\xe9\xa4J\xa1G\xa8\xa4\xa6\xe2ID \xa7\xa4\xc3M\xb8g\xc5\xe7 \xa7Y\xa5i  \xb9\xea\xa8\xd2\xa1G60001 10000 \xb8\xd3\xa8\xa4\xa6\xe2\xaa\xba\xa7\xa4\xc3M\xb8g\xc5\xe7\xb3]\xb8m\xac\xb01\xb8U',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xa4\xc3M\xb8g\xc5\xe7\xad\xd7\xa7\xef\xac\xb01W' },
+    '$addsummon': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '2460 0 1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa1\xf5\xbf\xe9\xa4J\xa1G\xa5l\xb3\xea\xc3~ID \xb5\xa5\xaf\xc5 1 \xa7Y\xa5i\xc0\xf2\xb1o\xb9\xef\xc0\xb3\xaa\xba\xc5\xdc\xb2\xa7\xa5l\xb3\xea\xc3~ \xb9\xea\xa8\xd2\xa1G2460 0 1  \xbd\xc6\xbbs\xa4@\xa5u0\xaf\xc5\xaa\xba\xc5\xdc\xb2\xa7\xabC\xb5\xec\xbcC\xab\xc8',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbd\xc6\xbbs\xa4@\xa5u\xa5l\xb3\xea\xc3~' },
+    '$addtitle': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '60001 222',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa1\xf5\xbf\xe9\xa4J\xa1G\xa8\xa4\xa6\xe2ID \xba\xd9\xbf\xd7\xa1A\xa7Y\xa5i\xc0\xf2\xb1o\xb9\xef\xc0\xb3\xba\xd9\xbf\xd7 \xb9\xea\xa8\xd2\xa1G60001 222',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,25,20,10',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbcW\xa5[\xa4@\xad\xd3\xba\xd9\xbf\xd7' },
+    '$ani': {
+        'func': Ani,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 1,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbc\xbd\xa9\xf1\xb3\xf5\xb4\xba\xb0\xca\xb5e',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3\xf5\xb4\xba\xb0\xca\xb5e' },
+    '$aura': {
+        'func': Aura,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1 1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbf\xe9\xa4J2\xad\xd3\xbc\xc6\xa6r \xb2\xc4\xa4@\xad\xd3\xbc\xc6\xa6r\xaa\xed\xa5\xdc\xa5\xfa\xc0\xf4\xba\xd8\xc3\xfe \xb2\xc4\xa4G\xad\xd3\xbc\xc6\xa6r\xaa\xed\xa5\xdc\xa5\xfa\xc0\xf4\xacV\xa6\xe2',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4H\xaa\xab\xb8}\xa4U\xa5\xfa\xc0\xf4' },
+    '$ac': {
+        'func': AutoCM,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '150',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa6\xdb\xb0\xca\xb0\xa3\xc5]' },
+    '$autoeat': {
+        'func': AutoEat,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa6\xdb\xb0\xca\xa6Y\xb2i\xb6\xb9' },
+    '$ab': {
+        'func': AutoGetZyBaotu,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa6\xdb\xb0\xca\xb1M\xa6\xb3\xc4_\xb9\xcf' },
+    '$autogoto': {
+        'func': AutoGoto,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb6}\xb1\xd2\xa1]\xc3\xf6\xb3\xac\xa1^\xa6\xdb\xb0\xca\xad\xb8\xa6\xe6' },
+    '$ban': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '12345 5\xa4\xc0\xc4\xc1 \xacO \xa5\xf4\xa9\xca',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb3B\xbb@',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xb8T\xa4\xee\xb5n\xbf\xfd\xaa\xba\xa1u\xa8\xa4\xa6\xe2ID+\xaa\xc5\xae\xe6+\xae\xc9\xb6\xa1+\xaa\xc5\xae\xe6+\xacO\xa7_\xa4\xbd\xa7i+\xad\xec\xa6]\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb8T\xa4\xee\xa8\xa4\xa6\xe2\xb5n\xbf\xfd' },
+    '$bian': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 2710,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xfc\xb3N',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa1\xf5\xbf\xe9\xa4J:\xbc\xd2\xab\xac\xbds\xb8\xb9\xa1A\xa6p\xa1u2710\xa1A2650...\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5\xdc\xa8\xad\xa6\xa8\xa5\xf4\xb7N\xbc\xd2\xab\xac' },
+    '$blacklist': {
+        'func': BlackList,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc0\xf2\xa8\xfa\xac\xdb\xc3\xf6\xb6\xc2\xa6W\xb3\xe6' },
+    '$block': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 12345,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb3B\xbb@',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xb8T\xa8\xa5\xaa\xba\xa1u\xa8\xa4\xa6\xe2ID\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb8T\xa8\xa5\xacY\xad\xd3ID' },
+    '$btnlog': {
+        'func': BtnLog,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xacd\xac\xdd\xab\xf6\xb6s\xa4\xe9\xbbx' },
+    '$checkSourceName': {
+        'func': CheckSourceName,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc0\xcb\xacd\xb8\xea\xb7\xbd\xa9R\xa6W\xacO\xa7_\xb3W\xbdd' },
+    '$ci': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '\xbaa\xc5A\xa4\xa7\xa5\xc9',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xce\xa4\xa4\xa4\xe5\xbf\xe9\xa4J\xa1u\xb9D\xa8\xe3\xa6W\xa1v\xc3\xf6\xc1\xe4\xa6r',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb8U\xaf\xe0\xb9D\xa8\xe3\xbd\xc6\xbbs\xab\xfc\xa5O' },
+    '$clearkeyinfo': {
+        'func': ClearKeyInfo,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2M\xb2z\xa4H\xaa\xab\xa7\xde\xaf\xe0\xc4\xe6\xabD\xaak\xbc\xc6\xbe\xda' },
+    '$cleartask()': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\xf4\xb0\xc8',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2M\xb0\xa3\xa6\xdb\xa4v\xa8\xad\xa4W\xaa\xba\xa5\xf4\xb0\xc8' },
+    '$clone': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '30204 5',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xa7J\xb6\xa9\xaa\xba\xa1u\xb9D\xa8\xe3ID+\xaa\xc5\xae\xe6+\xbc\xc6\xb6q\xa1v\xa1A\xa6p\xaaG\xa7\xd1\xb0O\xb9D\xa8\xe3ID\xa1A\xbd\xd0\xa8\xcf\xa5\xce\xa1u$item_xx+\xaa\xc5\xae\xe6+\xaa\xc5\xae\xe6+\xb9D\xa8\xe3\xc3\xf6\xc1\xe4\xa6r\xa1v\xb6i\xa6\xe6\xacd\xa7\xe4',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7J\xb6\xa9\xb9D\xa8\xe3' },
+    '$clonenpc 20': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': 'NPC',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2i\xb6\xb9\xb0V\xbdm\xaev' },
+    '$clonenpc 30': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': 'NPC',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc4\xdd\xa9\xca\xa4\xce\xbe\xd4\xb0\xab\xb4\xfa\xb8\xd5' },
+    '$clonenpc 31': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': 'NPC',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb5\xe6\xb3\xbe' },
+    '$clonenpc 32': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': 'NPC',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb9D\xa8\xe3\xb3]\xb8m' },
+    '$clonenpc 33': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': 'NPC',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5l\xb3\xea\xc3~\xb3]\xb8m' },
+    '$clonenpc 34': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': 'NPC',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xac\xec\xa7\xde\xba\xde\xb2z\xad\xfb' },
+    '$clonenpc 37': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': 'NPC',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xae\xd1\xc5K\xa4\xce\xa5\xb4\xb3y' },
+    '$clonenpc 46': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': 'NPC',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5l\xb3\xea\xae\xa9\xaa\xc5' },
+    '$clonenpc 48': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xfc\xb3N',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbc\xd2\xab\xac\xaei\xa5\xdc' },
+    '$clonenpc 4991': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb0\xc6\xa5\xbb',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7J\xb6\xa9\xb0\xc6\xa5\xbb\xb1\xb5\xa4\xde\xa4H' },
+    '$combfire.in': {
+        'func': CombFireIn,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 2015,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbf\xe9\xa4J\xb0\xd1\xbc\xc6\xac\xb0mapobject/fire\xa4\xe5\xa5\xf3\xa7\xa8\xa4U\xaa\xba\xb7\xcf\xaa\xe1\xbc\xd2\xaa\xa9\xa6W(\xa4\xa3\xb1a.txt)',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xb8\xfc\xa4J\xb2\xd5\xa6X\xb7\xcf\xaa\xe1\xbc\xd2\xaa\xa9' },
+    '$combfire.out': {
+        'func': CombFireOut,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 2019,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbf\xe9\xa4J\xb0\xd1\xbc\xc6\xac\xb0mapobject/fire\xa4\xe5\xa5\xf3\xa7\xa8\xa4U\xaa\xba\xb7Q\xadn\xbf\xe9\xa5X\xaa\xba\xa4\xe5\xa5\xf3\xa6W(\xa4\xa3\xb1a.txt)',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xbf\xe9\xa5X\xb2\xd5\xa6X\xb7\xcf\xaa\xe1\xbc\xd2\xaa\xa9' },
+    '$crash': {
+        'func': TestCrash,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5\xfd\xa4\xde\xc0\xba\xb1Y\xbc\xec' },
+    '$createnpc': {
+        'func': CreateNpc,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 1,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb0\xd1\xbc\xc6\xaa\xed\xa5\xdc\xb3\xd0\xab\xd8npc\xbc\xc6\xb6q',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3\xd0\xab\xd8\xb4\xfa\xb8\xd5npc' },
+    '$data': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '\xa6\xdb\xa4vID',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xacd\xac\xdd\xa8\xe4\xbc\xc6\xbe\xda\xaa\xba\xa1u\xa8\xa4\xa6\xe2ID\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,25,20,10,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xacd\xac\xdd\xacY\xad\xd3ID\xaa\xba\xbc\xc6\xbe\xda' },
+    '$dlg': {
+        'func': ShowDlg,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa6b\xb9C\xc0\xb8\xa4\xa4\xa5\xb4\xb6}\xacd\xac\xdddlg\xa4\xe5\xa5\xf3' },
+    '$error': {
+        'func': TestError,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 'sth.',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbbs\xb3y\xa4@\xad\xd3\xab\xc8\xa4\xe1\xba\xdd\xb3\xf8\xbf\xf9\xa1A\xa5i\xa5H\xb6\xc7\xa4@\xad\xd3\xa6r\xb2\xc5\xa6\xea\xa4]\xa5i\xa5H\xa4\xa3\xb6\xc7',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbbs\xb3y\xa4@\xad\xd3\xab\xc8\xa4\xe1\xba\xdd\xb3\xf8\xbf\xf9' },
+    '$fairy': {
+        'func': Fairy,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 1,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbf\xe9\xa4J1\xad\xd3\xbc\xc6\xa6r \xaa\xed\xa5\xdc\xba\xeb\xc6F\xba\xd8\xc3\xfe',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3]\xb8m\xb8\xf2\xc0H\xa4p\xba\xeb\xc6F' },
+    '$fight': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xbe\xd4\xb0\xab',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,25',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb6i\xa4J\xa4@\xb3\xf5\xbe\xd4\xb0\xab' },
+    '$follow': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,25,20,10',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8\xfa\xae\xf8\xb8\xf2\xc2\xdc' },
+    '$frozen': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 12345,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb3B\xbb@',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xad\xe1\xb5\xb2\xaa\xba\xa1u\xa8\xa4\xa6\xe2ID\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xad\xe1\xb5\xb2\xb1b\xb8\xb9' },
+    "$fuben('aiji')": {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb0\xc6\xa5\xbb',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3\xe6\xa4H\xa5h\xaa\xf7\xa6r\xb6\xf0' },
+    "$fuben('fort')": {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb0\xc6\xa5\xbb',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3\xe6\xa4H\xa5h\xa7l\xa6\xe5\xa5j\xb3\xf9' },
+    "$fuben('inling')": {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb0\xc6\xa5\xbb',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3\xe6\xa4H\xa5h\xaf\xb3\xac\xd3\xb3\xae' },
+    '$full': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,25,20,15,10',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4H\xaa\xab\xaa\xac\xbaA\xab\xec\xb4_\xba\xa1' },
+    '$get LockPass': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20,10',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xacd\xac\xdd\xa6\xdb\xa4v\xaa\xba\xaa\xab\xab~\xc2\xea' },
+    '$getallobj': {
+        'func': GetObjLst,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc0\xf2\xa8\xfa\xb9\xab\xbc\xd0\xa4U\xa9\xd2\xa6\xb3\xb9\xef\xb6H' },
+    '$goto': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 12345,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xad\xb8\xa8\xec\xaa\xba\xa1u\xa8\xa4\xa6\xe2ID\xa1v\xa9\xce\xa1u\xb3\xf5\xb4\xba\xbds\xb8\xb9,x\xa7\xa4\xbc\xd0,y\xa7\xa4\xbc\xd0\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,25,20,15,10',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xad\xb8\xa8\xec\xab\xfc\xa9wID\xa9\xce\xb3\xf5\xb4\xba' },
+    '$halt': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xbe\xd4\xb0\xab',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,25,20,15,10,0',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb0h\xa5X\xbe\xd4\xb0\xab' },
+    '$hd fenghuo 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2l\xa4\xf5\xb3s\xab\xb0\xa4J\xb3\xf5' },
+    '$hd fenghuo 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2l\xa4\xf5\xb3s\xab\xb0\xb6}\xa9l' },
+    '$hd fenghuo 103': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2l\xa4\xf5\xb3s\xab\xb0\xb2M\xb3\xf5' },
+    '$hd fenghuo 112': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2l\xa4\xf5\xb3s\xab\xb0\xb5\xb2\xa7\xf4' },
+    '$hd fuben 100': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb0\xc6\xa5\xbb',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8\xb8\xaf\xab\xa5l\xb3\xea\xb0\xc6\xa5\xbb\xab\xfc\xa5O\xa4j\xa5\xfe' },
+    '$heromove': {
+        'func': TransHero,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '100 100',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbf\xe9\xa4J2\xad\xd3\xa7\xa4\xbc\xd0x, y',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3]\xb8m\xa8\xa4\xa6\xe2\xa6\xec\xb8m' },
+    '$hklog': {
+        'func': HotkeyLog,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xacd\xac\xdd\xa7\xd6\xb1\xb6\xc1\xe4\xa4\xe9\xbbx' },
+    '$home': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,25,20,15,10,0',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xdf\xa8\xe8\xa6^\xa8\xec\xb4_\xac\xa1\xc2I' },
+    '$horse': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '6 1 2 5 5 5',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xfc\xb3N',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa1\xf5\xbf\xe9\xa4J\xa1G\xa7\xa4\xc3M\xbds\xb8\xb9 \xb8\xcb\xb9\xa2 \xa5\xfa\xae\xc4 \xa7\xa4\xc3M\xacV\xa6\xe2 \xb8\xcb\xb9\xa2\xacV\xa6\xe2 \xa5\xfa\xae\xc4\xacV\xa6\xe2 \xb9\xea\xa8\xd2\xa1G6 1 2 5 5 5 \xc0\xf2\xb1o\xa4@\xb0\xa6\xab\xd3\xa9]\xb0\\',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xa4\xc3M\xad\xd7\xa7\xef' },
+    '$huanhuaalpha': {
+        'func': SetHuanhuaAlpha,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '160',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb3]\xb8m\xa4\xdb\xa4\xc6\xb3z\xa9\xfa\xab\xd7',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3]\xb8m\xa4\xdb\xa4\xc6\xb3z\xa9\xfa\xab\xd7' },
+    '$huodong blcx 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7L\xc1{\xab\xb0\xa4U\xb7\xc7\xb3\xc6' },
+    '$huodong blcx 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7L\xc1{\xab\xb0\xa4U\xb6}\xa9l' },
+    '$huodong blcx 103': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7L\xc1{\xab\xb0\xa4U\xb5\xb2\xa7\xf4' },
+    '$huodong bless4 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5|\xa4\xe8\xaa\xba\xaf\xac\xba\xd6\xb6}\xa9l' },
+    '$huodong bless4 103': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5|\xa4\xe8\xaa\xba\xaf\xac\xba\xd6\xb5\xb2\xa7\xf4' },
+    '$huodong dafuweng 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4T\xa4Q\xa4\xbb\xadp\xa4J\xb3\xf5' },
+    '$huodong dafuweng 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4T\xa4Q\xa4\xbb\xadp\xb6}\xa9l' },
+    '$huodong dafuweng 103': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4T\xa4Q\xa4\xbb\xadp\xb5\xb2\xa7\xf4' },
+    '$huodong dreamland 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb9\xda\xb9\xd2\xb4M\xc4_\xa4J\xb3\xf5' },
+    '$huodong dreamland 103': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb9\xda\xb9\xd2\xb4M\xc4_\xb6}\xa9l' },
+    '$huodong dreamland 104': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb9\xda\xb9\xd2\xb4M\xc4_\xb7\xc7\xb3\xc6\xb5\xb2\xa7\xf4' },
+    '$huodong dreamland 105': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb9\xda\xb9\xd2\xb4M\xc4_\xb5\xb2\xa7\xf4' },
+    '$huodong dreamland 106': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb9\xda\xb9\xd2\xb4M\xc4_\xb2M\xb3\xf5' },
+    '$huodong family11 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb6}\xb1\xd2\xacy\xac\xa3\xc2\xf4\xc3\xf6\xac\xa1\xb0\xca' },
+    '$huodong family11 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb5\xb2\xa7\xf4\xacy\xac\xa3\xc2\xf4\xc3\xf6\xac\xa1\xb0\xca' },
+    '$huodong fightboss 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8\xea\xa6a\xc5]\xb1N' },
+    '$huodong fubenreward 123': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb0\xc6\xa5\xbb',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb0\xc6\xa5\xbb\xafS\xae\xed\xbc\xfa\xc0y\xaa\xed\xaa\xba\xa1u\xbc\xfa\xc0y\xbds\xb8\xb9\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb0\xc6\xa5\xbb\xafS\xae\xed\xaa\xed\xbc\xfa\xc0y' },
+    '$huodong guobao 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5@\xb0e\xb0\xea\xc4_\xb6}\xa9l' },
+    '$huodong guobao 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5@\xb0e\xb0\xea\xc4_\xb5\xb2\xa7\xf4' },
+    '$huodong guozhan 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb0\xea\xaea\xc4v\xc1\xc9\xa4\xc0\xb2\xd5' },
+    '$huodong guozhan 103': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb0\xea\xaea\xc4v\xc1\xc9\xa4J\xb3\xf5' },
+    '$huodong guozhan 105': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb0\xea\xaea\xc4v\xc1\xc9\xb6}\xa9l' },
+    '$huodong guozhan 106': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb0\xea\xaea\xc4v\xc1\xc9\xb5\xb2\xa7\xf4' },
+    '$huodong haidi 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3\xe6\xa4H\xa4\xf1\xaaZ\xa4J\xb3\xf5' },
+    '$huodong haidi 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3\xe6\xa4H\xa4\xf1\xaaZ\xb6}\xa5\xb4' },
+    '$huodong haidi 104': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3\xe6\xa4H\xa4\xf1\xaaZ\xb7\xc7\xb3\xc6\xb5\xb2\xa7\xf4' },
+    '$huodong haidi 105': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3\xe6\xa4H\xa4\xf1\xaaZ\xb5\xb2\xa7\xf4' },
+    '$huodong haidi 106': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3\xe6\xa4H\xa4\xf1\xaaZ\xb2M\xb3\xf5' },
+    '$huodong kfroompvp 100': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8M\xbe\xd4\xa4\xd1\xa4U\xab\xfc\xa5O\xa4j\xa5\xfe' },
+    '$huodong killstar 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8\xea\xacy\xac\xa3\xa6n\xa4\xe2' },
+    '$huodong kuafujingji2 100': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaaZ\xaaL\xa4j\xb7|\xab\xfc\xa5O\xa4j\xa5\xfe' },
+    '$huodong liuli 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb6}\xb1\xd2\xc4_\xbdc\xc1`\xb0\xca\xad\xfb\xac\xa1\xb0\xca' },
+    '$huodong liuli 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc3\xf6\xb3\xac\xc4_\xbdc\xc1`\xb0\xca\xad\xfb\xac\xa1\xb0\xca' },
+    '$huodong localorgwar 104': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc0\xb0\xbe\xd4\xa4J\xb3\xf5' },
+    '$huodong localorgwar 105': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc0\xb0\xbe\xd4\xb6}\xa5\xb4' },
+    '$huodong localorgwar 106': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc0\xb0\xbe\xd4\xb5\xb2\xa7\xf4' },
+    '$huodong localorgwar 107': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc0\xb0\xbe\xd4\xb2M\xb3\xf5' },
+    '$huodong localorgwar 108': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xacd\xac\xdd\xc0\xb0\xbe\xd4\xc0\xb0\xac\xa3\xab\xc2\xb1\xe6' },
+    '$huodong localorgwar 112': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc0\xb0\xbe\xd4\xb6g\xa4\xe9\xa4\xc0\xb2\xd5' },
+    '$set MazeRecord {}': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2M\xaa\xc5\xb0g\xaec\xa4J\xb3\xf5\xa6\xb8\xbc\xc6' },
+    '$set MingGongRecord {}': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2M\xaa\xc5\xb0g\xaec\xa4J\xb3\xf5\xa6\xb8\xbc\xc6' },
+    "$call('templfuben.qinling.TestOP',100)": {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaf\xb3\xac\xd3\xb3\xae\xb0g\xaec\xab\xfc\xa5O' },
+    "$call('templfuben.fort.TestOP',100)": {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7l\xa6\xe5\xb0\xad\xb0g\xaec\xab\xfc\xa5O' },
+    '$hd maze 100': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaa\xf7\xa6r\xb6\xf0\xb0g\xaec\xab\xfc\xa5O' },
+    '$huodong ltjinhua 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8\xdf\xafT\xb6i\xa4\xc6\xbd\xd7\xa4J\xb3\xf5' },
+    '$huodong ltjinhua 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8\xdf\xafT\xb6i\xa4\xc6\xbd\xd7\xb6}\xa9l' },
+    '$huodong ltjinhua 103': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8\xdf\xafT\xb6i\xa4\xc6\xbd\xd7\xb5\xb2\xa7\xf4' },
+    '$huodong ltjinhua 104': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8\xdf\xafT\xb6i\xa4\xc6\xbd\xd7\xb2M\xb3\xf5' },
+    '$huodong luobo 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5\xda\xbd\xb3\xa4j\xa7@\xbe\xd4\xb6}\xa9l' },
+    '$huodong luobo 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5\xda\xbd\xb3\xa4j\xa7@\xbe\xd4\xb5\xb2\xa7\xf4' },
+    '$huodong moneytree 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb6}\xb1\xd2\xb7n\xbf\xfa\xbe\xf0\xac\xa1\xb0\xca' },
+    '$huodong moneytree 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc3\xf6\xb3\xac\xb7n\xbf\xfa\xbe\xf0\xac\xa1\xb0\xca' },
+    '$huodong moshen 100': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb0\xc6\xa5\xbb',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5]\xaf\xab\xad\xb0\xc1{\xb0\xc6\xa5\xbb\xb6}\xb1\xd2' },
+    '$huodong star12 105': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xacP\xaey\xa4Q\xa4G\xaec\xb6}\xb1\xd2' },
+    '$huodong tianbing 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8\xea\xaf\xab\xa4\xd1\xa7L' },
+    '$huodong tianqi 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4\xd1\xb1\xd2\xa4\xa7\xaa\xa7\xa4J\xb3\xf5' },
+    '$huodong tianqi 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4\xd1\xb1\xd2\xa4\xa7\xaa\xa7\xb6}\xa5\xb4' },
+    '$huodong tianqi 103': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4\xd1\xb1\xd2\xa4\xa7\xaa\xa7\xb7\xc7\xb3\xc6\xb5\xb2\xa7\xf4' },
+    '$huodong tianqi 104': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4\xd1\xb1\xd2\xa4\xa7\xaa\xa7\xb5\xb2\xa7\xf4' },
+    '$huodong yingxiongbiwu 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2\xd5\xb6\xa4\xa4\xf1\xaaZ\xa4J\xb3\xf5' },
+    '$huodong yingxiongbiwu 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2\xd5\xb6\xa4\xa4\xf1\xaaZ\xb2\xd5\xb6\xa4' },
+    '$huodong yingxiongbiwu 103': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2\xd5\xb6\xa4\xa4\xf1\xaaZ\xb6}\xa9l' },
+    '$huodong yingxiongbiwu 104': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2\xd5\xb6\xa4\xa4\xf1\xaaZ\xb5\xb2\xa7\xf4' },
+    '$huodong yunxugong 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb6\xb3\xb5\xea\xaec\xa4J\xb3\xf5' },
+    '$huodong yunxugong 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb6\xb3\xb5\xea\xaec\xb5\xb2\xa7\xf4' },
+    '$huodong yunxugong 105': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb6\xb3\xb5\xea\xaec\xb6}\xa9l' },
+    '$huodong yunxugong 109': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb6\xb3\xb5\xea\xaec\xb2M\xb3\xf5' },
+    '$huodong yuqiankeju 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xac\xec\xc1|\xb6}\xa9l\xabe10\xa4\xc0\xc4\xc1' },
+    '$huodong yuqiankeju 103': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xac\xec\xc1|\xb6}\xa9l' },
+    '$huodong yuqiankeju 104': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xac\xec\xc1|\xb5\xb2\xa7\xf4' },
+    '$huodong zuma 101': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaf\xf3\xb8s\xbbR\xa4\xbd\xa7i\xa4J\xb3\xf5' },
+    '$huodong zuma 102': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaf\xf3\xb8s\xbbR\xb6}\xa9l' },
+    '$huodong zuma 103': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaf\xf3\xb8s\xbbR\xb5\xb2\xa7\xf4' },
+    '$info': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '\xa6\xdb\xa4vID',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xacd\xac\xdd\xa8\xe4\xc4\xdd\xa9\xca\xaa\xba\xa1u\xa8\xa4\xa6\xe2ID\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,25,20,10,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xacd\xac\xdd\xacY\xad\xd3ID\xaa\xba\xc4\xdd\xa9\xca' },
+    '$item_xx': {
+        'func': ItemXX,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '\xbaa\xc5A\xa4\xa7\xa5\xc9',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbf\xe9\xa4J\xb0\xd1\xbc\xc6\xac\xb0\xaa\xab\xab~\xa6W',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xacd\xac\xdd\xaa\xab\xab~' },
+    '$jbbianji': {
+        'func': JuBenEditor,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 101,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '101\xa5\xb4\xb6}\xa1A102\xc3\xf6\xb3\xac',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbc@\xa5\xbb\xbds\xbf\xe8\xbe\xb9' },
+    '$jbdaobiao': {
+        'func': JubenDaobiao,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xab\xc8\xa4\xe1\xba\xdd\xbc@\xa5\xbb\xbe\xc9\xaa\xed',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbc@\xa5\xbb\xbe\xc9\xaa\xed' },
+    '$juben': {
+        'func': PlayJuben,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '13104 1 1 60',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb0\xd1\xbc\xc6task\xbds\xb8\xb9\xa1A\xbc@\xa5\xbbid\xa1A\xab\xe1\xad\xb1\xac\xb0\xa5i\xbf\xef\xb0\xd1\xbc\xc6\xaa\xed\xa5\xdc\xbc@\xa5\xbb\xbc\xbd\xa9\xf1\xaa\xba\xb6}\xa9l\xa9M\xb5\xb2\xa7\xf4\xa6\xec\xb8m',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbc\xbd\xa9\xf1\xbc@\xa5\xbb' },
+    '$kickout': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 12345,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb3B\xbb@',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xbd\xf0\xb1\xbc\xaa\xba\xc2\xf7\xbdu\xc2\\\xc5u\xaa\xba\xa1u\xa8\xa4\xa6\xe2ID\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc2\xf7\xbdu\xc2\\\xc5u\xb1j\xa6\xe6\xbd\xf0\xb1\xbc' },
+    '$kuafuerr': {
+        'func': KuafuErr,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '100',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xce\xa9\xf3\xbc\xd2\xc0\xc0\xb8\xf3\xaaA\xa5X\xb2{\xbf\xf9\xbb~',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '100\xacd\xac\xdd\xbf\xf9\xbb~\xc3\xfe\xab\xac' },
+    '$loadpldata': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1 159 1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xc5\xaa\xa8\xfa\xaa\xba\xa1u\xc2\xbe\xb7~+\xb5\xa5\xaf\xc5+\xc0\xc9\xa6\xb8\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5\xaa\xa8\xfa\xaf\xc5\xa7O\xb8\xb9\xbc\xc6\xbe\xda' },
+    '$login': {
+        'func': AutoLogin,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '123456',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa7\xd6\xb3t\xb5n\xbf\xfd',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xd6\xb3t\xb5n\xbf\xfd' },
+    '$magic': {
+        'func': BigMMagic,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 1,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb0\xd1\xbc\xc6\xaa\xed\xa5\xdc\xafS\xae\xc4\xbds\xb8\xb9\xa1A\xb0\xd1\xbc\xc6\xa5i\xacO\xa4@\xad\xd3\xa4]\xa5i\xa5H\xacO3\xad\xd3\xa1A\xb7\xed\xacO\xa4T\xad\xd3\xae\xc9\xa1A\xab\xe1\xa8\xe2\xad\xd3\xaa\xed\xa5\xdc\xa6\xec\xb8m\xa1A\xa8\xd2\xa6p$magic 1 100 50',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xafS\xae\xc4\xaei\xa5\xdc' },
+    '$mapsize': {
+        'func': MapSize,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc0\xf2\xa8\xfa\xa6a\xb9\xcf\xa4\xd8\xa4o' },
+    '$mhp': {
+        'func': CreateMultiHorsePlayer,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '35 10',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xc0\xf2\xa8\xfa\xa7\xa4\xc3M',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xa4\xc3M' },
+    '$music': {
+        'func': PlayBGM,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb3]\xb8mBGM',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3]\xb8mBGM' },
+    '$newdaypl()': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8\xa4\xa6\xe2\xa8\xea\xa4\xd1' },
+    '$newdaypl(1)': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb6\xa4\xa5\xee\xa4\xa4\xa9\xd2\xa6\xb3\xa8\xa4\xa6\xe2\xa8\xea\xa4\xd1' },
+    '$newmagic': {
+        'func': SwitchNewMagic,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa4\xc1\xb4\xab\xb7s\xc2\xc2\xaak\xb3N',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4\xc1\xb4\xab\xb7s\xc2\xc2\xaak\xb3N' },
+    '$newweekpl()': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8\xa4\xa6\xe2\xa8\xea\xa9P' },
+    '$newweekpl(1)': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb6\xa4\xa5\xee\xa4\xa4\xa9\xd2\xa6\xb3\xa8\xa4\xa6\xe2\xa8\xea\xa9P' },
+    '$npcbian': {
+        'func': NpcBian,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 111,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb1Nnpc\xc5\xdc\xa8\xad\xac\xb0\xab\xfc\xa9w\xa8\xa4\xa6\xe2\xa5~\xa7\xce',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xef\xc5\xdcnpc\xb3y\xab\xac' },
+    '$npc\xb9\xef\xa5\xd5': {
+        'func': NpcTalk,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5\xe3\xa5\xdc/\xc1\xf4\xc2\xc3npc\xb9\xef\xa5\xd5\xbds\xb8\xb9' },
+    '$openfight 1': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xbe\xd4\xb0\xab',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20,10',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbe\xd4\xb0\xab\xa4\xa4\xacd\xac\xdd\xbe\xd4\xb0\xab\xabH\xae\xa7' },
+    '$openfight 2': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xbe\xd4\xb0\xab',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20,10',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbe\xd4\xb0\xab\xa4\xa4\xacd\xac\xdd\xab\xca\xa6L\xa6\xa8\xa5\\\xb2v' },
+    '$opennewpay': {
+        'func': OpenNewPay,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '0',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xb4\xb6}\xb7s\xa5R\xad\xc8',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xb4\xb6}\xb7s\xa5R\xad\xc8' },
+    '$place': {
+        'func': Place,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1 21301 102 25',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb2\xc4\xa4@\xad\xd3\xb0\xd1\xbc\xc6\xaa\xed\xa5\xdc\xabO\xa6s\xa6b\xa6r\xa8\xe5\xaa\xbaID\xa1A\xb2\xc4\xa4G\xad\xd3\xaa\xed\xa5\xdc\xaa\xab\xab~shape \xb2\xc4\xa4T\xa5|\xac\xb0\xa7\xa4\xbc\xd0',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa6b\xa6a\xb9\xcf\xa4W\xa9\xf1\xb8m\xaa\xab\xab~' },
+    '$playaudio': {
+        'func': TestPlayAudio,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbc\xbd\xa9\xf1\xa4U\xb8\xfc\xaa\xba\xbf\xfd\xad\xb5\xa4\xe5\xa5\xf3',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbc\xbd\xa9\xf1\xa4U\xb8\xfc\xaa\xba\xbf\xfd\xad\xb5\xa4\xe5\xa5\xf3' },
+    '$profile': {
+        'func': GameProfile,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4\xc0\xaaR\xa4u\xa8\xe3' },
+    '$protocolidx': {
+        'func': ShowProtocolIdx,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc0\xf2\xa8\xfa\xb7\xed\xabe\xa8\xf3\xc4\xb3\xb8\xb9' },
+    '$resetsend': {
+        'func': ResetSendMode,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xf3\xa7\xef\xaa\xac\xbaA\xad\xc8' },
+    '$rr': {
+        'func': ReloadModule,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xad\xab\xb8\xfc\xbc\xd2\xb6\xf4' },
+    '$say': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '\xa7A\xa5|\xa4\xa3\xa5|\xb6\xcc',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xa8t\xb2\xce\xbb\xa1\xaa\xba\xa1u\xa4\xe5\xa6r\xa4\xba\xaee\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8t\xb2\xce\xb5o\xa8\xa5' },
+    '$scenemagic': {
+        'func': SceneMagic,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 5551,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbf\xe9\xa4J\xb3\xf5\xb4\xba\xafS\xae\xc4\xbds\xb8\xb9',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3\xf5\xb4\xba\xafS\xae\xc4' },
+    '$ser2cli': {
+        'func': Server2ClientPos,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '10 20',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb0\xd1\xbc\xc6\xacO\xaaA\xb0\xc8\xbe\xb9\xa7\xa4\xbc\xd0',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaaA\xb0\xc8\xba\xdd\xa7\xa4\xbc\xd0\xa9\xd2\xb9\xef\xc0\xb3\xaa\xba\xab\xc8\xa4\xe1\xba\xdd\xa7\xa4\xbc\xd0' },
+    '$set AbnormalLogin 0': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb8\xd1\xb0\xa3\xb2\xa7\xb1`\xb5n\xbf\xfd' },
+    '$set CookPoint 100': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\xf4\xb0\xc8',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbcW\xa5[\xbcp\xaf\xab\xa5\xf4\xb0\xc8\xbfn\xa4\xc0100' },
+    '$set Country': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 1,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xad\xd7\xa7\xef\xaa\xba\xb0\xea\xaea 1\xac\xb0\xabn\xbb\xbb 2\xac\xb0\xa4\xd1\xb9\xe7 3\xac\xb0\xabC\xb4P 4\xac\xb0\xa5[\xac\xa5',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb0\xea\xaea\xad\xd7\xa7\xef\xac\xb0\xabn\xbb\xbb\xb0\xea' },
+    '$set FXPoint2': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 10000,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xa1\xb0\xca',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xa1u\xa5\\\xbcw\xad\xc8\xbc\xc6\xc3B\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xad\xd7\xa7\xef\xa6\xdb\xa4v\xaa\xba\xa5\\\xbcw\xad\xc8' },
+    '$set GetNPCInfo 77': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb0\xc6\xa5\xbb',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb0g\xaec\xa4\xa3\xb9J\xb7t\xb9p\xa9\xc7' },
+    '$testshane 100': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\xf4\xb0\xc8',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb5\xbd\xb4c\xad\xc8\xac\xdb\xc3\xf6' },
+    '$set OrgCoin': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 10000,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa1\xf5\xbf\xe9\xa4J\xa1G\xa5\\\xb3\xd4\xb9\xf4 \xb9\xea\xa8\xd2\xa1G10000 \xb1N\xa6\xdb\xa4v\xaa\xba\xa5\\\xb3\xd4\xb9\xf4\xad\xd7\xa7\xef\xac\xb01W',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\\\xb3\xd4\xb9\xf4\xad\xd7\xa7\xef\xac\xb01W' },
+    '$set ResearchCash': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 5000000,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xad\xd7\xa7\xef\xaa\xba\xa9\xe8\xa5\xce\xaa\xf7\xbc\xc6\xb6q\xa1A\xa1u\xa9\xe8\xa5\xce\xaa\xf7\xc3B\xa1v\xa8\xea\xb7s\xbb\xdd\xa7\xf3\xb4\xab\xb8\xcb\xb3\xc6\xa9\xce\xad\xab\xb5n',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa9\xe8\xa5\xce\xaa\xf7\xad\xd7\xa7\xef\xac\xb0500W' },
+    '$set Shape': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 111,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xfc\xb3N',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa1\xf5\xbf\xe9\xa4J:\xa8\xa4\xa6\xe2\xbds\xb8\xb9\xa1A\xa6p\xa1u111\xa1A112...\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4H\xaa\xab\xb3y\xab\xac' },
+    '$set TestMan 88': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb0\xc6\xa5\xbb',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3\xe6\xa4H\xb6i\xa4J\xa5\xbb\xaaA\xb0\xc6\xa5\xbb' },
+    '$set TestMan 97': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb0\xc6\xa5\xbb',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3\xe6\xa4H\xb0\xc6\xa5\xbb\xa5i\xa5H\xb1o\xbc\xfa\xc0y' },
+    '$set TestMan 99': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '99\xb4\xfa\xb8\xd5\xc5v\xad\xad' },
+    '$set WieldAll 1': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xbe\xd4\xb0\xab',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa6\xdb\xb0\xca\xb8\xcb\xb3\xc6\xa9\xdb\xa6\xa1' },
+    '$set cash': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 5000000,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xb1N\xa6\xdb\xa4v\xaa\xba\xb2{\xaa\xf7\xad\xd7\xa7\xef\xac\xb0\xaa\xba\xa1u\xaa\xf7\xc3B\xbc\xc6\xb6q\xa1v\xa1A\xad\xab\xb5n\xa9\xce\xa6\xb3\xc5\xdc\xb0\xca\xab\xe1\xc5\xe3\xa5\xdc\xa5\xbf\xb1`',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaa\xf7\xbf\xfa\xad\xd7\xa7\xef\xac\xb0500W' },
+    '$set cha': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 30000,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xbe\xd4\xb0\xab',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xb1N\xa6\xdb\xa4v\xaa\xba\xbey\xa4O\xc4\xdd\xa9\xca\xbd\xd5\xbe\xe3\xac\xb0\xaa\xba\xa1u\xbc\xc6\xad\xc8\xa1v\xa1A\xa7\xf3\xb4\xab\xb8\xcb\xb3\xc6\xa9\xce\xad\xab\xb5n\xc5\xe3\xa5\xdc\xa7\xef\xc5\xdc',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xe2\xa6\xdb\xa4v\xbey\xa4O\xc4\xdd\xa9\xca\xa7\xef\xac\xb03W' },
+    '$set con': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 30000,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xbe\xd4\xb0\xab',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xb1N\xa6\xdb\xa4v\xaa\xba\xc5\xe9\xbd\xe8\xc4\xdd\xa9\xca\xbd\xd5\xbe\xe3\xac\xb0\xaa\xba\xa1u\xbc\xc6\xad\xc8\xa1v\xa1A\xa7\xf3\xb4\xab\xb8\xcb\xb3\xc6\xa9\xce\xad\xab\xb5n\xc5\xe3\xa5\xdc\xa7\xef\xc5\xdc',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xe2\xa6\xdb\xa4v\xc5\xe9\xbd\xe8\xc4\xdd\xa9\xca\xa7\xef\xac\xb03W' },
+    '$set dex': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 30000,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xbe\xd4\xb0\xab',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xb1N\xa6\xdb\xa4v\xaa\xba\xb1\xd3\xb1\xb6\xc4\xdd\xa9\xca\xbd\xd5\xbe\xe3\xac\xb0\xaa\xba\xa1u\xbc\xc6\xad\xc8\xa1v\xa1A\xa7\xf3\xb4\xab\xb8\xcb\xb3\xc6\xa9\xce\xad\xab\xb5n\xc5\xe3\xa5\xdc\xa7\xef\xc5\xdc',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xe2\xa6\xdb\xa4v\xb1\xd3\xb1\xb6\xc4\xdd\xa9\xca\xa7\xef\xac\xb03W' },
+    '$set gold': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 50000,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xc0\xf2\xb1o\xaa\xba\xa1u\xa5@\xac\xc9\xb0^\xc4m\xab\xd7\xbc\xc6\xb6q\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaa\xf7\xb9\xf4\xad\xd7\xa7\xef\xac\xb05W' },
+    '$set grade': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 120,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xb1N\xa6\xdb\xa4v\xbd\xd5\xbe\xe3\xa8\xec\xaa\xba\xa1u\xb5\xa5\xaf\xc5\xbc\xc6\xad\xc8\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4H\xaa\xab\xb5\xa5\xaf\xc5\xad\xd7\xa7\xef\xac\xb0120' },
+    '$set huoli': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 10000,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa1\xf5\xbf\xe9\xa4J\xa1G\xad\xd7\xa7\xef\xaa\xba\xa1u\xac\xa1\xa4O\xa1v\xa1A\xa1u\xac\xa1\xa4O\xa1v\xa8\xea\xb7s\xbb\xdd\xadn\xa8\xcf\xa5\xce\xa9\xce\xad\xab\xb5n',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xac\xa1\xa4O\xad\xd7\xa7\xef\xac\xb01W' },
+    '$set mag': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 30000,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xbe\xd4\xb0\xab',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xb1N\xa6\xdb\xa4v\xaa\xba\xc5]\xa4O\xc4\xdd\xa9\xca\xbd\xd5\xbe\xe3\xac\xb0\xaa\xba\xa1u\xbc\xc6\xad\xc8\xa1v\xa1A\xa7\xf3\xb4\xab\xb8\xcb\xb3\xc6\xa9\xce\xad\xab\xb5n\xc5\xe3\xa5\xdc\xa7\xef\xc5\xdc',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xe2\xa6\xdb\xa4v\xc5]\xa4O\xc4\xdd\xa9\xca\xa7\xef\xac\xb03W' },
+    '$set shenwubi': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 5000000,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xad\xd7\xa7\xef\xaa\xba\xb9\xda\xb7Q\xb9\xf4\xbc\xc6\xb6q\xa1A\xa1u\xb9\xda\xb7Q\xb9\xf4\xa1u\xa8\xea\xb7s\xa1A\xbb\xdd\xadn\xc1\xca\xb6R\xba\xeb\xab~\xb9D\xa8\xe3\xa9\xce\xad\xab\xb5n',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb9\xda\xb7Q\xb9\xf4\xad\xd7\xa7\xef\xac\xb0500W' },
+    '$set skexp': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 10000000,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xb1N\xa6\xdb\xa4v\xaa\xba\xb8g\xc5\xe7\xad\xd7\xa7\xef\xac\xb0\xaa\xba\xa1u\xb8g\xc5\xe7\xbc\xc6\xad\xc8\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4H\xaa\xab\xb8g\xc5\xe7\xad\xd7\xa7\xef\xac\xb01000W' },
+    '$set str': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 30000,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xbe\xd4\xb0\xab',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xb1N\xa6\xdb\xa4v\xaa\xba\xa4O\xb6q\xc4\xdd\xa9\xca\xbd\xd5\xbe\xe3\xac\xb0\xaa\xba\xa1u\xbc\xc6\xad\xc8\xa1v\xa1A\xa7\xf3\xb4\xab\xb8\xcb\xb3\xc6\xa9\xce\xad\xab\xb5n\xc5\xe3\xa5\xdc\xa7\xef\xc5\xdc',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xe2\xa6\xdb\xa4v\xa4O\xb6q\xc4\xdd\xa9\xca\xa7\xef\xac\xb03W' },
+    '$set tili': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 10000,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa1\xf5\xbf\xe9\xa4J\xa1G\xad\xd7\xa7\xef\xaa\xba\xa1u\xc5\xe9\xa4O\xa1v\xa1A\xa1u\xc5\xe9\xa4O\xa1v\xa8\xea\xb7s\xbb\xdd\xadn\xa8\xcf\xa5\xce\xa9\xce\xad\xab\xb5n',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5\xe9\xa4O\xad\xd7\xa7\xef\xac\xb01W' },
+    '$setbuilding': {
+        'func': SetBuliding,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1,8001,1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb0\xd1\xbc\xc61city:1~4\xa1A\xb0\xd1\xbc\xc62building:8001~8005\xa1A\xb0\xd1\xbc\xc63direct:1~2',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xb4\xb3y\xab\xd8\xb5\xae\xaa\xab' },
+    '$setcg': {
+        'func': ShowCg,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 1,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbf\xe9\xa4Jcg\xbds\xb8\xb9',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbc\xbd\xa9\xf1cg' },
+    '$setcolor': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '\xa6\xdb\xa4vID 10,10,10',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xfc\xb3N',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa1\xf5\xbf\xe9\xa4J\xa1G\xa8\xa4\xa6\xe2ID \xb3\xa1\xa6\xec\xbds\xb8\xb9,\xb3\xa1\xa6\xec\xbds\xb8\xb9,\xb3\xa1\xa6\xec\xbds\xb8\xb9 \xb9\xea\xa8\xd2\xa1G60001 10,10,10 \xb1N\xacY\xaa\xb1\xaea\xacV\xa6\xe2\xa7\xef\xac\xb010,10,10 ',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb1N\xa6\xdb\xa4v\xacV\xa6\xe2' },
+    '$setfilter': {
+        'func': SetFilter,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc2o\xc3\xe8' },
+    '$setfps': {
+        'func': SetGameFps,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '60',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb3]\xb8m\xb4V\xb2v\xa1A\xb2{\xa6b\xc0q\xbb{\xacO30',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3]\xb8m\xb4V\xb2v' },
+    '$setlight': {
+        'func': SetWorldLight,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '8',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb3]\xb8m\xabG\xab\xd7',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3]\xb8m\xa6a\xb9\xcf\xa4W\xaf\xe0\xac\xdd\xa8\xec\xaa\xba\xb9\xef\xb6H\xaa\xba\xabG\xab\xd7' },
+    '$setnewhero': {
+        'func': SetUseNewHero,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb7s\xc2\xc2\xb8\xea\xb7\xbd\xc5\xe3\xa5\xdc\xa4\xc1\xb4\xab',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb7s\xc2\xc2\xb8\xea\xb7\xbd\xc5\xe3\xa5\xdc\xa4\xc1\xb4\xab' },
+    '$setperform': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '2223 9',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xbe\xd4\xb0\xab',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xbcW\xa5[\xaa\xba\xa1u\xa9\xdb\xa6\xa1\xbds\xb8\xb9+\xaa\xc5\xae\xe6+\xa9\xdb\xa6\xa1\xb5\xa5\xaf\xc5\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc0\xf2\xb1o\xa9\xdb\xa6\xa1\xb0\xad\xa4\xfd\xa5\xf1\xaak' },
+    '$setprop': {
+        'func': SetProp,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3]\xb8m\xa6U\xb6\xb5\xc4\xdd\xa9\xca\xac\xc9\xad\xb1' },
+    '$setrunspeed': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 10,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xa5[\xb3t\xaa\xba\xad\xbf\xbc\xc6\xa1u\xbc\xc6\xa6r\xa1]\xbe\xe3\xbc\xc6\xa1^\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbe\xd4\xb0\xab\xa5[\xb3t' },
+    '$setshadowbg': {
+        'func': SetShadowBg,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 1,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '1\xc5\xe3\xa5\xdc\xb3\xb1\xbcv\xa1A0\xa4\xa3\xc5\xe3\xa5\xdc',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3]\xb8m\xb3\xb1\xbcv\xadI\xb4\xba' },
+    '$setskill': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1001 100',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa1\xf5\xbf\xe9\xa4J\xa1G\xa7\xde\xaf\xe0\xbds\xb8\xb9 \xb5\xa5\xaf\xc5 \xb9\xea\xa8\xd2\xa1G1001 100 \xb1N\xa6\xdb\xa4v\xaa\xba\xbcC\xacy\xac\xa3\xa7\xde\xa5\xa9\xb4\xa3\xa4\xc9\xa8\xec100\xaf\xc5',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3]\xb8m\xbe\xd4\xb0\xab\xa5\xcd\xac\xa1\xa7\xde\xaf\xe0' },
+    '$settech 0 105': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 24,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa1\xf5\xbf\xe9\xa4J\xa1G\xad\xd7\xa7\xef\xaaA\xb0\xc8\xbe\xb9\xb0\xd1\xbc\xc6\xa1uX\xa1v\xa1A\xaaA\xb0\xc8\xbe\xb9\xb5\xa5\xaf\xc5\xa4W\xad\xad=X*5+30',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3]\xb8m\xaaA\xb0\xc8\xbe\xb9\xb5\xa5\xaf\xc5\xac\xb0145' },
+    '$shaw': {
+        'func': Shaw,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '24 97 10',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa6\xdb\xa9w\xb8q\xb3\xb1\xbcv\xb6\xf4\xa1A\xa7\xa4\xbc\xd0+\xaa\xf8\xab\xd7\xa1A\xb0\xd1\xbc\xc6\xa5i\xbf\xef',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa6\xdb\xa9w\xb8q\xb3\xb1\xbcv\xb6\xf4' },
+    '$uimix': {
+        'func': UIMix,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb9C\xc0\xb8\xa4\xbaUI\xa7\xd6\xb3t\xacd\xa7\xe4\xa4u\xa8\xe3',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': 'UI\xa7\xd6\xb1\xb6\xbds\xbf\xe8' },
+    '$showdebug': {
+        'func': ShowServerDebugInfo,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xaaA\xb0\xc8\xba\xdd\xb1\xc0\xb0e\xabH\xae\xa7\xb5\xb9\xb5\xa6\xa6E\xac\xdd',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5\xe3\xa5\xdc\xaaA\xb0\xc8\xba\xdd\xbd\xd5\xb8\xd5\xabH\xae\xa7' },
+    '$showfps': {
+        'func': SwitchFPSBox,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xab\xc8\xa4\xe1\xba\xdd\xb9\xea\xae\xc9\xc5\xe3\xa5\xdcfps\xad\xc8\xa1A\xa6h\xa6\xb8\xa8\xcf\xa5\xce\xa4\xc1\xb4\xab\xc5\xe3\xa5\xdc',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xab\xc8\xa4\xe1\xba\xdd\xb9\xea\xae\xc9\xc5\xe3\xa5\xdcfps\xad\xc8' },
+    '$showhero': {
+        'func': CCreatePlayerTest,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 1,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb3\xd0\xab\xd8\xa9M\xa8\xa4\xa6\xe2\xa4@\xbc\xcb\xaa\xba\xad\xd3\xbc\xc6',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3\xd0\xab\xd8\xa9M\xa8\xa4\xa6\xe2\xa4@\xbc\xcb\xaa\xba\xad\xd3\xbc\xc6' },
+    '$showtrack': {
+        'func': ShowTrack,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1 1 3',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbf\xe9\xa4J3\xad\xd3\xbc\xc6\xa6r\xa1A\xba\xd8\xc3\xfe\xa1A\xacV\xa6\xe2\xa1A\xb6\xa1\xb9j',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4H\xaa\xab\xb2\xbe\xb0\xca\xa8\xad\xab\xe1\xaa\xba\xa7\xc0\xc0H\xafS\xae\xc4' },
+    '$spestand': {
+        'func': TestSpeStand,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 1,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbf\xe9\xa4J1\xa9\xce0\xa1A\xaa\xed\xa5\xdc\xb6}\xa9\xce\xc3\xf6',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5D\xa8\xa4spestand\xb0\xca\xa7@' },
+    '$summon': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 12345,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xa5l\xb3\xea\xb9L\xa8\xd3\xaa\xba\xa1u\xa8\xa4\xa6\xe2ID\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,25',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb1N\xacY\xad\xd3ID\xa5l\xb3\xea\xa8\xec\xa8\xad\xc3\xe4' },
+    '$switchmainmenu': {
+        'func': SwitchMainmenu,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa4\xc1\xb4\xab\xb7s\xc2\xc2\xa5D\xac\xc9\xad\xb1',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4\xc1\xb4\xab\xb7s\xc2\xc2\xa5D\xac\xc9\xad\xb1' },
+    '$task': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 12345,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\xf4\xb0\xc8',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xacd\xac\xdd\xa8\xe4\xa8\xad\xa4W\xa5\xf4\xb0\xc8\xaa\xba\xa1u\xa8\xa4\xa6\xe2ID\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,25,20,10',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xacd\xac\xdd\xacY\xad\xd3ID\xaa\xba\xa5\xf4\xb0\xc8' },
+    '$tianmingrecord': {
+        'func': TianmingRecord,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xaaA\xb0\xc8\xbe\xb9\xbf\xfd\xbbs\xa4\xd1\xbf\xef\xbf\xfd\xb9\xb3',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4\xd1\xbf\xef\xbf\xfd\xb9\xb3' },
+    '$unban': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 12345,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb3B\xbb@',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xb8\xd1\xb0\xa3\xb8T\xa4\xee\xb5n\xbf\xfd\xaa\xba\xa1u\xa8\xa4\xa6\xe2ID\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb8\xd1\xb0\xa3\xacYID\xaa\xba\xb8T\xa4\xee\xb5n\xbf\xfd' },
+    '$unblock': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 12345,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb3B\xbb@',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xb8\xd1\xb0\xa3\xb8T\xa8\xa5\xaa\xba\xa1u\xa8\xa4\xa6\xe2ID\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb8\xd1\xb0\xa3\xacY\xad\xd3ID\xaa\xba\xb8T\xa8\xa5' },
+    '$unfrozen': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 12345,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb3B\xbb@',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbd\xd0\xa6b\xa4U\xa4\xe8\xbf\xe9\xa4J\xb7Q\xadn\xb8\xd1\xb0\xa3\xad\xe1\xb5\xb2\xaa\xba\xa1u\xa8\xa4\xa6\xe2ID\xa1v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb8\xd1\xb0\xa3\xad\xe1\xb5\xb2\xacYID' },
+    '$uptime': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb1`\xb3W',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,40,30,20,10',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xacd\xac\xdd\xb7\xed\xabe\xaaA\xb0\xc8\xbe\xb9\xabH\xae\xa7' },
+    '$useit': {
+        'func': UseIt,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1 25815 25815',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb6\xa1\xb9j\xa4@\xa9w\xae\xc9\xb6\xa1\xa8\xcf\xa5\xce\xb9D\xa8\xe3\xa1A\xb9D\xa8\xe3\xa5i\xa5H\xacO\xa4@\xad\xd3\xa1A\xa4]\xa5i\xa5H\xacO\xa8\xe2\xad\xd3\xa1A\xb3\xcc\xab\xe1\xad\xb1\xaa\xba25815\xa5i\xa5H\xaf\xca\xac\xd9',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8C\xb9j\xa4@\xa9w\xae\xc9\xb6\xa1\xa8\xcf\xa5\xce\xb9D\xa8\xe3' },
+    '$warback': {
+        'func': WarBackGround,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 1,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbf\xe9\xa4J\xbe\xd4\xb0\xab\xadI\xb4\xba\xbds\xb8\xb9\xa1A\xbe\xd4\xb0\xab\xadI\xb4\xba\xbe\xc9\xaa\xed.xls\xbe\xc9\xadP\xa4\xa4',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xef\xc5\xdc\xbe\xd4\xb0\xab\xadI\xb4\xba' },
+    '$warbug': {
+        'func': WarBug,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 1,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xce\xa9\xf3\xb2\xe6\xbe\xf7\xad\xab\xb2{\xab\xc8\xa4\xe1\xba\xdd\xbe\xd4\xb0\xab\xb2\xa7\xb1`\xb0\xdd\xc3D\xa1A\xb4\xa3\xa8\xd1\xa5i\xacd\xb8\xdfbug\xbe\xfa\xa5v',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2\xe6\xbe\xf7\xad\xab\xb2{\xab\xc8\xa4\xe1\xba\xdd\xbe\xd4\xb0\xab\xb2\xa7\xb1`' },
+    '$getmagictime': {
+        'func': GetMagicTime,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 2,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xce\xa9\xf3\xb4\xfa\xb8\xd5\xaak\xb3N\xae\xc9\xb6\xa1',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xce\xa9\xf3\xb4\xfa\xb8\xd5\xaak\xb3N\xae\xc9\xb6\xa1' },
+    '$autoaddon': {
+        'func': AutoAddon,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 2,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xce\xa9\xf3\xb4\xfa\xb8\xd5\xaak\xb3N\xae\xc9\xb6\xa1',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xce\xa9\xf3\xb4\xfa\xb8\xd5\xaak\xb3N\xae\xc9\xb6\xa1' },
+    '$warlocation': {
+        'func': WarLocation,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 101,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '101\xa5\xb4\xb6}\xa1A102\xc3\xf6\xb3\xac',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaf\xb8\xa6\xec\xbds\xbf\xe8\xbe\xb9' },
+    '$warswitch': {
+        'func': WarSwitch,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 1,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbf\xe9\xa4J\xbe\xd4\xb0\xab\xb0\xca\xb5e\xb3\xf5\xb4\xba\xbds\xb8\xb9\xa1A\xb6i\xa4J\xbe\xd4\xb0\xab\xb3\xf5\xb4\xba\xa4\xc1\xb4\xab.xls',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xef\xc5\xdc\xbe\xd4\xb0\xab\xb3\xf5\xb4\xba\xa4\xc1\xb4\xab' },
+    '$weapon': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '5 7 5',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xfc\xb3N',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa1\xf5\xbf\xe9\xa4J:\xa1u\xaaZ\xbe\xb9\xba\xd8\xc3\xfe \xaaZ\xbe\xb9\xb5\xa5\xaf\xc5 \xacV\xa6\xe2\xa4\xe8\xae\xd7\xa1v\xa1A\xaaZ\xbe\xb9\xba\xd8\xc3\xfe\xac\xb01-6',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5\xdc\xaaZ\xbe\xb9\xb3y\xab\xac' },
+    '$win': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xbe\xd4\xb0\xab',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xbb\xb3\xf5\xbe\xd4\xb0\xab\xa5\xdf\xa7Y\xb3\xd3\xa7Q' },
+    '$wing': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 18,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xfc\xb3N',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa1\xf5\xbf\xe9\xa4J\xa1Gx #r\xaf\xcd\xbbH\xb3y\xab\xacx\xbdd\xb3\xf21-18',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5\xdc\xaf\xcd\xbbH' },
+    '$xieyi': {
+        'func': PrintProtocol,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa8\xf3\xc4\xb3\xb2\xce\xadp' },
+    '$zhanmenglianjie': {
+        'func': TestZhanMengFail,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbe\xd4\xb7\xf9\xb3s\xb1\xb5\xb4\xfa\xb8\xd5' },
+    '$zhanmengxuanfu': {
+        'func': TestZhanMengFail1,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbe\xd4\xb7\xf9\xc4a\xafB\xb4\xa3\xa5\xdc' },
+    '$zhen': {
+        'func': Zhen,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 1,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbf\xe9\xa4J\xb0}\xaak\xbds\xb8\xb9\xa1A\xa7\xf3\xa7\xef\xb0}\xaak',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xf3\xa7\xef\xb0}\xaak' },
+    '$\xa7\xf3\xb7s\xbe\xc9\xaa\xed': {
+        'func': UpdateDaoBiao,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa7\xf3\xb7s\xbe\xc9\xaa\xed',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa7\xf3\xb7s\xbe\xc9\xaa\xed' },
+    '$\xac\xdd\xac\xdd\xbf\xfd\xb9\xb3': {
+        'func': UploadRecord,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 12345,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb0\xd1\xbc\xc6\xa5\xd1\xa4T\xba\xd8\xae\xe6\xa6\xa1\xa1G1.id 2.id \xa4\xeb \xa4\xe9 3.id all',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4W\xb6\xc7\xbe\xd4\xb0\xab\xbf\xfd\xb9\xb3' },
+    '$\xac\xdd\xac\xdd\xa4\xe9\xbbx': {
+        'func': UploadLog,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 12345,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb0\xd1\xbc\xc6\xa5\xd1\xa4T\xba\xd8\xae\xe6\xa6\xa1\xa1G1.id 2.id \xa4\xeb \xa4\xe9 3.id all',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa4W\xb6\xc7\xa4\xe9\xbbx' },
+    '$\xac\xdd\xac\xdd\xb7s\xc2\xc2\xacV\xa6\xe2': {
+        'func': CHeroPalShow,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '111',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xac\xdd\xac\xdd\xb7s\xc2\xc2\xacV\xa6\xe2',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xac\xdd\xac\xdd\xb7s\xc2\xc2\xacV\xa6\xe2' },
+    '$\xc3C\xa6\xe2': {
+        'func': ShowColor,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5\xe3\xa5\xdc\xa9\xd2\xa6\xb3\xc3C\xa6\xe2' },
+    '$\xb3\xb1\xbcv\xb3z\xa9\xfa\xab\xd7': {
+        'func': SetNewShadowAlpha,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 255,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb3]\xb8m\xb3\xb1\xbcv\xb3z\xa9\xfa\xab\xd7',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3]\xb8m\xb3\xb1\xbcv\xb3z\xa9\xfa\xab\xd7' },
+    '$\xa6r\xc5\xe9': {
+        'func': ShowFont,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': None,
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5\xe3\xa5\xdc\xa9\xd2\xa6\xb3\xa6r\xc5\xe9' },
+    '$\xa6r\xc5\xe9\xb0\xbe\xb2\xbe': {
+        'func': ShowFontOffset,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xc5\xe3\xa5\xdc\xa6r\xc5\xe9\xb0\xbe\xb2\xbe',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99\xa1A',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5\xe3\xa5\xdc\xa6r\xc5\xe9\xb0\xbe\xb2\xbe' },
+    '$newmazeblock': {
+        'func': NewMazeBlockEditor,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb7s\xb0g\xaec\xaa\xfd\xbe\xd7\xbds\xbf\xe8\xbe\xb9',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99\xa1A',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbds\xbf\xe8\xb7s\xb0g\xaec\xaa\xba\xaa\xfd\xbe\xd7\xc2I\xa9M\xa8\xea\xa9\xc7\xc2I' },
+    '$hsveditor': {
+        'func': ShowHsvEditor,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 0,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xb4\xb6}HSV\xacV\xa6\xe2\xbds\xbf\xe8\xbe\xb9',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99\xa1A',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xb4\xb6}HSV\xacV\xa6\xe2\xbds\xbf\xe8\xbe\xb9' },
+    '$testpfd': {
+        'func': TestPerformDemo,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 'pfdname,pfdid',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xa9\xdb\xa6\xa1\xb9w\xc4\xfd',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99\xa1A',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xa9\xdb\xa6\xa1\xb9w\xc4\xfd' },
+    '$downloadoldres': {
+        'func': DownloadOldRes,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 1,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xa4U\xb8\xfc\xc2\xc2\xb8\xea\xb7\xbd',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99\xa1A',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xa4U\xb8\xfc\xc2\xc2\xb8\xea\xb7\xbd' },
+    '$af': {
+        'func': Autofuben,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '90 1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xa4U\xb8\xfc\xc2\xc2\xb8\xea\xb7\xbd',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99\xa1A',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xa4U\xb8\xfc\xc2\xc2\xb8\xea\xb7\xbd' },
+    '$playmusic': {
+        'func': PlayMusic,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 'm001 1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xa4U\xb8\xfc\xc2\xc2\xb8\xea\xb7\xbd',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99\xa1A',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xa4U\xb8\xfc\xc2\xc2\xb8\xea\xb7\xbd' },
+    '$testshootgame': {
+        'func': TestShootGame,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '2 1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xaa\xb1\xad\xb8\xbcC\xa4p\xb9C\xc0\xb8',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99\xa1A',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaa\xb1\xad\xb8\xbcC\xa4p\xb9C\xc0\xb8' },
+    '$testline': {
+        'func': TestTargetLine,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '\xb8s\xa1P\xb8\xa8\xad^\xc4}\xaf\xc9 1103',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xbe\xd4\xb0\xab\xb3s\xbdu',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99\xa1A',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xbe\xd4\xb0\xab\xb3s\xbdu' },
+    '$setlineparam': {
+        'func': SetTargetLineData,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1 1 0.74 40 300 0',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb0_\xc2I \xb2\xd7\xc2I \xa9\xb7\xb3\xbb\xb0\xbe\xb2\xbe \xa9\xb7\xb3\xbbX \xa9\xb7\xb3\xbbY \xa8\xfa\xc2I\xbc\xc6\xa5\xd8',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99\xa1A',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xbe\xd4\xb0\xab\xb3s\xbdu' },
+    '$openskillmagic': {
+        'func': OpenSkillMagicDlg,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '0',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa4\xc0\xad\xb6ID',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99\xa1A',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xa5\xb4\xb6}\xb7s\xa7\xde\xaf\xe0\xaak\xb3N\xac\xc9\xad\xb1' },
+    '$openyard': {
+        'func': OpenYard,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 'test',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa4\xc0\xad\xb6ID',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99\xa1A',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xaex\xb0|\xa6a\xa8\xea' },
+    '$music': {
+        'func': OpenPlayMusic,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5\xa6\xa6E',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xb4\xb6}\xad\xb5\xbc\xd6\xbc\xbd\xa9\xf1\xac\xc9\xad\xb1',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99\xa1A',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xad\xb5\xbc\xd6\xbc\xbd\xa9\xf1\xac\xc9\xad\xb1' },
+    '$chatpop': {
+        'func': ChatPop,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '20',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5\xa6\xa6E',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb2\xe1\xa4\xd1\xae\xf0\xaaw\xc5\xe3\xa5\xdc\xbc\xc6\xb6q\xb1\xb1\xa8\xee',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99\xa1A',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2\xe1\xa4\xd1\xae\xf0\xaaw\xc5\xe3\xa5\xdc\xbc\xc6\xb6q\xb1\xb1\xa8\xee' },
+    '$wingdata': {
+        'func': WingDataTransform,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5\xa6\xa6E',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xaf\xcd\xbbH\xbc\xc6\xbe\xda\xc2\xe0\xb4\xab',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaf\xcd\xbbH\xbc\xc6\xbe\xda\xc2\xe0\xb4\xab' },
+    '$opennewgroup': {
+        'func': OpenNewGroupDlg,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xb4\xb6}\xb7s\xc0\xb0\xac\xa3\xac\xc9\xad\xb1',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xb4\xb6}\xb7s\xc0\xb0\xac\xa3\xac\xc9\xad\xb1' },
+    '$testmagicpal': {
+        'func': TestMagicPal,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb6}\xa9\xf1\xa9\xd2\xa6\xb3\xa6\xca\xaf\xc5\xa9\xdb\xacV\xa6\xe2\xb9w\xc4\xfd',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb6}\xa9\xf1\xa9\xd2\xa6\xb3\xa6\xca\xaf\xc5\xa9\xdb\xacV\xa6\xe2\xb9w\xc4\xfd' },
+    '$testopenfunc': {
+        'func': OpenFuncTest,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 'open 1001',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': 'open\xb6}\xb1\xd2 pre\xb9w\xc4\xfd',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xb7s\xa5\\\xaf\xe0\xb6}\xb1\xd2' },
+    '$openmapeditor': {
+        'func': OpenMapEditor,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xb4\xb6}\xa6a\xb9\xcf\xbds\xbf\xe8\xbe\xb9',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xb4\xb6}\xa6a\xb9\xcf\xbds\xbf\xe8\xbe\xb9' },
+    '$testguide': {
+        'func': TestGuide,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xab\xfc\xa4\xde',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xab\xfc\xa4\xde' },
+    '$testautogotoyard': {
+        'func': TestAutoGotoYard,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa6\xdb\xb0\xca\xb8\xf5\xc2\xe0\xb3X\xb0\xdd\xaex\xb0| \xb8\xf5\xc2\xe0\xb6\xa1\xb9j|[\xa5\xd8\xbc\xd0]',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa6\xdb\xb0\xca\xb8\xf5\xaex\xb0|' },
+    '$testfurnitureeditor': {
+        'func': TestFurnitureeditor,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '0',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xaex\xb0|\xb3\xc3\xa8\xe3\xbds\xbf\xe8\xbe\xb90:mapobject/furniture 1: map landigs \xc0\xf2\xa8\xfa\xb6\xf1\xb8\xf4\xae|',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaex\xb0|\xb3\xc3\xa8\xe3\xbds\xbf\xe8\xbe\xb9' },
+    '$showyardmapcursorpos': {
+        'func': SwitchYardMapCursorPos,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '0',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xaex\xb0|\xa6a\xb9\xcf\xc5\xe3\xa5\xdc\xb9\xab\xbc\xd0\xa7\xa4\xbc\xd0',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaex\xb0|\xb9\xab\xbc\xd0\xa7\xa4\xbc\xd0' },
+    '$testbanavatar': {
+        'func': TestBanAvatar,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5\xa6\xa6E',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xab\xcc\xbd\xaa\xaa\xba\xc0Y\xb9\xb3\xa8q',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xab\xcc\xbd\xaa\xaa\xba\xc0Y\xb9\xb3\xa8q' },
+    '$onlineupdate': {
+        'func': ClientUpdate,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '2',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa6\xdb\xb0\xca\xa7\xf3\xb7s\xb4\xfa\xb8\xd5\xa1A',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa6\xdb\xb0\xca\xa7\xf3\xb7s\xb4\xfa\xb8\xd5' },
+    '$onlineupdatetest': {
+        'func': ClientUpdateTest,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa6\xdb\xb0\xca\xa7\xf3\xb7s\xa5\\\xaf\xe0\xb4\xfa\xb8\xd5\xa1A',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa6\xdb\xb0\xca\xa7\xf3\xb7s\xb4\xfa\xb8\xd5' },
+    '$banref': {
+        'func': BanReferencePrice,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xb1H\xb0\xe2\xa4\xa4\xa4\xdf\xa4W\xac[\xa9\xb5\xae\xc9\xae\xc4\xaaG\xa1A',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xb1H\xb0\xe2\xa4\xa4\xa4\xdf\xa4W\xac[\xa9\xb5\xae\xc9\xae\xc4\xaaG' },
+    '$fakesale': {
+        'func': TestConsignmall,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xb1H\xb0\xe2\xa4\xa4\xa4\xdf\xb5\xea\xc0\xc0\xc5u\xa6\xec',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xb1H\xb0\xe2\xa4\xa4\xa4\xdf\xb5\xea\xc0\xc0\xc5u\xa6\xec' },
+    '$testnewsound': {
+        'func': TestNewSound,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xb7s\xad\xb5\xae\xc4',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xb7s\xad\xb5\xae\xc4' },
+    '$openchattest': {
+        'func': OpenChatTest,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb6}\xb1\xd2\xc5\xe3\xa5\xdcchatid',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb6}\xb1\xd2\xc5\xe3\xa5\xdcchatid' },
+    '$testmagic': {
+        'func': OpenMagicTest,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xb4\xb6}\xbe\xd4\xb0\xab\xb8\xea\xb7\xbd\xb9w\xc4\xfd',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xb4\xb6}\xbe\xd4\xb0\xab\xb8\xea\xb7\xbd\xb9w\xc4\xfd' },
+    '$weather': {
+        'func': ShowWeather,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xc5\xe3\xa5\xdc\xa4\xd1\xae\xf0',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc5\xe3\xa5\xdc\xa4\xd1\xae\xf0' },
+    '$testwalker': {
+        'func': TestWalker,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 'stand 1 25 1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xac\xfc\xb3N',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xaei\xa5\xdc\xa8\xa4\xa6\xe2\xa1A\xb0\xd1\xbc\xc6\xa1G\xa8\xa4\xa6\xe2\xaa\xac\xbaA \xa8\xa4\xa6\xe2\xa4\xe8\xa6V \xaf\xcd\xbbH\xbds\xb8\xb9 \xa7\xa4\xc3M\xbds\xb8\xb9',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaei\xa5\xdc\xa8\xa4\xa6\xe2' },
+    '$setopenday': {
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '1024',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5\xa6\xa6E',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xaaA\xb0\xc8\xbe\xb9\xa4\xd1\xbc\xc6',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xaaA\xb0\xc8\xbe\xb9\xa4\xd1\xbc\xc6' },
+    '$testnewtask': {
+        'func': TestNewTask,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xb7s\xaa\xba\xa5\xf4\xb0\xc8\xc4\xe6',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xb7s\xaa\xba\xa5\xf4\xb0\xc8\xc4\xe6' },
+    '$testcreategif': {
+        'func': TestCreateRole,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '2010 2.1 0 -10',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xbc\xd2\xab\xac\xa5\xcd\xa6\xa8',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xbc\xd2\xab\xac\xa5\xcd\xa6\xa8' },
+    '$\xa6a\xb9\xcf\xafS\xae\xc4\xc0\xcb\xacd': {
+        'func': CheckMapAni,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5\xa6\xa6E',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xc0\xcb\xacd\xa6a\xb9\xcf\xafS\xae\xc4\xaa\xba\xa6X\xaak\xa9\xca',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xbf\xe9\xa5X\xc0\xcb\xacd\xb3\xf8\xa7i' },
+    '$holdonline': {
+        'func': HoldOnline,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb3o\xad\xd3\xb1b\xb8\xb9\xb1j\xa8\xee\xabO\xab\xf9\xa6b\xbdu',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb3o\xad\xd3\xb1b\xb8\xb9\xb1j\xa8\xee\xabO\xab\xf9\xa6b\xbdu' },
+    '$myqtest': {
+        'func': TestMYQ,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xb7\xf9\xa4\xcd\xb0\xe9',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xb7\xf9\xa4\xcd\xb0\xe9' },
+    '$ac2': {
+        'func': AutoCMNew,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xa5\\\xaf\xe0',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb0\xa3\xc5]',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa6\xdb\xb0\xca\xb0\xa3\xc5]' },
+    '$register': {
+        'func': TestRegister,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xb5\xf9\xa5U\xa4\xba\xb4O\xad\xb6',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xb5\xf9\xa5U\xa4\xba\xb4O\xad\xb6' },
+    '$SetIconPos': {
+        'func': TestIconPos,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xa7\xef\xa5D\xac\xc9\xad\xb1\xb9\xcf\xbc\xd0\xa6\xec\xb8m',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xa7\xef\xa5D\xac\xc9\xad\xb1\xb9\xcf\xbc\xd0\xa6\xec\xb8m' },
+    '$testwg': {
+        'func': TestBlackList,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xfa\xb8\xd5\xa5~\xb1\xbe',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xfa\xb8\xd5\xa5~\xb1\xbe' },
+    '$showchgdlg': {
+        'func': ShowChgDlg,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xc0\xcb\xb4\xfa\xb3\xcc\xaa\xf1\xad\xd7\xa7\xef\xac\xc9\xad\xb1',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xc0\xcb\xb4\xfa\xb3\xcc\xaa\xf1\xad\xd7\xa7\xef\xac\xc9\xad\xb1' },
+    '$checkrender': {
+        'func': CheckRender,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '100',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb4\xe8\xacV\xbe\xb9\xbd\xd5\xb8\xd5\xab\xfc\xa5O',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb4\xe8\xacV\xbe\xb9\xbd\xd5\xb8\xd5\xab\xfc\xa5O' },
+    '$cef': {
+        'func': CefOpen,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': 'https://quan.duoyioa.com/#/home 600 500',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xb4\xb6}\xa4@\xad\xd3\xba\xf4\xad\xb6',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99,',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xb4\xb6}\xa4@\xad\xd3\xba\xf4\xad\xb6' },
+    '$walk': {
+        'func': Walk,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '$walk 10 1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xbc\xd2\xc0\xc0\xb2\xbe\xb0\xca\xa4@\xacq\xb6Z\xc2\xf7',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb2\xbe\xb0\xca\xbc\xd2\xc0\xc0' },
+    '$qifu': {
+        'func': Qifu,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '$jifu 1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xacK\xb8`\xac\xe8\xba\xd6',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xacK\xb8`\xac\xe8\xba\xd6' },
+    '$starrank': {
+        'func': starrank,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': '$starrank 1',
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xb4\xb6}\xb1\xc6\xa6\xec\xc1\xc9\xa5\xfe\xa9\xfa\xacP\xac\xc9\xad\xb1',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb9\xda\xb7Q3\xb1\xc6\xa6\xec' },
+    '$uiprofile': {
+        'func': OpenUIProfile,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xacd\xac\xddUI\xa9\xca\xaf\xe0\xae\xf8\xaf\xd3',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xacd\xac\xddUI\xa9\xca\xaf\xe0\xae\xf8\xaf\xd3' },
+    '$mubanhao': {
+        'func': OpenMubanhaoDlg,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xa5\xb4\xb6}\xbc\xd2\xaaO\xb8\xb9\xa5D\xac\xc9\xad\xb1',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xa5\xb4\xb6}\xbc\xd2\xaaO\xb8\xb9\xa5D\xac\xc9\xad\xb1' },
+    '$fp': {
+        'func': FishPathTool,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xb0O\xbf\xfd\xae\xb7\xb3\xbd\xb8\xf4\xae|',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xb0O\xbf\xfd\xae\xb7\xb3\xbd\xb8\xf4\xae|' },
+    '$btnlighteditor': {
+        'func': OpenBtnLightEditor,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xab\xf6\xb6s\xb4V\xbc\xc6\xbd\xd5\xbe\xe3',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xab\xf6\xb6s\xb4V\xbc\xc6\xbd\xd5\xbe\xe3' },
+    '$closeblackroom': {
+        'func': CloseBlackRoomJudge,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xab\xcc\xbd\xaa\xb6\xc2\xab\xce\xa7P\xc2_',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xab\xcc\xbd\xaa\xb6\xc2\xab\xce\xa7P\xc2_' },
+    '$bubble': {
+        'func': OpenPubbleTool,
+        '\xab\xfc\xa5O\xb0\xd1\xbc\xc6': None,
+        '\xab\xfc\xa5O\xa4\xc0\xc3\xfe': '\xb5{\xa7\xc7',
+        '\xab\xfc\xa5O\xb4y\xadz': '\xae\xf0\xaaw\xbds\xbf\xe8',
+        '\xab\xfc\xa5O\xc5v\xad\xad': '99',
+        '\xab\xfc\xa5O\xae\xc4\xaaG': '\xae\xf0\xaaw\xbds\xbf\xe8' } }
