@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mxsj-script-manual"
+version = "0.1.0.dev1"
+requires-python = ">=3.10"
+dependencies = ["PySide6==6.10.3", "jsonschema==4.25.1"]
+description = "Version-pinned, read-only client script handbook and agent integration tools"
+
+[project.gui-scripts]
+mxsj-manual = "mxsj_manual.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+mxsj_manual = ["assets/*"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B"]

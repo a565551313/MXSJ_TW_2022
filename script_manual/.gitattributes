@@ -1,0 +1,4 @@
+# Evidence/review byte hashes must survive Windows Git checkout unchanged.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf

@@ -1,0 +1,202 @@
+:root {
+  font-family: system-ui, "Microsoft YaHei", sans-serif;
+  color: #1b3047;
+  background: #f2f5f9;
+  font-size: 15px;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+header {
+  padding: 20px 28px;
+  background: #102c44;
+  color: #fff;
+}
+header p {
+  margin: 8px 0;
+  font-size: 13px;
+  color: #c4d6e4;
+}
+header h1 {
+  margin: 0;
+  font-size: 23px;
+  letter-spacing: 1px;
+}
+.badge {
+  padding: 4px 9px;
+  border-radius: 4px;
+  background: #e7b451;
+  color: #172c40;
+  font-size: 12px;
+}
+#stats {
+  font-size: 14px;
+  margin-top: 12px;
+}
+.workspace {
+  display: grid;
+  grid-template-columns: 390px 1fr;
+  min-height: calc(100vh - 150px);
+}
+aside {
+  padding: 20px;
+  background: #fff;
+  border-right: 1px solid #d8e1e9;
+}
+label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 6px;
+  color: #50687e;
+}
+input,
+select,
+button {
+  font: inherit;
+  border: 1px solid #bdcddc;
+  border-radius: 5px;
+  padding: 9px;
+}
+input {
+  width: 100%;
+}
+select {
+  width: 49%;
+  font-size: 13px;
+  margin-top: 8px;
+}
+button {
+  background: #fff;
+  color: #163b59;
+  cursor: pointer;
+}
+button:hover {
+  background: #edf4fb;
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+#results {
+  margin-top: 14px;
+}
+#results button {
+  display: block;
+  border: 0;
+  border-bottom: 1px solid #e3eaf1;
+  border-radius: 0;
+  width: 100%;
+  text-align: left;
+  padding: 12px 5px;
+  overflow-wrap: anywhere;
+}
+#results button.selected {
+  background: #eaf2fb;
+  border-left: 3px solid #2676ab;
+  padding-left: 8px;
+}
+#results small {
+  display: block;
+  color: #647c92;
+  margin-top: 4px;
+}
+#paging {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 15px;
+  font-size: 12px;
+}
+main {
+  overflow-wrap: anywhere;
+  padding: 28px 35px;
+  max-width: 1250px;
+  min-width: 0;
+}
+h2 {
+  font-size: 24px;
+  overflow-wrap: anywhere;
+}
+h3 {
+  margin-top: 28px;
+  border-top: 1px solid #d9e3ec;
+  padding-top: 20px;
+  color: #1c5075;
+}
+h4 {
+  margin: 22px 0 8px;
+}
+p,
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
+}
+pre {
+  padding: 10px;
+  background: #e4edf4;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.notice {
+  padding: 12px 16px;
+  border-left: 3px solid #d29e36;
+  background: #fff6df;
+  font-size: 13px;
+  margin: 18px 0;
+}
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0;
+}
+.tabs .active {
+  background: #1a597f;
+  color: #fff;
+}
+.status {
+  font-size: 13px;
+  color: #59728a;
+}
+a {
+  color: #176c9c;
+}
+small {
+  font-size: 12px;
+  color: #62798d;
+}
+#warnings {
+  color: #815000;
+}
+@media (max-width: 850px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+  aside {
+    border-right: 0;
+  }
+  main {
+    overflow-wrap: anywhere;
+    padding: 20px;
+  }
+  #results {
+    max-height: 300px;
+    overflow: auto;
+  }
+}
+@media print {
+  aside,
+  .tabs {
+    display: none;
+  }
+  .workspace {
+    display: block;
+  }
+  main {
+    max-width: none;
+  }
+}

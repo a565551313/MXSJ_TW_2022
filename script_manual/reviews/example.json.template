@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "REPLACE_WITH_FROZEN_ARCHIVE_SHA256",
+  "entry_index": 337,
+  "annotation_sha256": "REPLACE_WITH_ACTUAL_ANNOTATION_FILE_SHA256",
+  "reviewer": "H",
+  "decision": "changes_requested",
+  "note": "填写实际核对范围、缺失与结论；这不是有效审核记录。"
+}

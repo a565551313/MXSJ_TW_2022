@@ -1,5 +1,7 @@
 # 项目当前状态（STATUS）
 
+> **最新：A「总控与脚本手册工具」第一版底座（2026-10-15）**：独立 `script_manual/` 0.1.0.dev1 已建立固定来源/JSON Schema/唯一归属任务卡、只读PySide6查看器、单HTML离线搜索导出和H独立摘要绑定审核。**目前仅20条历史路径种子、1份公告待复核样板、H通过0；不是全量分析。** 75/75（11 GUI，零跳过）、ruff含spec 0、自检0、Windows静态0/0/0，真实Chromium断网file://冒烟通过；Windows/EXE/游戏未验，Linux spec因宿主缺libpython未完成。B–H任务与边界见 `script_manual/docs/AGENT_TASKS.md`，详§3.40。本轮不改编辑器/游戏、不上传、不合本工作线。
+
 > **0.6.0.dev6完整源码包已交付到网盘script_editor目录，上传后重读目录/大小/MD5一致。路径导航修复已推送，含重建双Windows编译器/pycdc及源码许可；源码和真正ZIP解压副本均325项中309通过、16许可外部材料跳过，60 GUI通过，41 required齐全。详§3.39。Windows/用户完整c727/游戏仍未验收。**
 
 > **当前双引擎集成轮（2026-10-15）**：固定分支 `arena/61deb9e5-mxsj-tw-2022`，起点 `8212b26`（PR #33 已合并）。用户授权开始编辑器集成；不重跑全量语料，不修改已验的启动器/注册脚本，不自行合并或重复上传。先提交推送本检查点再实现。
@@ -20,14 +22,15 @@
 |---|---|
 | 工作分支 | `arena/61deb9e5-mxsj-tw-2022`（当前会话，固定名称；旧分支叙述仅历史） |
 | 基线 | 当前会话从 `8212b26`（PR #33）开始；第二段开工前检查点 `5998c1b` 已推送，第二段已推送`e72aac9`，历史dev3数据包增量见§3.33；当前dev6路径修复`1ad79ce`、源码交付`3791d0c`及网盘见§3.39；未合master |
-| `master` | 当前会话起始含PR #32/#33；本轮未改master，未查询最新远程顶端 |
-| 最近 PR | 会话起点为PR #33合并提交；本轮未开PR |
-| 合并授权 | 无。合入 master / 发布生产需要用户当轮明确授权 |
+| `master` | 当前会话起始含PR #32/#33；后按明确授权仅合PR #34，未把编辑器/手册工作线合入，不以此断言远程最新顶端 |
+| 最近 PR | PR #34（固定语料交付文档）已按授权审查并合并，merge `8afb53a`；A手册工作未开PR |
+| 合并授权 | PR #34当轮授权已履行；当前工作分支无合master/发布授权 |
 
 ## 2. 组件状态与实测
 
 | 组件 | 版本/阶段 | 状态 | 本次实测 |
 |---|---|---|---|
+| 脚本开发手册（`script_manual/`） | A底座0.1.0.dev1；20条历史目录种子/1说明样板/0 H通过 | 版本指纹、主键归属、证据分级、H摘要绑定、独立Qt/离线HTML；B–H未代为开展 | 75/75含11 GUI；真实Chromium离线14项检查；ruff含spec 0、自检0、wincompat 0/0/0；Windows与EXE待验，Linux打包缺宿主libpython，详§3.40 |
 | 独立脚本编辑器（`script_editor/`） | 0.6.0.dev6 路径导航完整源码包已交付 | script路径优先、旧项目/参数确认/新包路径索引，严格恢复与双VM续编不放宽 | 源码/真实ZIP解压副本均325项中309通过、16许可外部材料跳过，60 GUI通过；原包路径4951/5002，51明确不可读；双Windows工具本轮重建/静态核验，未Windows/用户全包/游戏验收，详§3.39 |
 | 逆向研究（`notes/`, `work/`） | 结案：双 VM opcode 表、0SLF 目录/路径哈希、`.dlg` 2,706/2,901、协议号表 412 条、帧续读 2 字节；10-15 新增标题/聊天编码链路与 `GCODE=BIG5`/`GetGameRegion()='cn'` 结案（`notes/title_and_chat_encoding.md`） | 稳定；未决项见 AGENTS §7 | 锁定输入 SHA 匹配；`script.fls` 全量反编译补跑 4401/5002 完整（生成物不入库） |
 | 注册 UI 补丁（`tools/client_patches/`，历史） | v3.3 已作废 | 用户判定旧 overlay/整图烤字按钮/包外散图不符合原生规范，**勿再分发 v3/v3.2/v3.3**；新实现见下行 | 90/90 仅历史证据，不作为新实现验收依据 |
@@ -1179,6 +1182,19 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
   同样325项中309通过、16许可跳过、60 GUI通过、41 required在场并执行（12.484s）。
   测试后186个payload文件仍匹配原包清单；上传后独立get_file核对名称/父目录/大小/MD5一致。
   旧包和权限未动、未上传游戏；[最终回执](evidence/script_editor_0.6_dev6_delivery_receipt_20261015.json)。
+
+### 3.40 A总控与客户端脚本手册底座（2026-10-15）
+
+- **授权与范围**：用户指定本会话为A并要求先开始；开工先检查工作树并推送固定分支（起点`1a0b233`，当时无待提交，Everything up-to-date）。本轮只新增独立`script_manual/`、本节与测试证据；不改脚本编辑器、游戏脚本、原包、启动器或Drive权限，不重建/上传游戏包，不合工作分支到master。
+- **协议与任务**：`coordination/baseline.json`固定两包SHA、VM、条目数、参数摘要、来源提交；`schema/contract.schema.json`为严格格式。主键为包SHA+原始entry号，禁止按路径/文件名静默覆盖；1288排除元记录不得写路径/函数/正文，data目录不能当源码。`tasks.json`分配C–G各4个样板，main.py归C、E/F协审；B全量目录、H独立复核，A不伪称已启动其他会话。
+- **内容边界**：20条种子明确标`historical`，来自已钉SHA的旧catalog，不是本轮逐条原包提取。只提供337公告模块格式样板（6个重点函数、2个消息分支、1条下游线索）；全部解释保留`inferred`，来源`historical_unverified_origin`，交C/H复核。其余19模块未编写说明。PR34语料只引用外部`full/manifest.audited.jsonl`，本轮没有下载全语料或钉其manifest摘要；不得以本底座冒充B完成。
+- **工具能力**：PySide6路径主列表，中文功能/路径/函数名和多词检索、领域/审核筛选、职责/函数及消息分支/上下游与修改入口/证据四页、内部模块跳转、后台加载/复验/导出、失败保留当前手册、关闭等待任务结束。core不依赖Qt，不导入执行游戏脚本。单HTML内嵌所有数据/CSS/JS，无网络依赖，SHA白名单CSP与文本转义；仓库外全新目录导出，不覆盖旧输出，失败保留INCOMPLETE标记；BUILD记录输入/HTML摘要与覆盖数。
+- **审核闸门**：包/entry/VM、重复主键、唯一owner、路径漂移、未知字段、证据悬空、越界行号、目录/排除政策、大小和符号链接等校验；禁止远程schema、重复JSON键/NaN与路径穿越。`--verify-evidence --repository`实算文本SHA/行范围，不代表语义正确；`--require-full-inventory`在当前20/5135上明确拒绝（完整登记仍不等于全函数解释）。H单独review绑定说明原字节SHA，改动即过期，不能由作者自填审核通过；此工作流不是密码学签名。
+- **Linux实测**：75/75，零跳过，其中11 Qt offscreen，Qt实际库`/home/user/path-navigation/.cache/qt-libs`；ruff（显式含spec）0；bootstrap `--check-only`退出0；Windows静态检查ERROR/WARNING/INFO均0。真实Chromium153.0.8010.0以断网context及`file://`验证14项（检索、分支、来源/证据、关联/深链、筛选、空状态、390px无横向溢出、无外网请求/JS/CSP错误）。测试本机临时注册已有中文字体，不把字体嵌入/再分发。生成站点/截图/日志/浏览器/构建目录均仓库外。
+- **Windows与打包待验**：附ASCII/CRLF双击启动bat、自动依赖自检、源码、build_exe.bat及onedir/onefile spec，入口不跑pip；EXE异常日志写APPDATA。Linux spec已尝试，但宿主缺`libpython3.11.so.1.0`，在Analysis阶段停止，**不是打包成功**。未Windows双击、EXE、用户包或游戏运行验收；不把Linux通过写成Windows可用/已交付EXE。
+- **下一阶段**：按`script_manual/docs/AGENT_TASKS.md`向B–H分派固定版本底座；B提交目录和提取回执，C–G先完成20个样板、H逐份复核，A统一集成再扩域/串功能链。其他Agent只改自有目录，不改schema/总任务/导航/根STATUS。
+- **持久证据**：`docs/evidence/script_manual_0.1.0_dev1_validation_20261015.json`含工具源文件摘要、75项统计、真实浏览器记录、导出回执、原包/参数前后匹配及未验边界；不是网盘上传回执。
+- **补记此前PR34授权已履行**：纯文档38行人工审查后已合，merge `8afb53a14fe9c939d61ea3ab71ed64f0bf682af1`，2026-10-15T13:09:05Z，评论 https://github.com/a565551313/MXSJ_TW_2022/pull/34#issuecomment-6192827624 。核对10卷远程metadata/回执与固定工具SHA，无CI配置；本会话未下载150 MB重验185048文件。该授权不扩展至本编辑器/手册工作线。
 
 ## 4. 等待外部输入
 
