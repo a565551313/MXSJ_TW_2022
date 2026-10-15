@@ -1,6 +1,6 @@
 # 项目当前状态（STATUS）
 
-> **本轮最新：0.6.0.dev3已补齐data全量候选生成/导入/项目续编；固定data的121脚本全部严格解码、至少一候选语法通过，并实际GUI可编辑打开（另12目录）。完整288/288零跳过，54 GUI，详§3.33。script第二段见§3.32。未新打包上传、未合主线，Windows/客户端未验。固定分支 `arena/61deb9e5-mxsj-tw-2022`。**
+> **最新交付：0.6.0.dev3完整独立源码ZIP已上传My Drive，源码提交`6ba9276`（含data功能`a00df3d`），远端大小/MD5重读匹配。附双Windows编译器、Windows pycdc及对应源码/许可、EXE构建脚本。交付副本289/289零跳过、54 GUI；Windows/客户端未验，详§3.34。未合master，固定分支`arena/61deb9e5-mxsj-tw-2022`。**
 
 > **当前双引擎集成轮（2026-10-15）**：固定分支 `arena/61deb9e5-mxsj-tw-2022`，起点 `8212b26`（PR #33 已合并）。用户授权开始编辑器集成；不重跑全量语料，不修改已验的启动器/注册脚本，不自行合并或重复上传。先提交推送本检查点再实现。
 > 已只读下载并核 SHA：小样 `1V9g9BF1uYLc6DslljTpXPCgUDRloMlJy`（446,379 B，`a778c5fd6d3624e91ed0786382c17f9f8e156c9529f3d19fb43bc19dee1689dc`）及双失败补样 `1pH5mx1IdAF1Y51lYYoFQqw2Ob0gkxbuM`（58,020 B，`4920b41cb962241e0d4bf1b98123666de78ecd96094102b5a24ecde6cef0b797`），内容留仓库外，未执行其脚本。对接采用 `(archive_sha256, entry_index)`，1288 排除不恢复；小样 u6=3.9.3/xdis=6.1.8 只作研究证据，不回退编辑器已修的 3.14 依赖。
@@ -19,7 +19,7 @@
 | 项 | 值 |
 |---|---|
 | 工作分支 | `arena/61deb9e5-mxsj-tw-2022`（当前会话，固定名称；旧分支叙述仅历史） |
-| 基线 | 当前会话从 `8212b26`（PR #33）开始；第二段开工前检查点 `5998c1b` 已推送，第二段已推送`e72aac9`，当前0.6.0.dev3数据包增量见§3.33，未合并/发布 |
+| 基线 | 当前会话从 `8212b26`（PR #33）开始；第二段开工前检查点 `5998c1b` 已推送，第二段已推送`e72aac9`，当前0.6.0.dev3数据包增量见§3.33，源码交付`6ba9276`及网盘见§3.34；未合master |
 | `master` | 当前会话起始含PR #32/#33；本轮未改master，未查询最新远程顶端 |
 | 最近 PR | 会话起点为PR #33合并提交；本轮未开PR |
 | 合并授权 | 无。合入 master / 发布生产需要用户当轮明确授权 |
@@ -28,7 +28,7 @@
 
 | 组件 | 版本/阶段 | 状态 | 本次实测 |
 |---|---|---|---|
-| 独立脚本编辑器（`script_editor/`） | 0.6.0.dev3 开发版；已交付仍0.5.1 | script全量候选/严格参数，data121脚本全量可编辑打开、双VM项目续编 | 本轮288/288（54 GUI）零跳过；data121逐一实际GUI打开，ruff/Windows静态检查通过；未新交付，Windows/全量安全回包未验，详§3.33 |
+| 独立脚本编辑器（`script_editor/`） | 0.6.0.dev3 完整独立源码测试包已交付 | script全量候选/严格参数，data121脚本全量可编辑打开、双VM项目续编 | 交付副本289/289（54 GUI）零跳过；data121逐一实际GUI打开；双Windows工具静态闭包通过并已网盘交付；Windows/全量安全回包未验，详§3.33—3.34 |
 | 逆向研究（`notes/`, `work/`） | 结案：双 VM opcode 表、0SLF 目录/路径哈希、`.dlg` 2,706/2,901、协议号表 412 条、帧续读 2 字节；10-15 新增标题/聊天编码链路与 `GCODE=BIG5`/`GetGameRegion()='cn'` 结案（`notes/title_and_chat_encoding.md`） | 稳定；未决项见 AGENTS §7 | 锁定输入 SHA 匹配；`script.fls` 全量反编译补跑 4401/5002 完整（生成物不入库） |
 | 注册 UI 补丁（`tools/client_patches/`，历史） | v3.3 已作废 | 用户判定旧 overlay/整图烤字按钮/包外散图不符合原生规范，**勿再分发 v3/v3.2/v3.3**；新实现见下行 | 90/90 仅历史证据，不作为新实现验收依据 |
 | 注册原生重做（`tools/registration/`） | 采用 PR #32；用户已确认该版测试无问题 | 保留对方注册源码，不以旧 font1/diag 版本覆盖；尚未接真实注册服务端 | 集成后 42/42 回归；真 2.5.6 重建 SHA `f0253c95…` 与对方记录一致，仅改 337/4007；详 §3.29 |
@@ -1032,7 +1032,14 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
   主恢复引擎固定源码及xdis/spark-parser/six/click对应源码、双CPython官方源码也附交付，
   一键启动/EXE构建脚本和固定原包匹配参数保留；首次Qt/安装构建依赖仍需联网，不是离线安装器。
 - 证据：[交付构建静态核验](evidence/script_editor_0.6_dev3_delivery_build_20261015.json)。
-  交付ZIP/网盘回执将在上传与重读核验后记入，不预报上传完成。
+  [网盘下载](https://drive.google.com/file/d/1ux8i20f7chx4vlHIiWPnxTw7YTJmqCpB/view)：
+  `MXSJ_ScriptEditor_0.6.0.dev3_source_with_compilers.zip`，39,314,505 B，174文件，
+  源码`6ba927665a8ba40c821623c4bca3c073c76a4dbd`；SHA256
+  `fe4db94db3bcb10982ae6b14dbc448d5554abb9e6e6ea1ae77e1eaa93dffd011`，
+  MD5 `a3baf00914f39fa4da7bbbfad319f71a`。ZIP CRC/逐文件SHA与长度全通过，
+  解压的独立交付副本再跑289/289、54 GUI、零跳过（23.380s）。
+  上传后单独get_file重读远端大小/MD5均同本地，未改分享权限，旧包保留。
+  [机器回执](evidence/script_editor_0.6_dev3_delivery_receipt_20261015.json)记录源提交/摘要/远端ID。
 - Windows启动、双compiler实际运行、Windows EXE构建及游戏语义仍待用户实测；
   不附游戏包或研究语料，不改mxLauncher/注册，不开PR/合master或更改网盘分享权限。
 
@@ -1040,7 +1047,7 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
 
 | 事项 | 等谁 | 阻塞什么 |
 |---|---|---|
-| 脚本编辑器0.5.1修Python3.14启动新包已上传（§3.28） | 用户Windows启动/客户端测试 | 不重复询问参数授权；script固定容量/未知映射继续严格拒绝，不把Linux或静态检查冒充Windows |
+| 脚本编辑器0.6.0.dev3完整源码新包已上传（§3.34） | 用户Windows启动、双VM检查/EXE/客户端测试 | 不重复询问参数授权；script固定容量/未知映射继续严格拒绝，不把Linux或静态检查冒充Windows |
 | 资源大包打开/新布局查找用户已确认通过；其余 Windows 快捷键/EXE、新图游戏加载仍待验 | 用户 | 不把两项交互通过外推完整编辑器/原生加载验收 |
 | font1用户确认“确实好了”；account/CBox保留 | 后续功能按需验收，不再等font1重传/复测 | 不外推全部表单/真实服务器成功，不重导/改用户布局，不索取真实资料 |
 | 真实注册接口与五账号整批成功回覆 | 后续服务端工作线（未开工） | 已定单条批量＋重名顺延（最多 `_99` 且最终 16 位，整批五个/同批重试不重复创建）；真实接口/固定成功回调调整/服务器验收未做，本阶段继续留桩，不能假报成功 |
@@ -1048,7 +1055,7 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
 
 ## 5. 下一步（优先级）
 
-当前用户请求优先：用户3.14.7无法启动已修复，0.5.1独立新包已上传并复查（§3.28），等Windows反馈；
+当前用户请求已执行：0.6.0.dev3完整独立源码包已提交、推送、上传并重读核验（§3.34），等Windows/客户端测试反馈；
 包内恢复编辑仍是主目标，不回退为要求用户自有.py的工具。
 0.5开发工作流已实测，匹配参数的交付授权已获得；独立源码新包已上传并复查，不宣称全面完成，继续补覆盖率/固定长度/Windows验证，
 不把阶段版或旧0.4.1网盘包当满足用户目标的成品。

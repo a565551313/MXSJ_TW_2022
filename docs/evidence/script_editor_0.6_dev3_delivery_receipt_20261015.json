@@ -1,0 +1,33 @@
+{
+  "file": "/home/user/script-editor-ship/deliveries/MXSJ_ScriptEditor_0.6.0.dev3_source_with_compilers.zip",
+  "source_commit": "6ba927665a8ba40c821623c4bca3c073c76a4dbd",
+  "files": 174,
+  "bytes": 39314505,
+  "sha256": "fe4db94db3bcb10982ae6b14dbc448d5554abb9e6e6ea1ae77e1eaa93dffd011",
+  "md5": "a3baf00914f39fa4da7bbbfad319f71a",
+  "zip_crc": "passed",
+  "manifest_checks": "all-file hashes and lengths passed",
+  "windows_runtime_audit": "static-only; both runtimes passed",
+  "pycdc_staging": "Windows platform metadata, binary/source/license/notices integrity verified; no execution",
+  "remote": {
+    "id": "1ux8i20f7chx4vlHIiWPnxTw7YTJmqCpB",
+    "name": "MXSJ_ScriptEditor_0.6.0.dev3_source_with_compilers.zip",
+    "bytes": 39314505,
+    "md5": "a3baf00914f39fa4da7bbbfad319f71a",
+    "web_view_link": "https://drive.google.com/file/d/1ux8i20f7chx4vlHIiWPnxTw7YTJmqCpB/view",
+    "verification": "separate get_file after upload; size and md5 match local",
+    "permissions_changed": false
+  },
+  "standalone_extracted_copy_tests": {
+    "passed": 289,
+    "gui": 54,
+    "skipped": 0,
+    "seconds": 23.38,
+    "log_sha256": "c71c4f02fc5fc3fbc603cf1f4c307039b2d3f8bd24654f94de610c9ebb387435",
+    "environment": "Linux Qt offscreen; actual Linux compilers/pycdc and external original materials; not Windows execution"
+  },
+  "windows_execution": "not-tested",
+  "game_semantics": "not-tested",
+  "no_game_package": true,
+  "git_binary_artifacts": false
+}
