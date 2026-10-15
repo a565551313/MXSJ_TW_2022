@@ -1,6 +1,6 @@
 # 项目当前状态（STATUS）
 
-> **最新修复：0.6.0.dev5补齐当前c727测试包自动XOR关联及旧项目缺关联重试，避免所有条目被“请选择XOR目录”统一挡住。全套310项中294通过、16外部材料跳过，55 GUI通过；完整用户包/Windows/客户端仍未验，详§3.38。网盘新包待校验上传，旧dev4不含此修复。**
+> **最新交付：0.6.0.dev5完整源码包已上传网盘script_editor目录并重读核对目录/大小/MD5；补齐当前c727测试包自动XOR关联、旧项目缺关联及未恢复标签重试。源码与ZIP解压副本均310项中294通过、16外部材料跳过，55 GUI通过，详§3.38。用户完整包/Windows/客户端仍待验，未合master。**
 
 > **当前双引擎集成轮（2026-10-15）**：固定分支 `arena/61deb9e5-mxsj-tw-2022`，起点 `8212b26`（PR #33 已合并）。用户授权开始编辑器集成；不重跑全量语料，不修改已验的启动器/注册脚本，不自行合并或重复上传。先提交推送本检查点再实现。
 > 已只读下载并核 SHA：小样 `1V9g9BF1uYLc6DslljTpXPCgUDRloMlJy`（446,379 B，`a778c5fd6d3624e91ed0786382c17f9f8e156c9529f3d19fb43bc19dee1689dc`）及双失败补样 `1pH5mx1IdAF1Y51lYYoFQqw2Ob0gkxbuM`（58,020 B，`4920b41cb962241e0d4bf1b98123666de78ecd96094102b5a24ecde6cef0b797`），内容留仓库外，未执行其脚本。对接采用 `(archive_sha256, entry_index)`，1288 排除不恢复；小样 u6=3.9.3/xdis=6.1.8 只作研究证据，不回退编辑器已修的 3.14 依赖。
@@ -28,7 +28,7 @@
 
 | 组件 | 版本/阶段 | 状态 | 本次实测 |
 |---|---|---|---|
-| 独立脚本编辑器（`script_editor/`） | 0.6.0.dev4 目录后负载修复完整源码包已交付 | script全量候选/严格参数，data121脚本全量可编辑打开、双VM项目续编 | 交付副本289/289（54 GUI）零跳过；data121逐一实际GUI打开；双Windows工具静态闭包通过并已网盘交付；Windows/全量安全回包未验，详§3.33—3.34 |
+| 独立脚本编辑器（`script_editor/`） | 0.6.0.dev5 自动XOR关联修复完整源码包已交付 | script全量候选/严格参数，data121脚本全量可编辑打开、双VM项目续编 | 交付副本289/289（54 GUI）零跳过；data121逐一实际GUI打开；双Windows工具静态闭包通过并已网盘交付；Windows/全量安全回包未验，详§3.33—3.34 |
 | 逆向研究（`notes/`, `work/`） | 结案：双 VM opcode 表、0SLF 目录/路径哈希、`.dlg` 2,706/2,901、协议号表 412 条、帧续读 2 字节；10-15 新增标题/聊天编码链路与 `GCODE=BIG5`/`GetGameRegion()='cn'` 结案（`notes/title_and_chat_encoding.md`） | 稳定；未决项见 AGENTS §7 | 锁定输入 SHA 匹配；`script.fls` 全量反编译补跑 4401/5002 完整（生成物不入库） |
 | 注册 UI 补丁（`tools/client_patches/`，历史） | v3.3 已作废 | 用户判定旧 overlay/整图烤字按钮/包外散图不符合原生规范，**勿再分发 v3/v3.2/v3.3**；新实现见下行 | 90/90 仅历史证据，不作为新实现验收依据 |
 | 注册原生重做（`tools/registration/`） | 采用 PR #32；用户已确认该版测试无问题 | 保留对方注册源码，不以旧 font1/diag 版本覆盖；尚未接真实注册服务端 | 集成后 42/42 回归；真 2.5.6 重建 SHA `f0253c95…` 与对方记录一致，仅改 337/4007；详 §3.29 |
@@ -1126,14 +1126,22 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
   这仅证明原包这些条目非全不可恢复，不声称已读到用户派生包相同负载。
 - 版本0.6.0.dev5；完整源码交付复用dev4已核验Windows双编译器/pycdc及对应源码/许可，
   不用Linux测试产物冒充Windows文件，不附游戏包。仍上传指定script_editor目录，不改权限/旧包。
-- [本轮证据](evidence/script_editor_registered_catalog_20261015.json)。新包待ZIP/解压副本与上传重读核验后记账；
+- [本轮证据](evidence/script_editor_registered_catalog_20261015.json)。已交付
+  [0.6.0.dev5完整源码ZIP](https://drive.google.com/file/d/115EwvX3Cr6r3RR4nCeVf5uMnFYyS9iu5/view)，
+  放指定script_editor文件夹（ID `1Oknzs5ftrOHpf_jy0vQasYRtJCPoBQmO`），
+  `MXSJ_ScriptEditor_0.6.0.dev5_source_with_compilers.zip`，39,343,950 B、182文件，
+  代码`820fc89c95795949c09a9552ed7b50f13b77f9b3`，MD5 `8fac8969745e28ca05e806b40525adfa`，
+  SHA256 `624397280d67a4c0261fdd232402a55263e834ba0b0bacdf21438440adcb33fc`。
+  ZIP CRC/逐文件摘要通过，真正解压后的副本复测310项中294通过、16明确外部跳过、55 GUI通过（10.376s）；
+  上传后独立get_file重读文件名、父目录、大小及MD5均匹配，旧包/权限不变，无游戏包上传。
+  [交付回执](evidence/script_editor_0.6_dev5_delivery_receipt_20261015.json)。
   Windows加载/EXE构建、完整用户c727恢复和客户端语义仍待验。
 
 ## 4. 等待外部输入
 
 | 事项 | 等谁 | 阻塞什么 |
 |---|---|---|
-| 脚本编辑器0.6.0.dev4完整源码修复包已上传指定script_editor目录（§3.37） | 用户Windows启动、双VM检查/EXE/客户端测试 | 不重复询问参数授权；script固定容量/未知映射继续严格拒绝，不把Linux或静态检查冒充Windows |
+| 脚本编辑器0.6.0.dev5完整源码修复包已上传指定script_editor目录（§3.38） | 用户Windows启动、双VM检查/EXE/客户端测试 | 不重复询问参数授权；script固定容量/未知映射继续严格拒绝，不把Linux或静态检查冒充Windows |
 | 资源大包打开/新布局查找用户已确认通过；其余 Windows 快捷键/EXE、新图游戏加载仍待验 | 用户 | 不把两项交互通过外推完整编辑器/原生加载验收 |
 | font1用户确认“确实好了”；account/CBox保留 | 后续功能按需验收，不再等font1重传/复测 | 不外推全部表单/真实服务器成功，不重导/改用户布局，不索取真实资料 |
 | 真实注册接口与五账号整批成功回覆 | 后续服务端工作线（未开工） | 已定单条批量＋重名顺延（最多 `_99` 且最终 16 位，整批五个/同批重试不重复创建）；真实接口/固定成功回调调整/服务器验收未做，本阶段继续留桩，不能假报成功 |
@@ -1141,7 +1149,7 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
 
 ## 5. 下一步（优先级）
 
-当前用户请求已执行：0.6.0.dev4完整独立源码修复包已提交、推送、上传指定script_editor目录并重读核验（§3.37），等Windows/客户端测试反馈；
+当前用户请求已执行：0.6.0.dev5完整独立源码修复包已提交、推送、上传指定script_editor目录并重读核验（§3.38），等Windows/客户端测试反馈；
 包内恢复编辑仍是主目标，不回退为要求用户自有.py的工具。
 0.5开发工作流已实测，匹配参数的交付授权已获得；独立源码新包已上传并复查，不宣称全面完成，继续补覆盖率/固定长度/Windows验证，
 不把阶段版或旧0.4.1网盘包当满足用户目标的成品。
