@@ -1,0 +1,27 @@
+{
+  "date_local": "2026-10-16",
+  "branch": "arena/61deb9e5-mxsj-tw-2022",
+  "previous_local_head": "8212b26e359a693db5513e1bf0d0c6a5139336ba",
+  "verified_remote_head": "e49cb00bee81c1b792ee86be4476c29b89fd2f3f",
+  "previous_index_sha256": "48ee94c65679de76d7c3722ec92f88b4b941aa815fe28778ae89d27756f60403",
+  "previous_index_had_staged_changes": false,
+  "temporary_index_audit": {
+    "tracked_differences": [
+      "docs/STATUS.md"
+    ],
+    "untracked_files": [
+      "docs/evidence/script_manual_C_242fd8c_A_review_20261016.md"
+    ]
+  },
+  "operation": [
+    "backup index outside repository",
+    "git update-ref guarded by expected old SHA (same branch only)",
+    "git read-tree e49cb00 (NO -u; index only)"
+  ],
+  "worktree_files_overwritten": 0,
+  "report_hashes_before_and_after_metadata_alignment": {
+    "docs/STATUS.md": "f8bf5a66c6173e98fbb424ad037c38a0ff2fbf697989fb2dc8230d03d3605f10",
+    "docs/evidence/script_manual_C_242fd8c_A_review_20261016.md": "a6870c0ce386a8366435034ec66d894e1b55e78b98aff47cbadc864d5a1d8efc"
+  },
+  "reset_checkout_stash_force_push_used": false
+}
