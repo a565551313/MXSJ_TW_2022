@@ -173,3 +173,35 @@ strings -a -n 5 mxLauncher.exe | grep -Ei 'ResLib|update\.ini|bk%d|Fonts|MX_SPLA
 
 > 待办若要继续：写回 `.rsrc` 需要一个「替换资源载荷」的工具（读取器 `pe_resource_dump.py`
 > 已有；写回要处理对齐与 `SizeofResource`，并保留原签名失效的事实——改完必然没有 Authenticode）。
+
+## 9. 已落地：把皮膚圖上的繁字改成簡體（「讓它別再亂碼/別再繁體」的最短路徑）
+
+2026-10-15 使用者選了 §8 的方案 ③（文字從「字」變成「圖」，與码页彻底脱鉤），並要求先看效果。已做完，
+產物在沙箱 `/home/user/scratch/`（**未入庫、未覆蓋原檔**）：`PNG_1_simplified.png`、`mxLauncher_simplified.exe`。
+
+做了什麼：啟動器整個版面其實是 `.rsrc` 裡那張 PNG（`PNG_1`，982x553，545,162 B，語言標 **2052 簡中**），
+「新手指引／官方網站／官方論壇／遊戲資料／進入遊戲／檢查更新／下載進度：／更新進度：」八個標籤是**畫死在圖裡**的。
+於是：擦掉舊字 → 用客戶端自帶的 `Fonts/FZLanTingYuan-DB-GBK.ttf` 重畫簡體 → 把圖湊回**原本的位元組數** → 原位寫回。
+
+| 步驟 | 指令 |
+|---|---|
+| 1 抽出皮膚 | `python3 tools/data-parser/pe_resource_dump.py mxLauncher.exe --dump out` |
+| 2 改字（並湊長度） | `python3 tools/data-parser/skin_label_patch.py out/PNG_1.png new.png --labels labels.json --font Fonts/FZLanTingYuan-DB-GBK.ttf --pad-to 545162` |
+| 3 原位寫回 | `python3 tools/data-parser/pe_resource_patch.py mxLauncher.exe mxLauncher_new.exe --type PNG --name 1 --payload new.png --strip-signature` |
+
+**關鍵手法**（都寫進腳本了，換別張圖也能用）：
+- 擦字用「逐行中位色」（`median`）；按鈕那種橫向漸層用「框外兩端插值」（`lerp`）。眾數在細節多的行上會被抗鋸齒打散，留下一片灰；
+  框選小了會留殘影 —— 先量舊字實際行（tab 在 y123..146、按鈕 y378..395 / y427..444），再放 3~5 px 邊距。
+- `--pad-to`：PNG 結尾固定是 `IEND`（12 B），在它前面塞一個 `tEXt` 註釋塊就能**任意加長**，壓縮數據一個位元組都不動 ⇒
+  資源長度不變 ⇒ `.rsrc` 目錄、節表、重定位全都不用改，純拼位元組即可。
+- 寫回器只接受「與原載荷同長度」，長度不符直接拒絕；寫完會**自己再讀一遍**核對哈希，不符就不產出檔案。
+- `--strip-signature`：改過之後 Authenticode 必然對不上，留一段壞簽名不如清零並砍掉檔尾證書（本檔 13,400 B：1,659,992 → 1,646,592）。
+
+核對結果：新檔 `pe_resource_dump.py` 反讀出來的 PNG 與我給的**逐位元組相同**；86 條資源、型別統計、三個版式全部不變 ⇒
+除了那張圖，其它一位元組都沒動。測試：`tools/data-parser/test_skin_and_resource_patch.py`（12 項，含「拿原載荷寫回去 ⇒ 整個檔案 sha256 不變」這條不变量）。
+
+**還是沒解決的兩件事**（如實記錄）：
+1. 版式 `DIALOG 100/102` 與 `STRING` 表**本來就是簡體**，但它們走 `SetWindowTextA`+系統 ANSI 码页，
+   繁中系統上還是會花屏 —— 那條線要嘛改系统区域、要嘛 SLEA/NTLEA（§8 方案 ①②）。順手掃了一遍：除皮膚圖外
+   沒有任何資源文字是繁體（比對時只撞出一個「想」，繁簡同字），所以**圖改完，繁體就到此為止**。
+2. logo「新夢想世界」是手繪圖形不是字，要一起換就得重畫那塊圖（另活）。
