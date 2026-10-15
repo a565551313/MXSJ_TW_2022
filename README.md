@@ -593,6 +593,7 @@ REVIEW_API_BASE=http://127.0.0.1:8000 npx vitest run src/api/liveBackend.test.ts
 | 编辑资源包 / UI 布局 | [resource_editor/README.md](resource_editor/README.md)、[ui_editor/README.md](ui_editor/README.md)、[0SLF 路径哈希与 .dlg](notes/fls_path_hash_and_dlg.md) |
 | 看懂字节码 / 反编译 | [opcode 映射与反编译报告](notes/opcode_mapping_and_decompilation.md) |
 | 要重建/使用全量反编译语料 | [反编译语料重建配方](docs/DECOMPILE_CORPUS.md)（要不要建、怎么建、4 个坑） |
+| 想知道客户端 `mx.exe` / `mxmain.dll` / `mxLauncher.exe` 能逆向到什么程度 | [客户端二进制可逆性实测](notes/client_binary_reversibility.md)（出不了源码；54% 镜像是加密壳；原生类名不在明文里） |
 | 修改注册预览 | [客户端补丁说明](tools/client_patches/README.md)、[v3.3 修正](tools/client_patches/REGISTRATION_CONTROL_FIX_V3_3.md)、[v3.3 交付事实表](tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md) |
 | 设计接入与运维 | [GATEWAY.md](server/docs/GATEWAY.md)、[GATEWAY_SECURITY_GM.md](server/docs/GATEWAY_SECURITY_GM.md) |
 | 了解历史研究 | [work 索引](work/dream-world-connect-login-map/INDEX.md)，客户端侧权威现状 [client-status-20261012.md](work/dream-world-connect-login-map/report/client-status-20261012.md) |

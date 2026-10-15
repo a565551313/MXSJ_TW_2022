@@ -52,6 +52,8 @@
 - **关键负面结果**：全仓所有 `.dll`/`.exe` 明文里 `CCombPanel`、`FONT_EDIT`、
   `PyArg_ParseTuple` 命中数**都是 0**。也就是说 `interface` / `combdialog` 这些原生
   包装类的注册名与常量名不在明文库里（大概率就在那 5.2 MB 高熵段内）。
+  **所以别拿 `strings` 的 0 命中当证据**——它既不能证明"`interface` 没有 `FONT_EDIT`"，
+  也不能证明有；这类"符号在不在"的问题只能靠运行期探针（见 §4 第一条）。
 
 ## 3. mxLauncher.exe：这颗是"可读"的，但仍不是源码
 
