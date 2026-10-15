@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QMainWindow,
     QMessageBox,
+    QPushButton,
     QTreeWidgetItem,
 )
 
@@ -70,7 +71,7 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
         self.output_dock.show()
         QMessageBox.warning(self, "操作未完成", str(message))
 
-    def task(self, function, complete):
+    def task(self, function, complete, *, cancel=None):
         if self.jobs:
             return
         job = Job(function)
@@ -88,9 +89,17 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
         for action, _ in actions:
             action.setEnabled(False)
         self.statusBar().showMessage("后台处理中…")
+        cancel_button = None
+        if cancel is not None:
+            cancel_button = QPushButton("取消恢复（保留已有编辑）")
+            cancel_button.clicked.connect(lambda: cancel.set())
+            self.statusBar().addPermanentWidget(cancel_button)
 
         def finish(result, error=False):
             self.jobs.discard(job)
+            if cancel_button is not None:
+                self.statusBar().removeWidget(cancel_button)
+                cancel_button.deleteLater()
             self.centralWidget().setEnabled(True)
             for dock, enabled in dock_states:
                 dock.setEnabled(enabled)
@@ -99,6 +108,9 @@ class Window(Workspace, ModuleActions, ProjectActions, BuildActions, QMainWindow
                 action.setEnabled(enabled)
             self.refresh_native_action()
             self.statusBar().showMessage("就绪 · 原生写包需关联源码并通过清单确认")
+            if cancel is not None and cancel.is_set():
+                self.statusBar().showMessage("恢复已取消；原包及已有编辑未修改")
+                return
             if error:
                 self.fail(result)
             else:

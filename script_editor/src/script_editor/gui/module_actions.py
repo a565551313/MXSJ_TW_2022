@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
+from threading import Event
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
@@ -63,6 +64,7 @@ class ModuleActions:
             )
             tab.draft_saved = False
             tab.attach_report(report)
+            tab.candidate_requested.connect(self.open_recovery_candidate)
             if report.filename_hex:
                 self.module_names[(report.archive, report.index)] = repr(
                     bytes.fromhex(report.filename_hex)
@@ -82,7 +84,31 @@ class ModuleActions:
             self.output_dock.show()
             self.refresh_native_action()
 
-        self.task(lambda: read_module(archive, index, catalog), complete)
+        cancel = Event()
+        self.task(
+            lambda: read_module(archive, index, catalog, cancel=cancel),
+            complete,
+            cancel=cancel,
+        )
+
+    def open_recovery_candidate(self, report):
+        # A fresh tab, never mutate/replace a user's current candidate or edits.
+        virtual = report.archive.parent / (
+            f".{report.archive.name}.{report.index}.{report.selected_engine}.recovered.py"
+        )
+        for i in range(self.tabs.count()):
+            existing = self.tabs.widget(i)
+            if existing.path == virtual.resolve():
+                self.tabs.setCurrentWidget(existing)
+                return existing
+        tab = self.add_source(
+            virtual, vm=report.vm, text=report.source, source_kind="recovered-draft"
+        )
+        tab.draft_saved = False
+        tab.attach_report(report)
+        tab.candidate_requested.connect(self.open_recovery_candidate)
+        tab.editor.document().setModified(True)
+        return tab
 
     def save_draft(self, tab):
         if tab.draft_saved:
