@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import io
+from collections.abc import Iterable
 from pathlib import Path
 
 from PIL import Image
@@ -10,16 +11,41 @@ from ..codecs import detect, wav
 from ..codecs.sprite import Sprite, decode_sprite
 from ..model.document import PackDocument
 from ..names import unpack_dlg_text
+from ..output_paths import guard_output
 
 
-def export_sprite_frames(sprite: Sprite, out_dir: Path, stem: str) -> list[Path]:
-    """导出精灵全部帧为 ``<stem>_fNN.png``。"""
+def _source_paths(doc: PackDocument,
+                  protected_paths: Iterable[str | Path]) -> list[Path]:
+    """保护当前/历史基线及同目录资源包，GUI 可追加其他已打开包。"""
+    sources = [*doc.source_paths, *(Path(p) for p in protected_paths)]
+    for source in doc.source_paths:
+        sources.extend(p for p in source.parent.iterdir()
+                       if p.suffix.lower() == ".fls")
+    return sources
+
+
+def _write_bytes(path: Path, data: bytes, root: Path,
+                 sources: Iterable[str | Path]) -> None:
+    guard_output(path, sources, root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    guard_output(path, sources, root)
+    path.write_bytes(data)
+
+
+def export_sprite_frames(sprite: Sprite, out_dir: Path, stem: str,
+                         protected_paths: Iterable[str | Path] = (),
+                         root: Path | None = None) -> list[Path]:
+    """导出全部帧，写第一帧前先检查所有目标，禁止覆盖源资源。"""
+    root = root if root is not None else out_dir
+    sources = list(protected_paths)
+    paths = [out_dir / f"{stem}_f{fi:02d}.png"
+             for fi in range(sprite.frame_count)]
+    for path in paths:
+        guard_output(path, sources, root)
     out_dir.mkdir(parents=True, exist_ok=True)
-    paths = []
-    for fi in range(sprite.frame_count):
-        path = out_dir / f"{stem}_f{fi:02d}.png"
+    for fi, path in enumerate(paths):
+        guard_output(path, sources, root)
         sprite.render_frame(fi).save(path)
-        paths.append(path)
     return paths
 
 
@@ -40,13 +66,15 @@ def _is_wav(content: bytes) -> bool:
     return wav.is_wav(content)
 
 
-def export_entry(doc: PackDocument, index: int, out_dir: Path) -> list[Path]:
+def export_entry(doc: PackDocument, index: int, out_dir: Path,
+                 protected_paths: Iterable[str | Path] = ()) -> list[Path]:
     """按条目类型导出单个条目，返回生成的文件列表。
 
     精灵解码失败时回退导出原始字节 ``.bin``——原包自带、本机
     解码器未覆盖的精灵变体不该连原始数据都拿不出来（样本回传
     定点补解码器就靠这条路）。
     """
+    sources = _source_paths(doc, protected_paths)
     out_dir.mkdir(parents=True, exist_ok=True)
     kind = doc.entry_kind(index)
     stem = f"{Path(doc.path).stem if doc.path else 'pack'}_{index:04d}"
@@ -54,32 +82,35 @@ def export_entry(doc: PackDocument, index: int, out_dir: Path) -> list[Path]:
     plain = _dlg_plain(content)
     if plain is not None:
         path = out_dir / f"{stem}.dlg"
-        path.write_bytes(plain)
+        _write_bytes(path, plain, out_dir, sources)
         return [path]
     if kind is detect.EntryKind.SPRITE:
         try:
-            return export_sprite_frames(decode_sprite(content), out_dir, stem)
+            sprite = decode_sprite(content)
         except Exception:
             path = out_dir / f"{stem}.bin"
-            path.write_bytes(content)
+            _write_bytes(path, content, out_dir, sources)
             return [path]
+        return export_sprite_frames(sprite, out_dir, stem, sources)
     if kind is detect.EntryKind.PNG:
         path = out_dir / f"{stem}.png"
+        guard_output(path, sources, out_dir)
         Image.open(io.BytesIO(content)).save(path)
         return [path]
     ext = {detect.EntryKind.JSON: ".json", detect.EntryKind.TEXT: ".txt"}
     suffix = ".wav" if _is_wav(content) else ext.get(kind, ".bin")
     path = out_dir / f"{stem}{suffix}"
-    path.write_bytes(content)
+    _write_bytes(path, content, out_dir, sources)
     return [path]
 
 
-def export_all_sprites(doc: PackDocument, out_dir: Path) -> int:
+def export_all_sprites(doc: PackDocument, out_dir: Path,
+                       protected_paths: Iterable[str | Path] = ()) -> int:
     """导出包内全部精灵条目，返回导出的精灵个数。"""
     count = 0
     for index in range(doc.count):
         if doc.entry_kind(index) is detect.EntryKind.SPRITE:
-            export_entry(doc, index, out_dir)
+            export_entry(doc, index, out_dir, protected_paths)
             count += 1
     return count
 
@@ -105,7 +136,8 @@ def _safe_parts(name: str) -> list[str]:
 
 
 def export_entries(doc: PackDocument, indexes: list[int],
-                   out_dir: Path) -> dict:
+                   out_dir: Path,
+                   protected_paths: Iterable[str | Path] = ()) -> dict:
     """按真名目录树批量导出条目（导出选中/导出该页共用）。
 
     有真名的按原路径建子目录：精灵导成 ``<名>_fNN.png`` 逐帧图，
@@ -114,6 +146,8 @@ def export_entries(doc: PackDocument, indexes: list[int],
     失败不中断整批，结果以 {"entries", "files", "failed"} 汇报。
     """
     out_dir.mkdir(parents=True, exist_ok=True)
+    doc.resolve_names()  # 用户显式导出时，后台/按需补全真名，保留目录导出语义
+    sources = _source_paths(doc, protected_paths)
     pack_stem = Path(doc.path).stem if doc.path else "pack"
     used: set[Path] = set()
     files = 0
@@ -142,7 +176,7 @@ def export_entries(doc: PackDocument, indexes: list[int],
                 leaf = f"{pack_stem}_{index:04d}"
                 if dlg_plain is not None:
                     leaf += ".dlg"
-            parent.mkdir(parents=True, exist_ok=True)
+            guard_output(parent, sources, out_dir)
             if kind is detect.EntryKind.SPRITE and dlg_plain is None:
                 stem = leaf.rsplit(".", 1)[0] if "." in leaf else leaf
                 target = parent / f"{stem}_f00.png"
@@ -155,11 +189,12 @@ def export_entries(doc: PackDocument, indexes: list[int],
                     target = parent / f"{stem}.bin"
                     if target in used:
                         target = parent / f"{stem}_{index:04d}.bin"
-                    target.write_bytes(content)
+                    _write_bytes(target, content, out_dir, sources)
                     used.add(target)
                     files += 1
                 else:
-                    paths = export_sprite_frames(sprite, parent, stem)
+                    paths = export_sprite_frames(
+                        sprite, parent, stem, sources, root=out_dir)
                     used.update(paths)
                     files += len(paths)
             else:
@@ -169,7 +204,7 @@ def export_entries(doc: PackDocument, indexes: list[int],
                 target = parent / filename
                 if target in used:
                     target = parent / f"{target.stem}_{index:04d}{target.suffix}"
-                target.write_bytes(content)
+                _write_bytes(target, content, out_dir, sources)
                 used.add(target)
                 files += 1
             done += 1

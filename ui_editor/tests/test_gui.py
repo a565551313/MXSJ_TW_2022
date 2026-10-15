@@ -4,6 +4,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -51,7 +52,9 @@ class TestMainWindowFlow(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             target = str(Path(tmp) / "out.dlg")
-            self.assertTrue(w.save_as(target))
+            with mock.patch("ui_editor.ui.main_window.SaveReviewDialog.exec",
+                            return_value=1):
+                self.assertTrue(w.save_as(target))
             from ui_editor.core import dlg_codec
             from ui_editor.core.model import LayoutDocument
             dicts, _ = dlg_codec.parse_bytes(Path(target).read_bytes())
@@ -174,7 +177,7 @@ class TestOpenFromPack(unittest.TestCase):
             pack_path.write_bytes(_mini_pack_bytes("data/junk.bin"))
             count = self.window.open_pack_file(str(pack_path))
             self.assertEqual(count, 0)
-            self.assertEqual(self.window.resource_panel.root_count(), 0)
+            self.assertEqual(self.window.resource_panel.root_count(), 1)
 
     def test_open_pack_layout_after_tree_add(self):
         import tempfile
@@ -356,7 +359,7 @@ class TestResourceDirFilterAndSearch(unittest.TestCase):
             visit(tree.topLevelItem(i))
         return texts
 
-    def test_resource_dir_skips_pack_without_layouts(self):
+    def test_resource_dir_includes_pack_without_layouts(self):
         import tempfile
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -365,7 +368,7 @@ class TestResourceDirFilterAndSearch(unittest.TestCase):
             (Path(tmp) / "item.fls").write_bytes(
                 _mini_pack_bytes("data/junk.bin"))
             self.window.open_resource_dir(tmp)
-            self.assertEqual(self.window.resource_panel.root_count(), 1)
+            self.assertEqual(self.window.resource_panel.root_count(), 2)
             self.assertTrue(any(
                 "ui.fls" in t for t in self._visible_texts()))
 
@@ -606,6 +609,10 @@ class TestCanvasClipboardAndContextMenu(unittest.TestCase):
         self.assertIsNotNone(self.doc)
 
     def tearDown(self):
+        # 本组创建的 QMimeData 归剪贴板所有；在 QApplication/解释器
+        # 析构前清掉测试数据，避免 offscreen 后端的销毁顺序崩溃。
+        # 仅测试清理，不在产品退出时清空用户剪贴板。
+        self._app.clipboard().clear()
         if self.window.doc is not None:
             self.window.doc.dirty = False
         self.window.close()

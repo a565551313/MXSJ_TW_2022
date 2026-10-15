@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mxsj-script-editor"
+version = "0.5.1.dev1"
+description = "MXSJ dual-VM package editor with unverified recovery drafts"
+readme = "README.md"
+requires-python = ">=3.10,<3.15"
+license = { text = "Mixed: editor proprietary; separate recovery_worker.py GPL-3.0-or-later; see licenses/recovery" }
+dependencies = ["PySide6==6.10.3", "uncompyle6 @ https://codeload.github.com/rocky/python-uncompyle6/tar.gz/91298ba80e322cfb8736ab8a697509527297a7a9#sha256=9e60958d4b0386e3976331ba6236ef2a1a986b2a162f3ddb9a8db424ae2e4d87", "xdis==6.3.0", "spark-parser==1.9.0", "six==1.17.0", "click==8.5.0"]
+
+[project.gui-scripts]
+mxsj-script-editor = "script_editor.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+script_editor = ["data/*.py"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B"]

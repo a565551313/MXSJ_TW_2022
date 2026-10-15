@@ -56,6 +56,15 @@ class Archive:
         assert self._indexd is not None
         return self._indexd.count
 
+    @property
+    def original_metas(self) -> list:
+        """原始目录元数据（只读使用，与 origin 序号空间对应）。"""
+        if self.kind == KIND_0SLF:
+            assert self._index0 is not None
+            return list(self._index0.metas)
+        assert self._indexd is not None
+        return list(self._indexd.metas)
+
     def close(self) -> None:
         self._reader.close()
 

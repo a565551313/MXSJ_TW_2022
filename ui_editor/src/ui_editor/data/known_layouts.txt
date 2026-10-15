@@ -2899,3 +2899,5 @@ war/teammessage.dlg
 war/watchfight_item.dlg
 war4/headskilltipsnew.dlg
 xiuwei.dlg
+login/regform.dlg
+login/regterms.dlg

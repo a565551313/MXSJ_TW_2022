@@ -132,6 +132,17 @@ class PythonSourceTests(unittest.TestCase):
         )
         self.assertEqual(codes(found), ["WIN302", "WIN302"])
 
+    def test_distribution_metadata_read_text_is_utf8_not_path_default(self):
+        found = py(
+            "t.py",
+            """
+            import importlib.metadata
+            info = importlib.metadata.distribution("pkg").read_text("direct_url.json")
+            data = Path("a").read_text()
+        """,
+        )
+        self.assertEqual(codes(found), ["WIN302"])
+
     def test_posix_only_imports(self):
         found = py("t.py", "import fcntl\nfrom termios import tcgetattr\n")
         self.assertEqual(codes(found), ["WIN303", "WIN303"])

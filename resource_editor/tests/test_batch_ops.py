@@ -1,4 +1,6 @@
 """批量导出（真名目录树）与网格多选/右键信号。"""
+from __future__ import annotations
+
 import os
 import sys
 import tempfile

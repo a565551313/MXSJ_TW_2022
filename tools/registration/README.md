@@ -1,10 +1,49 @@
 # 注册原生重做：第二期（现行风格 + 注册五个账号）
 
+> **2026-10-15 合并取舍（最新用户确认）**：PR #32 的 `mxLauncher.exe` 相关方案与注册 `script.fls` 修改以对方版本为准；用户已确认注册脚本测试没有问题。独立 `script_editor/` 以本分支 0.5.1.dev1 为准，不以旧历史记录回退。下文旧测试状态和交付说明保留为历史，不覆盖本次确认。此前启动器生成工具的路径/写入边界审查问题仍单独记录，不能当作已修复。
+
 ## 当前做到哪里
 
 第一期 1.1 的入口、条款、表单校验、桩提示、返回流程已由用户实机确认。
-第二期改用现行风格并加五账号勾选：**Linux 离线回归通过，Windows 实机未验**。
+第二期改用现行风格并加五账号勾选：**用户已报告申请会员时整窗无响应，未通过原生验收**。
+用户确认脚本来自原第二期 ZIP、两张新布局可在同一个包找到。
+已补 phase2-diag1 入口分段日志与 Python 异常尽力回退，见
+[诊断测试步骤](DIAGNOSTIC_TESTING.md)。只换测试副本 script，不重新导入布局；
+用户现反馈 diag1 不再冻窗，但 terms layout 构造抛 Exception 并恢复首页。
+已发现明文入包不符合真实 LoadFile 路径 XOR。用户指出一次性助手不解决
+后续新增/持续改布局，现转为资源0.4.3/UI0.8.3原生写入永久修正。
+按 [编辑器正常流程](EDITORS_NATIVE_LAYOUT_WORKFLOW.md) 操作，不用助手/模板覆盖。
+原生跳转仍待实际游戏验证；23项注册回归只作历史证据，不是编辑器新版本验收。
 这不是已接通的注册服务；服务端仍无注册接口，不会创建真实账号。
+
+## 最新修复：phase2-font1（2026-10-15）
+
+diag2实机精确报缺失`FONT_EDIT`，锚点/工厂已ready。此为脚本引用旧别名错误，
+不是用户控件名/协议接线。已按原entry4007的CEDIT调用核对FontLT14_3，四框和
+提示区明确使用该原生字体；提示区黑色0，不再依赖旧COLOR_EDIT别名，不注入假属性。
+默认测试桩删除FONT_EDIT/COLOR_EDIT，旧源同探针先失败，新源通过（32项真2.5.6）。
+细节与只换script、不重导布局的步骤见 [字体修复测试](FONT_FIX_TESTING.md)。
+
+打包新代码时仍硬性验证原生marshal逐字匹配混淆输入及全零padding，再严格反变换
+co_code后完整marshal逐字匹配编译结果。新增authored_marshal只用于已知自写新代码，
+原条目的修复转译器/五段XOR/key DB不改；不得让旧边界猜测误改新co_code。
+此次不声称Windows全部交互已过；原生表单显示/控件仍需实测。
+
+## 2026-10-15 当前实机断点：账号输入框 AttributeError
+
+用户已用新版编辑器保存，确认协议页可进入、同意消息为1；日志已走到
+`form layout ready` / `form account begin` 后 `step=1 EXC type=AttributeError`。
+用户进一步确认实际表单占位 `sName=account`、`sWidgetType=CBox`，不再要求
+改正确名字、重导布局或怀疑同意接线。
+
+phase2-diag2 是**定位版，不是声称修好版**：保持原生CEDIT接口和全部用户布局，
+拆分运行时anchor、工厂解析、FONT_EDIT解析、工厂调用、SetLimit标记。
+异常只补静态代码位置/PC及受co_names白名单约束的缺失属性名，不记录对象repr、
+完整异常文字、帐号/密码/邮箱或局部变量。构造失败仍保留协议页。
+详见 [诊断步骤](DIAGNOSTIC_TESTING.md) 顶部最新章节。
+原CEDIT→CreateEdit别名、七形参/九参数子类构造、原CEdit.SetLimit已逐code object
+只读核对；不执行恢复游戏模块。离线桩也改用九参数构造，不再假装cls(name)即原生。
+本轮26项通过（真CPython2.5.6），仍不能凭AttributeError类型确定实际缺失属性。
 
 ## 用户定的行为
 
@@ -88,7 +127,9 @@
   静默失败，1.1 已实机证实修复；不可现代化成 Unicode/f-string。
 - `.dlg` 的显示文字为 Big5、资源路径为 GBK，不能整份重编码。
   生成器只转义控制字节/引号/反斜杠，原字节往返与编辑器解码文案均有测试。
-- `photo\register_diag.txt` 只记流程、数量、异常类型，不记录帐号、密码或邮箱。
+- `photo\register_diag.txt` 只记流程、数量、控件尺寸、异常类型，不记录帐号、密码或邮箱。
+  phase2-diag1 从模块导入、InputSecrecy 开始到布局/条款/表单逐段前后关文件写日志；
+  photo 路径不可写时尝试工作目录 `register_diag.txt`。同步原生阻塞不能靠 except 取消。
 
 ## 源码与模板
 
@@ -184,12 +225,13 @@ AttributeError 死路，并多带 `_DiagFailure`/`_ImportRuntime`/`_RecoverEntry
 `_CreateFormEdit` 调试脚手架）。以它为基线重建，产物 SHA-256 仍是 `ed0f4126…`
 （与已出货那颗逐字节相同）——即这份网盘归档不含任何我们无法复现的内容。
 
-## 第二期测试包（2026-10-14 已授权上传）
+## 原第二期测试包（2026-10-14 已授权上传，现为卡屏排查基线）
 
 - 源码提交：`22a3fab`，已推送当前会话分支，未合入 master。
 - [下载 registration_phase2.zip](https://drive.google.com/file/d/1FQjI8tiFSYAihlHUzwJN2GNNZWy5CBy7/view)（Google Drive，未改分享权限）。
 - 大小：24,189,000 字节；ZIP MD5：`56c583afa4fa58b7fa8f47efb5a802c3`。
 - ZIP SHA-256：`0541062f45a74bfbda99b62022d30c3929feb0e0979069d36b06d513d3cec97b`。
+- 此链接是已报告卡屏的原包，**不是 phase2-diag1**，勿重下它当修复版。
 - 包内有新 script.fls、两张新布局、测试说明、SHA256SUMS。
   本包只测界面/校验/候选资料，不发送真实注册请求；顺延规则还只是已定方案。
 
@@ -269,7 +311,7 @@ AttributeError 死路，并多带 `_DiagFailure`/`_ImportRuntime`/`_RecoverEntry
 产物：`script.fls` 24,264,817 B，SHA-256 `f0253c9536d95e0a…`（4007 负载仍是 44,362 B
 定长，编译后 pyc 20,748 B，无需缩 `co_lnotab`）。
 
-## 第二期 Windows 验收
+## 原第二期 Windows 验收步骤（下列明文导入方式已被存储修复说明取代）
 
 只在**游戏测试副本**操作，备份旧 `script.fls` 和 `interface.fls`，勿改原安装包。
 测试包包含 `data/script.fls`、`interface_import/login/` 下两份新布局及测试说明。
@@ -286,6 +328,8 @@ AttributeError 死路，并多带 `_DiagFailure`/`_ImportRuntime`/`_RecoverEntry
    先填 15～16 位再勾，提交应提醒缩短而不是截断原输入。
 6. 若打不开/点了没反应，只回传失败步骤及脱敏的诊断/截图，不要发送真实密码。
 
-这轮还要实证：新增的明文 `.dlg` 条目是否被原生游戏正确加载。
+**更正**：明文 `.dlg` 新增不符合真实原生路径 XOR，不能继续按原导入流程验收。
+已导入用户应按存储修复说明操作测试副本；首次新导入也必须使用对应路径密文，
+不能拿编辑器能显示当作引擎解密通过。详 `notes/native_dlg_path_cipher.md`。
 真实五帐号创建与真实成功回覆不在本阶段 Windows 验收范围内。
 提交推送、Drive 上传仍需用户逐轮明确授权；没有授权不得发布。

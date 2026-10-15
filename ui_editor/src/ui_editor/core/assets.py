@@ -58,12 +58,16 @@ class AssetResolver:
         self._bytes_cache: dict[str, bytes | None] = {}
         self._image_cache: dict[str, list[QImage] | None] = {}
         self._media_cache: list[str] | None = None
+        self._session_layouts: dict[int, str] = {}  # 用户明确给出的路径；仅本会话
         self._staged: dict[str, bytes] = {}  # 选图窗新加、待随包写入
 
     # -- 挂载 -----------------------------------------------------
-    def mount_pack(self, path: str | Path) -> FlsPack:
+    def mount_pack(self, path: str | Path, *, priority: bool = False) -> FlsPack:
         pack = FlsPack(path)
-        self._packs.append(pack)
+        if priority:
+            self._packs.insert(0, pack)
+        else:
+            self._packs.append(pack)
         self._bytes_cache.clear()
         self._image_cache.clear()
         self._media_cache = None
@@ -105,12 +109,42 @@ class AssetResolver:
         pack = self.pack_for(pack_path)
         if pack is None:
             return []
-        return pack.matched_paths(known_layout_hashes())
+        return pack.matched_paths(known_layout_hashes() | self._session_layouts)
+
+    def remember_layout(self, name: str) -> None:
+        """只登记用户提供的真实路径；重启不会反推 0SLF 无名条目。"""
+        from .layout_import import validate_layout_path
+        from .mxhash import mx_hash
+
+        name = validate_layout_path(name)
+        self._session_layouts[mx_hash(name.encode("gbk"))] = name
+        self._media_cache = None
+
+    def fetch_pack_dlg(self, pack_path: str | Path, name: str):
+        """锁定树节点对应的包；同名布局不从其它包/散装目录冒取。"""
+        pack = self.pack_for(pack_path)
+        if pack is None:
+            return None
+        data = pack.read_named(name)
+        if data is None:
+            return None
+        try:
+            return dlg_codec.parse_bytes(unpack_packed_text(data))
+        except DlgError:
+            return None
 
     def missing_layouts(self, pack_path: str | Path) -> list[str]:
         """目录中被引用、但该包里没有的布局（死引用/热更新候选）。"""
         found = set(self.scan_layouts(pack_path))
         return [p for p in known_layout_paths() if p not in found]
+
+    @property
+    def has_sources(self) -> bool:
+        return bool(self._packs or self._loose_dirs)
+
+    def resource_exists(self, name: str) -> bool:
+        """只查当前挂载来源与待入包图；不解码负载，供静态诊断使用。"""
+        return self._staged_lookup(name) is not None or self._exists(name)
 
     def _exists(self, name: str) -> bool:
         """资源是否真在某个包/散装目录里（只查索引与文件存在性）。"""
@@ -158,8 +192,9 @@ class AssetResolver:
             return self._media_cache
         found: set[str] = set()
         for pack in self._packs:
-            for layout in pack.matched_paths(known_layout_hashes()):
-                data = self.fetch_bytes(layout)
+            layouts = pack.matched_paths(known_layout_hashes() | self._session_layouts)
+            for layout in layouts:
+                data = pack.read_named(layout)
                 if data is None:
                     continue
                 # 只做文本扫描（不完整解析布局），大包也够快

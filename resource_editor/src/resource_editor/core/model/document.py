@@ -12,12 +12,14 @@ from __future__ import annotations
 
 import io
 import zlib
-from collections.abc import Callable
-from dataclasses import dataclass, field
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO
 
 from .. import names as _names
+from ..changes import ResourceChange
 from ..codecs import detect
 from ..containers import (
     KIND_0SLF,
@@ -28,7 +30,9 @@ from ..containers import (
     open_archive,
     open_archive_path,
 )
+from ..history import Action, History
 from ..mxhash import mx_hash
+from ..native_layout import encode_layout, layout_hint, path_bytes
 
 
 @dataclass
@@ -38,7 +42,6 @@ class _Slot:
     origin: int | None                 # 原包序号；None=新增条目
     stored: bytes | None = None        # 改动后的存储字节；None=用原始
     dirty: bool = False                # 当前字节是否与原始不同
-    history: list[tuple[bytes | None, bool]] = field(default_factory=list)
     path_name: str | None = None       # 按路径导入时登记的真名
 
 
@@ -48,11 +51,15 @@ class PackDocument:
     def __init__(self, archive: Archive, path: Path | None = None):
         self.archive = archive
         self.path = path
+        self.source_paths: set[Path] = {path} if path is not None else set()
         self._slots: list[_Slot] = [
             _Slot(origin=i) for i in range(archive.orig_count)
         ]
-        self._kind_cache: dict[int, detect.EntryKind] = {}
+        self._kind_epoch = 0
+        self._kind_cache: dict[int, tuple[int, detect.EntryKind]] = {}
         self._names: dict[int, str] | None = None  # 原始序号→真名
+        self._name_references_ready = False
+        self.history = History()
 
     # ---------------------------------------------------------- 打开 ----
     @classmethod
@@ -119,13 +126,23 @@ class PackDocument:
             return self.archive.content_len(slot.origin)
         return len(self.content(index))
 
+    def _invalidate_kinds(self) -> None:
+        self._kind_epoch += 1
+        self._kind_cache.clear()
+
     def entry_kind(self, index: int) -> detect.EntryKind:
-        """条目类型（只嗅探头部，结果缓存；改动条目自动失效）。"""
-        kind = self._kind_cache.get(index)
-        if kind is None:
+        """只嗅探头部；缓存带编辑代际，旧后台读头不能回灌修改后的类型。"""
+        while True:
+            epoch = self._kind_epoch
+            cached = self._kind_cache.get(index)
+            if cached is not None and cached[0] == epoch:
+                return cached[1]
             kind = detect.sniff_prefix(self._content_head(index))
-            self._kind_cache[index] = kind
-        return kind
+            if epoch != self._kind_epoch:
+                continue
+            # 即便在检查/存入间发生切换，旧代际缓存也不会被下次查询使用。
+            self._kind_cache[index] = (epoch, kind)
+            return kind
 
     def _content_head(self, index: int) -> bytes:
         """内容视图的前 512 字节（嗅探用，尽量不读全条）。"""
@@ -146,25 +163,23 @@ class PackDocument:
         return self.archive.stored_head(slot.origin, 512)
 
     # ---------------------------------------------------- 真名识别 ----
-    def resolve_names(self) -> int:
-        """为 0SLF 条目识别真名，返回识别出的条数（幂等）。
-
-        字典命中给 .dlg 条目命名，再读这些布局扒出其引用的图片
-        路径反查目录（详见 core.names）。识别需读种子条目负载，
-        打开大包时应由后台任务调用；label() 首次被问到也会惰性
-        触发。识别失败绝不影响文档可用性。
-        """
+    def resolve_names(self, *, quick: bool = False) -> int:
+        """quick 仅按索引匹配字典，零负载 IO；完整引用扫描由后台执行。"""
         if self.archive.kind != "0slf":
             return 0
-        if self._names is None:
+        if self._names is None or (not quick and not self._name_references_ready):
+            archive = self.archive
             try:
-                entry_ids = [meta.entry_id
-                             for meta in self.archive.extra_metas]
-                self._names = _names.build_name_map(
-                    entry_ids, self.archive.read_stored)
+                result = _names.build_name_map(
+                    [meta.entry_id for meta in archive.original_metas],
+                    archive.read_stored, references=not quick)
             except Exception:
-                self._names = {}
-        return len(self._names)
+                return self.named_count
+            # 保存后换基线时，旧归档的名字不能写到新下标。
+            if self.archive is archive:
+                self._names = result
+                self._name_references_ready = not quick
+        return self.named_count
 
     @property
     def named_count(self) -> int:
@@ -179,11 +194,17 @@ class PackDocument:
         slot = self._slots[index]
         if slot.path_name:
             return slot.path_name
-        self.resolve_names()
+        self.resolve_names(quick=True)
         origin = slot.origin
         if origin is not None and self._names:
             return self._names.get(origin)
         return None
+
+    def known_resource_paths(self) -> list[str]:
+        """仅列当前包已识别/本次导入的真名，排除目录和无名条目。"""
+        return sorted({name for index in range(self.count)
+                       if (name := self.true_name(index))
+                       and not name.endswith(("/", "\\"))}, key=str.casefold)
 
     def label(self, index: int) -> str:
         """条目显示名：data.fls 用文件名；0SLF 优先真名，未识别出真名时回退序号。"""
@@ -192,7 +213,7 @@ class PackDocument:
         slot = self._slots[index]
         if slot.path_name:
             return slot.path_name
-        self.resolve_names()
+        self.resolve_names(quick=True)
         origin = slot.origin
         if origin is not None and self._names:
             name = self._names.get(origin)
@@ -211,67 +232,147 @@ class PackDocument:
     def is_modified(self) -> bool:
         if self.dirty_count > 0:
             return True
-        return [s.origin for s in self._slots] != list(
+        # 排序仅是写包规范化，不是用户改动。
+        return {slot.origin for slot in self._slots} != set(
             range(self.archive.orig_count))
 
     # ---------------------------------------------------------- 修改 ----
-    def _set_stored(self, index: int, stored: bytes) -> None:
+    def _set_stored(self, index: int, stored: bytes | None,
+                    label: str = "替换资源") -> None:
         slot = self._slots[index]
-        slot.history.append((slot.stored, slot.dirty))
-        slot.stored = stored
-        slot.dirty = (
-            slot.origin is not None
-            and stored != self.archive.read_stored(slot.origin)
-        )
-        self._kind_cache.pop(index, None)
+        if (stored is not None and slot.origin is not None
+                and stored == self.archive.read_stored(slot.origin)):
+            stored = None  # 真实无改动，不为原始字节建立多余覆盖层/历史
+        if slot.stored == stored:
+            return
+        before = (slot.stored, slot.dirty)
+        after = (stored, slot.origin is None or stored is not None)
+
+        def apply(state):
+            slot.stored, slot.dirty = state
+            self._invalidate_kinds()
+
+        apply(after)
+        self.history.record(
+            f"{label}：{self.label(index)}",
+            Action(lambda: apply(before), lambda: apply(after),
+                   len(before[0] or b"") + len(stored or b"")))
 
     def replace_content(self, index: int, content: bytes) -> None:
         """以内容视图字节替换条目（data.fls 自动重新压缩）。"""
         if self.archive.kind == KIND_FLSDATA:
             self._set_stored(index, flsdata.deflate(content))
         else:
+            # 内容替换自动规范识别出的布局，原始存储替换仍有独立高级API。
+            slot = self._slots[index]
+            old_head = (slot.stored[:4096] if slot.stored is not None
+                        else self.archive.stored_head(slot.origin, 4096))
+            if layout_hint(content[:4096]) or layout_hint(old_head):
+                content = encode_layout(
+                    content, self.archive.extra_metas[index].entry_id
+                )
             self._set_stored(index, content)
+
+    def replace_for_path(self, index: int, content: bytes, res_path: str) -> None:
+        """按路径替换：.dlg自动转原生密文，二进制资源仍原样存储。"""
+        if self.kind != KIND_0SLF:
+            raise ValueError("按路径替换只支持0SLF")
+        if res_path.strip().lower().endswith(".dlg"):
+            res_path = path_bytes(res_path).decode("gbk")
+        entry_id = mx_hash(res_path.encode("gbk", "strict"))
+        if self.archive.extra_metas[index].entry_id != entry_id:
+            raise ValueError("替换路径与目标条目编号不一致")
+        if res_path.lower().endswith(".dlg"):
+            entry_id = mx_hash(path_bytes(res_path))
+            content = encode_layout(content, entry_id)
+        self._set_stored(index, content)
 
     def replace_stored(self, index: int, stored: bytes) -> None:
         """直接替换存储字节（高级用法，如整条目原始数据替换）。"""
         self._set_stored(index, stored)
 
     def revert(self, index: int) -> None:
-        """把条目恢复到打开时的字节（记入撤销栈，可再撤销回来）。"""
-        slot = self._slots[index]
-        if slot.origin is None:
-            return  # 新增条目没有"打开时状态"可还原
-        if slot.dirty or slot.stored is not None:
-            slot.history.append((slot.stored, slot.dirty))
-            slot.stored = None
-            slot.dirty = False
-            self._kind_cache.pop(index, None)
+        """还原条目原字节，可通过全局时间线撤销/重做。"""
+        if self._slots[index].origin is not None:
+            self._set_stored(index, None, "还原资源")
 
-    def undo(self, index: int) -> bool:
-        """撤销该条目最近一次修改；无可撤销时返回 False。"""
-        slot = self._slots[index]
-        if not slot.history:
-            return False
-        slot.stored, slot.dirty = slot.history.pop()
-        self._kind_cache.pop(index, None)
-        return True
+    def undo(self, index: int | None = None) -> bool:
+        """按文档时间线撤销最近一步；index 为旧 API 的兼容参数。"""
+        return self.history.undo()
+
+    def redo(self) -> bool:
+        return self.history.redo()
+
+    @property
+    def can_undo(self) -> bool:
+        return self.history.can_undo
+
+    @property
+    def can_redo(self) -> bool:
+        return self.history.can_redo
+
+    def edit_group(self, label: str):
+        return self.history.group(label)
+
+    def _insert_slot(self, index: int, slot: _Slot, meta) -> None:
+        self._slots.insert(index, slot)
+        self.archive.extra_metas.insert(index, meta)
+        self._invalidate_kinds()
+
+    def _remove_slot(self, slot: _Slot) -> None:
+        index = next(i for i, candidate in enumerate(self._slots)
+                     if candidate is slot)
+        del self._slots[index]
+        del self.archive.extra_metas[index]
+        self._invalidate_kinds()
+
+    def _restore_slot(self, index: int, slot: _Slot, meta,
+                      previous: _Slot | None, following: _Slot | None) -> None:
+        # write_to/build_bytes 可能排序；定位相邻对象而不是失效的旧下标。
+        if following is not None:
+            position = next((i for i, candidate in enumerate(self._slots)
+                             if candidate is following), None)
+            if position is not None:
+                self._insert_slot(position, slot, meta)
+                return
+        if previous is not None:
+            position = next((i for i, candidate in enumerate(self._slots)
+                             if candidate is previous), None)
+            if position is not None:
+                self._insert_slot(position + 1, slot, meta)
+                return
+        self._insert_slot(min(index, self.count), slot, meta)
+
+    def _add_slot(self, slot: _Slot, meta, label: str) -> int:
+        index = self.count
+        previous = self._slots[-1] if self._slots else None
+        self._insert_slot(index, slot, meta)
+        self.history.record(
+            f"新增资源：{label}",
+            Action(lambda: self._remove_slot(slot),
+                   lambda: self._restore_slot(index, slot, meta, previous, None),
+                   len(slot.stored or b"")))
+        return index
 
     def add_entry(self, content: bytes, name: str | None = None) -> int:
-        """追加新条目，返回新条目序号。data.fls 必须提供 name。"""
+        """新增条目（可撤销/重做）；data.fls 必须提供唯一文件名。"""
         if self.archive.kind == KIND_FLSDATA:
             if not name:
                 raise ValueError("data.fls 新增条目必须提供文件名")
-            self.archive.extra_metas.append(flsdata.EntryMeta(name=name))
+            if any(meta.name == name for meta in self.archive.extra_metas):
+                raise ValueError("同名条目已存在，请使用替换")
+            meta = flsdata.EntryMeta(name=name)
             stored = flsdata.deflate(content)
         else:
+            used = {meta.entry_id for meta in self.archive.extra_metas}
             entry_id = len(self._slots)
-            self.archive.extra_metas.append(
-                fls0slf.EntryMeta(entry_id=entry_id,
-                                  r1=fls0slf.fresh_r1(entry_id))
-            )
+            while entry_id in used:
+                entry_id += 1
+            meta = fls0slf.EntryMeta(entry_id=entry_id,
+                                   r1=fls0slf.fresh_r1(entry_id))
             stored = content
-        self._slots.append(_Slot(origin=None, stored=stored))
-        return self.count - 1
+        return self._add_slot(_Slot(origin=None, stored=stored, dirty=True),
+                              meta, name or str(meta.entry_id))
 
     def index_by_path(self, res_path: str) -> int | None:
         """按资源路径查条目序号（0SLF：算 mx_hash 对 entry_id）。"""
@@ -291,24 +392,83 @@ class PackDocument:
         """
         if self.archive.kind == KIND_FLSDATA:
             raise ValueError("data.fls 请用 add_entry 并提供文件名")
+        if res_path.strip().lower().endswith(".dlg"):
+            res_path = path_bytes(res_path).decode("gbk")
         existing = self.index_by_path(res_path)
         if existing is not None:
             raise ValueError(
                 f"路径已存在于条目 {existing}，请改用替换")
-        entry_id = mx_hash(res_path.encode("gbk", "replace"))
-        self.archive.extra_metas.append(
-            fls0slf.EntryMeta(entry_id=entry_id,
-                              r1=fls0slf.fresh_r1(entry_id)))
-        self._slots.append(_Slot(origin=None, stored=content,
-                                 path_name=res_path))
-        return self.count - 1
+        entry_id = mx_hash(res_path.encode("gbk", "strict"))
+        if res_path.lower().endswith(".dlg"):
+            entry_id = mx_hash(path_bytes(res_path))
+            content = encode_layout(content, entry_id)
+        meta = fls0slf.EntryMeta(entry_id=entry_id,
+                                  r1=fls0slf.fresh_r1(entry_id))
+        return self._add_slot(
+            _Slot(origin=None, stored=content, dirty=True, path_name=res_path),
+            meta, res_path)
 
     def delete_entry(self, index: int) -> None:
-        del self.archive.extra_metas[index]
-        del self._slots[index]
-        self._kind_cache.clear()
+        slot = self._slots[index]
+        meta = self.archive.extra_metas[index]
+        label = self.label(index)
+        previous = self._slots[index - 1] if index else None
+        following = self._slots[index + 1] if index + 1 < self.count else None
+        self._remove_slot(slot)
+        self.history.record(
+            f"删除资源：{label}",
+            Action(lambda: self._restore_slot(index, slot, meta, previous, following),
+                   lambda: self._remove_slot(slot), len(slot.stored or b"")))
+
+    def changes(self) -> list[ResourceChange]:
+        """相对最近成功保存基线的清单，不包含已撤销的操作。"""
+        result = []
+        origins = set()
+        for i, slot in enumerate(self._slots):
+            if slot.origin is not None:
+                origins.add(slot.origin)
+            if slot.origin is not None and not slot.dirty:
+                continue
+            meta = self.archive.extra_metas[i]
+            identity = (f"0x{meta.entry_id:08X}" if self.kind == KIND_0SLF
+                        else meta.name)
+            result.append(ResourceChange(
+                "新增" if slot.origin is None else "修改", identity,
+                (slot.path_name or (self._names or {}).get(slot.origin, f"条目 {i}")
+                 if self.kind == KIND_0SLF else meta.name),
+                None if slot.origin is None
+                else self.archive.stored_len(slot.origin), self.stored_len(i)))
+        for origin, meta in enumerate(self.archive.original_metas):
+            if origin in origins:
+                continue
+            identity = (f"0x{meta.entry_id:08X}" if self.kind == KIND_0SLF
+                        else meta.name)
+            label = ((self._names or {}).get(origin, f"条目 {origin}")
+                     if self.kind == KIND_0SLF else meta.name)
+            result.append(ResourceChange("删除", identity, label,
+                                         self.archive.stored_len(origin), None))
+        return result
 
     # ---------------------------------------------------------- 保存 ----
+    @contextmanager
+    def preserve_write_order(self) -> Iterator[None]:
+        """保存失败时恢复写前槽位顺序，避免 GUI 旧下标指向别的条目。
+
+        write_to 为逐条校验对齐目录顺序；成功后 mark_saved 重建基线，
+        发布前任一异常则撤销排序，不撤销用户本来的编辑。
+        """
+        archive = self.archive
+        slots = list(self._slots)
+        metas = list(archive.extra_metas)
+        try:
+            yield
+        except BaseException:
+            if self.archive is archive:
+                self._slots = slots
+                archive.extra_metas = metas
+                self._invalidate_kinds()
+            raise
+
     def changed_indexes(self) -> set[int]:
         """内容与原包不同（或新增）的条目下标集合。
 
@@ -335,7 +495,22 @@ class PackDocument:
             return
         self._slots = [self._slots[i] for i in order]
         self.archive.extra_metas = [metas[i] for i in order]
-        self._kind_cache.clear()
+        self._invalidate_kinds()
+
+    def layout_indexes_for_verification(self) -> set[int]:
+        """只检查改动布局；源/新内容或登记路径可识别时不能降级为任意二进制。"""
+        result = set()
+        for index in self.changed_indexes():
+            slot = self._slots[index]
+            if slot.path_name and slot.path_name.lower().endswith(".dlg"):
+                result.add(index)
+                continue
+            candidates = [self.stored(index)[:4096]]
+            if slot.origin is not None:
+                candidates.append(self.archive.stored_head(slot.origin, 4096))
+            if any(layout_hint(data) for data in candidates):
+                result.add(index)
+        return result
 
     def write_to(
         self,
@@ -343,6 +518,8 @@ class PackDocument:
         progress: Callable[[int, int], None] | None = None,
     ) -> None:
         """把当前文档流式写入 out（未改动条目从源文件拷贝）。"""
+        if self.history.in_group:
+            raise ValueError("批量编辑尚未结束，不能保存/构建资源包")
         if self.archive.kind == KIND_0SLF:
             self._sort_slots_for_write()
         items: list[tuple[str, object]] = []
@@ -362,10 +539,32 @@ class PackDocument:
 
     def mark_saved(self, path: Path) -> None:
         """保存成功后同步基线：以新文件重建索引，改动状态清零。"""
+        if self.history.in_group:
+            raise ValueError("批量编辑尚未结束，不能建立保存基线")
+        # 路径哈希包不存真名：保留本会话导入时登记的名字，不能
+        # 在保存后的槽位重建中丢失；旧名字缓存按原下标，必须重建。
+        imported = {}
+        if self.archive.kind == KIND_0SLF:
+            imported = {
+                meta.entry_id: slot.path_name
+                for meta, slot in zip(
+                    self.archive.extra_metas, self._slots, strict=True
+                )
+                if slot.path_name
+            }
+        # 新路径已发布且不是源包；先取得新句柄，再释放旧基线。
+        # 若新文件打开失败，旧文档仍可读取，不留下已关闭的归档。
+        new_archive = open_archive_path(path)
         self.archive.close()
-        self.archive = open_archive_path(path)
+        self.archive = new_archive
         self.path = path
+        self.source_paths.add(path)
         self._slots = [
-            _Slot(origin=i) for i in range(self.archive.orig_count)
+            _Slot(origin=i, path_name=imported.get(meta.entry_id))
+            if self.archive.kind == KIND_0SLF else _Slot(origin=i)
+            for i, meta in enumerate(self.archive.extra_metas)
         ]
-        self._kind_cache.clear()
+        self._names = None
+        self._name_references_ready = False
+        self._invalidate_kinds()
+        self.history.clear()

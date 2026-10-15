@@ -15,7 +15,9 @@ from PySide6.QtCore import QMimeData, QSettings, QSize, Qt
 from PySide6.QtGui import QAction, QGuiApplication, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
+    QDialog,
     QFileDialog,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QMainWindow,
@@ -36,16 +38,28 @@ from .. import __version__
 from ..core import dlg_codec, pack_build, snap
 from ..core.assets import AssetResolver
 from ..core.catalog import known_layout_paths
+from ..core.diagnostics import (
+    Diagnostic,
+    diagnose,
+    reference_impacts,
+    widget_at_path,
+)
+from ..core.layout_import import prepare_layout_import, validate_layout_path
 from ..core.model import LayoutDocument, Widget
 from ..core.mxhash import mx_hash
+from ..core.output_paths import guard_output
 from ..core.pack import FlsPack
 from ..core.painters import PaintContext
+from ..core.review import referenced_staged_images
 from ..core.script_index import ScriptIndex, get_default_index
 from ..core.styles import StyleBook
 from . import icons
 from .canvas import CanvasView, LayoutScene
+from .diagnostics_panel import DiagnosticsPanel
+from .layout_import_dialog import LayoutImportDialog
 from .panels import PalettePanel, ResourceTreePanel, WidgetTreePanel
 from .property_panel import PropertyPanel
+from .save_review import SaveReviewDialog
 from .script_panel import ScriptPanel
 
 
@@ -56,6 +70,15 @@ class MainWindow(QMainWindow):
         super().__init__()
         self._settings = QSettings("MXSJ", "UIEditor")
         self.resolver = AssetResolver()
+        paths = self._settings.value("known_layout_paths", [])
+        if isinstance(paths, str):
+            paths = [paths]
+        if isinstance(paths, (list, tuple)):
+            for path in paths:
+                try:
+                    self.resolver.remember_layout(path)
+                except (ValueError, TypeError, AttributeError):
+                    pass  # 损坏设置不阻塞启动，也不加入候选
         self.styles = StyleBook()
         self.ctx = PaintContext(assets=self.resolver, styles=self.styles)
         self.script_index: ScriptIndex = get_default_index()
@@ -76,6 +99,10 @@ class MainWindow(QMainWindow):
         self.script_panel = ScriptPanel()
         self.props_panel = PropertyPanel()
         self.props_panel.assets = self.resolver  # 文件字段从包里选
+        self.props_panel.before_change = self._before_property_change
+        self.diagnostics_panel = DiagnosticsPanel()
+        self.diagnostics_panel.refresh_requested.connect(self.run_diagnostics)
+        self.diagnostics_panel.path_chosen.connect(self._select_diagnostic_path)
         self.palette_panel = PalettePanel()
         self._build_docks()
         self._build_menus()
@@ -114,6 +141,9 @@ class MainWindow(QMainWindow):
         right_layout.addWidget(right_split)
         right.setWidget(right_host)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, right)
+        diagnostics = QDockWidget("布局诊断（静态）", self)
+        diagnostics.setWidget(self.diagnostics_panel)
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, diagnostics)
 
     def _build_menus(self) -> None:
         file_menu = self.menuBar().addMenu("文件")
@@ -142,6 +172,8 @@ class MainWindow(QMainWindow):
                          QKeySequence.StandardKey.Quit)
 
         view_menu = self.menuBar().addMenu("视图")
+        self._add_action(view_menu, "刷新布局诊断", self.run_diagnostics,
+                         QKeySequence("Ctrl+Shift+D"))
         self._act_fit = self._add_action(
             view_menu, "适应窗口", self.view.fit_content)
         self._act_actual = self._add_action(
@@ -337,6 +369,8 @@ class MainWindow(QMainWindow):
     def _connect_signals(self) -> None:
         self.resource_panel.open_pack_layout.connect(
             self._open_pack_layout)
+        self.resource_panel.import_pack_layout.connect(self.import_pack_layout)
+        self.resource_panel.open_pack_path.connect(self.open_pack_path)
         self.resource_panel.open_loose_file.connect(self.open_layout_file)
         self.resource_panel.choose_resource_dir.connect(
             self.open_resource_dir_dialog)
@@ -360,7 +394,7 @@ class MainWindow(QMainWindow):
     # 文档打开/新建/保存
     # ------------------------------------------------------------------
     def _confirm_discard(self) -> bool:
-        if self.doc is None or not self.doc.dirty:
+        if self.doc is None or not (self.doc.dirty or self.doc.pending_pack_import):
             return True
         answer = QMessageBox.question(
             self, "未保存的修改",
@@ -370,7 +404,9 @@ class MainWindow(QMainWindow):
 
     def _set_document(self, doc: LayoutDocument | None) -> None:
         self._loading = True
+        self.resource_panel.clear_pending()
         self.doc = doc
+        self.diagnostics_panel.reset()
         self._selected = None
         self.scene.set_document(doc)
         self.tree_panel.build(doc)
@@ -401,6 +437,62 @@ class MainWindow(QMainWindow):
         if doc.source_path:
             return self.script_index.match_loose_path(doc.source_path)
         return None
+
+    def _script_link(self):
+        return self.script_index.for_layout(self._doc_layout_path(self.doc))
+
+    @staticmethod
+    def _impact_text(impacts) -> str:
+        lines = []
+        for impact in impacts:
+            lines.append(f"· {impact.name}")
+            lines.extend(f"  {detail}" for detail in impact.details)
+        return "\n".join(lines)
+
+    def _before_property_change(self, widget: Widget, key: str, value) -> bool:
+        if key != "sName" or value == widget.props.get(key):
+            return True
+        if not isinstance(value, str):
+            QMessageBox.warning(self, "控件名无效", "sName 必须是字符串。")
+            return False
+        if self.doc and value and any(other is not widget and other.name == value
+                                      for other in self.doc.all_widgets()):
+            QMessageBox.warning(self, "控件名重复",
+                                f"布局中已有控件名 {value!r}，请使用唯一名字。")
+            return False
+        impacts = reference_impacts([widget.name], self._script_link())
+        if not impacts:
+            return True  # 索引未命中不代表安全，诊断与脚本面板持续说明边界。
+        return QMessageBox.question(
+            self, "改名可能影响脚本引用（静态）",
+            f"将 {widget.name!r} 改为 {value!r}。静态索引发现：\n"
+            + self._impact_text(impacts)
+            + "\n\n继续只修改布局，不会改写脚本或自动接线。"
+              "索引可能漏动态引用或版本变化。确定继续？",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes
+
+    def _layout_diagnostics(self) -> list[Diagnostic]:
+        if self.doc is None:
+            return []
+        return diagnose(
+            self.doc, link=self._script_link(),
+            resource_exists=(self.resolver.resource_exists
+                             if self.resolver.has_sources else None),
+            staged_paths=self.resolver.staged_images())
+
+    def run_diagnostics(self) -> None:
+        self.diagnostics_panel.set_issues(self._layout_diagnostics())
+
+    def _select_diagnostic_path(self, path: tuple[int, ...]) -> None:
+        if self.doc is None:
+            return
+        widget = widget_at_path(self.doc, path)
+        if widget is not None:
+            self._select_widget(widget)
+            item = self.scene.item_for(widget)
+            if item is not None:
+                self.view.ensureVisible(item)
 
     def _apply_script_link(self, doc: LayoutDocument | None) -> str:
         """按文档路径挂上脚本关联（面板+代码皮肤），返回状态栏注记。"""
@@ -472,9 +564,8 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "挂载资源包失败", str(exc))
             return -1
         layouts = self.resolver.scan_layouts(pack_path)
-        if layouts:
-            self._add_pack_to_tree(pack_path, layouts)
-            self.resource_panel.expand_pack(pack_path)
+        self._add_pack_to_tree(pack_path, layouts)
+        self.resource_panel.expand_pack(pack_path)
         self._try_load_styles()
         self.scene.refresh_all()
         return len(layouts)
@@ -499,17 +590,88 @@ class MainWindow(QMainWindow):
         if count == 0:
             QMessageBox.information(
                 self, "没有布局文件",
-                f"该资源包内没有布局文件：\n{path}\n\n"
+                f"该资源包内没有已识别的布局：\n{path}\n\n"
                 "（图片等其它资源已照常挂载，打开布局时可自动取图；"
-                "布局请到资源树中按名称查找后双击。）")
+                "可在左侧包节点右键导入本地布局。）")
         elif count > 0:
             self._update_status(
                 f"已挂载 {Path(path).name}：识别到 {count} 个布局，"
                 "在左侧资源树双击（可先按名称搜索）即可打开。")
 
+    def _remember_layout(self, path: str) -> None:
+        self.resolver.remember_layout(path)
+        paths = sorted(set(self.resolver._session_layouts.values()), key=str.casefold)
+        self._settings.setValue("known_layout_paths", paths)
+        self._settings.sync()
+
+    def open_pack_path(self, pack_path: str) -> None:
+        path, ok = QInputDialog.getText(
+            self, "按包内路径打开布局",
+            "填写导入时的完整路径（如 login/regform.dlg）。\n"
+            "只读核查，不会再次导入或改写资源包：")
+        if not ok:
+            return
+        try:
+            path = validate_layout_path(path)
+            result = self.resolver.fetch_pack_dlg(pack_path, path)
+            if result is None:
+                raise ValueError("该包中找不到可解析布局；"
+                                 "请核对保存的新包和当时填写的路径。")
+            doc = LayoutDocument.from_dicts(*result)
+        except Exception as exc:
+            QMessageBox.warning(self, "按路径打开失败", str(exc))
+            return
+        if not self._confirm_discard():
+            return
+        doc.source_pack = (pack_path, path)
+        self._remember_layout(path)
+        self.resource_panel.add_known_layout(pack_path, path)
+        self._set_document(doc)
+        self.resource_panel._search.clear()
+        self.resource_panel.expand_pack(pack_path)
+        self.resource_panel.reveal_selection(("pack", pack_path, path))
+
+    def import_pack_layout(self, pack_path: str) -> None:
+        """本地 .dlg 导入到单一编辑文档，实际写入只在生成新包时。"""
+        filename, _ = QFileDialog.getOpenFileName(
+            self, "选择本地布局文件", "", "布局文件 (*.dlg);;所有文件 (*)")
+        if not filename:
+            return
+        dialog = LayoutImportDialog(Path(filename).name,
+                                    self.resolver.scan_layouts(pack_path), self)
+        if dialog.exec() != QDialog.Accepted:
+            return
+        try:
+            with FlsPack(pack_path) as pack:
+                doc, replacing = prepare_layout_import(
+                    pack, dialog.path, Path(filename).read_bytes())
+        except Exception as exc:
+            QMessageBox.warning(self, "导入布局失败", str(exc))
+            return
+        if replacing:
+            answer = QMessageBox.question(
+                self, "确认替换布局",
+                f"包内 {dialog.path} 已存在。保存新包时将替换该布局，继续吗？",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No)
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+        if not self._confirm_discard():
+            return
+        doc.source_pack = (pack_path, dialog.path)
+        self._set_document(doc)
+        self.resource_panel.show_pending(pack_path, dialog.path)
+        self._update_status(
+            f"已导入 {dialog.path}（待入新包），可预览/编辑；"
+            "保存前查看改动清单。未带图片，未接脚本，原包未修改。")
+
     def _open_pack_layout(self, pack_path: str, res_path: str,
                           skip_discard: bool = False) -> None:
         """从包中打开一个布局（树双击与对话框共用）。包顺带入树。"""
+        if (self.doc and self.doc.pending_pack_import
+                and self.doc.source_pack == (pack_path, res_path)):
+            self.resource_panel.reveal_selection(("pending", pack_path, res_path))
+            return
         if not skip_discard and not self._confirm_discard():
             return
         try:
@@ -520,7 +682,7 @@ class MainWindow(QMainWindow):
             return
         self._add_pack_to_tree(
             pack_path, self.resolver.scan_layouts(pack_path))
-        result = self.resolver.fetch_dlg(res_path)
+        result = self.resolver.fetch_pack_dlg(pack_path, res_path)
         if result is None:
             QMessageBox.warning(
                 self, "找不到布局",
@@ -546,15 +708,14 @@ class MainWindow(QMainWindow):
                 continue
             layouts = self.resolver.scan_layouts(str(pack_file))
             if not layouts:
-                skipped += 1  # 没有布局文件的包不进树（仍挂载供取图）
-                continue
+                skipped += 1  # 无已识别布局也入树，允许右键新增
             self._add_pack_to_tree(str(pack_file), layouts)
             added += 1
         self._try_load_styles()
         self.scene.refresh_all()
         self._update_status(
-            f"资源目录：{path}；新入树 {added} 个含布局的包"
-            f"（跳过 {skipped} 个无布局包）。{self.resolver.summary}；"
+            f"资源目录：{path}；新入树 {added} 个包"
+            f"（其中 {skipped} 个无已识别布局，可右键导入）。{self.resolver.summary}；"
             "双击包中布局即可切换打开。")
 
     def open_resource_dir_dialog(self) -> None:
@@ -570,7 +731,7 @@ class MainWindow(QMainWindow):
             return
         doc = LayoutDocument()
         frame = doc.new_widget("CMainFrame")
-        frame.props["sTitle"] = "新对话框"
+        frame.props["sTitle"] = "新對話框"
         doc.dirty = True
         self._set_document(doc)
         self._select_widget(frame)
@@ -603,28 +764,70 @@ class MainWindow(QMainWindow):
         """选图窗挂账的新图里，被当前布局引用到的那些（随包写入）。"""
         if self.doc is None:
             return {}
-        staged = self.resolver.staged_images()
-        if not staged:
-            return {}
-        texts: set[str] = set()
-        stack: list = [self.doc.to_dicts()]
-        while stack:
-            value = stack.pop()
-            if isinstance(value, str):
-                texts.add(value.replace("/", "\\").lower())
-            elif isinstance(value, dict):
-                stack.extend(value.values())
-            elif isinstance(value, (list, tuple)):
-                stack.extend(value)
-        return {path: data for path, data in staged.items()
-                if path.replace("/", "\\").lower() in texts}
+        return referenced_staged_images(self.doc.to_dicts(),
+                                        self.resolver.staged_images())
+
+    def _confirm_save_review(self, target: str, *, to_pack: bool) -> bool:
+        if self.doc is None:
+            return False
+        try:
+            guard_output(target, self._pack_sources())
+            staged = self.resolver.staged_images()
+            extras = self._referenced_staged_images()
+            images: list[tuple[str, str, int]] = []
+            if to_pack:
+                with FlsPack(self.doc.source_pack[0]) as pack:
+                    for name, data in extras.items():
+                        kind = "替换图片" if pack.contains(name) else "新增图片"
+                        images.append((kind, name, len(data)))
+                images.extend(("未引用，跳过并保留待入包", name, len(data))
+                              for name, data in staged.items() if name not in extras)
+            else:
+                images.extend(("散装保存不嵌入，保留待入包", name, len(data))
+                              for name, data in staged.items())
+            issues = self._layout_diagnostics()
+            if to_pack:
+                for name in extras:
+                    try:
+                        name.encode("gbk")
+                    except UnicodeEncodeError:
+                        issues.append(Diagnostic(
+                            "错误", "ENCODING", None, "图片资源路径",
+                            f"待写入图片路径无法按 GBK 编码：{name!r}"))
+            notice = ""
+            if to_pack and self.doc.pending_pack_import:
+                with FlsPack(self.doc.source_pack[0]) as pack:
+                    kind = "替换" if pack.contains(self.doc.source_pack[1]) else "新增"
+                notice = (f"导入布局待入包：{kind} {self.doc.source_pack[1]}；"
+                          "不自动接脚本。新增布局明文存储，客户端加载待实机验证。")
+            dialog = SaveReviewDialog(target, self.doc.changes(), issues, images,
+                                      to_pack=to_pack, parent=self,
+                                      layout_notice=notice)
+            return dialog.exec() == QDialog.Accepted
+        except (OSError, ValueError) as exc:
+            QMessageBox.warning(self, "保存前检查失败", str(exc))
+            return False
+
+
+    def _require_save_encoding(self, extras: dict[str, bytes]) -> None:
+        """程序化写回也不能绕过原生字段编码检查；codec 回退仍仅作兼容。"""
+        errors = [issue for issue in diagnose(self.doc) if issue.code == "ENCODING"]
+        for name in extras:
+            try:
+                name.encode("gbk")
+            except UnicodeEncodeError:
+                errors.append(Diagnostic("错误", "ENCODING", None, "图片资源路径",
+                                         f"图片资源路径无法按 GBK 编码：{name!r}"))
+        if errors:
+            raise ValueError("原生字段编码检查未通过："
+                             + "；".join(issue.message for issue in errors))
 
     def write_pack_copy(self, out_path: str) -> dict | None:
         """把当前包内布局写回一个新包文件（原包不动）。返回校验报告。
 
         选图窗新加且被本布局引用到的图片随布局一并写入（按路径
         新增或替换）。写后硬性校验：条目数 = 原数 + 新增图片数、
-        新包目录按条目号升序且布局与新图都能被二分查找命中
+        新增布局计入总数；新包目录按条目号升序且布局与新图都能被二分查找命中
         （模拟引擎寻址）、条目集合与预期一致、除布局条目与这些
         图片外每条（按条目号）存储字节一致、用全新解析器回读
         目标布局与当前文档逐字段一致、新图逐字节回读一致；
@@ -633,13 +836,19 @@ class MainWindow(QMainWindow):
         if self.doc is None or not self.doc.source_pack:
             return None
         src_pack, res_path = self.doc.source_pack
+        extras = self._referenced_staged_images()
+        self._require_save_encoding(extras)
         plain = dlg_codec.dump_bytes(self.doc.to_dicts())
         tmp_out = str(out_path)
-        extras = self._referenced_staged_images()
         info = pack_build.patch_pack_copy(
-            src_pack, res_path, plain, tmp_out, extra_entries=extras)
+            src_pack, res_path, plain, tmp_out, extra_entries=extras,
+            protected_paths=self._pack_sources(),
+            allow_create=self.doc.pending_pack_import)
         report: dict = {"out": tmp_out, "bytes": info["bytes"],
                         "mode": info["mode"],
+                        "layout_added": bool(info.get("layout_added")),
+                        "native_layout_storage": bool(
+                            info.get("native_layout_storage")),
                         "images_added": len(info["images_added"]),
                         "images_replaced": len(info["images_replaced"])}
         staged_all = set(self.resolver.staged_images())
@@ -648,7 +857,8 @@ class MainWindow(QMainWindow):
             from ..core.assets import AssetResolver as _Resolver
 
             with FlsPack(src_pack) as before, FlsPack(tmp_out) as after:
-                expected = before.count + len(info["images_added"])
+                expected = (before.count + len(info["images_added"])
+                            + int(info.get("layout_added", False)))
                 if after.count != expected:
                     report["error"] = "条目数变化，写回结果不可信"
                     return report
@@ -666,7 +876,8 @@ class MainWindow(QMainWindow):
 
                 added_ids = {mx_hash(n.encode("gbk", "replace"))
                              for n in info["images_added"]}
-                if set(ids_after) != set(before.entry_ids) | added_ids:
+                if set(ids_after) != (set(before.entry_ids) | added_ids
+                                      | {mx_hash(res_path.encode("gbk"))}):
                     report["error"] = "新包条目集合与预期不符，写回结果不可信"
                     return report
                 for name in [res_path, *extras]:
@@ -678,9 +889,8 @@ class MainWindow(QMainWindow):
                 changed = 0
                 unexpected = 0
                 for entry_id in before.entry_ids:
-                    # 快速补丁不挪动其他条目：span 未变即可断定
-                    # 存储字节未变，跳过读取（允许变化的条目即便
-                    # span 未变也要比内容，可能只是等长改字）
+                    # core 已在发布前逐字节验证未改条目；此处只
+                    # 统计变化，不再把 span 相同当作保真证据。
                     if (entry_id not in allowed
                             and before.span_of(entry_id)
                             == after.span_of(entry_id)):
@@ -717,8 +927,15 @@ class MainWindow(QMainWindow):
             return report
         report["ok"] = True
         # 状态迁移：已验证落盘，标记干净并让后续保存续写新包
-        self.doc.dirty = False
+        self.resolver.mount_pack(tmp_out, priority=True)
+        self._remember_layout(res_path)
+        self._add_pack_to_tree(tmp_out, self.resolver.scan_layouts(tmp_out))
+        self.doc.pending_pack_import = False
+        self.resource_panel.clear_pending()
+        self.doc.mark_saved()
         self.doc.source_pack = (tmp_out, res_path)
+        self.resource_panel.expand_pack(tmp_out)
+        self.resource_panel.reveal_selection(("pack", tmp_out, res_path))
         self.resolver.discard_staged(list(extras))  # 已进新包，销账
         self._update_title()
         return report
@@ -737,16 +954,8 @@ class MainWindow(QMainWindow):
             "资源包 (*.fls);;所有文件 (*)")
         if not path:
             return
-        if Path(path) == Path(src_pack):
-            answer = QMessageBox.warning(
-                self, "要覆盖原包吗？",
-                "你选了原包本身。强烈建议改存为新文件，并保留原包备份。\n"
-                "确定要直接覆盖原包吗？",
-                QMessageBox.StandardButton.Yes
-                | QMessageBox.StandardButton.No)
-            if answer != QMessageBox.StandardButton.Yes:
-                return
-        overwritten = Path(path) == Path(src_pack)
+        if not self._confirm_save_review(path, to_pack=True):
+            return
         self._update_status("正在写回资源包并校验…")
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         try:
@@ -762,15 +971,13 @@ class MainWindow(QMainWindow):
                 (report or {}).get("error", "未知错误")
                 + "\n新包文件已生成但不可信，请勿替换进客户端。")
             return
-        fast = report.get("mode") in ("inplace", "relocated")
+        fast = report.get("mode") in ("inplace", "relocated", "added")
         images_note = ""
         if report.get("images_added") or report.get("images_replaced"):
             images_note = (
                 f"\n一并写入新图 {report.get('images_added', 0)} 张、"
                 f"替换图片 {report.get('images_replaced', 0)} 张。")
-        tail = ("已直接覆盖原文件——请确认你手边留有原包备份。"
-                if overwritten else
-                "原包未被修改。安装时请在完整客户端副本上操作：先备份"
+        tail = ("原包未被修改。安装时请在完整客户端副本上操作：先备份"
                 "原包，再把新包改名替换，最后进游戏验证该界面。")
         entries_note = ""
         if report.get("entries_after") is not None:
@@ -795,6 +1002,7 @@ class MainWindow(QMainWindow):
             f"条目校验通过（改变 {report.get('changed_entries', 0)} 条，"
             f"大小 {report['bytes']} 字节"
             + ("，快速补丁未重写整包" if fast else "") + "）。"
+            + "\n布局已按原生路径密钥写入并回读验证。"
             + images_note + entries_note + unused_note + "\n\n" + tail)
 
     def save_as(self, path: str | None = None) -> bool:
@@ -806,21 +1014,41 @@ class MainWindow(QMainWindow):
                 "布局文件 (*.dlg);;所有文件 (*)")
             if not path:
                 return False
+        if not self._write_to(str(path)):
+            return False
         self.doc.source_path = str(path)
         self.doc.source_pack = None
-        self._write_to(str(path))
+        self._update_title()
         return True
 
-    def _write_to(self, path: str) -> None:
-        data = dlg_codec.dump_bytes(self.doc.to_dicts())
+    def _pack_sources(self) -> list[Path]:
+        sources = self.resolver.pack_paths
+        if self.doc and self.doc.source_pack:
+            sources.append(Path(self.doc.source_pack[0]))
+        # 同一客户端资源目录中尚未挂载的包也不能被另存覆盖。
+        directories = {source.parent for source in sources}
+        for directory in directories:
+            sources.extend(path for path in directory.iterdir()
+                           if path.suffix.lower() == ".fls")
+        return sources
+
+    def _write_to(self, path: str) -> bool:
+        if self.doc is None:
+            return False
         try:
+            guard_output(path, self._pack_sources())
+            if not self._confirm_save_review(path, to_pack=False):
+                return False
+            self._require_save_encoding({})
+            data = dlg_codec.dump_bytes(self.doc.to_dicts())
             Path(path).write_bytes(data)
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             QMessageBox.warning(self, "保存失败", str(exc))
-            return
-        self.doc.dirty = False
+            return False
+        self.doc.mark_saved()
         self._update_title()
         self._update_status(f"已保存：{path}")
+        return True
 
     def export_png(self) -> None:
         if self.doc is None:
@@ -829,6 +1057,14 @@ class MainWindow(QMainWindow):
             self, "导出 PNG", self.doc.display_name + ".png",
             "PNG 图片 (*.png)")
         if not path:
+            return
+        sources = self._pack_sources()
+        if self.doc.source_path:
+            sources.append(Path(self.doc.source_path))
+        try:
+            guard_output(path, sources)
+        except (OSError, ValueError) as exc:
+            QMessageBox.warning(self, "导出失败", str(exc))
             return
         image = self.view.export_image()
         if image.save(path):
@@ -1071,13 +1307,21 @@ class MainWindow(QMainWindow):
             if not targets:
                 return
         descendants = sum(len(list(w.walk())) - 1 for w in targets)
-        if descendants:
+        impacts = reference_impacts(
+            (node.name for root in targets for node in root.walk()),
+            self._script_link())
+        if descendants or impacts:
+            note = ("\n\n静态索引发现受影响引用（包含整棵子树）：\n"
+                    + self._impact_text(impacts)
+                    + "\n只删除布局控件，不改脚本，不自动接线；"
+                      "静态索引可能漏动态引用或版本变化。"
+                    if impacts else "")
             answer = QMessageBox.question(
-                self, "删除控件",
+                self, "删除控件" if not impacts else "删除可能影响脚本引用（静态）",
                 f"将删除 {len(targets)} 个控件及其 {descendants} 个"
-                "子控件，确定吗？",
-                QMessageBox.StandardButton.Yes
-                | QMessageBox.StandardButton.No)
+                "子控件，确定吗？" + note,
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No)
             if answer != QMessageBox.StandardButton.Yes:
                 return
         parent = targets[0].parent
@@ -1260,6 +1504,9 @@ class MainWindow(QMainWindow):
         self.doc.checkpoint(("prop", id(widget), key))
         self.scene.refresh_widget(widget)
         self.tree_panel.update_label(widget)
+        if key == "sName":
+            self.props_panel.refresh_label(widget)
+            self.script_panel.set_widget(widget)
         self._update_title()
 
     # -- 撤销/重做 ----------------------------------------------------
@@ -1441,8 +1688,10 @@ class MainWindow(QMainWindow):
 
     def _update_title(self) -> None:
         self._sync_history_actions()
+        self.diagnostics_panel.mark_stale()
         name = self.doc.display_name if self.doc else "未打开布局"
-        star = "*" if self.doc and self.doc.dirty else ""
+        pending = self.doc and (self.doc.dirty or self.doc.pending_pack_import)
+        star = "*" if pending else ""
         self.setWindowTitle(f"{name}{star} — MXSJ UI 编辑器 {__version__}")
 
     def _update_status(self, text: str) -> None:

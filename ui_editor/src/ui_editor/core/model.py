@@ -11,6 +11,7 @@ from __future__ import annotations
 import copy
 
 from .defaults_data import DEFAULT_PROPS
+from .review import LayoutChange, layout_changes
 
 WIDGET_TYPES: tuple[str, ...] = tuple(sorted(DEFAULT_PROPS))
 
@@ -124,10 +125,27 @@ class LayoutDocument:
         self.source_path: str | None = None
         self.source_pack: tuple[str, str] | None = None
         self.dirty = False
+        self.pending_pack_import = False  # 未落到新包，即使撤销至导入状态仍待保存
         # 撤销/重做时间线：to_dicts() 快照列表，_h_index 指当前状态
         self._history: list[list[dict]] = []
         self._h_index = -1
         self._last_merge_key = None
+        self._saved_state = self._snapshot()
+
+    def begin_pack_import(self, previous: list[dict]) -> None:
+        """导入以原包内容为清单基线；新增布局以空列表为基线。"""
+        self._saved_state = copy.deepcopy(previous)
+        self.pending_pack_import = True
+        self.dirty = True
+
+    def mark_saved(self) -> None:
+        """仅成功写入后建立清单基线；保留撤销时间线。"""
+        self._saved_state = self._snapshot()
+        self.dirty = False
+        self._last_merge_key = None
+
+    def changes(self) -> list[LayoutChange]:
+        return layout_changes(self._saved_state, self.to_dicts())
 
     # -- 撤销/重做（快照时间线，设计见 notes/ui_editor_phase2） ----
     def _snapshot(self) -> list[dict]:
@@ -176,7 +194,7 @@ class LayoutDocument:
         self.roots = [Widget.from_dict(d)
                       for d in copy.deepcopy(state)]
         self._last_merge_key = None
-        self.dirty = True
+        self.dirty = bool(layout_changes(self._saved_state, state))
 
     def undo(self) -> bool:
         """回退一步；成功返回 True（roots 已重建，选中需重解析）。"""

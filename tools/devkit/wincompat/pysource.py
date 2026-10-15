@@ -311,6 +311,13 @@ class _Visitor(ast.NodeVisitor):
             isinstance(func, ast.Attribute)
             and func.attr in {"read_text", "write_text"}
             and not _has_keyword(node, "encoding")
+            # Distribution.read_text is a metadata API documented as UTF-8;
+            # it is NOT pathlib.Path.read_text and accepts no encoding arg.
+            and not (
+                func.attr == "read_text"
+                and isinstance(func.value, ast.Call)
+                and ast.unparse(func.value.func) == "importlib.metadata.distribution"
+            )
         ):
             self._add(node.lineno, "WIN302", f"{func.attr}()")
         elif self._is_subprocess_call(func) and node.args:

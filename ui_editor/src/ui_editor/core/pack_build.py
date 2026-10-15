@@ -1,5 +1,9 @@
 """``0SLF`` 资源包的写回：替换指定条目的负载，重组整个归档。
 
+原生证据见 notes/native_dlg_path_cipher.md：.dlg 的密钥由完整路径哈希
+派生。新增和替换均按此规则写密文；旧明文/错误密钥只作读取兼容，
+明确保存目标布局时迁移。发布前使用原生路径密钥回读，不从输出头猜密钥。
+
 读侧见 :mod:`.pack`。本模块在此之上提供三步能力（均不修改
 原文件，产物是完整的归档字节）：
 
@@ -9,10 +13,8 @@
    紧凑排布，目录记录里的 r2/r3 按闭式变换重算（r1 与条目
    密钥的选择都沿用原条目，见下）；
 3. :func:`replace_dlg_entry` 面向 UI 编辑器：定位路径对应
-   条目，**沿用该条目原有的 4 字节 XOR 密钥**重新加密新
-   明文并替换——引擎解密只依赖文件头反推（见 assets 的
-   ``unpack_packed_text``），密钥不变则新旧条目在引擎眼中
-   无区别，这是最保守的替换方式。
+   条目，按完整路径派生的原生 XOR 密钥加密新明文。
+   未修改布局和其它负载保持原字节；旧头反推只用于读取兼容。
 
 写后校验由调用方负责（用 FlsPack 重开、fetch_dlg 回读比对）。
 
@@ -32,22 +34,27 @@ entry_id 排序插入**（插入点之后记录的下标变化，r3 按新下标
 16 字节目录记录——新负载变短/等长就原位替换（多出的旧字节
 留在原地成间隙），变长且间隙不够时把新负载挪到目录原址、
 目录整体顺移到其后，其余条目连偏移都不动；
-:func:`patch_pack_copy` 在此之上做"复制整包 + 补丁"，或在
-用户明确选原文件时直接补丁原文件。仅当包内负载交叠等病态
-布局下才回退到整包重组。
+:func:`patch_pack_copy` 在此之上做"临时复制整包 + 补丁 + 校验"，
+禁止覆盖源包及其别名，验证通过才原子发布新包。仅当包内负载
+交叠等病态布局下才回退到整包重组。
 """
 
 from __future__ import annotations
 
 import bisect
+import os
 import shutil
 import struct
+import tempfile
+from collections.abc import Iterable
 from pathlib import Path
 
 from . import dlg_codec
 from .errors import PackError
 from .mxhash import mx_hash
-from .pack import DIR_RECORD_SIZE, MAGIC, MASK32, decode_directory
+from .native_layout import decode_native, encode_layout, path_bytes, plain_if_layout
+from .output_paths import guard_output
+from .pack import DIR_RECORD_SIZE, MAGIC, MASK32, FlsPack, decode_directory
 
 _HEADER = struct.Struct("<4sII")
 _RECORD = struct.Struct("<IIII")
@@ -210,7 +217,7 @@ def replace_dlg_entry(archive: bytes, res_path: str,
     """把归档中 res_path 对应 .dlg 条目替换为 new_plain 的加密形。
 
     new_plain 必须是 .dlg 明文字节（以 ``# -*- coding: gbk -*-``
-    开头）；加密沿用原条目密钥。找不到条目或明文不合式时抛
+    开头）；加密按原生路径派生密钥。找不到条目或明文不合式时抛
     PackError，绝不产生半成品归档。
     """
     from .errors import DlgError
@@ -220,14 +227,13 @@ def replace_dlg_entry(archive: bytes, res_path: str,
     except DlgError as exc:
         raise PackError(f"新布局无法解析，拒绝写回：{exc}") from exc
     entries = parse_archive(archive)
-    entry_id = mx_hash(res_path.encode("gbk", "replace"))
+    entry_id = mx_hash(path_bytes(res_path))
     for entry in entries:
         if entry.entry_id == entry_id:
             plain_now = unpack_packed_text(entry.stored)
             if plain_now.startswith(b"["):
                 raise PackError(f"{res_path} 不是 .dlg 条目，拒绝替换")
-            key = entry_xor_key(entry.stored)
-            entry.stored = _xor4(new_plain, key)
+            entry.stored = encode_layout(new_plain, entry_id)
             return build_archive(entries)
     raise PackError(f"包中找不到条目：{res_path}")
 
@@ -306,7 +312,7 @@ def _plan_patch(path: Path, res_path: str,
         dlg_codec.parse_bytes(new_plain)
     except DlgError as exc:
         raise PackError(f"新布局无法解析，拒绝写回：{exc}") from exc
-    entry_id = mx_hash(res_path.encode("gbk", "replace"))
+    entry_id = mx_hash(path_bytes(res_path))
     file_size, count, dir_offset, dir_data, spans, records = \
         _read_index(path)
     target = -1
@@ -328,7 +334,7 @@ def _plan_patch(path: Path, res_path: str,
         count=count, dir_offset=dir_offset, dir_data=dir_data,
         spans=spans, target=target, doff=doff, clen=clen,
         limit=_fit_limit(spans, doff, dir_offset, file_size),
-        new_stored=_xor4(new_plain, entry_xor_key(stored)))
+        new_stored=encode_layout(new_plain, entry_id))
 
 
 def _write_located(path: Path, *, count: int, dir_offset: int,
@@ -385,7 +391,7 @@ def patch_dlg_entry_in_file(pack_path, res_path: str,
     """
     path = Path(pack_path)
     plan = _plan_patch(path, res_path, new_plain)
-    entry_id = mx_hash(res_path.encode("gbk", "replace"))
+    entry_id = mx_hash(path_bytes(res_path))
     raw = _RECORD.unpack_from(
         plan.dir_data, plan.target * DIR_RECORD_SIZE)
     return _write_located(
@@ -446,13 +452,53 @@ def patch_raw_entry_in_file(pack_path, entry_id: int,
     return {"mode": "added", "target_index": pos, "bytes": size}
 
 
-def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
-                    out_path, extra_entries: dict | None = None) -> dict:
+def _create_layout_copy(src: Path, out: Path, path: str, plain: bytes,
+                        extras: dict[str, bytes]) -> dict:
+    """缺失布局按原生路径密钥写密文；其它资源仍原样存储。"""
+    layout_id = mx_hash(path_bytes(path))
+    with FlsPack(src) as pack:
+        existing = set(pack.entry_ids)
+    writes = {layout_id: encode_layout(plain, layout_id)}
+    for name, data in extras.items():
+        entry_id = mx_hash(name.encode("gbk"))
+        if entry_id in writes:
+            raise PackError("布局/附加资源路径哈希冲突")
+        writes[entry_id] = data
+    try:
+        shutil.copyfile(src, out)
+        _, _, _, _, _, records = _read_index(src)
+        if any(record[1] == 0 for record in records):
+            raise _RebuildNeeded("原目录种子需要规范化")
+        for entry_id, data in writes.items():
+            patch_raw_entry_in_file(out, entry_id, data)
+        mode = "added"
+    except _RebuildNeeded:
+        rows = parse_archive(src.read_bytes())
+        for row in rows:
+            if row.entry_id in writes:
+                row.stored = writes.pop(row.entry_id)
+        rows.extend(RawEntry(entry_id, fresh_r1(entry_id), data)
+                    for entry_id, data in writes.items())
+        out.write_bytes(build_archive(rows))
+        mode = "rebuild"
+    return {"mode": mode, "layout_added": True,
+            "images_added": [n for n in extras
+                             if mx_hash(n.encode("gbk")) not in existing],
+            "images_replaced": [n for n in extras
+                                if mx_hash(n.encode("gbk")) in existing],
+            "changed_ids": sorted({layout_id} | {
+                mx_hash(n.encode("gbk")) for n in extras
+                if mx_hash(n.encode("gbk")) in existing}),
+            "bytes": out.stat().st_size, "out": str(out)}
+
+
+def _patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
+                    out_path, extra_entries: dict | None = None,
+                    allow_create: bool = False) -> dict:
     """把 res_path 条目的新内容落到 out_path，返回补丁报告。
 
-    out 与源包不同：先整文件复制（系统级顺序拷贝）再在副本上
-    打补丁，源包一字节不动；out 就是源包本身（用户明确覆盖
-    时）：直接在原文件上打补丁，只写几 KB。校验由调用方完成。
+    内部构建器：out 必须是调用方独占的临时副本；不对外调用。
+    源包一字节不动，验证与发布由 patch_pack_copy 负责。
 
     extra_entries 为 {资源路径: 存储字节}：随布局一并写入的
     附加条目（如本次编辑新加的图片），路径已存在则替换其内容，
@@ -467,15 +513,18 @@ def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
     """
     src, out = Path(archive_path), Path(out_path)
     extras = dict(extra_entries or {})
-    try:
-        same = src.resolve() == out.resolve()
-    except OSError:
-        same = str(src) == str(out)
+    if allow_create:
+        with FlsPack(src) as pack:
+            if not pack.contains(res_path):
+                return _create_layout_copy(src, out, res_path, new_plain, extras)
     plan = _plan_patch(src, res_path, new_plain)  # 先只读侦察，失败不落盘
     src_ids = [_RECORD.unpack_from(plan.dir_data, i * DIR_RECORD_SIZE)[0]
                for i in range(plan.count)]
-    need_rebuild = any(a > b for a, b in
-                       zip(src_ids, src_ids[1:], strict=False))
+    need_rebuild = (
+        any(a > b for a, b in zip(src_ids, src_ids[1:], strict=False))
+        or any(_RECORD.unpack_from(plan.dir_data, i * DIR_RECORD_SIZE)[1] == 0
+               for i in range(plan.count))
+    )
     added: list[str] = []
     replaced: list[str] = []
 
@@ -492,9 +541,8 @@ def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
     info: dict | None = None
     if not need_rebuild:
         try:
-            if not same:
-                with open(src, "rb") as fin, open(out, "wb") as fout:
-                    shutil.copyfileobj(fin, fout, 8 * 1024 * 1024)
+            with open(src, "rb") as fin, open(out, "wb") as fout:
+                shutil.copyfileobj(fin, fout, 8 * 1024 * 1024)
             info = patch_dlg_entry_in_file(out, res_path, new_plain)
             apply_extras()
         except _RebuildNeeded:  # 病态包回退整包重组（慢，但正确）
@@ -513,6 +561,104 @@ def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
     info["bytes"] = out.stat().st_size
     info["out"] = str(out)
     return info
+
+
+def _verify_copy(src: Path, out: Path, res_path: str, new_plain: bytes,
+                 extras: dict[str, bytes]) -> None:
+    """发布前独立回读；未改条目分块逐字节比较，不以 span 相同代替。"""
+    layout_id = mx_hash(path_bytes(res_path))
+    extra_ids = {mx_hash(name.encode("gbk", "strict")): data
+                 for name, data in extras.items()}
+    if layout_id in extra_ids or len(extra_ids) != len(extras):
+        raise PackError("附加资源路径哈希冲突，拒绝写回")
+    _, _, _, _, _, records = _read_index(out)
+    if any(record[1] == 0 for record in records):
+        raise PackError("新包目录存在零校验种子")
+    with FlsPack(src) as before, FlsPack(out) as after:
+        ids = after.entry_ids
+        if len(set(ids)) != len(ids) or ids != sorted(ids):
+            raise PackError("新包条目编号重复或目录未升序")
+        if set(ids) != set(before.entry_ids) | set(extra_ids) | {layout_id}:
+            raise PackError("新包条目集合与预期不符")
+        # 独立比对负载，即使偏移/长度没变化也不能跳过。
+        with open(src, "rb") as fin, open(out, "rb") as fout:
+            for entry_id in before.entry_ids:
+                if entry_id == layout_id or entry_id in extra_ids:
+                    continue
+                old_offset, old_length = before.span_of(entry_id)
+                new_offset, new_length = after.span_of(entry_id)
+                if old_length != new_length:
+                    raise PackError(f"未改条目长度变化：{entry_id}")
+                fin.seek(old_offset)
+                fout.seek(new_offset)
+                left = old_length
+                while left:
+                    size = min(left, 1024 * 1024)
+                    if fin.read(size) != fout.read(size):
+                        raise PackError(f"未改条目负载变化：{entry_id}")
+                    left -= size
+        try:
+            native_plain = decode_native(after.read_id(layout_id), layout_id)
+        except ValueError as exc:
+            raise PackError("新布局未按原生路径密钥存储") from exc
+        if native_plain != new_plain:
+            raise PackError("新布局原生回读不一致")
+        for entry_id, data in extra_ids.items():
+            if after.read_id(entry_id) != data:
+                raise PackError(f"附加资源回读不一致：{entry_id}")
+
+
+def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
+                    out_path, extra_entries: dict | None = None,
+                    protected_paths: Iterable[str | Path] = (),
+                    allow_create: bool = False) -> dict:
+    """只生成新包：禁止源包/别名，临时副本验证后原子发布。
+
+    构建、补丁或校验失败均不改变源包和已有输出。protected_paths
+    由 GUI 传入其余已挂载资源，以防输出覆盖另一个源包。
+    allow_create 默认关闭；显式开启后仅接受预检合格的 .dlg，缺失时
+    按原生路径密钥新增/替换，已有明文或错误密钥的目标布局会迁移；
+    其它未改条目保持原字节。客户端实机仍需验收。
+    """
+    src, out = Path(archive_path), Path(out_path)
+    sources = [src, *protected_paths]
+    extras = dict(extra_entries or {})
+    tmp: Path | None = None
+    try:
+        guard_output(out, sources)
+        # Normalize input once, so already-native input is not double encrypted.
+        normalized = plain_if_layout(new_plain)
+        if normalized is None:
+            raise PackError("目标不是有效布局字面量")
+        new_plain = normalized
+        for name in extras:
+            if name.lower().endswith(".dlg"):
+                raise PackError("附加图片入口不接受.dlg；请作为目标布局保存")
+        if allow_create:
+            from .layout_import import prepare_layout_import, validate_layout_path
+
+            res_path = validate_layout_path(res_path)
+            with FlsPack(src) as pack:
+                prepare_layout_import(pack, res_path, new_plain)
+        else:
+            _plan_patch(src, res_path, new_plain)  # 输入无效时不创建输出
+        with tempfile.NamedTemporaryFile(
+            prefix=f".{out.name}.", suffix=".tmp", dir=out.parent,
+            delete=False,
+        ) as fh:
+            tmp = Path(fh.name)
+        info = _patch_pack_copy(src, res_path, new_plain, tmp, extras, allow_create)
+        _verify_copy(src, tmp, res_path, new_plain, extras)
+        guard_output(out, sources)
+        os.replace(tmp, out)
+        info["out"] = str(out)
+        info["native_layout_storage"] = True
+        return info
+    except (OSError, ValueError) as exc:
+        raise PackError(f"写入新包失败：{exc}") from exc
+    finally:
+        if tmp is not None:
+            tmp.unlink(missing_ok=True)
 
 
 def replace_dlg_entry_to_file(archive_path, res_path: str,

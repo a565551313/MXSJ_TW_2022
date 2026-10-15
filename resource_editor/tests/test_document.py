@@ -38,16 +38,18 @@ class TestDocument0Slf(unittest.TestCase):
         self.assertEqual(doc.count, 3)
         PackDocument.from_bytes(doc.build_bytes())  # 构建结果可重解析
 
-    def test_save_with_backup(self):
+    def test_save_new_copy_preserves_previous_baseline(self):
         doc = _make_0slf_doc()
         with tempfile.TemporaryDirectory() as td:
             target = Path(td) / "test.fls"
             save_document(doc, target)
             self.assertTrue(target.exists())
+            first = target.read_bytes()
             doc.replace_content(0, b"v2")
-            save_document(doc, target)
-            self.assertTrue(target.with_suffix(".fls.bak").exists())
-            reopened = PackDocument.open(target)
+            next_target = Path(td) / "next.fls"
+            save_document(doc, next_target)
+            self.assertEqual(target.read_bytes(), first)
+            reopened = PackDocument.open(next_target)
             self.assertEqual(reopened.stored(0), b"v2")
             self.assertFalse(reopened.is_modified)
 

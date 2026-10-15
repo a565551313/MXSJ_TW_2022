@@ -112,7 +112,7 @@
 - GIRB 碰撞解码仍有 300/429 扇区解不出；现在明确失败而非假成功。不要拿旧的成功率反驳字节级差异。
 - `notes/fls_path_hash_and_dlg.md` 说引擎**线性扫描**目录，而编辑器 P0 修复依据是“有序目录 / 二分寻址 + `r1≠0`”——两者尚未用反汇编统一；改目录写回逻辑前先看 `mx.exe:0x48ECF0`。
 - `GS2C_PROP_CHANGE` 与 `GS2C_NPC_CHAT_EXT` 在客户端表里同为 152（客户端自身冲突）；链路帧 `0xFF` 续读长度是 **2 字节**。
-- `script.fls` 模块导入不走路径哈希（未解）；`.dlg` 每条目 4 字节 XOR 密钥的派生公式未定位（靠固定文件头反推）。
+- `script.fls` 模块导入不走路径哈希（未解）；`.dlg` 原生路径 XOR 已由真实 LoadFile 静态链定位（见 `notes/native_dlg_path_cipher.md`）；头反推只作旧存储读取兼容，不能用于写包验证。
 - 仓库里**没有任何真实客户端抓包字节**；所有协议结论来自静态分析。
 - 反编译产物 ≠ 可回编译源码（2026-10-15 用自建 CPython 2.5.6 实测）：这批 `.pyo` 的模块码对象以 RETURN_VALUE 收尾，uncompyle6 如实还原成模块顶层一句 `return`，于是 4,998 个产物里有 3,220 个**只因这一行** `compile()` 不过（剥掉后 75.4% 可编译）。走「编辑后回编译」管线前必须先剥它，并对候选文件做一次 `compile()` 校验；第二引擎 pycdc 的产物没有这个伪影，但自身语法错误率更高（48.4% 可编译），只用于阅读与交叉印证（详见 `notes/opcode_mapping_and_decompilation.md` §4.6）。
 - 清点 `script.fls` 的反编译产物**必须扫目录**，别按 `script_entries.jsonl` 的 `current_filename` 匹配：12 个条目的包内自报文件名带位元污染（含 `\x00`/`?`/`*`），`batch_decompile` 写文件时会抛 `OSError` 而**静默零产物**；catalog 无名条目则落在 `script/unknown/`。2026-10-15 复核：所谓「26 条无产物」= 13 条清点误差 + 9 条可救 + 4 条无解。定点恢复用 `tools/decompiler/recover_entries.py`（只读复用 `batch_decompile`，它的 SHA 被 `agent_e_reproduction.json` 锁定，不要改）。

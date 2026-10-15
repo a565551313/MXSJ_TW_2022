@@ -3,9 +3,8 @@
 * ``os.pread`` 是 POSIX 专属、Windows 没有：把 ``readers._PREAD``
   置 None 强制走「加锁 seek+read」回退路径，验证定位读、流式
   拷贝与多线程并发读都正确（含会被文本模式毁坏的 0x1A/CRLF 字节）。
-* Windows 上覆盖仍被读句柄占着的文件会 PermissionError：
-  ``save_document`` 必须在替换前释放源句柄；这里验证「打开源
-  文件 → 改一条 → 存回同一路径」成功，且替换失败时文档可恢复。
+* 保存必须输出新包：Windows 上不再需要原位覆盖源包；验证
+  源包不动，新包回读正确，且原子发布失败时编辑文档仍可用。
 """
 import io
 import os
@@ -92,20 +91,21 @@ class TestSaveOverOpenSource(unittest.TestCase):
         pack.write_bytes(original)
         return pack, original
 
-    def test_save_back_to_same_path(self):
+    def test_save_to_new_path_preserves_source(self):
         with tempfile.TemporaryDirectory() as td:
             pack, original = self._make_pack(td)
             doc = PackDocument.open(pack)
             doc.replace_content(1, b"edited")
-            report = save_document(doc, pack)
+            target = Path(td) / "new.fls"
+            report = save_document(doc, target)
             self.assertTrue(report.ok, msg="; ".join(report.messages))
-            # 备份是改前字节；文档已以新文件为基线、改动清零
-            self.assertEqual(Path(td, "pack.fls.bak").read_bytes(), original)
+            # 源包不动；文档已以新文件为基线、改动清零。
+            self.assertEqual(pack.read_bytes(), original)
             self.assertFalse(doc.is_modified)
             self.assertEqual(doc.content(1), b"edited")
             self.assertEqual(doc.content(2), self.PAYLOADS[2])
             doc.close()
-            again = PackDocument.open(pack)
+            again = PackDocument.open(target)
             self.assertEqual(again.content(0), self.PAYLOADS[0])
             self.assertEqual(again.content(1), b"edited")
             again.close()
@@ -120,8 +120,10 @@ class TestSaveOverOpenSource(unittest.TestCase):
                 side_effect=PermissionError("denied"),
             ):
                 with self.assertRaises(SaveError):
-                    save_document(doc, pack)
-            # 原文件未被动过；文档已按原路径重开且编辑状态保留
+                    save_document(doc, Path(td) / "new.fls")
+            # 原文件未被动过，编辑状态保留，临时输出已清理。
+            self.assertFalse((Path(td) / "new.fls").exists())
+            self.assertEqual(list(Path(td).glob("*.tmp")), [])
             self.assertEqual(pack.read_bytes(), original)
             self.assertTrue(doc.is_modified)
             self.assertEqual(doc.content(0), self.PAYLOADS[0])

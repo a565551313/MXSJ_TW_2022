@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QListWidgetItem,
+    QMenu,
     QPushButton,
     QToolButton,
     QTreeWidget,
@@ -63,6 +64,8 @@ class ResourceTreePanel(QWidget):
     """
 
     open_pack_layout = Signal(str, str)  # (包路径, 资源路径)
+    open_pack_path = Signal(str)
+    import_pack_layout = Signal(str)    # 包根右键导入
     open_loose_file = Signal(str)        # 散装 .dlg 路径
     choose_resource_dir = Signal()
     choose_loose_dir = Signal()
@@ -85,15 +88,52 @@ class ResourceTreePanel(QWidget):
         self._search.setClearButtonEnabled(True)
         self._search.textChanged.connect(self._apply_search)
         layout.addWidget(self._search)
-        hint = QLabel("双击布局即可切换打开；多次打开只追加、不移除。"
+        hint = QLabel("双击布局即可切换打开；包节点右键可导入本地布局（待存新包）。"
                       "绿色为现役新 UI，橙色为第三代，灰色斜体为包内缺失。")
         hint.setWordWrap(True)
         layout.addWidget(hint)
         self._tree = QTreeWidget()
         self._tree.setHeaderHidden(True)
         self._tree.itemDoubleClicked.connect(self._on_double_click)
+        self._tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._tree.customContextMenuRequested.connect(self._show_context_menu)
+        self._pending_item: QTreeWidgetItem | None = None
         layout.addWidget(self._tree, 1)
         self._roots: dict[tuple[str, str], QTreeWidgetItem] = {}
+
+    def _show_context_menu(self, pos) -> None:
+        item = self._tree.itemAt(pos)
+        data = item.data(0, Qt.ItemDataRole.UserRole) if item else None
+        if not data or data[0] != "packroot":
+            return
+        menu = QMenu(self)
+        action = menu.addAction("导入布局文件…")
+        action.triggered.connect(lambda: self.import_pack_layout.emit(data[1]))
+        open_action = menu.addAction("按包内路径打开布局…")
+        open_action.triggered.connect(lambda: self.open_pack_path.emit(data[1]))
+        menu.exec(self._tree.viewport().mapToGlobal(pos))
+
+    def clear_pending(self) -> None:
+        if self._pending_item is not None:
+            root = self._pending_item.parent()
+            root.takeChild(root.indexOfChild(self._pending_item))
+            self._pending_item = None
+
+    def show_pending(self, pack_path: str, res_path: str) -> None:
+        """仅单文档待入包叶子；取消/切换时删除，不假装已在源包里。"""
+        self.clear_pending()
+        self.add_pack(pack_path, [])
+        root = self._roots[("pack", pack_path)]
+        leaf = QTreeWidgetItem([res_path + "（待入新包）"])
+        leaf.setData(0, Qt.ItemDataRole.UserRole, ("pending", pack_path, res_path))
+        leaf.setToolTip(0, "当前编辑文档，尚未写入资源包；保存只生成新包。")
+        root.addChild(leaf)
+        self._pending_item = leaf
+        self._search.clear()
+        root.setExpanded(True)
+        root.setHidden(False)
+        self._tree.scrollToItem(leaf)
+        self.reveal_selection(("pending", pack_path, res_path))
 
     # -- 根节点管理 -------------------------------------------------
     def add_pack(self, pack_path: str | Path, layouts: list[str],
@@ -128,6 +168,24 @@ class ResourceTreePanel(QWidget):
         self._tree.addTopLevelItem(root)
         root.setExpanded(False)
         self._roots[key] = root
+
+    def add_known_layout(self, pack_path: str, res_path: str) -> None:
+        """补入经包内回读验证的路径，不拆根节点，不挂幽灵叶子。"""
+        self.add_pack(pack_path, [res_path])
+        root = self._roots[("pack", pack_path)]
+        data = ("pack", pack_path, res_path)
+        for i in range(root.childCount()):
+            if root.child(i).data(0, Qt.ItemDataRole.UserRole) == data:
+                return
+        leaf = QTreeWidgetItem([res_path])
+        leaf.setData(0, Qt.ItemDataRole.UserRole, data)
+        _style_leaf(leaf, res_path)
+        root.addChild(leaf)
+        present = sum(not root.child(i).font(0).italic()
+                      and root.child(i).data(0, Qt.ItemDataRole.UserRole)[0] == "pack"
+                      for i in range(root.childCount()))
+        root.setText(0, f"{Path(pack_path).name}（{present} 个布局）")
+        self._apply_search(self._search.text())
 
     def add_loose_dir(self, dir_path: str | Path) -> None:
         """把一个散装 .dlg 目录挂到树上（只保留 .dlg 与含它的目录）。"""
@@ -207,7 +265,7 @@ class ResourceTreePanel(QWidget):
         data = item.data(0, Qt.ItemDataRole.UserRole)
         if not isinstance(data, tuple) or not data:
             return
-        if data[0] == "pack":
+        if data[0] in ("pack", "pending"):
             self.open_pack_layout.emit(data[1], data[2])
         elif data[0] == "file":
             self.open_loose_file.emit(data[1])

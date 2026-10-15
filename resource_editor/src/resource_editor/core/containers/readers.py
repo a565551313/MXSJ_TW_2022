@@ -79,9 +79,11 @@ class FileReader:
 
     def _read_some(self, size: int, offset: int) -> bytes:
         """在 offset 处至多读 size 字节（允许短读，调用方循环补齐）。"""
-        if _PREAD is not None:
-            return _PREAD(self._fd, size, offset)
         with self._lock:
+            if self._closed:
+                raise ValueError("资源包读取句柄已关闭")
+            if _PREAD is not None:
+                return _PREAD(self._fd, size, offset)
             os.lseek(self._fd, offset, os.SEEK_SET)
             return os.read(self._fd, size)
 
@@ -110,6 +112,7 @@ class FileReader:
             done += len(chunk)
 
     def close(self) -> None:
-        if not self._closed:
-            self._closed = True
-            os.close(self._fd)
+        with self._lock:
+            if not self._closed:
+                self._closed = True
+                os.close(self._fd)
