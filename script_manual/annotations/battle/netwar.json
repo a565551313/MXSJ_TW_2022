@@ -5,15 +5,18 @@
   "path": "script/netwar.py",
   "owner": "F",
   "domain": "battle",
-  "author": "F",
-  "source_status": "recovered_complete_not_original",
+  "author": "N5（2026-10-16 全新会话，承接逻辑任务包 F/battle；不冒称旧 F 会话）",
+  "source_status": "recovered_partial",
   "purpose": {
-    "text": "战斗网络消息层：客户端发送战斗操作（C2S*）与服务端下发战斗状态/指令（S2C*），负责战斗开始/回合/结束的网络编解码与主循环切换。",
+    "text": "战斗网络消息层：C2S* 把客户端战斗操作打包发出，S2C* 把服务端下发的战斗状态/指令解包成 war.CCmd(war.Xxx) 交给 war 的指令队列（入队与过滤在 war.CCmd 构造函数里）。本模块只做编解码与战斗开始/回合/结束的周边准备；队列推进、表现与结束收尾都在 war.py。",
     "confidence": "static_reviewed",
     "evidence": [
-      "start",
-      "end",
-      "turn"
+      "nw_def_S2CWarStart",
+      "nw_def_S2CWarEnd",
+      "nw_def_C2SWarPerform",
+      "war_ccmd_ref",
+      "nw_imports",
+      "catalog_self"
     ]
   },
   "keywords": [
@@ -21,6 +24,7 @@
     "网络",
     "S2C",
     "C2S",
+    "封包",
     "回合",
     "战斗开始",
     "战斗结束",
@@ -33,10 +37,10 @@
       "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "重置网络战斗模块全局：g_WarTimes/g_WarVersion/g_WarLocation。",
-        "confidence": "extracted",
+        "text": "复位本模块的三个全局：g_WarTimes=0、g_WarVersion=0、g_WarLocation=[0, 0]（函数体：global 声明 + 三次赋值，无其它副作用）。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "globals"
+          "nw_def_ModuleReset"
         ]
       },
       "calls": [],
@@ -44,279 +48,352 @@
     },
     {
       "name": "C2SWarPerform",
-      "signature": null,
+      "signature": "(id, perform)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端技能操作封包：PacketPrepare(net.C2GS_WAR_PERFORM) + PacketAddI(id,1) + PacketAddI(perform,2) + PacketSend()。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarPerform"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketAddI",
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarLook",
-      "signature": null,
+      "signature": "(id)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "查看单位封包：PacketPrepare(net.C2GS_WAR_LOOK) + PacketAddI(id,1) + PacketSend()。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarLook"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketAddI",
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarAttack",
-      "signature": null,
+      "signature": "(id)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "普攻操作封包：PacketPrepare(net.C2GS_WAR_ATTACK) + PacketAddI(id,1) + PacketSend()。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarAttack"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketAddI",
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarDefend",
-      "signature": null,
+      "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_DEFEND)，无附加字段，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarDefend"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarEscape",
-      "signature": null,
+      "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_ESCAPE)，无附加字段，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarEscape"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarItem",
-      "signature": null,
+      "signature": "(id, item)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_USE)，依次 AddI(id, 1)，AddI(item, 4)，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarItem"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketAddI",
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarSummon",
-      "signature": null,
+      "signature": "(op, id)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_SUMMON)，依次 AddI(op, 1)，AddI(id, 4)，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarSummon"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketAddI",
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarProtect",
-      "signature": null,
+      "signature": "(id)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_PROTECT)，依次 AddI(id, 1)，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarProtect"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketAddI",
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarCatch",
-      "signature": null,
+      "signature": "(id)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_CAPTURE)，依次 AddI(id, 1)，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarCatch"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketAddI",
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SChild",
-      "signature": null,
+      "signature": "(iChildID)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_SUMMONCHILD)，依次 AddI(iChildID, 4)，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SChild"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketAddI",
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2STurnEnd",
-      "signature": null,
+      "signature": "(turnNum)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端回合结束回执：PacketPrepare(net.C2GS_WAR_TURNEND) + PacketAddI(turnNum, 1) + PacketSend()。war.Turn 在非录像且非 lastcmd 时以 g_TurnCount-1 调用它。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2STurnEnd",
+          "war_turn_ref"
         ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.PacketAddI",
+        "netobj.PacketPrepare",
+        "netobj.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarSummAttack",
-      "signature": null,
+      "signature": "(id, target)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_SUMMON_ATTACK)，依次 AddI(id, 1)，AddI(target, 1)，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarSummAttack"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketAddI",
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarSummPerform",
-      "signature": null,
+      "signature": "(id, target, perform)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_SUMMON_PERFORM)，依次 AddI(target, 1)，AddI(perform, 2)，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarSummPerform"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketAddI",
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarSummGuard",
-      "signature": null,
+      "signature": "(id)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_SUMMON_DEFEND)，依次 AddI(id, 1)，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarSummGuard"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketAddI",
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarSummEscape",
-      "signature": null,
+      "signature": "(id)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_SUMMON_ESCAPE)，依次 AddI(id, 1)，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarSummEscape"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketAddI",
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarSummItem",
-      "signature": null,
+      "signature": "(id, target, item)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_SUMMON_USE)，依次 AddI(id, 1)，AddI(target, 1)，AddI(item, 4)，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarSummItem"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketAddI",
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarSummProtect",
-      "signature": null,
+      "signature": "(id, target)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_SUMMON_PROTECT)，依次 AddI(id, 1)，AddI(target, 1)，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarSummProtect"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketAddI",
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarExitWatch",
-      "signature": null,
+      "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_LEAVEWATCH)，无附加字段，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarExitWatch"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarBackCommand",
-      "signature": null,
+      "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_BACKCOMMAND)，无附加字段，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarBackCommand"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "ReduceWarTime",
-      "signature": null,
+      "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "递减全局战斗次数 g_WarTimes。",
-        "confidence": "extracted",
+        "text": "g_WarTimes -= 1（global 声明后自减，无返回值、无边界保护——负数不会被夹回 0，这是候选的字面形态，未据其推断游戏必然如此）。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "globals"
+          "nw_def_ReduceWarTime"
         ]
       },
       "calls": [],
@@ -324,13 +401,13 @@
     },
     {
       "name": "ReleaseVersion",
-      "signature": null,
+      "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "战斗版本号读写。",
-        "confidence": "inferred",
+        "text": "g_WarVersion = 0。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "globals"
+          "nw_def_ReleaseVersion"
         ]
       },
       "calls": [],
@@ -338,13 +415,13 @@
     },
     {
       "name": "GetWarVersion",
-      "signature": null,
+      "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "战斗版本号读写。",
-        "confidence": "inferred",
+        "text": "读 g_WarVersion。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "globals"
+          "nw_def_GetWarVersion"
         ]
       },
       "calls": [],
@@ -352,27 +429,29 @@
     },
     {
       "name": "SetWarLocation",
-      "signature": null,
+      "signature": "(warLocation)",
       "kind": "function",
       "summary": {
-        "text": "战斗地点坐标读写，测试地点覆盖。",
-        "confidence": "inferred",
+        "text": "写 g_WarLocation：import dlgwarlocationeditor 后取 GetTestWarLocation()，再把传入/测试地点写入全局（候选体里带测试覆盖逻辑）。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "start"
+          "nw_def_SetWarLocation"
         ]
       },
-      "calls": [],
+      "calls": [
+        "dlgwarlocationeditor.GetTestWarLocation"
+      ],
       "branches": []
     },
     {
       "name": "ReleaseWarLocation",
-      "signature": null,
+      "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "战斗地点坐标读写，测试地点覆盖。",
-        "confidence": "inferred",
+        "text": "释放/复位战斗地点记录 g_WarLocation。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "start"
+          "nw_def_ReleaseWarLocation"
         ]
       },
       "calls": [],
@@ -380,13 +459,13 @@
     },
     {
       "name": "GetWarLocation",
-      "signature": null,
+      "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "战斗地点坐标读写，测试地点覆盖。",
-        "confidence": "inferred",
+        "text": "返回 g_WarLocation（[攻方地点, 守方地点]）。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "start"
+          "nw_def_GetWarLocation"
         ]
       },
       "calls": [],
@@ -394,44 +473,85 @@
     },
     {
       "name": "S2CWarStart",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "extracted",
+        "text": "战斗开始解包 + 战前准备：ReleaseVersion/ReleaseWarLocation → warrecord.StartRecord(netobj) → g_WarTimes += 1 → 构造 war.CCmd(war.Start) 并按顺序解包 scene(+1001)/alineup/elineup/type/x/y/background/g_WarVersion/startTurn/双方地点 → SetWarLocation → 打开 net 的 SetServerCmdAbleCache(True)；随后入场动画、清场、切战斗环境、warturn.MkStartCmd、main.SetWarLoop()、war.SetProcess(war.NextCmd)，再刷新任务/时间护盾、快捷键方案、观战数据、关闭一批窗口并刷新技能图标。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "start"
+          "nw_def_S2CWarStart",
+          "n5_prov"
         ]
       },
-      "calls": [],
+      "calls": [
+        "ReleaseVersion",
+        "ReleaseWarLocation",
+        "SetWarLocation",
+        "WarStartCloseDlg",
+        "dlgnpc.CloseJuQing",
+        "dlgnpc.CloseNpcDlg",
+        "dlgwarrecord.IsWarRec",
+        "juben.IsPlayJuben",
+        "juben.StopJuBen",
+        "main.SetWarLoop",
+        "mainmenu.SwitchEnv",
+        "net.GetNet",
+        "netobj.UnpackInt",
+        "nettask.GetTaskInfo",
+        "oNetObj.SetServerCmdAbleCache",
+        "shortcut.CShortcutMgr.SetWarScheme",
+        "stackcheck.SetBeforeCall",
+        "timecontrol.CTimeControl.SetWarShield",
+        "war.CCmd",
+        "war.GetReplayWar",
+        "war.SetProcess",
+        "warenteranimation.GetWarEnterAniMgr",
+        "warobserver.ClearOldData",
+        "warrecord.StartRecord",
+        "warriorskillicon.UpdateLocalDefaultShow",
+        "warturn.MkStartCmd",
+        "warui.LoadWarriorSelect",
+        "warui.ReadDefaultMagicID"
+      ],
       "branches": [
         {
           "condition": "warenteranimation.GetWarEnterAniMgr().GetIsShowingAni()",
           "effect": {
-            "text": "战斗入场动画正在播放时直接返回，不立即启动战斗循环。",
-            "confidence": "extracted",
+            "text": "直接 return None——入场动画正在播时整段后续（含 main.SetWarLoop）都不执行",
+            "confidence": "static_reviewed",
             "evidence": [
-              "start"
+              "nw_def_S2CWarStart"
             ]
           }
         },
         {
           "condition": "bIsSureWarType and not bIsServerRecord and not bIsClientRecord",
           "effect": {
-            "text": "特定战斗类型且非录像时，设置入场动画显示状态。",
+            "text": "候选里该 if 的**条件体是 pass**（第 232 行）；第 233 行的 warenteranimation.GetWarEnterAniMgr().SetEnterAniShow(not (cmd.startTurn)) 与 if 同缩进，位于 if **之后**，在本候选中是无条件执行。真实守卫待核——pycdc 的 “空条件体 + 后续调用”形态不能当作源码原文。",
             "confidence": "inferred",
             "evidence": [
-              "start"
+              "nw_def_S2CWarStart",
+              "n5_prov"
             ]
           }
         },
         {
           "condition": "juben.IsPlayJuben()",
           "effect": {
-            "text": "若正在播放剧情，先停止剧情再进入战斗。",
-            "confidence": "extracted",
+            "text": "juben.StopJuBen()",
+            "confidence": "static_reviewed",
             "evidence": [
-              "start"
+              "nw_def_S2CWarStart"
+            ]
+          }
+        },
+        {
+          "condition": "nettask.GetTaskInfo(3501)",
+          "effect": {
+            "text": "timecontrol.CTimeControl.SetWarShield(2)",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "nw_def_S2CWarStart"
             ]
           }
         }
@@ -439,51 +559,70 @@
     },
     {
       "name": "WarStartCloseDlg",
-      "signature": null,
+      "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "战斗开始时关闭剧情/NPC/ artifact/地图等窗口。",
-        "confidence": "extracted",
+        "text": "战斗开始时关闭一批非战斗窗口：dlgnewguide.CloseWindow、dlgqunxiong.SwitchMiniDlg、dlgartifact.CloseWindow、mazemap.SwitchGameView(False)、dlgjianghu.CloseWindow。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "close"
+          "nw_def_WarStartCloseDlg"
         ]
       },
-      "calls": [],
+      "calls": [
+        "LOG",
+        "dlgartifact.CloseWindow",
+        "dlgjianghu.CloseWindow",
+        "dlgnewguide.CloseWindow",
+        "dlgqunxiong.SwitchMiniDlg",
+        "mazemap.SwitchGameView"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarMask",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "屏蔽/遮罩信息：整体委托给 warmask.S2CWarInfo(netobj)，本函数不构造 CCmd。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarMask",
+          "catalog_warmask"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "warmask.S2CWarInfo"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarOPCmd",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "运营/测试指令子包：解 iSub，iSub==1 且 permission.IsTestLastWarCmd() 时打日志并 netobj.SetServerCmdAbleCache(True)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarOPCmd"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG",
+        "netobj.SetServerCmdAbleCache",
+        "netobj.UnpackInt",
+        "permission.IsTestLastWarCmd"
+      ],
       "branches": []
     },
     {
       "name": "IsWarEnd",
-      "signature": null,
+      "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "判断当前无进行中战斗（g_WarTimes==0）。",
-        "confidence": "extracted",
+        "text": "返回 g_WarTimes == 0，即“当前没有进行中的战斗”。S2CWarEnd 用它做早退守卫。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "globals"
+          "nw_def_IsWarEnd"
         ]
       },
       "calls": [],
@@ -491,34 +630,61 @@
     },
     {
       "name": "S2CWarEnd",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "extracted",
+        "text": "战斗结束解包：早退守卫（录像在等下一段视频 → return；IsWarEnd() 为真 → return），然后 ReduceWarTime()、构造 war.CCmd(war.End)、g_Turn/g_TurnMax 调整、g_Weather=0、warrecord.EndRecord、net.g_Net.Pause(1)、timecontrol 释放战斗护盾、mazemap 恢复游戏视图、关闭 SetServerCmdAbleCache，最后按 permission.IsTestNewbieProfile() 清新手标记。**本函数不含 main.SetMainLoop()，也没有任何主循环切换**——切换发生在 war.End 内部（普通分支 main.SetMainLoop()，录像分支 main.CloseGame()）。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "end"
+          "nw_def_S2CWarEnd",
+          "n5_prov",
+          "war_end_ref"
         ]
       },
-      "calls": [],
+      "calls": [
+        "IsWarEnd",
+        "LOG",
+        "ReduceWarTime",
+        "hero.SetPlayerExtAttr",
+        "mazemap.SwitchGameView",
+        "net.GetNet",
+        "net.g_Net.Pause",
+        "oNetObj.SetServerCmdAbleCache",
+        "permission.IsTestNewbieProfile",
+        "recordvideo.GetVideoMgr",
+        "timecontrol.CTimeControl.ReleaseWarShield",
+        "war.CCmd",
+        "warrecord.EndRecord"
+      ],
       "branches": [
         {
           "condition": "recordvideo.GetVideoMgr().CheckNxtVideo()",
           "effect": {
-            "text": "若有下一个录像片段，直接返回不结束。",
-            "confidence": "extracted",
+            "text": "直接 return，不处理本次结束包",
+            "confidence": "static_reviewed",
             "evidence": [
-              "end"
+              "nw_def_S2CWarEnd"
             ]
           }
         },
         {
-          "condition": "IsWarEnd()",
+          "condition": "IsWarEnd() 为真（g_WarTimes==0）",
           "effect": {
-            "text": "当前已无战斗时直接返回。",
-            "confidence": "extracted",
+            "text": "直接 return，避免重复结束",
+            "confidence": "static_reviewed",
             "evidence": [
-              "end"
+              "nw_def_S2CWarEnd",
+              "nw_def_IsWarEnd"
+            ]
+          }
+        },
+        {
+          "condition": "permission.IsTestNewbieProfile()",
+          "effect": {
+            "text": "hero.SetPlayerExtAttr('iIsFirstWar', 0)",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "nw_def_S2CWarEnd"
             ]
           }
         }
@@ -526,44 +692,68 @@
     },
     {
       "name": "S2CWarTurn",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "extracted",
+        "text": "回合包：清技能图标、warturn.StoreTurnState()、构造 war.CCmd(war.Turn)、按 netobj.UnpackInt(1) 写 cmd.lastcmd、recordvideo 记回合数；非录像时尝试 warui.Hide()（整段包在 try/except 里，异常被吞）；g_Turn/g_TurnMax 各 +1；无英雄且魔法快捷键窗在显示时收起；触发 commoncb 回合数变化回调与预载解析；最后按 lastcmd（或测试开关）决定要不要关掉 net 的指令缓存。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "turn"
+          "nw_def_S2CWarTurn"
         ]
       },
-      "calls": [],
+      "calls": [
+        "commoncb.TriggerCB",
+        "net.GetNet",
+        "netobj.UnpackInt",
+        "oNetObj.SetServerCmdAbleCache",
+        "permission.IsTestLastWarCmd",
+        "preload_interface.StartParserCmd",
+        "recordvideo.GetVideoMgr",
+        "war.CCmd",
+        "war.GetReplayWar",
+        "warriorskillicon.ClearAllSkillIcon",
+        "warturn.StoreTurnState",
+        "warui.Hide",
+        "warui.SetMagicKeyDlgShow"
+      ],
       "branches": [
         {
           "condition": "not netobj.UnpackInt(1)",
           "effect": {
-            "text": "lastcmd=False，表示非最后指令。",
-            "confidence": "extracted",
+            "text": "cmd.lastcmd = False；否则 True",
+            "confidence": "static_reviewed",
             "evidence": [
-              "turn"
+              "nw_def_S2CWarTurn"
             ]
           }
         },
         {
           "condition": "not war.GetReplayWar()",
           "effect": {
-            "text": "非录像时隐藏战斗UI。",
-            "confidence": "extracted",
+            "text": "try 里 warui.Hide()（异常被吞）",
+            "confidence": "static_reviewed",
             "evidence": [
-              "turn"
+              "nw_def_S2CWarTurn"
             ]
           }
         },
         {
           "condition": "war.g_HeroID is None and warui.g_MagicKeyDlg",
           "effect": {
-            "text": "英雄ID未就绪时隐藏魔法快捷键对话框。",
-            "confidence": "inferred",
+            "text": "warui.SetMagicKeyDlgShow(False)",
+            "confidence": "static_reviewed",
             "evidence": [
-              "turn"
+              "nw_def_S2CWarTurn"
+            ]
+          }
+        },
+        {
+          "condition": "oNetObj 且 (not cmd.lastcmd 或 permission.IsTestLastWarCmd())",
+          "effect": {
+            "text": "oNetObj.SetServerCmdAbleCache(False)",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "nw_def_S2CWarTurn"
             ]
           }
         }
@@ -571,673 +761,1033 @@
     },
     {
       "name": "S2CChangeTimer",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.ChangeTimer)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CChangeTimer"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarAdd",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "extracted",
+        "text": "入场单位解包，是字段最多的一个包：按 g_WarVersion 决定是否先解 realid（4），再解 id(1)/shape(2)；desc 按 war.g_ReplayVer 走 1→2 字节、2→4 字节、其它→prop.UnpackDesc 并清 horse；g_WarVersion>=1 时用 oldwalkerprocess.SpecialShape 归一外形；接着解 allied/type/child（UnpackBit）、owner_id，place/cls/grade 按 g_WarVersion 与 war.g_ReplayVer / war.RECORD_VERSION 走三套不同分支；最后解 name。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "add"
+          "nw_def_S2CWarAdd"
         ]
       },
-      "calls": [],
+      "calls": [
+        "cmd.desc.copy",
+        "netobj.UnpackBit",
+        "netobj.UnpackInt",
+        "netobj.UnpackString",
+        "oldwalkerprocess.SpecialShape",
+        "prop.UnpackDesc",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarDel",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "删除单位：构造 war.CCmd(war.Delete)，解 id(1)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarDel"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarAttackNormal",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "普通攻击包：构造 war.CCmd(war.AttackNormal)，解 att_id(1)/vic_id(1)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarAttackNormal"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "GS2CWarShape",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "战斗网络消息处理函数（详见 recovered source）。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.ChgShape)，用 UnpackInt，UnpackString 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_GS2CWarShape"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "netobj.UnpackString",
+        "prop.UnpackDesc",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarAttackNormalEnd",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.AttackNormalEnd)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarAttackNormalEnd"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarAttackConverg",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.AttackConverg)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarAttackConverg"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarProtect",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.Protect)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarProtect"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarPerform",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
+        "text": "技能包：构造 war.CCmd(war.Perform)，解 id(1)/pid(2)，再按 netobj.GetCmdLen()-3 循环解 vic_ids，打印日志并 recordvideo 记特殊技能次数。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "perform"
+          "nw_def_S2CWarPerform"
         ]
       },
-      "calls": [],
+      "calls": [
+        "LOG_DEBUG",
+        "cmd.vic_ids.append",
+        "netobj.GetCmdLen",
+        "netobj.UnpackInt",
+        "recordvideo.GetVideoMgr",
+        "war.CCmd",
+        "xrange"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarWState",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.State)，用 UnpackBit，UnpackInt，UnpackSigned 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarWState"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackBit",
+        "netobj.UnpackInt",
+        "netobj.UnpackSigned",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarOtherPerform",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
+        "text": "服务端→客户端：构造 war.CCmd(war.Shield)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "perform"
+          "nw_def_S2CWarOtherPerform"
         ]
       },
-      "calls": [],
+      "calls": [
+        "LOG_DEBUG",
+        "S2CChangeDirection",
+        "S2CDelTargetLine",
+        "S2CMultiWalkTo",
+        "S2CPlayMagic",
+        "S2CServerShout",
+        "S2CShowPassWarBtn",
+        "S2CWarDecideWinnerTime",
+        "S2CWarJuben",
+        "S2CWarMPFPPercent",
+        "S2CWarNotifyExt",
+        "S2CWarPerformAtPos",
+        "S2CWarriorHpColor",
+        "S2CWarriorNameColor",
+        "S2CWarriorSwap",
+        "chatoutput.SetChatFloatType",
+        "netobj.UnpackInt",
+        "war.CCmd",
+        "war.SetHpBarShowInfo"
+      ],
       "branches": []
     },
     {
       "name": "S2CServerShout",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.ServerShout)，用 UnpackInt，UnpackPS 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CServerShout"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "netobj.UnpackPS",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CChangeDirection",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.ChangeDir)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CChangeDirection"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG_DEBUG",
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CPlayMagic",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.PlayMagicAction)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CPlayMagic"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG_DEBUG",
+        "lstObjID.append",
+        "netobj.UnpackInt",
+        "range",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CMultiWalkTo",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.WarriorMultiWalkTo)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CMultiWalkTo"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG_DEBUG",
+        "netobj.UnpackInt",
+        "war.CCmd",
+        "xrange"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarNotifyExt",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "战斗内广播提示：解 iShowType/itype/iShape/iLen/sMsg，交给 usermacro.MOVE_MSG （或特殊版且 itype 同时为 0 与 4 时的 AddItemPrpmptTips——候选里 `itype == 0 and itype == 4` 恒为假，疑为 pycdc 误拼，原样保留，未据此认定游戏行为）。文本经 wrapinterface.ReplaceChatIDLink 处理。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarNotifyExt"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG_DEBUG",
+        "netobj.UnpackInt",
+        "netobj.UnpackString",
+        "permission.GetSpecialVersion",
+        "usermacro.AddItemPrpmptTips",
+        "usermacro.MOVE_MSG",
+        "wrapinterface.ReplaceChatIDLink"
+      ],
       "branches": []
     },
     {
       "name": "S2CDelTargetLine",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.DelTargetLine)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CDelTargetLine"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG_DEBUG",
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarPerformAtPos",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.PerformAtPos)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarPerformAtPos"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG_DEBUG",
+        "cmd.vic_lst.append",
+        "magicdata.IsDestMagic",
+        "netobj.UnpackInt",
+        "range",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarJuben",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.WarJuben)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarJuben"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG_DEBUG",
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CShowPassWarBtn",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "显示“跳过战斗”按钮：warui.ShowPassWarBtn()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CShowPassWarBtn",
+          "catalog_warui"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG_DEBUG",
+        "warui.ShowPassWarBtn"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarriorSwap",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.WarriorSwap)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarriorSwap"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "range",
+        "tWapeList.append",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarriorHpColor",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.ShowWarriorHpBar)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarriorHpColor"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd",
+        "xf8"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarriorNameColor",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "单位名字染色：解 iOrder/iType，iType==1 时调 war.SetWarriorNameColor(iOrder, interface.COLOR_43)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarriorNameColor"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG_DEBUG",
+        "netobj.UnpackInt",
+        "war.SetWarriorNameColor"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarMPFP",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "法力/力道变化：解 ID/iType/value 后构造 war.CCmd(func) 并挂 cmd.id/cmd.value。候选里 `func = None if iType == 1 else war.FpChange`——iType==1 时回调是 None，与“1=MP、否则 FP”的直觉相反，疑为 pycdc 对条件表达式的误拼；原样保留，未据此认定游戏行为。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarMPFP"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarAddon",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.Addon)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarAddon"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarSpecialAddon",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.SpecialAddon)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarSpecialAddon"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarWeather",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.Weather)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarWeather"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarPlayerChat",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.PlayerChat)，用 UnpackInt，UnpackString 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarPlayerChat"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "netobj.UnpackString",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarHPPercent",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.HPPercent)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarHPPercent"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarMPFPPercent",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "法力/力道百分比（g_WarRecordInfoFunc 的 2 号子处理函数）：解包后交给 war 的 MPPercent/FPPercent 回调。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarMPFPPercent",
+          "nw_recordmap"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG",
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarDecideWinnerTime",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.OpenDecideTime)，用 UnpackPS 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarDecideWinnerTime"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "C_marshal.loads",
+        "netobj.UnpackPS",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarSummon",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.Summon)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarSummon"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarSummonCatch",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.Catch)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarSummonCatch"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarONACT",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "立即行动：把指定单位的 m_WaitingTimePercent 置 100（插到最前出手）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarONACT"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "world.GetObj"
+      ],
       "branches": []
     },
     {
       "name": "S2CBackCommand",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "回退指令：解玩家/宠物/玩家真实 ID，把双方 m_WaitingTimePercent 置 30，若该玩家是本机英雄则 warui.ShowHeroMenu()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CBackCommand",
+          "catalog_warui"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "hero.GetHeroID",
+        "netobj.UnpackInt",
+        "warui.ShowHeroMenu",
+        "world.GetObj"
+      ],
       "branches": []
     },
     {
       "name": "S2CPerformName",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.PerformName)，用 UnpackInt，UnpackString 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CPerformName"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "netobj.UnpackString",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "C2SWarSpecial",
-      "signature": null,
+      "signature": "(id, sid)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端→服务端封包：PacketPrepare(net.C2GS_WAR_SP)，依次 AddI(id, 1)，AddI(sid, 2)，最后 PacketSend()。仅按候选字面描述；协议号常量与字段长度未与真机/服务端核对，不表示发送成功。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarSpecial"
         ]
       },
-      "calls": [],
+      "calls": [
+        "net.g_Net.PacketAddI",
+        "net.g_Net.PacketPrepare",
+        "net.g_Net.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarSign",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "战斗内提示语：解字符串后 warui.OnSign(msg)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarSign",
+          "catalog_warui"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackString",
+        "warui.OnSign"
+      ],
       "branches": []
     },
     {
       "name": "C2SSendSign",
-      "signature": null,
+      "signature": "(msg)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "客户端发言封包：PacketPrepare(net.C2GS_WAR_TEAM) + PacketAddS(msg, len(msg)) + PacketSend()。协议号与长度未与真机/服务端核对。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SSendSign"
         ]
       },
-      "calls": [],
+      "calls": [
+        "len",
+        "netobj.PacketAddS",
+        "netobj.PacketPrepare",
+        "netobj.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "C2SLookWarrior",
-      "signature": null,
+      "signature": "(order)",
       "kind": "function",
       "summary": {
-        "text": "客户端向服务端发送战斗操作封包（C2GS_*），按参数打包并发送。",
-        "confidence": "inferred",
+        "text": "查看单位封包（与 C2SWarLook 同协议号 net.C2GS_WAR_LOOK）：PacketAddI(order, 1) + PacketSend()。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SLookWarrior"
         ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.PacketAddI",
+        "netobj.PacketPrepare",
+        "netobj.PacketSend"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarChildSkill",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "子女/孩子技能包：解 grade(1) 写 war.g_ChildGrade，再解 cnt 个 2 字节技能 id 填 war.g_ChildSkills；若当前激活宠物是 pet.CChild，则同步 SetProp('m_Grade') 与 UpdateSkill。它不构造 war.CCmd（不走指令队列）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarChildSkill",
+          "n5_census_all"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "isinstance",
+        "netobj.UnpackInt",
+        "ob.SetProp",
+        "ob.UpdateSkill",
+        "pet.GetActivatePet",
+        "war.g_ChildSkills.append",
+        "xrange"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarCalledPet",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "extracted",
+        "text": "召唤宠物信息：解 g_CallPetLeft / canCallChild(→warui.g_CanCallChild) / canAgainCall / calledPetNum，再按数量循环解 4 字节的宠物 id。候选体里 `canAgainCall.g_CanCallAgain = None` 把一个整数当对象赋值，而且赋值与 `warui.g_CallPets = calledPet` 一起被包进 try、`return None` 也在 try 内——这是候选的既有形态（pycdc 对异常/清理块的常见误拼），原样保留，不据此认定游戏行为。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "calledpet"
+          "nw_def_S2CWarCalledPet",
+          "n5_prov"
         ]
       },
-      "calls": [],
-      "branches": [
-        {
-          "condition": "ob and isinstance(ob, pet.CChild)",
-          "effect": {
-            "text": "激活宠物为子单位时更新等级与技能。",
-            "confidence": "extracted",
-            "evidence": [
-              "calledpet"
-            ]
-          }
-        }
-      ]
+      "calls": [
+        "calledPet.append",
+        "netobj.UnpackInt",
+        "xrange"
+      ],
+      "branches": []
     },
     {
       "name": "S2CChangeAction",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.ChgAction)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CChangeAction"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWalkTo",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "服务端→客户端：构造 war.CCmd(war.WarriorWalkTo)，用 UnpackInt 解包字段并挂到 cmd 上。入队发生在 war.CCmd 的构造函数里（带录像过滤守卫），本函数既不推进队列，也不切主循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWalkTo"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "war.CCmd"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarExtInfo",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "战斗附加信息：解 iIsVideo/iIsWatch，写入 mdwatchcompetition.GetWatchModel() 的 SetIsWarRecord / SetIsWatchWar。它也是 g_WarRecordInfoFunc 的 1 号子处理函数。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarExtInfo",
+          "nw_recordmap"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG",
+        "bool",
+        "mdwatchcompetition.GetWatchModel",
+        "netobj.UnpackInt"
+      ],
       "branches": []
     },
     {
       "name": "S2CShowSpecialWatchPanel",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "观战面板（g_WarRecordInfoFunc 的 3 号子处理函数）：解包后显示/刷新特殊观战面板。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CShowSpecialWatchPanel",
+          "nw_recordmap"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG",
+        "avatar.UnpackPhotoInt4",
+        "iAlliedIDList.append",
+        "iEnemyIDList.append",
+        "mainmenu.SwitchSpecialWatchModel",
+        "mdwatchcompetition.GetWatchModel",
+        "netobj.UnpackInt",
+        "oModel.IsWarRecord",
+        "oModel.IsWatchWar",
+        "oModel.SetWatchInfo",
+        "range",
+        "war.GetWarType",
+        "war.GetWarriorClass",
+        "war.GetWarriorGrade",
+        "war.GetWarriorPlace",
+        "war.IsAllide",
+        "warui.IsShowSpecialWatch"
+      ],
       "branches": []
     },
     {
       "name": "S2CUpdateSpecialWatchPanelPetInfo",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "观战面板宠物信息（g_WarRecordInfoFunc 的 4 号子处理函数）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CUpdateSpecialWatchPanelPetInfo",
+          "nw_recordmap"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG",
+        "mdwatchcompetition.GetWatchModel",
+        "mdwatchwar.GetModel",
+        "netobj.UnpackInt",
+        "permission.IsWatchWar"
+      ],
       "branches": []
     },
     {
       "name": "S2CUpdateSpecialWatchPanelDrugInfo",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "观战面板药品信息（g_WarRecordInfoFunc 的 5 号子处理函数）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CUpdateSpecialWatchPanelDrugInfo",
+          "nw_recordmap"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG",
+        "mdwatchcompetition.GetWatchModel",
+        "mdwatchwar.GetModel",
+        "netobj.UnpackInt",
+        "permission.IsWatchWar"
+      ],
       "branches": []
     },
     {
       "name": "S2CUpdateSpecialWatchPanelSpInfo",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "观战面板 SP 信息（g_WarRecordInfoFunc 的 6 号子处理函数）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CUpdateSpecialWatchPanelSpInfo",
+          "nw_recordmap"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "LOG",
+        "mdlcommandskilltips.GetCommandSkillTipsModel",
+        "mdwatchcompetition.GetWatchModel",
+        "mdwatchwar.GetModel",
+        "netobj.UnpackInt",
+        "permission.IsWatchWar"
+      ],
       "branches": []
     },
     {
       "name": "S2CUpdateRecordShowInfo",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "录像展示信息（g_WarRecordInfoFunc 的 7 号子处理函数）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CUpdateRecordShowInfo",
+          "nw_recordmap"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "netobj.UnpackInt",
+        "netobj.UnpackMarshal",
+        "netobj.UnpackPS",
+        "warinfo.SetWarInfo"
+      ],
       "branches": []
     },
     {
       "name": "S2CUpateRecordInfo",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "录像信息（g_WarRecordInfoFunc 的 8 号子处理函数；函数名本身在候选里就是 Upate 拼写）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CUpateRecordInfo",
+          "nw_recordmap"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "avatar.UnpackPhotoInt4",
+        "mainmenu.SwitchNewSpecialWatchModel",
+        "mdwatchwar.GetModel",
+        "netobj.UnpackInt",
+        "range",
+        "warui.IsShowSpecialWatch"
+      ],
       "branches": []
     },
     {
       "name": "S2CUpdateControlPoint",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "inferred",
-        "evidence": []
+        "text": "据点信息（g_WarRecordInfoFunc 的 9 号子处理函数）：解玩家 id 与攻/防/ obstruct，刷新 mdwatchwar 与 mdlcommandskilltips 两个模型。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CUpdateControlPoint",
+          "nw_recordmap"
+        ]
       },
-      "calls": [],
+      "calls": [
+        "mdlcommandskilltips.GetCommandSkillTipsModel",
+        "mdwatchwar.GetModel",
+        "netobj.UnpackInt"
+      ],
       "branches": []
     },
     {
       "name": "S2CWarRecordInfo",
-      "signature": null,
+      "signature": "(netobj)",
       "kind": "function",
       "summary": {
-        "text": "服务端下发战斗消息解析，构造 war.CCmd 并入战斗指令队列。",
-        "confidence": "extracted",
+        "text": "录像信息子包分发：解 iSub，用 g_WarRecordInfoFunc（定义在 1069-1078 行，1..9 映射 9 个子处理函数）取 oFunc；候选里 `if oFunc:` 的体是 pass，紧接着的 `oFunc(netobj)` 在 if **之外**——与 S2CWarStart 231-233 同类的 pycdc 形态，真实守卫待核，iSub 缺失时是否会抛异常未经任何验证。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "recordinfo"
+          "nw_def_S2CWarRecordInfo",
+          "nw_recordmap",
+          "n5_prov"
         ]
       },
-      "calls": [],
+      "calls": [
+        "LOG_DEBUG",
+        "g_WarRecordInfoFunc.get",
+        "netobj.UnpackInt",
+        "oFunc"
+      ],
       "branches": [
         {
-          "condition": "oFunc = g_WarRecordInfoFunc.get(iSub)",
+          "condition": "iSub 命中 g_WarRecordInfoFunc",
           "effect": {
-            "text": "按子类型1-9分发到对应处理函数。",
-            "confidence": "extracted",
+            "text": "候选字面：if 体为 pass，调用 oFunc(netobj) 在 if 之后；真实条件体待核",
+            "confidence": "inferred",
             "evidence": [
-              "recordinfo"
+              "nw_def_S2CWarRecordInfo",
+              "n5_prov"
             ]
           }
         }
@@ -1247,68 +1797,103 @@
   "resources": [
     {
       "kind": "module",
-      "target": "war",
+      "target": "script/core/war.py (entry 697)",
       "summary": {
-        "text": "核心战斗模块：指令队列、状态、动画。",
-        "confidence": "inferred",
+        "text": "指令队列与表现：S2C* 用 war.CCmd(war.Start/End/Turn/Add/...) 把指令交给它；S2CWarStart 还会 war.SetProcess(war.NextCmd)；war.Turn 反向调本模块的 C2STurnEnd。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "start"
+          "war_ccmd_ref",
+          "war_turn_ref",
+          "catalog_war"
         ]
       }
     },
     {
       "kind": "module",
-      "target": "net",
+      "target": "script/net.py (entry 3176)",
       "summary": {
-        "text": "网络封包发送/接收基础。",
-        "confidence": "extracted",
+        "text": "网络对象：net.g_Net.Packet*/PacketSend 与 net.GetNet()/CNet；Replay 时 war 会自建 net.CNet(0,0)。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarPerform",
+          "nw_def_S2CWarStart",
+          "catalog_net"
         ]
       }
     },
     {
       "kind": "module",
-      "target": "warturn",
+      "target": "script/recordvideo.py (entry 4356)",
       "summary": {
-        "text": "回合状态存储与跳放。",
-        "confidence": "inferred",
+        "text": "录像：S2CWarEnd 用 CheckNxtVideo() 做早退，S2CWarTurn 记回合数，S2CWarPerform 记特殊技能次数，war.Turn 还会 CRecordVideo.CheckBout。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "turn"
+          "nw_def_S2CWarEnd",
+          "nw_def_S2CWarTurn",
+          "catalog_recordvideo"
         ]
       }
     },
     {
       "kind": "module",
-      "target": "warrecord",
+      "target": "script/core/warenteranimation.py (entry 3098)",
       "summary": {
-        "text": "战斗录像记录。",
-        "confidence": "extracted",
+        "text": "入场动画：S2CWarStart 用 GetIsShowingAni() 早退、用 SHOW_ANI_WAR_TYPE 判定战斗类型，并调 SetEnterAniShow（后者在候选里位于 if 之后，见 S2CWarStart 的分支说明）。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "start",
-          "end"
+          "nw_def_S2CWarStart",
+          "catalog_warenteranimation"
         ]
       }
     },
     {
       "kind": "module",
-      "target": "warenteranimation",
+      "target": "script/dialog/dlgwarrecord.py (entry 1314)",
       "summary": {
-        "text": "战斗入场动画管理。",
-        "confidence": "extracted",
+        "text": "录像/战报界面：S2CWarStart 用 IsWarRec() 判定服务端录像分支。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "start"
+          "nw_def_S2CWarStart",
+          "catalog_dlgwarrecord"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/warrecord.py (entry 1884)",
+      "summary": {
+        "text": "录像记录：S2CWarStart 的 StartRecord 与 S2CWarEnd 的 EndRecord。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarStart",
+          "nw_def_S2CWarEnd",
+          "catalog_warrecord"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/main.py (entry 4293)",
+      "summary": {
+        "text": "主循环：本模块只在 S2CWarStart 里调 main.SetWarLoop()；**S2CWarEnd 不碰主循环**，结束时的 SetMainLoop/CloseGame 在 war.End 内部。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarStart",
+          "nw_def_S2CWarEnd",
+          "war_end_ref",
+          "catalog_main"
         ]
       }
     },
     {
       "kind": "protocol",
-      "target": "C2GS_*/S2C war messages",
+      "target": "net.C2GS_WAR_* / netobj.Unpack*",
       "summary": {
-        "text": "大量战斗协议号，详见 net 模块常量。",
-        "confidence": "inferred",
+        "text": "封包读写接口：C2S 侧是 PacketPrepare(协议常量)+PacketAddI(值, 长度)+PacketSend；S2C 侧是 netobj.UnpackInt(n)/UnpackBit(位, 宽)/UnpackSigned(n)/UnpackString(n)。协议常量与字段长度仅按候选字面记录，未与真机/服务端核对。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "c2s"
+          "nw_def_C2SWarPerform",
+          "nw_def_S2CWarAdd"
         ]
       }
     }
@@ -1329,183 +1914,807 @@
     {
       "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
       "entry_index": 1612
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3176
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4356
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1314
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3098
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1884
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 305
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1080
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 427
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3038
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4913
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2747
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 837
     }
   ],
   "modification_guides": [
     {
-      "question": "战斗开始链路在哪里？",
+      "question": "改一个战斗封包的字段顺序/长度要动哪里？",
       "answer": {
-        "text": "S2CWarStart 解析场景/布阵/类型/坐标/背景/版本/回合，切换 main 主循环为战斗循环（main.SetWarLoop），创建 Start 指令并入队。",
-        "confidence": "extracted",
-        "evidence": [
-          "start"
-        ]
-      }
-    },
-    {
-      "question": "战斗结束链路在哪里？",
-      "answer": {
-        "text": "S2CWarEnd 递减战斗次数，构造 End 指令，恢复地图视图与网络缓存。",
-        "confidence": "extracted",
-        "evidence": [
-          "end"
-        ]
-      }
-    },
-    {
-      "question": "新回合如何处理？",
-      "answer": {
-        "text": "S2CWarTurn 存储上回合状态，构造 Turn 指令，递增回合计数。",
-        "confidence": "extracted",
-        "evidence": [
-          "turn"
-        ]
-      }
-    },
-    {
-      "question": "想修改战斗网络消息字段？",
-      "answer": {
-        "text": "在对应 S2C*/C2S* 函数中调整 UnpackInt/PacketAddI 的类型与长度；协议号在 net 模块。",
-        "confidence": "inferred",
-        "evidence": [
-          "c2s",
-          "start"
-        ]
-      }
-    },
-    {
-      "question": "战斗主循环切换链路（协审 main.py）在哪里？",
-      "answer": {
-        "text": "S2CWarStart 调用 main.SetWarLoop() 将主循环切为战斗循环，并 war.SetProcess(war.NextCmd)；S2CWarEnd 后需恢复非战斗循环。本意见供 C/A 在 main.py 正文统一，F 不重复建档 main.py。",
+        "text": "C2S 侧改 netwar 里对应 C2S* 函数的 PacketPrepare/PacketAddI 序列；S2C 侧改对应 S2C* 函数的 netobj.Unpack* 序列，两者必须严格对称，否则 war 侧回调会读到错位字段。协议号与长度未与真机/服务端核对，改动必须实机验证。",
         "confidence": "static_reviewed",
         "evidence": [
-          "start",
-          "end"
+          "nw_def_C2SWarPerform",
+          "nw_def_S2CWarAdd"
+        ]
+      }
+    },
+    {
+      "question": "战斗开始/结束分别在哪里切主循环？",
+      "answer": {
+        "text": "开始：S2CWarStart 里 main.SetWarLoop()（在入场动画正在播时会提前 return 而不执行）。结束：本模块的 S2CWarEnd **不切主循环**，它只构造 war.CCmd(war.End)；真正的切换在 war.End——普通分支 main.SetMainLoop()，录像分支 main.CloseGame()。main.py 正文归属 N2。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarStart",
+          "nw_def_S2CWarEnd",
+          "war_end_ref",
+          "catalog_main"
+        ]
+      }
+    },
+    {
+      "question": "新加一个 S2C 战斗指令要动哪里？",
+      "answer": {
+        "text": "在 netwar 加 S2C* 解包函数（构造 war.CCmd(war.<回调>) 并挂字段），并在 war.py 加同名回调；回调必须最终 NextCmd() 或 SetProcess(Wait, ...)，否则队列卡死。若它是录像信息子包，还要登记进 g_WarRecordInfoFunc（1069-1078 行）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarPerform",
+          "nw_recordmap",
+          "war_ccmd_ref"
+        ]
+      }
+    },
+    {
+      "question": "录像/观战相关的守卫分别在哪？",
+      "answer": {
+        "text": "录像：S2CWarEnd 的 recordvideo.GetVideoMgr().CheckNxtVideo()；S2CWarStart 的 dlgwarrecord.IsWarRec()（服务端录像）与 war.GetReplayWar()（客户端回放）；入队过滤在 war.CCmd.__init__ 的 recordvideo.GetVideoMgr().IsFilter()。观战：permission.IsWatchWar()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarEnd",
+          "nw_def_S2CWarStart",
+          "war_ccmd_ref"
+        ]
+      }
+    },
+    {
+      "question": "战斗全局 g_WarTimes / g_WarVersion / g_WarLocation 在哪里改？",
+      "answer": {
+        "text": "三者都在本模块顶部（22-26 行）声明；复位在 ModuleReset，递减在 ReduceWarTime，判定在 IsWarEnd；g_WarVersion 由 ReleaseVersion/GetWarVersion 与 S2CWarStart 写入，g_WarLocation 由 SetWarLocation/ReleaseWarLocation/GetWarLocation 管理。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_globals",
+          "nw_def_ModuleReset",
+          "nw_def_ReduceWarTime",
+          "nw_def_IsWarEnd"
         ]
       }
     }
   ],
   "limitations": [
-    "来源为 pycdc 交叉复核恢复候选，非原始源码；uncompyle6 为 stub；语义未与原包行为对照。",
-    "仅对 S2CWarStart/S2CWarEnd/S2CWarTurn 等关键分支做了条件拆分；其余 80+ 函数仅按名称/前缀概括，calls 为空表示未整理。",
-    "真实战斗计算（伤害、命中、AI）在 war.py/warturn.py 等模块，本模块只负责网络消息编解码与战斗循环切换。",
-    "函数签名多为 null，因恢复源未提供可靠参数注解。",
-    "协审意见（交 C/A）：main.py 战斗切换链路仅确认 S2CWarStart->main.SetWarLoop 与 war.SetProcess(war.NextCmd)；完整主循环恢复/异常路径需 C 在 main.py 正文核对，F 不重复建立 main.py 正文。"
+    "**本轮 uncompyle6 对 entry 1406 依然失败**（decompile_fail，产物只有 13 行 marshal 结构摘要），因此正文证据锚在仓库内既有的 pycdc 候选上（SHA 2a050ae3…，1086 行）。source_status 由旧的 recovered_complete_not_original 下调为 recovered_partial：pycdc 产物本身语法/控制流不可靠，uncompyle6 也没有可用的第二份产物可以互校。",
+    "pycdc 候选有两类已知形态问题，本轮都原样写进分支说明、没有替它“修好”：(a) S2CWarStart 231-233：`if bIsSureWarType and not ... :` 的条件体是 pass，SetEnterAniShow 调用与 if 同缩进、在 if 之后；(b) S2CWarRecordInfo 1084-1086：`if oFunc:` 体是 pass，`oFunc(netobj)` 在 if 之外。入队/调用是否在真实守卫内无法从本候选判定，相关结论一律标 inferred 并写“真实守卫待核”。",
+    "交叉印证只做到“同一份字节码”这一层：xdis 直接读 pyc 得到 86 个顶层码对象，与 pycdc 候选的 86 个 def 名称一一对应，且全部落在模块 co_names（102 项）内；这不能证明 pycdc 反编译出的控制流与源码一致。",
+    "跨模块链：S2CWarEnd 不切主循环、war.End 普通分支 main.SetMainLoop()、录像分支 main.CloseGame()，均为静态阅读；没有运行记录，没有帧级或实机验证。main.py 正文由 N2 负责。",
+    "C2S 协议常量（net.C2GS_WAR_*）与 PacketAddI 的长度参数仅按候选字面记录，仓库里没有任何真实抓包字节，未与真机/服务端核对，不表示发送成功或服务端接受。",
+    "未逐条解释的分支/函数：观战面板系列（S2CShowSpecialWatchPanel 及其三个 Update*）、S2CUpateRecordInfo/S2CUpdateControlPoint 的字段语义、S2CWarNotifyExt/S2CWarPerformAtPos/S2CWarJuben 等多字段包只给了通用解包描述，没有逐字段语义解释。",
+    "Windows/EXE、原生引擎、实机与真实服务端均未在 N5 本轮验证；Qt GUI 因沙箱缺 libGL.so.1 未实跑。"
   ],
   "sources": [
+    {
+      "id": "n5_prov",
+      "path": "script_manual/annotations/battle/evidence/n5_provenance_20261016.txt",
+      "sha256": "47ffb39b9891bbc98ba788b26556aa979969f4a0cd2b19a6c96f9dcbc28aac15",
+      "kind": "metadata",
+      "note": "N5 本轮定点恢复回执：命令、引擎版本（Python3.11.2/u6 3.9.3/xdis 6.1.8/spark-parser 1.9.0/click 8.5.0）、输入/工具/候选/pyc 摘要、1406 的四项交叉核对、损坏标识符清单与只读边界。"
+    },
+    {
+      "id": "n5_census",
+      "path": "script_manual/annotations/battle/evidence/n5_codecensus_20261016.txt",
+      "sha256": "32bf184461de4713d94d8bcde0dadb11fadbed06827235d73628a3a0d2973ad1",
+      "kind": "metadata",
+      "note": "N5 用 xdis 6.1.8 直接读本轮 pyc 得到的码对象普查；本模块 86 个顶层函数的形参（co_varnames[:co_argcount]）即来自这里。不是源码，不含默认值与控制流。"
+    },
     {
       "id": "pycdc_netwar",
       "path": "tools/decompiler/output/script_fls_pycdc/script/netwar.py",
       "sha256": "2a050ae3a139b4e19029166377a6a60c5cd72d092f4c044427a07a56445028e0",
       "kind": "recovered_source",
-      "note": "pycdc 交叉复核产物，entry 1406，uncompyle6 stub；输入 script.fls SHA 8b6e..."
+      "note": "仓库内既有的 pycdc（Decompyle++）交叉复核候选，entry 1406，1086 行。候选头自述：生成时间 2026-10-14T23:55:56Z、输入 script.fls SHA 8b6e9266…、File: entry_1406.pyc (Python 2.5)、uncompyle6 状态=stub。对应输入 pyc：本轮独立转译得到 pyc_len=35248、pyc SHA256=bda0b10a6333db59d813c7a21174e55f057a3fe71e3a335e265cbfe32f3d6b5e（stored payload bdc4e87128b2031b…），xdis 直接读该 pyc 得到 86 个顶层码对象，与候选 86 个 def 名称一一对应。处理方法：recover_entries 只读转译 → 本次仅反编译失败、保留 marshal 摘要；正文仍引用历史 pycdc 候选。不可靠范围：候选 import 段有重复项（permission 出现两次）；存在两处“if 体为 pass、调用落在 if 之后”的控制流形态；S2CWarCalledPet 把整数当对象赋值且 return 落在 try 内；这些都不作为行为断言的依据。"
     },
     {
-      "id": "catalog_netwar",
+      "id": "war_src",
+      "path": "script_manual/annotations/battle/evidence/war_697_excerpt.txt",
+      "sha256": "92c8b8c977361a9f89ae3b5d2223df803143dca5bd2bccd879c0d11320992524",
+      "kind": "metadata",
+      "note": "entry 697 去头候选摘录；本模块只借它证明跨模块事实（war.CCmd 入队守卫、war.Turn→C2STurnEnd、war.End 的 SetMainLoop/CloseGame 落点）。"
+    },
+    {
+      "id": "catalog",
       "path": "server/docs/catalog/script_entries.jsonl",
       "sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
       "kind": "metadata",
-      "note": "历史函数名目录，entry 1406，marshal_transpiled_filename_checked，semantic_review not_reviewed。"
+      "note": "历史目录；行号 = entry_index+1，用于钉住被引模块的 entry 身份。"
     }
   ],
   "evidence": [
     {
-      "id": "imports",
-      "source_id": "pycdc_netwar",
+      "id": "n5_prov",
+      "source_id": "n5_prov",
       "start_line": 1,
-      "end_line": 27
+      "end_line": 62
     },
     {
-      "id": "globals",
+      "id": "n5_census_all",
+      "source_id": "n5_census",
+      "start_line": 8,
+      "end_line": 300
+    },
+    {
+      "id": "war_end_ref",
+      "source_id": "war_src",
+      "start_line": 1487,
+      "end_line": 1561
+    },
+    {
+      "id": "war_turn_ref",
+      "source_id": "war_src",
+      "start_line": 1406,
+      "end_line": 1465
+    },
+    {
+      "id": "war_ccmd_ref",
+      "source_id": "war_src",
+      "start_line": 233,
+      "end_line": 246
+    },
+    {
+      "id": "nw_def_ModuleReset",
       "source_id": "pycdc_netwar",
-      "start_line": 22,
-      "end_line": 26
+      "start_line": 28,
+      "end_line": 36
     },
     {
-      "id": "c2s",
+      "id": "nw_def_C2SWarPerform",
       "source_id": "pycdc_netwar",
       "start_line": 37,
+      "end_line": 43
+    },
+    {
+      "id": "nw_def_C2SWarLook",
+      "source_id": "pycdc_netwar",
+      "start_line": 44,
+      "end_line": 49
+    },
+    {
+      "id": "nw_def_C2SWarAttack",
+      "source_id": "pycdc_netwar",
+      "start_line": 50,
+      "end_line": 55
+    },
+    {
+      "id": "nw_def_C2SWarDefend",
+      "source_id": "pycdc_netwar",
+      "start_line": 56,
+      "end_line": 60
+    },
+    {
+      "id": "nw_def_C2SWarEscape",
+      "source_id": "pycdc_netwar",
+      "start_line": 61,
+      "end_line": 65
+    },
+    {
+      "id": "nw_def_C2SWarItem",
+      "source_id": "pycdc_netwar",
+      "start_line": 66,
+      "end_line": 72
+    },
+    {
+      "id": "nw_def_C2SWarSummon",
+      "source_id": "pycdc_netwar",
+      "start_line": 73,
+      "end_line": 81
+    },
+    {
+      "id": "nw_def_C2SWarProtect",
+      "source_id": "pycdc_netwar",
+      "start_line": 82,
+      "end_line": 87
+    },
+    {
+      "id": "nw_def_C2SWarCatch",
+      "source_id": "pycdc_netwar",
+      "start_line": 88,
+      "end_line": 93
+    },
+    {
+      "id": "nw_def_C2SChild",
+      "source_id": "pycdc_netwar",
+      "start_line": 94,
+      "end_line": 99
+    },
+    {
+      "id": "nw_def_C2STurnEnd",
+      "source_id": "pycdc_netwar",
+      "start_line": 100,
+      "end_line": 106
+    },
+    {
+      "id": "nw_def_C2SWarSummAttack",
+      "source_id": "pycdc_netwar",
+      "start_line": 107,
+      "end_line": 113
+    },
+    {
+      "id": "nw_def_C2SWarSummPerform",
+      "source_id": "pycdc_netwar",
+      "start_line": 114,
+      "end_line": 120
+    },
+    {
+      "id": "nw_def_C2SWarSummGuard",
+      "source_id": "pycdc_netwar",
+      "start_line": 121,
+      "end_line": 126
+    },
+    {
+      "id": "nw_def_C2SWarSummEscape",
+      "source_id": "pycdc_netwar",
+      "start_line": 127,
+      "end_line": 132
+    },
+    {
+      "id": "nw_def_C2SWarSummItem",
+      "source_id": "pycdc_netwar",
+      "start_line": 133,
+      "end_line": 140
+    },
+    {
+      "id": "nw_def_C2SWarSummProtect",
+      "source_id": "pycdc_netwar",
+      "start_line": 141,
+      "end_line": 147
+    },
+    {
+      "id": "nw_def_C2SWarExitWatch",
+      "source_id": "pycdc_netwar",
+      "start_line": 148,
+      "end_line": 152
+    },
+    {
+      "id": "nw_def_C2SWarBackCommand",
+      "source_id": "pycdc_netwar",
+      "start_line": 153,
       "end_line": 157
     },
     {
-      "id": "start",
+      "id": "nw_def_ReduceWarTime",
+      "source_id": "pycdc_netwar",
+      "start_line": 158,
+      "end_line": 162
+    },
+    {
+      "id": "nw_def_ReleaseVersion",
+      "source_id": "pycdc_netwar",
+      "start_line": 163,
+      "end_line": 167
+    },
+    {
+      "id": "nw_def_GetWarVersion",
+      "source_id": "pycdc_netwar",
+      "start_line": 168,
+      "end_line": 171
+    },
+    {
+      "id": "nw_def_SetWarLocation",
+      "source_id": "pycdc_netwar",
+      "start_line": 172,
+      "end_line": 183
+    },
+    {
+      "id": "nw_def_ReleaseWarLocation",
+      "source_id": "pycdc_netwar",
+      "start_line": 184,
+      "end_line": 190
+    },
+    {
+      "id": "nw_def_GetWarLocation",
+      "source_id": "pycdc_netwar",
+      "start_line": 191,
+      "end_line": 194
+    },
+    {
+      "id": "nw_def_S2CWarStart",
       "source_id": "pycdc_netwar",
       "start_line": 195,
       "end_line": 272
     },
     {
-      "id": "close",
+      "id": "nw_def_WarStartCloseDlg",
       "source_id": "pycdc_netwar",
       "start_line": 273,
       "end_line": 286
     },
     {
-      "id": "end",
+      "id": "nw_def_S2CWarMask",
+      "source_id": "pycdc_netwar",
+      "start_line": 287,
+      "end_line": 291
+    },
+    {
+      "id": "nw_def_S2CWarOPCmd",
+      "source_id": "pycdc_netwar",
+      "start_line": 292,
+      "end_line": 302
+    },
+    {
+      "id": "nw_def_IsWarEnd",
+      "source_id": "pycdc_netwar",
+      "start_line": 303,
+      "end_line": 306
+    },
+    {
+      "id": "nw_def_S2CWarEnd",
       "source_id": "pycdc_netwar",
       "start_line": 307,
       "end_line": 336
     },
     {
-      "id": "turn",
+      "id": "nw_def_S2CWarTurn",
       "source_id": "pycdc_netwar",
       "start_line": 337,
       "end_line": 374
     },
     {
-      "id": "add",
+      "id": "nw_def_S2CChangeTimer",
+      "source_id": "pycdc_netwar",
+      "start_line": 375,
+      "end_line": 381
+    },
+    {
+      "id": "nw_def_S2CWarAdd",
       "source_id": "pycdc_netwar",
       "start_line": 382,
       "end_line": 427
     },
     {
-      "id": "perform",
+      "id": "nw_def_S2CWarDel",
+      "source_id": "pycdc_netwar",
+      "start_line": 428,
+      "end_line": 433
+    },
+    {
+      "id": "nw_def_S2CWarAttackNormal",
+      "source_id": "pycdc_netwar",
+      "start_line": 434,
+      "end_line": 440
+    },
+    {
+      "id": "nw_def_GS2CWarShape",
+      "source_id": "pycdc_netwar",
+      "start_line": 441,
+      "end_line": 455
+    },
+    {
+      "id": "nw_def_S2CWarAttackNormalEnd",
+      "source_id": "pycdc_netwar",
+      "start_line": 456,
+      "end_line": 461
+    },
+    {
+      "id": "nw_def_S2CWarAttackConverg",
+      "source_id": "pycdc_netwar",
+      "start_line": 462,
+      "end_line": 468
+    },
+    {
+      "id": "nw_def_S2CWarProtect",
+      "source_id": "pycdc_netwar",
+      "start_line": 469,
+      "end_line": 475
+    },
+    {
+      "id": "nw_def_S2CWarPerform",
       "source_id": "pycdc_netwar",
       "start_line": 476,
+      "end_line": 487
+    },
+    {
+      "id": "nw_def_S2CWarWState",
+      "source_id": "pycdc_netwar",
+      "start_line": 488,
+      "end_line": 499
+    },
+    {
+      "id": "nw_def_S2CWarOtherPerform",
+      "source_id": "pycdc_netwar",
+      "start_line": 500,
       "end_line": 555
     },
     {
-      "id": "calledpet",
+      "id": "nw_def_S2CServerShout",
+      "source_id": "pycdc_netwar",
+      "start_line": 556,
+      "end_line": 562
+    },
+    {
+      "id": "nw_def_S2CChangeDirection",
+      "source_id": "pycdc_netwar",
+      "start_line": 563,
+      "end_line": 571
+    },
+    {
+      "id": "nw_def_S2CPlayMagic",
+      "source_id": "pycdc_netwar",
+      "start_line": 572,
+      "end_line": 582
+    },
+    {
+      "id": "nw_def_S2CMultiWalkTo",
+      "source_id": "pycdc_netwar",
+      "start_line": 583,
+      "end_line": 595
+    },
+    {
+      "id": "nw_def_S2CWarNotifyExt",
+      "source_id": "pycdc_netwar",
+      "start_line": 596,
+      "end_line": 618
+    },
+    {
+      "id": "nw_def_S2CDelTargetLine",
+      "source_id": "pycdc_netwar",
+      "start_line": 619,
+      "end_line": 625
+    },
+    {
+      "id": "nw_def_S2CWarPerformAtPos",
+      "source_id": "pycdc_netwar",
+      "start_line": 626,
+      "end_line": 652
+    },
+    {
+      "id": "nw_def_S2CWarJuben",
+      "source_id": "pycdc_netwar",
+      "start_line": 653,
+      "end_line": 659
+    },
+    {
+      "id": "nw_def_S2CShowPassWarBtn",
+      "source_id": "pycdc_netwar",
+      "start_line": 660,
+      "end_line": 665
+    },
+    {
+      "id": "nw_def_S2CWarriorSwap",
+      "source_id": "pycdc_netwar",
+      "start_line": 666,
+      "end_line": 680
+    },
+    {
+      "id": "nw_def_S2CWarriorHpColor",
+      "source_id": "pycdc_netwar",
+      "start_line": 681,
+      "end_line": 693
+    },
+    {
+      "id": "nw_def_S2CWarriorNameColor",
+      "source_id": "pycdc_netwar",
+      "start_line": 694,
+      "end_line": 706
+    },
+    {
+      "id": "nw_def_S2CWarMPFP",
+      "source_id": "pycdc_netwar",
+      "start_line": 707,
+      "end_line": 717
+    },
+    {
+      "id": "nw_def_S2CWarAddon",
+      "source_id": "pycdc_netwar",
+      "start_line": 718,
+      "end_line": 727
+    },
+    {
+      "id": "nw_def_S2CWarSpecialAddon",
+      "source_id": "pycdc_netwar",
+      "start_line": 728,
+      "end_line": 736
+    },
+    {
+      "id": "nw_def_S2CWarWeather",
+      "source_id": "pycdc_netwar",
+      "start_line": 737,
+      "end_line": 743
+    },
+    {
+      "id": "nw_def_S2CWarPlayerChat",
+      "source_id": "pycdc_netwar",
+      "start_line": 744,
+      "end_line": 754
+    },
+    {
+      "id": "nw_def_S2CWarHPPercent",
+      "source_id": "pycdc_netwar",
+      "start_line": 755,
+      "end_line": 761
+    },
+    {
+      "id": "nw_def_S2CWarMPFPPercent",
+      "source_id": "pycdc_netwar",
+      "start_line": 762,
+      "end_line": 772
+    },
+    {
+      "id": "nw_def_S2CWarDecideWinnerTime",
+      "source_id": "pycdc_netwar",
+      "start_line": 773,
+      "end_line": 780
+    },
+    {
+      "id": "nw_def_S2CWarSummon",
+      "source_id": "pycdc_netwar",
+      "start_line": 781,
+      "end_line": 787
+    },
+    {
+      "id": "nw_def_S2CWarSummonCatch",
+      "source_id": "pycdc_netwar",
+      "start_line": 788,
+      "end_line": 795
+    },
+    {
+      "id": "nw_def_S2CWarONACT",
+      "source_id": "pycdc_netwar",
+      "start_line": 796,
+      "end_line": 804
+    },
+    {
+      "id": "nw_def_S2CBackCommand",
+      "source_id": "pycdc_netwar",
+      "start_line": 805,
+      "end_line": 824
+    },
+    {
+      "id": "nw_def_S2CPerformName",
+      "source_id": "pycdc_netwar",
+      "start_line": 825,
+      "end_line": 833
+    },
+    {
+      "id": "nw_def_C2SWarSpecial",
+      "source_id": "pycdc_netwar",
+      "start_line": 834,
+      "end_line": 840
+    },
+    {
+      "id": "nw_def_S2CWarSign",
+      "source_id": "pycdc_netwar",
+      "start_line": 841,
+      "end_line": 847
+    },
+    {
+      "id": "nw_def_C2SSendSign",
+      "source_id": "pycdc_netwar",
+      "start_line": 848,
+      "end_line": 855
+    },
+    {
+      "id": "nw_def_C2SLookWarrior",
+      "source_id": "pycdc_netwar",
+      "start_line": 856,
+      "end_line": 863
+    },
+    {
+      "id": "nw_def_S2CWarChildSkill",
+      "source_id": "pycdc_netwar",
+      "start_line": 864,
+      "end_line": 880
+    },
+    {
+      "id": "nw_def_S2CWarCalledPet",
       "source_id": "pycdc_netwar",
       "start_line": 881,
       "end_line": 899
     },
     {
-      "id": "recordinfo",
+      "id": "nw_def_S2CChangeAction",
+      "source_id": "pycdc_netwar",
+      "start_line": 900,
+      "end_line": 906
+    },
+    {
+      "id": "nw_def_S2CWalkTo",
+      "source_id": "pycdc_netwar",
+      "start_line": 907,
+      "end_line": 913
+    },
+    {
+      "id": "nw_def_S2CWarExtInfo",
+      "source_id": "pycdc_netwar",
+      "start_line": 914,
+      "end_line": 922
+    },
+    {
+      "id": "nw_def_S2CShowSpecialWatchPanel",
+      "source_id": "pycdc_netwar",
+      "start_line": 923,
+      "end_line": 987
+    },
+    {
+      "id": "nw_def_S2CUpdateSpecialWatchPanelPetInfo",
+      "source_id": "pycdc_netwar",
+      "start_line": 988,
+      "end_line": 999
+    },
+    {
+      "id": "nw_def_S2CUpdateSpecialWatchPanelDrugInfo",
+      "source_id": "pycdc_netwar",
+      "start_line": 1000,
+      "end_line": 1011
+    },
+    {
+      "id": "nw_def_S2CUpdateSpecialWatchPanelSpInfo",
+      "source_id": "pycdc_netwar",
+      "start_line": 1012,
+      "end_line": 1023
+    },
+    {
+      "id": "nw_def_S2CUpdateRecordShowInfo",
+      "source_id": "pycdc_netwar",
+      "start_line": 1024,
+      "end_line": 1032
+    },
+    {
+      "id": "nw_def_S2CUpateRecordInfo",
+      "source_id": "pycdc_netwar",
+      "start_line": 1033,
+      "end_line": 1060
+    },
+    {
+      "id": "nw_def_S2CUpdateControlPoint",
+      "source_id": "pycdc_netwar",
+      "start_line": 1061,
+      "end_line": 1079
+    },
+    {
+      "id": "nw_def_S2CWarRecordInfo",
       "source_id": "pycdc_netwar",
       "start_line": 1080,
       "end_line": 1086
+    },
+    {
+      "id": "nw_imports",
+      "source_id": "pycdc_netwar",
+      "start_line": 9,
+      "end_line": 21
+    },
+    {
+      "id": "nw_globals",
+      "source_id": "pycdc_netwar",
+      "start_line": 22,
+      "end_line": 26
+    },
+    {
+      "id": "nw_recordmap",
+      "source_id": "pycdc_netwar",
+      "start_line": 1069,
+      "end_line": 1078
+    },
+    {
+      "id": "catalog_self",
+      "source_id": "catalog",
+      "start_line": 1407,
+      "end_line": 1407
+    },
+    {
+      "id": "catalog_war",
+      "source_id": "catalog",
+      "start_line": 698,
+      "end_line": 698
+    },
+    {
+      "id": "catalog_recordvideo",
+      "source_id": "catalog",
+      "start_line": 4357,
+      "end_line": 4357
+    },
+    {
+      "id": "catalog_dlgwarrecord",
+      "source_id": "catalog",
+      "start_line": 1315,
+      "end_line": 1315
+    },
+    {
+      "id": "catalog_warenteranimation",
+      "source_id": "catalog",
+      "start_line": 3099,
+      "end_line": 3099
+    },
+    {
+      "id": "catalog_warrecord",
+      "source_id": "catalog",
+      "start_line": 1885,
+      "end_line": 1885
+    },
+    {
+      "id": "catalog_main",
+      "source_id": "catalog",
+      "start_line": 4294,
+      "end_line": 4294
+    },
+    {
+      "id": "catalog_net",
+      "source_id": "catalog",
+      "start_line": 3177,
+      "end_line": 3177
+    },
+    {
+      "id": "catalog_warui",
+      "source_id": "catalog",
+      "start_line": 1081,
+      "end_line": 1081
+    },
+    {
+      "id": "catalog_warmask",
+      "source_id": "catalog",
+      "start_line": 428,
+      "end_line": 428
     }
   ],
   "relationships": [
     {
-      "direction": "upstream",
-      "kind": "imports",
+      "direction": "downstream",
+      "kind": "calls",
       "module": {
         "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
         "entry_index": 697
       },
-      "symbol": "war",
+      "symbol": "war.CCmd / war.Start / war.End / war.Turn / war.Add / war.SetProcess",
       "summary": {
-        "text": "导入 war 模块，调用 war.CCmd/war.Start 等战斗指令与状态。",
-        "confidence": "extracted",
+        "text": "S2C* 解包后构造 war.CCmd(war.X)；S2CWarStart 额外调 war.SetProcess(war.NextCmd)。入队与录像过滤都由 war.CCmd.__init__ 完成。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "start"
-        ]
-      }
-    },
-    {
-      "direction": "upstream",
-      "kind": "imports",
-      "module": {
-        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
-        "entry_index": 4293
-      },
-      "symbol": "main",
-      "summary": {
-        "text": "S2CWarStart 调用 main.SetWarLoop() 切换主循环为战斗循环。",
-        "confidence": "extracted",
-        "evidence": [
-          "start"
+          "nw_def_S2CWarStart",
+          "nw_def_S2CWarEnd",
+          "war_ccmd_ref"
         ]
       }
     },
@@ -1516,12 +2725,80 @@
         "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
         "entry_index": 4293
       },
-      "symbol": "main.SetWarLoop",
+      "symbol": "SetWarLoop",
       "summary": {
-        "text": "战斗开始时切换主循环。",
-        "confidence": "extracted",
+        "text": "只有 S2CWarStart 调 main.SetWarLoop()；S2CWarEnd **不**调 main 的任何循环切换，结束切换在 war.End（普通 SetMainLoop / 录像 CloseGame）。",
+        "confidence": "static_reviewed",
         "evidence": [
-          "start"
+          "nw_def_S2CWarStart",
+          "nw_def_S2CWarEnd",
+          "war_end_ref",
+          "catalog_main"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 697
+      },
+      "symbol": "war.Turn → netwar.C2STurnEnd",
+      "summary": {
+        "text": "war.Turn 在非录像且非 lastcmd 时以 g_TurnCount-1 调回本模块发回合结束回执。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "war_turn_ref",
+          "nw_def_C2STurnEnd"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4356
+      },
+      "symbol": "GetVideoMgr().CheckNxtVideo / AddTurnNum / AddSpecialSkillCnt",
+      "summary": {
+        "text": "录像侧的早退守卫与计数；真正的入队过滤在 war.CCmd 里（IsFilter）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarEnd",
+          "nw_def_S2CWarTurn",
+          "catalog_recordvideo"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "data_flow",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3098
+      },
+      "symbol": "GetWarEnterAniMgr / SHOW_ANI_WAR_TYPE",
+      "summary": {
+        "text": "入场动画早退守卫与战斗类型判定；SetEnterAniShow 的位置歧义见 S2CWarStart 分支说明。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "nw_def_S2CWarStart",
+          "catalog_warenteranimation"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "message",
+      "module": null,
+      "symbol": null,
+      "summary": {
+        "text": "S2C* 的调用方是客户端原生网络分发层（net 模块内部按协议号分派），候选里看不到注册表，本轮没有解成确定调用，留空待核。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_prov"
         ]
       }
     }
