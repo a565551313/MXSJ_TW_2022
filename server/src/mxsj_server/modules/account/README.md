@@ -1,6 +1,6 @@
 # 账号与认证（`account`）
 
-状态：**v0.1 接口草案 / 无业务实现**。负责人：待分配，不代表需要独立一个人。
+状态：**最小开发闭环已实现（SQLite/JSON-lines 原型）**。这不是生产 PostgreSQL 适配或原版客户端协议实现。
 
 ## 独占负责范围
 
@@ -36,7 +36,8 @@
 ## 实现入口与验收
 
 - `contracts.py`：类型化公开接口；**新设计的内部 API，不是原版网络协议**。
-- `validation.py`：登录请求的输入形状校验；不验证密码、不签发票据、不实现限流/封禁/持久化。接入层必须先限流并限制帧大小，之后才能调用认证用例。
+- `validation.py`：登录请求的输入形状校验。
+- `../../application/game_loop.py`：开发原型的注册、PBKDF2 密码校验、短期票据、会话代数和 SQLite 持久化；仅由 loopback JSON-lines 入口使用。尚无速率限制/封禁/生产 PostgreSQL 适配，不能直接公网部署。
 - `application/`：命令处理、认证授权、幂等、事务与跨模块协调。
 - `domain/`：业务规则和状态，不依赖 TCP、FastAPI、SQLAlchemy。
 - `adapters/`：数据库和其他外部系统适配。
