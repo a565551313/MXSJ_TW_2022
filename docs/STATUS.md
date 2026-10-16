@@ -1,6 +1,6 @@
 # 项目当前状态（STATUS）
 
-> **服务端独立工作分支（2026-10-17）**：`agent/server-login-foundation-20261017` 从 `master` 建立。首个小切片新增 `contracts/validation.py` 的 RequestContext 形状校验和 10 个针对性单元测试；只校验上下文结构，不代表身份认证、角色归属、授权或会话 fencing 已实现。文件已提交，**尚未在本环境执行测试**，需 CI/本地复跑确认；不合并 master。代码链接：[validation.py](../server/src/mxsj_server/contracts/validation.py)、[test_context_validation.py](../server/tests/architecture/test_context_validation.py)。
+> **服务端独立工作分支进度（2026-10-17）**：`agent/server-login-foundation-20261017` 从 `master` 独立推进。当前提交包含 `contracts/validation.py` 的 RequestContext 形状校验、`modules/account/validation.py` 的 LoginRequest 输入形状校验，以及对应的 10 项上下文测试和 6 项登录输入测试；更新账号模块 README。校验不等于认证/授权：尚无密码验证、票据签发/撤销、限流、会话权威、角色归属或数据库事务实现。**本轮没有可用的仓库执行环境，测试尚未实际运行；GitHub Actions/状态检查当前无结果。** 草稿 PR [#47](https://github.com/a565551313/MXSJ_TW_2022/pull/47)，未合并 master。代码：[上下文校验](../server/src/mxsj_server/contracts/validation.py)、[登录输入校验](../server/src/mxsj_server/modules/account/validation.py)、[上下文测试](../server/tests/architecture/test_context_validation.py)、[登录测试](../server/tests/modules/account/test_validation.py)。
 
 > **N5二轮已核（2026-10-16）**：原PR44更新至6fd5061，原三项P2（ID/Release/Timer）均闭合；另有一处战斗指南须限定非终止回调（B-N5-04），同一候选war.End不走NextCmd/Wait就是反例。已评论N5并同步N7，小修后按新head末审，勿继续说原三项未修。未merge/未正式激活，正式仍5135/20/3/1。详§3.50及[二轮报告](evidence/script_manual_N5_6fd5061_A_review_20261016.md)。
 
