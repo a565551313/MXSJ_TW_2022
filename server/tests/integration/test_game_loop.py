@@ -72,6 +72,20 @@ class GameLoopIntegrationTests(unittest.TestCase):
             self.service.create_character(self.ticket, 1, "same-op", "Bob")
         self.assertEqual(raised.exception.code, "CONFLICT")
 
+    def test_duplicate_character_name_returns_conflict(self) -> None:
+        self.service.create_character(self.ticket, 1, "name-op-1", "Alice")
+        with self.assertRaises(DomainError) as raised:
+            self.service.create_character(self.ticket, 1, "name-op-2", "Alice")
+        self.assertEqual(raised.exception.code, "CONFLICT")
+
+    def test_reentering_map_preserves_character_position_and_instance(self) -> None:
+        character = self.service.create_character(self.ticket, 1, "map-op", "Alice")
+        self.service.select_character(self.ticket, 1, character.character_id)
+        first = self.service.enter_map(self.ticket, 1)
+        second = self.service.enter_map(self.ticket, 1)
+        self.assertEqual(first.map_instance_id, second.map_instance_id)
+        self.assertEqual((first.x, first.y), (second.x, second.y))
+
     def test_cannot_select_another_accounts_character(self) -> None:
         other = self.service.register("player_2", "another-correct-password")
         other_login = self.service.login(other["account_name"], "another-correct-password", 1)
