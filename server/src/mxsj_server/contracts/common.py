@@ -1,4 +1,4 @@
-"""共享内部契约 v0.1；不是客户端报文，尚无运行时校验实现。"""
+"""共享内部契约 v0.1；不是客户端报文。边界形状校验见 validation.py。"""
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
