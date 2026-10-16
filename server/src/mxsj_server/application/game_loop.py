@@ -14,6 +14,7 @@ import re
 import secrets
 import sqlite3
 import time
+from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -93,7 +94,7 @@ class GameLoopService:
     def _initialize(self) -> None:
         migration = Path(__file__).resolve().parents[3] / "migrations" / "0001_playable_loop.sql"
         schema = migration.read_text(encoding="utf-8")
-        with self._connect() as connection:
+        with closing(self._connect()) as connection:
             connection.executescript(schema)
             connection.execute(
                 "INSERT OR IGNORE INTO realms(realm_id, name, status) VALUES(1, '开发区', 'online')"
@@ -180,7 +181,7 @@ class GameLoopService:
                 "ON CONFLICT(realm_id, account_id) DO UPDATE SET ticket_hash=excluded.ticket_hash, "
                 "session_epoch=excluded.session_epoch, expires_at_ms=excluded.expires_at_ms, "
                 "selected_character_id=NULL, updated_at_ms=excluded.updated_at_ms",
-                (realm.realm_id, int(account["account_id"]), ticket_hash, epoch, expires_at, None if False else _now_ms()),
+                (realm.realm_id, int(account["account_id"]), ticket_hash, epoch, expires_at, _now_ms()),
             )
             connection.commit()
         return {
