@@ -1,0 +1,338 @@
+{
+  "kind": "N1 auxiliary machine report (not an annotation; not loaded by the manual)",
+  "harness": {
+    "path": "script_manual/inventory/n1_replay_audit.py",
+    "sha256": "81bf9f470b80cf430df0a8c075a3ce90e699337c698e95d3f12e8e4be09c6d5e",
+    "python": "3.11.2"
+  },
+  "extractor_sha256_in_repository": "e12addfbed390638d850e0bba2e8116e518528f875f5a7d26091e19e35ec8c11",
+  "work_directory_outside_repository": true,
+  "trees": [
+    {
+      "tree": "tree1",
+      "frozen_seed": {
+        "commit": "cc5c1bad7a806078794eca1ab7482230a18ef9d5",
+        "sha256": "de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b",
+        "rows": 20,
+        "identities_equal_tasks_json": true,
+        "all_historical": true
+      },
+      "tree_inputs_sha256": {
+        "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "data/data.fls": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+        "server/docs/catalog/script_entries.jsonl": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+        "script_manual/coordination/tasks.json": "9d658e62ad12cb85f9b71965ebf248b9527d830c20a41a2e471143370283d1b9",
+        "script_manual/inventory/extract_inventory.py": "e12addfbed390638d850e0bba2e8116e518528f875f5a7d26091e19e35ec8c11"
+      },
+      "prior_sample_regression_present": false,
+      "runs": [
+        {
+          "mode": "--sample",
+          "child_exit_code": 0,
+          "extractor_stdout": [
+            "script: {'signatures': 115953, 'kind_function': 28822, 'structurally_read': 4950, 'functions_total': 125973, 'kind_class': 9730, 'kind_method': 87421, 'parent_bytecode_undecodable': 1986, 'signature_rejected_non_identifier_parameter': 186, 'signature_unavailable': 71, 'kind_fallback': 1668, 'signature_kwargs_only': 53, 'suspect_names': 231, 'historical': 37, 'signature_rejected_compiler_internal_slot': 33, 'fallback_rejected_control_chars': 4, 'unreadable': 14, 'excluded_by_policy': 1} failures=51",
+            "sample written: <work>/tree1/script_manual/inventory/sample_regression.json all_paths=True",
+            "seed_source: {'modules_jsonl_sha256_at_read': 'de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b', 'frozen_seed_commit': 'cc5c1bad7a806078794eca1ab7482230a18ef9d5', 'frozen_seed_sha256': 'de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b', 'is_frozen_seed_file': True, 'historical_seed_rows_in_modules_jsonl': 20, 'seed_paths_from_prior_sample_regression': 0, 'task_identities': 20}"
+          ],
+          "stderr_tail": [],
+          "audit": {
+            "mode": "--sample",
+            "extractor_exit_code": 0,
+            "elapsed_seconds": 14.7,
+            "python": "3.11.2",
+            "extractor_sha256": "e12addfbed390638d850e0bba2e8116e518528f875f5a7d26091e19e35ec8c11",
+            "pinned_inputs_sha256": {
+              "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+              "data/data.fls": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+              "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+            },
+            "pinned_inputs_unchanged_after": true,
+            "script_read_stored_calls": 10002,
+            "script_read_stored_distinct_entries": 5001,
+            "script_read_stored_entry_1288": 0,
+            "data_read_stored_calls": 0,
+            "data_read_stored_distinct_entries": 0,
+            "read_at_calls_by_archive_and_caller": {
+              "script.fls:fingerprint": 24,
+              "script.fls:index": 3,
+              "script.fls:read_stored": 10002
+            },
+            "entry_1288_directory_span": {
+              "offset": 3460344,
+              "length": 5661
+            },
+            "script_read_at_overlapping_1288_span_by_caller": {
+              "fingerprint": 1
+            },
+            "passed": true
+          }
+        },
+        {
+          "mode": "--full",
+          "child_exit_code": 0,
+          "extractor_stdout": [
+            "script: {'signatures': 115953, 'kind_function': 28822, 'structurally_read': 4950, 'functions_total': 125973, 'kind_class': 9730, 'kind_method': 87421, 'parent_bytecode_undecodable': 1986, 'signature_rejected_non_identifier_parameter': 186, 'signature_unavailable': 71, 'kind_fallback': 1668, 'signature_kwargs_only': 53, 'suspect_names': 231, 'historical': 37, 'signature_rejected_compiler_internal_slot': 33, 'fallback_rejected_control_chars': 4, 'unreadable': 14, 'excluded_by_policy': 1} failures=51",
+            "data: {'directory': 12, 'embedded_filename_match': 121, 'signatures': 2176, 'kind_function': 997, 'structurally_read': 121, 'functions_total': 2409, 'kind_class': 218, 'kind_method': 1194, 'signature_rejected_compiler_internal_slot': 15, 'signature_kwargs_only': 17, 'suspect_names': 10} failures=0",
+            "inventory written: <work>/tree1/script_manual/inventory/modules.jsonl rows=5135",
+            "receipt written: <work>/tree1/script_manual/inventory/B_extraction_receipt.json"
+          ],
+          "stderr_tail": [],
+          "audit": {
+            "mode": "--full",
+            "extractor_exit_code": 0,
+            "elapsed_seconds": 15.6,
+            "python": "3.11.2",
+            "extractor_sha256": "e12addfbed390638d850e0bba2e8116e518528f875f5a7d26091e19e35ec8c11",
+            "pinned_inputs_sha256": {
+              "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+              "data/data.fls": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+              "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+            },
+            "pinned_inputs_unchanged_after": true,
+            "script_read_stored_calls": 10002,
+            "script_read_stored_distinct_entries": 5001,
+            "script_read_stored_entry_1288": 0,
+            "data_read_stored_calls": 121,
+            "data_read_stored_distinct_entries": 121,
+            "read_at_calls_by_archive_and_caller": {
+              "data.fls:fingerprint": 1,
+              "data.fls:index": 137,
+              "data.fls:read_stored": 121,
+              "script.fls:fingerprint": 24,
+              "script.fls:index": 3,
+              "script.fls:read_stored": 10002
+            },
+            "entry_1288_directory_span": {
+              "offset": 3460344,
+              "length": 5661
+            },
+            "script_read_at_overlapping_1288_span_by_caller": {
+              "fingerprint": 1
+            },
+            "passed": true
+          }
+        }
+      ],
+      "outputs_sha256": {
+        "modules.jsonl": "266a7834765bb6b106d7c9e25261c2751277808d0b4d4be12bfbd142638ebf5c",
+        "sample_regression.json": "d179e1586151e1ffadd0a3016a4822bceb67a842da83aaf9bc16c48639b96051",
+        "B_extraction_receipt.json": "2ce69d3afeefcf37cef488e99d7f9b44274047cfceab677b512b22a7243504aa"
+      }
+    },
+    {
+      "tree": "tree2",
+      "frozen_seed": {
+        "commit": "cc5c1bad7a806078794eca1ab7482230a18ef9d5",
+        "sha256": "de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b",
+        "rows": 20,
+        "identities_equal_tasks_json": true,
+        "all_historical": true
+      },
+      "tree_inputs_sha256": {
+        "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "data/data.fls": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+        "server/docs/catalog/script_entries.jsonl": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+        "script_manual/coordination/tasks.json": "9d658e62ad12cb85f9b71965ebf248b9527d830c20a41a2e471143370283d1b9",
+        "script_manual/inventory/extract_inventory.py": "e12addfbed390638d850e0bba2e8116e518528f875f5a7d26091e19e35ec8c11"
+      },
+      "prior_sample_regression_present": false,
+      "runs": [
+        {
+          "mode": "--sample",
+          "child_exit_code": 0,
+          "extractor_stdout": [
+            "script: {'signatures': 115953, 'kind_function': 28822, 'structurally_read': 4950, 'functions_total': 125973, 'kind_class': 9730, 'kind_method': 87421, 'parent_bytecode_undecodable': 1986, 'signature_rejected_non_identifier_parameter': 186, 'signature_unavailable': 71, 'kind_fallback': 1668, 'signature_kwargs_only': 53, 'suspect_names': 231, 'historical': 37, 'signature_rejected_compiler_internal_slot': 33, 'fallback_rejected_control_chars': 4, 'unreadable': 14, 'excluded_by_policy': 1} failures=51",
+            "sample written: <work>/tree2/script_manual/inventory/sample_regression.json all_paths=True",
+            "seed_source: {'modules_jsonl_sha256_at_read': 'de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b', 'frozen_seed_commit': 'cc5c1bad7a806078794eca1ab7482230a18ef9d5', 'frozen_seed_sha256': 'de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b', 'is_frozen_seed_file': True, 'historical_seed_rows_in_modules_jsonl': 20, 'seed_paths_from_prior_sample_regression': 0, 'task_identities': 20}"
+          ],
+          "stderr_tail": [],
+          "audit": {
+            "mode": "--sample",
+            "extractor_exit_code": 0,
+            "elapsed_seconds": 13.3,
+            "python": "3.11.2",
+            "extractor_sha256": "e12addfbed390638d850e0bba2e8116e518528f875f5a7d26091e19e35ec8c11",
+            "pinned_inputs_sha256": {
+              "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+              "data/data.fls": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+              "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+            },
+            "pinned_inputs_unchanged_after": true,
+            "script_read_stored_calls": 10002,
+            "script_read_stored_distinct_entries": 5001,
+            "script_read_stored_entry_1288": 0,
+            "data_read_stored_calls": 0,
+            "data_read_stored_distinct_entries": 0,
+            "read_at_calls_by_archive_and_caller": {
+              "script.fls:fingerprint": 24,
+              "script.fls:index": 3,
+              "script.fls:read_stored": 10002
+            },
+            "entry_1288_directory_span": {
+              "offset": 3460344,
+              "length": 5661
+            },
+            "script_read_at_overlapping_1288_span_by_caller": {
+              "fingerprint": 1
+            },
+            "passed": true
+          }
+        },
+        {
+          "mode": "--full",
+          "child_exit_code": 0,
+          "extractor_stdout": [
+            "script: {'signatures': 115953, 'kind_function': 28822, 'structurally_read': 4950, 'functions_total': 125973, 'kind_class': 9730, 'kind_method': 87421, 'parent_bytecode_undecodable': 1986, 'signature_rejected_non_identifier_parameter': 186, 'signature_unavailable': 71, 'kind_fallback': 1668, 'signature_kwargs_only': 53, 'suspect_names': 231, 'historical': 37, 'signature_rejected_compiler_internal_slot': 33, 'fallback_rejected_control_chars': 4, 'unreadable': 14, 'excluded_by_policy': 1} failures=51",
+            "data: {'directory': 12, 'embedded_filename_match': 121, 'signatures': 2176, 'kind_function': 997, 'structurally_read': 121, 'functions_total': 2409, 'kind_class': 218, 'kind_method': 1194, 'signature_rejected_compiler_internal_slot': 15, 'signature_kwargs_only': 17, 'suspect_names': 10} failures=0",
+            "inventory written: <work>/tree2/script_manual/inventory/modules.jsonl rows=5135",
+            "receipt written: <work>/tree2/script_manual/inventory/B_extraction_receipt.json"
+          ],
+          "stderr_tail": [],
+          "audit": {
+            "mode": "--full",
+            "extractor_exit_code": 0,
+            "elapsed_seconds": 14.7,
+            "python": "3.11.2",
+            "extractor_sha256": "e12addfbed390638d850e0bba2e8116e518528f875f5a7d26091e19e35ec8c11",
+            "pinned_inputs_sha256": {
+              "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+              "data/data.fls": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+              "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+            },
+            "pinned_inputs_unchanged_after": true,
+            "script_read_stored_calls": 10002,
+            "script_read_stored_distinct_entries": 5001,
+            "script_read_stored_entry_1288": 0,
+            "data_read_stored_calls": 121,
+            "data_read_stored_distinct_entries": 121,
+            "read_at_calls_by_archive_and_caller": {
+              "data.fls:fingerprint": 1,
+              "data.fls:index": 137,
+              "data.fls:read_stored": 121,
+              "script.fls:fingerprint": 24,
+              "script.fls:index": 3,
+              "script.fls:read_stored": 10002
+            },
+            "entry_1288_directory_span": {
+              "offset": 3460344,
+              "length": 5661
+            },
+            "script_read_at_overlapping_1288_span_by_caller": {
+              "fingerprint": 1
+            },
+            "passed": true
+          }
+        }
+      ],
+      "outputs_sha256": {
+        "modules.jsonl": "266a7834765bb6b106d7c9e25261c2751277808d0b4d4be12bfbd142638ebf5c",
+        "sample_regression.json": "d179e1586151e1ffadd0a3016a4822bceb67a842da83aaf9bc16c48639b96051",
+        "B_extraction_receipt.json": "2ce69d3afeefcf37cef488e99d7f9b44274047cfceab677b512b22a7243504aa"
+      }
+    }
+  ],
+  "all_runs_passed": true,
+  "outputs_identical_across_trees": true,
+  "delivered_outputs_sha256": {
+    "modules.jsonl": "266a7834765bb6b106d7c9e25261c2751277808d0b4d4be12bfbd142638ebf5c",
+    "sample_regression.json": "d179e1586151e1ffadd0a3016a4822bceb67a842da83aaf9bc16c48639b96051",
+    "B_extraction_receipt.json": "2ce69d3afeefcf37cef488e99d7f9b44274047cfceab677b512b22a7243504aa"
+  },
+  "delivered_equal_replay": true,
+  "baseline_ref": "9b0dea799768aaacbb967ffc59f45753970752be",
+  "baseline_modules_jsonl_sha256": "35203710d79acd08b080e9d08fa1357ea9f8c29464a64eeb1a34aa27e36a9efd",
+  "inventory_diff_vs_baseline": {
+    "rows_old": 5135,
+    "rows_new": 5135,
+    "identities_equal_in_order": true,
+    "row_field_changes": {
+      "path": 0,
+      "vm": 0,
+      "path_status": 0,
+      "function_count": 0,
+      "function_name_or_kind": 0
+    },
+    "function_records_old": 128382,
+    "function_records_new": 128382,
+    "signature_changes": {
+      "unchanged": 128078,
+      "non_identifier_to_null": 186,
+      "bare_star_removed": 70,
+      "internal_slot_to_null": 48
+    },
+    "signature_change_examples": {
+      "non_identifier_to_null": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 13,
+          "name": "CPageXiulian.__init__",
+          "old": "(self, pSkillM24:cDlg)",
+          "new": null
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 68,
+          "name": "GetPathByTwoPoint",
+          "old": "(tStartP& '=, tEndPoint, lPath)",
+          "new": null
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 108,
+          "name": "CRecordDelegate.OnHelp",
+          "old": "(self, iPlayer%()",
+          "new": null
+        }
+      ],
+      "bare_star_removed": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 30,
+          "name": "CAccountMgr.GetUrl",
+          "old": "(self, path, *, **dct)",
+          "new": "(self, path, **dct)"
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 30,
+          "name": "C2980Mgr.GetUrl",
+          "old": "(self, path, *, **dct)",
+          "new": "(self, path, **dct)"
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 70,
+          "name": "dump",
+          "old": "(obj, fp, skipkeys, ensure_ascii, check_circular, allow_nan, cls, indent, separators, encoding, default, use_decimal, namedtuple_as_object, tuple_as_array, bigint_as_string, sort_keys, item_sort_key, for_json, ignore_nan, int_as_string_bitcount, iterable_as_array, *, **kw)",
+          "new": "(obj, fp, skipkeys, ensure_ascii, check_circular, allow_nan, cls, indent, separators, encoding, default, use_decimal, namedtuple_as_object, tuple_as_array, bigint_as_string, sort_keys, item_sort_key, for_json, ignore_nan, int_as_string_bitcount, iterable_as_array, **kw)"
+        }
+      ],
+      "internal_slot_to_null": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 233,
+          "name": "getmoduleinfo.<lambda>",
+          "old": "(.0)",
+          "new": null
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 233,
+          "name": "BlockFinder.tokeneater",
+          "old": "(self, type, token, .3, .4, line)",
+          "new": null
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 248,
+          "name": "CMakeDialog.OnEnter.<genexpr>",
+          "old": "(.0)",
+          "new": null
+        }
+      ]
+    }
+  },
+  "interpretation": "read_stored is the only per-entry payload read; overlap of the entry 1288 span only by fingerprint means its bytes were hashed as part of the whole-archive SHA-256, never targeted, inflated, decrypted or parsed"
+}
