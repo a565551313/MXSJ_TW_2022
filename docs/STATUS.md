@@ -1233,6 +1233,47 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
 - 回归：A当前数据、仓库外E覆盖、仓库外C+E同时覆盖，均78/78、零跳过、11真实Qt offscreen。旧夹具E副本复现75项：58通过/3失败/3错误/11GUI跳过，不能说75实过；旧失败/错误主要为夹具/数量耦合。新单元绿灯不消除C的.py ruff问题或C/E事实问题。A ruff显式含spec 0、wincompat 0/0/0（58文件/26源码脚本）、bootstrap自检0、当前来源复验0。Windows/EXE/游戏未验；此前Linux打包缺宿主libpython的边界不变。
 - 持久证据：`docs/evidence/script_manual_E_ec97941_A_review_20261015.md`与`script_manual_0.1.0_dev2_validation_20261015.json`。E需小修再交A/H，C仍按§3.41修订；二者均未并入正式数据，现行预览也不冒充已集成。
 
+
+<!-- 以下保留master并行工作记录；章节编号为各工作线原有历史编号。 -->
+
+### 3.30 固定版本全量语料重建与网盘归档（2026-10-15）
+
+本轮仅语料和证据；分支 `arena/4803041b-mxsj-tw-2022`，输入基线固定
+`8212b26e359a693db5513e1bf0d0c6a5139336ba`，不跟随浮动 master。
+原包 `8b6e9266…`、原参数表 `43bb090d…` 前后未变；工具完整 SHA 为
+`a74742231e04c018c3f63452cfc859c20c6404fd73891eae9076bfcf8185b4e8`。
+与文档/旧 manifest 的 `242543f8…` 差异实算定位到 `45d5590` → `26b7a087`
+（引擎护栏、路径解析、失败标记及清点）；用户确认采用当前固定版本新重建，
+**不宣称逐字节复现旧 79 MB，不修改旧 manifest**。
+
+- 5002 条全部登记，1288 在读 payload 前排除，只有 `excluded_by_policy` 记录；
+  实际范围 5001，标准 pyc 4997。原包只读，无目标 import/exec。
+- 先交 10 条代表样例，再补 entry 82 真双引擎失败，随后每批 50 条、2 worker；
+  转译 120 秒、双引擎各 30 秒独立进程组隔离，stdout/stderr 原字节完整留存。
+- 最终 audited 清单：有源码形状候选的独立 entry **4973**，双引擎重复候选 entry
+  **4780**；完整标记 **4916** / 部分 **57** / 失败 **28** / 排除 **1**。
+  entry 聚合超时 0，但 uncompyle6 单引擎超时 4（另一引擎产出）；不隐去超时记录。
+- uncompyle6：4445 完整标记 / 347 部分 / 201 失败 / 4 超时；
+  pycdc：4834 / 127 / 36 / 0。真实 CPython 2.5.6 / 2.7.18 原样语法通过的独立
+  entry 为 3756 / 3757，处理候选为 3806 / 4062；**都不是语义正确率**。
+  raw 未做历史 Big5 字面量后处理，不与旧编译计数直接比较。
+- Python 3.11.2、uncompyle6 3.9.3、xdis 6.1.8、pycdc 固定提交
+  `b4289760970dbc399684f1e155ec6d1ea1cc787e`，实际依赖/编译器/源码 SHA 均归档。
+  仓库外驱动与修复参数、验证、版本差异、命令均留档；原工具、编辑器、启动器、注册脚本未改。
+- 测试：原工具 66/66、隔离驱动 7/7、诊断-only 清点复核 4/4。
+  最终用 `full/manifest.audited.jsonl`，主键 `(archive_sha256, entry_index)`；
+  原始 runner 清单保留。仅 parser/opcode 诊断不计源码；候选形状仍是启发式，非语义验收。
+- 归档前核验 179531 个引用产物指纹；归档后从 ZIP 读取 185048 文件逐个 SHA 校验，
+  10 卷 CRC 均通过；上传回执大小与 MD5 全部匹配。10 个独立 ZIP 共 152769019 B，
+  全部解压同一空目录，不需拼接；不含原始游戏包/原参数表，**分享权限未改**。
+
+持久交付入口（10 卷下载、完整 SHA、统计、样例和编辑器对接契约）：
+[网盘交付索引](https://drive.google.com/file/d/1nIUskEGc1pkECGZIi3ZqUB8exmv8Zgrm/view)；
+[归档 SHA256 清单](https://drive.google.com/file/d/1FLksxEL5ZbXzH0LTz2U63wfjk0Keuve6/view)；
+[上传核对回执](https://drive.google.com/file/d/1lMhOi7wCgtOYC45XTVO0QvgzZKqdwEyF/view)。
+沙箱当前根目录 `/home/user/mxsj-corpus-20261015`；生成物未进 Git，不依赖沙箱存活。
+编辑器集成和语义/原生验收仍属于另一工作线，本轮没有开展。
+
 ## 4. 等待外部输入
 
 | 事项 | 等谁 | 阻塞什么 |
