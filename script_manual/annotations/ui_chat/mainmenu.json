@@ -5,7 +5,7 @@
   "path": "script/mainmenu.py",
   "owner": "D",
   "domain": "ui_chat",
-  "author": "D",
+  "author": "N3（全新会话；逻辑任务包 D / ui_chat，非旧 D 会话）",
   "source_status": "recovered_partial",
   "purpose": {
     "text": "主界面组合与兼容门面：候选中CMainMenu继承interface.CPanel，组装聊天输入、右下按钮栏、人物/召唤兽/地图及任务追踪组件，处理显示、战斗/观战/庭院模式、目标框和快捷键消息桥接。具体业务由组件/信号委托处理，不是interface公共控件层，也不是所有菜单功能的唯一实现。",
@@ -35,11 +35,13 @@
       "signature": "(s)",
       "kind": "function",
       "summary": {
-        "text": "s为假时清空g_MainMenu并返回；为真且未创建时在interface.MainPanel上创建CMainMenu并Recall待处理回调。随后按加载状态安排聊天窗口，并调用战斗快捷栏、日历、UI样式和计时相关入口；不等于这些业务都实现于本模块。",
+        "text": "s为假时清空g_MainMenu并返回；为真且未创建时（elif g_MainMenu is None）在interface.MainPanel上创建CMainMenu（L158），随后调用Recall()（L159）回放此前PushCall排队的回调。此处只确认调用发生：Recall候选的推导式形态使“待处理回调逐个被执行”待核，不能据此断言排队回调一定生效（见Recall条）。随后按加载状态安排聊天窗口，并调用战斗快捷栏、日历、UI样式和计时相关入口；不等于这些业务都实现于本模块。",
         "confidence": "static_reviewed",
         "evidence": [
           "menu_show",
-          "menu_deferred"
+          "menu_deferred",
+          "d1_recall_body",
+          "d1_deferred_callers"
         ]
       },
       "calls": [
@@ -64,10 +66,11 @@
         {
           "condition": "s and g_MainMenu is None",
           "effect": {
-            "text": "创建CMainMenu(interface.MainPanel)后调用Recall。",
+            "text": "创建CMainMenu(interface.MainPanel)（L158）后调用Recall()（L159）。只确认这一调用，Recall内逐个回调是否成功执行待核。",
             "confidence": "static_reviewed",
             "evidence": [
-              "menu_show"
+              "menu_show",
+              "d1_deferred_callers"
             ]
           }
         },
@@ -428,15 +431,37 @@
       "signature": "(func, *args)",
       "kind": "function",
       "summary": {
-        "text": "主界面存在立即调用外部传入func；不存在则把(func,args)存入_g_Callback，Recall逐个调用后清队列。func动态目标不固定。",
+        "text": "候选L377-L385本体只有两句可执行语句：_g_Callback.append((func, args))（L384）后return（L385），即**无条件**把(func,args)追加进模块级队列_g_Callback（L8初值[]）。函数内没有g_MainMenu判断、没有对func的直接调用、也没有任何控制流关键字——机器核对这三项在L377..L385的命中计数均为0，因此不能给它补出“主界面存在就立即执行func、否则排队”的分支（这正是D1要纠正的失真）。“存在就立即做、不存在才排队”的分支其实属于**调用者**：本候选内ShowGmBtn在if g_MainMenu走dlggm.ShowGMButtonDlg、else才PushCall(ShowGmBtn, bShow)（L461-L465）；OnPlayerMailNotify先commoncb.TriggerCB，再if not g_MainMenu才PushCall(OnPlayerMailNotify, bNotify)（L1221-L1223）。两处都把**自身**作为func入队，队列元素形如(本模块函数, 1元参数元组)。func的动态目标不在本函数内固定，回放由Recall负责且其成败待核。",
         "confidence": "static_reviewed",
         "evidence": [
+          "d1_pushcall_body",
+          "d1_reproduce",
+          "d1_deferred_callers",
+          "d1_callback_refs",
           "menu_deferred"
         ]
       },
       "calls": [
-        "func"
+        "_g_Callback.append"
       ],
+      "branches": []
+    },
+    {
+      "name": "Recall",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "候选L1277-L1285声明的流程：global _g_Callback（L1278）；cl = [_[1] for x in _g_Callback]（L1279）；for (cb, args) in cl: print cb, args; cb(*args)（L1280-L1282）；随后**无条件**_g_Callback = []清队列（L1284）并return（L1285）。本条只登记候选声明的字面形态，没有把候选修好再当原文，也没有按历史实现补逻辑。已核异常：L1279推导式的循环变量是x，而表达式取的是_[1]，两者不对应；整份1288行候选里裸名_只出现这一次（命中1行=L1279），且_ = …/for _ in …/import … as _ 三种绑定形态命中均为0，所以cl不保证取得队列里的(func,args)对，紧随的for (cb, args) in cl解包也就不保证逐个回调正常完成。清队列（L1284）在for之后同一函数体内，字面上无论回放是否成功都会执行。唯一调用点是L159，在Show(s)的elif g_MainMenu is None分支里、L158创建CMainMenu之后；队列另在ModuleReset（L11/L14）被清空。运行期究竟抛NameError/ValueError、还是能正常回放、或该行本属转译器伪影（decompile_ok不证明语义正确），一律**待核**：本工作包无原生/实机手段，不写成已确认实机bug，也不写成已确认能正常执行。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "d1_recall_body",
+          "d1_underscore_scan",
+          "d1_callback_refs",
+          "d1_deferred_callers",
+          "menu_deferred"
+        ]
+      },
+      "calls": [],
       "branches": []
     },
     {
@@ -692,9 +717,12 @@
       "module": null,
       "symbol": null,
       "summary": {
-        "text": "PushCall/Recall中的func来自调用者，运行期具体对象未知；不能依据func变量名补出调用目标。",
-        "confidence": "inferred",
+        "text": "PushCall入队的func是动态目标，PushCall本体不调用它；Recall回放时才执行cb(*args)。entry 219候选内可静态确认的PushCall调用点只有两处，且都把本模块自身函数入队：ShowGmBtn（L465）与OnPlayerMailNotify（L1223）。其他条目是否import mainmenu后调用PushCall，本工作包未做跨条目全量检索，属未知；不能依据func变量名补出调用目标，也不能把“未检索”写成“不存在”。",
+        "confidence": "static_reviewed",
         "evidence": [
+          "d1_deferred_callers",
+          "d1_pushcall_body",
+          "d1_recall_body",
           "menu_deferred"
         ]
       }
@@ -755,18 +783,36 @@
           "support_btn_delegate"
         ]
       }
+    },
+    {
+      "question": "PushCall/Recall这套延迟回调要改，应该动哪里？",
+      "answer": {
+        "text": "先分层，别改错地方。（1）排队入口PushCall本体（候选L377-L385）只是无条件_g_Callback.append((func,args))，里面没有主界面判断、没有func直接调用、没有任何分支，所以“立即执行还是排队”的开关不在这里，要去**调用者**改：本候选内是ShowGmBtn的if g_MainMenu / else（L461-L465）和OnPlayerMailNotify的if not g_MainMenu（L1222-L1223）。（2）回放侧在Recall（L1277-L1285），由Show(s)的elif g_MainMenu is None分支在创建CMainMenu后调用一次（L159）；队列另在ModuleReset（L11/L14）被清空，模块级初值在L8。（3）改Recall前必须注意L1279的cl = [_[1] for x in _g_Callback]变量不对应、裸名_在候选内无绑定，逐个回调能否正常执行待核——不要把修好的版本当成原文语义，也不要据手册断言实机行为。（4）跨条目调用者未检索，改PushCall签名或队列元素形状前需先全量检索调用方并实机回归。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "d1_pushcall_body",
+          "d1_recall_body",
+          "d1_deferred_callers",
+          "d1_callback_refs",
+          "d1_underscore_scan",
+          "d1_reproduce",
+          "d1_scope"
+        ]
+      }
     }
   ],
   "limitations": [
     "219候选L305含损坏的import标识符，虽引擎报decompile_ok仍标recovered_partial；没有擅自按历史catalog修名，不能拿本稿回编。",
     "未展开CheckIdle/CheckBan的全部周期与网络语义、所有邮件/观战/庭院/目标弹出菜单项；构造会注册周期检测，禁止为手册运行构造函数。",
-    "20/21之后delegatechatinput的具体执行者、PushCall传入目标、slot/commoncb内部调度、资源实际可用性和状态依赖未确认；未知不等于不存在。",
+    "20/21之后delegatechatinput的具体执行者、slot/commoncb内部调度、资源实际可用性和状态依赖未确认；延迟回调侧：PushCall在entry 219候选内只有ShowGmBtn(L465)/OnPlayerMailNotify(L1223)两个调用点，跨条目调用者未检索，Recall回放的运行期成败未验。未知不等于不存在。",
     "只解释列出的重点函数/分支，不是全模块穷尽清单；calls是候选中的静态符号线索，空列表不代表没有调用。",
     "来源是固定包本轮定点转译/恢复候选，而非原始源码；报告中保留候选全文SHA和原行号。转译器的baseline/decompile_ok不证明严格可逆、语法或行为正确。",
     "从仓库外完整候选制作有限metadata审阅报告；JSON的sources.sha256及证据行号绑定报告原字节，不伪称验证了外置全文语义。完整候选未搬入Git；复现方法和各SHA见provenance.txt。",
     "没有实机/Windows/游戏/真实网络验证，所有runtime_verified数量为0；未导入/执行恢复稿，未修改游戏包、编辑器、启动器；1288排除且未读其payload。",
     "仅适用archive_sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72；不能外推注册派生包、PR34清单或其他引擎候选。",
-    "未自行审核通过；交H逐份独立审核、A集成。部分协审模块不在20条种子inventory中，关联身份可核但导航会警告；只由B/A补目录，不在本工作包改总表。"
+    "未自行审核通过；交H逐份独立审核、A集成。部分协审模块不在20条种子inventory中，关联身份可核但导航会警告；只由B/A补目录，不在本工作包改总表。",
+    "Recall候选L1279的cl = [_[1] for x in _g_Callback]循环变量与表达式不对应，裸名_在1288行候选内只此一次出现且无任何绑定；本轮只登记字面异常，未修候选、未判定实机是否抛异常，也未排除它是转译器伪影。不把“未发现”写成“不存在”，也不把候选缺陷写成已验收的实机bug。",
+    "D1相关新证据只放在N3新增的mainmenu_d1_deferred.txt（只供mainmenu.json引用）；interface(3854)/key(3232)/chatoutput(4832)三份已有限通过JSON共用的provenance.txt、support.txt、mainmenu.txt、chatoutput.txt、interface.txt、key.txt、validation.txt字节一律未改，以免那三份已激活审核意外变stale。mainmenu.json自身因本轮修订而SHA变化、旧审核转stale是预期结果，交N7对新SHA复核。"
   ],
   "sources": [
     {
@@ -789,6 +835,13 @@
       "sha256": "f7896042c8b14af9303ff523e61b468f6fe0daadee124f9ea13bdbfce21ba1d9",
       "kind": "metadata",
       "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    },
+    {
+      "id": "report_mainmenu_d1",
+      "path": "script_manual/annotations/ui_chat/evidence/mainmenu_d1_deferred.txt",
+      "sha256": "dc43e5560cb5aee6d06987b1d505f564e2b1ba81e2056f4826dda1ffd7cfe504",
+      "kind": "metadata",
+      "note": "N3为修复D1新增的**主菜单专用**小证据，只被mainmenu.json引用。含entry 219候选的独立复现回执、PushCall/Recall完整函数体原样摘录、裸名_与_g_Callback的全量扫描计数、PushCall/Recall在候选内的全部调用点及所在函数。复现产物去头恰好6行恢复头后与D原报告钉的候选SHA256 e03d31ac8deaab37766addcab9e2a1a63dd1b3c223e977cfe3f427b80df05bfd（42790字节/1288行）逐字节相同；未为凑旧摘要扩大去头或忽略范围，原始落盘产物SHA也一并登记。刻意不改provenance.txt/support.txt/mainmenu.txt/chatoutput.txt/interface.txt/key.txt/validation.txt任何字节，因为它们被已在A有限通过的interface(3854)/key(3232)/chatoutput(4832)以SHA共同引用。完整候选留仓库外，未搬入Git；未import/eval/exec恢复稿，未读1288负载。"
     }
   ],
   "evidence": [
@@ -893,6 +946,48 @@
       "source_id": "report_support",
       "start_line": 47,
       "end_line": 124
+    },
+    {
+      "id": "d1_callback_refs",
+      "source_id": "report_mainmenu_d1",
+      "start_line": 96,
+      "end_line": 106
+    },
+    {
+      "id": "d1_deferred_callers",
+      "source_id": "report_mainmenu_d1",
+      "start_line": 108,
+      "end_line": 163
+    },
+    {
+      "id": "d1_pushcall_body",
+      "source_id": "report_mainmenu_d1",
+      "start_line": 39,
+      "end_line": 64
+    },
+    {
+      "id": "d1_recall_body",
+      "source_id": "report_mainmenu_d1",
+      "start_line": 66,
+      "end_line": 84
+    },
+    {
+      "id": "d1_reproduce",
+      "source_id": "report_mainmenu_d1",
+      "start_line": 19,
+      "end_line": 37
+    },
+    {
+      "id": "d1_scope",
+      "source_id": "report_mainmenu_d1",
+      "start_line": 165,
+      "end_line": 171
+    },
+    {
+      "id": "d1_underscore_scan",
+      "source_id": "report_mainmenu_d1",
+      "start_line": 86,
+      "end_line": 94
     }
   ]
 }
