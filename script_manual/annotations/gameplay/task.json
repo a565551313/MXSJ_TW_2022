@@ -5,7 +5,7 @@
   "path": "script/mxgame/task/model/task.py",
   "owner": "G",
   "domain": "gameplay",
-  "author": "A（G停工后代写；待其他实际审核者复核，A不自批）",
+  "author": "N6新会话（接管修订；原初稿为A代写，非G会话；本记录未经独立审核，N6不自批）",
   "source_status": "recovered_complete_not_original",
   "purpose": {
     "text": "任务需求和客户端满足状态的模型候选：保存物品/宠物/装备需求、重算满足列表、登记满足/未满足描述、提供寻路禁用提示和NPC任务条件检查；不是任务对话框、服务器任务完成或领奖逻辑。",
@@ -119,8 +119,8 @@
         {
           "condition": "petOrItemTaskList为真",
           "effect": {
-            "text": "候选实际把petTaskList赋给二选一两个列表，不能按变量名改写成petOrItemTaskList。",
-            "confidence": "static_reviewed",
+            "text": "候选实际把petTaskList赋给二选一两个列表，不能按变量名改写成petOrItemTaskList。若petTaskList为空或假值，这一解包有异常可能（静态推断，未运行）。",
+            "confidence": "inferred",
             "evidence": [
               "task_RefreshNecessary"
             ]
@@ -143,7 +143,7 @@
       "signature": "(tasklist)",
       "kind": "function",
       "summary": {
-        "text": "候选先写dct=dict([_[1] for k in tasklist])，再遍历dct追加未在g_SatisfyTaskidLst中的tid，最后TriggerCB(TASK_SATISFY,tasklist)。推导式不随k取值，能否走到回调待核；这里只描述声明代码。",
+        "text": "候选先写dct=dict([_[1] for k in tasklist])，再遍历dct追加未在g_SatisfyTaskidLst中的tid，最后TriggerCB(TASK_SATISFY,tasklist)。推导式内的k未使用；`_`在该推导式中未绑定，非空tasklist时会求值`_[1]`，除非模块/内建环境中的`_`可下标，否则可能异常（推断，未运行核）。",
         "confidence": "static_reviewed",
         "evidence": [
           "task_TaskSatisfy"
@@ -159,7 +159,7 @@
       "signature": "(tasklist)",
       "kind": "function",
       "summary": {
-        "text": "同样先经过异常推导式；后面声明移除已满足tid、读取未满足描述，并仍用TASK_SATISFY常量通知，不凭函数名改成另一事件。是否能执行到此待核。",
+        "text": "同样先经过异常推导式（`_`未绑定，同TaskSatisfy）；随后从g_SatisfyTaskidLst移除已满足tid，并读取g_UnsatisfyTaskID2Desc.get(tid)赋给desc（desc无后续引用）；最后仍用TASK_SATISFY常量通知，不凭函数名改成另一事件。是否能执行到此待核。",
         "confidence": "static_reviewed",
         "evidence": [
           "task_TaskUnSatisfy"
@@ -331,7 +331,7 @@
       "signature": "(data)",
       "kind": "function",
       "summary": {
-        "text": "从8元data读任务类型/标记/等级上下限/国家/职业等，按等级[下限,上限)、国家/职业、任务类型状态等门禁提前False，最后True。flag/npc_charidx/npc_entertips虽解包但此函数未使用。",
+        "text": "从8元data读任务类型/标记/等级上下限/国家/职业等，按等级[下限,上限)、国家、职业（候选变量名zy/m_Force；职业含义仅凭变量名推断，属性表未核）、任务类型状态等门禁提前False，最后True。flag/npc_charidx/npc_entertips虽解包但此函数未使用。",
         "confidence": "static_reviewed",
         "evidence": [
           "task_CheckNpcFlag"
@@ -362,10 +362,30 @@
           }
         },
         {
-          "condition": "tasktype在限制状态集合且GetStatus!=1，或国家/职业相关额外门禁命中",
+          "condition": "tasktype在LIMITSTATUS_TASKTYPE且nettask.GetStatus(tasktype)!=1",
           "effect": {
             "text": "False；集合来源与服务器含义未在本稿验证。",
             "confidence": "static_reviewed",
+            "evidence": [
+              "task_CheckNpcFlag"
+            ]
+          }
+        },
+        {
+          "condition": "country==0且tasktype在LIMITCOUNTRY_TASKTYPE",
+          "effect": {
+            "text": "False；集合定义未在摘录内，服务器含义未核。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "task_CheckNpcFlag"
+            ]
+          }
+        },
+        {
+          "condition": "zy==0且tasktype==18",
+          "effect": {
+            "text": "False；zy取自hero.g_Prop.m_Force，职业语义只凭变量名推断。",
+            "confidence": "inferred",
             "evidence": [
               "task_CheckNpcFlag"
             ]
@@ -409,7 +429,7 @@
       },
       "symbol": "hero.g_Prop.m_Grade / m_Force / m_Country",
       "summary": {
-        "text": "CheckNpcFlag读取主角等级/职业/国家作本地条件，来源字段不证明服务器判断相同。",
+        "text": "CheckNpcFlag读取m_Grade、m_Force（候选变量名zy，职业语义未核）、m_Country作本地条件；来源字段不证明服务器判断相同。",
         "confidence": "static_reviewed",
         "evidence": [
           "task_CheckNpcFlag"
@@ -512,16 +532,16 @@
     {
       "id": "excerpt_npc",
       "path": "script_manual/annotations/gameplay/evidence/npc_candidate_excerpt.txt",
-      "sha256": "3657f5eaf3bb78e9e8875110c743b42b69362050772a0ff6907a7a948c5a4986",
-      "kind": "metadata",
-      "note": "A代写有限候选摘录；全文/去六头正文SHA和原候选行号在报告头。仅静态来源，非完整源码、非原生/运行期报告。"
+      "sha256": "306145dd32fd76d528ff8ec375f68996719301bfc93ee36677eadd71eaa91f5b",
+      "kind": "recovered_source",
+      "note": "N6 2026-10-16独立复现：npc候选正文SHA与A一致；摘录L号逐行核对。A代写有限候选摘录，仅静态来源。"
     },
     {
       "id": "excerpt_task",
       "path": "script_manual/annotations/gameplay/evidence/task_candidate_excerpt.txt",
       "sha256": "9b0b94d5339f33e4d6cf7138ff10c5c4b2a0c56012f2c3cc938a86fd2ff667ca",
-      "kind": "metadata",
-      "note": "A代写有限候选摘录；全文/去六头正文SHA和原候选行号在报告头。仅静态来源，非完整源码、非原生/运行期报告。"
+      "kind": "recovered_source",
+      "note": "N6 2026-10-16独立复现：去六头正文SHA与A一致，摘录行号逐字核对。A代写有限候选摘录，仅静态来源，非完整源码、非原生/运行期报告；推导式与解包异常为静态推断，未运行。"
     }
   ],
   "evidence": [
