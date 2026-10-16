@@ -1,0 +1,300 @@
+N5 / 四条目（697 war / 1406 netwar / 1612 warcmd / 8 e_warctrl）码对象普查
+报告类型：metadata；派生自本轮独立转译出的 pyc，不是源码、不是完整恢复稿、不是运行记录。
+固定包 SHA256：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72
+工具：Python 3.11.2 / uncompyle6 3.9.3 / xdis 6.1.8 / spark-parser 1.9.0 / click 8.5.0（仓库外 venv，未改手册依赖）
+本文件的行号是报告自身行号；条目身份摘要见 n5_provenance_20261016.txt。
+未执行、未 import 任何恢复出来的游戏模块。
+
+本文件用 xdis 6.1.8 直接读取本轮独立转译出的 pyc（未经过任何反编译器），列出四个条目的全部码对象：限定名、kind、真实形参名、字节码首行号。
+用途：为 annotation 的 functions[].signature 提供**字节码层**证据，并交叉印证“候选里的函数确实存在于（对应条目）这份字节码”。
+它不是源码，不含默认值、不含函数体、不含控制流；不能据此断言行为。
+
+entry 697  co_filename=script/core/war.py  pyc SHA256=96cb750ee47247233359d6541d1a58c3d3ab879a03efb5113e1fa64a85a7b305  pyc 长度=73205  码对象数量=153
+形参来自码对象 co_varnames[:co_argcount]（*args/**kwargs 由 co_flags 判定）；默认值不在码对象里，故本表不含默认值；首行号是字节码 co_firstlineno，与候选文本行号不是同一套刻度。
+
+  序号  限定名                                          kind     形参                                             首行
+   1  ModuleReset                                  function ()                                               72
+   2  SetReplayWar                                 function (flag)                                          161
+   3  GetReplayWar                                 function ()                                              166
+   4  GetWarMgr                                    function ()                                              170
+   5  GetHeroID                                    function ()                                              176
+   6  GetWarriorList                               function ()                                              179
+   7  CCmd                                         function ()                                              182
+   8  CCmd.__init__                                method   (self, callback)                                184
+   9  SetProcess                                   function (func, *arg)                                    197
+  10  Process                                      function (bNewFrame)                                     204
+  11  Wait                                         function (*ids)                                          227
+  12  StartBout                                    function ()                                              239
+  13  ClearUsedCmd                                 function ()                                              248
+  14  NextServerCmd                                function ()                                              256
+  15  NextCmd                                      function ()                                              265
+  16  CmdIsAction                                  function (cmd)                                           280
+  17  CmdFind                                      function (func, valuename, value)                        295
+  18  CmdFindProtector                             function ()                                              314
+  19  CmdFindAttackSpecialAddon                    function (att_id)                                        321
+  20  GetWarriorCnt                                function (bIsAlly, bIsUser)                              339
+  21  AddWarriorCnt                                function (bIsAlly, bIsUser)                              345
+  22  ClearWarriorCnt                              function ()                                              352
+  23  ClearTurn                                    function ()                                              356
+  24  GetTurn                                      function ()                                              360
+  25  ForceEnd                                     function ()                                              364
+  26  GetStateInfo                                 function (warrior)                                       407
+  27  GetPerformName                               function (pid)                                           463
+  28  CmdFindPerformName                           function (id)                                            470
+  29  GetMpFpInfo                                  function (warrior)                                       490
+  30  CreateSame                                   function (filename, state)                               502
+  31  GetAnimeObject                               function (filename, path, parent)                        532
+  32  PlayAni                                      function (filename, path, x, y, z, f, direction, parent)  543
+  33  PlayAni.Play                                 function (obj, dummy, curf)                              564
+  34  PlayTraceAni                                 function (startx, starty, x, y, z, dis, fname, path, num, frame, direction)  583
+  35  PlayTraceAni.PlayTraceAni                    method   (self, obj, stepremain, cur, waitingtime)       600
+  36  FrameTimer                                   function ()                                              621
+  37  FrameTimer.FrameTimer                        function (obj)                                           629
+  38  CheckAuto                                    function ()                                              646
+  39  OnWarStart                                   function ()                                              661
+  40  OnWarEnd                                     function ()                                              665
+  41  OnTurnCountChanged                           function ()                                              670
+  42  Start                                        function (cmd)                                           676
+  43  CmdFindAttackEndByID                         function (att_id)                                        808
+  44  CmdFindAttackNormalByID                      function (att_id)                                        811
+  45  GetNewMagicInfo                              function (iAttackerID, iVicList, iPerformID)             820
+  46  Add                                          function (cmd)                                           876
+  47  GetPlace                                     function (cmd, bMustEmpty)                               906
+  48  RemoveRecordPlace                            function (iAllied, iPlace)                               919
+  49  NormalAdd                                    function (cmd, isShowAddAni, bMustInEmptyPos)            929
+  50  DelTargetLine                                function (cmd)                                          1042
+  51  WarriorWalkTo                                function (cmd)                                          1049
+  52  WarriorMultiWalkTo                           function (cmd)                                          1068
+  53  WarriorSwap                                  function (cmd)                                          1099
+  54  WarJuben                                     function (cmd)                                          1120
+  55  ChgShape                                     function (cmd)                                          1125
+  56  ChgShapeByArg                                function (obj, shape, name, desc)                       1136
+  57  SetWarriorName                               function (id, name)                                     1181
+  58  SetBossWarriorSelect                         function (oObj, iShape)                                 1217
+  59  IsAllide                                     function (iPlayerID)                                    1226
+  60  GetWarriorClass                              function (iPlayerID)                                    1234
+  61  GetWarriorGrade                              function (iPlayerID)                                    1242
+  62  GetWarriorPlace                              function (iPlayerID)                                    1250
+  63  Delete                                       function (cmd)                                          1258
+  64  Flash                                        function (cmd)                                          1276
+  65  Rush                                         function (cmd)                                          1284
+  66  DoDieAction                                  function (cmd)                                          1294
+  67  GetAttackInfo                                function (att_id, vic_id)                               1302
+  68  GetMagicInfo                                 function (att_id, vic_ids)                              1321
+  69  GetOrderPos                                  function (attacker, victim, adj)                        1341
+  70  AttackNormal                                 function (cmd)                                          1363
+  71  Protect                                      function (cmd)                                          1442
+  72  IsWarriorNeedGoback                          function (oWarrior, iMiniGobackDistance)                1465
+  73  AttackNormalEnd                              function (cmd)                                          1470
+  74  AttackNormalEnd_Old                          function (cmd)                                          1497
+  75  AttackConverg                                function (cmd)                                          1522
+  76  Shield                                       function (cmd)                                          1584
+  77  ServerShout                                  function (cmd)                                          1591
+  78  ExtraEffect                                  function (cmd)                                          1598
+  79  State                                        function (cmd)                                          1606
+  80  HPPercent                                    function (cmd)                                          1641
+  81  MPPercent                                    function (cmd)                                          1651
+  82  FPPercent                                    function (cmd)                                          1661
+  83  OpenDecideTime                               function (oCmd)                                         1671
+  84  PerformAtPos                                 function (cmd)                                          1679
+  85  Perform                                      function (cmd)                                          1703
+  86  ChangeDir                                    function (cmd)                                          1799
+  87  PlayMagicAction                              function (cmd)                                          1806
+  88  ShowSpecialEffect                            function (warriorID, pID)                               1813
+  89  Catch                                        function (cmd)                                          1822
+  90  Addon                                        function (cmd)                                          1838
+  91  SpecialAddon                                 function (cmd)                                          1845
+  92  DoAddonAction                                function (id, pid, turn, series, magicId)               1849
+  93  Weather                                      function (cmd)                                          1860
+  94  PlayerChat                                   function (cmd)                                          1866
+  95  Summon                                       function (cmd)                                          1878
+  96  Turn                                         function (cmd)                                          1890
+  97  GetCurTurnCount                              function ()                                             1946
+  98  ChangeTimer                                  function (cmd)                                          1949
+  99  End                                          function (cmd)                                          1959
+ 100  ServerCmd                                    function (cmd)                                          2059
+ 101  SetReplayVer                                 function (ver)                                          2065
+ 102  SetReplayVer.Timer                           function (obj, dummy)                                   2075
+ 103  Replay                                       function (fname)                                        2082
+ 104  SetRecordWarType                             function (iType)                                        2101
+ 105  ChgAction                                    function (cmd)                                          2105
+ 106  GetBoss                                      function ()                                             2125
+ 107  AddBossWeapon                                function (owner_id, cmd)                                2130
+ 108  DelBossWeapon                                function (weapon)                                       2147
+ 109  CreateBossIcon                               function (parent, icon_dct)                             2173
+ 110  GetBossWeaponID                              function (weapon)                                       2192
+ 111  GetBossWeapon                                function (id)                                           2202
+ 112  GetVictimPos                                 function (victim)                                       2209
+ 113  GetHitEffectPos                              function (obj)                                          2234
+ 114  BeHurt                                       function (obj)                                          2247
+ 115  BossBeginHit                                 function (obj, bprotect, phy)                           2295
+ 116  BeginHitByArg                                function (boss, ward, phy, bprotect)                    2310
+ 117  RefreshAddonPos                              function (addon_lst, id)                                2324
+ 118  BossSetAddon                                 function (id, pid, turn, series)                        2336
+ 119  BossWarriorTurn                              function ()                                             2358
+ 120  BossDelAddon                                 function (weapon_id, aid)                               2387
+ 121  BossDelAddon.Fadeout                         function (obj, lst, alpha)                              2392
+ 122  BossAttackNormal                             function (cmd)                                          2405
+ 123  BossPerform                                  function (cmd)                                          2413
+ 124  BossGetMagicInfo                             function (attack_id, victim_lst)                        2431
+ 125  BossCmdFind                                  function (func)                                         2447
+ 126  BossState                                    function (cmd)                                          2455
+ 127  GetRealWarriorID                             function (iID)                                          2474
+ 128  BossDelete                                   function (cmd)                                          2481
+ 129  BossTurn                                     function ()                                             2490
+ 130  BossDel                                      function (obj)                                          2497
+ 131  BossHitOver                                  function (obj)                                          2510
+ 132  PerformName                                  function (cmd)                                          2536
+ 133  MpChange                                     function (cmd)                                          2546
+ 134  FpChange                                     function (cmd)                                          2554
+ 135  ShowGraspTips                                function (cmd)                                          2562
+ 136  IsNextBout                                   function (bout)                                         2578
+ 137  CWarMgr                                      function ()                                             2608
+ 138  CWarMgr.__init__                             method   (self)                                         2615
+ 139  CWarMgr.OnPetDel                             method   (self, iOwnerID)                               2618
+ 140  CWarMgr.OnPetDead                            method   (self, iOwnerID)                               2621
+ 141  CWarMgr.OnPetRestore                         method   (self, iOwnerID)                               2624
+ 142  CWarMgr.OnPerform                            method   (self, iPerformID, iAttackID, iVicList)        2627
+ 143  CWarMgr.OnWarriorAdd                         method   (self, iWarriorID)                             2630
+ 144  GetBackGround                                function ()                                             2633
+ 145  TransformShape                               function (iShape)                                       2636
+ 146  SetHpBarShowInfo                             function (iWarriorID, iShow)                            2644
+ 147  SetWarriorNameColor                          function (iWarriorID, iColor)                           2652
+ 148  ShowWarriorHpBar                             function (cmd)                                          2663
+ 149  ClearHpBarShowInfo                           function ()                                             2678
+ 150  GetWarriorShowHpBarValue                     function (iWarrior)                                     2682
+ 151  GetWarType                                   function ()                                             2686
+ 152  IsSkillInCmdList                             function (iSkillID, iAttackID, iVicList)                2690
+ 153  IsPVPWar                                     function ()                                             2699
+
+entry 8  co_filename=script/pubscript/pubskill/e_warctrl.py  pyc SHA256=0853d1f0ba6e3957cad65d624e0f1d0f8f8e70f33cc77ea48f6de3df33bea182  pyc 长度=6338  码对象数量=27
+形参来自码对象 co_varnames[:co_argcount]（*args/**kwargs 由 co_flags 判定）；默认值不在码对象里，故本表不含默认值；首行号是字节码 co_firstlineno，与候选文本行号不是同一套刻度。
+
+  序号  限定名                                          kind     形参                                             首行
+   1  ModuleReset                                  function (mode)                                           14
+   2  GetWarCtrl                                   function ()                                               22
+   3  RemoveSkill                                  function (skillID)                                        29
+   4  SetSkillPause                                function (skillID, pause)                                 33
+   5  GetSkillPlayCtrl                             function (skillID)                                        37
+   6  CWarCtrl                                     function ()                                               41
+   7  CWarCtrl.__init__                            method   (self, iWarType)                                 42
+   8  CWarCtrl.PlaySkill                           method   (self, skillID, skillPath, attackInfo)           51
+   9  CWarCtrl.SetSkillPause                       method   (self, skillID, pause)                           56
+  10  CWarCtrl.SetPause                            method   (self, pause)                                    62
+  11  CWarCtrl.RemoveSkill                         method   (self, skillID)                                  65
+  12  CWarCtrl.GetPlayCtrl                         method   (self, skillID)                                  71
+  13  CWarCtrl._removeSkill                        method   (self, skillID)                                  74
+  14  CWarCtrl.StartTimer                          method   (self)                                           80
+  15  CWarCtrl.OnUpdate                            method   (self, *args)                                    85
+  16  CWarCtrl._OnUpdate                           method   (self, *args)                                    94
+  17  CPlayCtrl                                    function ()                                              117
+  18  CPlayCtrl.__init__                           method   (self, skillID, skillPath, attackInfo)          118
+  19  CPlayCtrl.GetCmdCount                        method   (self, cmdType)                                 127
+  20  CPlayCtrl.GetAttackCount                     method   (self)                                          130
+  21  CPlayCtrl.GetCurFrame                        method   (self)                                          133
+  22  CPlayCtrl.AddAttackCount                     method   (self)                                          136
+  23  CPlayCtrl.SetPause                           method   (self, pause)                                   139
+  24  CPlayCtrl.IsEnd                              method   (self)                                          142
+  25  CPlayCtrl.OnUpdate                           method   (self)                                          145
+  26  CPlayCtrl.Release                            method   (self)                                          151
+  27  CPlayCtrl.TriggerSignal                      method   (self, sSignal, *args)                          159
+
+entry 1612  co_filename=script/core/magicperform/warcmd.py  pyc SHA256=297eb007b449cd92f0062ed1e3d55c6a7d64d8edb0d32cd3f6c3882a7871cf16  pyc 长度=2629  码对象数量=1
+形参来自码对象 co_varnames[:co_argcount]（*args/**kwargs 由 co_flags 判定）；默认值不在码对象里，故本表不含默认值；首行号是字节码 co_firstlineno，与候选文本行号不是同一套刻度。
+
+  序号  限定名                                          kind     形参                                             首行
+   1  CreateCmdObject                              function (iSkillID, dSkillInfo, dattackInfo)              61
+
+entry 1406  co_filename=script/netwar.py  pyc SHA256=bda0b10a6333db59d813c7a21174e55f057a3fe71e3a335e265cbfe32f3d6b5e  pyc 长度=35248  码对象数量=86
+形参来自码对象 co_varnames[:co_argcount]（*args/**kwargs 由 co_flags 判定）；默认值不在码对象里，故本表不含默认值；首行号是字节码 co_firstlineno，与候选文本行号不是同一套刻度。
+
+  序号  限定名                                          kind     形参                                             首行  pycdc行
+   1  ModuleReset                                  function ()                                               23       28
+   2  C2SWarPerform                                function (id, perform)                                    30       37
+   3  C2SWarLook                                   function (id)                                             37       44
+   4  C2SWarAttack                                 function (id)                                             43       50
+   5  C2SWarDefend                                 function ()                                               49       56
+   6  C2SWarEscape                                 function ()                                               54       61
+   7  C2SWarItem                                   function (id, item)                                       59       66
+   8  C2SWarSummon                                 function (op, id)                                         66       73
+   9  C2SWarProtect                                function (id)                                             74       82
+  10  C2SWarCatch                                  function (id)                                             80       88
+  11  C2SChild                                     function (iChildID)                                       86       94
+  12  C2STurnEnd                                   function (turnNum)                                        92      100
+  13  C2SWarSummAttack                             function (id, target)                                    101      107
+  14  C2SWarSummPerform                            function (id, target, perform)                           108      114
+  15  C2SWarSummGuard                              function (id)                                            116      121
+  16  C2SWarSummEscape                             function (id)                                            122      127
+  17  C2SWarSummItem                               function (id, target, item)                              128      133
+  18  C2SWarSummProtect                            function (id, target)                                    136      141
+  19  C2SWarExitWatch                              function ()                                              142      148
+  20  C2SWarBackCommand                            function ()                                              148      153
+  21  ReduceWarTime                                function ()                                              152      158
+  22  ReleaseVersion                               function ()                                              157      163
+  23  GetWarVersion                                function ()                                              162      168
+  24  SetWarLocation                               function (warLocation)                                   166      172
+  25  ReleaseWarLocation                           function ()                                              177      184
+  26  GetWarLocation                               function ()                                              182      191
+  27  S2CWarStart                                  function (netobj)                                        186      195
+  28  WarStartCloseDlg                             function ()                                              286      273
+  29  S2CWarMask                                   function (netobj)                                        304      287
+  30  S2CWarOPCmd                                  function (netobj)                                        308      292
+  31  IsWarEnd                                     function ()                                              316      303
+  32  S2CWarEnd                                    function (netobj)                                        321      307
+  33  S2CWarTurn                                   function (netobj)                                        353      337
+  34  S2CChangeTimer                               function (netobj)                                        393      375
+  35  S2CWarAdd                                    function (netobj)                                        400      382
+  36  S2CWarDel                                    function (netobj)                                        447      428
+  37  S2CWarAttackNormal                           function (netobj)                                        453      434
+  38  GS2CWarShape                                 function (netobj)                                        460      441
+  39  S2CWarAttackNormalEnd                        function (netobj)                                        475      456
+  40  S2CWarAttackConverg                          function (netobj)                                        481      462
+  41  S2CWarProtect                                function (netobj)                                        488      469
+  42  S2CWarPerform                                function (netobj)                                        495      476
+  43  S2CWarWState                                 function (netobj)                                        506      488
+  44  S2CWarOtherPerform                           function (netobj)                                        518      500
+  45  S2CServerShout                               function (netobj)                                        572      556
+  46  S2CChangeDirection                           function (netobj)                                        578      563
+  47  S2CPlayMagic                                 function (netobj)                                        586      572
+  48  S2CMultiWalkTo                               function (netobj)                                        595      583
+  49  S2CWarNotifyExt                              function (netobj)                                        606      596
+  50  S2CDelTargetLine                             function (netobj)                                        628      619
+  51  S2CWarPerformAtPos                           function (netobj)                                        634      626
+  52  S2CWarJuben                                  function (netobj)                                        658      653
+  53  S2CShowPassWarBtn                            function (netobj)                                        664      660
+  54  S2CWarriorSwap                               function (netobj)                                        669      666
+  55  S2CWarriorHpColor                            function (netobj)                                        683      681
+  56  S2CWarriorNameColor                          function (netobj)                                        697      694
+  57  S2CWarMPFP                                   function (netobj)                                        708      707
+  58  S2CWarAddon                                  function (netobj)                                        719      718
+  59  S2CWarSpecialAddon                           function (netobj)                                        729      728
+  60  S2CWarWeather                                function (netobj)                                        738      737
+  61  S2CWarPlayerChat                             function (netobj)                                        745      744
+  62  S2CWarHPPercent                              function (netobj)                                        757      755
+  63  S2CWarMPFPPercent                            function (netobj)                                        764      762
+  64  S2CWarDecideWinnerTime                       function (netobj)                                        774      773
+  65  S2CWarSummon                                 function (netobj)                                        782      781
+  66  S2CWarSummonCatch                            function (netobj)                                        789      788
+  67  S2CWarONACT                                  function (netobj)                                        797      796
+  68  S2CBackCommand                               function (netobj)                                        804      805
+  69  S2CPerformName                               function (netobj)                                        820      825
+  70  C2SWarSpecial                                function (id, sid)                                       829      834
+  71  S2CWarSign                                   function (netobj)                                        837      841
+  72  C2SSendSign                                  function (msg)                                           844      848
+  73  C2SLookWarrior                               function (order)                                         852      856
+  74  S2CWarChildSkill                             function (netobj)                                        860      864
+  75  S2CWarCalledPet                              function (netobj)                                        875      881
+  76  S2CChangeAction                              function (netobj)                                        889      900
+  77  S2CWalkTo                                    function (netobj)                                        897      907
+  78  S2CWarExtInfo                                function (netobj)                                        904      914
+  79  S2CShowSpecialWatchPanel                     function (netobj)                                        914      923
+  80  S2CUpdateSpecialWatchPanelPetInfo            function (netobj)                                        964      988
+  81  S2CUpdateSpecialWatchPanelDrugInfo           function (netobj)                                        975     1000
+  82  S2CUpdateSpecialWatchPanelSpInfo             function (netobj)                                        987     1012
+  83  S2CUpdateRecordShowInfo                      function (netobj)                                        999     1024
+  84  S2CUpateRecordInfo                           function (netobj)                                       1007     1033
+  85  S2CUpdateControlPoint                        function (netobj)                                       1033     1061
+  86  S2CWarRecordInfo                             function (netobj)                                       1053     1080
+
+交叉核对（entry 1406）：pycdc 候选顶层 def 数量=86，本普查顶层码对象=86，86 个名字全部出现在模块 co_names（102 项）内，一一对应；未在其中的 16 项 = 12 个 import 模块名 + g_WarTimes/g_WarVersion/g_WarLocation + g_WarRecordInfoFunc。
+两处行号刻度不同（pycdc 行 vs 字节码 co_firstlineno），但顺序与名称一致，可据此确认 pycdc 候选来自同一份 entry 1406 字节码。

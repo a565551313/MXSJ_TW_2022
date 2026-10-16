@@ -1,0 +1,58 @@
+N5 / 2026-10-16 battle 域（war / netwar / warcmd / e_warctrl）定点恢复与返修回执
+报告类型：metadata；是 N5 自己的恢复记录，不是 H 审核、不是运行记录、不是完整源码分发。
+会话身份：全新会话 N5（逻辑任务包 F / battle；author 记实际新会话，不冒称旧 F 会话）。
+开工基线：A 交接提交 9b0dea799768aaacbb967ffc59f45753970752be（= arena/61deb9e5-mxsj-tw-2022 顶端）；合并内容检查点 7d32e5340b0ab4168f725d238d767ad6232f715d 是该提交的父提交（本地为 depth=2 shallow 克隆，git merge-base 无法越过 shallow 边界，故以 HEAD 的 parent 记录判定）。
+
+输入与工具 SHA256：
+  固定包 data/script.fls = 8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72
+  固定参数 tools/decompiler/script_fls_keys.json = 43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb
+  data/data.fls（仅指纹核验，本轮未读其条目正文） = 5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c
+  tools/decompiler/recover_entries.py = 152dbc28864a10c8b7188df7ae91c8039b0b8c0b056d98591e407b897e39c458
+  tools/decompiler/batch_decompile.py = a74742231e04c018c3f63452cfc859c20c6404fd73891eae9076bfcf8185b4e8
+  server/docs/catalog/script_entries.jsonl = d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da
+
+恢复命令（产物/报告全部在仓库外）：
+  python tools/decompiler/recover_entries.py --out /tmp/n5-recover/entries \
+      --entries 697,1406,1612,8 --decompile-timeout 30 --report /tmp/n5-recover/f-probe.json
+  解释器与引擎：Python 3.11.2 / uncompyle6 3.9.3 / xdis 6.1.8 / spark-parser 1.9.0 / click 8.5.0（仓库外 venv，未改手册依赖）
+  实际输出：处理 4 条，用时 2.8s → {'recovered': 4}；697/1612/8 = decompile_ok/kind=source，1406 = decompile_fail/kind=source_partial+digest。
+
+逐条身份与摘要（去头正文 = 去掉 recover_entries 写入的 6 行产物头；去头正文 SHA 与 A 的 BDF 收据逐条一致）：
+  entry 697: co_filename=script/core/war.py entry_id=0x2069990b stage=baseline repaired=False bounds_refined=False
+    stored payload=a1d49aa67473ac6b1def790d074830aa5833f23763ad4c04e08dca258d01b008
+    exp_len=73197 pyc_len=73205 pyc=96cb750ee47247233359d6541d1a58c3d3ab879a03efb5113e1fa64a85a7b305
+    反编译=decompile_ok 产物类型=source 总行数=2640 去头正文行数=2634
+    去头正文 SHA256=a6a81ad68ea82e0fbe028627b7d88c734ab56b889c79e1aa50da421b4a02f7b7 与 A 收据一致=True
+  entry 1406: co_filename=script/netwar.py entry_id=0x458cd0df stage=baseline repaired=False bounds_refined=False
+    stored payload=bdc4e87128b2031bc5eaf6fd688e94325f8653d4fae0a2f5d62ae83b2f71536e
+    exp_len=35240 pyc_len=35248 pyc=bda0b10a6333db59d813c7a21174e55f057a3fe71e3a335e265cbfe32f3d6b5e
+    反编译=decompile_fail 产物类型=source_partial+digest 总行数=13 去头正文行数=7
+    去头正文 SHA256=242c5e7ab2d4f6c0f2f25105654586a6f7b80a66c682a8927f99ad5773f884da 与 A 收据一致=True
+  entry 1612: co_filename=script/core/magicperform/warcmd.py entry_id=0x50646bdf stage=baseline repaired=False bounds_refined=False
+    stored payload=bf9104f82df4c4f27be91d882fd6a1e922f275f5fb48c68c918c365df20729c8
+    exp_len=2621 pyc_len=2629 pyc=297eb007b449cd92f0062ed1e3d55c6a7d64d8edb0d32cd3f6c3882a7871cf16
+    反编译=decompile_ok 产物类型=source 总行数=45 去头正文行数=39
+    去头正文 SHA256=60f0e56950f96c9951029f6de2665bf16d0cb3fb7bc4cbb6d1adf312e16541fa 与 A 收据一致=True
+  entry 8: co_filename=script/pubscript/pubskill/e_warctrl.py entry_id=0x5d2ab3 stage=baseline repaired=False bounds_refined=False
+    stored payload=a40d7aae07ddfda668fdfca77cdf4aea38b614e85c8bf07996cd077aef66cdc1
+    exp_len=6330 pyc_len=6338 pyc=0853d1f0ba6e3957cad65d624e0f1d0f8f8e70f33cc77ea48f6de3df33bea182
+    反编译=decompile_ok 产物类型=source 总行数=176 去头正文行数=170
+    去头正文 SHA256=bd97d6af2a54a26eacf1bb6c6cf14edc0843800dd8fa7f7234a88ec6034022ad 与 A 收据一致=True
+
+1406 的额外交叉核对（因为 u6 又失败，本轮不冒称有完整源码）：
+  1) 用 xdis 6.1.8 直接读 pyc：顶层码对象 86 个，与仓库内 pycdc 候选的顶层 def 数 86 完全相等；86 个名字全部落在模块 co_names（102 项）内。
+  2) pycdc 候选头部自述：生成时间 2026-10-14T23:55:56Z、输入 script.fls SHA 8b6e9266…、Decompyle++（pycdc）、File: entry_1406.pyc (Python 2.5)、uncompyle6 状态=stub。
+  3) 该候选是仓库内既有文件（git 跟踪，501 个 script_fls_pycdc 产物之一），SHA 已被旧稿与本次复核同时钉住。
+  4) 因此本轮把 netwar 的正文证据锚在 pycdc 候选上，并明确其不可靠范围：候选里有两处“if 体是 pass、真正调用在 if 之后”的形态（S2CWarStart 231-233、S2CWarRecordInfo 1084-1086），这不是源码原文，不能据此断定原控制流。
+
+本轮已知的候选损坏标识符（原样保留，不猜补、不替换为 catalog 历史名）：
+  entry 697 war.py：3 处 `except SystemE??or:`（去头正文 580 / 759 / 773 行）。
+  entry 1612 warcmd.py：1 处 `e_comskilldefine.TLNKKXS^WBX@OHTSJHVEANI`（映射表第 12 条）。
+  entry 8 e_warctrl.py：1 处 `e_warinterface.}EillFinished`（CWarCtrl._removeSkill）。
+  另外 entry 697 去头正文 172 行 EID2PATH 的中文串带解码噪声，原样保留。
+
+只读边界：只走 recover_entries 的只读转译；不执行、不 import 任何恢复出来的游戏模块；不重建原包；不触碰 entry 1288（本次白名单只有 697/1406/1612/8）；整包 SHA 仅作指纹核对。没有下载 PR34 全量语料，也没有使用编辑器 dev6 的 3.14 依赖环境。
+
+产物去向：完整候选、pyc、venv、报告 JSON 全部留在仓库外 /tmp/n5-recover（沙箱外置研究材料，不入 Git）。入库的只有本目录下的 5 份小证据摘录与 4 份 annotation JSON + 1 份 N5_RESPONSE.md。
+
+本轮未做：Qt GUI 实跑（沙箱缺 libGL.so.1）、Windows/EXE、原生引擎、实机与真实服务端验证；战斗伤害/命中/AI 计算不在本卡范围，也没有任何 runtime_verified 结论。
