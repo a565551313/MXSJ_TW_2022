@@ -18,7 +18,7 @@
     "documented_branch_records": 220,
     "inventory_function_records_not_explanations": 128382
   },
-  "policy": "Logical owners B-H are compatibility labels only. Every N1-N7 is a NEW session not yet launched. A remains tools/integration. Authors do not self-approve; N7 reviews incrementally; all new PRs base A.",
+  "policy": "Logical owners B-H remain compatibility labels. N1-N7 were NEW sessions and have delivered/merged PRs; do not launch seven more. A now finishes integration under explicit user authorization; no author self-approval.",
   "assignments": [
     {
       "id": "N1",
@@ -48,7 +48,7 @@
         "128382只是结构函数记录，不是手册解释完成数。B尚未语义认可；不能靠结构验证通过给自己批准。"
       ],
       "task_card": "script_manual/coordination/new_agents_20261016/N1.md",
-      "dispatch_state": "new_agent_submitted_PR_under_A_review",
+      "dispatch_state": "merged_into_A_under_user_authorization",
       "actual_agent_session": null,
       "fixed_branch": "Assigned by Arena to the NEW session; never reuse old role branches",
       "submitted_PR": 43,
@@ -56,7 +56,9 @@
       "actual_fixed_branch": "arena/8c171896-mxsj-tw-2022",
       "A_review_recommendation": "finite_inventory_fix_candidate; conservative234null_policy_confirmed_by_A; not_full_semantic_acceptance",
       "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/43#issuecomment-6206340681",
-      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented."
+      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented.",
+      "merge_commit": "474bd3abe51428442fb25ece98620135ea38ae88",
+      "merged_at": "2026-10-16T02:27:54Z"
     },
     {
       "id": "N2",
@@ -96,15 +98,17 @@
         "四模块均有真实来源边界；保持现行注册/启动器/编辑器及原包不变。"
       ],
       "task_card": "script_manual/coordination/new_agents_20261016/N2.md",
-      "dispatch_state": "new_agent_submitted_PR_under_A_review",
+      "dispatch_state": "merged_into_A_under_user_authorization",
       "actual_agent_session": null,
       "fixed_branch": "Assigned by Arena to the NEW session; never reuse old role branches",
       "submitted_PR": 39,
       "fixed_head": "c7142366fabafea0b35d943d8746a1de9d899b49",
       "actual_fixed_branch": "arena/a1839872-mxsj-tw-2022",
-      "A_review_recommendation": "five_repair_groups_checked_by_A; await_N7_new_bytes_claim_by_claim_review",
+      "A_review_recommendation": "finite_new_byte_review_accepted_as_A_delegate; not_N7_or_runtime",
       "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/39#issuecomment-6206340890",
-      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented."
+      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented.",
+      "merge_commit": "3f0db0306c49ecdc9a59b6bb15b0ae9c3efdd3df",
+      "merged_at": "2026-10-16T02:28:02Z"
     },
     {
       "id": "N3",
@@ -138,7 +142,7 @@
         "其余三个已通过JSON和关联来源原字节保持不变，accepted仍至少3（其他并行PR改动须另计）。"
       ],
       "task_card": "script_manual/coordination/new_agents_20261016/N3.md",
-      "dispatch_state": "new_agent_submitted_PR_under_A_review",
+      "dispatch_state": "merged_into_A_under_user_authorization",
       "actual_agent_session": null,
       "fixed_branch": "Assigned by Arena to the NEW session; never reuse old role branches",
       "submitted_PR": 41,
@@ -146,7 +150,9 @@
       "actual_fixed_branch": "arena/10debde2-mxsj-tw-2022",
       "A_review_recommendation": "finite_candidate; N7_template_exact_SHA_match",
       "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/41#issuecomment-6206341216",
-      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented."
+      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented.",
+      "merge_commit": "eb3b7b776eea79bd78e4452ec13cdd813c175e1f",
+      "merged_at": "2026-10-16T02:28:08Z"
     },
     {
       "id": "N4",
@@ -187,7 +193,7 @@
         "四篇改后A旧review过期属预期，禁止自行改reviews，交N7按新原字节SHA复核。"
       ],
       "task_card": "script_manual/coordination/new_agents_20261016/N4.md",
-      "dispatch_state": "new_agent_submitted_PR_under_A_review",
+      "dispatch_state": "merged_into_A_under_user_authorization",
       "actual_agent_session": null,
       "fixed_branch": "Assigned by Arena to the NEW session; never reuse old role branches",
       "submitted_PR": 40,
@@ -195,7 +201,9 @@
       "actual_fixed_branch": "arena/b0da7f97-mxsj-tw-2022",
       "A_review_recommendation": "finite_candidate; four_N7_templates_exact_SHA_match",
       "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/40#issuecomment-6206341535",
-      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented."
+      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented.",
+      "merge_commit": "bbfb2748aca75c475ea1695aeae4a0169663be87",
+      "merged_at": "2026-10-16T02:28:14Z"
     },
     {
       "id": "N5",
@@ -235,16 +243,18 @@
         "netwar函数证据、动画边界、队列/循环跨模块事实与推测分开；无runtime_verified或服务端/战斗计算保证。"
       ],
       "task_card": "script_manual/coordination/new_agents_20261016/N5.md",
-      "dispatch_state": "new_agent_submitted_PR_under_A_review",
+      "dispatch_state": "merged_into_A_under_user_authorization",
       "actual_agent_session": null,
       "fixed_branch": "Assigned by Arena to the NEW session; never reuse old role branches",
       "submitted_PR": 44,
       "fixed_head": "6fd5061dded82bbbcfc96694a5c20ef1a7a3e41e",
       "actual_fixed_branch": "arena/ae1bd730-mxsj-tw-2022",
-      "A_review_recommendation": "original_B-N5-01_to_03_closed; B-N5-04_P2_nonterminating_callback_scope_fix_pending; then_N7_independent_review",
+      "A_review_recommendation": "A_coauthored_four_guides_and_factual_corrections; awaiting_non_A_exact_byte_review; no_self_approval",
       "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/44#issuecomment-6206634114",
       "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented.",
-      "round2_report": "docs/evidence/script_manual_N5_6fd5061_A_review_20261016.md"
+      "round2_report": "docs/evidence/script_manual_N5_6fd5061_A_review_20261016.md",
+      "merge_commit": "c2c1f6e1803fe7312daba8f0c8d07b75a5c60733",
+      "merged_at": "2026-10-16T02:28:26Z"
     },
     {
       "id": "N6",
@@ -284,7 +294,7 @@
         "四篇仍由独立N7最终审核；本任务不写reviews，不把作者身份填成旧G。"
       ],
       "task_card": "script_manual/coordination/new_agents_20261016/N6.md",
-      "dispatch_state": "new_agent_submitted_PR_under_A_review",
+      "dispatch_state": "merged_into_A_under_user_authorization",
       "actual_agent_session": null,
       "fixed_branch": "Assigned by Arena to the NEW session; never reuse old role branches",
       "submitted_PR": 42,
@@ -292,7 +302,9 @@
       "actual_fixed_branch": "arena/6f7784e1-mxsj-tw-2022",
       "A_review_recommendation": "finite_candidate; four_independent_N7_templates_exact_SHA_match; A_does_not_self_approve",
       "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/42#issuecomment-6206341720",
-      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented."
+      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented.",
+      "merge_commit": "e06e6f4c4bac7db210969dcac76b19d0ea5fffe1",
+      "merged_at": "2026-10-16T02:28:20Z"
     },
     {
       "id": "N7",
@@ -347,23 +359,37 @@
         "reviews/reports/N7_acceptance.md记录六题、B目录核对、实际环境/通过/跳过、仍阻塞；原review有字节变更必须stale/重审。"
       ],
       "task_card": "script_manual/coordination/new_agents_20261016/N7.md",
-      "dispatch_state": "new_agent_submitted_PR_under_A_review",
+      "dispatch_state": "merged_into_A_under_user_authorization",
       "actual_agent_session": null,
       "fixed_branch": "Assigned by Arena to the NEW session; never reuse old role branches",
       "submitted_PR": 45,
       "fixed_head": "db872c5cd6aad0349e62d17af2959576aa3fec12",
       "actual_fixed_branch": "arena/474295bc-mxsj-tw-2022",
-      "A_review_recommendation": "valid_partial_review_delivery; nine_templates_match; login_new_head_and_battle_review_not_complete",
+      "A_review_recommendation": "nine_exact_SHA_templates_activated; four_login_reviewed_by_A_delegate; four_battle_A_revisions_need_non_A_review",
       "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/45#issuecomment-6206334018",
-      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented."
+      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented.",
+      "merge_commit": "e60fcb588ff7a50249504ff603f1a64af50f5c8b",
+      "merged_at": "2026-10-16T02:28:31Z"
     }
   ],
   "latest_progress": {
     "date": "2026-10-16",
-    "state": "seven_NEW_agents_submitted_PRs_A_reviewed_no_merges",
-    "report": "docs/evidence/script_manual_new_cohort_A_review_20261016.md",
-    "formal_content_baseline": "9b0dea799768aaacbb967ffc59f45753970752be",
-    "note": "N5 PR44 updated to6fd5061: original3P2 closed, one guide-scope P2 B-N5-04 remains. N1/N3/N4/N6 finite candidates, N2/N5 await independent N7 tail review. No PR merges or formal review activation.",
-    "N5_round2_report": "docs/evidence/script_manual_N5_6fd5061_A_review_20261016.md"
+    "state": "seven_PRs_merged_A_finalized_16_finite_accepted_4_A_coauthored_pending",
+    "authorization": "用户“你帮他们收尾吧”；既有“H宕机了你审吧”代审授权继续适用，不合master。",
+    "report": "docs/evidence/script_manual_A_finalize_20261016.md",
+    "integration_checkpoint": "e60fcb588ff7a50249504ff603f1a64af50f5c8b",
+    "coverage": {
+      "indexed": 5135,
+      "annotated": 20,
+      "accepted": 16,
+      "H": 12,
+      "A_delegate": 4,
+      "pending": 4,
+      "stale_review": 0,
+      "changes_requested": 0,
+      "excluded": 1
+    },
+    "remaining": "非A独立末审battle四篇新字节；修正已由A完成。尚无新的独立审核结果，不伪造已联系/已开工状态。",
+    "note": "baseline_coverage与各任务卡保留历史，CONTRACT author/reviewer规则继续有效；source/tool历史指纹不因收尾改写。"
   }
 }

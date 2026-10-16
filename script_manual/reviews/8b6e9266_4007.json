@@ -2,8 +2,9 @@
   "schema_version": 1,
   "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
   "entry_index": 4007,
-  "annotation_sha256": "8dcdf564b029821d4ae8a54bfd7adbeb47a44ddca0a2a839a3abe8eaa9373f4a",
-  "reviewer": "H",
-  "decision": "changes_requested",
-  "note": "N7新会话独立复核（Arena 2026-10-16 新分配的第7个新agent，逻辑任务包H/review；不是旧H、不是A、不是旧C，未代写作者正文）。输入提交：A集成分支固定head 9b0dea799768aaacbb967ffc59f45753970752be，检查点7d32e5340b0ab4168f725d238d767ad6232f715d已确认为祖先；固定包script.fls 8b6e9266…、data.fls 5f96bdb2…、参数表43bb090d…本机sha256sum核对一致，未改动。独立复现：仓库外 Python3.11.2 + uncompyle6 3.9.3 / xdis 6.1.8 / spark-parser 1.9.0 / click 8.5.0，recover_entries.py --entries 337,4293,4007,4806 → 四条均 recovered/source/baseline/decompile_ok，script/login/mainpage.py(338)、script/main.py(1579)、script/login/register.py(1311)、script/login/loginin.py(1442)；行号为含6行恢复头的候选文件行号。register/4007。候选已由本会话独立恢复成功（1311 行，recovered/source/baseline/decompile_ok），但本轮**未对注册流程逐函数展开核对**，故只登记可静态确认的证据缺口，不给注册语义结论。退修 N7-L11（P2，modification_guides『注册逻辑与布局分别在哪里？』/answer/evidence=['reg1','reg2']）：只引 register 自身段落，无法证明 mainpage 注册入口（mainpage.OnMessage(2)）或 confirm 布局所在；须补两处实际行段，或把回答收缩为本模块的边界说明。退修 N7-L12（P3，relationships 方向/kind）：沿用 A 的 C 预审第 4 项——register 调用 mainpage.Show 相对 register 是 downstream 调用；loginin 读取 register.g_AccountInfo 是数据引用，不应标 calls。退修 N7-L13（P3）：注册字段校验、验证码失败、reg2_2980 等分支本轮未逐条核，保留为未复核，不计通过。本审核只覆盖上述已核对行段与已登记缺口；未穷尽四份候选，未做实机/Windows/原生/服务端验收，不因正文已合并而放行。"
+  "annotation_sha256": "3372b8537aeb3d687aa4279b0b92f6f579654ee49a36c6fc5b1a835320e25551",
+  "reviewer": "A_delegate",
+  "delegation": "用户“H宕机了你审吧”授权A接替复核，随后“你帮他们收尾吧”授权收尾；本记录是A有限代审，不是独立H/N7。A未参与此N2固定正文的写作或改动。",
+  "decision": "accepted",
+  "note": "2026-10-16 A收尾有限代审；输入PR39 c7142366fabafea0b35d943d8746a1de9d899b49，已合A e60fcb588ff7a50249504ff603f1a64af50f5c8b；旧N7在9b0dea7基线的退修仅作问题清单，不挪绑定SHA冒充新N7结论。register：核CConfirm独立布局与reg1–5布局字符串、Step的三类映射（1255–1259）；普通OnRegisterGame（1080–1129）120验证码/非零错误/成功Step(2)与2980的OnRegister（996–1037）Code250→Register2980(1)明确分开；OnRegCode（1132–1166）解析失败及非零错误→ShowRegisterCodeFail；核字段校验定位、ResultEmail为提供数据而非反向calls。布局文件内容和服务端未验。 四条原包目录ID/stored/pyc/raw u6/body SHA实际重算一致；修正恢复子进程布尔参数后，以真实False及True独立输出四对raw/正文，严格cp950后处理链一致。接受范围为原五组阻塞及六题相关新增/修改结论和定位、来源链，不是穷尽本模块全部函数/分支语义。局限/不确定候选形态保留，不代表原始源码、5000模块、Qt/Windows/EXE/游戏/原生或服务端通过。详细报告：docs/evidence/script_manual_A_finalize_20261016.md。"
 }

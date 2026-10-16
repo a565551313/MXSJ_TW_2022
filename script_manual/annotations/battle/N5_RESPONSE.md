@@ -384,3 +384,24 @@ python tools/devkit/check_windows_compat.py script_manual --strict # ERROR 0，W
 ```
 
 （本节的重跑结果与第 8 节同为标准四项；本轮未新增加测试，也未改 `script_manual` 代码。）
+
+
+## A接手收尾补记（2026-10-16，非N5原会话所作）
+
+用户授权“你帮他们收尾吧”后由A修改四篇，作者字段已明示共同作者，A不自批。旧SHA表及三P2闭合记录保留为6fd5061历史，不冒称本次新字节。
+
+- war：B-N5-04限定继续消费队列的非终止回调，End关闭/切主循环为明确例外；补Process/Wait证据，修改建议标inferred。
+- netwar：同一全称队列推进误述亦已收窄；撤回C2S与S2C必须字段对称的误导建议（各方向应匹配服务端，未核服务端）。
+- e_warctrl：主动RemoveSkill先Release，自动_OnUpdate只_removeSkill，不混作一条释放链；TriggerSignal发出而非订阅；ModuleReset只置None，不保证timer/资源清理，不再指导“跨战斗必须reset”。
+- warcmd：损坏键在候选映射字面顺序第6项，不是第12项；新增命令流程为局部三实参调用形状的推测，不代表21子模块接口均已核实。
+
+四份现字节交非A独立末审，未制造accepted。来源摘录的L前缀原文不变；仅同步更正warcmd摘录和共享provenance元描述中把正文L12误当第12项的定位错误（映射第6项），各引用SHA已重算。最终哈希：
+
+|文件|A补后原字节SHA256|
+|---|---|
+|e_warctrl.json|`8dfca6e5ca37b5787c11ce6f0d1d4c688fb8d9eae4fd94f938e512d69e2deb31`|
+|netwar.json|`614bef9d870b118b1e58bf9593e5297de08a3da4cf7b819adfc5f15d27bd766a`|
+|war.json|`9c0aea28914085b8cb1ce4424352e5f165cedf9170da087c257ac9ce90085605`|
+|warcmd.json|`65e19f3c4a93e2dbb8add8ecea523f6d64bddf6f55dd031cd864986c8e2d15da`|
+
+恢复参数/候选字节不改，工具布尔参数修正不覆盖历史冻结工具指纹。本次实际验证与限制见 `docs/evidence/script_manual_A_finalize_20261016.md`。

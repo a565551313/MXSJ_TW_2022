@@ -1435,3 +1435,15 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 - A本轮重恢复四条，3source形状+1406仍partial；2208摘录行逐行一致，四去头正文SHA匹配。PR快照与外置组合schema/来源/full通过；82=71过+11缺PySide6跳过/0失败，ruff含spec和Windows静态walk133路径/27源全0。未另跑HTML/jsdom或真实浏览器/Qt/Windows/EXE/游戏/原生/实服。
 - 已评论PR44并同步PR45的新N7，原三项不再列未修。N5在同一PR小修指南后报新head，N7按新字节末审；N2尾审仍待。正式仍5135/20/3/1、5changes/12pending，外置组合12accepted/4login stale/4battle pending不是正式值。
 - 报告docs/evidence/script_manual_N5_6fd5061_A_review_20261016.md及同名JSON含四ID/四新JSON SHA/反例范围/验证指纹；机器分派表N5固定head与最新待办已更新，首轮报告保留历史判断不改写。
+
+
+## 3.51 A按授权接手收尾：七PR已合A，16份有限通过，四battle待非A独审（2026-10-16）
+
+- 用户“你帮他们收尾吧”授权后，A先确认8638aad已推且干净，逐条`gh pr merge <明确PR号> --merge`成功并读回MERGED：43 f953eb9、39 c714236、41 77b64be、40 44230b9、42 23b60f9、44 6fd5061、45 db872c5，base均固定A；本地ff至e60fcb588ff7a50249504ff603f1a64af50f5c8b。未合master、未上传或改游戏/编辑器/启动器/原包/参数。
+- 正式5135登记/20说明/**16有限accepted（12 H+4 A_delegate）/4pending/0stale/0changes/1排除**。九份N7模板逐个原字节SHA匹配激活；登录四份不改正文，由A在既有授权下有限代审五组阻塞、六题与原包→raw/正文链，不把N7旧基线退修换SHA冒充新审。gameplay用N6新稿/N7独审，不复活A自批。
+- A接手war的B-N5-04并发现netwar同句重复，均限定非终止/仍消费队列回调，End关闭/切主循环为例外；netwar另撤回C2S/S2C字段必须对称的误导。e_warctrl指南纠正主动Release与自动移除不同、TriggerSignal是发出非订阅、ModuleReset只置None不保证timer/资源释放。warcmd把候选L12误称第12项改为字面映射第6项，元描述与sources SHA同步、L前缀候选原文不改。四篇均明示A共同作者、保持pending，**A不自批凑20**；原三P2仍closed，N5_RESPONSE追加真实A补记/新SHA。
+- 修复恢复子进程False双repr问题，传真实布尔；先加AST合成回归在旧代码复现2失败，改一行后工具27项全过。四条N2重新经隔离子进程分别False/True，stored/pyc/raw/body SHA与严格cp950链4/4吻合；不执行/import恢复游戏模块。历史冻结工具SHA保留旧报告，新SHA钉本次报告，非静默替换分析基线。
+- 新`python script_manual/check_manual.py`统一六闸门，`--require-gui`可禁跳Qt；不恢复原包/生成站点。标准86=原82+runner4，75通过11缺PySide6跳过0失败；N1独立32/32、恢复工具27/27另列。严格来源/full无警告、ruff含spec、Windows static walk168路径/31源全0；修改工具2路径/2源全0。工具既有临时路径测试改用跨平台TemporaryDirectory，安全路径用合成夹具。
+- 新跑N1**两棵真实隔离树**，各冻结20种子→sample/full，四次成功；三产物跨树且与交付逐字节一致，128382结构函数记录未丢。1288定点读取四次均0，整包SHA仍会覆盖该字节范围，不说完全没读其字节。不是沿用上轮单树退化结果。
+- 新合并态严格HTML构建与jsdom通过：16accepted/4pending、4中文/函数搜索、2过滤、3路径identity导航、80tab、hero→npc跳转、N2/A_delegate授权与四battle/A作者pending身份，0脚本错误。不是实浏览器/CSP/Qt/Windows/EXE/游戏/原生/实服验收；42名称底稿/5000未扩语义保留。
+- 详细MD/JSON报告`docs/evidence/script_manual_A_finalize_20261016.{md,json}`含七合并ID、16绑定SHA、四篇待审新SHA、工具修复与测试摘要。README/CONTRACT/分派入口/机器表刷新为现状，旧卡与§3.49/3.50保留历史。不要求用户转交返修或重新开七人；四篇只欠非A对A修订新字节末审，尚无结果，不伪造独立通过。

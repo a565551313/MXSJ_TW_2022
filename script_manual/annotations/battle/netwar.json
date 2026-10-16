@@ -5,7 +5,7 @@
   "path": "script/netwar.py",
   "owner": "F",
   "domain": "battle",
-  "author": "N5（2026-10-16 全新会话，承接逻辑任务包 F/battle；不冒称旧 F 会话）",
+  "author": "N5（2026-10-16 全新会话，承接逻辑任务包 F/battle；不冒称旧 F 会话）；A收尾修正文中指南/定位事实，需非A独立复核，A不自批",
   "source_status": "recovered_partial",
   "purpose": {
     "text": "战斗网络消息层：C2S* 把客户端战斗操作打包发出，S2C* 把服务端下发的战斗状态/指令解包成 war.CCmd(war.Xxx) 交给 war 的指令队列（入队与过滤在 war.CCmd 构造函数里）。本模块只做编解码与战斗开始/回合/结束的周边准备；队列推进、表现与结束收尾都在 war.py。",
@@ -1968,8 +1968,8 @@
     {
       "question": "改一个战斗封包的字段顺序/长度要动哪里？",
       "answer": {
-        "text": "C2S 侧改 netwar 里对应 C2S* 函数的 PacketPrepare/PacketAddI 序列；S2C 侧改对应 S2C* 函数的 netobj.Unpack* 序列，两者必须严格对称，否则 war 侧回调会读到错位字段。协议号与长度未与真机/服务端核对，改动必须实机验证。",
-        "confidence": "static_reviewed",
+        "text": "C2S侧按对应C2S*函数的PacketPrepare/PacketAddI序列查出站字段；S2C侧按对应S2C*函数的Unpack*序列查入站字段。二者是不同方向的消息，不能仅因功能名字对应就要求C2S与S2C字段严格对称。修改任一方向应与该方向的服务端协议对应；本条目没有服务端/抓包证据，字段顺序、长度、兼容性与运行效果均待核。",
+        "confidence": "inferred",
         "evidence": [
           "nw_def_C2SWarPerform",
           "nw_def_S2CWarAdd"
@@ -1992,12 +1992,13 @@
     {
       "question": "新加一个 S2C 战斗指令要动哪里？",
       "answer": {
-        "text": "在 netwar 加 S2C* 解包函数（构造 war.CCmd(war.<回调>) 并挂字段），并在 war.py 加同名回调；回调必须最终 NextCmd() 或 SetProcess(Wait, ...)，否则队列卡死。若它是录像信息子包，还要登记进 g_WarRecordInfoFunc（1069-1078 行）。",
-        "confidence": "static_reviewed",
+        "text": "候选中许多S2C*解包函数构造war.CCmd(war.<回调>)并挂字段，可据此定位对应war回调；不是每个S2C*都构造CCmd，也不能要求每个回调最终NextCmd或SetProcess(Wait)。仍需消费战斗队列的非终止回调应检查后续调度；End的关闭/切主循环终止路径是反例，详war条目。本建议不穷尽所有队列机制。若确为录像信息子包，再核g_WarRecordInfoFunc分派表；实际注册、协议兼容性及运行效果待验证。",
+        "confidence": "inferred",
         "evidence": [
           "nw_def_S2CWarPerform",
           "nw_recordmap",
-          "war_ccmd_ref"
+          "war_ccmd_ref",
+          "war_end_ref"
         ]
       }
     },
@@ -2034,13 +2035,14 @@
     "跨模块链：S2CWarEnd 不切主循环、war.End 普通分支 main.SetMainLoop()、录像分支 main.CloseGame()，均为静态阅读；没有运行记录，没有帧级或实机验证。main.py 正文由 N2 负责。",
     "C2S 协议常量（net.C2GS_WAR_*）与 PacketAddI 的长度参数仅按候选字面记录，仓库里没有任何真实抓包字节，未与真机/服务端核对，不表示发送成功或服务端接受。",
     "未逐条解释的分支/函数：观战面板系列（S2CShowSpecialWatchPanel 及其三个 Update*）、S2CUpateRecordInfo/S2CUpdateControlPoint 的字段语义、S2CWarNotifyExt/S2CWarPerformAtPos/S2CWarJuben 等多字段包只给了通用解包描述，没有逐字段语义解释。",
-    "Windows/EXE、原生引擎、实机与真实服务端均未在 N5 本轮验证；Qt GUI 因沙箱缺 libGL.so.1 未实跑。"
+    "Windows/EXE、原生引擎、实机与真实服务端均未在 N5 本轮验证；Qt GUI 因沙箱缺 libGL.so.1 未实跑。",
+    "A收尾纠正B-N5-04在本篇的重复表述，并撤回“C2S与S2C必须字段对称”的误导性修改建议；不同方向应各自匹配服务端协议，未验证服务端。"
   ],
   "sources": [
     {
       "id": "n5_prov",
       "path": "script_manual/annotations/battle/evidence/n5_provenance_20261016.txt",
-      "sha256": "47ffb39b9891bbc98ba788b26556aa979969f4a0cd2b19a6c96f9dcbc28aac15",
+      "sha256": "723920dc7fbdfdc0c03603c546f866aa882fbe5733442a66aecdef4a5602b7e3",
       "kind": "metadata",
       "note": "N5 本轮定点恢复回执：命令、引擎版本（Python3.11.2/u6 3.9.3/xdis 6.1.8/spark-parser 1.9.0/click 8.5.0）、输入/工具/候选/pyc 摘要、1406 的四项交叉核对、损坏标识符清单与只读边界。"
     },

@@ -5,7 +5,7 @@
   "path": "script/core/war.py",
   "owner": "F",
   "domain": "battle",
-  "author": "N5（2026-10-16 全新会话，承接逻辑任务包 F/battle；不冒称旧 F 会话）",
+  "author": "N5（2026-10-16 全新会话，承接逻辑任务包 F/battle；不冒称旧 F 会话）；A收尾仅修改指南B-N5-04（非终止/结束分流），此JSON须非A复核，A不自批",
   "source_status": "recovered_partial",
   "purpose": {
     "text": "战斗核心调度层：模块级战斗全局与唯一复位入口、g_Cmds 指令队列与“构造即入队”的 CCmd（带录像过滤守卫）、SetProcess/Process/Wait/NextCmd 组成的处理循环，以及按回调类型分派的战斗指令表现实现（Start/Add/AttackNormal/Perform/Turn/End 等）。真实伤害/命中/AI 计算不在本模块。",
@@ -3767,8 +3767,8 @@
     {
       "question": "改一条战斗指令的表现要动哪里？",
       "answer": {
-        "text": "先找到该回调（netwar 的 S2C* 用 war.CCmd(war.Xxx) 指定），再改 war.py 里同名函数。分派总入口：Perform（技能）/AttackNormal（普攻）/Turn（回合）/End（结束）/Add（入场）/Start（开场）。改完必须让回调最终回到 NextCmd() 或 SetProcess(Wait, ...)。这是按候选结构的推断而非实测：Process() 只执行 g_ProcessFunc，推进只发生在 NextCmd()/Wait() 两处，回调不回到这两处则队列不再前进；Process 仅在回调抛异常时自动回落 NextCmd()。",
-        "confidence": "static_reviewed",
+        "text": "先由netwar的S2C*中war.CCmd(war.Xxx)定位表现回调，再读war.py相应函数。候选Process调用当前g_ProcessFunc，异常路径会回落NextCmd；Wait在所等对象完成后调用NextCmd，NextCmd取出队首并交回Process。对仍需继续消费战斗队列的非终止回调，修改时建议检查它如何回到NextCmd、等待处理或其他已核的后续调度，不能由本稿穷尽所有合法模式。结束/关闭/退出战斗或切主循环的终止路径不要求继续推进：End录像分支CloseGame后返回，普通分支SetMainLoop后收尾，不调用NextCmd或SetProcess(Wait)。修改建议为静态推测，实际调度/异常与运行效果待验证，不能把没有继续推进一律视为队列卡住。",
+        "confidence": "inferred",
         "evidence": [
           "w_perform",
           "w_attacknormal",
@@ -3776,7 +3776,9 @@
           "w_end",
           "w_add",
           "w_start",
-          "w_nextcmd"
+          "w_nextcmd",
+          "w_process",
+          "w_wait"
         ]
       }
     },
@@ -3825,13 +3827,14 @@
     "真实战斗计算（伤害、命中、AI、服务端裁决）不在此模块，也没有任何 runtime_verified 结论；Process/Wait/NextCmd 的推进时序是静态阅读所得，未经实机或帧级验证。",
     "DoAddonAction 的 boss 分支在候选里位于 return 之后（不可达），以及 PlayAni/ChgShape 等处的异常回落，都只是候选形态的描述，未据其推断游戏必然如此。",
     "main.py / SetMainLoop / SetWarLoop 的最终语义归属 N2（C 域）正文；本模块只记录调用点与行号。",
-    "Windows/EXE、原生引擎、实机与真实服务端均未在 N5 本轮验证；Qt GUI 因沙箱缺 libGL.so.1 未实跑。"
+    "Windows/EXE、原生引擎、实机与真实服务端均未在 N5 本轮验证；Qt GUI 因沙箱缺 libGL.so.1 未实跑。",
+    "B-N5-04由A按用户“帮他们收尾”授权仅补指南范围及证据，未改候选。A是本JSON的共同作者，不给该JSON自批accepted；其余三篇N5原字节不变，可另作有限代审。"
   ],
   "sources": [
     {
       "id": "n5_prov",
       "path": "script_manual/annotations/battle/evidence/n5_provenance_20261016.txt",
-      "sha256": "47ffb39b9891bbc98ba788b26556aa979969f4a0cd2b19a6c96f9dcbc28aac15",
+      "sha256": "723920dc7fbdfdc0c03603c546f866aa882fbe5733442a66aecdef4a5602b7e3",
       "kind": "metadata",
       "note": "N5 本轮定点恢复回执：命令、引擎版本、输入/工具/候选/pyc 摘要、损坏标识符清单与只读边界。"
     },

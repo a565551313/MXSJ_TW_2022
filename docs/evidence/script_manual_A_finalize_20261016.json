@@ -1,0 +1,404 @@
+{
+  "date": "2026-10-16",
+  "kind": "A user-authorized final integration and limited review; not independent H or runtime acceptance",
+  "branch": "arena/61deb9e5-mxsj-tw-2022",
+  "authorization": [
+    "你帮他们收尾吧",
+    "H宕机了你审吧"
+  ],
+  "integration_checkpoint": "e60fcb588ff7a50249504ff603f1a64af50f5c8b",
+  "merged_PRs": [
+    {
+      "baseRefName": "arena/61deb9e5-mxsj-tw-2022",
+      "headRefOid": "f953eb992bf3c5d072ae478a0ac67e4d651e5064",
+      "mergeCommit": {
+        "oid": "474bd3abe51428442fb25ece98620135ea38ae88"
+      },
+      "mergedAt": "2026-10-16T02:27:54Z",
+      "number": 43,
+      "state": "MERGED"
+    },
+    {
+      "baseRefName": "arena/61deb9e5-mxsj-tw-2022",
+      "headRefOid": "c7142366fabafea0b35d943d8746a1de9d899b49",
+      "mergeCommit": {
+        "oid": "3f0db0306c49ecdc9a59b6bb15b0ae9c3efdd3df"
+      },
+      "mergedAt": "2026-10-16T02:28:02Z",
+      "number": 39,
+      "state": "MERGED"
+    },
+    {
+      "baseRefName": "arena/61deb9e5-mxsj-tw-2022",
+      "headRefOid": "77b64beda4b3b31455445ae48dfc124d614ce931",
+      "mergeCommit": {
+        "oid": "eb3b7b776eea79bd78e4452ec13cdd813c175e1f"
+      },
+      "mergedAt": "2026-10-16T02:28:08Z",
+      "number": 41,
+      "state": "MERGED"
+    },
+    {
+      "baseRefName": "arena/61deb9e5-mxsj-tw-2022",
+      "headRefOid": "44230b98527f72948acf16295e83f0151a26eb27",
+      "mergeCommit": {
+        "oid": "bbfb2748aca75c475ea1695aeae4a0169663be87"
+      },
+      "mergedAt": "2026-10-16T02:28:14Z",
+      "number": 40,
+      "state": "MERGED"
+    },
+    {
+      "baseRefName": "arena/61deb9e5-mxsj-tw-2022",
+      "headRefOid": "6fd5061dded82bbbcfc96694a5c20ef1a7a3e41e",
+      "mergeCommit": {
+        "oid": "c2c1f6e1803fe7312daba8f0c8d07b75a5c60733"
+      },
+      "mergedAt": "2026-10-16T02:28:26Z",
+      "number": 44,
+      "state": "MERGED"
+    },
+    {
+      "baseRefName": "arena/61deb9e5-mxsj-tw-2022",
+      "headRefOid": "23b60f96c602fe605912c3d323af743a4d54c22a",
+      "mergeCommit": {
+        "oid": "e06e6f4c4bac7db210969dcac76b19d0ea5fffe1"
+      },
+      "mergedAt": "2026-10-16T02:28:20Z",
+      "number": 42,
+      "state": "MERGED"
+    },
+    {
+      "baseRefName": "arena/61deb9e5-mxsj-tw-2022",
+      "headRefOid": "db872c5cd6aad0349e62d17af2959576aa3fec12",
+      "mergeCommit": {
+        "oid": "e60fcb588ff7a50249504ff603f1a64af50f5c8b"
+      },
+      "mergedAt": "2026-10-16T02:28:31Z",
+      "number": 45,
+      "state": "MERGED"
+    }
+  ],
+  "master_merged": false,
+  "coverage": {
+    "expected_entries": 5135,
+    "indexed": 5135,
+    "annotated": 20,
+    "accepted": 16,
+    "excluded": 1,
+    "pending": 4,
+    "stale_review": 0,
+    "changes_requested": 0
+  },
+  "finite_reviews": [
+    {
+      "entry_index": 219,
+      "annotation_sha256": "87525f6936f2818def3e30fbc729f29e1a428d863e929ec4f74c55cbd892a4e8",
+      "reviewer": "H",
+      "decision": "accepted"
+    },
+    {
+      "entry_index": 337,
+      "annotation_sha256": "ce4dba86bfb2c9dc71c28b6afdfbac9c3f962b3e8776c037d94dacfc37a5d5d5",
+      "reviewer": "A_delegate",
+      "decision": "accepted"
+    },
+    {
+      "entry_index": 516,
+      "annotation_sha256": "1ec1bc8f6bc812f24d27520c22036461cd4301c307e7e56ec0d0e6df2ec59fef",
+      "reviewer": "H",
+      "decision": "accepted"
+    },
+    {
+      "entry_index": 717,
+      "annotation_sha256": "59f17f879663241bc013d946f0ac2b5cdc9e0596d703efed612604db3f8f2f4d",
+      "reviewer": "H",
+      "decision": "accepted"
+    },
+    {
+      "entry_index": 871,
+      "annotation_sha256": "55b81261b69494667555e03f64c9cabf69c36a8f0d6383eaa6e0edb961062850",
+      "reviewer": "H",
+      "decision": "accepted"
+    },
+    {
+      "entry_index": 949,
+      "annotation_sha256": "965e88b5e5c2b4f6494bc74af01ef58ed617e37da7016121a7209b5c2ed3c459",
+      "reviewer": "H",
+      "decision": "accepted"
+    },
+    {
+      "entry_index": 1129,
+      "annotation_sha256": "35861348caf819b147087a5b6676a95a1d4aa1355e1dee91467e4aa0cd608f1c",
+      "reviewer": "H",
+      "decision": "accepted"
+    },
+    {
+      "entry_index": 2170,
+      "annotation_sha256": "505977078ec047c3584311ed3f25e8a2547e70a13ecf874b41e532c84fe21ba3",
+      "reviewer": "H",
+      "decision": "accepted"
+    },
+    {
+      "entry_index": 3038,
+      "annotation_sha256": "75a8fe1074967a6125de05a569ac2b669632a1e7e6dee387c6a0d8a4fd3a916a",
+      "reviewer": "H",
+      "decision": "accepted"
+    },
+    {
+      "entry_index": 3176,
+      "annotation_sha256": "17c3a9956859c5c22ac61e362d1f5458d9cc5168b042522aa16b5a27eebeab90",
+      "reviewer": "H",
+      "decision": "accepted"
+    },
+    {
+      "entry_index": 3232,
+      "annotation_sha256": "745bd2579c85ab7e1faf9deb78fd37cedb23bb0a5e322b398064a2c8ed4f4b0f",
+      "reviewer": "H",
+      "decision": "accepted"
+    },
+    {
+      "entry_index": 3854,
+      "annotation_sha256": "a8c3ddf43ef74a6a0fe4319dc6922233ae9e44583523fe26d72830a3d9258318",
+      "reviewer": "H",
+      "decision": "accepted"
+    },
+    {
+      "entry_index": 4007,
+      "annotation_sha256": "3372b8537aeb3d687aa4279b0b92f6f579654ee49a36c6fc5b1a835320e25551",
+      "reviewer": "A_delegate",
+      "decision": "accepted"
+    },
+    {
+      "entry_index": 4293,
+      "annotation_sha256": "f5eff3f1f3a95bc9373bd903c2a404a795308557801f1ce0268525f768698692",
+      "reviewer": "A_delegate",
+      "decision": "accepted"
+    },
+    {
+      "entry_index": 4806,
+      "annotation_sha256": "fe004aeeab7d3c38dd62324a0a522dac2c2dcb04745c963010960e4e0ab9bf0c",
+      "reviewer": "A_delegate",
+      "decision": "accepted"
+    },
+    {
+      "entry_index": 4832,
+      "annotation_sha256": "bb4b492a400adfcb7812b255e76c51a0c655e24e34c0f49121448959068bf799",
+      "reviewer": "H",
+      "decision": "accepted"
+    }
+  ],
+  "domain_record_counts_not_full_explanations": {
+    "battle": {
+      "modules": 4,
+      "functions": 267,
+      "branches": 67
+    },
+    "gameplay": {
+      "modules": 4,
+      "functions": 51,
+      "branches": 73
+    },
+    "login": {
+      "modules": 4,
+      "functions": 155,
+      "branches": 37
+    },
+    "network": {
+      "modules": 4,
+      "functions": 157,
+      "branches": 48
+    },
+    "ui_chat": {
+      "modules": 4,
+      "functions": 84,
+      "branches": 75
+    }
+  },
+  "A_coauthored_pending": {
+    "e_warctrl": "8dfca6e5ca37b5787c11ce6f0d1d4c688fb8d9eae4fd94f938e512d69e2deb31",
+    "war": "9c0aea28914085b8cb1ce4424352e5f165cedf9170da087c257ac9ce90085605",
+    "netwar": "614bef9d870b118b1e58bf9593e5297de08a3da4cf7b819adfc5f15d27bd766a",
+    "warcmd": "65e19f3c4a93e2dbb8add8ecea523f6d64bddf6f55dd031cd864986c8e2d15da"
+  },
+  "source_reproduction": {
+    "recovery_tool_sha256": "cd0e95fef232e9b34769bdb1e98e70dd46b6e023d17fca6ac32670d854196a35",
+    "N2": [
+      {
+        "entry": 337,
+        "stored_pyc_raw_body_sha_matches": true,
+        "isolated_real_boolean_False_True_and_strict_cp950_match": true
+      },
+      {
+        "entry": 4293,
+        "stored_pyc_raw_body_sha_matches": true,
+        "isolated_real_boolean_False_True_and_strict_cp950_match": true
+      },
+      {
+        "entry": 4007,
+        "stored_pyc_raw_body_sha_matches": true,
+        "isolated_real_boolean_False_True_and_strict_cp950_match": true
+      },
+      {
+        "entry": 4806,
+        "stored_pyc_raw_body_sha_matches": true,
+        "isolated_real_boolean_False_True_and_strict_cp950_match": true
+      }
+    ],
+    "game_modules_imported_or_executed": false,
+    "excerpt_checks": [
+      {
+        "file": "annotations/gameplay/evidence/hero_candidate_excerpt.txt",
+        "quoted_candidate_lines_unchanged_from_independently_checked_snapshot": true,
+        "metadata_also_unchanged": true
+      },
+      {
+        "file": "annotations/gameplay/evidence/dlgitem_candidate_excerpt.txt",
+        "quoted_candidate_lines_unchanged_from_independently_checked_snapshot": true,
+        "metadata_also_unchanged": true
+      },
+      {
+        "file": "annotations/gameplay/evidence/task_candidate_excerpt.txt",
+        "quoted_candidate_lines_unchanged_from_independently_checked_snapshot": true,
+        "metadata_also_unchanged": true
+      },
+      {
+        "file": "annotations/gameplay/evidence/npc_candidate_excerpt.txt",
+        "quoted_candidate_lines_unchanged_from_independently_checked_snapshot": true,
+        "metadata_also_unchanged": true
+      },
+      {
+        "file": "annotations/ui_chat/evidence/mainmenu_d1_deferred.txt",
+        "quoted_candidate_lines_unchanged_from_independently_checked_snapshot": true,
+        "metadata_also_unchanged": true
+      },
+      {
+        "file": "annotations/battle/evidence/war_697_excerpt.txt",
+        "quoted_candidate_lines_unchanged_from_independently_checked_snapshot": true,
+        "metadata_also_unchanged": true
+      },
+      {
+        "file": "annotations/battle/evidence/warcmd_1612_excerpt.txt",
+        "quoted_candidate_lines_unchanged_from_independently_checked_snapshot": true,
+        "metadata_also_unchanged": false
+      },
+      {
+        "file": "annotations/battle/evidence/e_warctrl_8_excerpt.txt",
+        "quoted_candidate_lines_unchanged_from_independently_checked_snapshot": true,
+        "metadata_also_unchanged": true
+      }
+    ],
+    "battle_current_annotation_sha256": {
+      "e_warctrl": "8dfca6e5ca37b5787c11ce6f0d1d4c688fb8d9eae4fd94f938e512d69e2deb31",
+      "war": "9c0aea28914085b8cb1ce4424352e5f165cedf9170da087c257ac9ce90085605",
+      "netwar": "614bef9d870b118b1e58bf9593e5297de08a3da4cf7b819adfc5f15d27bd766a",
+      "warcmd": "65e19f3c4a93e2dbb8add8ecea523f6d64bddf6f55dd031cd864986c8e2d15da"
+    }
+  },
+  "N1_two_real_trees": {
+    "trees": 2,
+    "all_runs_passed": true,
+    "outputs_identical_across_trees": true,
+    "delivered_equal_replay": true,
+    "outputs_sha256": {
+      "modules.jsonl": "266a7834765bb6b106d7c9e25261c2751277808d0b4d4be12bfbd142638ebf5c",
+      "sample_regression.json": "d179e1586151e1ffadd0a3016a4822bceb67a842da83aaf9bc16c48639b96051",
+      "B_extraction_receipt.json": "2ce69d3afeefcf37cef488e99d7f9b44274047cfceab677b512b22a7243504aa"
+    },
+    "targeted_1288_reads_per_run": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "note": "Whole-archive fingerprinting hashes bytes overlapping entry1288; no targeted payload read/decryption/recovery."
+  },
+  "gates": {
+    "entry": "python script_manual/check_manual.py",
+    "strict_evidence_full": true,
+    "manual_tests": {
+      "discovered": 86,
+      "passed": 75,
+      "skipped_Qt_missing": 11,
+      "failed": 0,
+      "new_gate_runner_regressions": 4
+    },
+    "N1_independent_tests": {
+      "discovered": 32,
+      "passed": 32,
+      "skipped": 0
+    },
+    "recovery_tool_synthetic_tests": {
+      "discovered": 27,
+      "passed": 27,
+      "skipped": 0,
+      "new_AST_boolean_regressions": 2,
+      "negative_control_before_fix_failed": 2
+    },
+    "ruff_including_spec": true,
+    "windows_static_manual": {
+      "root": "/home/user/MXSJ_TW_2022",
+      "source": "walk",
+      "scanned_files": 31,
+      "listed_paths": 168,
+      "findings": []
+    },
+    "windows_static_changed_tools": {
+      "root": "/home/user/MXSJ_TW_2022",
+      "source": "walk",
+      "scanned_files": 2,
+      "listed_paths": 2,
+      "findings": []
+    },
+    "html_build": {
+      "html_sha256": "f0aeaff7a43fac8b999aab32829d5b48af8418df1cdc6fba722a12581593574d",
+      "coverage": {
+        "expected_entries": 5135,
+        "indexed": 5135,
+        "annotated": 20,
+        "accepted": 16,
+        "excluded": 1
+      }
+    },
+    "DOM": {
+      "environment": "jsdom26.1.0 (DOM script execution only, NOT real browser/Qt/Windows/game)",
+      "indexed": 5135,
+      "annotated": 20,
+      "status": {
+        "accepted": 16,
+        "pending": 4
+      },
+      "Chinese_searches": 4,
+      "review_filter_checks": 2,
+      "path_navigation_and_identity_hash_checks": 3,
+      "function_search": "CreateCmdObject",
+      "G_authored_N6_reviewed_H": true,
+      "all20_annotation_four_tabs": 80,
+      "cross_module_button_jump": "hero→npc",
+      "errors": []
+    }
+  },
+  "artifact_sha256": {
+    "all-gates-final.log": "957b04b5117fb419d3605982c8d0e471cc5a33cbeedb82b2eccbf59f2ab8150e",
+    "boolean-negative.log": "e086c004ef111ac06d679a452442f1c71a98145f75082e587f8eeefbaa333974",
+    "boolean-positive.log": "5d6e722bead8de83641efb950dfbce4c34ef49f3a2657c1c1d572d3e81b5cd1e",
+    "source-audit.json": "c81f99c68b95522ba7ffd672082c96b697b46748f0f90f398aefa033029c2b54",
+    "N1-two-trees.json.template": "957cda62a0125d575a1f82db9b5bb70052d373b6412387253886830ae8ad7424",
+    "dom.cjs": "699980538acac44100c0b66fb3dd1adb618896d03cb3daf7add471bd24622094",
+    "dom-result.json": "3d36ecaaa7b4f4ec6860df455a0e8b493f40a9f12535d5ac0c43486d3ce3f8b1",
+    "site-final/BUILD.json": "aaccfe1477011f016f1a8221d9c149912fab3af92297135694bc3bc9c36be369",
+    "audit.py": "bb1d4144582adb151c6b59f3de0534626eb7d4d32d49685c22aec679588be998"
+  },
+  "tool_sha256": {
+    "tools/decompiler/recover_entries.py": "cd0e95fef232e9b34769bdb1e98e70dd46b6e023d17fca6ac32670d854196a35",
+    "tools/decompiler/test_recover_entries.py": "4da6290053ed87247d17706c8a68534e2ac41f1892a93c5c78cf595df49d8bf0",
+    "script_manual/check_manual.py": "197f5271acb0648534d0184edb359d26279357cd49b9c1a83b08142a945c5645",
+    "script_manual/tests/test_gate_runner.py": "78f652d7e87f83c022982256cac848b5805abc84bcba212eda9c2d864b74bd25"
+  },
+  "not_done": [
+    "No non-A final review of the four A-coauthored battle JSONs yet; not self-approved.",
+    "No real Qt/browser/CSP/Windows/EXE/game/native/server acceptance.",
+    "No 5000-module semantic expansion, 79MB corpus rebuild, game/editor/launcher changes, master merge or upload."
+  ],
+  "independent_review_request_status": "not_yet_posted_at_report_creation; subsequent A receipt will record actual published comment URL, not claim N7 execution."
+}

@@ -5,7 +5,7 @@
   "path": "script/core/magicperform/warcmd.py",
   "owner": "F",
   "domain": "battle",
-  "author": "N5（2026-10-16 全新会话，承接逻辑任务包 F/battle；不冒称旧 F 会话）",
+  "author": "N5（2026-10-16 全新会话，承接逻辑任务包 F/battle；不冒称旧 F 会话）；A收尾修正文中指南/定位事实，需非A独立复核，A不自批",
   "source_status": "recovered_partial",
   "purpose": {
     "text": "战斗表现命令工厂：模块级 SKILLTYPE_CMD 把 e_comskilldefine 的技能类型常量映射到对应的表现命令类，CreateCmdObject 按 dSkillInfo[SKILL_DATA_TYPE] 查表并 new 出该命令对象（构造参数统一为 iSkillID/dSkillInfo/dattackInfo）。它只做“类型→类”的分派，不含播放逻辑。",
@@ -228,7 +228,7 @@
       "kind": "module",
       "target": "script/core/magicperform/warcmd/warcmdplayghostmoveani.py (entry 1905)",
       "summary": {
-        "text": "表现命令子模块：类 CWarCmdPlayGhostMoveAni，对应映射键 （第 12 条，常量名在候选里损坏）（残影移动动画）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 1905 双重证明，不再是“仅凭 catalog 推测”。",
+        "text": "表现命令子模块：类 CWarCmdPlayGhostMoveAni，对应映射键 （候选映射字面顺序第 6 条，常量名在候选里损坏）（残影移动动画）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 1905 双重证明，不再是“仅凭 catalog 推测”。",
         "confidence": "static_reviewed",
         "evidence": [
           "wc_import",
@@ -477,7 +477,7 @@
       "question": "新增一种战斗表现命令要动哪里？",
       "answer": {
         "text": "三步：① 在 e_comskilldefine 加 SKILL_TYPE_* 常量；② 新建 script/core/magicperform/warcmd/warcmd<xxx>.py 并在其中实现 CWarCmd<Xxx>（构造参数必须是 (iSkillID, dSkillInfo, dattackInfo)）；③ 在 warcmd.py 顶部 import 行与 SKILLTYPE_CMD 表里各登记一次。漏掉第③步会得到 CreateCmdObject 的“失聯狀態”日志并返回 None。",
-        "confidence": "static_reviewed",
+        "confidence": "inferred",
         "evidence": [
           "wc_import",
           "wc_map",
@@ -496,9 +496,9 @@
       }
     },
     {
-      "question": "SKILLTYPE_CMD 第 12 条是什么？",
+      "question": "SKILLTYPE_CMD 候选映射字面顺序第 6 条是什么？",
       "answer": {
-        "text": "第 12 条的值是 warcmdplayghostmoveani.CWarCmdPlayGhostMoveAni（未损坏），但键在候选里是损坏标识符 TLNKKXS^WBX@OHTSJHVEANI，按前后条目命名规律应为 SKILL_TYPE_GHOSTMOVEANI 一类，**没有**未损坏字节证据，只能标为待核，不要按猜测改名。",
+        "text": "候选映射字面顺序第 6 条的值是 warcmdplayghostmoveani.CWarCmdPlayGhostMoveAni（未损坏），但键在候选里是损坏标识符 TLNKKXS^WBX@OHTSJHVEANI，按前后条目命名规律应为 SKILL_TYPE_GHOSTMOVEANI 一类，**没有**未损坏字节证据，只能标为待核，不要按猜测改名。",
         "confidence": "inferred",
         "evidence": [
           "wc_map",
@@ -519,17 +519,18 @@
     }
   ],
   "limitations": [
-    "候选共 45 行（去头正文 39 行），已完整摘录进本目录的 warcmd_1612_excerpt.txt，但仍存在 1 处损坏标识符（SKILLTYPE_CMD 第 12 条的键），故 source_status 记 recovered_partial；decompile_ok 不等于语义正确。",
+    "候选共 45 行（去头正文 39 行），已完整摘录进本目录的 warcmd_1612_excerpt.txt，但仍存在 1 处损坏标识符（SKILLTYPE_CMD 候选映射字面顺序第 6 条的键），故 source_status 记 recovered_partial；decompile_ok 不等于语义正确。",
     "未执行、未 import 任何恢复出来的游戏模块；21 个子模块的正文本轮一条都没读，它们的构造签名、接口与是否共享基类（warcmdbase entry 4694）均无证据。",
-    "映射键的常量名全部按候选字面保留；第 12 条键名不可确认，条目顺序与“SKILL_TYPE_* 前缀”只能作为命名线索，不是字节证据。",
+    "映射键的常量名全部按候选字面保留；候选映射字面顺序第 6 条键名不可确认，条目顺序与“SKILL_TYPE_* 前缀”只能作为命名线索，不是字节证据。",
     "CreateCmdObject 的调用方本轮未解（候选内没有调用点），相关关系一律标 inferred。",
-    "没有任何 runtime_verified 结论；Windows/EXE、原生引擎、实机与真实服务端均未验证。"
+    "没有任何 runtime_verified 结论；Windows/EXE、原生引擎、实机与真实服务端均未验证。",
+    "A收尾按实际候选映射顺序纠正损坏键的次序为第6项；新增命令指南仅为从本地三实参调用形状推导的修改建议，未核21个子模块，不升级为全部接口已确认。"
   ],
   "sources": [
     {
       "id": "n5_prov",
       "path": "script_manual/annotations/battle/evidence/n5_provenance_20261016.txt",
-      "sha256": "47ffb39b9891bbc98ba788b26556aa979969f4a0cd2b19a6c96f9dcbc28aac15",
+      "sha256": "723920dc7fbdfdc0c03603c546f866aa882fbe5733442a66aecdef4a5602b7e3",
       "kind": "metadata",
       "note": "N5 本轮定点恢复回执：命令、引擎版本、输入/工具/候选/pyc 摘要、损坏标识符清单与只读边界。"
     },
@@ -543,7 +544,7 @@
     {
       "id": "warcmd_src",
       "path": "script_manual/annotations/battle/evidence/warcmd_1612_excerpt.txt",
-      "sha256": "19380ecf7d56a3e82de937a07d4b6fc555145b958be2c397e00caa6b1826a30b",
+      "sha256": "1565fade4feb7d52f1cd52c4e33c11e50bee0cab5e65c1c1a5c8dcd371cbc170",
       "kind": "metadata",
       "note": "entry 1612 去头候选（SHA 60f0e569…，与 A 的 BDF 收据一致）的**完整**摘录（去头正文 1-39 行），L 前缀保留候选行号。虽然是全量，它仍然是反编译产物，不是原始源码。"
     },

@@ -22,7 +22,7 @@ L00005: "# Embedded file name: script\\core\\magicperform\\warcmd.py"
 L00006: "import e_comskilldefine, e_debugctrl, warcmdaddbuff, warcmdattackend, warcmdattackpre, warcmdbgcolor, warcmdbgrolecolor, warcmddelay, warcmdenermyhit, warcmdenermyhurt, warcmdghost, warcmdgoback, warcmdmove, warcmdplayani, warcmdplayghostani, warcmdplayghostmoveani, warcmdplaymoveani, warcmdplaysound, warcmdrolepalette, warcmdsetaction, warcmdsetmulaction, warcmdspare, warcmdremant"
 
 [wc_map] 原文行 7..27（1-based 闭区间）
-SKILLTYPE_CMD：技能类型 → 表现命令类的映射表，21 条。第 12 条（GHOSTMOVEANI）在本版候选里是损坏标识符 TLNKKXS^WBX@OHTSJHVEANI，按其值 warcmdplayghostmoveani.CWarCmdPlayGhostMoveAni 与常量命名规律可判定含义，但**没有**未损坏的字节证据，故只能标为待核，不能当作已确认常量名。
+SKILLTYPE_CMD：技能类型 → 表现命令类的映射表，21 条。候选正文L12、映射字面顺序第6项（GHOSTMOVEANI）在本版候选里是损坏标识符 TLNKKXS^WBX@OHTSJHVEANI，按其值 warcmdplayghostmoveani.CWarCmdPlayGhostMoveAni 与常量命名规律可判定含义，但**没有**未损坏的字节证据，故只能标为待核，不能当作已确认常量名。
 L00007: "SKILLTYPE_CMD = {(e_comskilldefine.SKILL_TYPE_REMNANT): (warcmdremant.CWarCmdRemant), "
 L00008: "   (e_comskilldefine.SKILL_TYPE_MOVE): (warcmdmove.CWarCmdMove), "
 L00009: "   (e_comskilldefine.SKILL_TYPE_ANI): (warcmdplayani.CWarCmdPlayAni), "

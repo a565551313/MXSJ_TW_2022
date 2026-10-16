@@ -5,7 +5,7 @@
   "path": "script/pubscript/pubskill/e_warctrl.py",
   "owner": "F",
   "domain": "battle",
-  "author": "N5（2026-10-16 全新会话，承接逻辑任务包 F/battle；不冒称旧 F 会话）",
+  "author": "N5（2026-10-16 全新会话，承接逻辑任务包 F/battle；不冒称旧 F 会话）；A收尾修正文中指南/定位事实，需非A独立复核，A不自批",
   "source_status": "recovered_partial",
   "purpose": {
     "text": "战斗技能播放控制：CWarCtrl 是全局单例容器，用常驻 timer 回调驱动一帧一帧的更新（构造实参首值字面为 0.033，计时单位与实际帧间隔未验证，见 limitations），管理每个技能的 CPlayCtrl（倍速/暂停/回收）；CPlayCtrl 把帧号交给 e_warcmdmgr 的命令管理器，并对外发 slot 信号。三层模块级 API（GetWarCtrl/RemoveSkill/SetSkillPause/GetSkillPlayCtrl）是薄包装。",
@@ -1213,7 +1213,7 @@
     {
       "question": "技能播完在哪里回收、怎么接通知？",
       "answer": {
-        "text": "回收路径：_OnUpdate 发现 ctrl.IsEnd()（或 OnUpdate 抛异常 → OnUpdateError）→ 进 delList → _removeSkill → Release + del + 通知 e_warinterface。通知名在候选里是损坏标识符 e_warinterface.}EillFinished，接通知要先确认真实函数名。另外 CPlayCtrl 本身是 slot 信号主体，可用 TriggerSignal 订阅。",
+        "text": "候选有两条不同路径：主动CWarCtrl.RemoveSkill取到对象后先skill.Release()，再_removeSkill；自动_OnUpdate在结束或异常后收集delList，直接调用_removeSkill，没有在这条路径显式Release。_removeSkill依次调试WriteInfo、del字典项、调用损坏标识符e_warinterface.}EillFinished；不能据此保证资源释放或通知成功。CPlayCtrl.TriggerSignal调用ssEmit，是发出信号而非订阅接口；订阅方式与生命周期须另查slot及调用方，本轮未核。",
         "confidence": "static_reviewed",
         "evidence": [
           "ew_cwarctrl",
@@ -1225,8 +1225,8 @@
     {
       "question": "新增一种技能播放要动哪里？",
       "answer": {
-        "text": "用 CWarCtrl.PlaySkill(skillID, skillPath, attackInfo) 登记即可，它会新建 CPlayCtrl 并由命令管理器 LoadSkillData(skillPath, attackInfo) 加载；真正的命令内容在 e_warcmdmgr（entry 631）与 warcmd 子模块（entry 1612 的分派表）里。容器是单例，跨战斗复用前需要 ModuleReset()。",
-        "confidence": "static_reviewed",
+        "text": "本篇可定位PlaySkill构造CPlayCtrl、CPlayCtrl构造CWarCmdMgr并LoadSkillData的入口，不能证明仅登记即可完成新增技能。建议继续核e_warcmdmgr（entry631）与各命令子模块、数据及调用者，均不在本轮证据内。ModuleReset只把g_WarCtrl置None，不能证明旧timer/技能资源被释放，也不能给出跨战斗前必须调用它的生命周期建议；实际复用与清理机制待验证。",
+        "confidence": "inferred",
         "evidence": [
           "ew_cwarctrl",
           "ew_cplayctrl",
@@ -1243,13 +1243,14 @@
     "m_Speed 与 timer.Timer 第一个实参（字面值 0.033，计时单位与实际帧间隔未验证）的组合得出的实际播放速度、以及倍速下的帧丢失，均未实机验证。",
     "Windows/EXE、原生引擎、实机与真实服务端均未验证。",
     "CPlayCtrl.Release 只能证明“正常返回后顺序调用会跳过”：候选是先 m_WarCmdMgr.Release(self) 再置 None，下游同步重入或抛异常时引用仍非空，故不声称可重入/异常安全（B-N5-02）。",
-    "timer.Timer 的实现（script/core/timer.py，catalog entry_index 3153）不在本卡恢复白名单内、本轮未取正文：0.033 的计时单位、-1 的重复语义、以及 0.033 与实际帧率的关系全部未知；“约 30fps/无限循环”只是推测，已从正文中删除（B-N5-03）。"
+    "timer.Timer 的实现（script/core/timer.py，catalog entry_index 3153）不在本卡恢复白名单内、本轮未取正文：0.033 的计时单位、-1 的重复语义、以及 0.033 与实际帧率的关系全部未知；“约 30fps/无限循环”只是推测，已从正文中删除（B-N5-03）。",
+    "A收尾纠正修改指南：自动移除与主动RemoveSkill的Release顺序不同；TriggerSignal是ssEmit发出而非订阅；ModuleReset仅置None，不能当成完整跨战斗清理流程。"
   ],
   "sources": [
     {
       "id": "n5_prov",
       "path": "script_manual/annotations/battle/evidence/n5_provenance_20261016.txt",
-      "sha256": "47ffb39b9891bbc98ba788b26556aa979969f4a0cd2b19a6c96f9dcbc28aac15",
+      "sha256": "723920dc7fbdfdc0c03603c546f866aa882fbe5733442a66aecdef4a5602b7e3",
       "kind": "metadata",
       "note": "N5 本轮定点恢复回执：命令、引擎版本、输入/工具/候选/pyc 摘要、损坏标识符清单与只读边界。"
     },

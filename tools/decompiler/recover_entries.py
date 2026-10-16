@@ -239,7 +239,7 @@ def decompile_isolated(pyc: bytes, engine: str, decode_big5: bool,
         pyc_path.write_bytes(pyc)
         code = _CHILD.format(decompiler=str(REPO_ROOT / "tools" / "decompiler"),
                              pyc_path=str(pyc_path), out_path=str(out_path),
-                             engine=engine, decode_big5=repr(decode_big5))
+                             engine=engine, decode_big5=decode_big5)
         try:
             proc = subprocess.run([sys.executable, "-c", code],
                                   capture_output=True, text=True, timeout=timeout)

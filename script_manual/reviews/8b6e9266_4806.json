@@ -2,8 +2,9 @@
   "schema_version": 1,
   "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
   "entry_index": 4806,
-  "annotation_sha256": "76b2fea23dbcaf49b4c146e9cfe1a3de21512beba393672e9d3c3f1963f47b5f",
-  "reviewer": "H",
-  "decision": "changes_requested",
-  "note": "N7新会话独立复核（Arena 2026-10-16 新分配的第7个新agent，逻辑任务包H/review；不是旧H、不是A、不是旧C，未代写作者正文）。输入提交：A集成分支固定head 9b0dea799768aaacbb967ffc59f45753970752be，检查点7d32e5340b0ab4168f725d238d767ad6232f715d已确认为祖先；固定包script.fls 8b6e9266…、data.fls 5f96bdb2…、参数表43bb090d…本机sha256sum核对一致，未改动。独立复现：仓库外 Python3.11.2 + uncompyle6 3.9.3 / xdis 6.1.8 / spark-parser 1.9.0 / click 8.5.0，recover_entries.py --entries 337,4293,4007,4806 → 四条均 recovered/source/baseline/decompile_ok，script/login/mainpage.py(338)、script/main.py(1579)、script/login/register.py(1311)、script/login/loginin.py(1442)；行号为含6行恢复头的候选文件行号。loginin/4806。候选核对：L580 def OnMessage(self, msgid) → L582 if msgid == 2 → L583 if not misc.IsTWServer() → L584-588 取 chk_agree，未选中则 ShowMessageBox('請勾選「我同意多益通用戶協議」…') 并 return → L589 LoginOk()；L252 def LoginOk() → L269 netlogin.C2SLoginIn(user, password)，函数体内无 SaveAccount；L663 def OnLogin()；SaveAccount 有 L509（方法）与 L1416（函数）两处。退修 N7-L01（P1，modification_guides『登录按钮点击后经过哪些函数和模块』/answer/evidence=['loginin','show']）：该问答写『LoginOk保存账号；网络连接由netserver.RandomConnect与netlogin处理』，与同一文件 LoginOk 的 summary（不保存账号）、与 L396 分支说明、以及 main.json『账号保存在OnLogin()』三方互相矛盾；候选 L252-L269 明确无 SaveAccount。RandomConnect 亦未被本条证据覆盖，不能串成先后链。退修 N7-L02（P2，ShowLogin 相关分支与 OnMessage(2) 条件表述）：候选 L583 的协议勾选检查只在 not misc.IsTWServer() 之内，不是全客户端前提；正文不得附会 TW/HK 映射。退修 N7-L03（P2，modification_guides『main.py如何启动、运行主循环、切换战斗和退出』/answer/evidence=['show']）：该问答谈 main.py 却只引 loginin 自身的 show 段，与所谈内容不对应；须补 main.py 实际行段或收缩为导航说明。本审核只覆盖上述已核对行段与已登记缺口；未穷尽四份候选，未做实机/Windows/原生/服务端验收，不因正文已合并而放行。"
+  "annotation_sha256": "fe004aeeab7d3c38dd62324a0a522dac2c2dcb04745c963010960e4e0ab9bf0c",
+  "reviewer": "A_delegate",
+  "delegation": "用户“H宕机了你审吧”授权A接替复核，随后“你帮他们收尾吧”授权收尾；本记录是A有限代审，不是独立H/N7。A未参与此N2固定正文的写作或改动。",
+  "decision": "accepted",
+  "note": "2026-10-16 A收尾有限代审；输入PR39 c7142366fabafea0b35d943d8746a1de9d899b49，已合A e60fcb588ff7a50249504ff603f1a64af50f5c8b；旧N7在9b0dea7基线的退修仅作问题清单，不挪绑定SHA冒充新N7结论。loginin：核LoginOk（246–265）的校验→C2SLoginIn→错误回调顺序、OnMessage(2)仅非TW协议框门禁（574–585）、独立OnLogin→SaveAccount（657–661）、ShowLogin仅按g_LangVersion分支（701–709）、OneoffLogin两入口与普通按钮链分开。未据发包推定登录成功或自动连接全链。 四条原包目录ID/stored/pyc/raw u6/body SHA实际重算一致；修正恢复子进程布尔参数后，以真实False及True独立输出四对raw/正文，严格cp950后处理链一致。接受范围为原五组阻塞及六题相关新增/修改结论和定位、来源链，不是穷尽本模块全部函数/分支语义。局限/不确定候选形态保留，不代表原始源码、5000模块、Qt/Windows/EXE/游戏/原生或服务端通过。详细报告：docs/evidence/script_manual_A_finalize_20261016.md。"
 }

@@ -2,11 +2,12 @@
 
 独立、只读的脚本字典工具。**JSON 是唯一底稿**，PySide6 查看器和离线单 HTML 共用校验/索引层，不导入或执行游戏脚本，不修改游戏包、脚本编辑器或启动器。
 
-本轮已按用户授权把现有成果合到 **A集成分支（不是master）**：5135条目录登记、20份说明、3份有限通过、5份有退修审核、12份无有效审核。**合并不等于验收**：B目录签名仍有已知错误，F多条仅名称底稿，其他说明也有有限范围/待修项。历史A代审实际标A_delegate，不冒称独立H。此前已按 [N1–N7新任务卡](coordination/NEW_AGENTS_START_20261016.md) 分派并收到七个新PR；不再复用旧B–H会话或旧PR。当前进度和测试以 [`../docs/STATUS.md`](../docs/STATUS.md) 最新§3.50为准。
+**当前正式状态（2026-10-16，STATUS§3.51）**：七个新PR39–45已全部合入A分支，未合master。5135条目录登记 / 20份说明 / **16份有限审核通过（12 H、4 A_delegate）** / 4份战斗说明待独立复核 / 1排除；无过期审核。合并不是全模块或实机验收，42条战斗函数仍是名称底稿，其余5000模块没有假讲解。
 
-> **最新复核（2026-10-16，§3.49）**：七个全新agent已交PR39–45，不必再次启动七人。N1/N3/N4/N6为有限集成候选；N2待N7补新字节尾审，N5有3项P2待修，N7为部分审核交付。**新PR均未合并，正式仍5135/20/3/1**；外置模拟精确激活九份N7模板可达12通过，不是正式状态。见[总复核报告](../docs/evidence/script_manual_new_cohort_A_review_20261016.md)。
-
-> **N5二轮补充（§3.50）**：PR44的6fd5061已修原三P2；余一处“所有回调须NextCmd/Wait”的指南范围小修（End终止路径例外），修后交N7末审。[二轮报告](../docs/evidence/script_manual_N5_6fd5061_A_review_20261016.md)。仍未合入，正式通过数不变。
+- 已精确核SHA激活九份N7模板；登录四篇由A按用户授权作有限代审，不冒称N7新结论。
+- A接手补完战斗四篇的指南/事实定位，因此四篇author均记A共同作者，**A不自批**；剩余工作仅为非A对新字节独立末审，不再让用户转述返修或重开七人。
+- 恢复工具布尔参数双repr缺陷已修；新增独立回归，并实际重核四条raw/正文编码链。N1在两棵隔离树重放，三产物一致；详情、范围与未知见[收尾报告](../docs/evidence/script_manual_A_finalize_20261016.md)。
+- 历史§3.49/3.50“未合入/3通过”等为当时快照，不是现状。当前源码已集成，但Qt、真实浏览器、Windows/EXE、游戏/原生/服务端仍未验收；本轮不上传、不打游戏包。
 
 ## 开始使用
 
@@ -27,13 +28,13 @@ PYTHONPATH=script_manual/src python -m mxsj_manual build --verify-evidence --rep
 - 输出目录**必须不存在且在仓库/手册输入目录之外**；重复导出用新目录，绝不覆盖旧站点。
 - `index.html` 双击可用，无服务端、网络请求或外部字体；可以整目录拷到别的电脑。`BUILD.json` 记录工具版本、输入文件摘要、覆盖数及 HTML 摘要。生成失败保留 `INCOMPLETE.txt`，不得分发未完成目录。
 - `--verify-evidence` **仅**复核注释引用的文本字节 SHA256 和行号；不检查原始包、不做语义验证。冻结原包指纹另见 `coordination/baseline.json`。未加此选项时，页面明确标记证据“本次未校验”。不要求分发原包或79 MB语料。
-- `--require-full-inventory` 可与 validate/build 配合，要求冻结包**全部登记条目**齐全（含目录、不可读及政策排除元记录）。本轮5135条登记可通过此结构闸门，但B签名/回执待修，不能据此宣称元数据语义全部正确。总量5135是5002+133条登记，并非5135份可执行源码。
+- `--require-full-inventory` 可与 validate/build 配合，要求冻结包**全部登记条目**齐全（含目录、不可读及政策排除元记录）。本轮5135条登记可通过此结构闸门，；N1已修已知签名/回执问题并独立重放，但不能据此宣称元数据语义全部正确。总量5135是5002+133条登记，并非5135份可执行源码。
 - `--content PATH` 在子命令**之前**指定另一份完整数据目录；目录必须包含同版schema、coordination、inventory、annotations、reviews。
 - 搜索多个词取交集，路径反斜杠会归一化；功能关键词只能搜到已经编写的说明。搜不到不代表功能不存在。
 
 ## 给并行 Agent 的入口
 
-**N1–N7卡已执行并交PR，勿重复启动七人**；[任务卡入口](coordination/NEW_AGENTS_START_20261016.md)保留范围约束，最新行动见STATUS§3.49/总复核报告。下列契约/逻辑owner映射继续生效，但旧B–H分支与“更新原PR”不再是新人操作指令。
+**N1–N7卡已执行并交PR，勿重复启动七人**；[任务卡入口](coordination/NEW_AGENTS_START_20261016.md)保留范围约束，当前已合入A，实际进展见STATUS§3.51/收尾报告。下列契约/逻辑owner映射继续生效，但旧B–H分支与“更新原PR”不再是新人操作指令。
 
 1. 先读 [`docs/CONTRACT.md`](docs/CONTRACT.md) — 字段、证据与版本规则。
 2. 读 [`docs/AGENT_TASKS.md`](docs/AGENT_TASKS.md) — 权限边界和各任务卡。
@@ -45,13 +46,17 @@ PYTHONPATH=script_manual/src python -m mxsj_manual build --verify-evidence --rep
 
 ```bash
 python -m pip install -r script_manual/requirements-dev.txt
+python script_manual/check_manual.py  # 六道统一闸门，包含N1/恢复工具独立测试
+# python script_manual/check_manual.py --require-gui  # Qt缺失时禁止跳过
 PYTHONPATH=script_manual/src QT_QPA_PLATFORM=offscreen python -m unittest discover -s script_manual/tests -v
 python script_manual/bootstrap.py --check-only
 ruff check script_manual
 python tools/devkit/check_windows_compat.py script_manual --strict
 ```
 
-单元测试使用 `tests/fixtures/` 固定样本，不从生产annotations/inventory构造期望值；真实数据另有不假定说明数量的结构冒烟，集成时仍须单独跑 `validate --verify-evidence`。冻结夹具不是新的权威底稿，勿随Agent交付自动改数量。
+单元测试使用 `tests/fixtures/` 固定样本，不从生产annotations/inventory构造期望值；真实数据另有不假定说明数量的结构冒烟；统一闸门已包含下面的严格来源/full检查，单独跑测试时仍须另跑 `validate --verify-evidence`。冻结夹具不是新的权威底稿，勿随Agent交付自动改数量。
+
+统一入口只读验证与合成测试，不做恢复/HTML构建；缺任一道工具或任一步非零都会返回失败，不把N1的32项藏在标准86项里，也不把GUI跳过当通过。
 
 core测试不依赖Qt/游戏包；GUI测试在可用PySide6环境执行。`MXSJ_MANUAL_REQUIRE_GUI=1` 可禁止因Qt缺失而跳过GUI测试，Windows构建脚本已设置。离线浏览器验收是单独的开发检查，不要求用户安装浏览器自动化依赖。
 

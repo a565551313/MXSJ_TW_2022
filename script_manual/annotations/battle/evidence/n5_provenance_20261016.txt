@@ -51,7 +51,7 @@ entry_id 机械复核（2026-10-16 返修 B-N5-01）：上面四条 entry_id 全
 
 本轮已知的候选损坏标识符（原样保留，不猜补、不替换为 catalog 历史名）：
   entry 697 war.py：3 处 `except SystemE??or:`（去头正文 580 / 759 / 773 行）。
-  entry 1612 warcmd.py：1 处 `e_comskilldefine.TLNKKXS^WBX@OHTSJHVEANI`（映射表第 12 条）。
+  entry 1612 warcmd.py：1 处 `e_comskilldefine.TLNKKXS^WBX@OHTSJHVEANI`（映射表候选正文L12、映射字面顺序第6项）。
   entry 8 e_warctrl.py：1 处 `e_warinterface.}EillFinished`（CWarCtrl._removeSkill）。
   另外 entry 697 去头正文 172 行 EID2PATH 的中文串带解码噪声，原样保留。
 
