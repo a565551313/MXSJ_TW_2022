@@ -1,0 +1,812 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 1612,
+  "path": "script/core/magicperform/warcmd.py",
+  "owner": "F",
+  "domain": "battle",
+  "author": "N5（2026-10-16 全新会话，承接逻辑任务包 F/battle；不冒称旧 F 会话）；A收尾修正文中指南/定位事实，需非A独立复核，A不自批",
+  "source_status": "recovered_partial",
+  "purpose": {
+    "text": "战斗表现命令工厂：模块级 SKILLTYPE_CMD 把 e_comskilldefine 的技能类型常量映射到对应的表现命令类，CreateCmdObject 按 dSkillInfo[SKILL_DATA_TYPE] 查表并 new 出该命令对象（构造参数统一为 iSkillID/dSkillInfo/dattackInfo）。它只做“类型→类”的分派，不含播放逻辑。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "wc_import",
+      "wc_map",
+      "wc_create",
+      "catalog_self"
+    ]
+  },
+  "keywords": [
+    "战斗",
+    "表现",
+    "命令",
+    "warcmd",
+    "CreateCmdObject",
+    "SKILLTYPE_CMD",
+    "技能类型"
+  ],
+  "functions": [
+    {
+      "name": "CreateCmdObject",
+      "signature": "(iSkillID, dSkillInfo, dattackInfo)",
+      "kind": "function",
+      "summary": {
+        "text": "按技能类型创建表现命令对象：skillType = dSkillInfo[e_comskilldefine.SKILL_DATA_TYPE]；先 e_debugctrl.DebugPrint('skillType = ', skillType)；命中 SKILLTYPE_CMD 则 SKILLTYPE_CMD[skillType](iSkillID, dSkillInfo, dattackInfo)（映射值是类本身，这里是实例化）；未命中打 LOG_DEBUG('-_-b 該指令處於失聯狀態！！！', iSkillID, skillType) 并隐式返回 None。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_create",
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "LOG_DEBUG",
+        "e_debugctrl.DebugPrint"
+      ],
+      "branches": [
+        {
+          "condition": "skillType in SKILLTYPE_CMD",
+          "effect": {
+            "text": "返回 SKILLTYPE_CMD[skillType](iSkillID, dSkillInfo, dattackInfo)",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "wc_create"
+            ]
+          }
+        },
+        {
+          "condition": "skillType 不在表里（else 分支）",
+          "effect": {
+            "text": "LOG_DEBUG('-_-b 該指令處於失聯狀態！！！', iSkillID, skillType)，函数隐式返回 None；调用方必须自己处理 None",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "wc_create"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdaddbuff.py (entry 3722)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdAddBuff，对应映射键 SKILL_TYPE_ADDBUFF（加 buff）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 3722 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdaddbuff"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdattackend.py (entry 4494)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdAttackEnd，对应映射键 SKILL_TYPE_ATTACK_END（攻击结束）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 4494 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdattackend"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdattackpre.py (entry 803)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdAttackPre，对应映射键 SKILL_TYPE_ATTACK_PRE（攻击起手）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 803 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdattackpre"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdbgcolor.py (entry 3595)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdBGColor，对应映射键 SKILL_TYPE_BGCOLOR（背景变色）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 3595 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdbgcolor"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdbgrolecolor.py (entry 1847)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdBGRoleColor，对应映射键 SKILL_TYPE_BGROLECOLOR（背景角色染色）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 1847 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdbgrolecolor"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmddelay.py (entry 499)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdDelay，对应映射键 SKILL_TYPE_DELAY（延迟）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 499 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmddelay"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdenermyhit.py (entry 4126)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdEnermyHit，对应映射键 SKILL_TYPE_ENEMY_HIT（受击命中）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 4126 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdenermyhit"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdenermyhurt.py (entry 2691)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdEnermyHurt，对应映射键 SKILL_TYPE_ENEMY_HURT（受击掉血）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 2691 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdenermyhurt"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdghost.py (entry 4959)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdGhost，对应映射键 SKILL_TYPE_GHOST（残影）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 4959 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdghost"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdgoback.py (entry 2842)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdGoBack，对应映射键 SKILL_TYPE_GOBACK（回位）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 2842 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdgoback"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdmove.py (entry 1834)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdMove，对应映射键 SKILL_TYPE_MOVE（移动）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 1834 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdmove"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdplayani.py (entry 2784)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdPlayAni，对应映射键 SKILL_TYPE_ANI（播动画）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 2784 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdplayani"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdplayghostani.py (entry 3991)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdPlayGhostAni，对应映射键 SKILL_TYPE_GHOSTANI（残影动画）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 3991 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdplayghostani"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdplayghostmoveani.py (entry 1905)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdPlayGhostMoveAni，对应映射键 （候选映射字面顺序第 6 条，常量名在候选里损坏）（残影移动动画）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 1905 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdplayghostmoveani"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdplaymoveani.py (entry 1621)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdPlayMoveAni，对应映射键 SKILL_TYPE_MOVEANI（移动动画）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 1621 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdplaymoveani"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdplaysound.py (entry 231)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdPlaySound，对应映射键 SKILL_TYPE_PLAY_SOUND（播音效）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 231 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdplaysound"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdremant.py (entry 3367)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdRemant，对应映射键 SKILL_TYPE_REMNANT（残留特效）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 3367 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdremant"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdrolepalette.py (entry 1480)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdRolePalette，对应映射键 SKILL_DATA_COMPONENT_ROLEPALETTE（角色调色板）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 1480 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdrolepalette"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdsetaction.py (entry 3972)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdSetAction，对应映射键 SKILL_TYPE_ACTION（设动作）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 3972 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdsetaction"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdsetmulaction.py (entry 3644)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdSetMulAction，对应映射键 SKILL_TYPE_MULACTION（设多段动作）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 3644 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdsetmulaction"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmd/warcmdspare.py (entry 2397)",
+      "summary": {
+        "text": "表现命令子模块：类 CWarCmdSpare，对应映射键 SKILL_TYPE_SPARE（备用/替补）。存在性由 warcmd.py 的 import 行（去头正文第 6 行）与 catalog 的 entry 2397 双重证明，不再是“仅凭 catalog 推测”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import",
+          "catalog_warcmdspare"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/pubscript/pubskill/e_comskilldefine.py (entry 203)",
+      "summary": {
+        "text": "技能类型常量表：SKILLTYPE_CMD 的全部键与 CreateCmdObject 读取的 SKILL_DATA_TYPE 都来自它。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_map",
+          "wc_create",
+          "catalog_e_comskilldefine"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/pubscript/pubskill/e_debugctrl.py (entry 2013)",
+      "summary": {
+        "text": "调试打印：CreateCmdObject 用 e_debugctrl.DebugPrint 输出 skillType。注意该条目在 catalog 里的 current_filename 已损坏（FVG/EAiE@W…ebugctrl.py），只有 historical_filename 指向 script/pubscript/pubskill/e_debugctrl.py。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_create",
+          "catalog_e_debugctrl"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/warcmdbase.py (entry 4694)",
+      "summary": {
+        "text": "同目录下的 warcmd 基类文件（本轮未读其正文）。21 个 CWarCmd* 是否都继承它、接口是否一致，本轮没有任何证据，不做断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "catalog_warcmdbase",
+          "wc_import"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 203
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2013
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4694
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2370
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 697
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 8
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 631
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3722
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4494
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 803
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3595
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1847
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 499
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4126
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2691
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4959
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2842
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1834
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2784
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3991
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1905
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1621
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 231
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3367
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1480
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3972
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3644
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2397
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "新增一种战斗表现命令要动哪里？",
+      "answer": {
+        "text": "三步：① 在 e_comskilldefine 加 SKILL_TYPE_* 常量；② 新建 script/core/magicperform/warcmd/warcmd<xxx>.py 并在其中实现 CWarCmd<Xxx>（构造参数必须是 (iSkillID, dSkillInfo, dattackInfo)）；③ 在 warcmd.py 顶部 import 行与 SKILLTYPE_CMD 表里各登记一次。漏掉第③步会得到 CreateCmdObject 的“失聯狀態”日志并返回 None。",
+        "confidence": "inferred",
+        "evidence": [
+          "wc_import",
+          "wc_map",
+          "wc_create"
+        ]
+      }
+    },
+    {
+      "question": "表现命令没生效时先查什么？",
+      "answer": {
+        "text": "先看 CreateCmdObject 是否命中：未命中会打 LOG_DEBUG('-_-b 該指令處於失聯狀態！！！')，并带 iSkillID 与 skillType；命中后要检查对应 CWarCmd* 子模块（各为独立 entry）与 war.py 的 Perform 分派是否走到它。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_create"
+        ]
+      }
+    },
+    {
+      "question": "SKILLTYPE_CMD 候选映射字面顺序第 6 条是什么？",
+      "answer": {
+        "text": "候选映射字面顺序第 6 条的值是 warcmdplayghostmoveani.CWarCmdPlayGhostMoveAni（未损坏），但键在候选里是损坏标识符 TLNKKXS^WBX@OHTSJHVEANI，按前后条目命名规律应为 SKILL_TYPE_GHOSTMOVEANI 一类，**没有**未损坏字节证据，只能标为待核，不要按猜测改名。",
+        "confidence": "inferred",
+        "evidence": [
+          "wc_map",
+          "n5_prov"
+        ]
+      }
+    },
+    {
+      "question": "这个模块被谁调用？",
+      "answer": {
+        "text": "候选里没有调用方（模块只有 import、映射表和 CreateCmdObject）。同目录的 e_warcmdmgr（entry 631）与 war.py 的 Perform 新法术管线是候选调用方，但本轮没有跨模块证据，关系标为待核，不写成确定调用。",
+        "confidence": "inferred",
+        "evidence": [
+          "wc_create",
+          "catalog_magicperform"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "候选共 45 行（去头正文 39 行），已完整摘录进本目录的 warcmd_1612_excerpt.txt，但仍存在 1 处损坏标识符（SKILLTYPE_CMD 候选映射字面顺序第 6 条的键），故 source_status 记 recovered_partial；decompile_ok 不等于语义正确。",
+    "未执行、未 import 任何恢复出来的游戏模块；21 个子模块的正文本轮一条都没读，它们的构造签名、接口与是否共享基类（warcmdbase entry 4694）均无证据。",
+    "映射键的常量名全部按候选字面保留；候选映射字面顺序第 6 条键名不可确认，条目顺序与“SKILL_TYPE_* 前缀”只能作为命名线索，不是字节证据。",
+    "CreateCmdObject 的调用方本轮未解（候选内没有调用点），相关关系一律标 inferred。",
+    "没有任何 runtime_verified 结论；Windows/EXE、原生引擎、实机与真实服务端均未验证。",
+    "A收尾按实际候选映射顺序纠正损坏键的次序为第6项；新增命令指南仅为从本地三实参调用形状推导的修改建议，未核21个子模块，不升级为全部接口已确认。"
+  ],
+  "sources": [
+    {
+      "id": "n5_prov",
+      "path": "script_manual/annotations/battle/evidence/n5_provenance_20261016.txt",
+      "sha256": "723920dc7fbdfdc0c03603c546f866aa882fbe5733442a66aecdef4a5602b7e3",
+      "kind": "metadata",
+      "note": "N5 本轮定点恢复回执：命令、引擎版本、输入/工具/候选/pyc 摘要、损坏标识符清单与只读边界。"
+    },
+    {
+      "id": "n5_census",
+      "path": "script_manual/annotations/battle/evidence/n5_codecensus_20261016.txt",
+      "sha256": "32bf184461de4713d94d8bcde0dadb11fadbed06827235d73628a3a0d2973ad1",
+      "kind": "metadata",
+      "note": "码对象普查：本条目只有 1 个顶层码对象，形参 (iSkillID, dSkillInfo, dattackInfo) 来自 co_varnames[:co_argcount]，与候选 def 行一致。"
+    },
+    {
+      "id": "warcmd_src",
+      "path": "script_manual/annotations/battle/evidence/warcmd_1612_excerpt.txt",
+      "sha256": "1565fade4feb7d52f1cd52c4e33c11e50bee0cab5e65c1c1a5c8dcd371cbc170",
+      "kind": "metadata",
+      "note": "entry 1612 去头候选（SHA 60f0e569…，与 A 的 BDF 收据一致）的**完整**摘录（去头正文 1-39 行），L 前缀保留候选行号。虽然是全量，它仍然是反编译产物，不是原始源码。"
+    },
+    {
+      "id": "catalog",
+      "path": "server/docs/catalog/script_entries.jsonl",
+      "sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+      "kind": "metadata",
+      "note": "历史目录；行号 = entry_index+1，用于钉住 21 个 warcmd 子模块及 e_comskilldefine/e_debugctrl 的 entry 身份（不是签名来源）。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "n5_prov",
+      "source_id": "n5_prov",
+      "start_line": 1,
+      "end_line": 62
+    },
+    {
+      "id": "n5_census_all",
+      "source_id": "n5_census",
+      "start_line": 8,
+      "end_line": 300
+    },
+    {
+      "id": "wc_import",
+      "source_id": "warcmd_src",
+      "start_line": 17,
+      "end_line": 22
+    },
+    {
+      "id": "wc_map",
+      "source_id": "warcmd_src",
+      "start_line": 26,
+      "end_line": 46
+    },
+    {
+      "id": "wc_create",
+      "source_id": "warcmd_src",
+      "start_line": 50,
+      "end_line": 60
+    },
+    {
+      "id": "catalog_self",
+      "source_id": "catalog",
+      "start_line": 1613,
+      "end_line": 1613
+    },
+    {
+      "id": "catalog_e_comskilldefine",
+      "source_id": "catalog",
+      "start_line": 204,
+      "end_line": 204
+    },
+    {
+      "id": "catalog_e_debugctrl",
+      "source_id": "catalog",
+      "start_line": 2014,
+      "end_line": 2014
+    },
+    {
+      "id": "catalog_warcmdbase",
+      "source_id": "catalog",
+      "start_line": 4695,
+      "end_line": 4695
+    },
+    {
+      "id": "catalog_magicperform",
+      "source_id": "catalog",
+      "start_line": 2371,
+      "end_line": 2371
+    },
+    {
+      "id": "catalog_warcmdaddbuff",
+      "source_id": "catalog",
+      "start_line": 3723,
+      "end_line": 3723
+    },
+    {
+      "id": "catalog_warcmdattackend",
+      "source_id": "catalog",
+      "start_line": 4495,
+      "end_line": 4495
+    },
+    {
+      "id": "catalog_warcmdattackpre",
+      "source_id": "catalog",
+      "start_line": 804,
+      "end_line": 804
+    },
+    {
+      "id": "catalog_warcmdbgcolor",
+      "source_id": "catalog",
+      "start_line": 3596,
+      "end_line": 3596
+    },
+    {
+      "id": "catalog_warcmdbgrolecolor",
+      "source_id": "catalog",
+      "start_line": 1848,
+      "end_line": 1848
+    },
+    {
+      "id": "catalog_warcmddelay",
+      "source_id": "catalog",
+      "start_line": 500,
+      "end_line": 500
+    },
+    {
+      "id": "catalog_warcmdenermyhit",
+      "source_id": "catalog",
+      "start_line": 4127,
+      "end_line": 4127
+    },
+    {
+      "id": "catalog_warcmdenermyhurt",
+      "source_id": "catalog",
+      "start_line": 2692,
+      "end_line": 2692
+    },
+    {
+      "id": "catalog_warcmdghost",
+      "source_id": "catalog",
+      "start_line": 4960,
+      "end_line": 4960
+    },
+    {
+      "id": "catalog_warcmdgoback",
+      "source_id": "catalog",
+      "start_line": 2843,
+      "end_line": 2843
+    },
+    {
+      "id": "catalog_warcmdmove",
+      "source_id": "catalog",
+      "start_line": 1835,
+      "end_line": 1835
+    },
+    {
+      "id": "catalog_warcmdplayani",
+      "source_id": "catalog",
+      "start_line": 2785,
+      "end_line": 2785
+    },
+    {
+      "id": "catalog_warcmdplayghostani",
+      "source_id": "catalog",
+      "start_line": 3992,
+      "end_line": 3992
+    },
+    {
+      "id": "catalog_warcmdplayghostmoveani",
+      "source_id": "catalog",
+      "start_line": 1906,
+      "end_line": 1906
+    },
+    {
+      "id": "catalog_warcmdplaymoveani",
+      "source_id": "catalog",
+      "start_line": 1622,
+      "end_line": 1622
+    },
+    {
+      "id": "catalog_warcmdplaysound",
+      "source_id": "catalog",
+      "start_line": 232,
+      "end_line": 232
+    },
+    {
+      "id": "catalog_warcmdremant",
+      "source_id": "catalog",
+      "start_line": 3368,
+      "end_line": 3368
+    },
+    {
+      "id": "catalog_warcmdrolepalette",
+      "source_id": "catalog",
+      "start_line": 1481,
+      "end_line": 1481
+    },
+    {
+      "id": "catalog_warcmdsetaction",
+      "source_id": "catalog",
+      "start_line": 3973,
+      "end_line": 3973
+    },
+    {
+      "id": "catalog_warcmdsetmulaction",
+      "source_id": "catalog",
+      "start_line": 3645,
+      "end_line": 3645
+    },
+    {
+      "id": "catalog_warcmdspare",
+      "source_id": "catalog",
+      "start_line": 2398,
+      "end_line": 2398
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 203
+      },
+      "symbol": "SKILL_TYPE_* / SKILL_DATA_TYPE",
+      "summary": {
+        "text": "SKILLTYPE_CMD 的键与 CreateCmdObject 读取的字段都来自 e_comskilldefine。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_map",
+          "wc_create"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2013
+      },
+      "symbol": "DebugPrint",
+      "summary": {
+        "text": "CreateCmdObject 里的调试打印；该条目的包内自报路径已损坏，身份按历史路径与 entry 2013 记录。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_create",
+          "catalog_e_debugctrl"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3722
+      },
+      "symbol": "warcmd* 子模块（21 个，见 resources）",
+      "summary": {
+        "text": "候选第 6 行的 import 一次引入全部 21 个 warcmd* 子模块，每个都对应一个独立 entry（见 resources 与 catalog 行号）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "wc_import"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": null,
+      "symbol": null,
+      "summary": {
+        "text": "CreateCmdObject 的调用方不在本条目内，本轮没有跨模块证据；同目录 magicperform 管线（entry 2370）与 e_warcmdmgr（entry 631）只是候选方向，未确认。",
+        "confidence": "inferred",
+        "evidence": [
+          "wc_create"
+        ]
+      }
+    }
+  ]
+}

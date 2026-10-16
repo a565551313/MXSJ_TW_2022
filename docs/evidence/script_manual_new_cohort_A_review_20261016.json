@@ -1,0 +1,1151 @@
+{
+  "kind": "A_new_cohort_fixed_PR_review_NOT_merge_or_blanket_acceptance",
+  "date": "2026-10-16",
+  "branch": "arena/61deb9e5-mxsj-tw-2022",
+  "formal_content_baseline": "9b0dea799768aaacbb967ffc59f45753970752be",
+  "worktree_before_review_clean": true,
+  "prior_work_pushed_before_start": true,
+  "sandbox_git_recovery": {
+    "comparison": {
+      "old_head": "8212b26e359a693db5513e1bf0d0c6a5139336ba",
+      "remote_head": "9b0dea799768aaacbb967ffc59f45753970752be",
+      "paths_checked": 215,
+      "matching": [
+        "docs/STATUS.md",
+        "docs/evidence/corpus_8212b26_editor_review_20261015.json",
+        "docs/evidence/git_metadata_alignment_20261016.json",
+        "docs/evidence/script_editor_0.6_dev3_delivery_build_20261015.json",
+        "docs/evidence/script_editor_0.6_dev3_delivery_receipt_20261015.json",
+        "docs/evidence/script_editor_0.6_dev4_delivery_build_20261015.json",
+        "docs/evidence/script_editor_0.6_dev4_delivery_receipt_20261015.json",
+        "docs/evidence/script_editor_0.6_dev5_delivery_receipt_20261015.json",
+        "docs/evidence/script_editor_0.6_dev6_delivery_receipt_20261015.json",
+        "docs/evidence/script_editor_0.6_stage2_20261015.json",
+        "docs/evidence/script_editor_data_corpus_20261015.json",
+        "docs/evidence/script_editor_dev6_delivery_build_20261015.json",
+        "docs/evidence/script_editor_module_paths_20261015.json",
+        "docs/evidence/script_editor_post_directory_20261015.json",
+        "docs/evidence/script_editor_registered_catalog_20261015.json",
+        "docs/evidence/script_manual_0.1.0_dev1_validation_20261015.json",
+        "docs/evidence/script_manual_0.1.0_dev2_validation_20261015.json",
+        "docs/evidence/script_manual_BDF_A_review_20261016.md",
+        "docs/evidence/script_manual_BDF_A_validation_20261016.json",
+        "docs/evidence/script_manual_C_242fd8c_A_review_20261016.md",
+        "docs/evidence/script_manual_C_559386b_A_review_20261015.md",
+        "docs/evidence/script_manual_DE_A_delegated_review_20261016.md",
+        "docs/evidence/script_manual_DE_A_delegated_validation_20261016.json",
+        "docs/evidence/script_manual_E_60c5739_A_review_20261016.md",
+        "docs/evidence/script_manual_E_60c5739_A_validation_20261016.json",
+        "docs/evidence/script_manual_E_ec97941_A_review_20261015.md",
+        "docs/evidence/script_manual_G_A_draft_20261016.md",
+        "docs/evidence/script_manual_G_A_draft_validation_20261016.json",
+        "docs/evidence/script_manual_integration_reassignment_20261016.json",
+        "docs/evidence/script_manual_integration_reassignment_20261016.md",
+        "script_editor/.gitignore",
+        "script_editor/DESIGN.md",
+        "script_editor/README.md",
+        "script_editor/bootstrap.py",
+        "script_editor/build_recovery_engine.py",
+        "script_editor/build_windows_recovery_engine.py",
+        "script_editor/decoding/README.md",
+        "script_editor/diagnose_archive.py",
+        "script_editor/licenses/README.md",
+        "script_editor/licenses/recovery/README.md",
+        "script_editor/pyproject.toml",
+        "script_editor/recovery_engines/README.md",
+        "script_editor/runtimes/manifest.json",
+        "script_editor/src/script_editor/__init__.py",
+        "script_editor/src/script_editor/core/archives/document.py",
+        "script_editor/src/script_editor/core/archives/fls0slf.py",
+        "script_editor/src/script_editor/core/archives/verify.py",
+        "script_editor/src/script_editor/core/archives/writer.py",
+        "script_editor/src/script_editor/core/project/document.py",
+        "script_editor/src/script_editor/core/project/storage.py",
+        "script_editor/src/script_editor/core/project/workspace.py",
+        "script_editor/src/script_editor/core/services/bundled_catalog.py",
+        "script_editor/src/script_editor/core/services/corpus_manifest.py",
+        "script_editor/src/script_editor/core/services/corpus_recovery.py",
+        "script_editor/src/script_editor/core/services/data_corpus.py",
+        "script_editor/src/script_editor/core/services/files.py",
+        "script_editor/src/script_editor/core/services/module_browser.py",
+        "script_editor/src/script_editor/core/services/module_paths.py",
+        "script_editor/src/script_editor/core/services/pycdc_engine.py",
+        "script_editor/src/script_editor/core/services/recovery_candidates.py",
+        "script_editor/src/script_editor/core/services/recovery_process.py",
+        "script_editor/src/script_editor/core/vm/py25/keys.py",
+        "script_editor/src/script_editor/data/recovery_worker.py",
+        "script_editor/src/script_editor/data_corpus.py",
+        "script_editor/src/script_editor/gui/build_actions.py",
+        "script_editor/src/script_editor/gui/corpus_actions.py",
+        "script_editor/src/script_editor/gui/module_actions.py",
+        "script_editor/src/script_editor/gui/project_actions.py",
+        "script_editor/src/script_editor/gui/source_tab.py",
+        "script_editor/src/script_editor/gui/window.py",
+        "script_editor/src/script_editor/gui/workspace.py",
+        "script_editor/src/script_editor/gui/workspace_actions.py",
+        "script_editor/src/script_editor/gui/workspace_menus.py",
+        "script_editor/src/script_editor/release_checks.py",
+        "script_editor/stage_recovery.py",
+        "script_editor/tests/corpus_fixtures.py",
+        "script_editor/tests/test_archive_diagnostics.py",
+        "script_editor/tests/test_bootstrap.py",
+        "script_editor/tests/test_bundled_catalog.py",
+        "script_editor/tests/test_corpus_import.py",
+        "script_editor/tests/test_data_corpus.py",
+        "script_editor/tests/test_gui_corpus_workspace.py",
+        "script_editor/tests/test_gui_data_corpus.py",
+        "script_editor/tests/test_gui_module.py",
+        "script_editor/tests/test_gui_module_paths.py",
+        "script_editor/tests/test_gui_recovery_candidates.py",
+        "script_editor/tests/test_module_paths.py",
+        "script_editor/tests/test_recovery_candidates.py",
+        "script_editor/tests/test_script_layouts.py",
+        "script_editor/tests/test_workspace_state.py",
+        "script_editor/third_party/README.md",
+        "script_editor/third_party/pycdc-b4289760970dbc399684f1e155ec6d1ea1cc787e.tar.gz",
+        "script_editor/先读测试说明.txt",
+        "script_manual/.gitattributes",
+        "script_manual/.gitignore",
+        "script_manual/README.md",
+        "script_manual/annotations/battle/.gitkeep",
+        "script_manual/annotations/battle/e_warctrl.json",
+        "script_manual/annotations/battle/netwar.json",
+        "script_manual/annotations/battle/war.json",
+        "script_manual/annotations/battle/warcmd.json",
+        "script_manual/annotations/gameplay/.gitkeep",
+        "script_manual/annotations/gameplay/dlgitem.json",
+        "script_manual/annotations/gameplay/evidence/dlgitem_candidate_excerpt.txt",
+        "script_manual/annotations/gameplay/evidence/hero_candidate_excerpt.txt",
+        "script_manual/annotations/gameplay/evidence/npc_candidate_excerpt.txt",
+        "script_manual/annotations/gameplay/evidence/task_candidate_excerpt.txt",
+        "script_manual/annotations/gameplay/hero.json",
+        "script_manual/annotations/gameplay/npc.json",
+        "script_manual/annotations/gameplay/task.json",
+        "script_manual/annotations/login/loginin.json",
+        "script_manual/annotations/login/main.json",
+        "script_manual/annotations/login/main_entry4293_recovered.py.txt",
+        "script_manual/annotations/login/mainpage.json",
+        "script_manual/annotations/login/register.json",
+        "script_manual/annotations/network/.gitkeep",
+        "script_manual/annotations/network/connect.json",
+        "script_manual/annotations/network/evidence_review_e_network.md",
+        "script_manual/annotations/network/main_network_review_for_c.md",
+        "script_manual/annotations/network/net.json",
+        "script_manual/annotations/network/netquicklogin.json",
+        "script_manual/annotations/network/netserver.json",
+        "script_manual/annotations/ui_chat/.gitkeep",
+        "script_manual/annotations/ui_chat/chatoutput.json",
+        "script_manual/annotations/ui_chat/evidence/chatoutput.txt",
+        "script_manual/annotations/ui_chat/evidence/interface.txt",
+        "script_manual/annotations/ui_chat/evidence/key.txt",
+        "script_manual/annotations/ui_chat/evidence/mainmenu.txt",
+        "script_manual/annotations/ui_chat/evidence/provenance.txt",
+        "script_manual/annotations/ui_chat/evidence/support.txt",
+        "script_manual/annotations/ui_chat/evidence/validation.txt",
+        "script_manual/annotations/ui_chat/interface.json",
+        "script_manual/annotations/ui_chat/key.json",
+        "script_manual/annotations/ui_chat/mainmenu.json",
+        "script_manual/bootstrap.py",
+        "script_manual/browser_tests/.gitignore",
+        "script_manual/browser_tests/README.md",
+        "script_manual/browser_tests/check.cjs",
+        "script_manual/browser_tests/package-lock.json",
+        "script_manual/browser_tests/package.json",
+        "script_manual/coordination/H_QUEUE_D_1f6fdd3.json",
+        "script_manual/coordination/H_QUEUE_E_60c5739.json",
+        "script_manual/coordination/NEW_AGENTS_START_20261016.md",
+        "script_manual/coordination/baseline.json",
+        "script_manual/coordination/delegated_reviews_20261016/A_delegate_2170.json.template",
+        "script_manual/coordination/delegated_reviews_20261016/A_delegate_219.json.template",
+        "script_manual/coordination/delegated_reviews_20261016/A_delegate_3176.json.template",
+        "script_manual/coordination/delegated_reviews_20261016/A_delegate_3232.json.template",
+        "script_manual/coordination/delegated_reviews_20261016/A_delegate_3854.json.template",
+        "script_manual/coordination/delegated_reviews_20261016/A_delegate_4832.json.template",
+        "script_manual/coordination/delegated_reviews_20261016/A_delegate_516.json.template",
+        "script_manual/coordination/delegated_reviews_20261016/A_delegate_871.json.template",
+        "script_manual/coordination/new_agents_20261016/N1.md",
+        "script_manual/coordination/new_agents_20261016/N2.md",
+        "script_manual/coordination/new_agents_20261016/N3.md",
+        "script_manual/coordination/new_agents_20261016/N4.md",
+        "script_manual/coordination/new_agents_20261016/N5.md",
+        "script_manual/coordination/new_agents_20261016/N6.md",
+        "script_manual/coordination/new_agents_20261016/N7.md",
+        "script_manual/coordination/reassignment_20261016.json",
+        "script_manual/coordination/tasks.json",
+        "script_manual/docs/AGENT_TASKS.md",
+        "script_manual/docs/CONTRACT.md",
+        "script_manual/examples/annotation.json",
+        "script_manual/inventory/B_extraction_receipt.json",
+        "script_manual/inventory/extract_inventory.py",
+        "script_manual/inventory/modules.jsonl",
+        "script_manual/inventory/sample_regression.json",
+        "script_manual/pyproject.toml",
+        "script_manual/requirements-dev.txt",
+        "script_manual/requirements.txt",
+        "script_manual/reviews/8b6e9266_2170.json",
+        "script_manual/reviews/8b6e9266_219.json",
+        "script_manual/reviews/8b6e9266_3176.json",
+        "script_manual/reviews/8b6e9266_3232.json",
+        "script_manual/reviews/8b6e9266_3854.json",
+        "script_manual/reviews/8b6e9266_4832.json",
+        "script_manual/reviews/8b6e9266_516.json",
+        "script_manual/reviews/8b6e9266_871.json",
+        "script_manual/reviews/README.md",
+        "script_manual/reviews/example.json.template",
+        "script_manual/run.py",
+        "script_manual/schema/contract.schema.json",
+        "script_manual/script_manual.spec",
+        "script_manual/src/mxsj_manual/__init__.py",
+        "script_manual/src/mxsj_manual/__main__.py",
+        "script_manual/src/mxsj_manual/app.py",
+        "script_manual/src/mxsj_manual/assets/manual.js",
+        "script_manual/src/mxsj_manual/assets/style.css",
+        "script_manual/src/mxsj_manual/core/__init__.py",
+        "script_manual/src/mxsj_manual/core/catalog.py",
+        "script_manual/src/mxsj_manual/core/export.py",
+        "script_manual/src/mxsj_manual/core/io.py",
+        "script_manual/src/mxsj_manual/core/render.py",
+        "script_manual/src/mxsj_manual/core/store.py",
+        "script_manual/src/mxsj_manual/core/validation.py",
+        "script_manual/src/mxsj_manual/gui/__init__.py",
+        "script_manual/src/mxsj_manual/gui/jobs.py",
+        "script_manual/src/mxsj_manual/gui/models.py",
+        "script_manual/src/mxsj_manual/gui/window.py",
+        "script_manual/src/mxsj_manual/paths.py",
+        "script_manual/tests/fixtures/annotations/login/mainpage.json",
+        "script_manual/tests/fixtures/coordination/baseline.json",
+        "script_manual/tests/fixtures/coordination/tasks.json",
+        "script_manual/tests/fixtures/inventory/modules.jsonl",
+        "script_manual/tests/support.py",
+        "script_manual/tests/test_bootstrap.py",
+        "script_manual/tests/test_catalog.py",
+        "script_manual/tests/test_fixture_isolation.py",
+        "script_manual/tests/test_gui.py",
+        "script_manual/tests/test_reviews_export.py",
+        "script_manual/tests/test_validation.py"
+      ],
+      "different": [
+        {
+          "path": "script_editor/诊断script打开.bat",
+          "worktree_blob": "b6a65c3c670a869c090f454c2540310e850033c0",
+          "remote_blob": "d9166cd8e9d3b0312206bc61646d0ade87457280"
+        },
+        {
+          "path": "script_manual/build_exe.bat",
+          "worktree_blob": "4b1626e02eef562641e31cc4e7c6c0c0dec3948a",
+          "remote_blob": "3df0a76039e9f2b2ca7d3b20ead7a6e0416afd23"
+        },
+        {
+          "path": "script_manual/启动脚本手册.bat",
+          "worktree_blob": "49567b25ddd4889819955cd0af54c003984655a6",
+          "remote_blob": "f62474352d8c9871905de71b226ba18e4c691f6d"
+        }
+      ],
+      "missing": [],
+      "local_only": [],
+      "expected_absent": [],
+      "line_ending_only_differences": [
+        {
+          "path": "script_editor/诊断script打开.bat",
+          "equal_after_CRLF_to_LF": true,
+          "git_filtered_hash_matches": true,
+          "worktree_sha256": "2d77fbe9cdef7670964d3a6c67ab3d4090df241b473c6cf2b0db67fef1b5180b"
+        },
+        {
+          "path": "script_manual/build_exe.bat",
+          "equal_after_CRLF_to_LF": true,
+          "git_filtered_hash_matches": true,
+          "worktree_sha256": "0c69b0377c871910e2701e53733301e423a022a9a3e4626668c5b26dbdeb4633"
+        },
+        {
+          "path": "script_manual/启动脚本手册.bat",
+          "equal_after_CRLF_to_LF": true,
+          "git_filtered_hash_matches": true,
+          "worktree_sha256": "ad105753b783341b1976c464e5652b58672097e5e5bbe32625ebfcb05970c774"
+        }
+      ]
+    },
+    "method": "Verified all215 relevant paths;212 rawblob equal,3 CRLF-only and Git filtered hash equal. Restored only current branch ref and index; worktree bytes preserved. No duplicate commit, checkout, hard reset or clean."
+  },
+  "all_seven_PRs_open_and_base_A_at_inspection": true,
+  "no_domain_PR_merged_this_round": true,
+  "no_formal_review_activation": true,
+  "formal_coverage_unchanged": {
+    "expected_entries": 5135,
+    "indexed": 5135,
+    "annotated": 20,
+    "accepted": 3,
+    "excluded": 1,
+    "changes_requested": 5,
+    "pending": 12
+  },
+  "prs": [
+    {
+      "agent": "N2",
+      "number": 39,
+      "head": "c7142366fabafea0b35d943d8746a1de9d899b49",
+      "head_branch": "arena/a1839872-mxsj-tw-2022",
+      "base": "arena/61deb9e5-mxsj-tw-2022",
+      "url": "https://github.com/a565551313/MXSJ_TW_2022/pull/39",
+      "changed_paths": [
+        "script_manual/annotations/login/N2_RESPONSE.md",
+        "script_manual/annotations/login/N2_provenance.json.template",
+        "script_manual/annotations/login/N2_validation.json.template",
+        "script_manual/annotations/login/loginin.json",
+        "script_manual/annotations/login/main.json",
+        "script_manual/annotations/login/main_entry4293_recovered.py.txt",
+        "script_manual/annotations/login/mainpage.json",
+        "script_manual/annotations/login/register.json"
+      ],
+      "recommendation": "five_repair_groups_checked_by_A; await_N7_new_bytes_claim_by_claim_review",
+      "A_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/39#issuecomment-6206340890"
+    },
+    {
+      "agent": "N4",
+      "number": 40,
+      "head": "44230b98527f72948acf16295e83f0151a26eb27",
+      "head_branch": "arena/b0da7f97-mxsj-tw-2022",
+      "base": "arena/61deb9e5-mxsj-tw-2022",
+      "url": "https://github.com/a565551313/MXSJ_TW_2022/pull/40",
+      "changed_paths": [
+        "script_manual/annotations/network/N4_RESPONSE.md",
+        "script_manual/annotations/network/N4_reproduction.json.template",
+        "script_manual/annotations/network/connect.json",
+        "script_manual/annotations/network/evidence_n4_network.md",
+        "script_manual/annotations/network/evidence_review_e_network.md",
+        "script_manual/annotations/network/main_network_review_for_c.md",
+        "script_manual/annotations/network/net.json",
+        "script_manual/annotations/network/netquicklogin.json",
+        "script_manual/annotations/network/netserver.json"
+      ],
+      "recommendation": "finite_candidate; four_N7_templates_exact_SHA_match",
+      "A_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/40#issuecomment-6206341535"
+    },
+    {
+      "agent": "N3",
+      "number": 41,
+      "head": "77b64beda4b3b31455445ae48dfc124d614ce931",
+      "head_branch": "arena/10debde2-mxsj-tw-2022",
+      "base": "arena/61deb9e5-mxsj-tw-2022",
+      "url": "https://github.com/a565551313/MXSJ_TW_2022/pull/41",
+      "changed_paths": [
+        "script_manual/annotations/ui_chat/N3_RESPONSE.md",
+        "script_manual/annotations/ui_chat/evidence/mainmenu_d1_deferred.txt",
+        "script_manual/annotations/ui_chat/mainmenu.json"
+      ],
+      "recommendation": "finite_candidate; N7_template_exact_SHA_match",
+      "A_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/41#issuecomment-6206341216"
+    },
+    {
+      "agent": "N6",
+      "number": 42,
+      "head": "23b60f96c602fe605912c3d323af743a4d54c22a",
+      "head_branch": "arena/6f7784e1-mxsj-tw-2022",
+      "base": "arena/61deb9e5-mxsj-tw-2022",
+      "url": "https://github.com/a565551313/MXSJ_TW_2022/pull/42",
+      "changed_paths": [
+        "script_manual/annotations/gameplay/N6_RESPONSE.md",
+        "script_manual/annotations/gameplay/dlgitem.json",
+        "script_manual/annotations/gameplay/evidence/dlgitem_candidate_excerpt.txt",
+        "script_manual/annotations/gameplay/evidence/npc_candidate_excerpt.txt",
+        "script_manual/annotations/gameplay/hero.json",
+        "script_manual/annotations/gameplay/npc.json",
+        "script_manual/annotations/gameplay/task.json"
+      ],
+      "recommendation": "finite_candidate; four_independent_N7_templates_exact_SHA_match; A_does_not_self_approve",
+      "A_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/42#issuecomment-6206341720"
+    },
+    {
+      "agent": "N1",
+      "number": 43,
+      "head": "f953eb992bf3c5d072ae478a0ac67e4d651e5064",
+      "head_branch": "arena/8c171896-mxsj-tw-2022",
+      "base": "arena/61deb9e5-mxsj-tw-2022",
+      "url": "https://github.com/a565551313/MXSJ_TW_2022/pull/43",
+      "changed_paths": [
+        "script_manual/inventory/B_extraction_receipt.json",
+        "script_manual/inventory/N1_RESPONSE.md",
+        "script_manual/inventory/N1_replay_audit.json.template",
+        "script_manual/inventory/extract_inventory.py",
+        "script_manual/inventory/modules.jsonl",
+        "script_manual/inventory/n1_replay_audit.py",
+        "script_manual/inventory/sample_regression.json",
+        "script_manual/inventory/test_signature_metadata.py"
+      ],
+      "recommendation": "finite_inventory_fix_candidate; conservative234null_policy_confirmed_by_A; not_full_semantic_acceptance",
+      "A_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/43#issuecomment-6206340681"
+    },
+    {
+      "agent": "N5",
+      "number": 44,
+      "head": "e2fb1aa1fd9019a84df391c13d68e3ec3d9179b6",
+      "head_branch": "arena/ae1bd730-mxsj-tw-2022",
+      "base": "arena/61deb9e5-mxsj-tw-2022",
+      "url": "https://github.com/a565551313/MXSJ_TW_2022/pull/44",
+      "changed_paths": [
+        "script_manual/annotations/battle/N5_RESPONSE.md",
+        "script_manual/annotations/battle/e_warctrl.json",
+        "script_manual/annotations/battle/evidence/e_warctrl_8_excerpt.txt",
+        "script_manual/annotations/battle/evidence/n5_codecensus_20261016.txt",
+        "script_manual/annotations/battle/evidence/n5_provenance_20261016.txt",
+        "script_manual/annotations/battle/evidence/war_697_excerpt.txt",
+        "script_manual/annotations/battle/evidence/warcmd_1612_excerpt.txt",
+        "script_manual/annotations/battle/netwar.json",
+        "script_manual/annotations/battle/war.json",
+        "script_manual/annotations/battle/warcmd.json"
+      ],
+      "recommendation": "changes_requested_B-N5-01_to_03; await_new_N5_head_and_N7_review",
+      "A_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/44#issuecomment-6206333803"
+    },
+    {
+      "agent": "N7",
+      "number": 45,
+      "head": "db872c5cd6aad0349e62d17af2959576aa3fec12",
+      "head_branch": "arena/474295bc-mxsj-tw-2022",
+      "base": "arena/61deb9e5-mxsj-tw-2022",
+      "url": "https://github.com/a565551313/MXSJ_TW_2022/pull/45",
+      "changed_paths": [
+        "script_manual/reviews/8b6e9266_1129.json",
+        "script_manual/reviews/8b6e9266_1129.json.template",
+        "script_manual/reviews/8b6e9266_2170.json",
+        "script_manual/reviews/8b6e9266_2170.json.template",
+        "script_manual/reviews/8b6e9266_219.json",
+        "script_manual/reviews/8b6e9266_219.json.template",
+        "script_manual/reviews/8b6e9266_3038.json",
+        "script_manual/reviews/8b6e9266_3038.json.template",
+        "script_manual/reviews/8b6e9266_3176.json",
+        "script_manual/reviews/8b6e9266_3176.json.template",
+        "script_manual/reviews/8b6e9266_3232.json",
+        "script_manual/reviews/8b6e9266_337.json",
+        "script_manual/reviews/8b6e9266_3854.json",
+        "script_manual/reviews/8b6e9266_4007.json",
+        "script_manual/reviews/8b6e9266_4293.json",
+        "script_manual/reviews/8b6e9266_4806.json",
+        "script_manual/reviews/8b6e9266_4832.json",
+        "script_manual/reviews/8b6e9266_516.json",
+        "script_manual/reviews/8b6e9266_516.json.template",
+        "script_manual/reviews/8b6e9266_717.json",
+        "script_manual/reviews/8b6e9266_717.json.template",
+        "script_manual/reviews/8b6e9266_871.json",
+        "script_manual/reviews/8b6e9266_871.json.template",
+        "script_manual/reviews/8b6e9266_949.json",
+        "script_manual/reviews/8b6e9266_949.json.template",
+        "script_manual/reviews/reports/N7_RESPONSE.md",
+        "script_manual/reviews/reports/N7_acceptance.md",
+        "script_manual/reviews/reports/N7_inventory_review.md"
+      ],
+      "recommendation": "valid_partial_review_delivery; nine_templates_match; login_new_head_and_battle_review_not_complete",
+      "A_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/45#issuecomment-6206334018"
+    }
+  ],
+  "findings": [
+    {
+      "id": "B-N5-01",
+      "priority": "P2",
+      "pr": 44,
+      "paths": [
+        "script_manual/annotations/battle/evidence/war_697_excerpt.txt:7",
+        "script_manual/annotations/battle/evidence/e_warctrl_8_excerpt.txt:7",
+        "script_manual/annotations/battle/evidence/n5_provenance_20261016.txt:21,36"
+      ],
+      "issue": "Two source headers have wrong entry_id values; archive SHA/index/payload/pyc/body match correct entries.",
+      "expected": {
+        "697": "0x206d634b",
+        "8": "0x005d26b3"
+      },
+      "reported": {
+        "697": "0x2069990b",
+        "8": "0x5d2ab3"
+      },
+      "repair": "Recompute IDs from archive index for all four entries; correct four locations and all referring sources SHA; revalidate."
+    },
+    {
+      "id": "B-N5-02",
+      "priority": "P2",
+      "pr": 44,
+      "paths": [
+        "script_manual/annotations/battle/e_warctrl.json:975"
+      ],
+      "issue": "CPlayCtrl.Release claims reentrant safety although downstream Release(self) is invoked before clearing reference. A synchronous reentry still sees a live manager, and exceptions prevent clearing.",
+      "evidence": "Independently reproduced e_warctrl candidate, exactly stripped six recovery header lines; body159-163.",
+      "repair": "State only order and normal-return sequential-repeat behavior; reentrancy/exception safety unverified. Do not fix candidate as purported original."
+    },
+    {
+      "id": "B-N5-03",
+      "priority": "P2",
+      "pr": 44,
+      "paths": [
+        "script_manual/annotations/battle/e_warctrl.json:495"
+      ],
+      "issue": "Timer(0.033, OnUpdate, -1, self) interpreted as actual ~30fps and infinite repetition without evidence for Timer implementation/units/repeat semantics.",
+      "repair": "Add valid callee evidence or keep literal parameters and mark timing/repetition semantics inferred/unknown."
+    }
+  ],
+  "schema_sources_full": {
+    "pr39": {
+      "coverage": {
+        "expected_entries": 5135,
+        "indexed": 5135,
+        "annotated": 20,
+        "accepted": 3,
+        "excluded": 1
+      },
+      "status": {
+        "pending": 12,
+        "accepted": 3,
+        "changes_requested": 5
+      },
+      "warnings": []
+    },
+    "pr40": {
+      "coverage": {
+        "expected_entries": 5135,
+        "indexed": 5135,
+        "annotated": 20,
+        "accepted": 3,
+        "excluded": 1
+      },
+      "status": {
+        "pending": 12,
+        "accepted": 3,
+        "stale_review": 4,
+        "changes_requested": 1
+      },
+      "warnings": [
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:516",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:871",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:2170",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:3176"
+      ]
+    },
+    "pr41": {
+      "coverage": {
+        "expected_entries": 5135,
+        "indexed": 5135,
+        "annotated": 20,
+        "accepted": 3,
+        "excluded": 1
+      },
+      "status": {
+        "pending": 12,
+        "accepted": 3,
+        "changes_requested": 4,
+        "stale_review": 1
+      },
+      "warnings": [
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:219"
+      ]
+    },
+    "pr42": {
+      "coverage": {
+        "expected_entries": 5135,
+        "indexed": 5135,
+        "annotated": 20,
+        "accepted": 3,
+        "excluded": 1
+      },
+      "status": {
+        "pending": 12,
+        "accepted": 3,
+        "changes_requested": 5
+      },
+      "warnings": []
+    },
+    "pr43": {
+      "coverage": {
+        "expected_entries": 5135,
+        "indexed": 5135,
+        "annotated": 20,
+        "accepted": 3,
+        "excluded": 1
+      },
+      "status": {
+        "pending": 12,
+        "accepted": 3,
+        "changes_requested": 5
+      },
+      "warnings": []
+    },
+    "pr44": {
+      "coverage": {
+        "expected_entries": 5135,
+        "indexed": 5135,
+        "annotated": 20,
+        "accepted": 3,
+        "excluded": 1
+      },
+      "status": {
+        "pending": 12,
+        "accepted": 3,
+        "changes_requested": 5
+      },
+      "warnings": []
+    },
+    "pr45": {
+      "coverage": {
+        "expected_entries": 5135,
+        "indexed": 5135,
+        "annotated": 20,
+        "accepted": 3,
+        "excluded": 1
+      },
+      "status": {
+        "changes_requested": 13,
+        "accepted": 3,
+        "pending": 4
+      },
+      "warnings": []
+    },
+    "combined": {
+      "coverage": {
+        "expected_entries": 5135,
+        "indexed": 5135,
+        "annotated": 20,
+        "accepted": 3,
+        "excluded": 1
+      },
+      "status": {
+        "stale_review": 13,
+        "accepted": 3,
+        "pending": 4
+      },
+      "warnings": [
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:219",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:337",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:516",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:717",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:871",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:949",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:1129",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:2170",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:3038",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:3176",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:4007",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:4293",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:4806"
+      ]
+    },
+    "combined_template_activation": {
+      "activated": [
+        {
+          "entry": 1129,
+          "decision": "accepted",
+          "sha256": "35861348caf819b147087a5b6676a95a1d4aa1355e1dee91467e4aa0cd608f1c"
+        },
+        {
+          "entry": 2170,
+          "decision": "accepted",
+          "sha256": "505977078ec047c3584311ed3f25e8a2547e70a13ecf874b41e532c84fe21ba3"
+        },
+        {
+          "entry": 219,
+          "decision": "accepted",
+          "sha256": "87525f6936f2818def3e30fbc729f29e1a428d863e929ec4f74c55cbd892a4e8"
+        },
+        {
+          "entry": 3038,
+          "decision": "accepted",
+          "sha256": "75a8fe1074967a6125de05a569ac2b669632a1e7e6dee387c6a0d8a4fd3a916a"
+        },
+        {
+          "entry": 3176,
+          "decision": "accepted",
+          "sha256": "17c3a9956859c5c22ac61e362d1f5458d9cc5168b042522aa16b5a27eebeab90"
+        },
+        {
+          "entry": 516,
+          "decision": "accepted",
+          "sha256": "1ec1bc8f6bc812f24d27520c22036461cd4301c307e7e56ec0d0e6df2ec59fef"
+        },
+        {
+          "entry": 717,
+          "decision": "accepted",
+          "sha256": "59f17f879663241bc013d946f0ac2b5cdc9e0596d703efed612604db3f8f2f4d"
+        },
+        {
+          "entry": 871,
+          "decision": "accepted",
+          "sha256": "55b81261b69494667555e03f64c9cabf69c36a8f0d6383eaa6e0edb961062850"
+        },
+        {
+          "entry": 949,
+          "decision": "accepted",
+          "sha256": "965e88b5e5c2b4f6494bc74af01ef58ed617e37da7016121a7209b5c2ed3c459"
+        }
+      ],
+      "coverage": {
+        "expected_entries": 5135,
+        "indexed": 5135,
+        "annotated": 20,
+        "accepted": 12,
+        "excluded": 1
+      },
+      "status": {
+        "accepted": 12,
+        "pending": 4,
+        "stale_review": 4
+      },
+      "warnings": [
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:337",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:4007",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:4293",
+        "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:4806"
+      ]
+    }
+  },
+  "source_recovery": {
+    "python": "3.11.2",
+    "versions": {
+      "jsonschema": "4.25.1",
+      "ruff": "0.17.1",
+      "uncompyle6": "3.9.3",
+      "xdis": "6.1.8",
+      "spark-parser": "1.9.0",
+      "click": "8.5.0"
+    },
+    "tool_sha256": {
+      "tools/decompiler/recover_entries.py": "152dbc28864a10c8b7188df7ae91c8039b0b8c0b056d98591e407b897e39c458",
+      "tools/decompiler/batch_decompile.py": "a74742231e04c018c3f63452cfc859c20c6404fd73891eae9076bfcf8185b4e8"
+    },
+    "whitelist": [
+      337,
+      4293,
+      4007,
+      4806,
+      219,
+      3176,
+      2170,
+      871,
+      516,
+      3038,
+      717,
+      1129,
+      949,
+      697,
+      1406,
+      1612,
+      8
+    ],
+    "recovered": 17,
+    "complete_shaped_candidates": 16,
+    "partial": {
+      "entry_index": 1406,
+      "kind": "source_partial+digest",
+      "decompile": "decompile_fail"
+    },
+    "game_candidates_executed_or_imported": false,
+    "targeted1288_recovery": false,
+    "mechanical_evidence_checks": {
+      "excerpt_checks": {
+        "pr42/script_manual/annotations/gameplay/evidence/hero_candidate_excerpt.txt": {
+          "L_lines": 205,
+          "mismatches": 0
+        },
+        "pr42/script_manual/annotations/gameplay/evidence/dlgitem_candidate_excerpt.txt": {
+          "L_lines": 225,
+          "mismatches": 0
+        },
+        "pr42/script_manual/annotations/gameplay/evidence/task_candidate_excerpt.txt": {
+          "L_lines": 224,
+          "mismatches": 0
+        },
+        "pr42/script_manual/annotations/gameplay/evidence/npc_candidate_excerpt.txt": {
+          "L_lines": 326,
+          "mismatches": 0
+        },
+        "pr44/script_manual/annotations/battle/evidence/war_697_excerpt.txt": {
+          "L_lines": 2000,
+          "mismatches": 0
+        },
+        "pr44/script_manual/annotations/battle/evidence/warcmd_1612_excerpt.txt": {
+          "L_lines": 38,
+          "mismatches": 0
+        },
+        "pr44/script_manual/annotations/battle/evidence/e_warctrl_8_excerpt.txt": {
+          "L_lines": 170,
+          "mismatches": 0
+        },
+        "N3": {
+          "L_lines": 59,
+          "mismatches": 0
+        },
+        "N4": {
+          "R_lines": 302,
+          "mismatches": 0
+        },
+        "N2_main": {
+          "segments": 17,
+          "lines": 975,
+          "mismatches": 0
+        }
+      },
+      "identity_mismatches": [
+        {
+          "entry": 697,
+          "actual": "0x206d634b",
+          "claimed": "0x2069990b"
+        },
+        {
+          "entry": 8,
+          "actual": "0x5d26b3",
+          "claimed": "0x5d2ab3"
+        }
+      ],
+      "N2_provenance": [
+        {
+          "entry": 337,
+          "entry_id": 276057508,
+          "stored_pyc_raw_body_SHA_match": true,
+          "raw_cp950_chain_match": true
+        },
+        {
+          "entry": 4293,
+          "entry_id": 3644790581,
+          "stored_pyc_raw_body_SHA_match": true,
+          "raw_cp950_chain_match": true
+        },
+        {
+          "entry": 4007,
+          "entry_id": 3420703632,
+          "stored_pyc_raw_body_SHA_match": true,
+          "raw_cp950_chain_match": true
+        },
+        {
+          "entry": 4806,
+          "entry_id": 4117897820,
+          "stored_pyc_raw_body_SHA_match": true,
+          "raw_cp950_chain_match": true
+        }
+      ],
+      "N5_provenance": [
+        {
+          "entry": 697,
+          "stored_pyc_body_SHA_match": true,
+          "entry_id_actual": "0x206d634b",
+          "entry_id_claimed": "0x2069990b"
+        },
+        {
+          "entry": 1406,
+          "stored_pyc_body_SHA_match": true,
+          "entry_id_actual": "0x458cd0df",
+          "entry_id_claimed": "0x458cd0df"
+        },
+        {
+          "entry": 1612,
+          "stored_pyc_body_SHA_match": true,
+          "entry_id_actual": "0x50646bdf",
+          "entry_id_claimed": "0x50646bdf"
+        },
+        {
+          "entry": 8,
+          "stored_pyc_body_SHA_match": true,
+          "entry_id_actual": "0x5d26b3",
+          "entry_id_claimed": "0x5d2ab3"
+        }
+      ]
+    }
+  },
+  "N1_independent_replay": {
+    "actual_trees_this_A_run": 1,
+    "runs": [
+      "sample",
+      "full"
+    ],
+    "seed": "cc5c1bad7a806078794eca1ab7482230a18ef9d5:script_manual/inventory/modules.jsonl",
+    "all_runs_passed": true,
+    "delivered_equal_replay": true,
+    "outputs_sha256": {
+      "modules.jsonl": "266a7834765bb6b106d7c9e25261c2751277808d0b4d4be12bfbd142638ebf5c",
+      "sample_regression.json": "d179e1586151e1ffadd0a3016a4822bceb67a842da83aaf9bc16c48639b96051",
+      "B_extraction_receipt.json": "2ce69d3afeefcf37cef488e99d7f9b44274047cfceab677b512b22a7243504aa"
+    },
+    "inventory_diff_vs_baseline": {
+      "rows_old": 5135,
+      "rows_new": 5135,
+      "identities_equal_in_order": true,
+      "row_field_changes": {
+        "path": 0,
+        "vm": 0,
+        "path_status": 0,
+        "function_count": 0,
+        "function_name_or_kind": 0
+      },
+      "function_records_old": 128382,
+      "function_records_new": 128382,
+      "signature_changes": {
+        "unchanged": 128078,
+        "non_identifier_to_null": 186,
+        "bare_star_removed": 70,
+        "internal_slot_to_null": 48
+      },
+      "signature_change_examples": {
+        "non_identifier_to_null": [
+          {
+            "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+            "entry_index": 13,
+            "name": "CPageXiulian.__init__",
+            "old": "(self, pSkillM24:cDlg)",
+            "new": null
+          },
+          {
+            "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+            "entry_index": 68,
+            "name": "GetPathByTwoPoint",
+            "old": "(tStartP& '=, tEndPoint, lPath)",
+            "new": null
+          },
+          {
+            "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+            "entry_index": 108,
+            "name": "CRecordDelegate.OnHelp",
+            "old": "(self, iPlayer%()",
+            "new": null
+          }
+        ],
+        "bare_star_removed": [
+          {
+            "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+            "entry_index": 30,
+            "name": "CAccountMgr.GetUrl",
+            "old": "(self, path, *, **dct)",
+            "new": "(self, path, **dct)"
+          },
+          {
+            "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+            "entry_index": 30,
+            "name": "C2980Mgr.GetUrl",
+            "old": "(self, path, *, **dct)",
+            "new": "(self, path, **dct)"
+          },
+          {
+            "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+            "entry_index": 70,
+            "name": "dump",
+            "old": "(obj, fp, skipkeys, ensure_ascii, check_circular, allow_nan, cls, indent, separators, encoding, default, use_decimal, namedtuple_as_object, tuple_as_array, bigint_as_string, sort_keys, item_sort_key, for_json, ignore_nan, int_as_string_bitcount, iterable_as_array, *, **kw)",
+            "new": "(obj, fp, skipkeys, ensure_ascii, check_circular, allow_nan, cls, indent, separators, encoding, default, use_decimal, namedtuple_as_object, tuple_as_array, bigint_as_string, sort_keys, item_sort_key, for_json, ignore_nan, int_as_string_bitcount, iterable_as_array, **kw)"
+          }
+        ],
+        "internal_slot_to_null": [
+          {
+            "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+            "entry_index": 233,
+            "name": "getmoduleinfo.<lambda>",
+            "old": "(.0)",
+            "new": null
+          },
+          {
+            "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+            "entry_index": 233,
+            "name": "BlockFinder.tokeneater",
+            "old": "(self, type, token, .3, .4, line)",
+            "new": null
+          },
+          {
+            "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+            "entry_index": 248,
+            "name": "CMakeDialog.OnEnter.<genexpr>",
+            "old": "(.0)",
+            "new": null
+          }
+        ]
+      }
+    },
+    "runs_detail": [
+      {
+        "mode": "--sample",
+        "child_exit_code": 0,
+        "extractor_stdout": [
+          "script: {'signatures': 115953, 'kind_function': 28822, 'structurally_read': 4950, 'functions_total': 125973, 'kind_class': 9730, 'kind_method': 87421, 'parent_bytecode_undecodable': 1986, 'signature_rejected_non_identifier_parameter': 186, 'signature_unavailable': 71, 'kind_fallback': 1668, 'signature_kwargs_only': 53, 'suspect_names': 231, 'historical': 37, 'signature_rejected_compiler_internal_slot': 33, 'fallback_rejected_control_chars': 4, 'unreadable': 14, 'excluded_by_policy': 1} failures=51",
+          "sample written: <work>/tree1/script_manual/inventory/sample_regression.json all_paths=True",
+          "seed_source: {'modules_jsonl_sha256_at_read': 'de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b', 'frozen_seed_commit': 'cc5c1bad7a806078794eca1ab7482230a18ef9d5', 'frozen_seed_sha256': 'de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b', 'is_frozen_seed_file': True, 'historical_seed_rows_in_modules_jsonl': 20, 'seed_paths_from_prior_sample_regression': 0, 'task_identities': 20}"
+        ],
+        "stderr_tail": [],
+        "audit": {
+          "mode": "--sample",
+          "extractor_exit_code": 0,
+          "elapsed_seconds": 9.7,
+          "python": "3.11.2",
+          "extractor_sha256": "e12addfbed390638d850e0bba2e8116e518528f875f5a7d26091e19e35ec8c11",
+          "pinned_inputs_sha256": {
+            "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+            "data/data.fls": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+            "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+          },
+          "pinned_inputs_unchanged_after": true,
+          "script_read_stored_calls": 10002,
+          "script_read_stored_distinct_entries": 5001,
+          "script_read_stored_entry_1288": 0,
+          "data_read_stored_calls": 0,
+          "data_read_stored_distinct_entries": 0,
+          "read_at_calls_by_archive_and_caller": {
+            "script.fls:fingerprint": 24,
+            "script.fls:index": 3,
+            "script.fls:read_stored": 10002
+          },
+          "entry_1288_directory_span": {
+            "offset": 3460344,
+            "length": 5661
+          },
+          "script_read_at_overlapping_1288_span_by_caller": {
+            "fingerprint": 1
+          },
+          "passed": true
+        }
+      },
+      {
+        "mode": "--full",
+        "child_exit_code": 0,
+        "extractor_stdout": [
+          "script: {'signatures': 115953, 'kind_function': 28822, 'structurally_read': 4950, 'functions_total': 125973, 'kind_class': 9730, 'kind_method': 87421, 'parent_bytecode_undecodable': 1986, 'signature_rejected_non_identifier_parameter': 186, 'signature_unavailable': 71, 'kind_fallback': 1668, 'signature_kwargs_only': 53, 'suspect_names': 231, 'historical': 37, 'signature_rejected_compiler_internal_slot': 33, 'fallback_rejected_control_chars': 4, 'unreadable': 14, 'excluded_by_policy': 1} failures=51",
+          "data: {'directory': 12, 'embedded_filename_match': 121, 'signatures': 2176, 'kind_function': 997, 'structurally_read': 121, 'functions_total': 2409, 'kind_class': 218, 'kind_method': 1194, 'signature_rejected_compiler_internal_slot': 15, 'signature_kwargs_only': 17, 'suspect_names': 10} failures=0",
+          "inventory written: <work>/tree1/script_manual/inventory/modules.jsonl rows=5135",
+          "receipt written: <work>/tree1/script_manual/inventory/B_extraction_receipt.json"
+        ],
+        "stderr_tail": [],
+        "audit": {
+          "mode": "--full",
+          "extractor_exit_code": 0,
+          "elapsed_seconds": 10.1,
+          "python": "3.11.2",
+          "extractor_sha256": "e12addfbed390638d850e0bba2e8116e518528f875f5a7d26091e19e35ec8c11",
+          "pinned_inputs_sha256": {
+            "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+            "data/data.fls": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+            "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+          },
+          "pinned_inputs_unchanged_after": true,
+          "script_read_stored_calls": 10002,
+          "script_read_stored_distinct_entries": 5001,
+          "script_read_stored_entry_1288": 0,
+          "data_read_stored_calls": 121,
+          "data_read_stored_distinct_entries": 121,
+          "read_at_calls_by_archive_and_caller": {
+            "data.fls:fingerprint": 1,
+            "data.fls:index": 137,
+            "data.fls:read_stored": 121,
+            "script.fls:fingerprint": 24,
+            "script.fls:index": 3,
+            "script.fls:read_stored": 10002
+          },
+          "entry_1288_directory_span": {
+            "offset": 3460344,
+            "length": 5661
+          },
+          "script_read_at_overlapping_1288_span_by_caller": {
+            "fingerprint": 1
+          },
+          "passed": true
+        }
+      }
+    ],
+    "tests": {
+      "ran": 32,
+      "passed": 32,
+      "skipped": 0,
+      "failed": 0,
+      "log_sha256": "6c6e8bd28e30c222bd0a00da2d8e0b3070afc20b1cb8e46bec313c1de2e9ae80",
+      "note": "Initial snapshot-only run skipped BDF receipt-dependent case; copied fixed baseline BDF receipt and reran all32 with zero skips. Do not count first run as32 passes."
+    },
+    "A_policy_confirmation": "48 internal slots plus186 nonidentifier parameters may become null with records and raw audit preserved; not proof of all128382 function semantics.",
+    "default_unit_suite_does_not_include_inventory_tests": true
+  },
+  "combined_overlay_checks": {
+    "formal": false,
+    "same_version_core_as_A": true,
+    "N7_activation_only_in_external_overlay": true,
+    "only_nine_explicit_8b6e9266_entry_templates": true,
+    "example_template_not_activated": true,
+    "first_attempt_template_glob_caught_example_by_assertion": true,
+    "unit_tests": {
+      "ran": 82,
+      "passed": 71,
+      "skipped": 11,
+      "failed": 0,
+      "skip_reason_this_fresh_environment": "PySide6 not installed; GUI tests not executed",
+      "log_sha256": "bf4f84c8c6749f5d28b0bbecc784e2f21304e7ba15654b15ced7e02221b6f15a"
+    },
+    "ruff_including_spec_passed": true,
+    "windows_static": {
+      "root": "/home/user/manual-newcohort-review-20261016/combined",
+      "source": "walk",
+      "scanned_files": 29,
+      "listed_paths": 166,
+      "findings": []
+    },
+    "build": {
+      "coverage": {
+        "expected_entries": 5135,
+        "indexed": 5135,
+        "annotated": 20,
+        "accepted": 12,
+        "excluded": 1
+      },
+      "HTML_sha256": "0e12d7e925163243d5218ac71dbe8ead186a8722abf7fb2774c18cca3670cdd5",
+      "HTML_bytes": 26540791,
+      "BUILD_receipt_sha256": "dd8c0945d279fdf02f47c7de74c7d6a51c21485fa4b1f9c7132dd983b03bbe0c",
+      "dom": {
+        "environment": "jsdom26.1.0 (DOM script execution only, NOT real browser/Qt/Windows/game)",
+        "indexed": 5135,
+        "annotated": 20,
+        "status": {
+          "accepted": 12,
+          "pending": 4,
+          "stale_review": 4
+        },
+        "Chinese_searches": 4,
+        "review_filter_checks": 3,
+        "path_navigation_and_identity_hash_checks": 3,
+        "function_search": "CreateCmdObject",
+        "G_authored_N6_reviewed_H": true,
+        "all20_annotation_four_tabs": 80,
+        "cross_module_button_jump": "hero→npc",
+        "errors": []
+      }
+    }
+  },
+  "tool_followups_not_silently_fixed": [
+    {
+      "path": "tools/decompiler/recover_entries.py:225,242",
+      "issue": "decode_big5 repr applied twice: False reaches child as truthy string. Confirmed by code inspection; N2 correctly bypassed with direct bd.decompile_pyc_bytes(...decode_big5=False).",
+      "current_True_recovery_affected": false,
+      "status": "Recorded for separate A tool fix with bool propagation regression; frozen reviewed tool SHA not changed this round."
+    },
+    {
+      "path": "script_manual/tests",
+      "issue": "N1 new32 pure metadata tests need a separately documented command after PR43 integration; not in standard82 discovery.",
+      "status": "PR43 not merged; no production tests added that import unavailable pending PR code."
+    }
+  ],
+  "not_run": [
+    "real Qt runtime",
+    "real browser (jsdom only)",
+    "Windows/EXE",
+    "game/native/server runtime"
+  ],
+  "next": [
+    "N5 fix threeP2 on same NEW N5 PR44, publish fixed new head",
+    "N7 complete PR39 new bytes and review N5 repaired head; append current snapshot to reports",
+    "A integrate only after authorization, activate matching exact-byte review records and run full gates again"
+  ],
+  "final_A_formal_validation": {
+    "coverage": {
+      "expected_entries": 5135,
+      "indexed": 5135,
+      "annotated": 20,
+      "accepted": 3,
+      "excluded": 1,
+      "changes_requested": 5,
+      "pending": 12
+    },
+    "sources_full_passed": true,
+    "unit_ran": 82,
+    "passed": 71,
+    "skipped": 11,
+    "failed": 0,
+    "Qt_not_installed": true,
+    "test_log_sha256": "6d839124eb3b0f987d4c9caa3ecad2fe4acb4c1704caabb20ad79d4943a869da",
+    "ruff_passed": true,
+    "all_seven_PR_heads_rechecked_unchanged": true,
+    "no_original_core_author_or_review_file_modified": true
+  }
+}

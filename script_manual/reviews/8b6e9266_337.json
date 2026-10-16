@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 337,
+  "annotation_sha256": "ce4dba86bfb2c9dc71c28b6afdfbac9c3f962b3e8776c037d94dacfc37a5d5d5",
+  "reviewer": "A_delegate",
+  "delegation": "用户“H宕机了你审吧”授权A接替复核，随后“你帮他们收尾吧”授权收尾；本记录是A有限代审，不是独立H/N7。A未参与此N2固定正文的写作或改动。",
+  "decision": "accepted",
+  "note": "2026-10-16 A收尾有限代审；输入PR39 c7142366fabafea0b35d943d8746a1de9d899b49，已合A e60fcb588ff7a50249504ff603f1a64af50f5c8b；旧N7在9b0dea7基线的退修仅作问题清单，不挪绑定SHA冒充新N7结论。mainpage：按重新核对的去六头332行候选核公告两个独立失败分支（263–269）、News/Service在OnMessage(30)按g_LangVersion选择（226–256）、Show异常else位置不修补（305–329）、首页选服与TW外链/非TW注册分流（111–139）；确认正文将地址、正文、布局分开，不把HTTP失败说成写文件失败。 四条原包目录ID/stored/pyc/raw u6/body SHA实际重算一致；修正恢复子进程布尔参数后，以真实False及True独立输出四对raw/正文，严格cp950后处理链一致。接受范围为原五组阻塞及六题相关新增/修改结论和定位、来源链，不是穷尽本模块全部函数/分支语义。局限/不确定候选形态保留，不代表原始源码、5000模块、Qt/Windows/EXE/游戏/原生或服务端通过。详细报告：docs/evidence/script_manual_A_finalize_20261016.md。"
+}

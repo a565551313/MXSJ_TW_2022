@@ -1,0 +1,854 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 4293,
+  "path": "script/main.py",
+  "owner": "C",
+  "domain": "login",
+  "author": "N2 (new Arena session arena/a1839872-mxsj-tw-2022)",
+  "source_status": "recovered_complete_not_original",
+  "purpose": {
+    "text": "客户端主控制：启动初始化、主循环、模块循环、战斗循环切换、重启/重登录、退出与热键。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "globals",
+      "start",
+      "mainloop",
+      "warloop",
+      "exit"
+    ]
+  },
+  "keywords": [
+    "main",
+    "主循环",
+    "MainLoop",
+    "WarLoop",
+    "退出",
+    "重启",
+    "热键",
+    "Loop"
+  ],
+  "functions": [
+    {
+      "name": "InitSize",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "初始化UI风格并全屏模式0。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "globals"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "StartStep1",
+      "signature": "(mode=0)",
+      "kind": "function",
+      "summary": {
+        "text": "设置不可保存、初始化新资源路径、OnGameStart。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "start"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Start",
+      "signature": "(mode=0)",
+      "kind": "function",
+      "summary": {
+        "text": "调用StartStep1；内网版本且非TW时InnerStart。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "start"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "InnerStart",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "内网功能：UIMix与CGetMXCCName。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "start"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CloseGame",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "发关闭信号、NormalLogout并设置m_IsExit，保存/清理资源；CreatePyCommand(30, DoCloseGame)调度后者才置Quit=True并释放部分资源。计数单位及执行时序未实机验证。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "close"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SaveServerData",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "net对象存在时遍历日志发送回调，只有某次回调返回真才ProcessServerCmd；函数返回True不代表已保存成功。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "save_server"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Restart",
+      "signature": "(flag=0, logout=True)",
+      "kind": "function",
+      "summary": {
+        "text": "保存/清理状态；旧net对象先ProcessServerCmd再Disconnect，随后换CFakeNet；清HTTP、ResetProtocol，Loop=AfterRestart且RestartTimes=2，resetcontrol.DoReset后StartStep1(flag)。并非函数内立即恢复MainLoop。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "restart"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "MainLoop",
+      "signature": "(mousex, mousey)",
+      "kind": "function",
+      "summary": {
+        "text": "Quit时返回1；否则cursor/addon后驱动net（多包节流分支）、netserver、connect、netquicklogin，再pubhttp/pubhttps、IM、ping、dgw、其它模块与timer、CModuleLoop；末尾返回0。同名ProcessServerCmd不是同一实现。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "mainloop",
+          "net_multi"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "Quit",
+          "effect": {
+            "text": "返回1，不运行后续循环。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "mainloop"
+            ]
+          }
+        },
+        {
+          "condition": "net.g_Net and IsTestMultiProcessServerCmd()",
+          "effect": {
+            "text": "多包消费；当前候选IsTestMultiProcessServerCmd恒真，预算只据候选常量引用，不证明实时表现。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "mainloop",
+              "net_multi"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CModuleLoop",
+      "signature": "(object)",
+      "kind": "class",
+      "summary": {
+        "text": "模块循环注册表：AddLoop/DelLoop/Loop动态调用模块Loop函数。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "moduleloop"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CModuleLoop.Loop",
+      "signature": "(cls)",
+      "kind": "method",
+      "summary": {
+        "text": "遍历m_Loops并调用模块loop函数。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "moduleloop"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CModuleLoop.AddLoop",
+      "signature": "(cls, modname, loopfunc)",
+      "kind": "method",
+      "summary": {
+        "text": "注册模块循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "moduleloop"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CModuleLoop.DelLoop",
+      "signature": "(cls, modname)",
+      "kind": "method",
+      "summary": {
+        "text": "注销模块循环。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "moduleloop"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "WarLoop",
+      "signature": "(mousex, mousey)",
+      "kind": "function",
+      "summary": {
+        "text": "战斗循环：非暂停时war.Process(True)，再调用MainLoop。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "warloop"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "not dlgwarrecord.IsWarRecPause()",
+          "effect": {
+            "text": "先war.Process(True)，之后仍调用MainLoop；暂停时跳过Process。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "warloop"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "AfterRestart",
+      "signature": "(mousex, mousey)",
+      "kind": "function",
+      "summary": {
+        "text": "RestartTimes每次减1，恰等0才SetMainLoop；NeedCheck时StartCheck。这里不保证实际帧率。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "warloop"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetWarLoop",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "设置Loop=WarLoop。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "warloop"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetMainLoop",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "设置Loop=MainLoop。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "warloop"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "InWar",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "判断当前Loop是否WarLoop。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "warloop"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ExitGame",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "候选not gamectrl.IsShowMainPage()时直接Quit=True；否则依角色/Ctrl/net条件选择RealExit参数，再按角色/net条件检查离线寄售。不根据名字反转该谓词。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "exit"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "doexit",
+      "signature": "(dlg=None)",
+      "kind": "function",
+      "summary": {
+        "text": "执行关闭：截图路径、CloseGame。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "exit"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "doreturn",
+      "signature": "(dlg)",
+      "kind": "function",
+      "summary": {
+        "text": "注册_relogin计数回调：t<30继续，或net存在且未发完并t<90继续；否则重置分辨率并Restart。注册后调用NormalLogout并置m_IsRelogin。计数不是实测帧/秒。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "doreturn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "docancel",
+      "signature": "(dlg)",
+      "kind": "function",
+      "summary": {
+        "text": "取消退出对话框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "exit"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "RealExit",
+      "signature": "(bPopupDialog, daymsg)",
+      "kind": "function",
+      "summary": {
+        "text": "弹出退出确认/离线寄售提示；确认后doreturn/doexit/docancel。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "exit"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ClearHotKey",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "对列出的魔法/聊天/表情/默认/用户配置快捷键以无回调形式调用RegisterHotKey，并清Ctrl/Shift扩展键；未见调用RegisterDefaultHotKey，不声称注销所有键。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "clear_keys"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "RegisterDefaultHotKey",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "注册默认快捷键与快照函数。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hotkeys"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SwitchHotKey",
+      "signature": "(IsWar, bOldWar=None)",
+      "kind": "function",
+      "summary": {
+        "text": "g_DisableHotKey真则返回；读取配置并注册公共快捷键，在IsWar分支注册战斗键，否则注册攻击/交易/给予并清扩展Ctrl/Shift；末尾注册BossHotKey。这里只确认注册调用，不保证目标行为。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "switch"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "g_DisableHotKey",
+          "effect": {
+            "text": "直接返回。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "switch"
+            ]
+          }
+        },
+        {
+          "condition": "IsWar",
+          "effect": {
+            "text": "注册战斗快捷键；否则走非战斗键分支。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "switch"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "RegisterChatHotKey",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "注册聊天快捷键。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hotkeys"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "config",
+      "target": "mx.ini / cfg data",
+      "summary": {
+        "text": "RealExit调用cfg.WriteMXIniBackUp；版本/公告刷新配置读取应参见mainpage，不用Start段佐证。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "exit"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/main.py (entry 4293)",
+      "summary": {
+        "text": "客户端主控制模块。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "start",
+          "mainloop"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 337
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4007
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4806
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "main.py如何启动、运行主循环、切换战斗和退出？",
+      "answer": {
+        "text": "Start->StartStep1调用OnGameStart；Loop初始MainLoop。MainLoop驱动网络/HTTP/模块回调；WarLoop在非暂停时war.Process(True)，然后MainLoop。SetWarLoop/SetMainLoop改Loop；Restart暂置AfterRestart。退出与重登录见CloseGame/ExitGame/RealExit/doexit/doreturn，不能混淆Quit设置时点。快捷键见下一问。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "start",
+          "mainloop",
+          "net_multi",
+          "warloop",
+          "restart",
+          "close",
+          "exit",
+          "doreturn"
+        ]
+      }
+    },
+    {
+      "question": "公告失败在哪触发，正文/地址/布局分别改哪里？",
+      "answer": {
+        "text": "公告逻辑在entry337：refreshbulletin在succeed为假或响应缺少\\r\\n\\r\\n时显示“刷新公告失敗”。这不是refreshService的错误提示；实际失败原因未知，未请求业务URL。 正文news.txt由refreshbulletin成功响应body覆盖；写文件异常时才把body.split缓存g_News，并非HTTP失败时缓存。OnMessage(30)按g_LangVersion==0读取update.ini的Setting/News及Service，否则HK节；布局login/mainpage.dlg。Show的候选else内创建面板，并在autoupdate与时间条件满足时调度OnMessage(30)；该else位置异常待原生复核，不宣称自动刷新已可用。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "mp_cls",
+          "mp_news_url",
+          "mp_refresh",
+          "mp_show"
+        ]
+      }
+    },
+    {
+      "question": "登录按钮点击后经过哪些函数和模块？",
+      "answer": {
+        "text": "CLoginIn.OnMessage(2)仅在not misc.IsTWServer()内检查chk_agree；对象存在且未选中才提示并return。其余情况调用LoginOk：非空/密码长度/账号非纯数字校验后C2SLoginIn，再设置错误回调。OnLogin是另一个入口，LoginIn存在才SaveAccount；不能由此证明提交即成功或直接调用OnLogin。RandomConnect在OneoffLogin/OneoffLogin2内，不串入普通按钮链。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "li_message2",
+          "li_loginok",
+          "li_onlogin",
+          "li_autologin"
+        ]
+      }
+    },
+    {
+      "question": "注册逻辑与布局分别在哪里？",
+      "answer": {
+        "text": "首页OnMessage(2)在IsTWServer()真时打开外部REGISTER_URL（按g_LangVersion分支）；仅非TW才隐藏首页并register.Show(True)->Step(0)。register各CRegPanel与回调负责逻辑，布局reg1/reg2/reg3/reg4/reg5.dlg，CConfirm另用login/confirm.dlg。confirm是独立确认入口，不能当成Step序列；未验证布局资源内容或注册服务可用。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "mp_entry",
+          "rg_confirm",
+          "rg_reg1",
+          "rg_reg2",
+          "rg_reg2_2980",
+          "rg_panels34",
+          "rg_stepshow"
+        ]
+      }
+    },
+    {
+      "question": "快捷键清理、默认键与战斗切换分别在哪里？",
+      "answer": {
+        "text": "ClearHotKey只处理其列出的键；RegisterDefaultHotKey注册关闭/Esc/Enter与截图，RegisterChatHotKey注册聊天键；SwitchHotKey受g_DisableHotKey守卫，按IsWar选择战斗/非战斗键。默认Enter委托interface.DefaultButtonClick，实际焦点与原生事件未验。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "clear_keys",
+          "hotkeys",
+          "switch"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "本轮Python 3.11.2/uncompyle6 3.9.3/xdis 6.1.8只读定点恢复；不是原始源码，未执行游戏模块或验证运行行为。",
+    "main.py体积大，本说明仅覆盖启动/主循环/战斗切换/退出/热键等重点，未覆盖全部函数。",
+    "calls为静态引用线索，动态调用未全部解析。",
+    "E/F协审网络与战斗计算，本说明不宣称真实战斗逻辑。",
+    "旧dev0 main全文f048f22c…含sNz/hXCN形态，历史来源/字符处理无法复现，不再作证。新候选正文SHA与E协审bf5051dc…一致，但netserver保存槽位仅[15..20]，不猜变量名。",
+    "RestartQuickLogin的DGW分支serverid未见本地赋值，目标DoDgwQuickLogin未在本卡内核实；RestarConfirm/Ex调用StartQuickTimer不证明定时器生效。connect成功回调绑定与瞬连条件以network域独立返修为准。",
+    "战斗协审仅只读对照battle/netwar对SetWarLoop的记录；本卡不据此认定上游入场/入队已验证。",
+    "来源链、编码边界和实际测试见同目录N2_RESPONSE.md/N2_provenance.json.template；最高static_reviewed，无实机或全函数完成声明。",
+    "main来源状态指外置完整恢复候选；仓库内仅有限摘录，不将摘录叫完整源码。旧稿的具名槽位不能沿用于本轮新候选。"
+  ],
+  "sources": [
+    {
+      "id": "recovered_main",
+      "path": "script_manual/annotations/login/main_entry4293_recovered.py.txt",
+      "sha256": "b2b6d636b2faced29ebab0f87945bc947574c4b5ba980ea6faa719bf90debd80",
+      "kind": "recovered_source",
+      "note": "N2本轮u6 3.9.3候选的有限摘录，不是完整源码。每段保持候选原行字节；上方标原候选行号，evidence绑定摘录文件行。原包→entry→转译pyc→raw u6→严格cp950后处理→完整候选→摘录的SHA及映射见N2_provenance.json.template。已替换不可复现的旧dev0有损稿，不手猜中文或槽位。"
+    },
+    {
+      "id": "mainpage_src",
+      "path": "tools/decompiler/output/script_fls/script/login/mainpage.py",
+      "sha256": "984cbe6ac7d2ed0a1479d2bcb72ea34a2fc89756017d1d95ab0f9f2195e925ac",
+      "kind": "recovered_source",
+      "note": "N2独立恢复固定script.fls白名单；精确去六行恢复头（含生成时间）后，整个正文与本文件原字节SHA一致。Python3.11.2/u6 3.9.3/xdis6.1.8；默认decode_big5_literals严格cp950，失败保留转义，不猜改字串。完整链/pyc/候选摘要见annotations/login/N2_provenance.json.template与N2_RESPONSE.md；非原始源码，解码成功不保证语义。"
+    },
+    {
+      "id": "register_src",
+      "path": "tools/decompiler/output/script_fls/script/login/register.py",
+      "sha256": "bc2b5bff78d3feb473227767e9172eba21346f7fd6adad67687eb9ec97eba18d",
+      "kind": "recovered_source",
+      "note": "N2独立恢复固定script.fls白名单；精确去六行恢复头（含生成时间）后，整个正文与本文件原字节SHA一致。Python3.11.2/u6 3.9.3/xdis6.1.8；默认decode_big5_literals严格cp950，失败保留转义，不猜改字串。完整链/pyc/候选摘要见annotations/login/N2_provenance.json.template与N2_RESPONSE.md；非原始源码，解码成功不保证语义。"
+    },
+    {
+      "id": "loginin_src",
+      "path": "tools/decompiler/output/script_fls/script/login/loginin.py",
+      "sha256": "dd90527be51d315b6a0e6cafce32f4ad08e74040153d3fbc141c239cac550929",
+      "kind": "recovered_source",
+      "note": "N2独立恢复固定script.fls白名单；精确去六行恢复头（含生成时间）后，整个正文与本文件原字节SHA一致。Python3.11.2/u6 3.9.3/xdis6.1.8；默认decode_big5_literals严格cp950，失败保留转义，不猜改字串。完整链/pyc/候选摘要见annotations/login/N2_provenance.json.template与N2_RESPONSE.md；非原始源码，解码成功不保证语义。"
+    },
+    {
+      "id": "legacy_mainpage",
+      "path": "tools/decompiler/output/script_fls/script/login/mainpage.py",
+      "sha256": "984cbe6ac7d2ed0a1479d2bcb72ea34a2fc89756017d1d95ab0f9f2195e925ac",
+      "kind": "recovered_source",
+      "note": "N2独立恢复固定script.fls白名单；精确去六行恢复头（含生成时间）后，整个正文与本文件原字节SHA一致。Python3.11.2/u6 3.9.3/xdis6.1.8；默认decode_big5_literals严格cp950，失败保留转义，不猜改字串。完整链/pyc/候选摘要见annotations/login/N2_provenance.json.template与N2_RESPONSE.md；非原始源码，解码成功不保证语义。"
+    },
+    {
+      "id": "legacy_register",
+      "path": "tools/decompiler/output/script_fls/script/login/register.py",
+      "sha256": "bc2b5bff78d3feb473227767e9172eba21346f7fd6adad67687eb9ec97eba18d",
+      "kind": "recovered_source",
+      "note": "N2独立恢复固定script.fls白名单；精确去六行恢复头（含生成时间）后，整个正文与本文件原字节SHA一致。Python3.11.2/u6 3.9.3/xdis6.1.8；默认decode_big5_literals严格cp950，失败保留转义，不猜改字串。完整链/pyc/候选摘要见annotations/login/N2_provenance.json.template与N2_RESPONSE.md；非原始源码，解码成功不保证语义。"
+    },
+    {
+      "id": "legacy_loginin",
+      "path": "tools/decompiler/output/script_fls/script/login/loginin.py",
+      "sha256": "dd90527be51d315b6a0e6cafce32f4ad08e74040153d3fbc141c239cac550929",
+      "kind": "recovered_source",
+      "note": "N2独立恢复固定script.fls白名单；精确去六行恢复头（含生成时间）后，整个正文与本文件原字节SHA一致。Python3.11.2/u6 3.9.3/xdis6.1.8；默认decode_big5_literals严格cp950，失败保留转义，不猜改字串。完整链/pyc/候选摘要见annotations/login/N2_provenance.json.template与N2_RESPONSE.md；非原始源码，解码成功不保证语义。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "mp_refresh",
+      "source_id": "mainpage_src",
+      "start_line": 260,
+      "end_line": 283
+    },
+    {
+      "id": "mp_layout",
+      "source_id": "mainpage_src",
+      "start_line": 50,
+      "end_line": 86
+    },
+    {
+      "id": "reg_flow",
+      "source_id": "register_src",
+      "start_line": 307,
+      "end_line": 543
+    },
+    {
+      "id": "loginok2",
+      "source_id": "loginin_src",
+      "start_line": 246,
+      "end_line": 267
+    },
+    {
+      "id": "globals",
+      "source_id": "recovered_main",
+      "start_line": 4,
+      "end_line": 19
+    },
+    {
+      "id": "start",
+      "source_id": "recovered_main",
+      "start_line": 21,
+      "end_line": 41
+    },
+    {
+      "id": "close",
+      "source_id": "recovered_main",
+      "start_line": 43,
+      "end_line": 100
+    },
+    {
+      "id": "save_server",
+      "source_id": "recovered_main",
+      "start_line": 102,
+      "end_line": 116
+    },
+    {
+      "id": "restart",
+      "source_id": "recovered_main",
+      "start_line": 118,
+      "end_line": 193
+    },
+    {
+      "id": "restart_slots",
+      "source_id": "recovered_main",
+      "start_line": 195,
+      "end_line": 256
+    },
+    {
+      "id": "quick",
+      "source_id": "recovered_main",
+      "start_line": 258,
+      "end_line": 308
+    },
+    {
+      "id": "reconnect",
+      "source_id": "recovered_main",
+      "start_line": 310,
+      "end_line": 383
+    },
+    {
+      "id": "mainloop",
+      "source_id": "recovered_main",
+      "start_line": 385,
+      "end_line": 450
+    },
+    {
+      "id": "moduleloop",
+      "source_id": "recovered_main",
+      "start_line": 452,
+      "end_line": 475
+    },
+    {
+      "id": "net_multi",
+      "source_id": "recovered_main",
+      "start_line": 477,
+      "end_line": 502
+    },
+    {
+      "id": "warloop",
+      "source_id": "recovered_main",
+      "start_line": 504,
+      "end_line": 539
+    },
+    {
+      "id": "exit",
+      "source_id": "recovered_main",
+      "start_line": 541,
+      "end_line": 621
+    },
+    {
+      "id": "doreturn",
+      "source_id": "recovered_main",
+      "start_line": 623,
+      "end_line": 648
+    },
+    {
+      "id": "clear_keys",
+      "source_id": "recovered_main",
+      "start_line": 650,
+      "end_line": 686
+    },
+    {
+      "id": "hotkeys",
+      "source_id": "recovered_main",
+      "start_line": 688,
+      "end_line": 768
+    },
+    {
+      "id": "switch",
+      "source_id": "recovered_main",
+      "start_line": 770,
+      "end_line": 994
+    },
+    {
+      "id": "mp_entry",
+      "source_id": "legacy_mainpage",
+      "start_line": 111,
+      "end_line": 139
+    },
+    {
+      "id": "rg_confirm",
+      "source_id": "legacy_register",
+      "start_line": 136,
+      "end_line": 166
+    },
+    {
+      "id": "rg_reg1",
+      "source_id": "legacy_register",
+      "start_line": 167,
+      "end_line": 213
+    },
+    {
+      "id": "rg_reg2",
+      "source_id": "legacy_register",
+      "start_line": 307,
+      "end_line": 543
+    },
+    {
+      "id": "rg_reg2_2980",
+      "source_id": "legacy_register",
+      "start_line": 561,
+      "end_line": 930
+    },
+    {
+      "id": "rg_panels34",
+      "source_id": "legacy_register",
+      "start_line": 1208,
+      "end_line": 1254
+    },
+    {
+      "id": "rg_stepshow",
+      "source_id": "legacy_register",
+      "start_line": 1255,
+      "end_line": 1305
+    },
+    {
+      "id": "li_message2",
+      "source_id": "legacy_loginin",
+      "start_line": 575,
+      "end_line": 585
+    },
+    {
+      "id": "li_loginok",
+      "source_id": "legacy_loginin",
+      "start_line": 246,
+      "end_line": 267
+    },
+    {
+      "id": "li_onlogin",
+      "source_id": "legacy_loginin",
+      "start_line": 657,
+      "end_line": 661
+    },
+    {
+      "id": "li_autologin",
+      "source_id": "legacy_loginin",
+      "start_line": 513,
+      "end_line": 559
+    },
+    {
+      "id": "mp_cls",
+      "source_id": "legacy_mainpage",
+      "start_line": 50,
+      "end_line": 86
+    },
+    {
+      "id": "mp_news_url",
+      "source_id": "legacy_mainpage",
+      "start_line": 226,
+      "end_line": 256
+    },
+    {
+      "id": "mp_show",
+      "source_id": "legacy_mainpage",
+      "start_line": 305,
+      "end_line": 329
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "downstream",
+      "kind": "data_flow",
+      "module": null,
+      "symbol": "Loop",
+      "summary": {
+        "text": "本模块全局Loop在MainLoop/WarLoop/AfterRestart间赋值；不是向外发送消息。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "restart",
+          "warloop"
+        ]
+      }
+    }
+  ]
+}

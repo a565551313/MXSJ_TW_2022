@@ -1,0 +1,124 @@
+{
+  "version": "0.1.0.dev2",
+  "date": "2026-10-15",
+  "recorded_at_utc": "2026-10-15T15:10:32.404348+00:00",
+  "scope": "A fixture isolation and E preliminary review; C/E not integrated; not H acceptance",
+  "tests": {
+    "a_production": {
+      "ran": 78,
+      "passed": 78,
+      "skipped": 0,
+      "gui": 11
+    },
+    "external_e_overlay": {
+      "ran": 78,
+      "passed": 78,
+      "skipped": 0,
+      "gui": 11
+    },
+    "external_c_and_e_overlay": {
+      "ran": 78,
+      "passed": 78,
+      "skipped": 0,
+      "gui": 11
+    },
+    "old_fixture_e_overlay": {
+      "ran": 75,
+      "passed": 58,
+      "failures": 3,
+      "errors": 3,
+      "skipped": 11
+    },
+    "note": "Unit fixtures isolated from production. Production structural smoke separate. Green unit tests do not validate all annotation claims or correct C Python2 evidence lint failures."
+  },
+  "checks": {
+    "ruff": "0; includes explicit spec",
+    "windows_static": "ERROR/WARNING/INFO 0/0/0; 58 filenames,26 Python/script scans",
+    "bootstrap_check_only": "exit 0",
+    "a_source_text_verify": "exit 0",
+    "e_source_text_verify": "exit 0; one unindexed3970 warning",
+    "e_browser_smoke": {
+      "browser": "153.0.8010.0",
+      "offline": true,
+      "protocol": "file://",
+      "scope": "E 5-annotation export smoke; not semantic validation",
+      "errors": [],
+      "checks": [
+        "5 annotation count",
+        "frame conflict visible",
+        "function content visible",
+        "evidence verified label"
+      ]
+    }
+  },
+  "pending": [
+    "E needs content corrections before H review",
+    "C needs earlier review corrections",
+    "Windows/EXE/game not executed",
+    "Full packaging still not verified; prior host libpython limitation unchanged"
+  ],
+  "unchanged_originals": {
+    "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+  },
+  "source_files_sha256": {
+    "script_manual/.gitattributes": "1e866c9057e4081e7abf0645afa2a94dc9a8601acaac8bcf1ec16e21bdd96b71",
+    "script_manual/.gitignore": "27430c3412eb379163b5c24be6f00711393878d64e709e93d42f0260848c7626",
+    "script_manual/README.md": "0f87226a3cb788d45e41f7ad9850e897c89aff7059c7bae2814cecc6e7925534",
+    "script_manual/annotations/battle/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "script_manual/annotations/gameplay/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "script_manual/annotations/login/mainpage.json": "b8a96ab7d52bebfd9f8e2efca9172a5a0f5d8978902a9482f7632ffbc8bc2f54",
+    "script_manual/annotations/network/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "script_manual/annotations/ui_chat/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "script_manual/bootstrap.py": "02fcebe2831ace9828f29e24491e3d050ea366ac31e47ddcfc554765986860a3",
+    "script_manual/browser_tests/.gitignore": "4d56952b0fb13bf8f9b6c13a6d4c34a075bac3af447636a1df4335d7576e2f97",
+    "script_manual/browser_tests/README.md": "d4046aa2682d0541d0f2b0b15f17c5d18a3f606ee091c614c3608bb0489c6fb7",
+    "script_manual/browser_tests/check.cjs": "a875fd8a3c7fc4e609d31855b67d68332149f9f714f36918136192e55b8d2b3a",
+    "script_manual/browser_tests/package-lock.json": "23f1251e375923980f4c9c3a881b32b3e6cec36f958c53b543554f35421f6f1b",
+    "script_manual/browser_tests/package.json": "96d91a82eedcd23e89db6ffbb54b37b50ed7aab67ef2e4c24d05a8e601cab4ad",
+    "script_manual/build_exe.bat": "0c69b0377c871910e2701e53733301e423a022a9a3e4626668c5b26dbdeb4633",
+    "script_manual/coordination/baseline.json": "55f23e7298d0d2481123a384095192cbfe1d559c029f4ded923c2911f63d06c9",
+    "script_manual/coordination/tasks.json": "88f665da9e0f233378a9771b63c14c8f5ea877c4fe43313a75c8347a913ad67c",
+    "script_manual/docs/AGENT_TASKS.md": "7411d869991c8fd5cedaa028496a8e3a2f1e617a0ac0e3ab3a99235bafeed868",
+    "script_manual/docs/CONTRACT.md": "f31b36a9ab74f25483af5c9e0cad46a345fb885f36ab539109abe13388a8090e",
+    "script_manual/examples/annotation.json": "b8a96ab7d52bebfd9f8e2efca9172a5a0f5d8978902a9482f7632ffbc8bc2f54",
+    "script_manual/inventory/modules.jsonl": "de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b",
+    "script_manual/pyproject.toml": "4cccf04383806799de19fa53396ab6c2660cf2f44be38c1f3086d401c02b60a8",
+    "script_manual/requirements-dev.txt": "cdceae1c61f1b266c83dd02ee9d22411d6d7fdece8fb57d39821f6d9156116ab",
+    "script_manual/requirements.txt": "566183b3ceac03dc6a91f17e970f86512fcc0a13af02af7f09ee5e2396ad391a",
+    "script_manual/reviews/README.md": "063344fc9d407040d0f7c7509ec3df708596b6f8dd015dd8b9e0bf78afb2a7f2",
+    "script_manual/reviews/example.json.template": "548d75588d1bf178bf6ab5b72a65edbf9cc371a483941783b4e01347040270b8",
+    "script_manual/run.py": "1d967263ed8f5396ba753713ecc5574118e554e1d13c0c391345d2c82feba4c8",
+    "script_manual/schema/contract.schema.json": "6eba29e2154296c021f5f173de79347e3c0ce71a55d4804c3e812790347b1a2d",
+    "script_manual/script_manual.spec": "30b5617fe5149f573ccaffdc2c05f1ef2e9a5d1a2b62e7d4ec4bafc101a3f840",
+    "script_manual/src/mxsj_manual/__init__.py": "f5a95f54ee9cb78cde22c3ae0aaa511ab64c7d7ee08d108457ec0cccb311528b",
+    "script_manual/src/mxsj_manual/__main__.py": "d1c3cc2e79bbc48d3518877b62746ee6fbcfca9468982bdf5a63ec0916844f49",
+    "script_manual/src/mxsj_manual/app.py": "c1c48c84f7de1c943fe79a0e3c40c94a655e3db00ca6fdd3b94496e5444d4538",
+    "script_manual/src/mxsj_manual/assets/manual.js": "be9f40f44255f9ebbf82812684e1ac9fc5ee31c6327afd654c674b08e977b80f",
+    "script_manual/src/mxsj_manual/assets/style.css": "4f3e13fadb11f8500a6daebdfcf8321e90db3349a6fe0f5121c0daa6d53b5010",
+    "script_manual/src/mxsj_manual/core/__init__.py": "6911a9aed3c3e66c34388c030dd310cce8d41e3cbc8b0c9efc450e5e917b4af0",
+    "script_manual/src/mxsj_manual/core/catalog.py": "7ba7360c8363116a0aea8888cc58db4a9aaae31253224d959a7479b7b3518db0",
+    "script_manual/src/mxsj_manual/core/export.py": "ed90d047a0697050ef05cbdaad05da00c0925174cadfb3fd73b4154eb162a915",
+    "script_manual/src/mxsj_manual/core/io.py": "17d76d9a57bc92374a515368a175d18fdb2e1f712390df5e9355e5f6426c37c9",
+    "script_manual/src/mxsj_manual/core/render.py": "914e12000d76bff00a15b1bc2badffe6de4351f01d508dc47acde37b4ded2e84",
+    "script_manual/src/mxsj_manual/core/store.py": "268de19d3663a6238302d525e91d191f88c13a08d6e0d45a012c715e2511e670",
+    "script_manual/src/mxsj_manual/core/validation.py": "b699fb0952861b6bdcc681ea8cf94f3ec107f3ae2ee4942aaccdb4ccc199263e",
+    "script_manual/src/mxsj_manual/gui/__init__.py": "d02977c56d6396d662c60e42af2900d16c897a4dc20a416344bcc945f5a7a6a5",
+    "script_manual/src/mxsj_manual/gui/jobs.py": "eaf9c95ab7c0a09dfeb4f8e22ef53dc0d2fbb74dd8c2c618007dfed54cad17d9",
+    "script_manual/src/mxsj_manual/gui/models.py": "db5e364d29b0c2b317fca0f8e68d2fdb52afbe65e29f575f28f2b850ca6b5097",
+    "script_manual/src/mxsj_manual/gui/window.py": "0fa0b4d7873a80bda710969cc815a1ee1561550cd9b22548ff13f048ddb5942c",
+    "script_manual/src/mxsj_manual/paths.py": "e650beba61c06665f9ba95eb10e100bdca8b323087edd1dcbe8032da0b6ec2cc",
+    "script_manual/tests/fixtures/annotations/login/mainpage.json": "b8a96ab7d52bebfd9f8e2efca9172a5a0f5d8978902a9482f7632ffbc8bc2f54",
+    "script_manual/tests/fixtures/coordination/baseline.json": "55f23e7298d0d2481123a384095192cbfe1d559c029f4ded923c2911f63d06c9",
+    "script_manual/tests/fixtures/coordination/tasks.json": "88f665da9e0f233378a9771b63c14c8f5ea877c4fe43313a75c8347a913ad67c",
+    "script_manual/tests/fixtures/inventory/modules.jsonl": "de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b",
+    "script_manual/tests/support.py": "4cbf15a020aa17f3faee46e38d099b448b1700bb0b74adf59ca3a306ca1bf73e",
+    "script_manual/tests/test_bootstrap.py": "8e05330bf1dd390ccfed20db0a20b4780a7e3f5461ace6bd9b871e13a0df8ba6",
+    "script_manual/tests/test_catalog.py": "a38a1f795d3d91236dccd9beea117658148de798bec162fecfc3f92eb4b3930c",
+    "script_manual/tests/test_fixture_isolation.py": "cd36485b06a7841fefbbfeda7ba933a28241939527b524b51e62234f4333e886",
+    "script_manual/tests/test_gui.py": "874c523d9787f7b3d81b1d0d1aede3e105353262ae4cb3f13bd902b941192cdf",
+    "script_manual/tests/test_reviews_export.py": "90244c57a677dc15efe786537cff7a159e4d44c0232d70d90a76659339ce11bd",
+    "script_manual/tests/test_validation.py": "a36df81079a05e09097ff8bd57a5516ca83f9a9c9922ee6d6a6420bc00cde355",
+    "script_manual/启动脚本手册.bat": "ad105753b783341b1976c464e5652b58672097e5e5bbe32625ebfcb05970c774"
+  }
+}

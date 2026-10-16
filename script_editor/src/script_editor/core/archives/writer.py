@@ -22,30 +22,41 @@ def write_script(source: ArchiveDocument, changed: dict[int, bytes], out):
     if any(not entry.r1 for entry in entries):
         raise ValueError("unknown zero-r1 script format")
     directory = struct.unpack("<I", source.reader.read_at(8, 4))[0]
-    physical = sorted(range(len(entries)), key=lambda i: source.index.spans[i].offset)
-    cursor, offsets, sizes = 0, {}, {}
-    for i in physical:
-        span = source.index.spans[i]
-        if span.offset < cursor:
-            raise ValueError("overlapping script payloads")
-        source.reader.copy_to(cursor, span.offset - cursor, out)
-        offsets[i] = out.tell()
-        if i in changed:
-            data = changed[i]
-            out.write(data)
-            sizes[i] = len(data)
+    # The directory is a region in the physical stream, NOT the end of payloads.
+    # Preserve its relative position, all opaque gaps and any trailing bytes.
+    regions = [
+        (span.offset, span.length, i) for i, span in enumerate(source.index.spans)
+    ]
+    regions.append((directory, 16 * len(entries), -1))
+    # Empty payloads at directory start precede the directory itself.
+    regions.sort(key=lambda region: (region[0], region[1], region[2]))
+    cursor, offsets, sizes, new_directory = 0, {}, {}, None
+    for start, length, i in regions:
+        if start < cursor:
+            raise ValueError("overlapping script regions")
+        source.reader.copy_to(cursor, start - cursor, out)
+        if i == -1:
+            new_directory = out.tell()
+            # Reserve the table until offsets on BOTH sides are known.
+            source.reader.copy_to(start, length, out)
         else:
-            source.reader.copy_to(span.offset, span.length, out)
-            sizes[i] = span.length
-        cursor = span.offset + span.length
-    source.reader.copy_to(cursor, directory - cursor, out)
-    new_directory = out.tell()
+            offsets[i] = out.tell()
+            if i in changed:
+                data = changed[i]
+                out.write(data)
+                sizes[i] = len(data)
+            else:
+                source.reader.copy_to(start, length, out)
+                sizes[i] = length
+        cursor = start + length
+    source.reader.copy_to(cursor, source.reader.size - cursor, out)
+    if new_directory is None:
+        raise ValueError("missing script directory")
+    out.seek(new_directory)
     for i, meta in enumerate(entries):
         r2 = ((meta.r1 * meta.entry_id + 0xDF25E) & 0xFFFFFFFF) ^ sizes[i]
         r3 = ((r2 * i * 0xF718FE + 0xD59D16C) & 0xFFFFFFFF) ^ offsets[i]
         out.write(struct.pack("<IIII", meta.entry_id, meta.r1, r2, r3))
-    tail_start = directory + 16 * len(entries)
-    source.reader.copy_to(tail_start, source.reader.size - tail_start, out)
     out.seek(8)
     out.write(struct.pack("<I", new_directory))
     out.seek(0, 2)

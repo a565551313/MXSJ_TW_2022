@@ -1,0 +1,985 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MXSJ manual contract v1",
+  "$defs": {
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "confidence": {
+          "enum": [
+            "extracted",
+            "inferred",
+            "static_reviewed",
+            "runtime_verified"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "text",
+        "confidence",
+        "evidence"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "kind": {
+          "enum": [
+            "metadata",
+            "recovered_source",
+            "runtime_report"
+          ]
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "sha256",
+        "kind",
+        "note"
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "source_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "start_line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "end_line": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "id",
+        "source_id",
+        "start_line",
+        "end_line"
+      ]
+    },
+    "function": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "signature": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 8192
+        },
+        "kind": {
+          "enum": [
+            "function",
+            "method",
+            "class"
+          ]
+        },
+        "summary": {
+          "$ref": "#/$defs/claim"
+        },
+        "calls": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "maxItems": 500
+        },
+        "branches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "condition": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 8192
+              },
+              "effect": {
+                "$ref": "#/$defs/claim"
+              }
+            },
+            "required": [
+              "condition",
+              "effect"
+            ]
+          },
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "name",
+        "signature",
+        "kind",
+        "summary",
+        "calls",
+        "branches"
+      ]
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "module",
+            "layout",
+            "file",
+            "config",
+            "image",
+            "sound",
+            "protocol"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "summary": {
+          "$ref": "#/$defs/claim"
+        }
+      },
+      "required": [
+        "kind",
+        "target",
+        "summary"
+      ]
+    },
+    "annotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "archive_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "entry_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "owner": {
+          "enum": [
+            "C",
+            "D",
+            "E",
+            "F",
+            "G"
+          ]
+        },
+        "domain": {
+          "enum": [
+            "login",
+            "ui_chat",
+            "network",
+            "battle",
+            "gameplay"
+          ]
+        },
+        "author": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "purpose": {
+          "$ref": "#/$defs/claim"
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "maxItems": 100
+        },
+        "functions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/function"
+          },
+          "maxItems": 4096
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/resource"
+          },
+          "maxItems": 500
+        },
+        "related_modules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "archive_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "entry_index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100000
+              }
+            },
+            "required": [
+              "archive_sha256",
+              "entry_index"
+            ]
+          },
+          "maxItems": 500
+        },
+        "modification_guides": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "question": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 8192
+              },
+              "answer": {
+                "$ref": "#/$defs/claim"
+              }
+            },
+            "required": [
+              "question",
+              "answer"
+            ]
+          },
+          "maxItems": 100
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "maxItems": 100
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source"
+          },
+          "maxItems": 100
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 1000
+        },
+        "source_status": {
+          "enum": [
+            "metadata_only",
+            "historical_unverified_origin",
+            "recovered_partial",
+            "recovered_complete_not_original",
+            "native_origin_checked_not_semantics"
+          ]
+        },
+        "relationships": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "direction": {
+                "enum": [
+                  "upstream",
+                  "downstream"
+                ]
+              },
+              "kind": {
+                "enum": [
+                  "imports",
+                  "calls",
+                  "message",
+                  "data_flow"
+                ]
+              },
+              "module": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "archive_sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "entry_index": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100000
+                      }
+                    },
+                    "required": [
+                      "archive_sha256",
+                      "entry_index"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "symbol": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 8192
+              },
+              "summary": {
+                "$ref": "#/$defs/claim"
+              }
+            },
+            "required": [
+              "direction",
+              "kind",
+              "module",
+              "symbol",
+              "summary"
+            ]
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "archive_sha256",
+        "entry_index",
+        "path",
+        "owner",
+        "domain",
+        "author",
+        "purpose",
+        "keywords",
+        "functions",
+        "resources",
+        "related_modules",
+        "modification_guides",
+        "limitations",
+        "sources",
+        "evidence",
+        "source_status",
+        "relationships"
+      ]
+    },
+    "inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "archive_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "entry_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 8192
+        },
+        "vm": {
+          "enum": [
+            "py25",
+            "py27"
+          ]
+        },
+        "path_status": {
+          "enum": [
+            "structurally_read",
+            "historical",
+            "unreadable",
+            "directory",
+            "excluded_by_policy"
+          ]
+        },
+        "functions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 8192
+              },
+              "signature": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "enum": [
+                  "function",
+                  "method",
+                  "class"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "signature",
+              "kind"
+            ]
+          },
+          "maxItems": 4096
+        }
+      },
+      "required": [
+        "archive_sha256",
+        "entry_index",
+        "path",
+        "vm",
+        "path_status",
+        "functions"
+      ]
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "archive_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "entry_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "owner": {
+          "enum": [
+            "C",
+            "D",
+            "E",
+            "F",
+            "G"
+          ]
+        },
+        "domain": {
+          "enum": [
+            "login",
+            "ui_chat",
+            "network",
+            "battle",
+            "gameplay"
+          ]
+        },
+        "state": {
+          "enum": [
+            "assigned",
+            "in_progress",
+            "submitted",
+            "blocked"
+          ]
+        },
+        "priority": {
+          "enum": [
+            "pilot",
+            "normal"
+          ]
+        },
+        "collaborators": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "C",
+              "D",
+              "E",
+              "F",
+              "G"
+            ]
+          },
+          "maxItems": 5
+        }
+      },
+      "required": [
+        "archive_sha256",
+        "entry_index",
+        "owner",
+        "domain",
+        "state",
+        "priority",
+        "collaborators"
+      ]
+    },
+    "tasks": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/task"
+          },
+          "maxItems": 10000
+        }
+      },
+      "required": [
+        "schema_version",
+        "tasks"
+      ]
+    },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "analysis_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "repository_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "archives": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 8192
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "vm": {
+                "enum": [
+                  "py25",
+                  "py27"
+                ]
+              },
+              "entries": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100000
+              },
+              "excluded_indices": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100000
+                },
+                "maxItems": 4096
+              }
+            },
+            "required": [
+              "name",
+              "sha256",
+              "vm",
+              "entries",
+              "excluded_indices"
+            ]
+          },
+          "maxItems": 20
+        },
+        "parameter_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "corpus_reference": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "repository_commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "manifest": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8192
+            },
+            "status": {
+              "enum": [
+                "external_reference_not_loaded",
+                "pinned_manifest_available"
+              ]
+            },
+            "note": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8192
+            },
+            "manifest_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "repository_commit",
+            "manifest",
+            "status",
+            "note"
+          ]
+        },
+        "inventory_seed_source": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8192
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "note": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8192
+            }
+          },
+          "required": [
+            "path",
+            "sha256",
+            "note"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "analysis_id",
+        "repository_commit",
+        "archives",
+        "parameter_sha256",
+        "corpus_reference",
+        "inventory_seed_source"
+      ]
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "archive_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "entry_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "annotation_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "reviewer": {
+          "enum": [
+            "H",
+            "A_delegate"
+          ]
+        },
+        "decision": {
+          "enum": [
+            "accepted",
+            "changes_requested"
+          ]
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "delegation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      },
+      "required": [
+        "schema_version",
+        "archive_sha256",
+        "entry_index",
+        "annotation_sha256",
+        "reviewer",
+        "decision",
+        "note"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "reviewer": {
+                "const": "A_delegate"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "delegation"
+            ]
+          }
+        }
+      ]
+    },
+    "guide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "id",
+        "title",
+        "domain",
+        "author",
+        "editorial_status",
+        "summary",
+        "keywords",
+        "prerequisites",
+        "steps",
+        "limitations"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,60}$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000
+        },
+        "domain": {
+          "enum": [
+            "login",
+            "network",
+            "ui_chat",
+            "battle",
+            "gameplay"
+          ]
+        },
+        "author": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000
+        },
+        "editorial_status": {
+          "const": "draft_unreviewed"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000
+        },
+        "keywords": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 30,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          }
+        },
+        "prerequisites": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 30,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 30,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "title",
+              "explanation",
+              "change",
+              "check",
+              "references"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 5000
+              },
+              "explanation": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 5000
+              },
+              "change": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 5000
+              },
+              "check": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 5000
+              },
+              "references": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 8,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "archive_sha256",
+                    "entry_index",
+                    "annotation_sha256",
+                    "function",
+                    "evidence_ids"
+                  ],
+                  "properties": {
+                    "archive_sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "entry_index": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "annotation_sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "function": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 5000
+                    },
+                    "evidence_ids": {
+                      "type": "array",
+                      "minItems": 1,
+                      "maxItems": 10,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 5000
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 30,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          }
+        }
+      }
+    }
+  }
+}

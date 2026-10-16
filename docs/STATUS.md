@@ -1,8 +1,36 @@
 # 项目当前状态（STATUS）
 
+> **N5二轮已核（2026-10-16）**：原PR44更新至6fd5061，原三项P2（ID/Release/Timer）均闭合；另有一处战斗指南须限定非终止回调（B-N5-04），同一候选war.End不走NextCmd/Wait就是反例。已评论N5并同步N7，小修后按新head末审，勿继续说原三项未修。未merge/未正式激活，正式仍5135/20/3/1。详§3.50及[二轮报告](evidence/script_manual_N5_6fd5061_A_review_20261016.md)。
+
+> **全新N1–N7七PR已复核（2026-10-16）**：PR39–45均已收到，勿重复启动七人。N1目录独立重放逐字节一致、32回归全过；N3/N4/N6的九份新N7模板SHA完全匹配，四项为有限集成候选。**N2仍待N7新字节尾审；N5发现3项P2已退修；N7为部分审核交付须补N2/N5。** 新PR均未合并，正式仍5135登记/20说明/3有限通过/1排除；外置模拟12通过不是正式值。本轮重建环境实跑82=71过+11缺PySide6跳过，来源/full、ruff、静态/完整HTML和jsdom（非真实浏览器/Qt）通过。详§3.49及[总复核报告](evidence/script_manual_new_cohort_A_review_20261016.md)。
+
+> **已合并现有成果并重新分给全新agent（2026-10-16）**：按用户授权，PR38/35/36/37及D固定提交均已合A，master未动。现**5135登记/20说明/3有限通过/5退修review/12待审/1排除**，合并不等于验收；B签名、C/F内容问题仍在。八份原A代审按原字节SHA核对后已激活，G不自批。全新N1–N7独立任务卡已备好，**不是恢复旧会话，均尚待用户启动**：[复制任务卡入口](../script_manual/coordination/NEW_AGENTS_START_20261016.md)。详§3.48。
+
+> **G停工后A代写四篇已落盘（2026-10-16）**：固定包四条均baseline可读候选，两轮去六头正文4/4逐字节一致。新增hero/dlgitem/task/npc有限说明，**51函数/62分支**，含修改问答、上下游和951行可核摘录；任务模型变量/推导式异常等照实保留。实际author=A代写，不伪称G、不自批。正式现为**20种子/5说明/0通过**；其他领域PR未合。82项=71过+11 Qt缺libGL跳过，来源/ruff/静态/HTML与jsdom脚本验证通过（非浏览器/实机）。详§3.47。
+
+> **A代审首批完成（2026-10-16）**：用户明确授权“H宕机了你审吧”，不再等20篇或独立H。固定D1f6fdd3/E60c5739八篇的240条类/函数、118关键分支逐项审核：**interface/key/chatoutput三篇有限通过；mainmenu及E四篇退修，11项P2**。八份实际A_delegate审核记录已绑定原JSON SHA，暂存template避免正式孤立review；不是伪填H。工具dev3显示身份/授权/意见，原字节改变仍stale。**未合领域/目录，正式仍20种子/1说明/0通过**；外置A20种子+D/E覆盖20/9/3。两组各82项=71通过+11 Qt缺libGL跳过/0失败，jsdom脚本冒烟通过（非浏览器/Qt/实机）。PR37/38已纠正base到A。详§3.46，旧“等20篇”安排失效。
+
+> **B/D/F首轮预审（2026-10-16）**：B全量5135条/128382函数元数据已独立逐字节复现，但70个kwargs签名多插裸`*`、48个内部参数名不能冒充已确认源码签名，待修；D12候选及pyc摘要复现、3142行摘录全匹配，四篇83函数/75分支进入H待审队列；F三篇有可读候选，需补有限解释，netwar引用/条件仍待修。B+D+E+F及再叠C两组全目录严格验证通过、各78项=67通过+11 GUI缺libGL跳过/0失败。**均未合入，D/E共8篇仅A预审，H仍等20样板齐备。**详§3.45。
+
+> **E第二轮预审闭环（2026-10-16）**：PR #36 @ `60c5739` 五项修订已核；A用锁定环境独立定点恢复五条，稳定头/参数及去头正文5/5一致。E四份（157函数/43分支）进入H待审队列，**未合入/不是H通过**。A、A+E、A+C+E三组各78项=67通过+11 GUI缺libGL跳过；严格来源验证/ruff/静态检查/离线构建通过。C仍退修，B/D/F/G尚未见本轮PR，H按20样板齐备后独审。详§3.44。
+
+> **C第二轮预审（2026-10-16）**：固定审查PR #35 @ `242fd8c`，错绑模块与Python2证据扩展名已修，来源结构验证/ruff/wincompat通过；但LoginOk保存账号旧问答、条件与证据覆盖、关系方向及main有损文本说明仍待修。78项本轮67通过/11 GUI缺Qt跳过，不沿用历史零跳过结论。**未合入/H未审**。已评论PR，详§3.43；本地HEAD/索引快照回退已核对并仅对齐Git元数据，未覆盖工作文件；报告随A检查点提交。
+
+> **E网络预审＋A夹具修复（2026-10-15）**：已在仓库外审查`ec97941`（4网络说明），独立定点恢复5条并复现871/516正文与旧稿字节一致；格式/摘要/行号与ruff通过，但OnError条件、选服后隐藏面板、DoConnect成功链表述及时间头SHA复现需修，**E尚未合入/H未审**。A手册升0.1.0.dev2，固定单元夹具与生产内容分离；本地、E覆盖、C+E覆盖三组均78/78（11 GUI、零跳过），不代表C/E内容验收。正式数据仍20种子/1样板/0 H通过，详§3.42。
+
+> **C首批提交预审（2026-10-15）**：收到`arena/160274ce-mxsj-tw-2022`的`559386b`（4份登录域说明）。仅在仓库外审查，SHA/行号/schema通过，但发现错模块跳转、登录提交/账号保存混淆、无关证据引用、Python2证据.py导致ruff 38项及疑似有损文本需澄清，**尚未合入/接纳，H未审**。A另负责修测试夹具对生产数量/来源的耦合，不以改计数冒充内容通过。详§3.41。
+
+> **最新：A「总控与脚本手册工具」第一版底座（2026-10-15）**：独立 `script_manual/` 0.1.0.dev1 已建立固定来源/JSON Schema/唯一归属任务卡、只读PySide6查看器、单HTML离线搜索导出和H独立摘要绑定审核。**目前仅20条历史路径种子、1份公告待复核样板、H通过0；不是全量分析。** 75/75（11 GUI，零跳过）、ruff含spec 0、自检0、Windows静态0/0/0，真实Chromium断网file://冒烟通过；Windows/EXE/游戏未验，Linux spec因宿主缺libpython未完成。B–H任务与边界见 `script_manual/docs/AGENT_TASKS.md`，详§3.40。本轮不改编辑器/游戏、不上传、不合本工作线。
+
+> **0.6.0.dev6完整源码包已交付到网盘script_editor目录，上传后重读目录/大小/MD5一致。路径导航修复已推送，含重建双Windows编译器/pycdc及源码许可；源码和真正ZIP解压副本均325项中309通过、16许可外部材料跳过，60 GUI通过，41 required齐全。详§3.39。Windows/用户完整c727/游戏仍未验收。**
+
+> **当前双引擎集成轮（2026-10-15）**：固定分支 `arena/61deb9e5-mxsj-tw-2022`，起点 `8212b26`（PR #33 已合并）。用户授权开始编辑器集成；不重跑全量语料，不修改已验的启动器/注册脚本，不自行合并或重复上传。先提交推送本检查点再实现。
+> 已只读下载并核 SHA：小样 `1V9g9BF1uYLc6DslljTpXPCgUDRloMlJy`（446,379 B，`a778c5fd6d3624e91ed0786382c17f9f8e156c9529f3d19fb43bc19dee1689dc`）及双失败补样 `1pH5mx1IdAF1Y51lYYoFQqw2Ob0gkxbuM`（58,020 B，`4920b41cb962241e0d4bf1b98123666de78ecd96094102b5a24ecde6cef0b797`），内容留仓库外，未执行其脚本。对接采用 `(archive_sha256, entry_index)`，1288 排除不恢复；小样 u6=3.9.3/xdis=6.1.8 只作研究证据，不回退编辑器已修的 3.14 依赖。
+> 首段目标：固定来源 pycdc 独立进程、双引擎候选与原始诊断、单条超时/取消/大小限制、候选另开保留编辑、真实小样回归。后续再做修复参数严格导入及项目候选来源续编；不把源码输出/compile 通过等同语义正确，不放宽写包及固定容量保护。
+
 > **2026-10-15 合并取舍（最新用户确认）**：PR #32 的 `mxLauncher.exe` 相关方案与注册 `script.fls` 修改以对方版本为准；用户已确认注册脚本测试没有问题。独立 `script_editor/` 以本分支 0.5.1.dev1 为准，不以旧历史记录回退。下文旧测试状态和交付说明保留为历史，不覆盖本次确认。此前启动器生成工具的路径/写入边界审查问题仍单独记录，不能当作已修复。
 
-> **快照日期：2026-10-15**（Asia/Shanghai）。本文是唯一的“当前状态”文件：每轮工作结束时更新本文，不要再新建交接文档。
+> **快照日期：2026-10-16**（Asia/Shanghai）。本文是唯一的“当前状态”文件：每轮工作结束时更新本文，不要再新建交接文档。
 > 长期规则见 [`AGENTS.md`](../AGENTS.md)；项目总览见 [`README.md`](../README.md)；历史快照在 [`archive/`](archive/README.md)。
 > 旧会话组件实测不代表本轮全部复跑。当前编辑器增强会话固定分支 `arena/51e31d38-mxsj-tw-2022`：会话起始基线 `fa1387162e60625c0a064403647abe8f65155acb`（PR #31），本期在安全修复 `9ee68e3` 上继续。功能代码 `f224f16`、类型缓存代际修复 `bf2bfc3` 已推送；未开 PR/合并/发布。此前阶段复跑两编辑器及其自检/静态检查；当前轮只复跑脚本编辑器，其它组件表格保留历史证据。本轮续增资源 0.4.1 路径下拉与 UI 0.8.1 包树右键导入，提交记录见本分支顶端；最新续修为资源0.4.3/UI0.8.3通用原生布局写入，当前范围见 §3.13 / §6；旧一次性助手被用户否决为最终方案。
 
@@ -12,17 +40,18 @@
 
 | 项 | 值 |
 |---|---|
-| 工作分支 | `arena/51e31d38-mxsj-tw-2022`（当前会话，固定名称） |
-| 基线 | 当前会话起始 `fa1387162e60625c0a064403647abe8f65155acb`（PR #31 合并提交）；安全修复后增加编辑器首期三项功能，代码至 `bf2bfc3` 已推送固定分支，未合并/发布 |
-| `master` | 本地起始基线已含 PR #31 合并；未查询远程最新顶端。旧会话 `b04f999` / “编辑器尚未合入”声明已过期 |
-| 最近 PR | 起始 HEAD 为 PR #31 合并提交；本轮未开 PR |
-| 合并授权 | 无。合入 master / 发布生产需要用户当轮明确授权 |
+| 工作分支 | `arena/61deb9e5-mxsj-tw-2022`（当前会话，固定名称；旧分支叙述仅历史） |
+| 基线 | 当前会话从 `8212b26`（PR #33）开始；第二段开工前检查点 `5998c1b` 已推送，第二段已推送`e72aac9`，历史dev3数据包增量见§3.33；当前dev6路径修复`1ad79ce`、源码交付`3791d0c`及网盘见§3.39；未合master |
+| `master` | 当前会话起始含PR #32/#33；后按明确授权仅合PR #34，未把编辑器/手册工作线合入，不以此断言远程最新顶端 |
+| 最近 PR | PR #34（固定语料交付文档）已按授权审查并合并，merge `8afb53a`；A手册工作未开PR |
+| 合并授权 | PR #34当轮授权已履行；当前工作分支无合master/发布授权 |
 
 ## 2. 组件状态与实测
 
 | 组件 | 版本/阶段 | 状态 | 本次实测 |
 |---|---|---|---|
-| 独立脚本编辑器（`script_editor/`） | 0.5.1.dev1源码修复包已上传；旧0.5.0勿继续用 | 修真实3.14启动与引擎兼容、保护已有编辑稿 | 3.14.7/3.11各184/184（32 GUI）全过；真实安装/启动器补装复检通过，隔离176通过+8材料skip，新包远端复查通过；固定长度/未知/Windows客户端仍待，详§3.28 |
+| 脚本开发手册（`script_manual/`） | dev3；正式5135登记/20说明/3有限通过/1排除；新PR39–45未合 | N1/N3/N4/N6有限集成候选；N2待N7新字节尾审；N5二轮原三P2已闭合、余一处指南小修，N7仍需末审 | 新环境组合层82=71过+11缺PySide6跳过；N1另32全过及真20种子重放；来源/full、ruff、静态/HTML、jsdom80页/搜索/跳转通过，非Qt/浏览器/实机；详§3.49 |
+| 独立脚本编辑器（`script_editor/`） | 0.6.0.dev6 路径导航完整源码包已交付 | script路径优先、旧项目/参数确认/新包路径索引，严格恢复与双VM续编不放宽 | 源码/真实ZIP解压副本均325项中309通过、16许可外部材料跳过，60 GUI通过；原包路径4951/5002，51明确不可读；双Windows工具本轮重建/静态核验，未Windows/用户全包/游戏验收，详§3.39 |
 | 逆向研究（`notes/`, `work/`） | 结案：双 VM opcode 表、0SLF 目录/路径哈希、`.dlg` 2,706/2,901、协议号表 412 条、帧续读 2 字节；10-15 新增标题/聊天编码链路与 `GCODE=BIG5`/`GetGameRegion()='cn'` 结案（`notes/title_and_chat_encoding.md`） | 稳定；未决项见 AGENTS §7 | 锁定输入 SHA 匹配；`script.fls` 全量反编译补跑 4401/5002 完整（生成物不入库） |
 | 注册 UI 补丁（`tools/client_patches/`，历史） | v3.3 已作废 | 用户判定旧 overlay/整图烤字按钮/包外散图不符合原生规范，**勿再分发 v3/v3.2/v3.3**；新实现见下行 | 90/90 仅历史证据，不作为新实现验收依据 |
 | 注册原生重做（`tools/registration/`） | 采用 PR #32；用户已确认该版测试无问题 | 保留对方注册源码，不以旧 font1/diag 版本覆盖；尚未接真实注册服务端 | 集成后 42/42 回归；真 2.5.6 重建 SHA `f0253c95…` 与对方记录一致，仅改 337/4007；详 §3.29 |
@@ -48,6 +77,7 @@
 - 两者不能同时成立。修复同时改了排序与 `r1≠0`，真正起作用的可能只是 `r1≠0`（0 疑为哨兵）。需用反汇编回头判定，再统一文档与 docstring。
 
 ### 3.3 环境限制（不是缺陷）
+- **本轮脚本编辑器dev6环境已补齐**：真实Qt6.10.3离屏测试，使用固定GitHub来源真实Linux系统ELF库而非空符号桩；双标准VM与Linux pycdc实际构建/运行。以下10-14旧环境描述仅历史，不能代替本轮证据；这些Linux测试材料不进入Windows源码交付包。
 - 沙箱无 `libGL.so.1` / `libEGL` / `libxkbcommon` / `libdbus-1`，也不能 `apt`。10-14 起的变通：用 gcc 生成只导出空符号的桩库放到 `LD_LIBRARY_PATH`（`libdbus-1.so.3` 需版本节点 `LIBDBUS_1_3`，`libxkbcommon.so.0` 需 `V_0.5.0`），再加 `QT_QPA_PLATFORM=offscreen`，PySide6 6.12 即可离屏开窗，三个编辑器的 GUI 测试组都能跑。桩库只在沙箱，**不入库**；它能证明「代码不会在导入/建窗时崩」，不能替代 Windows 实机。
 - 沙箱 Python 没有 `libpython3.11.so`（Debian 未装 `libpython3.11`），PyInstaller 分析会直接退出；同样用一个空桩 `libpython3.11.so.1.0` 绕过即可完成 spec 干跑（产物不可运行，只验证 hiddenimports/datas）。GitHub release 资产域不可达，装不了 python-build-standalone。
 - 复核验收套件原样执行文档中的 `python3 …` 启动命令，依赖必须装在该 `python3` 可见的位置。
@@ -895,6 +925,317 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
 - **未修/待验边界**：PR #32 生成工具的 report 路径覆盖、签名剥除误删额外 overlay、PNG 填充失败前写盘问题仍存在；本次遵用户决定保留其版本，不宣称已修。脚本编辑器 Windows EXE / 客户端验证仍待，用户对注册版本的实测确认不等于整个编辑器已验收。
 
 
+
+### 3.30 双引擎恢复集成第一段（2026-10-15，本分支开发中）
+
+- 本轮固定分支 `arena/61deb9e5-mxsj-tw-2022`，起点 `8212b26`；先提交推送检查点 `a2492a3` 后开始实现。研究方继续跑语料，本方不重跑全量、不修改 decompiler 被钉的工具或原包；不改已实测注册/启动器，不自行合并或上传新包。
+- 网盘主样 446,379 B / SHA `a778c5fd6d3624e91ed0786382c17f9f8e156c9529f3d19fb43bc19dee1689dc`，失败补样 58,020 B / SHA `4920b41cb962241e0d4bf1b98123666de78ecd96094102b5a24ecde6cef0b797` 均独立下载复核。只使用 manifest 的 archive SHA + entry 编号和标准 pyc 的 artifact SHA，不按文件名猜身份，不执行其驱动或恢复源码，1288 排除记录不生成内容。材料留仓库外 `.cache`，不入 Git/发行包。
+- 新开发版本 0.6.0.dev1：后台保留独立 uncompyle6 / pycdc 候选；主引擎失败/超时不丢第二引擎；部分、双失败、只有头注释等明确分类。候选可另开编辑标签，重复打开/取消均保留已有编辑。新增逐流输出限额、可取消的进程传输、POSIX 进程组回收；Windows 路径未实测。现有标准编译、来源核验、原子新包、容量与完整回读护栏不变。
+- pycdc 经上游 LICENSE/README 实核为 **GPL version 3（不是 MIT）**，独立进程、不与 GUI 链接。完整官方源码归档 commit `b4289760970dbc399684f1e155ec6d1ea1cc787e`，373,111 B / SHA `d7d8c53d37a1a586097145b532fca02535db2f2f0999b3b1e910133c9941bf31` 已附源码树。两次真实 Linux CMake 构建二进制 SHA 均为 `84573109081562e70ace38b6850f581276dcc33401be6d23e55e0486c8d4eeb4`，与研究方记录一致。加载核二进制/完整源码/GPL许可摘要，不用 PATH 或游戏 DLL。真实 staged 副本校验及恢复通过；Windows EXE stage 新增第二引擎与完整对应源码复制、实际双 VM smoke 门禁，未执行 Windows 构建。
+- 不回退编辑器的引擎依赖：继续固定 u6 3.9.4.dev0＋xdis6.3，旧样例 u6 3.9.3/xdis6.1.8 只是研究证据，不安装进产品。
+
+**本轮最终实测**（Linux Python 3.11.2，真实 Qt 6.10.3 offscreen）：
+- 编辑器 **220/220，通过且零 skip**，其中 36 GUI；新增 36 项覆盖候选、原始字节、错误分类、超时/取消/输出上限、完整源码/许可、候选另开与脏稿保护、真实标准2.5.6/2.7.13双VM编译、6项外部研究样例/原包用例。完整测试日志：仓库外 `/home/user/script-editor-dual-recovery/all-tests.log`。
+- 真实原包 2371：严格解码后主引擎 0.5s 超时，第二引擎产出候选；3505：主引擎失败头不算源码、pycdc 部分候选可阅读/编辑；小样124为部分且可编译仍不标完整，3505/4861原始非UTF8字节保留，82双失败没有假源码。4305标准pyc小样两引擎返回文本，但直接原包严格参数校验仍拒绝；不混同两种链路。
+- 124/4861 原包仍分别遇未知 opcode 213/215，4305 遇 marshal count 失败；下一段需按原包/entry/pyc精确关联、验证实际修复参数后才能接通，不能直接拿外部pyc绕过。无全面覆盖率/语义正确率声明。
+- `bootstrap.py --check-only` 已执行，当前 Git 开发目录缺本机 pycdc bundle，先于 runtime 检查退出2；Git也未包含发行用 Windows x86 双 compiler runtime，不能计为完整自检通过；原生编译回归用的是仓库外实际源码编出的2.5.6/2.7.13，不是游戏 DLL。
+- Ruff 全编辑器 0 报告、105 个 Python 文件格式检查通过；Windows 静态检查 0 ERROR / 0 WARNING。人工复核了新进程 argv/临时目录/UTF8/Windows文件关闭与平台分支；Windows 原生/EXE 未验，0.6尚未打包上传。已交付0.5.1网盘包不变，不冒充其中已有双引擎。
+
+**下一段**：读取研究方 entry 清单与候选来源，严格复核修复参数；项目续编保存未采用草稿及候选元数据；补结构差异与覆盖验收。固定容量研究仍独立，不用删lnotab或猜key凑回包。
+
+
+
+### 3.31 研究方全量语料交付只读复核（2026-10-15）
+
+用户说“他已经完成了你看看”。本轮只读审查，不代替另一 agent 重建/运行全量，不运行下载的驱动或目标模块，不改编辑器产品代码、原包/keys/启动器/注册脚本、旧证据或网盘权限，不合并他方分支。研究方 `arena/4803041b-mxsj-tw-2022@8816f23` 只新增状态交接，本侧仅通过 GitHub API 读取，不 cherry-pick。
+
+**交付入口与独立核验**：
+- [完整交付索引](https://drive.google.com/file/d/1nIUskEGc1pkECGZIi3ZqUB8exmv8Zgrm/view)、[10卷SHA清单](https://drive.google.com/file/d/1FLksxEL5ZbXzH0LTz2U63wfjk0Keuve6/view)、[上传回执](https://drive.google.com/file/d/1lMhOi7wCgtOYC45XTVO0QvgzZKqdwEyF/view)。这是固定8212b26的新全量重建，**不是早先2364954字节补包，也不宣称逐字节复现旧79MB**。
+- 实际下载10个独立ZIP，总计152769019字节；逐卷实算SHA256/MD5与交付索引及Drive元数据相符。直接流式读ZIP，不解压/运行代码：185048个受SHA256SUMS覆盖的文件逐一SHA/CRC通过，checksum文件本身也经CRC和整卷SHA保护；无重名、越界路径或symlink成员。
+- 主键 `(archive_sha256, entry_index)` 恰5002个，0..5001无重漏；全部5001个非排除条目的容器entry_id和原参数与本地锁定原包/原表一致；193676次artifact引用的SHA/大小及其所属entry目录均核对一致。1288在full/sample/sample_v2中均仅record，未读取其payload。
+- `full/manifest.audited.jsonl` 为74417377字节，SHA `e06efa990600ec1ca3f4f57c475596c10203c40d36a989ce43fe1192fa890535`；最大单行16246字节。后续需逐行有界导入，不把74MB清单塞进现有16MiB参数表入口。
+- 独立从audited清单重算：4973条有源码形状候选，4780条双引擎均有候选；4916完整输出标记/57部分/28失败/1政策排除。4997份标准pyc，1954/3066/4166/4691缺pyc；单引擎超时4条，聚合超时0。原样语法记录通过2.5.6/2.7.18为3756/3757，处理候选为3806/4062。这里是核对归档的编译记录，**本轮未重跑这些编译器，数量不是语义正确率或编辑器回包覆盖率**。
+
+**编辑器对接实测（仅21条只读核心codec，不调用反编译器/编译器）**：
+- 研究修复报告15个非baseline条目：8条（63/1013/1528/1854/1931/2643/2984/4305）用记录中的修复参数通过编辑器现有严格codec，所得标准pyc与交付逐字节相同；原参数均拒绝。可作为下一段严格导入的正向验收，尤其4305/1931不再缺修复证据。
+- 另3条有交付pyc但仍被严格opcode拒绝：64（80@3217）、4133（92@595）、4928（203@30721）；4条是报告中明确没有pyc的失败项。baseline的124/4861也仍被213@2506、215@381拒绝。**不把这种拒绝当成“不能阅读编辑候选”的理由，但不能因此放宽发布校验。**
+- 2371原参数可严格解码，却与归档pyc不完全相同：一个嵌套65字节co_code内，offset42..44由本侧 `[19,3,9]` 变为归档 `[124,6,0]`；其余marshal树相同。两版语义均未验证。归档stage=baseline/repaired=false仅代表全局参数未换，不能理解成没有局部转译修补。
+- 读取（不导入执行）固定研究转译器确认：它有未知opcode→NOP、元组tag强制修正、header修补、co_code局部seam求解。因此“marshal可读/重复pyc相同/native加载通过”并不证明严格可逆或控制流/业务语义正确。不能仅匹配entry和全局keys就将外部pyc冒充编辑器原生解码结果。
+- 统计小口径：`compiler-and-byte-summary.json` 的u6 raw_pass=52包含50条已被audited降为diagnostic-only的条目；按有源码形状过滤只剩2。最终总表3756/3757已经正确过滤，可以复算。编辑器按audited主体/状态处理，不直接用子表52作为可用源码数。
+- 研究侧u6/xdis=3.9.3/6.1.8、编译器2.7.18；编辑器继续固定修过3.14兼容的3.9.4.dev0/6.3及产品2.7.13，不覆盖版本，不沿用其编译通过章。该5002条语料针对script.fls，不能外推data.fls覆盖。
+
+**审查结论**：以“全量研究语料交付”范围可以接收，无需让研究方重跑；不等于全模块安全回编或编辑器完成。下一步本侧实现：流式audited清单/路径/指纹导入，严格校验可复现的修复profile；将外部候选与原生已验证来源分层保留，支持候选/编辑稿项目续编。源码可读/编辑和安全回包继续分离。
+
+机器可核对结果（不含源码正文、原始keys或1288 payload）：[`docs/evidence/corpus_8212b26_editor_review_20261015.json`](evidence/corpus_8212b26_editor_review_20261015.json)。下载归档与审查输出在仓库外 `/home/user/corpus-review/.cache/material`（缓存不保证续轮保留）；本侧审查辅助脚本在 `/home/user/corpus-review-tools/`。原包script/data、参数、被钉工具及启动器SHA复核未变。本轮没有重跑GUI/220项产品套件，也未构建、打包上传或进行Windows/游戏验收。
+
+### 3.32 编辑器第二段：语料对接与草稿续编（2026-10-15）
+
+按用户“那进行下一步”实施；先提交推送 `5998c1b` 再编码，未合他方分支/主线。
+源码升 `0.6.0.dev2`，独立目录，不改游戏原包、原keys表、启动器或已验注册方案。
+
+**实际实现**：
+- `corpus_manifest` 逐行有界导入74MB audited清单，保存offset/长度/行SHA；严格关联整包SHA、
+  VM、entry index/id、整清单SHA与产物SHA。只按选中entry读取、拒绝跨namespace/路径别名/symlink，
+  不把74MB清单交给16MiB keys入口。1288在读取产物前排除。
+- `verified_parameters`逐项整数比对原参数、本侧严格解码且与交付pyc逐字节相等才写**全新JSON**；
+  真实通过63/1013/1528/1854/1931/2643/2984/4305，7条拒绝。未覆盖原表，不移植NOP或局部修补。
+  GUI显式另存后关联该目录，保存项目引用路径/SHA；不是静默替换内置表。
+- 外部候选保留原stdout/stderr、转义稿/变换和历史语法证据，可编辑但不自动可发布。
+  历史2.5.6通过仅影响展示排序；124/2371/4861实际可读且origin_verified=false。
+  采用时重新核对实际原包standard SHA，不能依靠序列化bool或complete放行。
+- schema3保存全部打开缓冲区、未采用稿、候选/原字节/诊断、VM/来源/采用状态和语料引用；
+  兼容1/2，原子保存，不强制先存.py。重开保留已有编辑/undo、不覆盖当前候选，改名另存后重复打开也保留。
+  语料缺失或已嵌入源码文件缺失仍能恢复文本，原包和catalog仍需可验证。
+- 语料目录只读，单离线产物8MiB/单快照文本与raw约8MiB、最多128编辑区、项目≤64MiB；
+  保存前48MiB近似预算，超限不改旧项目、不丢缓冲。1182真实stdout 4239260B可读；
+  本机子进程每流2MiB边界不放宽。缺语料普通打开回退本机双引擎并提示，显式另开失败不碰旧稿。
+
+**本轮实际验证**：
+- 完整套件264/264，**零跳过**，其中48 Qt offscreen GUI；相对220新增44项。
+  Linux/Python3.11.2、PySide6/Qt6.10.3，标准CPython2.5.6/2.7.13实际构建启用，
+  固定pycdc实际构建并跑双VM冒烟，真实原包与外部小样/选中full产物均启用。
+  首轮全量曾因测试venv的恢复源码安装摘要不符失败；通过启动器同等的带SHA本地源码安装重钉后，
+  最终全量无失败。没有放宽源码来源检查来过测试。
+- 真实4305用已核验profile与**测试专用小源码（非整份恢复游戏逻辑）**，真实编译→新包→完整标准读回，
+  内嵌文件名保留，其余5001条存储负载全等；哨兵证明编译目标未执行。
+  未改严格原生链的VM/文件名、容量拒绝、完整回读与原包只读要求。
+- ruff全过，Windows静态检查104文件零发现，git diff --check通过。
+  发行门新增关键GUI/schema3/严格目录测试，5条真实full语料测试明确为外部材料可选项。
+- 机器记录：[第二段验证摘要](evidence/script_editor_0.6_stage2_20261015.json)。
+  仓库外完整日志`/home/user/script-editor-next/final-tests.log`，构建器及Linux测试环境不入源码交付。
+  原包script/data、原表、mxLauncher SHA记录在摘要且复核未改；未执行游戏模块/DLL/研究驱动，未重跑全量反编译。
+
+**未完成/下一步**：更广结构差异与安全回包覆盖验收；Windows构建/运行、EXE依赖闭包与客户端实机。
+本轮未新打包上传网盘，不把Linux测试当Windows验收；下一次交付仍须独立源码、双Windows编译器与GPL第二引擎闭包。
+
+### 3.33 data.fls全量可打开补齐（2026-10-15）
+
+用户明确“data.fls也要啊”；不能用“支持2.7编译”代替包内源码打开覆盖。
+本轮从已推送`e72aac9`继续，版本0.6.0.dev3，不改原包/原表/启动器/注册，不重跑script研究全量。
+
+- 实际检查固定data SHA `5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c`：
+  133条=12目录+121脚本，121全部严格CRC/长度/native解码成功。
+- 新`core/services/data_corpus.py`只处理data，调用既有独立双引擎生成全量候选缓存；
+  CLI`script_editor.data_corpus`、GUI“恢复语料→生成data全量候选清单…”接线。
+  新目录不可覆盖，原包只读；构建中断/取消留INCOMPLETE、不发布可用清单；可选标准2.7.13逐候选编译检查。
+- VM2.7清单显式archive_vm、entry index、路径身份和目录标记；复用有界SHA/路径约束，
+  不错套script entry_id/五段参数/2.5 magic或语法记录。导入/候选页/项目快照与离线续编均已接通。
+- 首轮120/121可读，data82 `lib\uuid.pyo`被xdis6.3的unsigned long位数读取和pycdc失败阻断。
+  修复仅位于独立GPL worker：按signed32读取位数、校验15bit digits与边界，保留每个整数的值/符号。
+  不修改原始pyc、opcode、原codec或安装的第三方文件；主GUI仍不导入GPL解析库。
+  真实2.5.6和2.7.13编译→恢复→再编译，正负大long的原始marshal常量对照通过。
+- 复测**121/121均有可编辑候选，121/121至少一候选通过标准2.7.13语法检查**。
+  主引擎121完整启发式；pycdc84完整/37失败，有原诊断，不说双引擎全部成功。
+  共220份有主体候选中198语法通过/22不通过；不以此替代业务语义验证。
+- 实际逐一在Qt offscreen GUI打开121个data脚本，全部可编辑、VM=py27、严格原包来源匹配。
+  原字节/compat渲染性质/trace/诊断保留；项目保存与重开保留data修改、VM及语料引用，不自动采用。
+  uuid也实际通过不依赖缓存的普通read_module直接打开。
+- 真实data75用**测试专用小源码**编译→新包→完整standard读回，原嵌入文件名保留，另132条存储负载全等，
+  目标未执行。不是121条全恢复源码回包或客户端业务验收。
+- 本轮新增24项，完整**288/288，零跳过，54 GUI**；真实双compiler/pycdc、script材料与全data缓存启用。
+  ruff通过，Windows静态检查108源码/脚本，0 error/warning/info；git diff --check通过。
+  发行门新增data关键GUI/生成/负long双VM测试，5条真实data材料测试为明确外部可选项。
+  新生成清单1067个artifact引用均用产品读取器重核SHA/长度；输入script/data/keys/launcher SHA全部未改。
+
+证据：[data覆盖与回归摘要](evidence/script_editor_data_corpus_20261015.json)。
+仓库外缓存`/home/user/script-editor-next/.cache/data-corpus-v2`，日志`data-corpus-v2-build.log`、`data-full-tests.log`；
+候选源码/原字节与Linux工具不入Git。源码工具支持自行生成，不依赖另一个agent交语料。
+
+**未完成**：Windows构建/运行、EXE依赖闭包、客户端语义与全条目安全回包。未新打包/上传，旧网盘0.5.1不含本轮修复；
+不自行合master。下一次交付仍须完整独立源码、双Windows编译器与GPL第二引擎闭包。
+
+### 3.34 0.6.0.dev3完整源码交付收尾（2026-10-15）
+
+用户授权“那你提交推送上传”；data功能提交`a00df3d`已推送，先补真实交付文件再上传。
+- 已从固定CPython官方源码交叉重建Windows x86 2.5.6/2.7.13，更新实际交付manifest，
+  两套EXE/DLL/标准库/许可的静态PE及逐文件SHA核验通过；不是Linux文件改名。
+- 从固定pycdc源码真实交叉生成Windows x86程序，只导入Windows 10/11系统UCRT/kernel32；
+  GPL完整源归档、许可、静态CRT/LLVM许可及完整构建配方随包。13条Zig libunwind属性警告，构建退出0。
+  新增构建声明摘要校验/EXE暂存保留及对应回归，不允许暂存时丢弃运行时声明。
+- 完整回归**289/289、54 GUI、零跳过**；ruff、Windows静态109源码/脚本0发现、diff检查通过。
+  主恢复引擎固定源码及xdis/spark-parser/six/click对应源码、双CPython官方源码也附交付，
+  一键启动/EXE构建脚本和固定原包匹配参数保留；首次Qt/安装构建依赖仍需联网，不是离线安装器。
+- 证据：[交付构建静态核验](evidence/script_editor_0.6_dev3_delivery_build_20261015.json)。
+  [网盘下载](https://drive.google.com/file/d/1ux8i20f7chx4vlHIiWPnxTw7YTJmqCpB/view)：
+  `MXSJ_ScriptEditor_0.6.0.dev3_source_with_compilers.zip`，39,314,505 B，174文件，
+  源码`6ba927665a8ba40c821623c4bca3c073c76a4dbd`；SHA256
+  `fe4db94db3bcb10982ae6b14dbc448d5554abb9e6e6ea1ae77e1eaa93dffd011`，
+  MD5 `a3baf00914f39fa4da7bbbfad319f71a`。ZIP CRC/逐文件SHA与长度全通过，
+  解压的独立交付副本再跑289/289、54 GUI、零跳过（23.380s）。
+  上传后单独get_file重读远端大小/MD5均同本地，未改分享权限，旧包保留。
+  [机器回执](evidence/script_editor_0.6_dev3_delivery_receipt_20261015.json)记录源提交/摘要/远端ID。
+- Windows启动、双compiler实际运行、Windows EXE构建及游戏语义仍待用户实测；
+  不附游戏包或研究语料，不改mxLauncher/注册，不开PR/合master或更改网盘分享权限。
+
+### 3.35 用户反馈script打开即条目0负载越界（2026-10-15，待定位）
+
+用户实际反馈：data.fls可正常打开，抽看部分源码正常；script打开即报“条目0负载越界”。
+**尚未拿到报错文件的元数据，不能宣称已复现/修复，也不能仅据此认定用户文件损坏。**
+
+- 本次重新只读核仓库原包：SHA `8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72`，
+  24,454,082 B，5002条，目录偏移24,374,050；全部负载边界通过。
+  第一条偏移7,489,695、长度214，普通读取和模拟Windows无pread的seek/read分支均可打开。
+  这不是用户文件或Windows实机验收；不拿原包通过代替用户报错。
+- 新增独立标准库只读诊断`diagnose_archive.py`及BAT：记录文件大小/SHA、头与有限目录原始记录、
+  解码边界及稳定性；不附源码/负载/密钥、不执行游戏模块、不写回输入、不需要Qt。
+  诊断包用于收集**用户刚才报错的那份script**的JSON，不是编辑器修复版。
+- 容器错误增加具体偏移/长度/目录偏移/文件大小，不放松原边界校验，不影响data读取。
+- 本次核心/只读诊断/文件身份回归35/35通过，新增诊断6项；ruff与4个改动文件Windows静态0发现。
+  未重跑此前289完整GUI/真实双VM测试；不复用旧环境结果冒充本次完整回归。
+- 下一步：拿到用户JSON后与固定原包/当前派生包的目录字段比对，再做有证据的兼容修复。
+  本次未上传新网盘发行包，未改启动器/注册/游戏包，未合master。
+
+### 3.36 用户诊断定位：script目录后负载被误拒（2026-10-15）
+
+已从Drive读取`script-open-diagnostic-1792062154408995100.json`（ID `12960oayaA6CKHg1i58B94_6VYLlDS8k6`）。
+用户Windows3.14.7，script SHA `c7276deb0af7142c1b249d24299b884cd7320c0e84375cc6ac55f166df1d9ed1`，
+48,449,597 B、5002条；目录`[24,184,785,24,264,817)`，首负载从24,264,817开始、长214。
+这是**目录后的负载**，首条不超EOF；旧读取器误把“必须在目录前”当硬规则。
+旧诊断的5002 invalid也是同一规则，不能据此认定5002条都真正损坏；尚未取得用户完整目录和负载。
+
+- 用用户提供的8条原始目录记录重放，旧0.6.0.dev3解析器确切复现“条目0负载越界”；
+  新读取器通过这8条重放。允许目录两侧，但仍拒绝头部/目录重叠及真正EOF越界。
+- 同时修流式writer：将目录本身视为保留区域，写完两侧负载后回填，不重复拷贝目录后负载。
+  独立envelope按区域物理顺序核无引用旧字节/间隙/尾部；不把目录强搬到末尾，不改data逻辑。
+- 新增8个布局回归含4种目录位置×4种变更组合、目录后续编及native API完整codec读回，
+  后者显式mock标准编译器审计，不冒充真实Windows编译验收。相关核心回归**56/56零跳过**。
+  ruff全目录通过，Windows静态113源码/脚本0发现。未重跑完整GUI/双VM289基线。
+- 另在仓库原包5002条及由它构造的48,647,407 B“全负载目录后”模型上做完整只读/无改动重写：
+  两者全部边界通过、重写逐字节相等。模型不是用户的完整c727包，不替代其恢复或游戏验证。
+- 诊断v2保留旧pre-directory指标，新增实际文件边界和目录重叠指标，不再把post-directory误报损坏。
+- [机器证据](evidence/script_editor_post_directory_20261015.json)。不自动扩展原包XOR表的SHA白名单。
+  用户现有修改/项目、原游戏包不动；Windows/用户全包/客户端仍待测；**源码修复尚未更新网盘整包**。
+
+### 3.37 0.6.0.dev4完整源码修复包已交付（2026-10-15）
+
+用户明确要求上传到网盘`script_editor`目录（Drive ID `1Oknzs5ftrOHpf_jy0vQasYRtJCPoBQmO`），
+不传My Drive根目录，不交缺编译器的纯Git源码或需要覆盖旧目录的零散补丁。
+修复源码`77dc861`已推送；版本升0.6.0.dev4，GUI标题可明确区分旧0.6.0.dev3。
+
+- 双Windows x86标准CPython2.5.6/2.7.13及Windows pycdc均从固定官方源码真实交叉重建。
+  compiler manifest更新为实际产物摘要，PE/系统DLL导入/许可和对应源码静态核验通过。
+- 本次80/80零跳过（56核心＋24runtime bundle），ruff及Windows静态113源码/脚本0发现。
+  本环境未重跑此前完整GUI/真实双VM289历史基线，不把它当0.6.0.dev4当前验收。
+- 新说明明确目录后负载修复、保留项目续编、派生c727包不自动套原包XOR表；
+  首次Qt/Python构建依赖仍需联网；不含编辑器预构建EXE或游戏包。
+- [构建核验](evidence/script_editor_0.6_dev4_delivery_build_20261015.json)。
+  [网盘文件](https://drive.google.com/file/d/1Si8vmiddOC43jAAyNO1zZjlPvpgPSL_3/view)位于指定
+  [script_editor目录](https://drive.google.com/drive/folders/1Oknzs5ftrOHpf_jy0vQasYRtJCPoBQmO)，
+  `MXSJ_ScriptEditor_0.6.0.dev4_source_with_compilers.zip`，39,326,132 B、179文件，
+  源码提交`3f708a098fb67d67a867d9090b49f5a159c9a549`，修复`77dc861`。
+  SHA256 `974c0bdcd7f454517aba2932eab4df0335aa26c81330ff03131a58a0a59369ac`，
+  MD5 `876b1df8d3b57f0d10964c4a75d64374`。ZIP CRC/逐文件SHA与长度全通过，
+  真正解压ZIP后的独立副本再跑80/80、零跳过（0.308s）。上传后独立get_file重读
+  文件名、父目录ID、大小及MD5均匹配本地，未改权限/移动旧文件/替换旧ZIP。
+  [机器回执](evidence/script_editor_0.6_dev4_delivery_receipt_20261015.json)。
+- Windows实际加载、EXE构建、完整用户c727包恢复及客户端语义仍未验；不改分享权限，不合master。
+
+### 3.38 0.6.0.dev5补齐已知测试包XOR自动关联（2026-10-15）
+
+用户0.6.0.dev4截图：包已打开，但所有条目停在“请先选择并确认XOR目录”。
+根因是§3.36只修容器布局而未登记当前c727包的参数关联，这是交付缺口，不能再要求用户手找目录。
+
+- 精确登记诊断中的完整SHA `c7276deb0af7142c1b249d24299b884cd7320c0e84375cc6ac55f166df1d9ed1`，
+  关联同一份已授权`script-original.json`，仍核对参数SHA。只允许逐条严格恢复尝试，
+  不是已验证全部payload/边界，更不是恢复源码可信/可发布证明；不猜key、不扩展到未知版本。
+- 原包与此测试包共用一份参数，EXE暂存去重但双包完整指纹仍分别复核；篡改参数仍拒绝。
+  项目缺关联时补已核验内置关联，不覆盖显式项目目录；旧未恢复标签可重试，
+  已有可编辑稿/修改/撤销历史不被替换。1288、严格native/marshal与人工采用门保持。
+- 新增7项（5核心＋2真实Qt工作流）：Qt→自动绑定→严格native读取→真实主恢复worker→可编辑，
+  以及旧项目缺参数→自动补齐→重试→再点击不覆盖修改。SHA/参数路线用受控样本模拟，
+  标准CPython2.5真实编译与worker不mock；不把它冒充实际用户完整c727文件验收。
+- 全套310项：**294通过、16明确外部语料/缓存跳过，55 GUI实际通过**；真实双VM与Linux双引擎启用。
+  非许可跳过0，所有required IDs在场；ruff/Windows静态113源码/脚本0发现，diff检查通过。
+- 用户截图同entry 7/13/2359/2368在仓库原包上用真实双引擎均获得候选（1465/51710/4239/4019字符）。
+  这仅证明原包这些条目非全不可恢复，不声称已读到用户派生包相同负载。
+- 版本0.6.0.dev5；完整源码交付复用dev4已核验Windows双编译器/pycdc及对应源码/许可，
+  不用Linux测试产物冒充Windows文件，不附游戏包。仍上传指定script_editor目录，不改权限/旧包。
+- [本轮证据](evidence/script_editor_registered_catalog_20261015.json)。已交付
+  [0.6.0.dev5完整源码ZIP](https://drive.google.com/file/d/115EwvX3Cr6r3RR4nCeVf5uMnFYyS9iu5/view)，
+  放指定script_editor文件夹（ID `1Oknzs5ftrOHpf_jy0vQasYRtJCPoBQmO`），
+  `MXSJ_ScriptEditor_0.6.0.dev5_source_with_compilers.zip`，39,343,950 B、182文件，
+  代码`820fc89c95795949c09a9552ed7b50f13b77f9b3`，MD5 `8fac8969745e28ca05e806b40525adfa`，
+  SHA256 `624397280d67a4c0261fdd232402a55263e834ba0b0bacdf21438440adcb33fc`。
+  ZIP CRC/逐文件摘要通过，真正解压后的副本复测310项中294通过、16明确外部跳过、55 GUI通过（10.376s）；
+  上传后独立get_file重读文件名、父目录、大小及MD5均匹配，旧包/权限不变，无游戏包上传。
+  [交付回执](evidence/script_editor_0.6_dev5_delivery_receipt_20261015.json)。
+  Windows加载/EXE构建、完整用户c727恢复和客户端语义仍待验。
+
+### 3.39 0.6.0.dev6源码：script模块路径优先（2026-10-15）
+
+用户截图要求像data一样显示模块路径，而非数字ID。旧0SLF容器目录仅有ID，
+旧GUI直到双击恢复后才追加`repr(bytes)`，既没有批量路径索引，也仍以ID为主标题。
+
+- 新增只读路径扫描：已确认整包/参数SHA，参数表一次读取并在结束再次复核；
+  每条仍检查存储摘要/固定XOR边界、有界native marshal。独立于opcode翻译和反编译器，
+  不运行游戏代码，不产生源码绑定、编辑稿或发布资格。原包/参数变化拒绝整批索引。
+- 列表直接显示`script/login/register.py`等内嵌路径，统一斜杠；原`.py`/`.pyo`后缀保留，
+  不把源码文件名猜成`.pyo`。控制字符拒绝，非UTF8可见转义，不猜码页；不可读项明确标记。
+  ID/序号保留在详情和搜索，搜索支持两种斜杠、大小写无关；data仍使用其容器目录路径。
+- 打开包、旧项目、确认外部参数、发布后切换新包均接入后台路径索引；拒绝参数确认不显示
+  未采用参数所得路径。项目回滚恢复原导航状态，已有源码/撤销保留；新包切换清理旧导航缓存。
+- 新增15项全部通过，含5项真实Qt（自动路径/搜索/精确entry映射、旧项目保留编辑、
+  data保留pyo、手动参数重索引、拒绝确认不泄漏路径）；核心含摘要篡改/中途变化/坏压缩隔离。
+  在修改前源码上，同一GUI用例先复现FAIL（实际`#0 · ID 00000064`，预期模块路径）。
+- 仓库原包5002条真实Qt后台打开：4951条路径，51条明确不可读；约7.95秒、Qt事件循环
+  393次响应；搜索`login/register.py`仅4007，0源码标签/0绑定，不执行模块。
+  用户完整c727负载仍不可用，不能冒充用户全包或Windows验收。
+- 全套325项运行结束0失败，但有55次测试/子测试跳过（本轮重置缺双标准VM/构建件及外部语料），
+  **不符合完整发布验收条件**，不沿用历史dev5的294通过/55 GUI数字。ruff/diff检查通过。
+- [机器证据](evidence/script_editor_module_paths_20261015.json)。代码已推送固定分支；
+  未合master、未改游戏原包/分享权限。本轮取回dev5完整源码ZIP时，连接器download_file返回
+  `Could not retrieve the file from the connector`；不重复失败调用、不交缺编译器替代ZIP。
+  此为上轮源码修复时状态。本轮用户要求提交推送上传，未重复失败调用；按固定配方重建双Windows
+  编译器（156/178官方core单元）与Windows pycdc，标准库及许可与旧件一致、PE32/摘要核验通过，
+  更新运行时清单；二进制仍不入Git，不混入Linux测试程序。
+- 本轮已重建实际Linux双标准VM与pycdc并使用固定来源uncompyle6重新跑全套：
+  **325项中309通过、16许可外部语料/缓存跳过，60 GUI通过**（12.653s），41 required全执行。
+  不沿用上轮缺VM时的55次跳过或dev5的历史数字；Windows执行/EXE及游戏仍待用户测试。
+  [本轮构建核验](evidence/script_editor_dev6_delivery_build_20261015.json)。
+  完整独立源码ZIP已交付：
+  [MXSJ_ScriptEditor_0.6.0.dev6_source_with_compilers.zip](https://drive.google.com/file/d/1BS9py9F5-z_MWr4zfZp214HUBW3Fo-8q/view)，
+  指定script_editor文件夹 `1Oknzs5ftrOHpf_jy0vQasYRtJCPoBQmO`，39,409,837 B、187文件，
+  源提交`3791d0cc83e3d3178d7652cdd744fc516932aac3`，
+  SHA256 `6ac9e6bf51dd4b7613418320fcd054c5c9b2e4e073489602130295130837c38e`，
+  MD5 `a1af71f85fe056d3dc8e2d6d7d9ef6e0`。
+  ZIP CRC/逐文件长度摘要、双Windows运行时及pycdc/参数暂存核验通过；真正解压后完整回归
+  同样325项中309通过、16许可跳过、60 GUI通过、41 required在场并执行（12.484s）。
+  测试后186个payload文件仍匹配原包清单；上传后独立get_file核对名称/父目录/大小/MD5一致。
+  旧包和权限未动、未上传游戏；[最终回执](evidence/script_editor_0.6_dev6_delivery_receipt_20261015.json)。
+
+### 3.40 A总控与客户端脚本手册底座（2026-10-15）
+
+- **授权与范围**：用户指定本会话为A并要求先开始；开工先检查工作树并推送固定分支（起点`1a0b233`，当时无待提交，Everything up-to-date）。本轮只新增独立`script_manual/`、本节与测试证据；不改脚本编辑器、游戏脚本、原包、启动器或Drive权限，不重建/上传游戏包，不合工作分支到master。
+- **协议与任务**：`coordination/baseline.json`固定两包SHA、VM、条目数、参数摘要、来源提交；`schema/contract.schema.json`为严格格式。主键为包SHA+原始entry号，禁止按路径/文件名静默覆盖；1288排除元记录不得写路径/函数/正文，data目录不能当源码。`tasks.json`分配C–G各4个样板，main.py归C、E/F协审；B全量目录、H独立复核，A不伪称已启动其他会话。
+- **内容边界**：20条种子明确标`historical`，来自已钉SHA的旧catalog，不是本轮逐条原包提取。只提供337公告模块格式样板（6个重点函数、2个消息分支、1条下游线索）；全部解释保留`inferred`，来源`historical_unverified_origin`，交C/H复核。其余19模块未编写说明。PR34语料只引用外部`full/manifest.audited.jsonl`，本轮没有下载全语料或钉其manifest摘要；不得以本底座冒充B完成。
+- **工具能力**：PySide6路径主列表，中文功能/路径/函数名和多词检索、领域/审核筛选、职责/函数及消息分支/上下游与修改入口/证据四页、内部模块跳转、后台加载/复验/导出、失败保留当前手册、关闭等待任务结束。core不依赖Qt，不导入执行游戏脚本。单HTML内嵌所有数据/CSS/JS，无网络依赖，SHA白名单CSP与文本转义；仓库外全新目录导出，不覆盖旧输出，失败保留INCOMPLETE标记；BUILD记录输入/HTML摘要与覆盖数。
+- **审核闸门**：包/entry/VM、重复主键、唯一owner、路径漂移、未知字段、证据悬空、越界行号、目录/排除政策、大小和符号链接等校验；禁止远程schema、重复JSON键/NaN与路径穿越。`--verify-evidence --repository`实算文本SHA/行范围，不代表语义正确；`--require-full-inventory`在当前20/5135上明确拒绝（完整登记仍不等于全函数解释）。H单独review绑定说明原字节SHA，改动即过期，不能由作者自填审核通过；此工作流不是密码学签名。
+- **Linux实测**：75/75，零跳过，其中11 Qt offscreen，Qt实际库`/home/user/path-navigation/.cache/qt-libs`；ruff（显式含spec）0；bootstrap `--check-only`退出0；Windows静态检查ERROR/WARNING/INFO均0。真实Chromium153.0.8010.0以断网context及`file://`验证14项（检索、分支、来源/证据、关联/深链、筛选、空状态、390px无横向溢出、无外网请求/JS/CSP错误）。测试本机临时注册已有中文字体，不把字体嵌入/再分发。生成站点/截图/日志/浏览器/构建目录均仓库外。
+- **Windows与打包待验**：附ASCII/CRLF双击启动bat、自动依赖自检、源码、build_exe.bat及onedir/onefile spec，入口不跑pip；EXE异常日志写APPDATA。Linux spec已尝试，但宿主缺`libpython3.11.so.1.0`，在Analysis阶段停止，**不是打包成功**。未Windows双击、EXE、用户包或游戏运行验收；不把Linux通过写成Windows可用/已交付EXE。
+- **下一阶段**：按`script_manual/docs/AGENT_TASKS.md`向B–H分派固定版本底座；B提交目录和提取回执，C–G先完成20个样板、H逐份复核，A统一集成再扩域/串功能链。其他Agent只改自有目录，不改schema/总任务/导航/根STATUS。
+- **持久证据**：`docs/evidence/script_manual_0.1.0_dev1_validation_20261015.json`含工具源文件摘要、75项统计、真实浏览器记录、导出回执、原包/参数前后匹配及未验边界；不是网盘上传回执。
+- **补记此前PR34授权已履行**：纯文档38行人工审查后已合，merge `8afb53a14fe9c939d61ea3ab71ed64f0bf682af1`，2026-10-15T13:09:05Z，评论 https://github.com/a565551313/MXSJ_TW_2022/pull/34#issuecomment-6192827624 。核对10卷远程metadata/回执与固定工具SHA，无CI配置；本会话未下载150 MB重验185048文件。该授权不扩展至本编辑器/手册工作线。
+
+### 3.41 C登录域559386b的A预审：需修改，未集成（2026-10-15）
+
+- 用户转交C分支`arena/160274ce-mxsj-tw-2022`及提交`559386b3a44015d4bf7a4b4f0651b09d3257b87b`。A只fetch对象并在仓库外覆盖副本审查，没有切分支、cherry-pick、merge、改正式annotations或现行预览；查询没有该head的打开PR。4份说明有155条类/函数记录、30消息分支，不代表全部已核对。
+- 通过范围：只改login域5文件；隔离证据镜像下validate（含SHA/行范围）退出0，20目录/4说明/0 H通过。机器格式校验不等于事实正确。
+- 阻塞：mainpage的selectserver.Show错误绑定4806(loginin，selectserver旧catalog为4844)；LoginOk被误写为保存账号（候选实际246–265提交C2SLoginIn，OnLogin 657–661才SaveAccount）；LoginOk/ShowLogin及跨模块问答等多处引用范围不支持结论；main.py的Python2证据以.py入工具目录使ruff报38项；与A保字节转义稿比较出现字符丢失形态，需原始输出/解码后处理证据澄清。旧候选来源状态升级也须补来源关联。
+- A责任：初稿也误串mainpage→loginin，C虽改文字仍未改身份，A承认种子错误；测试夹具直接读生产内容，A后续拆分固定夹具与内容冒烟。catalog子集20项完成，8个失败报告含subTest；全套GUI复验因夹具缺新增证据出现模态窗口，超时后A终止自有测试进程，**没有完整回归结论**。不将所有测试问题推给C，不通过改数字凑绿。
+- 持久预审：`docs/evidence/script_manual_C_559386b_A_review_20261015.md`。这是A集成预审，不是H独立审核记录。当前正式底座仍20历史种子/1说明样板/0 H通过，C修订后再交A/H/E/F；未开/合PR、未上传、未改游戏或编辑器。
+
+### 3.42 E网络ec97941预审与A测试夹具隔离dev2（2026-10-15）
+
+- E分支`arena/14596f40-mxsj-tw-2022`提交`ec97941f386c7e199e2f7fb39f49f0cf71b2959a`仅network域6文件，157类/函数记录、42分支。只fetch，在仓库外构建覆盖副本；没有切分支/合入/改E正文，也未发现该head打开PR。validate含证据SHA/行号通过，20目录/5说明/0 H通过，3970未编入为唯一关联警告；ruff与隔离wincompat通过，真实Qt与离线Chromium另做E内容冒烟。
+- A独立venv使用Python3.11.2/u6 3.9.3/xdis6.1.8，定点只读恢复3176/2170/871/516/4293，全部baseline/source；871/516去掉6行恢复头后与仓库旧稿**原字节相同**，其余恢复行数与E报告一致并抽查关键片段。未执行游戏脚本，未处理1288，未裁决原生帧/服务端行为；原包/keys SHA不变。
+- 待E修：报告把OnError隐藏窗口前提写反（实际not IsQuickConnect且not CanQuickConnect），JSON瞬连分支应补未在瞬连中的守卫；SetServerRoleInfo实际OnLogin后Show(False)隐藏登录面板，不是回登录界面；DoConnect成功回调未引用的限制需贯彻到摘要和main协审；生成时间位于恢复头，H重跑不能直接匹配整文件SHA，应补工具/依赖与归一化正文/pyc摘要；计时单位表述保持一致。报告修改后须同步所有JSON的SHA/行号。
+- A自修0.1.0.dev2：开工前先推送检查点；tests/fixtures冻结schema v1样本，单元夹具不再复制生产annotations/inventory/reviews，新增缺生产数据仍可单测、生产数量无假设结构冒烟、非法生产数据仍拒绝3项回归。未改schema/归属/任务表或C/E正文，也不是把断言1改成4/5。
+- 回归：A当前数据、仓库外E覆盖、仓库外C+E同时覆盖，均78/78、零跳过、11真实Qt offscreen。旧夹具E副本复现75项：58通过/3失败/3错误/11GUI跳过，不能说75实过；旧失败/错误主要为夹具/数量耦合。新单元绿灯不消除C的.py ruff问题或C/E事实问题。A ruff显式含spec 0、wincompat 0/0/0（58文件/26源码脚本）、bootstrap自检0、当前来源复验0。Windows/EXE/游戏未验；此前Linux打包缺宿主libpython的边界不变。
+- 持久证据：`docs/evidence/script_manual_E_ec97941_A_review_20261015.md`与`script_manual_0.1.0_dev2_validation_20261015.json`。E需小修再交A/H，C仍按§3.41修订；二者均未并入正式数据，现行预览也不冒充已集成。
+
+
+<!-- 以下保留master并行工作记录；章节编号为各工作线原有历史编号。 -->
+
 ### 3.30 固定版本全量语料重建与网盘归档（2026-10-15）
 
 本轮仅语料和证据；分支 `arena/4803041b-mxsj-tw-2022`，输入基线固定
@@ -937,7 +1278,7 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
 
 | 事项 | 等谁 | 阻塞什么 |
 |---|---|---|
-| 脚本编辑器0.5.1修Python3.14启动新包已上传（§3.28） | 用户Windows启动/客户端测试 | 不重复询问参数授权；script固定容量/未知映射继续严格拒绝，不把Linux或静态检查冒充Windows |
+| 脚本编辑器0.6.0.dev5完整源码修复包已上传指定script_editor目录（§3.38） | 用户Windows启动、双VM检查/EXE/客户端测试 | 不重复询问参数授权；script固定容量/未知映射继续严格拒绝，不把Linux或静态检查冒充Windows |
 | 资源大包打开/新布局查找用户已确认通过；其余 Windows 快捷键/EXE、新图游戏加载仍待验 | 用户 | 不把两项交互通过外推完整编辑器/原生加载验收 |
 | font1用户确认“确实好了”；account/CBox保留 | 后续功能按需验收，不再等font1重传/复测 | 不外推全部表单/真实服务器成功，不重导/改用户布局，不索取真实资料 |
 | 真实注册接口与五账号整批成功回覆 | 后续服务端工作线（未开工） | 已定单条批量＋重名顺延（最多 `_99` 且最终 16 位，整批五个/同批重试不重复创建）；真实接口/固定成功回调调整/服务器验收未做，本阶段继续留桩，不能假报成功 |
@@ -945,7 +1286,7 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
 
 ## 5. 下一步（优先级）
 
-当前用户请求优先：用户3.14.7无法启动已修复，0.5.1独立新包已上传并复查（§3.28），等Windows反馈；
+当前用户请求已执行：0.6.0.dev6完整独立源码修复包已提交、推送、上传指定script_editor目录并重读核验（§3.39），等Windows/客户端测试反馈；
 包内恢复编辑仍是主目标，不回退为要求用户自有.py的工具。
 0.5开发工作流已实测，匹配参数的交付授权已获得；独立源码新包已上传并复查，不宣称全面完成，继续补覆盖率/固定长度/Windows验证，
 不把阶段版或旧0.4.1网盘包当满足用户目标的成品。
@@ -1038,3 +1379,135 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 ## 7. 如何更新本文
 
 每轮结束：改快照日期 → 更新 §1 分支/基线 → 用**实际跑过**的结果更新 §2（没跑就写“未执行”）→ 增删 §3/§4 → 调整 §5 → 在 §6 追加一行。不要删历史行；超过一屏时把旧行搬到 `archive/`。
+
+
+## 3.43 C login第二轮预审（2026-10-16）
+
+- 固定PR #35 head `242fd8c941997f22a47f06069554cebba20d79a3`；隔离覆盖A远端e49cb00审查，未合入。
+- 已确认改正selectserver误链、函数级LoginOk摘要、ShowLogin行段；main候选仅改.py.txt，原字节SHA不变，不能视为字符保真问题已修。
+- 阻塞：LoginOk旧问答未同步；ShowLogin与协议检查条件失真；问答/分支多处证据不覆盖断言；关系方向/kind需复核；恢复来源/有损字串处理需说明。
+- 本轮严格validate20/4/H0、ruff含spec、wincompat67路径/26脚本均通过；unittest 78项=67通过+11 GUI因无Qt跳过，0失败。游戏/Windows/EXE未验。
+- 报告：`docs/evidence/script_manual_C_242fd8c_A_review_20261016.md`；PR评论：https://github.com/a565551313/MXSJ_TW_2022/pull/35#issuecomment-6203416829 。H仍后置，正式数据仍20历史种子/1样板/H0。
+- 安全边界：初期本地HEAD8212b26与远端A e49cb00不一致；临时索引核查证实工作文件与远端完全一致，仅新增本报告与STATUS补充。备份索引后只对齐同一分支HEAD/index，无工作文件覆盖，无reset/切分支/stash/强推。收据`docs/evidence/git_metadata_alignment_20261016.json`；本报告随后提交推送，PR评论已发布。
+
+
+## 3.44 E network第二轮闭环与H输入准备（2026-10-16）
+
+- 固定PR #36 `60c573956f12a739712e4b24ddf1fb852f71bff0`，仅network六文件；相对首轮五项修订经A独立核对闭环，可入H待审队列。没有合并，没有代写H accepted。
+- 用Python3.11.2/u6 3.9.3/xdis6.1.8/spark-parser1.9.0/click8.5.0只读定点恢复3176/2170/871/516/4293：五条稳定恢复头与固定keys/bounds核对，精确去六头正文SHA 5/5匹配；871/516与仓库旧候选正文原字节一致。原包/参数表/工具SHA均未变，未执行游戏模块、未定点恢复1288。
+- OnError条件及守卫、OnLogin后隐藏面板、未引用Success成功链口径、可复现正文摘要和计时单位已同步；帧长2/3字节、队列/成功回调/瞬连定时异常继续待核，不预判真实行为。
+- E覆盖来源验证20/5/H0、C+E草稿覆盖20/8/H0通过，均仅3970未编入种子警告。C退修结论不变。三组各78项=67通过+11 GUI跳过/0失败；已装PySide6但缺系统libGL.so.1。ruff含spec通过，E静态69路径/26脚本全0，两组离线HTML构建通过；本轮浏览器、Windows/EXE、原生/实机/服务端未验。
+- 报告：`docs/evidence/script_manual_E_60c5739_A_review_20261016.md`；机器收据：`docs/evidence/script_manual_E_60c5739_A_validation_20261016.json`；H固定字节输入：`script_manual/coordination/H_QUEUE_E_60c5739.json`。交接单不是H审核，也未从此会话启动/联系其他独立会话。
+- 协调表仅更新C=blocked、E=submitted；其余assigned不等于已经开工。截至查询只有C/E两个开放手册PR；B目录及D/F/G十二篇样板与C返修仍是下一卡口，H按既定20样板齐备后独审。正式数据仍20历史种子/1样板/H0。
+- 上轮本地Git元数据回退已安全核实并只对齐同分支HEAD/index，未覆盖任何工作文件。检查点94e6d33已推送，工作区随后只新增本轮A报告/协调资料；继续仅在固定A分支提交推送。
+
+
+## 3.45 B/D/F首轮集成预审（2026-10-16）
+
+- 固定B `e516b63499615af7892ece0a217bd36c35894032`、D `1f6fdd323475e3940ea95b19e62c452e58dbd259`、F `12ce0c63ab50db00050365de5a6891fd4fa37ce6`，范围各自inventory/ui_chat/battle，无越域。截至查询三者只有分支提交、没有PR，须owner各自在固定分支开PR到A；未替owner切分支或创建PR。
+- B用A真实20种子独立sample→full，两次script提取和data提取后5135行/128382函数记录与提交逐字节一致，SHA35203710d79acd08b080e9d08fa1357ea9f8c29464a64eeb1a34aa27e36a9efd。原包/参数/13工具指纹一致，1288的read_stored请求为0。发现70个kwargs-only签名多加裸*、48个内部.n形参须置未知或安全重建；四条拒绝旧路径的原线索未实际保留在回执。B待修，不改A测试。
+- D独立重现12个白名单pyc与候选摘要，3142行摘录逐条匹配；菜单信号实际锻造委托、聊天左右键层次、CClickBox签名与快捷键守卫抽查吻合。83函数/75分支为有限样板，可入H待审；损坏标识符、动态/原生/实机边界继续保留。交接单`script_manual/coordination/H_QUEUE_D_1f6fdd3.json`。
+- F独立定点探针697/1612/8均u6 3.9.3 decompile_ok/source（2640/45/176行），1406仍decompile_fail/13行partial+digest，不冒称可用完整源。F需将三份名称底稿补为有限说明，并修netwar三处globals假引用、入场动画pass条件、跨模块入队/循环切换证据和来源说明。main仍C唯一owner。
+- 外部B+D+E+F覆盖：5135登记/13说明/1排除/H0；再叠C草稿：5135/16/1/H0；严格来源和full闸门均通过，无关联警告。两组dev2各78项=67通过+11 GUI跳过/0失败；旧75项种子耦合失败不再存在，不等于B/F内容正确。ruff含B脚本/spec通过，静态89路径/27脚本全0，13说明全目录离线HTML25816929字节构建成功；浏览器本轮未验，真实Qt缺libGL，Windows/EXE/游戏/原生/服务端未验。
+- 报告`docs/evidence/script_manual_BDF_A_review_20261016.md`；机器收据`docs/evidence/script_manual_BDF_A_validation_20261016.json`含固定SHA、全部坏签名、D来源复现、F探针及回归日志摘要。仅提交A报告/协调资料，不提交候选/生成站/全量覆盖产物。
+- 协调表D=submitted、F=blocked，保持C=blocked/E=submitted/G=assigned；B状态记报告。D/E共8篇仅A有限预审待H，不是H accepted；B/C/F待修，G未交，H按20篇齐备后独审。正式数据仍20历史种子/1样板/H0，所有领域/目录提交均未合入。
+
+
+## 3.46 H宕机后用户授权A代审（2026-10-16）
+
+- 用户明确授权“H宕机了你审吧”。A以实际身份`A_delegate`承担审核，非独立H，不再等20篇齐备；旧H_QUEUE保持固定历史输入，其等待gate由本轮覆盖。
+- 固定D `1f6fdd323475e3940ea95b19e62c452e58dbd259`、E `60c573956f12a739712e4b24ddf1fb852f71bff0`。逐项核八篇240类/函数、118已列关键分支及职责/资源/上下游/修改指南/局限；240定义/非空签名字面匹配仅自动辅助，不等于语义验收。
+- **三篇有限通过**：interface22/24、key19/13、chatoutput25/21，共66函数/58分支。已标注的损坏标识符/焦点/滚动异常、动态调用/原生事件/编码/资源/实机未知继续保留，不声称全模块解释完或候选可回编。
+- **五篇退修、11项P2**：mainmenu.PushCall无条件排队被写成立即回调，Recall推导式异常未交代；net的组包顺序/帧率缩放与查名/队列异常摘要；netquicklogin.ModuleReset全局作用域与未重置标志、问答错引状态段；netserver把属性存在当握手、组包顺序、未来时间戳刷新分支、递归完整谓词；connect无代理摘要写成两路而实际二选一。均要求修文档/证据，不修游戏候选后冒充原文。
+- 八份真实审核记录在`script_manual/coordination/delegated_reviews_20261016/*.json.template`，绑定原JSON原字节SHA，暂不加载以免正式目录引用未合正文。机器收据含逐函数/分支检查与全部SHA。**未获领域合并授权，本轮未合B–G；正式20种子/1说明/0通过**。任务表三篇仍submitted，mainmenu及E四篇blocked；B/C/F既有退修、G待交不放宽。
+- 工具升0.1.0.dev3：schema兼容H/A_delegate，代审必须填授权；表格、原生详情、离线页显示实际身份/意见/授权/审核绑定SHA，总数改称审核通过。C等作者不可自批，H旧记录兼容，孤立/重复拒绝和原字节stale继续有效。
+- 正式与外置DE覆盖来源校验通过；外置只用A20种子，20/9/3且7条未建档关联警告保留，未借B问题目录消警告或声称full。3份实际通过JSON逐个加1字节均降stale、通过数3→2，恢复原字节后3。
+- 根/覆盖两组各82项=71通过+11 Qt因libGL.so.1缺失跳过/0失败；ruff含spec、Windows静态全0、JS语法通过。外置HTML构建与jsdom26.1.0执行页面脚本通过，核3通过/5退修与身份意见展示；不是实际浏览器、Qt、Windows/EXE、游戏/原生/实服测试。
+- B PR38/F PR37发现base误指master，gh pr edit经典Projects GraphQL错误后改用REST PATCH，响应确认均为A固定分支、head未变；未代开D PR或合任何领域PR。
+- 报告：`docs/evidence/script_manual_DE_A_delegated_review_20261016.md`；收据：`docs/evidence/script_manual_DE_A_delegated_validation_20261016.json`。仅A工具/协议、协调、审核与状态，不搬入完整候选、生成HTML、npm依赖或游戏包，无网盘上传。
+
+
+## 3.47 G停工后由A补四篇有限说明（2026-10-16）
+
+- 用户报告G停工，A承接G固定四篇，开工前A69ca61f已推且干净。只补G，不接管C–F返修；owner=G保留任务包身份，author明确A代写，**不为自己四篇创建A_delegate accepted**。task状态四篇submitted表示有限稿待复核，不代表独立审核完成。
+- hero3038/dlgitem717/task1129/npc949两轮定点恢复均baseline/decompile_ok/source；固定script/keys摘要未变，去六头正文4/4逐字节相等。完整输出形状不等于原始源码/语义正确。原候选、pyc、两轮产物留仓库外。
+- 新增四份gameplay JSON：13/12、13/19、13/14、12/17函数/分支，合计**51/62**，每篇职责、资源/上下游、3项修改问答与有限范围/实机局限。四份小摘录951行逐行与候选相等，含候选全文/正文SHA和原行号。不是全函数解释。
+- 明确保留task.RefreshNecessary拆错变量、TaskSatisfy/UnSatisfy异常推导式，角色ID类型/显示OR及私有配置假值回落，物品布局双入口/隐藏亦构造/装饰器未知，普通与任务NPC点击门禁/距离/重叠/任务分流。没有修游戏候选凑解释，不把发送当服务器成功。
+- 正式schema/来源SHA/行号校验过，现**20种子/5说明/0通过**，未使用B问题全量目录或声称full通过；其他领域PR仍未合，D/E三份有限通过仍在固定模板等待授权集成与原字节核对。
+- unittest82项=71通过+11 Qt缺libGL.so.1跳过/0失败；ruff含spec、Windows静态全0；外置HTML构建和jsdom26.1.0执行真实页面脚本通过，四中文词命中正确模块且均显示A作者/待审。非真实浏览器、Qt、Windows/EXE、游戏、原生或服务端验收。
+- 报告`docs/evidence/script_manual_G_A_draft_20261016.md`；机器收据`docs/evidence/script_manual_G_A_draft_validation_20261016.json`，含stored/pyc/candidate/正文/JSON摘要、两轮复现与测试产物指纹。未改原包/参数/编辑器/启动器，未上传或合任何领域PR。
+
+
+## 3.48 用户授权先合并再重新分配给全新agent（2026-10-16）
+
+- 用户明确要求先合现有成果，再按合并后实际进展分给全新agent，不是原会话。A开工前9880457已推且干净；仅在固定A分支操作，不合master。
+- `gh pr merge 38/35/36/37 --merge`分别执行成功并读回merged；对应合并7a0a05a/82d42b3/ccf602c/dbf3406。D无PR，按授权以固定1f6fdd3非快进merge为7d32e5340b0ab4168f725d238d767ad6232f715d并推A；G四篇已在9880457，无重复合入。
+- 激活八份此前真实A_delegate审核前，逐个比较合入正文原JSON SHA全部相同；三有限通过interface/key/chatoutput，mainmenu和四网络五退修。旧templates不改、只载canonical `reviews/8b6e9266_<entry>.json`，没有给G自批或新造H记录。
+- 当前**5135登记/20说明/3通过/5退修review/12pending/1排除**；无关联警告。C155/30、D83/75、E157/43、F259/10、G51/62，共705函数记录/220分支；F173条多为名称底稿，不能说全部解释完。inventory128382只是结构记录，B的70/48签名和4条fallback仍需修，full/schema通过不闭合语义。
+- 全新任务：N1目录，N2登录/main，N3主菜单D1及保护已过三篇，N4四网络10项，N5战斗补解释/证据，N6接管A代写gameplay，N7全新独立H角色按批复核。七份自包含卡在`script_manual/coordination/new_agents_20261016/N1.md`至N7.md，入口`NEW_AGENTS_START_20261016.md`，机器分派`reassignment_20261016.json`。全部awaiting_new_agent_start，不冒称已启动/联系；原逻辑owner仅兼容目录归属，新作者/审核note记实际新会话。
+- 新人各用系统给的固定分支先合A基线，不能切旧B–H分支，不能再更新已合PR35–38，只开新PR到A。领域只改自己路径，N7只审不代写，main仅N2；N3避免改共用来源让三份有效审核失效。A保留工具/schema/总表/状态。
+- 此轮并行先修当前20篇及目录，不再等20篇齐备，也不扩5000模块/下载全量79MB语料。N7可先审G四篇，随新PR就绪独立核定原字节SHA；未合正文的review暂存template以免孤立记录。
+- 合并态严格来源/full验证通过；82项=71通过+11 Qt缺libGL.so.1跳过/0失败；ruff含spec、Windows静态全0；完整20说明单HTML与jsdom脚本验证通过。无真实浏览器/Qt、Windows/EXE、游戏/原生/实服验收；生成站点/依赖留仓库外。
+- 报告`docs/evidence/script_manual_integration_reassignment_20261016.md`；同名JSON收据含合并ID、激活SHA、分域/审核统计、任务卡指纹和本轮验证。原包/参数/分析基线未变，仅baseline注释说明现目录来源与待修边界。
+
+
+## 3.49 全新N1–N7七PR已收到并按固定head复核（2026-10-16）
+
+- 用户要求继续查看全新agent的成果。开工先push A（up-to-date），本轮只审核/评论/维护协调文档，**未merge PR39–45、未正式激活新review、未合master**。正式数据仍9b0dea7的5135/20/3/1，5退修review/12pending。
+- 沙箱重建已实查：旧临时分析环境消失，本地HEAD回到8212b26但最新文件保留。比对215路径，212原blob相同、3bat只换行差异且Git过滤hash相同；仅恢复当前分支指针/索引到远端9b0dea7，工作字节未动，未重复提交/clean。新环境重新安装、复跑，不引用旧日志冒充本轮。
+- 新PR固定输入：N1 #43 f953eb9；N2 #39 c714236；N3 #41 77b64be；N4 #40 44230b9；N5 #44 e2fb1aa；N6 #42 23b60f9；N7 #45 db872c5。七PR全部base A、变更在各卡范围，均已评论；机器表reassignment更新为已交PR，卡保留历史开工边界，不再表示尚待启动。
+- N1真20种子→sample/full，A新跑一棵隔离树，三产物逐字节等于PR43；32项独立元数据回归全过（首次快照缺BDF收据跳1，补齐后重跑32无跳过）。5135身份/128382结构函数未丢；70kwargs、48内部槽、186非标识符及4fallback逐条留痕。A明确认可186保守null策略，不认可“全目录语义已验收”；这32不属于标准82，后续集成入口需单列。
+- N3/N4/N6是有限集成候选：新N7九份模板绑定新JSON原字节SHA均匹配，三份UI旧已过字节不变。G原作者是A，接管作者N6，非作者审核是新N7，A不自批。
+- N2五组修复重点复核有实质进展；A独立核stored/pyc/raw u6/严格cp950→候选4/4，17段main摘录975行完全匹配。新N7仅基线退修+新稿部分核对，尚未审完新head的逐Claim/方向/保真链，不能把基线退修或A结构通过当成已有H新字节accepted。
+- N5确已补三篇重点说明（共267函数/63分支，war仍42名称底稿），但发现3项P2：①697/8的来源头entry_id错写（实际0x206d634b/0x005d26b3，四处要改并更新sources SHA）；②CPlayCtrl.Release先调用下游后置None，不能声称“可重入安全”；③Timer(0.033,...,-1,...)未引callee/单位语义却说约30fps/无限重复，须补证或降断言。已评论PR44，N5同PR修后报新head，N7再审，A不代写正文。
+- N7是有效部分审核交付，不是全部验收完成：原基线16review中3有限过/13退修；九新模板可用，但login新稿未审完、battle未审。“N5无PR”是旧快照，当前44已交且需返修，已评论要求追加新状态、补N2和N5修后head的独立尾审。
+- A白名单独立恢复17条，16source形状+1406仍partial（不是17完整源）；N6 980、N4 302、N3 59、N5三候选2208条摘录行和N2 main975行均匹配。本轮七快照/组合schema/来源/full全过，过期审核未屏蔽。
+- **仅仓库外模拟**：叠七PR内容为3accepted/13stale/4pending，精确激活九具名N7模板后12accepted/4login stale/4battle pending；example模板不激活。此12不是正式A状态；新内容未获merge前不放正式孤立/提前生效审核。
+- 模拟组合新跑82项=71过+11缺PySide6跳过/0失败；ruff含spec、Windows静态walk166路径/29源全0；HTML构建及jsdom实际脚本通过（4中文/函数搜索、3过滤、3路径identity导航、20篇×4页80次tab、hero→npc按钮跳转、N6/H身份）。非真实Qt/浏览器/CSP/Windows/EXE/游戏/原生/实服验收，无1288定点恢复或业务请求。
+- A澄清CONTRACT：evidence行号指sources.path自身物理行，L/R候选原行是另一套编号，避免改已审字节。恢复工具False双repr传字符串问题已确认，N2真实False直接API绕过且raw链吻合；本轮仅登记，不静默改冻结工具SHA。
+- 报告docs/evidence/script_manual_new_cohort_A_review_20261016.md；同名JSON含固定head/各PR评论、复现/检查/DOM指纹、N1回放及3项P2。下一步新N5修三项，新N7补尾审，A在授权/对应门槛满足后再集成并重跑，不改历史报告为当前结果。
+
+
+## 3.50 N5二轮6fd5061复核：原三P2闭合，余一处指南范围（2026-10-16）
+
+- 用户通知N5二轮已交，实查是原PR44快进更新到6fd5061dded82bbbcfc96694a5c20ef1a7a3e41e，父为e2fb1aa。A开工前de60052已推且干净，先push确认；仅仓库外审查，未merge/改正文/正式review/原包/工具。
+- B-N5-01/02/03本轮均闭合：原包目录四ID及新回执/摘录/重新恢复结果一致，sources SHA和provenance行号同步；Release撤保证并明先调下游后清引用，Timer单位/重复/实际帧率未知同步到各处。267函数记录/67分支，42名称底稿仍明确。
+- 新发现B-N5-04 / P2：war.json修改指南仍要求所有回调最终NextCmd或SetProcess(Wait)，虽写“推断”但把End等终止回调也涵盖。候选End去六头L1900–1974，录像L1909 CloseGame返回、普通L1927 SetMainLoop收尾，无NextCmd/SetProcess(Wait)，不是漏推进卡队列。只需限定继续消费队列的非终止回调，明确结束/关闭/切主循环例外，给新增Process/Wait断言补现有w_process/w_wait证据并标清推测；无须重做原三项或改候选。
+- A本轮重恢复四条，3source形状+1406仍partial；2208摘录行逐行一致，四去头正文SHA匹配。PR快照与外置组合schema/来源/full通过；82=71过+11缺PySide6跳过/0失败，ruff含spec和Windows静态walk133路径/27源全0。未另跑HTML/jsdom或真实浏览器/Qt/Windows/EXE/游戏/原生/实服。
+- 已评论PR44并同步PR45的新N7，原三项不再列未修。N5在同一PR小修指南后报新head，N7按新字节末审；N2尾审仍待。正式仍5135/20/3/1、5changes/12pending，外置组合12accepted/4login stale/4battle pending不是正式值。
+- 报告docs/evidence/script_manual_N5_6fd5061_A_review_20261016.md及同名JSON含四ID/四新JSON SHA/反例范围/验证指纹；机器分派表N5固定head与最新待办已更新，首轮报告保留历史判断不改写。
+
+
+## 3.51 A按授权接手收尾：七PR已合A，16份有限通过，四battle待非A独审（2026-10-16）
+
+- 用户“你帮他们收尾吧”授权后，A先确认8638aad已推且干净，逐条`gh pr merge <明确PR号> --merge`成功并读回MERGED：43 f953eb9、39 c714236、41 77b64be、40 44230b9、42 23b60f9、44 6fd5061、45 db872c5，base均固定A；本地ff至e60fcb588ff7a50249504ff603f1a64af50f5c8b。未合master、未上传或改游戏/编辑器/启动器/原包/参数。
+- 正式5135登记/20说明/**16有限accepted（12 H+4 A_delegate）/4pending/0stale/0changes/1排除**。九份N7模板逐个原字节SHA匹配激活；登录四份不改正文，由A在既有授权下有限代审五组阻塞、六题与原包→raw/正文链，不把N7旧基线退修换SHA冒充新审。gameplay用N6新稿/N7独审，不复活A自批。
+- A接手war的B-N5-04并发现netwar同句重复，均限定非终止/仍消费队列回调，End关闭/切主循环为例外；netwar另撤回C2S/S2C字段必须对称的误导。e_warctrl指南纠正主动Release与自动移除不同、TriggerSignal是发出非订阅、ModuleReset只置None不保证timer/资源释放。warcmd把候选L12误称第12项改为字面映射第6项，元描述与sources SHA同步、L前缀候选原文不改。四篇均明示A共同作者、保持pending，**A不自批凑20**；原三P2仍closed，N5_RESPONSE追加真实A补记/新SHA。
+- 修复恢复子进程False双repr问题，传真实布尔；先加AST合成回归在旧代码复现2失败，改一行后工具27项全过。四条N2重新经隔离子进程分别False/True，stored/pyc/raw/body SHA与严格cp950链4/4吻合；不执行/import恢复游戏模块。历史冻结工具SHA保留旧报告，新SHA钉本次报告，非静默替换分析基线。
+- 新`python script_manual/check_manual.py`统一六闸门，`--require-gui`可禁跳Qt；不恢复原包/生成站点。标准86=原82+runner4，75通过11缺PySide6跳过0失败；N1独立32/32、恢复工具27/27另列。严格来源/full无警告、ruff含spec、Windows static walk168路径/31源全0；修改工具2路径/2源全0。工具既有临时路径测试改用跨平台TemporaryDirectory，安全路径用合成夹具。
+- 新跑N1**两棵真实隔离树**，各冻结20种子→sample/full，四次成功；三产物跨树且与交付逐字节一致，128382结构函数记录未丢。1288定点读取四次均0，整包SHA仍会覆盖该字节范围，不说完全没读其字节。不是沿用上轮单树退化结果。
+- 新合并态严格HTML构建与jsdom通过：16accepted/4pending、4中文/函数搜索、2过滤、3路径identity导航、80tab、hero→npc跳转、N2/A_delegate授权与四battle/A作者pending身份，0脚本错误。不是实浏览器/CSP/Qt/Windows/EXE/游戏/原生/实服验收；42名称底稿/5000未扩语义保留。
+- 详细MD/JSON报告`docs/evidence/script_manual_A_finalize_20261016.{md,json}`含七合并ID、16绑定SHA、四篇待审新SHA、工具修复与测试摘要。README/CONTRACT/分派入口/机器表刷新为现状，旧卡与§3.49/3.50保留历史。不要求用户转交返修或重新开七人；四篇只欠非A对A修订新字节末审，尚无结果，不伪造独立通过。
+
+- A收尾内容已推570a6a1与作者说明/字节收据对齐0b04cc1；独审请求已实际留言PR45#issuecomment-6206831156，N5收尾通知PR44#issuecomment-6206831398。仅表示请求已发布，未声称N7已开工或有新结果；45已合，若续审须新PR到A、只改reviews，四篇待审SHA见收尾报告。
+
+
+## 3.52 Windows源码测试交付准备与Arena沙盒恢复规则（2026-10-16）
+
+- 用户授权把独立脚本手册工具打包上传Google Drive供Windows实测，并要求把Arena Agent Mode沙盒状态丢失的预防/恢复写给后续agent。开工先push3dd4df6，up-to-date且工作区干净；不合master、不改游戏/编辑器/启动器，不上传原游戏包。
+- 新增长期文档`docs/ARENA_SANDBOX_RECOVERY.md`，在AGENTS.md开工60秒入口醒目链接，并加`docs/templates/AGENT_CHECKPOINT.md`。记录本仓库已观测的临时环境失效、HEAD/index旧但新版工作字节保留，不推断平台根因或承诺本地持久。预防为阶段提交/推送/核远端OID与版本、持久的小回执和授权交付；恢复先保护差异，再fetch/逐路径核Git blob及CRLF，按真实缺失/元数据错位分别处理。高级update-ref/read-tree只在全部路径核准和备份后手工操作，禁止reset hard/clean、删.git或替换仓库根，不把dirty误判为前人没提交。
+- 新增`script_manual/测试手册.bat`（ASCII/CRLF）：独立venv、依赖镜像回退、bootstrap预检、六闸门强制GUI、每次新日志、失败停住；`WINDOWS_TEST.md`列解压/启动/来源校验根目录/目视搜索导航/构建EXE/脱敏日志回报。不会自动上传日志或运行游戏。
+- 新增`make_source_package.py`：只从干净已提交checkout的Git白名单与27个实际来源依赖收集源码/证据，不装游戏或整份语料；含N1共享解析器core、BDF小收据及六闸门所需合成测试/静态工具。拒绝越界/符号链接、缺证/错SHA、原游戏/编译器二进制、仓库内输出和覆盖旧ZIP；逐文件manifest钉提交及SHA，ZIP CRC/成员摘要自验。用户运行/自检/构建不需要Git。新增4项纯合成打包回归，标准90=79通过+11缺PySide6跳过；N1独立32/32、恢复工具27/27、严格来源/full、ruff含spec、Windows static walk172路径/34源全0。Windows/Qt实机仍待用户，不算通过。
+- Drive已检查历史script_editor文件夹及其父目录；同级新建script_manual文件夹`1mxu6gDe2qLywlGR17NgtSuCShgQZom85`，没有更改分享权限。源码包需先提交推送，再构建并在无原包/.git的中文空格目录实际解压复跑；上传/远端校验成功后另追加真实回执，不提前宣称已上传。
+- 内容仍5135登记/20说明/16有限accepted/4battle pending/1排除，无stale；四篇A共同作者未自批。此次不扩语义或替代非A末审。
+
+- **实际交付完成补记**：源码已提交推送84e0b9c后构建ZIP，264项/3,140,276字节；263个载荷manifest SHA/大小及CRC全过。原ZIP解压到仓库外中文空格路径，在无.git/原包、清除继承PYTHONPATH/PYTHONHOME后六闸门全过（90=79pass+11缺Qt skip、N1独立32、恢复27），再strict HTML导出通过。不是隐式依赖原checkout才可用。
+- 已上传Google Drive文件`14s0nmb61CfMDFMerb23JpJkQioZHc6J6`，新script_manual文件夹`1mxu6gDe2qLywlGR17NgtSuCShgQZom85`；单独get读回父目录、size3140276、MD5 94ab1107d8c4eacaee96111b5ab35d3a一致，未改分享权限。SHA256 261237f7212628b4574523466cd9805b329dfb2a57488d0226c97c0a5b8db0bc为本地ZIP值，不假称远端重算。交付MD/JSON：docs/evidence/script_manual_windows_source_test1_delivery_20261016.{md,json}。源码ZIP不是EXE，用户Windows/Qt/目视验收仍待；四battle独审仍pending。已授权上传取代此前各历史轮“不上传”的阶段边界，不是上传游戏包/改变权限授权。
+
+## 3.53 手册按修改任务进入：dev4首批6篇/26步骤（2026-10-16）
+
+- 用户明确拒绝目录+函数名作为完整手册，授权按原目标继续；开工先核4d423c8干净并push up-to-date。本轮实写6专题/26步骤/46引用，涉及6已有模块，默认GUI/HTML任务入口、步骤导航、检索、函数/证据深链、已核原文预览；新增schema/严格加载与正文变更失效保护、缓存SHA冲突防护，打包数据补guides。没有修改已审/待审annotation和review字节。
+- 原模块5135登记/20说明/16accepted/4battle pending/1排除不变。六专题A编排且全部draft_unreviewed，引用模块通过不能转移。完整目标、五领域后续具体任务和实质验收写入script_manual/docs/CONTENT_PLAN.md，不把6专题或20篇当终点，不再要求用户重提需求/重派七人。
+- 本轮最终六闸门：106=93pass+13Qt skip，N1独立32、恢复27通过；strict/full/evidence、ruff/spec、Windows静态184路径/38源、0错/警告。新增合成加载/失效/坏引用/转义/预览/缓存冲突/打包字节保全测试；两项新Qt交互仅写未执行。实际安装PySide6-Essentials6.10.3尝试offscreen，缺libGL.so.1，未使用桩库，不把跳过算通过。
+- 真实Chromium153断网file://且CSP开，生产6篇/26步骤/检索空态、12函数证据定位与刷新、专题深链、来源预览、battle待审、hero→npc、390px宽度通过，0脚本/页/CSP错、仅本地文件请求；旧20种子隔离夹具14组浏览器断言也实际通过。不是Qt/Windows/EXE/游戏/专题独审。
+- dev4版本同步源码/pyproject/源包root；本轮未重打ZIP或上传，Drive test1仍是dev3样板旧包。详细MD/JSON：docs/evidence/script_manual_task_guides_dev4_20261016.*；真实导出/浏览器产物在仓库外/home/user/manual-guides-20261016/final-site与final-browser。源码阶段推送，不以测试或新首页冒称全量内容交付。

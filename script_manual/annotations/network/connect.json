@@ -1,0 +1,691 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 2170,
+  "path": "script/connect.py",
+  "owner": "E",
+  "domain": "network",
+  "author": "N4（全新网络退修会话；原稿 E，非原 E 会话）",
+  "source_status": "recovered_complete_not_original",
+  "purpose": {
+    "text": "选服/跨服场景的多路尝试连接层：同时向多个候选地址（直连或代理）发起尝试，跨服CMXNet以先回Hello者胜出并接管g_Net；DoConnect尝试的真实成功链因内嵌Success未被引用而待核（三处ConnectAttempt按字面都传Fail，见证据报告§3.2）；账号登录本体在Hello之后转netlogin，不在本文件。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "con_struct",
+      "con_proto"
+    ]
+  },
+  "keywords": [
+    "连接",
+    "跨服",
+    "KuaFu",
+    "尝试连接",
+    "Hello",
+    "代理",
+    "电信网通",
+    "重连"
+  ],
+  "functions": [
+    {
+      "name": "CMXNet",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "跨服/多路尝试用的连接对象（net.CNet子类）：注册1号Hello处理、首次失败只打印第二次才上抛、支持经代理裸发目标地址。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_struct"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMXNet.__init__",
+      "signature": "(self, proxy, ip, port)",
+      "kind": "method",
+      "summary": {
+        "text": "保存代理，登记到g_NetobjList，注册m_NetFunction[1]=S2CHello；port为空时置空串后交net.CNet。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMXNet.OnConnectFail",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "一次性守卫：首次打印连接失败并置m_IsFail，之后才调net.CNet.OnConnectFail（换FakeNet等）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_err"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMXNet.OnError",
+      "signature": "(self, msg=None)",
+      "kind": "method",
+      "summary": {
+        "text": "同OnConnectFail的一次性守卫，之后上抛net.CNet.OnError。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_err"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMXNet.ConnectServer",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "有代理先连代理并NakedSend目标IPv4 4字节+端口4字节小端拆分，无代理直连m_IP:m_Port。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "m_Proxy非空",
+          "effect": {
+            "text": "Connect(代理ip,代理port)后逐字节裸发目标IP与端口；代理服务端是否按此解析未证实。",
+            "confidence": "inferred",
+            "evidence": [
+              "con_proto"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "S2CHello",
+      "signature": "(netobj)",
+      "kind": "function",
+      "summary": {
+        "text": "胜出回调：清g_NetobjList、把对象设为net.g_Net、转netlogin.S2CHello，并把该对象1号处理替换为netlogin版。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ProcessServerCmd",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "每帧驱动：遍历g_NetobjList未失败对象与g_AttemptDict尝试对象的Run；供main每帧调用。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_struct"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CAttemptNet",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "带帧数预算的尝试连接对象：注册1号为S2CAttemptHello，超时或失败经Release触发失败回调。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_struct"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CAttemptNet.__init__",
+      "signature": "(self, proxy, ip, port, frame)",
+      "kind": "method",
+      "summary": {
+        "text": "保存代理与帧预算frame，注册m_NetFunction[1]=S2CAttemptHello。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CAttemptNet.OnConnectFail",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "打印后Release（进而触发尝试的error_callback）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_err"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CAttemptNet.OnError",
+      "signature": "(self, msg=None)",
+      "kind": "method",
+      "summary": {
+        "text": "打印后Release。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_err"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CAttemptNet.ConnectServer",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "与CMXNet.ConnectServer同构的代理裸发/直连。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CAttemptNet.Run",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "每帧ProcessServerCmd并递减m_Frame，归零打印连接超时并Release。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "m_Frame递减到<=0",
+          "effect": {
+            "text": "打印超时并Release→触发error_callback；frame单位是帧不是秒（DoConnect传g_DelaySecond=24，名实不符）。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "con_proto"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CAttemptNet.Release",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "按IP删尝试记录并调用error_callback(self)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CAttemptHello",
+      "signature": "(netobj)",
+      "kind": "function",
+      "summary": {
+        "text": "尝试Hello处理：按IP取出并删除尝试记录，调用登记的callback(netobj)；DoConnect登记的成功与失败回调按字面均为Fail，真实胜出落点待核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ConnectAttempt",
+      "signature": "(ip, port, proxy, callback, frame, error_callback)",
+      "kind": "function",
+      "summary": {
+        "text": "建CAttemptNet、以IP为键登记(成功回调,失败回调,对象)并发起ConnectServer；DoConnect三处调用按字面都传Fail作两个回调，见DoConnect异常说明。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ClearAttempt",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "清空全局尝试字典g_AttemptDict（不逐个Release对象）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_struct"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "DoConnect",
+      "signature": "(idx, pwd, proxy_port_ip_list, proxy)",
+      "kind": "function",
+      "summary": {
+        "text": "重连尝试总入口：g_DelaySecond<=0直接main.RestarConfirmEx；否则有代理对候选表前两条各调用一次ConnectAttempt，无代理按IsDianXin(net.g_Net.m_IP)取target_idx=0或1、二选一仅调用一次。内嵌Success（声明ClearAttempt后main.RestarConfirm）未被本稿调用点引用；三处ConnectAttempt都把Fail同时传作成功与失败回调，真实成功链待核，不能保证RestarConfirm为成功落点。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "n4_connect_attempts"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "g_DelaySecond <= 0",
+          "effect": {
+            "text": "直接main.RestarConfirmEx，不再尝试（字面失败/兜底落点）。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "con_proto"
+            ]
+          }
+        },
+        {
+          "condition": "有代理",
+          "effect": {
+            "text": "对候选表前两条各发一次ConnectAttempt(..., Fail, Fail)尝试；按字面成功回调也传Fail，真实胜出落点待核。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "n4_connect_attempts"
+            ]
+          }
+        },
+        {
+          "condition": "无代理",
+          "effect": {
+            "text": "按IsDianXin(net.g_Net.m_IP)选电信(0)/网通(1)候选发一次ConnectAttempt(..., Fail, Fail)尝试；真实胜出落点待核。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "n4_connect_attempts"
+            ]
+          }
+        },
+        {
+          "condition": "内嵌Success(R171)未被引用（三处尝试均把成功回调传为Fail）",
+          "effect": {
+            "text": "与函数名矛盾，疑似反编译丢线或原文如此；真实胜出路径缺失待核，不得写成已确认失败即重连。",
+            "confidence": "inferred",
+            "evidence": [
+              "con_proto"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DoConnect.Success",
+      "signature": "(netobj)",
+      "kind": "function",
+      "summary": {
+        "text": "内嵌成功回调（恢复稿中未被任何调用点引用）：函数体声明为ClearAttempt、记代理并main.RestarConfirm；属候选声明，真实成功链待核，不得写成已确认落点。",
+        "confidence": "inferred",
+        "evidence": [
+          "con_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "DoConnect.Fail",
+      "signature": "(netobj)",
+      "kind": "function",
+      "summary": {
+        "text": "内嵌失败回调：调main.RestarConfirmEx换路重试。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "IsDianXin",
+      "signature": "(ip)",
+      "kind": "function",
+      "summary": {
+        "text": "按selectserver.ServerInfo()文本行分区（电信/网通）判定IP归属，找不到默认True。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "KuaFuConnect",
+      "signature": "(idx, pwd, proxy_port_ip_list)",
+      "kind": "function",
+      "summary": {
+        "text": "对每个(proxy,port,ip)建CMXNet（置m_ReConnect/m_Idx/m_Pwd）并发起连接，多路并发先Hello者由S2CHello胜出。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "NewKuaFuConnect",
+      "signature": "(idx, pwd, proxy_port_ip_list)",
+      "kind": "function",
+      "summary": {
+        "text": "先GetKuaFuProxyLst重排/扩展候选，再同KuaFuConnect并发连接。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetKuaFuProxyLst",
+      "signature": "(proxy_port_ip_list)",
+      "kind": "function",
+      "summary": {
+        "text": "按代理名/登录区判网型（电信1/网通2/教育网3），组合直连与同型+98/99代理候选列表。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "判型循环未命中分支",
+          "effect": {
+            "text": "每轮把nettype重置为1，字典序下可能覆盖已判结果；疑似原文/反编译问题，只登记待核。",
+            "confidence": "inferred",
+            "evidence": [
+              "con_proto"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "kind": "protocol",
+      "target": "命令1 (GS2C_HELLO, entry 3970号表)",
+      "summary": {
+        "text": "两处m_NetFunction[1]注册是本文件字面证据，符号名与数值来自号表交叉；Hello包体字段在netlogin内解包，不在本文件。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "net (entry 3176) CNet",
+      "summary": {
+        "text": "基类提供Connect/ProcessServerCmd/OnError默认处理与g_Net全局；本文件对象胜出后写入net.g_Net。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_struct"
+        ]
+      }
+    },
+    {
+      "kind": "config",
+      "target": "g_DelaySecond = 24（尝试帧预算）",
+      "summary": {
+        "text": "传给CAttemptNet的frame预算，单位是帧；变量名带Second易误读，改值前须确认原生帧调度。",
+        "confidence": "inferred",
+        "evidence": [
+          "con_proto"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3176
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 871
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 516
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4293
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "想改跨服连接的候选地址或代理顺序，改哪里？",
+      "answer": {
+        "text": "候选生成在GetKuaFuProxyLst（网型判定+组合），并发发起在KuaFuConnect/NewKuaFuConnect，上游列表由main.RestarConfirmEx等传入；服务器/代理原始数据来自selectserver（E样板外）。改判型逻辑须注意已登记的nettype覆盖疑点。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      }
+    },
+    {
+      "question": "想改连接超时，改g_DelaySecond吗？",
+      "answer": {
+        "text": "它是传给尝试对象的帧预算（24帧），不是秒；改前须确认main帧循环与原生ProcessServerCmd的帧义，且DoConnect的成功回调未引用异常未核清前不要动尝试回调签名。",
+        "confidence": "inferred",
+        "evidence": [
+          "con_proto"
+        ]
+      }
+    },
+    {
+      "question": "代理连接失败先看哪里？",
+      "answer": {
+        "text": "看ConnectServer的代理分支：先连代理、再裸发目标IP 4字节+端口4字节；任一字节序/代理地址（m_Proxy的host:port拆分）错都会失败。代理服务端解析未证实，不要把客户端裸发字节写成代理协议定论。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      }
+    },
+    {
+      "question": "DoConnect无代理会电信/网通各尝试一次吗？",
+      "answer": {
+        "text": "不会。g_DelaySecond>0时，proxy为真才对列表前两条各一次；proxy为假按IsDianXin取target_idx=0或1，仅一次ConnectAttempt。三处按候选都传Fail为双回调，Success仍未被引用，不能把尝试次数或成功链按意图补齐。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "n4_connect_attempts"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "来源为仓库外定点恢复候选（SHA见证据报告§3），非原始源码；完整恢复不等于行为正确，无实机/抓包证据。",
+    "Hello只到命令1的注册与转交：包体字段（seed/服务器编号等）在netlogin.S2CHello内，不在E样板，本包未复核work区的hello字段结论。",
+    "DoConnect内嵌Success未被引用的静态异常未回码对象复核，真实胜出回调链缺失；GetKuaFuProxyLst判型覆盖疑点同理，可能为反编译丢线。",
+    "代理裸发字节（IP 4字节+端口4字节小端）只是客户端写法，代理服务端解析与回包未证实；selectserver.ServerInfo/GetServerInfo的数据格式未核对。",
+    "未逐项列嵌套之外的动态调用目标（netlogin/main/selectserver/restartsave均为符号级引用，entry身份待B目录核对）；无runtime_verified结论。"
+  ],
+  "sources": [
+    {
+      "id": "e_review",
+      "path": "script_manual/annotations/network/evidence_review_e_network.md",
+      "sha256": "0d2b04f3024623eb4f4fb1da00deea0101d32558a67ca589e3ed39f16e53b5ec",
+      "kind": "recovered_source",
+      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块候选当时整文件SHA 002200b5022b23b77bb0e0034cc5d4bb962d32dbb4879f817dffbf54c4ea8b55（含生成时间行，只作历史标识）；按报告§1规则去头正文SHA 0a46ea6fb77879332c53531a1a746556782b9fc48a1fb01f6330e97c8c775e24 可复核，295行。报告§1另含工具/依赖版本与处理选项。 N4纠正报告中的顺序/条件/作用域描述；原有行范围未移动，历史候选摘要保留。"
+    },
+    {
+      "id": "catalog",
+      "path": "server/docs/catalog/script_entries.jsonl",
+      "sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+      "kind": "metadata",
+      "note": "历史目录种子元数据（entry 2170 行）；function_names_origin自述为历史解码未在本轮复核，仅作函数名交叉核对，不作语义证据。"
+    },
+    {
+      "id": "protocol_table",
+      "path": "work/dream-world-connect-login-map/artifacts/protocol_table/protocol_opcodes.json",
+      "sha256": "a464a9cf66d66de01b8ed6272ea7529217c5d1631f94509bd7ca773077a9c9d9",
+      "kind": "metadata",
+      "note": "entry 3970 script/protocol.py 号表产物（work研究区，自述marshal线性遍历未执行游戏代码，412赋值/409整型）；仅供协议号数值交叉，数值不在E样板源码内，不证明服务端行为。"
+    },
+    {
+      "id": "n4_excerpt",
+      "path": "script_manual/annotations/network/evidence_n4_network.md",
+      "sha256": "0c8657fc9c71c019d1c62dcfbb569316aee7451dec8845dd2010fc0741004e65",
+      "kind": "recovered_source",
+      "note": "全新N4独立恢复四白名单后的有限原行摘录；原候选完整SHA、去精确六头正文SHA与R行在文件中。非原始源码，不代表运行验证。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "con_method",
+      "source_id": "e_review",
+      "start_line": 9,
+      "end_line": 75
+    },
+    {
+      "id": "con_id",
+      "source_id": "e_review",
+      "start_line": 242,
+      "end_line": 324
+    },
+    {
+      "id": "con_struct",
+      "source_id": "e_review",
+      "start_line": 252,
+      "end_line": 266
+    },
+    {
+      "id": "con_proto",
+      "source_id": "e_review",
+      "start_line": 267,
+      "end_line": 316
+    },
+    {
+      "id": "con_err",
+      "source_id": "e_review",
+      "start_line": 317,
+      "end_line": 324
+    },
+    {
+      "id": "con_cross",
+      "source_id": "e_review",
+      "start_line": 493,
+      "end_line": 515
+    },
+    {
+      "id": "con_catalog",
+      "source_id": "catalog",
+      "start_line": 2171,
+      "end_line": 2171
+    },
+    {
+      "id": "con_hello",
+      "source_id": "protocol_table",
+      "start_line": 228,
+      "end_line": 228
+    },
+    {
+      "id": "n4_connect_attempts",
+      "source_id": "n4_excerpt",
+      "start_line": 358,
+      "end_line": 391
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3176
+      },
+      "symbol": "net.CNet / net.g_Net",
+      "summary": {
+        "text": "继承主通道连接对象并在胜出后写入net.g_Net。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_struct"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": null,
+      "symbol": "netlogin.S2CHello",
+      "summary": {
+        "text": "Hello胜出后转交登录Hello处理并替换1号处理函数；netlogin（catalog entry 4082）不在当前种子目录，身份待B编入后解析。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_proto"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4293
+      },
+      "symbol": "main.RestarConfirmEx / RestarConfirm",
+      "summary": {
+        "text": "main跨服链调用KuaFuConnect；DoConnect的Fail落点为main.RestarConfirmEx，RestarConfirm仅为未被引用的Success体内候选声明；main正文由C负责，见协审报告。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "con_cross"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4293
+      },
+      "symbol": "main.RestarConfirm / RestarConfirmEx",
+      "summary": {
+        "text": "失败/兜底落点main.RestarConfirmEx已按字面登记；main.RestarConfirm仅出现在未被引用的Success函数体内，属候选声明、真实成功链待核。",
+        "confidence": "inferred",
+        "evidence": [
+          "con_proto"
+        ]
+      }
+    }
+  ]
+}

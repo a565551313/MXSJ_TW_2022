@@ -10,7 +10,10 @@ from ..core.archives.document import ArchiveDocument
 from ..core.inspection.native import inspect_module
 from ..core.project.document import Binding, save_project
 from ..core.project.storage import load_state
+from ..core.project.workspace import EditorState
+from ..core.services.bundled_catalog import bundled_catalog
 from ..core.services.files import read_source
+from ..core.services.module_paths import index_script_paths
 
 
 class ProjectActions:
@@ -61,22 +64,11 @@ class ProjectActions:
             self.fail(exc)
 
     def save_project(self):
-        if any(
-            self.tabs.widget(i).editor.document().isModified()
-            for i in range(self.tabs.count())
-        ):
-            if (
-                QMessageBox.question(
-                    self,
-                    "源码未保存",
-                    "项目不保存编辑区文字。继续只保存关联？",
-                    defaultButton=QMessageBox.StandardButton.No,
-                )
-                != QMessageBox.StandardButton.Yes
-            ):
-                return False
         name, _ = QFileDialog.getSaveFileName(
-            self, "保存项目（不复制原包/源码）", "", "Project (*.mxscript.json)"
+            self,
+            "保存项目（含编辑缓冲区/草稿；不复制原包）",
+            "",
+            "Project (*.mxscript.json)",
         )
         if not name:
             return False
@@ -84,7 +76,31 @@ class ProjectActions:
             path = Path(
                 name if name.endswith(".mxscript.json") else name + ".mxscript.json"
             )
-            save_project(path, self.bindings, self.catalogs)
+            editors = tuple(
+                EditorState(
+                    tab.path,
+                    tab.vm.currentData(),
+                    tab.source_kind,
+                    tab.editor.toPlainText(),
+                    tab.editor.document().isModified(),
+                    tab.draft_saved,
+                    tab.recovery,
+                )
+                for tab in (self.tabs.widget(i) for i in range(self.tabs.count()))
+                if not (
+                    tab.recovery
+                    and tab.recovery.vm == "py25"
+                    and tab.recovery.index == 1288
+                )
+            )
+            save_project(
+                path,
+                self.bindings,
+                self.catalogs,
+                editors=editors,
+                corpora=tuple(self.corpus_refs),
+            )
+            self.saved_workspace = {e.path: e.text for e in editors}
             self.project_dirty = False
             return True
         except Exception as exc:
@@ -97,7 +113,7 @@ class ProjectActions:
         reply = QMessageBox.question(
             self,
             "项目关联未保存",
-            "保存当前源码关联项目？",
+            "保存当前项目关联与编辑缓冲区/候选草稿？",
             QMessageBox.StandardButton.Save
             | QMessageBox.StandardButton.Discard
             | QMessageBox.StandardButton.Cancel,
@@ -122,7 +138,7 @@ class ProjectActions:
             QMessageBox.question(
                 self,
                 "确认项目来源",
-                "确认项目源码来源可信，恢复源码已由您检查/修复并明确采用？",
+                "确认项目来源可信？将读取关联的本地文件。未采用草稿不会自动取得发布资格。",
                 defaultButton=QMessageBox.StandardButton.No,
             )
             != QMessageBox.StandardButton.Yes
@@ -130,15 +146,24 @@ class ProjectActions:
             return
         self.task(lambda: self.prepare_project(Path(name)), self.adopt_project)
 
-    @staticmethod
-    def prepare_project(path):
+    def prepare_project(self, path):
         state = load_state(path)
-        texts = {b.source: read_source(b.source) for b in state.bindings}
+        snapshots = {e.path: e.text for e in state.editors}
+        texts = {
+            b.source: snapshots[b.source]
+            if b.source in snapshots
+            else read_source(b.source)
+            for b in state.bindings
+        }
         documents = []
+        catalogs = list(state.catalogs)
         try:
-            paths = {b.archive for b in state.bindings} | {
-                c.archive for c in state.catalogs
-            }
+            paths = (
+                {b.archive for b in state.bindings}
+                | {c.archive for c in state.catalogs}
+                | {e.report.archive for e in state.editors if e.report is not None}
+                | {c.archive for c in state.corpora}
+            )
             for path in paths:
                 archive = ArchiveDocument(path)
                 documents.append(archive)
@@ -148,7 +173,21 @@ class ProjectActions:
                 for catalog in state.catalogs:
                     if catalog.archive == path:
                         catalog.verify(archive)
-            return state, texts, documents
+                if not any(c.archive == path for c in catalogs):
+                    # Older projects can have entry-information tabs but no XOR
+                    # reference. Add only a valid exact-pin asset; never replace
+                    # an explicit project association or block draft restoration
+                    # because the optional bundled asset is unavailable.
+                    try:
+                        catalog = bundled_catalog(archive, self.runtime_root)
+                    except (OSError, ValueError):
+                        catalog = None
+                    if catalog is not None:
+                        catalogs.append(catalog)
+                index_script_paths(
+                    archive, next((c for c in catalogs if c.archive == path), None)
+                )
+            return replace(state, catalogs=tuple(catalogs)), texts, documents
         except Exception:
             for archive in documents:
                 archive.close()
@@ -160,6 +199,7 @@ class ProjectActions:
         old_item = self.tree.currentItem()
         old_tabs = {self.tabs.widget(i) for i in range(self.tabs.count())}
         old_archives = set(self.archives)
+        old_names = dict(self.module_names)
         try:
             # One source tab has one explicit VM; reject conflicts before mutation.
             source_vms = {}
@@ -175,6 +215,26 @@ class ProjectActions:
                         raise ValueError(
                             "已打开的源码类型/VM与项目冲突；请先关闭冲突标签"
                         )
+            for editor in state.editors:
+                for tab in old_tabs:
+                    if tab.path != editor.path:
+                        continue
+                    if (
+                        tab.vm.currentData() != editor.vm
+                        or tab.source_kind != editor.source_kind
+                    ):
+                        raise ValueError("已打开编辑区与项目类型/VM冲突，原稿保留")
+                    if tab.recovery is not None and editor.report is not None:
+                        if (
+                            tab.recovery.archive,
+                            tab.recovery.index,
+                            tab.recovery.fingerprint,
+                        ) != (
+                            editor.report.archive,
+                            editor.report.index,
+                            editor.report.fingerprint,
+                        ):
+                            raise ValueError("已打开编辑区来源与项目冲突，原稿保留")
             for archive in documents:
                 old = next((a for a in self.archives if a.path == archive.path), None)
                 if old is not None:
@@ -189,6 +249,23 @@ class ProjectActions:
                     text=texts[binding.source],
                     source_kind=binding.source_kind,
                 )
+            for editor in state.editors:
+                tab = self.add_source(
+                    editor.path,
+                    editor.vm,
+                    reference=editor.source_kind in {"reference", "module-unavailable"},
+                    text=editor.text,
+                    source_kind=editor.source_kind,
+                )
+                if tab in old_tabs:
+                    continue  # NEVER replace an open buffer or its undo/report state.
+                tab.editor.setPlainText(editor.text)
+                tab.draft_saved = editor.draft_saved and editor.path.is_file()
+                if editor.report is not None:
+                    tab.attach_report(editor.report)
+                    tab.candidate_requested.connect(self.open_recovery_candidate)
+                tab.editor.document().setModified(editor.modified)
+                self.refresh_tab_title(tab)
         except Exception:
             # Roll back only widgets/readers created in this attempt. Existing
             # dirty buffers, undo history, associations and baselines stay intact.
@@ -202,6 +279,8 @@ class ProjectActions:
                 if root.data(0, Qt.ItemDataRole.UserRole + 1) not in old_archives:
                     self.tree.takeTopLevelItem(i)
             self.archives[:] = [a for a in self.archives if a in old_archives]
+            self.module_names = old_names
+            self._navigation_revision = None
             if old_tab is not None:
                 self.tabs.setCurrentWidget(old_tab)
             if old_item is not None:
@@ -212,7 +291,27 @@ class ProjectActions:
             for archive in documents:
                 if archive not in self.archives:
                     archive.close()
+        for document in documents:
+            active = next(a for a in self.archives if a.path == document.path)
+            active.module_paths = document.module_paths
+            active.module_path_errors = document.module_path_errors
+            self.module_names = {
+                key: name
+                for key, name in self.module_names.items()
+                if key[0] != document.path
+            }
+            self.module_names.update(
+                ((document.path, index), name)
+                for index, name in document.module_paths.items()
+            )
         self.bindings, self.catalogs = list(state.bindings), list(state.catalogs)
         self.built_texts.clear()
-        self.project_dirty = False
+        self.corpus_refs = list(state.corpora)
+        self.corpora.clear()  # Verify lazily; embedded drafts also work offline.
+        self.saved_workspace = {e.path: e.text for e in state.editors}
+        self.project_dirty = any(
+            tab.editor.toPlainText() != self.saved_workspace.get(tab.path)
+            for tab in old_tabs
+            if tab.editor.document().isModified()
+        )
         self.refresh_native_action()

@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 4293,
+  "annotation_sha256": "f5eff3f1f3a95bc9373bd903c2a404a795308557801f1ce0268525f768698692",
+  "reviewer": "A_delegate",
+  "delegation": "用户“H宕机了你审吧”授权A接替复核，随后“你帮他们收尾吧”授权收尾；本记录是A有限代审，不是独立H/N7。A未参与此N2固定正文的写作或改动。",
+  "decision": "accepted",
+  "note": "2026-10-16 A收尾有限代审；输入PR39 c7142366fabafea0b35d943d8746a1de9d899b49，已合A e60fcb588ff7a50249504ff603f1a64af50f5c8b；旧N7在9b0dea7基线的退修仅作问题清单，不挪绑定SHA冒充新N7结论。main：核新的1573行去六头候选与17段975行摘录映射，MainLoop驱动网络/HTTP/timer/模块回调、WarLoop非暂停war.Process(True)后MainLoop、Loop初值及两个setter；Restart暂置AfterRestart而非立即MainLoop；ExitGame not IsShowMainPage守卫、CloseGame调度DoCloseGame才Quit、doexit/doreturn区分；ClearHotKey不调用RegisterDefaultHotKey，默认Enter委托interface.DefaultButtonClick，SwitchHotKey受g_DisableHotKey和IsWar守卫。未把Loop赋值当message，未重建原候选有损具名槽位。 四条原包目录ID/stored/pyc/raw u6/body SHA实际重算一致；修正恢复子进程布尔参数后，以真实False及True独立输出四对raw/正文，严格cp950后处理链一致。接受范围为原五组阻塞及六题相关新增/修改结论和定位、来源链，不是穷尽本模块全部函数/分支语义。局限/不确定候选形态保留，不代表原始源码、5000模块、Qt/Windows/EXE/游戏/原生或服务端通过。详细报告：docs/evidence/script_manual_A_finalize_20261016.md。"
+}

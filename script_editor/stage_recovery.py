@@ -52,7 +52,10 @@ def main():
         check=True,
     )
     from script_editor.core.compiler.runner import bundled_compiler, compile_standard
+    from script_editor.core.services.pycdc_engine import stage_pycdc
+    from script_editor.core.services.recovery_candidates import pycdc_candidate
 
+    pycdc = stage_pycdc(root, target)
     with tempfile.TemporaryDirectory(prefix="mx-worker-smoke-") as temporary:
         temporary = Path(temporary)
         for vm in ("py25", "py27"):
@@ -77,6 +80,9 @@ def main():
                 "source", ""
             ):
                 raise ValueError("独立恢复EXE实际smoke失败，禁止宣称完整构建")
+            secondary = pycdc_candidate(pycdc, source.read_bytes(), vm)
+            if not secondary.complete or "worker_smoke" not in secondary.source:
+                raise ValueError("第二引擎实际双VM smoke失败，禁止出货")
     return 0
 
 

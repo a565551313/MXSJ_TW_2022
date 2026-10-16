@@ -1,0 +1,731 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 717,
+  "path": "script/mxgame/item/view/dlgitem.py",
+  "owner": "G",
+  "domain": "gameplay",
+  "author": "N6新会话（接管修订；原初稿为A代写，非G会话；本记录未经独立审核，N6不自批）",
+  "source_status": "recovered_complete_not_original",
+  "purpose": {
+    "text": "物品/装备与召唤兽页的界面组合入口：创建CItemDialog、管理显示和提示缓存、路由本地UI消息到整理/锁定/选物/使用等动作。物品数据与使用规则委托item、网络或其他业务模块；不是服务器背包规则。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "dlgitem_CItemDialog___init__",
+      "dlgitem_CItemDialog_GetDlgPath",
+      "dlgitem_CItemDialog_OnMessage",
+      "dlgitem_CItemDialog_UseItem",
+      "dlgitem_CItemDialog_SelectItem",
+      "dlgitem_IsDialogShowing",
+      "dlgitem_ShowSwitch",
+      "dlgitem_ShowDlg",
+      "dlgitem_Show",
+      "dlgitem_ShowHint",
+      "dlgitem_PreShowDlgAfterLogin",
+      "dlgitem_ShowItemSortDlg",
+      "dlgitem_CItemSortDlg___init__"
+    ]
+  },
+  "keywords": [
+    "背包",
+    "物品",
+    "整理",
+    "物品锁",
+    "右键使用",
+    "召唤兽",
+    "item_new.dlg"
+  ],
+  "functions": [
+    {
+      "name": "CItemDialog.__init__",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "给CCombDialog传dialog/item/item_new.dlg，初始化信号、物品区域、属性/召唤兽提示及多个组件/引导，再InitDelegates。构造会主动LeftUp两个按钮；本稿不执行构造，也不保证布局控件实际存在。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_CItemDialog___init__"
+        ]
+      },
+      "calls": [
+        "combdialog.CCombDialog.__init__",
+        "self.CreatePropItems",
+        "self.CreateItemAreas",
+        "self.InitSignals",
+        "self.InitDelegates"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CItemDialog.GetDlgPath",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "直接返回dialog/item/item1.dlg；与构造器传入item_new.dlg并列保留，不能凭本函数判定真正加载哪张。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_CItemDialog_GetDlgPath"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CItemDialog.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "本地按钮/物品/召唤兽消息分发。UI消息号不是网络协议号；网络函数这里只见调用，服务端处理未证实。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_CItemDialog_OnMessage"
+        ]
+      },
+      "calls": [
+        "nethero.C2SOpenLock",
+        "nethero.C2SPackItem",
+        "netplayer.C2SOpenItemLock",
+        "netplayer.C2SOpenItemUnLock",
+        "ShowItemSortDlg",
+        "self.UseItem",
+        "self.SelectItem",
+        "netopenui.C2SOpenPlayerInfoDlg",
+        "hero.GetRealID",
+        "dlgquicksell.OpenQuickSellView"
+      ],
+      "branches": [
+        {
+          "condition": "msgid == 2",
+          "effect": {
+            "text": "SetShow(False)，不是销毁对象。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_OnMessage"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 1",
+          "effect": {
+            "text": "调用nethero.C2SOpenLock。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_OnMessage"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 4",
+          "effect": {
+            "text": "由m_CurrPage-1算itype，-1/0规整为0，调用C2SPackItem并置item.g_ArrangeEnd=False。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_OnMessage"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 5 或 7",
+          "effect": {
+            "text": "分别调用C2SOpenItemLock或C2SOpenItemUnLock。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_OnMessage"
+            ]
+          }
+        },
+        {
+          "condition": "msgid in (6,8)",
+          "effect": {
+            "text": "转ShowSwitchDlg(msgid)，其业务本体本稿未解释。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_OnMessage"
+            ]
+          }
+        },
+        {
+          "condition": "msgid in (11,12,13,14)",
+          "effect": {
+            "text": "分别调用Switch(0)、Switch(3)、Switch(2)、Switch(1)，不是按消息号连续页号。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_OnMessage"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 15",
+          "effect": {
+            "text": "调用ShowItemSortDlg；区别于4号网络整理入口。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_OnMessage"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 16",
+          "effect": {
+            "text": "调用dlgquicksell.OpenQuickSellView并记引导点击；不在此直接售卖。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_OnMessage"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 22",
+          "effect": {
+            "text": "调用netopenui.C2SOpenPlayerInfoDlg(hero.GetRealID(), 0)；hero侧ID类型与该窗口的协议行为未核。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_OnMessage"
+            ]
+          }
+        },
+        {
+          "condition": "RIGHT_BUTTON_MESSAGE+100 < msgid < RIGHT_BUTTON_MESSAGE+500",
+          "effect": {
+            "text": "转UseItem；范围两端不包含。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_OnMessage"
+            ]
+          }
+        },
+        {
+          "condition": "100 <= msgid < 600",
+          "effect": {
+            "text": "在前面分支未命中时转SelectItem；召唤兽消息在这之前有单独范围。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_OnMessage"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CItemDialog.UseItem",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "用msgid减右键偏移再减100得到位置，保存g_LastSelPos并取普通物品区域；物品存在且没有手持对象时才按m_ShowSummon转UsePetItem或UseAllItem。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_CItemDialog_UseItem"
+        ]
+      },
+      "calls": [
+        "self.UsePetItem",
+        "self.UseAllItem"
+      ],
+      "branches": [
+        {
+          "condition": "GetItem()为None",
+          "effect": {
+            "text": "不使用物品。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_UseItem"
+            ]
+          }
+        },
+        {
+          "condition": "物品存在且handobj.g_HandObj is None",
+          "effect": {
+            "text": "按m_ShowSummon二选一委托使用；手持非空时不调用这两个入口。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_UseItem"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CItemDialog.SelectItem",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "msgid>=500选区域2并减500，否则选区域0并减100；Shift按下且物品存在时OnCopyItemInfo，否则未按Shift时it.Take。不是本函数直接发使用包。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_CItemDialog_SelectItem"
+        ]
+      },
+      "calls": [
+        "OnCopyItemInfo",
+        "it.Take"
+      ],
+      "branches": [
+        {
+          "condition": "C_sys.IsKeyDown(VK_SHIFT)",
+          "effect": {
+            "text": "有物品才复制信息；不会走else里的Take。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_SelectItem"
+            ]
+          }
+        },
+        {
+          "condition": "未按Shift",
+          "effect": {
+            "text": "调用it.Take，后续手持行为依item基类。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_SelectItem"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "IsDialogShowing",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "返回g_ItemDialog and g_ItemDialog.GetShow()，可能是None/假值，不强制返回bool。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_IsDialogShowing"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowSwitch",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "将not IsDialogShowing()交ShowDlg；首次切换可能构造对象和登记回调。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_ShowSwitch"
+        ]
+      },
+      "calls": [
+        "IsDialogShowing",
+        "ShowDlg"
+      ],
+      "branches": []
+    },
+    {
+      "name": "ShowDlg",
+      "signature": "(flag)",
+      "kind": "function",
+      "summary": {
+        "text": "首次依据dlgshenmoisland.IsShenmoHuodong()（函数名推断为神魔活动判定，未核）选择普通或专用物品窗（CShenmoItemDialog），登记pet/item回调并ShowFlash；已有对象则Topmost并清选中位置。随后SetShow(flag)；显示时ShowHint、置顶并调用CloseOtherUI()，隐藏时ClearAllItemExt。函数前有@syncoperate.Operate()装饰器，调度语义未核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_ShowDlg",
+          "dlgitem_ShowDlg_decorator",
+          "dlgitem_CloseOtherUI"
+        ]
+      },
+      "calls": [
+        "CItemDialog",
+        "dlgshenmoisland.IsShenmoHuodong",
+        "dlgshenmoisland.CShenmoItemDialog",
+        "pet.AddEquipCallback",
+        "item.AddShadowCallback",
+        "GetEquitInfo",
+        "g_ItemDialog.RegMonsterPieceHandler",
+        "CloseOtherUI",
+        "clickcounter.TaskLog"
+      ],
+      "branches": [
+        {
+          "condition": "g_ItemDialog is None",
+          "effect": {
+            "text": "即使flag为False也先构造并登记回调。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_ShowDlg"
+            ]
+          }
+        },
+        {
+          "condition": "flag为真",
+          "effect": {
+            "text": "调用GetEquitInfo并RegMonsterPieceHandler。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_ShowDlg"
+            ]
+          }
+        },
+        {
+          "condition": "SetShow后GetShow()为真",
+          "effect": {
+            "text": "显示提示、清暂存提示、置顶并调用CloseOtherUI()；CloseOtherUI内部只调用dlgswap.CloseWindow()与dlggive.CloseWindow()，两窗口功能未在本摘录核实。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_ShowDlg",
+              "dlgitem_CloseOtherUI"
+            ]
+          }
+        },
+        {
+          "condition": "SetShow后GetShow()为假",
+          "effect": {
+            "text": "ClearAllItemExt；不等于销毁整个物品窗。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_ShowDlg"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Show",
+      "signature": "(flag)",
+      "kind": "function",
+      "summary": {
+        "text": "只在g_ItemDialog存在时SetShow(flag)；与ShowDlg不同，不负责首次创建。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_Show"
+        ]
+      },
+      "calls": [
+        "g_ItemDialog.SetShow"
+      ],
+      "branches": []
+    },
+    {
+      "name": "ShowHint",
+      "signature": "(shapes, shape=None)",
+      "kind": "function",
+      "summary": {
+        "text": "物品窗存在且显示时直接委托ShowHint；否则保存g_HintShapes/g_HintShape，供后续ShowDlg可见时消费。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_ShowHint"
+        ]
+      },
+      "calls": [
+        "g_ItemDialog.ShowHint"
+      ],
+      "branches": [
+        {
+          "condition": "窗口不存在或不可见",
+          "effect": {
+            "text": "仅缓存提示，不能据此断言已经显示。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_ShowHint"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PreShowDlgAfterLogin",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "若permission.IsTestBansys('dlgitem')或gamectrl.IsFristRunFromOpenSys()为真则直接return；否则在g_ItemDialog为空时调用ShowDlg(False)预建隐藏窗（ShowDlg(False)仍会构造对象）。装饰器和活动专用窗口仍可能改变实际执行。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_PreShowDlgAfterLogin"
+        ]
+      },
+      "calls": [
+        "permission.IsTestBansys",
+        "gamectrl.IsFristRunFromOpenSys",
+        "ShowDlg"
+      ],
+      "branches": [
+        {
+          "condition": "permission.IsTestBansys('dlgitem')或gamectrl.IsFristRunFromOpenSys()为真",
+          "effect": {
+            "text": "直接return，不调用ShowDlg。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_PreShowDlgAfterLogin"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "ShowItemSortDlg",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "每次赋值g_ItemSortDlg=CItemSortDlg()；没有在本函数看到已有对象复用。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_ShowItemSortDlg"
+        ]
+      },
+      "calls": [
+        "CItemSortDlg"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CItemSortDlg.__init__",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "字面加载dialog/itemsort.dlg，给btn_ItemLock开父通知，创建物品区域/刷新背包并居中；布局实际控件存在性未核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_CItemSortDlg___init__"
+        ]
+      },
+      "calls": [
+        "combdialog.CCombDialog.__init__",
+        "self.CreateAreaItem",
+        "self.UpdateBag",
+        "interface.Center"
+      ],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "layout",
+      "target": "dialog/item/item_new.dlg / dialog/item/item1.dlg",
+      "summary": {
+        "text": "分别是构造器实参与GetDlgPath返回字符串；基类选择机制未审，不能当成已验证的同一资源或替换关系。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_CItemDialog___init__",
+          "dlgitem_CItemDialog_GetDlgPath"
+        ]
+      }
+    },
+    {
+      "kind": "layout",
+      "target": "dialog/itemsort.dlg",
+      "summary": {
+        "text": "本地排序窗构造字面路径，与主物品窗及网络整理动作不同；未读取布局payload。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_CItemSortDlg___init__"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "nethero / netplayer / item / syncoperate",
+      "summary": {
+        "text": "锁与整理只见网络调用符号，物品动作在item/业务委托，ShowDlg装饰器实现未知。没有从UI消息号推定协议号。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_CItemDialog_OnMessage",
+          "dlgitem_ShowDlg"
+        ]
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3038
+      },
+      "symbol": "hero.GetRealID（OnMessage 22号）",
+      "summary": {
+        "text": "OnMessage的22号动作调用hero.GetRealID()并把结果交netopenui.C2SOpenPlayerInfoDlg；只确认调用关系，hero侧ID类型与协议未核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_CItemDialog_OnMessage"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": null,
+      "symbol": "combdialog.CCombDialog / interface.DialogPanel",
+      "summary": {
+        "text": "组合窗父容器与基类提供UI机制；实际加载及原生事件注入未核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_CItemDialog___init__"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": null,
+      "symbol": "nethero.C2SPackItem / netplayer.C2SOpenItemLock",
+      "summary": {
+        "text": "本地UI分派到网络发送入口，服务端受理/背包变化没有实机证据。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_CItemDialog_OnMessage"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3038
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "背包打不开、关不掉或预加载后状态异常，查哪里？",
+      "answer": {
+        "text": "先区分Show只操作已有窗、ShowDlg负责创建、回调与@syncoperate.Operate()装饰器，ShowSwitch翻转显示；预建入口PreShowDlgAfterLogin会传False。不要把False当不构造，或把SetShow(False)当释放回调。活动专用窗和装饰器需另外验证。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_Show",
+          "dlgitem_ShowDlg",
+          "dlgitem_ShowDlg_decorator",
+          "dlgitem_ShowSwitch",
+          "dlgitem_PreShowDlgAfterLogin"
+        ]
+      }
+    },
+    {
+      "question": "整理、物品锁、右键使用和Shift复制分别改哪里？",
+      "answer": {
+        "text": "整理网络动作是OnMessage的4号，本地排序窗是15号；5/7号是物品加解锁入口，1号另调OpenLock。右键UseItem有手持和召唤兽门禁，左键SelectItem按Shift转复制或Take。改发送/使用规则须跟nethero/netplayer/item委托并联调，不能只改按钮文字。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_CItemDialog_OnMessage",
+          "dlgitem_CItemDialog_UseItem",
+          "dlgitem_CItemDialog_SelectItem",
+          "dlgitem_ShowItemSortDlg"
+        ]
+      }
+    },
+    {
+      "question": "正文、URL、布局或皮肤想改，入口在哪里？",
+      "answer": {
+        "text": "主物品窗的item_new.dlg与GetDlgPath的item1.dlg先核基类选择，不盲改一张；排序窗另为itemsort.dlg。提示文字/按钮文案需跟具体控件或布局，本有限摘录没有已确认的统一公告URL/皮肤配置。布局内容与资源实际存在性待验。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "dlgitem_CItemDialog___init__",
+          "dlgitem_CItemDialog_GetDlgPath",
+          "dlgitem_CItemSortDlg___init__"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "3215行候选仅解释本稿13个重点函数；装备拖放、全部物品使用类型、快捷栏、召唤兽、闪烁、奖励弹窗与所有委托未穷尽；OnMessage中9/10/21号、1000以上宠物号（SelectPet/ShowPetInfo）及Switch/ShowSwitchDlg本体未展开。",
+    "构造器字面item_new.dlg与GetDlgPath返回item1.dlg并存；未复核CCombDialog是否/何时读取GetDlgPath，不能宣布实际只用其中一张布局。",
+    "ShowDlg前有@syncoperate.Operate()装饰器（摘录L2613），Operate的调度/排队/线程语义未核；False也可先构造对象，不是无副作用隐藏API。",
+    "作者是A代写，不是G会话提交或独立审核。所有Claim等级只是作者静态核对；未创建本稿accepted审核，修改后仍须独立复核。",
+    "来源为冻结script.fls的u6 3.9.3/xdis6.1.8定点恢复候选，baseline/decompile_ok仅证明输出形状，不证明可逆、可回编或语义正确；模块顶层return等反编译形态未修写。",
+    "函数/关键分支只覆盖已列子集；calls为空不代表无调用，运行期回调/工厂/原生实现未解，不能从函数名推断效果。",
+    "sources是带候选全文/去六头SHA及原行号的小摘录，不伪装完整源码。全候选/pyc及构建产物留仓库外；没有执行/导入游戏模块、没有读取布局/资源payload、没有实机/Windows/服务端或runtime_verified结论。",
+    "仅适用本archive_sha256；1288排除不定点恢复，不适用于用户修改包、其他引擎或PR34语料；相关模块未编目录的警告不代表不存在。"
+  ],
+  "sources": [
+    {
+      "id": "excerpt_dlgitem",
+      "path": "script_manual/annotations/gameplay/evidence/dlgitem_candidate_excerpt.txt",
+      "sha256": "3d2d9796d71f3a62dbad28fdc041602573fc8ac60435192cbfd148827a9b7a1a",
+      "kind": "recovered_source",
+      "note": "N6 2026-10-16独立复现：同版本工具得到候选去六头正文SHA与A一致；摘录L号逐行JSON解码与候选字节全等（含追加的L2558–L2562、L2613）。A代写有限候选摘录，仅静态来源，非完整源码、非原生/运行期报告。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "dlgitem_CItemDialog_GetDlgPath",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 48,
+      "end_line": 51
+    },
+    {
+      "id": "dlgitem_CItemDialog_OnMessage",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 52,
+      "end_line": 112
+    },
+    {
+      "id": "dlgitem_CItemDialog_SelectItem",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 129,
+      "end_line": 145
+    },
+    {
+      "id": "dlgitem_CItemDialog_UseItem",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 113,
+      "end_line": 128
+    },
+    {
+      "id": "dlgitem_CItemDialog___init__",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 9,
+      "end_line": 47
+    },
+    {
+      "id": "dlgitem_CItemSortDlg___init__",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 232,
+      "end_line": 240
+    },
+    {
+      "id": "dlgitem_CloseOtherUI",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 241,
+      "end_line": 246
+    },
+    {
+      "id": "dlgitem_IsDialogShowing",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 146,
+      "end_line": 150
+    },
+    {
+      "id": "dlgitem_PreShowDlgAfterLogin",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 212,
+      "end_line": 224
+    },
+    {
+      "id": "dlgitem_Show",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 193,
+      "end_line": 199
+    },
+    {
+      "id": "dlgitem_ShowDlg",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 157,
+      "end_line": 192
+    },
+    {
+      "id": "dlgitem_ShowDlg_decorator",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 247,
+      "end_line": 248
+    },
+    {
+      "id": "dlgitem_ShowHint",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 200,
+      "end_line": 211
+    },
+    {
+      "id": "dlgitem_ShowItemSortDlg",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 225,
+      "end_line": 231
+    },
+    {
+      "id": "dlgitem_ShowSwitch",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 151,
+      "end_line": 156
+    }
+  ]
+}

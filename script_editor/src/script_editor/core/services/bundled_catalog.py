@@ -9,10 +9,16 @@ from pathlib import Path
 from ..project.storage import CatalogRef
 from ..vm.py25.keys import read_catalog
 
-# User explicitly authorized this one original-package catalog on 2026-10-15.
-# A derived/new package must use its verified project association, not this map.
+# The original catalog is authorized for delivery. The EXACT derivative below
+# is the user's current test package, identified by their read-only diagnostic.
+# This association permits strict per-entry recovery attempts, NOT source trust
+# or proof that all entries use these boundaries. Unknown derivatives stay off.
 BUNDLED_CATALOGS = {
     "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72": (
+        "script-original.json",
+        "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+    ),
+    "c7276deb0af7142c1b249d24299b884cd7320c0e84375cc6ac55f166df1d9ed1": (
         "script-original.json",
         "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
     ),
@@ -50,7 +56,11 @@ def stage_catalogs(root: Path, destination: Path):
     target = destination.resolve(strict=True) / "decoding"
     # An existing folder is always refused, including failed/partial old builds.
     target.mkdir()
+    copied = set()
     for row in report:
-        shutil.copyfile(root / "decoding" / row["file"], target / row["file"])
+        # Several exact package fingerprints may refer to the same pinned asset.
+        if row["file"] not in copied:
+            shutil.copyfile(root / "decoding" / row["file"], target / row["file"])
+            copied.add(row["file"])
     audit_catalogs(destination)
     return report

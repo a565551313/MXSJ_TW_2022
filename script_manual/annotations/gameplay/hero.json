@@ -1,0 +1,614 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 3038,
+  "path": "script/hero.py",
+  "owner": "G",
+  "domain": "gameplay",
+  "author": "N6新会话（接管修订；原初稿为A代写，非G会话；本记录未经独立审核，N6不自批）",
+  "source_status": "recovered_complete_not_original",
+  "purpose": {
+    "text": "主角客户端状态与属性/技能门面：持有g_Hero/g_Prop/g_ID、将初始化字段解包到属性对象、通知技能和属性回调，并提供显示判定、坐标与角色私有配置入口；不是服务器角色计算或物品面板的全部实现。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "hero_GetHeroObject",
+      "hero_PropInitFinish",
+      "hero_CreateProp",
+      "hero_UpdateSkill",
+      "hero_AddRefreshCallback",
+      "hero_RemoveRefreshCallback",
+      "hero_GetRealID",
+      "hero_GetHeroShow",
+      "hero_GetClientPos",
+      "hero_GetServerPos",
+      "hero_SavePrivateData",
+      "hero_GetPrivateData",
+      "hero_SetPlayerExtAttr"
+    ]
+  },
+  "keywords": [
+    "角色",
+    "主角",
+    "属性",
+    "技能刷新",
+    "坐标",
+    "显示判定",
+    "角色私有配置"
+  ],
+  "functions": [
+    {
+      "name": "GetHeroObject",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "直接返回当前g_Hero引用；不创建角色，也没有非空保证。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_GetHeroObject"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "PropInitFinish",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "仅返回hasattr(g_Prop, m_bShowPrettyID)的结果，不能把函数名解读为全属性或网络初始化完成。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_PropInitFinish"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "g_Prop存在m_bShowPrettyID属性",
+          "effect": {
+            "text": "返回True；只检查存在，不检查属性真值。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "hero_PropInitFinish"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CreateProp",
+      "signature": "(netobj)",
+      "kind": "function",
+      "summary": {
+        "text": "依ITEM_SERVERINIT顺序调用每个属性项Unpack并setattr到g_Prop；ITEM_ALL中其余项用Default，再登记PROPNAMEWITHCALLBACK并调用CheckBanWord。解包宽度与顺序仍依赖属性表和prop基类，不等于服务器契约已核对。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_CreateProp"
+        ]
+      },
+      "calls": [
+        "item.Unpack",
+        "item.Default",
+        "AddPropCallBack",
+        "CheckBanWord"
+      ],
+      "branches": []
+    },
+    {
+      "name": "UpdateSkill",
+      "signature": "(sktype, id, level, title='', limit=-1, truelv=0, exp=None, maxp=None, iscandel=0, binlist=False, dExtend=None)",
+      "kind": "function",
+      "summary": {
+        "text": "先把sktype减1，再依level/exp/战斗技能和limit条件删除或重建CSkill；随后通知学习页、登记回调、战斗菜单、快捷栏和自动战斗模块。回调具体对象来自运行期登记。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_UpdateSkill"
+        ]
+      },
+      "calls": [
+        "CSkill",
+        "dlglearnskill.Refresh",
+        "dlglearnskill2.Refresh",
+        "callback",
+        "warui.RefreshHeroMenu",
+        "shortcut.CShortcutUIMgr.UpdateSkillMagic",
+        "dlgautofight.HeroSkillUpdate"
+      ],
+      "branches": [
+        {
+          "condition": "level<=0 且(exp is None或exp<=0) 且(id不在g_FightSkillLst或limit<=0)",
+          "effect": {
+            "text": "只在对应技能字典有此id时删除；不是无条件删除所有零级技能。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "hero_UpdateSkill"
+            ]
+          }
+        },
+        {
+          "condition": "不满足删除条件",
+          "effect": {
+            "text": "创建CSkill、写扩展/修炼等字段，存回g_Skills[sktype][id]。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "hero_UpdateSkill"
+            ]
+          }
+        },
+        {
+          "condition": "减1后的sktype == ST_SKILL",
+          "effect": {
+            "text": "额外调用两套学习技能页Refresh；之后仍遍历登记回调并通知其他模块。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "hero_UpdateSkill"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "AddRefreshCallback",
+      "signature": "(cid, items, func, *args)",
+      "kind": "function",
+      "summary": {
+        "text": "items中的字符串直接作为属性名，其他条目取v[0]；按cid把func和args交属性项AddRefreshCallbackWithID。这里只登记，具体首次触发语义在属性项基类。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_AddRefreshCallback"
+        ]
+      },
+      "calls": [
+        "propitem.AddRefreshCallbackWithID"
+      ],
+      "branches": []
+    },
+    {
+      "name": "RemoveRefreshCallback",
+      "signature": "(cid, items, func=None)",
+      "kind": "function",
+      "summary": {
+        "text": "按与登记相同的属性名表示，从属性项移除指定cid/func；不证明所有UI对象或其他回调已释放。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_RemoveRefreshCallback"
+        ]
+      },
+      "calls": [
+        "propitem.RemoveRefreshCallbackWithID"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetRealID",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "g_ID为None时返回None；跨服判定为真时返回g_ID/10，否则返回g_ID。仅描述候选运算，不据此猜测ID协议。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_GetRealID"
+        ]
+      },
+      "calls": [
+        "misc.IsInKuafuServer"
+      ],
+      "branches": [
+        {
+          "condition": "g_ID is None",
+          "effect": {
+            "text": "直接返回，不进行除法。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "hero_GetRealID"
+            ]
+          }
+        },
+        {
+          "condition": "misc.IsInKuafuServer()为真",
+          "effect": {
+            "text": "返回g_ID/10；实际类型与原生ID契约待核。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "hero_GetRealID"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetHeroShow",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "以g_Hero.GetShow()与juben.IsPlayJuben()、marriage.IsWedding()、juben.IsForceEnd()、hidecatcat.IsHeroInGamePlayer()、racingspeedgame.CheckGameStart()的OR结果作为bNeedShow；herochengshowmgr（名称推断为变形显示管理器）若仅有庭院秋千原因（常量名TYPE_REASON_YARD_SWING）则提前True，否则返回bNeedShow。不是单纯g_Hero.GetShow，也没有g_Hero空值保护。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_GetHeroShow"
+        ]
+      },
+      "calls": [
+        "g_Hero.GetShow",
+        "juben.IsPlayJuben",
+        "marriage.IsWedding",
+        "juben.IsForceEnd",
+        "hidecatcat.IsHeroInGamePlayer",
+        "racingspeedgame.CheckGameStart",
+        "GetHeroID",
+        "herochengshowmgr.GetHeroChangeShow",
+        "oCheckShow.IsHaveReason",
+        "oCheckShow.IsOnlyReason"
+      ],
+      "branches": [
+        {
+          "condition": "有显示原因且仅庭院秋千原因",
+          "effect": {
+            "text": "提前返回True，不返回前面算得的bNeedShow。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "hero_GetHeroShow"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetClientPos",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "多人坐骑两种类从父对象取坐标，普通角色从g_Hero取；多人坐骑父对象为空时记日志并返回(0,0)。类实现/坐标单位未复核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_GetClientPos"
+        ]
+      },
+      "calls": [
+        "g_Hero.GetParent",
+        "g_Hero.GetPos"
+      ],
+      "branches": [
+        {
+          "condition": "属于列出的两种多人坐骑类且父为空",
+          "effect": {
+            "text": "日志后返回(0,0)，不能把它当真实角色位置。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "hero_GetClientPos"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetServerPos",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "先取GetClientPos；存在地图对象时调用ClientPos2ServerPos，否则返回(0,0)。这里只是客户端坐标转换入口，不是收到服务器坐标的证据。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_GetServerPos"
+        ]
+      },
+      "calls": [
+        "GetClientPos",
+        "map.GetGameMapObject",
+        "oMap.ClientPos2ServerPos"
+      ],
+      "branches": []
+    },
+    {
+      "name": "SavePrivateData",
+      "signature": "(section, key, value)",
+      "kind": "function",
+      "summary": {
+        "text": "仅当g_ID为真时按需创建users目录，用GetRealID组成users/%d.ini并调用cfg.SaveData；否则False。本稿未核所有调用方，也未核写盘结果。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_SavePrivateData"
+        ]
+      },
+      "calls": [
+        "GetRealID",
+        "cfg.SaveData"
+      ],
+      "branches": [
+        {
+          "condition": "g_ID为假",
+          "effect": {
+            "text": "返回False，不创建目录或保存。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "hero_SavePrivateData"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetPrivateData",
+      "signature": "(section, key)",
+      "kind": "function",
+      "summary": {
+        "text": "g_ID为真时先读角色users/%d.ini；仅当读出的data为真才返回，空值等假值会回落mx.ini，不是只在键不存在时回落。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_GetPrivateData"
+        ]
+      },
+      "calls": [
+        "GetRealID",
+        "cfg.GetData"
+      ],
+      "branches": [
+        {
+          "condition": "角色配置data为真",
+          "effect": {
+            "text": "返回角色配置值。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "hero_GetPrivateData"
+            ]
+          }
+        },
+        {
+          "condition": "无g_ID或角色data为假",
+          "effect": {
+            "text": "读mx.ini的同section/key。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "hero_GetPrivateData"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "SetPlayerExtAttr",
+      "signature": "(sAttrKey, anyAttrValue, iShow=0)",
+      "kind": "function",
+      "summary": {
+        "text": "比较旧值与新值，不相等才写g_dPlayerExtDict并TriggerCB(PLAYER_EXTATTR_UPDATE, sAttrKey, iShow)。相等时无此通知，回调接收者未解。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_SetPlayerExtAttr"
+        ]
+      },
+      "calls": [
+        "GetPlayerExtAttr",
+        "commoncb.TriggerCB"
+      ],
+      "branches": [
+        {
+          "condition": "旧值 != anyAttrValue",
+          "effect": {
+            "text": "写字典后发属性更新通知；不承诺服务端同步。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "hero_SetPlayerExtAttr"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "kind": "config",
+      "target": "users/%d.ini → mx.ini（section/key由调用者给出）",
+      "summary": {
+        "text": "角色私有配置的保存路径和读取回落不同；假值也触发回落。未读写用户配置。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_SavePrivateData",
+          "hero_GetPrivateData"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "prop.CProp / ITEM_SERVERINIT / ITEM_ALL",
+      "summary": {
+        "text": "CreateProp依属性项Unpack/Default；表头列m_Grade/m_Cash等，但本稿未核全表序列和类型宽度。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_property_table_head",
+          "hero_CreateProp"
+        ]
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 949
+      },
+      "symbol": "CNpc.LeftUp → hero.g_Hero.GetPos / hero.WalkTo",
+      "summary": {
+        "text": "NPC近远距离判定读取主角位置，远处可能调用hero.WalkTo；WalkTo本体不在本稿重点函数内。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_CNpc_LeftUp"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": null,
+      "symbol": "warui / shortcut / dlgautofight",
+      "summary": {
+        "text": "UpdateSkill向这些客户端表现/快捷栏模块发刷新调用；不据此证明战斗计算正确。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_UpdateSkill"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 949
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "想改角色属性字段或技能显示，入口在哪里？",
+      "answer": {
+        "text": "属性表从InitItem查，解包应用在CreateProp；本稿只摘表头，不给出完整协议字段顺序。技能分组和通知看UpdateSkill，须区分减1后的sktype与外部传入编号，新增字段必须同时核prop基类/发送方/接收方，不能只改显示函数。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_property_table_head",
+          "hero_CreateProp",
+          "hero_UpdateSkill"
+        ]
+      }
+    },
+    {
+      "question": "角色不显示、点击/快捷键受显示判定影响，查哪里？",
+      "answer": {
+        "text": "先区分g_Hero.GetShow与GetHeroShow的多状态OR及秋千例外；再到调用方核门禁。NPC读取位置和移动是另一条链。本稿未核原生渲染、焦点或所有调用方，不以一次返回True保证可操作。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_GetHeroShow",
+          "npc_CNpc_LeftUp"
+        ]
+      }
+    },
+    {
+      "question": "正文、URL、布局、私有配置分别在哪里改？",
+      "answer": {
+        "text": "本稿重点入口是数据/回调门面，不提供一张统一角色.dlg或已确认公告URL。具体正文/布局须追到消费属性的业务窗；私有section/key查SavePrivateData/GetPrivateData，注意空值会回落mx.ini，勿用实际用户配置做测试。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "hero_SavePrivateData",
+          "hero_GetPrivateData",
+          "hero_CreateProp"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "2927行候选仅选本稿列出的函数；移动实现、全部属性类型/顺序、战斗数值、形象/描述/宠物与角色完整生命周期未逐项解释。",
+    "GetHeroShow直接解引用g_Hero；PropInitFinish只判m_bShowPrettyID属性存在，不证明所有字段收到或登录完成。",
+    "GetRealID在跨服分支出现g_ID/10，这是Python2候选字面运算；g_ID实际对象类型及ID编码契约未复核，不能当作统一整数换算规范。",
+    "作者是A代写，不是G会话提交或独立审核。所有Claim等级只是作者静态核对；未创建本稿accepted审核，修改后仍须独立复核。",
+    "来源为冻结script.fls的u6 3.9.3/xdis6.1.8定点恢复候选，baseline/decompile_ok仅证明输出形状，不证明可逆、可回编或语义正确；模块顶层return等反编译形态未修写。",
+    "函数/关键分支只覆盖已列子集；calls为空不代表无调用，运行期回调/工厂/原生实现未解，不能从函数名推断效果。",
+    "sources是带候选全文/去六头SHA及原行号的小摘录，不伪装完整源码。全候选/pyc及构建产物留仓库外；没有执行/导入游戏模块、没有读取布局/资源payload、没有实机/Windows/服务端或runtime_verified结论。",
+    "仅适用本archive_sha256；1288排除不定点恢复，不适用于用户修改包、其他引擎或PR34语料；相关模块未编目录的警告不代表不存在。"
+  ],
+  "sources": [
+    {
+      "id": "excerpt_hero",
+      "path": "script_manual/annotations/gameplay/evidence/hero_candidate_excerpt.txt",
+      "sha256": "58c5d634b2be0880339a0d976cedd91ad6fbdf033d13266fcee4007c7feeb277",
+      "kind": "recovered_source",
+      "note": "N6 2026-10-16独立复现：去六头正文SHA与A一致，摘录行号逐字核对。A代写有限候选摘录，仅静态来源，非完整源码、非原生/运行期报告。"
+    },
+    {
+      "id": "excerpt_npc",
+      "path": "script_manual/annotations/gameplay/evidence/npc_candidate_excerpt.txt",
+      "sha256": "306145dd32fd76d528ff8ec375f68996719301bfc93ee36677eadd71eaa91f5b",
+      "kind": "recovered_source",
+      "note": "N6 2026-10-16独立复现：npc候选正文SHA与A一致；摘录L号逐行核对。A代写有限候选摘录（hero.json仅引用其中npc_CNpc_LeftUp段），仅静态来源，非完整源码、非原生/运行期报告。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "hero_AddRefreshCallback",
+      "source_id": "excerpt_hero",
+      "start_line": 71,
+      "end_line": 83
+    },
+    {
+      "id": "hero_CreateProp",
+      "source_id": "excerpt_hero",
+      "start_line": 23,
+      "end_line": 39
+    },
+    {
+      "id": "hero_GetClientPos",
+      "source_id": "excerpt_hero",
+      "start_line": 117,
+      "end_line": 131
+    },
+    {
+      "id": "hero_GetHeroObject",
+      "source_id": "excerpt_hero",
+      "start_line": 9,
+      "end_line": 17
+    },
+    {
+      "id": "hero_GetHeroShow",
+      "source_id": "excerpt_hero",
+      "start_line": 106,
+      "end_line": 116
+    },
+    {
+      "id": "hero_GetPrivateData",
+      "source_id": "excerpt_hero",
+      "start_line": 156,
+      "end_line": 166
+    },
+    {
+      "id": "hero_GetRealID",
+      "source_id": "excerpt_hero",
+      "start_line": 97,
+      "end_line": 105
+    },
+    {
+      "id": "hero_GetServerPos",
+      "source_id": "excerpt_hero",
+      "start_line": 132,
+      "end_line": 144
+    },
+    {
+      "id": "hero_PropInitFinish",
+      "source_id": "excerpt_hero",
+      "start_line": 18,
+      "end_line": 22
+    },
+    {
+      "id": "hero_RemoveRefreshCallback",
+      "source_id": "excerpt_hero",
+      "start_line": 84,
+      "end_line": 96
+    },
+    {
+      "id": "hero_SavePrivateData",
+      "source_id": "excerpt_hero",
+      "start_line": 145,
+      "end_line": 155
+    },
+    {
+      "id": "hero_SetPlayerExtAttr",
+      "source_id": "excerpt_hero",
+      "start_line": 167,
+      "end_line": 174
+    },
+    {
+      "id": "hero_UpdateSkill",
+      "source_id": "excerpt_hero",
+      "start_line": 40,
+      "end_line": 70
+    },
+    {
+      "id": "hero_property_table_head",
+      "source_id": "excerpt_hero",
+      "start_line": 175,
+      "end_line": 213
+    },
+    {
+      "id": "npc_CNpc_LeftUp",
+      "source_id": "excerpt_npc",
+      "start_line": 76,
+      "end_line": 162
+    }
+  ]
+}

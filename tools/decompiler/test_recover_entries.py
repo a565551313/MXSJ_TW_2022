@@ -3,11 +3,14 @@
 
 from __future__ import annotations
 
+import ast
 import importlib.util
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -17,6 +20,38 @@ _spec = importlib.util.spec_from_file_location(
 rc = importlib.util.module_from_spec(_spec)
 sys.modules["recover_entries"] = rc
 _spec.loader.exec_module(rc)  # type: ignore[union-attr]
+
+
+class IsolatedBooleanTests(unittest.TestCase):
+    """Inspect the generated child AST; never import or execute game code."""
+
+    def check_flag(self, flag):
+        def fake_run(argv, **kwargs):
+            tree = ast.parse(argv[2])
+            calls = [n for n in ast.walk(tree) if isinstance(n, ast.Call)]
+            call = next(n for n in calls if isinstance(n.func, ast.Attribute)
+                        and n.func.attr == "decompile_pyc_bytes")
+            value = next(k.value for k in call.keywords
+                         if k.arg == "decode_big5")
+            self.assertIsInstance(value, ast.Constant)
+            self.assertIs(value.value, flag)  # 'False' must not become truthy.
+            output = next(n.args[0].value for n in calls
+                          if isinstance(n.func, ast.Name)
+                          and n.func.id == "open"
+                          and n.args[0].value.endswith("out.py"))
+            Path(output).write_text("synthetic result", encoding="utf-8")
+            return rc.subprocess.CompletedProcess(
+                argv, 0, stdout="OK fake\n", stderr="")
+
+        with patch.object(rc.subprocess, "run", side_effect=fake_run):
+            self.assertEqual(rc.decompile_isolated(b"synthetic", "fake", flag, 1),
+                             ("synthetic result", "decompile_ok"))
+
+    def test_false_is_passed_as_boolean_not_string(self):
+        self.check_flag(False)
+
+    def test_true_is_passed_as_boolean_not_string(self):
+        self.check_flag(True)
 
 
 class SanitizeComponentTests(unittest.TestCase):
@@ -58,7 +93,7 @@ class SanitizeRelTests(unittest.TestCase):
 
     def test_absolute_path_cannot_escape_via_leading_slash(self):
         # 前导斜杠被丢弃，只剩分量，避免写到 out 目录之外
-        self.assertEqual(rc.sanitize_rel("/etc/passwd"), "etc/passwd")
+        self.assertEqual(rc.sanitize_rel("/synthetic/input.py"), "synthetic/input.py")
 
 
 class NeedsRenamingTests(unittest.TestCase):
@@ -167,11 +202,11 @@ class OutGuardTests(unittest.TestCase):
             rc.assert_out_dir_ok(Path(rc.REPO_ROOT) / "data" / "scratch")
 
     def test_accepts_external_dir(self):
-        tmp = Path("/tmp/mxsj-recover-out")
-        try:
-            rc.assert_out_dir_ok(tmp)
-        except SystemExit as exc:  # pragma: no cover - 环境异常时可见
-            self.fail(f"外部目录不应被拒绝: {exc}")
+        with tempfile.TemporaryDirectory(prefix="mxsj-recover-out-") as td:
+            try:
+                rc.assert_out_dir_ok(Path(td))
+            except SystemExit as exc:  # pragma: no cover - 环境异常时可见
+                self.fail(f"外部目录不应被拒绝: {exc}")
 
 
 class ReadEntryTests(unittest.TestCase):
@@ -199,12 +234,12 @@ class TranspileFailureReportedTests(unittest.TestCase):
 class DryRunWritesNothingTests(unittest.TestCase):
     def test_dry_run_status_and_no_files(self):
         """对不存在于包内的条目，dry-run 也不应创建任何产物。"""
-        tmp = Path("/tmp/mxsj-recover-dry")
-        tmp.mkdir(parents=True, exist_ok=True)
-        before = set(tmp.rglob("*"))
-        rec = {"entry_index": -1, "status": "skipped"}
-        self.assertEqual(rec["status"], "skipped")
-        self.assertEqual(set(tmp.rglob("*")), before)
+        with tempfile.TemporaryDirectory(prefix="mxsj-recover-dry-") as td:
+            tmp = Path(td)
+            before = set(tmp.rglob("*"))
+            rec = {"entry_index": -1, "status": "skipped"}
+            self.assertEqual(rec["status"], "skipped")
+            self.assertEqual(set(tmp.rglob("*")), before)
 
 
 class ReportShapeTests(unittest.TestCase):

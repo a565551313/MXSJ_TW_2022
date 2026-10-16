@@ -1,0 +1,401 @@
+{
+  "schema_version": 1,
+  "kind": "new_agent_cohort_assignment_not_old_session_restart",
+  "revision": "20261016-new-cohort-v1",
+  "date": "2026-10-16",
+  "authorization": "用户要求先合并现有成果，再按合并后最新进展重新分配给全新agent。",
+  "content_merge_commit": "7d32e5340b0ab4168f725d238d767ad6232f715d",
+  "pr_base": "arena/61deb9e5-mxsj-tw-2022",
+  "master_merge_authorized": false,
+  "baseline_coverage": {
+    "indexed": 5135,
+    "annotated": 20,
+    "accepted": 3,
+    "changes_requested": 5,
+    "pending": 12,
+    "excluded": 1,
+    "annotation_function_records_not_all_explained": 705,
+    "documented_branch_records": 220,
+    "inventory_function_records_not_explanations": 128382
+  },
+  "policy": "Logical owners B-H remain compatibility labels. N1-N7 were NEW sessions and have delivered/merged PRs; do not launch seven more. A now finishes integration under explicit user authorization; no author self-approval.",
+  "assignments": [
+    {
+      "id": "N1",
+      "title": "全量目录签名与提取回执修复",
+      "logical_owner": "B",
+      "domain": "inventory",
+      "allowed": [
+        "script_manual/inventory/"
+      ],
+      "entries": [],
+      "files": [],
+      "reports": [
+        "docs/evidence/script_manual_BDF_A_review_20261016.md",
+        "docs/evidence/script_manual_BDF_A_validation_20261016.json"
+      ],
+      "objective": "修目录真实错误，不扩域、不重建全量反编译语料。",
+      "tasks": [
+        "修signature_of对仅**kwargs错误插裸*的问题：70例已列在BDF机器收据；例如entry30的(self,path,*,**dct)应去掉不存在的裸*。覆盖无位置参数和有位置参数两种，仅*args和两者同时存在不能回归。",
+        "处理48个含.0/.1/.3等编译器内部槽名的签名。不能冒充公开源码调用参数；无可靠重建证据则signature=null。保留函数记录/限定名及原槽名审阅线索，不猜tuple形参，不从旧catalog复制函数。",
+        "补880/2310/3078/3122拒绝fallback的实际原值或明确可回查记录，JSON转义控制字符；不把已清空的空串称为原值。",
+        "在自己的inventory目录补独立纯元数据回归，至少普通、*args、**kwargs、两者、内部槽名五类；无需执行游戏函数，禁止改A测试凑数量。",
+        "用真实20种子做sample再full，更新modules.jsonl、sample_regression、B_extraction_receipt及工具SHA/计数。当前modules已是5135，不可拿它当原20种子。可在仓库外隔离树用git show cc5c1bad7a806078794eca1ab7482230a18ef9d5:script_manual/inventory/modules.jsonl取冻结种子；先核20行身份，再运行提取器（该脚本按自身ROOT写inventory，务必阅读并隔离，不覆盖原包/其他工作）。",
+        "核5135身份/20种子路径、函数记录数128382不因修签名静默丢失；若确需变化逐条解释。保留目录/历史/不可读/重复路径和1288仅政策元记录。证明没有定点read_stored(1288)，但不要把整包SHA读取误说成完全未读其字节。"
+      ],
+      "acceptance": [
+        "五类纯元数据测试、真20种子sample→full及full验证均有实际日志/输入工具摘要；新签名无裸*错误，无法确认的内部形参明确null。",
+        "128382只是结构函数记录，不是手册解释完成数。B尚未语义认可；不能靠结构验证通过给自己批准。"
+      ],
+      "task_card": "script_manual/coordination/new_agents_20261016/N1.md",
+      "dispatch_state": "merged_into_A_under_user_authorization",
+      "actual_agent_session": null,
+      "fixed_branch": "Assigned by Arena to the NEW session; never reuse old role branches",
+      "submitted_PR": 43,
+      "fixed_head": "f953eb992bf3c5d072ae478a0ac67e4d651e5064",
+      "actual_fixed_branch": "arena/8c171896-mxsj-tw-2022",
+      "A_review_recommendation": "finite_inventory_fix_candidate; conservative234null_policy_confirmed_by_A; not_full_semantic_acceptance",
+      "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/43#issuecomment-6206340681",
+      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented.",
+      "merge_commit": "474bd3abe51428442fb25ece98620135ea38ae88",
+      "merged_at": "2026-10-16T02:27:54Z"
+    },
+    {
+      "id": "N2",
+      "title": "登录/注册/main说明返修",
+      "logical_owner": "C",
+      "domain": "login",
+      "allowed": [
+        "script_manual/annotations/login/"
+      ],
+      "entries": [
+        337,
+        4293,
+        4007,
+        4806
+      ],
+      "files": [
+        "mainpage.json",
+        "main.json",
+        "register.json",
+        "loginin.json"
+      ],
+      "reports": [
+        "docs/evidence/script_manual_C_242fd8c_A_review_20261016.md",
+        "script_manual/annotations/network/main_network_review_for_c.md"
+      ],
+      "objective": "逐项消除C预审的条件、证据、重复文字与来源保真问题；main.py仍只有本任务的正文owner。",
+      "tasks": [
+        "全文统一LoginOk/OnLogin：候选LoginOk校验后C2SLoginIn，OnLogin才SaveAccount。loginin旧问答仍写LoginOk保存账号，必须同步；无证据的RandomConnect先后链不要拼接。",
+        "ShowLogin仅据main.g_LangVersion==0分支，不附会TW/HK映射；OnMessage(2)协议勾选检查只在not misc.IsTWServer()内。摘要、分支、问答三处都核。",
+        "逐Claim补真行段：OnMessage(2)不能只引LoginOk；main登录问答含OnLogin也须对应证据；公告News地址读取需mainpage.OnMessage(30)；注册问答须分别覆盖首页入口和confirm布局；main循环不能引loginin显示段。无证据则收缩断言/降推测，而非只扩大无关范围。",
+        "复核方向/kind：register调用mainpage.Show相对register是下游调用；loginin读取register.g_AccountInfo是数据引用，不能叫调用。main显示关系逐条找实际调用，不由职责猜图。",
+        "回应main证据稿有损/乱码形态，补原包→条目→pyc/候选→编码/处理方法的可复核链和工具版本；不能凭改扩展名或加包SHA声明就当来源已证。不能手猜中文字串或统一简繁替换。历史候选无法复现则保留historical_unverified_origin和不可靠范围。",
+        "核公告失败出处、正文/地址/布局入口、登录点击链、注册逻辑/布局、主循环/快捷键这六题；与E/F协审只读对照，不改network/battle或另建main说明。更新实际改过JSON的author为新N2会话，勿冒称旧C作者完成。"
+      ],
+      "acceptance": [
+        "逐项回应原报告5组阻塞，列每项新证据/保留未知；同一结论无摘要/问答互相矛盾。",
+        "四模块均有真实来源边界；保持现行注册/启动器/编辑器及原包不变。"
+      ],
+      "task_card": "script_manual/coordination/new_agents_20261016/N2.md",
+      "dispatch_state": "merged_into_A_under_user_authorization",
+      "actual_agent_session": null,
+      "fixed_branch": "Assigned by Arena to the NEW session; never reuse old role branches",
+      "submitted_PR": 39,
+      "fixed_head": "c7142366fabafea0b35d943d8746a1de9d899b49",
+      "actual_fixed_branch": "arena/a1839872-mxsj-tw-2022",
+      "A_review_recommendation": "finite_new_byte_review_accepted_as_A_delegate; not_N7_or_runtime",
+      "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/39#issuecomment-6206340890",
+      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented.",
+      "merge_commit": "3f0db0306c49ecdc9a59b6bb15b0ae9c3efdd3df",
+      "merged_at": "2026-10-16T02:28:02Z"
+    },
+    {
+      "id": "N3",
+      "title": "主菜单说明修复与已通过UI内容保护",
+      "logical_owner": "D",
+      "domain": "ui_chat",
+      "allowed": [
+        "script_manual/annotations/ui_chat/mainmenu.json",
+        "script_manual/annotations/ui_chat/evidence/"
+      ],
+      "entries": [
+        219
+      ],
+      "files": [
+        "mainmenu.json"
+      ],
+      "reports": [
+        "docs/evidence/script_manual_DE_A_delegated_review_20261016.md",
+        "docs/evidence/script_manual_DE_A_delegated_validation_20261016.json"
+      ],
+      "objective": "修D1，不重写已有限通过的interface/key/chatoutput。",
+      "tasks": [
+        "D1：冻结候选PushCall仅无条件_g_Callback.append((func,args))，无g_MainMenu判断和直接func调用。修函数summary/calls及所有引用它的问答，不能补想象中的立即执行分支。",
+        "Recall出现cl=[_[1] for x in _g_Callback]，变量不对应，不能保证逐个回调正常完成；照候选说明声明的执行/清队列及异常待核，不擅自把候选修好当原文。",
+        "保留219损坏import标识符/recovered_partial、动态回调和原生/实机未知；菜单4号SS_ClickSkill实际委托锻造以及多订阅关系不能退回按名字猜技能面板。",
+        "改证据文件前检查它被哪些已通过JSON以SHA引用。主菜单修复应优先新建只供mainmenu引用的小证据文件，**不改共享support/provenance等字节而使其他三份审核意外失效**。若确需共用来源修订，先报A协调，不静默连改。",
+        "interface(3854)、key(3232)、chatoutput(4832)已在A按固定字节有限通过；本任务不改这三JSON。逐条复验其原JSON/来源SHA与有效审核仍相符，记录未动即可，不重复宣称全模块或实机通过。"
+      ],
+      "acceptance": [
+        "D1在函数/调用/问答层同步纠正，改后主菜单旧审核变stale是预期，交N7对新SHA复核。",
+        "其余三个已通过JSON和关联来源原字节保持不变，accepted仍至少3（其他并行PR改动须另计）。"
+      ],
+      "task_card": "script_manual/coordination/new_agents_20261016/N3.md",
+      "dispatch_state": "merged_into_A_under_user_authorization",
+      "actual_agent_session": null,
+      "fixed_branch": "Assigned by Arena to the NEW session; never reuse old role branches",
+      "submitted_PR": 41,
+      "fixed_head": "77b64beda4b3b31455445ae48dfc124d614ce931",
+      "actual_fixed_branch": "arena/10debde2-mxsj-tw-2022",
+      "A_review_recommendation": "finite_candidate; N7_template_exact_SHA_match",
+      "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/41#issuecomment-6206341216",
+      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented.",
+      "merge_commit": "eb3b7b776eea79bd78e4452ec13cdd813c175e1f",
+      "merged_at": "2026-10-16T02:28:08Z"
+    },
+    {
+      "id": "N4",
+      "title": "网络四篇11项代审中的10项修复",
+      "logical_owner": "E",
+      "domain": "network",
+      "allowed": [
+        "script_manual/annotations/network/"
+      ],
+      "entries": [
+        3176,
+        2170,
+        871,
+        516
+      ],
+      "files": [
+        "net.json",
+        "connect.json",
+        "netquicklogin.json",
+        "netserver.json"
+      ],
+      "reports": [
+        "docs/evidence/script_manual_DE_A_delegated_review_20261016.md",
+        "docs/evidence/script_manual_DE_A_delegated_validation_20261016.json",
+        "docs/evidence/script_manual_E_60c5739_A_review_20261016.md"
+      ],
+      "objective": "修N1–N3、Q1–Q2、S1–S4、C1共10项；这些编号是历史发现ID，和本轮agent编号无关。",
+      "tasks": [
+        "net / 历史N1：PacketPrepare实际先原生调用、后记m_NetHead，别写反。历史N2：LowestUnpackParams先写2后按2/iRate再写，不能称最终固定每轮2包。历史N3：GetServerName异常推导式和低优先队列赋值异常须贯彻到各函数摘要，不能只在局限里提示却在摘要保证正常运行。",
+        "netquicklogin / Q1：ModuleReset没有重置g_bHasQuickLoginFail；g_bHasClickQuickLogin局部同名赋值未声明global。区分模块顶层初值和再次调用时的全局效果。Q2：断线诊断问答不可只引18–62状态段，分别给CanQuickConnect/清Key、net.OnError、main实际触发行段，或收缩回答。",
+        "netserver / S1：OnServerCmd只判断hasattr(m_Hello)，False也满足属性存在；统一类摘要/对照问答，不能称已握手门禁。S2：先调基类PacketPrepare再记m_iCmd。",
+        "netserver / S3：时间差<=1200也可能因tm>now刷新；照候选permission门禁、try/except/else和完整谓词解释，HTTP拉取仍在外层。S4：递归实际条件(self.m_Time-1!=0) or g_AutoProxy且m_Time先自增，不得缩写成只首轮自动扩一次。",
+        "connect / C1：无代理分支按电信/网通二选一target_idx，仅一次ConnectAttempt；有代理才对前两条各一次。同步摘要与已正确分支。",
+        "保留前轮已改正的OnError条件、OnLogin后隐藏面板、Success未引用/三处Fail双回调、稳定来源SHA、计时单位未知；帧长2/3冲突、低队列、StartQuickTimer和DGW缺链不得为消除退修而删掉。main正文只能发协审意见给N2/A。"
+      ],
+      "acceptance": [
+        "10项逐一有响应/候选行/JSON位置；全篇查重，不把同一错误留在旧问答或类摘要。",
+        "四篇改后A旧review过期属预期，禁止自行改reviews，交N7按新原字节SHA复核。"
+      ],
+      "task_card": "script_manual/coordination/new_agents_20261016/N4.md",
+      "dispatch_state": "merged_into_A_under_user_authorization",
+      "actual_agent_session": null,
+      "fixed_branch": "Assigned by Arena to the NEW session; never reuse old role branches",
+      "submitted_PR": 40,
+      "fixed_head": "44230b98527f72948acf16295e83f0151a26eb27",
+      "actual_fixed_branch": "arena/b0da7f97-mxsj-tw-2022",
+      "A_review_recommendation": "finite_candidate; four_N7_templates_exact_SHA_match",
+      "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/40#issuecomment-6206341535",
+      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented.",
+      "merge_commit": "bbfb2748aca75c475ea1695aeae4a0169663be87",
+      "merged_at": "2026-10-16T02:28:14Z"
+    },
+    {
+      "id": "N5",
+      "title": "战斗三篇补写与netwar证据修复",
+      "logical_owner": "F",
+      "domain": "battle",
+      "allowed": [
+        "script_manual/annotations/battle/"
+      ],
+      "entries": [
+        697,
+        1406,
+        1612,
+        8
+      ],
+      "files": [
+        "war.json",
+        "netwar.json",
+        "warcmd.json",
+        "e_warctrl.json"
+      ],
+      "reports": [
+        "docs/evidence/script_manual_BDF_A_review_20261016.md",
+        "docs/evidence/script_manual_BDF_A_validation_20261016.json"
+      ],
+      "objective": "把173条仅名称记录中的关键入口补成可用有限说明；纠正netwar证据/条件/跨模块链，不推定战斗计算或网络成功。",
+      "tasks": [
+        "独立定点恢复697/1612/8，A已验证u6 3.9.3 baseline有2640/45/176行候选，去头正文SHA在BDF收据。不能沿用“未落盘所以无源码”的旧结论；也不能把decompile_ok当语义正确。1406新u6仍失败13行partial+digest，不冒称完整源，可使用钉摘要的历史pycdc候选并明确局限。",
+        "war/core调度、warcmd表现分派、e_warctrl接口至少把本轮重点入口逐个读后解释职责/函数/关键守卫/资源/修改入口，限定名区分类与方法。当前war150、e_warctrl22、warcmd1多为名字底稿，不计已解释，不能只改source_status或堆函数名。",
+        "netwar的ModuleReset/ReduceWarTime/IsWarEnd不能继续只引globals22–26，补实际函数体，并全文查同类非推测假引用。",
+        "历史pycdc动画if体是pass，SetEnterAniShow调用在if之后；把字面位置/真实守卫待核写清，不凭意图归入条件。",
+        "CCmd入队追core/war构造器及录像过滤；结束切循环追End分支，录像可能CloseGame，普通分支才SetMainLoop，不能写成S2CWarEnd直接切主循环。main最终说明由N2负责，不越域写main。",
+        "warcmd资源清单仅catalog不能证明模块存在/导入；补实际候选导入/映射或降相关推测。补实际pyc/工具/处理来源和不可靠范围，原报告五项逐条响应。"
+      ],
+      "acceptance": [
+        "三篇不再停留纯名称名单，且解释有对应函数/守卫/修改指南证据；不要求一次讲全所有战斗函数。",
+        "netwar函数证据、动画边界、队列/循环跨模块事实与推测分开；无runtime_verified或服务端/战斗计算保证。"
+      ],
+      "task_card": "script_manual/coordination/new_agents_20261016/N5.md",
+      "dispatch_state": "merged_into_A_under_user_authorization",
+      "actual_agent_session": null,
+      "fixed_branch": "Assigned by Arena to the NEW session; never reuse old role branches",
+      "submitted_PR": 44,
+      "fixed_head": "6fd5061dded82bbbcfc96694a5c20ef1a7a3e41e",
+      "actual_fixed_branch": "arena/ae1bd730-mxsj-tw-2022",
+      "A_review_recommendation": "A_coauthored_four_guides_and_factual_corrections; awaiting_non_A_exact_byte_review; no_self_approval",
+      "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/44#issuecomment-6206634114",
+      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented.",
+      "round2_report": "docs/evidence/script_manual_N5_6fd5061_A_review_20261016.md",
+      "merge_commit": "c2c1f6e1803fe7312daba8f0c8d07b75a5c60733",
+      "merged_at": "2026-10-16T02:28:26Z"
+    },
+    {
+      "id": "N6",
+      "title": "独立接管A代写的角色/物品/任务/NPC四篇",
+      "logical_owner": "G",
+      "domain": "gameplay",
+      "allowed": [
+        "script_manual/annotations/gameplay/"
+      ],
+      "entries": [
+        3038,
+        717,
+        1129,
+        949
+      ],
+      "files": [
+        "hero.json",
+        "dlgitem.json",
+        "task.json",
+        "npc.json"
+      ],
+      "reports": [
+        "docs/evidence/script_manual_G_A_draft_20261016.md",
+        "docs/evidence/script_manual_G_A_draft_validation_20261016.json"
+      ],
+      "objective": "从新会话重新核对51函数/62分支有限稿，修错补缺后交独立N7，不能因A写的就视为审核通过。",
+      "tasks": [
+        "独立复现四个白名单3038/717/1129/949，核去六头正文和951摘录行的原字节；原完整候选/旧venv不在新沙箱，按报告命令重建，不依赖/home/user旧外置目录。环境不同则建立新来源记录，不扩大忽略规则冒称同摘要。",
+        "hero：核CreateProp遍历和属性表有限范围、UpdateSkill编号减1和通知、GetHeroShow多状态OR/秋千例外、GetRealID类型未知、坐标转换与角色私有配置假值回落。别把存在属性当初始化完成。",
+        "dlgitem：核item_new.dlg实参与GetDlgPath的item1.dlg并存，未核基类时不宣布只用一张；Show/ShowDlg/ShowSwitch/预建False差异、装饰器未知、4号网络整理与15号本地排序、Shift复制/手持与召唤兽门禁逐条看。",
+        "task：核petOrItemTaskList分支却拆petTaskList、两处dict([_[1] for k in tasklist])；只能登记候选异常，不自行修成理想源码。核IsSatisfyTask缺未满足描述也True、ClearTask不清全部表、HasBanFindPathTask只是提示/返回。",
+        "npc：核普通/客户端任务NPC两种LeftUp、自动/剧本/地图/节流/距离/重叠门禁、自定义回调消费、远处只WalkTo和任务ID分流；CreateNpc连续if覆盖、任务标记与对话正文/URL/布局区分。",
+        "发现问题只改自己的gameplay正文/小证据/响应报告；保留A初稿来源与实际新作者说明，不能把合并或作者静态核对写成独立accepted。未发现错误时提交逐项来源核对报告并交N7，不为制造差异而改字节。"
+      ],
+      "acceptance": [
+        "51/62现有有限范围逐项有来源核对记录；新增内容明确单列，不把所有模块说成穷尽。",
+        "四篇仍由独立N7最终审核；本任务不写reviews，不把作者身份填成旧G。"
+      ],
+      "task_card": "script_manual/coordination/new_agents_20261016/N6.md",
+      "dispatch_state": "merged_into_A_under_user_authorization",
+      "actual_agent_session": null,
+      "fixed_branch": "Assigned by Arena to the NEW session; never reuse old role branches",
+      "submitted_PR": 42,
+      "fixed_head": "23b60f96c602fe605912c3d323af743a4d54c22a",
+      "actual_fixed_branch": "arena/6f7784e1-mxsj-tw-2022",
+      "A_review_recommendation": "finite_candidate; four_independent_N7_templates_exact_SHA_match; A_does_not_self_approve",
+      "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/42#issuecomment-6206341720",
+      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented.",
+      "merge_commit": "e06e6f4c4bac7db210969dcac76b19d0ea5fffe1",
+      "merged_at": "2026-10-16T02:28:20Z"
+    },
+    {
+      "id": "N7",
+      "title": "全新独立审核与集成验收",
+      "logical_owner": "H",
+      "domain": "review",
+      "allowed": [
+        "script_manual/reviews/"
+      ],
+      "entries": [
+        337,
+        4293,
+        4007,
+        4806,
+        219,
+        3854,
+        3232,
+        4832,
+        3176,
+        2170,
+        871,
+        516,
+        697,
+        1406,
+        1612,
+        8,
+        3038,
+        717,
+        1129,
+        949
+      ],
+      "files": [],
+      "reports": [
+        "docs/evidence/script_manual_DE_A_delegated_review_20261016.md",
+        "docs/evidence/script_manual_BDF_A_review_20261016.md",
+        "docs/evidence/script_manual_C_242fd8c_A_review_20261016.md",
+        "docs/evidence/script_manual_G_A_draft_20261016.md",
+        "script_manual/docs/CONTRACT.md"
+      ],
+      "objective": "独立审核实际字节与语义，不代写作者正文。按完成一批审一批，不等20篇重交齐备。",
+      "tasks": [
+        "先审尚未被独立审核的gameplay四篇（A代写51/62），再按新PR就绪顺序审mainmenu、network、login、battle。C/F仍有已知问题可先changes_requested，不能因已合并就放行。",
+        "已激活8份A_delegate记录：3854/3232/4832有限通过，219/3176/2170/871/516退修；其他12份pending不是内容已通过。保留原字节绑定，原A模板是历史记录，不当作新会话的审核结果。",
+        "本新会话承担独立H角色，真实记录reviewer=\"H\"，note明确新N7会话身份/输入提交/范围/未知；不是假扮旧H或A。对已存在的reviews/8b6e9266_<entry>.json原位更新；新条目沿用同命名。一个身份只一份有效JSON，勿另加H_x.json造成重复。",
+        "审核未合的新PR时：先用gh读实际head固定SHA，取只读仓库外overlay，在新A基线上叠该PR；核实际JSON原字节SHA、所有新增/修改Claim、函数/关键分支、修改指南、来源/局限。review提交回自己reviews分支；正文尚未到A时暂用.json.template避免孤立审核，由A合作者正文后按原字节激活。",
+        "独立核N1签名五类测试、真实20种子→5135复现及1288政策边界，不能只看N1自报成功。目录语义验收写reviews/reports/N7_inventory_review.md，目录本身不符合annotation review schema，不造entry来塞JSON。",
+        "合并态验收六题：公告失败出处，正文/地址/布局，登录点击链，注册逻辑/布局，main主循环，快捷键。每题必须标证据与未知，不能由游戏截图/命名猜链。核路径/中文/函数搜索、模块跳转、审核原字节stale、HTML安全和全目录体量。",
+        "跑现有测试/严格来源/full/ruff/Windows静态；有Qt/浏览器才报告实际执行，否则明确跳过或只jsdom。不能把Linux/static/生成HTML等同Windows/游戏/原生/服务端验收。工具缺陷报A，不改src/schema/tests来迎合内容。"
+      ],
+      "acceptance": [
+        "逐模块按实际JSON SHA给accepted有限范围或changes_requested具体位置；不审核自己代写内容，不复制作者结论。",
+        "reviews/reports/N7_acceptance.md记录六题、B目录核对、实际环境/通过/跳过、仍阻塞；原review有字节变更必须stale/重审。"
+      ],
+      "task_card": "script_manual/coordination/new_agents_20261016/N7.md",
+      "dispatch_state": "merged_into_A_under_user_authorization",
+      "actual_agent_session": null,
+      "fixed_branch": "Assigned by Arena to the NEW session; never reuse old role branches",
+      "submitted_PR": 45,
+      "fixed_head": "db872c5cd6aad0349e62d17af2959576aa3fec12",
+      "actual_fixed_branch": "arena/474295bc-mxsj-tw-2022",
+      "A_review_recommendation": "nine_exact_SHA_templates_activated; four_login_reviewed_by_A_delegate; four_battle_A_revisions_need_non_A_review",
+      "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/45#issuecomment-6206334018",
+      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented.",
+      "merge_commit": "e60fcb588ff7a50249504ff603f1a64af50f5c8b",
+      "merged_at": "2026-10-16T02:28:31Z"
+    }
+  ],
+  "latest_progress": {
+    "date": "2026-10-16",
+    "state": "seven_PRs_merged_A_finalized_16_finite_accepted_4_A_coauthored_pending",
+    "authorization": "用户“你帮他们收尾吧”；既有“H宕机了你审吧”代审授权继续适用，不合master。",
+    "report": "docs/evidence/script_manual_A_finalize_20261016.md",
+    "integration_checkpoint": "e60fcb588ff7a50249504ff603f1a64af50f5c8b",
+    "coverage": {
+      "indexed": 5135,
+      "annotated": 20,
+      "accepted": 16,
+      "H": 12,
+      "A_delegate": 4,
+      "pending": 4,
+      "stale_review": 0,
+      "changes_requested": 0,
+      "excluded": 1
+    },
+    "remaining": "非A独立末审battle四篇新字节；修正已由A完成。尚无新的独立审核结果，不伪造已联系/已开工状态。",
+    "note": "baseline_coverage与各任务卡保留历史，CONTRACT author/reviewer规则继续有效；source/tool历史指纹不因收尾改写。",
+    "independent_review_request": {
+      "status": "published_comment_request_only; no_new_N7_review_received_or_execution_claimed",
+      "review_target_commit": "0b04cc17ae3e4c10c7dc3d60ba48fc1d43d193bd",
+      "N7_request": "https://github.com/a565551313/MXSJ_TW_2022/pull/45#issuecomment-6206831156",
+      "N5_closeout": "https://github.com/a565551313/MXSJ_TW_2022/pull/44#issuecomment-6206831398"
+    }
+  }
+}

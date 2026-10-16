@@ -1,0 +1,1389 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 3176,
+  "path": "script/net.py",
+  "owner": "E",
+  "domain": "network",
+  "author": "N4（全新网络退修会话；原稿 E，非原 E 会话）",
+  "source_status": "recovered_complete_not_original",
+  "purpose": {
+    "text": "游戏主通道的Python层总管：连接对象CNet、按协议号动态分发收包（NET_FUNCTION_NAME）、组包/夹包发送、明文HTTP小通道、断线与错误提示、战斗命令缓存/延迟队列。套接字、帧状态机与加解密在原生C_net中，不在本文件；客户端发送符号不证明服务端行为。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "net_struct",
+      "net_frame",
+      "net_callback"
+    ]
+  },
+  "keywords": [
+    "网络",
+    "主通道",
+    "协议分发",
+    "NET_FUNCTION_NAME",
+    "收包",
+    "发包",
+    "夹包",
+    "断线",
+    "FakeNet",
+    "HTTP",
+    "协议号",
+    "帧"
+  ],
+  "functions": [
+    {
+      "name": "ResetUnpackParams",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "按当前帧率缩放每帧收包处理的时间/次数/包数预算，并回写原生每帧处理数。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "LowestUnpackParams",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "先调用SetProcessSvrCmdNumPerFrame(2)，随后取iRate = setfps.GetCurFrame()/30，按帧率缩放各预算，令UNPACK_PACKET_NUM_PER_PROCESS = 2/iRate并再次回写原生；最终不是固定每轮2包，原生是否采纳未验。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "n4_net_lowest"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetFNet",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "恒返回True的开关式函数；PacketSend据此决定是否走夹包检查，真实语义未见其它证据。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetCheckPacket",
+      "signature": "(bCheck)",
+      "kind": "function",
+      "summary": {
+        "text": "设置发送后包自检开关g_CheckPacketFlag。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_config"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "InitNetServerCommandQueue",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "在启用开关为真时（重）建服务器命令缓存队列对象，旧对象先Destroy。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnLoadingFinish",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "加载完成后启动服务器命令缓存队列计时器。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNetServerCommand",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "原生CServerCommand的Python子类，在命令队列缓存/延迟队列中作为已收包的快照对象使用，提供带符号/长度前缀解包。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_struct"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNetServerCommand.UnpackSigned",
+      "signature": "(self, size)",
+      "kind": "method",
+      "summary": {
+        "text": "先UnpackInt再按符号位把无符号值折回有符号（size<4时）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNetServerCommand.PacketAddPS",
+      "signature": "(self, sMsg, iLenSize=1)",
+      "kind": "method",
+      "summary": {
+        "text": "按长度前缀追加字符串（先写长度整数再写串）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNetServerCommand.UnpackPS",
+      "signature": "(self, iLen=1)",
+      "kind": "method",
+      "summary": {
+        "text": "按长度前缀解字符串，长度为0返回空串。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNetServerCommand.UnpackString",
+      "signature": "(self, iLen)",
+      "kind": "method",
+      "summary": {
+        "text": "调原生解串后经pubtimeformat.ChangeTimeLink改写时间链接文本。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "游戏主通道连接对象（原生CNetClient子类）：负责连接、按协议号分发收包、组包发送、HTTP小通道之外的全部主通道Python层逻辑；套接字与线格式在原生C_net中。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_struct"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.__init__",
+      "signature": "(self, ip, port)",
+      "kind": "method",
+      "summary": {
+        "text": "保存ip/port，初始化分发缓存与战斗命令标志，调用SetMaxLenBytes(3)与每帧处理数设置；3的线格式含义未证实（见帧冲突）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "SetMaxLenBytes(3)字面值",
+          "effect": {
+            "text": "只能证明Python层这样设值；原生报告主张续读2字节，二者冲突未结清，不得据此改线格式。",
+            "confidence": "inferred",
+            "evidence": [
+              "net_frame"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CNet.SetServerCmdAbleCache",
+      "signature": "(self, bAble)",
+      "kind": "method",
+      "summary": {
+        "text": "设置战斗中是否允许缓存服务器命令（m_bIsCache）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.Connect",
+      "signature": "(self, ip=None, port=None)",
+      "kind": "method",
+      "summary": {
+        "text": "缺省用构造时ip/port；先过whitewebsite白名单，不通过直接返回不连接，通过后调原生Connect。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "whitewebsite.CheckUrlIsInWhite(ip)为假",
+          "effect": {
+            "text": "直接return，不发起原生连接；白名单数据与判定在whitewebsite模块（E样板外），未核对。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "net_callback"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CNet.GetInfo",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "返回代理名（如有）加ip:port的连接描述串。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_struct"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.GetServerName",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "候选先读取selectserver.SERVERINI并经C_sys.RecordString处理，随后serverinfo = [_[1] for x in s.splitlines() if x.strip() != '']；表达式不随x取记录，存在推导式变量异常。后段声明按ip+port查找并返回名字/空串，但正常查名行为未确认，不能保证可运行。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "n4_net_name"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.S2CBoutSpecialServerCMD",
+      "signature": "(self, netobj)",
+      "kind": "method",
+      "summary": {
+        "text": "字面219号的特殊处理：转调netnewplayerguide.S2CRefreshInfo。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.GetFunc",
+      "signature": "(self, iCmd)",
+      "kind": "method",
+      "summary": {
+        "text": "按协议号取处理函数：219特判；否则查m_NetFunction缓存，未命中按NET_FUNCTION_NAME动态import目标模块并getattr，同时登记战斗扩展标志。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_proto"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "iCmd == 219",
+          "effect": {
+            "text": "返回S2CBoutSpecialServerCMD；219在3970号表GS2C命名空间无同名符号，语义名缺失。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "net_proto"
+            ]
+          }
+        },
+        {
+          "condition": "NET_FUNCTION_NAME无此号或目标模块/函数不存在",
+          "effect": {
+            "text": "返回None（或动态导入抛错，本文件未捕获）；后续OnServerCmd只打日志。",
+            "confidence": "inferred",
+            "evidence": [
+              "net_callback"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CNet.GetSpecialFunc",
+      "signature": "(self, iCmd)",
+      "kind": "method",
+      "summary": {
+        "text": "按NET_FUNCTION_NAME的特殊函数名取特殊处理函数并缓存，无特殊名返回None。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.OnServerCmd",
+      "signature": "(self, icmd)",
+      "kind": "method",
+      "summary": {
+        "text": "收包分发主链：队列优先→GetFunc动态分发→战斗缓存/记录→命令延迟→GM锁定拦截→计时调用处理函数。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "命令队列对象存在且icmd命中高/低优先级集合",
+          "effect": {
+            "text": "入队并return，不立即执行；但两集合在本文件内均为空集，实际命中条件缺失待查。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "net_callback"
+            ]
+          }
+        },
+        {
+          "condition": "func is None",
+          "effect": {
+            "text": "只打'!!!! func==None, OnServerCmd: 0x%x'日志并return，不抛错不断线。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "net_callback"
+            ]
+          }
+        },
+        {
+          "condition": "main.InWar()且该号战斗标志bit1置位",
+          "effect": {
+            "text": "warrecord.WriteRecord记录；bit0且允许缓存时把命令包成war.CCmd挂起而非立即执行。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "net_callback"
+            ]
+          }
+        },
+        {
+          "condition": "g_CmdDelay存在且标志含16（延迟类）",
+          "effect": {
+            "text": "入g_DelayQueue；其中icmd==167先读1字节子值，子值在(7,8,13)才延迟、否则立即调用；icmd==112先warrecord.StartRecord。167/112与号表GS2C_PLAYER_CHAT/GS2C_WAR_START的对应是跨文件推断。",
+            "confidence": "inferred",
+            "evidence": [
+              "net_proto"
+            ]
+          }
+        },
+        {
+          "condition": "netgm.IsClientLocked()且处理函数不属于netgm模块",
+          "effect": {
+            "text": "打GM屏蔽日志并return，丢弃本次命令。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "net_callback"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CNet.AddS2CProtocol",
+      "signature": "(self, icmd)",
+      "kind": "method",
+      "summary": {
+        "text": "把协议号与目标模块/函数名登记到protocolprint的S2C信息（调试/日志用途）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.OnSpecialServerCmd",
+      "signature": "(self, icmd)",
+      "kind": "method",
+      "summary": {
+        "text": "特殊命令预处理：命中SPECIAL_SERVER_CMD直接处理；活动号先预读子标识比对；扩展表为空；处理了返回True否则False。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "icmd在SPECIAL_SERVER_CMD集合（含字面219）",
+          "effect": {
+            "text": "立即GetFunc并调用，返回True。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "net_proto"
+            ]
+          }
+        },
+        {
+          "condition": "icmd == GS2C_HUODONG_OP（符号）",
+          "effect": {
+            "text": "PreUnpackInt/PreUnpackString预读子标识，命中SPECIAL_HUODONG才处理并返回True，否则False；预读不消费依赖原生实现，未证实。",
+            "confidence": "inferred",
+            "evidence": [
+              "net_callback"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CNet.OnConnectFail",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "打印并把全局g_Net替换为CFakeNet空操作对象。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.OnError",
+      "signature": "(self, msg=None)",
+      "kind": "method",
+      "summary": {
+        "text": "连接错误分发（A预审后更正初判条件）：仅当当前不在瞬连中且不具备瞬连条件时先main.HideWindow(exit=False)隐藏窗口；未收到Hello走OnConnectFail，已标记重登/退出直接返回；最后仅在不在瞬连中时判定瞬连：能瞬连走netquicklogin.Connect(sReason=網絡中斷-2)，否则ShowError弹框。已在瞬连中时不再重复发起Connect、也不弹ShowError。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "not IsQuickConnect() and not CanQuickConnect()",
+          "effect": {
+            "text": "先main.HideWindow(exit=False)隐藏窗口；已在瞬连中或具备瞬连条件时不执行此隐藏（A预审更正，旧稿条件写反）。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "net_callback"
+            ]
+          }
+        },
+        {
+          "condition": "未收到Hello（m_Hello为假）",
+          "effect": {
+            "text": "转OnConnectFail（g_Net换FakeNet）后return。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "net_callback"
+            ]
+          }
+        },
+        {
+          "condition": "m_IsRelogin或m_IsExit为真",
+          "effect": {
+            "text": "直接return，不弹框不重连（main的退出/回登录链据此抑制，见协审报告）。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "net_callback"
+            ]
+          }
+        },
+        {
+          "condition": "else 且 not IsQuickConnect()",
+          "effect": {
+            "text": "CanQuickConnect()为真走netquicklogin.Connect(sReason=網絡中斷-2)；为假记日志并ShowError(msg)弹退出/重新登录框。已在瞬连中时不再重复发起Connect。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "net_callback"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CNet.UnpackSigned",
+      "signature": "(self, size)",
+      "kind": "method",
+      "summary": {
+        "text": "同CNetServerCommand.UnpackSigned的连接对象版。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.SendLongText",
+      "signature": "(self, msg)",
+      "kind": "method",
+      "summary": {
+        "text": "以C2GS_TEXT（号表86）发送长文本：先发子型1，再按240字节切片发子型2。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "每240字节一片",
+          "effect": {
+            "text": "PacketPrepare(C2GS_TEXT)+子型2+片断串逐片PacketSend；服务端如何拼包未证实。",
+            "confidence": "inferred",
+            "evidence": [
+              "net_frame"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CNet.UnpackString",
+      "signature": "(self, iLen)",
+      "kind": "method",
+      "summary": {
+        "text": "原生解串后经ChangeTimeLink改写。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.PacketPrepare",
+      "signature": "(self, a)",
+      "kind": "method",
+      "summary": {
+        "text": "先调用原生CNetClient.PacketPrepare(self, a)，调用返回后才赋self.m_NetHead = a；不保证原生发送或回调行为。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "n4_net_prepare"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.PacketAddPS",
+      "signature": "(self, sMsg, iLenSize=1)",
+      "kind": "method",
+      "summary": {
+        "text": "长度前缀追加字符串。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.UnpackPS",
+      "signature": "(self, iLen=1)",
+      "kind": "method",
+      "summary": {
+        "text": "长度前缀解字符串。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.PacketAddBinaryPS",
+      "signature": "(self, sMsg, iLenSize=1)",
+      "kind": "method",
+      "summary": {
+        "text": "长度前缀追加二进制串。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.UnpackBinaryPS",
+      "signature": "(self, iLen=1)",
+      "kind": "method",
+      "summary": {
+        "text": "长度前缀解二进制串。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.PacketMarshal",
+      "signature": "(self, oInfo, iLen)",
+      "kind": "method",
+      "summary": {
+        "text": "用C_marshal序列化对象后按长度追加二进制。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.UnpackMarshal",
+      "signature": "(self, iLen)",
+      "kind": "method",
+      "summary": {
+        "text": "读长度与二进制后用C_marshal反序列化。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.PackLstFreeColor",
+      "signature": "(self, lFreeColor)",
+      "kind": "method",
+      "summary": {
+        "text": "按下标0/3/6写2字节、其余写1字节的顺序追加一组整数（自由颜色列表的客户端组包）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNet.PacketSend",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "发送出口：特定命令带扩展文本时改走WrapPacketSend夹包；正常原生发送后做随机字节自检与日志记录。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "m_NetHead为C2GS_MAP_MOVE/C2GS_NPC_LOOK且specialword有扩展文本",
+          "effect": {
+            "text": "改走WrapPacketSend夹包发送并return。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "net_frame"
+            ]
+          }
+        },
+        {
+          "condition": "发送后自检发现包数据被改（随机字节或首字节不一致）",
+          "effect": {
+            "text": "调blacklist.SendIlleageCallInfo(119,...)自报并打日志；119是字面参数、服务端处置未证实。",
+            "confidence": "inferred",
+            "evidence": [
+              "net_frame"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CFakeNet",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "int子类假网络对象：把CNet全部公有方法替换为无操作FakeFunc，使断线后调用g_Net不报错。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CFakeNet.FakeFunc",
+      "signature": "(self, *args)",
+      "kind": "method",
+      "summary": {
+        "text": "无操作占位，返回None。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowError",
+      "signature": "(msg=None)",
+      "kind": "function",
+      "summary": {
+        "text": "弹网络错误框（退出游戏/重新登录两按钮），并把g_Net置为FakeNet；重新登录走10计数延迟后main.Restart。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetUrlInfo",
+      "signature": "(url)",
+      "kind": "function",
+      "summary": {
+        "text": "拆http/https URL为(server, port, file)，无端口默认80。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_struct"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CHttpObject",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "明文HTTP GET小通道（原生CNetClient子类）：白名单校验后裸发GET请求，轮询收数据，结束/失败时回调(data, succeed, *arg)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "OnError时响应行第二段以200开头",
+          "effect": {
+            "text": "succeed=True回调；否则False。OnConnectFail直接以False回调。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "net_callback"
+            ]
+          }
+        },
+        {
+          "condition": "构造时URL不在白名单",
+          "effect": {
+            "text": "直接return不连接，回调永不触发的风险形态（调用方netserver.getMsg等须留意）。",
+            "confidence": "inferred",
+            "evidence": [
+              "net_callback"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DisconnectNet",
+      "signature": "(errMsg)",
+      "kind": "function",
+      "summary": {
+        "text": "若当前非FakeNet，用20次计数定时器等发送完成(IsSent)后Disconnect并ShowError。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ClearCmdDelay",
+      "signature": "(ob=None)",
+      "kind": "function",
+      "summary": {
+        "text": "释放延迟定时器并逐条补执行g_DelayQueue（战斗中缓存类转war.CCmd，其余立即调用）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CreateCmdDelay",
+      "signature": "(t)",
+      "kind": "function",
+      "summary": {
+        "text": "建t*30计数的延迟定时器，到期ClearCmdDelay；30的单位依赖原生CreatePyCommand，未证实。",
+        "confidence": "inferred",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OpenUrl",
+      "signature": "(sUrl)",
+      "kind": "function",
+      "summary": {
+        "text": "白名单通过后用C_sys.OpenUrl打开URL，失败按错误码打日志。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_config"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetNet",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "返回全局当前网络对象g_Net（初始为CFakeNet）。",
+        "confidence": "extracted",
+        "evidence": [
+          "net_struct"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "PacketPrepare",
+      "signature": "(iCmd)",
+      "kind": "function",
+      "summary": {
+        "text": "模块级快捷入口：对g_Net调PacketPrepare并返回g_Net，供各C2S函数链式调用。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "WrapPacketSend",
+      "signature": "(netobj, icmd, extMsg)",
+      "kind": "function",
+      "summary": {
+        "text": "夹包发送：marshal扩展消息+md5校验串，小包单发（子型3）、大包按200字节分片（子型0/1/2），外层号为C2GS_MIXPACKET（号表151）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_frame"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "总长<240",
+          "effect": {
+            "text": "单包子型3一次发送。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "net_frame"
+            ]
+          }
+        },
+        {
+          "condition": "总长>=240",
+          "effect": {
+            "text": "先把校验串等追加到原包，再按200字节切成首/中/尾片逐包发送；服务端拼包规则未证实。",
+            "confidence": "inferred",
+            "evidence": [
+              "net_frame"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CNetServerCommandQueue",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "加载期命令缓存队列：高/低双deque，用timer.Timer(0.016, ...)驱动Loop（单位未证实），类预算每轮最多2条；Loop低优先分支把m_oLQueue赋为None，不能保证低队列能消费。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback",
+          "n4_net_queue"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "Loop取低优先队列分支（恢复稿字面）",
+          "effect": {
+            "text": "写作self.m_oLQueue = oQueue（oQueue此时为None），疑似笔误/反编译问题，低优先可能永远取不到；只登记待核，不断言为已证实bug。",
+            "confidence": "inferred",
+            "evidence": [
+              "net_callback"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CNetServerCommandQueue.AddNetServerCommand",
+      "signature": "(self, iCmd, oNetObj)",
+      "kind": "method",
+      "summary": {
+        "text": "icmd在高/低集合时把(CNetServerCommand快照)入相应队列并返回True，否则False。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CNetServerCommandQueue.Loop",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "候选声明高优先选择意图：有高队列时oQueue取高队列，后续按PROCESS_NUM_PER_TIME最多2次取出并在可调用时分发；低队列分支却执行self.m_oLQueue = oQueue（此时None），不选择低队列且随后End，不能保证低优先消费。无g_Net先End返回；异常来源待核，不判实机bug。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "n4_net_queue"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "无高队列且低队列非空",
+          "effect": {
+            "text": "oQueue此前为None，self.m_oLQueue = oQueue清掉低队列引用；随后not oQueue为真而End。按候选字面登记，不修为理想取队列语句。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "n4_net_queue"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "kind": "protocol",
+      "target": "script/protocol.py (entry 3970) 的GS2C_*/C2GS_*符号",
+      "summary": {
+        "text": "本文件from protocol import *注入协议号符号，NET_FUNCTION_NAME以符号为键；数值须查3970号表，本文件仅3个本地常数与若干字面号。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_proto"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "C_net（原生CNetClient/CServerCommand）",
+      "summary": {
+        "text": "连接、帧、Unpack/Packet原生实现来源；Python层只见调用与设值，原生行为未在本包复核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_struct"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "whitewebsite（白名单判定模块）",
+      "summary": {
+        "text": "CNet.Connect与CHttpObject/OpenUrl连接前调用CheckUrlIsInWhite；白名单内容与判定规则不在E样板内。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_config"
+        ]
+      }
+    },
+    {
+      "kind": "config",
+      "target": "本文件模块常数：节流(0.016/8/4)、g_CheckPacketFlag、g_bEnableServerCommandQueue",
+      "summary": {
+        "text": "可调面与默认值见证据报告§2.5；改动影响见modification_guides。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_config"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2170
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 871
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 516
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4293
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1406
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "想改某个GS2C协议的处理函数/新增一个协议号，改哪里？",
+      "answer": {
+        "text": "先在entry 3970 protocol.py确认/新增GS2C符号数值，再改本文件NET_FUNCTION_NAME中该符号对应的sModuleName/sProcessFuncName（及可选iExtFlag特殊标志）；处理函数本体在目标模块（如netlogin/netwar）内，不在本文件。动态import/getattr写错只会在运行期落入func==None日志或抛错，须实机验证。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_proto",
+          "net_callback"
+        ]
+      }
+    },
+    {
+      "question": "想改服务器地址、端口或代理，改本文件吗？",
+      "answer": {
+        "text": "不改本文件。地址/候选来自selectserver/netserver（516）与登录链，CNet只是被传入ip/port后Connect；代理裸发握手在connect/netserver/netquicklogin的ConnectServer里。改本文件Connect只会影响白名单与原生连接调用。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      }
+    },
+    {
+      "question": "帧长度/SetMaxLenBytes(3)能不能改成2？",
+      "answer": {
+        "text": "不能凭本文件改。Python字面3与原生报告的2存在未结清冲突（见证据报告§2.3），须先由原生复核/抓包裁决；在此之前改它属于臆测，可能造成收包错位。",
+        "confidence": "inferred",
+        "evidence": [
+          "net_frame"
+        ]
+      }
+    },
+    {
+      "question": "想改断线提示或自动重连行为，改哪里？",
+      "answer": {
+        "text": "提示框在本文件ShowError/OnError/CNet.OnConnectFail（换FakeNet）；自动瞬连的判定与重连在871 netquicklogin（CanQuickConnect/Connect），main的m_IsExit/m_IsRelogin抑制条件也要同步看。只改文案也要实机验证弹框与按钮回调。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      }
+    },
+    {
+      "question": "想关掉发包自检或夹包，风险？",
+      "answer": {
+        "text": "开关分别是g_CheckPacketFlag（SetCheckPacket）与GetFNet恒真+specialword扩展文本触发WrapPacketSend；关掉/改动可能影响服务端侧未知处置（自报119等），服务端容忍度未证实，不得当作无害开关。",
+        "confidence": "inferred",
+        "evidence": [
+          "net_frame"
+        ]
+      }
+    },
+    {
+      "question": "想改收包低档预算、服务器查名或低优先队列，能直接照摘要修代码吗？",
+      "answer": {
+        "text": "不能。LowestUnpackParams先写2再写2/iRate，勿把最终预算固定为2；GetServerName含_[1]/x不对应，Loop低队列赋值方向异常，须先回码对象/原生核对，不把候选改成理想实现后当作原文。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "n4_net_lowest",
+          "n4_net_name",
+          "n4_net_queue"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "来源为仓库外定点恢复候选（SHA见证据报告§2），非原始源码；uncompyle6完整输出/语法形态不等于语义正确，模块末顶层return为已知伪影，含转义字节的注释/文档串不可逐字还原。",
+    "帧处理只有Python设值证据：SetMaxLenBytes(3)与原生报告主张的2字节续读冲突未结清；原生C_net的套接字、帧状态机、SetSeed加解密均未复核，无抓包/实机证据。",
+    "协议号数值除GS2C_PLAYER_IB=24/CLIENTUI=174/ZHIDAO=181三个本地常数与219/167/112字面值外，均来自entry 3970号表交叉（非本文件、非E独立验证）；GS2C_ONLINEEDITSOURCE=46号表无同名、219的GS2C语义名缺失，未写成不存在。",
+    "NET_FUNCTION_NAME指向的约二百个目标模块/函数未逐项核对是否存在于冻结包；动态import失败形态、SPECIAL_SERVER_CMD_EXT为空表的原因、高/低优先级集合的填充点均缺失。",
+    "静态异常保留待核：GetServerName推导式变量不对应、队列低优先赋值、167/112跨表推断、CHttpObject的method参数未用；不保证正常查名/低队列消费，不断言原文或实机bug。计时常数真实时间单位依赖原生调度，未实测。",
+    "未覆盖：嵌套闭包（ShowError.ExitGame/Relogin、CHttpObject.NetProcess、DisconnectNet.onTimer等）未单列为函数条目；calls为空表示未逐项整理静态调用串，不表示无调用；无任何runtime_verified结论。"
+  ],
+  "sources": [
+    {
+      "id": "e_review",
+      "path": "script_manual/annotations/network/evidence_review_e_network.md",
+      "sha256": "0d2b04f3024623eb4f4fb1da00deea0101d32558a67ca589e3ed39f16e53b5ec",
+      "kind": "recovered_source",
+      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块候选当时整文件SHA c8221fc806ed0af1cd4dcb4905cf29d4ba25e0cb7652be093405386d3a96c905（含生成时间行，只作历史标识）；按报告§1规则去头正文SHA 4cad123e0121c3c18cf24a6af59d1827da28517478b5c92e90f98bf664092c50 可复核，1364行。报告§1另含工具/依赖版本与处理选项。 N4纠正报告中的顺序/条件/作用域描述；原有行范围未移动，历史候选摘要保留。"
+    },
+    {
+      "id": "catalog",
+      "path": "server/docs/catalog/script_entries.jsonl",
+      "sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+      "kind": "metadata",
+      "note": "历史目录种子元数据（entry 3176 行）；function_names_origin自述为历史解码未在本轮复核，仅作函数名交叉核对，不作语义证据。"
+    },
+    {
+      "id": "protocol_table",
+      "path": "work/dream-world-connect-login-map/artifacts/protocol_table/protocol_opcodes.json",
+      "sha256": "a464a9cf66d66de01b8ed6272ea7529217c5d1631f94509bd7ca773077a9c9d9",
+      "kind": "metadata",
+      "note": "entry 3970 script/protocol.py 号表产物（work研究区，自述marshal线性遍历未执行游戏代码，412赋值/409整型）；仅供协议号数值交叉，数值不在E样板源码内，不证明服务端行为。"
+    },
+    {
+      "id": "n4_excerpt",
+      "path": "script_manual/annotations/network/evidence_n4_network.md",
+      "sha256": "0c8657fc9c71c019d1c62dcfbb569316aee7451dec8845dd2010fc0741004e65",
+      "kind": "recovered_source",
+      "note": "全新N4独立恢复四白名单后的有限原行摘录；原候选完整SHA、去精确六头正文SHA与R行在文件中。非原始源码，不代表运行验证。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "net_method",
+      "source_id": "e_review",
+      "start_line": 9,
+      "end_line": 75
+    },
+    {
+      "id": "net_id",
+      "source_id": "e_review",
+      "start_line": 76,
+      "end_line": 241
+    },
+    {
+      "id": "net_struct",
+      "source_id": "e_review",
+      "start_line": 86,
+      "end_line": 104
+    },
+    {
+      "id": "net_proto",
+      "source_id": "e_review",
+      "start_line": 105,
+      "end_line": 134
+    },
+    {
+      "id": "net_frame",
+      "source_id": "e_review",
+      "start_line": 135,
+      "end_line": 174
+    },
+    {
+      "id": "net_callback",
+      "source_id": "e_review",
+      "start_line": 175,
+      "end_line": 229
+    },
+    {
+      "id": "net_config",
+      "source_id": "e_review",
+      "start_line": 230,
+      "end_line": 241
+    },
+    {
+      "id": "net_cross",
+      "source_id": "e_review",
+      "start_line": 493,
+      "end_line": 515
+    },
+    {
+      "id": "net_catalog",
+      "source_id": "catalog",
+      "start_line": 3177,
+      "end_line": 3177
+    },
+    {
+      "id": "proto_hello",
+      "source_id": "protocol_table",
+      "start_line": 228,
+      "end_line": 228
+    },
+    {
+      "id": "proto_text",
+      "source_id": "protocol_table",
+      "start_line": 118,
+      "end_line": 118
+    },
+    {
+      "id": "proto_mix",
+      "source_id": "protocol_table",
+      "start_line": 161,
+      "end_line": 161
+    },
+    {
+      "id": "proto_quick",
+      "source_id": "protocol_table",
+      "start_line": 239,
+      "end_line": 239
+    },
+    {
+      "id": "proto_sel",
+      "source_id": "protocol_table",
+      "start_line": 271,
+      "end_line": 271
+    },
+    {
+      "id": "proto_heart",
+      "source_id": "protocol_table",
+      "start_line": 285,
+      "end_line": 285
+    },
+    {
+      "id": "n4_net_lowest",
+      "source_id": "n4_excerpt",
+      "start_line": 20,
+      "end_line": 35
+    },
+    {
+      "id": "n4_net_name",
+      "source_id": "n4_excerpt",
+      "start_line": 41,
+      "end_line": 53
+    },
+    {
+      "id": "n4_net_error",
+      "source_id": "n4_excerpt",
+      "start_line": 59,
+      "end_line": 76
+    },
+    {
+      "id": "n4_net_prepare",
+      "source_id": "n4_excerpt",
+      "start_line": 82,
+      "end_line": 85
+    },
+    {
+      "id": "n4_net_queue",
+      "source_id": "n4_excerpt",
+      "start_line": 91,
+      "end_line": 111
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": null,
+      "symbol": "C_net.CNetClient / CServerCommand",
+      "summary": {
+        "text": "原生网络基类提供Connect/ProcessServerCmd/Packet/Unpack本体；Python层继承并覆写回调，原生实现未复核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_struct"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3970
+      },
+      "symbol": "protocol.GS2C_*/C2GS_*",
+      "summary": {
+        "text": "协议号符号注入来源（entry 3970）；数值交叉见protocol_table，集成时该关联待B编入目录后解析。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_proto"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 871
+      },
+      "symbol": "netquicklogin.Connect / CanQuickConnect / IsQuickConnect",
+      "summary": {
+        "text": "OnError在可瞬连时转瞬连重连；871的Hello后恢复会话。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_callback"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "message",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1406
+      },
+      "symbol": "netwar.S2CWar*（经NET_FUNCTION_NAME动态分发）",
+      "summary": {
+        "text": "战斗类GS2C号经分发表以iExtFlag 16/18等标志路由到netwar处理函数并可能入战斗缓存/战报；战斗计算不在E范围，由F核对。",
+        "confidence": "inferred",
+        "evidence": [
+          "net_proto",
+          "net_callback"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4293
+      },
+      "symbol": "main.MainLoop / NetMultiProcessServerCmd",
+      "summary": {
+        "text": "4293每帧驱动g_Net.ProcessServerCmd并消费本文件节流常数；详见E协审报告，main正文由C负责。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "net_cross"
+        ]
+      }
+    }
+  ]
+}

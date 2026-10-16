@@ -1,0 +1,993 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 219,
+  "path": "script/mainmenu.py",
+  "owner": "D",
+  "domain": "ui_chat",
+  "author": "N3（全新会话；逻辑任务包 D / ui_chat，非旧 D 会话）",
+  "source_status": "recovered_partial",
+  "purpose": {
+    "text": "主界面组合与兼容门面：候选中CMainMenu继承interface.CPanel，组装聊天输入、右下按钮栏、人物/召唤兽/地图及任务追踪组件，处理显示、战斗/观战/庭院模式、目标框和快捷键消息桥接。具体业务由组件/信号委托处理，不是interface公共控件层，也不是所有菜单功能的唯一实现。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "menu_construct",
+      "menu_hotkey",
+      "support_btn_delegate",
+      "d_provenance"
+    ]
+  },
+  "keywords": [
+    "主菜单",
+    "主界面",
+    "按钮栏",
+    "快捷键分发",
+    "消息映射",
+    "聊天输入",
+    "公共基础边界",
+    "鍛造",
+    "SS_ClickSkill",
+    "目标菜单"
+  ],
+  "functions": [
+    {
+      "name": "Show",
+      "signature": "(s)",
+      "kind": "function",
+      "summary": {
+        "text": "s为假时清空g_MainMenu并返回；为真且未创建时（elif g_MainMenu is None）在interface.MainPanel上创建CMainMenu（L158），随后调用Recall()（L159）回放此前PushCall排队的回调。此处只确认调用发生：Recall候选的推导式形态使“待处理回调逐个被执行”待核，不能据此断言排队回调一定生效（见Recall条）。随后按加载状态安排聊天窗口，并调用战斗快捷栏、日历、UI样式和计时相关入口；不等于这些业务都实现于本模块。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_show",
+          "menu_deferred",
+          "d1_recall_body",
+          "d1_deferred_callers"
+        ]
+      },
+      "calls": [
+        "CMainMenu",
+        "Recall",
+        "SwitchChatWnd",
+        "warui.ShowMagicShortKey",
+        "dlgcalendar.C2SGetServerTime",
+        "SendUIStyle"
+      ],
+      "branches": [
+        {
+          "condition": "not s",
+          "effect": {
+            "text": "只看到g_MainMenu=None并return，不能据此断言所有子对象资源已释放。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_show"
+            ]
+          }
+        },
+        {
+          "condition": "s and g_MainMenu is None",
+          "effect": {
+            "text": "创建CMainMenu(interface.MainPanel)（L158）后调用Recall()（L159）。只确认这一调用，Recall内逐个回调是否成功执行待核。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_show",
+              "d1_deferred_callers"
+            ]
+          }
+        },
+        {
+          "condition": "not delayloading.IsShowLoading()",
+          "effect": {
+            "text": "才调用SwitchChatWnd；加载中不走这个调用。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_show"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CMainMenu.__init__",
+      "signature": "(self, parent)",
+      "kind": "method",
+      "summary": {
+        "text": "初始化目标/提示状态，调用InitNewMainmenu、InitCommonCB、CheckIdle、CheckBan；后两者登记CreatePyCommand(600,...)检测回调。构造并非纯布局，定时频率/行为未实机确认，手册没有执行它。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_construct",
+          "menu_monitors"
+        ]
+      },
+      "calls": [
+        "interface.CPanel.__init__",
+        "self.InitNewMainmenu",
+        "self.InitCommonCB",
+        "self.CheckIdle",
+        "self.CheckBan"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CMainMenu.InitNewMainmenu",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "通过BuildComponent组合comchatinput、combtnmenu、comsummonframe、comheroframe、commapinfobar，并创建dlgtasktrace.CTaskFollowMainPart。按钮栏创建异常仅LOG_EXC；之后访问m_BtnMenu是否安全须另核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_construct"
+        ]
+      },
+      "calls": [
+        "comchatinput.BuildComponent",
+        "combtnmenu.BuildComponent",
+        "comsummonframe.BuildComponent",
+        "comheroframe.BuildComponent",
+        "commapinfobar.BuildComponent",
+        "dlgtasktrace.CTaskFollowMainPart"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CMainMenu.OnHotKeyMsg",
+      "signature": "(self, iMsgID)",
+      "kind": "method",
+      "summary": {
+        "text": "把快捷键逻辑消息转到子组件：20/21给聊天输入OnMessage，1..9映射按钮栏的SS_Click*信号并ssEmit。这里不直接打开物品/任务等业务窗，也不包含系统按钮10的分支。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_hotkey"
+        ]
+      },
+      "calls": [
+        "self.m_ChatInputPanel.OnMessage",
+        "self.m_BtnMenu.ssEmit"
+      ],
+      "branches": [
+        {
+          "condition": "iMsgID in (20, 21)",
+          "effect": {
+            "text": "原样转给m_ChatInputPanel.OnMessage；协审组件中20发SS_ClickEmoteBtn，21发SS_ClickSpeak。具体委托后续目标未全部核对。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_hotkey",
+              "support_chatinput_component"
+            ]
+          }
+        },
+        {
+          "condition": "iMsgID == 1",
+          "effect": {
+            "text": "发m_BtnMenu.SS_ClickAttack；已见委托OnAttack内有条件后调用world.AttackSelect，不是直接发起一场已确认战斗。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_hotkey",
+              "support_btn_delegate"
+            ]
+          }
+        },
+        {
+          "condition": "iMsgID == 2",
+          "effect": {
+            "text": "发SS_ClickItem；委托OnItem在生存模式切虚拟包，否则关闭特定交易窗后调用dlgitem.ShowSwitch。不是无条件打开同一种物品页。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_hotkey",
+              "support_btn_delegate"
+            ]
+          }
+        },
+        {
+          "condition": "iMsgID == 3",
+          "effect": {
+            "text": "发SS_ClickTrade；协审委托OnTrade经ShowPopmenu选择TYPE2FUNC中的交易菜单工厂，未审核菜单全部条目。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_hotkey",
+              "support_btn_delegate"
+            ]
+          }
+        },
+        {
+          "condition": "iMsgID == 4",
+          "effect": {
+            "text": "发SS_ClickSkill，但已核委托OnSkill调用makeequipctrl.GetMakeEquipDlgCtrl并开/关锻造主界面；不能仅凭Skill把它写成技能面板。main的技能/招式快捷键另走skillmagicsignal。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_hotkey",
+              "support_btn_delegate",
+              "upstream_main_menu"
+            ]
+          }
+        },
+        {
+          "condition": "iMsgID == 5",
+          "effect": {
+            "text": "发SS_ClickTeam；委托可能切teamui或打开队伍弹出菜单，取决于频道开关和已有弹窗。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_hotkey",
+              "support_btn_delegate"
+            ]
+          }
+        },
+        {
+          "condition": "iMsgID == 6",
+          "effect": {
+            "text": "发SS_ClickTask；生存模式拒绝，存在委托任务红点时走timewheelinterface，否则dlgtasknew.ShowSwitch。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_hotkey",
+              "support_btn_delegate"
+            ]
+          }
+        },
+        {
+          "condition": "iMsgID == 7",
+          "effect": {
+            "text": "发SS_ClickGroup；具体幫派处理在CBtnFuncDelegate.OnGroup，此有限摘录未展开其全部条件，不推定一定打开幫派窗。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_hotkey",
+              "support_btn_delegate"
+            ]
+          }
+        },
+        {
+          "condition": "iMsgID == 8",
+          "effect": {
+            "text": "发SS_ClickInfo；委托OnInfo目标受状态控制，本工作包未完整摘录其实现，后续目标未知。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_hotkey"
+            ]
+          }
+        },
+        {
+          "condition": "iMsgID == 9",
+          "effect": {
+            "text": "发SS_ClickFriend；委托OnFriend先检查活动和GetPlayerMail，再可能调用dlgfriend.ShowSwitch，并非每次都开好友窗。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_hotkey",
+              "support_btn_delegate"
+            ]
+          }
+        },
+        {
+          "condition": "iMsgID不在20/21或1..9（包括10）",
+          "effect": {
+            "text": "此候选没有匹配动作而返回；按钮栏自己的OnMessage另有10→SS_ClickSys，勿把两套入口的覆盖范围混同。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_hotkey",
+              "support_btn_msg"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CMainMenu.InitCommonCB",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "注册SHOWFPS_TIPS→OnShowTips、STATE_CHANGE→UpdateFoodNum字符串回调。这里能确认登记关系，commoncb内部查找/调度和实际触发未审核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_construct"
+        ]
+      },
+      "calls": [
+        "commoncb.RegistCB"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CMainMenu.SetOriTopPartShow",
+      "signature": "(self, bShow)",
+      "kind": "method",
+      "summary": {
+        "text": "协调地图、召唤兽、人物、战斗魔法栏、状态与引导可见性；具体部件自行负责显示实现。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_construct"
+        ]
+      },
+      "calls": [
+        "warui.SetMagicKeyDlgShow",
+        "netstate.SetShowAllState",
+        "dlgnewguide.SetShowGuidNotSave"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CMainMenu.SetOriBottomPartShow",
+      "signature": "(self, bShow)",
+      "kind": "method",
+      "summary": {
+        "text": "只把bShow传给聊天输入组件和按钮栏SetShow，是组合层而不是绘制/业务实现。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_construct"
+        ]
+      },
+      "calls": [
+        "self.m_ChatInputPanel.SetShow",
+        "self.m_BtnMenu.SetShow"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CMainMenu.SwitchYardEditMode",
+      "signature": "(self, bInYardEdit, bShowBottom)",
+      "kind": "method",
+      "summary": {
+        "text": "按庭院编辑状态创建yardhidemainmenu组件，必要时取消聊天输入激活，再分别控制上下部件。yardhidemainmenu实际类未核对。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_modes"
+        ]
+      },
+      "calls": [
+        "yardhidemainmenu.BuildComponent",
+        "self.SetOriBottomPartShow",
+        "self.SetOriTopPartShow"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CMainMenu.OnOpenWatchPanel",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "按war.GetWarType与dlgbattleasupport.GetLive选择mdwatchwar模型的OpenWarrecordPanal或OpenPanal；不是这里绘制观战界面。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_modes"
+        ]
+      },
+      "calls": [
+        "war.GetWarType",
+        "mdwatchwar.GetModel",
+        "mdwatchwar.GetModel().OpenWarrecordPanal",
+        "mdwatchwar.GetModel().OpenPanal"
+      ],
+      "branches": []
+    },
+    {
+      "name": "SwitchEnv",
+      "signature": "(bWar)",
+      "kind": "function",
+      "summary": {
+        "text": "隐藏小地图，保存/更新战斗状态，调用main.SwitchHotKey(bWar)，清手持物，通知多个业务模块切换；只静态核对入口段，不解释后面全部业务。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_switch_env"
+        ]
+      },
+      "calls": [
+        "dlgmap.HideMinimap",
+        "SwitchEnvIsWar",
+        "handobj.Clear",
+        "main.SwitchHotKey",
+        "main.CancelWindow"
+      ],
+      "branches": []
+    },
+    {
+      "name": "SwitchChatWnd",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "先chatoutput.Show(True)，再按分辨率读mx.ini/Game的ChatWnd变体；值为1或未配置时取原窗口位置并调用chatoutput.SwitchChatWnd，最后chatwnd.SendLog。不推断日志内容/上传结果。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_show"
+        ]
+      },
+      "calls": [
+        "chatoutput.Show",
+        "cfg.GetData",
+        "windowsmessage.GetWndPos",
+        "chatwnd.InitPosition",
+        "chatoutput.SwitchChatWnd",
+        "chatwnd.SendLog"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetMainmenuBtn",
+      "signature": "(iBtnType)",
+      "kind": "function",
+      "summary": {
+        "text": "兼容访问口：主界面未创建返回None，否则委托m_BtnMenu.GetBtnByType。调用者不能假设任何时刻都有按钮对象。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_accessors"
+        ]
+      },
+      "calls": [
+        "g_MainMenu.m_BtnMenu.GetBtnByType"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetChatInputObj",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "主界面存在时返回聊天输入组件的m_ChatInput，否则None；输入实现属于chatinput/CChatInputDlg，不属于mainmenu公共绘制。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_accessors"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "PushCall",
+      "signature": "(func, *args)",
+      "kind": "function",
+      "summary": {
+        "text": "候选L377-L385本体只有两句可执行语句：_g_Callback.append((func, args))（L384）后return（L385），即**无条件**把(func,args)追加进模块级队列_g_Callback（L8初值[]）。函数内没有g_MainMenu判断、没有对func的直接调用、也没有任何控制流关键字——机器核对这三项在L377..L385的命中计数均为0，因此不能给它补出“主界面存在就立即执行func、否则排队”的分支（这正是D1要纠正的失真）。“存在就立即做、不存在才排队”的分支其实属于**调用者**：本候选内ShowGmBtn在if g_MainMenu走dlggm.ShowGMButtonDlg、else才PushCall(ShowGmBtn, bShow)（L461-L465）；OnPlayerMailNotify先commoncb.TriggerCB，再if not g_MainMenu才PushCall(OnPlayerMailNotify, bNotify)（L1221-L1223）。两处都把**自身**作为func入队，队列元素形如(本模块函数, 1元参数元组)。func的动态目标不在本函数内固定，回放由Recall负责且其成败待核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "d1_pushcall_body",
+          "d1_reproduce",
+          "d1_deferred_callers",
+          "d1_callback_refs",
+          "menu_deferred"
+        ]
+      },
+      "calls": [
+        "_g_Callback.append"
+      ],
+      "branches": []
+    },
+    {
+      "name": "Recall",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "候选L1277-L1285声明的流程：global _g_Callback（L1278）；cl = [_[1] for x in _g_Callback]（L1279）；for (cb, args) in cl: print cb, args; cb(*args)（L1280-L1282）；随后**无条件**_g_Callback = []清队列（L1284）并return（L1285）。本条只登记候选声明的字面形态，没有把候选修好再当原文，也没有按历史实现补逻辑。已核异常：L1279推导式的循环变量是x，而表达式取的是_[1]，两者不对应；整份1288行候选里裸名_只出现这一次（命中1行=L1279），且_ = …/for _ in …/import … as _ 三种绑定形态命中均为0，所以cl不保证取得队列里的(func,args)对，紧随的for (cb, args) in cl解包也就不保证逐个回调正常完成。清队列（L1284）在for之后同一函数体内，字面上无论回放是否成功都会执行。唯一调用点是L159，在Show(s)的elif g_MainMenu is None分支里、L158创建CMainMenu之后；队列另在ModuleReset（L11/L14）被清空。运行期究竟抛NameError/ValueError、还是能正常回放、或该行本属转译器伪影（decompile_ok不证明语义正确），一律**待核**：本工作包无原生/实机手段，不写成已确认实机bug，也不写成已确认能正常执行。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "d1_recall_body",
+          "d1_underscore_scan",
+          "d1_callback_refs",
+          "d1_deferred_callers",
+          "menu_deferred"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMainMenu.ShowTarget",
+      "signature": "(self, target)",
+      "kind": "method",
+      "summary": {
+        "text": "按分辨率选坐标，按interface.IsNewStyle选择CTargetPngFrame或CTargetFrame；target为None则清引用。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_target"
+        ]
+      },
+      "calls": [
+        "CTargetFrame",
+        "CTargetPngFrame"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CTargetFrame.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "目标框左/右键逻辑：1清目标，2切换目标弹出菜单，大右键偏移消息递归转1。弹出菜单构造不等于其中每个动作已确认。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_target"
+        ]
+      },
+      "calls": [
+        "SetTarget",
+        "self.CreatePopMenu",
+        "self.OnMessage"
+      ],
+      "branches": [
+        {
+          "condition": "msgid == 1",
+          "effect": {
+            "text": "调用SetTarget(None)。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_target"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 2",
+          "effect": {
+            "text": "已有可见菜单时隐藏并返回，否则CreatePopMenu。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_target"
+            ]
+          }
+        },
+        {
+          "condition": "msgid >= interface.RIGHT_BUTTON_MESSAGE",
+          "effect": {
+            "text": "再调用本对象OnMessage(1)，走清目标。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "menu_target"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CTargetPngFrame.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "新样式目标框候选有相同1/2/右键偏移分支；不能只修改旧CTargetFrame而遗漏新样式。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_target"
+        ]
+      },
+      "calls": [
+        "SetTarget",
+        "self.CreatePopMenu",
+        "self.OnMessage"
+      ],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "module",
+      "target": "interface.CPanel / MainPanel",
+      "summary": {
+        "text": "公共基类与父面板入口；主菜单不在interface中实现各业务。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_construct",
+          "menu_show"
+        ]
+      }
+    },
+    {
+      "kind": "layout",
+      "target": "dialog/mainmenu/com_btnmenu.dlg；com_btnmenu_mini.dlg；com_btnmenu_new.dlg；com_btnmenu_mini_new.dlg",
+      "summary": {
+        "text": "路径来自协审CBtnMenu.GetUiPath，按permission.IsOpenNewMainmenu和分辨率选择；只核脚本字符串，未读取布局包/验证控件存在。",
+        "confidence": "extracted",
+        "evidence": [
+          "support_btn_layout"
+        ]
+      }
+    },
+    {
+      "kind": "layout",
+      "target": "dialog/mainmenu/com_chatinput.dlg；dialog/mainmenu/com_chatinputmini.dlg",
+      "summary": {
+        "text": "聊天输入子组件构造所用候选布局路径；mainmenu本身只调用BuildComponent，不把它们当成一张统一mainmenu.dlg。",
+        "confidence": "extracted",
+        "evidence": [
+          "support_chatinput_component"
+        ]
+      }
+    },
+    {
+      "kind": "config",
+      "target": "mx.ini → Game → ChatWnd / ChatWnd1366 / ChatWnd1366x708",
+      "summary": {
+        "text": "主界面恢复聊天内外置选择的配置入口；不能把此开关当频道接收开关。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_show"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "combtnmenu / delegatebtnmenu / model_btnmenu",
+      "summary": {
+        "text": "视图定义消息与信号；CBtnFuncDelegate连接业务动作；model负责状态/闪烁/红点信号。三层职责不同。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "support_btn_build",
+          "support_btn_msg",
+          "support_btn_delegate",
+          "support_menu_model"
+        ]
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4293
+      },
+      "symbol": "main.SwitchHotKey.mainmenumsg",
+      "summary": {
+        "text": "main从dlgsysopt.g_HotKeys取配置并通过key.RegisterHotKey登记部分菜单回调；mainmenumsg调用本模块OnHotKeyMsg。战斗分支会重绑，不固定为某个物理键。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "upstream_main_menu"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3854
+      },
+      "symbol": "interface.CPanel",
+      "summary": {
+        "text": "CMainMenu继承公共CPanel；具体功能、状态和组合逻辑留在mainmenu及子组件。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_construct"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4699
+      },
+      "symbol": "combtnmenu.BuildComponent / CBtnMenu.ssEmit",
+      "summary": {
+        "text": "构造按钮栏并发出逻辑信号；点击入口CBtnMenu.OnMessage与快捷键入口OnHotKeyMsg共享1..9的信号映射但覆盖不完全相同。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_construct",
+          "menu_hotkey",
+          "support_btn_msg"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "message",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1713
+      },
+      "symbol": "delegatebtnmenu.CBtnFuncDelegate.Init",
+      "summary": {
+        "text": "通过按钮栏ssConnect建立的两跳信号下游；不是mainmenu直接调用每个委托。候选多处ssConnect订阅同一信号；运行期连接生命周期/顺序未审，不能假定只有一个处理者。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "support_btn_build",
+          "support_btn_delegate"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2525
+      },
+      "symbol": "comchatinput.CChatInputDlg.OnMessage",
+      "summary": {
+        "text": "20/21转聊天输入组件；只确认发出表情/动作相关信号，具体委托目标未全部核对。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_hotkey",
+          "support_chatinput_component"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4832
+      },
+      "symbol": "chatoutput.Show / SwitchChatWnd",
+      "summary": {
+        "text": "主菜单显示流程安排聊天输出的构造和内外置切换。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_show"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": null,
+      "symbol": null,
+      "summary": {
+        "text": "PushCall入队的func是动态目标，PushCall本体不调用它；Recall回放时才执行cb(*args)。entry 219候选内可静态确认的PushCall调用点只有两处，且都把本模块自身函数入队：ShowGmBtn（L465）与OnPlayerMailNotify（L1223）。其他条目是否import mainmenu后调用PushCall，本工作包未做跨条目全量检索，属未知；不能依据func变量名补出调用目标，也不能把“未检索”写成“不存在”。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "d1_deferred_callers",
+          "d1_pushcall_body",
+          "d1_recall_body",
+          "menu_deferred"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3854
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3232
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4832
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4293
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "想改主菜单触发某个功能，应该从哪里下手？",
+      "answer": {
+        "text": "先分入口：鼠标查combtnmenu.CBtnMenu.OnMessage，快捷键查main.SwitchHotKey→mainmenumsg→CMainMenu.OnHotKeyMsg；再查CBtnFuncDelegate.Init的连接和对应On*实现。不要只改mainmenu里的映射或只改按钮名；例如4→SS_ClickSkill实际走锻造，技能页另有skillmagicsignal入口。状态限制和多订阅副作用须实机回归。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_hotkey",
+          "support_btn_msg",
+          "support_btn_delegate",
+          "upstream_main_menu"
+        ]
+      }
+    },
+    {
+      "question": "改布局、按钮皮肤、正文/URL分别在哪里？",
+      "answer": {
+        "text": "本模块主要组合，不提供一个可直接替换的总mainmenu.dlg。按钮布局查CBtnMenu.GetUiPath的四种.dlg与控件名，输入布局查CChatInputDlg；皮肤/提示由相应组件和style提供。此有限证据没有确认统一公告正文或URL入口，不能编造文件名；需跟到具体业务。布局包内容、简繁解码和分辨率变体未验。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_construct",
+          "support_btn_layout",
+          "support_chatinput_component"
+        ]
+      }
+    },
+    {
+      "question": "要改所有窗口通用的点击/输入规则还是某个功能？",
+      "answer": {
+        "text": "跨界面点击/消息码/字符路由属于interface与key；菜单组合/模式属于本模块；物品/任务/锻造等行为属于信号委托和业务模块。改公共基类会波及聊天、登录和大量窗口，优先在目标组件或委托改入口；本次仅文档分析，不实施修改。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "menu_construct",
+          "menu_hotkey",
+          "support_btn_delegate"
+        ]
+      }
+    },
+    {
+      "question": "PushCall/Recall这套延迟回调要改，应该动哪里？",
+      "answer": {
+        "text": "先分层，别改错地方。（1）排队入口PushCall本体（候选L377-L385）只是无条件_g_Callback.append((func,args))，里面没有主界面判断、没有func直接调用、没有任何分支，所以“立即执行还是排队”的开关不在这里，要去**调用者**改：本候选内是ShowGmBtn的if g_MainMenu / else（L461-L465）和OnPlayerMailNotify的if not g_MainMenu（L1222-L1223）。（2）回放侧在Recall（L1277-L1285），由Show(s)的elif g_MainMenu is None分支在创建CMainMenu后调用一次（L159）；队列另在ModuleReset（L11/L14）被清空，模块级初值在L8。（3）改Recall前必须注意L1279的cl = [_[1] for x in _g_Callback]变量不对应、裸名_在候选内无绑定，逐个回调能否正常执行待核——不要把修好的版本当成原文语义，也不要据手册断言实机行为。（4）跨条目调用者未检索，改PushCall签名或队列元素形状前需先全量检索调用方并实机回归。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "d1_pushcall_body",
+          "d1_recall_body",
+          "d1_deferred_callers",
+          "d1_callback_refs",
+          "d1_underscore_scan",
+          "d1_reproduce",
+          "d1_scope"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "219候选L305含损坏的import标识符，虽引擎报decompile_ok仍标recovered_partial；没有擅自按历史catalog修名，不能拿本稿回编。",
+    "未展开CheckIdle/CheckBan的全部周期与网络语义、所有邮件/观战/庭院/目标弹出菜单项；构造会注册周期检测，禁止为手册运行构造函数。",
+    "20/21之后delegatechatinput的具体执行者、slot/commoncb内部调度、资源实际可用性和状态依赖未确认；延迟回调侧：PushCall在entry 219候选内只有ShowGmBtn(L465)/OnPlayerMailNotify(L1223)两个调用点，跨条目调用者未检索，Recall回放的运行期成败未验。未知不等于不存在。",
+    "只解释列出的重点函数/分支，不是全模块穷尽清单；calls是候选中的静态符号线索，空列表不代表没有调用。",
+    "来源是固定包本轮定点转译/恢复候选，而非原始源码；报告中保留候选全文SHA和原行号。转译器的baseline/decompile_ok不证明严格可逆、语法或行为正确。",
+    "从仓库外完整候选制作有限metadata审阅报告；JSON的sources.sha256及证据行号绑定报告原字节，不伪称验证了外置全文语义。完整候选未搬入Git；复现方法和各SHA见provenance.txt。",
+    "没有实机/Windows/游戏/真实网络验证，所有runtime_verified数量为0；未导入/执行恢复稿，未修改游戏包、编辑器、启动器；1288排除且未读其payload。",
+    "仅适用archive_sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72；不能外推注册派生包、PR34清单或其他引擎候选。",
+    "未自行审核通过；交H逐份独立审核、A集成。部分协审模块不在20条种子inventory中，关联身份可核但导航会警告；只由B/A补目录，不在本工作包改总表。",
+    "Recall候选L1279的cl = [_[1] for x in _g_Callback]循环变量与表达式不对应，裸名_在1288行候选内只此一次出现且无任何绑定；本轮只登记字面异常，未修候选、未判定实机是否抛异常，也未排除它是转译器伪影。不把“未发现”写成“不存在”，也不把候选缺陷写成已验收的实机bug。",
+    "D1相关新证据只放在N3新增的mainmenu_d1_deferred.txt（只供mainmenu.json引用）；interface(3854)/key(3232)/chatoutput(4832)三份已有限通过JSON共用的provenance.txt、support.txt、mainmenu.txt、chatoutput.txt、interface.txt、key.txt、validation.txt字节一律未改，以免那三份已激活审核意外变stale。mainmenu.json自身因本轮修订而SHA变化、旧审核转stale是预期结果，交N7对新SHA复核。"
+  ],
+  "sources": [
+    {
+      "id": "provenance",
+      "path": "script_manual/annotations/ui_chat/evidence/provenance.txt",
+      "sha256": "41b341949b2c7c9c086a7d46b2083137f3a5f1a5c006563dcc55d972fdea7998",
+      "kind": "metadata",
+      "note": "本轮白名单/ranged I/O定点提取回执、输入/工具/候选/pyc摘要、引擎及可重现核心。不是PR34审计manifest或实机验证。"
+    },
+    {
+      "id": "report_mainmenu",
+      "path": "script_manual/annotations/ui_chat/evidence/mainmenu.txt",
+      "sha256": "9eaed517871aac63f1523dc3b29c4cc0adf628e31b385395723882dc0a0068d7",
+      "kind": "metadata",
+      "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    },
+    {
+      "id": "report_support",
+      "path": "script_manual/annotations/ui_chat/evidence/support.txt",
+      "sha256": "f7896042c8b14af9303ff523e61b468f6fe0daadee124f9ea13bdbfce21ba1d9",
+      "kind": "metadata",
+      "note": "D 本轮有限静态审阅报告；包含外置完整候选 SHA256、条目身份、原始候选行号及原样摘录。报告摘要只保护报告字节，不能独自证明反编译语义；重现输入与工具见 provenance.txt。"
+    },
+    {
+      "id": "report_mainmenu_d1",
+      "path": "script_manual/annotations/ui_chat/evidence/mainmenu_d1_deferred.txt",
+      "sha256": "dc43e5560cb5aee6d06987b1d505f564e2b1ba81e2056f4826dda1ffd7cfe504",
+      "kind": "metadata",
+      "note": "N3为修复D1新增的**主菜单专用**小证据，只被mainmenu.json引用。含entry 219候选的独立复现回执、PushCall/Recall完整函数体原样摘录、裸名_与_g_Callback的全量扫描计数、PushCall/Recall在候选内的全部调用点及所在函数。复现产物去头恰好6行恢复头后与D原报告钉的候选SHA256 e03d31ac8deaab37766addcab9e2a1a63dd1b3c223e977cfe3f427b80df05bfd（42790字节/1288行）逐字节相同；未为凑旧摘要扩大去头或忽略范围，原始落盘产物SHA也一并登记。刻意不改provenance.txt/support.txt/mainmenu.txt/chatoutput.txt/interface.txt/key.txt/validation.txt任何字节，因为它们被已在A有限通过的interface(3854)/key(3232)/chatoutput(4832)以SHA共同引用。完整候选留仓库外，未搬入Git；未import/eval/exec恢复稿，未读1288负载。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "d_provenance",
+      "source_id": "provenance",
+      "start_line": 1,
+      "end_line": 78
+    },
+    {
+      "id": "menu_accessors",
+      "source_id": "report_mainmenu",
+      "start_line": 33,
+      "end_line": 76
+    },
+    {
+      "id": "menu_construct",
+      "source_id": "report_mainmenu",
+      "start_line": 217,
+      "end_line": 277
+    },
+    {
+      "id": "menu_deferred",
+      "source_id": "report_mainmenu",
+      "start_line": 181,
+      "end_line": 215
+    },
+    {
+      "id": "menu_hotkey",
+      "source_id": "report_mainmenu",
+      "start_line": 419,
+      "end_line": 438
+    },
+    {
+      "id": "menu_modes",
+      "source_id": "report_mainmenu",
+      "start_line": 279,
+      "end_line": 324
+    },
+    {
+      "id": "menu_monitors",
+      "source_id": "report_mainmenu",
+      "start_line": 326,
+      "end_line": 358
+    },
+    {
+      "id": "menu_show",
+      "source_id": "report_mainmenu",
+      "start_line": 78,
+      "end_line": 126
+    },
+    {
+      "id": "menu_switch_env",
+      "source_id": "report_mainmenu",
+      "start_line": 128,
+      "end_line": 179
+    },
+    {
+      "id": "menu_target",
+      "source_id": "report_mainmenu",
+      "start_line": 360,
+      "end_line": 417
+    },
+    {
+      "id": "support_btn_build",
+      "source_id": "report_support",
+      "start_line": 126,
+      "end_line": 192
+    },
+    {
+      "id": "support_btn_delegate",
+      "source_id": "report_support",
+      "start_line": 241,
+      "end_line": 382
+    },
+    {
+      "id": "support_btn_layout",
+      "source_id": "report_support",
+      "start_line": 194,
+      "end_line": 209
+    },
+    {
+      "id": "support_btn_msg",
+      "source_id": "report_support",
+      "start_line": 211,
+      "end_line": 239
+    },
+    {
+      "id": "support_chatinput_component",
+      "source_id": "report_support",
+      "start_line": 426,
+      "end_line": 493
+    },
+    {
+      "id": "support_menu_model",
+      "source_id": "report_support",
+      "start_line": 384,
+      "end_line": 424
+    },
+    {
+      "id": "upstream_main_menu",
+      "source_id": "report_support",
+      "start_line": 47,
+      "end_line": 124
+    },
+    {
+      "id": "d1_callback_refs",
+      "source_id": "report_mainmenu_d1",
+      "start_line": 96,
+      "end_line": 106
+    },
+    {
+      "id": "d1_deferred_callers",
+      "source_id": "report_mainmenu_d1",
+      "start_line": 108,
+      "end_line": 163
+    },
+    {
+      "id": "d1_pushcall_body",
+      "source_id": "report_mainmenu_d1",
+      "start_line": 39,
+      "end_line": 64
+    },
+    {
+      "id": "d1_recall_body",
+      "source_id": "report_mainmenu_d1",
+      "start_line": 66,
+      "end_line": 84
+    },
+    {
+      "id": "d1_reproduce",
+      "source_id": "report_mainmenu_d1",
+      "start_line": 19,
+      "end_line": 37
+    },
+    {
+      "id": "d1_scope",
+      "source_id": "report_mainmenu_d1",
+      "start_line": 165,
+      "end_line": 171
+    },
+    {
+      "id": "d1_underscore_scan",
+      "source_id": "report_mainmenu_d1",
+      "start_line": 86,
+      "end_line": 94
+    }
+  ]
+}

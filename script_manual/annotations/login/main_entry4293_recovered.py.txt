@@ -1,0 +1,994 @@
+# N2 limited evidence excerpt; NOT complete source.
+# candidate SHA and original line ranges: N2_provenance.json.template.
+# candidate original lines 12-27; evidence=globals
+import globalhotkeyfunc, key, C_sys, gamectrl, time, log, permission, mdtasktrace
+g_DisableHotKey = False
+g_RelogServerName = None
+g_RelogTips = ''
+g_IsDgwConnect = False
+g_MiniVersion = 0
+g_LangVersion = 0
+g_iCurFrame = 0
+g_IgnoreResLoaderCheck = False
+Quit = False
+
+def InitSize():
+    import game, gamectrl
+    gamectrl.InitUIStyle()
+    game.FullScreen(0)
+    return
+# candidate original lines 41-61; evidence=start
+def StartStep1(mode=0):
+    import charpath, cfg
+    cfg.SetCanSave(False)
+    charpath.InitUseNewRes()
+    gamectrl.OnGameStart(mode)
+    return
+
+
+def Start(mode=0):
+    StartStep1(mode)
+    import innerversion, misc
+    if innerversion.IsInnerVer() and not misc.IsTWServer():
+        InnerStart()
+    return
+
+
+def InnerStart():
+    import gmcommanddata
+    gmcommanddata.UIMix()
+    gmcommanddata.CGetMXCCName()
+    return
+# candidate original lines 73-130; evidence=close
+def CloseGame():
+    import statisticsignal
+    statisticsignal.Emit(statisticsignal.SS_CLOSE_GAME)
+    import yardviewsignal
+    yardviewsignal.Emit(yardviewsignal.SS_CLOSE_GAME_SAVE2LOCAL)
+    import netquicklogin, net
+    netquicklogin.NormalLogout()
+    if net.g_Net:
+        net.g_Net.m_IsExit = True
+    import serversource
+    serversource.WhenQuitGame()
+    import blacklist
+    blacklist.DestroyScaner()
+    SaveServerData()
+    SaveClientData()
+    import audio
+    audio.ReleaseChatAudio()
+    import permission
+    if permission.IsOpenNewSoundBnk():
+        import newsoundinterface
+        newsoundinterface.CloseSound()
+    import juben
+    juben.CheckJubenSkipAndEsc()
+    import toolkit
+    toolkit.ClearRegCode()
+    import crashrpt
+    crashrpt.CrashUninstall()
+    import recordvideo
+    recordvideo.CRecordVideo.DealEnd()
+    import pubdyflyer, pubbigdatadefines, mdbigdata
+    if mdbigdata.GetBigDataModel().GetValue('iCloseEventLogSend') == 0:
+        mdbigdata.GetBigDataModel().OnChange('iCloseEventLogSend', 1)
+        pubdyflyer.C2BLogEvent(pubbigdatadefines.CLOSE_EVENT)
+
+    def DoCloseGame(obj, dummy=None):
+        global Quit
+        Quit = True
+        key.RegisterHotKey(key.LEFT_BUTTON_UP)
+        key.RegisterHotKey(key.LEFT_BUTTON_DOWN)
+        key.RegisterHotKey(key.RIGHT_BUTTON_UP)
+        import device, item, war
+        device.ReleaseDevice()
+        item.ReleaseAllInterfaceCallback()
+        import qcprofilemgr
+        if qcprofilemgr.IsQCProfile():
+            qcprofilemgr.GetQCProfileManager().StopProfile()
+        if permission.GMCanAdopt():
+            import newcommandmgr
+            newcommandmgr.SVNOnlyUpdate()
+        return
+
+    import interface
+    obj = interface.CBaseObject(None)
+    obj.CreatePyCommand(30, DoCloseGame, obj)
+    import gameprofile
+    gameprofile.EndCheckDlgShowTime()
+    print 'End'
+    return
+# candidate original lines 133-147; evidence=save_server
+def SaveServerData():
+    import net, dlgbaozi, clickcounter, hotkeycounter, dlgsale, imnewgamemgr, cursorclicklog, scheduleclicklog, activityclicklog, personaccoutlog
+    netobj = net.g_Net
+    if netobj:
+        call_lst = (
+         dlgbaozi.C2SSendBaozi, clickcounter.C2SSendLog, hotkeycounter.C2SSendHotKeyCount, dlgsale.C2SSavePriceLst,
+         imnewgamemgr.C2SSendImNewGameClickLog, cursorclicklog.GetCurSorClickLog().SendLog,
+         scheduleclicklog.GetScheduleClickLog().SendLog, activityclicklog.GetActivityClickLog().SendLog,
+         personaccoutlog.GetClickLogMgr().SendLog)
+        for callback in call_lst:
+            if callback():
+                netobj.ProcessServerCmd()
+
+        return True
+    return False
+# candidate original lines 150-225; evidence=restart
+def Restart(flag=0, logout=True):
+    global Loop
+    global RestartTimes
+    global g_DelayF11
+    global g_DelayF9
+    global g_ExitDialog
+    import chatwnd, fishgame, seawar, skillbar, magicmgr
+    SaveServerData()
+    SaveClientData()
+    fishgame.GameOver()
+    magicmgr.CMagicNameMgr.Clear()
+    seawar.EndWar()
+    skillbar.ShowMagicBar(None)
+    chatwnd.Show(False)
+    ClearHotKey()
+    key.RegisterHotKey(key.VK_CLOSE)
+    import blacklist
+    blacklist.DestroyScaner()
+    C_sys.ClearAllCommand()
+    import cardgame
+    cardgame.ClearAllWarInfo()
+    import world
+    world.ClearAllObject()
+    import map
+    map.Clear()
+    import sound
+    sound.StopAllLoopSample()
+    if logout:
+        import netquicklogin
+        netquicklogin.NormalLogout()
+    import clientcommand
+    if permission.GMCanAdopt():
+        clientcommand.GMLog()
+    import net
+    if net.g_Net:
+        net.g_Net.ProcessServerCmd()
+        net.g_Net.Disconnect()
+    net.g_Net = net.CFakeNet()
+    import pubhttp
+    pubhttp.Clear()
+    import pubhttps
+    pubhttps.Clear()
+    g_ExitDialog = None
+    import blacklist
+    blacklist.g_SentType = {}
+    import audioroom
+    audioroom.GetMgr().DoLogout()
+    import netprotocol
+    netprotocol.ResetProtocol()
+    ClearCmdParam()
+    import getzminfo
+    getzminfo.StopSend()
+    Loop = AfterRestart
+    RestartTimes = 2
+    if g_DelayF9:
+        g_DelayF9.Release()
+        g_DelayF9 = None
+    if g_DelayF11:
+        g_DelayF11.Release()
+        g_DelayF11 = None
+    import interface
+    interface.g_ActiveEdit = None
+    interface.g_DefaultEdit = None
+    chatpanel = chatwnd.g_MainPanel
+    import resetcontrol
+    bIsQuickLogin = flag == 2
+    resetcontrol.DoReset(bIsQuickLogin, logout)
+    LOG('========= restart %s===========' % flag)
+    StartStep1(flag)
+    import resloadasyncmgr
+    resloadasyncmgr.OnRestart()
+    import newcommandmgr
+    newcommandmgr.UpdateLoop()
+    import chatwnd
+    chatwnd.g_MainPanel = chatpanel
+    return
+# candidate original lines 228-289; evidence=restart_slots
+g_RestartSaveList = None
+g_RestartSaveObjs = [
+ (
+  'netserver', [15, 16, 17, 18, 19, 20]),
+ (
+  'dlgshutdown', ['g_DelayTime', 'g_Keyword', 'g_NoShutdown', 'g_SetTime']),
+ (
+  'warui', ['g_PrevBoutCmd', 'g_DefaultMagicID', 'g_PetID2DefaultMagicID', 'g_RecentMagic']),
+ (
+  'dlgautofight', ['g_Turn', 'g_StateObj', 'g_CanRecover', 'g_HaspetAction']),
+ (
+  'misc', ['g_InterNet']),
+ (
+  'chatoutput', ['g_Chats']),
+ (
+  'chatinput', ['HistoryString', 'CurrentString']),
+ (
+  'channel', ['g_Channel']),
+ (
+  'dlgnewbiequestion', ['g_QuestionText']),
+ (
+  'loginin', ['g_LoginEmail']),
+ (
+  'dlgmap', ['g_SceneID2NpcInfo']),
+ (
+  'netquicklogin', ['g_LoginKey']),
+ (
+  'audioroom', ['g_KuafuServer']),
+ (
+  'mgrscreenshot', ['g_ScreenShotPath']),
+ (
+  'hidecatcat', ['g_GameFlag']),
+ (
+  'wrapui', ['g_OrgWelcome'])]
+
+def RestartSave():
+    global g_RestartSaveList
+    global g_RestartSaveObjs
+    lst = []
+    for (modeName, attrList) in g_RestartSaveObjs:
+        mode = __import__(modeName)
+        for attr in attrList:
+            lst.append(getattr(mode, attr, None))
+
+    g_RestartSaveList = lst
+    return
+
+
+def RestartRestore():
+    global g_RestartSaveList
+    if not g_RestartSaveList:
+        return
+    i = 0
+    for (modeName, attrList) in g_RestartSaveObjs:
+        mode = __import__(modeName)
+        for attr in attrList:
+            setattr(mode, attr, g_RestartSaveList[i])
+            i += 1
+
+    g_RestartSaveList = None
+    return
+
+# candidate original lines 291-341; evidence=quick
+def RestartQuickLogin(loginKey, heroID):
+    import selectserver, netlogin, world, misc, chatoutput, netserver
+    proxy = selectserver.g_Proxy
+    ip = selectserver.g_LastVisit[2]
+    port = selectserver.g_LastVisit[3]
+    lastVisit = selectserver.g_LastVisit
+    loginServer = selectserver.g_LoginServer
+    ca = netlogin.g_CurrAccount
+    if g_DelayF9:
+        tickf9 = g_DelayF9.m_Tick
+    else:
+        tickf9 = 0
+    if g_DelayF11:
+        tickf11 = g_DelayF11.m_Tick
+    else:
+        tickf11 = 0
+    hidebar = world.g_HideSaleBar
+    RestartSave()
+    Restart(2, False)
+    import net, selectserver, netlogin, map, chatoutput, netquicklogin, netserver
+    net.g_Net = net.CFakeNet()
+    netlogin.g_CurrAccount = ca
+    if tickf9 or tickf11 or hidebar:
+        import common
+        map.PushDelayCall(common.CCfgFunctor(tickf9, tickf11, hidebar))
+    netquicklogin.g_LoginKey = loginKey
+    selectserver.g_LastVisit = lastVisit
+    selectserver.g_LoginServer = loginServer
+    if g_IsDgwConnect:
+        netquicklogin.DoDgwQuickLogin(loginKey, heroID, serverid)
+        return
+    else:
+        netobj = selectserver.CMXNet(ip, port)
+        netobj.m_Hello = False
+        netobj.m_QuickLogin = True
+        netobj.m_HeroID = heroID
+        netobj.m_LoginKey = loginKey
+        if proxy:
+            print '連接代理!!!!!', proxy
+            p = proxy.find(':')
+            netobj.m_Proxy = proxy
+            netobj.Connect(proxy[:p], int(proxy[p + 1:]))
+            iplst = ip.replace('.', ' ').split()
+            for i in xrange(4):
+                netobj.NakedSend(chr(int(iplst[i])))
+
+            netobj.NakedSend(chr(port % 256) + chr(port / 256 % 256) + chr(port / 65536 % 256) + chr(port / 16777216 % 256))
+        else:
+            netobj.Connect()
+    net.g_Net = netobj
+    return
+# candidate original lines 344-417; evidence=reconnect
+def RestarConfirm(ip, port, idx, pwd):
+    import selectserver, netlogin, world, misc
+    proxy = selectserver.g_Proxy
+    ca = netlogin.g_CurrAccount
+    if g_DelayF9:
+        tickf9 = g_DelayF9.m_Tick
+    else:
+        tickf9 = 0
+    if g_DelayF11:
+        tickf11 = g_DelayF11.m_Tick
+    else:
+        tickf11 = 0
+    hidebar = world.g_HideSaleBar
+    import chatoutput
+    chatoutput.ChatsRecordFilter()
+    RestartSave()
+    Restart(2)
+    import net, selectserver, netlogin, map, netserver
+    net.g_Net = net.CFakeNet()
+    netlogin.g_CurrAccount = ca
+    if tickf9 or tickf11 or hidebar:
+        import common
+        map.PushDelayCall(common.CCfgFunctor(tickf9, tickf11, hidebar))
+    RestartRestore()
+    netobj = selectserver.CMXNet(ip, port)
+    netobj.m_Hello = False
+    netobj.m_ReConnect = True
+    netobj.m_Idx = idx
+    netobj.m_Pwd = pwd
+    if proxy:
+        print '連接代理!!!!!', proxy
+        p = proxy.find(':')
+        netobj.m_Proxy = proxy
+        netobj.Connect(proxy[:p], int(proxy[p + 1:]))
+        iplst = ip.replace('.', ' ').split()
+        for i in xrange(4):
+            netobj.NakedSend(chr(int(iplst[i])))
+
+        netobj.NakedSend(chr(port % 256) + chr(port / 256 % 256) + chr(port / 65536 % 256) + chr(port / 16777216 % 256))
+    else:
+        netobj.Connect()
+    net.g_Net = netobj
+    import netquicklogin
+    netquicklogin.StartQuickTimer()
+    return
+
+
+def RestarConfirmEx(idx, pwd, proxy_port_ip_list):
+    import netlogin, world, misc, selectserver, netserver
+    ca = netlogin.g_CurrAccount
+    if g_DelayF9:
+        tickf9 = g_DelayF9.m_Tick
+    else:
+        tickf9 = 0
+    if g_DelayF11:
+        tickf11 = g_DelayF11.m_Tick
+    else:
+        tickf11 = 0
+    hidebar = world.g_HideSaleBar
+    RestartSave()
+    Restart(2)
+    import net, connect
+    net.g_Net = net.CFakeNet()
+    connect.KuaFuConnect(idx, pwd, proxy_port_ip_list)
+    import netlogin
+    netlogin.g_CurrAccount = ca
+    if tickf9 or tickf11 or hidebar:
+        import common, map
+        map.PushDelayCall(common.CCfgFunctor(tickf9, tickf11, hidebar))
+    import selectserver, netserver
+    RestartRestore()
+    import netquicklogin
+    netquicklogin.StartQuickTimer()
+    return
+# candidate original lines 425-490; evidence=mainloop
+def MainLoop(mousex, mousey):
+    global g_iCurFrame
+    g_iCurFrame += 1
+    if Quit:
+        return 1
+    import freetimetaskqueue
+    freetimetaskqueue.UpdateStartTime()
+    import cursor, interface, net
+    cursor.Loop(mousex, mousey)
+    if interface.Hold is not None:
+        hold = interface.Hold.Get()
+        if hold is None:
+            interface.Hold = None
+        elif not C_sys.IsActiveWindow():
+            hold.LeftUp()
+        else:
+            try:
+                p = hold.GetParent()
+                while True:
+                    if p == interface.MainPanel:
+                        hold.Hold()
+                        break
+                    p = p.GetParent()
+
+            except AttributeError:
+                pass
+
+    import addon
+    addon.Hold()
+    if net.g_Net:
+        if IsTestMultiProcessServerCmd():
+            NetMultiProcessServerCmd()
+        else:
+            net.g_Net.ProcessServerCmd()
+    import netserver
+    netserver.ProcessServerCmd()
+    import connect
+    connect.ProcessServerCmd()
+    import netquicklogin
+    netquicklogin.ProcessServerCmd()
+    import pubhttp
+    pubhttp.NetProcess()
+    import pubhttps
+    pubhttps.NetProcess()
+    import imnet
+    imnet.ProcessIMCmd()
+    import ping
+    ping.Loop()
+    import dgw
+    dgw.Loop()
+    import cardgamecmdmgr
+    cardgamecmdmgr.CGameActionMgr.PerForm()
+    import pubmain
+    pubmain.Loop()
+    import timer
+    timer.Loop(timer.TimeForTimer())
+    CModuleLoop.Loop()
+    import yibug
+    yibug.YBLoop()
+    import loginterface
+    loginterface.Loop()
+    if permission.IsOpenNewSoundBnk():
+        import newsoundinterface
+        newsoundinterface.Loop()
+    log.Loop()
+    return 0
+# candidate original lines 493-516; evidence=moduleloop
+class CModuleLoop(object):
+    m_Loops = {}
+
+    @classmethod
+    def Loop(cls):
+        for (modname, loopfunc) in cls.m_Loops.items():
+            func = getattr(__import__(modname), loopfunc)
+            func()
+
+        return
+
+    @classmethod
+    def AddLoop(cls, modname, loopfunc):
+        cls.m_Loops[modname] = loopfunc
+        return
+
+    @classmethod
+    def DelLoop(cls, modname):
+        try:
+            del cls.m_Loops[modname]
+        except KeyError:
+            pass
+
+        return
+# candidate original lines 519-544; evidence=net_multi
+def IsTestMultiProcessServerCmd():
+    return True
+
+
+def NetMultiProcessServerCmd():
+    import net, dragonlogmgr
+    fTotalTime = 0
+    iUnpackNum = 0
+    net.g_UnpackNumThisFrame = 0
+    for i in xrange(net.MAX_PROCESS_SERVER_CMD_TIMES):
+        fTime = time.time()
+        net.g_Net.ProcessServerCmd()
+        if iUnpackNum == net.g_UnpackNumThisFrame:
+            break
+        fDeltaTime = time.time() - fTime
+        fTotalTime += fDeltaTime
+        iUnpackNum += net.UNPACK_PACKET_NUM_PER_PROCESS
+        if iUnpackNum >= net.MIN_UNPACK_PACKET_NUM_PER_FRAME:
+            if fDeltaTime >= net.MAX_PROCESS_SERVER_CMD_TIME_PER_TIME:
+                break
+            if fTotalTime >= net.MAX_PROCESS_SERVER_CMD_TIME_PER_FRAME:
+                break
+
+    if permission.IsOpenDragonpkNetLog():
+        dragonlogmgr.CollectUnpackTime(fTotalTime)
+    return
+# candidate original lines 547-582; evidence=warloop
+def WarLoop(mousex, mousey):
+    import dlgwarrecord
+    if not dlgwarrecord.IsWarRecPause():
+        import war
+        war.Process(True)
+    r = MainLoop(mousex, mousey)
+    return r
+
+
+def AfterRestart(mousex, mousey):
+    global RestartTimes
+    RestartTimes -= 1
+    if RestartTimes == 0:
+        SetMainLoop()
+        import blacklist
+        if blacklist.NeedCheck():
+            blacklist.StartCheck()
+    return 0
+
+
+def SetWarLoop():
+    global Loop
+    Loop = WarLoop
+    return
+
+
+def SetMainLoop():
+    global Loop
+    Loop = MainLoop
+    return
+
+
+Loop = MainLoop
+
+def InWar():
+    return Loop == WarLoop
+# candidate original lines 718-798; evidence=exit
+def ExitGame():
+    global Quit
+    if not gamectrl.IsShowMainPage():
+        Quit = True
+        return
+    import hero, net
+    if hasattr(hero, 'g_ID') and hero.g_ID and not C_sys.IsKeyDown(key.VK_CTRL) and net.g_Net:
+        RealExit(True, ('正在從服務器獲取信息...',
+                        '正在從服務器獲取信息...',
+                        '正在從服務器獲取信息...',
+                        '正在從服務器獲取信息...'))
+    else:
+        RealExit(True, None)
+    if net.g_Net and hasattr(hero, 'g_ID') and hero.g_ID:
+        import netsale
+        netsale.C2SCheckOfflineSale()
+    return
+
+
+def doexit(dlg=None):
+    import dlgexitinfo
+    dlgexitinfo.C2IMScreenShotPath()
+    CloseGame()
+    return
+
+
+def doreturn(dlg):
+    global g_ExitDialog
+    import net, log
+    log.DelMgr()
+    import statisticsignal
+    statisticsignal.Emit(statisticsignal.SS_RETURNLOGIN)
+
+    def _relogin(obj, t, dummy):
+        if t < 30:
+            return (
+             t + 1, dummy)
+        elif net.g_Net and not net.g_Net.IsSent() and t < 90:
+            return (
+             t + 1, dummy)
+        import taiwanspecial
+        taiwanspecial.Reset800x600WhenLogin()
+        Restart()
+        return
+
+    dlg.CreatePyCommand(1, _relogin, 1, dlg)
+    import netquicklogin
+    netquicklogin.NormalLogout()
+    if net.g_Net:
+        net.g_Net.m_IsRelogin = True
+    g_ExitDialog = None
+    return
+
+
+def docancel(dlg):
+    global g_ExitDialog
+    g_ExitDialog = None
+    return
+
+
+def RealExit(bPopupDialog, daymsg):
+    global g_ExitDialog
+    import commondialog, hero, cfg
+    cfg.WriteMXIniBackUp()
+    if bPopupDialog == True:
+        if g_ExitDialog:
+            doexit(None)
+            return
+        if hasattr(hero, 'g_Hero') and hero.g_Hero and hero.g_Hero.IsSale():
+            import usermacro
+            usermacro.PROMPT_MSG('退出遊戲將自動進入離線擺攤狀態')
+        if daymsg:
+            import dlgexitinfo
+            dlgexitinfo.OpenExitInfoDlg()
+        else:
+            g_ExitDialog = commondialog.ShowNewMessageBox('你確定現在就要退出遊戲嗎?', ('重新登錄',
+                                                                                                                                   '離開遊戲',
+                                                                                                                                   '取消'), (doreturn, doexit, docancel))
+    elif g_ExitDialog:
+        g_ExitDialog.UpdateDayMsg(daymsg)
+    return
+# candidate original lines 744-769; evidence=doreturn
+def doreturn(dlg):
+    global g_ExitDialog
+    import net, log
+    log.DelMgr()
+    import statisticsignal
+    statisticsignal.Emit(statisticsignal.SS_RETURNLOGIN)
+
+    def _relogin(obj, t, dummy):
+        if t < 30:
+            return (
+             t + 1, dummy)
+        elif net.g_Net and not net.g_Net.IsSent() and t < 90:
+            return (
+             t + 1, dummy)
+        import taiwanspecial
+        taiwanspecial.Reset800x600WhenLogin()
+        Restart()
+        return
+
+    dlg.CreatePyCommand(1, _relogin, 1, dlg)
+    import netquicklogin
+    netquicklogin.NormalLogout()
+    if net.g_Net:
+        net.g_Net.m_IsRelogin = True
+    g_ExitDialog = None
+    return
+# candidate original lines 801-837; evidence=clear_keys
+def ClearHotKey():
+    _magickeys = (key.VK_F1, key.VK_F2, key.VK_F3, key.VK_F4, key.VK_F5, key.VK_F6, key.VK_F7, key.VK_F8)
+    _chatkeys = (key.VK_PAGEUP, key.VK_PAGEDOWN, (key.VK_ALT, key.VK_1), (key.VK_ALT, key.VK_2), (key.VK_ALT, key.VK_3),
+     (
+      key.VK_ALT, key.VK_4), (key.VK_ALT, key.VK_5), (key.VK_ALT, key.VK_6), (key.VK_ALT, key.VK_7), (key.VK_ALT, key.VK_S),
+     (
+      key.VK_ALT, key.VK_COMMA), (key.VK_ALT, key.VK_PERIOD),
+     key.VK_WAVE)
+    _emotekeys = ((key.VK_CTRL, key.VK_1), (key.VK_CTRL, key.VK_2), (key.VK_CTRL, key.VK_3), (key.VK_CTRL, key.VK_4),
+     (
+      key.VK_CTRL, key.VK_5), (key.VK_CTRL, key.VK_6), (key.VK_CTRL, key.VK_7), (key.VK_CTRL, key.VK_8),
+     (
+      key.VK_CTRL, key.VK_9), (key.VK_CTRL, key.VK_0), (key.VK_CTRL, key.VK_DEC), (key.VK_CTRL, key.VK_EQUAL),
+     (
+      key.VK_CTRL, key.VK_WAVE))
+    _default = (key.VK_ESCAPE, key.VK_ENTER, key.VK_TAB, key.VK_F9)
+    for k in _magickeys:
+        key.RegisterHotKey(k)
+
+    for k in _chatkeys:
+        key.RegisterHotKey(k)
+
+    for k in _emotekeys:
+        key.RegisterHotKey(k)
+
+    for k in _default:
+        key.RegisterHotKey(k)
+
+    key.RegisterHotKeyEx(key.VK_CTRL)
+    key.RegisterHotKeyEx(key.VK_SHIFT)
+    key.RegisterHotKeyEx(-key.VK_CTRL)
+    key.RegisterHotKeyEx(-key.VK_SHIFT)
+    import dlgsysopt
+    for hk in dlgsysopt.g_HotKeys.values():
+        key.RegisterHotKey(hk)
+
+    return
+# candidate original lines 981-1061; evidence=hotkeys
+def RegisterDefaultHotKey():
+    import interface
+    key.RegisterHotKey(key.VK_CLOSE, ExitGame)
+    key.RegisterHotKey(key.VK_ESCAPE, HideWindow)
+    key.RegisterHotKey(key.VK_ENTER, interface.DefaultButtonClick)
+    import reimport
+    if permission.GetSpecialVersion():
+        reimport.RegisterReloadHotKey()
+
+    def Snapshot():
+        global Snapshotback
+        global g_SnapshotBG
+        global g_SnapshotID
+        try:
+            import os
+            os.mkdir('screen')
+        except:
+            pass
+
+        try:
+            g_SnapshotID += 1
+        except:
+            g_SnapshotID = 0
+
+        import interface, time
+        timetxt = '%d%02d%02d-%02d%02d%02d' % time.localtime()[:6]
+        if g_SnapshotBG:
+            pass
+        else:
+            path = 'screen/%s-%04d.bmp' % (timetxt, g_SnapshotID)
+            g_SnapshotBG = interface.CSnapshotBitmapObject(None, path)
+            g_SnapshotBG.SetZ(999)
+
+            def _refrashback(obj):
+                global g_SnapshotBG
+                import usermacro, mgrscreenshot
+                mgrscreenshot.AddScreenShotPath(path)
+                usermacro.NORMAL_MSG('截圖成功，已保存至遊戲目錄下的#s(55,screen)#Y文件夾。')
+                g_SnapshotBG = None
+                return
+
+            Snapshotback = interface.CBaseObject(None)
+            Snapshotback.CreatePyCommand(5, _refrashback)
+        return
+
+    key.RegisterHotKey(-key.VK_SNAPSHOT, Snapshot)
+    return
+
+
+def RegisterChatHotKey():
+    import chatoutput
+    key.RegisterHotKey(key.VK_PAGEUP, chatoutput.PageUp)
+    key.RegisterHotKey(key.VK_PAGEDOWN, chatoutput.PageDown)
+    import chatinput
+    key.RegisterAltHotKey(key.VK_1, chatinput.SpeedChat, 0)
+    key.RegisterAltHotKey(key.VK_2, chatinput.SpeedChat, 1)
+    key.RegisterAltHotKey(key.VK_3, chatinput.SpeedChat, 3)
+    key.RegisterAltHotKey(key.VK_4, chatinput.SpeedChat, 11)
+    key.RegisterAltHotKey(key.VK_5, chatinput.SpeedChat, 26)
+    key.RegisterAltHotKey(key.VK_6, chatinput.SpeedChat, 5)
+    key.RegisterAltHotKey(key.VK_7, chatinput.SpeedChat, 6)
+    RegisterChannelHotKey()
+    _magickeys = (
+     key.VK_F1, key.VK_F2, key.VK_F3, key.VK_F4, key.VK_F5, key.VK_F6, key.VK_F7, key.VK_F8)
+    for (idx, k) in enumerate(_magickeys):
+        key.RegisterHotKey(k, selecthotmagic, idx)
+
+    key.RegisterHotKey(key.VK_F9, switchplayer)
+    key.RegisterHotKey(key.VK_F10, switchsalebar)
+    key.RegisterHotKey(key.VK_F11, switchteamleader)
+    key.RegisterHotKey(key.VK_F12, switchdialog)
+
+    def OnHotEnter():
+        import interface
+        edit = interface.GetActiveEdit()
+        if edit and hasattr(edit, 'OnHotEnter'):
+            edit.OnHotEnter()
+        return
+
+    key.RegisterAltHotKey(key.VK_S, OnHotEnter)
+    return
+# candidate original lines 1118-1342; evidence=switch
+def SwitchHotKey(IsWar, bOldWar=None):
+    global g_DisableHotKey
+    import dlgsysopt
+    if g_DisableHotKey:
+        return
+    hotkeys = dlgsysopt.g_HotKeys
+    for hk in hotkeys.values():
+        key.RegisterHotKey(hk)
+
+    key.RegisterHotKey(key.VK_TAB)
+
+    def mainmenumsg(msgid):
+        import mainmenu
+        mainmenu.g_MainMenu.OnHotKeyMsg(msgid)
+        return
+
+    def openstate():
+        import mainmenu
+        mainmenu.g_MainMenu.m_HeroFrame.ssEmit(mainmenu.g_MainMenu.m_HeroFrame.SS_ClickIcon)
+        return
+
+    def opensummon():
+        import mainmenu
+        mainmenu.g_MainMenu.m_SummonFrame.ssEmit(mainmenu.g_MainMenu.m_SummonFrame.SS_ClickIcon)
+        return
+
+    def teamop():
+        import mainmenu, teamui
+        mainmenu.SetTeamBtnAniShow(False)
+        teamui.MakeTeam()
+        return
+
+    def dobbmake():
+        import popmenu, nethero, misc
+        if misc.IsNationFightServer():
+            return
+        import dlgbbcardmake
+        if not popmenu.CBBCardItem.BBMakeValid():
+            return
+        if dlgbbcardmake.IsOpen():
+            dlgbbcardmake.Show(False)
+        else:
+            nethero.C2SBBCardMakeOpen()
+        return
+
+    def doachieve():
+        import misc, netachieve, dlgachieve, hero
+        if misc.IsNationFightServer():
+            return
+        if dlgachieve.GetAchieveDlg() is None:
+            netachieve.CAchieve.C2SGetRecentAchieve(hero.g_ID)
+        else:
+            dlgachieve.Show(False)
+        return
+
+    def openLycos():
+        import nethero
+        nethero.C2SOpenLycos()
+        return
+
+    def openSysopt():
+        import dlgsysopt
+        dlgsysopt.ShowSwitch()
+        return
+
+    def switchHideAround():
+        import dlgsysopt
+        dlgsysopt.SwitchNpcAround()
+        return
+
+    def gamescreenshot():
+        import mgrscreenshot
+        mgr = mgrscreenshot.CShotManage()
+        mgr.Show(mgr.TYPE_SAVEGAMESHOT)
+        return
+
+    def openCalender():
+        import dlgschedule, dlgnewschedule
+        if permission.IsNewSchedule():
+            dlgnewschedule.ShowSwitch()
+        else:
+            dlgschedule.SwitchSchedule()
+        return
+
+    def openZhidao():
+        import netzhidao
+        netzhidao.C2SOpen(1)
+        return
+
+    import world, dlgmap, dlgride, dlgworldmap
+    if not IsWar:
+        key.RegisterCtrlHotKey(key.VK_1, globalhotkeyfunc.DoEmote, key.VK_1, 1)
+        key.RegisterCtrlHotKey(key.VK_2, globalhotkeyfunc.DoEmote, key.VK_2, 2)
+        key.RegisterCtrlHotKey(key.VK_3, globalhotkeyfunc.DoEmote, key.VK_3, 12)
+        key.RegisterCtrlHotKey(key.VK_4, globalhotkeyfunc.DoEmote, key.VK_4, 3)
+        key.RegisterCtrlHotKey(key.VK_5, globalhotkeyfunc.DoEmote, key.VK_5, 13)
+        key.RegisterCtrlHotKey(key.VK_6, globalhotkeyfunc.DoEmote, key.VK_6, 4)
+        key.RegisterCtrlHotKey(key.VK_7, globalhotkeyfunc.DoEmote, key.VK_7, 9)
+        key.RegisterCtrlHotKey(key.VK_8, globalhotkeyfunc.DoEmote, key.VK_8, 8)
+        key.RegisterCtrlHotKey(key.VK_9, globalhotkeyfunc.DoEmote, key.VK_9, 10)
+        key.RegisterCtrlHotKey(key.VK_0, globalhotkeyfunc.DoEmote, key.VK_0, 11)
+        key.RegisterCtrlHotKey(key.VK_DEC, globalhotkeyfunc.DoEmote, key.VK_DEC, 7)
+        key.RegisterCtrlHotKey(key.VK_EQUAL, globalhotkeyfunc.DoEmote, key.VK_EQUAL, 6)
+        key.RegisterCtrlHotKey(key.VK_WAVE, globalhotkeyfunc.DoEmote, key.VK_WAVE, 5)
+    key.RegisterHotKey(hotkeys['人物界面'], openstate)
+    key.RegisterHotKey(hotkeys['召喚獸界面'], opensummon)
+    key.RegisterHotKey(hotkeys['技能界面'], OnSwitchSkillDlg)
+    key.RegisterHotKey(hotkeys['招式界面'], OnSwitchMagicDlg)
+    key.RegisterHotKey(hotkeys['好友界面'], mainmenumsg, 9)
+    key.RegisterHotKey(hotkeys['物品界面'], mainmenumsg, 2)
+    key.RegisterHotKey(hotkeys['鍛造界面'], mainmenumsg, 4)
+    key.RegisterHotKey(hotkeys['任務界面'], mainmenumsg, 6)
+    key.RegisterHotKey(hotkeys['隊伍界面'], teamop)
+    key.RegisterHotKey(hotkeys['幫派界面'], mainmenumsg, 7)
+    key.RegisterHotKey(hotkeys['表情'], mainmenumsg, 20)
+    key.RegisterHotKey(hotkeys['動作'], mainmenumsg, 21)
+    key.RegisterHotKey(hotkeys['幻化'], dobbmake)
+    key.RegisterHotKey(hotkeys['成就'], doachieve)
+    key.RegisterHotKey(hotkeys['系統設置'], openSysopt)
+    key.RegisterHotKey(hotkeys['隱藏NPC周圍玩家'], switchHideAround)
+    key.RegisterHotKey(hotkeys['遊戲截圖'], gamescreenshot)
+    key.RegisterHotKey(key.VK_TAB, dlgmap.SwitchMinimap)
+    key.RegisterHotKey(hotkeys['世界地圖'], dlgworldmap.ShowSwitchWorldMap)
+    key.RegisterHotKey(hotkeys['坐騎界面'], dlgride.ShowSwitch)
+    import warui
+    key.RegisterHotKey(hotkeys['自動戰鬥'], warui.AutoFight)
+    key.RegisterHotKey(hotkeys['夢想精靈'], openLycos)
+    key.RegisterHotKey(hotkeys['日曆界面'], openCalender)
+    key.RegisterHotKey(hotkeys['夢想知道'], openZhidao)
+    key.RegisterHotKey(hotkeys['寄售中心界面'], globalhotkeyfunc.OpenConsignmall)
+    key.RegisterHotKey(hotkeys['精品交易中心'], globalhotkeyfunc.OpenTjTradeCenter)
+    if IsWar:
+        import mxv, warui
+
+        def defaultattack():
+            if mxv.g_Panel:
+                return
+            import misc, war, bgdata
+            if war.g_HeroID is None:
+                return
+            if war.g_WarType >= bgdata.WARTYPE_PK:
+                if war.g_TurnCount <= 1 and misc.Time() - war.g_WarStartTime < 3:
+                    return
+            if warui.IsCanQuickAct():
+                t = warui.GetTurn()
+                if t == 1:
+                    ob = warui.GetPrevBoutTarget(1)
+                    if ob:
+                        warui.PhyAttack(ob)
+                elif t == 2:
+                    ob = warui.GetPrevBoutTarget(2)
+                    if ob:
+                        warui.SummonAttack(ob)
+                elif t == 3:
+                    ob = warui.GetPrevBoutTarget(1)
+                    if ob:
+                        warui.HerdboyAttack(ob)
+            return
+
+        def doact(act):
+            if mxv.g_Panel:
+                return
+            if warui.IsCanQuickAct(act):
+                warui.g_HeroMenu.OnMessage(act)
+            return
+
+        def openwardlg(act):
+            if mxv.g_Panel:
+                return
+            oWarDlg = getattr(warui, 'g_MagicDialog', None)
+            if oWarDlg and oWarDlg.GetShow():
+                oWarDlg.CloseWindow()
+            else:
+                doact(act)
+            return
+
+        def usedefaultmagic():
+            if mxv.g_Panel:
+                return
+            import war, usermacro, pet
+            if war.g_HeroID and warui.IsCanQuickAct():
+                ob = warui.GetPrevBoutTarget()
+                flag = False
+                if isinstance(warui.g_HeroMenu, warui.CSummonMenu):
+                    petobj = pet.GetActivatePet()
+                    if len(pet.GetInitActiveSkills(petobj, True)) == 0:
+                        flag = True
+                if ob and warui.UseDefaultMagic(ob, flag) == False and flag == False and hasattr(ob, 'GetDefaultMagicID') and ob.GetDefaultMagicID() is None:
+                    usermacro.PROMPT_MSG('還沒有設置默認法術')
+            return
+
+        def selectdefaultmagic():
+            if mxv.g_Panel:
+                return
+            import war
+            if war.g_HeroID and warui.IsCanQuickAct():
+                warui.SelectDefaultMagic()
+            return
+
+        key.RegisterHotKey(hotkeys['防禦'], doact, 4)
+        key.RegisterHotKey(hotkeys['保護'], doact, 5)
+        key.RegisterHotKey(hotkeys['說服'], doact, 7)
+        key.RegisterHotKey(hotkeys['默認攻擊'], defaultattack)
+        key.RegisterHotKey(hotkeys['默認法術'], usedefaultmagic)
+        key.RegisterHotKey(hotkeys['選擇默認法術'], selectdefaultmagic)
+        key.RegisterHotKey(hotkeys['戰鬥道具'], doact, 3)
+        key.RegisterHotKey(hotkeys['法術列表'], openwardlg, 1)
+        key.RegisterHotKey(hotkeys['戰況界面'], warui.DoCommandOpt, 1)
+        key.RegisterHotKey(hotkeys['特技列表'], openwardlg, 2)
+        if warui.IsShowWarriorSelect():
+            key.RegisterHotKeyEx(key.VK_CTRL, world.WarCtrlDownCondition)
+            key.RegisterHotKeyEx(key.VK_SHIFT, world.WarCtrlDownCondition)
+            key.RegisterHotKeyEx(-key.VK_CTRL, world.WarCtrlUpCondition)
+            key.RegisterHotKeyEx(-key.VK_SHIFT, world.WarCtrlUpCondition)
+    else:
+        key.RegisterHotKey(hotkeys['攻擊'], mainmenumsg, 1)
+        key.RegisterHotKey(hotkeys['交易'], world.SwapSelect)
+        key.RegisterHotKey(hotkeys['給予'], world.GiveSelect)
+        key.RegisterHotKeyEx(key.VK_CTRL)
+        key.RegisterHotKeyEx(key.VK_SHIFT)
+        key.RegisterHotKeyEx(-key.VK_CTRL)
+        key.RegisterHotKeyEx(-key.VK_SHIFT)
+    import modelbaseopt
+    modelbaseopt.GetCBaseOptionModel().RegisterBossHotKey()
+    return

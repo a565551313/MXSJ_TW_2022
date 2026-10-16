@@ -1,0 +1,1266 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 4007,
+  "path": "script/login/register.py",
+  "owner": "C",
+  "domain": "login",
+  "author": "N2 (new Arena session arena/a1839872-mxsj-tw-2022)",
+  "source_status": "recovered_complete_not_original",
+  "purpose": {
+    "text": "注册流程控制：服务条款、普通/2980邮箱注册、验证码、手机/邮箱校验、HTTP回调与结果页。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "top",
+      "reg1",
+      "reg2",
+      "reg2_2980"
+    ]
+  },
+  "keywords": [
+    "注册",
+    "reg1",
+    "reg2",
+    "2980",
+    "验证码",
+    "邮箱",
+    "手机",
+    "服务条款",
+    "acct_reg"
+  ],
+  "functions": [
+    {
+      "name": "ModuleReset",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "重置注册全局状态：g_AccountInfo/g_CDKey/g_ConfirmDlg/g_RegisterPanel。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegEdit",
+      "signature": "(self, ...)",
+      "kind": "class",
+      "summary": {
+        "text": "注册输入框基类：只允许字母数字；激活时通知父面板。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "PhoneEdit",
+      "signature": "(self, ...)",
+      "kind": "class",
+      "summary": {
+        "text": "手机号输入框：只允许数字。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "_IdentityEdit",
+      "signature": "(self, ...)",
+      "kind": "class",
+      "summary": {
+        "text": "身份证输入框：允许数字与x/X；回车触发OnMessage(2)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CAdvPwdEdit",
+      "signature": "(self, ...)",
+      "kind": "class",
+      "summary": {
+        "text": "高级密码输入框：只允许数字。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMyEdit",
+      "signature": "(self, ...)",
+      "kind": "class",
+      "summary": {
+        "text": "通用注册输入框：IsValid且非@才允许输入。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMailEdit",
+      "signature": "(self, ...)",
+      "kind": "class",
+      "summary": {
+        "text": "邮箱输入框：输入/删除后通知父面板OnEditChange。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2980MailEdit",
+      "signature": "(self, ...)",
+      "kind": "class",
+      "summary": {
+        "text": "2980邮箱输入框：只允许字母数字。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "IsValid",
+      "signature": "(txt)",
+      "kind": "function",
+      "summary": {
+        "text": "注册输入非法字符黑名单校验。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowError",
+      "signature": "(err, ecode=0, errmsg='')",
+      "kind": "function",
+      "summary": {
+        "text": "按dc_error_code.ERROR_MSG显示错误，未知错误显示未知錯誤(code)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "top"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowConfirmDlg",
+      "signature": "(flag)",
+      "kind": "function",
+      "summary": {
+        "text": "flag=1清空g_ConfirmDlg；否则创建CConfirm服务条款确认框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "confirm"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CConfirm",
+      "signature": "(self, parent)",
+      "kind": "class",
+      "summary": {
+        "text": "服务条款确认面板：加载login/confirm.dlg，读取servicedata.CONFIRM_MSG并显示。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "confirm"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CConfirm.__init__",
+      "signature": "(self, parent)",
+      "kind": "method",
+      "summary": {
+        "text": "加载confirm.dlg并把CONFIRM_MSG按行输出到output控件。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "confirm"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CConfirm.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "1同意注册：C2SConfirmRegInfo并隐藏确认框；2关闭游戏。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "confirm"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "msgid == 1",
+          "effect": {
+            "text": "netlogin.C2SConfirmRegInfo；若有selectrole对话框设置默认按钮；隐藏确认框。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "confirm"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 2",
+          "effect": {
+            "text": "main.CloseGame关闭游戏。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "confirm"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CRegPanel1",
+      "signature": "(self, parent)",
+      "kind": "class",
+      "summary": {
+        "text": "注册服务条款页：加载reg1.dlg，显示SERVICE_MSG，步骤图。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg1"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel1.__init__",
+      "signature": "(self, parent)",
+      "kind": "method",
+      "summary": {
+        "text": "加载reg1.dlg，输出服务条款，显示同意步骤图。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg1"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel1.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "1同意进入Step(1)；2关闭游戏；3拒绝并返回首页。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg1"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "msgid == 1",
+          "effect": {
+            "text": "Step(1)进入资料页。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "reg1"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 2",
+          "effect": {
+            "text": "main.CloseGame。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "reg1"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 3",
+          "effect": {
+            "text": "隐藏注册并尝试mainpage.Show(True)，失败则main.doreturn。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "reg1"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CCheckCodeBox",
+      "signature": "(self, parent)",
+      "kind": "class",
+      "summary": {
+        "text": "验证码图片框：下载/解码base64图片到photo\\register并显示，可点击刷新。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "checkcode"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CCheckCodeBox.ShowCodeImg",
+      "signature": "(self, b64str)",
+      "kind": "method",
+      "summary": {
+        "text": "解码验证码图片并创建点击图片；失败显示openerror。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "checkcode"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CCheckCodeBox.RequestNewCode",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "发起OP_REGCODE HTTP请求刷新验证码，150帧内防重复。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "checkcode"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CCheckCodeBox.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "msgid=1请求新验证码，带请求中提示。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "checkcode"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2",
+      "signature": "(self, parent)",
+      "kind": "class",
+      "summary": {
+        "text": "普通注册资料页：加载reg2.dlg，创建密码/邮箱/验证码输入框与刷新链接。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2.CreateEdits",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "创建pwd/pwd2/email/email2/code输入框并设置Tab顺序与显示规则。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2.IdentityCheck",
+      "signature": "(self, identity)",
+      "kind": "method",
+      "summary": {
+        "text": "身份证辅助校验候选含18位长度及校验码路径；不代表调用入口已确认。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2.DoCheck",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "校验密码长度/一致、邮箱格式、验证码长度，返回错误文本。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2.CheckEmail",
+      "signature": "(self, email)",
+      "kind": "method",
+      "summary": {
+        "text": "邮箱长度5-50与正则校验。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2.Save",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "保存Password/Password2/Email到g_AccountInfo。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2.DoNext",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "校验通过后MD5密码并发起acct_reg.aspx注册请求，含验证码与TG/广告参数。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2.ShowCheckCode",
+      "signature": "(self, imgbytes, vregval)",
+      "kind": "method",
+      "summary": {
+        "text": "显示验证码图片与输入框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "1保存并Step(0)；2DoNext；3打开2980注册；4刷新验证码。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "msgid == 1",
+          "effect": {
+            "text": "Save并Step(0)返回服务条款页。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "reg2"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 2",
+          "effect": {
+            "text": "DoNext发起注册。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "reg2"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 3",
+          "effect": {
+            "text": "Register2980(0)打开2980邮箱注册。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "reg2"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 4",
+          "effect": {
+            "text": "刷新验证码。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "reg2"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Register2980",
+      "signature": "(step)",
+      "kind": "function",
+      "summary": {
+        "text": "按step创建CRegPanel2_2980或CRegPanel3_2980。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2_2980"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2_2980",
+      "signature": "(self, parent)",
+      "kind": "class",
+      "summary": {
+        "text": "2980邮箱注册页：加载reg4.dlg，创建密码/手机/邮箱/验证码输入框，服务条款链接。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2_2980"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2_2980.DoCheck",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "校验邮箱/密码/手机/验证码及已缓存的邮箱/手机检查结果。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2_2980"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2_2980.CheckEmail",
+      "signature": "(self, email)",
+      "kind": "method",
+      "summary": {
+        "text": "邮箱正则校验。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2_2980"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2_2980.Save",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "保存Password/Password2/Email。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2_2980"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2_2980.DoRegist",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "校验通过后加密密码并发起funswregister.aspx注册。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2_2980"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2_2980.RequestPhoneValid",
+      "signature": "(self, phone, callback, *args)",
+      "kind": "method",
+      "summary": {
+        "text": "发起手机存在性检查。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2_2980"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2_2980.RequestEmailValid",
+      "signature": "(self, email, callback, *args)",
+      "kind": "method",
+      "summary": {
+        "text": "发起邮箱存在性检查。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2_2980"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2_2980.RequestPhoneCode",
+      "signature": "(self, phone)",
+      "kind": "method",
+      "summary": {
+        "text": "请求短信验证码。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2_2980"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2_2980.RequestPhoneVoiceCode",
+      "signature": "(self, phone)",
+      "kind": "method",
+      "summary": {
+        "text": "请求语音验证码。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2_2980"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel2_2980.OnMessage",
+      "signature": "(self, msgid)",
+      "kind": "method",
+      "summary": {
+        "text": "2980页消息分发：校验、注册、服务条款、检测、获取验证码等。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2_2980"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnCheckEmail",
+      "signature": "(data, *args)",
+      "kind": "function",
+      "summary": {
+        "text": "处理邮箱检查结果并更新面板缓存/回调。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "callbacks"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnCheckPhone",
+      "signature": "(data, *args)",
+      "kind": "function",
+      "summary": {
+        "text": "处理手机检查结果；成功时回调。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "callbacks"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnRegister",
+      "signature": "(data, *args)",
+      "kind": "function",
+      "summary": {
+        "text": "处理2980注册结果；成功保存账号并进入CRegPanel3_2980。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "callbacks"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnPhoneCode",
+      "signature": "(data, *args)",
+      "kind": "function",
+      "summary": {
+        "text": "处理短信验证码发送结果。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "callbacks"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnPhoneVoice",
+      "signature": "(data, *args)",
+      "kind": "function",
+      "summary": {
+        "text": "处理语音验证码发送结果。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "callbacks"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnRegisterGame",
+      "signature": "(data, *args)",
+      "kind": "function",
+      "summary": {
+        "text": "处理普通注册结果；错误120显示验证码；成功进入Step(2)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "callbacks"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnRegCode",
+      "signature": "(data, *args)",
+      "kind": "function",
+      "summary": {
+        "text": "处理验证码刷新结果。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "callbacks"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "OnReceiveProcess",
+      "signature": "(data, succeed, optype, *args)",
+      "kind": "function",
+      "summary": {
+        "text": "HTTP回调总入口：分割头体，解析playerphoto.CAnalyser，按optype分发。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "callbacks"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "UTF82GBK",
+      "signature": "(msg)",
+      "kind": "function",
+      "summary": {
+        "text": "UTF-8转GBK辅助。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "callbacks"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel3_2980",
+      "signature": "(self, parent)",
+      "kind": "class",
+      "summary": {
+        "text": "注册成功页：显示邮箱，可进入游戏或返回首页。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "panels34"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRegPanel4",
+      "signature": "(self, parent)",
+      "kind": "class",
+      "summary": {
+        "text": "注册完成页：显示ResultEmail并打开邮箱URL。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "panels34"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Step",
+      "signature": "(n)",
+      "kind": "function",
+      "summary": {
+        "text": "按索引创建CRegPanel1/CRegPanel2/CRegPanel4。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "stepshow"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Show",
+      "signature": "(s)",
+      "kind": "function",
+      "summary": {
+        "text": "显示/隐藏注册；显示时InputSecrecy(1)并Step(0)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "stepshow"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowRegisterCheckCode",
+      "signature": "(imgbytes, vregval)",
+      "kind": "function",
+      "summary": {
+        "text": "若当前面板是CRegPanel2则显示验证码。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "stepshow"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowRegisterCodeFail",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "验证码请求失败时更新图片状态。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "stepshow"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ClearRegCode",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "删除photo\\register目录。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "stepshow"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetCheckCode",
+      "signature": "(checkcode)",
+      "kind": "function",
+      "summary": {
+        "text": "若2980面板显示中则填入验证码。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "stepshow"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "layout",
+      "target": "login/reg1.dlg",
+      "summary": {
+        "text": "注册服务条款页布局。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg1"
+        ]
+      }
+    },
+    {
+      "kind": "layout",
+      "target": "login/reg2.dlg",
+      "summary": {
+        "text": "普通注册资料页布局。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2"
+        ]
+      }
+    },
+    {
+      "kind": "layout",
+      "target": "login/reg3.dlg",
+      "summary": {
+        "text": "注册完成页布局。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "panels34"
+        ]
+      }
+    },
+    {
+      "kind": "layout",
+      "target": "login/reg4.dlg",
+      "summary": {
+        "text": "2980邮箱注册页布局。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2_2980"
+        ]
+      }
+    },
+    {
+      "kind": "layout",
+      "target": "login/reg5.dlg",
+      "summary": {
+        "text": "2980注册成功页布局。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "panels34"
+        ]
+      }
+    },
+    {
+      "kind": "layout",
+      "target": "login/confirm.dlg",
+      "summary": {
+        "text": "服务条款确认框布局。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "confirm"
+        ]
+      }
+    },
+    {
+      "kind": "file",
+      "target": "photo\\register\\*.jpg",
+      "summary": {
+        "text": "验证码图片缓存目录。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "checkcode"
+        ]
+      }
+    },
+    {
+      "kind": "config",
+      "target": "gameurl.REGISTER_URL / REGISTER_2980_URL",
+      "summary": {
+        "text": "普通与2980注册服务地址。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2",
+          "reg2_2980"
+        ]
+      }
+    },
+    {
+      "kind": "protocol",
+      "target": "OP_CHECKEMAIL/OP_CHECKPHONE/OP_REGISTER/OP_PHONECODE/OP_PHONEVOICE/OP_REGISTERGAME/OP_REGCODE",
+      "summary": {
+        "text": "注册流程操作码与回调映射。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "callbacks"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 337
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4806
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4293
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "注册逻辑与布局分别在哪里？",
+      "answer": {
+        "text": "首页OnMessage(2)在IsTWServer()真时打开外部REGISTER_URL（按g_LangVersion分支）；仅非TW才隐藏首页并register.Show(True)->Step(0)。register各CRegPanel与回调负责逻辑，布局reg1/reg2/reg3/reg4/reg5.dlg，CConfirm另用login/confirm.dlg。confirm是独立确认入口，不能当成Step序列；未验证布局资源内容或注册服务可用。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "mp_entry",
+          "confirm",
+          "reg1",
+          "reg2",
+          "reg2_2980",
+          "panels34",
+          "stepshow"
+        ]
+      }
+    },
+    {
+      "question": "注册点击后经过哪些函数？",
+      "answer": {
+        "text": "普通注册：CRegPanel1.OnMessage(1)->Step(1)->CRegPanel2；DoNext校验并请求；OnReceiveProcess分派；OnRegisterGame错误120显示验证码，成功Step(2)->CRegPanel4。2980为Register2980与OnRegister分支，成功构造CRegPanel3_2980，不是同一Step(2)链。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg1",
+          "reg2",
+          "reg2_2980",
+          "callbacks",
+          "stepshow"
+        ]
+      }
+    },
+    {
+      "question": "验证码失败在哪里处理？",
+      "answer": {
+        "text": "OnRegisterGame错误120要求验证码并ShowRegisterCheckCode；OnRegCode解析失败/err非零调用ShowRegisterCodeFail，成功ShowRegisterCheckCode；CCheckCodeBox.RequestNewCode负责请求刷新。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "checkcode",
+          "callbacks",
+          "stepshow"
+        ]
+      }
+    },
+    {
+      "question": "如何修改注册字段校验？",
+      "answer": {
+        "text": "CRegPanel2.DoCheck/CheckEmail与CRegPanel2_2980.DoCheck/CheckEmail；输入限制在CreateEdits/SetLimit。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2",
+          "reg2_2980"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "本轮Python 3.11.2/uncompyle6 3.9.3/xdis 6.1.8只读定点恢复；不是原始源码，未执行游戏模块或验证运行行为。",
+    "注册服务端协议结论仅静态分析，未与真实服务端联调。",
+    "未覆盖所有辅助函数/分支；calls为静态引用线索。",
+    "2980分支含大量网络参数，需E协审。",
+    "来源链、编码边界和实际测试见同目录N2_RESPONSE.md/N2_provenance.json.template；最高static_reviewed，无实机或全函数完成声明。"
+  ],
+  "sources": [
+    {
+      "id": "legacy_register",
+      "path": "tools/decompiler/output/script_fls/script/login/register.py",
+      "sha256": "bc2b5bff78d3feb473227767e9172eba21346f7fd6adad67687eb9ec97eba18d",
+      "kind": "recovered_source",
+      "note": "N2独立恢复固定script.fls白名单；精确去六行恢复头（含生成时间）后，整个正文与本文件原字节SHA一致。Python3.11.2/u6 3.9.3/xdis6.1.8；默认decode_big5_literals严格cp950，失败保留转义，不猜改字串。完整链/pyc/候选摘要见annotations/login/N2_provenance.json.template与N2_RESPONSE.md；非原始源码，解码成功不保证语义。"
+    },
+    {
+      "id": "legacy_mainpage",
+      "path": "tools/decompiler/output/script_fls/script/login/mainpage.py",
+      "sha256": "984cbe6ac7d2ed0a1479d2bcb72ea34a2fc89756017d1d95ab0f9f2195e925ac",
+      "kind": "recovered_source",
+      "note": "N2独立恢复固定script.fls白名单；精确去六行恢复头（含生成时间）后，整个正文与本文件原字节SHA一致。Python3.11.2/u6 3.9.3/xdis6.1.8；默认decode_big5_literals严格cp950，失败保留转义，不猜改字串。完整链/pyc/候选摘要见annotations/login/N2_provenance.json.template与N2_RESPONSE.md；非原始源码，解码成功不保证语义。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "top",
+      "source_id": "legacy_register",
+      "start_line": 1,
+      "end_line": 135
+    },
+    {
+      "id": "confirm",
+      "source_id": "legacy_register",
+      "start_line": 136,
+      "end_line": 166
+    },
+    {
+      "id": "reg1",
+      "source_id": "legacy_register",
+      "start_line": 167,
+      "end_line": 213
+    },
+    {
+      "id": "checkcode",
+      "source_id": "legacy_register",
+      "start_line": 214,
+      "end_line": 306
+    },
+    {
+      "id": "reg2",
+      "source_id": "legacy_register",
+      "start_line": 307,
+      "end_line": 543
+    },
+    {
+      "id": "reg2_2980",
+      "source_id": "legacy_register",
+      "start_line": 561,
+      "end_line": 930
+    },
+    {
+      "id": "callbacks",
+      "source_id": "legacy_register",
+      "start_line": 931,
+      "end_line": 1207
+    },
+    {
+      "id": "panels34",
+      "source_id": "legacy_register",
+      "start_line": 1208,
+      "end_line": 1254
+    },
+    {
+      "id": "stepshow",
+      "source_id": "legacy_register",
+      "start_line": 1255,
+      "end_line": 1305
+    },
+    {
+      "id": "reg1_end",
+      "source_id": "legacy_register",
+      "start_line": 186,
+      "end_line": 220
+    },
+    {
+      "id": "mp_entry",
+      "source_id": "legacy_mainpage",
+      "start_line": 111,
+      "end_line": 139
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 337
+      },
+      "symbol": "mainpage.Show",
+      "summary": {
+        "text": "CRegPanel1拒绝条款(msgid=3)及完成页返回按钮调用mainpage.Show(True)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg1_end",
+          "panels34"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4806
+      },
+      "symbol": "loginin.SaveAccount",
+      "summary": {
+        "text": "注册成功时保存账号到登录列表。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "callbacks"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4293
+      },
+      "symbol": "main.CloseGame",
+      "summary": {
+        "text": "服务条款页msgID=2关闭游戏。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg1"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "message",
+      "module": null,
+      "symbol": "net.CHttpObject",
+      "summary": {
+        "text": "注册流程通过HTTP请求服务端。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "reg2",
+          "reg2_2980",
+          "callbacks"
+        ]
+      }
+    }
+  ]
+}

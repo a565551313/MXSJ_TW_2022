@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 4007,
+  "annotation_sha256": "3372b8537aeb3d687aa4279b0b92f6f579654ee49a36c6fc5b1a835320e25551",
+  "reviewer": "A_delegate",
+  "delegation": "用户“H宕机了你审吧”授权A接替复核，随后“你帮他们收尾吧”授权收尾；本记录是A有限代审，不是独立H/N7。A未参与此N2固定正文的写作或改动。",
+  "decision": "accepted",
+  "note": "2026-10-16 A收尾有限代审；输入PR39 c7142366fabafea0b35d943d8746a1de9d899b49，已合A e60fcb588ff7a50249504ff603f1a64af50f5c8b；旧N7在9b0dea7基线的退修仅作问题清单，不挪绑定SHA冒充新N7结论。register：核CConfirm独立布局与reg1–5布局字符串、Step的三类映射（1255–1259）；普通OnRegisterGame（1080–1129）120验证码/非零错误/成功Step(2)与2980的OnRegister（996–1037）Code250→Register2980(1)明确分开；OnRegCode（1132–1166）解析失败及非零错误→ShowRegisterCodeFail；核字段校验定位、ResultEmail为提供数据而非反向calls。布局文件内容和服务端未验。 四条原包目录ID/stored/pyc/raw u6/body SHA实际重算一致；修正恢复子进程布尔参数后，以真实False及True独立输出四对raw/正文，严格cp950后处理链一致。接受范围为原五组阻塞及六题相关新增/修改结论和定位、来源链，不是穷尽本模块全部函数/分支语义。局限/不确定候选形态保留，不代表原始源码、5000模块、Qt/Windows/EXE/游戏/原生或服务端通过。详细报告：docs/evidence/script_manual_A_finalize_20261016.md。"
+}

@@ -10,6 +10,7 @@ from ..core.archives.document import ArchiveDocument
 from ..core.compiler.profiles import PROFILES
 from ..core.compiler.runner import bundled_compiler, compile_standard, inspect_compiler
 from ..core.project.storage import CatalogRef, ProjectState
+from ..core.services.module_paths import index_script_paths, scan_script_paths
 from ..core.services.workflow import Snapshot, prepare_build, publish_build
 from ..core.vm.py25.keys import read_catalog
 from .preview import BuildPreview
@@ -71,14 +72,16 @@ class BuildActions:
         path = Path(name).resolve()
 
         def prepare():
-            return CatalogRef(
+            ref = CatalogRef(
                 archive.path,
                 archive.fingerprint(),
                 path,
                 hashlib.sha256(read_catalog(path)).hexdigest(),
             )
+            return ref, scan_script_paths(archive, ref)
 
-        def complete(ref):
+        def complete(result):
+            ref, (paths, errors) = result
             if (
                 QMessageBox.question(
                     self,
@@ -92,6 +95,17 @@ class BuildActions:
             self.catalogs = [c for c in self.catalogs if c.archive != ref.archive] + [
                 ref
             ]
+            archive.module_paths, archive.module_path_errors = paths, errors
+            self.module_names = {
+                key: name
+                for key, name in self.module_names.items()
+                if key[0] != archive.path
+            }
+            self.module_names.update(
+                ((archive.path, i), name) for i, name in paths.items()
+            )
+            self._navigation_revision = None
+            self.workspace_refresh()
             self.project_dirty = True
             tab = self.tabs.currentWidget()
             if tab and tab.source_kind == "module-unavailable" and self.selected():
@@ -144,6 +158,7 @@ class BuildActions:
                 or tab.vm.currentData() != plan.snapshot.vm
             ):
                 raise ValueError("清单已过期，请重新预编译确认")
+            self.assert_writable_target(destination)
             state = ProjectState(tuple(self.bindings), tuple(self.catalogs))
             protected = tuple(a.path for a in self.archives) + tuple(
                 self.tabs.widget(i).path for i in range(self.tabs.count())
@@ -163,6 +178,9 @@ class BuildActions:
             new = ArchiveDocument(report.output)
             if new.fingerprint() != report.output_sha256:
                 raise ValueError("新包发布后发生变化")
+            index_script_paths(
+                new, next((c for c in state.catalogs if c.archive == new.path), None)
+            )
             return report, state, new, None
         except Exception as exc:
             if new is not None:
@@ -202,6 +220,9 @@ class BuildActions:
                 self.tree.takeTopLevelItem(i)
                 self.archives.remove(archive)
                 archive.close()
+        self.module_names = {
+            key: name for key, name in self.module_names.items() if key[0] != old_path
+        }
         root = next(
             self.tree.topLevelItem(i)
             for i in range(self.tree.topLevelItemCount())
@@ -307,6 +328,7 @@ class BuildActions:
             if not name:
                 return
             target = Path(name if name.lower().endswith(".pyc") else name + ".pyc")
+            self.assert_writable_target(target)
             text = tab.editor.toPlainText()
             filename = str(tab.path)
             protected = tuple(

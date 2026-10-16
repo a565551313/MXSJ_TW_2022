@@ -1,0 +1,60 @@
+{
+  "kind": "A_prepared_H_queue_not_an_H_review",
+  "a_tool_base_commit": "3fbbea1ebfd20e82867c57f4bdcddd0b87f1a611",
+  "owner_submission": {
+    "branch": "arena/7abe16b9-mxsj-tw-2022",
+    "commit": "1f6fdd323475e3940ea95b19e62c452e58dbd259",
+    "scope": "script_manual/annotations/ui_chat/ only",
+    "pr": "not_created_at_review_time"
+  },
+  "annotations": [
+    {
+      "path": "script_manual/annotations/ui_chat/chatoutput.json",
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4832,
+      "sha256": "bb4b492a400adfcb7812b255e76c51a0c655e24e34c0f49121448959068bf799",
+      "function_count": 25,
+      "branch_count": 21
+    },
+    {
+      "path": "script_manual/annotations/ui_chat/interface.json",
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3854,
+      "sha256": "a8c3ddf43ef74a6a0fe4319dc6922233ae9e44583523fe26d72830a3d9258318",
+      "function_count": 22,
+      "branch_count": 24
+    },
+    {
+      "path": "script_manual/annotations/ui_chat/key.json",
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3232,
+      "sha256": "745bd2579c85ab7e1faf9deb78fd37cedb23bb0a5e322b398064a2c8ed4f4b0f",
+      "function_count": 19,
+      "branch_count": 13
+    },
+    {
+      "path": "script_manual/annotations/ui_chat/mainmenu.json",
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 219,
+      "sha256": "a88bd387abcc8e0edcb3f6a1dd0258a922ef149332c3f16f66e63238f8cee48d",
+      "function_count": 17,
+      "branch_count": 17
+    }
+  ],
+  "validation_receipt": "docs/evidence/script_manual_BDF_A_validation_20261016.json",
+  "receipt_sha256": "711a38904aaafa4d1f7239b34060c949d4d37bbc2500b5db31672a42f313f126",
+  "gate": "H remains downstream; wait for all 20 finite pilot annotations and accepted B input",
+  "instructions": [
+    "Keep H fixed branch; assemble outside-repository A+D overlay (optionally B inventory once corrected and accepted)",
+    "Copy each sources.path to outside evidence repository preserving raw bytes",
+    "Reproduce 12 allowed candidates and verify pyc/source digests plus excerpt lines independently; no execution of game modules",
+    "Submit H reviews/ only, each bound to raw annotation SHA; do not edit D source",
+    "Do not count this A queue as H accepted or original/native/runtime verification"
+  ],
+  "unresolved": [
+    "219/3232 damaged identifiers retained; recovered_partial",
+    "native event delivery and callback ordering unknown",
+    "input focus/IME/Alt/Ctrl/Space and layout/style combinations need runtime",
+    "full underlying business modules and resources not in finite D scope"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 4832,
+  "annotation_sha256": "bb4b492a400adfcb7812b255e76c51a0c655e24e34c0f49121448959068bf799",
+  "reviewer": "A_delegate",
+  "delegation": "2026-10-16用户明确授权：“H宕机了你审吧”。A总控代审，非独立H会话；不含领域正文或master合并授权。",
+  "decision": "accepted",
+  "note": "有限静态说明：25类/函数、21关键分支；含职责、资源/关联、修改问答与局限核对。本轮未发现新增阻塞；仅接受已列内容与明确未知，不表示全模块、原始源码、原生或实机通过。 实际审核者为A代审，非独立H。详docs/evidence/script_manual_DE_A_delegated_review_20261016.md。"
+}

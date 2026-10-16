@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -19,6 +19,8 @@ from .code_editor import CodeEditor
 
 
 class SourceTab(QWidget):
+    candidate_requested = Signal(object)
+
     def __init__(
         self, path: Path, text: str, vm="py25", reference=False, source_kind=None
     ):
@@ -86,6 +88,15 @@ class SourceTab(QWidget):
             f"{report.archive.name} · #{report.index} · {report.identity}\n"
             + repr(bytes.fromhex(report.filename_hex))
         )
+        if report.corpus_manifest_sha256:
+            status = (
+                "与语料pyc全字节相等"
+                if report.origin_verified
+                else "未核验/不匹配，须先接通严格来源；不能直接采用"
+            )
+            self.path_label.setText(
+                self.path_label.text() + "\n载入时原包严格来源：" + status
+            )
         body = QTabWidget()
         self.layout().removeWidget(self.editor)
         body.addTab(self.editor, "恢复草稿" if report.source else "读取结果")
@@ -101,5 +112,43 @@ class SourceTab(QWidget):
             pane.setReadOnly(True)
             pane.setPlainText(text)
             body.addTab(pane, title)
+        for index, candidate in enumerate(report.candidates):
+            page = QWidget()
+            layout = QVBoxLayout(page)
+            label = QLabel(
+                f"{candidate.engine} · {candidate.status} · 未核验语法/业务语义。"
+                "另开候选不会覆盖当前编辑。"
+            )
+            label.setWordWrap(True)
+            label.setTextFormat(Qt.TextFormat.PlainText)
+            layout.addWidget(label)
+            button = QPushButton("另开此候选为可编辑草稿（保留当前修改）")
+            button.setObjectName("openCandidate_" + candidate.engine)
+            button.setEnabled(bool(candidate.source))
+            button.clicked.connect(
+                lambda checked=False, i=index: self.candidate_requested.emit(
+                    report.for_candidate(i)
+                )
+            )
+            layout.addWidget(button)
+            details = QTabWidget()
+            for title, content in (
+                ("候选源码", candidate.source),
+                ("引擎输出", candidate.stdout.decode("utf-8", "backslashreplace")),
+                (
+                    "诊断",
+                    "\n".join(candidate.diagnostics)
+                    + "\n"
+                    + candidate.stderr.decode("utf-8", "backslashreplace")
+                    + "\n过程stdout：\n"
+                    + candidate.trace_stdout.decode("utf-8", "backslashreplace"),
+                ),
+            ):
+                pane = QPlainTextEdit()
+                pane.setReadOnly(True)
+                pane.setPlainText(content)
+                details.addTab(pane, title)
+            layout.addWidget(details)
+            body.addTab(page, candidate.engine + " 候选")
         self.layout().addWidget(body, 1)
         self.module_pages = body

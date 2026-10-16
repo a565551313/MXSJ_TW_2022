@@ -25,6 +25,8 @@ class ArchiveDocument:
         self.reader = FileReader(self.path)
         self._revision = self.reader.opened_revision
         self._fingerprint = None
+        self.module_paths = {}
+        self.module_path_errors = {}
         try:
             magic = self.reader.read_at(0, 4)
             if magic == fls0slf.MAGIC:

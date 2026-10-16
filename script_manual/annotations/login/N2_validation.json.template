@@ -1,0 +1,40 @@
+{
+  "scope": "mechanical evidence anchors and regression text checks, not independent semantic acceptance",
+  "checks": {
+    "button_guard_and_submit": true,
+    "loginok_submit_not_save": true,
+    "onlogin_guard_save": true,
+    "showlogin_language_not_region": true,
+    "randomconnect_separate": true,
+    "news_actual_config": true,
+    "news_failure_callback": true,
+    "register_entry_guard": true,
+    "confirm_layout": true,
+    "main_loop_not_login_show": true,
+    "main_hotkeys_real": true,
+    "relationships_kinds": true,
+    "main_excerpt_all_17_ranges_exact": true
+  },
+  "standard_tests": {
+    "total": 82,
+    "passed": 71,
+    "skipped_gui": 11,
+    "failed": 0
+  },
+  "test_log_sha256": "28dac69ae7ae04241084b3f0a17b123286e81d5c1c0ea3230bc9353be33a68bc",
+  "validate": {
+    "expected_entries": 5135,
+    "indexed": 5135,
+    "annotated": 20,
+    "accepted": 3,
+    "excluded": 1
+  },
+  "ruff": "passed",
+  "wincompat": {
+    "filenames": 124,
+    "scripts": 27,
+    "errors": 0,
+    "warnings": 0,
+    "info": 0
+  }
+}

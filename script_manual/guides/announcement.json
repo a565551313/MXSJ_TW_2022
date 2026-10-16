@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "id": "announcement",
+  "title": "修改首页公告：失败提示、地址、正文和布局",
+  "domain": "login",
+  "author": "A",
+  "editorial_status": "draft_unreviewed",
+  "summary": "把“刷新公告失败”和“改公告内容”分开排查，定位入口、字面180计数的节流、HTTP两条失败分支、写入与显示；不把客服回调混成公告回调。",
+  "keywords": [
+    "公告",
+    "刷新失败",
+    "news.txt",
+    "News",
+    "Service",
+    "mainpage.dlg",
+    "refreshbulletin"
+  ],
+  "prerequisites": [
+    "只读研究和在独立副本修改；不覆盖原包、不运行恢复模块、不请求真实业务URL。",
+    "本专题是A新编排草稿，引用模块有限accepted不能转移成专题accepted；先核版本、正文SHA和证据。"
+  ],
+  "steps": [
+    {
+      "title": "先定位首页和布局，而不是改HTTP回调当作改界面",
+      "explanation": "CMainPage对应login/mainpage.dlg。布局负责界面，公告正文不是写死在布局里；刷新由OnMessage(30)进入。",
+      "change": "只改界面应先定位布局及控件使用处；本专题没有读取并验证.dlg资源内容，不能据候选猜控件类型或新增布局参数。",
+      "check": "分别列出要改的是布局、地址还是文本；不要一次混改三处。确认本工具引用的入口和实际加载的布局版本一致。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 337,
+          "annotation_sha256": "ce4dba86bfb2c9dc71c28b6afdfbac9c3f962b3e8776c037d94dacfc37a5d5d5",
+          "function": "CMainPage",
+          "evidence_ids": [
+            "cls"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "刷新按钮没反应：先看节流和地址选择",
+      "explanation": "OnMessage(30)取当前时间，距离g_RefreshTim不足180时提示稍后再刷新并return；否则更新刷新时间。g_LangVersion==0用update.ini的Setting节News/Service，另一支用HK节；随后分别创建公告与客服HTTP对象。",
+      "change": "改地址应查相应节的News；Service是另一份内容，不应替换成公告字段。改节流前先确认单位/原生行为，不能从字面数字推断实测时长。",
+      "check": "离线核对两种g_LangVersion分支的配置键、两个回调的对应关系；不请求真实URL。若尚未到HTTP阶段，先查节流而非改失败提示。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 337,
+          "annotation_sha256": "ce4dba86bfb2c9dc71c28b6afdfbac9c3f962b3e8776c037d94dacfc37a5d5d5",
+          "function": "CMainPage.OnMessage",
+          "evidence_ids": [
+            "news_url"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "刷新失败：明确两条失败路径",
+      "explanation": "refreshbulletin先检查succeed；为假弹“刷新公告失敗”并return。为真后找\\r\\n\\r\\n分隔符，找不到也弹同一提示。它们不是refreshService的提示，也不能仅凭提示认定服务器断网。",
+      "change": "如需区分错误，应在这两个返回点分别记录脱敏原因；提示修改不是网络故障修复。保留旧协议和错误处理，不把未知内容当成成功响应。",
+      "check": "只用合成输入分别覆盖succeed假、成功但缺分隔符、含分隔符三类。这里给出检查方案，不执行游戏回调或证明服务端可用。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 337,
+          "annotation_sha256": "ce4dba86bfb2c9dc71c28b6afdfbac9c3f962b3e8776c037d94dacfc37a5d5d5",
+          "function": "refreshbulletin",
+          "evidence_ids": [
+            "refresh"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "正文从哪来，什么时候回退到内存",
+      "explanation": "回调取分隔符后的body，尝试写news.txt；只有写文件异常才用body.split缓存g_News。随后保存refreshnews时间，并在g_MainPage存在时发OnMessage(10)刷新显示。不是HTTP失败时才缓存。",
+      "change": "改正文来源需保留body解析、持久化和显示通知的分工；别仅修改news.txt就以为远程刷新不会覆盖。路径权限、编码和原生控件显示另行验证。",
+      "check": "区分HTTP成功/失败与写文件成功/异常；确认修改没有把写失败吞成网络失败，且显示通知条件保留。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 337,
+          "annotation_sha256": "ce4dba86bfb2c9dc71c28b6afdfbac9c3f962b3e8776c037d94dacfc37a5d5d5",
+          "function": "refreshbulletin",
+          "evidence_ids": [
+            "refresh"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 337,
+          "annotation_sha256": "ce4dba86bfb2c9dc71c28b6afdfbac9c3f962b3e8776c037d94dacfc37a5d5d5",
+          "function": "CMainPage.OnMessage",
+          "evidence_ids": [
+            "messages"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "不要把自动刷新当成已确认可用",
+      "explanation": "Show候选在try/else内创建面板；autoupdate与时间条件满足才调度OnMessage(30)。该else形态有疑点，不能为了讲出完整流程把它改成想当然的正常分支。",
+      "change": "需要改自动刷新时，先核原始字节码/原生调用及调度单位；不要在手册里把异常候选修好再引用为事实。",
+      "check": "人工检查首次显示、关闭重开、节流与自动调度，但这些必须在合适原生环境另做，当前不声称执行。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 337,
+          "annotation_sha256": "ce4dba86bfb2c9dc71c28b6afdfbac9c3f962b3e8776c037d94dacfc37a5d5d5",
+          "function": "Show",
+          "evidence_ids": [
+            "show"
+          ]
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "未读取布局资源/网络响应实况；候选Show与history消息的异常形态保留未知。",
+    "每步修改建议与检查清单尚非实机结果；未证实的跨模块连接不补成完整链。",
+    "专题还需非作者独立内容复核；Windows、原生引擎和真实服务端未由本专题验收。"
+  ]
+}

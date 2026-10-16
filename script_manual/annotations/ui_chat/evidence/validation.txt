@@ -1,0 +1,142 @@
+{
+  "report_format": "D-static-validation-v1 (metadata receipt, not an annotation/review)",
+  "date_utc": "2026-10-15",
+  "branch": "arena/7abe16b9-mxsj-tw-2022",
+  "handbook_base_commit": "cc5c1bad7a806078794eca1ab7482230a18ef9d5",
+  "scope": "仅四份D样板及有限静态证据；不是原生/实机/语义验收。只有annotations/ui_chat发生修改。",
+  "module_counts": [
+    {
+      "entry_index": 4832,
+      "path": "script/chatoutput.py",
+      "source_status": "recovered_complete_not_original",
+      "functions": 25,
+      "branches": 21,
+      "evidence_ranges": 25
+    },
+    {
+      "entry_index": 3854,
+      "path": "script/interface.py",
+      "source_status": "recovered_complete_not_original",
+      "functions": 22,
+      "branches": 24,
+      "evidence_ranges": 22
+    },
+    {
+      "entry_index": 3232,
+      "path": "script/key.py",
+      "source_status": "recovered_partial",
+      "functions": 19,
+      "branches": 13,
+      "evidence_ranges": 17
+    },
+    {
+      "entry_index": 219,
+      "path": "script/mainmenu.py",
+      "source_status": "recovered_partial",
+      "functions": 17,
+      "branches": 17,
+      "evidence_ranges": 17
+    }
+  ],
+  "total_functions": 83,
+  "total_branches": 75,
+  "claim_confidence_counts": {
+    "static_reviewed": 212,
+    "extracted": 4,
+    "inferred": 7
+  },
+  "annotation_sha256": {
+    "chatoutput.json": "bb4b492a400adfcb7812b255e76c51a0c655e24e34c0f49121448959068bf799",
+    "interface.json": "a8c3ddf43ef74a6a0fe4319dc6922233ae9e44583523fe26d72830a3d9258318",
+    "key.json": "745bd2579c85ab7e1faf9deb78fd37cedb23bb0a5e322b398064a2c8ed4f4b0f",
+    "mainmenu.json": "a88bd387abcc8e0edcb3f6a1dd0258a922ef149332c3f16f66e63238f8cee48d"
+  },
+  "locked_inputs_after": {
+    "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "data/data.fls": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+    "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+  },
+  "shared_files_unchanged": "测试23与固定底座git show逐字节比较AGENTS/STATUS/手册规则/schema/coordination/inventory/login样板/decompiler工具，未改。",
+  "validation": {
+    "command": "PYTHONPATH=script_manual/src python -m mxsj_manual validate --verify-evidence --repository .",
+    "exit_code": 0,
+    "warnings_total": 6,
+    "unindexed_related_module_indices": [
+      4699,
+      1713,
+      2525,
+      3257,
+      2589
+    ],
+    "warning_note": "3257在两个关系上重复警告；5个不同身份都从允许条目的co_filename/候选确认，未擅改B的20条种子目录。"
+  },
+  "dedicated_readonly_checks": {
+    "count": 24,
+    "passed": 24,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "environment": "Linux Python 3.11.2；jsonschema 4.25.1；无Qt/游戏运行",
+    "command": "PYTHONPATH=script_manual/src /home/user/d-ui-chat-venv/bin/python /home/user/d-ui-chat-work/test_deliverables.py",
+    "note": "这是D内容专项unittest，不是底座75项产品全套。下附本轮实际执行源码和输出供H审阅；源码依赖provenance所述外置候选重现，绝不import候选。",
+    "checker_sha256": "1df57be0eae18f793d44a944f3db97ca375bc458e860e161e4080436c0761103",
+    "log": "test_01_schema_and_verified_evidence (__main__.DManualTests.test_01_schema_and_verified_evidence) ... ok\ntest_02_only_four_assigned_identities (__main__.DManualTests.test_02_only_four_assigned_identities) ... ok\ntest_03_function_branch_counts_and_uniqueness (__main__.DManualTests.test_03_function_branch_counts_and_uniqueness) ... ok\ntest_04_claim_confidence_and_pending_review (__main__.DManualTests.test_04_claim_confidence_and_pending_review) ... ok\ntest_05_report_digests_paths_lf_and_limits (__main__.DManualTests.test_05_report_digests_paths_lf_and_limits) ... ok\ntest_06_candidate_sha_length_and_original_filename (__main__.DManualTests.test_06_candidate_sha_length_and_original_filename) ... ok\ntest_07_report_excerpts_exactly_match_candidate_lines (__main__.DManualTests.test_07_report_excerpts_exactly_match_candidate_lines) ... ok\ntest_08_source_ranges_are_closed_and_real (__main__.DManualTests.test_08_source_ranges_are_closed_and_real) ... ok\ntest_09_signatures_exist_in_original_candidate (__main__.DManualTests.test_09_signatures_exist_in_original_candidate) ... ok\ntest_10_each_function_has_own_declaration_in_cited_excerpt (__main__.DManualTests.test_10_each_function_has_own_declaration_in_cited_excerpt) ... ok\ntest_11_call_expressions_are_in_own_candidate (__main__.DManualTests.test_11_call_expressions_are_in_own_candidate) ... ok\ntest_12_damage_not_silently_repaired (__main__.DManualTests.test_12_damage_not_silently_repaired) ... ok\ntest_13_dynamic_targets_remain_null (__main__.DManualTests.test_13_dynamic_targets_remain_null) ... ok\ntest_14_menu_skill_name_not_guessed_as_skill_page (__main__.DManualTests.test_14_menu_skill_name_not_guessed_as_skill_page) ... ok\ntest_15_chat_display_and_receive_switches_distinguished (__main__.DManualTests.test_15_chat_display_and_receive_switches_distinguished) ... ok\ntest_16_search_has_all_new_modules (__main__.DManualTests.test_16_search_has_all_new_modules) ... ok\ntest_17_negative_digest_rejected (__main__.DManualTests.test_17_negative_digest_rejected) ... ok\ntest_18_negative_out_of_bounds_evidence_rejected (__main__.DManualTests.test_18_negative_out_of_bounds_evidence_rejected) ... ok\ntest_19_negative_runtime_upgrade_rejected (__main__.DManualTests.test_19_negative_runtime_upgrade_rejected) ... ok\ntest_20_full_inventory_must_still_fail (__main__.DManualTests.test_20_full_inventory_must_still_fail) ... ok\ntest_21_selected_payload_hashes_and_excluded_range_guard (__main__.DManualTests.test_21_selected_payload_hashes_and_excluded_range_guard) ... ok\ntest_22_stable_input_and_tool_digests (__main__.DManualTests.test_22_stable_input_and_tool_digests) ... ok\ntest_23_baseline_contract_and_other_owners_unchanged (__main__.DManualTests.test_23_baseline_contract_and_other_owners_unchanged) ... ok\ntest_24_export_verified_content_offline (__main__.DManualTests.test_24_export_verified_content_offline) ... ok\n\n----------------------------------------------------------------------\nRan 24 tests in 1.236s\n\nOK\n",
+    "checker_source": "\"\"\"Read-only tests for D's four manual records; never imports game candidates.\"\"\"\nfrom __future__ import annotations\n\nfrom collections import Counter\nimport copy\nimport hashlib\nimport json\nfrom pathlib import Path\nimport re\nimport shutil\nimport struct\nimport subprocess\nimport tempfile\nimport unittest\nimport zlib\n\nfrom mxsj_manual.core.catalog import load_catalog\nfrom mxsj_manual.core.export import export_site\nfrom mxsj_manual.core.io import ManualError\nfrom mxsj_manual.core.validation import annotation_semantics, claims\n\nROOT = Path('/home/user/MXSJ_TW_2022')\nWORK = Path('/home/user/d-ui-chat-work')\nCONTENT = ROOT / 'script_manual'\nDOMAIN = CONTENT / 'annotations/ui_chat'\nBASE = 'cc5c1bad7a806078794eca1ab7482230a18ef9d5'\nEXPECTED = {219: ('mainmenu', 'script/mainmenu.py', 17, 17),\n            3854: ('interface', 'script/interface.py', 22, 24),\n            3232: ('key', 'script/key.py', 19, 13),\n            4832: ('chatoutput', 'script/chatoutput.py', 25, 21)}\nROWS = [json.loads(p.read_text(encoding='utf-8')) for p in sorted(DOMAIN.glob('*.json'))]\nRECEIPTS = {r['entry_index']: r for filename in ('recovery_receipt.json', 'support_receipt.json')\n            for r in json.loads((WORK / filename).read_text(encoding='utf-8'))['entries']}\n\n\ndef digest(raw):\n    return hashlib.sha256(raw).hexdigest()\n\n\ndef read_candidate(index):\n    folder = 'candidates' if index in EXPECTED else 'support'\n    return (WORK / folder / f'{index}.py').read_bytes()\n\n\nclass DManualTests(unittest.TestCase):\n    def test_01_schema_and_verified_evidence(self):\n        catalog = load_catalog(CONTENT, repository=ROOT)\n        self.assertEqual(catalog.coverage(), dict(expected_entries=5135, indexed=20,\n                                                 annotated=5, accepted=0, excluded=0))\n        self.assertEqual(len(catalog.warnings), 6)\n        self.assertEqual({int(w.rsplit(':', 1)[1]) for w in catalog.warnings}, {4699, 1713, 2525, 3257, 2589})\n\n    def test_02_only_four_assigned_identities(self):\n        self.assertEqual({r['entry_index'] for r in ROWS}, set(EXPECTED))\n        self.assertEqual(len(ROWS), 4)\n        for row in ROWS:\n            self.assertEqual((row['owner'], row['author'], row['domain']), ('D', 'D', 'ui_chat'))\n            self.assertEqual(row['path'], EXPECTED[row['entry_index']][1])\n            self.assertNotEqual(row['entry_index'], 1288)\n\n    def test_03_function_branch_counts_and_uniqueness(self):\n        for row in ROWS:\n            self.assertEqual(len(row['functions']), EXPECTED[row['entry_index']][2])\n            self.assertEqual(sum(len(f['branches']) for f in row['functions']), EXPECTED[row['entry_index']][3])\n            names = [f['name'] for f in row['functions']]\n            self.assertEqual(len(names), len(set(names)))\n        self.assertEqual(sum(len(r['functions']) for r in ROWS), 83)\n        self.assertEqual(sum(len(f['branches']) for r in ROWS for f in r['functions']), 75)\n\n    def test_04_claim_confidence_and_pending_review(self):\n        all_claims = [claim for row in ROWS for claim in claims(row)]\n        confidence = Counter(claim['confidence'] for claim in all_claims)\n        self.assertEqual(set(confidence), {'extracted', 'static_reviewed', 'inferred'})\n        self.assertEqual(confidence['runtime_verified'], 0)\n        for claim in all_claims:\n            self.assertTrue(claim['evidence'])\n        catalog = load_catalog(CONTENT)\n        self.assertEqual([r['review_status'] for r in catalog.modules if r['entry_index'] in EXPECTED], ['pending'] * 4)\n\n    def test_05_report_digests_paths_lf_and_limits(self):\n        for row in ROWS:\n            for source in row['sources']:\n                p = ROOT / source['path']\n                self.assertTrue(p.is_relative_to(DOMAIN))\n                self.assertFalse(p.is_symlink())\n                raw = p.read_bytes()\n                self.assertNotIn(b'\\r', raw)\n                self.assertLess(len(raw), 128 * 1024)\n                self.assertEqual(source['kind'], 'metadata')\n                self.assertEqual(digest(raw), source['sha256'])\n                raw.decode('utf-8')\n        self.assertLess(sum(p.stat().st_size for p in DOMAIN.rglob('*') if p.is_file()), 512 * 1024)\n\n    def test_06_candidate_sha_length_and_original_filename(self):\n        for index, receipt in RECEIPTS.items():\n            self.assertNotEqual(index, 1288)\n            raw = read_candidate(index)\n            self.assertEqual(digest(raw), receipt['candidate_sha256'])\n            self.assertEqual(len(raw), receipt['candidate_bytes'])\n            self.assertEqual(len(raw.decode('utf-8').splitlines()), receipt['candidate_lines'])\n            if index in EXPECTED:\n                self.assertEqual(receipt['co_filename'], EXPECTED[index][1])\n\n    def test_07_report_excerpts_exactly_match_candidate_lines(self):\n        excerpts = 0\n        for path in sorted((DOMAIN / 'evidence').glob('*.txt')):\n            if path.name in {'provenance.txt', 'validation.txt'}:\n                continue\n            index = None\n            range_expected = None\n            range_seen = []\n            def check_range():\n                if range_expected is not None:\n                    self.assertEqual(range_seen, list(range(range_expected[0], range_expected[1] + 1)))\n            for line in path.read_text(encoding='utf-8').splitlines():\n                header = re.fullmatch(r'\\[[^]]+\\] entry=(\\d+)；co_filename=(.+)', line)\n                if header:\n                    check_range()\n                    range_expected = None\n                    range_seen = []\n                    index = int(header[1])\n                    self.assertEqual(header[2], RECEIPTS[index]['co_filename'])\n                if line.startswith('原候选 SHA256='):\n                    self.assertIn(RECEIPTS[index]['candidate_sha256'], line)\n                bounds = re.fullmatch(r'原候选行范围：(\\d+)\\.\\.(\\d+)（闭区间）', line)\n                if bounds:\n                    check_range()\n                    range_expected = (int(bounds[1]), int(bounds[2]))\n                    range_seen = []\n                content = re.fullmatch(r'L(\\d+): (.+)', line)\n                if content:\n                    self.assertIsNotNone(index)\n                    number = int(content[1])\n                    raw_line = json.loads(content[2])\n                    self.assertEqual(raw_line, read_candidate(index).decode('utf-8').splitlines()[number - 1])\n                    range_seen.append(number)\n                    excerpts += 1\n            check_range()\n        self.assertGreater(excerpts, 2500)\n\n    def test_08_source_ranges_are_closed_and_real(self):\n        for row in ROWS:\n            sources = {s['id']: (ROOT / s['path']).read_text(encoding='utf-8').splitlines() for s in row['sources']}\n            evidence = {e['id']: e for e in row['evidence']}\n            for e in evidence.values():\n                lines = sources[e['source_id']]\n                self.assertGreaterEqual(e['start_line'], 1)\n                self.assertGreaterEqual(e['end_line'], e['start_line'])\n                self.assertLessEqual(e['end_line'], len(lines))\n            for claim in claims(row):\n                self.assertTrue(all(ref in evidence for ref in claim['evidence']))\n\n    def test_09_signatures_exist_in_original_candidate(self):\n        for row in ROWS:\n            compact = re.sub(r'\\s+', '', read_candidate(row['entry_index']).decode('utf-8'))\n            for item in row['functions']:\n                leaf = item['name'].rsplit('.', 1)[-1]\n                literal = f'def {leaf}{item[\"signature\"]}:'\n                self.assertIn(re.sub(r'\\s+', '', literal), compact, item['name'])\n\n    def test_10_each_function_has_own_declaration_in_cited_excerpt(self):\n        for row in ROWS:\n            sources = {s['id']: (ROOT / s['path']).read_text(encoding='utf-8').splitlines() for s in row['sources']}\n            evidence = {e['id']: e for e in row['evidence']}\n            for item in row['functions']:\n                text = '\\n'.join('\\n'.join(sources[evidence[ref]['source_id']][evidence[ref]['start_line'] - 1:evidence[ref]['end_line']])\n                                 for ref in item['summary']['evidence'])\n                self.assertIn('def ' + item['name'].rsplit('.', 1)[-1] + '(', text, item['name'])\n\n    def test_11_call_expressions_are_in_own_candidate(self):\n        for row in ROWS:\n            source = read_candidate(row['entry_index']).decode('utf-8')\n            for item in row['functions']:\n                for call in item['calls']:\n                    self.assertIn(call, source, f'{row[\"entry_index\"]}: {item[\"name\"]}: {call}')\n\n    def test_12_damage_not_silently_repaired(self):\n        row_key = next(r for r in ROWS if r['entry_index'] == 3232)\n        row_menu = next(r for r in ROWS if r['entry_index'] == 219)\n        self.assertEqual(row_key['source_status'], 'recovered_partial')\n        self.assertEqual(row_menu['source_status'], 'recovered_partial')\n        self.assertIn('RegisterS%/HotKey', read_candidate(3232).decode('utf-8'))\n        self.assertNotIn('RegisterSysHotKey', [f['name'] for f in row_key['functions']])\n        self.assertIn('t|wgqbrecordteaminfo', read_candidate(219).decode('utf-8'))\n\n    def test_13_dynamic_targets_remain_null(self):\n        dynamic = [rel for row in ROWS for rel in row['relationships'] if rel['summary']['confidence'] == 'inferred']\n        self.assertGreaterEqual(len(dynamic), 6)\n        for relation in dynamic:\n            self.assertIsNone(relation['module'])\n        self.assertTrue(any(rel['symbol'] is None for rel in dynamic))\n\n    def test_14_menu_skill_name_not_guessed_as_skill_page(self):\n        row = next(r for r in ROWS if r['entry_index'] == 219)\n        fn = next(f for f in row['functions'] if f['name'] == 'CMainMenu.OnHotKeyMsg')\n        branch = next(b for b in fn['branches'] if b['condition'] == 'iMsgID == 4')\n        self.assertIn('锻造', branch['effect']['text'])\n        self.assertIn('makeequipctrl.GetMakeEquipDlgCtrl', (DOMAIN / 'evidence/support.txt').read_text(encoding='utf-8'))\n\n    def test_15_chat_display_and_receive_switches_distinguished(self):\n        row = next(r for r in ROWS if r['entry_index'] == 4832)\n        text = json.dumps(row, ensure_ascii=False)\n        self.assertIn('g_MarkValue', text)\n        self.assertIn('hero.m_Switch', text)\n        self.assertIn('C2SChgChannelSwitch', text)\n        self.assertIn('不宣称服务端采纳', text)\n        self.assertIn('未知', text)\n\n    def test_16_search_has_all_new_modules(self):\n        catalog = load_catalog(CONTENT, repository=ROOT)\n        for query, index in [('主菜单', 219), ('CClickBox', 3854), ('CFunctor', 3232), ('气泡', 4832)]:\n            self.assertIn(index, [r['entry_index'] for r in catalog.search(query, domain='ui_chat')])\n        self.assertEqual(len(catalog.search(domain='ui_chat', status='pending')), 4)\n\n    def test_17_negative_digest_rejected(self):\n        row = copy.deepcopy(ROWS[0])\n        row['sources'][0]['sha256'] = '0' * 64\n        with self.assertRaisesRegex(ManualError, '摘要变化'):\n            annotation_semantics(row, repository=ROOT)\n\n    def test_18_negative_out_of_bounds_evidence_rejected(self):\n        row = copy.deepcopy(ROWS[0])\n        row['evidence'][0]['end_line'] = 1000000\n        with self.assertRaisesRegex(ManualError, '超过来源'):\n            annotation_semantics(row, repository=ROOT)\n\n    def test_19_negative_runtime_upgrade_rejected(self):\n        row = copy.deepcopy(ROWS[0])\n        row['purpose']['confidence'] = 'runtime_verified'\n        with self.assertRaisesRegex(ManualError, '实机验收'):\n            annotation_semantics(row, repository=ROOT)\n\n    def test_20_full_inventory_must_still_fail(self):\n        with self.assertRaisesRegex(ManualError, '全量目录未完成'):\n            load_catalog(CONTENT, repository=ROOT, require_full=True)\n\n    def test_21_selected_payload_hashes_and_excluded_range_guard(self):\n        self.assertEqual(set(RECEIPTS), {219, 3854, 3232, 4832, 4293, 4699, 1713, 241, 2525, 3257, 2589, 2906})\n        with (ROOT / 'data/script.fls').open('rb') as f:\n            magic, count, table = struct.unpack('<4sII', f.read(12))\n            self.assertEqual((magic, count), (b'0SLF', 5002))\n            def record(i):\n                f.seek(table + i * 16)\n                eid, a, b, c = struct.unpack('<IIII', f.read(16))\n                size = (((a * eid + 0x0DF25E) & 0xffffffff) ^ b) & 0xffffffff\n                offset = (((b * i * 0x00F718FE + 0x0D59D16C) & 0xffffffff) ^ c) & 0xffffffff\n                return eid, offset, size\n            _, excluded_offset, excluded_size = record(1288)  # directory metadata only\n            for index, receipt in RECEIPTS.items():\n                eid, offset, size = record(index)\n                self.assertTrue(offset + size <= excluded_offset or excluded_offset + excluded_size <= offset)\n                f.seek(offset)\n                raw = f.read(size)\n                self.assertEqual(digest(raw), receipt['stored_sha256'])\n                self.assertEqual(f'{eid:08x}', receipt['entry_id'])\n                self.assertEqual(len(zlib.decompress(raw)), receipt['expanded_size'])\n\n    def test_22_stable_input_and_tool_digests(self):\n        baseline = json.loads((CONTENT / 'coordination/baseline.json').read_text(encoding='utf-8'))\n        for archive in baseline['archives']:\n            self.assertEqual(digest((ROOT / 'data' / archive['name']).read_bytes()), archive['sha256'])\n        self.assertEqual(digest((ROOT / 'tools/decompiler/script_fls_keys.json').read_bytes()), baseline['parameter_sha256'])\n        self.assertEqual(digest((ROOT / 'tools/decompiler/batch_decompile.py').read_bytes()), 'a74742231e04c018c3f63452cfc859c20c6404fd73891eae9076bfcf8185b4e8')\n\n    def test_23_baseline_contract_and_other_owners_unchanged(self):\n        for relative in ['AGENTS.md', 'docs/STATUS.md', 'script_manual/README.md', 'script_manual/docs/CONTRACT.md',\n                         'script_manual/docs/AGENT_TASKS.md', 'script_manual/coordination/baseline.json',\n                         'script_manual/coordination/tasks.json', 'script_manual/schema/contract.schema.json',\n                         'script_manual/inventory/modules.jsonl', 'script_manual/annotations/login/mainpage.json',\n                         'tools/decompiler/batch_decompile.py', 'tools/decompiler/recover_entries.py']:\n            original = subprocess.check_output(['git', 'show', f'{BASE}:{relative}'], cwd=ROOT)\n            self.assertEqual((ROOT / relative).read_bytes(), original, relative)\n\n    def test_24_export_verified_content_offline(self):\n        catalog = load_catalog(CONTENT, repository=ROOT)\n        with tempfile.TemporaryDirectory(dir=WORK) as temporary:\n            output = Path(temporary) / 'offline'\n            export_site(catalog, output, content_root=CONTENT)\n            receipt = json.loads((output / 'BUILD.json').read_text(encoding='utf-8'))\n            self.assertEqual(receipt['coverage']['annotated'], 5)\n            self.assertEqual(receipt['coverage']['accepted'], 0)\n            self.assertTrue((output / 'index.html').is_file())\n            self.assertFalse((output / 'INCOMPLETE.txt').exists())\n            raw = (output / 'index.html').read_bytes()\n            for token in ['CMainMenu.OnHotKeyMsg', 'CClickBox.__init__', 'CFunctor.__call__', 'CChannelOutput.CreateTextObj']:\n                self.assertIn(token.encode('utf-8'), raw)\n            self.assertIn('verified_bytes_and_lines'.encode(), raw)\n            self.assertEqual(digest(raw), receipt['html_sha256'])\n\n\nif __name__ == '__main__':\n    unittest.main(verbosity=2)\n"
+  },
+  "first_run_findings": [
+    {
+      "finding": "CFunctor.__call__摘录从L105开始漏了L104声明；专项测试10失败。",
+      "resolution": "修改证据范围为104..133，重算报告和四份引用摘要，测试保持原要求。"
+    },
+    {
+      "finding": "一次性专项自检误用export_site(repository=...)并当作返回回执；并非手册产品缺陷。",
+      "resolution": "按固定底座真实API使用content_root及BUILD.json，不改产品源码/测试。"
+    },
+    {
+      "finding": "git diff --cached --check识别六份证据报告末尾封套空行。",
+      "resolution": "删除报告封套末尾空行，保留每个原候选行的JSON字符串（含原空格/空行），重算报告/正文SHA，再跑24项和导出。"
+    }
+  ],
+  "offline_build": {
+    "command": "PYTHONPATH=script_manual/src python -m mxsj_manual build --verify-evidence --repository . --output /home/user/d-ui-chat-work/site-d-final-v3",
+    "exit_code": 0,
+    "build_receipt": {
+      "tool_version": "0.1.0.dev1",
+      "analysis_id": "mxsj-original-20261015-v1",
+      "coverage": {
+        "expected_entries": 5135,
+        "indexed": 20,
+        "annotated": 5,
+        "accepted": 0,
+        "excluded": 0
+      },
+      "html_sha256": "c68aed3646f2e5b95e008a590564117330109f26deb24a1e0964a9eb5cfb497f",
+      "input_sha256": {
+        "schema/contract.schema.json": "6eba29e2154296c021f5f173de79347e3c0ce71a55d4804c3e812790347b1a2d",
+        "coordination/baseline.json": "55f23e7298d0d2481123a384095192cbfe1d559c029f4ded923c2911f63d06c9",
+        "inventory/modules.jsonl": "de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b",
+        "coordination/tasks.json": "88f665da9e0f233378a9771b63c14c8f5ea877c4fe43313a75c8347a913ad67c",
+        "annotations/login/mainpage.json": "b8a96ab7d52bebfd9f8e2efca9172a5a0f5d8978902a9482f7632ffbc8bc2f54",
+        "annotations/ui_chat/chatoutput.json": "bb4b492a400adfcb7812b255e76c51a0c655e24e34c0f49121448959068bf799",
+        "annotations/ui_chat/interface.json": "a8c3ddf43ef74a6a0fe4319dc6922233ae9e44583523fe26d72830a3d9258318",
+        "annotations/ui_chat/key.json": "745bd2579c85ab7e1faf9deb78fd37cedb23bb0a5e322b398064a2c8ed4f4b0f",
+        "annotations/ui_chat/mainmenu.json": "a88bd387abcc8e0edcb3f6a1dd0258a922ef149332c3f16f66e63238f8cee48d"
+      },
+      "evidence_verified": true,
+      "scope": "只校验输入结构及可选字节/行号；不验证解释正确，不运行游戏。"
+    },
+    "not_run": "没有运行真实浏览器/GUI/Windows/EXE；导出成功不等于这些平台通过。"
+  },
+  "negative_tests": "损坏来源摘要、越界行号、将metadata升级为runtime_verified均拒绝；--require-full-inventory对应核心闸门仍拒绝20/5135的种子目录。",
+  "not_run": [
+    "游戏脚本/恢复pyc/客户端执行",
+    "真实网络收发与服务端采纳",
+    "原生C_sys输入泵/slot内部调度核对",
+    "Windows/EXE/GUI/真实浏览器验收",
+    "底座75项产品全套",
+    "H独立审核（本分支H通过0）"
+  ],
+  "policy": "1288只读目录元数据用于排除区间保护，无payload读取/解压/恢复；完整候选/pyc、venv、站点与测试工作文件均仓库外。",
+  "git_diff_cached_check": "最终退出0；所有11个新增文件仅位于script_manual/annotations/ui_chat/。",
+  "final_manual_audit": "追加main技能/招式信号定义、第二delegate订阅、netchat旧气泡语法原行证据；所有calls保留候选调用表达式，不把动态self/工厂强行固定成类。"
+}

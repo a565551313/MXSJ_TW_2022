@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "id": "hotkeys",
+  "title": "修改快捷键：清理、默认键、聊天和战斗方案",
+  "domain": "ui_chat",
+  "author": "A",
+  "editorial_status": "draft_unreviewed",
+  "summary": "按注册层次及切换守卫寻找修改入口，避免把ClearHotKey理解为清空一切或重新注册默认键。",
+  "keywords": [
+    "快捷键",
+    "热键",
+    "Enter",
+    "Esc",
+    "截图",
+    "战斗",
+    "SwitchHotKey"
+  ],
+  "prerequisites": [
+    "只读研究和在独立副本修改；不覆盖原包、不运行恢复模块、不请求真实业务URL。",
+    "本专题是A新编排草稿，引用模块有限accepted不能转移成专题accepted；先核版本、正文SHA和证据。"
+  ],
+  "steps": [
+    {
+      "title": "先分清清理与注册职责",
+      "explanation": "ClearHotKey对列出的键以无回调形式调用RegisterHotKey，并处理Ctrl/Shift扩展键；未见调用RegisterDefaultHotKey，也不能说它注销全部键。",
+      "change": "先确定需要改的是清理清单还是注册映射；不要往ClearHotKey末尾擅自补默认注册来“修复”候选。",
+      "check": "对照列出的键与后续注册来源，保留“无回调调用”的字面事实；底层注销机制需另核key模块/原生接口。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4293,
+          "annotation_sha256": "f5eff3f1f3a95bc9373bd903c2a404a795308557801f1ce0268525f768698692",
+          "function": "ClearHotKey",
+          "evidence_ids": [
+            "clear_keys"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "默认Enter是委托，不是这里直接登录",
+      "explanation": "RegisterDefaultHotKey注册关闭、Esc、Enter和截图；Enter委托interface.DefaultButtonClick，具体焦点和默认按钮行为要看下游及原生事件。聊天快捷键另在RegisterChatHotKey。",
+      "change": "改全局默认键定位RegisterDefaultHotKey；改聊天映射定位RegisterChatHotKey；改登录提交则回到登录专题，不能直接把全局Enter绑成LoginOk。",
+      "check": "列出焦点在输入框/其它窗口、弹窗、无默认按钮等检查条件；未做原生验证，不称这些情况已正常。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4293,
+          "annotation_sha256": "f5eff3f1f3a95bc9373bd903c2a404a795308557801f1ce0268525f768698692",
+          "function": "RegisterDefaultHotKey",
+          "evidence_ids": [
+            "hotkeys"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4293,
+          "annotation_sha256": "f5eff3f1f3a95bc9373bd903c2a404a795308557801f1ce0268525f768698692",
+          "function": "RegisterChatHotKey",
+          "evidence_ids": [
+            "hotkeys"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "战斗切换先受禁用守卫，再选方案",
+      "explanation": "SwitchHotKey在g_DisableHotKey真时直接返回；读取配置并注册公共键，IsWar分支注册战斗键，否则处理普通攻击/交易/给予和扩展键，末尾注册BossHotKey。",
+      "change": "改用户映射应同时核配置来源、禁用守卫、公共与战斗/普通两套注册；不要只在默认注册处改一键而漏掉切换覆盖。",
+      "check": "检查禁用/启用、进入/退出战斗和公共键重注册是否符合预期；快捷键是否生效最终仍需Windows原生输入验证。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4293,
+          "annotation_sha256": "f5eff3f1f3a95bc9373bd903c2a404a795308557801f1ce0268525f768698692",
+          "function": "SwitchHotKey",
+          "evidence_ids": [
+            "switch"
+          ]
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "未完成原生按键分发、焦点优先级与所有配置加载链，不能把调用RegisterHotKey等同按键实际生效。",
+    "每步修改建议与检查清单尚非实机结果；未证实的跨模块连接不补成完整链。",
+    "专题还需非作者独立内容复核；Windows、原生引擎和真实服务端未由本专题验收。"
+  ]
+}

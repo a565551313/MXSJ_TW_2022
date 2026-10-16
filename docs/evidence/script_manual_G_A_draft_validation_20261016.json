@@ -1,0 +1,227 @@
+{
+  "kind": "A_authored_G_finite_drafts_not_an_independent_review",
+  "a_base_commit": "69ca61f3830f23e8710427c4113adc5e01e77c11",
+  "date": "2026-10-16",
+  "user_context": "用户说G也罢工了，A承接G四篇；作者明确A，非G会话提交，A不自批。",
+  "identity_archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "keys_db_sha256": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+  "tools": {
+    "tools/decompiler/recover_entries.py": "152dbc28864a10c8b7188df7ae91c8039b0b8c0b056d98591e407b897e39c458",
+    "tools/decompiler/batch_decompile.py": "a74742231e04c018c3f63452cfc859c20c6404fd73891eae9076bfcf8185b4e8"
+  },
+  "environment": {
+    "python": "3.11.2",
+    "uncompyle6": "3.9.3",
+    "xdis": "6.1.8",
+    "spark-parser": "1.9.0",
+    "click": "8.5.0"
+  },
+  "recovery": [
+    {
+      "entry_index": 3038,
+      "entry_id": 2570449439,
+      "path": "script/hero.py",
+      "stored_size": 34157,
+      "stored_sha256": "930eb0dfac061776a25cf9581d4bc81ff9b75b738c1efd76f2d57486e955a182",
+      "pyc_sha256": "1f2a23693e51ab2d09240a6edb3704934bd9f1164c05aa399c07c811e735f136",
+      "candidate_sha256": "f8ada6bf353f890d7c41b7d107e4fdf85960f621d526113a7fd5562b59e88bbe",
+      "body_after_six_header_lines_sha256": "e04fe622f96f7b8ae22a1cb6386d3cac496be589378fead5f3670e35f927dce7",
+      "body_replay_exact": true,
+      "decompile": "decompile_ok",
+      "stage": "baseline",
+      "candidate_lines": 2927
+    },
+    {
+      "entry_index": 717,
+      "entry_id": 557984035,
+      "path": "script/mxgame/item/view/dlgitem.py",
+      "stored_size": 45042,
+      "stored_sha256": "55322bfd081248c9d1dbeb32486060c27df657db294db6afe2fa54b5c9a1b8cc",
+      "pyc_sha256": "67da426079c0a7b9e0fe643d6f6a60e186b387346a0aa2ab4033a1e2133913f4",
+      "candidate_sha256": "39719656e31bbfff5fc6cafd9aa01ab18d04347c16fdc113c4a919a1d9f16ad5",
+      "body_after_six_header_lines_sha256": "153bae3a3ec02b9d9ff646d8b292bc7fe561e0e3e1f25ccab9563eef769bcbbb",
+      "body_replay_exact": true,
+      "decompile": "decompile_ok",
+      "stage": "baseline",
+      "candidate_lines": 3215
+    },
+    {
+      "entry_index": 1129,
+      "entry_id": 941158085,
+      "path": "script/mxgame/task/model/task.py",
+      "stored_size": 13841,
+      "stored_sha256": "09505840b0cbd3f66db959e1b2785e969fd324e34e8db83315f0c4b1671524ae",
+      "pyc_sha256": "4ca1668cac81b089f2ed09e3de6cefbf31e10972294c687c8c9fa7445fefe986",
+      "candidate_sha256": "ee2e07f3015ff326c9324c2fdf0964967266b69e46072da05dfdf6916ec931e9",
+      "body_after_six_header_lines_sha256": "7169355746d61124085ccbf5d043fc55e99ab203201cf24142aedd237ec764f7",
+      "body_replay_exact": true,
+      "decompile": "decompile_ok",
+      "stage": "baseline",
+      "candidate_lines": 1107
+    },
+    {
+      "entry_index": 949,
+      "entry_id": 775008924,
+      "path": "script/char/npc.py",
+      "stored_size": 19436,
+      "stored_sha256": "45deec3b0ae520055db0c8725006d10868c921fe83ae88d9da34c4b4bd3e9602",
+      "pyc_sha256": "f4cb29b1fe420f8c39deaa3af9207dfd5325f04c4c42e088fd93f8213e399c90",
+      "candidate_sha256": "99af0f138981af4a3cc16aff4e4f3d83075e839703757b410d8600b2c9bc9cc3",
+      "body_after_six_header_lines_sha256": "cf66726ed19a239a0f23dc764b55b75805a85817fa532ee0e70690b3a8140dfb",
+      "body_replay_exact": true,
+      "decompile": "decompile_ok",
+      "stage": "baseline",
+      "candidate_lines": 1235
+    }
+  ],
+  "exact_excerpt_lines": 951,
+  "safety": {
+    "game_modules_imported_or_executed": false,
+    "entry1288_targeted_or_recovered": false,
+    "whole_archive_read_for_fingerprint_and_existing_recovery_input": true,
+    "game_or_parameter_files_modified": false,
+    "layout_resource_payload_read": false,
+    "runtime_verified": 0,
+    "independent_reviews_created": 0
+  },
+  "annotation_records": [
+    {
+      "path": "script_manual/annotations/gameplay/dlgitem.json",
+      "entry_index": 717,
+      "author": "A（G停工后代写；待其他实际审核者复核，A不自批）",
+      "sha256": "f2877ccf38925edcd1547a6d3d248ea8bdca4ca40fa690c4ac3cd148813e2382",
+      "functions": 13,
+      "branches": 19,
+      "decision": "pending; not A self-accepted"
+    },
+    {
+      "path": "script_manual/annotations/gameplay/hero.json",
+      "entry_index": 3038,
+      "author": "A（G停工后代写；待其他实际审核者复核，A不自批）",
+      "sha256": "f4b276b70609ce668d08bce184de930698cb733ee2795a1fda962c395d5112c3",
+      "functions": 13,
+      "branches": 12,
+      "decision": "pending; not A self-accepted"
+    },
+    {
+      "path": "script_manual/annotations/gameplay/npc.json",
+      "entry_index": 949,
+      "author": "A（G停工后代写；待其他实际审核者复核，A不自批）",
+      "sha256": "738877ff88e071f7fdf66549301dfb795987352c63e6cdb6d31ed7c7496dd23e",
+      "functions": 12,
+      "branches": 17,
+      "decision": "pending; not A self-accepted"
+    },
+    {
+      "path": "script_manual/annotations/gameplay/task.json",
+      "entry_index": 1129,
+      "author": "A（G停工后代写；待其他实际审核者复核，A不自批）",
+      "sha256": "5a3d4b9f24a5c75884e7608cdd0e16749b328a1f73edfd5dcf34aa37c3fa84d9",
+      "functions": 13,
+      "branches": 14,
+      "decision": "pending; not A self-accepted"
+    }
+  ],
+  "summary": {
+    "annotations": 4,
+    "functions": 51,
+    "branches": 62,
+    "accepted": 0
+  },
+  "validation": {
+    "command": "PYTHONPATH=script_manual/src python -m mxsj_manual validate --verify-evidence --repository .",
+    "formal_coverage": {
+      "expected_entries": 5135,
+      "indexed": 20,
+      "annotated": 5,
+      "accepted": 0,
+      "excluded": 0
+    },
+    "tests": {
+      "total": 82,
+      "passed": 71,
+      "skipped": 11,
+      "failed": 0,
+      "reason_for_skips": "Qt missing system libGL.so.1; not GUI passed"
+    },
+    "ruff_including_spec": "passed",
+    "windows_static": {
+      "root": "/home/user/MXSJ_TW_2022",
+      "source": "git",
+      "scanned_files": 26,
+      "listed_paths": 76,
+      "findings": []
+    },
+    "offline_DOM": {
+      "environment": "jsdom26.1.0, not a real browser or Qt",
+      "module_searches": 4,
+      "annotated": 5,
+      "accepted": 0,
+      "all_four_authored_A_and_pending": true
+    },
+    "full_inventory_gate": "not run; 20 seeds do not satisfy full 5135",
+    "not_run": [
+      "real browser",
+      "Windows/EXE",
+      "game",
+      "native",
+      "live server"
+    ]
+  },
+  "external_artifacts": {
+    "recovery.json": {
+      "sha256": "707ce69ed058cdc3ccb6c8a99cbe70de5147fdad463c0960e038616d739a351e",
+      "bytes": 3357
+    },
+    "recovery.log": {
+      "sha256": "ceabbd180a8d45407f7845defe8daf50fabfed9f9654037698084d10cba00595",
+      "bytes": 438
+    },
+    "replay.json": {
+      "sha256": "7fb71004937a50039cdd57685907619a89274bc55580df136877140814047756",
+      "bytes": 3354
+    },
+    "replay.log": {
+      "sha256": "05669b40956928497daff55bb8be09fb33acb179e5ca054520d17a2d709c7a86",
+      "bytes": 436
+    },
+    "tests.log": {
+      "sha256": "34bcd0a3c3a04cb9fa04c0f93dca390c74551d7096025006b912bd254acd7c91",
+      "bytes": 11592
+    },
+    "wincompat.json": {
+      "sha256": "b114cb65f11da30167dd172be2ca0e07b33c403659e0ea82bbe6ca4a9c1adefa",
+      "bytes": 122
+    },
+    "dom.json": {
+      "sha256": "c42d54fbdc4d57ad035c578d3ed51d2028859d1ffc9eeaa77bee9b724c7cd778",
+      "bytes": 142
+    },
+    "site-final/index.html": {
+      "sha256": "190bfe16887f77b78f155b27f6f072e55480c836fb10d2c183c1544b956945de",
+      "bytes": 171291
+    },
+    "site-final/BUILD.json": {
+      "sha256": "0efbbdc51946e98b82f14634ccbbda881084fcb201075520be06d62146942bac",
+      "bytes": 1385
+    }
+  },
+  "evidence_files": {
+    "script_manual/annotations/gameplay/evidence/hero_candidate_excerpt.txt": {
+      "sha256": "58c5d634b2be0880339a0d976cedd91ad6fbdf033d13266fcee4007c7feeb277",
+      "bytes": 9240
+    },
+    "script_manual/annotations/gameplay/evidence/dlgitem_candidate_excerpt.txt": {
+      "sha256": "5d0b257c0ad48c6223f3e10bbde032bb01dfeb4bf5fe4d3c516dfdabd18db123",
+      "bytes": 9995
+    },
+    "script_manual/annotations/gameplay/evidence/task_candidate_excerpt.txt": {
+      "sha256": "9b0b94d5339f33e4d6cf7138ff10c5c4b2a0c56012f2c3cc938a86fd2ff667ca",
+      "bytes": 10181
+    },
+    "script_manual/annotations/gameplay/evidence/npc_candidate_excerpt.txt": {
+      "sha256": "3657f5eaf3bb78e9e8875110c743b42b69362050772a0ff6907a7a948c5a4986",
+      "bytes": 14761
+    }
+  }
+}

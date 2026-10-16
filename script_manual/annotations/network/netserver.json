@@ -1,0 +1,1200 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 516,
+  "path": "script/login/netserver.py",
+  "owner": "E",
+  "domain": "network",
+  "author": "N4（全新网络退修会话；原稿 E，非原 E 会话）",
+  "source_status": "recovered_complete_not_original",
+  "purpose": {
+    "text": "登录前选服阶段的连接管理：服务器/代理候选状态、随机测连与超时换批、转服重连、选服协议（角色信息/转服）收发，以及HTTP错误文案拉取。与connect.py同名类不同实现，分工见正文关系。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "s_struct_r",
+      "s_proto_r"
+    ]
+  },
+  "keywords": [
+    "选服",
+    "测连",
+    "转服",
+    "代理",
+    "服务器列表",
+    "S2CServerRoleInfo",
+    "连接管理"
+  ],
+  "functions": [
+    {
+      "name": "ModuleReset",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "重置选服阶段全部全局状态：角色信息、优先/登录服、代理、连接管理器、不可进服列表、错误文案、玩家ID等，并在模块加载时执行一次。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_state"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetPlayerID",
+      "signature": "(iPlayerID)",
+      "kind": "function",
+      "summary": {
+        "text": "保存当前玩家ID，供netquicklogin请求瞬连时取用。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_src_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetPlayerID",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "返回保存的玩家ID。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_src_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "RefreshServerInfo",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "仅在非特殊且非过度版本时try解析mx.ini refreshserver为float；解析成功才进else取now=misc.Time()，在(tm is None or tm>now or now-tm>1200)时selectserver.Refresh。解析异常只置tm=None，不进else刷新。BulletinURL的CHttpObject拉取在外层，前述门禁/不刷新不阻止后续文案请求（不保证成功）。1200是时间戳差阈值，不是CreatePyCommand计时参数。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "n4_server_refresh"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "permission.GetSpecialVersion() or permission.GetOverdoVersion()",
+          "effect": {
+            "text": "跳过时间戳解析/列表刷新段；HTTP文案请求仍在外层。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "n4_server_refresh"
+            ]
+          }
+        },
+        {
+          "condition": "非特殊且非过度版本，float解析抛异常",
+          "effect": {
+            "text": "except只置tm=None；不会进入else，不能补成tm=None后自动刷新。继续外层HTTP文案请求。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "n4_server_refresh"
+            ]
+          }
+        },
+        {
+          "condition": "版本门禁通过且解析成功，else内(tm is None or tm>now or now-tm>1200)",
+          "effect": {
+            "text": "调用selectserver.Refresh(None)；tm>now为独立刷新条件，例如tm=101、now=100也命中，不能只看差<=1200。tm is None保留为候选字面谓词，不宣称float成功会返回None。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "n4_server_refresh"
+            ]
+          }
+        },
+        {
+          "condition": "版本门禁通过且解析成功，但完整OR谓词为假",
+          "effect": {
+            "text": "跳过列表刷新：通常数值下为tm非None、tm<=now且now-tm<=1200；对NaN等仍按完整谓词判断，不额外补候选没有的验证。外层仍读取BulletinURL并构造CHttpObject，回调ValueError吞掉。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "n4_server_refresh"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetErrorAnsMsg",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "返回HTTP拉到的服务器错误文案字典。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_src_state"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetUnEnterServerList",
+      "signature": "(unEnableServerList)",
+      "kind": "function",
+      "summary": {
+        "text": "设置不可进服列表。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_struct_r"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetUnEnterServerList",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "返回不可进服列表。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_struct_r"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ClearUnEnterServerList",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "清空不可进服列表。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_struct_r"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "IsSelectServerOver",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "返回选服完成标志。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_struct_r"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetSelectServerOver",
+      "signature": "(isOver)",
+      "kind": "function",
+      "summary": {
+        "text": "设置选服完成标志（TransferServer时置真）。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_src_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetConnectedProxy",
+      "signature": "(proxy)",
+      "kind": "function",
+      "summary": {
+        "text": "保存实际连上的代理。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_struct_r"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetConnectedProxy",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "返回实际连上的代理。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_struct_r"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetProxy",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "代理设置auto时返回实际连上代理，否则返回设置值。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_state"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetProxy",
+      "signature": "(proxy)",
+      "kind": "function",
+      "summary": {
+        "text": "设置代理并写mx.ini [Game] proxy（写失败吞异常）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_state"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetProxyName",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "返回代理名。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_struct_r"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetProxyName",
+      "signature": "(proxyName)",
+      "kind": "function",
+      "summary": {
+        "text": "设置代理名。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_struct_r"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetProxyNameByProxy",
+      "signature": "(ipPort)",
+      "kind": "function",
+      "summary": {
+        "text": "按selectserver代理列表把ipPort映射为电信/网通/教育网+备注名。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_state"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetServerRoleInfo",
+      "signature": "(infos)",
+      "kind": "function",
+      "summary": {
+        "text": "保存各服角色数；当前连接带m_ServerInfo且目标可进或已有角色则直接TransferServer并return；否则依次调用loginin.OnLogin()与loginin.Show(False)，即调用OnLogin后隐藏登录面板（A预审后更正，旧稿误写“回登录界面”）；OnLogin的账号/保存语义与隐藏后界面去向不在本文件证据内。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_proto"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "当前连接有m_ServerInfo且（serverid不在不可进列表或已有角色信息）",
+          "effect": {
+            "text": "直接TransferServer(autoenterselrole=True)不再等用户选服。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "s_src_proto"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetServerRoleInfo",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "返回各服角色数信息。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_src_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetLoginServerIPPort",
+      "signature": "(ip, port)",
+      "kind": "function",
+      "summary": {
+        "text": "保存登录服ip/port。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_src_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetLoginServeIPPort",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "返回登录服(ip, port)（函数名Serve为原文拼写）。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_src_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetLoginServer",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "返回登录服(区名, 服名)。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_src_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "TransferServer",
+      "signature": "(fieldname, servername, server_ip, port, serverid, autoenterselrole=False)",
+      "kind": "function",
+      "summary": {
+        "text": "选服落点：存登录服状态、写restartsave、置选服完成、发C2STransferServer、弹连接中对话框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ShowConnectingDlg",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "弹'正在連接服務器中....'框，返回回调showlogin断开当前连接并转loginin界面。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "S2CServerRoleInfo",
+      "signature": "(netobj)",
+      "kind": "function",
+      "summary": {
+        "text": "GS2C_SELSERVER（号表47）接收：UnpackInt(1)计数，循环UnpackInt(4)serverid+UnpackInt(1)rolenum，交SetServerRoleInfo。字段宽度为字面证据，服务端发送条件未证实。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "C2STransferServer",
+      "signature": "(serverid)",
+      "kind": "function",
+      "summary": {
+        "text": "客户端发送：以C2GS_SELECT_SERVER（号表41）起包，加serverid(2字节)后发送；只证明客户端发送，服务端切换/回包未证实。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_proto"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMXNet",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "选服测连连接对象（net.CNet子类，本文件版，与connect.py同名不同类）：OnServerCmd只检查hasattr(self, m_Hello)即属性存在；False也满足，不是已握手或Hello真值门禁。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "n4_server_prepare",
+          "n4_server_connect"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMXNet.__init__",
+      "signature": "(self, ip, port, iType=0)",
+      "kind": "method",
+      "summary": {
+        "text": "保存连接类型m_NetType（TEST_HELLO/RESELECT_HELLO等，值在loginhello模块）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMXNet.PacketPrepare",
+      "signature": "(self, icmd)",
+      "kind": "method",
+      "summary": {
+        "text": "先调用net.CNet.PacketPrepare(self, icmd)，调用返回后才写self.m_iCmd = icmd；基类自己的顺序是先原生调用后记m_NetHead，勿颠倒这两层。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "n4_server_prepare",
+          "n4_net_prepare"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMXNet.OnServerCmd",
+      "signature": "(self, icmd)",
+      "kind": "method",
+      "summary": {
+        "text": "仅当hasattr(self, 'm_Hello')为真才转net.CNet.OnServerCmd；m_Hello=False同样可转发。测连/转服构造处显式置False，不能从此方法保证握手完成；Hello置真链在样板外未核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "n4_server_prepare",
+          "n4_server_connect",
+          "n4_server_reselect_hello"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "无m_Hello属性",
+          "effect": {
+            "text": "直接return不分发；注意判断的是属性存在而非真值，不得写成已握手判断。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "s_src_conn"
+            ]
+          }
+        },
+        {
+          "condition": "已有m_Hello属性但值为False",
+          "effect": {
+            "text": "仍调用net.CNet.OnServerCmd；此方法不检查值，不保证下游处理或握手完成。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "n4_server_prepare",
+              "n4_server_connect"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CMXNet.OnConnectFail",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "置m_IsFail，有连接管理器交其OnSocketConnectFail，否则走net.CNet默认失败处理。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CMXNet.OnError",
+      "signature": "(self, msg=None)",
+      "kind": "method",
+      "summary": {
+        "text": "置m_IsFail，有管理器交OnSocketError，否则net.CNet默认错误处理。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CConnectMgr",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "选服连接管理器基类（interface.CBaseObject）：持测连对象列表，全失败时按错误文案弹框并可刷新列表。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CConnectMgr.Connect",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "基类空实现，子类覆写。",
+        "confidence": "extracted",
+        "evidence": [
+          "s_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CConnectMgr.ConnectTestFail",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "全失败时弹错误文案（优先HTTP的g_ErrorAnsMsg按服名/default），刷新<3次时确定回调刷新列表，并loginin.CheckShowRefreshServer。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "IsConnectTestFail()为假（尚有未失败对象）",
+          "effect": {
+            "text": "不弹框（基类调用点均先判断）。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "s_src_conn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CConnectMgr.OnSocketConnectFail",
+      "signature": "(self, netobj)",
+      "kind": "method",
+      "summary": {
+        "text": "转ConnectTestFail统一判断。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CConnectMgr.OnSocketError",
+      "signature": "(self, netobj)",
+      "kind": "method",
+      "summary": {
+        "text": "转ConnectTestFail统一判断。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CConnectMgr.IsConnectTestFail",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "全部测连对象m_IsFail为真才返回True（空列表亦为True）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRandomConnectMgr",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "随机测连管理器：优先服或电信5+网通2候选、代理列表、超时换批及全失败重试；Connect先增m_Time再按(m_Time-1 != 0) or g_AutoProxy递归，非仅首轮自动扩一次，实际终止/成功率未验。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn",
+          "n4_server_connect"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRandomConnectMgr.GetServerInfo",
+      "signature": "(self, district, name)",
+      "kind": "method",
+      "summary": {
+        "text": "按区名+服名在候选数据中找服务器记录。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRandomConnectMgr.GetTestProxyList",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "组测连代理列表：用户指定代理优先，auto置g_AutoProxy，按已试轮数m_Time逐个跳过队首。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRandomConnectMgr.GetTestServerList",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "优先服直选，否则电信随机5台+网通随机2台。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRandomConnectMgr.Connect",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "取服务器/代理列表，空列表先返回；对当前代理和每台测试服建CMXNet(TEST_HELLO)，有代理先连代理再裸发IP/端口。随后ShowConnectingDlg、m_Time先自增、SetTimeOutCmd，再以(self.m_Time-1 != 0) or g_AutoProxy完整谓词立即递归Connect；非首轮即使非自动代理也可递归，不能保证只扩一轮或正常终止。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "n4_server_connect"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "serverlist为空",
+          "effect": {
+            "text": "selectserver.Refresh后return；proxylist为空直接return。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "s_src_conn"
+            ]
+          }
+        },
+        {
+          "condition": "(self.m_Time-1 != 0) or g_AutoProxy（在m_Time += 1、SetTimeOutCmd之后）",
+          "effect": {
+            "text": "递归self.Connect()；递增后m_Time=1时仅自动代理为真触发，m_Time=2时非自动也触发；两项都假才不立即递归，仍已设超时。每次进入重新取列表，空服/空代理先return；真实轮数/终止与异常待核，勿改OR为AND。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "n4_server_connect"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CRandomConnectMgr.SetTimeOutCmd",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "以PROXY_CONNECT_TIMEOUT=15设CreatePyCommand到期再Connect换批；15的单位依赖原生，未证实为秒。",
+        "confidence": "inferred",
+        "evidence": [
+          "s_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CRandomConnectMgr.ConnectTestFail",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "全失败且未全试过时重置轮数全量重试一次，否则落基类弹框逻辑。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CReselectConnectMgr",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "转服重连管理器：按serverID在非推荐区找目标，带账号(idx,pwd)凭据并发起连接。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_mgr"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CReselectConnectMgr.Connect",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "建CMXNet(RESELECT_HELLO)对象（存m_PassPort=(idx,pwd)），有代理走代理裸发否则直连。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_mgr"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "RandomConnect",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "建CRandomConnectMgr并Connect的模块入口。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_mgr"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ReselectServerConnect",
+      "signature": "(serverID, idx, pwd)",
+      "kind": "function",
+      "summary": {
+        "text": "按main.g_IsDgwConnect分DGW与普通转服重连。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_mgr"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "main.g_IsDgwConnect为真",
+          "effect": {
+            "text": "走DgwReselectServerConnect（dgwconnecttest，DGW本体不在样板内）。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "s_src_mgr"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DgwReselectServerConnect",
+      "signature": "(serverID, idx, pwd)",
+      "kind": "function",
+      "summary": {
+        "text": "记DGW重登信息并调dgwconnecttest.ConnectTest。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_mgr"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "NormalReselectServerConnect",
+      "signature": "(serverID, idx, pwd)",
+      "kind": "function",
+      "summary": {
+        "text": "建CReselectConnectMgr并Connect。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_mgr"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ProcessServerCmd",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "遍历连接管理器未失败对象收包，任一m_Hello为真即break；供main每帧调用。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "protocol",
+      "target": "GS2C_SELSERVER=47 / C2GS_SELECT_SERVER=41 (entry 3970号表)",
+      "summary": {
+        "text": "接收/发送符号在本文件，数值来自号表交叉；字段宽度（计数1/serverid4或2/rolenum1）为本文件字面证据。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_gs2c",
+          "s_c2gs"
+        ]
+      }
+    },
+    {
+      "kind": "config",
+      "target": "mx.ini [Game] proxy 与 refreshserver",
+      "summary": {
+        "text": "SetProxy持久化代理，写失败吞异常；refreshserver仅在版本门禁通过且float解析成功后按(tm is None or tm>now or now-tm>1200)判刷新，未来时间戳亦刷新，解析异常不进else。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_state",
+          "n4_server_refresh"
+        ]
+      }
+    },
+    {
+      "kind": "config",
+      "target": "update.ini [Setting] BulletinURL",
+      "summary": {
+        "text": "错误文案HTTP地址，经net.CHttpObject拉取；正文格式serverid:文案逐行。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_state"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "selectserver.GetServerInfo（服务器/代理候选数据）",
+      "summary": {
+        "text": "区/服/ip/port/serverid与代理ipPort/type来源；该模块与数据文件格式不在E样板内，未核对。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_cfg_r"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3176
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2170
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4293
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4806
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "想改选服协议或转服流程，改哪里？",
+      "answer": {
+        "text": "接收改S2CServerRoleInfo解包/SetServerRoleInfo落点，发送改C2STransferServer（serverid 2字节）与TransferServer状态保存；协议号在entry 3970。服务端是否受理转服未证实，须实机验证选服后是否真切换。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_proto"
+        ]
+      }
+    },
+    {
+      "question": "想改测连超时/候选数量/代理策略，改哪里？",
+      "answer": {
+        "text": "超时看PROXY_CONNECT_TIMEOUT=15与SetTimeOutCmd（单位未证实），候选数看GetTestServerList（电信5+网通2），代理看GetTestProxyList与mx.ini proxy。Connect在ShowConnectingDlg后先m_Time += 1、设超时，再按(m_Time-1 != 0) or g_AutoProxy立即递归；递增后轮数为2且非自动也递归，不是只扩一轮。修改前核原码与终止边界，勿按意图改谓词；实机多网络成功率未验。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn",
+          "n4_server_connect"
+        ]
+      }
+    },
+    {
+      "question": "连接失败弹的文案不对，改哪里？",
+      "answer": {
+        "text": "文案地址在update.ini [Setting] BulletinURL，RefreshServerInfo外层经CHttpObject拉取、解析g_ErrorAnsMsg（服名/default）；本地兜底'連接服務器失敗'在CConnectMgr.ConnectTestFail。前面的版本/时间戳门禁只约束列表刷新：float成功后完整OR含未来时间戳，解析失败不进else；都不是HTTP请求的门禁，不保证请求成功。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_state",
+          "s_src_conn",
+          "n4_server_refresh"
+        ]
+      }
+    },
+    {
+      "question": "本文件的CMXNet和connect.py的CMXNet能互换吗？",
+      "answer": {
+        "text": "不能。同名不同类：本文件版带iType和管理器回调，OnServerCmd仅检查m_Hello属性存在，False也放行，绝非已握手保证；connect.py版带g_NetobjList与已注册的Hello胜出链，须按所属模块分别处理。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_struct_r",
+          "n4_server_prepare",
+          "n4_server_connect"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "仓库内候选与本轮仓库外新恢复稿diff仅差恢复头6行（SHA见证据报告§5），仍非原始源码；完整恢复不等于行为正确，无实机验证。",
+    "loginhello.TEST_HELLO/RESELECT_HELLO的数值、Hello置位时机、selectserver候选数据文件格式均在样板外，只登记符号；DGW转服（dgwconnecttest）本体未审。",
+    "PROXY_CONNECT_TIMEOUT=15等CreatePyCommand计时单位未实测；随机候选（5+2）与完整OR递归条件的真实轮数/终止/成功率无数据。保留候选谓词及先自增顺序，不将可能的反编译控制流问题说成可用的首轮扩一轮策略。",
+    "OnServerCmd仅判m_Hello属性存在，False也放行，不保证握手完成，实际Hello置真链未核；空测连列表时IsConnectTestFail=True的实际触发未实测。",
+    "服务端对C2GS_SELECT_SERVER的受理、S2CServerRoleInfo的发送条件均未证实；无runtime_verified结论；嵌套闭包（getMsg/showlogin/nexttest）未单列函数条目。"
+  ],
+  "sources": [
+    {
+      "id": "srv_src",
+      "path": "tools/decompiler/output/script_fls/script/login/netserver.py",
+      "sha256": "1fccc33d2d20540680c6af62e2bfdcf850291a855ed4bf626374262b8702c94b",
+      "kind": "recovered_source",
+      "note": "uncompyle6历史恢复候选（无恢复头），与本轮仓库外定点恢复稿diff仅差6行头，已逐行核对；非原始源码。"
+    },
+    {
+      "id": "e_review",
+      "path": "script_manual/annotations/network/evidence_review_e_network.md",
+      "sha256": "0d2b04f3024623eb4f4fb1da00deea0101d32558a67ca589e3ed39f16e53b5ec",
+      "kind": "recovered_source",
+      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块另见报告§5交叉核对；报告§1含工具/依赖版本、处理选项与去头正文摘要比对规则，本模块去头正文摘要与仓库内候选SHA一致。 N4纠正报告中的顺序/条件/作用域描述；原有行范围未移动，历史候选摘要保留。"
+    },
+    {
+      "id": "catalog",
+      "path": "server/docs/catalog/script_entries.jsonl",
+      "sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+      "kind": "metadata",
+      "note": "历史目录种子元数据（entry 516 行）；function_names_origin自述为历史解码未在本轮复核，仅作函数名交叉核对，不作语义证据。"
+    },
+    {
+      "id": "protocol_table",
+      "path": "work/dream-world-connect-login-map/artifacts/protocol_table/protocol_opcodes.json",
+      "sha256": "a464a9cf66d66de01b8ed6272ea7529217c5d1631f94509bd7ca773077a9c9d9",
+      "kind": "metadata",
+      "note": "entry 3970 script/protocol.py 号表产物（work研究区，自述marshal线性遍历未执行游戏代码，412赋值/409整型）；仅供协议号数值交叉，数值不在E样板源码内，不证明服务端行为。"
+    },
+    {
+      "id": "n4_excerpt",
+      "path": "script_manual/annotations/network/evidence_n4_network.md",
+      "sha256": "0c8657fc9c71c019d1c62dcfbb569316aee7451dec8845dd2010fc0741004e65",
+      "kind": "recovered_source",
+      "note": "全新N4独立恢复四白名单后的有限原行摘录；原候选完整SHA、去精确六头正文SHA与R行在文件中。非原始源码，不代表运行验证。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "s_id",
+      "source_id": "e_review",
+      "start_line": 398,
+      "end_line": 492
+    },
+    {
+      "id": "s_struct_r",
+      "source_id": "e_review",
+      "start_line": 410,
+      "end_line": 430
+    },
+    {
+      "id": "s_proto_r",
+      "source_id": "e_review",
+      "start_line": 431,
+      "end_line": 453
+    },
+    {
+      "id": "s_cfg_r",
+      "source_id": "e_review",
+      "start_line": 454,
+      "end_line": 492
+    },
+    {
+      "id": "s_catalog",
+      "source_id": "catalog",
+      "start_line": 517,
+      "end_line": 517
+    },
+    {
+      "id": "s_gs2c",
+      "source_id": "protocol_table",
+      "start_line": 271,
+      "end_line": 271
+    },
+    {
+      "id": "s_c2gs",
+      "source_id": "protocol_table",
+      "start_line": 80,
+      "end_line": 80
+    },
+    {
+      "id": "s_src_proto",
+      "source_id": "srv_src",
+      "start_line": 183,
+      "end_line": 273
+    },
+    {
+      "id": "s_src_conn",
+      "source_id": "srv_src",
+      "start_line": 274,
+      "end_line": 578
+    },
+    {
+      "id": "s_src_state",
+      "source_id": "srv_src",
+      "start_line": 8,
+      "end_line": 232
+    },
+    {
+      "id": "s_src_mgr",
+      "source_id": "srv_src",
+      "start_line": 483,
+      "end_line": 578
+    },
+    {
+      "id": "n4_server_refresh",
+      "source_id": "n4_excerpt",
+      "start_line": 231,
+      "end_line": 263
+    },
+    {
+      "id": "n4_server_prepare",
+      "source_id": "n4_excerpt",
+      "start_line": 269,
+      "end_line": 284
+    },
+    {
+      "id": "n4_server_connect",
+      "source_id": "n4_excerpt",
+      "start_line": 290,
+      "end_line": 340
+    },
+    {
+      "id": "n4_server_reselect_hello",
+      "source_id": "n4_excerpt",
+      "start_line": 346,
+      "end_line": 352
+    },
+    {
+      "id": "n4_net_prepare",
+      "source_id": "n4_excerpt",
+      "start_line": 82,
+      "end_line": 85
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3176
+      },
+      "symbol": "net.CNet / net.g_Net / CHttpObject",
+      "summary": {
+        "text": "继承主通道连接对象、发送选服包并用HTTP通道拉文案。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_proto"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4806
+      },
+      "symbol": "loginin.OnLogin / Show / GetSelectServer / CheckShowRefreshServer",
+      "summary": {
+        "text": "选服非转服分支依次调用loginin.OnLogin()、loginin.Show(False)（调用OnLogin后隐藏登录面板；OnLogin的账号/保存语义与隐藏后界面去向不在本文件证据内）、失败弹框后loginin.CheckShowRefreshServer检查刷新；loginin正文由C负责，此处只登记调用符号。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_conn"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4293
+      },
+      "symbol": "main每帧netserver.ProcessServerCmd / Restart状态保存",
+      "summary": {
+        "text": "main帧循环驱动本模块收包，重启时以位置槽位保存部分netserver状态（槽位映射缺失，见协审报告）；main正文由C负责。",
+        "confidence": "inferred",
+        "evidence": [
+          "s_cfg_r"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "data_flow",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 871
+      },
+      "symbol": "netserver.GetPlayerID / SetLoginServerIPPort等状态",
+      "summary": {
+        "text": "玩家ID与登录服地址供瞬连请求与重连取用。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "s_src_proto"
+        ]
+      }
+    }
+  ]
+}

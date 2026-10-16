@@ -1,0 +1,5 @@
+"""Independent handbook; never imports or executes game modules."""
+
+from __future__ import annotations
+
+__version__ = "0.1.0.dev4"

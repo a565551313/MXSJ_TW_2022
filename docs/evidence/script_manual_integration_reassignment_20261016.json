@@ -1,0 +1,287 @@
+{
+  "kind": "user_authorized_integration_and_new_agent_reassignment_not_blanket_acceptance",
+  "date": "2026-10-16",
+  "analysis_repository_commit_unchanged": "1a0b23312cdd50b9654faaa4b57f75b78f9adf9a",
+  "content_merge_commit": "7d32e5340b0ab4168f725d238d767ad6232f715d",
+  "branch": "arena/61deb9e5-mxsj-tw-2022",
+  "master_merged": false,
+  "merged_PRs": [
+    {
+      "number": 38,
+      "owner": "B",
+      "head": "e516b63499615af7892ece0a217bd36c35894032",
+      "merge": "7a0a05a3b19d77783244f2b83608e3daf35c4c2f"
+    },
+    {
+      "number": 35,
+      "owner": "C",
+      "head": "242fd8c941997f22a47f06069554cebba20d79a3",
+      "merge": "82d42b33aca4b2a8be3b0a78e76914b59482dfdc"
+    },
+    {
+      "number": 36,
+      "owner": "E",
+      "head": "60c573956f12a739712e4b24ddf1fb852f71bff0",
+      "merge": "ccf602cb9b442476d891372eff53a8ecbc3a9c5a"
+    },
+    {
+      "number": 37,
+      "owner": "F",
+      "head": "12ce0c63ab50db00050365de5a6891fd4fa37ce6",
+      "merge": "dbf3406adbb125e96956f6f88ce0db487c59043c"
+    }
+  ],
+  "direct_D_merge": {
+    "head": "1f6fdd323475e3940ea95b19e62c452e58dbd259",
+    "merge": "7d32e5340b0ab4168f725d238d767ad6232f715d",
+    "reason": "No PR existed; explicit user instruction to merge existing work; same fixed A branch, no old branch checkout."
+  },
+  "G_already_on_A": "9880457",
+  "coverage": {
+    "expected_entries": 5135,
+    "indexed": 5135,
+    "annotated": 20,
+    "accepted": 3,
+    "excluded": 1
+  },
+  "annotation_review_status": {
+    "pending": 12,
+    "accepted": 3,
+    "changes_requested": 5
+  },
+  "domains": [
+    {
+      "domain": "login",
+      "annotations": 4,
+      "function_records_not_all_explained": 155,
+      "documented_branches": 30,
+      "review_status": {
+        "pending": 4
+      }
+    },
+    {
+      "domain": "ui_chat",
+      "annotations": 4,
+      "function_records_not_all_explained": 83,
+      "documented_branches": 75,
+      "review_status": {
+        "accepted": 3,
+        "changes_requested": 1
+      }
+    },
+    {
+      "domain": "network",
+      "annotations": 4,
+      "function_records_not_all_explained": 157,
+      "documented_branches": 43,
+      "review_status": {
+        "changes_requested": 4
+      }
+    },
+    {
+      "domain": "battle",
+      "annotations": 4,
+      "function_records_not_all_explained": 259,
+      "documented_branches": 10,
+      "review_status": {
+        "pending": 4
+      }
+    },
+    {
+      "domain": "gameplay",
+      "annotations": 4,
+      "function_records_not_all_explained": 51,
+      "documented_branches": 62,
+      "review_status": {
+        "pending": 4
+      }
+    }
+  ],
+  "activated_prior_reviews": [
+    {
+      "review": "script_manual/reviews/8b6e9266_2170.json",
+      "annotation": "script_manual/annotations/network/connect.json",
+      "entry_index": 2170,
+      "annotation_sha256": "3c32bc2397114566c1fe35dcb32036ff695f33e9da4b0f734f0145f198e323e9",
+      "decision": "changes_requested",
+      "reviewer": "A_delegate"
+    },
+    {
+      "review": "script_manual/reviews/8b6e9266_219.json",
+      "annotation": "script_manual/annotations/ui_chat/mainmenu.json",
+      "entry_index": 219,
+      "annotation_sha256": "a88bd387abcc8e0edcb3f6a1dd0258a922ef149332c3f16f66e63238f8cee48d",
+      "decision": "changes_requested",
+      "reviewer": "A_delegate"
+    },
+    {
+      "review": "script_manual/reviews/8b6e9266_3176.json",
+      "annotation": "script_manual/annotations/network/net.json",
+      "entry_index": 3176,
+      "annotation_sha256": "e00bd3e82ff47faf1d93b4f29a4916a54c484ce252c84a023850619ba9039a1d",
+      "decision": "changes_requested",
+      "reviewer": "A_delegate"
+    },
+    {
+      "review": "script_manual/reviews/8b6e9266_3232.json",
+      "annotation": "script_manual/annotations/ui_chat/key.json",
+      "entry_index": 3232,
+      "annotation_sha256": "745bd2579c85ab7e1faf9deb78fd37cedb23bb0a5e322b398064a2c8ed4f4b0f",
+      "decision": "accepted",
+      "reviewer": "A_delegate"
+    },
+    {
+      "review": "script_manual/reviews/8b6e9266_3854.json",
+      "annotation": "script_manual/annotations/ui_chat/interface.json",
+      "entry_index": 3854,
+      "annotation_sha256": "a8c3ddf43ef74a6a0fe4319dc6922233ae9e44583523fe26d72830a3d9258318",
+      "decision": "accepted",
+      "reviewer": "A_delegate"
+    },
+    {
+      "review": "script_manual/reviews/8b6e9266_4832.json",
+      "annotation": "script_manual/annotations/ui_chat/chatoutput.json",
+      "entry_index": 4832,
+      "annotation_sha256": "bb4b492a400adfcb7812b255e76c51a0c655e24e34c0f49121448959068bf799",
+      "decision": "accepted",
+      "reviewer": "A_delegate"
+    },
+    {
+      "review": "script_manual/reviews/8b6e9266_516.json",
+      "annotation": "script_manual/annotations/network/netserver.json",
+      "entry_index": 516,
+      "annotation_sha256": "0eca5474ea815ad5269c4659db590344ec504399aa2778ef3db2eca41d961621",
+      "decision": "changes_requested",
+      "reviewer": "A_delegate"
+    },
+    {
+      "review": "script_manual/reviews/8b6e9266_871.json",
+      "annotation": "script_manual/annotations/network/netquicklogin.json",
+      "entry_index": 871,
+      "annotation_sha256": "9c2a8cd021148264f1069469fdb366e1857d4ebc3c80004f3cbb2c3ea52ce678",
+      "decision": "changes_requested",
+      "reviewer": "A_delegate"
+    }
+  ],
+  "inventory_sha256_known_signature_defects_pending_N1": "35203710d79acd08b080e9d08fa1357ea9f8c29464a64eeb1a34aa27e36a9efd",
+  "input_sha256": {
+    "schema/contract.schema.json": "e4dbac56183cd42fd5ec776bead8e2a080cb8de86cb2d94ce7d60fe1f44da75e",
+    "coordination/baseline.json": "773a8afe6ed8adcbc3acf958c094ce794310c1bff9c742a18fa2935d7b8a471b",
+    "inventory/modules.jsonl": "35203710d79acd08b080e9d08fa1357ea9f8c29464a64eeb1a34aa27e36a9efd",
+    "coordination/tasks.json": "9d658e62ad12cb85f9b71965ebf248b9527d830c20a41a2e471143370283d1b9",
+    "annotations/battle/e_warctrl.json": "5c43c60874ca7ba79de07e0dd138937f54f46caf5b439e983531c88d34d16ef6",
+    "annotations/battle/netwar.json": "e9dbab014bc8e37f36c517ea06df21b2307e3140088d24588be3a98a688e10ac",
+    "annotations/battle/war.json": "608e73c3e51dc926bd923c55072498bdbe3b401ebaf0bdf9cdba4f68c21bbc6a",
+    "annotations/battle/warcmd.json": "395a9f36cd5f498353364d4408a84d18e1cba273dc1dd45fe6d23203a9f0ada8",
+    "annotations/gameplay/dlgitem.json": "f2877ccf38925edcd1547a6d3d248ea8bdca4ca40fa690c4ac3cd148813e2382",
+    "annotations/gameplay/hero.json": "f4b276b70609ce668d08bce184de930698cb733ee2795a1fda962c395d5112c3",
+    "annotations/gameplay/npc.json": "738877ff88e071f7fdf66549301dfb795987352c63e6cdb6d31ed7c7496dd23e",
+    "annotations/gameplay/task.json": "5a3d4b9f24a5c75884e7608cdd0e16749b328a1f73edfd5dcf34aa37c3fa84d9",
+    "annotations/login/loginin.json": "76b2fea23dbcaf49b4c146e9cfe1a3de21512beba393672e9d3c3f1963f47b5f",
+    "annotations/login/main.json": "361b5a067f40ffe3f9f3f7b75689f748c45b60ff4bb407f31b745f8eadc7a5bd",
+    "annotations/login/mainpage.json": "bcb980a3271c5cb90f643dd04563e0e7fdd36b93da748c942ad14a14c75ad511",
+    "annotations/login/register.json": "8dcdf564b029821d4ae8a54bfd7adbeb47a44ddca0a2a839a3abe8eaa9373f4a",
+    "annotations/network/connect.json": "3c32bc2397114566c1fe35dcb32036ff695f33e9da4b0f734f0145f198e323e9",
+    "annotations/network/net.json": "e00bd3e82ff47faf1d93b4f29a4916a54c484ce252c84a023850619ba9039a1d",
+    "annotations/network/netquicklogin.json": "9c2a8cd021148264f1069469fdb366e1857d4ebc3c80004f3cbb2c3ea52ce678",
+    "annotations/network/netserver.json": "0eca5474ea815ad5269c4659db590344ec504399aa2778ef3db2eca41d961621",
+    "annotations/ui_chat/chatoutput.json": "bb4b492a400adfcb7812b255e76c51a0c655e24e34c0f49121448959068bf799",
+    "annotations/ui_chat/interface.json": "a8c3ddf43ef74a6a0fe4319dc6922233ae9e44583523fe26d72830a3d9258318",
+    "annotations/ui_chat/key.json": "745bd2579c85ab7e1faf9deb78fd37cedb23bb0a5e322b398064a2c8ed4f4b0f",
+    "annotations/ui_chat/mainmenu.json": "a88bd387abcc8e0edcb3f6a1dd0258a922ef149332c3f16f66e63238f8cee48d",
+    "reviews/8b6e9266_2170.json": "3bba63ad6b4b772b2a92be4e8a25ece98c17e44fde1a1a4b4988884073f88d8d",
+    "reviews/8b6e9266_219.json": "a0fec43a09d71c1f1d1f04dfaf3354b0a5358df45b958d9ca6fd7244c6ba5376",
+    "reviews/8b6e9266_3176.json": "8ea4f42b636efcde5cc7cd95d5c0e97fd5830dd07c350df24d4371736fc43bef",
+    "reviews/8b6e9266_3232.json": "b90e0164bf48e2829cb439f40f9cad14f08e8b100d8851e081c7d3b69017e7f5",
+    "reviews/8b6e9266_3854.json": "92d43b3608da8ad491ff51ed71df60955526b46a5ea589b8b2852de1e03a2540",
+    "reviews/8b6e9266_4832.json": "82c1a0913e5494181c1e9e286e139d0e9d60ffdb55790ce8ab3849a4d659fdc4",
+    "reviews/8b6e9266_516.json": "6340c37ab8265ea73ace241f6b067409f582cc470b6d15978135567788da4084",
+    "reviews/8b6e9266_871.json": "d8a5e7bcff155dd055cb4fd002405c39b0fc63ebf7b9cdcfa8cbc6c005935676"
+  },
+  "new_cohort": "20261016-new-cohort-v1",
+  "new_cohort_state": "seven fresh agents NOT started; user will dispatch task cards; not restarting old sessions",
+  "assignment": "script_manual/coordination/reassignment_20261016.json",
+  "new_review_decisions_created_this_round": false,
+  "review_activation": "Only copied the eight actual prior user-authorized A_delegate records after exact raw annotation SHA matched. No new H review or G self-approval.",
+  "known_gates": "B signature defects; C and F pre-review issues; mainmenu + four network changes requested; G drafts pending independent review. Full/schema/evidence does not close semantic issues.",
+  "validation": {
+    "strict_schema_sources_full": {
+      "command": "PYTHONPATH=script_manual/src python -m mxsj_manual validate --verify-evidence --require-full-inventory --repository .",
+      "passed": true,
+      "coverage": {
+        "expected_entries": 5135,
+        "indexed": 5135,
+        "annotated": 20,
+        "accepted": 3,
+        "excluded": 1
+      },
+      "warnings": []
+    },
+    "unit_tests": {
+      "command": "PYTHONPATH=script_manual/src QT_QPA_PLATFORM=offscreen python -m unittest discover -s script_manual/tests -v",
+      "ran": 82,
+      "passed": 71,
+      "skipped": 11,
+      "failed": 0,
+      "skip_reason": "Qt missing libGL.so.1",
+      "log_sha256": "1eadbc7ae7d8140bdfe18492dba5106f1bc61a7a04f283b17f568903172ca004"
+    },
+    "ruff": {
+      "command": "ruff check script_manual script_manual/script_manual.spec",
+      "passed": true,
+      "version": "0.17.0"
+    },
+    "windows_static": {
+      "root": "/home/user/MXSJ_TW_2022",
+      "source": "git",
+      "scanned_files": 27,
+      "listed_paths": 121,
+      "findings": []
+    },
+    "offline_HTML": {
+      "build_command": "PYTHONPATH=script_manual/src python -m mxsj_manual build --verify-evidence --require-full-inventory --repository . --output <external-site>",
+      "passed": true,
+      "sha256": "545bb18498b61d7d71c88774f1f80e71ac8242b0a41da66a4e45870c9bd8b6ff",
+      "bytes": 26164918,
+      "dom": {
+        "environment": "Node jsdom26.1.0 only, not a real browser/Qt/Windows/game",
+        "indexed": 5135,
+        "annotated": 20,
+        "review_status": {
+          "pending": 12,
+          "accepted": 3,
+          "changes_requested": 5
+        },
+        "all8_reviews_honestly_A_delegate": true,
+        "G_all4_A_authored_pending": true,
+        "Chinese_searches": 4,
+        "path_navigation_A_delegate_detail": 2,
+        "jsdom_errors": []
+      }
+    },
+    "task_packet_lint": {
+      "passed": true,
+      "self_contained_cards": 7,
+      "all_referenced_reports_allowed_paths_and_files_exist": true,
+      "seed_commit_20_lines_verified": true,
+      "all_dispatch_states_awaiting_new_agent_start": true,
+      "assignment_sha256": "160305f7206d18b5db3a90fca4fded2df0b79b9c46b12d220a05188bf51c66fa",
+      "card_sha256": {
+        "N1": "b7479e694712915ccef64dbbbbf74aa06c3a0c1aceed29fd8bd4acf8744c9a85",
+        "N2": "3205f39b0584c5f6711d99f114aea7169b22a5331a8ec1b02cc0ff44f29a0011",
+        "N3": "b988fb82d7e50eb862216b38055b225691cc31e9a9a4147b83ca19af04521d71",
+        "N4": "bfeccfb1f2abbb9001cb4c4edd78f17107252df1028933c1fce3642b3ad82739",
+        "N5": "ded609e349596bdc8132532b7a4fc67a239310c9996cc8623bd814b01618a623",
+        "N6": "31eec2d9ca4be2a42a3fb941c088fdb0d20f03b05ba25aacac591dc6ace72628",
+        "N7": "0385e3447ba3a82c4fef934e8c1d7bd7fd72d4262a05cb09e988d16b617d41c8"
+      }
+    },
+    "not_executed": [
+      "real browser",
+      "Qt widget runtime tests (11 skipped)",
+      "Windows/EXE",
+      "game/native/server runtime",
+      "targeted1288 recovery"
+    ]
+  }
+}

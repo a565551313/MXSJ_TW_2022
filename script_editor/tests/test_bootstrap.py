@@ -137,6 +137,14 @@ class RecoveryBootstrapTests(unittest.TestCase):
             self.assertEqual(bootstrap.main([]), 17)
             app.assert_called_once_with([])
 
+    def test_secondary_check_distinguishes_missing_invalid_and_verified(self):
+        target = "script_editor.core.services.pycdc_engine.discover_pycdc"
+        for value, expected in ((None, False), (SimpleNamespace(), True)):
+            with self.subTest(expected=expected), patch(target, return_value=value):
+                self.assertIs(bootstrap.check_secondary_engine(), expected)
+        with patch(target, side_effect=ValueError("bad source SHA")):
+            self.assertFalse(bootstrap.check_secondary_engine())
+
     def test_full_check_does_not_claim_pass_when_engine_missing(self):
         with (
             patch.object(bootstrap, "ensure_dependencies", return_value=True),

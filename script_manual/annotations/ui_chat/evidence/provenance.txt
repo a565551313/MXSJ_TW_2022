@@ -1,0 +1,78 @@
+D 定点静态来源回执 / 2026-10-15
+handbook_commit=cc5c1bad7a806078794eca1ab7482230a18ef9d5
+analysis_id=mxsj-original-20261015-v1；baseline.repository_commit=1a0b23312cdd50b9654faaa4b57f75b78f9adf9a（未改）
+本报告是 metadata，不是 H 审核或运行记录。仅四份 annotation JSON 是手册正文。
+co_filename为转译器返回的路径（\已规范为/），不是原始字节字符串；种子inventory仍historical，D没有擅自提升其path_status。
+所有源码形状候选均本轮定点生成；没有下载 PR34 full/manifest.audited.jsonl，也没有使用编辑器 dev6 引擎。
+Python=3.11.2；uncompyle6=3.9.3；xdis=6.1.8；spark-parser=1.9.0；decode_big5=True。
+这套研究依赖只装在仓库外 venv，未修改手册/编辑器 requirements。
+只读 I/O：读 12 字节包头；seek 到允许条目的16字节目录；按真实偏移/长度只取允许负载；对1288仅读目录记录做区间不相交断言。
+只读白名单=[219,3854,3232,4832,4293,4699,1713,241,2525,3257,2589,2906]；1288 不在白名单；没有其payload、恢复文件或摘录。
+整包 SHA 仅用于指纹核验，不据整包哈希声称逐条读过或语义已验证。
+转译复用 recover_entries.transpile，候选经 recover_entries.decompile_isolated（uncompyle6，timeout=90s）；不导入任何候选模块。
+所有记录 stage=baseline/repaired=false/bounds_refined=false 仅为工具回报；batch_decompile 仍可能进行局部tag/opcode/seam修补。
+每个 pyc 只被解析/反编译，不在 Python2/3 VM 执行；本轮没有 compile/语法通过声明。
+来源状态：219和3232存在损坏标识符，标recovered_partial；3854和4832有完整输出形状，标recovered_complete_not_original，不等于完整正确。
+已见反例：219候选L305含损坏import；3232候选L228/L235含RegisterS%/HotKey。原样保留，不擅自改成catalog历史名。
+interface.CEdit.Active(False)候选有可疑fall-through；chatinput.MsgEnter有未定义变量/缩进迹象。未据此认定游戏存在同样缺陷。
+所有静态解释仅适用于下面摘要的候选；C_sys原生事件注入/slot信号内部/动态回调/资源包内容/实机行为均未完整核对。
+报告文件是小证据摘录，不是第二套Markdown手册。L前缀保存候选原行号，冒号后JSON字符串保留原行字符/空格；证据行号绑定报告实际UTF8原字节。
+完整候选目录：/home/user/d-ui-chat-work/{candidates,support}（沙箱外置研究材料，不入Git，不要求查看器导入它们）。
+A/H可用以下工具版本/白名单重现；不同Python构建的反编译头可能改变全文摘要，必须保留新的摘要，不放宽校验。
+
+输入与工具 SHA256：
+data/script.fls 8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72
+data/data.fls 5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c
+tools/decompiler/script_fls_keys.json 43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb
+tools/decompiler/batch_decompile.py a74742231e04c018c3f63452cfc859c20c6404fd73891eae9076bfcf8185b4e8
+tools/decompiler/recover_entries.py 152dbc28864a10c8b7188df7ae91c8039b0b8c0b056d98591e407b897e39c458
+server/docs/catalog/script_entries.jsonl d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da
+script_manual/coordination/baseline.json 55f23e7298d0d2481123a384095192cbfe1d559c029f4ded923c2911f63d06c9
+
+定点恢复记录（自动观察，不是行为解释；未记录实际keys/bounds值）：
+{"bounds_refined": false, "candidate_bytes": 42790, "candidate_lines": 1288, "candidate_sha256": "e03d31ac8deaab37766addcab9e2a1a63dd1b3c223e977cfe3f427b80df05bfd", "co_filename": "script/mainmenu.py", "decompile_status": "decompile_ok", "entry_id": "0a92a139", "entry_index": 219, "expanded_size": 41423, "pyc_sha256": "0a22d1fba48434b6dfb458ee4c0ade6bee618278aa1ce108fdb36661e8b2b82c", "repaired": false, "stage": "baseline", "steps": ["baseline:progress=41424/41424"], "stored_sha256": "c9835c4b13272697dc74d1fabb291cad705a1b4e95aaa2c92246ef07ee90c312", "stored_size": 18287}
+{"bounds_refined": false, "candidate_bytes": 167076, "candidate_lines": 5675, "candidate_sha256": "be6e733eb06beeead73b2ddef9a8b43346c7997cac60f04f0993c46c795e70b2", "co_filename": "script/interface.py", "decompile_status": "decompile_ok", "entry_id": "c43f0c45", "entry_index": 3854, "expanded_size": 184283, "pyc_sha256": "aeaeea28887ebc3eb2d48c2e18f92f054ffacf589a9d059d8acf8b2e20aadcb9", "repaired": false, "stage": "baseline", "steps": ["baseline:progress=184284/184284"], "stored_sha256": "72f37d30d2cb33e764011bd787340c36d73c16a54844d03758e2856695f0ad69", "stored_size": 57839}
+{"bounds_refined": false, "candidate_bytes": 6540, "candidate_lines": 270, "candidate_sha256": "b55d17dbd67f31e46d33f5d6d4403c19dd049c97f21890d13c08c2835015d88c", "co_filename": "script/key.py", "decompile_status": "decompile_ok", "entry_id": "a32afddb", "entry_index": 3232, "expanded_size": 6968, "pyc_sha256": "a8974e49894c5dae2aad30c50289fa82878d003637ebfdc8fb0f61bc2f66f6fd", "repaired": false, "stage": "baseline", "steps": ["baseline:progress=6969/6969"], "stored_sha256": "33aad7875f8a90dc6a1057ebb109ca783e5a46b6fe9a2ce4a26c751dd3473d86", "stored_size": 3523}
+{"bounds_refined": false, "candidate_bytes": 79567, "candidate_lines": 2472, "candidate_sha256": "9e2dfdeffb91138800ee631f2f2ac01f1a217c97c9a00d962975b5d8ab51ee60", "co_filename": "script/chatoutput.py", "decompile_status": "decompile_ok", "entry_id": "f6b6c332", "entry_index": 4832, "expanded_size": 79917, "pyc_sha256": "198075a6a45b0d2cba330780ace1c7f3a8b8876bc9554ef83eaa0e83a2941491", "repaired": false, "stage": "baseline", "steps": ["baseline:progress=79918/79918"], "stored_sha256": "f3746fbd85729ecaccae88d7fca392d445e66ea4a6b2ce66092f7e375875fb87", "stored_size": 32131}
+{"bounds_refined": false, "candidate_bytes": 46082, "candidate_lines": 1573, "candidate_sha256": "bf5051dc501a38128b4cf33dcdd17d5e2e99f2f274838af6e672e14d9edb05dc", "co_filename": "script/main.py", "decompile_status": "decompile_ok", "entry_id": "d93f1735", "entry_index": 4293, "expanded_size": 48484, "pyc_sha256": "16856d53d2eb4dc83eab1781b615cbac76904f5d14764dbb5d78996f9a6704c9", "repaired": false, "stage": "baseline", "steps": ["baseline:progress=48485/48485"], "stored_sha256": "5a3f694d7e5f9dec58b5ca44cef5724c40bde227319c321ffcb6cdd58c220dc6", "stored_size": 22151}
+{"bounds_refined": false, "candidate_bytes": 27577, "candidate_lines": 782, "candidate_sha256": "e73b4ad41d8dd7a49d73c1c2a3a5feb483380892c7d8077bb05cbfe20f07b103", "co_filename": "script/dialog/mainmenu/combtnmenu.py", "decompile_status": "decompile_ok", "entry_id": "f09397b9", "entry_index": 4699, "expanded_size": 27479, "pyc_sha256": "a1d6888afff39e661b8ebce52f966e1f77beb72ac3928cb3da1a7663917b96b8", "repaired": false, "stage": "baseline", "steps": ["baseline:progress=27480/27480"], "stored_sha256": "dc52e3307ef72acae44078b3a7ceffa5ca02666c2064a0bdf0d0266d788154d5", "stored_size": 12334}
+{"bounds_refined": false, "candidate_bytes": 32914, "candidate_lines": 814, "candidate_sha256": "9864da2f816b912834c258e8f16a0a917644046f1b7ae8ba16fb99b8b7dd0769", "co_filename": "script/dialog/mainmenu/delegate/delegatebtnmenu.py", "decompile_status": "decompile_ok", "entry_id": "55f990c9", "entry_index": 1713, "expanded_size": 36175, "pyc_sha256": "6edde2cf056c9bd8fbeca044b0c1bdd85dfd425c95f731832ae646164d226ec8", "repaired": false, "stage": "baseline", "steps": ["baseline:progress=36176/36176"], "stored_sha256": "ea55aa0364407fa737a7b12632b39a5dab9a2bdced84ad3e71def96eca9e4c5a", "stored_size": 13861}
+{"bounds_refined": false, "candidate_bytes": 3012, "candidate_lines": 99, "candidate_sha256": "6d987f5bf934016f7dbd65e3b2d1b87433d04bb6f0d020df006ca03a6a184b73", "co_filename": "script/dialog/mainmenu/model/model_btnmenu.py", "decompile_status": "decompile_ok", "entry_id": "0bf78201", "entry_index": 241, "expanded_size": 4179, "pyc_sha256": "0358d8f4719d8183cb1be032432d58be825ea26c6b6f03b97df885c6562e0dff", "repaired": false, "stage": "baseline", "steps": ["baseline:progress=4180/4180"], "stored_sha256": "3f7fe245e0def7d1433619238bb3dcd4b824bea46c76fedf663ba0663eece2b2", "stored_size": 2058}
+{"bounds_refined": false, "candidate_bytes": 11361, "candidate_lines": 325, "candidate_sha256": "5aedbdbb1d340c9aeb9a83bf975c2f5a2b718a584f0962bb1c19c9bfa169c256", "co_filename": "script/dialog/mainmenu/comchatinput.py", "decompile_status": "decompile_ok", "entry_id": "7f55dd9b", "entry_index": 2525, "expanded_size": 13724, "pyc_sha256": "10d6b9d43f8cb40aa775e5bc74fbd5d4cd8eb019aa107f7b4624816bc3d7e15c", "repaired": false, "stage": "baseline", "steps": ["baseline:progress=13725/13725"], "stored_sha256": "c21492d0f69fa49cabb8d2c59c07d1ce5beb4e15d68764e2fd0cac0cb81456d0", "stored_size": 6507}
+{"bounds_refined": false, "candidate_bytes": 24806, "candidate_lines": 827, "candidate_sha256": "5340fe4580efac9f5a49b8b1c6e0244b7f7898e0332dbe01d675c12f78305338", "co_filename": "script/netchat.py", "decompile_status": "decompile_ok", "entry_id": "a467560e", "entry_index": 3257, "expanded_size": 26859, "pyc_sha256": "9131ed7242745133382454d52c2fc2494018c522afc4107e2c6bb2c0929e04b8", "repaired": false, "stage": "baseline", "steps": ["baseline:progress=26860/26860"], "stored_sha256": "a87d8581f2df6b16e6f047af4da5a61dbbd439d53d0c220886878a53b9b61dd5", "stored_size": 13367}
+{"bounds_refined": false, "candidate_bytes": 234624, "candidate_lines": 6878, "candidate_sha256": "0c7ada90de63d6f41a56d80842135a2a5e32373b704a105d09e42a7049031312", "co_filename": "script/wrap/wrapinterface.py", "decompile_status": "decompile_ok", "entry_id": "8255450e", "entry_index": 2589, "expanded_size": 241287, "pyc_sha256": "9c9ef7e84695de3c4050426a9751f60bdd22509e59b0e5523a98646a5fc7db3b", "repaired": false, "stage": "baseline", "steps": ["baseline:progress=241288/241288"], "stored_sha256": "be9cc801ad5c998f12fc604f51ef609649c595b67b177a189eb7cd4425f8fcc7", "stored_size": 80145}
+{"bounds_refined": false, "candidate_bytes": 53668, "candidate_lines": 1670, "candidate_sha256": "3b3bfbcfb172a5eaef2c850f3d23e8f116e58e1d23075cb321b1c11a310f904d", "co_filename": "script/chatinput.py", "decompile_status": "decompile_ok", "entry_id": "931f4439", "entry_index": 2906, "expanded_size": 51545, "pyc_sha256": "3a4c994bde0265a89f127904e13dddcf74cb8069bdd65b454578b59b50b91dd9", "repaired": false, "stage": "baseline", "steps": ["baseline:progress=51546/51546"], "stored_sha256": "58c328556fe71dea14750511214bcfe010bfe2957de6c92aa02a23c06459cc8a", "stored_size": 23463}
+
+重现核心（仅解释器执行工具代码；恢复的pyc/py文本不得执行）：
+环境：python3 -m venv <仓库外venv>；pip install uncompyle6==3.9.3 xdis==6.1.8 spark-parser==1.9.0
+按下面过程循环上述白名单；输出目录必须在仓库外且不存在旧产物；报告不要求恢复全量语料。
+```python
+import struct, zlib, json, sys
+from pathlib import Path
+root = Path('/home/user/MXSJ_TW_2022')
+sys.path.insert(0, str(root / 'tools/decompiler'))
+import recover_entries as recovery
+db = json.loads((root / 'tools/decompiler/script_fls_keys.json').read_text(encoding='utf-8'))
+allowed = [219,3854,3232,4832,4293,4699,1713,241,2525,3257,2589,2906]
+assert 1288 not in allowed
+with (root / 'data/script.fls').open('rb') as f:
+    magic, count, table = struct.unpack('<4sII', f.read(12))
+    assert magic == b'0SLF' and count == 5002
+    def record(i):
+        f.seek(table + i * 16)
+        eid, a, b, c = struct.unpack('<IIII', f.read(16))
+        size = (((a * eid + 0x0DF25E) & 0xffffffff) ^ b) & 0xffffffff
+        offset = (((b * i * 0x00F718FE + 0x0D59D16C) & 0xffffffff) ^ c) & 0xffffffff
+        return eid, offset, size
+    _, excluded_offset, excluded_size = record(1288)  # metadata only
+    for index in allowed:
+        _, offset, size = record(index)
+        assert offset + size <= excluded_offset or excluded_offset + excluded_size <= offset
+        f.seek(offset)
+        expanded = zlib.decompress(f.read(size))
+        info = db[str(index)]
+        got = recovery.transpile(expanded, info['keys'], info['bounds'], 'uncompyle6', True)
+        assert got['pyc'] is not None
+        source, state = recovery.decompile_isolated(got['pyc'], 'uncompyle6', True, 90)
+        # Save only to external NEW files; hash pyc/source UTF8 bytes; never import them.
+```

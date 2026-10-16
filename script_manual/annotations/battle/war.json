@@ -1,0 +1,4303 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 697,
+  "path": "script/core/war.py",
+  "owner": "F",
+  "domain": "battle",
+  "author": "N5（2026-10-16 全新会话，承接逻辑任务包 F/battle；不冒称旧 F 会话）；A收尾仅修改指南B-N5-04（非终止/结束分流），此JSON须非A复核，A不自批",
+  "source_status": "recovered_partial",
+  "purpose": {
+    "text": "战斗核心调度层：模块级战斗全局与唯一复位入口、g_Cmds 指令队列与“构造即入队”的 CCmd（带录像过滤守卫）、SetProcess/Process/Wait/NextCmd 组成的处理循环，以及按回调类型分派的战斗指令表现实现（Start/Add/AttackNormal/Perform/Turn/End 等）。真实伤害/命中/AI 计算不在本模块。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "w_head",
+      "w_globals",
+      "w_ccmd",
+      "w_nextcmd",
+      "w_start",
+      "w_end",
+      "catalog_self"
+    ]
+  },
+  "keywords": [
+    "战斗",
+    "核心",
+    "指令队列",
+    "g_Cmds",
+    "CCmd",
+    "SetProcess",
+    "NextCmd",
+    "Wait",
+    "回合",
+    "录像过滤",
+    "Boss",
+    "动画"
+  ],
+  "functions": [
+    {
+      "name": "ModuleReset",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "战斗模块唯一集中复位入口：把 g_Cmds/g_ProcessFunc/g_ProcessArg/g_Turn/g_TurnCount/g_TurnMax/g_WarScene/g_WarType/g_HeroID/g_BossID/g_WarriorList/g_RecordPlace/g_WarMgr 等全部模块级战斗全局复位（g_Cmds=[]、g_ProcessFunc=None、g_Turn=0、g_TurnCount=0、g_WarMgr=None）。改战斗状态初值时应改这里，而不是在各指令回调里各自清零。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_modulereset"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetReplayWar",
+      "signature": "(flag)",
+      "kind": "function",
+      "summary": {
+        "text": "写全局录像开关 g_ReplayWar（仅赋值，不做其它副作用）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_replay_api"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetReplayWar",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "读 g_ReplayWar。它是 war.End/war.Turn/war.Start 里录像分支的统一判据。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_replay_api"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetWarMgr",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "懒构造并返回模块级单例 CWarMgr；模块复位后第一次调用会重新 new。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_replay_api"
+        ]
+      },
+      "calls": [
+        "CWarMgr"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetHeroID",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "读 g_HeroID（本场战斗中本机玩家的战斗内 id）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_replay_api"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetWarriorList",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "返回 g_WarriorList（Add 时逐个 append 的入场单位 id 列表）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_replay_api",
+          "w_add"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CCmd",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "战斗指令对象：只保存 m_Callback（表现回调）与 m_Used（是否已消费），其余字段由构造方（主要是 netwar 的 S2C* 解包）动态挂载。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ccmd"
+        ]
+      },
+      "calls": [
+        "__init__",
+        "g_Cmds.append",
+        "preload_interface.Record2PreloadQueue",
+        "recordvideo.GetVideoMgr",
+        "warturn.RecordCmd"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CCmd.__init__",
+      "signature": "(self, callback)",
+      "kind": "method",
+      "summary": {
+        "text": "构造即入队：只有 recordvideo.GetVideoMgr().IsFilter() 为假时才写 m_Used=False/m_Callback=callback、append 进 g_Cmds，并登记 preload_interface.Record2PreloadQueue 与 warturn.RecordCmd。录像过滤打开时对象被构造但**不入队也不带这两个属性**。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ccmd",
+          "n5_prov"
+        ]
+      },
+      "calls": [
+        "g_Cmds.append",
+        "preload_interface.Record2PreloadQueue",
+        "recordvideo.GetVideoMgr",
+        "warturn.RecordCmd"
+      ],
+      "branches": [
+        {
+          "condition": "not recordvideo.GetVideoMgr().IsFilter()",
+          "effect": {
+            "text": "入队 g_Cmds 并登记 preload/warturn；这是录像过滤守卫",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_ccmd"
+            ]
+          }
+        },
+        {
+          "condition": "recordvideo.GetVideoMgr().IsFilter()",
+          "effect": {
+            "text": "只 return，对象无 m_Used/m_Callback，也没有入队与登记",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_ccmd"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "SetProcess",
+      "signature": "(func, *arg)",
+      "kind": "function",
+      "summary": {
+        "text": "只把 (func, *arg) 记进 g_ProcessFunc/g_ProcessArg，不立即执行；真正的执行在 Process()。NextCmd() 把队首指令的回调放进来，Wait() 把等待语义放进来。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_setprocess",
+          "w_nextcmd"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "Process",
+      "signature": "(bNewFrame=False)",
+      "kind": "function",
+      "summary": {
+        "text": "执行当前 g_ProcessFunc(*g_ProcessArg)。permission.GetSpecialVersion() 时按帧计数：bNewFrame 重置计数，否则累加并在超过 MAX_RUN_COUNT(100) 时直接 return（防跑飞）；普通版不走计数。异常分特殊版 LOG_EXC 与普通版 gamedebug.systrace+LOG，两条路径都回落 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_process",
+          "w_head"
+        ]
+      },
+      "calls": [
+        "LOG",
+        "LOG_EXC",
+        "NextCmd",
+        "g_ProcessFunc",
+        "gamedebug.systrace",
+        "permission.GetSpecialVersion"
+      ],
+      "branches": [
+        {
+          "condition": "permission.GetSpecialVersion() and bNewFrame",
+          "effect": {
+            "text": "g_RunCmdCount 归零",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_process"
+            ]
+          }
+        },
+        {
+          "condition": "permission.GetSpecialVersion() and not bNewFrame",
+          "effect": {
+            "text": "g_RunCmdCount 累加；>MAX_RUN_COUNT(100) 直接 return，本帧不再推进队列",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_process",
+              "w_head"
+            ]
+          }
+        },
+        {
+          "condition": "g_ProcessFunc is not None",
+          "effect": {
+            "text": "包在 try 里执行；抛异常则记录并 NextCmd() 跳过当前指令",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_process"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wait",
+      "signature": "(*ids)",
+      "kind": "function",
+      "summary": {
+        "text": "表现与队列的同步点：给定 id 中任一对象仍存在且（未完成或动作队列非空）就什么都不做；全部完成后（特殊版还会先 magicmgr.ReleaseGBox()）调 NextCmd() 推进。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_wait"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "len",
+        "magicmgr.ReleaseGBox",
+        "permission.GetSpecialVersion",
+        "world.g_Objects.get"
+      ],
+      "branches": [
+        {
+          "condition": "任一 id 的对象存在且 m_Finished==False 或 m_ActionList 非空",
+          "effect": {
+            "text": "不推进，等待下一帧",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_wait"
+            ]
+          }
+        },
+        {
+          "condition": "全部 id 已完成",
+          "effect": {
+            "text": "NextCmd() 推进队列（特殊版先 ReleaseGBox）",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_wait"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "StartBout",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "新回合开头的一次性提速：g_NextBout 为真时清标记并把全场对象 m_WaitingTimePercent 置 100。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_queue"
+        ]
+      },
+      "calls": [
+        "world.g_Objects.values"
+      ],
+      "branches": [
+        {
+          "condition": "g_NextBout 为真",
+          "effect": {
+            "text": "清标记 + 所有对象 m_WaitingTimePercent=100",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_queue"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClearUsedCmd",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "从队首开始丢弃 m_Used 为真的指令，遇到第一条未用的就停（保持队首始终是待处理项）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_queue"
+        ]
+      },
+      "calls": [
+        "len"
+      ],
+      "branches": []
+    },
+    {
+      "name": "NextServerCmd",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "顺序执行队首连续的、未用的 ServerCmd 指令（cmd.func(cmd.netobj) 后置 m_Used=True）；遇到第一个非 ServerCmd 回调就停。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_queue"
+        ]
+      },
+      "calls": [
+        "cmd.func"
+      ],
+      "branches": []
+    },
+    {
+      "name": "NextCmd",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "队列推进核心：先 ClearUsedCmd()，队列非空则取出队首、**把它从 g_Cmds 删除**再 SetProcess+Process(False)；队列空时把处理函数设成 NextCmd 自身（空转），并处理 dlgwarrecord.g_IsWaitForClear 的一次性回执。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_nextcmd"
+        ]
+      },
+      "calls": [
+        "ClearUsedCmd",
+        "Process",
+        "SetProcess",
+        "dlgwarrecord.C2SWarRecCtrl",
+        "len"
+      ],
+      "branches": [
+        {
+          "condition": "len(g_Cmds) 非空",
+          "effect": {
+            "text": "取队首→SetProcess→del 队首→Process(False)",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_nextcmd"
+            ]
+          }
+        },
+        {
+          "condition": "队列已空",
+          "effect": {
+            "text": "SetProcess(NextCmd) 空转；若 dlgwarrecord.g_IsWaitForClear 则清标记并发 C2SWarRecCtrl(0)",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_nextcmd"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CmdIsAction",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "界定“动作类指令”集合：AttackNormal/AttackConverg/Perform/Turn/End/WarriorMultiWalkTo。CmdFind 系在扫描队列时遇到动作类指令必须停止向后找，避免跨动作消费。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_cmdaction"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "CmdFind",
+      "signature": "(func, valuename=None, value=None)",
+      "kind": "function",
+      "summary": {
+        "text": "按回调类型（可选再按属性等值）在 g_Cmds 里找第一条未用指令，命中即置 m_Used=True 并返回；扫描途中一旦出现动作类指令直接返回 None。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_cmdfind"
+        ]
+      },
+      "calls": [
+        "CmdIsAction",
+        "getattr"
+      ],
+      "branches": [
+        {
+          "condition": "valuename is None",
+          "effect": {
+            "text": "回调相等即命中并标记已用",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_cmdfind"
+            ]
+          }
+        },
+        {
+          "condition": "valuename 非 None",
+          "effect": {
+            "text": "再比较 getattr(acmd, valuename) == value 才算命中",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_cmdfind"
+            ]
+          }
+        },
+        {
+          "condition": "扫描中遇到 CmdIsAction(acmd)",
+          "effect": {
+            "text": "立即返回 None，不继续向后找",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_cmdfind",
+              "w_cmdaction"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CmdFindProtector",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "取一条未用的 Protect 指令，返回其 protector_id 对应的世界对象（没有则 None）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_cmdfind"
+        ]
+      },
+      "calls": [
+        "CmdFind",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CmdFindAttackSpecialAddon",
+      "signature": "(att_id)",
+      "kind": "function",
+      "summary": {
+        "text": "为普攻附加特效服务：找一条未用的 Perform 指令且 att_id 不在其 vic_ids 里，命中后按 acmd.pid 查 ATTACK_SPECIAL_ADDON 表，把结果写进 acmd.res 并返回；扫描中遇到动作类指令或未用的 AttackNormalEnd 即停。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_cmdfind",
+          "w_consts"
+        ]
+      },
+      "calls": [
+        "ATTACK_SPECIAL_ADDON.get",
+        "CmdIsAction",
+        "getattr"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetWarriorCnt",
+      "signature": "(bIsAlly, bIsUser)",
+      "kind": "function",
+      "summary": {
+        "text": "读 g_WarUserCnt[bIsAlly][bIsUser]，缺键返回 0。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_cnt"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "AddWarriorCnt",
+      "signature": "(bIsAlly, bIsUser)",
+      "kind": "function",
+      "summary": {
+        "text": "g_WarUserCnt[bIsAlly][bIsUser] 自增（缺键自动建表）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_cnt"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ClearWarriorCnt",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "g_WarUserCnt 置空字典。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_cnt"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ClearTurn",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "g_Turn 归零。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_cnt"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetTurn",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "读 g_Turn。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_cnt"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ForceEnd",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "异常/强制结束战斗的强清路径（不是正常 End 队列路径）：先把队首连续未用 ServerCmd 执行掉，再清空 g_Cmds、SetProcess(None)、释放所有 CWarrior 的动作/Flash/Remnant 并 Release，清空 magicmgr.g_MagicObjects 与 g_Timer、bullet.g_Bullets，最后 End(None)+ClearTurn()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_forceend"
+        ]
+      },
+      "calls": [
+        "ClearTurn",
+        "End",
+        "SetProcess",
+        "cmd.func",
+        "hasattr",
+        "hero.SetPlayerExtAttr",
+        "isinstance",
+        "obj.Release",
+        "obj.SetFinished",
+        "obj.m_ActionCmd.Release",
+        "obj.m_FlashCmd.Release",
+        "obj.m_RemnantCmd.Release",
+        "perform.ReleaseBrotherTimer",
+        "permission.IsTestNewbieProfile",
+        "timer.Release",
+        "world.g_Objects.values"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetStateInfo",
+      "signature": "(warrior)",
+      "kind": "function",
+      "summary": {
+        "text": "把队列里该单位相关的状态指令一次性消费掉并写回 warrior：Shield→护盾值、State→m_Ward/m_Hurt/m_Life/m_HPChg/m_Resist、HPPercent→m_HPPercent、Delete→m_Life 改 DEL、Addon→m_AddonCmds；boss 走 BossCmdFind 兜底；无状态指令时把这些字段清成 NONE/0。返回是否有 State 指令。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_stateinfo"
+        ]
+      },
+      "calls": [
+        "BossCmdFind",
+        "CmdFind",
+        "GetMpFpInfo",
+        "GetPerformName",
+        "warrior.SetShieldValue",
+        "warrior.m_AddonCmds.append"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetPerformName",
+      "signature": "(pid)",
+      "kind": "function",
+      "summary": {
+        "text": "对象存在时对指定 pid 跑一次 CmdFindPerformName。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_stateinfo"
+        ]
+      },
+      "calls": [
+        "CmdFindPerformName",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CmdFindPerformName",
+      "signature": "(id)",
+      "kind": "function",
+      "summary": {
+        "text": "收集该 id 的 PerformName 触发文本写进 wobj.m_TriggerText；遇到动作类指令停止；sktxt 落在 g_DelaySkTxtLst（三条神祐文本）里的会被跳过。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_stateinfo",
+          "w_globals"
+        ]
+      },
+      "calls": [
+        "CmdIsAction",
+        "enumerate",
+        "found.append",
+        "wobj.m_TriggerText.append",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetMpFpInfo",
+      "signature": "(warrior)",
+      "kind": "function",
+      "summary": {
+        "text": "用 CmdFind 取 MpChange/FpChange，写 warrior.m_MpChg/m_FpChg，缺省 0。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_stateinfo"
+        ]
+      },
+      "calls": [
+        "CmdFind"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CreateSame",
+      "signature": "(filename, state='')",
+      "kind": "function",
+      "summary": {
+        "text": "按 '@hero'/'@victim' 造分身：取 g_Attacker / g_Victims[0] 为源，walker.CFakeRole + 深拷贝 m_CharDesc，复制坐标/朝向/alpha/RGB；其它 filename 直接返回 None。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ani"
+        ]
+      },
+      "calls": [
+        "copy.deepcopy",
+        "hasattr",
+        "len",
+        "obj.SetAlpha",
+        "obj.SetDirection",
+        "obj.SetPos",
+        "obj.SetRGBInc",
+        "obj.SetState",
+        "source.GetDirection",
+        "walker.CFakeRole"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetAnimeObject",
+      "signature": "(filename, path, parent)",
+      "kind": "function",
+      "summary": {
+        "text": "资源分派：'@hero'/'@victim'→CreateSame；'.igs'→ui.CImage；其余→interface.CSpriteObject。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ani"
+        ]
+      },
+      "calls": [
+        "CreateSame",
+        "filename.endswith",
+        "interface.CSpriteObject",
+        "ui.CImage"
+      ],
+      "branches": []
+    },
+    {
+      "name": "PlayAni",
+      "signature": "(filename, path, x, y, z, f=None, direction=0, parent=None)",
+      "kind": "function",
+      "summary": {
+        "text": "播放动画：先建对象（2090\\walk.igs+char 特例走 CFakeRole，异常回落到 magic/1001.igs——候选里异常名是损坏标识符 SystemE??or，原样保留），再 CreatePyCommand(1, Play, images, f) 逐帧推进；f 为 None 时自然播完一循环即停，否则按传入帧数倒计数并做淡入。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ani"
+        ]
+      },
+      "calls": [
+        "GetAnimeObject",
+        "Play",
+        "images.CreatePyCommand",
+        "images.SetDirection",
+        "images.SetPos",
+        "images.SetState",
+        "images.SetZ",
+        "obj.GetFrame",
+        "obj.NextFrame",
+        "obj.SetAlpha",
+        "ui.CImage",
+        "walker.CFakeRole"
+      ],
+      "branches": []
+    },
+    {
+      "name": "PlayAni.Play",
+      "signature": "(obj, dummy, curf)",
+      "kind": "function",
+      "summary": {
+        "text": "PlayAni 的逐帧回调：按 m_WaitingTime 节流，推进帧并在前 10 帧做 SetAlpha 淡入。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ani"
+        ]
+      },
+      "calls": [
+        "GetAnimeObject",
+        "PlayAni",
+        "images.CreatePyCommand",
+        "images.SetDirection",
+        "images.SetPos",
+        "images.SetState",
+        "images.SetZ",
+        "obj.GetFrame",
+        "obj.NextFrame",
+        "obj.SetAlpha",
+        "ui.CImage",
+        "walker.CFakeRole"
+      ],
+      "branches": []
+    },
+    {
+      "name": "PlayTraceAni",
+      "signature": "(startx, starty, x, y, z, dis, fname, path, num, frame, direction)",
+      "kind": "function",
+      "summary": {
+        "text": "轨迹动画：起点==终点直接返回；dis 可以是 '@n'（按间距均分 n 段）或整数；用 interface.CBaseObject 挂逐帧回调，沿直线按步长铺 PlayAni。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ani"
+        ]
+      },
+      "calls": [
+        "PlayAni",
+        "int",
+        "interface.CBaseObject",
+        "math.sqrt",
+        "time.CreatePyCommand",
+        "type",
+        "xrange"
+      ],
+      "branches": []
+    },
+    {
+      "name": "PlayTraceAni.PlayTraceAni",
+      "signature": "(self, obj, stepremain, cur, waitingtime)",
+      "kind": "method",
+      "summary": {
+        "text": "PlayTraceAni 的逐帧回调：按 waitingtime 节流，逐段生成轨迹动画。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ani"
+        ]
+      },
+      "calls": [
+        "PlayAni",
+        "int",
+        "interface.CBaseObject",
+        "math.sqrt",
+        "time.CreatePyCommand",
+        "type",
+        "xrange"
+      ],
+      "branches": []
+    },
+    {
+      "name": "FrameTimer",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "调试用帧计数器：建红色 CTextObject 挂逐帧回调，维护 g_Frame/g_MaxFrame（仅特殊/调试用途）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ani"
+        ]
+      },
+      "calls": [
+        "d",
+        "g_FrameObject.CreatePyCommand",
+        "g_FrameObject.SetColor",
+        "g_FrameObject.SetPos",
+        "g_FrameObject.SetText",
+        "interface.CTextObject"
+      ],
+      "branches": []
+    },
+    {
+      "name": "FrameTimer.FrameTimer",
+      "signature": "(obj)",
+      "kind": "function",
+      "summary": {
+        "text": "FrameTimer 的逐帧回调：刷新 g_Frame 并更新调试文本。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ani"
+        ]
+      },
+      "calls": [
+        "d",
+        "g_FrameObject.CreatePyCommand",
+        "g_FrameObject.SetColor",
+        "g_FrameObject.SetPos",
+        "g_FrameObject.SetText",
+        "interface.CTextObject"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CheckAuto",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "自动战斗守卫：g_WarScene==65535 或最低位为 1 时直接返回；否则若 autocm.IsCM() 则 game.StopAll()。只在 permission.GetOverdoVersion() 时由 Start 调用。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_hooks",
+          "w_start"
+        ]
+      },
+      "calls": [
+        "autocm.IsCM",
+        "game.StopAll"
+      ],
+      "branches": []
+    },
+    {
+      "name": "OnWarStart",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "广播 commoncb.WAR_START。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_hooks"
+        ]
+      },
+      "calls": [
+        "commoncb.TriggerCB"
+      ],
+      "branches": []
+    },
+    {
+      "name": "OnWarEnd",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "广播 commoncb.WAR_END 并 preload_interface.MagicEnd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_hooks",
+          "w_end"
+        ]
+      },
+      "calls": [
+        "commoncb.TriggerCB",
+        "preload_interface.MagicEnd"
+      ],
+      "branches": []
+    },
+    {
+      "name": "OnTurnCountChanged",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "带 g_TurnCount 广播 commoncb.WAR_TURNCNTCHANGED。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_hooks",
+          "w_summon_turn"
+        ]
+      },
+      "calls": [
+        "commoncb.TriggerCB"
+      ],
+      "branches": []
+    },
+    {
+      "name": "Start",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "战斗开场总装配：先 pfmview 销毁旧战场，写 g_WarScene/g_TurnCount/g_NextBout/g_WarType/g_WarStartTime 并复位召唤/英雄/Boss/占位记录，ClearWarriorCnt + world.ClearAllObject + nettask.CloseAll，记双方阵型、map.SwitchSpecial、按需建/复用背景、铺双方阵型图（1024x768 用 lineup2 目录），非录像时 warui.ShowWarUI、天气归一、战报/天梯/观战刷新，最后 OnWarStart + OnTurnCountChanged + NextCmd()。修改“开场做了什么”应改这里。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_start"
+        ]
+      },
+      "calls": [
+        "CheckAuto",
+        "ClearWarriorCnt",
+        "GetReplayWar",
+        "LOG",
+        "NextCmd",
+        "OnTurnCountChanged",
+        "OnWarStart",
+        "dlgcateroom.AutoShowMin",
+        "dlgladderrank.ShowLoadingDlg",
+        "hero.GetProp",
+        "img.SetPos",
+        "map.SetShiftToWarSceneSignal",
+        "map.SwitchSpecial",
+        "map.WarSaveScene",
+        "mdwatchwar.GetModel",
+        "misc.Time",
+        "nettask.CloseAll",
+        "permission.GetOverdoVersion",
+        "permission.IsWatchWar",
+        "pfmview.DestroyWar",
+        "pfmview.IsWar",
+        "ratio.GetPosBy800x600",
+        "ratio.Is1024x768",
+        "sceneanimal.Clear",
+        "setfps.TryUse30FPS",
+        "sound.PlayFightMusic",
+        "ui.CImage",
+        "warbackground.CreateBackGround",
+        "warbackground.GetIndex",
+        "warnotify.AddBeginNotify",
+        "warnotify.SetEndExNotify",
+        "warui.ShowWarUI",
+        "weather.CWeatherMgr.ShowWeather",
+        "world.ClearAllObject"
+      ],
+      "branches": [
+        {
+          "condition": "pfmview.IsWar()",
+          "effect": {
+            "text": "先 pfmview.DestroyWar()",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_start"
+            ]
+          }
+        },
+        {
+          "condition": "permission.GetOverdoVersion()",
+          "effect": {
+            "text": "额外走一次 CheckAuto()",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_start",
+              "w_hooks"
+            ]
+          }
+        },
+        {
+          "condition": "not (g_Background and warbackground.GetIndex() == cmd.background)",
+          "effect": {
+            "text": "新建背景 warbackground.CreateBackGround(cmd.background)",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_start"
+            ]
+          }
+        },
+        {
+          "condition": "ratio.Is1024x768()",
+          "effect": {
+            "text": "阵型图目录用 lineup2，否则 lineup",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_start"
+            ]
+          }
+        },
+        {
+          "condition": "not GetReplayWar()",
+          "effect": {
+            "text": "warui.ShowWarUI()（录像不显示战斗 UI）",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_start"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CmdFindAttackEndByID",
+      "signature": "(att_id)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "CmdFind"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CmdFindAttackNormalByID",
+      "signature": "(att_id)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "CmdIsAction"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetNewMagicInfo",
+      "signature": "(iAttackerID, iVicList, iPerformID)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "CmdFindAttackEndByID",
+        "CmdFindAttackNormalByID",
+        "CmdFindProtector",
+        "GetStateInfo",
+        "g_Victims.append",
+        "getattr",
+        "magicperformdata.GetResInfoByPerformID",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "Add",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "入场单位：TransformShape 归一外形；同 id 旧对象先隐藏再删；BOSS_SHAPE 且已有 g_BossID 时改为 AddBossWeapon 并 return（不再新增 boss 主体）；是否播入场动画由 g_TurnCount 决定；塔防场景不强制空位（bMustInEmptyPos=not IsTowerFight()）；入场动画开启时先登记玩家信息并隐藏；最后 g_WarriorList.append(cmd.id) + NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_add"
+        ]
+      },
+      "calls": [
+        "AddBossWeapon",
+        "NextCmd",
+        "NormalAdd",
+        "StartBout",
+        "TransformShape",
+        "g_WarriorList.append",
+        "oWarrior.RefreshHPProgress",
+        "oWarrior.SetShow",
+        "towerdefence.IsTowerFight",
+        "warenteranimation.CheckWarEnterAniShow",
+        "warenteranimation.GetWarEnterAniMgr"
+      ],
+      "branches": [
+        {
+          "condition": "cmd.id 已在 world.g_Objects",
+          "effect": {
+            "text": "旧对象 SetShow(False) 并删除",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_add"
+            ]
+          }
+        },
+        {
+          "condition": "cmd.shape == walker.CWalkerBase.BOSS_SHAPE 且 g_BossID 已存在",
+          "effect": {
+            "text": "走 AddBossWeapon(g_BossID, cmd) 并 return",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_add"
+            ]
+          }
+        },
+        {
+          "condition": "warenteranimation.CheckWarEnterAniShow()",
+          "effect": {
+            "text": "登记入场玩家信息并把单位先隐藏",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_add"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetPlace",
+      "signature": "(cmd, bMustEmpty=True)",
+      "kind": "function",
+      "summary": {
+        "text": "站位分配：g_ReplayVer 在 1..5、place>11 或占位冲突时改由 lineup.GetEmptyPlace 重新分配；否则用服务端给的 place；结果记入 g_RecordPlace[allied]。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_place"
+        ]
+      },
+      "calls": [
+        "lineup.GetEmptyPlace"
+      ],
+      "branches": []
+    },
+    {
+      "name": "RemoveRecordPlace",
+      "signature": "(iAllied, iPlace)",
+      "kind": "function",
+      "summary": {
+        "text": "站位回收：仅内部版本（innerversion.IsInnerVer()）生效，且当场上没有对象仍占该位时才从记录里移除。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_place"
+        ]
+      },
+      "calls": [
+        "innerversion.IsInnerVer",
+        "world.g_Objects.values"
+      ],
+      "branches": []
+    },
+    {
+      "name": "NormalAdd",
+      "signature": "(cmd, isShowAddAni, bMustInEmptyPos=True)",
+      "kind": "function",
+      "summary": {
+        "text": "真正构造战斗单位的地方：先按 cmd.owner_id 是否等于 g_HeroID 决定新资源判定方式（newoldcharchangemgr.IsUesNewResWithShape / charpath.GetResNewWithShapeDesc），回收旧站位，再 warrior.Create(...) 建对象，随后刷新名字、血条/HP 进度、挂件与入场动画登记。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_normaladd"
+        ]
+      },
+      "calls": [
+        "AddWarriorCnt",
+        "GetPlace",
+        "GetWarMgr",
+        "PlayAni",
+        "RemoveRecordPlace",
+        "SetWarriorName",
+        "bool",
+        "charpath.GetResNewWithShapeDesc",
+        "g_dWarriorNameColor.get",
+        "getattr",
+        "hasattr",
+        "lineup.GetPos",
+        "mdreportcache.AddName",
+        "mdreportcache.AddPetName",
+        "netwar.GetWarLocation",
+        "netwar.GetWarVersion",
+        "newlineupdata.GetPos",
+        "newoldcharchangemgr.IsUesNewResWithShape",
+        "obj.GetIsUseNewRes",
+        "obj.SetDesc",
+        "obj.SetDirection",
+        "obj.SetPos",
+        "obj.UpdateNameColor",
+        "permission.IsOpenNewOldColorMap",
+        "sound.Play",
+        "str",
+        "warrior.Create",
+        "warrior.IsAlly",
+        "warui.SetWarState",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "DelTargetLine",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "交给 wartargetline.DelTargetLine(cmd.sourceID, cmd.targetID) 后 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_walk"
+        ]
+      },
+      "calls": [
+        "LOG_DEBUG",
+        "NextCmd",
+        "wartargetline.DelTargetLine"
+      ],
+      "branches": []
+    },
+    {
+      "name": "WarriorWalkTo",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "单兵走位：对象不存在或已死直接 NextCmd()；否则更新 m_Place/占位记录、取目标坐标、FakeWalkTo，并 SetProcess(Wait, cmd.id) 等它走完。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_walk"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "SetProcess",
+        "lineup.GetPos",
+        "obj.FakeWalkTo",
+        "obj.IsDied",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "WarriorMultiWalkTo",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "多人同时走位：按 cmd.walkinfo 逐个（跳过不存在/已死）改占位、取 newlineupdata.GetPos(用 netwar.GetWarLocation() 的攻方地点) 后 FakeQuickWalkTo；等待列表为空才 NextCmd()，否则 SetProcess(Wait, *iWaitList)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_walk"
+        ]
+      },
+      "calls": [
+        "LOG_DEBUG",
+        "NextCmd",
+        "SetProcess",
+        "iWaitList.append",
+        "netwar.GetWarLocation",
+        "newlineupdata.GetPos",
+        "oWarrior.FakeQuickWalkTo",
+        "oWarrior.GetPlace",
+        "oWarrior.IsDied",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "WarriorSwap",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "换位：按 cmd.swapinfo 逐个改占位记录并 Teleport 到新坐标；有换位信息则等最后一个 id，否则 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_walk"
+        ]
+      },
+      "calls": [
+        "LOG",
+        "NextCmd",
+        "SetProcess",
+        "lineup.GetPos",
+        "oWarrior.Teleport",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "WarJuben",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "战斗内剧情：warjuben.PlayJuben(GetBackGround(), cmd.iJubenID)。注意它本身不调 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_transform"
+        ]
+      },
+      "calls": [
+        "GetBackGround",
+        "warjuben.PlayJuben"
+      ],
+      "branches": []
+    },
+    {
+      "name": "ChgShape",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "变身：oldwalkerprocess.SpecialShape 归一外形 → TransformShape → ChgShapeByArg 换模型，然后 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_transform"
+        ]
+      },
+      "calls": [
+        "ChgShapeByArg",
+        "NextCmd",
+        "TransformShape",
+        "getattr",
+        "oldwalkerprocess.SpecialShape",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "ChgShapeByArg",
+      "signature": "(obj, shape, name, desc)",
+      "kind": "function",
+      "summary": {
+        "text": "换模型的具体实现：非死亡态先切 stand，清 m_StandSize，SetOrigDesc/SetIsUseNewRes/ChangeShape，死亡态保持 die 并停最后一帧，重设名字、刷新血条，并按 addon.CreateForWar 重建挂件（保留回合/系列/MagicId）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_transform"
+        ]
+      },
+      "calls": [
+        "SetWarriorName",
+        "addon.CreateForWar",
+        "charpath.GetResNewWithShapeDesc",
+        "getattr",
+        "hasattr",
+        "obj.ChangeShape",
+        "obj.FrameAmount",
+        "obj.RefreshHPProgress",
+        "obj.SetFrame",
+        "obj.SetIsUseNewRes",
+        "obj.SetOrigDesc",
+        "obj.SetState",
+        "obj.m_Addons.keys",
+        "obj.m_Addons.update",
+        "warui.RefreshStateIcon"
+      ],
+      "branches": []
+    },
+    {
+      "name": "SetWarriorName",
+      "signature": "(id, name)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "IsPVPWar",
+        "friend.GetShowName",
+        "getattr",
+        "hasattr",
+        "hero.id2class",
+        "interface.CTextObject",
+        "newlineupdata.GetNum",
+        "npcheightdata.GetWarSelectData",
+        "obj.GetAllied",
+        "obj.GetParent",
+        "obj.GetPlace",
+        "obj.GetPos",
+        "obj.GetSelectObjShow",
+        "obj.GetShape",
+        "obj.m_NameText.GetSize",
+        "obj.m_NameText.SetPos",
+        "obj.m_NameText.SetZ",
+        "permission.IsOpenFightOptimize",
+        "selectobj.RefreshPlaceToNum",
+        "selectobj.SetCommandID",
+        "selectobj.SetGradeandZhiye",
+        "selectobj.SetPos",
+        "selectobj.SetShow",
+        "teammgr.GetTeamMgr",
+        "warrior.CWarriorSelect",
+        "world.g_Objects.get",
+        "wrapui.HandleLink"
+      ],
+      "branches": []
+    },
+    {
+      "name": "SetBossWarriorSelect",
+      "signature": "(oObj, iShape)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "npcheightdata.GetWarSelectData",
+        "oObj.GetParent",
+        "oObj.GetPos",
+        "oSelectObj.SetPos",
+        "warrior.CWarriorSelect"
+      ],
+      "branches": []
+    },
+    {
+      "name": "IsAllide",
+      "signature": "(iPlayerID)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "warrior.IsAlly",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetWarriorClass",
+      "signature": "(iPlayerID)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "oWarrior.GetClass",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetWarriorGrade",
+      "signature": "(iPlayerID)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "oWarrior.GetGrade",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetWarriorPlace",
+      "signature": "(iPlayerID)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "oWarrior.GetPlace",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "Delete",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "删除单位：先 StartBout；对象存在则 SetProcess(Wait, cmd.id)、发 GetWarMgr().OnPetDel、按 m_FastDelete 决定 Delete(0) 或 Delete()；对象不存在时回落 BossDelete，都不成立才 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_delete"
+        ]
+      },
+      "calls": [
+        "BossDelete",
+        "GetWarMgr",
+        "NextCmd",
+        "SetProcess",
+        "StartBout",
+        "hasattr",
+        "obj.Delete",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "Flash",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "301 号自带动作：SetProcess(Wait, id) 后压入 obj.DoFlash 并 NextAction()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_delete",
+          "w_perform"
+        ]
+      },
+      "calls": [
+        "SetProcess",
+        "obj.NextAction",
+        "obj.PushBackAction",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "Rush",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "302 号自带动作：冲向 cmd.vic_ids[0]（GetOrderPos），SetProcess(Wait, id) 后 Rush+NextAction。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_delete",
+          "w_perform"
+        ]
+      },
+      "calls": [
+        "GetOrderPos",
+        "SetProcess",
+        "oRusher.NextAction",
+        "oRusher.PushBackAction",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "DoDieAction",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "303 号自带动作：SetProcess(Wait, id) 后压入 obj.DoDieAction 并 NextAction()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_delete",
+          "w_perform"
+        ]
+      },
+      "calls": [
+        "SetProcess",
+        "obj.NextAction",
+        "obj.PushBackAction",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetAttackInfo",
+      "signature": "(att_id, vic_id)",
+      "kind": "function",
+      "summary": {
+        "text": "普攻前把 att_id/vic_id 解析成 g_Attacker/g_Victim，并用 CmdFindProtector 找 g_Protector；对攻击者/受击者（有保护者时也对其）跑 GetStateInfo。任一为 None 直接返回。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_attackinfo"
+        ]
+      },
+      "calls": [
+        "CmdFindProtector",
+        "GetStateInfo",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetMagicInfo",
+      "signature": "(att_id, vic_ids)",
+      "kind": "function",
+      "summary": {
+        "text": "法术前解析：g_Victims 逐个 GetStateInfo；攻击者不在受击列表里时也对攻击者跑 GetStateInfo，并强制清 Boss 的状态字段。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_attackinfo"
+        ]
+      },
+      "calls": [
+        "GetBoss",
+        "GetStateInfo",
+        "g_Victims.append",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetOrderPos",
+      "signature": "(attacker, victim, adj=True)",
+      "kind": "function",
+      "summary": {
+        "text": "算攻击站位：以受击者位置为基准把攻击者推到左右 100 / 上下 50 的偏移，再按 attacker.m_AttackSpace（缺省 80）沿连线回拉。adj=False 时不加偏移。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_attackinfo"
+        ]
+      },
+      "calls": [
+        "GetVictimPos",
+        "attacker.CalcPos",
+        "attacker.GetPos"
+      ],
+      "branches": []
+    },
+    {
+      "name": "AttackNormal",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "普通攻击表现主流程：StartBout → g_Turn==0 直接 return（不表现）→ 预载下一招、发统计信号 →循环收集 AttackSpecialAddon → BossAttackNormal 归一 → GetAttackInfo；g_Attacker/g_Victim 缺失就标 m_Used 并跳过；按 g_SkipRush 决定是否插 Rush；压入 AttackPre/Attack/ClearKeyCallback；据 AttackNormalEnd 决定各方是否回位；最后按是否有保护者决定 Wait 的目标 id 集合。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_attacknormal"
+        ]
+      },
+      "calls": [
+        "BossAttackNormal",
+        "CmdFind",
+        "CmdFindAttackSpecialAddon",
+        "GetAttackInfo",
+        "GetOrderPos",
+        "GetRealWarriorID",
+        "IsWarriorNeedGoback",
+        "NextCmd",
+        "SetProcess",
+        "StartBout",
+        "attaddon.append",
+        "follower.IsDied",
+        "follower.PushBackAction",
+        "g_Attacker.AddFollower",
+        "g_Attacker.IsDied",
+        "g_Attacker.IsSuperDirection",
+        "g_Attacker.IsSuperPosition",
+        "g_Attacker.LoadAttackInfo",
+        "g_Attacker.NextAction",
+        "g_Attacker.PushBackAction",
+        "g_Victim.PushBackAction",
+        "magicmgr.ShowMagicName",
+        "preload_interface.PreloadNextMagic",
+        "statisticsignal.Emit",
+        "world.g_Objects.get"
+      ],
+      "branches": [
+        {
+          "condition": "g_Turn == 0",
+          "effect": {
+            "text": "直接 return，不做任何攻击表现",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_attacknormal"
+            ]
+          }
+        },
+        {
+          "condition": "g_Attacker is None or g_Victim is None",
+          "effect": {
+            "text": "打印 War Error、标 cmd.m_Used=True、NextCmd() 并 return",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_attacknormal"
+            ]
+          }
+        },
+        {
+          "condition": "not g_SkipRush",
+          "effect": {
+            "text": "先压入 Rush 到 GetOrderPos 位置；否则把 g_SkipRush 复位",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_attacknormal"
+            ]
+          }
+        },
+        {
+          "condition": "CmdFind(AttackNormalEnd) 命中且 IsWarriorNeedGoback",
+          "effect": {
+            "text": "给受击者/攻击者/跟随者压入 GoBack(43, True)",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_attacknormal"
+            ]
+          }
+        },
+        {
+          "condition": "g_Protector 存在",
+          "effect": {
+            "text": "SetProcess(Wait, att_id, vic_id, protector_id)；否则只等攻受双方",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_attacknormal"
+            ]
+          }
+        },
+        {
+          "condition": "isShowMagicName",
+          "effect": {
+            "text": "magicmgr.ShowMagicName(pid, cmd)；否则直接 g_Attacker.NextAction()",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_attacknormal"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Protect",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "保护指令：候选里只打印一行日志就 NextCmd()，没有表现实现。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_attacknormal"
+        ]
+      },
+      "calls": [
+        "NextCmd"
+      ],
+      "branches": []
+    },
+    {
+      "name": "IsWarriorNeedGoback",
+      "signature": "(oWarrior, iMiniGobackDistance=5)",
+      "kind": "function",
+      "summary": {
+        "text": "回位判定：是 CWarrior、有 m_OrigX/m_OrigY、不在原位同向（容差 iMiniGobackDistance，默认 5）且未死亡时需要回位。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_attacknormal"
+        ]
+      },
+      "calls": [
+        "hasattr",
+        "isinstance",
+        "oWarrior.IsDied",
+        "oWarrior.IsSuperDirection",
+        "oWarrior.IsSuperPosition"
+      ],
+      "branches": []
+    },
+    {
+      "name": "AttackNormalEnd",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "新版攻击收尾：cmd.id 存在时只处理该单位回位（GetRealWarriorID 归一，含 Boss 武器位）；否则遍历全场需要回位的单位，并按 cmd.clear_lst 删除对象；有回位名单才 SetProcess(Wait, *名单) 并逐个 NextAction()，否则直接 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_attackend"
+        ]
+      },
+      "calls": [
+        "GetRealWarriorID",
+        "IsWarriorNeedGoback",
+        "NextCmd",
+        "SetProcess",
+        "getattr",
+        "gobacklist.append",
+        "obj.PushBackAction",
+        "wobj.NextAction",
+        "world.DelObject",
+        "world.GetObj",
+        "world.g_Objects.values"
+      ],
+      "branches": []
+    },
+    {
+      "name": "AttackNormalEnd_Old",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "旧版收尾：无条件遍历全场 CWarrior 压入 GoBack(30, True) 并等待。候选里 AttackNormal 已不调用它。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_attackend"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "SetProcess",
+        "gobacklist.append",
+        "hasattr",
+        "isinstance",
+        "obj.IsDied",
+        "obj.IsSuperDirection",
+        "obj.IsSuperPosition",
+        "obj.PushBackAction",
+        "wobj.NextAction",
+        "world.GetObj",
+        "world.g_Objects.values"
+      ],
+      "branches": []
+    },
+    {
+      "name": "AttackConverg",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "合击：先清 g_Protector，StartBout，g_Turn==0 直接 return；然后从队首吞指令，把同一 vic_id 的 AttackConverg/AttackNormal 的 att_id 收进 attacker_ids（遇到 AttackNormal 记 last_id 后停）；多个攻击者按 GetOrderPos(...,adj=False) 排 Rush/Attack 并按是否 last_id 改命中帧/掉血帧；最后压 Attack+GoBack、发统计信号、SetProcess(Wait, vic_id, *attacker_ids)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_attackend"
+        ]
+      },
+      "calls": [
+        "GetOrderPos",
+        "GetStateInfo",
+        "SetProcess",
+        "StartBout",
+        "attacker.LoadAttackInfo",
+        "attacker.Rush",
+        "attacker_ids.append",
+        "g_Attacker.NextAction",
+        "g_Attacker.PushBackAction",
+        "g_Attackers.append",
+        "len",
+        "preload_interface.PreloadNextMagic",
+        "statisticsignal.Emit",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "Shield",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "护盾：obj.SetShieldValue(cmd.shield_chg) 后 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_buffstate"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "obj.SetShieldValue",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "ServerShout",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "战斗喊话：iType==1 且 permission.IsOpenFightOptimize() 时用 magicmgr.CMagicName 显示（TYPE_TO_ADV={1:3}）；否则只打印。然后 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_buffstate"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "magicmgr.CMagicName",
+        "permission.IsOpenFightOptimize",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "ExtraEffect",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "附加特效：obj.SetExtraEffect(cmd.effectid, cmd.turn) 后 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_buffstate"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "obj.SetExtraEffect",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "State",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "状态结算：对象存在且（有掉血或有护盾）时写 m_Hurt、CreateModifyHP、清护盾；掉血为负时按 m_State=='die' 走复活（Guard/刷新血条/CheckGoBackDelay/OnPetRestore）或按 life 走宠物死亡回调；life==DEAD 则 Die() 并 SetProcess(Wait, id) 后 return；对象不存在时回落 BossState。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_buffstate"
+        ]
+      },
+      "calls": [
+        "BossState",
+        "GetWarMgr",
+        "NextCmd",
+        "SetProcess",
+        "getattr",
+        "hasattr",
+        "obj.CheckGoBackDelay",
+        "obj.CreateModifyHP",
+        "obj.Die",
+        "obj.GetShieldValue",
+        "obj.Guard",
+        "obj.NextAction",
+        "obj.RefreshHPProgress",
+        "obj.SetShieldValue",
+        "warui.CheckIsWarriorHp",
+        "warui.SetWarriorHpBar",
+        "world.g_Objects.get"
+      ],
+      "branches": [
+        {
+          "condition": "obj 存在 且 (cmd.hp_chg 或 obj.GetShieldValue())",
+          "effect": {
+            "text": "写伤害/血条/护盾",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_buffstate"
+            ]
+          }
+        },
+        {
+          "condition": "cmd.hp_chg < 0 且 obj.m_State == 'die'",
+          "effect": {
+            "text": "走复活链路并 GetWarMgr().OnPetRestore",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_buffstate"
+            ]
+          }
+        },
+        {
+          "condition": "cmd.life == WARRIOR_LIFE_DEAD",
+          "effect": {
+            "text": "obj.Die(...) 并 SetProcess(Wait, cmd.id) 后 return",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_buffstate"
+            ]
+          }
+        },
+        {
+          "condition": "obj 不存在或条件不满足",
+          "effect": {
+            "text": "elif BossState(cmd) 命中则 return，否则 NextCmd()",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_buffstate",
+              "w_boss"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "HPPercent",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "血百分比：写 m_HPPercent/m_PrevHPPercent 并按 m_HPFull 刷新血条，然后 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_buffstate"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "getattr",
+        "obj.m_HPFull.SetRate",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "MPPercent",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "法力百分比：写 m_MPPercent，职业类在 (1,2) 时 CreateProgressChgCmd(2)，然后 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_buffstate"
+        ]
+      },
+      "calls": [
+        "LOG_DEBUG",
+        "NextCmd",
+        "obj.CreateProgressChgCmd",
+        "obj.GetClass",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "FPPercent",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "力道百分比：写 m_FPPercent，职业类为 0 时 CreateProgressChgCmd(3)，然后 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_buffstate"
+        ]
+      },
+      "calls": [
+        "LOG_DEBUG",
+        "NextCmd",
+        "obj.CreateProgressChgCmd",
+        "obj.GetClass",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "OpenDecideTime",
+      "signature": "(oCmd)",
+      "kind": "function",
+      "summary": {
+        "text": "打开决策倒计时：写入 mdlwardecidetime 数据后 dlgwardecidetime.OpenWarDecideTime()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_buffstate"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "dlgwardecidetime.OpenWarDecideTime",
+        "mdlwardecidetime.GetWarDecideTimeModel"
+      ],
+      "branches": []
+    },
+    {
+      "name": "PerformAtPos",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "NormalAdd",
+        "Perform",
+        "bool",
+        "cmd.vic_ids.append",
+        "enumerate",
+        "oWarrior.SetIsFake",
+        "oWarrior.SetShow"
+      ],
+      "branches": []
+    },
+    {
+      "name": "Perform",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "技能表现分派总入口（改“某技能怎么演”先看这里）：StartBout → g_Turn==0 直接 return →预载 + 统计 + GetWarMgr().OnPerform 广播 → 新法术（magicperformdata.IsNewMagic 且非强制旧版）走 magicperform.Start，成功 SetProcess(None) 交给表现层、失败 NextCmd()；pid==11004 标记快速删除；pid==11013 重建召唤物；pid in (1,2) 走逃跑；IGONRE_PERFORM(3,26361) 忽略；物理法术改 m_AttackAction；SPECIAL_EFFECT_LIST 走 ShowSpecialEffect；SELF_CONTROL_PERFORM(301/302/303) 走 Flash/Rush/DoDieAction；其余按 cmd.id 是否存在分派 magicmgr.NormalMagic 或 perform.CreatePerform（失败回落 magicdata.GetMapping + magicmgr.Launch 并等待）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_perform",
+          "w_consts"
+        ]
+      },
+      "calls": [
+        "BossGetMagicInfo",
+        "BossPerform",
+        "CmdFind",
+        "DoDieAction",
+        "Flash",
+        "GetMagicInfo",
+        "GetNewMagicInfo",
+        "GetWarMgr",
+        "NextCmd",
+        "NormalAdd",
+        "Rush",
+        "SetProcess",
+        "ShowSpecialEffect",
+        "StartBout",
+        "len",
+        "magicdata.GetMapping",
+        "magicmgr.Launch",
+        "magicmgr.NormalMagic",
+        "magicmgr.g_MagicKind.get",
+        "magicperform.IsForceOld",
+        "magicperform.Start",
+        "magicperformdata.IsNewMagic",
+        "misc.RandInt",
+        "obj.Escape",
+        "obj.SetShow",
+        "perform.CreatePerform",
+        "preload_interface.PreloadNextMagic",
+        "statisticsignal.Emit",
+        "world.DelObject",
+        "world.g_Objects.get"
+      ],
+      "branches": [
+        {
+          "condition": "g_Turn == 0",
+          "effect": {
+            "text": "直接 return，不表现",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_perform"
+            ]
+          }
+        },
+        {
+          "condition": "magicperformdata.IsNewMagic(pid) and not magicperform.IsForceOld(id, pid)",
+          "effect": {
+            "text": "新法术管线：magicperform.Start 成功→SetProcess(None)，失败→NextCmd()，随后 return",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_perform"
+            ]
+          }
+        },
+        {
+          "condition": "cmd.pid in (1, 2)",
+          "effect": {
+            "text": "逃跑表现（单人直接 Escape，多人加随机延迟），SetProcess(Wait, *vic_ids)；无人可逃则 NextCmd()",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_perform"
+            ]
+          }
+        },
+        {
+          "condition": "cmd.pid in IGONRE_PERFORM",
+          "effect": {
+            "text": "pass（忽略），落到最后的 NextCmd()",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_perform",
+              "w_consts"
+            ]
+          }
+        },
+        {
+          "condition": "cmd.pid in SELF_CONTROL_PERFORM",
+          "effect": {
+            "text": "301→Flash / 302→Rush / 303→DoDieAction 后 return",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_perform",
+              "w_consts",
+              "w_delete"
+            ]
+          }
+        },
+        {
+          "condition": "cmd.id 为真",
+          "effect": {
+            "text": "BossPerform→GetMagicInfo→magicmgr.NormalMagic 后 return",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_perform"
+            ]
+          }
+        },
+        {
+          "condition": "cmd.id 为假（0/None）",
+          "effect": {
+            "text": "perform.CreatePerform，失败回落 magicdata.GetMapping + magicmgr.Launch 并等待",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_perform"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "ChangeDir",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "改朝向：obj.SetDirection(cmd.iDir) 后 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_special"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "obj.SetDirection",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "PlayMagicAction",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "批量播法术动作：对 cmd.lstObjID 里每个对象 JustDoMagicAction()，然后 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_special"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "oWarrior.JustDoMagicAction",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "ShowSpecialEffect",
+      "signature": "(warriorID, pID)",
+      "kind": "function",
+      "summary": {
+        "text": "按 EID2PATH 取特效资源（缺则 None），对象有 m_OrigX/m_OrigY 时在其位置 PlayAni。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_special",
+          "w_consts"
+        ]
+      },
+      "calls": [
+        "EID2PATH.get",
+        "PlayAni",
+        "hasattr",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "Catch",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "捕捉：StartBout 后取双方对象，都存在则 SetProcess(Wait, id, sumid) 并压 Rush→Catch→GoBack；任一不存在直接 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_special"
+        ]
+      },
+      "calls": [
+        "GetOrderPos",
+        "NextCmd",
+        "SetProcess",
+        "StartBout",
+        "obj.NextAction",
+        "obj.PushBackAction",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "Addon",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "挂状态：StartBout 后 DoAddonAction(id, pid, turn, series, magicId) 再 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_special"
+        ]
+      },
+      "calls": [
+        "DoAddonAction",
+        "NextCmd",
+        "StartBout"
+      ],
+      "branches": []
+    },
+    {
+      "name": "SpecialAddon",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "Addon 的同义包装（直接调 Addon）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_special"
+        ]
+      },
+      "calls": [
+        "Addon"
+      ],
+      "branches": []
+    },
+    {
+      "name": "DoAddonAction",
+      "signature": "(id, pid, turn, series, magicId=0)",
+      "kind": "function",
+      "summary": {
+        "text": "挂状态实现：对象存在则 obj.SetAddon(...)；候选里随后的 boss 分支在 return 之后，是不可达代码——这是候选的既有形态，未据候选认定游戏必然如此，也未据此推断 Boss 挂件另有实现。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_special"
+        ]
+      },
+      "calls": [
+        "BossSetAddon",
+        "GetBoss",
+        "obj.SetAddon",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "Weather",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "天气：addon.Weather(cmd.weather) 后 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_special"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "addon.Weather"
+      ],
+      "branches": []
+    },
+    {
+      "name": "PlayerChat",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "战斗内喊话：netchat.ReplaceServerChat 过滤后走 netchat.S2CPlayerChat1，然后 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_special"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "netchat.ReplaceServerChat",
+        "netchat.S2CPlayerChat1"
+      ],
+      "branches": []
+    },
+    {
+      "name": "Summon",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "召唤：记 g_SummonObj=cmd.id，若该对象有 m_Child 则 pet.CreateChild(名字, g_ChildGrade, 外形, g_ChildSkills, warui.g_DefaultChildMagicID)，然后 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_summon_turn"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "pet.CreateChild",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "Turn",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "回合推进：g_Turn-=1、g_NextBout=True、g_TurnCount+=1；录像校验 + 统计信号；全场有 Turn 方法的对象逐个 Turn()；非 lastcmd 且非录像时 ShowBoutCountDown 并netwar.C2STurnEnd(g_TurnCount-1)（即回合结束回执由客户端在这里补发）；录像分支把 g_TurnCount 夹到 g_TurnMax 并显示“回合 x/y”；之后清 magicmgr.g_Box、刷新自动战斗提示、warmask 减禁招回合、观战与录像文本刷新、BossTurn + OnTurnCountChanged + NextCmd() + 入场动画 StartPlayerAni。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_summon_turn"
+        ]
+      },
+      "calls": [
+        "BossTurn",
+        "GetReplayWar",
+        "NextCmd",
+        "OnTurnCountChanged",
+        "dlgautofight.ShowTurnTips",
+        "dlgwarrecord.RefreshCurTurnText",
+        "g_TurnObject.SetPos",
+        "hasattr",
+        "interface.CTextObject",
+        "magicmgr.ClearHasFengKuangList",
+        "mdwatchwar.GetModel",
+        "netwar.C2STurnEnd",
+        "obj.Turn",
+        "permission.IsWatchWar",
+        "recordvideo.CRecordVideo.CheckBout",
+        "statisticsignal.Emit",
+        "warenteranimation.GetWarEnterAniMgr",
+        "warmask.ReduceBanMagicTurns",
+        "warui.ShowBoutCountDown",
+        "world.g_Objects.values"
+      ],
+      "branches": [
+        {
+          "condition": "not cmd.lastcmd 且 not GetReplayWar()",
+          "effect": {
+            "text": "ShowBoutCountDown 并 netwar.C2STurnEnd(g_TurnCount-1)",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_summon_turn"
+            ]
+          }
+        },
+        {
+          "condition": "GetReplayWar()",
+          "effect": {
+            "text": "g_TurnCount 夹到 g_TurnMax，显示回合文本，不发 C2STurnEnd",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_summon_turn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetCurTurnCount",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "读 g_TurnCount。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_changetimer_end"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ChangeTimer",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "回合倒计时：cmd.isInMagic 为假时才 warui.ChangeTimer(isOprated, passTime)，然后 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_changetimer_end"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "warui.ChangeTimer"
+      ],
+      "branches": []
+    },
+    {
+      "name": "End",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "战斗结束收尾（普通分支）。录像分支：GetReplayWar() 为真时 import main 后 main.CloseGame() 并 return，**不会**切主循环。普通分支：net.g_Net.Pause(0)（异常吞掉）→ g_Turn-=1 → warnotify.AddEndNotify →pet.ReleaseChild → dlgwarrecord.Close → mdwatchcompetition 关录像/观战标记 →**main.SetMainLoop()**（去头正文 1927 行）→ mainmenu.SwitchEnv(False) → 快捷键方案复位 →world.ClearAllObject，然后依次通知 warui/dlgbbcardmake/newblock/dlgtattoo/dlgrideup/warenteranimation/chatoutput/warmask 等模块收尾，最后 OnWarEnd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_end",
+          "n5_prov"
+        ]
+      },
+      "calls": [
+        "ClearHpBarShowInfo",
+        "GetReplayWar",
+        "LOG",
+        "OnWarEnd",
+        "chatoutput.ResetChatFloatType",
+        "dlgbbcardmake.OnWarEnd",
+        "dlgcateroom.AutoShowMax",
+        "dlggetinfo.ClearAllItemInfo",
+        "dlgrideup.RideUpWhenWarEnd",
+        "dlgtattoo.OnWarEndTattoo",
+        "dlgwarrecord.Close",
+        "dragonpk.ClearFuluMagic",
+        "main.CloseGame",
+        "main.SetMainLoop",
+        "mainmenu.SwitchEnv",
+        "mdwatchcompetition.GetWatchModel",
+        "net.g_Net.Pause",
+        "newblock.OnWarEnd",
+        "newsoundinterface.UnLoadBnk",
+        "permission.IsOpenNewSoundBnk",
+        "pet.ReleaseChild",
+        "shortcut.CShortcutMgr.GetShortcutShow",
+        "shortcut.CShortcutMgr.SetDefaultScheme",
+        "statisticsignal.Emit",
+        "warenteranimation.WarEnd",
+        "warmask.ClearWarMask",
+        "warmask.ClearWarType",
+        "warnotify.AddEndNotify",
+        "warui.Hide",
+        "warui.HideWarUI",
+        "warui.OnWarEnd",
+        "warui.SetMagicKeyDlgShow",
+        "warui.ShowMagicShortKey",
+        "world.ClearAllObject"
+      ],
+      "branches": [
+        {
+          "condition": "GetReplayWar()",
+          "effect": {
+            "text": "main.CloseGame() 后 return（录像结束直接关游戏，不切主循环）",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_end"
+            ]
+          }
+        },
+        {
+          "condition": "not GetReplayWar()（普通分支）",
+          "effect": {
+            "text": "net Pause(0)→…→main.SetMainLoop()→mainmenu.SwitchEnv(False)→清场→各模块收尾",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_end"
+            ]
+          }
+        },
+        {
+          "condition": "permission.IsOpenNewSoundBnk()",
+          "effect": {
+            "text": "卸载 sounddefine.FIGHT_BNKNAME_TUPLE 里的音效 bank",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "w_end"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "ServerCmd",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "转发型指令：cmd.func(cmd.netobj) 后 NextCmd()（由 netwar 侧挂 func/netobj 字段）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_servercmd_replay"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "cmd.func"
+      ],
+      "branches": []
+    },
+    {
+      "name": "SetReplayVer",
+      "signature": "(ver)",
+      "kind": "function",
+      "summary": {
+        "text": "设录像版本 g_ReplayVer；ver==1 时有 1/2 概率改判为 2，并弹一次“旧版录像可能播放出错”的提示框。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_servercmd_replay"
+        ]
+      },
+      "calls": [
+        "Timer",
+        "bobj.CreatePyCommand",
+        "commondialog.ShowMessageBox",
+        "interface.CBaseObject",
+        "misc.RandInt"
+      ],
+      "branches": []
+    },
+    {
+      "name": "SetReplayVer.Timer",
+      "signature": "(obj, dummy)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "SetReplayVer",
+        "bobj.CreatePyCommand",
+        "commondialog.ShowMessageBox",
+        "interface.CBaseObject",
+        "misc.RandInt"
+      ],
+      "branches": []
+    },
+    {
+      "name": "Replay",
+      "signature": "(fname)",
+      "kind": "function",
+      "summary": {
+        "text": "录像回放入口：新建 net.CNet(0,0)、清 g_RecordWarType、SetReplayWar(True) 后调 net.g_Net.Replay(fname)；成功则 g_RecordWarType=2 且 SetReplayWar(False)；最后 gamectrl.SetShowMainPage(bShow) 并返回结果。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_servercmd_replay"
+        ]
+      },
+      "calls": [
+        "LOG",
+        "SetReplayWar",
+        "gamectrl.SetShowMainPage",
+        "net.CNet",
+        "net.g_Net.Replay"
+      ],
+      "branches": []
+    },
+    {
+      "name": "SetRecordWarType",
+      "signature": "(iType)",
+      "kind": "function",
+      "summary": {
+        "text": "写 g_RecordWarType。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_servercmd_replay"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "ChgAction",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "hasattr",
+        "obj.ChangeShape",
+        "obj.FrameAmount",
+        "obj.Guard",
+        "obj.SetFrame",
+        "obj.SetState",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetBoss",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "AddBossWeapon",
+      "signature": "(owner_id, cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "ChgShapeByArg",
+        "NextCmd",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "DelBossWeapon",
+      "signature": "(weapon)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "ChgShapeByArg",
+        "GetBoss",
+        "boss.m_SubDict.keys",
+        "getattr"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CreateBossIcon",
+      "signature": "(parent, icon_dct)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "GetBoss",
+        "boss.m_SubDict.items",
+        "boss_icon.GetPos",
+        "boss_icon.GetSize",
+        "hasattr",
+        "icon.Refresh",
+        "icon.SetPos",
+        "warui.CWeaponIcon"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetBossWeaponID",
+      "signature": "(weapon)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "GetBoss",
+        "boss.m_SubDict.items"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetBossWeapon",
+      "signature": "(id)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "GetBoss",
+        "boss.m_SubDict.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetVictimPos",
+      "signature": "(victim)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "GetBoss",
+        "boss.GetPos",
+        "getattr",
+        "min",
+        "victim.GetPos"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetHitEffectPos",
+      "signature": "(obj)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "getattr",
+        "misc.RandInt",
+        "obj.GetSize"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BeHurt",
+      "signature": "(obj)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "GetBoss",
+        "NextServerCmd",
+        "boss.AddAddon",
+        "boss.CreateModifyHP",
+        "boss.GetPos",
+        "boss.GetSize",
+        "getattr",
+        "lst.append",
+        "warui.CheckIsWarriorHp",
+        "warui.SetWarriorHpBar"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BossBeginHit",
+      "signature": "(obj, bprotect, phy)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "BeginHitByArg",
+        "GetBoss",
+        "boss.m_VictimDict.items",
+        "hasattr"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BeginHitByArg",
+      "signature": "(boss, ward, phy, bprotect)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "boss.Evade",
+        "boss.Hit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "RefreshAddonPos",
+      "signature": "(addon_lst, id)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "GetBossWeapon",
+        "addobj.GetPos",
+        "addobj.SetPos"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BossSetAddon",
+      "signature": "(id, pid, turn, series)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "GetBoss",
+        "RefreshAddonPos",
+        "addon.CreateForWar",
+        "hasattr"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BossWarriorTurn",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "BossDelAddon",
+        "GetBoss",
+        "addon.OnTurnChange",
+        "hasattr",
+        "lst.append"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BossDelAddon",
+      "signature": "(weapon_id, aid)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "Fadeout",
+        "GetBoss",
+        "addonobj.SetAlpha",
+        "boss.CreatePyCommand",
+        "hasattr"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BossDelAddon.Fadeout",
+      "signature": "(obj, lst, alpha)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "BossDelAddon",
+        "GetBoss",
+        "addonobj.SetAlpha",
+        "boss.CreatePyCommand",
+        "hasattr"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BossAttackNormal",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "GetBoss"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BossPerform",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "GetBoss",
+        "lst.append"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BossGetMagicInfo",
+      "signature": "(attack_id, victim_lst)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "CmdFind",
+        "GetBoss",
+        "boss.m_VictimDict.keys",
+        "hasattr"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BossCmdFind",
+      "signature": "(func)",
+      "kind": "function",
+      "summary": {
+        "text": "Boss 版 CmdFind：boss 存在且有 m_VictimID 时按 boss.m_VictimID 复用 CmdFind(func, 'id', ...)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_boss"
+        ]
+      },
+      "calls": [
+        "CmdFind",
+        "GetBoss",
+        "getattr"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BossState",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "Boss 武器位状态：cmd.id 在 boss.m_SubDict 时按武器编号取偏移做 CreateModifyHP；life 为 DEAD/DEL 时 FlashWeapon + SetProcess(Wait, boss.m_ID) 并返回 True。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_boss"
+        ]
+      },
+      "calls": [
+        "GetBoss",
+        "SetProcess",
+        "boss.CreateModifyHP",
+        "boss.FlashWeapon",
+        "boss.GetPos",
+        "boss.GetSize"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetRealWarriorID",
+      "signature": "(iID)",
+      "kind": "function",
+      "summary": {
+        "text": "把 Boss 武器 id 归一成 boss.m_ID（非 Boss 相关 id 原样返回）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_boss"
+        ]
+      },
+      "calls": [
+        "GetBoss"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BossDelete",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "Boss 武器位删除：命中则 FlashWeapon + SetProcess(Wait, boss.m_ID) 并返回 True。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_boss"
+        ]
+      },
+      "calls": [
+        "GetBoss",
+        "SetProcess",
+        "boss.FlashWeapon"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BossTurn",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "Boss 回合复位：清 boss.m_VictimID 与 m_VictimDict。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_boss"
+        ]
+      },
+      "calls": [
+        "GetBoss"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BossDel",
+      "signature": "(obj)",
+      "kind": "function",
+      "summary": {
+        "text": "Boss 单位删除：先取武器位闪武并回起始点；否则按生死状态 Die() 或 NextAction()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_boss"
+        ]
+      },
+      "calls": [
+        "GetBossWeapon",
+        "getattr",
+        "obj.Die",
+        "obj.FlashWeapon",
+        "obj.NextAction",
+        "obj.SetPos"
+      ],
+      "branches": []
+    },
+    {
+      "name": "BossHitOver",
+      "signature": "(obj)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "GetBoss",
+        "boss.Die",
+        "boss.NextAction",
+        "boss.PushBackAction",
+        "boss.SetFinished",
+        "boss.SetPos",
+        "hasattr"
+      ],
+      "branches": []
+    },
+    {
+      "name": "PerformName",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "obj.Trigger",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "MpChange",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "obj.CreateModifyMP",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "FpChange",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "obj.CreateModifyFP",
+        "world.g_Objects.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "ShowGraspTips",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "towerdefence.IsTowerFight",
+        "usermacro.MOVE_MSG",
+        "usermacro.NORMAL_MSG",
+        "usermacro.g_MoveHint.SetLife",
+        "wrapinterface.ReplaceChatIDLink"
+      ],
+      "branches": []
+    },
+    {
+      "name": "IsNextBout",
+      "signature": "(bout)",
+      "kind": "function",
+      "summary": {
+        "text": "录像跳回合控制：g_UseNewJump 时按 warturn.Jump(bout) 跳，bout>g_TurnMax 直接 End(None) 并返回 False；旧路径用 g_SkipTurn 记录目标回合，往前跳会被 usermacro.PROMPT_MSG('只能跳到後面的回合') 拒绝。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_nextbout"
+        ]
+      },
+      "calls": [
+        "End",
+        "usermacro.PROMPT_MSG",
+        "warturn.Jump"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CWarMgr",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "战斗事件信号主题（继承 slot.ISignalSubject）：SS_DeletePet / SS_PetDead / SS_PetRestore /SS_MagicPerform / SS_WarriorAdd 五个信号；GetWarMgr() 懒构造单例。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_warmgr"
+        ]
+      },
+      "calls": [
+        "OnMagicPerform",
+        "OnPerform",
+        "OnPetDead",
+        "OnPetDel",
+        "OnPetRestore",
+        "OnWarriorAdd",
+        "__init__",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CWarMgr.__init__",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "只做 slot 的 ssInit()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_warmgr"
+        ]
+      },
+      "calls": [
+        "CWarMgr",
+        "OnMagicPerform",
+        "OnPerform",
+        "OnPetDead",
+        "OnPetDel",
+        "OnPetRestore",
+        "OnWarriorAdd",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CWarMgr.OnPetDel",
+      "signature": "(self, iOwnerID)",
+      "kind": "method",
+      "summary": {
+        "text": "广播 SS_DeletePet(iOwnerID)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_warmgr"
+        ]
+      },
+      "calls": [
+        "CWarMgr",
+        "OnMagicPerform",
+        "OnPerform",
+        "OnPetDead",
+        "OnPetRestore",
+        "OnWarriorAdd",
+        "__init__",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CWarMgr.OnPetDead",
+      "signature": "(self, iOwnerID)",
+      "kind": "method",
+      "summary": {
+        "text": "广播 SS_PetDead(iOwnerID)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_warmgr"
+        ]
+      },
+      "calls": [
+        "CWarMgr",
+        "OnMagicPerform",
+        "OnPerform",
+        "OnPetDel",
+        "OnPetRestore",
+        "OnWarriorAdd",
+        "__init__",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CWarMgr.OnPetRestore",
+      "signature": "(self, iOwnerID)",
+      "kind": "method",
+      "summary": {
+        "text": "广播 SS_PetRestore(iOwnerID)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_warmgr"
+        ]
+      },
+      "calls": [
+        "CWarMgr",
+        "OnMagicPerform",
+        "OnPerform",
+        "OnPetDead",
+        "OnPetDel",
+        "OnWarriorAdd",
+        "__init__",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CWarMgr.OnPerform",
+      "signature": "(self, iPerformID, iAttackID, iVicList)",
+      "kind": "method",
+      "summary": {
+        "text": "广播 SS_MagicPerform(iPerformID, iAttackID, iVicList)（Perform 里调用）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_warmgr",
+          "w_perform"
+        ]
+      },
+      "calls": [
+        "CWarMgr",
+        "OnMagicPerform",
+        "OnPetDead",
+        "OnPetDel",
+        "OnPetRestore",
+        "OnWarriorAdd",
+        "__init__",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CWarMgr.OnWarriorAdd",
+      "signature": "(self, iWarriorID)",
+      "kind": "method",
+      "summary": {
+        "text": "广播 SS_WarriorAdd(iWarriorID)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_warmgr"
+        ]
+      },
+      "calls": [
+        "CWarMgr",
+        "OnMagicPerform",
+        "OnPerform",
+        "OnPetDead",
+        "OnPetDel",
+        "OnPetRestore",
+        "__init__",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetBackGround",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "返回当前战斗背景对象 g_Background。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_warmgr"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "TransformShape",
+      "signature": "(iShape)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "SetHpBarShowInfo",
+      "signature": "(iWarriorID, iShow)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "hasattr",
+        "oWarrior.ClearHPProgress",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "SetWarriorNameColor",
+      "signature": "(iWarriorID, iColor)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "LOG_DEBUG",
+        "g_dWarriorNameColor.get",
+        "oWarrior.UpdateNameColor",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "ShowWarriorHpBar",
+      "signature": "(cmd)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "NextCmd",
+        "warui.CheckIsWarriorHp",
+        "warui.CreateWarriorHpBar",
+        "warui.SetWarriorHpBar",
+        "warui.SetWarriorHpBarOrder",
+        "world.GetObj"
+      ],
+      "branches": []
+    },
+    {
+      "name": "ClearHpBarShowInfo",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "GetWarriorShowHpBarValue",
+      "signature": "(iWarrior)",
+      "kind": "function",
+      "summary": {
+        "text": "（名称底稿）本轮未逐行读取该函数正文；形参来自码对象普查，行为未解释，未做任何语义断言。",
+        "confidence": "inferred",
+        "evidence": [
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "g_ShowHpBarInfo.get"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetWarType",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "读 g_WarType（Start 时由 cmd.type 写入）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_tail",
+          "w_start"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "IsSkillInCmdList",
+      "signature": "(iSkillID, iAttackID, iVicList)",
+      "kind": "function",
+      "summary": {
+        "text": "判断队列里是否已存在同一攻击者+同一技能+首目标一致的未用 Perform 指令（用于避免重复入队）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_tail"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "IsPVPWar",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "GetWarType() > 10 视为 PVP。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_tail"
+        ]
+      },
+      "calls": [
+        "GetWarType"
+      ],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "module",
+      "target": "script/core/warcmd.py (entry 1612)",
+      "summary": {
+        "text": "表现命令工厂：CreateCmdObject 按技能类型 new 出 CWarCmd*；war.Perform 的新法术管线与它同属 magicperform 目录。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_perform",
+          "catalog_warcmd"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/netwar.py (entry 1406)",
+      "summary": {
+        "text": "战斗网络层：S2C* 解包后 war.CCmd(war.Xxx) 把指令塞进本模块队列；Turn 又会反向调 netwar.C2STurnEnd。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ccmd",
+          "w_summon_turn",
+          "catalog_netwar"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/recordvideo.py (entry 4356)",
+      "summary": {
+        "text": "录像管理：GetVideoMgr().IsFilter() 是 CCmd 入队的过滤守卫。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ccmd",
+          "catalog_recordvideo"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/warturn.py (entry 305)",
+      "summary": {
+        "text": "回合记录与跳转：CCmd 入队时 warturn.RecordCmd(self)；IsNextBout 走 warturn.Jump。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ccmd",
+          "w_nextbout",
+          "catalog_warturn"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/preload/preload_interface.py (entry 4477)",
+      "summary": {
+        "text": "预载与录像登记：CCmd 入队时 Record2PreloadQueue，Perform/AttackNormal 前 PreloadNextMagic。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ccmd",
+          "w_perform",
+          "catalog_preload"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/warenteranimation.py (entry 3098)",
+      "summary": {
+        "text": "入场动画：Add/Start/Turn 都会在入场动画开启时登记或延后显示单位。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_add",
+          "w_summon_turn",
+          "catalog_warenteranimation"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/main.py (entry 4293)",
+      "summary": {
+        "text": "主循环落点：war.End 的普通分支调 main.SetMainLoop()，录像分支调 main.CloseGame()。main.py 正文由 N2 负责，F/N5 不越域写它。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_end",
+          "catalog_main"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/warui.py (entry 1080)",
+      "summary": {
+        "text": "战斗界面：Start 非录像时 ShowWarUI、Turn 的倒计时与 End 的收尾都落在它上面。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_start",
+          "w_end",
+          "catalog_warui"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1406
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1612
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 8
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4356
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 305
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4477
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3098
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4293
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1080
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4279
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1689
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1397
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 129
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2370
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1235
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2302
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "战斗指令队列在哪里？入队有什么守卫？",
+      "answer": {
+        "text": "队列是模块级 g_Cmds；入队发生在 CCmd.__init__（去头正文 205-216），守卫是 recordvideo.GetVideoMgr().IsFilter()——为真时对象不入队且不写 m_Used/m_Callback。推进在 NextCmd/Process/Wait，异常在 Process 里回落 NextCmd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ccmd",
+          "w_nextcmd",
+          "w_process",
+          "w_wait"
+        ]
+      }
+    },
+    {
+      "question": "改一条战斗指令的表现要动哪里？",
+      "answer": {
+        "text": "先由netwar的S2C*中war.CCmd(war.Xxx)定位表现回调，再读war.py相应函数。候选Process调用当前g_ProcessFunc，异常路径会回落NextCmd；Wait在所等对象完成后调用NextCmd，NextCmd取出队首并交回Process。对仍需继续消费战斗队列的非终止回调，修改时建议检查它如何回到NextCmd、等待处理或其他已核的后续调度，不能由本稿穷尽所有合法模式。结束/关闭/退出战斗或切主循环的终止路径不要求继续推进：End录像分支CloseGame后返回，普通分支SetMainLoop后收尾，不调用NextCmd或SetProcess(Wait)。修改建议为静态推测，实际调度/异常与运行效果待验证，不能把没有继续推进一律视为队列卡住。",
+        "confidence": "inferred",
+        "evidence": [
+          "w_perform",
+          "w_attacknormal",
+          "w_summon_turn",
+          "w_end",
+          "w_add",
+          "w_start",
+          "w_nextcmd",
+          "w_process",
+          "w_wait"
+        ]
+      }
+    },
+    {
+      "question": "战斗结束/切换主循环在哪里？录像分支有什么不同？",
+      "answer": {
+        "text": "切主循环只在 war.End（去头正文 1927 行 main.SetMainLoop()）；war.End 的录像分支先 main.CloseGame() 并 return，不会切主循环。netwar.S2CWarEnd 只构造 war.CCmd(war.End)，本身不切循环。异常清场走 ForceEnd。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_end",
+          "w_forceend"
+        ]
+      }
+    },
+    {
+      "question": "战斗全局初值/复位在哪里改？",
+      "answer": {
+        "text": "模块全局在去头正文 10-55 行声明，全部复位逻辑集中在 ModuleReset（57-148）。新加的战斗全局应同时在这两处登记，否则重开战斗会串场。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_globals",
+          "w_modulereset"
+        ]
+      }
+    },
+    {
+      "question": "动画/特效/音效资源入口分别在哪？",
+      "answer": {
+        "text": "动画：GetAnimeObject（.igs→CImage，其余→CSpriteObject）与 PlayAni/PlayTraceAni；特效：SPECIAL_EFFECT_LIST/EID2PATH + ShowSpecialEffect，ATTACK_SPECIAL_ADDON + CmdFindAttackSpecialAddon；音效：Start 里 sound.PlayFightMusic(g_WarType)，End 里按 permission.IsOpenNewSoundBnk() 卸载战斗 bank。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ani",
+          "w_consts",
+          "w_special",
+          "w_start",
+          "w_end"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "来源是本轮独立定点恢复的 uncompyle6 候选（去头正文 2634 行，SHA 与 A 的 BDF 收据一致），不是原始源码；decompile_ok 不等于语义正确，也从未执行或 import 过任何恢复出来的游戏模块。",
+    "候选存在 3 处损坏标识符 `except SystemE??or:`（去头正文 580/759/773 行），按 D 的判定标准 source_status 记为 recovered_partial；损坏名原样保留，没有猜补成 SystemError。",
+    "本轮逐行读过并给出解释的函数 100 个左右（见 functions[].summary），其余记录仍是名称底稿：形参来自码对象普查，行为未解释，summary 一律标 inferred 且只引码对象普查，没有行为断言。",
+    "未解释/未逐行读的部分主要包括：SetWarriorName/SetBossWarriorSelect/IsAllide/GetWarriorClass/GetWarriorGrade/GetWarriorPlace、ChgAction、Boss 武器与命中结算（AddBossWeapon/DelBossWeapon/CreateBossIcon/GetVictimPos/BeHurt/BossBeginHit/BeginHitByArg/RefreshAddonPos/BossSetAddon/BossWarriorTurn/BossGetMagicInfo/BossHitOver）、PerformName/MpChange/FpChange/ShowGraspTips、血条显示系列（SetHpBarShowInfo/ShowWarriorHpBar/GetWarriorShowHpBarValue/SetWarriorNameColor）、CmdFindAttackEndByID/CmdFindAttackNormalByID/GetNewMagicInfo/TransformShape 等。",
+    "真实战斗计算（伤害、命中、AI、服务端裁决）不在此模块，也没有任何 runtime_verified 结论；Process/Wait/NextCmd 的推进时序是静态阅读所得，未经实机或帧级验证。",
+    "DoAddonAction 的 boss 分支在候选里位于 return 之后（不可达），以及 PlayAni/ChgShape 等处的异常回落，都只是候选形态的描述，未据其推断游戏必然如此。",
+    "main.py / SetMainLoop / SetWarLoop 的最终语义归属 N2（C 域）正文；本模块只记录调用点与行号。",
+    "Windows/EXE、原生引擎、实机与真实服务端均未在 N5 本轮验证；Qt GUI 因沙箱缺 libGL.so.1 未实跑。",
+    "B-N5-04由A按用户“帮他们收尾”授权仅补指南范围及证据，未改候选。A是本JSON的共同作者，不给该JSON自批accepted；同轮A另修netwar、e_warctrl、warcmd的指南/定位，四篇都须非A对最终字节独立复核，不使用A代审自批。"
+  ],
+  "sources": [
+    {
+      "id": "n5_prov",
+      "path": "script_manual/annotations/battle/evidence/n5_provenance_20261016.txt",
+      "sha256": "723920dc7fbdfdc0c03603c546f866aa882fbe5733442a66aecdef4a5602b7e3",
+      "kind": "metadata",
+      "note": "N5 本轮定点恢复回执：命令、引擎版本、输入/工具/候选/pyc 摘要、损坏标识符清单与只读边界。"
+    },
+    {
+      "id": "n5_census",
+      "path": "script_manual/annotations/battle/evidence/n5_codecensus_20261016.txt",
+      "sha256": "32bf184461de4713d94d8bcde0dadb11fadbed06827235d73628a3a0d2973ad1",
+      "kind": "metadata",
+      "note": "N5 用 xdis 6.1.8 直接读本轮 pyc 得到的码对象普查（限定名/kind/真实形参/首行号），为 functions[].signature 与“函数确实存在”提供字节码层证据；不是源码，不含默认值与控制流。"
+    },
+    {
+      "id": "war_src",
+      "path": "script_manual/annotations/battle/evidence/war_697_excerpt.txt",
+      "sha256": "92c8b8c977361a9f89ae3b5d2223df803143dca5bd2bccd879c0d11320992524",
+      "kind": "metadata",
+      "note": "entry 697 去头候选（SHA a6a81ad6…，与 A 的 BDF 收据一致）的原样摘录，L 前缀保留候选行号；只覆盖本轮实际读过的区间（约占候选 55%），不是完整源码。"
+    },
+    {
+      "id": "catalog",
+      "path": "server/docs/catalog/script_entries.jsonl",
+      "sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+      "kind": "metadata",
+      "note": "历史目录；行号 = entry_index+1，用于钉住被引模块的 entry 身份（不是签名来源）。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "n5_prov",
+      "source_id": "n5_prov",
+      "start_line": 1,
+      "end_line": 62
+    },
+    {
+      "id": "n5_census_all",
+      "source_id": "n5_census",
+      "start_line": 8,
+      "end_line": 300
+    },
+    {
+      "id": "w_head",
+      "source_id": "war_src",
+      "start_line": 17,
+      "end_line": 28
+    },
+    {
+      "id": "w_globals",
+      "source_id": "war_src",
+      "start_line": 32,
+      "end_line": 75
+    },
+    {
+      "id": "w_modulereset",
+      "source_id": "war_src",
+      "start_line": 79,
+      "end_line": 170
+    },
+    {
+      "id": "w_consts",
+      "source_id": "war_src",
+      "start_line": 174,
+      "end_line": 200
+    },
+    {
+      "id": "w_replay_api",
+      "source_id": "war_src",
+      "start_line": 204,
+      "end_line": 229
+    },
+    {
+      "id": "w_ccmd",
+      "source_id": "war_src",
+      "start_line": 233,
+      "end_line": 246
+    },
+    {
+      "id": "w_setprocess",
+      "source_id": "war_src",
+      "start_line": 250,
+      "end_line": 257
+    },
+    {
+      "id": "w_process",
+      "source_id": "war_src",
+      "start_line": 261,
+      "end_line": 284
+    },
+    {
+      "id": "w_wait",
+      "source_id": "war_src",
+      "start_line": 288,
+      "end_line": 300
+    },
+    {
+      "id": "w_queue",
+      "source_id": "war_src",
+      "start_line": 304,
+      "end_line": 334
+    },
+    {
+      "id": "w_nextcmd",
+      "source_id": "war_src",
+      "start_line": 338,
+      "end_line": 352
+    },
+    {
+      "id": "w_cmdaction",
+      "source_id": "war_src",
+      "start_line": 356,
+      "end_line": 365
+    },
+    {
+      "id": "w_cmdfind",
+      "source_id": "war_src",
+      "start_line": 369,
+      "end_line": 415
+    },
+    {
+      "id": "w_cnt",
+      "source_id": "war_src",
+      "start_line": 419,
+      "end_line": 450
+    },
+    {
+      "id": "w_forceend",
+      "source_id": "war_src",
+      "start_line": 454,
+      "end_line": 498
+    },
+    {
+      "id": "w_stateinfo",
+      "source_id": "war_src",
+      "start_line": 502,
+      "end_line": 592
+    },
+    {
+      "id": "w_ani",
+      "source_id": "war_src",
+      "start_line": 596,
+      "end_line": 730
+    },
+    {
+      "id": "w_hooks",
+      "source_id": "war_src",
+      "start_line": 734,
+      "end_line": 761
+    },
+    {
+      "id": "w_start",
+      "source_id": "war_src",
+      "start_line": 765,
+      "end_line": 870
+    },
+    {
+      "id": "w_add",
+      "source_id": "war_src",
+      "start_line": 874,
+      "end_line": 902
+    },
+    {
+      "id": "w_place",
+      "source_id": "war_src",
+      "start_line": 906,
+      "end_line": 929
+    },
+    {
+      "id": "w_normaladd",
+      "source_id": "war_src",
+      "start_line": 933,
+      "end_line": 1028
+    },
+    {
+      "id": "w_walk",
+      "source_id": "war_src",
+      "start_line": 1032,
+      "end_line": 1117
+    },
+    {
+      "id": "w_delete",
+      "source_id": "war_src",
+      "start_line": 1121,
+      "end_line": 1167
+    },
+    {
+      "id": "w_attackinfo",
+      "source_id": "war_src",
+      "start_line": 1171,
+      "end_line": 1230
+    },
+    {
+      "id": "w_attacknormal",
+      "source_id": "war_src",
+      "start_line": 1234,
+      "end_line": 1314
+    },
+    {
+      "id": "w_perform",
+      "source_id": "war_src",
+      "start_line": 1318,
+      "end_line": 1402
+    },
+    {
+      "id": "w_summon_turn",
+      "source_id": "war_src",
+      "start_line": 1406,
+      "end_line": 1465
+    },
+    {
+      "id": "w_changetimer_end",
+      "source_id": "war_src",
+      "start_line": 1469,
+      "end_line": 1483
+    },
+    {
+      "id": "w_end",
+      "source_id": "war_src",
+      "start_line": 1487,
+      "end_line": 1561
+    },
+    {
+      "id": "w_servercmd_replay",
+      "source_id": "war_src",
+      "start_line": 1565,
+      "end_line": 1612
+    },
+    {
+      "id": "w_boss",
+      "source_id": "war_src",
+      "start_line": 1616,
+      "end_line": 1675
+    },
+    {
+      "id": "w_nextbout",
+      "source_id": "war_src",
+      "start_line": 1679,
+      "end_line": 1707
+    },
+    {
+      "id": "w_transform",
+      "source_id": "war_src",
+      "start_line": 1711,
+      "end_line": 1768
+    },
+    {
+      "id": "w_attackend",
+      "source_id": "war_src",
+      "start_line": 1772,
+      "end_line": 1881
+    },
+    {
+      "id": "w_buffstate",
+      "source_id": "war_src",
+      "start_line": 1885,
+      "end_line": 1983
+    },
+    {
+      "id": "w_special",
+      "source_id": "war_src",
+      "start_line": 1987,
+      "end_line": 2069
+    },
+    {
+      "id": "w_warmgr",
+      "source_id": "war_src",
+      "start_line": 2073,
+      "end_line": 2108
+    },
+    {
+      "id": "w_tail",
+      "source_id": "war_src",
+      "start_line": 2112,
+      "end_line": 2130
+    },
+    {
+      "id": "catalog_self",
+      "source_id": "catalog",
+      "start_line": 698,
+      "end_line": 698
+    },
+    {
+      "id": "catalog_netwar",
+      "source_id": "catalog",
+      "start_line": 1407,
+      "end_line": 1407
+    },
+    {
+      "id": "catalog_warcmd",
+      "source_id": "catalog",
+      "start_line": 1613,
+      "end_line": 1613
+    },
+    {
+      "id": "catalog_recordvideo",
+      "source_id": "catalog",
+      "start_line": 4357,
+      "end_line": 4357
+    },
+    {
+      "id": "catalog_warturn",
+      "source_id": "catalog",
+      "start_line": 306,
+      "end_line": 306
+    },
+    {
+      "id": "catalog_preload",
+      "source_id": "catalog",
+      "start_line": 4478,
+      "end_line": 4478
+    },
+    {
+      "id": "catalog_warenteranimation",
+      "source_id": "catalog",
+      "start_line": 3099,
+      "end_line": 3099
+    },
+    {
+      "id": "catalog_main",
+      "source_id": "catalog",
+      "start_line": 4294,
+      "end_line": 4294
+    },
+    {
+      "id": "catalog_warui",
+      "source_id": "catalog",
+      "start_line": 1081,
+      "end_line": 1081
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1406
+      },
+      "symbol": "war.CCmd / war.Start / war.End / war.Turn",
+      "summary": {
+        "text": "netwar 的 S2C* 解包后构造 war.CCmd(war.Xxx) 把指令放进 g_Cmds；S2CWarStart 还会 war.SetProcess(war.NextCmd)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ccmd",
+          "n5_prov"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4293
+      },
+      "symbol": "SetMainLoop / CloseGame",
+      "summary": {
+        "text": "war.End 普通分支 main.SetMainLoop()；录像分支 main.CloseGame()。main 正文归属 N2，此处只记录调用点与行号。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_end"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4356
+      },
+      "symbol": "GetVideoMgr().IsFilter",
+      "summary": {
+        "text": "CCmd.__init__ 的入队守卫；过滤打开时指令不入队。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ccmd"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 305
+      },
+      "symbol": "RecordCmd / Jump",
+      "summary": {
+        "text": "入队时 warturn.RecordCmd(self)；IsNextBout 的新跳转路径 warturn.Jump(bout)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ccmd",
+          "w_nextbout"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4477
+      },
+      "symbol": "Record2PreloadQueue / PreloadNextMagic",
+      "summary": {
+        "text": "入队与技能表现前的预载登记；OnWarEnd 还会 preload_interface.MagicEnd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_ccmd",
+          "w_perform",
+          "w_hooks"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3098
+      },
+      "symbol": "GetWarEnterAniMgr / CheckWarEnterAniShow",
+      "summary": {
+        "text": "Add 里入场动画开启时登记并隐藏单位；Turn 末尾 StartPlayerAni；End 末尾 warenteranimation.WarEnd()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_add",
+          "w_summon_turn",
+          "w_end"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4424
+      },
+      "symbol": "slot.ISignalSubject",
+      "summary": {
+        "text": "CWarMgr 继承 slot.ISignalSubject，用 ssInit/ssEmit 广播战斗事件。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_warmgr"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1080
+      },
+      "symbol": "ShowWarUI / Hide / ChangeTimer",
+      "summary": {
+        "text": "Start/Turn/End 分别调用战斗 UI 的显示、隐藏与倒计时；录像时 Start 不显示。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "w_start",
+          "w_summon_turn",
+          "w_end"
+        ]
+      }
+    }
+  ]
+}

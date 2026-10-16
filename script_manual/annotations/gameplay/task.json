@@ -1,0 +1,639 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 1129,
+  "path": "script/mxgame/task/model/task.py",
+  "owner": "G",
+  "domain": "gameplay",
+  "author": "N6新会话（接管修订；原初稿为A代写，非G会话；本记录未经独立审核，N6不自批）",
+  "source_status": "recovered_complete_not_original",
+  "purpose": {
+    "text": "任务需求和客户端满足状态的模型候选：保存物品/宠物/装备需求、重算满足列表、登记满足/未满足描述、提供寻路禁用提示和NPC任务条件检查；不是任务对话框、服务器任务完成或领奖逻辑。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "task_ModuleReset",
+      "task_AddNecessary",
+      "task_RefreshNecessary",
+      "task_TaskSatisfy",
+      "task_TaskUnSatisfy",
+      "task_ServerTaskSatisfy",
+      "task_GetIsTaskSatisfyFunc",
+      "task_AddTaskDesc",
+      "task_IsSatisfyTask",
+      "task_ClearTask",
+      "task_HasBanFindPathTask",
+      "task_IsTaskItem",
+      "task_CheckNpcFlag"
+    ]
+  },
+  "keywords": [
+    "任务",
+    "需求",
+    "满足条件",
+    "NPC任务标记",
+    "寻路限制",
+    "任务物品"
+  ],
+  "functions": [
+    {
+      "name": "ModuleReset",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "重新分配本函数声明的需求/描述/检查字典、满足列表及飞行引导管理器；g_iTaskChain不在此函数，不能把它称为全部任务状态重置。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_ModuleReset"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "AddNecessary",
+      "signature": "(taskid, itype, shape, amount=1)",
+      "kind": "function",
+      "summary": {
+        "text": "itype 1/2/3/4/5分别选择必需物品、宠物、需要物品、宠物或物品、装备表；同taskid/shape覆盖amount而非相加，新shape追加。类型1特殊任务还extend固定列表，最后RefreshNecessary。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_AddNecessary"
+        ]
+      },
+      "calls": [
+        "RefreshNecessary"
+      ],
+      "branches": [
+        {
+          "condition": "itype不在1..5",
+          "effect": {
+            "text": "立即return，不更新表或刷新。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "task_AddNecessary"
+            ]
+          }
+        },
+        {
+          "condition": "任务已有同shape",
+          "effect": {
+            "text": "替换为(shape,amount)，不是累计增加数量。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "task_AddNecessary"
+            ]
+          }
+        },
+        {
+          "condition": "itype==1且taskid在SPECIALTASK",
+          "effect": {
+            "text": "追加特殊任务需求列表；重复调用可能再次extend，本稿不承诺去重。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "task_AddNecessary"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "RefreshNecessary",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "声明汇总物品、宠物、二选一及装备满足/未满足结果，再调用TaskSatisfy/TaskUnSatisfy；但二选一结果为真时却从petTaskList拆值，候选控制/变量异常未结清，不宣称汇总可正常完成。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_RefreshNecessary"
+        ]
+      },
+      "calls": [
+        "GetItemsNecessary",
+        "GetPetsNecessary",
+        "RefreshPetOrItem",
+        "GetEquipItemNeed",
+        "TaskSatisfy",
+        "TaskUnSatisfy"
+      ],
+      "branches": [
+        {
+          "condition": "petOrItemTaskList为真",
+          "effect": {
+            "text": "候选实际把petTaskList赋给二选一两个列表，不能按变量名改写成petOrItemTaskList。若petTaskList为空或假值，这一解包有异常可能（静态推断，未运行）。",
+            "confidence": "inferred",
+            "evidence": [
+              "task_RefreshNecessary"
+            ]
+          }
+        },
+        {
+          "condition": "候选成功走到汇总末尾且satifys/unsatifys非空",
+          "effect": {
+            "text": "分别调用TaskSatisfy/TaskUnSatisfy；被调用函数也有异常待核，不能承诺发出正确满足通知。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "task_RefreshNecessary"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "TaskSatisfy",
+      "signature": "(tasklist)",
+      "kind": "function",
+      "summary": {
+        "text": "候选先写dct=dict([_[1] for k in tasklist])，再遍历dct追加未在g_SatisfyTaskidLst中的tid，最后TriggerCB(TASK_SATISFY,tasklist)。推导式内的k未使用；`_`在该推导式中未绑定，非空tasklist时会求值`_[1]`，除非模块/内建环境中的`_`可下标，否则可能异常（推断，未运行核）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_TaskSatisfy"
+        ]
+      },
+      "calls": [
+        "commoncb.TriggerCB"
+      ],
+      "branches": []
+    },
+    {
+      "name": "TaskUnSatisfy",
+      "signature": "(tasklist)",
+      "kind": "function",
+      "summary": {
+        "text": "同样先经过异常推导式（`_`未绑定，同TaskSatisfy）；随后从g_SatisfyTaskidLst移除已满足tid，并读取g_UnsatisfyTaskID2Desc.get(tid)赋给desc（desc无后续引用）；最后仍用TASK_SATISFY常量通知，不凭函数名改成另一事件。是否能执行到此待核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_TaskUnSatisfy"
+        ]
+      },
+      "calls": [
+        "commoncb.TriggerCB"
+      ],
+      "branches": []
+    },
+    {
+      "name": "ServerTaskSatisfy",
+      "signature": "(iTaskID)",
+      "kind": "function",
+      "summary": {
+        "text": "若iTaskID未在本地满足列表则追加；无论原来是否已在列表，都TriggerCB(TASK_SATISFY,[iTaskID])。函数名不证明调用源或服务端状态真实。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_ServerTaskSatisfy"
+        ]
+      },
+      "calls": [
+        "commoncb.TriggerCB"
+      ],
+      "branches": [
+        {
+          "condition": "iTaskID已在列表",
+          "effect": {
+            "text": "不重复append，但仍发本地回调。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "task_ServerTaskSatisfy"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetIsTaskSatisfyFunc",
+      "signature": "(IsSatisfy)",
+      "kind": "function",
+      "summary": {
+        "text": "按IsSatisfy真值返回TaskSatisfy或TaskUnSatisfy函数对象，不在这里执行。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_GetIsTaskSatisfyFunc"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "AddTaskDesc",
+      "signature": "(taskid, satify_desc, unsatify_desc)",
+      "kind": "function",
+      "summary": {
+        "text": "分别把满足/未满足描述存入g_TaskID2Desc和g_UnsatisfyTaskID2Desc；不是在这里绘制任务追踪文本。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_AddTaskDesc"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "IsSatisfyTask",
+      "signature": "(taskID)",
+      "kind": "function",
+      "summary": {
+        "text": "返回taskID在满足列表或不在未满足描述表的OR结果；不能仅从True推导交付条件已验证。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_IsSatisfyTask"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "taskID不在g_UnsatisfyTaskID2Desc",
+          "effect": {
+            "text": "即使未在满足列表，OR仍返回True。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "task_IsSatisfyTask"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClearTask",
+      "signature": "(taskid)",
+      "kind": "function",
+      "summary": {
+        "text": "从函数列出的8个字典中删除taskid，并从满足列表移除；没有清g_WithoutNoticeTask或g_Task2PetCheckInfo，不能称清空此任务的一切状态。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_ClearTask"
+        ]
+      },
+      "calls": [],
+      "branches": []
+    },
+    {
+      "name": "HasBanFindPathTask",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "遍历TASKID_TO_BANPATHTIPS键，任一在nettask.g_TaskInfo时显示该提示并True，否则False；它只是检查/提示，不在这里调用寻路停止。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_HasBanFindPathTask"
+        ]
+      },
+      "calls": [
+        "usermacro.PROMPT_MSG"
+      ],
+      "branches": [
+        {
+          "condition": "命中首个禁寻路任务",
+          "effect": {
+            "text": "提示后立刻True，字典遍历顺序不保证多任务时哪条先提示。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "task_HasBanFindPathTask"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "IsTaskItem",
+      "signature": "(taskid, shape)",
+      "kind": "function",
+      "summary": {
+        "text": "合并该任务必需物品/需要物品列表；为空直接True，否则按SPECIALSHAPE函数或精确shape匹配。不是所有任务类型/宠物/装备的统一满足判定。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_IsTaskItem"
+        ]
+      },
+      "calls": [],
+      "branches": [
+        {
+          "condition": "合并需求列表为空",
+          "effect": {
+            "text": "直接True，不是无物品需求时False。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "task_IsTaskItem"
+            ]
+          }
+        },
+        {
+          "condition": "特殊shape映射返回真或shape精确相等",
+          "effect": {
+            "text": "返回True；所有条目未命中才False。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "task_IsTaskItem"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CheckNpcFlag",
+      "signature": "(data)",
+      "kind": "function",
+      "summary": {
+        "text": "从8元data读任务类型/标记/等级上下限/国家/职业等，按等级[下限,上限)、国家、职业（候选变量名zy/m_Force；职业含义仅凭变量名推断，属性表未核）、任务类型状态等门禁提前False，最后True。flag/npc_charidx/npc_entertips虽解包但此函数未使用。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_CheckNpcFlag"
+        ]
+      },
+      "calls": [
+        "nettask.GetStatus"
+      ],
+      "branches": [
+        {
+          "condition": "不满足down_limit<=grade<up_limit",
+          "effect": {
+            "text": "False，上限不包含。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "task_CheckNpcFlag"
+            ]
+          }
+        },
+        {
+          "condition": "国家或职业限制非0且与角色不符",
+          "effect": {
+            "text": "False；0表示该项不限制。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "task_CheckNpcFlag"
+            ]
+          }
+        },
+        {
+          "condition": "tasktype在LIMITSTATUS_TASKTYPE且nettask.GetStatus(tasktype)!=1",
+          "effect": {
+            "text": "False；集合来源与服务器含义未在本稿验证。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "task_CheckNpcFlag"
+            ]
+          }
+        },
+        {
+          "condition": "country==0且tasktype在LIMITCOUNTRY_TASKTYPE",
+          "effect": {
+            "text": "False；集合定义未在摘录内，服务器含义未核。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "task_CheckNpcFlag"
+            ]
+          }
+        },
+        {
+          "condition": "zy==0且tasktype==18",
+          "effect": {
+            "text": "False；zy取自hero.g_Prop.m_Force，职业语义只凭变量名推断。",
+            "confidence": "inferred",
+            "evidence": [
+              "task_CheckNpcFlag"
+            ]
+          }
+        },
+        {
+          "condition": "tasktype已在nettask.g_TaskType2TaskID",
+          "effect": {
+            "text": "False，避免把已有该类型任务视为本函数可接受条件。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "task_CheckNpcFlag"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "kind": "config",
+      "target": "SPECIALSHAPE / SPECIALTASK / TASKID_TO_BANPATHTIPS",
+      "summary": {
+        "text": "模块内形状匹配函数、特定任务附加需求及禁寻路提示表；不是已找到独立JSON/CSV配置文件。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_shape_and_ban_tables",
+          "task_AddNecessary",
+          "task_HasBanFindPathTask"
+        ]
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "data_flow",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3038
+      },
+      "symbol": "hero.g_Prop.m_Grade / m_Force / m_Country",
+      "summary": {
+        "text": "CheckNpcFlag读取m_Grade、m_Force（候选变量名zy，职业语义未核）、m_Country作本地条件；来源字段不证明服务器判断相同。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_CheckNpcFlag"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 949
+      },
+      "symbol": "npc.UpNpcNeedByNpcTask → task.IsTaskItem",
+      "summary": {
+        "text": "NPC需求增减逻辑把task.IsTaskItem作为形状匹配的OR条件之一；不等同整个任务完成。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "npc_UpNpcNeedByNpcTask"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": null,
+      "symbol": "commoncb.TriggerCB(TASK_SATISFY,...)",
+      "summary": {
+        "text": "声明本地满足状态通知；两个列表处理函数仍有推导式异常，实际接收者和成功触发待核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_TaskSatisfy",
+          "task_TaskUnSatisfy",
+          "task_ServerTaskSatisfy"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3038
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 949
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "想改任务所需物品/数量或匹配规则，改哪里？",
+      "answer": {
+        "text": "需求登记看AddNecessary的itype分表和同shape覆盖数量；形状匹配看IsTaskItem及SPECIALSHAPE；全量管理器未在本稿解释。不要把客户端需求表改动当作服务器交付规则，需核登记来源和服务器。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_AddNecessary",
+          "task_IsTaskItem",
+          "task_shape_and_ban_tables"
+        ]
+      }
+    },
+    {
+      "question": "任务明明没完成却显示满足，先查什么？",
+      "answer": {
+        "text": "区分IsSatisfyTask的缺少未满足描述也返回True、ServerTaskSatisfy直接记本地列表，以及RefreshNecessary/两个列表函数的候选异常。先核字节码或独立候选，再看回调消费者，不能直接删OR或修推导式后宣称原游戏如此。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_IsSatisfyTask",
+          "task_ServerTaskSatisfy",
+          "task_RefreshNecessary",
+          "task_TaskSatisfy",
+          "task_TaskUnSatisfy"
+        ]
+      }
+    },
+    {
+      "question": "正文、URL、布局和禁止寻路提示分别在哪里改？",
+      "answer": {
+        "text": "满足/未满足描述存储入口AddTaskDesc，实际显示控件和上游文案来源未在本稿确认。禁寻路提示是模块内TASKID_TO_BANPATHTIPS，经HasBanFindPathTask显示；它不直接停止寻路。本模型没有本稿已确认的统一任务.dlg或业务URL，需继续跟UI/数据消费者。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "task_AddTaskDesc",
+          "task_HasBanFindPathTask",
+          "task_shape_and_ban_tables"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "1107行候选仅解释本稿13个入口；需求匹配管理器、宠物品质/装备条件、飞行引导、任务文本展示和协议解析未穷尽。",
+    "RefreshNecessary的petOrItemTaskList分支却从petTaskList拆值；TaskSatisfy/TaskUnSatisfy含dict([_[1] for k in tasklist])异常形态，运行期能否得到预期列表待回码对象/独立候选复核；不修候选凑正常流程。",
+    "IsSatisfyTask在没有未满足描述的任务上也可能True；不是服务器已完成/可领奖的证明。ClearTask不覆盖所有全局表。",
+    "作者是A代写，不是G会话提交或独立审核。所有Claim等级只是作者静态核对；未创建本稿accepted审核，修改后仍须独立复核。",
+    "来源为冻结script.fls的u6 3.9.3/xdis6.1.8定点恢复候选，baseline/decompile_ok仅证明输出形状，不证明可逆、可回编或语义正确；模块顶层return等反编译形态未修写。",
+    "函数/关键分支只覆盖已列子集；calls为空不代表无调用，运行期回调/工厂/原生实现未解，不能从函数名推断效果。",
+    "sources是带候选全文/去六头SHA及原行号的小摘录，不伪装完整源码。全候选/pyc及构建产物留仓库外；没有执行/导入游戏模块、没有读取布局/资源payload、没有实机/Windows/服务端或runtime_verified结论。",
+    "仅适用本archive_sha256；1288排除不定点恢复，不适用于用户修改包、其他引擎或PR34语料；相关模块未编目录的警告不代表不存在。"
+  ],
+  "sources": [
+    {
+      "id": "excerpt_npc",
+      "path": "script_manual/annotations/gameplay/evidence/npc_candidate_excerpt.txt",
+      "sha256": "306145dd32fd76d528ff8ec375f68996719301bfc93ee36677eadd71eaa91f5b",
+      "kind": "recovered_source",
+      "note": "N6 2026-10-16独立复现：npc候选正文SHA与A一致；摘录L号逐行核对。A代写有限候选摘录，仅静态来源。"
+    },
+    {
+      "id": "excerpt_task",
+      "path": "script_manual/annotations/gameplay/evidence/task_candidate_excerpt.txt",
+      "sha256": "9b0b94d5339f33e4d6cf7138ff10c5c4b2a0c56012f2c3cc938a86fd2ff667ca",
+      "kind": "recovered_source",
+      "note": "N6 2026-10-16独立复现：去六头正文SHA与A一致，摘录行号逐字核对。A代写有限候选摘录，仅静态来源，非完整源码、非原生/运行期报告；推导式与解包异常为静态推断，未运行。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "npc_UpNpcNeedByNpcTask",
+      "source_id": "excerpt_npc",
+      "start_line": 312,
+      "end_line": 323
+    },
+    {
+      "id": "task_AddNecessary",
+      "source_id": "excerpt_task",
+      "start_line": 38,
+      "end_line": 67
+    },
+    {
+      "id": "task_AddTaskDesc",
+      "source_id": "excerpt_task",
+      "start_line": 147,
+      "end_line": 153
+    },
+    {
+      "id": "task_CheckNpcFlag",
+      "source_id": "excerpt_task",
+      "start_line": 195,
+      "end_line": 218
+    },
+    {
+      "id": "task_ClearTask",
+      "source_id": "excerpt_task",
+      "start_line": 159,
+      "end_line": 169
+    },
+    {
+      "id": "task_GetIsTaskSatisfyFunc",
+      "source_id": "excerpt_task",
+      "start_line": 142,
+      "end_line": 146
+    },
+    {
+      "id": "task_HasBanFindPathTask",
+      "source_id": "excerpt_task",
+      "start_line": 170,
+      "end_line": 180
+    },
+    {
+      "id": "task_IsSatisfyTask",
+      "source_id": "excerpt_task",
+      "start_line": 154,
+      "end_line": 158
+    },
+    {
+      "id": "task_IsTaskItem",
+      "source_id": "excerpt_task",
+      "start_line": 181,
+      "end_line": 194
+    },
+    {
+      "id": "task_ModuleReset",
+      "source_id": "excerpt_task",
+      "start_line": 9,
+      "end_line": 37
+    },
+    {
+      "id": "task_RefreshNecessary",
+      "source_id": "excerpt_task",
+      "start_line": 68,
+      "end_line": 110
+    },
+    {
+      "id": "task_ServerTaskSatisfy",
+      "source_id": "excerpt_task",
+      "start_line": 134,
+      "end_line": 141
+    },
+    {
+      "id": "task_TaskSatisfy",
+      "source_id": "excerpt_task",
+      "start_line": 111,
+      "end_line": 121
+    },
+    {
+      "id": "task_TaskUnSatisfy",
+      "source_id": "excerpt_task",
+      "start_line": 122,
+      "end_line": 133
+    },
+    {
+      "id": "task_shape_and_ban_tables",
+      "source_id": "excerpt_task",
+      "start_line": 219,
+      "end_line": 246
+    }
+  ]
+}

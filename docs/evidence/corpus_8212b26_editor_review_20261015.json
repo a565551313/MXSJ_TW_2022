@@ -1,0 +1,652 @@
+{
+  "review_date": "2026-10-15",
+  "method": "Downloaded all ten ZIPs. Checked whole-archive SHA256/MD5 against delivery metadata, all embedded file SHA256/CRC, manifest artifact references, identity, policy exclusion and independent recount. Did not re-run corpus rebuild, native syntax compilers, or game modules.",
+  "archives": [
+    {
+      "part": 1,
+      "bytes": 23312078,
+      "sha256": "95ccc52384b8a196d7fa75cf0e0dc4047d3670fd3f13aa939324e004101e7e08",
+      "md5": "254db1ae8519eb14493e8d2525a87df7"
+    },
+    {
+      "part": 2,
+      "bytes": 18641599,
+      "sha256": "ec4991d1742627607e2e4b83b73592bd787a48a86968ebd091acfa29bcebd670",
+      "md5": "c48e8236946654f06865e8721b2a1053"
+    },
+    {
+      "part": 3,
+      "bytes": 19508725,
+      "sha256": "75a0f40c15b1b3e9591211221a6b30324b5adb3b7a652ade0582251e1d6de352",
+      "md5": "5f44878ffb93748ab034b8244f5dbeb0"
+    },
+    {
+      "part": 4,
+      "bytes": 22436061,
+      "sha256": "0bb5a268eb2bb621e9cc924f3661ed5253615e1a6520e23d5ec874aabaeadd7b",
+      "md5": "2fe63194bf280d324e2aeffa34968103"
+    },
+    {
+      "part": 5,
+      "bytes": 22209061,
+      "sha256": "1a6c4726f3ce704ae0147e1dcdf42e0c07d6ec577a65f6b8656de8902be43617",
+      "md5": "ee605212710755ce25111667836528be"
+    },
+    {
+      "part": 6,
+      "bytes": 19740225,
+      "sha256": "478c0fad40468cc4872cb6e5a044de65b5702a51cfac8115e98340d1e0a69e06",
+      "md5": "75d49edab330eceeb1f3cbc6e3f7adaa"
+    },
+    {
+      "part": 7,
+      "bytes": 14072561,
+      "sha256": "6143ca10215d054cfd3fe70fa924be46ad025a3daa81ae0ff7ff69531b3837b1",
+      "md5": "12fabc5d644d713c526be0463573a62a"
+    },
+    {
+      "part": 8,
+      "bytes": 4708874,
+      "sha256": "054c866cc1eade2634d6ad9ffe9cc2c7bd8b35431f0fcb0f5bdab4b2bd5c24ca",
+      "md5": "25b973df7ec85d6f11fead5e9bca952d"
+    },
+    {
+      "part": 9,
+      "bytes": 5140639,
+      "sha256": "7fb13b824f987fe6ccf2d6bef9f4f748543005d36c3b0eca4fc0cdd12b2256ab",
+      "md5": "e76eb724bcf71706656125b6d9ec8afa"
+    },
+    {
+      "part": 10,
+      "bytes": 2999196,
+      "sha256": "fdea0dbc34b2bb2985749a245273c4030db0600f3c830ac4b9aa4f9560a512c7",
+      "md5": "fa5b999557b90ed0cbf66cc42dfb991d"
+    }
+  ],
+  "total_compressed_bytes": 152769019,
+  "files_verified_against_SHA256SUMS": 185048,
+  "checksum_manifest_itself_crc_checked": true,
+  "all_files_crc_checked": true,
+  "artifact_references_verified": 193676,
+  "policy_record_paths_only": [
+    "full/entries/1288/record.json",
+    "sample/entries/1288/record.json",
+    "sample_v2/entries/1288/record.json"
+  ],
+  "summary_independently_recounted": {
+    "entries_registered": 5002,
+    "entry_status_counts": {
+      "complete": 4916,
+      "partial": 57,
+      "failed": 28,
+      "timeout": 0,
+      "excluded_by_policy": 1
+    },
+    "independent_entries_with_source_body": 4973,
+    "dual_engine_source_candidates_entries": 4780,
+    "engine_status_counts": {
+      "uncompyle6": {
+        "complete": 4445,
+        "partial": 347,
+        "failed": 201,
+        "timeout": 4
+      },
+      "pycdc": {
+        "complete": 4834,
+        "partial": 127,
+        "failed": 36,
+        "timeout": 0
+      }
+    },
+    "raw_syntax_pass_entries": {
+      "2.5.6": 3756,
+      "2.7.18": 3757
+    },
+    "candidate_syntax_pass_entries": {
+      "2.5.6": 3806,
+      "2.7.18": 4062
+    }
+  },
+  "standard_pyc_count": 4997,
+  "missing_pyc_nonpolicy": [
+    1954,
+    3066,
+    4166,
+    4691
+  ],
+  "repair_parameter_entry_indices": [
+    63,
+    64,
+    1013,
+    1528,
+    1854,
+    1931,
+    1954,
+    2643,
+    2984,
+    3066,
+    4133,
+    4166,
+    4305,
+    4691,
+    4928
+  ],
+  "elapsed_seconds": 8.632,
+  "reviewed_editor_commit": "8a8c0b1b9f60252c9ffe3a95951429fb62c79830",
+  "corpus_producer_commit": "8816f2359e272353b9a5051d7e671651d3efd022",
+  "delivery_index": "https://drive.google.com/file/d/1nIUskEGc1pkECGZIi3ZqUB8exmv8Zgrm/view",
+  "reproduction": {
+    "archive_verification": "python3 /home/user/corpus-review-tools/verify_archives.py /home/user/corpus-review/.cache/material",
+    "repair_checks": "PYTHONPATH=script_editor/src python3 /home/user/corpus-review-tools/check_repairs.py /home/user/corpus-review/.cache/material",
+    "scope": "read-only; ZIP CRC/SHA/manifest recount plus 21 package-codec checks, not a corpus rebuild or native/game execution"
+  },
+  "audited_manifest": {
+    "path": "full/manifest.audited.jsonl",
+    "bytes": 74417377,
+    "sha256": "e06efa990600ec1ca3f4f57c475596c10203c40d36a989ce43fe1192fa890535"
+  },
+  "read_only_editor_codec_checks": [
+    {
+      "entry": 0,
+      "corpus_status": "complete",
+      "repair_stage": "baseline",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "1fb8a3e2c02292de3bc9efd448662afbcbfc3b8c2bf5502b16590eefc9fc22e3",
+        "exact_equal_to_corpus_pyc": true,
+        "same_marshal_tree_as_corpus": true
+      },
+      "reported": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "1fb8a3e2c02292de3bc9efd448662afbcbfc3b8c2bf5502b16590eefc9fc22e3",
+        "exact_equal_to_corpus_pyc": true,
+        "same_marshal_tree_as_corpus": true
+      }
+    },
+    {
+      "entry": 63,
+      "corpus_status": "complete",
+      "repair_stage": "seam_shift",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "code tuple metadata invalid"
+      },
+      "reported": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "1291c218c68ab4cdb703df7a1bc784d023fa17e6aed471d4744fc73f845fe0a2",
+        "exact_equal_to_corpus_pyc": true,
+        "same_marshal_tree_as_corpus": true
+      }
+    },
+    {
+      "entry": 64,
+      "corpus_status": "complete",
+      "repair_stage": "seam_refine",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "unknown marshal tag b'A' at 6438"
+      },
+      "reported": {
+        "strict_editor_decode": "rejected",
+        "reason": "unmapped VM25 opcode 80 at 3217"
+      }
+    },
+    {
+      "entry": 82,
+      "corpus_status": "failed",
+      "repair_stage": "baseline",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "304de032fab750ad95dbebcbc73bbcf559c41bcb1aac8742810b2651bc510b20",
+        "exact_equal_to_corpus_pyc": true,
+        "same_marshal_tree_as_corpus": true
+      },
+      "reported": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "304de032fab750ad95dbebcbc73bbcf559c41bcb1aac8742810b2651bc510b20",
+        "exact_equal_to_corpus_pyc": true,
+        "same_marshal_tree_as_corpus": true
+      }
+    },
+    {
+      "entry": 124,
+      "corpus_status": "partial",
+      "repair_stage": "baseline",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "unmapped VM25 opcode 213 at 2506"
+      },
+      "reported": {
+        "strict_editor_decode": "rejected",
+        "reason": "unmapped VM25 opcode 213 at 2506"
+      }
+    },
+    {
+      "entry": 1013,
+      "corpus_status": "complete",
+      "repair_stage": "seam_refine",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "unknown marshal tag b'a' at 8759"
+      },
+      "reported": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "98c162441964278fd2fd45cbc044d51ca3aad89318f9b54ac53f9d89560fcc7b",
+        "exact_equal_to_corpus_pyc": true,
+        "same_marshal_tree_as_corpus": true
+      }
+    },
+    {
+      "entry": 1528,
+      "corpus_status": "complete",
+      "repair_stage": "seam_refine",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "unknown marshal tag b'a' at 1753"
+      },
+      "reported": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "bcc8c3bc3c51cde3a15f053008d255ca3b4830232139d97db5b21598dcedd304",
+        "exact_equal_to_corpus_pyc": true,
+        "same_marshal_tree_as_corpus": true
+      }
+    },
+    {
+      "entry": 1854,
+      "corpus_status": "complete",
+      "repair_stage": "seam_refine",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "unknown marshal tag b'A' at 492"
+      },
+      "reported": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "cf5281e3d74ab2e835b3fa6c96f19de4c61601fea6e1144e219311d31e66419a",
+        "exact_equal_to_corpus_pyc": true,
+        "same_marshal_tree_as_corpus": true
+      }
+    },
+    {
+      "entry": 1931,
+      "corpus_status": "complete",
+      "repair_stage": "resolved",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "unknown marshal tag b'2' at 11699"
+      },
+      "reported": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "70560b9a6f7b4287171ebf65f867e65c818738ed260b01da20a1d22c518a1e49",
+        "exact_equal_to_corpus_pyc": true,
+        "same_marshal_tree_as_corpus": true
+      }
+    },
+    {
+      "entry": 1954,
+      "corpus_status": "failed",
+      "repair_stage": "resolved_transpile_fail",
+      "has_corpus_pyc": false,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "transformed code/lnotab must be raw marshal strings"
+      },
+      "reported": {
+        "strict_editor_decode": "rejected",
+        "reason": "invalid marshal intern reference"
+      }
+    },
+    {
+      "entry": 2371,
+      "corpus_status": "complete",
+      "repair_stage": "baseline",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "a838da12d52607064080c1ce4b749aae47675dda86cc007f790aa5a66de4441f",
+        "exact_equal_to_corpus_pyc": false,
+        "same_marshal_tree_as_corpus": false
+      },
+      "reported": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "a838da12d52607064080c1ce4b749aae47675dda86cc007f790aa5a66de4441f",
+        "exact_equal_to_corpus_pyc": false,
+        "same_marshal_tree_as_corpus": false
+      }
+    },
+    {
+      "entry": 2643,
+      "corpus_status": "complete",
+      "repair_stage": "resolved",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "unknown marshal tag b'D' at 5937"
+      },
+      "reported": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "7d5eff46bc8dfe81e7834d18ac5644a6ec75107ff490c7b86112272a3f7c22b6",
+        "exact_equal_to_corpus_pyc": true,
+        "same_marshal_tree_as_corpus": true
+      }
+    },
+    {
+      "entry": 2984,
+      "corpus_status": "complete",
+      "repair_stage": "resolved",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "unknown marshal tag b'\\n' at 424"
+      },
+      "reported": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "f36b4a5959ae4d54cec4b09df7e8badcbec1c65d33a7c62a4d9e35764ebcf18a",
+        "exact_equal_to_corpus_pyc": true,
+        "same_marshal_tree_as_corpus": true
+      }
+    },
+    {
+      "entry": 3066,
+      "corpus_status": "failed",
+      "repair_stage": "unresolved",
+      "has_corpus_pyc": false,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "unknown marshal tag b'z' at 414"
+      },
+      "reported": {
+        "strict_editor_decode": "rejected",
+        "reason": "unknown marshal tag b'z' at 414"
+      }
+    },
+    {
+      "entry": 3505,
+      "corpus_status": "complete",
+      "repair_stage": "baseline",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "9b37ed76e74087fe0e0eb3ffd90689b4655bff8a3cff9dba45500e9ace96413d",
+        "exact_equal_to_corpus_pyc": true,
+        "same_marshal_tree_as_corpus": true
+      },
+      "reported": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "9b37ed76e74087fe0e0eb3ffd90689b4655bff8a3cff9dba45500e9ace96413d",
+        "exact_equal_to_corpus_pyc": true,
+        "same_marshal_tree_as_corpus": true
+      }
+    },
+    {
+      "entry": 4133,
+      "corpus_status": "complete",
+      "repair_stage": "resolved",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "unknown marshal tag b'\\xd7' at 1780"
+      },
+      "reported": {
+        "strict_editor_decode": "rejected",
+        "reason": "unmapped VM25 opcode 92 at 595"
+      }
+    },
+    {
+      "entry": 4166,
+      "corpus_status": "failed",
+      "repair_stage": "unresolved",
+      "has_corpus_pyc": false,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "transformed code/lnotab must be raw marshal strings"
+      },
+      "reported": {
+        "strict_editor_decode": "rejected",
+        "reason": "transformed code/lnotab must be raw marshal strings"
+      }
+    },
+    {
+      "entry": 4305,
+      "corpus_status": "complete",
+      "repair_stage": "seam_refine",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "impossible marshal container count"
+      },
+      "reported": {
+        "strict_editor_decode": "pass",
+        "standard_sha256": "4774afb3ebaa8c4ef389612b85e2d0a0b95750a28113596db429028412305991",
+        "exact_equal_to_corpus_pyc": true,
+        "same_marshal_tree_as_corpus": true
+      }
+    },
+    {
+      "entry": 4691,
+      "corpus_status": "failed",
+      "repair_stage": "unresolved",
+      "has_corpus_pyc": false,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "unknown marshal tag b'\\xcd' at 17025"
+      },
+      "reported": {
+        "strict_editor_decode": "rejected",
+        "reason": "unknown marshal tag b'\\xcd' at 17025"
+      }
+    },
+    {
+      "entry": 4861,
+      "corpus_status": "complete",
+      "repair_stage": "baseline",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "unmapped VM25 opcode 215 at 381"
+      },
+      "reported": {
+        "strict_editor_decode": "rejected",
+        "reason": "unmapped VM25 opcode 215 at 381"
+      }
+    },
+    {
+      "entry": 4928,
+      "corpus_status": "partial",
+      "repair_stage": "resolved",
+      "has_corpus_pyc": true,
+      "original": {
+        "strict_editor_decode": "rejected",
+        "reason": "unknown marshal tag b'\\xa7' at 84065"
+      },
+      "reported": {
+        "strict_editor_decode": "rejected",
+        "reason": "unmapped VM25 opcode 203 at 30721"
+      }
+    }
+  ],
+  "raw_syntax_count_caveat": {
+    "uncompyle6": {
+      "2.5.6": {
+        "unfiltered_raw_pass": 52,
+        "with_audited_source_body": 2,
+        "diagnostic_only_pass": [
+          178,
+          242,
+          294,
+          314,
+          394,
+          414,
+          560,
+          899,
+          924,
+          1025,
+          1077,
+          1149,
+          1154,
+          1195,
+          1200,
+          1433,
+          1536,
+          1592,
+          1710,
+          1756,
+          1846,
+          2064,
+          2321,
+          2415,
+          2473,
+          2662,
+          2698,
+          2738,
+          2882,
+          2958,
+          3289,
+          3303,
+          3313,
+          3699,
+          3709,
+          3714,
+          3758,
+          3810,
+          4031,
+          4465,
+          4482,
+          4498,
+          4501,
+          4561,
+          4580,
+          4606,
+          4613,
+          4858,
+          4936,
+          4952
+        ]
+      },
+      "2.7.18": {
+        "unfiltered_raw_pass": 52,
+        "with_audited_source_body": 2,
+        "diagnostic_only_pass": [
+          178,
+          242,
+          294,
+          314,
+          394,
+          414,
+          560,
+          899,
+          924,
+          1025,
+          1077,
+          1149,
+          1154,
+          1195,
+          1200,
+          1433,
+          1536,
+          1592,
+          1710,
+          1756,
+          1846,
+          2064,
+          2321,
+          2415,
+          2473,
+          2662,
+          2698,
+          2738,
+          2882,
+          2958,
+          3289,
+          3303,
+          3313,
+          3699,
+          3709,
+          3714,
+          3758,
+          3810,
+          4031,
+          4465,
+          4482,
+          4498,
+          4501,
+          4561,
+          4580,
+          4606,
+          4613,
+          4858,
+          4936,
+          4952
+        ]
+      }
+    },
+    "pycdc": {
+      "2.5.6": {
+        "unfiltered_raw_pass": 3754,
+        "with_audited_source_body": 3754,
+        "diagnostic_only_pass": []
+      },
+      "2.7.18": {
+        "unfiltered_raw_pass": 3755,
+        "with_audited_source_body": 3755,
+        "diagnostic_only_pass": []
+      }
+    }
+  },
+  "entry2371_corpus_vs_editor_strict_marshal_diff": [
+    {
+      "path": "root/fields/0/items/8/fields/0/items/5/code",
+      "lengths": [
+        65,
+        65
+      ],
+      "changes": [
+        [
+          42,
+          19,
+          124
+        ],
+        [
+          43,
+          3,
+          6
+        ],
+        [
+          44,
+          9,
+          0
+        ]
+      ]
+    }
+  ],
+  "warnings": [
+    "Legacy batch transcoder can replace unknown opcodes with NOP, force tuple tags, repair headers, or solve code-local seams. Stored global keys/bounds plus structural/native marshal checks do not prove fully reversible or semantically correct reconstruction.",
+    "8 of 15 non-baseline repair records have pyc bytes identical to editor strict decode; 3 other exported pyc cases remain rejected by strict opcodes; 4 lack pyc.",
+    "Entry 2371 is labeled baseline/global repaired=false, yet a nested code string differs by three bytes between editor strict decode and corpus pyc. Neither variant has been semantically verified.",
+    "Per-engine compiler-and-byte summary counts 52 uncompyle6 raw syntax passes, including 50 records marked diagnostic-only by the final audit. The audited aggregate correctly uses has_source_body and was independently reproduced.",
+    "Producer compiler is 2.7.18, editor compiler is 2.7.13; producer u6/xdis 3.9.3/6.1.8 are research dependencies, not replacement editor pins.",
+    "This review does not integrate the corpus importer or persist candidate drafts; it does not certify Windows, game semantics, or all-entry editor compatibility."
+  ],
+  "unchanged_local_inputs": {
+    "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "data/data.fls": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+    "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+    "tools/decompiler/batch_decompile.py": "a74742231e04c018c3f63452cfc859c20c6404fd73891eae9076bfcf8185b4e8",
+    "mxLauncher.exe": "3eeba17e7be96fcc43374c4f533d21048d3af20a6519b413ac2b46dc89183b63"
+  },
+  "manifest_metadata_crosschecks": {
+    "container_entry_ids_matching": 5001,
+    "original_parameter_records_matching": 5001,
+    "artifact_references_confined_to_own_entry": 193676,
+    "largest_audited_manifest_line_bytes": 16246,
+    "policy_payloads_read": 0
+  }
+}

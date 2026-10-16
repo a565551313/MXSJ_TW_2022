@@ -1,0 +1,1449 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 8,
+  "path": "script/pubscript/pubskill/e_warctrl.py",
+  "owner": "F",
+  "domain": "battle",
+  "author": "N5（2026-10-16 全新会话，承接逻辑任务包 F/battle；不冒称旧 F 会话）；A收尾修正文中指南/定位事实，需非A独立复核，A不自批",
+  "source_status": "recovered_partial",
+  "purpose": {
+    "text": "战斗技能播放控制：CWarCtrl 是全局单例容器，用常驻 timer 回调驱动一帧一帧的更新（构造实参首值字面为 0.033，计时单位与实际帧间隔未验证，见 limitations），管理每个技能的 CPlayCtrl（倍速/暂停/回收）；CPlayCtrl 把帧号交给 e_warcmdmgr 的命令管理器，并对外发 slot 信号。三层模块级 API（GetWarCtrl/RemoveSkill/SetSkillPause/GetSkillPlayCtrl）是薄包装。",
+    "confidence": "static_reviewed",
+    "evidence": [
+      "ew_module",
+      "ew_cwarctrl",
+      "ew_cplayctrl",
+      "catalog_self"
+    ]
+  },
+  "keywords": [
+    "战斗",
+    "技能",
+    "播放控制",
+    "CWarCtrl",
+    "CPlayCtrl",
+    "暂停",
+    "倍速",
+    "帧"
+  ],
+  "functions": [
+    {
+      "name": "ModuleReset",
+      "signature": "(mode=0)",
+      "kind": "function",
+      "summary": {
+        "text": "把模块级单例 g_WarCtrl 置 None；模块导入时（去头正文第 14 行）立即调用一次，因此模块导入时这次执行会把 g_WarCtrl 置 None（该赋值语句的字面顺序）。参数 mode 在函数体里没有被使用。。“保证单例未创建”的说法已撤：模块二次 import 的缓存/重复执行情形不在本条目证据内，不作断言。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_module"
+        ]
+      },
+      "calls": [
+        "ModuleReset"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetWarCtrl",
+      "signature": "()",
+      "kind": "function",
+      "summary": {
+        "text": "懒构造并返回全局 CWarCtrl 单例（g_WarCtrl 为假时 new）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_module"
+        ]
+      },
+      "calls": [
+        "CWarCtrl",
+        "GetWarCtrl"
+      ],
+      "branches": []
+    },
+    {
+      "name": "RemoveSkill",
+      "signature": "(skillID)",
+      "kind": "function",
+      "summary": {
+        "text": "薄包装：GetWarCtrl().RemoveSkill(skillID)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_module"
+        ]
+      },
+      "calls": [
+        "GetWarCtrl",
+        "RemoveSkill"
+      ],
+      "branches": []
+    },
+    {
+      "name": "SetSkillPause",
+      "signature": "(skillID, pause)",
+      "kind": "function",
+      "summary": {
+        "text": "薄包装：GetWarCtrl().SetSkillPause(skillID, pause)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_module"
+        ]
+      },
+      "calls": [
+        "GetWarCtrl",
+        "SetSkillPause"
+      ],
+      "branches": []
+    },
+    {
+      "name": "GetSkillPlayCtrl",
+      "signature": "(skillID)",
+      "kind": "function",
+      "summary": {
+        "text": "薄包装：返回 GetWarCtrl().GetPlayCtrl(skillID)（可能是 None）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_module"
+        ]
+      },
+      "calls": [
+        "GetSkillPlayCtrl",
+        "GetWarCtrl"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CWarCtrl",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "技能播放控制器容器：持有 m_PlayCtrls（skillID→CPlayCtrl）、全局 m_Pause、倍速 m_Speed/m_SpeedFrame、常驻帧回调 m_TimerObj 与战斗类型 m_iWarType。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl"
+        ]
+      },
+      "calls": [
+        "CPlayCtrl",
+        "CWarCtrl",
+        "EillFinished",
+        "GetPlayCtrl",
+        "OnUpdate",
+        "PlaySkill",
+        "RemoveSkill",
+        "SetPause",
+        "SetSkillPause",
+        "StartTimer",
+        "_OnUpdate",
+        "__init__",
+        "_removeSkill",
+        "ctrl.IsEnd",
+        "ctrl.OnUpdate",
+        "delList.append",
+        "e_debugctrl.DebugPrint",
+        "e_warinterface.OnTimeUpdateAfter",
+        "e_warinterface.OnTimeUpdateBefore",
+        "e_warinterface.OnUpdateError",
+        "self.GetPlayCtrl",
+        "self.StartTimer",
+        "self._OnUpdate",
+        "self._removeSkill",
+        "self.m_PlayCtrls.get",
+        "self.m_PlayCtrls.items",
+        "skill.Release",
+        "testdrawmagic.GetTestDrawMagic",
+        "timer.Timer"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CWarCtrl.__init__",
+      "signature": "(self, iWarType=None)",
+      "kind": "method",
+      "summary": {
+        "text": "初始化容器并起帧回调：m_PlayCtrls={}、m_TimerObj=None、m_Pause=False、m_Speed=1.0、m_SpeedFrame=0、m_iWarType=iWarType（默认 None），最后 StartTimer()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl",
+          "n5_census_all"
+        ]
+      },
+      "calls": [
+        "CPlayCtrl",
+        "CWarCtrl",
+        "EillFinished",
+        "GetPlayCtrl",
+        "OnUpdate",
+        "PlaySkill",
+        "RemoveSkill",
+        "SetPause",
+        "SetSkillPause",
+        "StartTimer",
+        "_OnUpdate",
+        "__init__",
+        "_removeSkill",
+        "ctrl.IsEnd",
+        "ctrl.OnUpdate",
+        "delList.append",
+        "e_debugctrl.DebugPrint",
+        "e_warinterface.OnTimeUpdateAfter",
+        "e_warinterface.OnTimeUpdateBefore",
+        "e_warinterface.OnUpdateError",
+        "self.GetPlayCtrl",
+        "self.StartTimer",
+        "self._OnUpdate",
+        "self._removeSkill",
+        "self.m_PlayCtrls.get",
+        "self.m_PlayCtrls.items",
+        "skill.Release",
+        "testdrawmagic.GetTestDrawMagic",
+        "timer.Timer"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CWarCtrl.PlaySkill",
+      "signature": "(self, skillID, skillPath, attackInfo)",
+      "kind": "method",
+      "summary": {
+        "text": "登记一个正在播放的技能：新建 CPlayCtrl(skillID, skillPath, attackInfo) 放进 m_PlayCtrls[skillID]（同 id 会直接覆盖，没有重复播放保护）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl"
+        ]
+      },
+      "calls": [
+        "CPlayCtrl",
+        "CWarCtrl",
+        "EillFinished",
+        "GetPlayCtrl",
+        "OnUpdate",
+        "PlaySkill",
+        "RemoveSkill",
+        "SetPause",
+        "SetSkillPause",
+        "StartTimer",
+        "_OnUpdate",
+        "__init__",
+        "_removeSkill",
+        "ctrl.IsEnd",
+        "ctrl.OnUpdate",
+        "delList.append",
+        "e_debugctrl.DebugPrint",
+        "e_warinterface.OnTimeUpdateAfter",
+        "e_warinterface.OnTimeUpdateBefore",
+        "e_warinterface.OnUpdateError",
+        "self.GetPlayCtrl",
+        "self.StartTimer",
+        "self._OnUpdate",
+        "self._removeSkill",
+        "self.m_PlayCtrls.get",
+        "self.m_PlayCtrls.items",
+        "skill.Release",
+        "testdrawmagic.GetTestDrawMagic",
+        "timer.Timer"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CWarCtrl.SetSkillPause",
+      "signature": "(self, skillID, pause)",
+      "kind": "method",
+      "summary": {
+        "text": "暂停/恢复单个技能：skillID 在 m_PlayCtrls 里才转调其 SetPause，否则 e_debugctrl.DebugPrint('skillID 不存在: ', skillID)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl"
+        ]
+      },
+      "calls": [
+        "CPlayCtrl",
+        "CWarCtrl",
+        "EillFinished",
+        "GetPlayCtrl",
+        "OnUpdate",
+        "PlaySkill",
+        "RemoveSkill",
+        "SetPause",
+        "SetSkillPause",
+        "StartTimer",
+        "_OnUpdate",
+        "__init__",
+        "_removeSkill",
+        "ctrl.IsEnd",
+        "ctrl.OnUpdate",
+        "delList.append",
+        "e_debugctrl.DebugPrint",
+        "e_warinterface.OnTimeUpdateAfter",
+        "e_warinterface.OnTimeUpdateBefore",
+        "e_warinterface.OnUpdateError",
+        "self.GetPlayCtrl",
+        "self.StartTimer",
+        "self._OnUpdate",
+        "self._removeSkill",
+        "self.m_PlayCtrls.get",
+        "self.m_PlayCtrls.items",
+        "skill.Release",
+        "testdrawmagic.GetTestDrawMagic",
+        "timer.Timer"
+      ],
+      "branches": [
+        {
+          "condition": "skillID in self.m_PlayCtrls",
+          "effect": {
+            "text": "转调该 CPlayCtrl.SetPause(pause)",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "ew_cwarctrl"
+            ]
+          }
+        },
+        {
+          "condition": "skillID 不存在",
+          "effect": {
+            "text": "e_debugctrl.DebugPrint('skillID 不存在: ', skillID)，什么都不做",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "ew_cwarctrl"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CWarCtrl.SetPause",
+      "signature": "(self, pause)",
+      "kind": "method",
+      "summary": {
+        "text": "全局暂停开关：只写 self.m_Pause（由 OnUpdate/_OnUpdate 在开头早退）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl"
+        ]
+      },
+      "calls": [
+        "CPlayCtrl",
+        "CWarCtrl",
+        "EillFinished",
+        "GetPlayCtrl",
+        "OnUpdate",
+        "PlaySkill",
+        "RemoveSkill",
+        "SetPause",
+        "SetSkillPause",
+        "StartTimer",
+        "_OnUpdate",
+        "__init__",
+        "_removeSkill",
+        "ctrl.IsEnd",
+        "ctrl.OnUpdate",
+        "delList.append",
+        "e_debugctrl.DebugPrint",
+        "e_warinterface.OnTimeUpdateAfter",
+        "e_warinterface.OnTimeUpdateBefore",
+        "e_warinterface.OnUpdateError",
+        "self.GetPlayCtrl",
+        "self.StartTimer",
+        "self._OnUpdate",
+        "self._removeSkill",
+        "self.m_PlayCtrls.get",
+        "self.m_PlayCtrls.items",
+        "skill.Release",
+        "testdrawmagic.GetTestDrawMagic",
+        "timer.Timer"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CWarCtrl.RemoveSkill",
+      "signature": "(self, skillID)",
+      "kind": "method",
+      "summary": {
+        "text": "主动移除技能：取到 CPlayCtrl 才 skill.Release() 后 _removeSkill(skillID)；取不到（None）什么都不做。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl"
+        ]
+      },
+      "calls": [
+        "CPlayCtrl",
+        "CWarCtrl",
+        "EillFinished",
+        "GetPlayCtrl",
+        "OnUpdate",
+        "PlaySkill",
+        "RemoveSkill",
+        "SetPause",
+        "SetSkillPause",
+        "StartTimer",
+        "_OnUpdate",
+        "__init__",
+        "_removeSkill",
+        "ctrl.IsEnd",
+        "ctrl.OnUpdate",
+        "delList.append",
+        "e_debugctrl.DebugPrint",
+        "e_warinterface.OnTimeUpdateAfter",
+        "e_warinterface.OnTimeUpdateBefore",
+        "e_warinterface.OnUpdateError",
+        "self.GetPlayCtrl",
+        "self.StartTimer",
+        "self._OnUpdate",
+        "self._removeSkill",
+        "self.m_PlayCtrls.get",
+        "self.m_PlayCtrls.items",
+        "skill.Release",
+        "testdrawmagic.GetTestDrawMagic",
+        "timer.Timer"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CWarCtrl.GetPlayCtrl",
+      "signature": "(self, skillID)",
+      "kind": "method",
+      "summary": {
+        "text": "m_PlayCtrls.get(skillID)，查不到返回 None。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl"
+        ]
+      },
+      "calls": [
+        "CPlayCtrl",
+        "CWarCtrl",
+        "EillFinished",
+        "GetPlayCtrl",
+        "OnUpdate",
+        "PlaySkill",
+        "RemoveSkill",
+        "SetPause",
+        "SetSkillPause",
+        "StartTimer",
+        "_OnUpdate",
+        "__init__",
+        "_removeSkill",
+        "ctrl.IsEnd",
+        "ctrl.OnUpdate",
+        "delList.append",
+        "e_debugctrl.DebugPrint",
+        "e_warinterface.OnTimeUpdateAfter",
+        "e_warinterface.OnTimeUpdateBefore",
+        "e_warinterface.OnUpdateError",
+        "self.GetPlayCtrl",
+        "self.StartTimer",
+        "self._OnUpdate",
+        "self._removeSkill",
+        "self.m_PlayCtrls.get",
+        "self.m_PlayCtrls.items",
+        "skill.Release",
+        "testdrawmagic.GetTestDrawMagic",
+        "timer.Timer"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CWarCtrl._removeSkill",
+      "signature": "(self, skillID)",
+      "kind": "method",
+      "summary": {
+        "text": "回收实现：先 testdrawmagic.GetTestDrawMagic().WriteInfo()（调试写盘），再 del m_PlayCtrls[skillID]，最后通知 e_warinterface 技能结束——候选里该函数名是损坏标识符 e_warinterface.}EillFinished，原样保留，未猜补为 SkillFinished。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl",
+          "n5_prov"
+        ]
+      },
+      "calls": [
+        "CPlayCtrl",
+        "CWarCtrl",
+        "EillFinished",
+        "GetPlayCtrl",
+        "OnUpdate",
+        "PlaySkill",
+        "RemoveSkill",
+        "SetPause",
+        "SetSkillPause",
+        "StartTimer",
+        "_OnUpdate",
+        "__init__",
+        "_removeSkill",
+        "ctrl.IsEnd",
+        "ctrl.OnUpdate",
+        "delList.append",
+        "e_debugctrl.DebugPrint",
+        "e_warinterface.OnTimeUpdateAfter",
+        "e_warinterface.OnTimeUpdateBefore",
+        "e_warinterface.OnUpdateError",
+        "self.GetPlayCtrl",
+        "self.StartTimer",
+        "self._OnUpdate",
+        "self._removeSkill",
+        "self.m_PlayCtrls.get",
+        "self.m_PlayCtrls.items",
+        "skill.Release",
+        "testdrawmagic.GetTestDrawMagic",
+        "timer.Timer"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CWarCtrl.StartTimer",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "起常驻帧回调：self.m_TimerObj 已存在则直接 return（不重复注册）；否则构造 timer.Timer(0.033, self.OnUpdate, -1, self)（去头正文 L85），四个实参按上列字面顺序传入。timer.Timer 的实现在 script/core/timer.py（catalog entry_index 3153），不在本卡 697/1406/1612/8 的恢复白名单内、本轮未取正文，因此 0.033 的计时单位、它与实际帧率的关系、以及 -1 的“重复次数”语义全部未验证——不得据此读作“约 30fps / 无限循环”，该读法在本稿只作为推测列出，见 limitations。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl",
+          "catalog_timer"
+        ]
+      },
+      "calls": [
+        "CPlayCtrl",
+        "CWarCtrl",
+        "EillFinished",
+        "GetPlayCtrl",
+        "OnUpdate",
+        "PlaySkill",
+        "RemoveSkill",
+        "SetPause",
+        "SetSkillPause",
+        "StartTimer",
+        "_OnUpdate",
+        "__init__",
+        "_removeSkill",
+        "ctrl.IsEnd",
+        "ctrl.OnUpdate",
+        "delList.append",
+        "e_debugctrl.DebugPrint",
+        "e_warinterface.OnTimeUpdateAfter",
+        "e_warinterface.OnTimeUpdateBefore",
+        "e_warinterface.OnUpdateError",
+        "self.GetPlayCtrl",
+        "self.StartTimer",
+        "self._OnUpdate",
+        "self._removeSkill",
+        "self.m_PlayCtrls.get",
+        "self.m_PlayCtrls.items",
+        "skill.Release",
+        "testdrawmagic.GetTestDrawMagic",
+        "timer.Timer"
+      ],
+      "branches": [
+        {
+          "condition": "self.m_TimerObj 已存在（非空）",
+          "effect": {
+            "text": "直接 return，不新建，也不改已有定时器",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "ew_cwarctrl"
+            ]
+          }
+        },
+        {
+          "condition": "self.m_TimerObj 为空",
+          "effect": {
+            "text": "self.m_TimerObj = timer.Timer(0.033, self.OnUpdate, -1, self)；实参字面值即此四个，参数语义未验证",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "ew_cwarctrl",
+              "catalog_timer"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CWarCtrl.OnUpdate",
+      "signature": "(self, *args)",
+      "kind": "method",
+      "summary": {
+        "text": "帧入口（timer 回调）：m_Pause 为真直接返回；否则 m_SpeedFrame += m_Speed，然后 while m_SpeedFrame >= 1: 调一次 _OnUpdate 并减 1——倍速靠一帧内多跑几次实现，m_Speed<1 时会出现某些帧不推进。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl"
+        ]
+      },
+      "calls": [
+        "CPlayCtrl",
+        "CWarCtrl",
+        "EillFinished",
+        "GetPlayCtrl",
+        "OnUpdate",
+        "PlaySkill",
+        "RemoveSkill",
+        "SetPause",
+        "SetSkillPause",
+        "StartTimer",
+        "_OnUpdate",
+        "__init__",
+        "_removeSkill",
+        "ctrl.IsEnd",
+        "ctrl.OnUpdate",
+        "delList.append",
+        "e_debugctrl.DebugPrint",
+        "e_warinterface.OnTimeUpdateAfter",
+        "e_warinterface.OnTimeUpdateBefore",
+        "e_warinterface.OnUpdateError",
+        "self.GetPlayCtrl",
+        "self.StartTimer",
+        "self._OnUpdate",
+        "self._removeSkill",
+        "self.m_PlayCtrls.get",
+        "self.m_PlayCtrls.items",
+        "skill.Release",
+        "testdrawmagic.GetTestDrawMagic",
+        "timer.Timer"
+      ],
+      "branches": [
+        {
+          "condition": "self.m_Pause",
+          "effect": {
+            "text": "直接 return ()，本帧完全不推进",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "ew_cwarctrl"
+            ]
+          }
+        },
+        {
+          "condition": "m_SpeedFrame >= 1（循环）",
+          "effect": {
+            "text": "每轮调一次 _OnUpdate 并 m_SpeedFrame -= 1",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "ew_cwarctrl"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CWarCtrl._OnUpdate",
+      "signature": "(self, *args)",
+      "kind": "method",
+      "summary": {
+        "text": "真正的每步更新：m_Pause 早退 → e_warinterface.OnTimeUpdateBefore(m_iWarType, 1) →遍历 m_PlayCtrls：IsEnd() 的进 delList；否则 try 调 ctrl.OnUpdate()，抛异常则 e_warinterface.OnUpdateError(e) 并同样进 delList →统一 _removeSkill → e_warinterface.OnTimeUpdateAfter(m_iWarType, 1)。注意遍历的是 items() 快照，删除走 delList，不在遍历中改字典。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl"
+        ]
+      },
+      "calls": [
+        "CPlayCtrl",
+        "CWarCtrl",
+        "EillFinished",
+        "GetPlayCtrl",
+        "OnUpdate",
+        "PlaySkill",
+        "RemoveSkill",
+        "SetPause",
+        "SetSkillPause",
+        "StartTimer",
+        "_OnUpdate",
+        "__init__",
+        "_removeSkill",
+        "ctrl.IsEnd",
+        "ctrl.OnUpdate",
+        "delList.append",
+        "e_debugctrl.DebugPrint",
+        "e_warinterface.OnTimeUpdateAfter",
+        "e_warinterface.OnTimeUpdateBefore",
+        "e_warinterface.OnUpdateError",
+        "self.GetPlayCtrl",
+        "self.StartTimer",
+        "self._OnUpdate",
+        "self._removeSkill",
+        "self.m_PlayCtrls.get",
+        "self.m_PlayCtrls.items",
+        "skill.Release",
+        "testdrawmagic.GetTestDrawMagic",
+        "timer.Timer"
+      ],
+      "branches": [
+        {
+          "condition": "ctrl.IsEnd()",
+          "effect": {
+            "text": "进 delList 并 continue（不再调 OnUpdate）",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "ew_cwarctrl"
+            ]
+          }
+        },
+        {
+          "condition": "ctrl.OnUpdate() 抛异常",
+          "effect": {
+            "text": "e_warinterface.OnUpdateError(e) 并把该技能进 delList",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "ew_cwarctrl"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CPlayCtrl",
+      "signature": null,
+      "kind": "class",
+      "summary": {
+        "text": "单个技能的播放控制器：继承 slot.ISignalSubject（可订阅信号），持有 m_SkillID、m_CurFrame、m_Pause、m_AttackCount 与命令管理对象 m_WarCmdMgr。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cplayctrl"
+        ]
+      },
+      "calls": [
+        "AddAttackCount",
+        "CPlayCtrl",
+        "GetAttackCount",
+        "GetCmdCount",
+        "GetCurFrame",
+        "IsEnd",
+        "OnUpdate",
+        "Release",
+        "SetPause",
+        "TriggerSignal",
+        "__init__",
+        "e_warcmdmgr.CWarCmdMgr",
+        "self.m_WarCmdMgr.GetCmdCount",
+        "self.m_WarCmdMgr.IsEnd",
+        "self.m_WarCmdMgr.LoadSkillData",
+        "self.m_WarCmdMgr.OnUpdate",
+        "self.m_WarCmdMgr.Release",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CPlayCtrl.__init__",
+      "signature": "(self, skillID, skillPath, attackInfo)",
+      "kind": "method",
+      "summary": {
+        "text": "构造：ssInit()（slot）→ m_SkillID/m_CurFrame=-1/m_Pause=False/m_AttackCount=0 →新建 e_warcmdmgr.CWarCmdMgr(self, skillID) 并 LoadSkillData(skillPath, attackInfo)。帧号从 -1 开始，第一次 OnUpdate 后才是 0。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cplayctrl"
+        ]
+      },
+      "calls": [
+        "AddAttackCount",
+        "CPlayCtrl",
+        "GetAttackCount",
+        "GetCmdCount",
+        "GetCurFrame",
+        "IsEnd",
+        "OnUpdate",
+        "Release",
+        "SetPause",
+        "TriggerSignal",
+        "__init__",
+        "e_warcmdmgr.CWarCmdMgr",
+        "self.m_WarCmdMgr.GetCmdCount",
+        "self.m_WarCmdMgr.IsEnd",
+        "self.m_WarCmdMgr.LoadSkillData",
+        "self.m_WarCmdMgr.OnUpdate",
+        "self.m_WarCmdMgr.Release",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CPlayCtrl.GetCmdCount",
+      "signature": "(self, cmdType)",
+      "kind": "method",
+      "summary": {
+        "text": "委托 m_WarCmdMgr.GetCmdCount(cmdType)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cplayctrl"
+        ]
+      },
+      "calls": [
+        "AddAttackCount",
+        "CPlayCtrl",
+        "GetAttackCount",
+        "GetCmdCount",
+        "GetCurFrame",
+        "IsEnd",
+        "OnUpdate",
+        "Release",
+        "SetPause",
+        "TriggerSignal",
+        "__init__",
+        "e_warcmdmgr.CWarCmdMgr",
+        "self.m_WarCmdMgr.GetCmdCount",
+        "self.m_WarCmdMgr.IsEnd",
+        "self.m_WarCmdMgr.LoadSkillData",
+        "self.m_WarCmdMgr.OnUpdate",
+        "self.m_WarCmdMgr.Release",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CPlayCtrl.GetAttackCount",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "读 m_AttackCount。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cplayctrl"
+        ]
+      },
+      "calls": [
+        "AddAttackCount",
+        "CPlayCtrl",
+        "GetAttackCount",
+        "GetCmdCount",
+        "GetCurFrame",
+        "IsEnd",
+        "OnUpdate",
+        "Release",
+        "SetPause",
+        "TriggerSignal",
+        "__init__",
+        "e_warcmdmgr.CWarCmdMgr",
+        "self.m_WarCmdMgr.GetCmdCount",
+        "self.m_WarCmdMgr.IsEnd",
+        "self.m_WarCmdMgr.LoadSkillData",
+        "self.m_WarCmdMgr.OnUpdate",
+        "self.m_WarCmdMgr.Release",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CPlayCtrl.GetCurFrame",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "读 m_CurFrame。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cplayctrl"
+        ]
+      },
+      "calls": [
+        "AddAttackCount",
+        "CPlayCtrl",
+        "GetAttackCount",
+        "GetCmdCount",
+        "GetCurFrame",
+        "IsEnd",
+        "OnUpdate",
+        "Release",
+        "SetPause",
+        "TriggerSignal",
+        "__init__",
+        "e_warcmdmgr.CWarCmdMgr",
+        "self.m_WarCmdMgr.GetCmdCount",
+        "self.m_WarCmdMgr.IsEnd",
+        "self.m_WarCmdMgr.LoadSkillData",
+        "self.m_WarCmdMgr.OnUpdate",
+        "self.m_WarCmdMgr.Release",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CPlayCtrl.AddAttackCount",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "m_AttackCount += 1。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cplayctrl"
+        ]
+      },
+      "calls": [
+        "AddAttackCount",
+        "CPlayCtrl",
+        "GetAttackCount",
+        "GetCmdCount",
+        "GetCurFrame",
+        "IsEnd",
+        "OnUpdate",
+        "Release",
+        "SetPause",
+        "TriggerSignal",
+        "__init__",
+        "e_warcmdmgr.CWarCmdMgr",
+        "self.m_WarCmdMgr.GetCmdCount",
+        "self.m_WarCmdMgr.IsEnd",
+        "self.m_WarCmdMgr.LoadSkillData",
+        "self.m_WarCmdMgr.OnUpdate",
+        "self.m_WarCmdMgr.Release",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CPlayCtrl.SetPause",
+      "signature": "(self, pause)",
+      "kind": "method",
+      "summary": {
+        "text": "单个技能暂停开关：写 self.m_Pause（OnUpdate 开头早退）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cplayctrl"
+        ]
+      },
+      "calls": [
+        "AddAttackCount",
+        "CPlayCtrl",
+        "GetAttackCount",
+        "GetCmdCount",
+        "GetCurFrame",
+        "IsEnd",
+        "OnUpdate",
+        "Release",
+        "SetPause",
+        "TriggerSignal",
+        "__init__",
+        "e_warcmdmgr.CWarCmdMgr",
+        "self.m_WarCmdMgr.GetCmdCount",
+        "self.m_WarCmdMgr.IsEnd",
+        "self.m_WarCmdMgr.LoadSkillData",
+        "self.m_WarCmdMgr.OnUpdate",
+        "self.m_WarCmdMgr.Release",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CPlayCtrl.IsEnd",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "委托 m_WarCmdMgr.IsEnd()——由命令管理器判定播放是否结束。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cplayctrl"
+        ]
+      },
+      "calls": [
+        "AddAttackCount",
+        "CPlayCtrl",
+        "GetAttackCount",
+        "GetCmdCount",
+        "GetCurFrame",
+        "IsEnd",
+        "OnUpdate",
+        "Release",
+        "SetPause",
+        "TriggerSignal",
+        "__init__",
+        "e_warcmdmgr.CWarCmdMgr",
+        "self.m_WarCmdMgr.GetCmdCount",
+        "self.m_WarCmdMgr.IsEnd",
+        "self.m_WarCmdMgr.LoadSkillData",
+        "self.m_WarCmdMgr.OnUpdate",
+        "self.m_WarCmdMgr.Release",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CPlayCtrl.OnUpdate",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "推进一步：m_Pause 早退；m_CurFrame += 1 后 m_WarCmdMgr.OnUpdate(self.m_CurFrame)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cplayctrl"
+        ]
+      },
+      "calls": [
+        "AddAttackCount",
+        "CPlayCtrl",
+        "GetAttackCount",
+        "GetCmdCount",
+        "GetCurFrame",
+        "IsEnd",
+        "OnUpdate",
+        "Release",
+        "SetPause",
+        "TriggerSignal",
+        "__init__",
+        "e_warcmdmgr.CWarCmdMgr",
+        "self.m_WarCmdMgr.GetCmdCount",
+        "self.m_WarCmdMgr.IsEnd",
+        "self.m_WarCmdMgr.LoadSkillData",
+        "self.m_WarCmdMgr.OnUpdate",
+        "self.m_WarCmdMgr.Release",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    },
+    {
+      "name": "CPlayCtrl.Release",
+      "signature": "(self)",
+      "kind": "method",
+      "summary": {
+        "text": "释放（去头正文 L159-163）：m_WarCmdMgr 为真时先调用 self.m_WarCmdMgr.Release(self)，待该调用返回后才 self.m_WarCmdMgr = None；为假则整段跳过。可据此证明的只有一件事：一次正常返回之后再顺序调用会因判空而跳过。不能据此说“可重入安全”——下游在 Release 内部同步回调本对象时 m_WarCmdMgr 仍非空，判空不成立；也不能说“异常安全”——下游抛异常时置 None 的语句不会执行。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cplayctrl"
+        ]
+      },
+      "calls": [
+        "AddAttackCount",
+        "CPlayCtrl",
+        "GetAttackCount",
+        "GetCmdCount",
+        "GetCurFrame",
+        "IsEnd",
+        "OnUpdate",
+        "Release",
+        "SetPause",
+        "TriggerSignal",
+        "__init__",
+        "e_warcmdmgr.CWarCmdMgr",
+        "self.m_WarCmdMgr.GetCmdCount",
+        "self.m_WarCmdMgr.IsEnd",
+        "self.m_WarCmdMgr.LoadSkillData",
+        "self.m_WarCmdMgr.OnUpdate",
+        "self.m_WarCmdMgr.Release",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": [
+        {
+          "condition": "self.m_WarCmdMgr 为真",
+          "effect": {
+            "text": "先 m_WarCmdMgr.Release(self)，返回后 m_WarCmdMgr = None（顺序即如此，中间不存在提前置空）",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "ew_cplayctrl"
+            ]
+          }
+        },
+        {
+          "condition": "self.m_WarCmdMgr 为假（已释放或从未创建）",
+          "effect": {
+            "text": "整段跳过，直接 return",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "ew_cplayctrl"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CPlayCtrl.TriggerSignal",
+      "signature": "(self, sSignal, *args)",
+      "kind": "method",
+      "summary": {
+        "text": "转发到 slot 的 ssEmit(sSignal, *args)。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cplayctrl"
+        ]
+      },
+      "calls": [
+        "AddAttackCount",
+        "CPlayCtrl",
+        "GetAttackCount",
+        "GetCmdCount",
+        "GetCurFrame",
+        "IsEnd",
+        "OnUpdate",
+        "Release",
+        "SetPause",
+        "TriggerSignal",
+        "__init__",
+        "e_warcmdmgr.CWarCmdMgr",
+        "self.m_WarCmdMgr.GetCmdCount",
+        "self.m_WarCmdMgr.IsEnd",
+        "self.m_WarCmdMgr.LoadSkillData",
+        "self.m_WarCmdMgr.OnUpdate",
+        "self.m_WarCmdMgr.Release",
+        "self.ssEmit",
+        "self.ssInit"
+      ],
+      "branches": []
+    }
+  ],
+  "resources": [
+    {
+      "kind": "module",
+      "target": "script/pubscript/pubskill/e_warcmdmgr.py (entry 631)",
+      "summary": {
+        "text": "命令管理器：CPlayCtrl 构造时新建 CWarCmdMgr(self, skillID)，由它 LoadSkillData、IsEnd、按帧 OnUpdate 与 Release。本轮的播放结束判定都委托给它。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cplayctrl",
+          "catalog_e_warcmdmgr"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/pubscript/pubskill/e_warinterface.py (entry 2435)",
+      "summary": {
+        "text": "对外接口：OnTimeUpdateBefore/After 与 OnUpdateError 由 CWarCtrl._OnUpdate 调用；技能结束通知在 _removeSkill 里（候选里该函数名损坏为 }EillFinished）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl",
+          "catalog_e_warinterface"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/timer.py (entry 3153)",
+      "summary": {
+        "text": "定时器：CWarCtrl.StartTimer 用 timer.Timer(0.033, self.OnUpdate, -1, self) 起常驻帧回调。本模块正文本轮未取（不在 697/1406/1612/8 白名单内），四个实参的语义（计时单位、重复次数）均未知，只有调用点这一处证据。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl",
+          "catalog_timer"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/common/slot.py (entry 4424)",
+      "summary": {
+        "text": "信号机制：CPlayCtrl 继承 slot.ISignalSubject，用 ssInit/ssEmit；TriggerSignal 是它的转发入口。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cplayctrl",
+          "catalog_slot"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/core/magicperform/testdrawmagic.py (entry 3542)",
+      "summary": {
+        "text": "调试：CWarCtrl._removeSkill 每次回收都会 GetTestDrawMagic().WriteInfo()。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl",
+          "catalog_testdrawmagic"
+        ]
+      }
+    },
+    {
+      "kind": "module",
+      "target": "script/pubscript/pubskill/e_debugctrl.py (entry 2013)",
+      "summary": {
+        "text": "调试打印：SetSkillPause 找不到技能时 DebugPrint('skillID 不存在: ', skillID)。该条目的包内自报路径已损坏，身份按 entry 2013 与历史路径记录。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl",
+          "catalog_e_debugctrl"
+        ]
+      }
+    }
+  ],
+  "related_modules": [
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 631
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2435
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3153
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 4424
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 3542
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 2013
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 697
+    },
+    {
+      "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+      "entry_index": 1612
+    }
+  ],
+  "modification_guides": [
+    {
+      "question": "改技能播放速度/倍速要动哪里？",
+      "answer": {
+        "text": "CWarCtrl.m_Speed 与 OnUpdate 的 m_SpeedFrame 累加循环：一帧内按 m_Speed 跑整数次 _OnUpdate。改帧间隔要改 StartTimer 里 timer.Timer 的第一个实参（现为字面值 0.033；其计时单位与实际帧间隔未验证，改动前应先确认 timer.py 的实现）。m_Speed<1 时会有帧不推进，改动需要实机验证。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl"
+        ]
+      }
+    },
+    {
+      "question": "暂停/继续怎么做？",
+      "answer": {
+        "text": "两层：CWarCtrl.SetPause 是全容器暂停（OnUpdate/_OnUpdate 开头都早退）；CWarCtrl.SetSkillPause(skillID, pause) / CPlayCtrl.SetPause 只停单个技能。注意全局暂停时 m_SpeedFrame 也会停止累加。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl",
+          "ew_cplayctrl"
+        ]
+      }
+    },
+    {
+      "question": "技能播完在哪里回收、怎么接通知？",
+      "answer": {
+        "text": "候选有两条不同路径：主动CWarCtrl.RemoveSkill取到对象后先skill.Release()，再_removeSkill；自动_OnUpdate在结束或异常后收集delList，直接调用_removeSkill，没有在这条路径显式Release。_removeSkill依次调试WriteInfo、del字典项、调用损坏标识符e_warinterface.}EillFinished；不能据此保证资源释放或通知成功。CPlayCtrl.TriggerSignal调用ssEmit，是发出信号而非订阅接口；订阅方式与生命周期须另查slot及调用方，本轮未核。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl",
+          "ew_cplayctrl",
+          "n5_prov"
+        ]
+      }
+    },
+    {
+      "question": "新增一种技能播放要动哪里？",
+      "answer": {
+        "text": "本篇可定位PlaySkill构造CPlayCtrl、CPlayCtrl构造CWarCmdMgr并LoadSkillData的入口，不能证明仅登记即可完成新增技能。建议继续核e_warcmdmgr（entry631）与各命令子模块、数据及调用者，均不在本轮证据内。ModuleReset只把g_WarCtrl置None，不能证明旧timer/技能资源被释放，也不能给出跨战斗前必须调用它的生命周期建议；实际复用与清理机制待验证。",
+        "confidence": "inferred",
+        "evidence": [
+          "ew_cwarctrl",
+          "ew_cplayctrl",
+          "ew_module"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "候选共 176 行（去头正文 170 行），已完整摘录进 e_warctrl_8_excerpt.txt；但存在 1 处损坏标识符（CWarCtrl._removeSkill 里的 e_warinterface.}EillFinished），故 source_status 记 recovered_partial，不猜补为 SkillFinished。",
+    "未执行、未 import 任何恢复出来的游戏模块；本轮没有任何 runtime_verified 结论。",
+    "播放结束判定委托给 e_warcmdmgr.CWarCmdMgr（entry 631），该模块本轮未读，IsEnd/OnUpdate 的真实语义（帧号如何映射到命令）没有证据。",
+    "CWarCtrl 的调用方（谁调 PlaySkill/RemoveSkill）不在本条目内，本轮没有跨模块证据，关系留空待核。",
+    "m_Speed 与 timer.Timer 第一个实参（字面值 0.033，计时单位与实际帧间隔未验证）的组合得出的实际播放速度、以及倍速下的帧丢失，均未实机验证。",
+    "Windows/EXE、原生引擎、实机与真实服务端均未验证。",
+    "CPlayCtrl.Release 只能证明“正常返回后顺序调用会跳过”：候选是先 m_WarCmdMgr.Release(self) 再置 None，下游同步重入或抛异常时引用仍非空，故不声称可重入/异常安全（B-N5-02）。",
+    "timer.Timer 的实现（script/core/timer.py，catalog entry_index 3153）不在本卡恢复白名单内、本轮未取正文：0.033 的计时单位、-1 的重复语义、以及 0.033 与实际帧率的关系全部未知；“约 30fps/无限循环”只是推测，已从正文中删除（B-N5-03）。",
+    "A收尾纠正修改指南：自动移除与主动RemoveSkill的Release顺序不同；TriggerSignal是ssEmit发出而非订阅；ModuleReset仅置None，不能当成完整跨战斗清理流程。"
+  ],
+  "sources": [
+    {
+      "id": "n5_prov",
+      "path": "script_manual/annotations/battle/evidence/n5_provenance_20261016.txt",
+      "sha256": "723920dc7fbdfdc0c03603c546f866aa882fbe5733442a66aecdef4a5602b7e3",
+      "kind": "metadata",
+      "note": "N5 本轮定点恢复回执：命令、引擎版本、输入/工具/候选/pyc 摘要、损坏标识符清单与只读边界。"
+    },
+    {
+      "id": "n5_census",
+      "path": "script_manual/annotations/battle/evidence/n5_codecensus_20261016.txt",
+      "sha256": "32bf184461de4713d94d8bcde0dadb11fadbed06827235d73628a3a0d2973ad1",
+      "kind": "metadata",
+      "note": "码对象普查：本条目 27 个码对象（2 个类 + 25 个函数/方法），形参来自 co_varnames[:co_argcount]，与候选 def 行逐条一致。"
+    },
+    {
+      "id": "ewarctrl_src",
+      "path": "script_manual/annotations/battle/evidence/e_warctrl_8_excerpt.txt",
+      "sha256": "963756669b1c48c30a6f35d270e46a0cb7854e46b19db389e28b4d9c484da554",
+      "kind": "metadata",
+      "note": "entry 8 去头候选（SHA bd97d6af…，与 A 的 BDF 收据一致）的**完整**摘录（去头正文 1-170 行），L 前缀保留候选行号。仍是反编译产物，不是原始源码。"
+    },
+    {
+      "id": "catalog",
+      "path": "server/docs/catalog/script_entries.jsonl",
+      "sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+      "kind": "metadata",
+      "note": "历史目录；行号 = entry_index+1，用于钉住被引模块的 entry 身份。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "n5_prov",
+      "source_id": "n5_prov",
+      "start_line": 1,
+      "end_line": 62
+    },
+    {
+      "id": "n5_census_all",
+      "source_id": "n5_census",
+      "start_line": 8,
+      "end_line": 300
+    },
+    {
+      "id": "ew_module",
+      "source_id": "ewarctrl_src",
+      "start_line": 17,
+      "end_line": 43
+    },
+    {
+      "id": "ew_cwarctrl",
+      "source_id": "ewarctrl_src",
+      "start_line": 47,
+      "end_line": 127
+    },
+    {
+      "id": "ew_cplayctrl",
+      "source_id": "ewarctrl_src",
+      "start_line": 131,
+      "end_line": 192
+    },
+    {
+      "id": "catalog_self",
+      "source_id": "catalog",
+      "start_line": 9,
+      "end_line": 9
+    },
+    {
+      "id": "catalog_e_warcmdmgr",
+      "source_id": "catalog",
+      "start_line": 632,
+      "end_line": 632
+    },
+    {
+      "id": "catalog_e_warinterface",
+      "source_id": "catalog",
+      "start_line": 2436,
+      "end_line": 2436
+    },
+    {
+      "id": "catalog_timer",
+      "source_id": "catalog",
+      "start_line": 3154,
+      "end_line": 3154
+    },
+    {
+      "id": "catalog_slot",
+      "source_id": "catalog",
+      "start_line": 4425,
+      "end_line": 4425
+    },
+    {
+      "id": "catalog_testdrawmagic",
+      "source_id": "catalog",
+      "start_line": 3543,
+      "end_line": 3543
+    },
+    {
+      "id": "catalog_e_debugctrl",
+      "source_id": "catalog",
+      "start_line": 2014,
+      "end_line": 2014
+    }
+  ],
+  "relationships": [
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 631
+      },
+      "symbol": "e_warcmdmgr.CWarCmdMgr",
+      "summary": {
+        "text": "CPlayCtrl 构造时新建命令管理器，播放推进与结束判定全部委托给它。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cplayctrl"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2435
+      },
+      "symbol": "e_warinterface",
+      "summary": {
+        "text": "_OnUpdate 前后各调一次 OnTimeUpdateBefore/After，异常走 OnUpdateError；_removeSkill 里的技能结束回调名在候选里损坏。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3153
+      },
+      "symbol": "timer.Timer",
+      "summary": {
+        "text": "StartTimer 用 timer.Timer(0.033, self.OnUpdate, -1, self) 起常驻帧回调；只看到调用点，timer.Timer 的实现未取，参数语义未验证。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl",
+          "catalog_timer"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "imports",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4424
+      },
+      "symbol": "slot.ISignalSubject",
+      "summary": {
+        "text": "CPlayCtrl 继承它并转发 TriggerSignal → ssEmit。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cplayctrl"
+        ]
+      }
+    },
+    {
+      "direction": "downstream",
+      "kind": "calls",
+      "module": {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3542
+      },
+      "symbol": "GetTestDrawMagic().WriteInfo",
+      "summary": {
+        "text": "_removeSkill 每次回收都会写一次调试信息（生产环境是否也应如此未验证）。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "ew_cwarctrl"
+        ]
+      }
+    },
+    {
+      "direction": "upstream",
+      "kind": "calls",
+      "module": null,
+      "symbol": null,
+      "summary": {
+        "text": "谁调用 GetWarCtrl/PlaySkill/RemoveSkill 不在本条目内，本轮无跨模块证据；war.py（entry 697）的 Perform 新法术管线是候选方向，未确认。",
+        "confidence": "inferred",
+        "evidence": [
+          "ew_module"
+        ]
+      }
+    }
+  ]
+}

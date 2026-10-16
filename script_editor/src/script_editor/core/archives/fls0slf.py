@@ -6,6 +6,7 @@
 * 目录为 count 条 16 字节记录 ``<IIII (entry_id, r1, r2, r3)>``，
   其中真实的负载长度与偏移被混淆，用 :func:`decode_directory`
   的闭式变换还原（与客户端一致，常量来自既有逆向成果）。
+* 负载可在目录前或目录后，但不能与头部/目录重叠或超出文件。
 * 负载即条目的"存储字节"：美术包为原始字节，script.fls 为 zlib 流。
   本模块只搬运存储字节，不做任何解压。
 
@@ -99,8 +100,17 @@ def parse_index(reader: RandomReader) -> Fls0SlfIndex:
     for index in range(count):
         raw = struct.unpack_from("<IIII", dir_data, index * DIR_RECORD_SIZE)
         clen, doff = decode_directory(index, raw)
-        if doff < 12 or doff + clen > dir_offset:
-            raise ContainerError(f"条目 {index} 负载越界，文件可能损坏")
+        if (
+            doff < 12
+            or doff + clen > reader.size
+            or (doff < dir_offset + dir_size and doff + clen > dir_offset)
+        ):
+            raise ContainerError(
+                f"条目 {index} 负载越界：解码偏移={doff}，长度={clen}，"
+                f"目录范围=[{dir_offset}, {dir_offset + dir_size})，"
+                f"文件大小={reader.size}；"
+                "可能是文件不完整或目录格式不匹配，请先做只读诊断，勿覆盖原包"
+            )
         metas.append(EntryMeta(entry_id=raw[0], r1=raw[1]))
         spans.append(EntrySpan(offset=doff, length=clen))
     return Fls0SlfIndex(metas=metas, spans=spans)

@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
+from threading import Event
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from ..core.project.document import Binding
 from ..core.services.files import save_new_source
 from ..core.services.module_browser import read_module
+from ..core.services.module_paths import display_module_path
 from ..core.services.workflow import Snapshot, prepare_build
 
 
@@ -34,7 +36,14 @@ class ModuleActions:
         if existing is not None:
             self.tabs.setCurrentWidget(existing)
             if not reload:
-                return
+                if (
+                    existing.source_kind != "module-unavailable"
+                    or existing.editor.document().isModified()
+                    or self.catalog_for(archive) is None
+                ):
+                    return
+                # Retry an untouched old failure tab after catalog association
+                # becomes available. Never replace an editable recovery draft.
             if existing.source_kind != "module-unavailable":
                 self.fail(
                     "已有恢复稿/源码保留，不能重新读取覆盖编辑。请先另存并关闭该标签。"
@@ -63,10 +72,14 @@ class ModuleActions:
             )
             tab.draft_saved = False
             tab.attach_report(report)
+            tab.candidate_requested.connect(self.open_recovery_candidate)
             if report.filename_hex:
-                self.module_names[(report.archive, report.index)] = repr(
-                    bytes.fromhex(report.filename_hex)
-                )
+                try:
+                    self.module_names[(report.archive, report.index)] = (
+                        display_module_path(bytes.fromhex(report.filename_hex))
+                    )
+                except ValueError:
+                    pass  # An invalid name must not discard a recovered draft.
             if report.source:
                 tab.editor.document().setModified(True)
             self.info.setPlainText(
@@ -82,7 +95,69 @@ class ModuleActions:
             self.output_dock.show()
             self.refresh_native_action()
 
-        self.task(lambda: read_module(archive, index, catalog), complete)
+        cancel = Event()
+
+        def recover():
+            if any(r.archive == archive.path for r in self.corpus_refs):
+                from ..core.services.corpus_recovery import corpus_report
+
+                try:
+                    return corpus_report(
+                        self.corpus_for(archive), archive, index, catalog
+                    )
+                except (OSError, ValueError) as exc:
+                    result = read_module(archive, index, catalog, cancel=cancel)
+                    return replace(
+                        result,
+                        diagnostics=("语料不可用：" + str(exc), *result.diagnostics),
+                    )
+            return read_module(archive, index, catalog, cancel=cancel)
+
+        self.task(
+            recover,
+            complete,
+            cancel=cancel,
+        )
+
+    def open_recovery_candidate(self, report):
+        # A fresh tab, never mutate/replace a user's current candidate or edits.
+        suffix = (
+            "." + report.corpus_manifest_sha256[:12]
+            if report.corpus_manifest_sha256
+            else ""
+        )
+        virtual = report.archive.parent / (
+            f".{report.archive.name}.{report.index}.{report.selected_engine}{suffix}.recovered.py"
+        )
+        for i in range(self.tabs.count()):
+            existing = self.tabs.widget(i)
+            origin = existing.recovery
+            same_origin = origin is not None and (
+                origin.archive,
+                origin.fingerprint,
+                origin.index,
+                origin.selected_engine,
+                origin.corpus_manifest_sha256,
+                origin.candidate_pyc_sha256,
+            ) == (
+                report.archive,
+                report.fingerprint,
+                report.index,
+                report.selected_engine,
+                report.corpus_manifest_sha256,
+                report.candidate_pyc_sha256,
+            )
+            if existing.path == virtual.resolve() or same_origin:
+                self.tabs.setCurrentWidget(existing)
+                return existing
+        tab = self.add_source(
+            virtual, vm=report.vm, text=report.source, source_kind="recovered-draft"
+        )
+        tab.draft_saved = False
+        tab.attach_report(report)
+        tab.candidate_requested.connect(self.open_recovery_candidate)
+        tab.editor.document().setModified(True)
+        return tab
 
     def save_draft(self, tab):
         if tab.draft_saved:
@@ -100,6 +175,7 @@ class ModuleActions:
             c.path for c in self.catalogs
         )
         protected += tuple(b.source for b in self.bindings)
+        self.assert_writable_target(path)
         save_new_source(path, tab.editor.toPlainText(), protected)
         tab.path, tab.draft_saved = path, True
         tab.path_label.setToolTip(str(path))
@@ -147,6 +223,17 @@ class ModuleActions:
                 from ..core.inspection.native import inspect_module
 
                 standard, filename, _ = inspect_module(archive, index, catalog)
+                if origin and (
+                    (origin.corpus_manifest_sha256 and not origin.candidate_pyc_sha256)
+                    or (
+                        origin.candidate_pyc_sha256
+                        and hashlib.sha256(standard).hexdigest()
+                        != origin.candidate_pyc_sha256
+                    )
+                ):
+                    raise ValueError(
+                        "外部语料pyc与原包严格来源不同；可编辑草稿，但不能据此采用发布"
+                    )
                 binding = replace(
                     Binding.associate(archive, index, tab.path),
                     filename_hex=filename.hex(),

@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "id": "main-loop",
+  "title": "理解主循环：启动、网络泵、战斗、重登与退出",
+  "domain": "login",
+  "author": "A",
+  "editorial_status": "draft_unreviewed",
+  "summary": "按Loop状态与退出时点阅读main，而不是将所有ProcessServerCmd或关闭函数视作同一入口。",
+  "keywords": [
+    "主循环",
+    "网络",
+    "战斗切换",
+    "重登",
+    "退出",
+    "Loop",
+    "MainLoop",
+    "Quit"
+  ],
+  "prerequisites": [
+    "只读研究和在独立副本修改；不覆盖原包、不运行恢复模块、不请求真实业务URL。",
+    "本专题是A新编排草稿，引用模块有限accepted不能转移成专题accepted；先核版本、正文SHA和证据。"
+  ],
+  "steps": [
+    {
+      "title": "启动与主循环先分开",
+      "explanation": "Start调用StartStep1，后者触发OnGameStart等初始化；Loop初值是MainLoop。启动过程和每次循环执行不是同一个生命周期阶段。",
+      "change": "初始化需求定位Start/StartStep1；每次循环需求定位MainLoop，避免重复初始化或在循环里重新注册。",
+      "check": "核谁设置Loop、何时调用Loop的原生侧仍需另证；当前只确定候选赋值/函数体，不声称原生帧率。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4293,
+          "annotation_sha256": "f5eff3f1f3a95bc9373bd903c2a404a795308557801f1ce0268525f768698692",
+          "function": "StartStep1",
+          "evidence_ids": [
+            "start"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4293,
+          "annotation_sha256": "f5eff3f1f3a95bc9373bd903c2a404a795308557801f1ce0268525f768698692",
+          "function": "SetMainLoop",
+          "evidence_ids": [
+            "warloop"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "MainLoop包含多套网络泵和模块回调",
+      "explanation": "Quit真时返回1；否则依次处理cursor/addon、net、netserver、connect、netquicklogin、HTTP/HTTPS、其它组件、timer与CModuleLoop。同名ProcessServerCmd是不同模块实现。",
+      "change": "排查连接/请求问题要定位对应模块的泵和状态，不能仅凭相同函数名全改；新增循环回调需核CModuleLoop的注册/删除契约。",
+      "check": "按mainloop/moduleloop/net_multi证据列调用顺序与守卫；未解的下游内部语义继续标缺口。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4293,
+          "annotation_sha256": "f5eff3f1f3a95bc9373bd903c2a404a795308557801f1ce0268525f768698692",
+          "function": "MainLoop",
+          "evidence_ids": [
+            "mainloop",
+            "moduleloop",
+            "net_multi"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "战斗只是切Loop，并非另起已证实的线程",
+      "explanation": "SetWarLoop赋Loop=WarLoop；WarLoop非暂停时war.Process(True)，之后仍调用MainLoop；SetMainLoop将Loop写回MainLoop。这里只证明函数指针式赋值与调用。",
+      "change": "改战斗阶段每次处理应定位WarLoop与war.Process；退出战斗的普通/录像分支不同，不给所有结束路径强塞NextCmd。",
+      "check": "用静态路径分别核暂停/非暂停、普通结束/录像关闭；原生调用时机及线程模型未证实。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4293,
+          "annotation_sha256": "f5eff3f1f3a95bc9373bd903c2a404a795308557801f1ce0268525f768698692",
+          "function": "WarLoop",
+          "evidence_ids": [
+            "warloop"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 697,
+          "annotation_sha256": "3e2a00ab67215267c471a9d60b90a09b743d765da46ae94571eabd6de20400d7",
+          "function": "End",
+          "evidence_ids": [
+            "w_end"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Restart先走过渡态，不立即恢复主循环",
+      "explanation": "Restart清理/重建部分状态后令Loop=AfterRestart、RestartTimes=2；AfterRestart每次递减，恰为0才SetMainLoop。计数不能直接说成实测毫秒或固定帧率。",
+      "change": "重登问题要同时读Restart、AfterRestart与doreturn调度，不把重置完成与恢复循环视作同时发生。",
+      "check": "核旧net断开/替换、HTTP清理与Loop赋值顺序；未确认的原生/下游回调不补成保证。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4293,
+          "annotation_sha256": "f5eff3f1f3a95bc9373bd903c2a404a795308557801f1ce0268525f768698692",
+          "function": "Restart",
+          "evidence_ids": [
+            "restart"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4293,
+          "annotation_sha256": "f5eff3f1f3a95bc9373bd903c2a404a795308557801f1ce0268525f768698692",
+          "function": "AfterRestart",
+          "evidence_ids": [
+            "warloop",
+            "doreturn"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "退出：CloseGame并非立即Quit=True",
+      "explanation": "ExitGame含not IsShowMainPage守卫；CloseGame做保存/通知后调度DoCloseGame，后者才置Quit=True。doexit请求关闭，doreturn安排重登录；取消也有单独分支。",
+      "change": "修改退出提示、保存或重登时按各入口职责处理，不反转条件名、不删延迟回调或把“返回登录”改成“退出进程”。",
+      "check": "核直接Quit分支、确认/取消/重新登录及延迟Quit时点；这些必须补原生测试，静态说明不是退出无损保证。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4293,
+          "annotation_sha256": "f5eff3f1f3a95bc9373bd903c2a404a795308557801f1ce0268525f768698692",
+          "function": "CloseGame",
+          "evidence_ids": [
+            "close"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4293,
+          "annotation_sha256": "f5eff3f1f3a95bc9373bd903c2a404a795308557801f1ce0268525f768698692",
+          "function": "ExitGame",
+          "evidence_ids": [
+            "exit",
+            "doreturn"
+          ]
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "main入口/循环频率/原生事件时序和各下游模块内部行为不由此候选完整证明。",
+    "每步修改建议与检查清单尚非实机结果；未证实的跨模块连接不补成完整链。",
+    "专题还需非作者独立内容复核；Windows、原生引擎和真实服务端未由本专题验收。"
+  ]
+}

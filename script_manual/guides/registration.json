@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "id": "registration",
+  "title": "修改注册：地区入口、普通注册、2980与验证码",
+  "domain": "login",
+  "author": "A",
+  "editorial_status": "draft_unreviewed",
+  "summary": "将注册分成首页分流、普通三步、2980独立流程与确认框，建立布局/逻辑对照，避免把两套注册混成一条链。",
+  "keywords": [
+    "注册",
+    "验证码",
+    "邮箱",
+    "手机号",
+    "reg2.dlg",
+    "2980",
+    "OnRegisterGame"
+  ],
+  "prerequisites": [
+    "只读研究和在独立副本修改；不覆盖原包、不运行恢复模块、不请求真实业务URL。",
+    "本专题是A新编排草稿，引用模块有限accepted不能转移成专题accepted；先核版本、正文SHA和证据。"
+  ],
+  "steps": [
+    {
+      "title": "先确认当前版本是否走客户端注册",
+      "explanation": "首页OnMessage(2)在IsTWServer()真时按语言值打开外部REGISTER_URL；仅非TW分支隐藏首页并register.Show(True)。不能因包里有注册面板就认定当前地区会打开它。",
+      "change": "先查地区入口与跳转，再决定改客户端面板还是外部注册页面；本工具不请求注册服务或替换外部页面。",
+      "check": "核两个谓词的真实作用域；确认需求指向的是客户端流程，不把没有走到的布局改动当作失效。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 337,
+          "annotation_sha256": "ce4dba86bfb2c9dc71c28b6afdfbac9c3f962b3e8776c037d94dacfc37a5d5d5",
+          "function": "CMainPage.OnMessage",
+          "evidence_ids": [
+            "entry"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "布局对照：confirm不是普通步骤之一",
+      "explanation": "CConfirm用login/confirm.dlg；CRegPanel1是reg1，CRegPanel2是reg2；2980资料页用reg4。CRegPanel3_2980成功页用reg5，CRegPanel4普通完成页用reg3。Step索引只映射CRegPanel1、CRegPanel2、CRegPanel4，不含CConfirm。",
+      "change": "布局修改与逻辑修改分开；CreateEdits/输入限制在脚本，不因布局文件名就猜创建出来的控件类型。保留原生UI编辑工作流，不一次性写补丁覆盖用户布局。",
+      "check": "核各面板构造字符串及Step实际映射；布局文件内容本轮未验证，不能把构造路径存在等同布局能运行。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4007,
+          "annotation_sha256": "3372b8537aeb3d687aa4279b0b92f6f579654ee49a36c6fc5b1a835320e25551",
+          "function": "CConfirm",
+          "evidence_ids": [
+            "confirm"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4007,
+          "annotation_sha256": "3372b8537aeb3d687aa4279b0b92f6f579654ee49a36c6fc5b1a835320e25551",
+          "function": "CRegPanel2",
+          "evidence_ids": [
+            "reg2"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4007,
+          "annotation_sha256": "3372b8537aeb3d687aa4279b0b92f6f579654ee49a36c6fc5b1a835320e25551",
+          "function": "CRegPanel2_2980",
+          "evidence_ids": [
+            "reg2_2980"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4007,
+          "annotation_sha256": "3372b8537aeb3d687aa4279b0b92f6f579654ee49a36c6fc5b1a835320e25551",
+          "function": "Step",
+          "evidence_ids": [
+            "panels34",
+            "stepshow"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "普通注册：条款→资料→提交，字段校验在DoCheck",
+      "explanation": "CRegPanel1同意消息进入Step(1)；CRegPanel2收集资料，DoNext校验通过才发起注册请求。密码/邮箱/验证码规则在DoCheck、CheckEmail与CreateEdits，不是OnRegisterGame才校验输入。",
+      "change": "调整字段时同时核输入限制、校验规则和提交取值；不要在这里更改协议字段/哈希格式后假定服务端兼容。",
+      "check": "为每个字段列空值、长度边界、不一致和合法值的测试方案；仅在安全离线/授权环境验证，不发真实注册请求。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4007,
+          "annotation_sha256": "3372b8537aeb3d687aa4279b0b92f6f579654ee49a36c6fc5b1a835320e25551",
+          "function": "CRegPanel1.OnMessage",
+          "evidence_ids": [
+            "reg1"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4007,
+          "annotation_sha256": "3372b8537aeb3d687aa4279b0b92f6f579654ee49a36c6fc5b1a835320e25551",
+          "function": "CRegPanel2.DoCheck",
+          "evidence_ids": [
+            "reg2"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4007,
+          "annotation_sha256": "3372b8537aeb3d687aa4279b0b92f6f579654ee49a36c6fc5b1a835320e25551",
+          "function": "CRegPanel2.DoNext",
+          "evidence_ids": [
+            "reg2"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "普通注册结果与验证码刷新错误要分开",
+      "explanation": "OnRegisterGame错误120要求验证码并ShowRegisterCheckCode；其它非零走ShowError；成功写账号信息并Step(2)。OnRegCode则在解析失败或err非零时ShowRegisterCodeFail，成功才显示验证码；它不等同注册成功。",
+      "change": "验证码问题先分辨是注册要求验证码、刷新验证码失败还是输入校验失败，再选择回调；不要用同一成功标记覆盖三种状态。",
+      "check": "检查120、其它错误、成功，以及验证码解析失败/非零/成功各自出口；测试计划不等于已执行游戏回调。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4007,
+          "annotation_sha256": "3372b8537aeb3d687aa4279b0b92f6f579654ee49a36c6fc5b1a835320e25551",
+          "function": "OnRegisterGame",
+          "evidence_ids": [
+            "callbacks"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4007,
+          "annotation_sha256": "3372b8537aeb3d687aa4279b0b92f6f579654ee49a36c6fc5b1a835320e25551",
+          "function": "OnRegCode",
+          "evidence_ids": [
+            "callbacks"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "2980是另一套结果，不是普通Step(2)",
+      "explanation": "2980资料页的DoRegist走其独立请求。OnRegister在Code==250时保存账号并Register2980(1)，构造其成功页；不能与普通OnRegisterGame的成功链混为一谈。",
+      "change": "改手机/邮箱检查先去CRegPanel2_2980相应规则；改结果跳转去OnRegister/Register2980，不改普通Step映射凑合。",
+      "check": "将普通/2980两套入口、请求、结果码和落点分别列清；未知返回码与损坏字串保留待核。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4007,
+          "annotation_sha256": "3372b8537aeb3d687aa4279b0b92f6f579654ee49a36c6fc5b1a835320e25551",
+          "function": "CRegPanel2_2980.DoRegist",
+          "evidence_ids": [
+            "reg2_2980"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4007,
+          "annotation_sha256": "3372b8537aeb3d687aa4279b0b92f6f579654ee49a36c6fc5b1a835320e25551",
+          "function": "OnRegister",
+          "evidence_ids": [
+            "callbacks"
+          ]
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "不保证注册服务可用；布局资源内容、服务端校验与损坏字串含义未验证。",
+    "每步修改建议与检查清单尚非实机结果；未证实的跨模块连接不补成完整链。",
+    "专题还需非作者独立内容复核；Windows、原生引擎和真实服务端未由本专题验收。"
+  ]
+}

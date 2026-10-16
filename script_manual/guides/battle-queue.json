@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "id": "battle-queue",
+  "title": "修改战斗表现：解包、入队、执行、等待和结束",
+  "domain": "battle",
+  "author": "A",
+  "editorial_status": "draft_unreviewed",
+  "summary": "把netwar收包和war表现队列连接起来，明确录像过滤、非终止推进和End的关闭/切循环例外。引用battle正文仍待非A独审。",
+  "keywords": [
+    "战斗",
+    "技能",
+    "队列",
+    "CCmd",
+    "NextCmd",
+    "Wait",
+    "End",
+    "SetMainLoop"
+  ],
+  "prerequisites": [
+    "只读研究和在独立副本修改；不覆盖原包、不运行恢复模块、不请求真实业务URL。",
+    "本专题是A新编排草稿，引用模块有限accepted不能转移成专题accepted；先核版本、正文SHA和证据。"
+  ],
+  "steps": [
+    {
+      "title": "解包是构造命令，不是立即播放完技能",
+      "explanation": "S2CWarPerform构造war.CCmd(war.Perform)并解包字段；CCmd.__init__只有录像过滤IsFilter为假才设置属性并append到g_Cmds。对象构造不等于已入队、已执行或计算出伤害。",
+      "change": "新增表现先定位对应S2C*和war回调；协议字段应各方向匹配服务端，不能要求C2S/S2C因名字对应就对称。此处不改真实协议。",
+      "check": "逐项核过滤真/假、字段来源和回调身份；未读的下游/服务端计算不按名字猜补。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 1406,
+          "annotation_sha256": "614bef9d870b118b1e58bf9593e5297de08a3da4cf7b819adfc5f15d27bd766a",
+          "function": "S2CWarPerform",
+          "evidence_ids": [
+            "nw_def_S2CWarPerform"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 697,
+          "annotation_sha256": "3e2a00ab67215267c471a9d60b90a09b743d765da46ae94571eabd6de20400d7",
+          "function": "CCmd.__init__",
+          "evidence_ids": [
+            "w_ccmd"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "SetProcess登记，Process才执行；NextCmd取队首",
+      "explanation": "SetProcess保存函数及参数而不立即执行；NextCmd先清理已用命令，非空时取队首并删除，再SetProcess+Process(False)；空队列有自身调度形态。Process的异常路径回落NextCmd，但不能推成所有情况自动推进。",
+      "change": "表现不动时分别查是否入队、是否被取出、当前处理函数及异常；不要仅加一次NextCmd掩盖等待条件。",
+      "check": "结合w_setprocess/w_process/w_nextcmd逐步定位停在哪个阶段；计数限制和异常形态按候选，不声称所有运行期路径已穷尽。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 697,
+          "annotation_sha256": "3e2a00ab67215267c471a9d60b90a09b743d765da46ae94571eabd6de20400d7",
+          "function": "SetProcess",
+          "evidence_ids": [
+            "w_setprocess"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 697,
+          "annotation_sha256": "3e2a00ab67215267c471a9d60b90a09b743d765da46ae94571eabd6de20400d7",
+          "function": "Process",
+          "evidence_ids": [
+            "w_process"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 697,
+          "annotation_sha256": "3e2a00ab67215267c471a9d60b90a09b743d765da46ae94571eabd6de20400d7",
+          "function": "NextCmd",
+          "evidence_ids": [
+            "w_nextcmd"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Wait等对象完成；终止命令不受继续推进要求",
+      "explanation": "Wait在对象未完成或动作队列非空时不推进，全部完成后NextCmd。仍需消费队列的非终止回调应检查后续调度；End普通分支SetMainLoop，录像分支CloseGame返回，都不是漏写NextCmd导致队列卡住。",
+      "change": "修改非终止表现先核等待对象生命周期；修改结束回调则核离场与切循环，不向结束/关闭路径强塞Wait或NextCmd。",
+      "check": "分别设计对象未完成/已完成、普通结束/录像关闭检查；仅为建议，未执行恢复模块或实机动画。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 697,
+          "annotation_sha256": "3e2a00ab67215267c471a9d60b90a09b743d765da46ae94571eabd6de20400d7",
+          "function": "Wait",
+          "evidence_ids": [
+            "w_wait"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 697,
+          "annotation_sha256": "3e2a00ab67215267c471a9d60b90a09b743d765da46ae94571eabd6de20400d7",
+          "function": "End",
+          "evidence_ids": [
+            "w_end"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4293,
+          "annotation_sha256": "f5eff3f1f3a95bc9373bd903c2a404a795308557801f1ce0268525f768698692",
+          "function": "SetMainLoop",
+          "evidence_ids": [
+            "warloop"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "战斗结束包和真正离场是两个阶段",
+      "explanation": "S2CWarEnd有录像等待/已结束守卫，其自身不切主循环；它构造war.CCmd(war.End)。war.End才在普通分支切回MainLoop或在录像分支关闭。",
+      "change": "排查结束后仍在战斗应区分包被守卫拦截、命令过滤/未执行、End的具体分支；不要在netwar结尾直接补SetMainLoop跳过表现收尾。",
+      "check": "按三个阶段检查证据及局限；录像/网络/帧级时序需独立原生验证。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 1406,
+          "annotation_sha256": "614bef9d870b118b1e58bf9593e5297de08a3da4cf7b819adfc5f15d27bd766a",
+          "function": "S2CWarEnd",
+          "evidence_ids": [
+            "nw_def_S2CWarEnd",
+            "war_end_ref"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 697,
+          "annotation_sha256": "3e2a00ab67215267c471a9d60b90a09b743d765da46ae94571eabd6de20400d7",
+          "function": "End",
+          "evidence_ids": [
+            "w_end"
+          ]
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "本专题引用的war/netwar有A共同改写，当前仍pending；任何UI呈现都不得把它们升级为已独审。",
+    "真实伤害/命中/AI/服务端裁决不在这些表现回调内；没有帧级或网络实测。",
+    "每步修改建议与检查清单尚非实机结果；未证实的跨模块连接不补成完整链。",
+    "专题还需非作者独立内容复核；Windows、原生引擎和真实服务端未由本专题验收。"
+  ]
+}
