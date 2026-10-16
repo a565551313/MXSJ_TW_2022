@@ -239,11 +239,12 @@
       "actual_agent_session": null,
       "fixed_branch": "Assigned by Arena to the NEW session; never reuse old role branches",
       "submitted_PR": 44,
-      "fixed_head": "e2fb1aa1fd9019a84df391c13d68e3ec3d9179b6",
+      "fixed_head": "6fd5061dded82bbbcfc96694a5c20ef1a7a3e41e",
       "actual_fixed_branch": "arena/ae1bd730-mxsj-tw-2022",
-      "A_review_recommendation": "changes_requested_B-N5-01_to_03; await_new_N5_head_and_N7_review",
-      "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/44#issuecomment-6206333803",
-      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented."
+      "A_review_recommendation": "original_B-N5-01_to_03_closed; B-N5-04_P2_nonterminating_callback_scope_fix_pending; then_N7_independent_review",
+      "A_review_comment": "https://github.com/a565551313/MXSJ_TW_2022/pull/44#issuecomment-6206634114",
+      "session_identity_note": "New agent confirmed by delivered PR branch and author/report; opaque Arena session ID not known and not invented.",
+      "round2_report": "docs/evidence/script_manual_N5_6fd5061_A_review_20261016.md"
     },
     {
       "id": "N6",
@@ -362,6 +363,7 @@
     "state": "seven_NEW_agents_submitted_PRs_A_reviewed_no_merges",
     "report": "docs/evidence/script_manual_new_cohort_A_review_20261016.md",
     "formal_content_baseline": "9b0dea799768aaacbb967ffc59f45753970752be",
-    "note": "Original baseline_coverage remains the handoff snapshot. PRs are not yet merged. Four finite integration candidates, N2 awaits N7, N5 threeP2, N7 partial tail review outstanding."
+    "note": "N5 PR44 updated to6fd5061: original3P2 closed, one guide-scope P2 B-N5-04 remains. N1/N3/N4/N6 finite candidates, N2/N5 await independent N7 tail review. No PR merges or formal review activation.",
+    "N5_round2_report": "docs/evidence/script_manual_N5_6fd5061_A_review_20261016.md"
   }
 }

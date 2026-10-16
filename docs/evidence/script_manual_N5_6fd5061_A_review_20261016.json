@@ -1,0 +1,199 @@
+{
+  "head": "6fd5061dded82bbbcfc96694a5c20ef1a7a3e41e",
+  "previous_head": "e2fb1aa1fd9019a84df391c13d68e3ec3d9179b6",
+  "original_findings": {
+    "B-N5-01": "closed",
+    "B-N5-02": "closed",
+    "B-N5-03": "closed"
+  },
+  "new_finding": "B-N5-04",
+  "raw_ID_checks": [
+    {
+      "entry": 697,
+      "ID": "0x206d634b",
+      "directory_report_body_SHA_match": true,
+      "body_sha256": "a6a81ad68ea82e0fbe028627b7d88c734ab56b889c79e1aa50da421b4a02f7b7"
+    },
+    {
+      "entry": 1406,
+      "ID": "0x458cd0df",
+      "directory_report_body_SHA_match": true,
+      "body_sha256": "242c5e7ab2d4f6c0f2f25105654586a6f7b80a66c682a8927f99ad5773f884da"
+    },
+    {
+      "entry": 1612,
+      "ID": "0x50646bdf",
+      "directory_report_body_SHA_match": true,
+      "body_sha256": "60f0e56950f96c9951029f6de2665bf16d0cb3fb7bc4cbb6d1adf312e16541fa"
+    },
+    {
+      "entry": 8,
+      "ID": "0x5d26b3",
+      "directory_report_body_SHA_match": true,
+      "body_sha256": "bd97d6af2a54a26eacf1bb6c6cf14edc0843800dd8fa7f7234a88ec6034022ad"
+    }
+  ],
+  "excerpt_lines": {
+    "war_697_excerpt.txt": 2000,
+    "warcmd_1612_excerpt.txt": 38,
+    "e_warctrl_8_excerpt.txt": 170
+  },
+  "annotation_SHA": {
+    "e_warctrl.json": "171bdccf368d82ffdc786396ccfc2869bd30f15db8413bd0b2e3929b5ebbb541",
+    "netwar.json": "67caf6ed51d81dfa96e46a48fb0ff5fd63d3a4be74325ed8bfab1c72c49ecfb1",
+    "war.json": "3f1da9509a05dcd3af0b0edf1bc33ea204cb39c775e4893b5972bba927f4cf88",
+    "warcmd.json": "b30331ba00e6ede84c47b590b8f9ba6b8462839fecae1ff150a776dab8633da5"
+  },
+  "function_and_branch_counts": {
+    "e_warctrl.json": {
+      "functions": 27,
+      "branches": 10
+    },
+    "netwar.json": {
+      "functions": 86,
+      "branches": 12
+    },
+    "war.json": {
+      "functions": 153,
+      "branches": 43
+    },
+    "warcmd.json": {
+      "functions": 1,
+      "branches": 2
+    }
+  },
+  "candidate_ranges": {
+    "Process": {
+      "start": 227,
+      "end": 250,
+      "NextCmd_call_lines": [
+        246
+      ],
+      "SetProcessWait_call_lines": [],
+      "SetMainLoop_lines": [],
+      "CloseGame_lines": []
+    },
+    "Wait": {
+      "start": 251,
+      "end": 263,
+      "NextCmd_call_lines": [
+        260
+      ],
+      "SetProcessWait_call_lines": [],
+      "SetMainLoop_lines": [],
+      "CloseGame_lines": []
+    },
+    "NextCmd": {
+      "start": 295,
+      "end": 309,
+      "NextCmd_call_lines": [],
+      "SetProcessWait_call_lines": [],
+      "SetMainLoop_lines": [],
+      "CloseGame_lines": []
+    },
+    "End": {
+      "start": 1900,
+      "end": 1974,
+      "NextCmd_call_lines": [],
+      "SetProcessWait_call_lines": [],
+      "SetMainLoop_lines": [
+        1927
+      ],
+      "CloseGame_lines": [
+        1909
+      ]
+    }
+  },
+  "isolated": {
+    "coverage": {
+      "expected_entries": 5135,
+      "indexed": 5135,
+      "annotated": 20,
+      "accepted": 3,
+      "excluded": 1
+    },
+    "warnings": [],
+    "status": {
+      "pending": 12,
+      "accepted": 3,
+      "changes_requested": 5
+    }
+  },
+  "external_combined_only": {
+    "coverage": {
+      "expected_entries": 5135,
+      "indexed": 5135,
+      "annotated": 20,
+      "accepted": 12,
+      "excluded": 1
+    },
+    "warnings": [
+      "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:337",
+      "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:4007",
+      "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:4293",
+      "说明已变化，审核过期：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72:4806"
+    ],
+    "status": {
+      "accepted": 12,
+      "pending": 4,
+      "stale_review": 4
+    }
+  },
+  "tests": {
+    "ran": 82,
+    "passed": 71,
+    "skipped": 11,
+    "failed": 0,
+    "skip_reason": "PySide6 absent; GUI not run",
+    "log_sha256": "44ea1d7c57c54e8001dff4845b7f6fa5da45220294e800b9d8b6d5413b03ad21"
+  },
+  "ruff_including_spec_passed": true,
+  "windows_static": {
+    "root": "/home/user/manual-newcohort-review-20261016/N5-round2",
+    "source": "walk",
+    "scanned_files": 27,
+    "listed_paths": 133,
+    "findings": []
+  },
+  "formal_reviews_changed_or_PRs_merged": false,
+  "new_HTML_jsdom_or_runtime_checks_this_round": false,
+  "kind": "A_N5_second_round_fixed_head_review_NOT_merge",
+  "date": "2026-10-16",
+  "formal_A_head_before_review": "de600527d005ff73175613d591ef537d12eeddc5",
+  "head_parent_verified": "e2fb1aa1fd9019a84df391c13d68e3ec3d9179b6",
+  "fixed_head_changes_only_battle": true,
+  "comments": {
+    "PR44": "https://github.com/a565551313/MXSJ_TW_2022/pull/44#issuecomment-6206634114",
+    "PR45": "https://github.com/a565551313/MXSJ_TW_2022/pull/45#issuecomment-6206634333"
+  },
+  "finding_detail": {
+    "id": "B-N5-04",
+    "priority": "P2",
+    "path": "script_manual/annotations/battle/war.json:3770",
+    "claim": "modification_guides[1].answer",
+    "issue": "Universal requirement to advance every callback through NextCmd/SetProcess(Wait) includes End although End exits replay or switches main loop and does neither. Added Process/Wait claims also lack corresponding w_process/w_wait references in this guide.",
+    "counterexample": {
+      "start": 1900,
+      "end": 1974,
+      "NextCmd_call_lines": [],
+      "SetProcessWait_call_lines": [],
+      "SetMainLoop_lines": [
+        1927
+      ],
+      "CloseGame_lines": [
+        1909
+      ]
+    },
+    "requested_repair": "Limit advice to non-terminating callbacks that need continuing queue consumption; explicitly exclude battle end/close/switch-main-loop paths. Cite existing w_process/w_wait for added claims and mark recommendations/unknowns appropriately. Update response/war raw SHA only as needed."
+  },
+  "next": "N5 make one bounded guide fix on same PR44; N7 independently review repaired latest head. N2 new-byte tail review remains pending.",
+  "full_battle_semantic_acceptance": false,
+  "formal_coverage_unchanged": {
+    "indexed": 5135,
+    "annotated": 20,
+    "accepted": 3,
+    "excluded": 1,
+    "changes_requested": 5,
+    "pending": 12
+  }
+}

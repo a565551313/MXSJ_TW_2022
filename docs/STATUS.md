@@ -1,5 +1,7 @@
 # 项目当前状态（STATUS）
 
+> **N5二轮已核（2026-10-16）**：原PR44更新至6fd5061，原三项P2（ID/Release/Timer）均闭合；另有一处战斗指南须限定非终止回调（B-N5-04），同一候选war.End不走NextCmd/Wait就是反例。已评论N5并同步N7，小修后按新head末审，勿继续说原三项未修。未merge/未正式激活，正式仍5135/20/3/1。详§3.50及[二轮报告](evidence/script_manual_N5_6fd5061_A_review_20261016.md)。
+
 > **全新N1–N7七PR已复核（2026-10-16）**：PR39–45均已收到，勿重复启动七人。N1目录独立重放逐字节一致、32回归全过；N3/N4/N6的九份新N7模板SHA完全匹配，四项为有限集成候选。**N2仍待N7新字节尾审；N5发现3项P2已退修；N7为部分审核交付须补N2/N5。** 新PR均未合并，正式仍5135登记/20说明/3有限通过/1排除；外置模拟12通过不是正式值。本轮重建环境实跑82=71过+11缺PySide6跳过，来源/full、ruff、静态/完整HTML和jsdom（非真实浏览器/Qt）通过。详§3.49及[总复核报告](evidence/script_manual_new_cohort_A_review_20261016.md)。
 
 > **已合并现有成果并重新分给全新agent（2026-10-16）**：按用户授权，PR38/35/36/37及D固定提交均已合A，master未动。现**5135登记/20说明/3有限通过/5退修review/12待审/1排除**，合并不等于验收；B签名、C/F内容问题仍在。八份原A代审按原字节SHA核对后已激活，G不自批。全新N1–N7独立任务卡已备好，**不是恢复旧会话，均尚待用户启动**：[复制任务卡入口](../script_manual/coordination/NEW_AGENTS_START_20261016.md)。详§3.48。
@@ -48,7 +50,7 @@
 
 | 组件 | 版本/阶段 | 状态 | 本次实测 |
 |---|---|---|---|
-| 脚本开发手册（`script_manual/`） | dev3；正式5135登记/20说明/3有限通过/1排除；新PR39–45未合 | N1/N3/N4/N6有限集成候选；N2待N7新字节尾审，N5三P2退修，N7部分交付须补尾审 | 新环境组合层82=71过+11缺PySide6跳过；N1另32全过及真20种子重放；来源/full、ruff、静态/HTML、jsdom80页/搜索/跳转通过，非Qt/浏览器/实机；详§3.49 |
+| 脚本开发手册（`script_manual/`） | dev3；正式5135登记/20说明/3有限通过/1排除；新PR39–45未合 | N1/N3/N4/N6有限集成候选；N2待N7新字节尾审；N5二轮原三P2已闭合、余一处指南小修，N7仍需末审 | 新环境组合层82=71过+11缺PySide6跳过；N1另32全过及真20种子重放；来源/full、ruff、静态/HTML、jsdom80页/搜索/跳转通过，非Qt/浏览器/实机；详§3.49 |
 | 独立脚本编辑器（`script_editor/`） | 0.6.0.dev6 路径导航完整源码包已交付 | script路径优先、旧项目/参数确认/新包路径索引，严格恢复与双VM续编不放宽 | 源码/真实ZIP解压副本均325项中309通过、16许可外部材料跳过，60 GUI通过；原包路径4951/5002，51明确不可读；双Windows工具本轮重建/静态核验，未Windows/用户全包/游戏验收，详§3.39 |
 | 逆向研究（`notes/`, `work/`） | 结案：双 VM opcode 表、0SLF 目录/路径哈希、`.dlg` 2,706/2,901、协议号表 412 条、帧续读 2 字节；10-15 新增标题/聊天编码链路与 `GCODE=BIG5`/`GetGameRegion()='cn'` 结案（`notes/title_and_chat_encoding.md`） | 稳定；未决项见 AGENTS §7 | 锁定输入 SHA 匹配；`script.fls` 全量反编译补跑 4401/5002 完整（生成物不入库） |
 | 注册 UI 补丁（`tools/client_patches/`，历史） | v3.3 已作废 | 用户判定旧 overlay/整图烤字按钮/包外散图不符合原生规范，**勿再分发 v3/v3.2/v3.3**；新实现见下行 | 90/90 仅历史证据，不作为新实现验收依据 |
@@ -1423,3 +1425,13 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 - 模拟组合新跑82项=71过+11缺PySide6跳过/0失败；ruff含spec、Windows静态walk166路径/29源全0；HTML构建及jsdom实际脚本通过（4中文/函数搜索、3过滤、3路径identity导航、20篇×4页80次tab、hero→npc按钮跳转、N6/H身份）。非真实Qt/浏览器/CSP/Windows/EXE/游戏/原生/实服验收，无1288定点恢复或业务请求。
 - A澄清CONTRACT：evidence行号指sources.path自身物理行，L/R候选原行是另一套编号，避免改已审字节。恢复工具False双repr传字符串问题已确认，N2真实False直接API绕过且raw链吻合；本轮仅登记，不静默改冻结工具SHA。
 - 报告docs/evidence/script_manual_new_cohort_A_review_20261016.md；同名JSON含固定head/各PR评论、复现/检查/DOM指纹、N1回放及3项P2。下一步新N5修三项，新N7补尾审，A在授权/对应门槛满足后再集成并重跑，不改历史报告为当前结果。
+
+
+## 3.50 N5二轮6fd5061复核：原三P2闭合，余一处指南范围（2026-10-16）
+
+- 用户通知N5二轮已交，实查是原PR44快进更新到6fd5061dded82bbbcfc96694a5c20ef1a7a3e41e，父为e2fb1aa。A开工前de60052已推且干净，先push确认；仅仓库外审查，未merge/改正文/正式review/原包/工具。
+- B-N5-01/02/03本轮均闭合：原包目录四ID及新回执/摘录/重新恢复结果一致，sources SHA和provenance行号同步；Release撤保证并明先调下游后清引用，Timer单位/重复/实际帧率未知同步到各处。267函数记录/67分支，42名称底稿仍明确。
+- 新发现B-N5-04 / P2：war.json修改指南仍要求所有回调最终NextCmd或SetProcess(Wait)，虽写“推断”但把End等终止回调也涵盖。候选End去六头L1900–1974，录像L1909 CloseGame返回、普通L1927 SetMainLoop收尾，无NextCmd/SetProcess(Wait)，不是漏推进卡队列。只需限定继续消费队列的非终止回调，明确结束/关闭/切主循环例外，给新增Process/Wait断言补现有w_process/w_wait证据并标清推测；无须重做原三项或改候选。
+- A本轮重恢复四条，3source形状+1406仍partial；2208摘录行逐行一致，四去头正文SHA匹配。PR快照与外置组合schema/来源/full通过；82=71过+11缺PySide6跳过/0失败，ruff含spec和Windows静态walk133路径/27源全0。未另跑HTML/jsdom或真实浏览器/Qt/Windows/EXE/游戏/原生/实服。
+- 已评论PR44并同步PR45的新N7，原三项不再列未修。N5在同一PR小修指南后报新head，N7按新字节末审；N2尾审仍待。正式仍5135/20/3/1、5changes/12pending，外置组合12accepted/4login stale/4battle pending不是正式值。
+- 报告docs/evidence/script_manual_N5_6fd5061_A_review_20261016.md及同名JSON含四ID/四新JSON SHA/反例范围/验证指纹；机器分派表N5固定head与最新待办已更新，首轮报告保留历史判断不改写。
