@@ -1,0 +1,412 @@
+{
+  "kind": "N4_independent_targeted_recovery_not_runtime_or_review",
+  "handoff_commit": "9b0dea799768aaacbb967ffc59f45753970752be",
+  "branch": "arena/b0da7f97-mxsj-tw-2022",
+  "environment": {
+    "python": "3.11.2",
+    "uncompyle6": "3.9.3",
+    "xdis": "6.1.8",
+    "spark-parser": "1.9.0",
+    "click": "8.5.0"
+  },
+  "inputs_sha256": {
+    "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "data/data.fls": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+    "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+    "tools/decompiler/recover_entries.py": "152dbc28864a10c8b7188df7ae91c8039b0b8c0b056d98591e407b897e39c458",
+    "tools/decompiler/batch_decompile.py": "a74742231e04c018c3f63452cfc859c20c6404fd73891eae9076bfcf8185b4e8"
+  },
+  "raw_report_sha256": "f8869d1774ff84ab3dd9ac87d28ccbbff2dcd97ecd46110f1633a467350ab121",
+  "candidates": [
+    {
+      "entry_index": 3176,
+      "entry_id": 2691519347,
+      "clen": 17485,
+      "doff": 21172656,
+      "stored_sha256": "4f233c2a41adc99e",
+      "exp_len": 42734,
+      "stage": "baseline",
+      "repaired": false,
+      "bounds_refined": false,
+      "steps": [
+        "baseline:progress=42735/42735"
+      ],
+      "keys_used": [
+        29,
+        142,
+        48,
+        3,
+        82
+      ],
+      "bounds_used": [
+        8665,
+        17320,
+        25990,
+        34644
+      ],
+      "pyc_len": 42742,
+      "co_filename": "script/net.py",
+      "rel_path": "script/net.py",
+      "renamed": false,
+      "path_class": "ok",
+      "decompile": "decompile_ok",
+      "status": "recovered",
+      "kind": "source",
+      "candidate_sha256": "fbf1282b883d9724614a934941f49b71f1b34249870e4baf653cde2577647984",
+      "body_sha256_exact_six_lines_removed": "4cad123e0121c3c18cf24a6af59d1827da28517478b5c92e90f98bf664092c50",
+      "line_count": 1364,
+      "stable_header_lines_1_2_3_4_6": [
+        "# MXSJ 恢复产物 · script.fls entry 3176 (id=0xa06d5373)",
+        "# co_filename(原始)='script/net.py'",
+        "# 转译阶段=baseline  密钥修复=False",
+        "# keys=[29, 142, 48, 3, 82] bounds=[8665, 17320, 25990, 34644]",
+        "# 输入 sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72"
+      ],
+      "stable_header_matches_A": true,
+      "body_matches_A": true,
+      "keys_and_bounds_match_locked_database": true
+    },
+    {
+      "entry_index": 2170,
+      "entry_id": 1832585054,
+      "clen": 4322,
+      "doff": 1259095,
+      "stored_sha256": "d25b50cafd59d842",
+      "exp_len": 8321,
+      "stage": "baseline",
+      "repaired": false,
+      "bounds_refined": false,
+      "steps": [
+        "baseline:progress=8322/8322"
+      ],
+      "keys_used": [
+        58,
+        209,
+        11,
+        19,
+        141
+      ],
+      "bounds_used": [
+        1671,
+        3425,
+        5170,
+        6849
+      ],
+      "pyc_len": 8329,
+      "co_filename": "script/connect.py",
+      "rel_path": "script/connect.py",
+      "renamed": false,
+      "path_class": "ok",
+      "decompile": "decompile_ok",
+      "status": "recovered",
+      "kind": "source",
+      "candidate_sha256": "6d49e1b3a7f2667fd9dfd898ddcc42806c9035679a5ad532079c63564a15d684",
+      "body_sha256_exact_six_lines_removed": "0a46ea6fb77879332c53531a1a746556782b9fc48a1fb01f6330e97c8c775e24",
+      "line_count": 295,
+      "stable_header_lines_1_2_3_4_6": [
+        "# MXSJ 恢复产物 · script.fls entry 2170 (id=0x6d3b075e)",
+        "# co_filename(原始)='script/connect.py'",
+        "# 转译阶段=baseline  密钥修复=False",
+        "# keys=[58, 209, 11, 19, 141] bounds=[1671, 3425, 5170, 6849]",
+        "# 输入 sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72"
+      ],
+      "stable_header_matches_A": true,
+      "body_matches_A": true,
+      "keys_and_bounds_match_locked_database": true
+    },
+    {
+      "entry_index": 871,
+      "entry_id": 696666009,
+      "clen": 4481,
+      "doff": 15474892,
+      "stored_sha256": "27fa7e9f4110fa92",
+      "exp_len": 8958,
+      "stage": "baseline",
+      "repaired": false,
+      "bounds_refined": false,
+      "steps": [
+        "baseline:progress=8959/8959"
+      ],
+      "keys_used": [
+        26,
+        169,
+        206,
+        111,
+        150
+      ],
+      "bounds_used": [
+        1865,
+        3708,
+        5524,
+        7416
+      ],
+      "pyc_len": 8966,
+      "co_filename": "script/netquicklogin.py",
+      "rel_path": "script/netquicklogin.py",
+      "renamed": false,
+      "path_class": "ok",
+      "decompile": "decompile_ok",
+      "status": "recovered",
+      "kind": "source",
+      "candidate_sha256": "cd9d3167c9602cbf76b1c110dd54884e78217fa700f5ec5a7709a7231172b215",
+      "body_sha256_exact_six_lines_removed": "36def1780a9bb229e98b850339eee91827ed6f6f972f330f52fa3f23183597b9",
+      "line_count": 313,
+      "stable_header_lines_1_2_3_4_6": [
+        "# MXSJ 恢复产物 · script.fls entry 871 (id=0x29864799)",
+        "# co_filename(原始)='script/netquicklogin.py'",
+        "# 转译阶段=baseline  密钥修复=False",
+        "# keys=[26, 169, 206, 111, 150] bounds=[1865, 3708, 5524, 7416]",
+        "# 输入 sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72"
+      ],
+      "stable_header_matches_A": true,
+      "body_matches_A": true,
+      "keys_and_bounds_match_locked_database": true
+    },
+    {
+      "entry_index": 516,
+      "entry_id": 406718548,
+      "clen": 7690,
+      "doff": 16321274,
+      "stored_sha256": "5c77e3aa1e55c42a",
+      "exp_len": 17234,
+      "stage": "baseline",
+      "repaired": false,
+      "bounds_refined": false,
+      "steps": [
+        "baseline:progress=17235/17235"
+      ],
+      "keys_used": [
+        177,
+        68,
+        48,
+        65,
+        32
+      ],
+      "bounds_used": [
+        3460,
+        6912,
+        10485,
+        13948
+      ],
+      "pyc_len": 17242,
+      "co_filename": "script/login/netserver.py",
+      "rel_path": "script/login/netserver.py",
+      "renamed": false,
+      "path_class": "ok",
+      "decompile": "decompile_ok",
+      "status": "recovered",
+      "kind": "source",
+      "candidate_sha256": "736cda1e2ea8ca4b376cf028c5d424938a09af9bf1053533ebd828d06b2b8741",
+      "body_sha256_exact_six_lines_removed": "1fccc33d2d20540680c6af62e2bfdcf850291a855ed4bf626374262b8702c94b",
+      "line_count": 584,
+      "stable_header_lines_1_2_3_4_6": [
+        "# MXSJ 恢复产物 · script.fls entry 516 (id=0x183e0854)",
+        "# co_filename(原始)='script/login/netserver.py'",
+        "# 转译阶段=baseline  密钥修复=False",
+        "# keys=[177, 68, 48, 65, 32] bounds=[3460, 6912, 10485, 13948]",
+        "# 输入 sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72"
+      ],
+      "stable_header_matches_A": true,
+      "body_matches_A": true,
+      "keys_and_bounds_match_locked_database": true
+    }
+  ],
+  "evidence_sha256": "0c8657fc9c71c019d1c62dcfbb569316aee7451dec8845dd2010fc0741004e65",
+  "excerpt_ranges": {
+    "n4_net_lowest": {
+      "entry_index": 3176,
+      "candidate_start_R": 55,
+      "candidate_end_R": 70,
+      "evidence_start_line": 20,
+      "evidence_end_line": 35
+    },
+    "n4_net_name": {
+      "entry_index": 3176,
+      "candidate_start_R": 696,
+      "candidate_end_R": 708,
+      "evidence_start_line": 41,
+      "evidence_end_line": 53
+    },
+    "n4_net_error": {
+      "entry_index": 3176,
+      "candidate_start_R": 856,
+      "candidate_end_R": 873,
+      "evidence_start_line": 59,
+      "evidence_end_line": 76
+    },
+    "n4_net_prepare": {
+      "entry_index": 3176,
+      "candidate_start_R": 901,
+      "candidate_end_R": 904,
+      "evidence_start_line": 82,
+      "evidence_end_line": 85
+    },
+    "n4_net_queue": {
+      "entry_index": 3176,
+      "candidate_start_R": 1323,
+      "candidate_end_R": 1343,
+      "evidence_start_line": 91,
+      "evidence_end_line": 111
+    },
+    "n4_quick_reset": {
+      "entry_index": 871,
+      "candidate_start_R": 13,
+      "candidate_end_R": 40,
+      "evidence_start_line": 117,
+      "evidence_end_line": 144
+    },
+    "n4_quick_clear_force": {
+      "entry_index": 871,
+      "candidate_start_R": 73,
+      "candidate_end_R": 80,
+      "evidence_start_line": 150,
+      "evidence_end_line": 157
+    },
+    "n4_quick_clear_delete": {
+      "entry_index": 871,
+      "candidate_start_R": 92,
+      "candidate_end_R": 99,
+      "evidence_start_line": 163,
+      "evidence_end_line": 170
+    },
+    "n4_quick_logout": {
+      "entry_index": 871,
+      "candidate_start_R": 192,
+      "candidate_end_R": 197,
+      "evidence_start_line": 176,
+      "evidence_end_line": 181
+    },
+    "n4_quick_connect": {
+      "entry_index": 871,
+      "candidate_start_R": 206,
+      "candidate_end_R": 244,
+      "evidence_start_line": 187,
+      "evidence_end_line": 225
+    },
+    "n4_server_refresh": {
+      "entry_index": 516,
+      "candidate_start_R": 68,
+      "candidate_end_R": 100,
+      "evidence_start_line": 231,
+      "evidence_end_line": 263
+    },
+    "n4_server_prepare": {
+      "entry_index": 516,
+      "candidate_start_R": 280,
+      "candidate_end_R": 295,
+      "evidence_start_line": 269,
+      "evidence_end_line": 284
+    },
+    "n4_server_connect": {
+      "entry_index": 516,
+      "candidate_start_R": 426,
+      "candidate_end_R": 476,
+      "evidence_start_line": 290,
+      "evidence_end_line": 340
+    },
+    "n4_server_reselect_hello": {
+      "entry_index": 516,
+      "candidate_start_R": 510,
+      "candidate_end_R": 516,
+      "evidence_start_line": 346,
+      "evidence_end_line": 352
+    },
+    "n4_connect_attempts": {
+      "entry_index": 2170,
+      "candidate_start_R": 164,
+      "candidate_end_R": 197,
+      "evidence_start_line": 358,
+      "evidence_end_line": 391
+    }
+  },
+  "excluded_1288_targeted": false,
+  "main_recovered_this_run": false,
+  "game_module_executed_or_imported": false,
+  "business_url_requested": false,
+  "reviews_modified": false,
+  "annotation_sha256": {
+    "net": "17c3a9956859c5c22ac61e362d1f5458d9cc5168b042522aa16b5a27eebeab90",
+    "connect": "505977078ec047c3584311ed3f25e8a2547e70a13ecf874b41e532c84fe21ba3",
+    "netquicklogin": "55b81261b69494667555e03f64c9cabf69c36a8f0d6383eaa6e0edb961062850",
+    "netserver": "1ec1bc8f6bc812f24d27520c22036461cd4301c307e7e56ec0d0e6df2ec59fef"
+  },
+  "shared_E_report_sha256": "0d2b04f3024623eb4f4fb1da00deea0101d32558a67ca589e3ed39f16e53b5ec",
+  "stored_digest_note": "候选记录中stored_sha256沿用恢复器字段，仅16位十六进制前缀；不是完整存储段SHA，不能代替全包或候选完整SHA。",
+  "validation": {
+    "strict_validate": {
+      "exit_code": 0,
+      "indexed": 5135,
+      "annotated": 20,
+      "accepted": 3,
+      "excluded": 1,
+      "expected_stale_review_entries": [
+        516,
+        871,
+        2170,
+        3176
+      ]
+    },
+    "unittest": {
+      "run": 82,
+      "passed": 71,
+      "skipped": 11,
+      "failures": 0,
+      "errors": 0,
+      "skip_reason": "PySide6 6.10.3 installed; QtWidgets import fails: libGL.so.1 missing"
+    },
+    "ruff": {
+      "exit_code": 0
+    },
+    "windows_static": {
+      "exit_code": 0,
+      "paths": 124,
+      "scripts": 27,
+      "errors": 0,
+      "warnings": 0,
+      "info": 0
+    },
+    "byte_and_metadata_checks": {
+      "excerpt_sections": 15,
+      "exact_candidate_lines": 302,
+      "function_identity_signature_records_unchanged": 157,
+      "branches_before": 43,
+      "branches_after": 48,
+      "shared_report_line_count_unchanged": true,
+      "prior_OnError_SetMaxLenBytes_StartQuickTimer_SetServerRoleInfo_records_unchanged": true
+    },
+    "html_build": {
+      "exit_code": 0,
+      "output": "/home/user/n4-manual-site-final/index.html",
+      "bytes": 26186154,
+      "sha256": "cb61e144e15edc36f47a8a45c22667c1b7119ac3721c431153ccc5570d989aff"
+    },
+    "browser_or_jsdom_executed": false,
+    "windows_exe_game_native_server_tested": false,
+    "external_logs": {
+      "validate": {
+        "path": "/home/user/n4-validate.log",
+        "sha256": "cab7595dc216e58456843cefee54a446c0c2f922aae47ed29504924c5a7150e0"
+      },
+      "tests": {
+        "path": "/home/user/n4-tests.log",
+        "sha256": "a941c362ed202b2db1993c4dd7d0928c6e30e2f6dffbb85878982818634cc0d4"
+      },
+      "ruff": {
+        "path": "/home/user/n4-ruff.log",
+        "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+      },
+      "wincompat": {
+        "path": "/home/user/n4-wincompat.log",
+        "sha256": "f6b698610b049d36187c2fc580510c6262a78fd9067f08d8ab8926d58b3ff0a8"
+      },
+      "verify": {
+        "path": "/home/user/n4-verify.log",
+        "sha256": "1f5f22abf307a57d35a8f53b8523308ce0672c906211762befc281350d9d0e24"
+      },
+      "build": {
+        "path": "/home/user/n4-build.log",
+        "sha256": "21b5e7e39946da1a529400ae074a553229674bd220ccd0e92ad8c3e351234788"
+      }
+    }
+  }
+}

@@ -5,7 +5,7 @@
   "path": "script/netquicklogin.py",
   "owner": "E",
   "domain": "network",
-  "author": "E（网络）",
+  "author": "N4（全新网络退修会话；原稿 E，非原 E 会话）",
   "source_status": "recovered_complete_not_original",
   "purpose": {
     "text": "断线瞬连（快速重登）：保存一次性LoginKey、按子型收发快速登录协议、断线后周期重试连接并在Hello后交main恢复会话。",
@@ -29,10 +29,10 @@
       "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "重置瞬连全局：LoginKey、计时器、连接对象、可瞬连标志、点击/失败标志与维护标志。",
+        "text": "仅重置声明global的七个状态：g_LoginKey=None、g_DoRestart=True、g_oStartQucikTimer=None、g_bCanDoQuickLogin=False、g_Timer=None、g_ConnectObj=None、g_MaintainFlag=False。模块顶层虽给点击/失败标志初值False，但再次调用本函数不赋g_bHasQuickLoginFail；g_bHasClickQuickLogin=False未声明global，按候选是局部同名赋值，不重置全局点击标志。作用域异常待核，不判实机bug。",
         "confidence": "static_reviewed",
         "evidence": [
-          "q_src_state"
+          "n4_quick_reset"
         ]
       },
       "calls": [],
@@ -569,10 +569,24 @@
     {
       "question": "断线后不弹瞬连框/不重连，先查什么？",
       "answer": {
-        "text": "查CanQuickConnect（LoginKey与hero.g_ID缺一不可）、g_LoginKey是否被S2CDelLoginKey/ForceLoginOut清掉、net.OnError的m_IsRelogin/m_IsExit抑制，以及main侧触发源（窗口改动也会调Connect）。",
+        "text": "先核本模块CanQuickConnect：返回g_LoginKey and hero.g_ID，非两者真值同时满足就不能据此走瞬连。Key可由S2CForceLoginOut、S2CDelLoginKey清除；NormalLogout仅在key与net.g_Net均为真时先发送再清Key。net.CNet.OnError先在not IsQuickConnect() and not CanQuickConnect()时HideWindow，随后未Hello转失败返回，m_IsRelogin/m_IsExit为真也返回；最后只有不在瞬连中才二选一Connect/ShowError，已在瞬连不重复启动。Connect的showdlg为真才建框。这里仅覆盖871与3176的诊断门禁，不证明main窗口/尺寸触发链，后者交N2/A依据main实际调用行核对。",
         "confidence": "static_reviewed",
         "evidence": [
-          "q_src_state"
+          "n4_quick_connect",
+          "n4_quick_clear_force",
+          "n4_quick_clear_delete",
+          "n4_quick_logout",
+          "n4_net_error"
+        ]
+      }
+    },
+    {
+      "question": "再次调用ModuleReset会清掉点击/失败全局标志吗？",
+      "answer": {
+        "text": "按候选不会：g_bHasQuickLoginFail没有赋值，g_bHasClickQuickLogin=False未声明global而为局部同名赋值。勿把模块顶层False初值混为每次重置效果；修改前须回码对象核作用域，不据此宣布实机bug。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "n4_quick_reset"
         ]
       }
     }
@@ -581,7 +595,8 @@
     "仓库内候选与本轮仓库外新恢复稿diff仅差恢复头6行（SHA见证据报告§4），仍非原始源码；完整恢复不等于行为正确，无实机验证下LoginKey的服务端有效期/受理规则未知。",
     "StartQuickTimer条件异常（初始None却要求为真才启动）未回码对象复核，可能是原文写反或反编译丢线；DoDgwQuickLogin在main侧被调用但本文件无此定义（见协审报告），DGW瞬连流程缺失。",
     "计时常数30/60/10/15（对话框计数）的单位依赖原生调度，未实测；S2CHello开头的print_stack调试形态是否原文如此待核。",
-    "g_MaintainFlag只写未见读、SetCanQuickLogin的置位调用方（S2CPropInit链）在样板外，均只登记符号不推断用途；无runtime_verified结论。"
+    "g_MaintainFlag只写未见读、SetCanQuickLogin的置位调用方（S2CPropInit链）在样板外，均只登记符号不推断用途；无runtime_verified结论。",
+    "ModuleReset全局作用域有限：未重置g_bHasQuickLoginFail，点击同名局部赋值未声明global；模块顶层初值不能替代再次调用效果。main窗口/尺寸触发仅有旧E协审，本N4未恢复main，已从诊断问答的已确认跨模块链中收缩，交N2核对。"
   ],
   "sources": [
     {
@@ -594,9 +609,9 @@
     {
       "id": "e_review",
       "path": "script_manual/annotations/network/evidence_review_e_network.md",
-      "sha256": "4735b665278c12f9ec01172fe04764d44e39d9178b3d78d403dc00baff742b1c",
+      "sha256": "0d2b04f3024623eb4f4fb1da00deea0101d32558a67ca589e3ed39f16e53b5ec",
       "kind": "recovered_source",
-      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块另见报告§4交叉核对；报告§1含工具/依赖版本、处理选项与去头正文摘要比对规则，本模块去头正文摘要与仓库内候选SHA一致。"
+      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块另见报告§4交叉核对；报告§1含工具/依赖版本、处理选项与去头正文摘要比对规则，本模块去头正文摘要与仓库内候选SHA一致。 N4纠正报告中的顺序/条件/作用域描述；原有行范围未移动，历史候选摘要保留。"
     },
     {
       "id": "catalog",
@@ -611,6 +626,13 @@
       "sha256": "a464a9cf66d66de01b8ed6272ea7529217c5d1631f94509bd7ca773077a9c9d9",
       "kind": "metadata",
       "note": "entry 3970 script/protocol.py 号表产物（work研究区，自述marshal线性遍历未执行游戏代码，412赋值/409整型）；仅供协议号数值交叉，数值不在E样板源码内，不证明服务端行为。"
+    },
+    {
+      "id": "n4_excerpt",
+      "path": "script_manual/annotations/network/evidence_n4_network.md",
+      "sha256": "0c8657fc9c71c019d1c62dcfbb569316aee7451dec8845dd2010fc0741004e65",
+      "kind": "recovered_source",
+      "note": "全新N4独立恢复四白名单后的有限原行摘录；原候选完整SHA、去精确六头正文SHA与R行在文件中。非原始源码，不代表运行验证。"
     }
   ],
   "evidence": [
@@ -685,6 +707,42 @@
       "source_id": "quick_src",
       "start_line": 266,
       "end_line": 307
+    },
+    {
+      "id": "n4_quick_reset",
+      "source_id": "n4_excerpt",
+      "start_line": 117,
+      "end_line": 144
+    },
+    {
+      "id": "n4_quick_clear_force",
+      "source_id": "n4_excerpt",
+      "start_line": 150,
+      "end_line": 157
+    },
+    {
+      "id": "n4_quick_clear_delete",
+      "source_id": "n4_excerpt",
+      "start_line": 163,
+      "end_line": 170
+    },
+    {
+      "id": "n4_quick_logout",
+      "source_id": "n4_excerpt",
+      "start_line": 176,
+      "end_line": 181
+    },
+    {
+      "id": "n4_quick_connect",
+      "source_id": "n4_excerpt",
+      "start_line": 187,
+      "end_line": 225
+    },
+    {
+      "id": "n4_net_error",
+      "source_id": "n4_excerpt",
+      "start_line": 59,
+      "end_line": 76
     }
   ],
   "relationships": [

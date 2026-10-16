@@ -1,6 +1,6 @@
-# E（网络）小证据审阅报告 — 3176 / 2170 / 871 / 516 定点恢复摘要
+# E 原稿／N4 局部退修：网络小证据审阅报告 — 3176 / 2170 / 871 / 516
 
-> 性质：按 `script_manual/docs/CONTRACT.md` §3 的「小审阅报告」约定提交的可分发摘要，
+> 性质：旧 E 小报告经全新 N4 局部退修；旧轮次/五条恢复记录仍属 E，N4 独立四条见 evidence_n4_network.md。
 > 不是完整源码、不是第二套底稿。正文 JSON（`net.json` 等）引用本报告的行号；
 > 原始行号另以 `R<行>` 标注，H 可按 §1 配方在仓库外重恢复后逐行复核。
 > 本报告只做静态阅读：未执行、未 import、未 eval 任何恢复模块，未连网，未改游戏包。
@@ -144,7 +144,7 @@
   并称全二进制只有一处 imm32 写入。二者表面冲突（Python 运行时经包装层
   传 3 不会被「imm32 写入扫描」命中），本工作包未做原生复核、未抓包，
   故帧续读字节数在本包内记为「未结清冲突」，禁止把 3 或 2 任一写成已证实线格式。
-- 发送：`CNet.PacketPrepare` 记录 `m_NetHead` 后转原生（R901–R904）；
+- 发送：`CNet.PacketPrepare` 先调原生、后记 `m_NetHead`（R901–R904）；
   字段追加有 `PacketAddPS`（长度前缀字符串，R906–R911）、
   `PacketAddBinaryPS`（R921–R926）、`PacketMarshal/UnpackMarshal`
   （经 `C_marshal`，R936–R947）、`PackLstFreeColor`（R949–R961）；
@@ -168,7 +168,7 @@
 - 每帧处理节流：R28–R32 常数 `0.016`（字面参数，其时间单位在本文件内
   未定义、未证实为秒）/`8` 次/每次半帧/`4` 包，
   `ResetUnpackParams`/`LowestUnpackParams` 按 `setfps.GetCurFrame()/30`
-  缩放并回写原生 `SetProcessSvrCmdNumPerFrame`（R34–R70）。
+  缩放并回写原生 `SetProcessSvrCmdNumPerFrame`（R34–R70）；Lowest 先写 2、再写 2/iRate，非最终固定 2。
   这与 4293 `main.py` 的 `NetMultiProcessServerCmd` 消费同一组常数
   （协审报告另述），但帧率缩放公式是否在原生层同样生效，未验证。
 
@@ -200,7 +200,7 @@
   `Loop` 中低优先分支写作 `self.m_oLQueue = oQueue`（此时 oQueue 为 None，
   疑似应为 `oQueue = self.m_oLQueue` 的反编译/原文笔误，R1323–R1343）；
   且 `HIGH_PRIORITY_CMD`/`LOW_PRIORITY_CMD` 在本文件内均为空集（R109–R110），
-  未见本文件内的填充点，故队列实际是否启用高/低优先，缺失待查。
+  填充点/实际启用待查；GetServerName R702 另含 `serverinfo = [_[1] for x in s.splitlines() if x.strip() != '']`，正常查名待核。
 - 连接与错误：`CNet.Connect` 先过 `whitewebsite.CheckUrlIsInWhite(ip)`，
   不在白名单直接返回不连接（R678–R687）——参数名虽为 ip，亦走 URL 白名单函数，
   语义以原生/whitewebsite 模块为准。
@@ -291,7 +291,7 @@
   「24」的单位是帧而非秒，变量名 DelaySecond 与实际单位不一致，须防误读。
 - `DoConnect`（R164–R198）：`g_DelaySecond<=0` 直接走
   `main.RestarConfirmEx`；有代理时对候选表前两条各发一次尝试，
-  无代理时按 `IsDianXin(net.g_Net.m_IP)` 选电信/网通候选（R200–R219 按
+  无代理时按 `IsDianXin(net.g_Net.m_IP)` 二选一候选、仅发一次（R200–R219 按
   `selectserver.ServerInfo()` 文本行判定，找不到默认 True）。
   成功链口径（本段为 A 预审后统一，旧稿摘要与此处限制曾不一致）：
   内嵌 `Success`（R171–R177，函数体声明为 `ClearAttempt` 后记代理并
@@ -346,7 +346,7 @@
   `IsQuickConnect` R238、`CanQuickConnect` R242、`StartConnectTimer` R247、
   `ProcessServerCmd` R266、`StartQuickTimer` R272、`DoQuickLoginConnect` R286、
   `ClearQuickTimer` R296、`SetCanQuickLogin` R307；
-  常数 `QUICKLOGIN_SECOND = 10`（R14）。
+  常数 `QUICKLOGIN_SECOND = 10`（R13）；ModuleReset R24–R40 不重置全局失败标志，点击同名赋值未声明 global。
 
 ### 4.2 协议号、发送、接收与回调（quicklogin，分开取证）
 
@@ -447,9 +447,9 @@
   同样：客户端发送符号不证明服务端已切换或回包。
 - 本文件内的连接对象 `CMXNet`（R280–R312）覆写
   `OnServerCmd`：仅当对象已有 `m_Hello` 属性时才转 `net.CNet.OnServerCmd`
-  （R292–R295），这是测连对象在 Hello 前后行为的门闸；
+  （R292–R295），只判属性存在，False 也满足，不能当作握手完成门闸；
   `m_Hello` 由别处（loginhello 链，E 样板外）在收到 Hello 后置位，
-  本文件只置 False（R443、R516 等）。不得把「有 m_Hello 属性」写成「已握手」。
+  本文件测连时置 False（R442、R516），仍满足 hasattr；PacketPrepare R287–R290 先调基类后记 m_iCmd。
 
 ### 5.3 测连、代理、错误分支与配置（netserver）
 
@@ -461,8 +461,8 @@
   弹连接中框、`m_Time += 1`、设字面值 15 的超时命令
   `PROXY_CONNECT_TIMEOUT = 15`（类常数 R363，`SetTimeOutCmd` R468–R477
   以 `CreatePyCommand(self.PROXY_CONNECT_TIMEOUT, nexttest)` 再次 `Connect` 换批）；
-  尾行 `if self.m_Time - 1 != 0 or g_AutoProxy: self.Connect()`（R465–R466）
-  使首轮在自动代理时立即再扩一轮，属须留意的行为形态。
+  尾行 `if self.m_Time - 1 != 0 or g_AutoProxy: self.Connect()`（R464–R465）
+  判递增后轮数：m_Time=1 时看自动代理；非 1 时即使非自动也递归，不能缩写成只扩一轮，终止待核。
   该 15 的时间单位依赖 CreatePyCommand 原生语义（netserver 连接管理器基类
   为 `interface.CBaseObject`），本文件未定义，不得径称秒——
   类名常数虽写作 TIMEOUT，亦只作字面登记（本段已按 A 预审统一单位口径，
@@ -483,8 +483,8 @@
   `ProcessServerCmd`（R573–R584）遍历管理器对象收包，任一 `m_Hello` 为真即 break。
 - 配置面：代理设置经 `SetProxy` 写 `mx.ini [Game] proxy`（R149–R159，
   写失败吞异常）；测连刷新节流读 `mx.ini [Game] refreshserver` 时间戳，
-  与 `misc.Time()` 当前时间戳作差 >1200 才再刷（R68–R79；此处 1200 的依据是
-  时间戳差值、按时间戳的秒计，与 CreatePyCommand 类参数的未证实单位不同）；错误文案 URL 读
+  非特殊且非过度版本、float 解析成功才进 else；完整谓词 tm is None or tm>now or now-tm>1200（R68–R79）。
+  1200 是 `misc.Time()` 时间戳差阈值；解析异常只置 None、不进 else 刷新；外层错误文案 URL 仍读
   `update.ini [Setting] BulletinURL` 经 `net.CHttpObject(web, 'get', getMsg)`
   拉取并按 `serverid:文案` 行解析（R81–R101，解析失败吞 ValueError）。
   服务器/代理候选本体来自 `selectserver.GetServerInfo()`（区名、ip、port、

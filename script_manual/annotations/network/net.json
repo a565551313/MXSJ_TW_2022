@@ -5,7 +5,7 @@
   "path": "script/net.py",
   "owner": "E",
   "domain": "network",
-  "author": "E（网络）",
+  "author": "N4（全新网络退修会话；原稿 E，非原 E 会话）",
   "source_status": "recovered_complete_not_original",
   "purpose": {
     "text": "游戏主通道的Python层总管：连接对象CNet、按协议号动态分发收包（NET_FUNCTION_NAME）、组包/夹包发送、明文HTTP小通道、断线与错误提示、战斗命令缓存/延迟队列。套接字、帧状态机与加解密在原生C_net中，不在本文件；客户端发送符号不证明服务端行为。",
@@ -50,10 +50,10 @@
       "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "把收包处理预算降到低档（每轮2包）并回写原生设置。",
+        "text": "先调用SetProcessSvrCmdNumPerFrame(2)，随后取iRate = setfps.GetCurFrame()/30，按帧率缩放各预算，令UNPACK_PACKET_NUM_PER_PROCESS = 2/iRate并再次回写原生；最终不是固定每轮2包，原生是否采纳未验。",
         "confidence": "static_reviewed",
         "evidence": [
-          "net_frame"
+          "n4_net_lowest"
         ]
       },
       "calls": [],
@@ -282,10 +282,10 @@
       "signature": "(self)",
       "kind": "method",
       "summary": {
-        "text": "读selectserver.SERVERINI并解密记录串，按ip+port匹配返回服务器名，找不到返回空串；文件格式细节未核对。",
+        "text": "候选先读取selectserver.SERVERINI并经C_sys.RecordString处理，随后serverinfo = [_[1] for x in s.splitlines() if x.strip() != '']；表达式不随x取记录，存在推导式变量异常。后段声明按ip+port查找并返回名字/空串，但正常查名行为未确认，不能保证可运行。",
         "confidence": "static_reviewed",
         "evidence": [
-          "net_config"
+          "n4_net_name"
         ]
       },
       "calls": [],
@@ -595,10 +595,10 @@
       "signature": "(self, a)",
       "kind": "method",
       "summary": {
-        "text": "记录m_NetHead后调原生PacketPrepare开始组包。",
+        "text": "先调用原生CNetClient.PacketPrepare(self, a)，调用返回后才赋self.m_NetHead = a；不保证原生发送或回调行为。",
         "confidence": "static_reviewed",
         "evidence": [
-          "net_frame"
+          "n4_net_prepare"
         ]
       },
       "calls": [],
@@ -952,10 +952,11 @@
       "signature": null,
       "kind": "class",
       "summary": {
-        "text": "加载期命令缓存队列：高/低双deque，以timer.Timer(0.016, ...)（字面量，单位未证实）驱动Loop，每轮最多处理2条。",
+        "text": "加载期命令缓存队列：高/低双deque，用timer.Timer(0.016, ...)驱动Loop（单位未证实），类预算每轮最多2条；Loop低优先分支把m_oLQueue赋为None，不能保证低队列能消费。",
         "confidence": "static_reviewed",
         "evidence": [
-          "net_callback"
+          "net_callback",
+          "n4_net_queue"
         ]
       },
       "calls": [],
@@ -991,14 +992,25 @@
       "signature": "(self)",
       "kind": "method",
       "summary": {
-        "text": "有高优先先高、否则低，每轮最多处理2条并调用处理函数；无网络对象时End销毁。",
+        "text": "候选声明高优先选择意图：有高队列时oQueue取高队列，后续按PROCESS_NUM_PER_TIME最多2次取出并在可调用时分发；低队列分支却执行self.m_oLQueue = oQueue（此时None），不选择低队列且随后End，不能保证低优先消费。无g_Net先End返回；异常来源待核，不判实机bug。",
         "confidence": "static_reviewed",
         "evidence": [
-          "net_callback"
+          "n4_net_queue"
         ]
       },
       "calls": [],
-      "branches": []
+      "branches": [
+        {
+          "condition": "无高队列且低队列非空",
+          "effect": {
+            "text": "oQueue此前为None，self.m_oLQueue = oQueue清掉低队列引用；随后not oQueue为真而End。按候选字面登记，不修为理想取队列语句。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "n4_net_queue"
+            ]
+          }
+        }
+      ]
     }
   ],
   "resources": [
@@ -1120,6 +1132,18 @@
           "net_frame"
         ]
       }
+    },
+    {
+      "question": "想改收包低档预算、服务器查名或低优先队列，能直接照摘要修代码吗？",
+      "answer": {
+        "text": "不能。LowestUnpackParams先写2再写2/iRate，勿把最终预算固定为2；GetServerName含_[1]/x不对应，Loop低队列赋值方向异常，须先回码对象/原生核对，不把候选改成理想实现后当作原文。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "n4_net_lowest",
+          "n4_net_name",
+          "n4_net_queue"
+        ]
+      }
     }
   ],
   "limitations": [
@@ -1127,16 +1151,16 @@
     "帧处理只有Python设值证据：SetMaxLenBytes(3)与原生报告主张的2字节续读冲突未结清；原生C_net的套接字、帧状态机、SetSeed加解密均未复核，无抓包/实机证据。",
     "协议号数值除GS2C_PLAYER_IB=24/CLIENTUI=174/ZHIDAO=181三个本地常数与219/167/112字面值外，均来自entry 3970号表交叉（非本文件、非E独立验证）；GS2C_ONLINEEDITSOURCE=46号表无同名、219的GS2C语义名缺失，未写成不存在。",
     "NET_FUNCTION_NAME指向的约二百个目标模块/函数未逐项核对是否存在于冻结包；动态import失败形态、SPECIAL_SERVER_CMD_EXT为空表的原因、高/低优先级集合的填充点均缺失。",
-    "三处静态异常只登记待核（队列低优先赋值、167/112跨表推断、CHttpObject的method参数未用），可能为反编译丢线而非原文缺陷；全部计时常数的真实时间单位依赖原生调度，未实测。",
+    "静态异常保留待核：GetServerName推导式变量不对应、队列低优先赋值、167/112跨表推断、CHttpObject的method参数未用；不保证正常查名/低队列消费，不断言原文或实机bug。计时常数真实时间单位依赖原生调度，未实测。",
     "未覆盖：嵌套闭包（ShowError.ExitGame/Relogin、CHttpObject.NetProcess、DisconnectNet.onTimer等）未单列为函数条目；calls为空表示未逐项整理静态调用串，不表示无调用；无任何runtime_verified结论。"
   ],
   "sources": [
     {
       "id": "e_review",
       "path": "script_manual/annotations/network/evidence_review_e_network.md",
-      "sha256": "4735b665278c12f9ec01172fe04764d44e39d9178b3d78d403dc00baff742b1c",
+      "sha256": "0d2b04f3024623eb4f4fb1da00deea0101d32558a67ca589e3ed39f16e53b5ec",
       "kind": "recovered_source",
-      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块候选当时整文件SHA c8221fc806ed0af1cd4dcb4905cf29d4ba25e0cb7652be093405386d3a96c905（含生成时间行，只作历史标识）；按报告§1规则去头正文SHA 4cad123e0121c3c18cf24a6af59d1827da28517478b5c92e90f98bf664092c50 可复核，1364行。报告§1另含工具/依赖版本与处理选项。"
+      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块候选当时整文件SHA c8221fc806ed0af1cd4dcb4905cf29d4ba25e0cb7652be093405386d3a96c905（含生成时间行，只作历史标识）；按报告§1规则去头正文SHA 4cad123e0121c3c18cf24a6af59d1827da28517478b5c92e90f98bf664092c50 可复核，1364行。报告§1另含工具/依赖版本与处理选项。 N4纠正报告中的顺序/条件/作用域描述；原有行范围未移动，历史候选摘要保留。"
     },
     {
       "id": "catalog",
@@ -1151,6 +1175,13 @@
       "sha256": "a464a9cf66d66de01b8ed6272ea7529217c5d1631f94509bd7ca773077a9c9d9",
       "kind": "metadata",
       "note": "entry 3970 script/protocol.py 号表产物（work研究区，自述marshal线性遍历未执行游戏代码，412赋值/409整型）；仅供协议号数值交叉，数值不在E样板源码内，不证明服务端行为。"
+    },
+    {
+      "id": "n4_excerpt",
+      "path": "script_manual/annotations/network/evidence_n4_network.md",
+      "sha256": "0c8657fc9c71c019d1c62dcfbb569316aee7451dec8845dd2010fc0741004e65",
+      "kind": "recovered_source",
+      "note": "全新N4独立恢复四白名单后的有限原行摘录；原候选完整SHA、去精确六头正文SHA与R行在文件中。非原始源码，不代表运行验证。"
     }
   ],
   "evidence": [
@@ -1243,6 +1274,36 @@
       "source_id": "protocol_table",
       "start_line": 285,
       "end_line": 285
+    },
+    {
+      "id": "n4_net_lowest",
+      "source_id": "n4_excerpt",
+      "start_line": 20,
+      "end_line": 35
+    },
+    {
+      "id": "n4_net_name",
+      "source_id": "n4_excerpt",
+      "start_line": 41,
+      "end_line": 53
+    },
+    {
+      "id": "n4_net_error",
+      "source_id": "n4_excerpt",
+      "start_line": 59,
+      "end_line": 76
+    },
+    {
+      "id": "n4_net_prepare",
+      "source_id": "n4_excerpt",
+      "start_line": 82,
+      "end_line": 85
+    },
+    {
+      "id": "n4_net_queue",
+      "source_id": "n4_excerpt",
+      "start_line": 91,
+      "end_line": 111
     }
   ],
   "relationships": [
