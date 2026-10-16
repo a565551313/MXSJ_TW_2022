@@ -5,7 +5,7 @@
   "path": "script/login/loginin.py",
   "owner": "C",
   "domain": "login",
-  "author": "C",
+  "author": "N2 (new Arena session arena/a1839872-mxsj-tw-2022)",
   "source_status": "recovered_complete_not_original",
   "purpose": {
     "text": "登录界面控制：账号/密码输入、历史账号、密码保护、服务条款、自动登录、邮箱/路径/密码对话框、音乐与链接。",
@@ -186,7 +186,7 @@
       "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "登录提交：读取账号/密码，校验非空与密码长度>=6、账号不能纯数字，设置g_User/g_LoginEmail，调用netlogin.C2SLoginIn(user,password)，并设置netlogin.g_LoginErrorCallback=LoginInErr。不保存账号。",
+        "text": "读取输入后先设置g_User；账号/密码非空、密码长度至少6且账号非纯数字时，设置g_LoginEmail，调用netlogin.C2SLoginIn，再设置LoginInErr错误回调；本函数不保存账号。",
         "confidence": "static_reviewed",
         "evidence": [
           "loginok"
@@ -200,10 +200,10 @@
       "signature": "(err_id, err_msg)",
       "kind": "function",
       "summary": {
-        "text": "登录错误回调：显示错误信息。",
+        "text": "错误回调按err_id显示错误/补丁提示；不是登录成功回调。",
         "confidence": "static_reviewed",
         "evidence": [
-          "show"
+          "loginerr"
         ]
       },
       "calls": [],
@@ -393,10 +393,13 @@
         {
           "condition": "msgid == 2",
           "effect": {
-            "text": "勾选协议后调用LoginOk()提交登录；LoginOk校验输入并调用netlogin.C2SLoginIn，设置错误回调LoginInErr；成功后的账号保存由OnLogin()执行。",
+            "text": "CLoginIn.OnMessage(2)仅在not misc.IsTWServer()内检查chk_agree；对象存在且未选中才提示并return。其余情况调用LoginOk：非空/密码长度/账号非纯数字校验后C2SLoginIn，再设置错误回调。OnLogin是另一个入口，LoginIn存在才SaveAccount；不能由此证明提交即成功或直接调用OnLogin。RandomConnect在OneoffLogin/OneoffLogin2内，不串入普通按钮链。",
             "confidence": "static_reviewed",
             "evidence": [
-              "loginok"
+              "message2",
+              "loginok",
+              "onlogin",
+              "autologin"
             ]
           }
         },
@@ -557,14 +560,35 @@
       "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "TW按g_LangVersion选择SERVICE_MSG/SERVICE_MSG2并创建服务消息框；非TW直接ShowService(True)。",
+        "text": "仅判断main.g_LangVersion == 0：为真构造SERVICE_MSG2服务框，下一步ShowService；否则ShowService(True)。这里没有IsTWServer判断，不推定版本值的地区映射。",
         "confidence": "static_reviewed",
         "evidence": [
           "showlogin"
         ]
       },
       "calls": [],
-      "branches": []
+      "branches": [
+        {
+          "condition": "main.g_LangVersion == 0",
+          "effect": {
+            "text": "SERVICE_MSG2创建服务框并绑定ShowService；无地区映射结论。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "showlogin"
+            ]
+          }
+        },
+        {
+          "condition": "main.g_LangVersion != 0",
+          "effect": {
+            "text": "调用ShowService(True)。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "showlogin"
+            ]
+          }
+        }
+      ]
     },
     {
       "name": "CClickRichText",
@@ -1048,32 +1072,39 @@
     {
       "question": "登录按钮点击后经过哪些函数和模块？",
       "answer": {
-        "text": "CLoginIn.OnMessage(2)在勾选协议后调用LoginOk；LoginOk保存账号；网络连接由netserver.RandomConnect与netlogin处理，E协审。",
+        "text": "CLoginIn.OnMessage(2)仅在not misc.IsTWServer()内检查chk_agree；对象存在且未选中才提示并return。其余情况调用LoginOk：非空/密码长度/账号非纯数字校验后C2SLoginIn，再设置错误回调。OnLogin是另一个入口，LoginIn存在才SaveAccount；不能由此证明提交即成功或直接调用OnLogin。RandomConnect在OneoffLogin/OneoffLogin2内，不串入普通按钮链。",
         "confidence": "static_reviewed",
         "evidence": [
-          "loginin",
-          "show"
+          "message2",
+          "loginok",
+          "onlogin",
+          "saveaccount",
+          "autologin"
         ]
       }
     },
     {
       "question": "注册逻辑与布局分别在哪里？",
       "answer": {
-        "text": "注册入口在mainpage.OnMessage(2)；逻辑/布局在register.py与login/reg*.dlg；注册成功回填loginin账号列表。",
+        "text": "首页OnMessage(2)在IsTWServer()真时打开外部REGISTER_URL（按g_LangVersion分支）；仅非TW才隐藏首页并register.Show(True)->Step(0)。register各CRegPanel与回调负责逻辑，布局reg1/reg2/reg3/reg4/reg5.dlg，CConfirm另用login/confirm.dlg。confirm是独立确认入口，不能当成Step序列；未验证布局资源内容或注册服务可用。",
         "confidence": "static_reviewed",
         "evidence": [
-          "loginin"
+          "mp_entry",
+          "rg_confirm",
+          "rg_reg1",
+          "rg_reg2",
+          "rg_reg2_2980",
+          "rg_panels34",
+          "rg_stepshow"
         ]
       }
     },
     {
       "question": "main.py如何启动、运行主循环、切换战斗和退出？",
       "answer": {
-        "text": "见entry 4293：Start/StartStep1初始化；Loop默认MainLoop；SetWarLoop切换WarLoop；CloseGame/ExitGame/RealExit/doexit/doreturn处理退出与重登录。",
-        "confidence": "static_reviewed",
-        "evidence": [
-          "show"
-        ]
+        "text": "启动、主循环、战斗切换、退出与快捷键请参见entry4293的main正文；本登录页说明不据Show段推断main行为。",
+        "confidence": "inferred",
+        "evidence": []
       }
     },
     {
@@ -1088,10 +1119,12 @@
     }
   ],
   "limitations": [
-    "来源为uncompyle6 3.9.3反编译候选，非原始源码；控制流和运行行为未实机验证。",
+    "本轮Python 3.11.2/uncompyle6 3.9.3/xdis 6.1.8只读定点恢复；不是原始源码，未执行游戏模块或验证运行行为。",
     "loginin模块较大，本说明只覆盖重点类/函数，未覆盖全部辅助函数。",
     "calls为静态引用线索，动态调用未全部解析。",
-    "网络登录链路需E协审，战斗切换需F协审。"
+    "网络登录链路需E协审，战斗切换需F协审。",
+    "来源链、编码边界和实际测试见同目录N2_RESPONSE.md/N2_provenance.json.template；最高static_reviewed，无实机或全函数完成声明。",
+    "CServiceMessageDialog的result推导式有_[1]未绑定形态；SaveAccount候选在判空前访问acc[0]。不由函数名称保证可用或修复候选。"
   ],
   "sources": [
     {
@@ -1099,7 +1132,21 @@
       "path": "tools/decompiler/output/script_fls/script/login/loginin.py",
       "sha256": "dd90527be51d315b6a0e6cafce32f4ad08e74040153d3fbc141c239cac550929",
       "kind": "recovered_source",
-      "note": "uncompyle6 3.9.3 recovered candidate; association basis: script.fls entry 4806, co_filename=script\\login\\loginin.py, input SHA 8b6e9266...; C reviewed fixed package. Not original source."
+      "note": "N2独立恢复固定script.fls白名单；精确去六行恢复头（含生成时间）后，整个正文与本文件原字节SHA一致。Python3.11.2/u6 3.9.3/xdis6.1.8；默认decode_big5_literals严格cp950，失败保留转义，不猜改字串。完整链/pyc/候选摘要见annotations/login/N2_provenance.json.template与N2_RESPONSE.md；非原始源码，解码成功不保证语义。"
+    },
+    {
+      "id": "legacy_mainpage",
+      "path": "tools/decompiler/output/script_fls/script/login/mainpage.py",
+      "sha256": "984cbe6ac7d2ed0a1479d2bcb72ea34a2fc89756017d1d95ab0f9f2195e925ac",
+      "kind": "recovered_source",
+      "note": "N2独立恢复固定script.fls白名单；精确去六行恢复头（含生成时间）后，整个正文与本文件原字节SHA一致。Python3.11.2/u6 3.9.3/xdis6.1.8；默认decode_big5_literals严格cp950，失败保留转义，不猜改字串。完整链/pyc/候选摘要见annotations/login/N2_provenance.json.template与N2_RESPONSE.md；非原始源码，解码成功不保证语义。"
+    },
+    {
+      "id": "legacy_register",
+      "path": "tools/decompiler/output/script_fls/script/login/register.py",
+      "sha256": "bc2b5bff78d3feb473227767e9172eba21346f7fd6adad67687eb9ec97eba18d",
+      "kind": "recovered_source",
+      "note": "N2独立恢复固定script.fls白名单；精确去六行恢复头（含生成时间）后，整个正文与本文件原字节SHA一致。Python3.11.2/u6 3.9.3/xdis6.1.8；默认decode_big5_literals严格cp950，失败保留转义，不猜改字串。完整链/pyc/候选摘要见annotations/login/N2_provenance.json.template与N2_RESPONSE.md；非原始源码，解码成功不保证语义。"
     }
   ],
   "evidence": [
@@ -1180,11 +1227,95 @@
       "source_id": "legacy_loginin",
       "start_line": 701,
       "end_line": 708
+    },
+    {
+      "id": "message2",
+      "source_id": "legacy_loginin",
+      "start_line": 575,
+      "end_line": 585
+    },
+    {
+      "id": "onlogin",
+      "source_id": "legacy_loginin",
+      "start_line": 657,
+      "end_line": 661
+    },
+    {
+      "id": "saveaccount",
+      "source_id": "legacy_loginin",
+      "start_line": 503,
+      "end_line": 511
+    },
+    {
+      "id": "autologin",
+      "source_id": "legacy_loginin",
+      "start_line": 513,
+      "end_line": 559
+    },
+    {
+      "id": "auto_home",
+      "source_id": "legacy_loginin",
+      "start_line": 132,
+      "end_line": 166
+    },
+    {
+      "id": "accountfill",
+      "source_id": "legacy_loginin",
+      "start_line": 472,
+      "end_line": 476
+    },
+    {
+      "id": "loginerr",
+      "source_id": "legacy_loginin",
+      "start_line": 268,
+      "end_line": 300
+    },
+    {
+      "id": "mp_entry",
+      "source_id": "legacy_mainpage",
+      "start_line": 111,
+      "end_line": 139
+    },
+    {
+      "id": "rg_confirm",
+      "source_id": "legacy_register",
+      "start_line": 136,
+      "end_line": 166
+    },
+    {
+      "id": "rg_reg1",
+      "source_id": "legacy_register",
+      "start_line": 167,
+      "end_line": 213
+    },
+    {
+      "id": "rg_reg2",
+      "source_id": "legacy_register",
+      "start_line": 307,
+      "end_line": 543
+    },
+    {
+      "id": "rg_reg2_2980",
+      "source_id": "legacy_register",
+      "start_line": 561,
+      "end_line": 930
+    },
+    {
+      "id": "rg_panels34",
+      "source_id": "legacy_register",
+      "start_line": 1208,
+      "end_line": 1254
+    },
+    {
+      "id": "rg_stepshow",
+      "source_id": "legacy_register",
+      "start_line": 1255,
+      "end_line": 1305
     }
   ],
   "relationships": [
     {
-      "direction": "upstream",
+      "direction": "downstream",
       "kind": "calls",
       "module": {
         "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
@@ -1192,26 +1323,26 @@
       },
       "symbol": "mainpage.Show",
       "summary": {
-        "text": "返回首页时调用mainpage.Show(True)。",
+        "text": "StartDYAutoLogin/StartDYAutoLogin2依次调用mainpage.Show(True, False)与Show(False)，非登录返回按钮；返回按钮实际到selectserver。",
         "confidence": "static_reviewed",
         "evidence": [
-          "loginin"
+          "auto_home"
         ]
       }
     },
     {
-      "direction": "downstream",
-      "kind": "calls",
+      "direction": "upstream",
+      "kind": "data_flow",
       "module": {
         "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
         "entry_index": 4007
       },
       "symbol": "register.g_AccountInfo",
       "summary": {
-        "text": "注册成功后回填账号。",
+        "text": "构造登录面板时读取register.g_AccountInfo[ResultEmail]填入输入框并删除该键；这是数据引用，不是调用register。",
         "confidence": "static_reviewed",
         "evidence": [
-          "loginin"
+          "accountfill"
         ]
       }
     },
@@ -1233,14 +1364,15 @@
     },
     {
       "direction": "downstream",
-      "kind": "message",
+      "kind": "calls",
       "module": null,
-      "symbol": "netserver.RandomConnect/netlogin",
+      "symbol": "netserver.RandomConnect",
       "summary": {
-        "text": "登录连接由netserver/netlogin处理，E协审。",
+        "text": "仅OneoffLogin/OneoffLogin2内调用RandomConnect；普通LoginOk提交到netlogin.C2SLoginIn，不能拼成一个先后链。",
         "confidence": "static_reviewed",
         "evidence": [
-          "loginin"
+          "autologin",
+          "loginok"
         ]
       }
     }
