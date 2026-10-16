@@ -3828,7 +3828,7 @@
     "DoAddonAction 的 boss 分支在候选里位于 return 之后（不可达），以及 PlayAni/ChgShape 等处的异常回落，都只是候选形态的描述，未据其推断游戏必然如此。",
     "main.py / SetMainLoop / SetWarLoop 的最终语义归属 N2（C 域）正文；本模块只记录调用点与行号。",
     "Windows/EXE、原生引擎、实机与真实服务端均未在 N5 本轮验证；Qt GUI 因沙箱缺 libGL.so.1 未实跑。",
-    "B-N5-04由A按用户“帮他们收尾”授权仅补指南范围及证据，未改候选。A是本JSON的共同作者，不给该JSON自批accepted；其余三篇N5原字节不变，可另作有限代审。"
+    "B-N5-04由A按用户“帮他们收尾”授权仅补指南范围及证据，未改候选。A是本JSON的共同作者，不给该JSON自批accepted；同轮A另修netwar、e_warctrl、warcmd的指南/定位，四篇都须非A对最终字节独立复核，不使用A代审自批。"
   ],
   "sources": [
     {

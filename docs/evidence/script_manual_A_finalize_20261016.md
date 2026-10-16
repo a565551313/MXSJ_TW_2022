@@ -51,7 +51,7 @@
 |待非A审核文件|最终JSON原字节SHA256|
 |---|---|
 |e_warctrl.json|`8dfca6e5ca37b5787c11ce6f0d1d4c688fb8d9eae4fd94f938e512d69e2deb31`|
-|war.json|`9c0aea28914085b8cb1ce4424352e5f165cedf9170da087c257ac9ce90085605`|
+|war.json|`3e2a00ab67215267c471a9d60b90a09b743d765da46ae94571eabd6de20400d7`|
 |netwar.json|`614bef9d870b118b1e58bf9593e5297de08a3da4cf7b819adfc5f15d27bd766a`|
 |warcmd.json|`65e19f3c4a93e2dbb8add8ecea523f6d64bddf6f55dd031cd864986c8e2d15da`|
 
@@ -82,7 +82,7 @@ python script_manual/check_manual.py --require-gui
 |ruff含spec|通过|
 |Windows静态walk|manual 168路径/31源：ERROR/WARNING/INFO均0；改动工具2路径/2源亦全0|
 |N1真种子重放|**两棵真实隔离树**，各20冻结种子→sample/full，四次成功；三份产物跨树一致且与交付字节一致；1288定点读取4次均0|
-|严格离线HTML|构建通过；HTML SHA `f0aeaff7a43fac8b999aab32829d5b48af8418df1cdc6fba722a12581593574d`|
+|严格离线HTML|构建通过；HTML SHA `7d5266729228c475591591647ee317f262fc76a284f9f7ffd183372c5767439c`|
 |jsdom26.1.0实际脚本|4中文搜索、2审核过滤、3路径/身份导航、CreateCmdObject函数搜索、20篇×4页80tab、hero→npc跳转均过；N2四篇显示A_delegate授权，A共同作者battle四篇保持pending，无脚本错误|
 
 N1整包SHA读取会覆盖1288字节范围，不谎称从未读过其字节；审计证明没有定点payload读/解密/恢复。此次两树重放是新执行，不借上轮单树的退化“跨树一致”冒充。

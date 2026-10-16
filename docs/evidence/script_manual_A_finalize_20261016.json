@@ -217,7 +217,7 @@
   },
   "A_coauthored_pending": {
     "e_warctrl": "8dfca6e5ca37b5787c11ce6f0d1d4c688fb8d9eae4fd94f938e512d69e2deb31",
-    "war": "9c0aea28914085b8cb1ce4424352e5f165cedf9170da087c257ac9ce90085605",
+    "war": "3e2a00ab67215267c471a9d60b90a09b743d765da46ae94571eabd6de20400d7",
     "netwar": "614bef9d870b118b1e58bf9593e5297de08a3da4cf7b819adfc5f15d27bd766a",
     "warcmd": "65e19f3c4a93e2dbb8add8ecea523f6d64bddf6f55dd031cd864986c8e2d15da"
   },
@@ -290,7 +290,7 @@
     ],
     "battle_current_annotation_sha256": {
       "e_warctrl": "8dfca6e5ca37b5787c11ce6f0d1d4c688fb8d9eae4fd94f938e512d69e2deb31",
-      "war": "9c0aea28914085b8cb1ce4424352e5f165cedf9170da087c257ac9ce90085605",
+      "war": "3e2a00ab67215267c471a9d60b90a09b743d765da46ae94571eabd6de20400d7",
       "netwar": "614bef9d870b118b1e58bf9593e5297de08a3da4cf7b819adfc5f15d27bd766a",
       "warcmd": "65e19f3c4a93e2dbb8add8ecea523f6d64bddf6f55dd031cd864986c8e2d15da"
     }
@@ -351,7 +351,7 @@
       "findings": []
     },
     "html_build": {
-      "html_sha256": "f0aeaff7a43fac8b999aab32829d5b48af8418df1cdc6fba722a12581593574d",
+      "html_sha256": "7d5266729228c475591591647ee317f262fc76a284f9f7ffd183372c5767439c",
       "coverage": {
         "expected_entries": 5135,
         "indexed": 5135,
@@ -379,14 +379,14 @@
     }
   },
   "artifact_sha256": {
-    "all-gates-final.log": "957b04b5117fb419d3605982c8d0e471cc5a33cbeedb82b2eccbf59f2ab8150e",
+    "all-gates-final.log": "edb8fa56e485f1fb7295baffc8fff810557bada85872754482097d2b0aaaec2c",
     "boolean-negative.log": "e086c004ef111ac06d679a452442f1c71a98145f75082e587f8eeefbaa333974",
     "boolean-positive.log": "5d6e722bead8de83641efb950dfbce4c34ef49f3a2657c1c1d572d3e81b5cd1e",
-    "source-audit.json": "c81f99c68b95522ba7ffd672082c96b697b46748f0f90f398aefa033029c2b54",
+    "source-audit.json": "3b69b5d4b29dd58b5b33a4a99f15d5612720b723f68513cb43f8fb74c96636a6",
     "N1-two-trees.json.template": "957cda62a0125d575a1f82db9b5bb70052d373b6412387253886830ae8ad7424",
     "dom.cjs": "699980538acac44100c0b66fb3dd1adb618896d03cb3daf7add471bd24622094",
     "dom-result.json": "3d36ecaaa7b4f4ec6860df455a0e8b493f40a9f12535d5ac0c43486d3ce3f8b1",
-    "site-final/BUILD.json": "aaccfe1477011f016f1a8221d9c149912fab3af92297135694bc3bc9c36be369",
+    "site-final/BUILD.json": "476f5eca32b24daba1b9486da7597dafc6656fd857b8e72264aafb7805fb66f8",
     "audit.py": "bb1d4144582adb151c6b59f3de0534626eb7d4d32d49685c22aec679588be998"
   },
   "tool_sha256": {

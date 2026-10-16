@@ -401,7 +401,7 @@ python tools/devkit/check_windows_compat.py script_manual --strict # ERROR 0，W
 |---|---|
 |e_warctrl.json|`8dfca6e5ca37b5787c11ce6f0d1d4c688fb8d9eae4fd94f938e512d69e2deb31`|
 |netwar.json|`614bef9d870b118b1e58bf9593e5297de08a3da4cf7b819adfc5f15d27bd766a`|
-|war.json|`9c0aea28914085b8cb1ce4424352e5f165cedf9170da087c257ac9ce90085605`|
+|war.json|`3e2a00ab67215267c471a9d60b90a09b743d765da46ae94571eabd6de20400d7`|
 |warcmd.json|`65e19f3c4a93e2dbb8add8ecea523f6d64bddf6f55dd031cd864986c8e2d15da`|
 
 恢复参数/候选字节不改，工具布尔参数修正不覆盖历史冻结工具指纹。本次实际验证与限制见 `docs/evidence/script_manual_A_finalize_20261016.md`。
