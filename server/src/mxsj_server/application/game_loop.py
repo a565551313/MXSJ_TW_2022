@@ -199,7 +199,11 @@ class GameLoopService:
         if not isinstance(ticket, str) or not 20 <= len(ticket) <= 128:
             raise DomainError("UNAUTHENTICATED", "valid session ticket required")
         realm_id = _positive_int(realm_id, "realm_id")
-        ticket_hash = hashlib.sha256(ticket.encode("ascii", errors="ignore")).digest()
+        try:
+            ticket_bytes = ticket.encode("ascii")
+        except UnicodeEncodeError as exc:
+            raise DomainError("UNAUTHENTICATED", "session expired or revoked") from exc
+        ticket_hash = hashlib.sha256(ticket_bytes).digest()
         row = connection.execute(
             "SELECT s.realm_id, s.account_id, s.ticket_hash, s.session_epoch, s.expires_at_ms, "
             "s.selected_character_id FROM account_sessions s JOIN accounts a USING(account_id) "
