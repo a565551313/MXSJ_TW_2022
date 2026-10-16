@@ -3,8 +3,7 @@
   "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
   "entry_index": 4832,
   "annotation_sha256": "bb4b492a400adfcb7812b255e76c51a0c655e24e34c0f49121448959068bf799",
-  "reviewer": "A_delegate",
-  "delegation": "2026-10-16用户明确授权：“H宕机了你审吧”。A总控代审，非独立H会话；不含领域正文或master合并授权。",
+  "reviewer": "H",
   "decision": "accepted",
-  "note": "有限静态说明：25类/函数、21关键分支；含职责、资源/关联、修改问答与局限核对。本轮未发现新增阻塞；仅接受已列内容与明确未知，不表示全模块、原始源码、原生或实机通过。 实际审核者为A代审，非独立H。详docs/evidence/script_manual_DE_A_delegated_review_20261016.md。"
+  "note": "N7新会话独立复核（Arena 2026-10-16 新分配的第7个新agent，逻辑任务包H/review；不是旧H、不是A、不是旧D，未代写作者正文）。输入提交：A集成分支固定head 9b0dea799768aaacbb967ffc59f45753970752be，检查点7d32e5340b0ab4168f725d238d767ad6232f715d已确认为祖先；固定包script.fls 8b6e9266…、data.fls 5f96bdb2…、参数表43bb090d…本机sha256sum核对一致，未改动。独立复现：仓库外 Python3.11.2 + uncompyle6 3.9.3 / xdis 6.1.8 / spark-parser 1.9.0 / click 8.5.0，recover_entries.py --entries 3854,3232,4832 → 三条均 recovered/source/baseline/decompile_ok，script/interface.py(5681行)、script/key.py(276)、script/chatoutput.py(2478)。本记录为对既有 A_delegate 记录的**原位更新**（reviewer 由 A_delegate 改为 H，未新增 H_x.json 重复条目）；A_delegate 的 accepted 不是独立审核，本会话按实际字节重新独立复核后维持结论，但不是无条件背书。chatoutput/4832。抽样核对（非全函数穷尽）：AddChat 候选 L1772-1794 逐行核对——L1778 if IsBan(chat): return；L1780 (real_chat, chat, delay) = wrapui.HandleSpecialEmote(chat)；L1782 g_Chats.append(real_chat)；L1783-1784 if not g_CurChatOutput: return。JSON 的“缓存先于无窗口返回”与分支“已经 g_Chats.append(real_chat)，但不走显示、延迟或 CHAT_ADD 通知”与候选字面完全一致，顺序未被写反；延迟替换经 DelayAdd 改同索引并刷新可见对象，JSON 已标注索引/对象生命周期安全未实机验证。结论：accepted（有限范围）。接受范围=已列25类/函数、21已列分支及其所引证据。保留边界：未穷尽2478行候选；频道映射/筛选、可见索引与对象重建、左右键显示与接收位分离、场景穿透/动态链接、内外置配置、翻页、漂字及内存过滤仅抽样核对；基础滚动异常、新气泡链接衔接、布局/字体/外窗与服务端采纳仍未知；未把发送调用写成网络成功；runtime_verified=0。"
 }

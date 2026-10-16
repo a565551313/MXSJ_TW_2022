@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 337,
+  "annotation_sha256": "bcb980a3271c5cb90f643dd04563e0e7fdd36b93da748c942ad14a14c75ad511",
+  "reviewer": "H",
+  "decision": "changes_requested",
+  "note": "N7新会话独立复核（Arena 2026-10-16 新分配的第7个新agent，逻辑任务包H/review；不是旧H、不是A、不是旧C，未代写作者正文）。输入提交：A集成分支固定head 9b0dea799768aaacbb967ffc59f45753970752be，检查点7d32e5340b0ab4168f725d238d767ad6232f715d已确认为祖先；固定包script.fls 8b6e9266…、data.fls 5f96bdb2…、参数表43bb090d…本机sha256sum核对一致，未改动。独立复现：仓库外 Python3.11.2 + uncompyle6 3.9.3 / xdis 6.1.8 / spark-parser 1.9.0 / click 8.5.0，recover_entries.py --entries 337,4293,4007,4806 → 四条均 recovered/source/baseline/decompile_ok，script/login/mainpage.py(338)、script/main.py(1579)、script/login/register.py(1311)、script/login/loginin.py(1442)；行号为含6行恢复头的候选文件行号。mainpage/337。候选核对：L232 elif msgid == 30（180 秒节流 L234-239；L248 net.CHttpObject(web,'get',refreshbulletin)）；L242-247 按 main.g_LangVersion == 0 在 update.ini 的 [Setting] 与 [HK] 之间选 News/Service 地址；L266 def refreshbulletin(data, succeed)，L268-270 与 L272-274 两个并列失败分支均弹『刷新公告失敗』；L279-281 写 news.txt，L283 异常回退 g_News；L286 记 mx.ini refreshnews。退修 N7-L04（P2，modification_guides『修改公告正文、地址、布局分别在哪里？』/answer/evidence=['cls','messages','refresh','show']）：地址选择实际在 OnMessage(30) 的 L242-L247，现有证据未覆盖 OnMessage(30)，读者无法定位地址来源，也无法解释『点了刷新没反应』（节流在 L234-L239）。须补 OnMessage(30) 行段。退修 N7-L05（P2，同文件『刷新公告失败在哪里触发？』/answer/evidence=['refresh']）：refreshbulletin 有**两个**并列失败点（succeed 为假 L268-270；缺 \\r\\n\\r\\n 分隔符 L272-274），现合并表述且未给两条行段。退修 N7-L06（P3，modification_guides『登录按钮点击后…』与『注册逻辑与布局…』均只引 evidence=['messages']）：两题都靠同一段概括性证据支撑，未分别指向 OnMessage(1)/OnMessage(2) 的实际行段。本审核只覆盖上述已核对行段与已登记缺口；未穷尽四份候选，未做实机/Windows/原生/服务端验收，不因正文已合并而放行。"
+}
