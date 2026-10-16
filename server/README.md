@@ -8,6 +8,36 @@
 没有修改客户端、FLS、原有 Mock 或旧逆向工具；没有将客户端脚本当作可信服务端运行。
 Pygame 不属于本项目服务端依赖。技术方向为 asyncio + PostgreSQL；具体依赖锁定由基础设施组统一完成。
 
+## 启动最小闭环（开发原型）
+
+需要 Python 3.11+，无第三方依赖。从仓库根目录启动：
+
+```bash
+PYTHONPATH=server/src PYTHONDONTWRITEBYTECODE=1 python -m mxsj_server.bootstrap.game_server --database server/data/game-loop.sqlite3
+```
+
+默认仅监听 `127.0.0.1:8765`；非 loopback 监听被拒绝。每行一个 UTF-8 JSON 对象，服务端每行返回一个 JSON 结果。可用 `action`：`register`、`list_realms`、`select_realm`、`login`、`create_character`、`list_characters`、`select_character`、`enter_map`。先注册，再列出/选择区服，然后登录；后续请求携带 `session_ticket` 与 `realm_id`。建角必须传稳定的 `operation_id`。
+
+示例请求（逐行发送）：
+
+```json
+{"action":"register","account_name":"player_1","password":"correct-horse-battery"}
+{"action":"list_realms"}
+{"action":"select_realm","realm_id":1}
+{"action":"login","account_name":"player_1","password":"correct-horse-battery","realm_id":1}
+{"action":"create_character","session_ticket":"<登录返回的票据>","realm_id":1,"operation_id":"create-001","name":"小明"}
+{"action":"select_character","session_ticket":"<登录返回的票据>","realm_id":1,"character_id":1}
+{"action":"enter_map","session_ticket":"<登录返回的票据>","realm_id":1}
+```
+
+票据占位符必须替换成登录响应中的真实值；示例 character_id 也应取建角返回值。开发协议限制 16 KiB 帧，未实现原版客户端握手、opcode/Big5 编码、限流/封禁或 PostgreSQL 事务。SQLite schema 位于 [`migrations/0001_playable_loop.sql`](migrations/0001_playable_loop.sql)，仅用于可执行原型。测试：
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s server/tests/architecture -v
+PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s server/tests/integration -v
+PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s server/tests/protocol -v
+```
+
 ## 完整度说明（补充盘点）
 
 **21个目录是一级责任区，不是全部玩法。** 当前进一步建立81个细分工作包及5002条完整材料索引。
