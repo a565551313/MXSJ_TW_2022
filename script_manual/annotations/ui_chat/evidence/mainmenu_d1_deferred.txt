@@ -1,0 +1,171 @@
+N3 / D1 · entry 219 mainmenu 延迟回调（PushCall / Recall）专用摘录
+报告类型：metadata；带来源摘要的有限静态摘录，不是原始源码或完整恢复稿。
+作用范围：**只供 ui_chat/mainmenu.json 引用**。本文件是 N3 为修复 D1 新增的主菜单专用小证据，
+  刻意不改动 mainmenu.txt / support.txt / provenance.txt / chatoutput.txt / interface.txt /
+  key.txt / validation.txt 的任何字节，因为前六者被已在 A 有限通过的 interface(3854)、
+  key(3232)、chatoutput(4832) 三份 JSON 以 sha256 共同引用，改一字节就会让那三份审核 stale。
+会话标识：N3（全新会话；逻辑任务包 D / ui_chat）。不是旧 D 会话，也不复用其分支。
+开工基线：9b0dea799768aaacbb967ffc59f45753970752be（含合并内容检查点 7d32e5340b0ab4168f725d238d767ad6232f715d）。
+固定包 SHA256：8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72
+keys DB SHA256：43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb
+引擎：uncompyle6 3.9.3 / xdis 6.1.8 / spark-parser 1.9.0；Python 3.11.2（与 D 原报告同版）。
+摘录规则：L 后数字是**去头候选**的 1-based 闭区间行号，与 D 原 mainmenu.txt 同一套编号；
+  冒号后是原行的 JSON 字符串（可解码还原空格/转义）；未更名、未补分支、未修乱码、未修候选。
+手册 evidence.start_line/end_line 指**本报告**实际行号；两套行号不可混用。
+只读取白名单条目 219 的负载；1288 仅目录元数据用于排除范围断言，无负载提取/解压/恢复。
+没有导入、eval、exec、运行恢复出来的游戏模块；没有客户端/Windows/网络/实机记录。
+decompile_ok、baseline、progress 都不是语义/严格可逆/可执行证明；转译器可能局部修补。
+
+[d1_reproduce] entry=219；co_filename=script/mainmenu.py
+复现命令（仓库外新目录，未覆盖任何输入）：
+  <仓库外venv>/bin/python tools/decompiler/recover_entries.py \
+    --out /home/user/n3_ext/recover219 --entries 219 \
+    --decompile-timeout 30 --report /home/user/n3_ext/recover219_report.json
+结果：status=recovered，stage=baseline，repaired=False，decompile=decompile_ok，path_class=ok
+  entry_id=177381689(0x0a92a139)；clen=18287；doff=15357457；exp_len=41423；pyc_len=41431
+  keys_used=[82, 66, 131, 42, 233]；bounds_used=[8389, 16778, 25091, 33374]
+  stored payload SHA256 前16位=c9835c4b13272697（与 D 原报告 c9835c4b13272697dc74…c312 一致）
+
+本次原始落盘产物（含 recover_entries.py 自动加的 6 行 `# MXSJ 恢复产物` 头）：
+  SHA256=65bf5f83cd27c3e483ca074d1e462eabe007a42e2cbc8baf35dcd9fe0c761e4f；字节=43119；行=1294
+去掉开头 6 行恢复头之后的候选（下文一切行号均以此为准）：
+  SHA256=e03d31ac8deaab37766addcab9e2a1a63dd1b3c223e977cfe3f427b80df05bfd；字节=42790；行=1288
+D 原报告钉的候选摘要=e03d31ac8deaab37766addcab9e2a1a63dd1b3c223e977cfe3f427b80df05bfd；字节=42790；行=1288
+比对结论：**逐字节相同（MATCH）**，且字节数与行数同时吻合。
+诚实声明：去头范围**恰好**是 recover_entries.py 自加的 6 行恢复头，D 原报告编号也从
+  `# -*- coding: utf-8 -*-` 起算；没有为了凑旧摘要而扩大去头/忽略范围或改动比对方式。
+  原始落盘产物与去头候选两个 SHA 都登记在此，未只报对得上的那一个。
+
+[d1_pushcall] entry=219；PushCall 完整函数体（def 到 return，后接空行）
+原候选 SHA256=e03d31ac8deaab37766addcab9e2a1a63dd1b3c223e977cfe3f427b80df05bfd；字节=42790；行=1288
+原候选行范围：377..386（闭区间）
+L00377: "def PushCall(func, *args):"
+L00378: "    r\"\"\""
+L00379: "        \\xbcW\\xa5[\\xa5D\\xacɭ\\xb1\\xaa\\xec\\xa9l\\xa4Ʈɪ\\xba\\xa6^\\xbdը\\xe7\\xbc\\xc6"
+L00380: "        :param func:\\xa6^\\xbdժ\\xba\\xa8\\xe7\\xbc\\xc6"
+L00381: "        :param args:\\xa6^\\xbdժ\\xba\\xb0Ѽ\\xc6"
+L00382: "        :return:"
+L00383: "        \"\"\""
+L00384: "    _g_Callback.append((func, args))"
+L00385: "    return"
+L00386: ""
+
+机器核对（全部由去头候选自动计算，非人工判断）：
+  L377..L385 内非空非注释行 = 9 行：[377, 378, 379, 380, 381, 382, 383, 384, 385]
+  其中 docstring 占 L378..L383 = 6 行（只描述参数，不是可执行分支）
+  去掉 def 行与 docstring 后，**函数体可执行语句只剩 2 行**：[384, 385]
+    L00384: "    _g_Callback.append((func, args))"
+    L00385: "    return"
+  其中出现 `g_MainMenu` 的行 = 无（计数 0）
+  其中出现 `func(` 直接调用的行 = 无（计数 0）
+  其中出现控制流关键字(if/elif/else/try/except/finally/while/for/with)的行 = 无（计数 0）
+  → 三个计数都是 0：本函数**没有任何分支**，没有 g_MainMenu 判断，也没有对 func 的直接调用；
+    因此不能给它补出“主界面存在就立即执行”的分支。PushCall 本体就是**无条件入队后 return**。
+  乱码 docstring（L379-L381）按原文保留，未猜测/改写其中文含义。
+
+[d1_recall] entry=219；Recall 完整函数体
+原候选 SHA256=e03d31ac8deaab37766addcab9e2a1a63dd1b3c223e977cfe3f427b80df05bfd；字节=42790；行=1288
+原候选行范围：1277..1286（闭区间）
+L01277: "def Recall():"
+L01278: "    global _g_Callback"
+L01279: "    cl = [_[1] for x in _g_Callback]"
+L01280: "    for (cb, args) in cl:"
+L01281: "        print cb, args"
+L01282: "        cb(*args)"
+L01283: ""
+L01284: "    _g_Callback = []"
+L01285: "    return"
+L01286: ""
+
+字面形态：L1279 `cl = [_[1] for x in _g_Callback]` 的循环变量是 `x`，而表达式取的是 `_[1]`，
+  两者不对应；紧随的 L1280 `for (cb, args) in cl` 要求 cl 的每个元素可解包成 2 项。
+  因此不能断言 L1281-L1282 的 `print cb, args` / `cb(*args)` 一定逐个正常执行。
+  L1284 `_g_Callback = []` 是无条件清队列（在 for 之后、同一函数体内）。
+  本摘录**只登记候选字面形态**，没有把候选修好再当原文，也没有按历史实现补逻辑。
+
+[d1_underscore_scan] entry=219；`_` 这个裸名在整份 1288 行候选中的出现情况
+扫描式：正则 (^|[^A-Za-z0-9_])_([^A-Za-z0-9_]|$)，即把 `_` 当独立标识符，排除 _g_Callback 等带前后缀名。
+命中行号 = [1279]（计数 1）
+另外扫描 `_` 的**绑定**形态（`_ = …`、`for _ in …`、`import … as _`）：命中行号 = 无（计数 0）
+结论：`_` 在候选里只被**读取**这一次（L1279），没有任何绑定；它也不是该推导式自己的循环变量 `x`。
+边界：这是**去头候选文本内**的扫描结果。`_` 是否由引擎注入、是否在其他模块/内建环境中被绑定，
+  本工作包没有原生或实机手段核实；因此 Recall 的运行期结果是 NameError、ValueError 还是能正常回放，
+  一律记为**待核**，不写成已确认的实机 bug，也不写成已确认能正常执行。
+  同理不能排除该行是转译器伪影（原始源码可能并非此形），decompile_ok 不证明语义正确。
+
+[d1_callback_refs] entry=219；`_g_Callback` 在候选中的全部出现
+命中行号 = [8, 11, 14, 384, 1278, 1279, 1284]（计数 7）
+L00008: "_g_Callback = []"
+L00011: "    global _g_Callback"
+L00014: "    _g_Callback = []"
+L00384: "    _g_Callback.append((func, args))"
+L01278: "    global _g_Callback"
+L01279: "    cl = [_[1] for x in _g_Callback]"
+L01284: "    _g_Callback = []"
+读法：L8 模块级初值 []；L11/L14 在 ModuleReset 内 global 并重设为 []；L384 PushCall 内 append；
+  L1278/L1279/L1284 在 Recall 内 global、读取、重设为 []。除这些行外候选内没有其他读写点。
+
+[d1_pushcall_callers] entry=219；PushCall / Recall 在候选内的全部调用点及其所在函数
+PushCall 命中行号 = [377, 465, 1223]
+Recall   命中行号 = [159, 1277]
+
+-- 排除定义行后，候选内 PushCall 实际调用点 = [465, 1223]（计数 2）
+
+-- 调用点 L465（所在定义 L456: def ShowGmBtn(bShow):）
+原候选行范围：456..466（闭区间）
+L00456: "def ShowGmBtn(bShow):"
+L00457: "    r\"\"\""
+L00458: "        \\xacO\\xa7_\\xc5\\xe3\\xa5\\xdcGM\\xad\\xb1\\xaaO"
+L00459: "        :param bool bShow:"
+L00460: "        \"\"\""
+L00461: "    if g_MainMenu:"
+L00462: "        import dlggm"
+L00463: "        dlggm.ShowGMButtonDlg(bShow)"
+L00464: "    else:"
+L00465: "        PushCall(ShowGmBtn, bShow)"
+L00466: "    return"
+
+-- 调用点 L1223（所在定义 L1219: def OnPlayerMailNotify(bNotify=True):）
+原候选行范围：1219..1224（闭区间）
+L01219: "def OnPlayerMailNotify(bNotify=True):"
+L01220: "    import commoncb"
+L01221: "    commoncb.TriggerCB(commoncb.PLAYERMAIL_NOTICE, bNotify)"
+L01222: "    if not g_MainMenu:"
+L01223: "        PushCall(OnPlayerMailNotify, bNotify)"
+L01224: "    return"
+
+-- Recall 唯一调用点 L159（所在定义 L148: def Show(s)），只取相关分支：
+原候选行范围：148..162（闭区间）
+L00148: "def Show(s):"
+L00149: "    r\"\"\""
+L00150: "        \\xc5\\xe3\\xa5\\xdc/\\xbeP\\xb7\\xb4 \\xa5D\\xacɭ\\xb1"
+L00151: "        :param bool s: \\xacO\\xa7_\\xc5\\xe3\\xa5\\xdc"
+L00152: "        \"\"\""
+L00153: "    global g_MainMenu"
+L00154: "    if not s:"
+L00155: "        g_MainMenu = None"
+L00156: "        return"
+L00157: "    elif g_MainMenu is None:"
+L00158: "        g_MainMenu = CMainMenu(interface.MainPanel)"
+L00159: "        Recall()"
+L00160: "    import delayloading"
+L00161: "    if not delayloading.IsShowLoading():"
+L00162: "        SwitchChatWnd()"
+
+读法（静态、字面）：两个调用点都在 entry 219 **本模块内**，且各自先自行判断 g_MainMenu：
+  ShowGmBtn 在 `if g_MainMenu:` 走 dlggm.ShowGMButtonDlg，**else** 才 PushCall(ShowGmBtn, bShow)；
+  OnPlayerMailNotify 先 commoncb.TriggerCB，再 `if not g_MainMenu:` 才 PushCall(OnPlayerMailNotify, bNotify)。
+  即“主界面存在就立即做、不存在才排队”这个分支属于**调用者**，不属于 PushCall 本体；
+  两处都把**自身**作为 func 入队，因此队列元素形如 (本模块函数, 1 元参数元组)。
+  Recall 只在 Show(s) 的 `elif g_MainMenu is None:` 分支里、于 L158 创建 CMainMenu 之后被调用一次。
+
+未覆盖范围（不写成“不存在”）：本摘录只枚举 entry 219 候选内部的调用点。
+  其他模块是否 import mainmenu 后调用 PushCall，本工作包没有做跨条目全量检索，属未知。
+
+[d1_scope_and_redlines] 本报告边界
+- 只服务 D1 的函数/调用/问答层纠正；不重写 interface(3854)/key(3232)/chatoutput(4832) 三份已有限通过说明。
+- 未修改任何共享证据文件字节；未改原包、密钥库、参数、编辑器、启动器。
+- 未定点恢复敏感条目 1288；未请求业务 URL；未上传网盘、未改权限。
+- 完整候选与恢复产物留在仓库外 /home/user/n3_ext/，未搬入 Git；本文件只是小摘录。
+- 所有结论限定 archive_sha256=8b6e9266…c0d72 的 entry 219；不外推注册派生包、PR34 清单或其他引擎候选。
+- 无 runtime_verified 结论：本轮没有 Windows/EXE/游戏/原生/实服验证。
