@@ -28,14 +28,14 @@ B把完整目录替换这个单文件，保留20个初始身份（路径若确�
 
 权威格式是 `schema/contract.schema.json` 的 `$defs.annotation`，未知字段拒绝，不接受散落Markdown作为第二套底稿。示例 `examples/annotation.json`；文件名任意但必须唯一主键且放在正确领域目录。
 
-2026-10-16 G停工后，其固定四篇由A代写：任务包owner仍G，author明确实际作者A，不伪称G提交；独立复核尚未完成，A不得用自己的代审身份自批这四篇。此例外不接管C–F正文返修。
+2026-10-16 G停工后，其固定四篇由A代写：任务包owner仍G，author明确实际作者A，不伪称G提交。随后新N6提交接管修订PR42，新N7在PR45提供四份精确SHA绑定的有限accepted模板，尚未合入/正式激活；A不得用自己的代审身份自批这四篇。此例外不接管C–F正文返修。
 
 必填：schema_version=1、身份、与目录完全一致的path、owner、domain、author、source_status、purpose、keywords、functions、resources、relationships、related_modules、modification_guides、limitations、sources、evidence。没有资料的列表可为空，**不要编造**。
 
 - `purpose` / 函数summary / 分支effect / 资源summary / 修改问答answer均为 **Claim**：`text`、`confidence`、`evidence`。
 - Claim.confidence：`extracted`=直接自动观察的事实；`inferred`=推测待核实；`static_reviewed`=作者已读证据并核对的解释；`runtime_verified`=作者有实机记录。**不是逐级自动升级**。非推测必须引用证据；实机结论还必须引用 `kind=runtime_report` 的证据。报告应含平台、输入SHA、操作、预期/实际、日志，机器只检查引用，真实性/充分性由H审阅。
 - `sources`：id / 仓库内规范相对path / sha256 / kind(metadata、recovered_source、runtime_report) / note（来源、引擎、缺失等）。相对路径不得逃逸、带盘符、反斜杠或符号链接。源码从仓库外语料读取时，不把大语料搬进Git；先与A约定可分发的小证据摘录/审阅报告及其路径，注明原候选SHA和行范围，不能伪装成完整源码。未经允许不摘录1288或敏感内容。
-- `evidence`：id、source_id、start_line、end_line，**从1开始，闭区间**，绑定原始UTF8文本字节摘要，不是重排后的代码位置；不可把AST解析/语法通过当行为证据。
+- `evidence`：id、source_id、start_line、end_line，**从1开始，闭区间**，绑定原始UTF8文本字节摘要，不是重排后的代码位置；不可把AST解析/语法通过当行为证据。 **start_line/end_line始终指该source_id对应sources.path文件自身的物理行号**；若该文件是摘录报告，L/R前缀或段头中的候选原行号属于另一套定位，不能直接填作报告物理行。报告须标清候选是否含恢复头、去头精确范围/摘要及行号映射。澄清此契约不要求改已审摘录/JSON的字节。
 - `source_status` 独立标来源：metadata_only、historical_unverified_origin、recovered_partial、recovered_complete_not_original、native_origin_checked_not_semantics。原生来源已核不等于反编译语义正确。
 - `functions`：name用限定名（如CMainPage.OnMessage）去重；signature为参数文本，未知null；kind；summary；calls（静态引用字符串线索，未解动态调用不要写死）；branches（condition/effect，大OnMessage要拆消息条件）。空calls不表示无调用。未覆盖全部函数要写limitations。
 - `resources`：kind(module/layout/file/config/image/sound/protocol)、target、summary。target只展示，不用来执行、请求网络或构造输出文件。

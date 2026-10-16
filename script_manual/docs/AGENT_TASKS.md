@@ -1,6 +1,6 @@
 # Agent任务卡（协议v1）
 
-> **本轮入口已更换**：2026-10-16用户要求合并现有成果后重新交给全新agent。请复制 [N1–N7新任务卡](../coordination/NEW_AGENTS_START_20261016.md)，不是恢复原B–H会话。本文的B–H仅保留逻辑owner/目录映射和历史范围；新PR都从新人固定分支提交到A，不再更新已合PR35–38。
+> **本轮入口已更换**：2026-10-16用户要求合并现有成果后重新交给全新agent。[N1–N7新任务卡](../coordination/NEW_AGENTS_START_20261016.md)已执行并提交PR39–45，勿重复启动七人；任务卡保留各自边界，最新复核/待修见STATUS§3.49，不是恢复原B–H会话。本文的B–H仅保留逻辑owner/目录映射和历史范围；新PR都从新人固定分支提交到A，不再更新已合PR35–38。
 
 所有Agent先读 `CONTRACT.md`、根 `AGENTS.md` 和根 `docs/STATUS.md`。输入/归属只认 `coordination/baseline.json` 与 `tasks.json`，不追浮动master。先提交推送自己现有工作再开工；不切换各自Arena固定分支，不擅自合master或上传游戏包/改权限。
 

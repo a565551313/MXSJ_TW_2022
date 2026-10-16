@@ -2,7 +2,9 @@
 
 独立、只读的脚本字典工具。**JSON 是唯一底稿**，PySide6 查看器和离线单 HTML 共用校验/索引层，不导入或执行游戏脚本，不修改游戏包、脚本编辑器或启动器。
 
-本轮已按用户授权把现有成果合到 **A集成分支（不是master）**：5135条目录登记、20份说明、3份有限通过、5份有退修审核、12份无有效审核。**合并不等于验收**：B目录签名仍有已知错误，F多条仅名称底稿，其他说明也有有限范围/待修项。历史A代审实际标A_delegate，不冒称独立H。用户决定重新分配给**全新agent**，直接复制 [N1–N7新任务卡](coordination/NEW_AGENTS_START_20261016.md)；不再复用旧会话或旧PR。当前进度和测试以 [`../docs/STATUS.md`](../docs/STATUS.md) 最新§3.48为准。
+本轮已按用户授权把现有成果合到 **A集成分支（不是master）**：5135条目录登记、20份说明、3份有限通过、5份有退修审核、12份无有效审核。**合并不等于验收**：B目录签名仍有已知错误，F多条仅名称底稿，其他说明也有有限范围/待修项。历史A代审实际标A_delegate，不冒称独立H。此前已按 [N1–N7新任务卡](coordination/NEW_AGENTS_START_20261016.md) 分派并收到七个新PR；不再复用旧B–H会话或旧PR。当前进度和测试以 [`../docs/STATUS.md`](../docs/STATUS.md) 最新§3.49为准。
+
+> **最新复核（2026-10-16，§3.49）**：七个全新agent已交PR39–45，不必再次启动七人。N1/N3/N4/N6为有限集成候选；N2待N7补新字节尾审，N5有3项P2待修，N7为部分审核交付。**新PR均未合并，正式仍5135/20/3/1**；外置模拟精确激活九份N7模板可达12通过，不是正式状态。见[总复核报告](../docs/evidence/script_manual_new_cohort_A_review_20261016.md)。
 
 ## 开始使用
 
@@ -29,7 +31,7 @@ PYTHONPATH=script_manual/src python -m mxsj_manual build --verify-evidence --rep
 
 ## 给并行 Agent 的入口
 
-**新一轮只按 [NEW_AGENTS_START_20261016.md](coordination/NEW_AGENTS_START_20261016.md) 的N1–N7卡分配给新会话**。下列契约/逻辑owner映射继续生效，但旧B–H分支与“更新原PR”不再是新人操作指令。
+**N1–N7卡已执行并交PR，勿重复启动七人**；[任务卡入口](coordination/NEW_AGENTS_START_20261016.md)保留范围约束，最新行动见STATUS§3.49/总复核报告。下列契约/逻辑owner映射继续生效，但旧B–H分支与“更新原PR”不再是新人操作指令。
 
 1. 先读 [`docs/CONTRACT.md`](docs/CONTRACT.md) — 字段、证据与版本规则。
 2. 读 [`docs/AGENT_TASKS.md`](docs/AGENT_TASKS.md) — 权限边界和各任务卡。
