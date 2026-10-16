@@ -1,0 +1,31 @@
+name: Server game-loop tests
+
+on:
+  push:
+    branches:
+      - master
+      - "agent/server-login-foundation-*"
+  pull_request:
+    paths:
+      - "server/src/mxsj_server/**"
+      - "server/migrations/**"
+      - "server/tests/architecture/**"
+      - "server/tests/integration/**"
+      - "server/tests/protocol/**"
+      - ".github/workflows/server-game-loop.yml"
+
+jobs:
+  stdlib-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Architecture contract tests
+        run: PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s server/tests/architecture -v
+      - name: Game-loop integration tests
+        run: PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s server/tests/integration -v
+      - name: TCP protocol tests
+        run: PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s server/tests/protocol -v
