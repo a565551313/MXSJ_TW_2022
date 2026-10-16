@@ -203,6 +203,7 @@ class GameLoopService:
         row = connection.execute(
             "SELECT s.realm_id, s.account_id, s.ticket_hash, s.session_epoch, s.expires_at_ms, "
             "s.selected_character_id FROM account_sessions s JOIN accounts a USING(account_id) "
+            "JOIN realms r ON r.realm_id = s.realm_id AND r.status = 'online' "
             "WHERE s.realm_id = ? AND s.ticket_hash = ? AND a.disabled = 0",
             (realm_id, ticket_hash),
         ).fetchone()
