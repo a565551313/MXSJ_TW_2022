@@ -37,7 +37,10 @@ class RequestContextValidationTests(unittest.TestCase):
             validate_request_context(context(character_id=None), require_character=True)
 
     def test_client_context_requires_account_and_session_epoch(self) -> None:
-        for override in ({"account_id": None}, {"session_epoch": None}):
+        for override in (
+            {"account_id": None, "character_id": None, "session_epoch": None},
+            {"session_epoch": None},
+        ):
             with self.subTest(override=override), self.assertRaises(DomainError) as raised:
                 validate_request_context(context(**override))
             self.assertEqual(raised.exception.code, "UNAUTHENTICATED")
