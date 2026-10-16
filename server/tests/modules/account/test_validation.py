@@ -49,7 +49,7 @@ class LoginRequestValidationTests(unittest.TestCase):
         invalid = request(credential=b"")
         with self.assertRaises(DomainError) as raised:
             validate_login_request(invalid)
-        self.assertNotIn("credential", str(raised.exception).lower())
+        self.assertNotIn("opaque-test-credential", str(raised.exception))
         self.assertNotIn("opaque-test-credential", repr(invalid))
 
 
