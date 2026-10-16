@@ -1,6 +1,7 @@
 name: Server game-loop tests
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
@@ -12,6 +13,7 @@ on:
       - "server/tests/architecture/**"
       - "server/tests/integration/**"
       - "server/tests/protocol/**"
+      - "server/tools/verify_game_loop.py"
       - ".github/workflows/server-game-loop.yml"
 
 jobs:
@@ -31,3 +33,6 @@ jobs:
         run: PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s server/tests/integration -v
       - name: TCP protocol tests
         run: PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s server/tests/protocol -v
+
+      - name: End-to-end registration-to-map smoke test
+        run: PYTHONDONTWRITEBYTECODE=1 python server/tools/verify_game_loop.py --database /tmp/mxsj-game-loop-smoke.sqlite3 --skip-unit-tests
