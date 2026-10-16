@@ -390,6 +390,12 @@
       "excluded": 1
     },
     "remaining": "非A独立末审battle四篇新字节；修正已由A完成。尚无新的独立审核结果，不伪造已联系/已开工状态。",
-    "note": "baseline_coverage与各任务卡保留历史，CONTRACT author/reviewer规则继续有效；source/tool历史指纹不因收尾改写。"
+    "note": "baseline_coverage与各任务卡保留历史，CONTRACT author/reviewer规则继续有效；source/tool历史指纹不因收尾改写。",
+    "independent_review_request": {
+      "status": "published_comment_request_only; no_new_N7_review_received_or_execution_claimed",
+      "review_target_commit": "0b04cc17ae3e4c10c7dc3d60ba48fc1d43d193bd",
+      "N7_request": "https://github.com/a565551313/MXSJ_TW_2022/pull/45#issuecomment-6206831156",
+      "N5_closeout": "https://github.com/a565551313/MXSJ_TW_2022/pull/44#issuecomment-6206831398"
+    }
   }
 }

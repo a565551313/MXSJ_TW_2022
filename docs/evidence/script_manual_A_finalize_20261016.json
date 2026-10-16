@@ -400,5 +400,10 @@
     "No real Qt/browser/CSP/Windows/EXE/game/native/server acceptance.",
     "No 5000-module semantic expansion, 79MB corpus rebuild, game/editor/launcher changes, master merge or upload."
   ],
-  "independent_review_request_status": "not_yet_posted_at_report_creation; subsequent A receipt will record actual published comment URL, not claim N7 execution."
+  "independent_review_request": {
+    "status": "published_comment_request_only; no_new_N7_review_received_or_execution_claimed",
+    "review_target_commit": "0b04cc17ae3e4c10c7dc3d60ba48fc1d43d193bd",
+    "N7_request": "https://github.com/a565551313/MXSJ_TW_2022/pull/45#issuecomment-6206831156",
+    "N5_closeout": "https://github.com/a565551313/MXSJ_TW_2022/pull/44#issuecomment-6206831398"
+  }
 }
