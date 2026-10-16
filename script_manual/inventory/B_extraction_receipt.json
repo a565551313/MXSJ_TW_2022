@@ -1,6 +1,9 @@
 {
-  "agent": "B",
+  "agent": "N1",
+  "logical_owner": "B",
+  "session": "new N1 Arena session on its own fixed branch; not the original B session",
   "task": "full inventory extraction for two pinned archives",
+  "revision_note": "N1 fixes per docs/evidence/script_manual_BDF_A_review_20261016.md: no bare '*' for **kwargs-only signatures; '.N' compiler slots and non-identifier parameter names -> signature null with raw clue in signature_audit.rejected; rejected fallback originals recorded in script_failures[].fallback_rejected",
   "baseline_analysis_id": "mxsj-original-20261015-v1",
   "inputs": {
     "script_fls": {
@@ -21,13 +24,20 @@
       "sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
       "role": "historical path fallback + sample comparison only; its function names were never copied into results"
     },
+    "frozen_seed": {
+      "commit": "cc5c1bad7a806078794eca1ab7482230a18ef9d5",
+      "path": "script_manual/inventory/modules.jsonl",
+      "sha256": "de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b",
+      "rows": 20,
+      "role": "the only modules.jsonl present in the isolated tree before --sample/--full; the current 5135-row inventory is never used as seed"
+    },
     "decompiled_corpus": "not used; marshal metadata is read directly from originals, PR34 corpus stays external_reference_not_loaded"
   },
   "tools": {
     "python": "3.11.2",
     "extractor": {
       "path": "script_manual/inventory/extract_inventory.py",
-      "sha256": "662c6fbf2a09d29c333658acbe954d390243f6ea469c7cb00eaba2f1751a9bb8"
+      "sha256": "e12addfbed390638d850e0bba2e8116e518528f875f5a7d26091e19e35ec8c11"
     },
     "reused_modules_sha256": {
       "script_editor/src/script_editor/core/archives/document.py": "29d43305c362159eb01f59afcfc072046928e88c7cd92de1e5334da5d60e32f4",
@@ -43,33 +53,62 @@
       "script_editor/src/script_editor/core/vm/py27/codec.py": "b283f56e712fcf24a6cde591cff9090c1a391a74548c2ad77f8b519f6427e462",
       "script_editor/src/script_editor/core/vm/py27/forward.py": "2a1c74fab70ae1d4546ba676c7bc269ed8c23936250241e6b2756ff4f8468d59",
       "script_editor/src/script_editor/core/vm/py27/inverse.py": "aab033aff3f08a20d6b3abbee36dae6c84e12a74bd5b30c6fd994b504558847e"
+    },
+    "loaded_script_editor_modules_sha256": {
+      "script_editor/src/script_editor/__init__.py": "47d6be55fec445ec4099b9869d6192427e0a8ed7bed7afe617e7b5559021d465",
+      "script_editor/src/script_editor/core/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "script_editor/src/script_editor/core/archives/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "script_editor/src/script_editor/core/archives/document.py": "29d43305c362159eb01f59afcfc072046928e88c7cd92de1e5334da5d60e32f4",
+      "script_editor/src/script_editor/core/archives/fls0slf.py": "458a8f3ce0e99fd479d9550e11b6870f0b39c574f567a91af23b80945cf4dc6e",
+      "script_editor/src/script_editor/core/archives/flsdata.py": "eb5077648a14a0399b8d4c246826bbead4127864e44bd2f5408bda92948c89fa",
+      "script_editor/src/script_editor/core/archives/readers.py": "4f3e1a277649e30ec2277182dd101b7a92b66b45e1bacb032d7d11e35ab20438",
+      "script_editor/src/script_editor/core/errors.py": "ce3e26c468111ded8fd5f49d5f04220e64a6544d740f321c7a73cf1cd558838c",
+      "script_editor/src/script_editor/core/services/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "script_editor/src/script_editor/core/services/module_paths.py": "c023634550a52da5e2b10a3e7d22c696456b626af3f25c41f2cd2a65207b8603",
+      "script_editor/src/script_editor/core/vm/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "script_editor/src/script_editor/core/vm/compression.py": "b54a4b6b92211792abe79933a6d81185a3fa4ebcd60d45831d2883c361438719",
+      "script_editor/src/script_editor/core/vm/marshal_tree.py": "e45fd1cf3a0011fe286bf1f8cb80af7722d9db9547f9a4ffc97e90353f2ce888",
+      "script_editor/src/script_editor/core/vm/py25/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "script_editor/src/script_editor/core/vm/py25/codec.py": "fac4db00a566ea2005cdb1bb87935ee9a7df5082098014e2fae2a2f60ce59eda",
+      "script_editor/src/script_editor/core/vm/py25/keys.py": "0e4a6433a6c11c8b6c1192b894f5faad1a2099e97a68f3e39be6440ef9e8f0ac",
+      "script_editor/src/script_editor/core/vm/py27/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "script_editor/src/script_editor/core/vm/py27/codec.py": "b283f56e712fcf24a6cde591cff9090c1a391a74548c2ad77f8b519f6427e462",
+      "script_editor/src/script_editor/core/vm/py27/forward.py": "2a1c74fab70ae1d4546ba676c7bc269ed8c23936250241e6b2756ff4f8468d59",
+      "script_editor/src/script_editor/core/vm/py27/inverse.py": "aab033aff3f08a20d6b3abbee36dae6c84e12a74bd5b30c6fd994b504558847e",
+      "script_editor/src/script_editor/core/vm/tables.py": "ff8c94b461e50f9a7905708f8505d7a50bbfdae1dbed7120aeea949f60e10118"
     }
   },
   "commands": [
-    "python3 script_manual/inventory/extract_inventory.py --sample",
-    "python3 script_manual/inventory/extract_inventory.py --full",
-    "PYTHONPATH=script_manual/src <venv>/python -m mxsj_manual validate --require-full-inventory"
+    "git show cc5c1bad7a806078794eca1ab7482230a18ef9d5:script_manual/inventory/modules.jsonl > <isolated-tree>/script_manual/inventory/modules.jsonl",
+    "python3 <isolated-tree>/script_manual/inventory/extract_inventory.py --sample",
+    "python3 <isolated-tree>/script_manual/inventory/extract_inventory.py --full",
+    "PYTHONPATH=script_manual/src python3 -m mxsj_manual validate --verify-evidence --require-full-inventory --repository .",
+    "python3 -m unittest discover -s script_manual/inventory -p 'test_*.py' -v"
   ],
+  "isolation": "ROOT = parents[2] of this script; --sample writes sample_regression.json and --full writes modules.jsonl plus this receipt under ROOT/script_manual/inventory. Runs happen in a copy outside the repository whose inventory holds only the frozen 20-seed modules.jsonl (no prior sample_regression.json); the three outputs are then copied back unchanged",
   "method": {
     "script": "0SLF index -> inflate -> pinned 5-segment XOR -> bounded marshal tree; path=co_filename, names from nested code objects",
     "data": "FLS0 central directory names are the registered paths; payload inflated, native VM27 converted with audited inverse, then same marshal walk; directories keep directory status",
     "kind": "parent standard bytecode LOAD_CONST + MAKE_FUNCTION/MAKE_CLOSURE, BUILD_CLASS within window => class; class child function => method; undecodable parent => header-flag fallback",
-    "signature": "argcount/varnames/flags only; null when unconfirmed; class signature always null; default values not rendered",
-    "excluded_1288": "payload bytes never read, decrypted or parsed; only the policy meta-record is emitted",
+    "signature": "CPython 2 co_varnames layout: co_argcount positional names, then *name if CO_VARARGS, then **name if CO_VARKEYWORDS; no bare '*' (Python 2 has no keyword-only parameters); emitted only when every name is a Python 2 identifier, otherwise null with the raw rendering kept in signature_audit.rejected; class signature always null; default values not rendered",
+    "excluded_1288": "never targeted by read_stored (audited, see read_audit.script); payload never decompressed, decrypted or parsed; whole-file SHA-256 fingerprinting reads its bytes only to hash the archive; only the policy meta-record is emitted",
     "execution": "no game module imported/executed; no decompiler run"
   },
   "script_counts": {
-    "signatures": 116172,
+    "signatures": 115953,
     "kind_function": 28822,
     "structurally_read": 4950,
     "functions_total": 125973,
     "kind_class": 9730,
     "kind_method": 87421,
     "parent_bytecode_undecodable": 1986,
+    "signature_rejected_non_identifier_parameter": 186,
     "signature_unavailable": 71,
     "kind_fallback": 1668,
+    "signature_kwargs_only": 53,
     "suspect_names": 231,
     "historical": 37,
+    "signature_rejected_compiler_internal_slot": 33,
     "fallback_rejected_control_chars": 4,
     "unreadable": 14,
     "excluded_by_policy": 1
@@ -77,12 +116,14 @@
   "data_counts": {
     "directory": 12,
     "embedded_filename_match": 121,
-    "signatures": 2191,
+    "signatures": 2176,
     "kind_function": 997,
     "structurally_read": 121,
     "functions_total": 2409,
     "kind_class": 218,
     "kind_method": 1194,
+    "signature_rejected_compiler_internal_slot": 15,
+    "signature_kwargs_only": 17,
     "suspect_names": 10
   },
   "script_failures": [
@@ -114,7 +155,21 @@
     {
       "entry_index": 880,
       "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
-      "fallback": ""
+      "fallback": "",
+      "fallback_rejected": {
+        "source": "server/docs/catalog/script_entries.jsonl",
+        "source_sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+        "field": "index_filename",
+        "original_value": "script/dialog/newwarui/newus\u0000item/newwaruseitemdefine.py",
+        "original_value_utf8_hex": "7363726970742f6469616c6f672f6e657777617275692f6e65777573006974656d2f6e65777761727573656974656d646566696e652e7079",
+        "control_characters": [
+          {
+            "offset": 28,
+            "codepoint": "U+0000"
+          }
+        ],
+        "disposition": "rejected: not written to modules.jsonl; entry registered as unreadable with path=null"
+      }
     },
     {
       "entry_index": 933,
@@ -174,7 +229,21 @@
     {
       "entry_index": 2310,
       "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
-      "fallback": ""
+      "fallback": "",
+      "fallback_rejected": {
+        "source": "server/docs/catalog/script_entries.jsonl",
+        "source_sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+        "field": "index_filename",
+        "original_value": "script/mxgame/activity/heartychocolate/heartych\u0000colatedefine.py",
+        "original_value_utf8_hex": "7363726970742f6d7867616d652f61637469766974792f68656172747963686f636f6c6174652f686561727479636800636f6c617465646566696e652e7079",
+        "control_characters": [
+          {
+            "offset": 47,
+            "codepoint": "U+0000"
+          }
+        ],
+        "disposition": "rejected: not written to modules.jsonl; entry registered as unreadable with path=null"
+      }
     },
     {
       "entry_index": 2330,
@@ -224,12 +293,40 @@
     {
       "entry_index": 3078,
       "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
-      "fallback": ""
+      "fallback": "",
+      "fallback_rejected": {
+        "source": "server/docs/catalog/script_entries.jsonl",
+        "source_sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+        "field": "index_filename",
+        "original_value": "script/reddotsys/redpoint\rool/redpointfoldersystemdefine.py",
+        "original_value_utf8_hex": "7363726970742f726564646f747379732f726564706f696e740d6f6f6c2f726564706f696e74666f6c64657273797374656d646566696e652e7079",
+        "control_characters": [
+          {
+            "offset": 25,
+            "codepoint": "U+000D"
+          }
+        ],
+        "disposition": "rejected: not written to modules.jsonl; entry registered as unreadable with path=null"
+      }
     },
     {
       "entry_index": 3122,
       "reason": "ValueError: 内嵌路径为空、过长或含控制字符",
-      "fallback": ""
+      "fallback": "",
+      "fallback_rejected": {
+        "source": "server/docs/catalog/script_entries.jsonl",
+        "source_sha256": "d42694bf2621496a9107b22c1123a73a753a34fd6e907d74cd72707b127f62da",
+        "field": "index_filename",
+        "original_value": "script/pyb2/pubbigdata/pubbigdax\u0000value.py",
+        "original_value_utf8_hex": "7363726970742f707962322f707562626967646174612f7075626269676461780076616c75652e7079",
+        "control_characters": [
+          {
+            "offset": 32,
+            "codepoint": "U+0000"
+          }
+        ],
+        "disposition": "rejected: not written to modules.jsonl; entry registered as unreadable with path=null"
+      }
     },
     {
       "entry_index": 3142,
@@ -343,6 +440,12 @@
     }
   ],
   "data_failures": [],
+  "rejected_fallback_entries": [
+    880,
+    2310,
+    3078,
+    3122
+  ],
   "duplicate_paths_kept": [],
   "self_checks": {
     "total_records_5135": true,
@@ -350,7 +453,4257 @@
     "excluded_1288_exact": true,
     "no_control_char_paths": true,
     "max_functions_per_entry": 1407,
-    "seed20_paths_preserved": true
+    "seed20_paths_preserved": true,
+    "seed_file_is_frozen_20_seed": true,
+    "functions_total": 128382,
+    "bare_star_signatures": 0,
+    "internal_slot_signatures": 0,
+    "all_signatures_wellformed_python2": true,
+    "signature_rejections_listed_equal_counters": true,
+    "kwargs_only_listed_equal_counters": true,
+    "rejected_fallbacks_with_original_value": [
+      880,
+      2310,
+      3078,
+      3122
+    ],
+    "excluded_1288_read_stored_calls": 0
+  },
+  "seed_source": {
+    "modules_jsonl_sha256_at_read": "de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b",
+    "frozen_seed_commit": "cc5c1bad7a806078794eca1ab7482230a18ef9d5",
+    "frozen_seed_sha256": "de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b",
+    "is_frozen_seed_file": true,
+    "historical_seed_rows_in_modules_jsonl": 20,
+    "seed_paths_from_prior_sample_regression": 0,
+    "task_identities": 20
+  },
+  "read_audit": {
+    "script": {
+      "read_stored_calls": 10002,
+      "distinct_entries_read": 5001,
+      "entries_in_archive": 5002,
+      "excluded_entries": [
+        1288
+      ],
+      "excluded_read_stored_calls": 0,
+      "excluded_directory_spans": [
+        {
+          "entry_index": 1288,
+          "offset": 3460344,
+          "length": 5661
+        }
+      ],
+      "fingerprint_calls": 5002,
+      "fingerprint_full_file_passes": 1,
+      "archive_bytes_hashed_per_pass": 24454082,
+      "note": "read_stored is the only per-entry payload read; whole-file SHA-256 fingerprinting reads every byte (including excluded spans) only to hash it"
+    },
+    "data": {
+      "read_stored_calls": 121,
+      "distinct_entries_read": 121,
+      "entries_in_archive": 133,
+      "excluded_entries": [],
+      "excluded_read_stored_calls": 0,
+      "excluded_directory_spans": [],
+      "fingerprint_calls": 1,
+      "fingerprint_full_file_passes": 1,
+      "archive_bytes_hashed_per_pass": 354143,
+      "note": "read_stored is the only per-entry payload read; whole-file SHA-256 fingerprinting reads every byte (including excluded spans) only to hash it"
+    }
+  },
+  "signature_audit": {
+    "policy": "a signature is a confirmed parameter list only if the co_varnames layout is consistent and every name is a Python 2 identifier; rejected raw renderings are review clues, never source signatures; tuple parameter shapes are not reconstructed and nothing is copied from the historical catalog",
+    "references": [
+      "CPython v2.5.6 Include/code.h:31-36 CO_VARARGS=0x0004, CO_VARKEYWORDS=0x0008",
+      "CPython v2.5.6 Lib/inspect.py:672-728 getargs: varargs=co_varnames[nargs] if CO_VARARGS, then varkw; :689 names starting with '' or '.' are anonymous tuple arguments",
+      "CPython v2.5.6 Lib/inspect.py:769-793 formatargspec: '*'+varargs only when present, '**'+varkw only when present; no bare '*'",
+      "CPython v2.5.6 Python/symtable.c:1216-1218 '.%d' implicit args; :1243-1246 tuple parameter i; :1412-1413 generator expression iterator '.0'"
+    ],
+    "counts": {
+      "script": {
+        "confirmed": 115953,
+        "kwargs_only_confirmed": 53,
+        "rejected_compiler_internal_slot": 33,
+        "rejected_non_identifier_parameter": 186,
+        "unavailable_metadata": 71
+      },
+      "data": {
+        "confirmed": 2176,
+        "kwargs_only_confirmed": 17,
+        "rejected_compiler_internal_slot": 15,
+        "rejected_non_identifier_parameter": 0,
+        "unavailable_metadata": 0
+      }
+    },
+    "kwargs_only_rendered": [
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 30,
+        "path": "script/pubscript/pubregister/pubdlggetpass.py",
+        "name": "CAccountMgr.GetUrl",
+        "kind": "method",
+        "signature": "(self, path, **dct)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 30,
+        "path": "script/pubscript/pubregister/pubdlggetpass.py",
+        "name": "C2980Mgr.GetUrl",
+        "kind": "method",
+        "signature": "(self, path, **dct)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 70,
+        "path": "script/lib/simplejson.py",
+        "name": "dump",
+        "kind": "function",
+        "signature": "(obj, fp, skipkeys, ensure_ascii, check_circular, allow_nan, cls, indent, separators, encoding, default, use_decimal, namedtuple_as_object, tuple_as_array, bigint_as_string, sort_keys, item_sort_key, for_json, ignore_nan, int_as_string_bitcount, iterable_as_array, **kw)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 70,
+        "path": "script/lib/simplejson.py",
+        "name": "dumps",
+        "kind": "function",
+        "signature": "(obj, skipkeys, ensure_ascii, check_circular, allow_nan, cls, indent, separators, encoding, default, use_decimal, namedtuple_as_object, tuple_as_array, bigint_as_string, sort_keys, item_sort_key, for_json, ignore_nan, int_as_string_bitcount, iterable_as_array, **kw)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 70,
+        "path": "script/lib/simplejson.py",
+        "name": "load",
+        "kind": "function",
+        "signature": "(fp, encoding, cls, object_hook, parse_float, parse_int, parse_constant, object_pairs_hook, use_decimal, namedtuple_as_object, tuple_as_array, **kw)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 70,
+        "path": "script/lib/simplejson.py",
+        "name": "loads",
+        "kind": "function",
+        "signature": "(s, encoding, cls, object_hook, parse_float, parse_int, parse_constant, object_pairs_hook, use_decimal, **kw)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 114,
+        "path": "script/yard/yardedit/yardeditzoom/yardeditzoommgr.py",
+        "name": "CYardZoomEditViewMgr.ClearBrush",
+        "kind": "method",
+        "signature": "(self, **yardviewsignal)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 213,
+        "path": "script/lib/UserDict.py",
+        "name": "UserDict.__init__",
+        "kind": "method",
+        "signature": "(self, dict, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 213,
+        "path": "script/lib/UserDict.py",
+        "name": "UserDict.update",
+        "kind": "method",
+        "signature": "(self, dict, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 213,
+        "path": "script/lib/UserDict.py",
+        "name": "DictMixin.update",
+        "kind": "method",
+        "signature": "(self, other, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 606,
+        "path": "script/mxgame/returnwish/dgtreturnhelp.py",
+        "name": "CReturnHelpDgt.Init",
+        "kind": "method",
+        "signature": "(self, **oView)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1206,
+        "path": "script/gamecode/gamepath.py",
+        "name": "popen2",
+        "kind": "function",
+        "signature": "(command, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1317,
+        "path": "script/pubscript/pubregister/pub2980register.py",
+        "name": "CMgr.GetUrl",
+        "kind": "method",
+        "signature": "(self, **dct)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1333,
+        "path": "script/pubscript/pubskill/e_comdelegate.py",
+        "name": "Replace",
+        "kind": "function",
+        "signature": "(modelname, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1492,
+        "path": "script/pubscript/pubregister/pubdlgreg.py",
+        "name": "CRegCommonMgr.GetUrl",
+        "kind": "method",
+        "signature": "(self, path, **dct)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1492,
+        "path": "script/pubscript/pubregister/pubdlgreg.py",
+        "name": "CReg2980Mgr.GetUrl",
+        "kind": "method",
+        "signature": "(self, path, **dct)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1492,
+        "path": "script/pubscript/pubregister/pubdlgreg.py",
+        "name": "CReSendMgr.GetUrl",
+        "kind": "method",
+        "signature": "(self, path, **dct)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1657,
+        "path": "script/pubscript/pubregister/pubdlggetaccount.py",
+        "name": "CGetAccountMgr.GetUrl",
+        "kind": "method",
+        "signature": "(self, path, **dct)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1888,
+        "path": "script/lib/textwrap.py",
+        "name": "wrap",
+        "kind": "function",
+        "signature": "(text, width, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1888,
+        "path": "script/lib/textwrap.py",
+        "name": "fill",
+        "kind": "function",
+        "signature": "(text, width, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2103,
+        "path": "script/lib/weakref.py",
+        "name": "WeakValueDictionary.update",
+        "kind": "method",
+        "signature": "(self, dict, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2103,
+        "path": "script/lib/weakref.py",
+        "name": "WeakKeyDictionary.update",
+        "kind": "method",
+        "signature": "(self, dict, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2264,
+        "path": "script/mxgame/summerreturn/model/mdsummerreturn.py",
+        "name": "CRecruitMgr.RefreshData",
+        "kind": "method",
+        "signature": "(self, iPlayerID, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2379,
+        "path": "script/mxgame/mvp/mvp.py",
+        "name": "OpenView",
+        "kind": "function",
+        "signature": "(cViewCls, oParent, iAlign, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2520,
+        "path": "script/lib/optparse.py",
+        "name": "OptionParser.set_defaults",
+        "kind": "method",
+        "signature": "(self, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2624,
+        "path": "script/pubscript/pubregister/pubregisterbase.py",
+        "name": "CMgrBase.GetUrl",
+        "kind": "method",
+        "signature": "(self, **args_dct)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "GetError",
+        "kind": "function",
+        "signature": "(errid, data, **argv)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "<lambda>",
+        "kind": "function",
+        "signature": "(id, **argvs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "<lambda>",
+        "kind": "function",
+        "signature": "(id, **argvs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "<lambda>",
+        "kind": "function",
+        "signature": "(id, **argvs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "<lambda>",
+        "kind": "function",
+        "signature": "(id, **argvs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "<lambda>",
+        "kind": "function",
+        "signature": "(id, **argvs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "<lambda>",
+        "kind": "function",
+        "signature": "(id, **argvs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "<lambda>",
+        "kind": "function",
+        "signature": "(id, **argvs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "<lambda>",
+        "kind": "function",
+        "signature": "(id, **argvs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "<lambda>",
+        "kind": "function",
+        "signature": "(id, **argvs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "<lambda>",
+        "kind": "function",
+        "signature": "(id, **argvs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "<lambda>",
+        "kind": "function",
+        "signature": "(id, **argvs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "<lambda>",
+        "kind": "function",
+        "signature": "(id, **argvs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "<lambda>",
+        "kind": "function",
+        "signature": "(id, **argvs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "<lambda>",
+        "kind": "function",
+        "signature": "(id, **argvs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2625,
+        "path": "script/pubscript/puberrorcode.py",
+        "name": "<lambda>",
+        "kind": "function",
+        "signature": "(id, **argvs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2867,
+        "path": "script/pubscript/pubregister/pubregister.py",
+        "name": "CMgr.GetUrl",
+        "kind": "method",
+        "signature": "(self, path, **dct)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2909,
+        "path": "script/pubscript/pubregister/pubgameurl.py",
+        "name": "GetUrl",
+        "kind": "function",
+        "signature": "(key, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2909,
+        "path": "script/pubscript/pubregister/pubgameurl.py",
+        "name": "GetIf2017Url",
+        "kind": "function",
+        "signature": "(key, path, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2921,
+        "path": "script/lib/os.py",
+        "name": "_Environ.update",
+        "kind": "method",
+        "signature": "(self, dict, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2921,
+        "path": "script/lib/os.py",
+        "name": "_Environ.update",
+        "kind": "method",
+        "signature": "(self, dict, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2945,
+        "path": "script/pub2/pubcore/pubutil.py",
+        "name": "CNamedTuple._Replace",
+        "kind": "method",
+        "signature": "(self, **kw)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4153,
+        "path": "script/pubscript/pubtoolkit.py",
+        "name": "Replace",
+        "kind": "function",
+        "signature": "(modelname, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4218,
+        "path": "script/lib/codecs.py",
+        "name": "iterencode",
+        "kind": "function",
+        "signature": "(iterator, encoding, errors, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4218,
+        "path": "script/lib/codecs.py",
+        "name": "iterdecode",
+        "kind": "function",
+        "signature": "(iterator, encoding, errors, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4875,
+        "path": "script/pubscript/pubregister/pubfindback.py",
+        "name": "CFindBackAccount.__init__",
+        "kind": "method",
+        "signature": "(self, gate, mac, **kwargs)"
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4960,
+        "path": "script/pubscript/pubregister/pubactfunction.py",
+        "name": "CMgr.GetUrl",
+        "kind": "method",
+        "signature": "(self, path, **dct)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 35,
+        "path": "lib/codecs.pyo",
+        "name": "iterencode",
+        "kind": "function",
+        "signature": "(iterator, encoding, errors, **kwargs)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 35,
+        "path": "lib/codecs.pyo",
+        "name": "iterdecode",
+        "kind": "function",
+        "signature": "(iterator, encoding, errors, **kwargs)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 51,
+        "path": "lib/optparse.pyo",
+        "name": "OptionParser.set_defaults",
+        "kind": "method",
+        "signature": "(self, **kwargs)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 52,
+        "path": "lib/os.pyo",
+        "name": "_Environ.update",
+        "kind": "method",
+        "signature": "(self, dict, **kwargs)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 52,
+        "path": "lib/os.pyo",
+        "name": "_Environ.update",
+        "kind": "method",
+        "signature": "(self, dict, **kwargs)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 63,
+        "path": "lib/simplejson.pyo",
+        "name": "dump",
+        "kind": "function",
+        "signature": "(obj, fp, skipkeys, ensure_ascii, check_circular, allow_nan, cls, indent, separators, encoding, default, use_decimal, namedtuple_as_object, tuple_as_array, bigint_as_string, sort_keys, item_sort_key, for_json, ignore_nan, int_as_string_bitcount, iterable_as_array, **kw)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 63,
+        "path": "lib/simplejson.pyo",
+        "name": "dumps",
+        "kind": "function",
+        "signature": "(obj, skipkeys, ensure_ascii, check_circular, allow_nan, cls, indent, separators, encoding, default, use_decimal, namedtuple_as_object, tuple_as_array, bigint_as_string, sort_keys, item_sort_key, for_json, ignore_nan, int_as_string_bitcount, iterable_as_array, **kw)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 63,
+        "path": "lib/simplejson.pyo",
+        "name": "load",
+        "kind": "function",
+        "signature": "(fp, encoding, cls, object_hook, parse_float, parse_int, parse_constant, object_pairs_hook, use_decimal, namedtuple_as_object, tuple_as_array, **kw)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 63,
+        "path": "lib/simplejson.pyo",
+        "name": "loads",
+        "kind": "function",
+        "signature": "(s, encoding, cls, object_hook, parse_float, parse_int, parse_constant, object_pairs_hook, use_decimal, **kw)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 76,
+        "path": "lib/textwrap.pyo",
+        "name": "wrap",
+        "kind": "function",
+        "signature": "(text, width, **kwargs)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 76,
+        "path": "lib/textwrap.pyo",
+        "name": "fill",
+        "kind": "function",
+        "signature": "(text, width, **kwargs)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 81,
+        "path": "lib/UserDict.pyo",
+        "name": "UserDict.__init__",
+        "kind": "method",
+        "signature": "(self, dict, **kwargs)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 81,
+        "path": "lib/UserDict.pyo",
+        "name": "UserDict.update",
+        "kind": "method",
+        "signature": "(self, dict, **kwargs)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 81,
+        "path": "lib/UserDict.pyo",
+        "name": "DictMixin.update",
+        "kind": "method",
+        "signature": "(self, other, **kwargs)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 84,
+        "path": "lib/weakref.pyo",
+        "name": "WeakValueDictionary.update",
+        "kind": "method",
+        "signature": "(self, dict, **kwargs)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 84,
+        "path": "lib/weakref.pyo",
+        "name": "WeakKeyDictionary.update",
+        "kind": "method",
+        "signature": "(self, dict, **kwargs)"
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 106,
+        "path": "pub2/pubcore/misc.pyo",
+        "name": "CSection.SetData",
+        "kind": "method",
+        "signature": "(self, **kwargs)"
+      }
+    ],
+    "rejected": [
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 13,
+        "path": "script/dialog/skillmagic/pagexiulian.py",
+        "name": "CPageXiulian.__init__",
+        "kind": "method",
+        "raw_signature": "(self, pSkillM24:cDlg)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "pSkillM24:cDlg",
+            "bytes_hex": "70536b696c6c4d32343a63446c67"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 68,
+        "path": "script/mxgame/minigame/paintandguess/model/paintandguessutil.py",
+        "name": "GetPathByTwoPoint",
+        "kind": "function",
+        "raw_signature": "(tStartP& '=, tEndPoint, lPath)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "tStartP& '=",
+            "bytes_hex": "745374617274502620273d"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 108,
+        "path": "script/mxgame/activity/groupbbq/delegate/dgtgroupbbqrecord.py",
+        "name": "CRecordDelegate.OnHelp",
+        "kind": "method",
+        "raw_signature": "(self, iPlayer%()",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "iPlayer%(",
+            "bytes_hex": "69506c617965722528"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 158,
+        "path": "script/mxgame/yearvoice/view/dlgyearvoice_apply.py",
+        "name": "CYearVoiceApplyDlg.SetSingName",
+        "kind": "method",
+        "raw_signature": "(self, \\xbc\\x81\\xaeme)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xbc\\x81\\xaeme",
+            "bytes_hex": "bc81ae6d65"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 178,
+        "path": "script/mxgame/decorate/view/dlgdecoratemain.py",
+        "name": "CDecorateMainDlg.__init__",
+        "kind": "method",
+        "raw_signature": "(\\x89elf, oParent, iPage, iSubPage)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x89elf",
+            "bytes_hex": "89656c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 178,
+        "path": "script/mxgame/decorate/view/dlgdecoratemain.py",
+        "name": "CDecorateMainDlg.SwitchView",
+        "kind": "method",
+        "raw_signature": "(\\x89elf, iViewType)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x89elf",
+            "bytes_hex": "89656c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 178,
+        "path": "script/mxgame/decorate/view/dlgdecoratemain.py",
+        "name": "CDecorateMainDlg.ShowDecoreateView",
+        "kind": "method",
+        "raw_signature": "(\\x89elf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x89elf",
+            "bytes_hex": "89656c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 178,
+        "path": "script/mxgame/decorate/view/dlgdecoratemain.py",
+        "name": "CDecorateMainDlg.ShowTeamMarkView",
+        "kind": "method",
+        "raw_signature": "(\\x89elf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x89elf",
+            "bytes_hex": "89656c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 178,
+        "path": "script/mxgame/decorate/view/dlgdecoratemain.py",
+        "name": "CDecorateMainDlg.ClearSubView",
+        "kind": "method",
+        "raw_signature": "(\\x89elf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x89elf",
+            "bytes_hex": "89656c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 178,
+        "path": "script/mxgame/decorate/view/dlgdecoratemain.py",
+        "name": "CDecorateMainDlg.CloseWindow",
+        "kind": "method",
+        "raw_signature": "(\\x89elf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x89elf",
+            "bytes_hex": "89656c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 178,
+        "path": "script/mxgame/decorate/view/dlgdecoratemain.py",
+        "name": "CDecorateMainDlg.OnMessage",
+        "kind": "method",
+        "raw_signature": "(\\x89elf, iMsgID)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x89elf",
+            "bytes_hex": "89656c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 211,
+        "path": "script/mxgame/colorcompensate/netcolorcompensate.py",
+        "name": "S2CClickBuff.ChangeToNewArtsStyle",
+        "kind": "function",
+        "raw_signature": "(s{g)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "s{g",
+            "bytes_hex": "737b67"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 233,
+        "path": "script/lib/inspect.py",
+        "name": "getmoduleinfo.<lambda>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 233,
+        "path": "script/lib/inspect.py",
+        "name": "BlockFinder.tokeneater",
+        "kind": "method",
+        "raw_signature": "(self, type, token, .3, .4, line)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".3",
+          ".4"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 238,
+        "path": "script/mxgame/newgroup/delegate/delegatewelfare/delegategroupwelfarewages.py",
+        "name": "CDelegateGroupWelfareWages.__init__",
+        "kind": "method",
+        "raw_signature": "(self, 1\u0017($6, pContext)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "1\u0017($6",
+            "bytes_hex": "3117282436"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 248,
+        "path": "script/dialog/dlgmakenew1.py",
+        "name": "CMakeDialog.OnEnter.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 248,
+        "path": "script/dialog/dlgmakenew1.py",
+        "name": "CMakeDialog.CheckValid.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 271,
+        "path": "script/pub2/pubtextcheck/pubtexttools.py",
+        "name": "GetCheckText",
+        "kind": "function",
+        "raw_signature": "(\\xefOri)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xefOri",
+            "bytes_hex": "ef4f7269"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 310,
+        "path": "script/dialog/dlgrobot.py",
+        "name": "CTalkOutput.CTalkText.SetIsEnter",
+        "kind": "method",
+        "raw_signature": "(self, \u00143\u0018\u0002\u0013r)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u00143\u0018\u0002\u0013r",
+            "bytes_hex": "143318021372"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 344,
+        "path": "script/mxgame/avatar/mdavatar.py",
+        "name": "CAvatarModel.SetLogData",
+        "kind": "method",
+        "raw_signature": "(self, iPhotoList, iOtherSex, \\xf7\\xcd\\xea\\xe7le)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xf7\\xcd\\xea\\xe7le",
+            "bytes_hex": "f7cdeae76c65"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 344,
+        "path": "script/mxgame/avatar/mdavatar.py",
+        "name": "CAvatarModel.SetPhotoPrice",
+        "kind": "method",
+        "raw_signature": "(self, \\xac\\x82old, iPoint)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xac\\x82old",
+            "bytes_hex": "ac826f6c64"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 351,
+        "path": "script/dialog/dlgherochange.py",
+        "name": "CDlgHeroChange.GetChangeShape",
+        "kind": "method",
+        "raw_signature": "(self, classID, \\xe2\\xd8\\xee\\xf3, shape)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xe2\\xd8\\xee\\xf3",
+            "bytes_hex": "e2d8eef3"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 351,
+        "path": "script/dialog/dlgherochange.py",
+        "name": "CDlgHeroChange.GetChangeShapeLst",
+        "kind": "method",
+        "raw_signature": "(self, classID, \\xe2\\xd8\\xee\\xf3)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xe2\\xd8\\xee\\xf3",
+            "bytes_hex": "e2d8eef3"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 353,
+        "path": "script/dialog/dlgpetitem.py",
+        "name": "CPetItemDialog.Switch",
+        "kind": "method",
+        "raw_signature": "(self, \u0001\u001c\u0011pe)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u0001\u001c\u0011pe",
+            "bytes_hex": "011c117065"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 361,
+        "path": "script/lib/traceback.py",
+        "name": "format_exception_only.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 381,
+        "path": "script/dialog/dlgkeju.py",
+        "name": "CProvinceExamDlg.MyButton.FlashItself.flash",
+        "kind": "function",
+        "raw_signature": "(\\xd4bj, frame, times)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xd4bj",
+            "bytes_hex": "d4626a"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 404,
+        "path": "script/mxgame/newappearancemain/newappearancecontext.py",
+        "name": "CAppearanceContext.OpenAppDlg",
+        "kind": "method",
+        "raw_signature": "(self, nPage, dExtendData, !NewPage)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "!NewPage",
+            "bytes_hex": "214e657750616765"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 406,
+        "path": "script/dialog/dlgcombfire.py",
+        "name": "CCombFireDlg.UpdateDIYTemplateList",
+        "kind": "method",
+        "raw_signature": "(self, \\xacct)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xacct",
+            "bytes_hex": "ac6374"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 406,
+        "path": "script/dialog/dlgcombfire.py",
+        "name": "UpdateDIYTemplateList",
+        "kind": "function",
+        "raw_signature": "(\\xacct)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xacct",
+            "bytes_hex": "ac6374"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 414,
+        "path": "script/mxgame/myqnew/view/myqitem.py",
+        "name": "CTalkPhoto.__init__",
+        "kind": "method",
+        "raw_signature": "(self, parent, w, h, posx, \\x83\\x9c\\x80\\x8a)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x83\\x9c\\x80\\x8a",
+            "bytes_hex": "839c808a"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 525,
+        "path": "script/mxgame/pay/view/dlgpayalipay.py",
+        "name": "CNewAlipayPayDialog.SetTaxtipsShow",
+        "kind": "method",
+        "raw_signature": "(self, \\x8c\\xbd\\x86\\x81\\x99)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x8c\\xbd\\x86\\x81\\x99",
+            "bytes_hex": "8cbd868199"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 555,
+        "path": "script/mxgame/activity/yearsummary/view/dlgyearsumcomment.py",
+        "name": "CYearSumCommentItem.SetItemCBFunc",
+        "kind": "method",
+        "raw_signature": "(self, fC|dyFunc, oDelFunc, oRightUpFunc)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "fC|dyFunc",
+            "bytes_hex": "66437c647946756e63"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 560,
+        "path": "script/blacklist/characteristic.py",
+        "name": "CRules.__init__",
+        "kind": "method",
+        "raw_signature": "(self, \\xa8\\xb5\\xa8le, *args)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xa8\\xb5\\xa8le",
+            "bytes_hex": "a8b5a86c65"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 596,
+        "path": "script/lib/threading.py",
+        "name": "_RLock._acquire_restore",
+        "kind": "method",
+        "raw_signature": "(self, .1)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".1"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 621,
+        "path": "script/mxgame/activity/timewheel/view/dlgquickweekcard.py",
+        "name": "CQuickOpenDlg.TbDgtUpdateCellOfSize",
+        "kind": "method",
+        "raw_signature": "(self, \\x96\\xb6dx)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x96\\xb6dx",
+            "bytes_hex": "96b66478"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 709,
+        "path": "script/mxgame/activity/piaoliuping/dlgseamailshare.py",
+        "name": "CSeamailShareDialog.OnMessage",
+        "kind": "method",
+        "raw_signature": "(self, >\u001a$0\u001e\u0013)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": ">\u001a$0\u001e\u0013",
+            "bytes_hex": "3e1a24301e13"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 739,
+        "path": "script/debug/yibugger/yibugobjgraph.py",
+        "name": "count.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 739,
+        "path": "script/debug/yibugger/yibugobjgraph.py",
+        "name": "count.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 739,
+        "path": "script/debug/yibugger/yibugobjgraph.py",
+        "name": "get_leaking_objects.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 739,
+        "path": "script/debug/yibugger/yibugobjgraph.py",
+        "name": "get_leaking_objects.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 774,
+        "path": "script/yard/yarddata/yardgridzoomlimitlogic.py",
+        "name": "CYardZoomLimitLogic.IsOutBorder",
+        "kind": "method",
+        "raw_signature": "(self, \\xd0\\xe1rid, iExceptZoom)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xd0\\xe1rid",
+            "bytes_hex": "d0e1726964"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 774,
+        "path": "script/yard/yarddata/yardgridzoomlimitlogic.py",
+        "name": "CYardZoomLimitLogic.IsInBorderZoom",
+        "kind": "method",
+        "raw_signature": "(self, \\xd0\\xe1rid, iExceptZoom)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xd0\\xe1rid",
+            "bytes_hex": "d0e1726964"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 774,
+        "path": "script/yard/yarddata/yardgridzoomlimitlogic.py",
+        "name": "CYardZoomLimitLogic.IsOutBorderMap",
+        "kind": "method",
+        "raw_signature": "(self, \\xd0\\xe1rid)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xd0\\xe1rid",
+            "bytes_hex": "d0e1726964"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 774,
+        "path": "script/yard/yarddata/yardgridzoomlimitlogic.py",
+        "name": "CYardZoomLimitLogic.CalLandBrushGrid",
+        "kind": "method",
+        "raw_signature": "(self, \\xd0\\xe1rid)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xd0\\xe1rid",
+            "bytes_hex": "d0e1726964"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 774,
+        "path": "script/yard/yarddata/yardgridzoomlimitlogic.py",
+        "name": "CYardZoomLimitLogic.IsLandGridOutBorder",
+        "kind": "method",
+        "raw_signature": "(self, \\xd0\\xe1rid)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xd0\\xe1rid",
+            "bytes_hex": "d0e1726964"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 807,
+        "path": "script/mxgame/return/returnrewardmgr.py",
+        "name": "CRewardMgr.SetExtraExp",
+        "kind": "method",
+        "raw_signature": "(self, MkTAJa\\p, iExtraExp)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "MkTAJa\\p",
+            "bytes_hex": "4d6b54414a615c70"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 828,
+        "path": "script/mxgame/warprepare/view/dlgwarprepareswitchequip.py",
+        "name": "CBagInterfaceItem.__init__",
+        "kind": "method",
+        "raw_signature": "(self, parent, x, y, msgid, ebxi~jmoiitems)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "ebxi~jmoiitems",
+            "bytes_hex": "656278697e6a6d6f696974656d73"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 891,
+        "path": "script/autopurchase.py",
+        "name": "SendEmail",
+        "kind": "function",
+        "raw_signature": "(targetId, 3&5 \"3\t&*e, itemName, amout, title, content)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "3&5 \"3\t&*e",
+            "bytes_hex": "33263520223309262a65"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 891,
+        "path": "script/autopurchase.py",
+        "name": "AutoPurchase.__init__",
+        "kind": "method",
+        "raw_signature": "(self, goodsIdx, price, targetId, 3&5 \"3\t&*e)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "3&5 \"3\t&*e",
+            "bytes_hex": "33263520223309262a65"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 924,
+        "path": "script/mxgame/newgroup/view/pagemanage/dlggroupmanagenew.py",
+        "name": "CGroupManageDialog.__init__",
+        "kind": "method",
+        "raw_signature": "(self, pContext, sSelectBtnName, \\xc4\\xe5\\xd8\\xd4\\xd2a)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc4\\xe5\\xd8\\xd4\\xd2a",
+            "bytes_hex": "c4e5d8d4d261"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 924,
+        "path": "script/mxgame/newgroup/view/pagemanage/dlggroupmanagenew.py",
+        "name": "CGroupManageDialog.SetDefaultSelect",
+        "kind": "method",
+        "raw_signature": "(self, sSelectBtnName, \\xc4\\xe5\\xd8\\xd4\\xd2a)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc4\\xe5\\xd8\\xd4\\xd2a",
+            "bytes_hex": "c4e5d8d4d261"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 934,
+        "path": "script/mxgame/dragon/model/dragonlogmgr.py",
+        "name": "CDragonLogMgr.LogUnpackTimeList.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1051,
+        "path": "script/pub2/pubcore/pubmisc_v2.py",
+        "name": "<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1077,
+        "path": "script/mxgame/newgroup/delegate/delegategroupmaindlg.py",
+        "name": "CDelegateGroupMainDlg.__init__",
+        "kind": "method",
+        "raw_signature": "(\\xb1\\xa7lf, pView, pContext, sPageList)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xb1\\xa7lf",
+            "bytes_hex": "b1a76c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1077,
+        "path": "script/mxgame/newgroup/delegate/delegategroupmaindlg.py",
+        "name": "CDelegateGroupMainDlg.InitSignal",
+        "kind": "method",
+        "raw_signature": "(\\xb1\\xa7lf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xb1\\xa7lf",
+            "bytes_hex": "b1a76c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1077,
+        "path": "script/mxgame/newgroup/delegate/delegategroupmaindlg.py",
+        "name": "CDelegateGroupMainDlg.InitC2SGet",
+        "kind": "method",
+        "raw_signature": "(\\xb1\\xa7lf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xb1\\xa7lf",
+            "bytes_hex": "b1a76c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1077,
+        "path": "script/mxgame/newgroup/delegate/delegategroupmaindlg.py",
+        "name": "CDelegateGroupMainDlg.OnRedDotChanged",
+        "kind": "method",
+        "raw_signature": "(\\xb1\\xa7lf, sKey, bRed)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xb1\\xa7lf",
+            "bytes_hex": "b1a76c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1077,
+        "path": "script/mxgame/newgroup/delegate/delegategroupmaindlg.py",
+        "name": "CDelegateGroupMainDlg.VGetBtnToPageDict",
+        "kind": "method",
+        "raw_signature": "(\\xb1\\xa7lf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xb1\\xa7lf",
+            "bytes_hex": "b1a76c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1077,
+        "path": "script/mxgame/newgroup/delegate/delegategroupmaindlg.py",
+        "name": "CDelegateGroupMainDlg.VCreateSubPage",
+        "kind": "method",
+        "raw_signature": "(\\xb1\\xa7lf, nPage)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xb1\\xa7lf",
+            "bytes_hex": "b1a76c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1077,
+        "path": "script/mxgame/newgroup/delegate/delegategroupmaindlg.py",
+        "name": "CDelegateGroupMainDlg.OpenSubPage",
+        "kind": "method",
+        "raw_signature": "(\\xb1\\xa7lf, nPage, dExData)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xb1\\xa7lf",
+            "bytes_hex": "b1a76c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1077,
+        "path": "script/mxgame/newgroup/delegate/delegategroupmaindlg.py",
+        "name": "CDelegateGroupMainDlg.VClose",
+        "kind": "method",
+        "raw_signature": "(\\xb1\\xa7lf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xb1\\xa7lf",
+            "bytes_hex": "b1a76c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1080,
+        "path": "script/warui.py",
+        "name": "CHeroMenu.CreateButtons.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1080,
+        "path": "script/warui.py",
+        "name": "CSummonMenu.CreateButtons.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1105,
+        "path": "script/dialog/newtrade/Model/mdnewtrade.py",
+        "name": "CNewTradeMd.SetAllGoodsInfo",
+        "kind": "method",
+        "raw_signature": "(self, lstAllGoodsInfo, iSelectItemIdx, i<etailID)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "i<etailID",
+            "bytes_hex": "693c657461696c4944"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1105,
+        "path": "script/dialog/newtrade/Model/mdnewtrade.py",
+        "name": "CChushenModel.SetAllGoodsInfo",
+        "kind": "method",
+        "raw_signature": "(self, dChushenInfo, i<etailID)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "i<etailID",
+            "bytes_hex": "693c657461696c4944"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1107,
+        "path": "script/mxgame/qingming/netqingming.py",
+        "name": "OnShowQuestionDlg",
+        "kind": "function",
+        "raw_signature": "(iIndex, iQu6 ':<=\u001a\u0017, iTrueAmount, sQuestion, iEndTime, iAnswerLen)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "iQu6 ':<=\u001a\u0017",
+            "bytes_hex": "6951753620273a3c3d1a17"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1116,
+        "path": "script/mxgame/activity/2021duangwu/cooking/md2021duangwucooking.py",
+        "name": "CCCookingModel.SetTargetPlayerInfo",
+        "kind": "method",
+        "raw_signature": "(self, p@ufsq`DxayerInfo)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "p@ufsq`DxayerInfo",
+            "bytes_hex": "70407566737160447861796572496e666f"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1122,
+        "path": "script/bullet.py",
+        "name": "CBullet.__init__",
+        "kind": "method",
+        "raw_signature": "(self, parent, filename, path, step, sx, sy, \\xc8x, ey, estep, victim, lastbullet, cmd)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc8x",
+            "bytes_hex": "c878"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1122,
+        "path": "script/bullet.py",
+        "name": "CBullet.CreateImage",
+        "kind": "method",
+        "raw_signature": "(self, parent, filename, path, sx, sy, \\xc8x, ey)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc8x",
+            "bytes_hex": "c878"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1158,
+        "path": "script/data/juben/task13402.py",
+        "name": "GetJubenData",
+        "kind": "function",
+        "raw_signature": "(juben!,)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "juben!,",
+            "bytes_hex": "6a7562656e212c"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1171,
+        "path": "script/mxgame/newgroup/model/groupcashview.py",
+        "name": "CGroupCashViewMgr.SetGroupCashData",
+        "kind": "method",
+        "raw_signature": "(self, iState, dServData, \\xa3\\x92\\xa4nd)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xa3\\x92\\xa4nd",
+            "bytes_hex": "a392a46e64"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1273,
+        "path": "script/mxgame/activity/piaoliuping/dlgseamailtaskitem.py",
+        "name": "CSeamailTaskItem.SetData",
+        "kind": "method",
+        "raw_signature": "(self, \\xdf\\xf2\\xd5fo)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xdf\\xf2\\xd5fo",
+            "bytes_hex": "dff2d5666f"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1330,
+        "path": "script/dialog/qixi/dgtqixi/dgtqixitasklist.py",
+        "name": "CQiXiTaskListDgt.UpdateInfo.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1330,
+        "path": "script/dialog/qixi/dgtqixi/dgtqixitasklist.py",
+        "name": "CQiXiTaskListDgt.UpdateInfo.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1330,
+        "path": "script/dialog/qixi/dgtqixi/dgtqixitasklist.py",
+        "name": "CQiXiTaskListDgt.UpdateInfo.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1433,
+        "path": "script/mxgame/serverbattle/delegate/allstart/dgtallstarmathtablemain.py",
+        "name": "CAllStarMatchTableDgt.Init",
+        "kind": "method",
+        "raw_signature": "(\\x90\\x86\\x8f\\x85)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x90\\x86\\x8f\\x85",
+            "bytes_hex": "90868f85"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1433,
+        "path": "script/mxgame/serverbattle/delegate/allstart/dgtallstarmathtablemain.py",
+        "name": "CAllStarMatchTableDgt.EidtInit",
+        "kind": "method",
+        "raw_signature": "(\\x90\\x86\\x8f\\x85)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x90\\x86\\x8f\\x85",
+            "bytes_hex": "90868f85"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1433,
+        "path": "script/mxgame/serverbattle/delegate/allstart/dgtallstarmathtablemain.py",
+        "name": "CAllStarMatchTableDgt.ShowTwoGroupDlg",
+        "kind": "method",
+        "raw_signature": "(\\x90\\x86\\x8f\\x85)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x90\\x86\\x8f\\x85",
+            "bytes_hex": "90868f85"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1433,
+        "path": "script/mxgame/serverbattle/delegate/allstart/dgtallstarmathtablemain.py",
+        "name": "CAllStarMatchTableDgt.ShowFourGroupDlg",
+        "kind": "method",
+        "raw_signature": "(\\x90\\x86\\x8f\\x85)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x90\\x86\\x8f\\x85",
+            "bytes_hex": "90868f85"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1433,
+        "path": "script/mxgame/serverbattle/delegate/allstart/dgtallstarmathtablemain.py",
+        "name": "CAllStarMatchTableDgt.ShowQualityGroupDlg",
+        "kind": "method",
+        "raw_signature": "(\\x90\\x86\\x8f\\x85)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x90\\x86\\x8f\\x85",
+            "bytes_hex": "90868f85"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1433,
+        "path": "script/mxgame/serverbattle/delegate/allstart/dgtallstarmathtablemain.py",
+        "name": "CAllStarMatchTableDgt.GetGroupInfo",
+        "kind": "method",
+        "raw_signature": "(\\x90\\x86\\x8f\\x85)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x90\\x86\\x8f\\x85",
+            "bytes_hex": "90868f85"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1433,
+        "path": "script/mxgame/serverbattle/delegate/allstart/dgtallstarmathtablemain.py",
+        "name": "CAllStarMatchTableDgt.OnUpdateSelectGroup",
+        "kind": "method",
+        "raw_signature": "(\\x90\\x86\\x8f\\x85, iGroup)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x90\\x86\\x8f\\x85",
+            "bytes_hex": "90868f85"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1433,
+        "path": "script/mxgame/serverbattle/delegate/allstart/dgtallstarmathtablemain.py",
+        "name": "CAllStarMatchTableDgt.VOpenPage",
+        "kind": "method",
+        "raw_signature": "(\\x90\\x86\\x8f\\x85, dExtend)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x90\\x86\\x8f\\x85",
+            "bytes_hex": "90868f85"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1473,
+        "path": "script/dialog/dlgmakenew.py",
+        "name": "CMakeDialog.GetSeqItemsID.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1473,
+        "path": "script/dialog/dlgmakenew.py",
+        "name": "CMakeDialog.CheckValid.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1473,
+        "path": "script/dialog/dlgmakenew.py",
+        "name": "CMakeDialog.OnSelectItem.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1481,
+        "path": "script/mxgame/appearance/view/pagedecorate/pageappearancedecorate.py",
+        "name": "CPageDecorate.__init__",
+        "kind": "method",
+        "raw_signature": "(self, pContext, pM (nDlg)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "pM (nDlg",
+            "bytes_hex": "704d20286e446c67"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1539,
+        "path": "script/usermacro.py",
+        "name": "AddItemPrpmptTips",
+        "kind": "function",
+        "raw_signature": "(iShape, sTxt, \\xc5Width, iLastsecond)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc5Width",
+            "bytes_hex": "c55769647468"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1539,
+        "path": "script/usermacro.py",
+        "name": "movehint",
+        "kind": "function",
+        "raw_signature": "(iType, iShape, sTxt, \\xc5Width, iShow)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc5Width",
+            "bytes_hex": "c55769647468"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1539,
+        "path": "script/usermacro.py",
+        "name": "CreateItemTips31220",
+        "kind": "function",
+        "raw_signature": "(parent, iShape, sTxt, \\xc5Width)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc5Width",
+            "bytes_hex": "c55769647468"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1539,
+        "path": "script/usermacro.py",
+        "name": "CreateItemTips",
+        "kind": "function",
+        "raw_signature": "(parent, iShape, sTxt, \\xc5Width)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc5Width",
+            "bytes_hex": "c55769647468"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1539,
+        "path": "script/usermacro.py",
+        "name": "CreateSkillTips",
+        "kind": "function",
+        "raw_signature": "(parent, iShape, sTxt, \\xc5Width)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc5Width",
+            "bytes_hex": "c55769647468"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1539,
+        "path": "script/usermacro.py",
+        "name": "CreateRoleTips",
+        "kind": "function",
+        "raw_signature": "(parent, iShape, sTxt, \\xc5Width)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc5Width",
+            "bytes_hex": "c55769647468"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1539,
+        "path": "script/usermacro.py",
+        "name": "CreateModelTips",
+        "kind": "function",
+        "raw_signature": "(parent, iShape, sTxt, \\xc5Width)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc5Width",
+            "bytes_hex": "c55769647468"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1539,
+        "path": "script/usermacro.py",
+        "name": "CreatePetIconTips",
+        "kind": "function",
+        "raw_signature": "(parent, iShape, sTxt, \\xc5Width)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc5Width",
+            "bytes_hex": "c55769647468"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1539,
+        "path": "script/usermacro.py",
+        "name": "CreateAniTips",
+        "kind": "function",
+        "raw_signature": "(parent, iShape, sTxt, \\xc5Width)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc5Width",
+            "bytes_hex": "c55769647468"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1539,
+        "path": "script/usermacro.py",
+        "name": "CreateIconTips",
+        "kind": "function",
+        "raw_signature": "(parent, iShape, sTxt, \\xc5Width)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc5Width",
+            "bytes_hex": "c55769647468"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1539,
+        "path": "script/usermacro.py",
+        "name": "CreateImmortTips",
+        "kind": "function",
+        "raw_signature": "(parent, iShape, sTxt, \\xc5Width)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc5Width",
+            "bytes_hex": "c55769647468"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1539,
+        "path": "script/usermacro.py",
+        "name": "CreateAchieveTips",
+        "kind": "function",
+        "raw_signature": "(parent, iShape, sTxt, \\xc5Width)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc5Width",
+            "bytes_hex": "c55769647468"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1592,
+        "path": "script/mxgame/group/model/mdgroupcreate.py",
+        "name": "CGroupCreateModel.SetNotice",
+        "kind": "method",
+        "raw_signature": "(self, \\xd6\\xe7\\xdc\\xdb\\xc3)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xd6\\xe7\\xdc\\xdb\\xc3",
+            "bytes_hex": "d6e7dcdbc3"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1648,
+        "path": "script/mxgame/nethuodong/activity/nethdcarnivalplay.py",
+        "name": "C2SChangeColor",
+        "kind": "function",
+        "raw_signature": "(\\xcbhape, color, wing, wingcolor)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xcbhape",
+            "bytes_hex": "cb68617065"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1670,
+        "path": "script/pubscript/pubmisc.py",
+        "name": "<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1703,
+        "path": "script/mxgame/newgive#delegate/dgtnewbuyflower.py",
+        "name": "CNewBuyFlowerDgt.Init",
+        "kind": "method",
+        "raw_signature": "(\u0000\u0016lf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u0000\u0016lf",
+            "bytes_hex": "00166c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1703,
+        "path": "script/mxgame/newgive#delegate/dgtnewbuyflower.py",
+        "name": "CNewBuyFlowerDgt.GetModel",
+        "kind": "method",
+        "raw_signature": "(\u0000\u0016lf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u0000\u0016lf",
+            "bytes_hex": "00166c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1703,
+        "path": "script/mxgame/newgive#delegate/dgtnewbuyflower.py",
+        "name": "CNewBuyFlowerDgt.EditInit",
+        "kind": "method",
+        "raw_signature": "(\u0000\u0016lf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u0000\u0016lf",
+            "bytes_hex": "00166c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1703,
+        "path": "script/mxgame/newgive#delegate/dgtnewbuyflower.py",
+        "name": "CNewBuyFlowerDgt.OnCloseWindow",
+        "kind": "method",
+        "raw_signature": "(\u0000\u0016lf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u0000\u0016lf",
+            "bytes_hex": "00166c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1703,
+        "path": "script/mxgame/newgive#delegate/dgtnewbuyflower.py",
+        "name": "CNewBuyFlowerDgt.OnChangeFlowerList",
+        "kind": "method",
+        "raw_signature": "(\u0000\u0016lf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u0000\u0016lf",
+            "bytes_hex": "00166c66"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1736,
+        "path": "script/data/juben/task13714.py",
+        "name": "GetJubenData",
+        "kind": "function",
+        "raw_signature": "(juben\\xb1\\xbc)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "juben\\xb1\\xbc",
+            "bytes_hex": "6a7562656eb1bc"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1739,
+        "path": "script/mapgame.py",
+        "name": "ShowThrowAni",
+        "kind": "function",
+        "raw_signature": "(ownerID, x, y, shape, \\x82\\x80\\x8be)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x82\\x80\\x8be",
+            "bytes_hex": "82808b65"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1739,
+        "path": "script/mapgame.py",
+        "name": "CTrowItem.__init__",
+        "kind": "method",
+        "raw_signature": "(self, ownerID, endPos, \\x82\\x80\\x8be, shape, callBack, *arg)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x82\\x80\\x8be",
+            "bytes_hex": "82808b65"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1774,
+        "path": "script/wrap/wrapuserlinklogic.py",
+        "name": "AskForIconTips",
+        "kind": "function",
+        "raw_signature": "(iIconID, oFini\\xb5\\xae\\x85\\x84)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "oFini\\xb5\\xae\\x85\\x84",
+            "bytes_hex": "6f46696e69b5ae8584"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1781,
+        "path": "script/mxgame/prettynum/view/prettynumview.py",
+        "name": "CPrettyNumView.SetMaxShowNum",
+        "kind": "method",
+        "raw_signature": "(self, $\u0000,5Count)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "$\u0000,5Count",
+            "bytes_hex": "24002c35436f756e74"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1843,
+        "path": "script/mxgame/tradecenter/market/showlogic_markettrade.py",
+        "name": "CShowLogicMarketTrade.__init__",
+        "kind": "method",
+        "raw_signature": "(self, \u001e5\u001dg)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001e5\u001dg",
+            "bytes_hex": "1e351d67"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1846,
+        "path": "script/mxgame/activity/acteye/view/dlgacteyerank.py",
+        "name": "CActEyeRankPanel.SetBgShow",
+        "kind": "method",
+        "raw_signature": "(self, \\xf1\\xc0how)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xf1\\xc0how",
+            "bytes_hex": "f1c0686f77"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1846,
+        "path": "script/mxgame/activity/acteye/view/dlgacteyerank.py",
+        "name": "CActEyeRankDlg.MaxAndMin",
+        "kind": "method",
+        "raw_signature": "(self, \\xf1\\xc0how)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xf1\\xc0how",
+            "bytes_hex": "f1c0686f77"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1905,
+        "path": "script/core/magicperform/warcmd/warcmdplayghostmoveani.py",
+        "name": "CWarCmdPlayGhostMoveAni.__init__",
+        "kind": "method",
+        "raw_signature": "(self, warmgr, kn{n, attackInfo)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "kn{n",
+            "bytes_hex": "6b6e7b6e"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 1907,
+        "path": "script/yard/yardmap/delegate/delegateyardborder.py",
+        "name": "CDelegateYardMapBorder.GetBorderZByType",
+        "kind": "method",
+        "raw_signature": "(self, 6\f!(e, x, y)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "6\f!(e",
+            "bytes_hex": "360c212865"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2004,
+        "path": "script/mxgame/activity/piaoliuping/mdseamail.py",
+        "name": "CPiaoliupingModel.SetHasBindHelp",
+        "kind": "method",
+        "raw_signature": "(self, EdM_nEBHdI@\\)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "EdM_nEBHdI@\\",
+            "bytes_hex": "45644d5f6e4542486449405c"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2080,
+        "path": "script/mxgame/sale/dlgsale.py",
+        "name": "CBuyDialog.CheckValid.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2110,
+        "path": "script/mxgame/consignmentsalecenter/view/dlgconsignmallrecord.py",
+        "name": "CConsignmallRecordDialog.SetLimitText",
+        "kind": "method",
+        "raw_signature": "(self, s@eaitText)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "s@eaitText",
+            "bytes_hex": "73406561697454657874"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2340,
+        "path": "script/lib/simplejson_ordered_dict.py",
+        "name": "OrderedDict.__eq__.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2545,
+        "path": "script/debug/walkerhidecheck.py",
+        "name": "CChecker.IsOpenCheck",
+        "kind": "method",
+        "raw_signature": "(self, bHi\\xb1\\xb0)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "bHi\\xb1\\xb0",
+            "bytes_hex": "624869b1b0"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2545,
+        "path": "script/debug/walkerhidecheck.py",
+        "name": "CChecker.OnSwitchPlayerShow",
+        "kind": "method",
+        "raw_signature": "(self, bHi\\xb1\\xb0)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "bHi\\xb1\\xb0",
+            "bytes_hex": "624869b1b0"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2620,
+        "path": "script/autofadein.py",
+        "name": "CAutoFadeInUtil.Push",
+        "kind": "method",
+        "raw_signature": "(self, oObj, fTime, iTaly{j_rnva)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "iTaly{j_rnva",
+            "bytes_hex": "6954616c797b6a5f726e7661"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2749,
+        "path": "script/protocol/openui/csyanzhiguan.py",
+        "name": "C2GSAppearanceSaveFreeDye",
+        "kind": "function",
+        "raw_signature": "(iType, iPos, \\xf2\\xc8\\xf3ape, lstHSV)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xf2\\xc8\\xf3ape",
+            "bytes_hex": "f2c8f3617065"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2749,
+        "path": "script/protocol/openui/csyanzhiguan.py",
+        "name": "C2GSAppearanceChgShapeConfirm",
+        "kind": "function",
+        "raw_signature": "(\\xf2\\xc8\\xf3ape, iPlayerMode)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xf2\\xc8\\xf3ape",
+            "bytes_hex": "f2c8f3617065"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2749,
+        "path": "script/protocol/openui/csyanzhiguan.py",
+        "name": "C2GSGiftFriend",
+        "kind": "function",
+        "raw_signature": "(iType, \\xf2\\xc8\\xf3ape, iFriendID)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xf2\\xc8\\xf3ape",
+            "bytes_hex": "f2c8f3617065"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2918,
+        "path": "script/lib/enum.py",
+        "name": "EnumMeta.__new__.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2918,
+        "path": "script/lib/enum.py",
+        "name": "EnumMeta.__new__.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2918,
+        "path": "script/lib/enum.py",
+        "name": "EnumMeta.__iter__.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2918,
+        "path": "script/lib/enum.py",
+        "name": "EnumMeta.__reversed__.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2918,
+        "path": "script/lib/enum.py",
+        "name": "_convert.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2958,
+        "path": "script/lib/bisect.py",
+        "name": "insort_right",
+        "kind": "function",
+        "raw_signature": "(a, \\xc4, lo, hi)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc4",
+            "bytes_hex": "c4"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2958,
+        "path": "script/lib/bisect.py",
+        "name": "bisect_right",
+        "kind": "function",
+        "raw_signature": "(a, \\xc4, lo, hi)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc4",
+            "bytes_hex": "c4"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2958,
+        "path": "script/lib/bisect.py",
+        "name": "insort_left",
+        "kind": "function",
+        "raw_signature": "(a, \\xc4, lo, hi)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc4",
+            "bytes_hex": "c4"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2958,
+        "path": "script/lib/bisect.py",
+        "name": "bisect_left",
+        "kind": "function",
+        "raw_signature": "(a, \\xc4, lo, hi)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xc4",
+            "bytes_hex": "c4"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2964,
+        "path": "script/common/gamereg.py",
+        "name": "Functor.__call__",
+        "kind": "method",
+        "raw_signature": "(self, *_arg\\x97, **_kwArgs)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "_arg\\x97",
+            "bytes_hex": "5f61726797"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2989,
+        "path": "script/mxgame/newgroup/view/pagemanage/groupskillschoolview.py",
+        "name": "CSkillSchoolDialog.OnEnter",
+        "kind": "method",
+        "raw_signature": "(self, \f\u0012gid)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\f\u0012gid",
+            "bytes_hex": "0c12676964"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2989,
+        "path": "script/mxgame/newgroup/view/pagemanage/groupskillschoolview.py",
+        "name": "CSkillSchoolDialog.OnLeave",
+        "kind": "method",
+        "raw_signature": "(self, \f\u0012gid)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\f\u0012gid",
+            "bytes_hex": "0c12676964"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2989,
+        "path": "script/mxgame/newgroup/view/pagemanage/groupskillschoolview.py",
+        "name": "CSkillSchoolDialog.OnMessage",
+        "kind": "method",
+        "raw_signature": "(self, \f\u0012gid)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\f\u0012gid",
+            "bytes_hex": "0c12676964"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 2998,
+        "path": "script/mxgame/newgroup/view/pagemanage/dlggroupbuildrightview.py",
+        "name": "CGroupBuildAllInfoView.DelegateUpdateCellOfData",
+        "kind": "method",
+        "raw_signature": "(self, 9\u00153::, oData, bReused)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "9\u00153::",
+            "bytes_hex": "3915333a3a"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3007,
+        "path": "script/mxgame/team/teamrecruit/dlgsubscriberecruitmember.py",
+        "name": "CDlgSubscribeRecruitMember.OnRefreshTarget",
+        "kind": "method",
+        "raw_signature": "(self, lT:rget)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "lT:rget",
+            "bytes_hex": "6c543a72676574"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3124,
+        "path": "script/lib/tokenize.py",
+        "name": "printtoken",
+        "kind": "function",
+        "raw_signature": "(type, token, .2, .3, line)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".2",
+          ".3"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3210,
+        "path": "script/dialog/dlgjingdongcard.py",
+        "name": "CJingDongCardDialog.OnMessage",
+        "kind": "method",
+        "raw_signature": "(self, \\xa9\\x8dsgID)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xa9\\x8dsgID",
+            "bytes_hex": "a98d73674944"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.__init__",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f, oParent, sFilePath, w, h, iMsgID)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.SetTitle",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f, sTxt, iFontID, iNormalColor, iSelectColor)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.SetTitleObj",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f, oTitle)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.SetTitleColor",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f, iNormalColor, iSelectColor)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.SetDesc",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f, sDesc, iFontID, iNormalColor, iSelectColor)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.SetDescObj",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f, oDesc)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.SetDescColor",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f, iNormalColor, iSelectColor)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.SetItemImg",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f, sPath, sPack, iMode)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.SetItemImgObj",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f, oImg, iMode)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.GetSize",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.SetSelect",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f, b)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.GetSelect",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.SetFrame",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f, iFrame)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.GetMsgID",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.CreateBg",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f, iFrame)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.Enter",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.Leave",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.LeftDown",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.LeftUp",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.RightUp",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.GetTitlePos",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.GetDescPos",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3256,
+        "path": "script/mxui/itboxwidget.py",
+        "name": "CItBox.ChangeTextColor",
+        "kind": "method",
+        "raw_signature": "(\u001f\t\u0000f, bSelect)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u001f\t\u0000f",
+            "bytes_hex": "1f090066"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3260,
+        "path": "script/mxgame/gongji/mdgongji.py",
+        "name": "CModelGongji.SetSelectGonggiInfo",
+        "kind": "method",
+        "raw_signature": "(self, \\x86\\xa6ata)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x86\\xa6ata",
+            "bytes_hex": "86a6617461"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3260,
+        "path": "script/mxgame/gongji/mdgongji.py",
+        "name": "CModelGongji.SetServerData",
+        "kind": "method",
+        "raw_signature": "(self, \\x86\\xa6ata)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x86\\xa6ata",
+            "bytes_hex": "86a6617461"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3260,
+        "path": "script/mxgame/gongji/mdgongji.py",
+        "name": "CModelGongji.SetSelectItemData",
+        "kind": "method",
+        "raw_signature": "(self, \\x86\\xa6ata)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x86\\xa6ata",
+            "bytes_hex": "86a6617461"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3264,
+        "path": "script/mxgame/consignmentsalecenter/view/dlgconsignmallsellgoods.py",
+        "name": "CSaleCenterSellGoodsDialog.UpdateGoodAtIndex",
+        "kind": "method",
+        "raw_signature": "(self, dGood, rRuex)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "rRuex",
+            "bytes_hex": "7252757f6578"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3264,
+        "path": "script/mxgame/consignmentsalecenter/view/dlgconsignmallsellgoods.py",
+        "name": "CSaleCenterSellGoodsDialog.UpdateFlashAtIndex",
+        "kind": "method",
+        "raw_signature": "(self, bFlash, rRuex)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "rRuex",
+            "bytes_hex": "7252757f6578"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3271,
+        "path": "script/mxgame/photoupload/mdphotoupload.py",
+        "name": "CPhotoUploadModel.ReqImg",
+        "kind": "method",
+        "raw_signature": "(self, P{Apig, sUrl, oCB)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "P{Apig",
+            "bytes_hex": "507b41706967"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3282,
+        "path": "script/mxgame/ornament/model/mdgraphornament.py",
+        "name": "COrnamentModel.SetBianyi",
+        "kind": "method",
+        "raw_signature": "(self, {P{snyi)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "{P{snyi",
+            "bytes_hex": "7b507b736e7969"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3313,
+        "path": "script/mxgame/baotu/netbaotu.py",
+        "name": "GetNetObj",
+        "kind": "function",
+        "raw_signature": "(\\x98Sub)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x98Sub",
+            "bytes_hex": "98537562"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3327,
+        "path": "script/gamedebug.py",
+        "name": "functrace",
+        "kind": "function",
+        "raw_signature": "(\\xd8\\xddmit)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xd8\\xddmit",
+            "bytes_hex": "d8dd6d6974"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3428,
+        "path": "script/mxgame/activity/2021duangwu/duangwu2021interface.py",
+        "name": "Int2TimeStr",
+        "kind": "function",
+        "raw_signature": "(iValue, bMustSec, \\xbc\\x8c\\xa0\\xa3or)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xbc\\x8c\\xa0\\xa3or",
+            "bytes_hex": "bc8ca0a36f72"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3428,
+        "path": "script/mxgame/activity/2021duangwu/duangwu2021interface.py",
+        "name": "Int2TimeStr.GetText",
+        "kind": "function",
+        "raw_signature": "(sText, \\xbc\\x8c\\xa0\\xa3or)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xbc\\x8c\\xa0\\xa3or",
+            "bytes_hex": "bc8ca0a36f72"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3453,
+        "path": "script/mxgame/summerreturn/view/dlgsummerreturnmain.py",
+        "name": "CSummerReturnMainDlg.OnMessage",
+        "kind": "method",
+        "raw_signature": "(self, #\u00079gID)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "#\u00079gID",
+            "bytes_hex": "230739674944"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3465,
+        "path": "script/mxgame/activity/survive/dlgsurvive.py",
+        "name": "CVirSumonStateDlg.RefreshPets",
+        "kind": "method",
+        "raw_signature": "(self, :/tID)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": ":/tID",
+            "bytes_hex": "3a2f744944"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3492,
+        "path": "script/mxgame/makeequip/delegate/dgteightdiagrams.py",
+        "name": "CEquipListDelegate.CheckValid.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3492,
+        "path": "script/mxgame/makeequip/delegate/dgteightdiagrams.py",
+        "name": "CEquipListDelegate.CheckValid.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3514,
+        "path": "script/mxgame/stopgamemodule/netstopgamemodule.py",
+        "name": "UnpackModuleArgs",
+        "kind": "function",
+        "raw_signature": "(iModuleID, \u0006\r\u001c\u0007\nj)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u0006\r\u001c\u0007\nj",
+            "bytes_hex": "060d1c070a6a"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3514,
+        "path": "script/mxgame/stopgamemodule/netstopgamemodule.py",
+        "name": "S2CStopGameModule",
+        "kind": "function",
+        "raw_signature": "(\u0006\r\u001c\u0007\nj)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u0006\r\u001c\u0007\nj",
+            "bytes_hex": "060d1c070a6a"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3521,
+        "path": "script/mxgame/makeequip/delegate/delegaterebuild/dgtequipsmelting.py",
+        "name": "CEquipSmeltingDelegate.SetSmeltingInfo",
+        "kind": "method",
+        "raw_signature": "(self, \\xee\\xce\\xeb\\xfe\\xeb)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xee\\xce\\xeb\\xfe\\xeb",
+            "bytes_hex": "eeceebfeeb"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3543,
+        "path": "script/capturemgr.py",
+        "name": "CCaptureMgr.Register",
+        "kind": "method",
+        "raw_signature": "(self, iKey, pObj, \\xb9\\x9d\\xbf\\xa5\\xa3e, iConflictPolicy)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xb9\\x9d\\xbf\\xa5\\xa3e",
+            "bytes_hex": "b99dbfa5a365"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3567,
+        "path": "script/yard/yardedit/yardeditdelegate/delegateyardbrushnide.py",
+        "name": "CDelegateYardBrushNide.RefreshPos",
+        "kind": "method",
+        "raw_signature": "(self, y]jnc_os)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "y]jnc_os",
+            "bytes_hex": "795d6a6e635f6f73"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3568,
+        "path": "script/mxgame/activity/newcatchfish/newcatchfishtest.py",
+        "name": "GetFishData",
+        "kind": "function",
+        "raw_signature": "(iSh\u0011\u0000\u0015)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "iSh\u0011\u0000\u0015",
+            "bytes_hex": "695368110015"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3568,
+        "path": "script/mxgame/activity/newcatchfish/newcatchfishtest.py",
+        "name": "GetFishNormSpeed",
+        "kind": "function",
+        "raw_signature": "(iSh\u0011\u0000\u0015)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "iSh\u0011\u0000\u0015",
+            "bytes_hex": "695368110015"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3568,
+        "path": "script/mxgame/activity/newcatchfish/newcatchfishtest.py",
+        "name": "GetFishScareSpeed",
+        "kind": "function",
+        "raw_signature": "(iSh\u0011\u0000\u0015)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "iSh\u0011\u0000\u0015",
+            "bytes_hex": "695368110015"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3709,
+        "path": "script/mxgame/activityreward/model/mdseasonchallenge.py",
+        "name": "CSeasonChallengeModel.OnShowRewardIconTips",
+        "kind": "method",
+        "raw_signature": "(self, iTaskId, iStep, \\xb2\\x85\\xa4\\xb2\\xa2)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xb2\\x85\\xa4\\xb2\\xa2",
+            "bytes_hex": "b285a4b2a2"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3755,
+        "path": "script/dialog/newwarui/newuseitem/mdnewwaruseitem.py",
+        "name": "CNewWarUseItemModel.SetAllDrugInfoList",
+        "kind": "method",
+        "raw_signature": "(self, {VqypSvlt)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "{VqypSvlt",
+            "bytes_hex": "7b5671797053766c74"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3986,
+        "path": "script/mxgame/rideskill/model/mdrideskill.py",
+        "name": "CCRideSkillModel.SetRecommend",
+        "kind": "method",
+        "raw_signature": "(self, %Job, iPlan)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "%Job",
+            "bytes_hex": "254a6f62"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3998,
+        "path": "script/mxgame/activity/countrycontest/arena/view/dlgctrycontest3v3matchhall.py",
+        "name": "C3v3MatchHallDialog.TeamDelegateNewCellOfData",
+        "kind": "method",
+        "raw_signature": "(self, oContainer, 5Data)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "5Data",
+            "bytes_hex": "3544617461"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3998,
+        "path": "script/mxgame/activity/countrycontest/arena/view/dlgctrycontest3v3matchhall.py",
+        "name": "C3v3MatchHallDialog.TeamDelegateUpdateCellOfData",
+        "kind": "method",
+        "raw_signature": "(self, oContainer, 5Data, bReused)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "5Data",
+            "bytes_hex": "3544617461"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3998,
+        "path": "script/mxgame/activity/countrycontest/arena/view/dlgctrycontest3v3matchhall.py",
+        "name": "C3v3MatchHallDialog.PlayerDelegateNewCellOfData",
+        "kind": "method",
+        "raw_signature": "(self, oContainer, 5Data)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "5Data",
+            "bytes_hex": "3544617461"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 3998,
+        "path": "script/mxgame/activity/countrycontest/arena/view/dlgctrycontest3v3matchhall.py",
+        "name": "C3v3MatchHallDialog.PlayerDelegateUpdateCellofData",
+        "kind": "method",
+        "raw_signature": "(self, oCell, 5Data, bReused)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "5Data",
+            "bytes_hex": "3544617461"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4034,
+        "path": "script/mxgame/activity/summertrainpet/showlogic/showlogic_dlgtrainpetshengling.py",
+        "name": "CDgtTrainPetShengLingLogic.__init__",
+        "kind": "method",
+        "raw_signature": "(j|uf, oDlg)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "j|uf",
+            "bytes_hex": "6a7c7566"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4034,
+        "path": "script/mxgame/activity/summertrainpet/showlogic/showlogic_dlgtrainpetshengling.py",
+        "name": "CDgtTrainPetShengLingLogic.VInit",
+        "kind": "method",
+        "raw_signature": "(j|uf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "j|uf",
+            "bytes_hex": "6a7c7566"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4034,
+        "path": "script/mxgame/activity/summertrainpet/showlogic/showlogic_dlgtrainpetshengling.py",
+        "name": "CDgtTrainPetShengLingLogic.InitPetAttrSignal",
+        "kind": "method",
+        "raw_signature": "(j|uf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "j|uf",
+            "bytes_hex": "6a7c7566"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4034,
+        "path": "script/mxgame/activity/summertrainpet/showlogic/showlogic_dlgtrainpetshengling.py",
+        "name": "CDgtTrainPetShengLingLogic.OnPetUpdate_Signal",
+        "kind": "method",
+        "raw_signature": "(j|uf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "j|uf",
+            "bytes_hex": "6a7c7566"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4034,
+        "path": "script/mxgame/activity/summertrainpet/showlogic/showlogic_dlgtrainpetshengling.py",
+        "name": "CDgtTrainPetShengLingLogic.VIsOpenSelfConditionShowLock",
+        "kind": "method",
+        "raw_signature": "(j|uf)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "j|uf",
+            "bytes_hex": "6a7c7566"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4078,
+        "path": "script/mxgame/activity/shenyuan/dgtshenyuan.py",
+        "name": "CShenyuanDelegate.OnSceneChangeNotFromWar",
+        "kind": "method",
+        "raw_signature": "(self, iScene D, iMapID, iMiniMapID)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "iScene D",
+            "bytes_hex": "695363656e652044"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4112,
+        "path": "script/mxgame/activity/mxkitchen/mxcook/dlgcookinfo.py",
+        "name": "CMiniCookInfoDlg.ShowTips",
+        "kind": "method",
+        "raw_signature": "(self, \u0017Score)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\u0017Score",
+            "bytes_hex": "1753636f7265"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4218,
+        "path": "script/lib/codecs.py",
+        "name": "EncodedFile",
+        "kind": "function",
+        "raw_signature": "(t{~w, data_encoding, file_encoding, errors)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "t{~w",
+            "bytes_hex": "747b7e77"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4234,
+        "path": "script/dialog/dlgnewbagua.py",
+        "name": "CBaguaBase.CheckValid.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4349,
+        "path": "script/mxgame/activity/2018worldcup/dlgworldcup.py",
+        "name": "GetMaxMinPoint",
+        "kind": "function",
+        "raw_signature": "(\\xe4Round)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xe4Round",
+            "bytes_hex": "e4526f756e64"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4465,
+        "path": "script/mxgame/activity/labyrinth_treasure/view/dlglabyrinthtreasuremain.py",
+        "name": "CLabyrinthTreasureDlg.OnEditMessage",
+        "kind": "method",
+        "raw_signature": "(self, \\xa9\\x8d\\xb3gID)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xa9\\x8d\\xb3gID",
+            "bytes_hex": "a98db3674944"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4465,
+        "path": "script/mxgame/activity/labyrinth_treasure/view/dlglabyrinthtreasuremain.py",
+        "name": "CLabyrinthTreasureDlg.OnMessage",
+        "kind": "method",
+        "raw_signature": "(self, \\xa9\\x8d\\xb3gID)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xa9\\x8d\\xb3gID",
+            "bytes_hex": "a98db3674944"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4507,
+        "path": "script/mxui/tablewidget.py",
+        "name": "CTable.ResetScrollBar",
+        "kind": "method",
+        "raw_signature": "(self, \\x8b\\x91\\x8fust)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x8b\\x91\\x8fust",
+            "bytes_hex": "8b918f757374"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4507,
+        "path": "script/mxui/tablewidget.py",
+        "name": "CTable.ResetScrollBarToHead",
+        "kind": "method",
+        "raw_signature": "(self, \\x8b\\x91\\x8fust)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x8b\\x91\\x8fust",
+            "bytes_hex": "8b918f757374"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4539,
+        "path": "script/mxgame/tradecenter/tradecenterwidget.py",
+        "name": "CDirListObject.SetExpandCB",
+        "kind": "method",
+        "raw_signature": "(self, \\xeb\\xc7\\xc6)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xeb\\xc7\\xc6",
+            "bytes_hex": "ebc7c6"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4597,
+        "path": "script/wrap/copylinkobj.py",
+        "name": "CreateKuafuLink.send.__call__",
+        "kind": "method",
+        "raw_signature": "(self, \\x90\\xb6nfo, *args)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\x90\\xb6nfo",
+            "bytes_hex": "90b66e666f"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4621,
+        "path": "script/char/walker.py",
+        "name": "CCustomWalkerBase.GetShowInSpecial",
+        "kind": "method",
+        "raw_signature": "(self, \r\u0017*\u0014c, walkShow, nameShow)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\r\u0017*\u0014c",
+            "bytes_hex": "0d172a1463"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4621,
+        "path": "script/char/walker.py",
+        "name": "CCustomWalkerBase.NpcLimit",
+        "kind": "method",
+        "raw_signature": "(self, \r\u0017*\u0014c)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\r\u0017*\u0014c",
+            "bytes_hex": "0d172a1463"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4734,
+        "path": "script/dialog/petshow.py",
+        "name": "CPetShowDlg.ShowPhoto",
+        "kind": "method",
+        "raw_signature": "(self, OT]LY)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "OT]LY",
+            "bytes_hex": "4f545d4c59"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4803,
+        "path": "script/mxgame/makeequip/delegate/dgtequiplistbase.py",
+        "name": "CEquipListDelegateBase.CheckValid.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4925,
+        "path": "script/dialog/presentcenter/view/dlgaccumulatechargepresent.py",
+        "name": "CAccumulateChargeDialog.SetActive",
+        "kind": "method",
+        "raw_signature": "(self, [Active)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "[Active",
+            "bytes_hex": "5b416374697665"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+        "entry_index": 4967,
+        "path": "script/mxgame/activity/fightpig/fightpigrank.py",
+        "name": "CFightPigRank.ShowInfo",
+        "kind": "method",
+        "raw_signature": "(self, id, \\xe8\\xe7me, kind, coutry, ilv, arr)",
+        "reason": "non_identifier_parameter",
+        "slot_names": [],
+        "non_identifier_names": [
+          {
+            "text": "\\xe8\\xe7me",
+            "bytes_hex": "e8e76d65"
+          }
+        ]
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 33,
+        "path": "lib/bdb.pyo",
+        "name": "Bdb.user_exception",
+        "kind": "method",
+        "raw_signature": "(self, frame, .2)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".2"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 42,
+        "path": "lib/enum.pyo",
+        "name": "EnumMeta.__new__.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 42,
+        "path": "lib/enum.pyo",
+        "name": "EnumMeta.__new__.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 42,
+        "path": "lib/enum.pyo",
+        "name": "EnumMeta.__iter__.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 42,
+        "path": "lib/enum.pyo",
+        "name": "EnumMeta.__reversed__.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 42,
+        "path": "lib/enum.pyo",
+        "name": "_convert.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 44,
+        "path": "lib/imputil.pyo",
+        "name": "Importer._process_result",
+        "kind": "method",
+        "raw_signature": "(self, .1, fqname)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".1"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 45,
+        "path": "lib/inspect.pyo",
+        "name": "getmoduleinfo.<lambda>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 45,
+        "path": "lib/inspect.pyo",
+        "name": "BlockFinder.tokeneater",
+        "kind": "method",
+        "raw_signature": "(self, type, token, .3, .4, line)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".3",
+          ".4"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 67,
+        "path": "lib/simplejson_ordered_dict.pyo",
+        "name": "OrderedDict.__eq__.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 78,
+        "path": "lib/tokenize.pyo",
+        "name": "printtoken",
+        "kind": "function",
+        "raw_signature": "(type, token, .2, .3, line)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".2",
+          ".3"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 79,
+        "path": "lib/traceback.pyo",
+        "name": "format_exception_only.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 106,
+        "path": "pub2/pubcore/misc.pyo",
+        "name": "<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 109,
+        "path": "pub2/pubcore/pubfunc.pyo",
+        "name": "IsEngineVersionGreaterEqual.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      },
+      {
+        "archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+        "entry_index": 109,
+        "path": "pub2/pubcore/pubfunc.pyo",
+        "name": "IsEngineVersionGreaterEqual.<genexpr>",
+        "kind": "function",
+        "raw_signature": "(.0)",
+        "reason": "compiler_internal_slot",
+        "slot_names": [
+          ".0"
+        ],
+        "non_identifier_names": []
+      }
+    ]
   },
   "suspect_name_examples": [
     {
@@ -688,15 +5041,18 @@
   ],
   "duplicate_qualified_name_count": 193,
   "cross_check_note": "script_editor 0.6 evidence reports 4951 readable paths on this archive without the manual policy exclusion; this run reports 4950 structurally_read plus the excluded 1288 meta-record, a difference of exactly one, consistent with never reading the 1288 payload (inference, not a re-read of 1288)",
-  "modules_jsonl_sha256": "35203710d79acd08b080e9d08fa1357ea9f8c29464a64eeb1a34aa27e36a9efd",
+  "modules_jsonl_sha256": "266a7834765bb6b106d7c9e25261c2751277808d0b4d4be12bfbd142638ebf5c",
   "sample_regression": {
     "path": "script_manual/inventory/sample_regression.json",
-    "sha256": "7a538b1d3da1164829ac14b4672f1fc0a3c4b79fc17551a02dfeb29579f1854a"
+    "sha256": "d179e1586151e1ffadd0a3016a4822bceb67a842da83aaf9bc16c48639b96051"
   },
   "known_limits": [
     "kind fallback entries are counted in kind_fallback, not hidden",
     "suspect_names counts identifiers failing ^[A-Za-z_][A-Za-z0-9_]*$ (possible marshal seam garbling near XOR bounds); bytes are kept as read and never repaired from the historical catalog",
+    "that legacy function-name check uses re.match with $, which also accepts a trailing newline; no current function name ends with one",
     "signatures omit default-value expressions",
+    "signature null covers class bodies, inconsistent metadata, '.N' compiler slots (anonymous tuple parameters, generator-expression iterators) and non-identifier parameter names; null means unknown, not 'no parameters'",
+    "garbling that still yields a valid identifier cannot be detected by the identifier rule; confirmed signatures are structural metadata, not semantically reviewed source",
     "duplicate qualified names are preserved (e.g. repeated <lambda>)",
     "structural read proves names/paths exist in the pinned archive; it does not prove decompiled behavior or runtime correctness"
   ]

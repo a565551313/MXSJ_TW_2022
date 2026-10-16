@@ -13,6 +13,7 @@
       "methods": 11,
       "plain_functions": 5,
       "signatures": 16,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 18,
       "flat_name_multiset_matches_historical": true,
       "only_in_extraction": [],
@@ -29,6 +30,7 @@
       "methods": 3,
       "plain_functions": 99,
       "signatures": 102,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 103,
       "flat_name_multiset_matches_historical": true,
       "only_in_extraction": [],
@@ -45,6 +47,7 @@
       "methods": 63,
       "plain_functions": 22,
       "signatures": 85,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 102,
       "flat_name_multiset_matches_historical": true,
       "only_in_extraction": [],
@@ -61,6 +64,7 @@
       "methods": 74,
       "plain_functions": 34,
       "signatures": 108,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 123,
       "flat_name_multiset_matches_historical": true,
       "only_in_extraction": [],
@@ -77,6 +81,7 @@
       "methods": 50,
       "plain_functions": 46,
       "signatures": 96,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 99,
       "flat_name_multiset_matches_historical": true,
       "only_in_extraction": [],
@@ -93,6 +98,7 @@
       "methods": 594,
       "plain_functions": 55,
       "signatures": 649,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 200,
       "flat_name_multiset_matches_historical": false,
       "only_in_extraction": [
@@ -130,6 +136,7 @@
       "methods": 3,
       "plain_functions": 19,
       "signatures": 22,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 23,
       "flat_name_multiset_matches_historical": false,
       "only_in_extraction": [
@@ -150,6 +157,7 @@
       "methods": 154,
       "plain_functions": 59,
       "signatures": 213,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 200,
       "flat_name_multiset_matches_historical": false,
       "only_in_extraction": [
@@ -187,6 +195,7 @@
       "methods": 43,
       "plain_functions": 20,
       "signatures": 63,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 0,
       "flat_name_multiset_matches_historical": false,
       "only_in_extraction": [
@@ -224,6 +233,7 @@
       "methods": 10,
       "plain_functions": 12,
       "signatures": 22,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 24,
       "flat_name_multiset_matches_historical": true,
       "only_in_extraction": [],
@@ -240,6 +250,7 @@
       "methods": 4,
       "plain_functions": 27,
       "signatures": 31,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 32,
       "flat_name_multiset_matches_historical": true,
       "only_in_extraction": [],
@@ -256,6 +267,7 @@
       "methods": 20,
       "plain_functions": 34,
       "signatures": 54,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 58,
       "flat_name_multiset_matches_historical": true,
       "only_in_extraction": [],
@@ -272,6 +284,7 @@
       "methods": 7,
       "plain_functions": 144,
       "signatures": 151,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 153,
       "flat_name_multiset_matches_historical": true,
       "only_in_extraction": [],
@@ -288,6 +301,7 @@
       "methods": 0,
       "plain_functions": 86,
       "signatures": 85,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 86,
       "flat_name_multiset_matches_historical": true,
       "only_in_extraction": [],
@@ -304,6 +318,7 @@
       "methods": 0,
       "plain_functions": 1,
       "signatures": 1,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 1,
       "flat_name_multiset_matches_historical": true,
       "only_in_extraction": [],
@@ -320,6 +335,7 @@
       "methods": 20,
       "plain_functions": 5,
       "signatures": 25,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 27,
       "flat_name_multiset_matches_historical": true,
       "only_in_extraction": [],
@@ -336,6 +352,7 @@
       "methods": 80,
       "plain_functions": 155,
       "signatures": 235,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 200,
       "flat_name_multiset_matches_historical": false,
       "only_in_extraction": [
@@ -373,6 +390,7 @@
       "methods": 217,
       "plain_functions": 54,
       "signatures": 271,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 200,
       "flat_name_multiset_matches_historical": false,
       "only_in_extraction": [
@@ -410,6 +428,7 @@
       "methods": 28,
       "plain_functions": 58,
       "signatures": 86,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 92,
       "flat_name_multiset_matches_historical": true,
       "only_in_extraction": [],
@@ -426,11 +445,42 @@
       "methods": 85,
       "plain_functions": 27,
       "signatures": 112,
+      "signatures_rejected_null": 0,
       "historical_function_names_excl_module": 119,
       "flat_name_multiset_matches_historical": true,
       "only_in_extraction": [],
       "only_in_historical": []
     }
   ],
-  "all_paths_match_seed": true
+  "all_paths_match_seed": true,
+  "seed_source": {
+    "modules_jsonl_sha256_at_read": "de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b",
+    "frozen_seed_commit": "cc5c1bad7a806078794eca1ab7482230a18ef9d5",
+    "frozen_seed_sha256": "de75ec619cf61e8a71098bd74f746081547b1423c6d28bd8595039f6a8e3483b",
+    "is_frozen_seed_file": true,
+    "historical_seed_rows_in_modules_jsonl": 20,
+    "seed_paths_from_prior_sample_regression": 0,
+    "task_identities": 20
+  },
+  "extractor_sha256": "e12addfbed390638d850e0bba2e8116e518528f875f5a7d26091e19e35ec8c11",
+  "read_audit": {
+    "read_stored_calls": 10002,
+    "distinct_entries_read": 5001,
+    "entries_in_archive": 5002,
+    "excluded_entries": [
+      1288
+    ],
+    "excluded_read_stored_calls": 0,
+    "excluded_directory_spans": [
+      {
+        "entry_index": 1288,
+        "offset": 3460344,
+        "length": 5661
+      }
+    ],
+    "fingerprint_calls": 5002,
+    "fingerprint_full_file_passes": 1,
+    "archive_bytes_hashed_per_pass": 24454082,
+    "note": "read_stored is the only per-entry payload read; whole-file SHA-256 fingerprinting reads every byte (including excluded spans) only to hash it"
+  }
 }
