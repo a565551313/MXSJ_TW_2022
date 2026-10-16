@@ -19,34 +19,14 @@ Simulates the complete normal player lifecycle:
        `GS2C_LOGIN_PLAYER_DEL = 10`.
      - Handles `C2GS_LOGIN_PLAYER_ENTER = 2` (select role & enter game).
   4. 進入地圖與世界交互 (Entering the Map & In-Map Interactions):
-     - Sends `GS2C_PROP_INIT = 16` (the `ITEM_SERVERINIT` hero attributes).
-       NOTE: `hero.py` (entry 3038) assigns `ITEM_ALL` and `ITEM_SERVERINIT` as
-       EMPTY tuples at module level (`BUILD_TUPLE 0`) and fills them at runtime via
-       `InitItem`, so neither the "97" nor the "112" figure quoted elsewhere in this
-       file is a static client literal.  Count them from the registration path.
+     - Sends `GS2C_PROP_INIT = 16` (all 97 `ITEM_SERVERINIT` hero attributes from `hero.py`).
      - Sends `GS2C_MAP_SCENE_M = 96` (loads map scene `1025` 清風村 / `1054` 明月城 / `1001` 永澤城).
      - Sends `GS2C_MAP_GOTO_M = 97` (places hero at spawn grid coordinates).
      - Sends `GS2C_MAP_ADD_NPC = 99` (spawns interactive teleporter NPC on the map).
      - Sends `GS2C_NOTIFY = 165` (welcome banner in system prompt & chat window).
-     - Handles `C2GS_MAP_MOVE = 54` (walking), `C2GS_HEART_BEAT = 63` -> `GS2C_HEART_BEAT = 63`,
-       `C2GS_REQUEST_TIME = 61` -> `GS2C_TIME = 31`, `C2GS_NPC_LOOK = 96` -> `GS2C_NPC_CHAT_EXT = 152`,
-       `C2GS_NPC_ANSWER = 98` (map teleportation), and `C2GS_PLAYER_CHAT = 149` (chat & `/tp`).
-       The `*_LEGACY` aliases (109/15/55/56/123/...) are also accepted for older
-       builds, but they are NOT present in the v2.27.2 client table.
-
-Opcode provenance (verified 2026-10-12)
----------------------------------------
-The authoritative C2GS/GS2C numbers are read out of the client itself:
-`data/script.fls` entry **3970** = `script\\protocol.py` (module docstring "协议号",
-GBK).  412 assignments, 409 integer constants (C2GS=176, GS2C=233), recovered with
-**0 unmapped opcodes** over 2476 bytes of `co_code`.  Reproduce with:
-
-    python3 work/dream-world-connect-login-map/tools/extract_protocol_table.py \
-        --cross-check-mock mock_server.py
-
-That cross-check is what flagged the constants corrected in this file; run it after
-any opcode edit.  Names below that the cross-check reports as `missing_in_client`
-are this project's own invention, not client facts.
+     - Handles `C2GS_MAP_MOVE = 54` (walking), `C2GS_HEART_BEAT = 109` -> `GS2C_HEART_BEAT = 69`,
+       `C2GS_REQUEST_TIME = 15` -> `GS2C_TIME = 12`, `C2GS_NPC_LOOK = 55` -> `GS2C_NPC_CHAT_EXT = 152`,
+       `C2GS_NPC_ANSWER = 56` (map teleportation), and `C2GS_PLAYER_CHAT = 123` (chat & `/tp` commands).
 """
 
 from __future__ import annotations
@@ -69,17 +49,21 @@ from typing import Any
 # 1. Protocol Constants (`data/script.fls` `idx=3970` `script/protocol.py`)
 # ============================================================================
 
-# Client -> GameServer (C2GS) - `data/script.fls` entry 3970 (`script\protocol.py`)
+# Client -> GameServer (C2GS) - Authentic `data/script.fls` v2.27.2 opcodes
 C2GS_LOGIN_ACCOUNT_ENTER = 1
 C2GS_LOGIN_PLAYER_ENTER = 2
 C2GS_LOGIN_PLAYER_ADD = 3
 C2GS_LOGIN_QUIT = 4
 C2GS_LOGIN_PLAYER_DEL = 7
 C2GS_PING = 8
+C2GS_PLAYER_ADJUSTPOINT = 16
+C2GS_PLAYER_UPGRADE = 17
 C2GS_PROP_NEWPOINT = 17
 C2GS_PLAYER_SWITCH = 18
 C2GS_PLAYER_SYSSWITCH = 21
 C2GS_TIME = 31
+C2GS_ITEM_OP = 32
+C2GS_ITEM_LOCK = 38
 C2GS_SELECT_SERVER = 41
 C2GS_TASK_GET = 48
 C2GS_TASK = 49
@@ -88,17 +72,32 @@ C2GS_SYN_DIREMOTE = 55
 C2GS_REQUEST_TIME = 61
 C2GS_ANSWERHELLO = 62
 C2GS_HEART_BEAT = 63
+C2GS_TITLE = 67
 C2GS_OPEN_UI = 88
+C2GS_ITEMSHOP = 89
 C2GS_NPC_LOOK = 96
 C2GS_NPC_COMMAND = 97
 C2GS_NPC_ANSWER = 98
 C2GS_NPC_RBCLICK = 108
 C2GS_NPC_INPUT = 115
+C2GS_SUMMON_RELEASE = 128
+C2GS_SUMMON_PROPVIEW = 129
+C2GS_SUMMON_RENAME = 130
+C2GS_SUMMON_FIGHT = 131
+C2GS_SUMMON_SHOW = 132
+C2GS_SUMMON_HIDE = 133
+C2GS_SUMMON_POINT = 134
+C2GS_GET_SUMMON_INFO = 144
+C2GS_GET_ITEM_INFO = 145
 C2GS_PLAYER_CHAT = 149
 C2GS_MIXPACKET = 151
 C2GS_CHECKWG = 152
 C2GS_PLAYER_CMD = 153
+C2GS_GET_ITEM_INFO_EXT = 156
+C2GS_ASSISTANT_OP = 192
 C2GS_GAME_PUBLIC = 209
+C2GS_SUMMON_TALENT = 229
+C2GS_OPEN_UI_NEW = 230
 
 # Legacy `data/data.fls` C2GS opcodes (kept for backwards-compatible fallback)
 C2GS_REQUEST_TIME_LEGACY = 15
@@ -112,44 +111,112 @@ C2GS_PLAYER_CHAT_LEGACY = 123
 C2GS_SELECT_SERVER_LEGACY = 247
 C2GS_GAME_PUBLIC_LEGACY = 250
 
-# GameServer -> Client (GS2C) - `data/script.fls` entry 3970 (`script\protocol.py`)
+# GameServer -> Client (GS2C) - Authentic `data/script.fls` v2.27.2 opcodes
 GS2C_HELLO = 1
 GS2C_LOGIN_PLAYER_INFO = 3
 GS2C_LOGIN_PLAYER_ENTER = 4
 GS2C_LOGIN_PLAYER_ADD = 6
 GS2C_LOGIN_ERROR = 8
 GS2C_LOGIN_PLAYER_DEL = 10
-# NOTE (2026-10-12, corrected against the client): the three constants below were
-# invented and are NOT in `data/script.fls` entry 3970 (`script\protocol.py`).
-# Values 14 / 17 belong to GS2C_BLACKLIST and nothing at all respectively.
-# Authoritative table: work/dream-world-connect-login-map/artifacts/protocol_table/
-# protocol_opcodes.csv  (regenerate with tools/extract_protocol_table.py)
-GS2C_LOGIN_PLAYER_INFO_END = 14   # WRONG in client: 14 = GS2C_BLACKLIST. Unused here.
+GS2C_OTHER_ASSISTANT = 11
+GS2C_LOGIN_PLAYER_INFO_END = 14
 GS2C_LOGIN_ACCOUNT_INFO = 15
 GS2C_PROP_INIT = 16
-GS2C_PROP_CHANGE = 152            # was 17; 17 is unused in the client table.
-# CAUTION: the client's own table assigns 152 to BOTH GS2C_PROP_CHANGE and
-# GS2C_NPC_CHAT_EXT.  Whichever the client registers last in m_NetFunction wins,
-# so one of the two is unreachable.  Needs a real-client run to confirm which.
+GS2C_PROP_CHANGE = 17
+GS2C_PROP_RESIST = 18
+GS2C_PROP_POWER = 19
+GS2C_PROP_PHOTO = 20
 GS2C_TIME = 31
 GS2C_TIME_LEGACY = 12
+GS2C_ITEM_KEY = 32
+GS2C_ITEM_ADD = 33
+GS2C_ITEM_DEL = 34
+GS2C_ITEM_AMOUNT = 35
+GS2C_ITEM_POS = 36
+GS2C_ITEM_LOCK = 39
+GS2C_ITEM_ATTRDESC = 42
 GS2C_SELSERVER = 47
 GS2C_SELSERVER_LEGACY = 45
+GS2C_SUMM_INFO = 48
+GS2C_SUMM_SKILL = 49
+GS2C_SUMM_SET_FIGHT = 50
+GS2C_SUMM_PROP_VIEW = 51
+GS2C_SUMM_PROP_STATE = 52
+GS2C_SUMMON_KEY = 53
+GS2C_SUMM_EQUIP = 54
+GS2C_PROP_CHANGELIST = 61
 GS2C_HEART_BEAT = 63
 GS2C_HEART_BEAT_LEGACY = 69
+GS2C_SKILL_LEVEL = 65
+GS2C_OPEN_UI = 89
 GS2C_MAP_SCENE_M = 96
 GS2C_MAP_GOTO_M = 97
 GS2C_MAP_ADD_PLAYER = 98
 GS2C_MAP_ADD_NPC = 99
-GS2C_MAP_DEL = 85                 # was 100; 100 = GS2C_MAP_ADD_GOODS. Unused here.
+GS2C_MAP_DEL = 100
 GS2C_MAP_EFFECT = 102
+GS2C_MAP_SUMMON = 105
+GS2C_MAP_CHANGE_SHAPE = 107
 GS2C_NPC_CHAT = 144
 GS2C_NPC_CHAT_EXT = 152
+GS2C_SUMMON_INFO = 161
+GS2C_ITEM_INFO = 162
 GS2C_NOTIFY_EXT = 164
 GS2C_NOTIFY = 165
 GS2C_PLAYER_CHAT = 167
 GS2C_MESSAGE = 169
+GS2C_ITEM_INFO_EX = 190
+GS2C_TITLE = 200
+GS2C_ITEM_OTHER = 205
 GS2C_GAME_PUBLIC = 209
+GS2C_ADD_MULTIITEM = 210
+GS2C_SUMM_ADD = 220
+GS2C_SUMM_REMOVE = 221
+GS2C_SUMMON_TALENT = 233
+GS2C_OPEN_UI_NEW = 234
+
+# Playable character shapes from `script/login/createrole.py`, `script/hero.py` (`idx=3038`),
+# and `script/oldwalkerprocess.py` (`idx=2086`):
+#   Male (sex=1):   111 (愛德華), 112 (隆), 121 (浪人), 122 (星虎), 131 (凌風), 132 (霹靂火)
+#   Female (sex=2): 211 (莉莉絲), 212 (雪蓮), 221 (玉馨), 222 (燕歌行), 231 (明月姬), 232 (晚秋)
+# Note: If `m_RealShape` is not in `hero.VALID_SHAPE_LIST`, `avatar.GetDefaultPhoto()` returns `[]`,
+# which causes `CStateDialog.__init__` (`dlgstate.py` line 606) to crash with `IndexError` and
+# leaves the Character Attributes window (`人物屬性`) blank!
+VALID_PLAYER_SHAPES: tuple[int, ...] = (
+    111, 112, 113, 121, 122, 131, 132,
+    211, 212, 221, 222, 231, 232, 233,
+)
+LEGACY_SHAPE_MAP: dict[int, int] = {
+    1: 111, 2: 112, 3: 121, 4: 122, 5: 131, 6: 132,
+    7: 211, 8: 212, 9: 221, 10: 222, 11: 231, 12: 232,
+}
+SHAPE_DEFAULT_ICON: dict[int, int] = {
+    111: 1, 112: 2, 113: 1, 121: 3, 122: 4, 131: 5, 132: 6,
+    211: 14, 212: 15, 221: 16, 222: 17, 231: 18, 232: 19, 233: 18,
+}
+SHAPE_NAMES: dict[int, str] = {
+    111: "愛德華(男)", 112: "隆(男)", 121: "浪人(男)", 122: "星虎(男)", 131: "凌風(男)", 132: "霹靂火(男)",
+    211: "莉莉絲(女)", 212: "雪蓮(女)", 221: "玉馨(女)", 222: "燕歌行(女)", 231: "明月姬(女)", 232: "晚秋(女)",
+}
+
+
+def normalize_player_shape(shape: int) -> int:
+    if shape in VALID_PLAYER_SHAPES:
+        return shape
+    return LEGACY_SHAPE_MAP.get(shape, 111)
+
+
+def get_sex_for_shape(shape: int) -> int:
+    return 2 if normalize_player_shape(shape) >= 200 else 1
+
+
+def normalize_liupai(liupai: int, major: int = 1) -> int:
+    if 1001 <= liupai <= 1014:
+        return liupai
+    if 1 <= liupai <= 14:
+        return 1000 + liupai
+    # Default liupai by major: 1(戰士)->1001(劍), 2(法師)->1007(道家), 3(術士)->1010(佛家)
+    return {1: 1001, 2: 1007, 3: 1010, 4: 1012, 5: 1013, 6: 1014}.get(major, 1001)
 
 # Movement step offsets from `script/nethero.py` (`idx=826`, `C2SMapMove`):
 # Directions 1..8 map to `_offset[d - 1]`
@@ -603,35 +670,18 @@ def ensure_client_ready(repo_root: Path, patch_fls: bool = True) -> None:
 # ============================================================================
 
 
-MAX_LEN_BYTES = 2  # CNetClient +0x6990; see frame_gs2c docstring for the evidence.
-
-
 def frame_gs2c(opcode: int, payload: bytes = b"") -> bytes:
     """
     Wraps a GS2C packet for `CNetClient::RecvPacket` (`0x004ab540`):
       - `body = bytes([opcode]) + payload`
       - If `len(body) < 0xFF`: `bytes([len(body)]) + body`
-      - If `len(body) >= 0xFF`: `b'\\xff' + <len(body) as MaxLenBytes little-endian> + body`
-
-    `MaxLenBytes` is **2**, not 3.  Verified 2026-10-12 by disassembling `mx.exe`:
-      - `0x4ab540` state 0 reads 1 length byte into `+0x6988`;
-      - state 1 compares it to `0xFF` and, on match, calls `ReadBytes(&+0x6988,
-        [+0x6990])` — i.e. it reads exactly `MaxLenBytes` continuation bytes;
-      - a whole-binary scan finds exactly ONE write to `+0x6990`, at `0x4AB23F`:
-        `c7 87 90 69 00 00 02 00 00 00` = `mov dword ptr [edi+0x6990], 2`.
-    Writing 3 length bytes left a stray `0x00` at the head of the body, so the
-    client read cmd=0x00 and desynced.  Only packets with a body >= 0xFF bytes are
-    affected; in this build that is `GS2C_PROP_INIT` (body 404).
+      - If `len(body) >= 0xFF`: `b'\\xff' + struct.pack('<I', len(body))[:3] + body`
     """
     body = bytes([opcode & 0xFF]) + payload
     n = len(body)
     if n < 0xFF:
         return bytes([n]) + body
-    if n >= 1 << (8 * MAX_LEN_BYTES):
-        raise ValueError(
-            f"body {n}B does not fit in MaxLenBytes={MAX_LEN_BYTES}; the client "
-            "cannot frame it (split the packet instead)")
-    return b"\xff" + n.to_bytes(MAX_LEN_BYTES, "little") + body
+    return b"\xff" + struct.pack("<I", n)[:3] + body
 
 
 def build_gs2c_hello(seed: int = 0x12345678, server_num: int = 3, is_cert: int = 0) -> bytes:
@@ -664,27 +714,34 @@ def build_gs2c_login_player_info(role: dict[str, Any]) -> bytes:
       - `ID`: 4B LE
       - `time`: 4B LE
       - `Icon`: 1B
-      - `Shape`: 2B LE (1..12 valid player shapes)
+      - `Shape`: 2B LE (111..232 playable human shapes)
       - `Desc`: 2B LE (color bits)
       - `Level`: 1B
-      - `School`: 1B (0=戰士, 1=法師, 2=術士)
+      - `School`: 1B (1=戰士, 2=法師, 3=術士, ...)
       - `Race`: 1B
       - `iPrepareLoad`: 1B (0 or 1)
       - `Point`: 4B LE
       - `Name`: 16B Big5 NUL-padded string
     Total payload = 37 bytes (38 bytes including opcode).
     """
+    shape = normalize_player_shape(int(role.get("shape", 111)))
+    icon = int(role.get("icon", 0))
+    if icon <= 0:
+        icon = SHAPE_DEFAULT_ICON.get(shape, 1)
+    school = int(role.get("school", 1))
+    if school <= 0:
+        school = 1
     name_b = encode_big5(role.get("name", "夢想少俠"), 16)
     payload = (
         struct.pack(
             "<IIBHHBBBBI",
             int(role.get("id", 10001)) & 0xFFFFFFFF,
             int(role.get("time", int(time.time()))) & 0xFFFFFFFF,
-            int(role.get("icon", 1)) & 0xFF,
-            int(role.get("shape", 1)) & 0xFFFF,
+            icon & 0xFF,
+            shape & 0xFFFF,
             int(role.get("color", 0)) & 0xFFFF,
             int(role.get("level", 60)) & 0xFF,
-            int(role.get("school", 1)) & 0xFF,
+            school & 0xFF,
             int(role.get("race", 1)) & 0xFF,
             int(role.get("prepare_load", 0)) & 0xFF,
             int(role.get("point", 100)) & 0xFFFFFFFF,
@@ -738,38 +795,60 @@ def build_gs2c_prop_init(role: dict[str, Any]) -> bytes:
     """
     role_id = int(role.get("id", 10001)) & 0xFFFFFFFF
     level = int(role.get("level", 60)) & 0xFF
-    shape = int(role.get("shape", 1)) & 0xFFFF
-    icon = int(role.get("icon", 1)) & 0xFF
+    shape = normalize_player_shape(int(role.get("shape", 111))) & 0xFFFF
+    sex = get_sex_for_shape(shape) & 0xFF
+    icon = int(role.get("icon", 0)) & 0xFF
+    if icon <= 0:
+        icon = SHAPE_DEFAULT_ICON.get(shape, 1) & 0xFF
     school = int(role.get("school", 1)) & 0xFF
+    if school <= 0:
+        school = 1
+    liupai = normalize_liupai(int(role.get("liupai", 1001)), school) & 0xFFFF
     cash = int(role.get("cash", 888888))
+    title_id = int(role.get("title_id", 101)) & 0xFFFF
+    title_color = int(role.get("title_color", 0)) & 0xFF
     name_20 = encode_big5(role.get("name", "夢想少俠"), 20)
     org_20 = encode_big5(role.get("faction", "清風明月幫"), 20)
     title_60 = encode_big5(role.get("title", "夢想開拓者"), 60)
     fake_name_20 = encode_big5("", 20)
+
+    str_all = int(role.get("str_all", 100 + level * 2)) & 0xFFFF
+    mag_all = int(role.get("mag_all", 100 + level * 2)) & 0xFFFF
+    cha_all = int(role.get("cha_all", 90 + level * 2)) & 0xFFFF
+    dex_all = int(role.get("dex_all", 90 + level * 2)) & 0xFFFF
+    con_all = int(role.get("con_all", 100 + level * 2)) & 0xFFFF
+    free_point = int(role.get("point", 50)) & 0xFFFF
+
+    att_all = int(role.get("att_all", 450 + str_all * 5)) & 0xFFFF
+    def_all = int(role.get("def_all", 350 + con_all * 4)) & 0xFFFF
+    spe_all = int(role.get("spe_all", 180 + dex_all * 3)) & 0xFFFF
+    magdef_all = int(role.get("magdef_all", 320 + mag_all * 4)) & 0xFFFF
+    hp_max = int(role.get("hp_max", 1200 + con_all * 15)) & 0xFFFF
+    mp_max = int(role.get("mp_max", 800 + mag_all * 10)) & 0xFFFF
 
     buf = bytearray()
     # 1. iPlayerRealID (4B), iPlayerShowID (4B), iPrettyID (4B) -> 12 bytes
     buf.extend(struct.pack("<III", role_id, role_id, 0))
 
     # 2. All 112 ITEM_SERVERINIT fields in exact `script/hero.py` order (391 bytes):
-    # [000] m_Icon(1B), [001] m_Shape(2B), [002] m_Desc(TDESC=1B:0), [003] m_Sex(1B)
-    buf.extend(struct.pack("<BHBB", icon, shape, 0, 1))
+    # [000] m_Icon(1B), [001] m_Shape(2B), [002] m_Desc(TDESC=1B:0), [003] m_Sex(1B: 1=男, 2=女)
+    buf.extend(struct.pack("<BHBB", icon, shape, 0, sex))
     # [004] m_Name(20B)
     buf.extend(name_20)
     # [005] m_Grade(1B), [006] m_Cash(8B), [007] m_Saving(4B), [008] m_Exp(4B),
     # [009] m_NextExp(4B), [010] m_NeedExp(4B), [011] m_Class(1B), [012] m_Country(1B: 1=南遙國)
-    buf.extend(struct.pack("<BQIIIIBB", level, cash, 1000000, 50000, 100000, 100000, school, 1))
+    buf.extend(struct.pack("<BQIIIIBB", level, cash, 1000000, 150000, 100000, 100000, school, 1))
     # [013] sOrg(20B), [014] m_OrgID(4B), [015] m_EmoteForTitle(2B), [016] m_Title(60B), [017] m_TitleID(2B)
     buf.extend(org_20)
     buf.extend(struct.pack("<IH", 1, 0))
     buf.extend(title_60)
-    buf.extend(struct.pack("<H", 0))
+    buf.extend(struct.pack("<H", title_id))
     # [018..025] m_HP(2B), m_HPMax(2B), m_MP(2B), m_MPMax(2B), m_FP(2B), m_FPMax(2B), m_SP(2B), m_SPMax(2B)
-    buf.extend(struct.pack("<HHHHHHHH", 3500, 3500, 2500, 2500, 100, 100, 100, 150))
+    buf.extend(struct.pack("<HHHHHHHH", hp_max, hp_max, mp_max, mp_max, 100, 100, 100, 150))
     # [026..029] m_Huoli(4B), m_Huoli_Max(2B), m_Tili(4B), m_Tili_Max(2B)
     buf.extend(struct.pack("<IHIH", 500, 500, 500, 500))
     # [030..039] m_Att_All, m_Def_All, m_Spe_All, m_Magdef_All, m_Str_All, m_Mag_All, m_Cha_All, m_Dex_All, m_Con_All, m_Point (10 x 2B)
-    buf.extend(struct.pack("<HHHHHHHHHH", 1200, 950, 480, 920, 140, 150, 130, 130, 120, 50))
+    buf.extend(struct.pack("<HHHHHHHHHH", att_all, def_all, spe_all, magdef_all, str_all, mag_all, cha_all, dex_all, con_all, free_point))
     # [040] m_Switch(4B), [041] m_GridPoint(1B)
     buf.extend(struct.pack("<IB", 0, 20))
     # [042] m_SkillExp(4B), [043] m_PFPoint(4B), [044] m_StoryPoint(2B)
@@ -780,13 +859,13 @@ def build_gs2c_prop_init(role: dict[str, Any]) -> bytes:
     # [056] m_FightCash(8B), [057] m_ShenWuBi(4B)
     buf.extend(struct.pack("<QI", 500000, 100000))
     # [058..064] m_SummonMax, m_BagMax, m_VIP, m_FlyFlag, m_GradeLimit, m_Force, m_TitleColor (7 x 1B)
-    buf.extend(struct.pack("<7B", 8, 2, 1, 0, 150, 1, 0))
+    buf.extend(struct.pack("<7B", 8, 2, 1, 0, 150, 1, title_color))
     # [065] m_RealShape(2B), [066] m_XiulianTotalNeed(1B), [067] m_PhotoEffect(4B), [068] m_IsGuestLogin(4B)
     buf.extend(struct.pack("<HBII", shape, 0, 0, 0))
     # [069] m_NameColor(1B), [070] m_IsMarried(1B), [071] m_Birthday(2B), [072] m_AutoUpgrade(1B), [073] m_IsDYT(1B)
     buf.extend(struct.pack("<BBHBB", 0, 0, 101, 0, 0))
     # [074] m_Liupai(2B), [075] m_SecondLiupai(2B)
-    buf.extend(struct.pack("<HH", 1, 0))
+    buf.extend(struct.pack("<HH", liupai, 0))
     # [076..080] m_GradeTolJHP, m_GetJHMax4Grade, m_SumCBExp, m_SumHFExp, m_TradeVolumeOfDay (5 x 4B)
     buf.extend(struct.pack("<5I", 0, 0, 0, 0, 0))
     # [081] m_FakeName(20B)
@@ -807,6 +886,413 @@ def build_gs2c_prop_init(role: dict[str, Any]) -> bytes:
 
     assert len(buf) == 403, f"Expected 403 bytes for GS2C_PROP_INIT, got {len(buf)}"
     return frame_gs2c(GS2C_PROP_INIT, bytes(buf))
+
+
+def build_gs2c_prop_change_word(idx: int, val: int) -> bytes:
+    """`GS2C_PROP_CHANGE = 17` for a 2-byte `TWORD` field at `ITEM_SERVERINIT[idx]`."""
+    return frame_gs2c(GS2C_PROP_CHANGE, struct.pack("<BH", idx & 0xFF, val & 0xFFFF))
+
+
+def build_gs2c_prop_change_byte(idx: int, val: int) -> bytes:
+    """`GS2C_PROP_CHANGE = 17` for a 1-byte `TBYTE` field at `ITEM_SERVERINIT[idx]`."""
+    return frame_gs2c(GS2C_PROP_CHANGE, struct.pack("<BB", idx & 0xFF, val & 0xFF))
+
+
+def build_gs2c_prop_change_str(idx: int, text: str, fixed_len: int) -> bytes:
+    """`GS2C_PROP_CHANGE = 17` for a fixed-length string field at `ITEM_SERVERINIT[idx]`."""
+    return frame_gs2c(GS2C_PROP_CHANGE, bytes([idx & 0xFF]) + encode_big5(text, fixed_len))
+
+
+def build_gs2c_open_ui_new_attr(sub_type: int) -> bytes:
+    """
+    `GS2C_OPEN_UI_NEW = 234` (`iMain=8, iSub=1..7`) -> `netattribute.S2CProcess(iSub, netobj)`:
+    Populates the 7 tabs of `屬性總覽` (`dlgattributemain.py` when clicking `查看屬性`):
+      - `iSub=1` (`流派抗性` `S2CSchoolResist`): 12 x signed 2B (`<12h`)
+      - `iSub=2` (`其它抗性` `S2COtherResist`):  5 x signed 1B (`<5b`)
+      - `iSub=3` (`修煉`     `S2CXiulianInfo`):  `<5BIBBBBI` (18 bytes)
+      - `iSub=4` (`卦象`     `S2CGuaXiang`):     `iLen=1B` + `iLen * <BB`
+      - `iSub=5` (`星圖`     `S2CXingTu`):       `iLen=1B` + `iLen * <BB`
+      - `iSub=6` (`法寶`     `S2CFaBao`):        `<BB` (`iMainFaBaoID`, `iSubFaBaoID`)
+      - `iSub=7` (`魔石`     `S2CMoShi`):        `<BB` (`iLevel`, `iPercent`)
+    """
+    header = struct.pack("<HB", 8, sub_type & 0xFF)
+    if sub_type == 1:
+        body = struct.pack("<12h", 15, 15, 15, 12, 12, 12, 12, 10, 10, 10, 10, 10)
+    elif sub_type == 2:
+        body = struct.pack("<5b", 10, 10, 10, 10, 10)
+    elif sub_type == 3:
+        body = struct.pack("<5BIBBBBI", 10, 10, 10, 10, 10, 50000, 20, 20, 20, 10, 80000)
+    elif sub_type == 4:
+        body = struct.pack("<B", 3) + struct.pack("<BBBBBB", 1, 5, 2, 5, 3, 5)
+    elif sub_type == 5:
+        body = struct.pack("<B", 2) + struct.pack("<BBBB", 1, 3, 2, 3)
+    elif sub_type == 6:
+        body = struct.pack("<BB", 1, 2)
+    else:
+        body = struct.pack("<BB", 5, 80)
+    return frame_gs2c(GS2C_OPEN_UI_NEW, header + body)
+
+
+def build_gs2c_open_ui_autopoint(role: dict[str, Any]) -> bytes:
+    """
+    `GS2C_OPEN_UI = 89` (`sub=235`) -> `netopenui.S2CHeroAutoPoint(netobj)`:
+      - `sub`: 1B (235)
+      - `bSelect`: 1B (0 or 1)
+      - `point[0..4]`: 5 x 1B (total = 5 points per level, e.g. 3, 0, 1, 1, 0)
+    """
+    ap = role.get("autopoint", [3, 0, 1, 1, 0])
+    b_sel = int(role.get("autopoint_enable", 1)) & 0xFF
+    payload = struct.pack("<BBBBBBB", 235, b_sel, ap[0], ap[1], ap[2], ap[3], ap[4])
+    return frame_gs2c(GS2C_OPEN_UI, payload)
+
+
+PLAYER_TITLES: list[dict[str, Any]] = [
+    {"id": 101, "title": "夢想開拓者", "desc": "踏入《夢想世界》的先驅少俠專屬稱謂。", "color": 0},
+    {"id": 102, "title": "清風明月俠", "desc": "遊歷清風村與明月城的瀟灑少俠。", "color": 1},
+    {"id": 103, "title": "天選之人", "desc": "氣運加身、萬眾矚目的傳奇稱謂。", "color": 2},
+    {"id": 104, "title": "名動江湖", "desc": "武藝超群、威震四方的江湖名宿。", "color": 3},
+]
+
+
+def build_gs2c_open_ui_titles(role: dict[str, Any]) -> bytes:
+    """
+    `GS2C_OPEN_UI = 89` (`sub=183, mode=1`) -> `netopenui.S2CRefreshTitle(netobj)`:
+      - `sub`: 1B (183)
+      - `mode`: 1B (1)
+      - `iTitleNum`: 2B LE
+      - `total`: 2B LE
+      - For each title (`UnpackTitleNetObj`):
+          `iLen`: 1B + `sTitle` (Big5)
+          `iTitleID`: 2B LE
+          `iCanColor`: 1B
+          `iCanDel`: 1B
+          `iTop`: 1B
+          `iColor`: 1B
+          (if `iColor > 0`: `iColorTime`: 1B)
+      - `iSelectTitle`: 2B LE
+    """
+    sel_id = int(role.get("title_id", 101)) & 0xFFFF
+    buf = bytearray(struct.pack("<BBHH", 183, 1, len(PLAYER_TITLES), len(PLAYER_TITLES)))
+    for t in PLAYER_TITLES:
+        tb = encode_big5(t["title"])
+        color = int(t.get("color", 0)) & 0xFF
+        buf.append(len(tb) & 0xFF)
+        buf.extend(tb)
+        buf.extend(struct.pack("<HBBBB", int(t["id"]) & 0xFFFF, 1, 0, 0, color))
+        if color > 0:
+            buf.append(30)  # iColorTime (days)
+    buf.extend(struct.pack("<H", sel_id))
+    return frame_gs2c(GS2C_OPEN_UI, bytes(buf))
+
+
+def build_gs2c_title_desc(title_id: int) -> bytes:
+    """
+    `GS2C_TITLE = 200` (`sub=1`) -> `dlgtitle.S2CTitle`:
+      - `sub`: 1B (1)
+      - `id`: 2B LE
+      - `len`: 1B + `desc` (Big5)
+    """
+    desc = "《夢想世界》少俠專屬榮譽稱謂。"
+    for t in PLAYER_TITLES:
+        if int(t["id"]) == title_id:
+            desc = t["desc"]
+            break
+    db = encode_big5(desc)
+    return frame_gs2c(GS2C_TITLE, struct.pack("<BHB", 1, title_id & 0xFFFF, len(db) & 0xFF) + db)
+
+
+STARTER_ITEMS: list[dict[str, Any]] = [
+    # Equipped items (`pos = 1..9` in `itemdefine.py` `EQUIPPOS_*`)
+    {"id": 20001, "shape": 60030, "pos": 1, "qty": 1, "flag": 64, "name": "飾金軟帽", "ext": "基礎屬性$防禦 +33"},
+    {"id": 20002, "shape": 50030, "pos": 2, "qty": 1, "flag": 64, "name": "青霜劍", "ext": "基礎屬性$攻擊 +108"},
+    {"id": 20003, "shape": 61030, "pos": 3, "qty": 1, "flag": 64, "name": "精鐵軟甲", "ext": "基礎屬性$防禦 +72"},
+    {"id": 20004, "shape": 66030, "pos": 4, "qty": 1, "flag": 64, "name": "幼龍腰帶", "ext": "基礎屬性$氣血 +336"},
+    {"id": 20005, "shape": 63030, "pos": 5, "qty": 1, "flag": 64, "name": "風火腕輪", "ext": "基礎屬性$防禦 +20"},
+    {"id": 20007, "shape": 64030, "pos": 7, "qty": 1, "flag": 64, "name": "翠微珠鏈", "ext": "基礎屬性$防禦 +24"},
+    {"id": 20008, "shape": 65020, "pos": 8, "qty": 1, "flag": 64, "name": "螢火指環", "ext": "基礎屬性$防禦 +7"},
+    {"id": 20009, "shape": 62030, "pos": 9, "qty": 1, "flag": 64, "name": "飛狼履", "ext": "基礎屬性$速度 +24"},
+    # Inventory items (`pos = 20..59` in `行囊`)
+    {"id": 20020, "shape": 21100, "pos": 20, "qty": 30, "flag": 64, "name": "金創藥", "ext": "恢復氣血 200 點"},
+    {"id": 20021, "shape": 30031, "pos": 21, "qty": 1, "flag": 64, "name": "飛行旗", "ext": "記錄座標並瞬間傳送"},
+    {"id": 20022, "shape": 70662, "pos": 22, "qty": 10, "flag": 64, "name": "還童丹", "ext": "洗煉召喚獸資質與技能"},
+    {"id": 20023, "shape": 25405, "pos": 23, "qty": 1, "flag": 64, "name": "魔獸要訣", "ext": "記載著召喚獸技能的古籍"},
+    {"id": 20024, "shape": 25814, "pos": 24, "qty": 5, "flag": 64, "name": "經驗心得", "ext": "使用後獲得豐厚角色經驗"},
+    {"id": 20025, "shape": 51030, "pos": 25, "qty": 1, "flag": 64, "name": "柳葉刀", "ext": "基礎屬性$攻擊 +108"},
+]
+
+
+def build_gs2c_item_add(it: dict[str, Any], item_type: int = 1, add_type: int = 0) -> bytes:
+    """
+    `GS2C_ITEM_ADD = 33` -> `netitem.S2CItemAdd(netobj)`:
+      - `iItemType`: 1B (1 -> `ITEM_NORMAL = 0`)
+      - `id`: 4B LE
+      - `shape`: 4B LE
+      - `special_flag`: 4B LE
+      - `quantity`: 2B LE
+      - `pos`: 1B (`1..9` = equipped, `20..59` = inventory bag)
+      - `iDataLen`: 2B LE (`2`)
+      - `sData`: `b"{}"` (`C_marshal.loads(b"{}")` -> `{}`)
+      - `iType`: 1B (`0`)
+    """
+    ext_marshal = b"{}"
+    payload = (
+        struct.pack(
+            "<BIIIHBH",
+            item_type & 0xFF,
+            int(it["id"]) & 0xFFFFFFFF,
+            int(it["shape"]) & 0xFFFFFFFF,
+            int(it.get("flag", 64)) & 0xFFFFFFFF,
+            int(it.get("qty", 1)) & 0xFFFF,
+            int(it["pos"]) & 0xFF,
+            len(ext_marshal),
+        )
+        + ext_marshal
+        + bytes([add_type & 0xFF])
+    )
+    return frame_gs2c(GS2C_ITEM_ADD, payload)
+
+
+def build_gs2c_item_key_end() -> bytes:
+    """`GS2C_ITEM_KEY = 32` (`sub=2`) -> `netitem.S2CItemKey`: marks `item.g_ItemSendEnd = True`."""
+    return frame_gs2c(GS2C_ITEM_KEY, b"\x02")
+
+
+def build_gs2c_item_pos(id1: int, pos1: int, id2: int = 0, pos2: int = 0, itype: int = 1) -> bytes:
+    """`GS2C_ITEM_POS = 36` -> `netitem.S2CItemPos`: moves/swaps items between inventory and equipment slots."""
+    payload = struct.pack("<BIBIB", itype & 0xFF, id1 & 0xFFFFFFFF, pos1 & 0xFF, id2 & 0xFFFFFFFF, pos2 & 0xFF)
+    return frame_gs2c(GS2C_ITEM_POS, payload)
+
+
+def build_gs2c_item_info(item_id: int, ext_str: str = "", key: int = 64, itype: int = 0) -> bytes:
+    """`GS2C_ITEM_INFO = 162` -> `nethero.S2CItemInfo`: populates item hover tooltip."""
+    return frame_gs2c(GS2C_ITEM_INFO, struct.pack("<BII", itype & 0xFF, key & 0xFFFFFFFF, item_id & 0xFFFFFFFF) + encode_big5(ext_str))
+
+
+def build_gs2c_skills(level: int = 60) -> list[bytes]:
+    """
+    `GS2C_SKILL_LEVEL = 65` -> `netskill.S2CSkillProcess(netobj)`:
+      - `iSub = 1` (`S2CSkill`): `<BB` `1, count` + `count * <HBBBBIIBBBBI` (23B per skill)
+      - `iSub = 2` (`S2CMagic`): `<BHBHHIBB` (`2, mtype=2, lv=1, id, nextid=0, exp=100, point=0, aexp=0`)
+    """
+    pkts: list[bytes] = []
+    # Main combat & life skills (`skill.py` / `netskill.py`)
+    skills = [
+        (1, 2, level, level + 10),   # 劍術
+        (2, 2, level, level + 10),   # 刀法
+        (3, 2, level, level + 10),   # 槍法
+        (7, 3, level, level + 10),   # 道家法術
+        (301, 1, level, level + 10), # 強身術
+    ]
+    buf = bytearray(struct.pack("<BB", 1, len(skills)))
+    for sid, stype, slv, slimit in skills:
+        buf.extend(struct.pack("<HBBBBIIBBBBI", sid, stype, slv, slimit, slv, 100, 1000, 0, 10, 100, 0, 1000))
+    pkts.append(frame_gs2c(GS2C_SKILL_LEVEL, bytes(buf)))
+
+    # Combat magic spells (`mtype = 2`)
+    for mid in (101, 102, 103):
+        m_pkt = struct.pack("<BHBHHIBB", 2, 2, 1, mid, 0, 1000, 0, 0)
+        pkts.append(frame_gs2c(GS2C_SKILL_LEVEL, m_pkt))
+    return pkts
+
+
+STARTER_PETS: list[dict[str, Any]] = [
+    {
+        "id": 50001,
+        "name": "小兔子",
+        "shape": 2040,
+        "grade": 30,
+        "hp": 1280,
+        "mp": 650,
+        "fp": 100,
+        "damage": 520,
+        "defense": 410,
+        "speed": 360,
+        "magdef": 380,
+        "str": 95,
+        "con": 85,
+        "mag": 60,
+        "cha": 70,
+        "dex": 90,
+        "point": 25,
+        "skills": [101, 106, 115],
+        "birthkey": 1,  # MARK_ISBAOBAO
+    },
+    {
+        "id": 50002,
+        "name": "仙獸青雲龍",
+        "shape": 4023,
+        "grade": 60,
+        "hp": 3200,
+        "mp": 1800,
+        "fp": 100,
+        "damage": 1150,
+        "defense": 920,
+        "speed": 680,
+        "magdef": 890,
+        "str": 180,
+        "con": 160,
+        "mag": 170,
+        "cha": 150,
+        "dex": 165,
+        "point": 50,
+        "skills": [201, 206, 215, 224],
+        "birthkey": 8,  # MARK_ISXIANPET
+    },
+]
+
+
+def build_gs2c_summ_add(pet_info: dict[str, Any]) -> bytes:
+    """
+    `GS2C_SUMM_ADD = 220` -> `netpet.S2CSummAllInfo(netobj)`:
+      1. `pid`: 4B LE
+      2. `pet.UpdateSummonProp`:
+         - `name`: 20B Big5
+         - `shape`: 2B LE (`2040` 小兔子, `4023` 仙獸青雲龍)
+         - `desc`: `UnpackDesc` (`1B = 0`)
+         - `BASE_PROP[4:]` (34 fields = 90 bytes)
+         - `m_iGraphStar`(1B), `m_iGraphLock`(1B), `m_iCanJinXiu`(1B)
+      3. `UnpackSummonSkill`: `skillNum`(1B), `hfSkillNum`(1B), `skills`(`2B * N`), `tempBindLen`(1B=0)
+      4. `UnpackSummonKey`: `key`(2B=0), `birthkey`(1B), `unbindtime`(4B=0)
+      5. `iTalentLen`(1B=0) (`limitserver.IsTestGameServer('summontalent') == True`)
+      6. `iSaveState`(1B=0), `UnpackSummonEquip`(`1B=0`), `iTraceID`(4B), `iTraceNo`(4B)
+    """
+    pid = int(pet_info["id"]) & 0xFFFFFFFF
+    name_20 = encode_big5(pet_info.get("name", "小兔子"), 20)
+    shape = int(pet_info.get("shape", 2040)) & 0xFFFF
+    grade = int(pet_info.get("grade", 30)) & 0xFF
+    hp = int(pet_info.get("hp", 1200))
+    mp = int(pet_info.get("mp", 600))
+    fp = int(pet_info.get("fp", 100))
+    dmg = int(pet_info.get("damage", 500))
+    df = int(pet_info.get("defense", 400))
+    spd = int(pet_info.get("speed", 350))
+    mdf = int(pet_info.get("magdef", 350))
+    p_str = int(pet_info.get("str", 90))
+    p_con = int(pet_info.get("con", 80))
+    p_mag = int(pet_info.get("mag", 60))
+    p_cha = int(pet_info.get("cha", 70))
+    p_dex = int(pet_info.get("dex", 85))
+    p_pt = int(pet_info.get("point", 25))
+    skills = list(pet_info.get("skills", [101, 106]))
+    birthkey = int(pet_info.get("birthkey", 1)) & 0xFF
+
+    buf = bytearray()
+    buf.extend(struct.pack("<I", pid))
+    buf.extend(name_20)
+    buf.extend(struct.pack("<HB", shape, 0))  # shape(2B) + UnpackDesc(1B=0)
+    # BASE_PROP[4:]:
+    # m_Grade(1B), m_HP..m_Magdef(10 x 4B), m_Str..m_Point(6 x 2B), m_Exp..m_Life(4 x 4B),
+    # m_bIsColorCompensate(1B), m_iSumScore(2B), m_MoLingGuo..m_MaxShenXian(5 x 1B),
+    # Update_Flag..m_Tunshi(4 x 4B), m_FuMo(5B), m_FuMoExt(5B)
+    buf.extend(
+        struct.pack(
+            "<B10I6H4IBH5B4I",
+            grade,
+            hp, mp, fp, hp, mp, fp,
+            dmg, df, spd, mdf,
+            p_str, p_con, p_mag, p_cha, p_dex, p_pt,
+            10000, 50000, 50000, 65000,
+            0, 1850, 0, 0, 10, 0, 10,
+            0, 0, 0, 0,
+        )
+    )
+    buf.extend(struct.pack("<BHHBHH", 0, 0, 0, 0, 0, 0))  # m_FuMo(5B), m_FuMoExt(5B)
+    buf.extend(struct.pack("<BBB", 1, 0, 0))  # m_iGraphStar, m_iGraphLock, m_iCanJinXiu
+    # UnpackSummonSkill
+    buf.extend(struct.pack("<BB", len(skills), 0))
+    for sk in skills:
+        buf.extend(struct.pack("<H", int(sk) & 0xFFFF))
+    buf.append(0)  # iTempBindSkillIDList len = 0
+    # UnpackSummonKey: key(2B), birthkey(1B), unbindtime(4B)
+    buf.extend(struct.pack("<HBI", 0, birthkey, 0))
+    # iTalentLen(1B=0), iSaveState(1B=0), equips len(1B=0), iTraceID(4B), iTraceNo(4B)
+    buf.extend(struct.pack("<BBBII", 0, 0, 0, pid, 1))
+    return frame_gs2c(GS2C_SUMM_ADD, bytes(buf))
+
+
+def build_gs2c_summ_set_fight(pid: int) -> bytes:
+    """`GS2C_SUMM_SET_FIGHT = 50` -> `netpet.S2CSetFight(netobj)` (`pid: 4B`)."""
+    return frame_gs2c(GS2C_SUMM_SET_FIGHT, struct.pack("<I", pid & 0xFFFFFFFF))
+
+
+def build_gs2c_summ_prop_view(pid: int) -> bytes:
+    """
+    `GS2C_SUMM_PROP_VIEW = 51` -> `netpet.S2CPropView(netobj)`:
+      - `pid`: 4B LE
+      - `extra_zz`: 2B LE
+      - `ADV_PROP` (18 fields = 30 bytes):
+          `Ability_Attack..Ability_Speed` (5 x 2B), `Update_Flag`(4B), `Update_Max`(4B),
+          `PromoteZZ`(1B), `PromoteMax`(2B), `Resist_Lidi..Resist_Nian` (9 x 1B)
+    """
+    payload = struct.pack(
+        "<IH5HIIBH9b",
+        pid & 0xFFFFFFFF,
+        50,
+        1520, 1480, 1450, 1500, 1490,
+        0, 0,
+        2, 5,
+        10, 10, 10, 10, 10, 10, 10, 10, 10,
+    )
+    return frame_gs2c(GS2C_SUMM_PROP_VIEW, payload)
+
+
+def build_gs2c_map_summon(owner_id: int, pet_info: dict[str, Any] | None) -> bytes:
+    """
+    `GS2C_MAP_SUMMON = 105` -> `netmap.S2CMapSummon(netobj)`:
+    Spawns or recalls the player's following summon beast on the map!
+    """
+    if not pet_info:
+        return frame_gs2c(GS2C_MAP_SUMMON, struct.pack("<IBB", owner_id & 0xFFFFFFFF, 0, 0))
+    nb = encode_big5(pet_info.get("name", "小兔子"))
+    shape = int(pet_info.get("shape", 2040)) & 0xFFFF
+    payload = (
+        struct.pack("<IBBBHB", owner_id & 0xFFFFFFFF, 1, 1, 0, shape, 0)
+        + bytes([len(nb) & 0xFF])
+        + nb
+        + b"\x00"
+    )
+    return frame_gs2c(GS2C_MAP_SUMMON, payload)
+
+
+def build_gs2c_map_change_shape(role_id: int, shape: int, title: str = "夢想開拓者", title_id: int = 101) -> bytes:
+    """
+    `GS2C_MAP_CHANGE_SHAPE = 107` -> `netmap.S2CChangeShape(netobj)`:
+      - `iObjID`: 4B LE
+      - `iShape`: 2B LE
+      - `desc`: `prop.UnpackDesc` (`1B = 0`)
+      - `iCountry`: 1B (`(direct << 3) | country`)
+      - `iSiblingBadge`: 2B LE
+      - `iEmoteType`: 1B
+      - `iTitleID`: 2B LE
+      - `iEmoteTitleID`: 2B LE
+      - `iLen`: 1B + `sTitle` (`iLen` bytes)
+      - `iColor`: 1B
+      - `iOrgID`: 4B LE
+      - `iOrgLevel`: 1B
+      - `iNameColorIdx`: 1B
+      - `bCanFly`: 1B
+      - `iPriorHorseID`: 1B
+      - `iTitleGrade`: 1B
+      - `bShowPrettyID`: 1B
+    """
+    tb = encode_big5(title) if title else b""
+    payload = (
+        struct.pack(
+            "<IHBBHBHHB",
+            role_id & 0xFFFFFFFF,
+            shape & 0xFFFF,
+            0,  # prop.UnpackDesc (1B = 0)
+            (3 << 3) | 1,  # iDirect=3, iCountry=1
+            0,  # iSiblingBadge
+            0,  # iEmoteType
+            title_id & 0xFFFF,
+            0,  # iEmoteTitleID
+            len(tb) & 0xFF,
+        )
+        + tb
+        + struct.pack("<BIBBBBBB", 1, 0, 0, 0, 0, 0, 0, 0)
+    )
+    return frame_gs2c(GS2C_MAP_CHANGE_SHAPE, payload)
 
 
 def build_gs2c_map_scene_m(
@@ -989,10 +1475,11 @@ class AccountStore:
             "id": role_id,
             "name": name,
             "icon": 1,
-            "shape": 1,
+            "shape": 111,
             "color": 0,
             "level": 60,
             "school": 1,
+            "liupai": 1001,
             "race": 1,
             "point": 200,
             "cash": 888888,
@@ -1002,10 +1489,36 @@ class AccountStore:
             "time": int(time.time()),
         }
 
+    def _migrate_roles(self) -> bool:
+        """Auto-upgrades any saved roles in `mock_accounts.json` with invalid `shape` (e.g. `1`) to human shapes (`111..232`)."""
+        changed = False
+        for acct in self.data.get("accounts", {}).values():
+            for r in acct.get("roles", []):
+                old_shape = int(r.get("shape", 111))
+                new_shape = normalize_player_shape(old_shape)
+                if old_shape != new_shape:
+                    r["shape"] = new_shape
+                    changed = True
+                if int(r.get("icon", 0)) <= 0:
+                    r["icon"] = SHAPE_DEFAULT_ICON.get(new_shape, 1)
+                    changed = True
+                if int(r.get("school", 0)) <= 0:
+                    r["school"] = 1
+                    changed = True
+                old_lp = int(r.get("liupai", 0))
+                new_lp = normalize_liupai(old_lp, int(r["school"]))
+                if old_lp != new_lp:
+                    r["liupai"] = new_lp
+                    changed = True
+        return changed
+
     def _load(self) -> None:
         if self.db_path.exists():
             try:
                 self.data = json.loads(self.db_path.read_text(encoding="utf-8"))
+                if self._migrate_roles():
+                    self._save()
+                    log("[DB] Auto-repaired legacy character shape/liupai in mock_accounts.json -> human shape (111..232)")
                 return
             except Exception as exc:
                 log(f"[WARN] Failed to load {self.db_path}: {exc}; initializing fresh store.")
@@ -1053,22 +1566,28 @@ class AccountStore:
         shape: int,
         color: int,
         major: int,
+        liupai: int = 1001,
     ) -> dict[str, Any]:
         with self.lock:
             acct = self.data["accounts"].setdefault(account, {"md5_pass": "", "roles": []})
             role_id = int(self.data.get("next_role_id", 10002))
             self.data["next_role_id"] = role_id + 1
             m = MAPS[self.default_map_id]
+            norm_shape = normalize_player_shape(shape)
+            norm_major = major if 1 <= major <= 6 else 1
+            norm_liupai = normalize_liupai(liupai, norm_major)
+            norm_icon = icon if icon > 0 else SHAPE_DEFAULT_ICON.get(norm_shape, 1)
             new_role = {
                 "id": role_id,
                 "name": name or f"少俠{role_id}",
-                "icon": icon if icon > 0 else 1,
-                "shape": shape if 1 <= shape <= 12 else 1,
+                "icon": norm_icon,
+                "shape": norm_shape,
                 "color": color,
-                "level": 10,
-                "school": major if major in (0, 1, 2) else 0,
+                "level": 30,
+                "school": norm_major,
+                "liupai": norm_liupai,
                 "race": 1,
-                "point": 50,
+                "point": 100,
                 "cash": 888888,
                 "map_id": self.default_map_id,
                 "x": m["spawn_x"],
@@ -1141,6 +1660,8 @@ class ClientSession:
         self.server_num = server_num
         self.account: str = "player01"
         self.active_role: dict[str, Any] | None = None
+        self.items: dict[int, dict[str, Any]] = {int(it["id"]): dict(it) for it in STARTER_ITEMS}
+        self.pets: dict[int, dict[str, Any]] = {int(p["id"]): dict(p) for p in STARTER_PETS}
         self.recv_buf = bytearray()
         self.hello_verified = False
 
@@ -1496,6 +2017,124 @@ class ClientSession:
             log(f"[C2GS <- {self.addr[1]}] C2GS_LOGIN_QUIT (op=4)")
             return
 
+        # 10. Character Attribute Point Allocation (`C2GS_PLAYER_ADJUSTPOINT = 16`)
+        if opcode == C2GS_PLAYER_ADJUSTPOINT:
+            self._on_player_adjustpoint(fields)
+            return
+
+        # 11. Character Level-Up (`C2GS_PLAYER_UPGRADE = 17`)
+        if opcode == C2GS_PLAYER_UPGRADE:
+            self._on_player_upgrade()
+            return
+
+        # 12. Assistant Operations (`C2GS_ASSISTANT_OP = 192` -> upgrade check, auto-point, etc.)
+        if opcode == C2GS_ASSISTANT_OP:
+            sub = fields[0] if fields else 0
+            log(f"[C2GS <- {self.addr[1]}] C2GS_ASSISTANT_OP (op=192, sub={sub})")
+            if sub == 21:
+                # CanUpgrade response (`GS2C_OTHER_ASSISTANT = 11`, `sub=37`, `state=1, exp=0, flag=0, cash=0`)
+                self.send_raw(
+                    frame_gs2c(GS2C_OTHER_ASSISTANT, struct.pack("<BBIBI", 37, 1, 0, 0, 0)),
+                    "GS2C_OTHER_ASSISTANT(sub=37, CanUpgrade=1)",
+                )
+            elif sub in (73, 110):
+                self._on_player_upgrade()
+            return
+
+        # 13. Open New UI (`C2GS_OPEN_UI_NEW = 230` -> `查看屬性 / 屬性總覽` `iMain=162, sub=49, iType=1..7`)
+        if opcode == C2GS_OPEN_UI_NEW:
+            if len(fields) >= 4:
+                i_main, i_sub, i_type = struct.unpack_from("<HBB", fields, 0)
+                log(f"[C2GS <- {self.addr[1]}] C2GS_OPEN_UI_NEW (op=230, main={i_main}, sub={i_sub}, type={i_type})")
+                if i_main == 162 and i_sub == 49:
+                    self.send_raw(
+                        build_gs2c_open_ui_new_attr(i_type),
+                        f"GS2C_OPEN_UI_NEW(op=234, main=8, sub={i_type})",
+                    )
+            return
+
+        # 14. Character Titles (`C2GS_TITLE = 67` -> `稱謂` dialog)
+        if opcode == C2GS_TITLE:
+            self._on_title_op(fields)
+            return
+
+        # 15. Inventory & Equipment Operations (`C2GS_ITEM_OP = 32`, `C2GS_GET_ITEM_INFO_EXT = 156`, `C2GS_GET_ITEM_INFO = 145`)
+        if opcode == C2GS_ITEM_OP:
+            self._on_item_op(fields)
+            return
+
+        if opcode in (C2GS_GET_ITEM_INFO_EXT, C2GS_GET_ITEM_INFO):
+            if len(fields) >= 4:
+                item_id = struct.unpack_from("<I", fields, 0)[0]
+                itype = fields[4] if len(fields) >= 5 else 0
+                it = self.items.get(item_id)
+                ext_str = it.get("ext", "") if it else ""
+                self.send_raw(
+                    build_gs2c_item_info(item_id, ext_str=ext_str, key=64, itype=itype),
+                    f"GS2C_ITEM_INFO(op=162, id={item_id})",
+                )
+            return
+
+        # 16. Summon Beast (召喚獸) Operations (`128..134`)
+        if opcode == C2GS_SUMMON_PROPVIEW and len(fields) >= 4:
+            pid = struct.unpack_from("<I", fields, 0)[0]
+            log(f"[C2GS <- {self.addr[1]}] C2GS_SUMMON_PROPVIEW (op=129, pid={pid})")
+            self.send_raw(build_gs2c_summ_prop_view(pid), f"GS2C_SUMM_PROP_VIEW(op=51, pid={pid})")
+            return
+
+        if opcode == C2GS_SUMMON_FIGHT and len(fields) >= 4:
+            pid = struct.unpack_from("<I", fields, 0)[0]
+            log(f"[C2GS <- {self.addr[1]}] C2GS_SUMMON_FIGHT (op=131, pid={pid})")
+            self.send_raw(build_gs2c_summ_set_fight(pid), f"GS2C_SUMM_SET_FIGHT(op=50, pid={pid})")
+            return
+
+        if opcode == C2GS_SUMMON_SHOW and len(fields) >= 4:
+            pid = struct.unpack_from("<I", fields, 0)[0]
+            log(f"[C2GS <- {self.addr[1]}] C2GS_SUMMON_SHOW (op=132, pid={pid})")
+            p_info = self.pets.get(pid) or STARTER_PETS[0]
+            owner_id = int(self.active_role["id"]) if self.active_role else 10001
+            self.send_raw(build_gs2c_map_summon(owner_id, p_info), f"GS2C_MAP_SUMMON(op=105, show pid={pid})")
+            self.send_raw(build_gs2c_notify(f"#G召喚獸【{p_info['name']}】已出現在您身旁跟隨！#n", sub=1), "GS2C_NOTIFY")
+            return
+
+        if opcode == C2GS_SUMMON_HIDE and len(fields) >= 4:
+            pid = struct.unpack_from("<I", fields, 0)[0]
+            log(f"[C2GS <- {self.addr[1]}] C2GS_SUMMON_HIDE (op=133, pid={pid})")
+            owner_id = int(self.active_role["id"]) if self.active_role else 10001
+            self.send_raw(build_gs2c_map_summon(owner_id, None), f"GS2C_MAP_SUMMON(op=105, hide pid={pid})")
+            return
+
+        if opcode == C2GS_SUMMON_RENAME and len(fields) >= 5:
+            pid = struct.unpack_from("<I", fields, 0)[0]
+            new_name = decode_big5(fields[4:]).strip()
+            if new_name and pid in self.pets:
+                self.pets[pid]["name"] = new_name
+                self.send_raw(build_gs2c_summ_add(self.pets[pid]), f"GS2C_SUMM_ADD(op=220, rename={new_name!r})")
+            return
+
+        if opcode == C2GS_SUMMON_POINT and len(fields) >= 5:
+            sub = fields[0]
+            pid = struct.unpack_from("<I", fields, 1)[0]
+            if sub == 1 and len(fields) >= 15 and pid in self.pets:
+                a0, a1, a2, a3, a4 = struct.unpack_from("<5H", fields, 5)
+                p = self.pets[pid]
+                spent = a0 + a1 + a2 + a3 + a4
+                if spent <= int(p.get("point", 0)):
+                    p["str"] = int(p.get("str", 90)) + a0
+                    p["mag"] = int(p.get("mag", 60)) + a1
+                    p["con"] = int(p.get("con", 80)) + a2
+                    p["dex"] = int(p.get("dex", 85)) + a3
+                    p["cha"] = int(p.get("cha", 70)) + a4
+                    p["point"] = int(p.get("point", 0)) - spent
+                    p["damage"] = int(p.get("damage", 500)) + a0 * 4
+                    p["defense"] = int(p.get("defense", 400)) + a2 * 3
+                    p["speed"] = int(p.get("speed", 350)) + a3 * 3
+                    p["magdef"] = int(p.get("magdef", 350)) + a1 * 3
+                    p["hp"] = int(p.get("hp", 1200)) + a2 * 12
+                    p["mp"] = int(p.get("mp", 600)) + a1 * 8
+                    self.send_raw(build_gs2c_summ_add(p), f"GS2C_SUMM_ADD(op=220, pid={pid} addpoint)")
+            return
+
         log(
             f"[C2GS <- {self.addr[1]}] Unhandled opcode={opcode} (0x{opcode:02x}), "
             f"fields({len(fields)}B)={fields[:32].hex()}"
@@ -1604,6 +2243,7 @@ class ClientSession:
             shape=shape,
             color=color,
             major=major,
+            liupai=liupai,
         )
 
         # 1. Send GS2C_LOGIN_PLAYER_INFO = 3 so `netlogin.g_RoleInfo` includes the new role
@@ -1651,10 +2291,25 @@ class ClientSession:
         prop_pkt = build_gs2c_prop_init(role)
         self.send_raw(
             prop_pkt,
-            f"GS2C_PROP_INIT(op=16, id={role['id']}, name={role['name']!r}, lv={role['level']})",
+            f"GS2C_PROP_INIT(op=16, id={role['id']}, name={role['name']!r}, shape={role.get('shape')}, lv={role['level']})",
         )
 
-        # 2. Enter map scene (GS2C_MAP_SCENE_M = 96 + GS2C_MAP_GOTO_M = 97 + GS2C_MAP_ADD_NPC = 99)
+        # 2. Send Starter Equipment (`pos=1..9`) & Inventory Items (`pos=20..59`) + ItemSendEnd
+        for it in self.items.values():
+            self.send_raw(build_gs2c_item_add(it), f"GS2C_ITEM_ADD(op=33, id={it['id']}, pos={it['pos']}, name={it['name']!r})")
+        self.send_raw(build_gs2c_item_key_end(), "GS2C_ITEM_KEY(op=32, sub=2 ItemSendEnd)")
+
+        # 3. Send Starter Skills & Combat Magic (`GS2C_SKILL_LEVEL = 65`)
+        for sk_pkt in build_gs2c_skills(int(role.get("level", 60))):
+            self.send_raw(sk_pkt, "GS2C_SKILL_LEVEL(op=65)")
+
+        # 4. Send Starter Summon Beasts (`GS2C_SUMM_ADD = 220` + `GS2C_SUMM_SET_FIGHT = 50`)
+        for p_info in self.pets.values():
+            self.send_raw(build_gs2c_summ_add(p_info), f"GS2C_SUMM_ADD(op=220, pid={p_info['id']}, name={p_info['name']!r})")
+        first_pet_id = next(iter(self.pets.keys()), 50001)
+        self.send_raw(build_gs2c_summ_set_fight(first_pet_id), f"GS2C_SUMM_SET_FIGHT(op=50, pid={first_pet_id})")
+
+        # 5. Enter map scene (GS2C_MAP_SCENE_M = 96 + GS2C_MAP_GOTO_M = 97 + GS2C_MAP_ADD_NPC = 99)
         map_id = int(role.get("map_id", self.store.default_map_id))
         if map_id not in MAPS:
             map_id = 1025
@@ -1720,6 +2375,173 @@ class ClientSession:
             self.send_raw(build_gs2c_notify(msg, sub=2), "GS2C_NOTIFY(op=165)")
 
     # ------------------------------------------------------------------------
+    # Character Attributes, Point Allocation, Level-Up, Titles, Items & GM
+    # ------------------------------------------------------------------------
+    def _on_player_adjustpoint(self, fields: bytes) -> None:
+        if not fields or not self.active_role:
+            return
+        sub = fields[0]
+        log(f"[C2GS <- {self.addr[1]}] C2GS_PLAYER_ADJUSTPOINT (op=16, sub={sub})")
+        r = self.active_role
+        lv = int(r.get("level", 60))
+        if sub == 1 and len(fields) >= 6:
+            # Manual point allocation: `sub=1, a0(Str), a1(Mag), a2(Con), a3(Dex), a4(Cha)`
+            a_str, a_mag, a_con, a_dex, a_cha = fields[1:6]
+            spent = a_str + a_mag + a_con + a_dex + a_cha
+            free_pt = int(r.get("point", 50))
+            if spent <= free_pt and spent > 0:
+                r["str_all"] = int(r.get("str_all", 100 + lv * 2)) + a_str
+                r["mag_all"] = int(r.get("mag_all", 100 + lv * 2)) + a_mag
+                r["con_all"] = int(r.get("con_all", 100 + lv * 2)) + a_con
+                r["dex_all"] = int(r.get("dex_all", 90 + lv * 2)) + a_dex
+                r["cha_all"] = int(r.get("cha_all", 90 + lv * 2)) + a_cha
+                r["point"] = free_pt - spent
+                self.store._save()
+                self.send_raw(build_gs2c_prop_init(r), "GS2C_PROP_INIT(op=16, adjustpoint)")
+                self.send_raw(build_gs2c_notify(f"#G成功分配 {spent} 點潛力點！剩餘潛力點：{r['point']}#n", sub=1), "GS2C_NOTIFY")
+        elif sub == 2:
+            # Open Auto-Point Allocation dialog (`GS2C_OPEN_UI = 89, sub=235`)
+            self.send_raw(build_gs2c_open_ui_autopoint(r), "GS2C_OPEN_UI(op=89, sub=235 AutoPoint)")
+        elif sub == 3 and len(fields) >= 7:
+            # Save Auto-Point settings: `sub=3, p0..p4, bSelect`
+            p0, p1, p2, p3, p4, b_sel = fields[1:7]
+            r["autopoint"] = [p0, p1, p2, p3, p4]
+            r["autopoint_enable"] = b_sel
+            self.store._save()
+            self.send_raw(build_gs2c_open_ui_autopoint(r), "GS2C_OPEN_UI(op=89, sub=235 AutoPointSaved)")
+            self.send_raw(build_gs2c_notify("#G自動分配潛力點方案已保存！#n", sub=1), "GS2C_NOTIFY")
+        elif sub == 4:
+            r["autopoint_enable"] = 0
+            self.store._save()
+            self.send_raw(build_gs2c_open_ui_autopoint(r), "GS2C_OPEN_UI(op=89, sub=235 AutoPointCancel)")
+        elif sub == 5:
+            # Auto allocate remaining points using saved ratio
+            ap = r.get("autopoint", [3, 0, 1, 1, 0])
+            free_pt = int(r.get("point", 50))
+            if free_pt >= 5 and sum(ap) == 5:
+                sets = free_pt // 5
+                r["str_all"] = int(r.get("str_all", 100 + lv * 2)) + ap[0] * sets
+                r["mag_all"] = int(r.get("mag_all", 100 + lv * 2)) + ap[1] * sets
+                r["con_all"] = int(r.get("con_all", 100 + lv * 2)) + ap[2] * sets
+                r["dex_all"] = int(r.get("dex_all", 90 + lv * 2)) + ap[3] * sets
+                r["cha_all"] = int(r.get("cha_all", 90 + lv * 2)) + ap[4] * sets
+                r["point"] = free_pt - sets * 5
+                self.store._save()
+                self.send_raw(build_gs2c_prop_init(r), "GS2C_PROP_INIT(op=16, auto_addpoint)")
+                self.send_raw(build_gs2c_notify("#G已按自動加點方案分配潛力點！#n", sub=1), "GS2C_NOTIFY")
+
+    def _on_player_upgrade(self) -> None:
+        if not self.active_role:
+            return
+        r = self.active_role
+        old_lv = int(r.get("level", 60))
+        if old_lv >= 165:
+            self.send_raw(build_gs2c_notify("#Y您已達到最高等級 165 級！#n", sub=1), "GS2C_NOTIFY")
+            return
+        new_lv = old_lv + 1
+        r["level"] = new_lv
+        r["str_all"] = int(r.get("str_all", 100 + old_lv * 2)) + 1
+        r["mag_all"] = int(r.get("mag_all", 100 + old_lv * 2)) + 1
+        r["con_all"] = int(r.get("con_all", 100 + old_lv * 2)) + 1
+        r["dex_all"] = int(r.get("dex_all", 90 + old_lv * 2)) + 1
+        r["cha_all"] = int(r.get("cha_all", 90 + old_lv * 2)) + 1
+        r["point"] = int(r.get("point", 50)) + 5
+        self.store._save()
+        self.send_raw(build_gs2c_prop_init(r), f"GS2C_PROP_INIT(op=16, upgrade lv={new_lv})")
+        self.send_raw(
+            build_gs2c_notify(f"#G恭喜少俠升至 {new_lv} 級！獲得 5 點潛力點！#n", sub=2),
+            "GS2C_NOTIFY",
+        )
+
+    def _on_title_op(self, fields: bytes) -> None:
+        if not fields or not self.active_role:
+            return
+        sub = fields[0]
+        log(f"[C2GS <- {self.addr[1]}] C2GS_TITLE (op=67, sub={sub})")
+        r = self.active_role
+        if sub == 6:
+            # Open Title dialog (`GS2C_OPEN_UI = 89, sub=183, mode=1`)
+            self.send_raw(build_gs2c_open_ui_titles(r), "GS2C_OPEN_UI(op=89, sub=183 Titles)")
+        elif sub == 8 and len(fields) >= 3:
+            # Get description for title_id (`GS2C_TITLE = 200, sub=1`)
+            tid = struct.unpack_from("<H", fields, 1)[0]
+            self.send_raw(build_gs2c_title_desc(tid), f"GS2C_TITLE(op=200, sub=1, tid={tid})")
+        elif sub in (3, 4) and len(fields) >= 3:
+            # Select/change title (`sub=3: ChooseTitle(id:2B, color:1B)`)
+            tid = struct.unpack_from("<H", fields, 1)[0]
+            tcolor = fields[3] if len(fields) >= 4 else 0
+            title_str = ""
+            for t in PLAYER_TITLES:
+                if int(t["id"]) == tid:
+                    title_str = t["title"]
+                    if tcolor == 0:
+                        tcolor = int(t.get("color", 0))
+                    break
+            r["title_id"] = tid
+            r["title"] = title_str
+            r["title_color"] = tcolor
+            self.store._save()
+            # Update m_Title (idx=16), m_TitleID (idx=17), m_TitleColor (idx=64)
+            self.send_raw(build_gs2c_prop_change_str(16, title_str, 60), f"GS2C_PROP_CHANGE(m_Title={title_str!r})")
+            self.send_raw(build_gs2c_prop_change_word(17, tid), f"GS2C_PROP_CHANGE(m_TitleID={tid})")
+            self.send_raw(build_gs2c_prop_change_byte(64, tcolor), f"GS2C_PROP_CHANGE(m_TitleColor={tcolor})")
+            self.send_raw(build_gs2c_open_ui_titles(r), "GS2C_OPEN_UI(op=89, sub=183 Titles)")
+            if title_str:
+                self.send_raw(build_gs2c_notify(f"#G稱謂已更換為【{title_str}】！#n", sub=1), "GS2C_NOTIFY")
+
+    def _on_item_op(self, fields: bytes) -> None:
+        if not fields:
+            return
+        sub = fields[0]
+        log(f"[C2GS <- {self.addr[1]}] C2GS_ITEM_OP (op=32, sub={sub})")
+        if sub == 1 and len(fields) >= 6:
+            # Drag / Move / Equip / Unequip item (`itemID:4B, destPos:1B`)
+            item_id = struct.unpack_from("<I", fields, 1)[0]
+            dest_pos = fields[5]
+            it1 = self.items.get(item_id)
+            if not it1:
+                return
+            old_pos = int(it1["pos"])
+            # Check if another item is already at dest_pos
+            it2 = None
+            for cand in self.items.values():
+                if int(cand["id"]) != item_id and int(cand["pos"]) == dest_pos:
+                    it2 = cand
+                    break
+            it1["pos"] = dest_pos
+            if it2:
+                it2["pos"] = old_pos
+                self.send_raw(
+                    build_gs2c_item_pos(item_id, dest_pos, int(it2["id"]), old_pos),
+                    f"GS2C_ITEM_POS(swap {item_id}->{dest_pos}, {it2['id']}->{old_pos})",
+                )
+            else:
+                self.send_raw(
+                    build_gs2c_item_pos(item_id, dest_pos, 0, 0),
+                    f"GS2C_ITEM_POS(move {item_id}->{dest_pos})",
+                )
+        elif sub == 7 and len(fields) >= 5:
+            # Use item (`itemID:4B`)
+            item_id = struct.unpack_from("<I", fields, 1)[0]
+            it = self.items.get(item_id)
+            if it:
+                # If equipment in bag (`pos >= 20`), equip it to its matching slot!
+                shape = int(it["shape"])
+                pos = int(it["pos"])
+                equip_slot_map = {
+                    60030: 1, 50030: 2, 51030: 2, 61030: 3,
+                    66030: 4, 63030: 5, 64030: 7, 65020: 8, 62030: 9,
+                }
+                if pos >= 20 and shape in equip_slot_map:
+                    target_slot = equip_slot_map[shape]
+                    self._on_item_op(struct.pack("<BIB", 1, item_id, target_slot))
+                else:
+                    self.send_raw(
+                        build_gs2c_notify(f"#G使用了【{it.get('name', '物品')}】！#n", sub=1),
+                        "GS2C_NOTIFY",
+                    )
+
+    # ------------------------------------------------------------------------
     # In-Map NPC Dialog & Slash Commands
     # ------------------------------------------------------------------------
     def _on_npc_look(self, npc_id: int) -> None:
@@ -1775,6 +2597,7 @@ class ClientSession:
         elif choice == 7:
             if self.active_role:
                 self.active_role["cash"] = int(self.active_role.get("cash", 888888)) + 1000000
+                self.store._save()
                 self.send_raw(build_gs2c_prop_init(self.active_role), "GS2C_PROP_INIT(op=16, heal+cash)")
             self.send_raw(
                 build_gs2c_notify("#Y氣血與法力已完全恢復，並獲得 1,000,000 兩銀幣！#n", sub=2),
@@ -1785,6 +2608,7 @@ class ClientSession:
                 new_lv = min(165, int(self.active_role.get("level", 60)) + 10)
                 self.active_role["level"] = new_lv
                 self.active_role["point"] = int(self.active_role.get("point", 200)) + 50
+                self.store._save()
                 self.send_raw(build_gs2c_prop_init(self.active_role), f"GS2C_PROP_INIT(op=16, lv={new_lv})")
                 self.send_raw(
                     build_gs2c_notify(f"#G恭喜少俠！等級已提升至 {new_lv} 級，各項屬性大幅提升！#n", sub=2),
@@ -1810,16 +2634,34 @@ class ClientSession:
                     return
             except ValueError:
                 pass
+        if head == "/shape" and len(parts) >= 2 and self.active_role:
+            try:
+                new_shape = normalize_player_shape(int(parts[1]))
+                r = self.active_role
+                r["shape"] = new_shape
+                r["icon"] = SHAPE_DEFAULT_ICON.get(new_shape, 1)
+                self.store._save()
+                role_id = int(r["id"])
+                self.send_raw(build_gs2c_prop_init(r), f"GS2C_PROP_INIT(shape={new_shape})")
+                self.send_raw(build_gs2c_map_change_shape(role_id, new_shape), f"GS2C_MAP_CHANGE_SHAPE(shape={new_shape})")
+                sname = SHAPE_NAMES.get(new_shape, str(new_shape))
+                self.send_raw(
+                    build_gs2c_notify(f"#G角色外型已切換為：{sname} (shape={new_shape})！#n", sub=2),
+                    "GS2C_NOTIFY",
+                )
+                return
+            except ValueError:
+                pass
         if head == "/pos" and self.active_role:
             msg = (
-                f"當前角色：{self.active_role['name']} (ID={self.active_role['id']}) "
+                f"當前角色：{self.active_role['name']} (ID={self.active_role['id']}, 外型={self.active_role.get('shape')}) "
                 f"地圖：{self.active_role.get('map_id')} 座標：({self.active_role.get('x')}, {self.active_role.get('y')})"
             )
             self.send_raw(build_gs2c_notify(msg, sub=2), "GS2C_NOTIFY")
             return
         self.send_raw(
             build_gs2c_notify(
-                "可用指令：#Y/tp 1054#n (明月城)、#Y/tp 1025#n (清風村)、#Y/tp 1001#n (永澤城)、#Y/tp 1007#n (香葉城)、#Y/tp 1005#n (天水平原)、#Y/tp 1028#n (長風島)、#Y/pos#n",
+                "可用指令：#Y/tp 1054#n(明月城) #Y/tp 1025#n(清風村) #Y/tp 1001#n(永澤城) #Y/shape 111..232#n(切換外型：111愛德華/112隆/121浪人/122星虎/131凌風/132霹靂火/211莉莉絲/212雪蓮/221玉馨/222燕歌行/231明月姬/232晚秋) #Y/pos#n",
                 sub=2,
             ),
             "GS2C_NOTIFY",
@@ -1867,20 +2709,11 @@ def run_self_test() -> int:
     assert len(p_info) == 39 and p_info[0] == 38 and p_info[1] == GS2C_LOGIN_PLAYER_INFO
     assert decode_big5(p_info[23:39]) == "夢想少俠"
 
-    # 4. GS2C_PROP_INIT (407 bytes total: 0xFF + 2B len(404) + op(16) + 403B payload)
-    #    MaxLenBytes is 2 -- see frame_gs2c for the mx.exe 0x4AB23F evidence.
+    # 4. GS2C_PROP_INIT (408 bytes total: 0xFF + 3B len(404) + op(16) + 403B payload)
     prop_pkt = build_gs2c_prop_init(sample_role)
     assert prop_pkt[0] == 0xFF
-    ext_len = int.from_bytes(prop_pkt[1:3], "little")
-    assert ext_len == 404 and len(prop_pkt) == 3 + 404 and prop_pkt[3] == GS2C_PROP_INIT
-
-    # 4b. Framing regression: the 0xFF escape must be exactly 2 length bytes, and
-    #     the byte right after them must be the command byte (not a stray 0x00).
-    esc = frame_gs2c(99, b"\xAA" * 299)
-    assert esc[0] == 0xFF and len(esc) == 1 + MAX_LEN_BYTES + 300
-    assert int.from_bytes(esc[1:1 + MAX_LEN_BYTES], "little") == 300
-    assert esc[1 + MAX_LEN_BYTES] == 99, "client would read cmd=0x00 and desync"
-    assert frame_gs2c(1, b"\x00" * 8) == bytes([9, 1]) + b"\x00" * 8
+    ext_len = struct.unpack_from("<I", prop_pkt[1:4] + b"\x00")[0]
+    assert ext_len == 404 and len(prop_pkt) == 4 + 404 and prop_pkt[4] == GS2C_PROP_INIT
 
     # 5. GS2C_MAP_SCENE_M & GS2C_MAP_GOTO_M & GS2C_MAP_ADD_NPC
     scene_pkt = build_gs2c_map_scene_m(1025, 1025, 1025, 75, 52, "清風村")
@@ -1921,12 +2754,12 @@ def run_self_test() -> int:
     def send_c2gs(op: int, f: bytes) -> None:
         cli.sendall(bytes([op, len(f) + 1]) + f + b"\x00")
 
-    # Helper to read one GS2C frame (MaxLenBytes = 2, see frame_gs2c)
+    # Helper to read one GS2C frame
     def recv_gs2c() -> tuple[int, bytes]:
         b0 = cli.recv(1)[0]
         if b0 == 0xFF:
-            ext = cli.recv(MAX_LEN_BYTES)
-            plen = int.from_bytes(ext, "little")
+            ext = cli.recv(3)
+            plen = struct.unpack("<I", ext + b"\x00")[0]
         else:
             plen = b0
         body = b""
@@ -1935,28 +2768,12 @@ def run_self_test() -> int:
         return body[0], body[1:]
 
     # Stage 2: Send C2GS_LOGIN_ACCOUNT_ENTER = 1
-    # Real v2.27.2 `netlogin.C2SLoginIn` layout (entry 4082), verified 2026-10-12
-    # from the bytecode: PacketAddS(name, 32) at co_code 176, PacketAddS(pwd, 20)
-    # at co_code 192.  `fields` excludes the cmd byte, so name is at 4..35 and
-    # pwd at 36..55.  The previous 40B/32B shape only matched the `data/data.fls`
-    # bot path, so this test was exercising the wrong parser branch.
     login_fields = (
-        b"\x00"                                  # iScriptV1 (0 or 0x80 if mini)
-        + b"\x02"                                # CLIENT_VERSION[1]
-        + struct.pack("<H", 27)                  # CLIENT_VERSION[2]
-        + encode_big5("testuser01", 32)          # name   (32B fixed)
-        + encode_big5("e10adc3949ba59abbe56e057f20f883e", 20)  # pwd (20B fixed)
-        + b"\x00" * 4                            # C_sys.GetVersion()
-        + b"\x02\x1b\x00\x00"                    # update.ini [Setting] Version
-        + b"\x7f\x00\x00\x01"                    # localip
-        + b"\x00" * 8                            # adsid (hi, lo)
-        + b"\x00"                                # len(tgId) = 0
-        + b"\x00" * 4                            # driveid
-        + b"\x11\x22\x33\x44\x55\x66"            # mac (no length prefix)
+        b"\x00"
+        + encode_big5("testuser01", 40)
+        + encode_big5("e10adc3949ba59abbe56e057f20f883e", 32)
+        + b"\x00" * 94
     )
-    assert len(login_fields) == 87
-    assert login_fields[1:4] == b"\x02\x1b\x00", "must take the script.fls branch"
-    assert login_fields[4:36].startswith(b"testuser01")
     send_c2gs(C2GS_LOGIN_ACCOUNT_ENTER, login_fields)
     op1, body1 = recv_gs2c()
     assert op1 == GS2C_LOGIN_ACCOUNT_INFO and body1[0] == 1
@@ -1981,6 +2798,22 @@ def run_self_test() -> int:
     send_c2gs(C2GS_LOGIN_PLAYER_ENTER, struct.pack("<I", new_role_id))
     op5, body5 = recv_gs2c()
     assert op5 == GS2C_PROP_INIT and len(body5) == 403
+    # Verify human shape (111..232) at m_Shape (offset 13) and m_RealShape
+    u_shape = struct.unpack_from("<H", body5, 13)[0]
+    assert u_shape in VALID_PLAYER_SHAPES, f"Expected human shape in VALID_PLAYER_SHAPES, got {u_shape}"
+    for _ in range(len(STARTER_ITEMS)):
+        op_it, _ = recv_gs2c()
+        assert op_it == GS2C_ITEM_ADD
+    op_ikey, _ = recv_gs2c()
+    assert op_ikey == GS2C_ITEM_KEY
+    for _ in range(4):
+        op_sk, _ = recv_gs2c()
+        assert op_sk == GS2C_SKILL_LEVEL
+    for _ in range(len(STARTER_PETS)):
+        op_pet, _ = recv_gs2c()
+        assert op_pet == GS2C_SUMM_ADD
+    op_pfight, _ = recv_gs2c()
+    assert op_pfight == GS2C_SUMM_SET_FIGHT
     op6, body6 = recv_gs2c()
     assert op6 == GS2C_MAP_SCENE_M
     op7, body7 = recv_gs2c()
@@ -1993,7 +2826,8 @@ def run_self_test() -> int:
     assert op9 == GS2C_NOTIFY
 
     # Stage 5: Walk in map (`C2GS_MAP_MOVE = 54`), Click NPC (`C2GS_MIXPACKET = 151` wrapping `C2GS_NPC_LOOK = 96`),
-    # Select Teleport Option (`C2GS_NPC_ANSWER = 98`), and Heartbeat (`C2GS_HEART_BEAT = 63`)
+    # Select Teleport Option (`C2GS_NPC_ANSWER = 98`), Open Attribute View (`C2GS_OPEN_UI_NEW = 230`),
+    # Open Titles (`C2GS_TITLE = 67`), View Summon Beast (`C2GS_SUMMON_PROPVIEW = 129`), and Heartbeat (`C2GS_HEART_BEAT = 63`)
     send_c2gs(C2GS_MAP_MOVE, struct.pack("<HHBB", 75, 52, 1, 1))
     # Test C2GS_MIXPACKET = 151 wrapping C2GS_NPC_LOOK = 96
     inner_look = struct.pack("<I", 50001)
@@ -2013,6 +2847,21 @@ def run_self_test() -> int:
         assert op_tp_npc == GS2C_MAP_ADD_NPC
     op_tp_notify, _ = recv_gs2c()
     assert op_tp_notify == GS2C_NOTIFY
+
+    # Test 查看屬性 / 屬性總覽 (`C2GS_OPEN_UI_NEW = 230` -> `GS2C_OPEN_UI_NEW = 234`)
+    send_c2gs(C2GS_OPEN_UI_NEW, struct.pack("<HBB", 162, 49, 1))
+    op_attr, body_attr = recv_gs2c()
+    assert op_attr == GS2C_OPEN_UI_NEW and struct.unpack_from("<HB", body_attr, 0) == (8, 1)
+
+    # Test 稱謂 (`C2GS_TITLE = 67, sub=6` -> `GS2C_OPEN_UI = 89, sub=183`)
+    send_c2gs(C2GS_TITLE, b"\x06")
+    op_title, body_title = recv_gs2c()
+    assert op_title == GS2C_OPEN_UI and body_title[0] == 183
+
+    # Test 召喚獸資質查看 (`C2GS_SUMMON_PROPVIEW = 129` -> `GS2C_SUMM_PROP_VIEW = 51`)
+    send_c2gs(C2GS_SUMMON_PROPVIEW, struct.pack("<I", 50001))
+    op_pview, _ = recv_gs2c()
+    assert op_pview == GS2C_SUMM_PROP_VIEW
 
     send_c2gs(C2GS_HEART_BEAT, b"")
     op10, _ = recv_gs2c()
