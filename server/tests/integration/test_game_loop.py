@@ -50,6 +50,11 @@ class GameLoopIntegrationTests(unittest.TestCase):
             self.service.login("player_1", "wrong-password", 1)
         self.assertEqual(raised.exception.code, "UNAUTHENTICATED")
 
+    def test_non_ascii_suffix_cannot_be_ignored_in_session_ticket(self) -> None:
+        with self.assertRaises(DomainError) as raised:
+            self.service.list_characters(self.ticket + "☠", 1)
+        self.assertEqual(raised.exception.code, "UNAUTHENTICATED")
+
     def test_realm_must_exist_and_be_online(self) -> None:
         with self.assertRaises(DomainError) as raised:
             self.service.select_realm(999)
