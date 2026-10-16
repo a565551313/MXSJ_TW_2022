@@ -25,6 +25,8 @@ jobs:
           python-version: "3.11"
       - name: Architecture contract tests
         run: PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s server/tests/architecture -v
+      - name: Account input validation tests
+        run: PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s server/tests/modules/account -v
       - name: Game-loop integration tests
         run: PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s server/tests/integration -v
       - name: TCP protocol tests
