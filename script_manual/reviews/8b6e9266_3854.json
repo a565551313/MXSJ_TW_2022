@@ -3,8 +3,7 @@
   "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
   "entry_index": 3854,
   "annotation_sha256": "a8c3ddf43ef74a6a0fe4319dc6922233ae9e44583523fe26d72830a3d9258318",
-  "reviewer": "A_delegate",
-  "delegation": "2026-10-16用户明确授权：“H宕机了你审吧”。A总控代审，非独立H会话；不含领域正文或master合并授权。",
+  "reviewer": "H",
   "decision": "accepted",
-  "note": "有限静态说明：22类/函数、24关键分支；含职责、资源/关联、修改问答与局限核对。本轮未发现新增阻塞；仅接受已列内容与明确未知，不表示全模块、原始源码、原生或实机通过。 实际审核者为A代审，非独立H。详docs/evidence/script_manual_DE_A_delegated_review_20261016.md。"
+  "note": "N7新会话独立复核（Arena 2026-10-16 新分配的第7个新agent，逻辑任务包H/review；不是旧H、不是A、不是旧D，未代写作者正文）。输入提交：A集成分支固定head 9b0dea799768aaacbb967ffc59f45753970752be，检查点7d32e5340b0ab4168f725d238d767ad6232f715d已确认为祖先；固定包script.fls 8b6e9266…、data.fls 5f96bdb2…、参数表43bb090d…本机sha256sum核对一致，未改动。独立复现：仓库外 Python3.11.2 + uncompyle6 3.9.3 / xdis 6.1.8 / spark-parser 1.9.0 / click 8.5.0，recover_entries.py --entries 3854,3232,4832 → 三条均 recovered/source/baseline/decompile_ok，script/interface.py(5681行)、script/key.py(276)、script/chatoutput.py(2478)。本记录为对既有 A_delegate 记录的**原位更新**（reviewer 由 A_delegate 改为 H，未新增 H_x.json 重复条目）；A_delegate 的 accepted 不是独立审核，本会话按实际字节重新独立复核后维持结论，但不是无条件背书。interface/3854。抽样核对（非全函数穷尽）：CClickBox.__init__ 候选 L1087 为 (self, parent, w, h, color=0, alpha=256, msgid=0)，与 JSON 记录的 signature 逐字一致，且 L1088-1089 确为先 CBoxObject.__init__(parent,w,h,color,alpha) 再 CClickObject.__init__(msgid)；摘要明确写“参数是宽高而不是图片路径；这是候选签名核对，不是以桩件构造成功来证明”，与本项目 AGENTS.md 记载的 CClickBox 签名事故教训一致，未回退到按名字猜签名。结论：accepted（有限范围）。接受范围=已列22类/函数、24已列分支及其所引证据。保留边界：未穷尽5681行候选；Active(False) 控制流异常、左右键无 OnMessage 时的不同回退、OpenUI/布局尺寸、点击 msgid 与回调优先级、CharInput/IME、CEdit 输入与路径选择等仅作抽样核对；未核原生输入事件顺序、线程、布局资源实际存在性与运行引擎；runtime_verified=0，无实机/Windows/服务端验收。本 accepted 不表示全模块已解释、候选可回编或游戏行为正确。"
 }

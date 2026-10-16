@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 516,
+  "annotation_sha256": "1ec1bc8f6bc812f24d27520c22036461cd4301c307e7e56ec0d0e6df2ec59fef",
+  "reviewer": "H",
+  "decision": "accepted",
+  "note": "network/netserver（PR#40 head 44230b98527f72948acf16295e83f0151a26eb27 的修订字节）。暂存为 .json.template：正文尚未进入A集成分支，按N7任务卡与CONTRACT§4.1避免孤立或提前生效的审核；A合并PR#40后应按此处绑定的 annotation_sha256 核对实际原字节，一致则改名为 8b6e9266_516.json 激活。N7新会话独立复核（Arena 2026-10-16 新分配的第7个新agent，逻辑任务包H/review；不是旧H、不是A、不是旧E，未代写作者正文）。输入提交：A集成分支固定head 9b0dea799768aaacbb967ffc59f45753970752be，检查点7d32e5340b0ab4168f725d238d767ad6232f715d已确认为祖先；固定包script.fls 8b6e9266…、data.fls 5f96bdb2…、参数表43bb090d…本机sha256sum核对一致，未改动。独立复现：仓库外 Python3.11.2 + uncompyle6 3.9.3 / xdis 6.1.8 / spark-parser 1.9.0 / click 8.5.0，recover_entries.py --entries 3176,2170,871,516 → 四条均 recovered/source/baseline/decompile_ok，分别 script/net.py(1364行)、script/connect.py(295)、script/netquicklogin.py(313)、script/login/netserver.py(584)。本会话按“含6行恢复头”的候选行号独立复核下列十条（与A前序报告所引行号同一套编号），逐条与重跑候选原文比对。N4修订复核：N7-E06 已消除（类摘要改为'OnServerCmd只检查hasattr(self, m_Hello)即属性存在；False也满足，不是已握手或Hello真值门禁'）；N7-E07 已消除（CMXNet.PacketPrepare 改为'先调用net.CNet.PacketPrepare(self, icmd)，调用返回后才写self.m_iCmd = icmd'，并提示与基类两层勿颠倒）；N7-E08 已消除（RefreshServerInfo 摘要与4个分支写全版本门禁、try/except 只置 tm=None 不进 else、完整 OR 谓词含 tm>now，并明确 BulletinURL 的 CHttpObject 拉取在外层）；N7-E09 已消除（CRandomConnectMgr.Connect 写明 m_Time 先自增、SetTimeOutCmd 后以 (self.m_Time-1 != 0) or g_AutoProxy 立即递归，并警示'勿改OR为AND'）。新证据 R 行号 R0068/R0280/R0426/R0510 与本会话重跑 netserver.py 对应行逐字一致。结论：accepted（有限范围）。接受范围=已列类/函数与其所引证据；1200 阈值单位、permission 门禁运行期取值、递归终止条件仍未验。所有 Claim 仍为 static_reviewed/inferred，runtime_verified=0；未做实机/原生/服务端验收。"
+}

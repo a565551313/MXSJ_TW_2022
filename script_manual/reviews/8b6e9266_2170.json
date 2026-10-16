@@ -3,8 +3,7 @@
   "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
   "entry_index": 2170,
   "annotation_sha256": "3c32bc2397114566c1fe35dcb32036ff695f33e9da4b0f734f0145f198e323e9",
-  "reviewer": "A_delegate",
-  "delegation": "2026-10-16用户明确授权：“H宕机了你审吧”。A总控代审，非独立H会话；不含领域正文或master合并授权。",
+  "reviewer": "H",
   "decision": "changes_requested",
-  "note": "有限静态说明：24类/函数、7关键分支；含职责、资源/关联、修改问答与局限核对。退修：C1 总摘要称无代理“按电信/网通各发一次”，但else依据IsDianXin二选一target_idx=0或1，只有一次ConnectAttempt。其分支描述已经写对，摘要仍与之矛盾。 修订：将无代理摘要改为二选一发一次，保留有代理前两条各一次以及三处Fail双回调/Success未引用的缺失说明。 实际审核者为A代审，非独立H。详docs/evidence/script_manual_DE_A_delegated_review_20261016.md。"
+  "note": "N7新会话独立复核（Arena 2026-10-16 新分配的第7个新agent，逻辑任务包H/review；不是旧H、不是A、不是旧E，未代写作者正文）。输入提交：A集成分支固定head 9b0dea799768aaacbb967ffc59f45753970752be，检查点7d32e5340b0ab4168f725d238d767ad6232f715d已确认为祖先；固定包script.fls 8b6e9266…、data.fls 5f96bdb2…、参数表43bb090d…本机sha256sum核对一致，未改动。独立复现：仓库外 Python3.11.2 + uncompyle6 3.9.3 / xdis 6.1.8 / spark-parser 1.9.0 / click 8.5.0，recover_entries.py --entries 3176,2170,871,516 → 四条均 recovered/source/baseline/decompile_ok，分别 script/net.py(1364行)、script/connect.py(295)、script/netquicklogin.py(313)、script/login/netserver.py(584)。本会话按“含6行恢复头”的候选行号独立复核下列十条（与A前序报告所引行号同一套编号），逐条与重跑候选原文比对。C1 实核（connect.py L184-196）：proxy 分支对 proxy_port_ip_list[0] 与 [1] 各调用一次 ConnectAttempt；else 分支 L190-L196 为 import net; if IsDianXin(net.g_Net.m_IP): target_idx = 0 else: target_idx = 1，随后只对 proxy_port_ip_list[target_idx] 调用**一次** ConnectAttempt。无代理是二选一发一次，不是电信/网通各发一次。本记录为对既有 A_delegate 记录的**原位更新**（reviewer 由 A_delegate 改为 H，未新增 H_x.json 重复条目）；A 的十条发现本会话均按实际候选字节独立复算确认，不是转述作者结论。退修 N7-E10（P2，functions/DoConnect/summary）：总摘要称无代理'按电信/网通各发一次'，与 else 分支依据 IsDianXin 二选一 target_idx、只有一次 ConnectAttempt 相矛盾（其分支描述本身已写对，属摘要与分支自相矛盾）。未发现行号越界、悬空证据、来源摘要不符或 runtime_verified 冒用；前轮已改正项（OnError 条件、OnLogin 后隐藏面板、Success 未引用/三处 Fail 双回调、稳定来源 SHA、计时单位未知）本轮仍保留，未见回退。"
 }
