@@ -11,6 +11,7 @@ on:
       - "server/src/mxsj_server/**"
       - "server/migrations/**"
       - "server/tests/architecture/**"
+      - "server/tests/modules/account/**"
       - "server/tests/integration/**"
       - "server/tests/protocol/**"
       - "server/tools/verify_game_loop.py"
