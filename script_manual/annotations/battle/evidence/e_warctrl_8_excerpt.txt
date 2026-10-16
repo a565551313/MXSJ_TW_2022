@@ -4,7 +4,7 @@ N5 / entry 8 e_warctrl.py 完整去头正文摘录
 引擎：Python 3.11.2 / uncompyle6 3.9.3 / xdis 6.1.8 / spark-parser 1.9.0 / click 8.5.0（仓库外 venv，未改手册依赖）
 L 前缀=候选去头正文（去掉 recover_entries 6 行产物头）内的原始行号，1-based 闭区间；冒号后为 JSON 字符串，保留原行字符与空格。
 annotation 的 evidence.start_line/end_line 绑定本文件的实际 UTF-8 原字节行，不是候选行号；行号与 SHA 只保护字节，不证明反编译语义正确。
-条目身份：entry_index=8  entry_id=0x5d2ab3  co_filename=script/pubscript/pubskill/e_warctrl.py
+条目身份：entry_index=8  entry_id=0x005d26b3  co_filename=script/pubscript/pubskill/e_warctrl.py
 stored payload SHA256=a40d7aae07ddfda668fdfca77cdf4aea38b614e85c8bf07996cd077aef66cdc1
 解压长度=6330  pyc 长度=6338  pyc SHA256=0853d1f0ba6e3957cad65d624e0f1d0f8f8e70f33cc77ea48f6de3df33bea182
 转译阶段=baseline  反编译结果=decompile_ok  产物类型=source

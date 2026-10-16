@@ -175,8 +175,8 @@ war / warcmd / e_warctrl 的形参来自候选 `def` 行，并与码对象普查
 | `war.json` | 150 → **153** | 0 → **43** | 0 → **111** | 150 → 42 | 0 → 151 | `historical_unverified_origin` → `recovered_partial` |
 | `netwar.json` | 86 → 86 | 10 → **12** | 0 → **86** | 76 → 0（另 10 条 extracted 取消） | 1 → 86 | `recovered_complete_not_original` → **`recovered_partial`（下调）** |
 | `warcmd.json` | 1 → 1 | 0 → **2** | 0 → **1** | 1 → 0 | 0 → 1 | `historical_unverified_origin` → `recovered_partial` |
-| `e_warctrl.json` | 22 → **27** | 0 → **6** | 0 → **27** | 22 → 0 | 0 → 25 | `historical_unverified_origin` → `recovered_partial` |
-| **合计** | **259 → 267** | **10 → 63** | 0 → **225** | 259 → 42 | 1 → 263 | |
+| `e_warctrl.json` | 22 → **27** | 0 → **10** | 0 → **27** | 22 → 0 | 0 → 25 | `historical_unverified_origin` → `recovered_partial` |
+| **合计** | **259 → 267** | **10 → 67** | 0 → **225** | 259 → 42 | 1 → 263 | |
 
 函数条数变化**逐条可解释**（不是凑数）：按任务卡“用限定名区分类与方法”的要求，把旧稿平铺/合并的同名记录拆成限定名。
 
@@ -226,20 +226,26 @@ tools/decompiler/output/script_fls_pycdc/script/netwar.py
 入库的小证据摘录（`script_manual/annotations/battle/evidence/`）：
 
 ```text
-n5_provenance_20261016.txt     88da51a167cb8e174266af6f04892f570fd66fa558d3834d85f02f819702e486
+n5_provenance_20261016.txt     47ffb39b9891bbc98ba788b26556aa979969f4a0cd2b19a6c96f9dcbc28aac15
 n5_codecensus_20261016.txt     32bf184461de4713d94d8bcde0dadb11fadbed06827235d73628a3a0d2973ad1
-war_697_excerpt.txt            8399fc051da77ebc671c2e73f225bd08a20908aae8d37c5100309f809158cbbc
+war_697_excerpt.txt            92c8b8c977361a9f89ae3b5d2223df803143dca5bd2bccd879c0d11320992524
 warcmd_1612_excerpt.txt        19380ecf7d56a3e82de937a07d4b6fc555145b958be2c397e00caa6b1826a30b
-e_warctrl_8_excerpt.txt        2207f84774a15ae905aea2c917a9406d7563b879204499f833f2053e308549d1
+e_warctrl_8_excerpt.txt        963756669b1c48c30a6f35d270e46a0cb7854e46b19db389e28b4d9c484da554
+
+（2026-10-16 返修后重算：provenance 因补写 entry_id 机械复核说明多出 4 行，
+两份摘录各改 1 个字符身份串，codecensus 与 warcmd_1612_excerpt 未动。见第 10 节。）
 ```
 
 修订后的正文原字节 SHA（供 N7/A 绑定审核用；改动任何一字节即失效）：
 
 ```text
-war.json        99355dff36b7c77c0aac3de945e0c0372728148e1ab9053a169783cbcdf15c4f
-netwar.json     d45fb764616f069a6fd2f012c2f8ae16ade3d55f7062349421eb7911c7b3d393
-warcmd.json     5b518318eaefa874818b42eb9fac11c6f6bbaf3f43e94f580b119c9aacf92c73
-e_warctrl.json  8c364cb547d35ac8ffbd712dc6963671231195e68c834e9e77912b8b6c0beede
+war.json        3f1da9509a05dcd3af0b0edf1bc33ea204cb39c775e4893b5972bba927f4cf88
+netwar.json     67caf6ed51d81dfa96e46a48fb0ff5fd63d3a4be74325ed8bfab1c72c49ecfb1
+warcmd.json     b30331ba00e6ede84c47b590b8f9ba6b8462839fecae1ff150a776dab8633da5
+e_warctrl.json  171bdccf368d82ffdc786396ccfc2869bd30f15db8413bd0b2e3929b5ebbb541
+
+（上一稿的四条 SHA 分别是 99355dff… / d45fb764… / 5b518318… / 8c364cb5…，
+已被本轮返修作废；绑定审核请用上面的新值。）
 ```
 
 ## 8. 实际跑过的命令与结果
@@ -291,3 +297,90 @@ python tools/devkit/check_windows_compat.py script_manual --strict
 9. 本轮没有改动 `docs/STATUS.md`、根导航、`coordination/`、`schema/`（A 独占）；若需同步 §3.48 的 F 计数，请 A 按新 SHA 更新。
 10. 完整候选、pyc、venv、恢复报告 JSON 全部留在仓库外 `/tmp/n5-recover`（沙箱外置研究材料，不入 Git）；
     入库的只有 5 份小证据摘录 + 4 份正文 + 本文件。
+
+## 10. A 复核返修（2026-10-16）：B-N5-01 / 02 / 03
+
+A 于 2026-10-16 对固定输入 `e2fb1aa1fd9019a84df391c13d68e3ec3d9179b6` 复核，指出 3 项 P2。三项**全部修完**，
+修法一律是“收缩断言 / 换机械来源”，**没有改候选、没有为了让断言成立而补实现**。下面是逐项。
+
+### B-N5-01：两条 entry_id 写错 —— 已修，且四条全部按机械来源重算
+
+错的是回执标识，不是解出的内容（A 已核 payload/pyc/去头正文 SHA 全对）。本轮没有手抄/手算任何一个 ID：
+写了一个脚本**现场打开 `data/script.fls`**，用两条互相独立的路径取 `eid`——
+
+1. 直读包索引表：`count` 在偏移 4、`idx_off` 在偏移 8，每条 16 字节按 `<IIII` 解，首字段即 `eid`
+   （本包 `count=5002`、`idx_off=24374050`）；
+2. 调 `tools/decompiler/recover_entries.py` 的 `read_entry()`。
+
+两者一致才写入；脚本里不含任何 ID 字面量。重算结果（写入值）：
+
+```text
+entry_index= 697  entry_id=0x206d634b   （原稿误写 0x2069990b）
+entry_index=1406  entry_id=0x458cd0df   （复核无误）
+entry_index=1612  entry_id=0x50646bdf   （复核无误）
+entry_index=   8  entry_id=0x005d26b3   （原稿误写 0x5d2ab3）
+```
+
+改了四处：`evidence/war_697_excerpt.txt:7`、`evidence/e_warctrl_8_excerpt.txt:7`、
+`evidence/n5_provenance_20261016.txt:21` 与 `:36`。错误性质已写进 provenance 新增的“entry_id 机械复核”段
+（第 41–44 行）：**手写转录错误，不是解错条目**；包 SHA、`entry_index`、stored payload / pyc / 去头正文 SHA 全部未变。
+
+连带更新（机械重算，不手抄）：三份改动过的小证据的 `sources[].sha256`
+（war / netwar 各 2 处、warcmd 1 处、e_warctrl 2 处），以及四份 JSON 里 `n5_prov` 的 `end_line` 58 → 62
+（provenance 多了 4 行说明）。改完 `validate --verify-evidence` 重跑通过。
+
+### B-N5-02：`CPlayCtrl.Release` 的“可重入安全” —— 已撤
+
+候选去头正文 L159–163 的字面顺序是：判 `m_WarCmdMgr` 为真 → **先** `self.m_WarCmdMgr.Release(self)`
+→ 该调用**返回后**才 `self.m_WarCmdMgr = None`。A 指出的两点成立：下游在 `Release` 内同步重入时引用仍非空，
+下游抛异常时置 `None` 那句根本执行不到。新摘要只保留能由这段字节证明的东西：
+
+> 可据此证明的只有一件事：一次正常返回之后再顺序调用会因判空而跳过。
+> 不能据此说“可重入安全”——下游在 Release 内部同步回调本对象时 `m_WarCmdMgr` 仍非空，判空不成立；
+> 也不能说“异常安全”——下游抛异常时置 None 的语句不会执行。
+
+同时给 `Release` 补了 2 条 `branches`（真/假两路，写明“先 Release 后 None，中间不存在提前置空”），
+并在 `e_warctrl.json` 的 `limitations` 里加了对应一条。**没有**为了让它“可重入安全”去改候选或加 try/finally。
+
+同类排查（同一类“弱证据写成保证”的说法）：把 `ModuleReset` 摘要里的“导入即**保证**单例未创建”也撤了，
+改成“模块导入时这次执行会把 g_WarCtrl 置 None（该赋值语句的字面顺序）”，并写明二次 import 的缓存情形不在证据内、不作断言；
+`war.json` 指南 1 里的“改完必须保证回调最终调用 NextCmd()，否则队列会卡住”改为
+“这是按候选结构的推断而非实测：Process() 只执行 g_ProcessFunc，推进只发生在 NextCmd()/Wait() 两处；
+Process 仅在回调抛异常时自动回落 NextCmd()”。
+
+### B-N5-03：`timer.Timer(0.033, …)` 的“约 30fps / -1 无限循环” —— 已删，语义标未知
+
+所引证据只有 e_warctrl 这一个调用点，`timer.Timer` 的实现在 `script/core/timer.py`（catalog `entry_index` 3153），
+**不在本卡 697/1406/1612/8 的恢复白名单内，本轮没有取它的正文**，因此单位、帧率、重复参数都没有证据。
+按 A 给的第二种处置（补来源或只记字面值）做了收缩：`CWarCtrl.StartTimer` 摘要现在只写
+“四个实参按字面顺序传入”，并明确写 0.033 的计时单位、它与实际帧率的关系、`-1` 的重复语义**全部未验证**，
+“约 30fps / 无限循环”在本稿只作为推测列出。补了 2 条 `branches`（`m_TimerObj` 已存在 → 直接 return；否则构造），
+证据加挂 `catalog_timer`（该行只用于钉住 timer.py 是 entry 3153，不提供语义）。
+
+同一说法在文件里另有 4 处，一并收敛：`purpose`（“常驻 timer（0.033s）”→“构造实参首值字面为 0.033，未验证”）、
+`modification_guides[0]`（改帧间隔的改法补“改动前应先确认 timer.py 的实现”）、
+`resources` 里 timer.py 那条、`relationships` 里 `timer.Timer` 那条；
+`limitations` 里“0.033s 帧间隔”改成“字面值 0.033（计时单位与实际帧间隔未验证）”，并新增一条说明 timer 语义未知。
+
+### 返修后的规模与校验
+
+| | functions | branches | static_reviewed | inferred | 非空 signature |
+|---|---|---|---|---|---|
+| war | 153 | 43 | 111 | 42 | 151 |
+| netwar | 86 | 12 | 86 | 0 | 86 |
+| warcmd | 1 | 2 | 1 | 0 | 1 |
+| e_warctrl | 27 | **6 → 10** | 27 | 0 | 25 |
+| 合计 | 267 | **63 → 67** | 225 | 42 | 263 |
+
+`extracted` 仍 0、`runtime_verified` 仍 0。返修后重跑（全部通过）：
+
+```bash
+PYTHONPATH=script_manual/src python -m mxsj_manual validate --verify-evidence --require-full-inventory --repository .
+# {"expected_entries": 5135, "indexed": 5135, "annotated": 20, "accepted": 3, "excluded": 1}
+PYTHONPATH=script_manual/src QT_QPA_PLATFORM=offscreen python -m unittest discover -s script_manual/tests
+# Ran 82 tests — OK (skipped=11)   # 11 项 Qt GUI 因沙箱缺 libGL.so.1 跳过，未算通过
+ruff check script_manual script_manual/script_manual.spec          # All checks passed!
+python tools/devkit/check_windows_compat.py script_manual --strict # ERROR 0，WARNING 0，INFO 0
+```
+
+（本节的重跑结果与第 8 节同为标准四项；本轮未新增加测试，也未改 `script_manual` 代码。）

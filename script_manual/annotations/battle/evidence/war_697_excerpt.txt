@@ -4,7 +4,7 @@ N5 / entry 697 war.py 关键入口摘录
 引擎：Python 3.11.2 / uncompyle6 3.9.3 / xdis 6.1.8 / spark-parser 1.9.0 / click 8.5.0（仓库外 venv，未改手册依赖）
 L 前缀=候选去头正文（去掉 recover_entries 6 行产物头）内的原始行号，1-based 闭区间；冒号后为 JSON 字符串，保留原行字符与空格。
 annotation 的 evidence.start_line/end_line 绑定本文件的实际 UTF-8 原字节行，不是候选行号；行号与 SHA 只保护字节，不证明反编译语义正确。
-条目身份：entry_index=697  entry_id=0x2069990b  co_filename=script/core/war.py
+条目身份：entry_index=697  entry_id=0x206d634b  co_filename=script/core/war.py
 stored payload SHA256=a1d49aa67473ac6b1def790d074830aa5833f23763ad4c04e08dca258d01b008
 解压长度=73197  pyc 长度=73205  pyc SHA256=96cb750ee47247233359d6541d1a58c3d3ab879a03efb5113e1fa64a85a7b305
 转译阶段=baseline  反编译结果=decompile_ok  产物类型=source

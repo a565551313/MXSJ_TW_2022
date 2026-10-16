@@ -529,7 +529,7 @@
     {
       "id": "n5_prov",
       "path": "script_manual/annotations/battle/evidence/n5_provenance_20261016.txt",
-      "sha256": "88da51a167cb8e174266af6f04892f570fd66fa558d3834d85f02f819702e486",
+      "sha256": "47ffb39b9891bbc98ba788b26556aa979969f4a0cd2b19a6c96f9dcbc28aac15",
       "kind": "metadata",
       "note": "N5 本轮定点恢复回执：命令、引擎版本、输入/工具/候选/pyc 摘要、损坏标识符清单与只读边界。"
     },
@@ -560,7 +560,7 @@
       "id": "n5_prov",
       "source_id": "n5_prov",
       "start_line": 1,
-      "end_line": 58
+      "end_line": 62
     },
     {
       "id": "n5_census_all",

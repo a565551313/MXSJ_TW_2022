@@ -3767,7 +3767,7 @@
     {
       "question": "改一条战斗指令的表现要动哪里？",
       "answer": {
-        "text": "先找到该回调（netwar 的 S2C* 用 war.CCmd(war.Xxx) 指定），再改 war.py 里同名函数。分派总入口：Perform（技能）/AttackNormal（普攻）/Turn（回合）/End（结束）/Add（入场）/Start（开场）。改完必须保证回调最终调用 NextCmd() 或 SetProcess(Wait, ...)，否则队列会卡住。",
+        "text": "先找到该回调（netwar 的 S2C* 用 war.CCmd(war.Xxx) 指定），再改 war.py 里同名函数。分派总入口：Perform（技能）/AttackNormal（普攻）/Turn（回合）/End（结束）/Add（入场）/Start（开场）。改完必须让回调最终回到 NextCmd() 或 SetProcess(Wait, ...)。这是按候选结构的推断而非实测：Process() 只执行 g_ProcessFunc，推进只发生在 NextCmd()/Wait() 两处，回调不回到这两处则队列不再前进；Process 仅在回调抛异常时自动回落 NextCmd()。",
         "confidence": "static_reviewed",
         "evidence": [
           "w_perform",
@@ -3831,7 +3831,7 @@
     {
       "id": "n5_prov",
       "path": "script_manual/annotations/battle/evidence/n5_provenance_20261016.txt",
-      "sha256": "88da51a167cb8e174266af6f04892f570fd66fa558d3834d85f02f819702e486",
+      "sha256": "47ffb39b9891bbc98ba788b26556aa979969f4a0cd2b19a6c96f9dcbc28aac15",
       "kind": "metadata",
       "note": "N5 本轮定点恢复回执：命令、引擎版本、输入/工具/候选/pyc 摘要、损坏标识符清单与只读边界。"
     },
@@ -3845,7 +3845,7 @@
     {
       "id": "war_src",
       "path": "script_manual/annotations/battle/evidence/war_697_excerpt.txt",
-      "sha256": "8399fc051da77ebc671c2e73f225bd08a20908aae8d37c5100309f809158cbbc",
+      "sha256": "92c8b8c977361a9f89ae3b5d2223df803143dca5bd2bccd879c0d11320992524",
       "kind": "metadata",
       "note": "entry 697 去头候选（SHA a6a81ad6…，与 A 的 BDF 收据一致）的原样摘录，L 前缀保留候选行号；只覆盖本轮实际读过的区间（约占候选 55%），不是完整源码。"
     },
@@ -3862,7 +3862,7 @@
       "id": "n5_prov",
       "source_id": "n5_prov",
       "start_line": 1,
-      "end_line": 58
+      "end_line": 62
     },
     {
       "id": "n5_census_all",
