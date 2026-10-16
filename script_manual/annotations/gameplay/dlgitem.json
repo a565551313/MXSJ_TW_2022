@@ -5,7 +5,7 @@
   "path": "script/mxgame/item/view/dlgitem.py",
   "owner": "G",
   "domain": "gameplay",
-  "author": "A（G停工后代写；待其他实际审核者复核，A不自批）",
+  "author": "N6新会话（接管修订；原初稿为A代写，非G会话；本记录未经独立审核，N6不自批）",
   "source_status": "recovered_complete_not_original",
   "purpose": {
     "text": "物品/装备与召唤兽页的界面组合入口：创建CItemDialog、管理显示和提示缓存、路由本地UI消息到整理/锁定/选物/使用等动作。物品数据与使用规则委托item、网络或其他业务模块；不是服务器背包规则。",
@@ -88,7 +88,10 @@
         "netplayer.C2SOpenItemUnLock",
         "ShowItemSortDlg",
         "self.UseItem",
-        "self.SelectItem"
+        "self.SelectItem",
+        "netopenui.C2SOpenPlayerInfoDlg",
+        "hero.GetRealID",
+        "dlgquicksell.OpenQuickSellView"
       ],
       "branches": [
         {
@@ -165,6 +168,16 @@
           "condition": "msgid == 16",
           "effect": {
             "text": "调用dlgquicksell.OpenQuickSellView并记引导点击；不在此直接售卖。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_CItemDialog_OnMessage"
+            ]
+          }
+        },
+        {
+          "condition": "msgid == 22",
+          "effect": {
+            "text": "调用netopenui.C2SOpenPlayerInfoDlg(hero.GetRealID(), 0)；hero侧ID类型与该窗口的协议行为未核。",
             "confidence": "static_reviewed",
             "evidence": [
               "dlgitem_CItemDialog_OnMessage"
@@ -305,18 +318,24 @@
       "signature": "(flag)",
       "kind": "function",
       "summary": {
-        "text": "首次依据神魔活动分普通或专用物品窗，登记pet/item回调并ShowFlash；已有对象则置顶和清选中位置。随后SetShow(flag)，按可见性处理提示/关闭交易赠予窗口或清扩展；装饰器与子类行为未核。",
+        "text": "首次依据dlgshenmoisland.IsShenmoHuodong()（函数名推断为神魔活动判定，未核）选择普通或专用物品窗（CShenmoItemDialog），登记pet/item回调并ShowFlash；已有对象则Topmost并清选中位置。随后SetShow(flag)；显示时ShowHint、置顶并调用CloseOtherUI()，隐藏时ClearAllItemExt。函数前有@syncoperate.Operate()装饰器，调度语义未核。",
         "confidence": "static_reviewed",
         "evidence": [
-          "dlgitem_ShowDlg"
+          "dlgitem_ShowDlg",
+          "dlgitem_ShowDlg_decorator",
+          "dlgitem_CloseOtherUI"
         ]
       },
       "calls": [
         "CItemDialog",
+        "dlgshenmoisland.IsShenmoHuodong",
         "dlgshenmoisland.CShenmoItemDialog",
         "pet.AddEquipCallback",
         "item.AddShadowCallback",
-        "CloseOtherUI"
+        "GetEquitInfo",
+        "g_ItemDialog.RegMonsterPieceHandler",
+        "CloseOtherUI",
+        "clickcounter.TaskLog"
       ],
       "branches": [
         {
@@ -342,10 +361,11 @@
         {
           "condition": "SetShow后GetShow()为真",
           "effect": {
-            "text": "显示提示、清暂存提示、置顶并CloseOtherUI。",
+            "text": "显示提示、清暂存提示、置顶并调用CloseOtherUI()；CloseOtherUI内部只调用dlgswap.CloseWindow()与dlggive.CloseWindow()，两窗口功能未在本摘录核实。",
             "confidence": "static_reviewed",
             "evidence": [
-              "dlgitem_ShowDlg"
+              "dlgitem_ShowDlg",
+              "dlgitem_CloseOtherUI"
             ]
           }
         },
@@ -409,7 +429,7 @@
       "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "若测试禁用dlgitem或首次OpenSys运行则return；否则不存在物品窗时调用ShowDlg(False)预建隐藏窗。装饰器和活动专用窗口仍可能改变实际执行。",
+        "text": "若permission.IsTestBansys('dlgitem')或gamectrl.IsFristRunFromOpenSys()为真则直接return；否则在g_ItemDialog为空时调用ShowDlg(False)预建隐藏窗（ShowDlg(False)仍会构造对象）。装饰器和活动专用窗口仍可能改变实际执行。",
         "confidence": "static_reviewed",
         "evidence": [
           "dlgitem_PreShowDlgAfterLogin"
@@ -420,7 +440,18 @@
         "gamectrl.IsFristRunFromOpenSys",
         "ShowDlg"
       ],
-      "branches": []
+      "branches": [
+        {
+          "condition": "permission.IsTestBansys('dlgitem')或gamectrl.IsFristRunFromOpenSys()为真",
+          "effect": {
+            "text": "直接return，不调用ShowDlg。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "dlgitem_PreShowDlgAfterLogin"
+            ]
+          }
+        }
+      ]
     },
     {
       "name": "ShowItemSortDlg",
@@ -497,15 +528,15 @@
   ],
   "relationships": [
     {
-      "direction": "upstream",
-      "kind": "imports",
+      "direction": "downstream",
+      "kind": "calls",
       "module": {
         "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
         "entry_index": 3038
       },
-      "symbol": "hero.GetRealID",
+      "symbol": "hero.GetRealID（OnMessage 22号）",
       "summary": {
-        "text": "OnMessage的22号动作把hero.GetRealID()交netopenui.C2SOpenPlayerInfoDlg；只确认调用关系。",
+        "text": "OnMessage的22号动作调用hero.GetRealID()并把结果交netopenui.C2SOpenPlayerInfoDlg；只确认调用关系，hero侧ID类型与协议未核。",
         "confidence": "static_reviewed",
         "evidence": [
           "dlgitem_CItemDialog_OnMessage"
@@ -549,11 +580,12 @@
     {
       "question": "背包打不开、关不掉或预加载后状态异常，查哪里？",
       "answer": {
-        "text": "先区分Show只操作已有窗、ShowDlg负责创建和回调、ShowSwitch翻转显示；预建入口PreShowDlgAfterLogin会传False。不要把False当不构造，或把SetShow(False)当释放回调。活动专用窗和装饰器需另外验证。",
+        "text": "先区分Show只操作已有窗、ShowDlg负责创建、回调与@syncoperate.Operate()装饰器，ShowSwitch翻转显示；预建入口PreShowDlgAfterLogin会传False。不要把False当不构造，或把SetShow(False)当释放回调。活动专用窗和装饰器需另外验证。",
         "confidence": "static_reviewed",
         "evidence": [
           "dlgitem_Show",
           "dlgitem_ShowDlg",
+          "dlgitem_ShowDlg_decorator",
           "dlgitem_ShowSwitch",
           "dlgitem_PreShowDlgAfterLogin"
         ]
@@ -586,9 +618,9 @@
     }
   ],
   "limitations": [
-    "3215行候选仅解释本稿13个重点函数；装备拖放、全部物品使用类型、快捷栏、召唤兽、闪烁、奖励弹窗与所有委托未穷尽。",
+    "3215行候选仅解释本稿13个重点函数；装备拖放、全部物品使用类型、快捷栏、召唤兽、闪烁、奖励弹窗与所有委托未穷尽；OnMessage中9/10/21号、1000以上宠物号（SelectPet/ShowPetInfo）及Switch/ShowSwitchDlg本体未展开。",
     "构造器字面item_new.dlg与GetDlgPath返回item1.dlg并存；未复核CCombDialog是否/何时读取GetDlgPath，不能宣布实际只用其中一张布局。",
-    "ShowDlg带syncoperate.Operate装饰器，其调度/排队/线程语义未核；False也可先构造对象，不是无副作用隐藏API。",
+    "ShowDlg前有@syncoperate.Operate()装饰器（摘录L2613），Operate的调度/排队/线程语义未核；False也可先构造对象，不是无副作用隐藏API。",
     "作者是A代写，不是G会话提交或独立审核。所有Claim等级只是作者静态核对；未创建本稿accepted审核，修改后仍须独立复核。",
     "来源为冻结script.fls的u6 3.9.3/xdis6.1.8定点恢复候选，baseline/decompile_ok仅证明输出形状，不证明可逆、可回编或语义正确；模块顶层return等反编译形态未修写。",
     "函数/关键分支只覆盖已列子集；calls为空不代表无调用，运行期回调/工厂/原生实现未解，不能从函数名推断效果。",
@@ -599,9 +631,9 @@
     {
       "id": "excerpt_dlgitem",
       "path": "script_manual/annotations/gameplay/evidence/dlgitem_candidate_excerpt.txt",
-      "sha256": "5d0b257c0ad48c6223f3e10bbde032bb01dfeb4bf5fe4d3c516dfdabd18db123",
-      "kind": "metadata",
-      "note": "A代写有限候选摘录；全文/去六头正文SHA和原候选行号在报告头。仅静态来源，非完整源码、非原生/运行期报告。"
+      "sha256": "3d2d9796d71f3a62dbad28fdc041602573fc8ac60435192cbfd148827a9b7a1a",
+      "kind": "recovered_source",
+      "note": "N6 2026-10-16独立复现：同版本工具得到候选去六头正文SHA与A一致；摘录L号逐行JSON解码与候选字节全等（含追加的L2558–L2562、L2613）。A代写有限候选摘录，仅静态来源，非完整源码、非原生/运行期报告。"
     }
   ],
   "evidence": [
@@ -642,6 +674,12 @@
       "end_line": 240
     },
     {
+      "id": "dlgitem_CloseOtherUI",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 241,
+      "end_line": 246
+    },
+    {
       "id": "dlgitem_IsDialogShowing",
       "source_id": "excerpt_dlgitem",
       "start_line": 146,
@@ -664,6 +702,12 @@
       "source_id": "excerpt_dlgitem",
       "start_line": 157,
       "end_line": 192
+    },
+    {
+      "id": "dlgitem_ShowDlg_decorator",
+      "source_id": "excerpt_dlgitem",
+      "start_line": 247,
+      "end_line": 248
     },
     {
       "id": "dlgitem_ShowHint",

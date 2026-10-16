@@ -5,7 +5,7 @@
   "path": "script/char/npc.py",
   "owner": "G",
   "domain": "gameplay",
-  "author": "A（G停工后代写；待其他实际审核者复核，A不自批）",
+  "author": "N6新会话（接管修订；原初稿为A代写，非G会话；本记录未经独立审核，N6不自批）",
   "source_status": "recovered_complete_not_original",
   "purpose": {
     "text": "场景NPC对象与点击/任务标记候选：近邻查找、普通NPC和客户端任务NPC点击分流、距离/移动门禁、NPC工厂及任务需求标记。对话正文与协议解包不在本模块，发送调用不证明对话或任务成功。",
@@ -135,16 +135,28 @@
       "signature": "(self)",
       "kind": "method",
       "summary": {
-        "text": "先记栈/点击日志，依剧本婚礼、通用点击回调、主角召唤兽/孩子、摊位/穿透等分流；普通路径按地图/节流/距离/重叠检查决定发送NpcLook或走近。业务分支不可简化为点击就打开对话。",
+        "text": "先记栈/点击日志；依IsLimitClick()（函数体为juben.IsPlayJuben()或marriage.IsWedding()，即剧本/婚礼）、world通用点击回调、IsHeroSummon/IsHeroChild（主角召唤兽/孩子）、IsSale()（基类方法，本摘录未展开）及m_SummonFlag穿透等分流；普通路径按地图/节流/距离/重叠检查决定发送NpcLook或走近。业务分支不可简化为点击就打开对话。",
         "confidence": "static_reviewed",
         "evidence": [
-          "npc_CNpc_LeftUp"
+          "npc_CNpc_LeftUp",
+          "npc_CNpc_IsLimitClick",
+          "npc_CNpc_IsHeroSummon_IsHeroChild"
         ]
       },
       "calls": [
         "walker.CWalker.LeftUp",
         "self.GetNormalClickObj",
+        "self.IsLimitClick",
+        "self.IsHeroSummon",
+        "self.IsHeroChild",
+        "ClickHeroSummon",
+        "ClickHeroChild",
+        "self.IsSale",
         "map.StopMove",
+        "self.TurnToHero",
+        "world.CheckWordItemOverlap",
+        "dlgoverlapnpc.Show",
+        "movetrace.C2SClientMoveTrace",
         "netnpc.C2SNpcLook",
         "hero.WalkTo"
       ],
@@ -155,7 +167,8 @@
             "text": "提前return；自动点击可绕过此处限制。",
             "confidence": "static_reviewed",
             "evidence": [
-              "npc_CNpc_LeftUp"
+              "npc_CNpc_LeftUp",
+              "npc_CNpc_IsLimitClick"
             ]
           }
         },
@@ -163,6 +176,27 @@
           "condition": "world通用条件和左键回调均满足",
           "effect": {
             "text": "转walker.CWalker.LeftUp并return，不走后续NpcLook。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CNpc_LeftUp"
+            ]
+          }
+        },
+        {
+          "condition": "IsHeroSummon()或IsHeroChild()为真",
+          "effect": {
+            "text": "调用ClickHeroSummon/ClickHeroChild(m_CharVirtualIdx)后return；两函数本体未核。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CNpc_LeftUp",
+              "npc_CNpc_IsHeroSummon_IsHeroChild"
+            ]
+          }
+        },
+        {
+          "condition": "IsSale()为真",
+          "effect": {
+            "text": "直接return（IsSale基类实现未在本摘录内）。",
             "confidence": "static_reviewed",
             "evidence": [
               "npc_CNpc_LeftUp"
@@ -190,7 +224,18 @@
           }
         },
         {
-          "condition": "dist < iDis*map.CELLSIZE 且开启重叠检查且重叠数>1",
+          "condition": "racingspeedgame.CheckGameStart()为真",
+          "effect": {
+            "text": "iDis由DISTANCE_CLICK减半（候选常量18，减半后用于距离比较）。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CNpc_LeftUp",
+              "npc_module_constants"
+            ]
+          }
+        },
+        {
+          "condition": "dist < iDis*map.CELLSIZE且开启重叠检查且重叠数>1",
           "effect": {
             "text": "打开重叠NPC选择界面并return，不直接发送当前NpcLook。",
             "confidence": "static_reviewed",
@@ -202,17 +247,18 @@
         {
           "condition": "近距离且前面分支均放行",
           "effect": {
-            "text": "在RANDOM_VALUE分支未提前返回的情况下，先发送移动追踪调用，再C2SNpcLook；之后通知日程/科举等模块。",
+            "text": "若m_CharIdx在RANDOM_VALUE、随机数>阈值且m_PopoTick<2，则换调色板并return（不发送）；否则清零m_PopoTick，继续movetrace.C2SClientMoveTrace、netnpc.C2SNpcLook、writeclicklog.WriteClickNpcTime、dlgnpc.g_ShowTask=True，并调用mgrschedule/mdnewschedule的JoinActivityInNpcShape与dlgkeju.CheckHasKejuTask（功能仅由模块名推断，未核）。",
             "confidence": "static_reviewed",
             "evidence": [
-              "npc_CNpc_LeftUp"
+              "npc_CNpc_LeftUp",
+              "npc_module_constants"
             ]
           }
         },
         {
           "condition": "不在近距离且map.AllowMove()",
           "effect": {
-            "text": "按与NPC连线算接近点，调用hero.WalkTo；这次不发送NpcLook。",
+            "text": "沿与NPC连线取距NPC 6个格子的接近点，调用hero.WalkTo；这次不发送NpcLook。",
             "confidence": "static_reviewed",
             "evidence": [
               "npc_CNpc_LeftUp"
@@ -226,10 +272,12 @@
       "signature": "(self)",
       "kind": "method",
       "summary": {
-        "text": "摊位/限制点击时return；召唤物穿透右键；普通路径用1的时间比较节流，虚拟编号>NPCMOD时先随机颜色再SetDesc，最后C2SNpcRBClick。右键不是左键距离对话链。",
+        "text": "IsSale()或IsLimitClick()为真时return；召唤物（m_SummonFlag）穿透右键；普通路径用1秒的时间比较节流；虚拟编号>NPCMOD（候选常量50000）时先随机颜色再SetDesc，最后C2SNpcRBClick。右键不是左键距离对话链。",
         "confidence": "static_reviewed",
         "evidence": [
-          "npc_CNpc_RightUp"
+          "npc_CNpc_RightUp",
+          "npc_CNpc_IsLimitClick",
+          "npc_module_constants"
         ]
       },
       "calls": [
@@ -239,12 +287,13 @@
       ],
       "branches": [
         {
-          "condition": "IsSale()或IsLimitClick()",
+          "condition": "IsSale()或IsLimitClick()为真",
           "effect": {
             "text": "直接return，没有像左键那样用m_AutoClick绕过此限制的条件。",
             "confidence": "static_reviewed",
             "evidence": [
-              "npc_CNpc_RightUp"
+              "npc_CNpc_RightUp",
+              "npc_CNpc_IsLimitClick"
             ]
           }
         }
@@ -306,6 +355,26 @@
           }
         },
         {
+          "condition": "地图不允许点击NPC且非自动，或距上次点击小于0.5且非自动",
+          "effect": {
+            "text": "提前return（与CNpc.LeftUp的门禁相同形式，但客户端版没有IsLimitClick/IsSale分支）。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CClientNpc_LeftUp"
+            ]
+          }
+        },
+        {
+          "condition": "world.g_ConverCondition与g_LeftClickCallback均满足",
+          "effect": {
+            "text": "转walker.CWalker.LeftUp并return。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CClientNpc_LeftUp"
+            ]
+          }
+        },
+        {
           "condition": "dist<10*CELLSIZE且m_TaskID==0",
           "effect": {
             "text": "移动追踪后调用C2SNpcLook。",
@@ -319,6 +388,16 @@
           "condition": "dist<10*CELLSIZE且m_TaskID!=0",
           "effect": {
             "text": "调用C2SNpcTask(m_TaskID,m_Sequence)，不冒称任务已完成。",
+            "confidence": "static_reviewed",
+            "evidence": [
+              "npc_CClientNpc_LeftUp"
+            ]
+          }
+        },
+        {
+          "condition": "dist>=10*CELLSIZE且map.AllowMove()",
+          "effect": {
+            "text": "只调用hero.WalkTo(dx,dy)，不发送NpcLook或NpcTask。",
             "confidence": "static_reviewed",
             "evidence": [
               "npc_CClientNpc_LeftUp"
@@ -379,7 +458,7 @@
       "signature": "(npcId, taskId, type, shape)",
       "kind": "function",
       "summary": {
-        "text": "把(type,shape,have=0)需求字典追加到NPC/任务列表；类型1调用物品特殊形状计数，类型2遍历宠物按候选key/出生标志过滤计数，随后UpdateNpcSign。重复登记未见去重。",
+        "text": "把(type,shape,have=0)需求字典追加到g_NpcNeedThing[npcId][taskId]列表；type==1时have=item.GetItemNumBySpecialShape((shape,), item.MARK_SOUL_BINDED, item.MARK_MODUL)；type==2时have=FindPet(shape)，计数pet.g_Pets中m_Prop.m_Shape==shape且（m_Key&64==0，或m_Key&pet.MARK_SOUL_BINDED真且m_BirthKey==0）的宠物（g_Pets为None时0）；随后UpdateNpcSign。重复登记未见去重。",
         "confidence": "static_reviewed",
         "evidence": [
           "npc_NpcNeed"
@@ -411,6 +490,16 @@
           "effect": {
             "text": "更新首条have=max(have+增量,0)后True；IsTaskItem可能在空需求时True，需联看模型。",
             "confidence": "static_reviewed",
+            "evidence": [
+              "npc_UpNpcNeedByNpcTask"
+            ]
+          }
+        },
+        {
+          "condition": "g_NpcNeedThing[npcId][taskId]不存在",
+          "effect": {
+            "text": "候选直接索引，未见守卫；缺键时的异常路径未运行核实。",
+            "confidence": "inferred",
             "evidence": [
               "npc_UpNpcNeedByNpcTask"
             ]
@@ -550,27 +639,28 @@
   "limitations": [
     "1235行候选仅解释本稿12个入口；摊位、召唤兽/孩子、传送点、死亡/特效、自动检测与全部标记聚合未穷尽。",
     "客户端NPC与普通NPC的LeftUp不同：客户端版先处理自定义回调和任务ID分支，未证明能互换。CreateNpc动态类的全部构造签名、原生基类及对象生命周期未统一核对。",
-    "DISTANCE_CLICK、NPCMOD、map.CELLSIZE、misc.Time及服务器协议字段/号表未独立验证；0.5/1只按候选时间比较常数记录，不据此承诺实际响应间隔。",
+    "DISTANCE_CLICK=18、NPCMOD=50000、RANDOM_VALUE为候选常量（摘录L13–L18），运行期取值未验证；map.CELLSIZE、misc.Time、IsSale基类实现、ClickHeroSummon/ClickHeroChild本体及服务器协议字段未验证；0.5秒/1秒节流数值只按候选比较常数记录，不据此承诺实际响应间隔。",
     "作者是A代写，不是G会话提交或独立审核。所有Claim等级只是作者静态核对；未创建本稿accepted审核，修改后仍须独立复核。",
     "来源为冻结script.fls的u6 3.9.3/xdis6.1.8定点恢复候选，baseline/decompile_ok仅证明输出形状，不证明可逆、可回编或语义正确；模块顶层return等反编译形态未修写。",
     "函数/关键分支只覆盖已列子集；calls为空不代表无调用，运行期回调/工厂/原生实现未解，不能从函数名推断效果。",
     "sources是带候选全文/去六头SHA及原行号的小摘录，不伪装完整源码。全候选/pyc及构建产物留仓库外；没有执行/导入游戏模块、没有读取布局/资源payload、没有实机/Windows/服务端或runtime_verified结论。",
-    "仅适用本archive_sha256；1288排除不定点恢复，不适用于用户修改包、其他引擎或PR34语料；相关模块未编目录的警告不代表不存在。"
+    "仅适用本archive_sha256；1288排除不定点恢复，不适用于用户修改包、其他引擎或PR34语料；相关模块未编目录的警告不代表不存在。",
+    "LeftUp调用的autofindpath、movetrace、dlgoverlapnpc、dlgnpc、mgrschedule/mdnewschedule、dlgkeju等被调用方本体未核，相应功能仅为名称或调用关系层面的描述。"
   ],
   "sources": [
     {
       "id": "excerpt_npc",
       "path": "script_manual/annotations/gameplay/evidence/npc_candidate_excerpt.txt",
-      "sha256": "3657f5eaf3bb78e9e8875110c743b42b69362050772a0ff6907a7a948c5a4986",
-      "kind": "metadata",
-      "note": "A代写有限候选摘录；全文/去六头正文SHA和原候选行号在报告头。仅静态来源，非完整源码、非原生/运行期报告。"
+      "sha256": "306145dd32fd76d528ff8ec375f68996719301bfc93ee36677eadd71eaa91f5b",
+      "kind": "recovered_source",
+      "note": "N6 2026-10-16独立复现：候选去六头正文SHA与A一致；摘录L号逐行核对（含追加的L13–L18、L266–L277、L310–L314）。A代写有限候选摘录，仅静态来源，非完整源码、非原生/运行期报告。"
     },
     {
       "id": "excerpt_task",
       "path": "script_manual/annotations/gameplay/evidence/task_candidate_excerpt.txt",
       "sha256": "9b0b94d5339f33e4d6cf7138ff10c5c4b2a0c56012f2c3cc938a86fd2ff667ca",
-      "kind": "metadata",
-      "note": "A代写有限候选摘录；全文/去六头正文SHA和原候选行号在报告头。仅静态来源，非完整源码、非原生/运行期报告。"
+      "kind": "recovered_source",
+      "note": "N6 2026-10-16独立复现：task候选去六头正文SHA与A一致，摘录逐行核对。A代写有限候选摘录，仅静态来源。"
     }
   ],
   "evidence": [
@@ -591,6 +681,18 @@
       "source_id": "excerpt_npc",
       "start_line": 68,
       "end_line": 75
+    },
+    {
+      "id": "npc_CNpc_IsHeroSummon_IsHeroChild",
+      "source_id": "excerpt_npc",
+      "start_line": 331,
+      "end_line": 343
+    },
+    {
+      "id": "npc_CNpc_IsLimitClick",
+      "source_id": "excerpt_npc",
+      "start_line": 344,
+      "end_line": 349
     },
     {
       "id": "npc_CNpc_LeftUp",
@@ -645,6 +747,12 @@
       "source_id": "excerpt_npc",
       "start_line": 312,
       "end_line": 323
+    },
+    {
+      "id": "npc_module_constants",
+      "source_id": "excerpt_npc",
+      "start_line": 324,
+      "end_line": 330
     },
     {
       "id": "task_IsTaskItem",

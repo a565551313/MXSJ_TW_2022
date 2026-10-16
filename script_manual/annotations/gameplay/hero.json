@@ -5,7 +5,7 @@
   "path": "script/hero.py",
   "owner": "G",
   "domain": "gameplay",
-  "author": "A（G停工后代写；待其他实际审核者复核，A不自批）",
+  "author": "N6新会话（接管修订；原初稿为A代写，非G会话；本记录未经独立审核，N6不自批）",
   "source_status": "recovered_complete_not_original",
   "purpose": {
     "text": "主角客户端状态与属性/技能门面：持有g_Hero/g_Prop/g_ID、将初始化字段解包到属性对象、通知技能和属性回调，并提供显示判定、坐标与角色私有配置入口；不是服务器角色计算或物品面板的全部实现。",
@@ -221,7 +221,7 @@
       "signature": "()",
       "kind": "function",
       "summary": {
-        "text": "以角色显示、剧本/婚礼/强制结束/躲猫猫/竞速等状态的OR结果作为bNeedShow；变形显示管理器若仅有庭院秋千原因则提前True，否则返回bNeedShow。不是单纯g_Hero.GetShow，也没有g_Hero空值保护。",
+        "text": "以g_Hero.GetShow()与juben.IsPlayJuben()、marriage.IsWedding()、juben.IsForceEnd()、hidecatcat.IsHeroInGamePlayer()、racingspeedgame.CheckGameStart()的OR结果作为bNeedShow；herochengshowmgr（名称推断为变形显示管理器）若仅有庭院秋千原因（常量名TYPE_REASON_YARD_SWING）则提前True，否则返回bNeedShow。不是单纯g_Hero.GetShow，也没有g_Hero空值保护。",
         "confidence": "static_reviewed",
         "evidence": [
           "hero_GetHeroShow"
@@ -231,7 +231,13 @@
         "g_Hero.GetShow",
         "juben.IsPlayJuben",
         "marriage.IsWedding",
-        "herochengshowmgr.GetHeroChangeShow"
+        "juben.IsForceEnd",
+        "hidecatcat.IsHeroInGamePlayer",
+        "racingspeedgame.CheckGameStart",
+        "GetHeroID",
+        "herochengshowmgr.GetHeroChangeShow",
+        "oCheckShow.IsHaveReason",
+        "oCheckShow.IsOnlyReason"
       ],
       "branches": [
         {
@@ -297,7 +303,7 @@
       "signature": "(section, key, value)",
       "kind": "function",
       "summary": {
-        "text": "仅当g_ID为真时按需创建users目录，用GetRealID组成users/%d.ini并调用cfg.SaveData；否则False。手册未调用此写盘函数。",
+        "text": "仅当g_ID为真时按需创建users目录，用GetRealID组成users/%d.ini并调用cfg.SaveData；否则False。本稿未核所有调用方，也未核写盘结果。",
         "confidence": "static_reviewed",
         "evidence": [
           "hero_SavePrivateData"
@@ -502,15 +508,15 @@
       "id": "excerpt_hero",
       "path": "script_manual/annotations/gameplay/evidence/hero_candidate_excerpt.txt",
       "sha256": "58c5d634b2be0880339a0d976cedd91ad6fbdf033d13266fcee4007c7feeb277",
-      "kind": "metadata",
-      "note": "A代写有限候选摘录；全文/去六头正文SHA和原候选行号在报告头。仅静态来源，非完整源码、非原生/运行期报告。"
+      "kind": "recovered_source",
+      "note": "N6 2026-10-16独立复现：去六头正文SHA与A一致，摘录行号逐字核对。A代写有限候选摘录，仅静态来源，非完整源码、非原生/运行期报告。"
     },
     {
       "id": "excerpt_npc",
       "path": "script_manual/annotations/gameplay/evidence/npc_candidate_excerpt.txt",
-      "sha256": "3657f5eaf3bb78e9e8875110c743b42b69362050772a0ff6907a7a948c5a4986",
-      "kind": "metadata",
-      "note": "A代写有限候选摘录；全文/去六头正文SHA和原候选行号在报告头。仅静态来源，非完整源码、非原生/运行期报告。"
+      "sha256": "306145dd32fd76d528ff8ec375f68996719301bfc93ee36677eadd71eaa91f5b",
+      "kind": "recovered_source",
+      "note": "N6 2026-10-16独立复现：npc候选正文SHA与A一致；摘录L号逐行核对。A代写有限候选摘录（hero.json仅引用其中npc_CNpc_LeftUp段），仅静态来源，非完整源码、非原生/运行期报告。"
     }
   ],
   "evidence": [
