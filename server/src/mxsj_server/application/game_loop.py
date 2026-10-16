@@ -117,7 +117,7 @@ class GameLoopService:
         salt = secrets.token_bytes(16)
         digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, _PASSWORD_ITERATIONS)
         try:
-            with self._connect() as connection:
+            with closing(self._connect()) as connection:
                 connection.execute("BEGIN IMMEDIATE")
                 cursor = connection.execute(
                     "INSERT INTO accounts(account_name, normalized_name, password_salt, password_hash, created_at_ms) "
@@ -131,7 +131,7 @@ class GameLoopService:
         return {"account_id": account_id, "account_name": name}
 
     def list_realms(self) -> tuple[Realm, ...]:
-        with self._connect() as connection:
+        with closing(self._connect()) as connection:
             rows = connection.execute(
                 "SELECT realm_id, name, status FROM realms WHERE status = 'online' ORDER BY realm_id"
             ).fetchall()
@@ -139,7 +139,7 @@ class GameLoopService:
 
     def select_realm(self, realm_id: int) -> Realm:
         realm_id = _positive_int(realm_id, "realm_id")
-        with self._connect() as connection:
+        with closing(self._connect()) as connection:
             row = connection.execute(
                 "SELECT realm_id, name, status FROM realms WHERE realm_id = ? AND status = 'online'",
                 (realm_id,),
@@ -153,7 +153,7 @@ class GameLoopService:
         if not isinstance(password, str) or not password or len(password) > 128:
             raise DomainError("UNAUTHENTICATED", "invalid account name or password")
         realm = self.select_realm(realm_id)
-        with self._connect() as connection:
+        with closing(self._connect()) as connection:
             account = connection.execute(
                 "SELECT account_id, account_name, password_salt, password_hash, disabled "
                 "FROM accounts WHERE normalized_name = ?",
@@ -226,7 +226,7 @@ class GameLoopService:
             raise DomainError("INVALID_ARGUMENT", "character name must be 2-16 letters, digits, Chinese characters, _ or -")
         appearance_template_id = _positive_int(appearance_template_id, "appearance_template_id")
         school_id = _positive_int(school_id, "school_id")
-        with self._connect() as connection:
+        with closing(self._connect()) as connection:
             connection.execute("BEGIN IMMEDIATE")
             session = self._authenticated_session(connection, ticket, realm_id=realm_id)
             prior = connection.execute(
@@ -278,7 +278,7 @@ class GameLoopService:
         return _character(row)
 
     def list_characters(self, ticket: str, realm_id: int) -> tuple[Character, ...]:
-        with self._connect() as connection:
+        with closing(self._connect()) as connection:
             session = self._authenticated_session(connection, ticket, realm_id=realm_id)
             rows = connection.execute(
                 "SELECT character_id, name, level, school_id, revision FROM characters "
@@ -289,7 +289,7 @@ class GameLoopService:
 
     def select_character(self, ticket: str, realm_id: int, character_id: int) -> Character:
         character_id = _positive_int(character_id, "character_id")
-        with self._connect() as connection:
+        with closing(self._connect()) as connection:
             connection.execute("BEGIN IMMEDIATE")
             session = self._authenticated_session(connection, ticket, realm_id=realm_id)
             row = connection.execute(
@@ -308,7 +308,7 @@ class GameLoopService:
         return _character(row)
 
     def enter_map(self, ticket: str, realm_id: int) -> MapEntry:
-        with self._connect() as connection:
+        with closing(self._connect()) as connection:
             connection.execute("BEGIN IMMEDIATE")
             session = self._authenticated_session(connection, ticket, realm_id=realm_id)
             character_id = session["selected_character_id"]
