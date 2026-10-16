@@ -1449,3 +1449,13 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 - 详细MD/JSON报告`docs/evidence/script_manual_A_finalize_20261016.{md,json}`含七合并ID、16绑定SHA、四篇待审新SHA、工具修复与测试摘要。README/CONTRACT/分派入口/机器表刷新为现状，旧卡与§3.49/3.50保留历史。不要求用户转交返修或重新开七人；四篇只欠非A对A修订新字节末审，尚无结果，不伪造独立通过。
 
 - A收尾内容已推570a6a1与作者说明/字节收据对齐0b04cc1；独审请求已实际留言PR45#issuecomment-6206831156，N5收尾通知PR44#issuecomment-6206831398。仅表示请求已发布，未声称N7已开工或有新结果；45已合，若续审须新PR到A、只改reviews，四篇待审SHA见收尾报告。
+
+
+## 3.52 Windows源码测试交付准备与Arena沙盒恢复规则（2026-10-16）
+
+- 用户授权把独立脚本手册工具打包上传Google Drive供Windows实测，并要求把Arena Agent Mode沙盒状态丢失的预防/恢复写给后续agent。开工先push3dd4df6，up-to-date且工作区干净；不合master、不改游戏/编辑器/启动器，不上传原游戏包。
+- 新增长期文档`docs/ARENA_SANDBOX_RECOVERY.md`，在AGENTS.md开工60秒入口醒目链接，并加`docs/templates/AGENT_CHECKPOINT.md`。记录本仓库已观测的临时环境失效、HEAD/index旧但新版工作字节保留，不推断平台根因或承诺本地持久。预防为阶段提交/推送/核远端OID与版本、持久的小回执和授权交付；恢复先保护差异，再fetch/逐路径核Git blob及CRLF，按真实缺失/元数据错位分别处理。高级update-ref/read-tree只在全部路径核准和备份后手工操作，禁止reset hard/clean、删.git或替换仓库根，不把dirty误判为前人没提交。
+- 新增`script_manual/测试手册.bat`（ASCII/CRLF）：独立venv、依赖镜像回退、bootstrap预检、六闸门强制GUI、每次新日志、失败停住；`WINDOWS_TEST.md`列解压/启动/来源校验根目录/目视搜索导航/构建EXE/脱敏日志回报。不会自动上传日志或运行游戏。
+- 新增`make_source_package.py`：只从干净已提交checkout的Git白名单与27个实际来源依赖收集源码/证据，不装游戏或整份语料；含N1共享解析器core、BDF小收据及六闸门所需合成测试/静态工具。拒绝越界/符号链接、缺证/错SHA、原游戏/编译器二进制、仓库内输出和覆盖旧ZIP；逐文件manifest钉提交及SHA，ZIP CRC/成员摘要自验。用户运行/自检/构建不需要Git。新增4项纯合成打包回归，标准90=79通过+11缺PySide6跳过；N1独立32/32、恢复工具27/27、严格来源/full、ruff含spec、Windows static walk172路径/34源全0。Windows/Qt实机仍待用户，不算通过。
+- Drive已检查历史script_editor文件夹及其父目录；同级新建script_manual文件夹`1mxu6gDe2qLywlGR17NgtSuCShgQZom85`，没有更改分享权限。源码包需先提交推送，再构建并在无原包/.git的中文空格目录实际解压复跑；上传/远端校验成功后另追加真实回执，不提前宣称已上传。
+- 内容仍5135登记/20说明/16有限accepted/4battle pending/1排除，无stale；四篇A共同作者未自批。此次不扩语义或替代非A末审。

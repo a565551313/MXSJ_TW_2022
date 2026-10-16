@@ -7,9 +7,13 @@
 - 已精确核SHA激活九份N7模板；登录四篇由A按用户授权作有限代审，不冒称N7新结论。
 - A接手补完战斗四篇的指南/事实定位，因此四篇author均记A共同作者，**A不自批**；剩余工作仅为非A对新字节独立末审，不再让用户转述返修或重开七人。
 - 恢复工具布尔参数双repr缺陷已修；新增独立回归，并实际重核四条raw/正文编码链。N1在两棵隔离树重放，三产物一致；详情、范围与未知见[收尾报告](../docs/evidence/script_manual_A_finalize_20261016.md)。
-- 历史§3.49/3.50“未合入/3通过”等为当时快照，不是现状。当前源码已集成，但Qt、真实浏览器、Windows/EXE、游戏/原生/服务端仍未验收；本轮不上传、不打游戏包。
+- 历史§3.49/3.50“未合入/3通过”等为当时快照，不是现状。当前源码已集成，但Qt、真实浏览器、Windows/EXE、游戏/原生/服务端仍未验收；Windows源码测试包现按用户授权交付Google Drive，不打游戏包、不合master。
 
 ## 开始使用
+
+**Windows测试交付**：先读 [`WINDOWS_TEST.md`](WINDOWS_TEST.md)，源码ZIP完整解压后双击 `测试手册.bat`（创建venv、强制Qt测试、保留日志），再按说明打开窗口/检查交互或自己运行 `build_exe.bat`。不需要Git或原游戏包；Linux结果不冒充Windows实测。维护者打包用 `python script_manual/make_source_package.py --output <仓库外新ZIP>`，自动收集实际来源依赖、拒绝摘要不符/越界/覆盖、写逐文件SHA清单，不扫入整个游戏或语料。
+
+Arena agent接手/环境变化先读根 [`docs/ARENA_SANDBOX_RECOVERY.md`](../docs/ARENA_SANDBOX_RECOVERY.md)；不要把旧HEAD下的新版文件误删或重复补交。
 
 Windows 安装 Python ≥3.10 后双击 **`启动脚本手册.bat`**。缺依赖自动安装，官方源失败才尝试镜像；失败保留日志。不需要编辑器/游戏运行时，也不内置或调用游戏编译器（本工具不编译、不写包）。
 
@@ -56,7 +60,7 @@ python tools/devkit/check_windows_compat.py script_manual --strict
 
 单元测试使用 `tests/fixtures/` 固定样本，不从生产annotations/inventory构造期望值；真实数据另有不假定说明数量的结构冒烟；统一闸门已包含下面的严格来源/full检查，单独跑测试时仍须另跑 `validate --verify-evidence`。冻结夹具不是新的权威底稿，勿随Agent交付自动改数量。
 
-统一入口只读验证与合成测试，不做恢复/HTML构建；缺任一道工具或任一步非零都会返回失败，不把N1的32项藏在标准86项里，也不把GUI跳过当通过。
+统一入口只读验证与合成测试，不做恢复/HTML构建；缺任一道工具或任一步非零都会返回失败，不把N1的32项藏在标准手册测试数量里，也不把GUI跳过当通过。
 
 core测试不依赖Qt/游戏包；GUI测试在可用PySide6环境执行。`MXSJ_MANUAL_REQUIRE_GUI=1` 可禁止因Qt缺失而跳过GUI测试，Windows构建脚本已设置。离线浏览器验收是单独的开发检查，不要求用户安装浏览器自动化依赖。
 
@@ -64,4 +68,4 @@ Windows 双击 `build_exe.bat`：建 `.venv`、装依赖、自检和测试，全
 
 Linux spec干跑已尝试，但宿主缺 `libpython3.11.so.1.0`，在Analysis阶段停止；不算打包通过。Windows onedir/onefile均尚未实机构建。
 
-**Linux检查不等于Windows/EXE/游戏验收。** 本轮不上传网盘、不合master，不打游戏包。
+**Linux检查不等于Windows/EXE/游戏验收。** Windows源码测试包按用户授权交付Google Drive；不合master、不打游戏包。

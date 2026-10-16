@@ -11,6 +11,8 @@
 
 ## 1. 开始前的 60 秒
 
+> **Arena.ai Agent Mode 必看**：本仓库曾多次出现临时环境不可用，以及HEAD/索引回旧版但新工作文件仍在的状态。开工/恢复/交接先读 [`docs/ARENA_SANDBOX_RECOVERY.md`](docs/ARENA_SANDBOX_RECOVERY.md)。预防靠阶段提交推送、核远端完整OID、记录可复现环境；恢复先保文件、核远端、逐路径证明差异，不能直接reset hard/clean、删.git或覆盖仓库根，也不能把dirty误判为前人没提交。检查点模板见 [`docs/templates/AGENT_CHECKPOINT.md`](docs/templates/AGENT_CHECKPOINT.md)。
+
 1. 读本文 → 读 [`docs/STATUS.md`](docs/STATUS.md)（当前状态、红灯、待办）→ 读你要碰的子目录自己的 `README.md` / `DESIGN.md`。
 2. `git status --short && git branch --show-current && git log -5 --oneline`。看到 untracked 目录**不要删**，看到旧 HEAD **不要覆盖**：先对比远程再决定（历史上发生过快照回退）。
 3. 核对锁定输入未被改动：
