@@ -15,7 +15,7 @@ echo.
 
 where py >nul 2>nul
 if %errorlevel%==0 (
-    py -3 --version >nul 2>nul
+    py -3 -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>nul
     if not errorlevel 1 (
         set "PYTHON=py -3"
         goto python_found
@@ -24,9 +24,12 @@ if %errorlevel%==0 (
 
 where python >nul 2>nul
 if %errorlevel%==0 (
-    python --version
-    set "PYTHON=python"
-    goto python_found
+    python -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>nul
+    if not errorlevel 1 (
+        python --version
+        set "PYTHON=python"
+        goto python_found
+    )
 )
 
 echo [ERROR] Python 3.11 or newer was not found.
