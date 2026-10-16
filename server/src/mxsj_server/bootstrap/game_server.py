@@ -80,8 +80,10 @@ async def _serve_connection(
                 break
             if not line:
                 break
-            if len(line) > _MAX_FRAME_BYTES or not line.endswith(b"\n"):
+            if len(line) > _MAX_FRAME_BYTES:
                 response = {"ok": False, "error": {"code": "FRAME_TOO_LARGE", "message": "request frame too large"}}
+            elif not line.endswith(b"\n"):
+                response = {"ok": False, "error": {"code": "INVALID_FRAME", "message": "request must end with newline"}}
             else:
                 try:
                     request = json.loads(line.decode("utf-8"))
