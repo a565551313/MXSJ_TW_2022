@@ -4,7 +4,7 @@ import sys
 import unittest
 from pathlib import Path
 
-SERVER = Path(__file__).resolve().parents[2]
+SERVER = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(SERVER / "src"))
 
 from mxsj_server.contracts.common import DomainError
