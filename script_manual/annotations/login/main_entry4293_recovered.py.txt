@@ -1,13 +1,6 @@
-# MXSJ 恢复产物 · script.fls entry 4293 (id=0xd93f1735)
-# co_filename(原始)='script/main.py'
-# 转译阶段=baseline  密钥修复=False
-# keys=[234, 15, 89, 63, 82] bounds=[9772, 19571, 29383, 39151]
-# 生成时间=2026-10-15T14:41:11Z
-# 输入 sha256=8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72
-# uncompyle6 version 3.9.4.dev0
-# Python bytecode version base 2.5 (62131)
-#   Decompiled from: Python 3.11.2 (main, Apr  8 2026, 01:58:00) [GCC 12.2.0]
-# Embedded file name: script\main.py
+# N2 limited evidence excerpt; NOT complete source.
+# candidate SHA and original line ranges: N2_provenance.json.template.
+# candidate original lines 12-27; evidence=globals
 import globalhotkeyfunc, key, C_sys, gamectrl, time, log, permission, mdtasktrace
 g_DisableHotKey = False
 g_RelogServerName = None
@@ -24,19 +17,7 @@ def InitSize():
     gamectrl.InitUIStyle()
     game.FullScreen(0)
     return
-
-
-def IsIgnoreResLoaderCheck():
-    global g_IgnoreResLoaderCheck
-    return g_IgnoreResLoaderCheck
-
-
-def SetIgnoreResLoaderCheck(bCheck):
-    global g_IgnoreResLoaderCheck
-    g_IgnoreResLoaderCheck = bCheck
-    return
-
-
+# candidate original lines 41-61; evidence=start
 def StartStep1(mode=0):
     import charpath, cfg
     cfg.SetCanSave(False)
@@ -58,17 +39,7 @@ def InnerStart():
     gmcommanddata.UIMix()
     gmcommanddata.CGetMXCCName()
     return
-
-
-def OutPutError():
-    import time, os
-    if not os.path.exists('err'):
-        os.makedirs('err')
-    txt = '%d-%d-%d-%d-%d-%d' % time.localtime(time.time())[:6]
-    filename = 'err/%s.txt' % txt
-    return
-
-
+# candidate original lines 73-130; evidence=close
 def CloseGame():
     import statisticsignal
     statisticsignal.Emit(statisticsignal.SS_CLOSE_GAME)
@@ -127,8 +98,7 @@ def CloseGame():
     gameprofile.EndCheckDlgShowTime()
     print 'End'
     return
-
-
+# candidate original lines 133-147; evidence=save_server
 def SaveServerData():
     import net, dlgbaozi, clickcounter, hotkeycounter, dlgsale, imnewgamemgr, cursorclicklog, scheduleclicklog, activityclicklog, personaccoutlog
     netobj = net.g_Net
@@ -144,8 +114,7 @@ def SaveServerData():
 
         return True
     return False
-
-
+# candidate original lines 150-225; evidence=restart
 def Restart(flag=0, logout=True):
     global Loop
     global RestartTimes
@@ -222,13 +191,11 @@ def Restart(flag=0, logout=True):
     import chatwnd
     chatwnd.g_MainPanel = chatpanel
     return
-
-
+# candidate original lines 228-289; evidence=restart_slots
 g_RestartSaveList = None
 g_RestartSaveObjs = [
  (
-  'netserver', ['g_Proxy', 'g_LoginServerIP', 'g_LoginServePort', 'g_LoginServer', 'g_KFServerID', 
-   'g_LoginServerID']),
+  'netserver', [15, 16, 17, 18, 19, 20]),
  (
   'dlgshutdown', ['g_DelayTime', 'g_Keyword', 'g_NoShutdown', 'g_SetTime']),
  (
@@ -287,7 +254,7 @@ def RestartRestore():
     g_RestartSaveList = None
     return
 
-
+# candidate original lines 291-341; evidence=quick
 def RestartQuickLogin(loginKey, heroID):
     import selectserver, netlogin, world, misc, chatoutput, netserver
     proxy = selectserver.g_Proxy
@@ -326,7 +293,7 @@ def RestartQuickLogin(loginKey, heroID):
         netobj.m_HeroID = heroID
         netobj.m_LoginKey = loginKey
         if proxy:
-            print 'sNz!!!!!', proxy
+            print '連接代理!!!!!', proxy
             p = proxy.find(':')
             netobj.m_Proxy = proxy
             netobj.Connect(proxy[:p], int(proxy[p + 1:]))
@@ -339,8 +306,7 @@ def RestartQuickLogin(loginKey, heroID):
             netobj.Connect()
     net.g_Net = netobj
     return
-
-
+# candidate original lines 344-417; evidence=reconnect
 def RestarConfirm(ip, port, idx, pwd):
     import selectserver, netlogin, world, misc
     proxy = selectserver.g_Proxy
@@ -371,7 +337,7 @@ def RestarConfirm(ip, port, idx, pwd):
     netobj.m_Idx = idx
     netobj.m_Pwd = pwd
     if proxy:
-        print 'sNz!!!!!', proxy
+        print '連接代理!!!!!', proxy
         p = proxy.find(':')
         netobj.m_Proxy = proxy
         netobj.Connect(proxy[:p], int(proxy[p + 1:]))
@@ -415,13 +381,7 @@ def RestarConfirmEx(idx, pwd, proxy_port_ip_list):
     import netquicklogin
     netquicklogin.StartQuickTimer()
     return
-
-
-def GetCurFrame():
-    global g_iCurFrame
-    return g_iCurFrame
-
-
+# candidate original lines 425-490; evidence=mainloop
 def MainLoop(mousex, mousey):
     global g_iCurFrame
     g_iCurFrame += 1
@@ -488,8 +448,7 @@ def MainLoop(mousex, mousey):
         newsoundinterface.Loop()
     log.Loop()
     return 0
-
-
+# candidate original lines 493-516; evidence=moduleloop
 class CModuleLoop(object):
     m_Loops = {}
 
@@ -514,8 +473,7 @@ class CModuleLoop(object):
             pass
 
         return
-
-
+# candidate original lines 519-544; evidence=net_multi
 def IsTestMultiProcessServerCmd():
     return True
 
@@ -542,8 +500,7 @@ def NetMultiProcessServerCmd():
     if permission.IsOpenDragonpkNetLog():
         dragonlogmgr.CollectUnpackTime(fTotalTime)
     return
-
-
+# candidate original lines 547-582; evidence=warloop
 def WarLoop(mousex, mousey):
     import dlgwarrecord
     if not dlgwarrecord.IsWarRecPause():
@@ -580,141 +537,7 @@ Loop = MainLoop
 
 def InWar():
     return Loop == WarLoop
-
-
-g_HideWindowData = {}
-
-def GetHideWindowData(aimString):
-    global g_HideWindowData
-    return g_HideWindowData.get(aimString)
-
-
-def CalHideWindowData():
-    ClearHideWindowData()
-    import interface, dlgnpc
-    npcDlgNum = 0
-    for shadow in interface.g_DialogList:
-        if shadow and isinstance(shadow.Get(), dlgnpc.CNpcDlgBase):
-            npcDlgNum += 1
-
-    g_HideWindowData['npcDlgNum'] = npcDlgNum
-    return
-
-
-def ClearHideWindowData():
-    global g_HideWindowData
-    g_HideWindowData = {}
-    return
-
-
-def HideWindow(exit=True):
-    import interface, combdialog, world, dlgwarrecord, netgm, wrapinterface
-    netgm.SynHotKeyEsc()
-    import popupmgr
-    oTempList = interface.g_DialogList
-    num = len(oTempList)
-    cnt = popupmgr.GetPopupMgr().EscFunc()
-    CalHideWindowData()
-    try:
-        import handobj
-        if handobj.IsHand():
-            cnt += 1
-        handobj.Clear()
-        if world.g_RightClickCallback:
-            world.g_RightClickCallback()
-            cnt += 1
-    except:
-        pass
-
-    dlg = None
-    bSend = False
-    for idx in xrange(num - 1, -1, -1):
-        if num != len(oTempList) and not bSend:
-            LOG('DialogList׳QܡAнT{D', dlg)
-            bSend = True
-        if idx >= len(oTempList):
-            continue
-        ds = oTempList[idx]
-        if ds is None or not ds.Get() or getattr(ds.Get(), 'm_IsIgnoreEsc', False):
-            continue
-        if isinstance(ds.Get(), dlgwarrecord.CRecordCtrlDlg):
-            cnt += 1
-            continue
-        dlg = ds.Get()
-        if dlg and dlg.GetShow():
-            cnt += 1
-            if hasattr(dlg, 'CloseWindow'):
-                dlg.CloseWindow()
-            elif hasattr(dlg, 'm_CloseBtn') and isinstance(dlg.m_CloseBtn, interface.CButton):
-                dlg.m_CloseBtn.LeftUp()
-            elif isinstance(dlg, combdialog.CCombDialog) and dlg.GetObject('m_CloseBtn'):
-                print 'combdialog.m_CloseBtn.LeftUp()'
-                dlg.GetObject('m_CloseBtn').LeftUp()
-            else:
-                dlg.SetShow(False)
-
-    for refobj in wrapinterface.g_TipsRefList:
-        obj = refobj.Get()
-        if obj and obj.GetShow():
-            cnt += 1
-            obj.SetShow(False)
-
-    import mainmenu, dlgmap, dlgworldmap, zoomui
-    try:
-        mainmenu.g_MainMenu.ShowTarget(None)
-    except:
-        pass
-
-    if dlgmap.IsMinimapShow():
-        dlgmap.HideMinimap()
-        cnt += 1
-    if dlgworldmap.IsWorldMapShow():
-        dlgworldmap.HideW9$ldMap()
-        cnt += 1
-    if zoomui.IsZoomShow():
-        zoomui.HideZoom()
-        cnt += 1
-    if cnt == 0 and exit:
-        import popmenu
-        popmenu.CQuitItem.OnExit()
-    ClearHideWindowData()
-    return
-
-
-def CancelWindow():
-    import interface, commondialog
-    for ds in interface.g_DialogList:
-        dlg = ds.Get()
-        if dlg and dlg.GetShow():
-            try:
-                if isinstance(dlg, commondialog.CMessageBox) and hasattr(dlg, 'm_bCloseFunc') and dlg.m_bCloseFunc:
-                    dlg.DoCancel()
-            except AttributeError:
-                pass
-
-    return
-
-
-g_ExitDialog = None
-
-def SaveClientData():
-    import ratio, dlgmap, teamui
-    mdtasktrace.GetModel().SaveLocal()
-    dlgmap.SaveFindDialogInfo()
-    import history_encryptnew
-    history_encryptnew.save_last()
-    import chatinput
-    chatinput.SaveHistoryInput()
-    import abtest
-    abtest.SaveServerFlag()
-    teamui.SendReturnLog()
-    import dlgbaozi
-    dlgbaozi.SaveEmoteText()
-    import yardviewsignal
-    yardviewsignal.Emit(yardviewsignal.SS_SAVEYARD_LOCAL_IFNEEDED)
-    return
-
-
+# candidate original lines 718-798; evidence=exit
 def ExitGame():
     global Quit
     if not gamectrl.IsShowMainPage():
@@ -722,7 +545,10 @@ def ExitGame():
         return
     import hero, net
     if hasattr(hero, 'g_ID') and hero.g_ID and not C_sys.IsKeyDown(key.VK_CTRL) and net.g_Net:
-        RealExit(True, ('bqAȾH...', 'bqAȾH...', 'bqAȾH...', 'bqAȾH...'))
+        RealExit(True, ('正在從服務器獲取信息...',
+                        '正在從服務器獲取信息...',
+                        '正在從服務器獲取信息...',
+                        '正在從服務器獲取信息...'))
     else:
         RealExit(True, None)
     if net.g_Net and hasattr(hero, 'g_ID') and hero.g_ID:
@@ -782,18 +608,45 @@ def RealExit(bPopupDialog, daymsg):
             return
         if hasattr(hero, 'g_Hero') and hero.g_Hero and hero.g_Hero.IsSale():
             import usermacro
-            usermacro.PROMPT_MSG('hXCN۰ʶiJu\\uA')
+            usermacro.PROMPT_MSG('退出遊戲將自動進入離線擺攤狀態')
         if daymsg:
             import dlgexitinfo
             dlgexitinfo.OpenExitInfoDlg()
         else:
-            g_ExitDialog = commondialog.ShowNewMessageBox('ATw{bNnhXC?', ('sn', '}C',
-                                                                          ''), (doreturn, doexit, docancel))
+            g_ExitDialog = commondialog.ShowNewMessageBox('你確定現在就要退出遊戲嗎?', ('重新登錄',
+                                                                                                                                   '離開遊戲',
+                                                                                                                                   '取消'), (doreturn, doexit, docancel))
     elif g_ExitDialog:
         g_ExitDialog.UpdateDayMsg(daymsg)
     return
+# candidate original lines 744-769; evidence=doreturn
+def doreturn(dlg):
+    global g_ExitDialog
+    import net, log
+    log.DelMgr()
+    import statisticsignal
+    statisticsignal.Emit(statisticsignal.SS_RETURNLOGIN)
 
+    def _relogin(obj, t, dummy):
+        if t < 30:
+            return (
+             t + 1, dummy)
+        elif net.g_Net and not net.g_Net.IsSent() and t < 90:
+            return (
+             t + 1, dummy)
+        import taiwanspecial
+        taiwanspecial.Reset800x600WhenLogin()
+        Restart()
+        return
 
+    dlg.CreatePyCommand(1, _relogin, 1, dlg)
+    import netquicklogin
+    netquicklogin.NormalLogout()
+    if net.g_Net:
+        net.g_Net.m_IsRelogin = True
+    g_ExitDialog = None
+    return
+# candidate original lines 801-837; evidence=clear_keys
 def ClearHotKey():
     _magickeys = (key.VK_F1, key.VK_F2, key.VK_F3, key.VK_F4, key.VK_F5, key.VK_F6, key.VK_F7, key.VK_F8)
     _chatkeys = (key.VK_PAGEUP, key.VK_PAGEDOWN, (key.VK_ALT, key.VK_1), (key.VK_ALT, key.VK_2), (key.VK_ALT, key.VK_3),
@@ -831,149 +684,7 @@ def ClearHotKey():
         key.RegisterHotKey(hk)
 
     return
-
-
-g_DelayF9 = None
-g_TickF9 = False
-
-def IsHidePlayer():
-    return True if g_DelayF9 else False
-
-
-def ReleaseF9():
-    global g_DelayF9
-    if g_DelayF9:
-        g_DelayF9.Release()
-        g_DelayF9 = None
-    return
-
-
-def switchplayer(tick=-1):
-    global g_DelayF9
-    global g_TickF9
-    import world, acteyectrl, usermacro, walkerhidecheck
-    if acteyectrl.GetActEyeCtrl().IsBegin():
-        usermacro.PROMPT_MSG('ʵLkϥΦ\\')
-        return
-    walkerhidecheck.GetChecker().OnSwitchPlayerShow(not world.g_HidePlayer & 1)
-    world.HideCourty(10, not world.g_HidePlayer & 1)
-    world.HidePlayer(1, not world.g_HidePlayer & 1)
-    if g_DelayF9:
-        ReleaseF9()
-    else:
-
-        def CancelF9(obj, tick):
-            obj.m_Tick = tick
-            if tick > 0:
-                import world
-                world.ShowHotKeyTips()
-                return (tick - 1,)
-            switchplayer()
-            return
-
-        if tick < 0:
-            tick = 1800
-        import interface, misc
-        g_DelayF9 = interface.CBaseObject(None)
-        if not misc.IsTWServer():
-            g_DelayF9.CreatePyCommand(30, CancelF9, tick)
-        g_DelayF9.m_Tick = tick
-        import clickcounter
-        clickcounter.Log('F9')
-    g_TickF9 = True
-    return
-
-
-g_TickF10 = False
-
-def switchsalebar(hidebar=-1):
-    global g_TickF10
-    import world
-    if hidebar < 0:
-        hidebar = not world.g_HideSaleBar
-    world.HideCourty(11, hidebar)
-    world.HideSaleBar(hidebar)
-    if hidebar:
-        import clickcounter
-        clickcounter.Log('F10')
-    g_TickF10 = True
-    return
-
-
-g_DelayF11 = None
-g_TickF11 = False
-
-def ReleaseF11():
-    global g_DelayF11
-    if g_DelayF11:
-        g_DelayF11.Release()
-        g_DelayF11 = None
-    return
-
-
-def switchteamleader(tick=-1):
-    global g_DelayF11
-    global g_TickF11
-    import world, acteyectrl, usermacro
-    if acteyectrl.GetActEyeCtrl().IsBegin():
-        usermacro.PROMPT_MSG('ʵLkϥΦ\\')
-        return
-    v = not world.g_HidePlayer & 32
-    world.HideCourty(10, v)
-    world.HidePlayer(32, v)
-    if v:
-        import clickcounter
-        clickcounter.Log('F11')
-    if g_DelayF11:
-        ReleaseF11()
-    else:
-
-        def CancelF11(obj, tick):
-            obj.m_Tick = tick
-            if tick > 0:
-                import world
-                world.ShowHotKeyTips()
-                return (tick - 1,)
-            switchteamleader()
-            return
-
-        if tick < 0:
-            tick = 3600
-        import interface
-        g_DelayF11 = interface.CBaseObject(None)
-        g_DelayF11.CreatePyCommand(30, CancelF11, tick)
-        g_DelayF11.m_Tick = tick
-    g_TickF11 = True
-    return
-
-
-def switchdialog():
-    import world
-    world.HideDialog(not world.g_HideDialog)
-    import clickcounter
-    clickcounter.Log('F12')
-    return
-
-
-g_SnapshotBG = None
-Snapshotback = None
-
-def selecthotmagic(idx):
-    import dlgsysopt
-    if dlgsysopt.DoFKeyCallback(idx + 1):
-        return
-    if C_sys.IsKeyDown(key.VK_ALT):
-        return
-    import warui
-    oShortcut = warui.GetMagicShortKeyDlg()
-    if not oShortcut:
-        return
-    import shortcut, statisticsignal
-    shortcut.CShortcut.DoWithPos(oShortcut.GetShortcutType(), idx)
-    statisticsignal.Emit(statisticsignal.SS_WAR_MAGIC_WAY, 'ֱ')
-    return
-
-
+# candidate original lines 981-1061; evidence=hotkeys
 def RegisterDefaultHotKey():
     import interface
     key.RegisterHotKey(key.VK_CLOSE, ExitGame)
@@ -1011,7 +722,7 @@ def RegisterDefaultHotKey():
                 global g_SnapshotBG
                 import usermacro, mgrscreenshot
                 mgrscreenshot.AddScreenShotPath(path)
-                usermacro.NORMAL_MSG('IϦ\\AwOsܹCؿU#s(55,screen)#Y\U000e7a21C')
+                usermacro.NORMAL_MSG('截圖成功，已保存至遊戲目錄下的#s(55,screen)#Y文件夾。')
                 g_SnapshotBG = None
                 return
 
@@ -1055,62 +766,7 @@ def RegisterChatHotKey():
 
     key.RegisterAltHotKey(key.VK_S, OnHotEnter)
     return
-
-
-def RegisterChannelHotKey():
-    import audiomgr
-    for k in (key.VK_COMMA, key.VK_PERIOD, key.VK_WAVE):
-        key.RegisterHotKey(k)
-
-    key.RegisterAltHotKey(key.VK_WAVE, audiomgr.OnStartWithHotkey)
-
-    def switchchannel(inc):
-        import hero, chatinput, channel
-        if C_sys.IsKeyDown(key.VK_SHIFT) or C_sys.IsKeyDown(key.VK_CTRL):
-            return
-        preIdx = chatinput.ChannelID2Index(channel.g_Channel)
-        showLst = chatinput.ComputeShowList()
-        try:
-            idx = showLst.index(preIdx)
-            iLen = len(showLst)
-            idx = (idx + inc + iLen) % iLen
-        except ValueError:
-            idx = 0
-
-        channelID = chatinput.Index2ChannelID(showLst[idx])
-        channel.SetChannel(channelID)
-        return
-
-    def PressChenelKey():
-        import interface, mainmenu
-        edit = interface.GetActiveEdit()
-        oChatInput = mainmenu.GetChatInputObj()
-        if oChatInput is not None:
-            chat_input = oChatInput
-        else:
-            return
-        if edit == chat_input:
-            switchchannel(1)
-        return
-
-    key.RegisterAltHotKey(key.VK_COMMA, switchchannel, -1)
-    key.RegisterAltHotKey(key.VK_PERIOD, switchchannel, 1)
-    key.RegisterAltHotKey(key.VK_0, PressChenelKey)
-    return
-
-
-def OnSwitchSkillDlg():
-    import skillmagicdefines, skillmagicsignal
-    skillmagicsignal.Emit(skillmagicsignal.SS_SKILLMAGIC_SWITCHOPEN, skillmagicdefines.S_PAGE_SKILL)
-    return
-
-
-def OnSwitchMagicDlg():
-    import skillmagicdefines, skillmagicsignal
-    skillmagicsignal.Emit(skillmagicsignal.SS_SKILLMAGIC_SWITCHOPEN, skillmagicdefines.S_PAGE_MAGIC)
-    return
-
-
+# candidate original lines 1118-1342; evidence=switch
 def SwitchHotKey(IsWar, bOldWar=None):
     global g_DisableHotKey
     import dlgsysopt
@@ -1215,33 +871,33 @@ def SwitchHotKey(IsWar, bOldWar=None):
         key.RegisterCtrlHotKey(key.VK_DEC, globalhotkeyfunc.DoEmote, key.VK_DEC, 7)
         key.RegisterCtrlHotKey(key.VK_EQUAL, globalhotkeyfunc.DoEmote, key.VK_EQUAL, 6)
         key.RegisterCtrlHotKey(key.VK_WAVE, globalhotkeyfunc.DoEmote, key.VK_WAVE, 5)
-    key.RegisterHotKey(hotkeys['Hɭ'], openstate)
-    key.RegisterHotKey(hotkeys['l~ɭ'], opensummon)
-    key.RegisterHotKey(hotkeys['ޯɭ'], OnSwitchSkillDlg)
-    key.RegisterHotKey(hotkeys['ۦɭ'], OnSwitchMagicDlg)
-    key.RegisterHotKey(hotkeys['nͬɭ'], mainmenumsg, 9)
-    key.RegisterHotKey(hotkeys['~ɭ'], mainmenumsg, 2)
-    key.RegisterHotKey(hotkeys['yɭ'], mainmenumsg, 4)
-    key.RegisterHotKey(hotkeys['Ȭɭ'], mainmenumsg, 6)
-    key.RegisterHotKey(hotkeys['ɭ'], teamop)
-    key.RegisterHotKey(hotkeys['ɭ'], mainmenumsg, 7)
-    key.RegisterHotKey(hotkeys[''], mainmenumsg, 20)
-    key.RegisterHotKey(hotkeys['ʧ@'], mainmenumsg, 21)
-    key.RegisterHotKey(hotkeys['ۤ'], dobbmake)
-    key.RegisterHotKey(hotkeys['N'], doachieve)
-    key.RegisterHotKey(hotkeys['tγ]m'], openSysopt)
-    key.RegisterHotKey(hotkeys['NPCP\U000aac6ea'], switchHideAround)
-    key.RegisterHotKey(hotkeys['CI'], gamescreenshot)
+    key.RegisterHotKey(hotkeys['人物界面'], openstate)
+    key.RegisterHotKey(hotkeys['召喚獸界面'], opensummon)
+    key.RegisterHotKey(hotkeys['技能界面'], OnSwitchSkillDlg)
+    key.RegisterHotKey(hotkeys['招式界面'], OnSwitchMagicDlg)
+    key.RegisterHotKey(hotkeys['好友界面'], mainmenumsg, 9)
+    key.RegisterHotKey(hotkeys['物品界面'], mainmenumsg, 2)
+    key.RegisterHotKey(hotkeys['鍛造界面'], mainmenumsg, 4)
+    key.RegisterHotKey(hotkeys['任務界面'], mainmenumsg, 6)
+    key.RegisterHotKey(hotkeys['隊伍界面'], teamop)
+    key.RegisterHotKey(hotkeys['幫派界面'], mainmenumsg, 7)
+    key.RegisterHotKey(hotkeys['表情'], mainmenumsg, 20)
+    key.RegisterHotKey(hotkeys['動作'], mainmenumsg, 21)
+    key.RegisterHotKey(hotkeys['幻化'], dobbmake)
+    key.RegisterHotKey(hotkeys['成就'], doachieve)
+    key.RegisterHotKey(hotkeys['系統設置'], openSysopt)
+    key.RegisterHotKey(hotkeys['隱藏NPC周圍玩家'], switchHideAround)
+    key.RegisterHotKey(hotkeys['遊戲截圖'], gamescreenshot)
     key.RegisterHotKey(key.VK_TAB, dlgmap.SwitchMinimap)
-    key.RegisterHotKey(hotkeys['@ɦa'], dlgworldmap.ShowSwitchWorldMap)
-    key.RegisterHotKey(hotkeys['Mɭ'], dlgride.ShowSwitch)
+    key.RegisterHotKey(hotkeys['世界地圖'], dlgworldmap.ShowSwitchWorldMap)
+    key.RegisterHotKey(hotkeys['坐騎界面'], dlgride.ShowSwitch)
     import warui
-    key.RegisterHotKey(hotkeys['۰ʾ\u0530'], warui.AutoFight)
-    key.RegisterHotKey(hotkeys['ڷQF'], openLycos)
-    key.RegisterHotKey(hotkeys['ɭ'], openCalender)
-    key.RegisterHotKey(hotkeys['ڷQD'], openZhidao)
-    key.RegisterHotKey(hotkeys['H⤤߬ɭ'], globalhotkeyfunc.OpenConsignmall)
-    key.RegisterHotKey(hotkeys['~'], globalhotkeyfunc.OpenTjTradeCenter)
+    key.RegisterHotKey(hotkeys['自動戰鬥'], warui.AutoFight)
+    key.RegisterHotKey(hotkeys['夢想精靈'], openLycos)
+    key.RegisterHotKey(hotkeys['日曆界面'], openCalender)
+    key.RegisterHotKey(hotkeys['夢想知道'], openZhidao)
+    key.RegisterHotKey(hotkeys['寄售中心界面'], globalhotkeyfunc.OpenConsignmall)
+    key.RegisterHotKey(hotkeys['精品交易中心'], globalhotkeyfunc.OpenTjTradeCenter)
     if IsWar:
         import mxv, warui
 
@@ -1299,7 +955,7 @@ def SwitchHotKey(IsWar, bOldWar=None):
                     if len(pet.GetInitActiveSkills(petobj, True)) == 0:
                         flag = True
                 if ob and warui.UseDefaultMagic(ob, flag) == False and flag == False and hasattr(ob, 'GetDefaultMagicID') and ob.GetDefaultMagicID() is None:
-                    usermacro.PROMPT_MSG('٨S]mq{kN')
+                    usermacro.PROMPT_MSG('還沒有設置默認法術')
             return
 
         def selectdefaultmagic():
@@ -1310,25 +966,25 @@ def SwitchHotKey(IsWar, bOldWar=None):
                 warui.SelectDefaultMagic()
             return
 
-        key.RegisterHotKey(hotkeys['m'], doact, 4)
-        key.RegisterHotKey(hotkeys['O@'], doact, 5)
-        key.RegisterHotKey(hotkeys['A'], doact, 7)
-        key.RegisterHotKey(hotkeys['q{'], defaultattack)
-        key.RegisterHotKey(hotkeys['q{kN'], usedefaultmagic)
-        key.RegisterHotKey(hotkeys['q{kN'], selectdefaultmagic)
-        key.RegisterHotKey(hotkeys['\u0530D'], doact, 3)
-        key.RegisterHotKey(hotkeys['kNC'], openwardlg, 1)
-        key.RegisterHotKey(hotkeys['Ԫpɭ'], warui.DoCommandOpt, 1)
-        key.RegisterHotKey(hotkeys['SަC'], openwardlg, 2)
+        key.RegisterHotKey(hotkeys['防禦'], doact, 4)
+        key.RegisterHotKey(hotkeys['保護'], doact, 5)
+        key.RegisterHotKey(hotkeys['說服'], doact, 7)
+        key.RegisterHotKey(hotkeys['默認攻擊'], defaultattack)
+        key.RegisterHotKey(hotkeys['默認法術'], usedefaultmagic)
+        key.RegisterHotKey(hotkeys['選擇默認法術'], selectdefaultmagic)
+        key.RegisterHotKey(hotkeys['戰鬥道具'], doact, 3)
+        key.RegisterHotKey(hotkeys['法術列表'], openwardlg, 1)
+        key.RegisterHotKey(hotkeys['戰況界面'], warui.DoCommandOpt, 1)
+        key.RegisterHotKey(hotkeys['特技列表'], openwardlg, 2)
         if warui.IsShowWarriorSelect():
             key.RegisterHotKeyEx(key.VK_CTRL, world.WarCtrlDownCondition)
             key.RegisterHotKeyEx(key.VK_SHIFT, world.WarCtrlDownCondition)
             key.RegisterHotKeyEx(-key.VK_CTRL, world.WarCtrlUpCondition)
             key.RegisterHotKeyEx(-key.VK_SHIFT, world.WarCtrlUpCondition)
     else:
-        key.RegisterHotKey(hotkeys[''], mainmenumsg, 1)
-        key.RegisterHotKey(hotkeys[''], world.SwapSelect)
-        key.RegisterHotKey(hotkeys[''], world.GiveSelect)
+        key.RegisterHotKey(hotkeys['攻擊'], mainmenumsg, 1)
+        key.RegisterHotKey(hotkeys['交易'], world.SwapSelect)
+        key.RegisterHotKey(hotkeys['給予'], world.GiveSelect)
         key.RegisterHotKeyEx(key.VK_CTRL)
         key.RegisterHotKeyEx(key.VK_SHIFT)
         key.RegisterHotKeyEx(-key.VK_CTRL)
@@ -1336,240 +992,3 @@ def SwitchHotKey(IsWar, bOldWar=None):
     import modelbaseopt
     modelbaseopt.GetCBaseOptionModel().RegisterBossHotKey()
     return
-
-
-def RegisterSelectMagicHotKey(bIsRegister):
-    _magickeys = (key.VK_F1, key.VK_F2, key.VK_F3, key.VK_F4, key.VK_F5, key.VK_F6, key.VK_F7, key.VK_F8)
-    for (idx, k) in enumerate(_magickeys):
-        if bIsRegister:
-            key.RegisterHotKey(k, selecthotmagic, idx)
-        else:
-            key.RegisterHotKey(k, None)
-
-    return
-
-
-def OnSysHotkey(key):
-    return
-    import commondialog
-
-    def doexit(dlg):
-        CloseGame()
-        return
-
-    def doconntinue(dlg):
-        return
-
-    commondialog.ShowMessageBox('z(%s)QU, oivTzbw, ĳzˬdt, d차, T{tΦwAiC?' % key, ('~C', '}C'), (doconntinue, doexit))
-
-
-def SysUpdate(p, s):
-    C_sys.Update(p, s)
-    return
-
-
-g_Adsid = ''
-
-def CmdParam(p):
-    global g_Adsid
-    if p:
-        if type(p) == str:
-            if p.find('loadres:') != -1:
-                SetIgnoreResLoaderCheck(True)
-                import resloadasyncmgr
-                resloadasyncmgr.Instance().SetIsResLoadAsyncServer()
-    import log
-    log.StartLog()
-    print 'ǤJѼƬ', p
-    if type(p) != str:
-        return
-    import re
-    patt1 = re.compile('^adsid=(?P<adsid>[0-9]+).*')
-    mobj1 = patt1.match(p)
-    if mobj1:
-        adsid = mobj1.group('adsid')
-        if adsid:
-            g_Adsid = adsid
-        print 'ѪRadsidG', g_Adsid
-    if p.startswith('@'):
-        import pubdylogin
-        pubdylogin.CmdParam(p)
-        return
-    if mobj1:
-        return
-    import param
-    param.RunAferStartParam(p)
-    return
-
-
-def ClearCmdParam():
-    import pubdylogin
-    pubdylogin.CYWLoginInfoMgr.ClearCmdParam()
-    return
-
-
-def OnCrash():
-    import crashrpt
-    crashrpt.OnCrash()
-    return 'Ȥݲ`AШϥθ귽״_״_᭫}Ȥ'
-
-
-def OnError(errContent):
-    print errContent
-    return
-
-
-def OnWalkerError(WalkerObjList):
-    print 'VL{o{pUCWalkerObjectﹳSJ귽G'
-    for WalkerObj in WalkerObjList:
-        LOG('WalkerError', getattr(WalkerObj, 'm_SprPath', ''))
-
-    return
-
-
-def OnSpriteError(lst):
-    print 'q}hspr~AJsprɵo{ʤְ\U000a5eeaframerq'
-    for (filename, package) in lst:
-        LOG('Error Spr', filename, package)
-
-    return
-
-
-def GetOneoff():
-    import pubdylogin
-    return pubdylogin.CYWLoginInfoMgr.GetOneoff()
-
-
-def IsOneoff():
-    import pubdylogin
-    return pubdylogin.CYWLoginInfoMgr.IsOneoff()
-
-
-def IsOneoff2():
-    import pubdylogin
-    if not pubdylogin.CanUseNewVersion():
-        return False
-    import pubdylogin
-    return pubdylogin.CYWLoginInfoMgr.GetDYLoginKey()
-
-
-def OnSizeRestored():
-    gamectrl.OnSizeRestored()
-    return
-
-
-def SetRate(FullScreen=False):
-    import ratio, cfg
-    sRate = ratio.GetRatio() if FullScreen else cfg.GetData('mx.ini', 'Game', 'ratio')
-    try:
-        iRate = int(sRate)
-    except:
-        iRate = 2
-
-    (workAreaW, workAreaH) = C_sys.GetWorkArea()
-    if iRate > 1 and (workAreaH < 768 or workAreaW < 1024):
-        iRate = 1
-    if iRate == ratio.RATIO_800X600:
-        ratio.Set800x600()
-    elif iRate == ratio.RATIO_1366X768:
-        ratio.Set1366X768()
-    elif iRate == ratio.RATIO_1024X768:
-        ratio.Set1024x768()
-    elif iRate == ratio.RATIO_1366X708:
-        ratio.Set1366X708()
-    return
-
-
-def SetRateTryTime():
-    import cfg
-    try:
-        settry = cfg.GetData('mx.ini', 'Game', 'SetTryTime')
-    except:
-        settry = 'False'
-
-    if settry == 'True':
-        SetTryTime(180)
-    cfg.SaveData('mx.ini', 'Game', 'SetTryTime', 'False')
-    cfg.SaveData('mx.ini', 'Game', 'answer', '0')
-    return
-
-
-g_TryTimeObject = None
-
-def SetTryTime(time):
-    global g_TryTimeObject
-
-    def ChangeTime(obj, second, dlg):
-        import commondialog, cfg, netquicklogin
-        second -= 1
-        if second:
-
-            def DoExit(obj):
-                cfg.SaveData('mx.ini', 'Game', 'answer', '1')
-                commondialog.HideMessageBox()
-                return
-
-            def DoSave(obj):
-                cfg.SaveData('mx.ini', 'Game', 'answer', '1')
-                import usermacro
-                usermacro.PROMPT_MSG('zfҦ]mwOdAz]iHqL#Yt-tγ]m#n#Ynͬɭ]ms#nA#Ytγ]m#nӽո`fҦjpC')
-                commondialog.HideMessageBox()
-                return
-
-            def DoReturn(obj):
-                cfg.SaveData('mx.ini', 'Game', 'answer', '1')
-                try:
-                    oldrate = int(cfg.GetData('mx.ini', 'Game', 'oldratio'))
-                except:
-                    oldrate = 1
-
-                cfg.SaveData('mx.ini', 'Game', 'ratio', str(oldrate))
-                netquicklogin.Connect(False, 'fjp')
-                return
-
-            try:
-                answer = int(cfg.GetData('mx.ini', 'Game', 'answer'))
-            except:
-                answer = 0
-            else:
-                if answer:
-                    return
-                if dlg:
-                    dlg.m_Text = dlg.SetMessage('O_Ode]mfjpҦH#r#Y%d#n٭^e]m' % second)
-                else:
-                    dlg = commondialog.ShowMessageBox('O_Ode]mfjpҦH#r#Y%d#n٭^e]m' % second, ('Od]m',
-                                                                                             '٭'), (DoSave, DoReturn))
-                    dlg.m_ExitFunc = DoExit
-                    dlg.m_AutoCancel = False
-                    dlg.Capture(0)
-                return (second, dlg)
-        else:
-            try:
-                oldrate = int(cfg.GetData('mx.ini', 'Game', 'oldratio'))
-            except:
-                oldrate = 1
-
-            cfg.SaveData('mx.ini', 'Game', 'ratio', str(oldrate))
-            netquicklogin.Connect(False, 'fjp-2')
-            return
-        return
-
-    if g_TryTimeObject:
-        g_TryTimeObject.Release()
-        g_TryTimeObject = None
-    import interface
-    g_TryTimeObject = interface.CBaseObject(None)
-    g_TryTimeObject.CreatePyCommand(30, ChangeTime, time, None)
-    return
-
-
-def OnError(ErrorContent):
-    import errorchk
-    if ErrorContent:
-        ErrorContent = ErrorContent.replace('\n', '\r\n')
-        errorchk.CChecker.ParseLogTxt(ErrorContent)
-        errorchk.CChecker.SendErrLog()
-    return
-
-
-return

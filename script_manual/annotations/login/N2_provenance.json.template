@@ -1,0 +1,269 @@
+{
+  "baseline": "9b0dea799768aaacbb967ffc59f45753970752be",
+  "python": "3.11.2",
+  "versions": {
+    "uncompyle6": "3.9.3",
+    "xdis": "6.1.8",
+    "spark-parser": "1.9.0",
+    "click": "8.5.0"
+  },
+  "tools": {
+    "tools/decompiler/recover_entries.py": "152dbc28864a10c8b7188df7ae91c8039b0b8c0b056d98591e407b897e39c458",
+    "tools/decompiler/batch_decompile.py": "a74742231e04c018c3f63452cfc859c20c6404fd73891eae9076bfcf8185b4e8",
+    "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+  },
+  "entries": [
+    {
+      "entry_index": 337,
+      "entry_id": 276057508,
+      "stored_sha256": "2106d4958fbb8726d7ce5802ffdbdb73bd7b30f391c50b059a45d83638379045",
+      "offset": 16656805,
+      "compressed_length": 5565,
+      "pyc_sha256": "a5b2703af8e4079e00ac6676c3679f7ca5d62e98ca20ac56de9943b5d9c2255f",
+      "pyc_length": 10343,
+      "candidate_sha256": "cf0040aa4e905be9c7991b4d94af562a7fc79de939c4b664da40c37e816377ff",
+      "body_sha256": "984cbe6ac7d2ed0a1479d2bcb72ea34a2fc89756017d1d95ab0f9f2195e925ac",
+      "raw_u6_sha256": "92c4bb5b90ac4ab91950f2c19f4cf09b18de2e2975534a6e0eec46f9ed805803",
+      "raw_state": "uncompyle6",
+      "co_filename": "script/login/mainpage.py",
+      "stage": "baseline",
+      "keys": [
+        226,
+        28,
+        112,
+        247,
+        187
+      ],
+      "bounds": [
+        2163,
+        4281,
+        6390,
+        8473
+      ],
+      "raw_plus_decode_equals_candidate_body": true
+    },
+    {
+      "entry_index": 4293,
+      "entry_id": 3644790581,
+      "stored_sha256": "5a3f694d7e5f9dec58b5ca44cef5724c40bde227319c321ffcb6cdd58c220dc6",
+      "offset": 16890366,
+      "compressed_length": 22151,
+      "pyc_sha256": "16856d53d2eb4dc83eab1781b615cbac76904f5d14764dbb5d78996f9a6704c9",
+      "pyc_length": 48492,
+      "candidate_sha256": "6c0a5fc4a28d3be894294cd21b748d9534a7b4f34d66d6bf27ee86c78e3d8a04",
+      "body_sha256": "bf5051dc501a38128b4cf33dcdd17d5e2e99f2f274838af6e672e14d9edb05dc",
+      "raw_u6_sha256": "99ccc611ec0a3d0c45c03816234cdf9ba8c47167a595686545e8ee517d15a57e",
+      "raw_state": "uncompyle6",
+      "co_filename": "script/main.py",
+      "stage": "baseline",
+      "keys": [
+        234,
+        15,
+        89,
+        63,
+        82
+      ],
+      "bounds": [
+        9772,
+        19571,
+        29383,
+        39151
+      ],
+      "raw_plus_decode_equals_candidate_body": true
+    },
+    {
+      "entry_index": 4007,
+      "entry_id": 3420703632,
+      "stored_sha256": "743c75c5d5751c28b22ddedb0633428814a2ba431b5ae3c84aa865b1f426b6e5",
+      "offset": 16829076,
+      "compressed_length": 19399,
+      "pyc_sha256": "aed0f99833b97cbcd46cd56f258e883d79a37d334b99baee50200bb4f66373b6",
+      "pyc_length": 44370,
+      "candidate_sha256": "0b0ac11a25e036644c4cfa6c2c9a200b71458f7b1b0bd7162c68336db9405c6a",
+      "body_sha256": "bc2b5bff78d3feb473227767e9172eba21346f7fd6adad67687eb9ec97eba18d",
+      "raw_u6_sha256": "ee1fc8ef1f4f4d5ec8c64693a0ac073cc13507ab2f1da28a5501357aebef4de1",
+      "raw_state": "uncompyle6",
+      "co_filename": "script/login/register.py",
+      "stage": "baseline",
+      "keys": [
+        222,
+        84,
+        13,
+        219,
+        82
+      ],
+      "bounds": [
+        8966,
+        17948,
+        26868,
+        35778
+      ],
+      "raw_plus_decode_equals_candidate_body": true
+    },
+    {
+      "entry_index": 4806,
+      "entry_id": 4117897820,
+      "stored_sha256": "bb79f84ce986f212300c179cd0d6595ee3efee0b0b9a3f186e3ff50a83a53b50",
+      "offset": 14936454,
+      "compressed_length": 19115,
+      "pyc_sha256": "b6f623fbf5039a4ce648e15e5f2f1be288ff427b3a49649554f69a52f378339c",
+      "pyc_length": 45354,
+      "candidate_sha256": "9c548fa5a7756622c5492c92aca74ef6713048ba466f98d58c2543d83a18e96b",
+      "body_sha256": "dd90527be51d315b6a0e6cafce32f4ad08e74040153d3fbc141c239cac550929",
+      "raw_u6_sha256": "e1dcc12b0c5cc5843e23582ce454bd91db32ce05e17239fffec1e44702950df9",
+      "raw_state": "uncompyle6",
+      "co_filename": "script/login/loginin.py",
+      "stage": "baseline",
+      "keys": [
+        135,
+        64,
+        230,
+        223,
+        234
+      ],
+      "bounds": [
+        9107,
+        18236,
+        27391,
+        36468
+      ],
+      "raw_plus_decode_equals_candidate_body": true
+    }
+  ],
+  "main_excerpt_mapping": [
+    {
+      "evidence": "globals",
+      "candidate_start": 12,
+      "candidate_end": 27,
+      "excerpt_start": 4,
+      "excerpt_end": 19
+    },
+    {
+      "evidence": "start",
+      "candidate_start": 41,
+      "candidate_end": 61,
+      "excerpt_start": 21,
+      "excerpt_end": 41
+    },
+    {
+      "evidence": "close",
+      "candidate_start": 73,
+      "candidate_end": 130,
+      "excerpt_start": 43,
+      "excerpt_end": 100
+    },
+    {
+      "evidence": "save_server",
+      "candidate_start": 133,
+      "candidate_end": 147,
+      "excerpt_start": 102,
+      "excerpt_end": 116
+    },
+    {
+      "evidence": "restart",
+      "candidate_start": 150,
+      "candidate_end": 225,
+      "excerpt_start": 118,
+      "excerpt_end": 193
+    },
+    {
+      "evidence": "restart_slots",
+      "candidate_start": 228,
+      "candidate_end": 289,
+      "excerpt_start": 195,
+      "excerpt_end": 256
+    },
+    {
+      "evidence": "quick",
+      "candidate_start": 291,
+      "candidate_end": 341,
+      "excerpt_start": 258,
+      "excerpt_end": 308
+    },
+    {
+      "evidence": "reconnect",
+      "candidate_start": 344,
+      "candidate_end": 417,
+      "excerpt_start": 310,
+      "excerpt_end": 383
+    },
+    {
+      "evidence": "mainloop",
+      "candidate_start": 425,
+      "candidate_end": 490,
+      "excerpt_start": 385,
+      "excerpt_end": 450
+    },
+    {
+      "evidence": "moduleloop",
+      "candidate_start": 493,
+      "candidate_end": 516,
+      "excerpt_start": 452,
+      "excerpt_end": 475
+    },
+    {
+      "evidence": "net_multi",
+      "candidate_start": 519,
+      "candidate_end": 544,
+      "excerpt_start": 477,
+      "excerpt_end": 502
+    },
+    {
+      "evidence": "warloop",
+      "candidate_start": 547,
+      "candidate_end": 582,
+      "excerpt_start": 504,
+      "excerpt_end": 539
+    },
+    {
+      "evidence": "exit",
+      "candidate_start": 718,
+      "candidate_end": 798,
+      "excerpt_start": 541,
+      "excerpt_end": 621
+    },
+    {
+      "evidence": "doreturn",
+      "candidate_start": 744,
+      "candidate_end": 769,
+      "excerpt_start": 623,
+      "excerpt_end": 648
+    },
+    {
+      "evidence": "clear_keys",
+      "candidate_start": 801,
+      "candidate_end": 837,
+      "excerpt_start": 650,
+      "excerpt_end": 686
+    },
+    {
+      "evidence": "hotkeys",
+      "candidate_start": 981,
+      "candidate_end": 1061,
+      "excerpt_start": 688,
+      "excerpt_end": 768
+    },
+    {
+      "evidence": "switch",
+      "candidate_start": 1118,
+      "candidate_end": 1342,
+      "excerpt_start": 770,
+      "excerpt_end": 994
+    }
+  ],
+  "main_excerpt_sha256": "b2b6d636b2faced29ebab0f87945bc947574c4b5ba980ea6faa719bf90debd80",
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "data_archive_sha256": "5f96bdb23d4555c8014ac4a4a65819f48a3251b95a8cc94dff09ee7e2cc0a12c",
+  "round2_body_equal": {
+    "337": true,
+    "4293": true,
+    "4007": true,
+    "4806": true
+  },
+  "legacy_three_exact_body_equal": {
+    "337": true,
+    "4007": true,
+    "4806": true
+  },
+  "note": "full candidate hashes include timestamp; remove exactly first six LF lines only for body comparisons. No other normalization/ignored lines."
+}

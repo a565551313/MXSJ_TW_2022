@@ -5,7 +5,7 @@
   "path": "script/login/mainpage.py",
   "owner": "C",
   "domain": "login",
-  "author": "C",
+  "author": "N2 (new Arena session arena/a1839872-mxsj-tw-2022)",
   "source_status": "recovered_complete_not_original",
   "purpose": {
     "text": "登录首页控制：公告显示与刷新、登录/注册/退出入口、首页链接、版本信息与密码保护；TW/HK差异与Logo显示。",
@@ -83,7 +83,7 @@
         "text": "鼠标进入msgID=50的密码保护按钮时显示键盘监听风险提示。",
         "confidence": "static_reviewed",
         "evidence": [
-          "button"
+          "tips"
         ]
       },
       "calls": [],
@@ -97,7 +97,7 @@
         "text": "离开msgID=50按钮时清除提示。",
         "confidence": "static_reviewed",
         "evidence": [
-          "button"
+          "tips"
         ]
       },
       "calls": [],
@@ -124,7 +124,7 @@
       "signature": "(self, msgid)",
       "kind": "method",
       "summary": {
-        "text": "首页消息分发：1登录/选服，2注册或打开网页，3关闭游戏，4重启启动器，10/11/12公告/历史/客服，20 Logo，21 BBS，22 gameplayer，30刷新公告。",
+        "text": "首页消息分发含选服、注册/网页、关闭/启动器、链接与公告刷新。候选把11列入(10,11,12)，且存在history.txt读取分支，但_id2btn只有10/12，11在读取前索引可能失败；有效历史页行为待核。",
         "confidence": "static_reviewed",
         "evidence": [
           "messages"
@@ -182,7 +182,7 @@
         {
           "condition": "msgid in (10,11,12)",
           "effect": {
-            "text": "切换公告/历史/客服按钮启用状态，读取news.txt/history.txt/service.txt并写入公告输出框；客服文本替换BBS链接。",
+            "text": "候选进入(10,11,12)后用_id2btn[msgid]，但映射仅10和12；10读news.txt/缓存，11含history.txt读取，12读service.txt并替换BBS字串。11先行映射缺项使实际可达性待核。",
             "confidence": "static_reviewed",
             "evidence": [
               "messages"
@@ -222,10 +222,10 @@
         {
           "condition": "msgid == 30",
           "effect": {
-            "text": "限流180秒后按update.ini读取News/Service地址并发起HTTP刷新；显示“获取公告中”对话框。",
+            "text": "以C_sys.Record(t-g_RefreshTim<180)结果限流；按g_LangVersion选择Setting/HK节的News/Service，创建两个HTTP对象与取消框。计时单位和C_sys.Record语义未实测。",
             "confidence": "static_reviewed",
             "evidence": [
-              "messages"
+              "news_url"
             ]
           }
         }
@@ -236,7 +236,7 @@
       "signature": "(data, succeed)",
       "kind": "function",
       "summary": {
-        "text": "公告HTTP回调：succeed=False或响应头分隔符缺失时弹“刷新公告失敗”；成功后取正文写news.txt，失败时缓存g_News，并通知首页OnMessage(10)。",
+        "text": "公告HTTP回调：succeed为假或缺头分隔符时提示失败并返回；成功响应body写news.txt，只有写文件异常才缓存g_News；随后通知首页OnMessage(10)。",
         "confidence": "static_reviewed",
         "evidence": [
           "refresh"
@@ -298,7 +298,7 @@
       "signature": "(s, autoupdate=True)",
       "kind": "function",
       "summary": {
-        "text": "显示/隐藏首页；显示时创建CMainPage，设置默认按钮，设置系统标题，若上次刷新超过1800秒则延迟60帧自动刷新。",
+        "text": "s为假清g_MainPage；s为真时读refreshnews，候选在try的else内才构造面板/设默认按钮/标题并按autoupdate与tm+1800条件调度CreatePyCommand(60)。该else结构未原生核对，计时单位不据此认定帧或秒。",
         "confidence": "static_reviewed",
         "evidence": [
           "show"
@@ -328,7 +328,7 @@
       "kind": "file",
       "target": "news.txt",
       "summary": {
-        "text": "本地公告正文；刷新成功时覆盖，读取失败时使用g_News缓存。",
+        "text": "刷新成功响应写news.txt，写文件异常才缓存g_News；显示时优先已有缓存，否则尝试读news.txt，读取异常用空列表。",
         "confidence": "static_reviewed",
         "evidence": [
           "messages",
@@ -340,7 +340,7 @@
       "kind": "file",
       "target": "history.txt",
       "summary": {
-        "text": "历史消息文本，供首页历史标签读取。",
+        "text": "候选msgid11含history.txt读取，但此前_id2btn缺11，实际可达性待核。",
         "confidence": "static_reviewed",
         "evidence": [
           "messages"
@@ -374,11 +374,11 @@
       "kind": "config",
       "target": "update.ini → [Setting]/[HK] → News/Service/Version",
       "summary": {
-        "text": "按TW/HK选择公告与客服URL及版本显示。",
+        "text": "Version固定读取Setting节；News/Service仅按g_LangVersion==0选Setting，否则HK节，不推定地区映射。",
         "confidence": "static_reviewed",
         "evidence": [
           "cls",
-          "messages"
+          "news_url"
         ]
       }
     },
@@ -423,7 +423,7 @@
     {
       "question": "刷新公告失败在哪里触发？",
       "answer": {
-        "text": "refreshbulletin：HTTP失败(succeed=False)或响应缺少\\r\\n\\r\\n头分隔符时弹“刷新公告失敗”；网络/URL问题需日志与抓包验证。",
+        "text": "refreshbulletin在succeed为假或响应缺少\\r\\n\\r\\n时显示“刷新公告失敗”。这不是refreshService的错误提示；实际失败原因未知，未请求业务URL。",
         "confidence": "static_reviewed",
         "evidence": [
           "refresh"
@@ -433,11 +433,11 @@
     {
       "question": "修改公告正文、地址、布局分别在哪里？",
       "answer": {
-        "text": "正文：news.txt（刷新成功覆盖，失败缓存g_News）；地址：update.ini的Setting/HK的News与Service；布局：login/mainpage.dlg；触发：OnMessage(30)与Show的自动刷新。",
+        "text": "正文news.txt由refreshbulletin成功响应body覆盖；写文件异常时才把body.split缓存g_News，并非HTTP失败时缓存。OnMessage(30)按g_LangVersion==0读取update.ini的Setting/News及Service，否则HK节；布局login/mainpage.dlg。Show的候选else内创建面板，并在autoupdate与时间条件满足时调度OnMessage(30)；该else位置异常待原生复核，不宣称自动刷新已可用。",
         "confidence": "static_reviewed",
         "evidence": [
           "cls",
-          "messages",
+          "news_url",
           "refresh",
           "show"
         ]
@@ -446,29 +446,37 @@
     {
       "question": "登录按钮点击后经过哪些函数和模块？",
       "answer": {
-        "text": "OnMessage(1)隐藏首页并调用selectserver.Show(True)；非TW注册入口OnMessage(2)调用register.Show(True)；登录提交链在loginin/OnLogin与netserver/netlogin，需E/F协审。",
+        "text": "首页OnMessage(1)先Show(False)再selectserver.Show(True)；这里只能确认到选服入口，不推断选服到登录提交的完整先后链。登录页按钮和OnLogin保存账号详entry4806。",
         "confidence": "static_reviewed",
         "evidence": [
-          "messages"
+          "entry"
         ]
       }
     },
     {
       "question": "注册逻辑与布局分别在哪里？",
       "answer": {
-        "text": "逻辑在script/login/register.py（entry 4007），布局login/reg*.dlg/confirm.dlg；首页仅负责入口切换。",
+        "text": "首页OnMessage(2)在IsTWServer()真时打开外部REGISTER_URL（按g_LangVersion分支）；仅非TW才隐藏首页并register.Show(True)->Step(0)。register各CRegPanel与回调负责逻辑，布局reg1/reg2/reg3/reg4/reg5.dlg，CConfirm另用login/confirm.dlg。confirm是独立确认入口，不能当成Step序列；未验证布局资源内容或注册服务可用。",
         "confidence": "static_reviewed",
         "evidence": [
-          "messages"
+          "entry",
+          "rg_confirm",
+          "rg_reg1",
+          "rg_reg2",
+          "rg_reg2_2980",
+          "rg_panels34",
+          "rg_stepshow"
         ]
       }
     }
   ],
   "limitations": [
-    "来源为uncompyle6 3.9.3反编译候选，非原始源码；控制流和运行行为未实机验证。",
+    "本轮Python 3.11.2/uncompyle6 3.9.3/xdis 6.1.8只读定点恢复；不是原始源码，未执行游戏模块或验证运行行为。",
     "calls为静态引用线索，动态import/字符串调用未全部解析。",
     "仅列出重点函数，未覆盖候选全部函数/分支。",
-    "TW/HK与g_LangVersion分支仅静态观察，未实机验证。"
+    "TW/HK与g_LangVersion分支仅静态观察，未实机验证。",
+    "来源链、编码边界和实际测试见同目录N2_RESPONSE.md/N2_provenance.json.template；最高static_reviewed，无实机或全函数完成声明。",
+    "Show的try/else位置及msgid11缺按钮映射是候选异常，未据此改游戏，也未声称公告自动刷新/历史页可用。"
   ],
   "sources": [
     {
@@ -476,7 +484,14 @@
       "path": "tools/decompiler/output/script_fls/script/login/mainpage.py",
       "sha256": "984cbe6ac7d2ed0a1479d2bcb72ea34a2fc89756017d1d95ab0f9f2195e925ac",
       "kind": "recovered_source",
-      "note": "uncompyle6 3.9.3 recovered candidate; association basis: script.fls entry 337, co_filename=script\\login\\mainpage.py, input SHA 8b6e9266...; C reviewed fixed package. Not original source."
+      "note": "N2独立恢复固定script.fls白名单；精确去六行恢复头（含生成时间）后，整个正文与本文件原字节SHA一致。Python3.11.2/u6 3.9.3/xdis6.1.8；默认decode_big5_literals严格cp950，失败保留转义，不猜改字串。完整链/pyc/候选摘要见annotations/login/N2_provenance.json.template与N2_RESPONSE.md；非原始源码，解码成功不保证语义。"
+    },
+    {
+      "id": "legacy_register",
+      "path": "tools/decompiler/output/script_fls/script/login/register.py",
+      "sha256": "bc2b5bff78d3feb473227767e9172eba21346f7fd6adad67687eb9ec97eba18d",
+      "kind": "recovered_source",
+      "note": "N2独立恢复固定script.fls白名单；精确去六行恢复头（含生成时间）后，整个正文与本文件原字节SHA一致。Python3.11.2/u6 3.9.3/xdis6.1.8；默认decode_big5_literals严格cp950，失败保留转义，不猜改字串。完整链/pyc/候选摘要见annotations/login/N2_provenance.json.template与N2_RESPONSE.md；非原始源码，解码成功不保证语义。"
     }
   ],
   "evidence": [
@@ -521,6 +536,66 @@
       "source_id": "legacy_mainpage",
       "start_line": 305,
       "end_line": 329
+    },
+    {
+      "id": "news_url",
+      "source_id": "legacy_mainpage",
+      "start_line": 226,
+      "end_line": 256
+    },
+    {
+      "id": "entry",
+      "source_id": "legacy_mainpage",
+      "start_line": 111,
+      "end_line": 139
+    },
+    {
+      "id": "rg_confirm",
+      "source_id": "legacy_register",
+      "start_line": 136,
+      "end_line": 166
+    },
+    {
+      "id": "rg_reg1",
+      "source_id": "legacy_register",
+      "start_line": 167,
+      "end_line": 213
+    },
+    {
+      "id": "rg_reg2",
+      "source_id": "legacy_register",
+      "start_line": 307,
+      "end_line": 543
+    },
+    {
+      "id": "rg_reg2_2980",
+      "source_id": "legacy_register",
+      "start_line": 561,
+      "end_line": 930
+    },
+    {
+      "id": "rg_panels34",
+      "source_id": "legacy_register",
+      "start_line": 1208,
+      "end_line": 1254
+    },
+    {
+      "id": "rg_stepshow",
+      "source_id": "legacy_register",
+      "start_line": 1255,
+      "end_line": 1305
+    },
+    {
+      "id": "rg_return",
+      "source_id": "legacy_register",
+      "start_line": 186,
+      "end_line": 220
+    },
+    {
+      "id": "tips",
+      "source_id": "legacy_mainpage",
+      "start_line": 88,
+      "end_line": 97
     }
   ],
   "relationships": [
@@ -577,10 +652,11 @@
       },
       "symbol": "mainpage.Show",
       "summary": {
-        "text": "注册页取消/完成时调用mainpage.Show(True)返回首页。",
+        "text": "register.CRegPanel1拒绝条款与完成页返回按钮调用本模块Show(True)。",
         "confidence": "static_reviewed",
         "evidence": [
-          "messages"
+          "rg_return",
+          "rg_panels34"
         ]
       }
     }
