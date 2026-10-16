@@ -255,11 +255,15 @@ class GameLoopService:
             ).fetchone()["n"]
             if int(count) >= 4:
                 raise DomainError("INVALID_STATE", "character limit reached")
-            cursor = connection.execute(
-                "INSERT INTO characters(realm_id, account_id, name, appearance_template_id, school_id, "
-                "level, revision, created_at_ms) VALUES(?, ?, ?, ?, ?, 1, 1, ?)",
-                (realm_id, int(session["account_id"]), name, appearance_template_id, school_id, _now_ms()),
-            )
+            try:
+                cursor = connection.execute(
+                    "INSERT INTO characters(realm_id, account_id, name, appearance_template_id, school_id, "
+                    "level, revision, created_at_ms) VALUES(?, ?, ?, ?, ?, 1, 1, ?)",
+                    (realm_id, int(session["account_id"]), name, appearance_template_id, school_id, _now_ms()),
+                )
+            except sqlite3.IntegrityError as exc:
+                connection.rollback()
+                raise DomainError("CONFLICT", "character name already exists") from exc
             character_id = int(cursor.lastrowid)
             connection.execute(
                 "INSERT INTO idempotency_records(realm_id, account_id, operation_id, request_fingerprint, "
