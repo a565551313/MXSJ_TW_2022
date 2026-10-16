@@ -107,3 +107,23 @@
   Agent 在正文里先行改判为 bug 或正常。
 - 本协审无实机、无抓包、无原生复核；帧续读 2/3 字节冲突（见 E 证据报告 §2.3）
   也请 A 不要依据 main/net 的 Python 字面值裁决。
+
+## 4. 全新 N4 退修协审补充（交 N2 / A；不是 main 正文）
+
+- 本节作者是全新 N4 网络会话，非旧 E。上文 M 行、候选 SHA 和 main 链是旧 E 历史协审；
+  本 N4 只独立恢复 3176/2170/871/516，**没有重恢复或重验 main**，不能把上文算作 N4 的新实证。
+- Q2 采取收缩回答：netquicklogin 的诊断问答现只保证 871 的 CanQuickConnect/清 Key/Connect showdlg
+  与 3176 OnError 门禁有实际原行证据，不再用状态初值段证明 main 窗口触发。请 N2 如采用上文
+  第 7 条，独立核 main 的实际 if 条件和调用行后在自己的 main JSON 取证；否则保留待核。
+- 已核 3176 R856–R873：初次 HideWindow 仅在 not IsQuickConnect() and not CanQuickConnect()；
+  之后未 Hello、m_IsRelogin 或 m_IsExit 可返回，最后只有不在瞬连中才 Connect/ShowError。
+  因而“退出/重登抑制”不代表一定抑制了前面的 HideWindow，main 正文请区分调用先后。
+- 3176 LowestUnpackParams R55–R70 先写原生 2，再按 iRate 回写 2/iRate；若 main 描述消费预算，
+  不得写成最终固定每轮 2 包，也勿与命令队列 PROCESS_NUM_PER_TIME=2 混为一项。
+- 2170 DoConnect R184–R196：有代理才前两条各一次，无代理 target_idx 二选一仅一次；
+  三处 Fail 双回调/Success 未引用仍保留，不能把 main.RestarConfirm 补成已确认的成功链。
+- 516 SetServerRoleInfo 的 OnLogin 后 Show(False) 隐藏口径保留；main/serverid、DGW 缺链、
+  netserver 不透明槽位、StartQuickTimer 条件异常、帧长 2/3 冲突仍待核，不因文档退修改判。
+
+新证据与逐项响应：`evidence_n4_network.md`、`N4_reproduction.json.template`、`N4_RESPONSE.md`。
+本节仅交协审，未改 `annotations/login/`、reviews、A 总表或 STATUS。

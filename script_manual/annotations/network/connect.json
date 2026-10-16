@@ -5,7 +5,7 @@
   "path": "script/connect.py",
   "owner": "E",
   "domain": "network",
-  "author": "E（网络）",
+  "author": "N4（全新网络退修会话；原稿 E，非原 E 会话）",
   "source_status": "recovered_complete_not_original",
   "purpose": {
     "text": "选服/跨服场景的多路尝试连接层：同时向多个候选地址（直连或代理）发起尝试，跨服CMXNet以先回Hello者胜出并接管g_Net；DoConnect尝试的真实成功链因内嵌Success未被引用而待核（三处ConnectAttempt按字面都传Fail，见证据报告§3.2）；账号登录本体在Hello之后转netlogin，不在本文件。",
@@ -291,10 +291,10 @@
       "signature": "(idx, pwd, proxy_port_ip_list, proxy)",
       "kind": "function",
       "summary": {
-        "text": "重连尝试总入口：g_DelaySecond<=0直接main.RestarConfirmEx（字面失败/兜底落点）；有代理对候选表前两条、无代理按电信/网通各发一次ConnectAttempt尝试。内嵌Success（函数体声明为ClearAttempt后main.RestarConfirm）在本稿未被任何调用点引用，三处ConnectAttempt按字面都把Fail同时传作成功与失败回调，故真实尝试成功链待核，不得把RestarConfirm写成已确认成功落点（A预审统一口径）。",
+        "text": "重连尝试总入口：g_DelaySecond<=0直接main.RestarConfirmEx；否则有代理对候选表前两条各调用一次ConnectAttempt，无代理按IsDianXin(net.g_Net.m_IP)取target_idx=0或1、二选一仅调用一次。内嵌Success（声明ClearAttempt后main.RestarConfirm）未被本稿调用点引用；三处ConnectAttempt都把Fail同时传作成功与失败回调，真实成功链待核，不能保证RestarConfirm为成功落点。",
         "confidence": "static_reviewed",
         "evidence": [
-          "con_proto"
+          "n4_connect_attempts"
         ]
       },
       "calls": [],
@@ -315,7 +315,7 @@
             "text": "对候选表前两条各发一次ConnectAttempt(..., Fail, Fail)尝试；按字面成功回调也传Fail，真实胜出落点待核。",
             "confidence": "static_reviewed",
             "evidence": [
-              "con_proto"
+              "n4_connect_attempts"
             ]
           }
         },
@@ -325,7 +325,7 @@
             "text": "按IsDianXin(net.g_Net.m_IP)选电信(0)/网通(1)候选发一次ConnectAttempt(..., Fail, Fail)尝试；真实胜出落点待核。",
             "confidence": "static_reviewed",
             "evidence": [
-              "con_proto"
+              "n4_connect_attempts"
             ]
           }
         },
@@ -520,6 +520,16 @@
           "con_proto"
         ]
       }
+    },
+    {
+      "question": "DoConnect无代理会电信/网通各尝试一次吗？",
+      "answer": {
+        "text": "不会。g_DelaySecond>0时，proxy为真才对列表前两条各一次；proxy为假按IsDianXin取target_idx=0或1，仅一次ConnectAttempt。三处按候选都传Fail为双回调，Success仍未被引用，不能把尝试次数或成功链按意图补齐。",
+        "confidence": "static_reviewed",
+        "evidence": [
+          "n4_connect_attempts"
+        ]
+      }
     }
   ],
   "limitations": [
@@ -533,9 +543,9 @@
     {
       "id": "e_review",
       "path": "script_manual/annotations/network/evidence_review_e_network.md",
-      "sha256": "4735b665278c12f9ec01172fe04764d44e39d9178b3d78d403dc00baff742b1c",
+      "sha256": "0d2b04f3024623eb4f4fb1da00deea0101d32558a67ca589e3ed39f16e53b5ec",
       "kind": "recovered_source",
-      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块候选当时整文件SHA 002200b5022b23b77bb0e0034cc5d4bb962d32dbb4879f817dffbf54c4ea8b55（含生成时间行，只作历史标识）；按报告§1规则去头正文SHA 0a46ea6fb77879332c53531a1a746556782b9fc48a1fb01f6330e97c8c775e24 可复核，295行。报告§1另含工具/依赖版本与处理选项。"
+      "note": "E小审阅报告：仓库外定点恢复候选的摘要+原始行号(R)，非完整源码；H须按报告§1配方重恢复并核候选SHA后复核。 本模块候选当时整文件SHA 002200b5022b23b77bb0e0034cc5d4bb962d32dbb4879f817dffbf54c4ea8b55（含生成时间行，只作历史标识）；按报告§1规则去头正文SHA 0a46ea6fb77879332c53531a1a746556782b9fc48a1fb01f6330e97c8c775e24 可复核，295行。报告§1另含工具/依赖版本与处理选项。 N4纠正报告中的顺序/条件/作用域描述；原有行范围未移动，历史候选摘要保留。"
     },
     {
       "id": "catalog",
@@ -550,6 +560,13 @@
       "sha256": "a464a9cf66d66de01b8ed6272ea7529217c5d1631f94509bd7ca773077a9c9d9",
       "kind": "metadata",
       "note": "entry 3970 script/protocol.py 号表产物（work研究区，自述marshal线性遍历未执行游戏代码，412赋值/409整型）；仅供协议号数值交叉，数值不在E样板源码内，不证明服务端行为。"
+    },
+    {
+      "id": "n4_excerpt",
+      "path": "script_manual/annotations/network/evidence_n4_network.md",
+      "sha256": "0c8657fc9c71c019d1c62dcfbb569316aee7451dec8845dd2010fc0741004e65",
+      "kind": "recovered_source",
+      "note": "全新N4独立恢复四白名单后的有限原行摘录；原候选完整SHA、去精确六头正文SHA与R行在文件中。非原始源码，不代表运行验证。"
     }
   ],
   "evidence": [
@@ -600,6 +617,12 @@
       "source_id": "protocol_table",
       "start_line": 228,
       "end_line": 228
+    },
+    {
+      "id": "n4_connect_attempts",
+      "source_id": "n4_excerpt",
+      "start_line": 358,
+      "end_line": 391
     }
   ],
   "relationships": [
