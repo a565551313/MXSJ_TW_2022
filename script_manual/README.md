@@ -11,6 +11,8 @@
 
 ## 开始使用
 
+[已上传源码测试包test1（Google Drive）](https://drive.google.com/file/d/14s0nmb61CfMDFMerb23JpJkQioZHc6J6/view)，[交付回执](../docs/evidence/script_manual_windows_source_test1_delivery_20261016.md)。包内固定源码84e0b9c；后续上传回执不改变已上传ZIP。
+
 **Windows测试交付**：先读 [`WINDOWS_TEST.md`](WINDOWS_TEST.md)，源码ZIP完整解压后双击 `测试手册.bat`（创建venv、强制Qt测试、保留日志），再按说明打开窗口/检查交互或自己运行 `build_exe.bat`。不需要Git或原游戏包；Linux结果不冒充Windows实测。维护者打包用 `python script_manual/make_source_package.py --output <仓库外新ZIP>`，自动收集实际来源依赖、拒绝摘要不符/越界/覆盖、写逐文件SHA清单，不扫入整个游戏或语料。
 
 Arena agent接手/环境变化先读根 [`docs/ARENA_SANDBOX_RECOVERY.md`](../docs/ARENA_SANDBOX_RECOVERY.md)；不要把旧HEAD下的新版文件误删或重复补交。

@@ -1459,3 +1459,6 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 - 新增`make_source_package.py`：只从干净已提交checkout的Git白名单与27个实际来源依赖收集源码/证据，不装游戏或整份语料；含N1共享解析器core、BDF小收据及六闸门所需合成测试/静态工具。拒绝越界/符号链接、缺证/错SHA、原游戏/编译器二进制、仓库内输出和覆盖旧ZIP；逐文件manifest钉提交及SHA，ZIP CRC/成员摘要自验。用户运行/自检/构建不需要Git。新增4项纯合成打包回归，标准90=79通过+11缺PySide6跳过；N1独立32/32、恢复工具27/27、严格来源/full、ruff含spec、Windows static walk172路径/34源全0。Windows/Qt实机仍待用户，不算通过。
 - Drive已检查历史script_editor文件夹及其父目录；同级新建script_manual文件夹`1mxu6gDe2qLywlGR17NgtSuCShgQZom85`，没有更改分享权限。源码包需先提交推送，再构建并在无原包/.git的中文空格目录实际解压复跑；上传/远端校验成功后另追加真实回执，不提前宣称已上传。
 - 内容仍5135登记/20说明/16有限accepted/4battle pending/1排除，无stale；四篇A共同作者未自批。此次不扩语义或替代非A末审。
+
+- **实际交付完成补记**：源码已提交推送84e0b9c后构建ZIP，264项/3,140,276字节；263个载荷manifest SHA/大小及CRC全过。原ZIP解压到仓库外中文空格路径，在无.git/原包、清除继承PYTHONPATH/PYTHONHOME后六闸门全过（90=79pass+11缺Qt skip、N1独立32、恢复27），再strict HTML导出通过。不是隐式依赖原checkout才可用。
+- 已上传Google Drive文件`14s0nmb61CfMDFMerb23JpJkQioZHc6J6`，新script_manual文件夹`1mxu6gDe2qLywlGR17NgtSuCShgQZom85`；单独get读回父目录、size3140276、MD5 94ab1107d8c4eacaee96111b5ab35d3a一致，未改分享权限。SHA256 261237f7212628b4574523466cd9805b329dfb2a57488d0226c97c0a5b8db0bc为本地ZIP值，不假称远端重算。交付MD/JSON：docs/evidence/script_manual_windows_source_test1_delivery_20261016.{md,json}。源码ZIP不是EXE，用户Windows/Qt/目视验收仍待；四battle独审仍pending。已授权上传取代此前各历史轮“不上传”的阶段边界，不是上传游戏包/改变权限授权。

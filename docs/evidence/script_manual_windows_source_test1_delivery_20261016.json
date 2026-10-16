@@ -1,0 +1,87 @@
+{
+  "output": "/home/user/manual-windows-delivery-20261016/MXSJScriptManual_0.1.0.dev3_windows_source_test1_20261016.zip",
+  "source_commit": "84e0b9c53761e407d8089a92e17637804129aaab",
+  "members": 264,
+  "bytes": 3140276,
+  "sha256": "261237f7212628b4574523466cd9805b329dfb2a57488d0226c97c0a5b8db0bc",
+  "md5": "94ab1107d8c4eacaee96111b5ab35d3a",
+  "zip_member_crc_and_sha_checked": true,
+  "zip_members": 264,
+  "manifest_payload_members_checked": 263,
+  "extract_root_has_no_git_or_game_data": true,
+  "extracted_six_gates_passed": true,
+  "test_counts": {
+    "manual": {
+      "discovered": 90,
+      "passed": 79,
+      "skipped_PySide6_missing": 11,
+      "failed": 0
+    },
+    "N1_independent": {
+      "passed": 32,
+      "skipped": 0
+    },
+    "recovery_synthetic": {
+      "passed": 27,
+      "skipped": 0
+    }
+  },
+  "extracted_strict_HTML_build": {
+    "expected_entries": 5135,
+    "indexed": 5135,
+    "annotated": 20,
+    "accepted": 16,
+    "excluded": 1
+  },
+  "manual_wincompat_static": {
+    "walk_paths": 172,
+    "source_files": 34,
+    "errors": 0,
+    "warnings": 0,
+    "info": 0
+  },
+  "source_evidence_dependencies": 27,
+  "windows_runtime_Qt_EXE_not_yet_tested": true,
+  "logs_sha256": {
+    "repo-gates.log": "8f6d5566ab241fcac9be2ec724d35e0d1b26255ede8c76b8e6850cec08d5b4a0",
+    "extracted-gates.log": "cc0198ea41a8c972d1e753d2aba0413b25d92bbac22415dd11f5a970a6e015ad"
+  },
+  "delivery": {
+    "authorized_by": "用户“你打包工具到谷歌云盘我去测试windows”",
+    "uploaded": true,
+    "file_id": "14s0nmb61CfMDFMerb23JpJkQioZHc6J6",
+    "file_name": "MXSJScriptManual_0.1.0.dev3_windows_source_test1_20261016.zip",
+    "web_view_link": "https://drive.google.com/file/d/14s0nmb61CfMDFMerb23JpJkQioZHc6J6/view",
+    "folder_id": "1mxu6gDe2qLywlGR17NgtSuCShgQZom85",
+    "folder_url": "https://drive.google.com/drive/folders/1mxu6gDe2qLywlGR17NgtSuCShgQZom85",
+    "parent_verified": true,
+    "remote_metadata_get_after_upload": {
+      "size": 3140276,
+      "md5_checksum": "94ab1107d8c4eacaee96111b5ab35d3a",
+      "mime_type": "application/zip",
+      "trashed": false
+    },
+    "remote_size_and_md5_match_local": true,
+    "share_permissions_changed_by_A": false,
+    "note": "上传成功后单独get元数据复核；未下载远端ZIP或声称重算远端SHA256。源包固定84e0b9c，上传回执是后续提交，不循环重打包去追新HEAD。"
+  },
+  "recovery_documentation": {
+    "entry": "AGENTS.md §1",
+    "guide": "docs/ARENA_SANDBOX_RECOVERY.md",
+    "template": "docs/templates/AGENT_CHECKPOINT.md",
+    "claims": "仓库内多次状态不一致的观测，不推断Arena根因/普遍性或承诺本地缓存持久。阶段提交推送核远端，止损保差异，先证明Git元数据错位与真实文件丢失；禁止reset hard/clean、删.git或覆盖仓库根。高级CAS update-ref/read-tree仅在全部路径核准/保护后手工。"
+  },
+  "scope": {
+    "coverage": {
+      "indexed": 5135,
+      "annotated": 20,
+      "finite_accepted": 16,
+      "pending_battle_non_A_review": 4,
+      "excluded": 1
+    },
+    "no_master_merge": true,
+    "no_game_editor_launcher_changes": true,
+    "no_game_archives_native_compiler_binaries_credentials_uploaded": true,
+    "no_runtime_or_non_A_review_claimed": true
+  }
+}
