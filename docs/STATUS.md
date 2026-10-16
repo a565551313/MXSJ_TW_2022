@@ -1,5 +1,7 @@
 # 项目当前状态（STATUS）
 
+> **服务端独立工作分支（2026-10-17）**：`agent/server-login-foundation-20261017` 从 `master` 建立。首个小切片新增 `contracts/validation.py` 的 RequestContext 形状校验和 10 个针对性单元测试；只校验上下文结构，不代表身份认证、角色归属、授权或会话 fencing 已实现。文件已提交，**尚未在本环境执行测试**，需 CI/本地复跑确认；不合并 master。代码链接：[validation.py](../server/src/mxsj_server/contracts/validation.py)、[test_context_validation.py](../server/tests/architecture/test_context_validation.py)。
+
 > **N5二轮已核（2026-10-16）**：原PR44更新至6fd5061，原三项P2（ID/Release/Timer）均闭合；另有一处战斗指南须限定非终止回调（B-N5-04），同一候选war.End不走NextCmd/Wait就是反例。已评论N5并同步N7，小修后按新head末审，勿继续说原三项未修。未merge/未正式激活，正式仍5135/20/3/1。详§3.50及[二轮报告](evidence/script_manual_N5_6fd5061_A_review_20261016.md)。
 
 > **全新N1–N7七PR已复核（2026-10-16）**：PR39–45均已收到，勿重复启动七人。N1目录独立重放逐字节一致、32回归全过；N3/N4/N6的九份新N7模板SHA完全匹配，四项为有限集成候选。**N2仍待N7新字节尾审；N5发现3项P2已退修；N7为部分审核交付须补N2/N5。** 新PR均未合并，正式仍5135登记/20说明/3有限通过/1排除；外置模拟12通过不是正式值。本轮重建环境实跑82=71过+11缺PySide6跳过，来源/full、ruff、静态/完整HTML和jsdom（非真实浏览器/Qt）通过。详§3.49及[总复核报告](evidence/script_manual_new_cohort_A_review_20261016.md)。
