@@ -132,6 +132,7 @@ def detail_html(row, section="overview"):
             f"<pre>SHA256 {text(source['sha256'])}</pre><p>{text(source['note'])}</p>"
         )
     for evidence in annotation["evidence"]:
-        result += f"<p>{text(evidence['id'])} → {text(evidence['source_id'])} "
+        result += f'<p id="evidence-{text(evidence["id"])}">{text(evidence["id"])} → '
+        result += f'{text(evidence["source_id"])} '
         result += f"L{evidence['start_line']}–{evidence['end_line']}</p>"
     return result

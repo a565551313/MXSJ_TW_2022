@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
+from .guides import load_guides, search_guides
 from .io import MAX_INVENTORY, ManualError, digest, module_id, parse_json, read_bytes
 from .store import ContentStore
 
@@ -14,6 +15,10 @@ class Catalog:
     modules: list[dict]
     warnings: list[str]
     file_hashes: dict[str, str]
+    guides: list[dict] = field(default_factory=list)
+
+    def search_guides(self, query=""):
+        return search_guides(self.guides, query)
 
     def search(self, query="", domain="", status=""):
         tokens = query.replace("\\", "/").casefold().split()
@@ -27,6 +32,7 @@ class Catalog:
 
     def payload(self):
         return {
+            "guides": self.guides,
             "baseline": self.baseline,
             "modules": self.modules,
             "warnings": self.warnings,
@@ -141,4 +147,5 @@ def load_catalog(root: Path, *, repository=None, require_full=False) -> Catalog:
     modules, warnings = _compose(
         store, inventory, tasks, annotations, reviews, repository
     )
-    return Catalog(store.baseline, modules, warnings, store.file_hashes)
+    guides = load_guides(store, modules, repository, warnings)
+    return Catalog(store.baseline, modules, warnings, store.file_hashes, guides)

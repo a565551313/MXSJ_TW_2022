@@ -11,7 +11,9 @@ HERE = Path(globals()["SPECPATH"])
 ONEFILE = os.environ.get("MXSJ_MANUAL_ONEFILE") == "1"
 datas = [
     (str(HERE / name), f"manual_content/{name}")
-    for name in ("schema", "coordination", "inventory", "annotations", "reviews")
+    for name in (
+        "schema", "coordination", "inventory", "annotations", "reviews", "guides"
+    )
 ]
 datas += [(str(HERE / "src/mxsj_manual/assets"), "mxsj_manual/assets")]
 a = Analysis(

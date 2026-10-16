@@ -1462,3 +1462,11 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 
 - **实际交付完成补记**：源码已提交推送84e0b9c后构建ZIP，264项/3,140,276字节；263个载荷manifest SHA/大小及CRC全过。原ZIP解压到仓库外中文空格路径，在无.git/原包、清除继承PYTHONPATH/PYTHONHOME后六闸门全过（90=79pass+11缺Qt skip、N1独立32、恢复27），再strict HTML导出通过。不是隐式依赖原checkout才可用。
 - 已上传Google Drive文件`14s0nmb61CfMDFMerb23JpJkQioZHc6J6`，新script_manual文件夹`1mxu6gDe2qLywlGR17NgtSuCShgQZom85`；单独get读回父目录、size3140276、MD5 94ab1107d8c4eacaee96111b5ab35d3a一致，未改分享权限。SHA256 261237f7212628b4574523466cd9805b329dfb2a57488d0226c97c0a5b8db0bc为本地ZIP值，不假称远端重算。交付MD/JSON：docs/evidence/script_manual_windows_source_test1_delivery_20261016.{md,json}。源码ZIP不是EXE，用户Windows/Qt/目视验收仍待；四battle独审仍pending。已授权上传取代此前各历史轮“不上传”的阶段边界，不是上传游戏包/改变权限授权。
+
+## 3.53 手册按修改任务进入：dev4首批6篇/26步骤（2026-10-16）
+
+- 用户明确拒绝目录+函数名作为完整手册，授权按原目标继续；开工先核4d423c8干净并push up-to-date。本轮实写6专题/26步骤/46引用，涉及6已有模块，默认GUI/HTML任务入口、步骤导航、检索、函数/证据深链、已核原文预览；新增schema/严格加载与正文变更失效保护、缓存SHA冲突防护，打包数据补guides。没有修改已审/待审annotation和review字节。
+- 原模块5135登记/20说明/16accepted/4battle pending/1排除不变。六专题A编排且全部draft_unreviewed，引用模块通过不能转移。完整目标、五领域后续具体任务和实质验收写入script_manual/docs/CONTENT_PLAN.md，不把6专题或20篇当终点，不再要求用户重提需求/重派七人。
+- 本轮最终六闸门：106=93pass+13Qt skip，N1独立32、恢复27通过；strict/full/evidence、ruff/spec、Windows静态184路径/38源、0错/警告。新增合成加载/失效/坏引用/转义/预览/缓存冲突/打包字节保全测试；两项新Qt交互仅写未执行。实际安装PySide6-Essentials6.10.3尝试offscreen，缺libGL.so.1，未使用桩库，不把跳过算通过。
+- 真实Chromium153断网file://且CSP开，生产6篇/26步骤/检索空态、12函数证据定位与刷新、专题深链、来源预览、battle待审、hero→npc、390px宽度通过，0脚本/页/CSP错、仅本地文件请求；旧20种子隔离夹具14组浏览器断言也实际通过。不是Qt/Windows/EXE/游戏/专题独审。
+- dev4版本同步源码/pyproject/源包root；本轮未重打ZIP或上传，Drive test1仍是dev3样板旧包。详细MD/JSON：docs/evidence/script_manual_task_guides_dev4_20261016.*；真实导出/浏览器产物在仓库外/home/user/manual-guides-20261016/final-site与final-browser。源码阶段推送，不以测试或新首页冒称全量内容交付。

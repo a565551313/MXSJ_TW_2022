@@ -33,7 +33,7 @@ EXTRAS = {
     "tools/decompiler/test_recover_entries.py",
 }
 FORBIDDEN = {".fls", ".exe", ".dll", ".pyo", ".pyc", ".zip", ".whl"}
-PACKAGE_ROOT = "MXSJScriptManual-source-0.1.0.dev3"
+PACKAGE_ROOT = "MXSJScriptManual-source-0.1.0.dev4"
 
 
 def safe_file(repo: Path, relative: str) -> Path:

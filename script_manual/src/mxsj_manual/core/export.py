@@ -31,11 +31,22 @@ def render_site(catalog):
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="{policy}">
-<title>MXSJ 客户端脚本开发手册 · 阶段样板</title>
+<title>MXSJ 客户端脚本开发手册 · 开发任务与代码字典</title>
 <style>{css}</style></head><body>
-<header><h1>MXSJ / 客户端脚本手册 <span class="badge">阶段样板 · 非全量</span></h1>
+<header><h1>MXSJ / 客户端脚本手册 <span class="badge">内容覆盖未完成</span></h1>
 <p id="version"></p><div id="stats"></div></header>
-<div class="workspace"><aside><label for="query">搜索路径 / 中文功能 / 函数名</label>
+<nav id="modebar" aria-label="手册入口">
+<button id="show-guides">开发任务 / 专题</button>
+<button id="show-modules">模块字典 / 目录</button></nav>
+<div class="workspace" id="guide-workspace"><aside>
+<label for="guide-query">我要修改什么功能？</label>
+<input id="guide-query" type="search" placeholder="公告、登录、验证码、快捷键、战斗…">
+<p id="guide-count"></p><div id="guide-results"></div>
+<p class="notice">专题由A编排、尚未独立审核；引用模块的accepted不转移给专题。
+没有专题的功能仍待编写，不用函数名列表冒充解释。</p></aside>
+<main id="guide-detail"></main></div>
+<div class="workspace" id="module-workspace" hidden><aside>
+<label for="query">搜索路径 / 中文功能 / 函数名</label>
 <input id="query" type="search"
 placeholder="例如：公告、login/mainpage、refreshbulletin">
 <select id="domain" aria-label="领域"><option value="">全部领域</option></select>

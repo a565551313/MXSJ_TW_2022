@@ -1,0 +1,159 @@
+{
+  "kind": "task-oriented handbook first substantive increment; not complete handbook",
+  "date": "2026-10-16",
+  "version": "0.1.0.dev4",
+  "base_commit": "4d423c8ad14cfd95959d5370e0079e1fd2d357a6",
+  "branch": "arena/61deb9e5-mxsj-tw-2022",
+  "guides": [
+    {
+      "id": "announcement",
+      "title": "修改首页公告：失败提示、地址、正文和布局",
+      "steps": 5,
+      "references": 6,
+      "sha256": "91ba3815f20bcec2a02d62e4a904c28d110a5785275624642b3e0840c3992a4a",
+      "status": "draft_unreviewed"
+    },
+    {
+      "id": "battle-queue",
+      "title": "修改战斗表现：解包、入队、执行、等待和结束",
+      "steps": 4,
+      "references": 10,
+      "sha256": "634128f71c687cc3bb9d7c13278588b0646ee5e298869202fc3504dc273b47c7",
+      "status": "draft_unreviewed"
+    },
+    {
+      "id": "hotkeys",
+      "title": "修改快捷键：清理、默认键、聊天和战斗方案",
+      "steps": 3,
+      "references": 4,
+      "sha256": "0abbddbd16dff02a940fe817f8460bda6a921046b703d5ad4c7f3944b4d35111",
+      "status": "draft_unreviewed"
+    },
+    {
+      "id": "login-flow",
+      "title": "修改登录按钮：协议门禁、输入校验与保存账号",
+      "steps": 4,
+      "references": 5,
+      "sha256": "5b07f2257b3df5348295b3a4ffa4718589d286c9a89ddf21cc278fa7a6374f64",
+      "status": "draft_unreviewed"
+    },
+    {
+      "id": "main-loop",
+      "title": "理解主循环：启动、网络泵、战斗、重登与退出",
+      "steps": 5,
+      "references": 9,
+      "sha256": "5ef89b93fd2f19389a4462b93c9959bcd9c2940c98748db7076dd794e2cd2958",
+      "status": "draft_unreviewed"
+    },
+    {
+      "id": "registration",
+      "title": "修改注册：地区入口、普通注册、2980与验证码",
+      "steps": 5,
+      "references": 12,
+      "sha256": "700d4a4065c4a5a4d4b7658ee13065c2a88683bd5cb1d8ff63b674934262c59d",
+      "status": "draft_unreviewed"
+    }
+  ],
+  "distinct_annotated_modules_referenced": 6,
+  "module_coverage_unchanged": {
+    "indexed": 5135,
+    "annotated": 20,
+    "accepted": 16,
+    "battle_pending": 4,
+    "excluded": 1
+  },
+  "guides_independently_accepted": 0,
+  "tests": {
+    "manual_suite_total": 106,
+    "manual_suite_passed": 93,
+    "manual_suite_qt_skipped": 13,
+    "N1_independent_passed": 32,
+    "recovery_passed": 27,
+    "ruff": "pass including spec",
+    "windows_static": {
+      "paths": 184,
+      "source_files": 38,
+      "errors": 0,
+      "warnings": 0
+    },
+    "strict_production_export": "pass with full inventory and repository evidence",
+    "qt_attempt": "Installed PySide6-Essentials 6.10.3; genuine offscreen startup failed: missing libGL.so.1. No stubs used; GUI tests skipped, not passed."
+  },
+  "offline_production_browser": {
+    "browser": "153.0.8010.0",
+    "protocol": "file://",
+    "offline": true,
+    "guides": 6,
+    "steps": 26,
+    "function_and_evidence_jumps_and_function_reload_checked": 12,
+    "source_preview_verified": true,
+    "mobile_no_horizontal_overflow": true,
+    "unknown_task_is_not_fake_completion": true,
+    "pending_battle_not_self_approved": true,
+    "guide_deep_link_reload": true,
+    "legacy_module_navigation": "hero→npc",
+    "errors": [],
+    "requests": [
+      "file:///home/user/manual-guides-20261016/final-site/index.html",
+      "file:///home/user/manual-guides-20261016/final-site/index.html",
+      "file:///home/user/manual-guides-20261016/final-site/index.html",
+      "file:///home/user/manual-guides-20261016/final-site/index.html",
+      "file:///home/user/manual-guides-20261016/final-site/index.html",
+      "file:///home/user/manual-guides-20261016/final-site/index.html",
+      "file:///home/user/manual-guides-20261016/final-site/index.html",
+      "file:///home/user/manual-guides-20261016/final-site/index.html"
+    ],
+    "not_tested": "Qt/Windows/EXE/game and guide semantic acceptance"
+  },
+  "offline_legacy_fixture_browser": {
+    "browser": "153.0.8010.0",
+    "protocol": "file://",
+    "offline": true,
+    "passed": [
+      "20 path rows and honest coverage",
+      "three-mode and multiword search",
+      "source warning",
+      "message branches",
+      "evidence status",
+      "resources/config guide",
+      "related-module navigation",
+      "deep-link reload",
+      "domain filtering",
+      "review filtering",
+      "empty-state warning",
+      "mobile no horizontal overflow",
+      "no external network requests",
+      "no page/CSP errors"
+    ],
+    "page_errors": [],
+    "requests": [
+      "file:///home/user/manual-guides-20261016/fixture-site/index.html",
+      "file:///home/user/manual-guides-20261016/fixture-site/index.html"
+    ]
+  },
+  "artifacts_not_shipped": {
+    "final-gates-fixed.log": {
+      "path": "/home/user/manual-guides-20261016/final-gates-fixed.log",
+      "sha256": "ba62b3af81313142fe6d118a19244079ab7f9f77b3729e40811227cb034a4494"
+    },
+    "final-export.log": {
+      "path": "/home/user/manual-guides-20261016/final-export.log",
+      "sha256": "348e782137b1fe93be4f386b5d2823fb5765426bc70fae88254f631d142a8a28"
+    },
+    "final-browser/browser-result.json": {
+      "path": "/home/user/manual-guides-20261016/final-browser/browser-result.json",
+      "sha256": "5256c203dc77b872f2010914a491c776fd98b0a6b1423507605b3159ad133e32"
+    },
+    "browser-legacy-fixture-fixed/browser-result.json": {
+      "path": "/home/user/manual-guides-20261016/browser-legacy-fixture-fixed/browser-result.json",
+      "sha256": "232b696e0613145ccfe4e08fb68c3af44a2bae2d50f8fdf65395515c9d05d389"
+    }
+  },
+  "boundaries": [
+    "No annotation/review bytes changed; module acceptance not transferred to guides",
+    "No game/editor/launcher edits or execution; no business URL requests",
+    "No new Drive package upload or independent guide approval",
+    "No Qt/Windows/EXE/game runtime acceptance",
+    "Next content phases and original complete-handbook goal remain in script_manual/docs/CONTENT_PLAN.md"
+  ]
+}

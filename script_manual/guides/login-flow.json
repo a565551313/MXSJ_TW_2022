@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "id": "login-flow",
+  "title": "修改登录按钮：协议门禁、输入校验与保存账号",
+  "domain": "login",
+  "author": "A",
+  "editorial_status": "draft_unreviewed",
+  "summary": "从首页选服入口和登录页按钮分别追踪，不把点击、发包、登录成功和保存历史混作同一事件。",
+  "keywords": [
+    "登录",
+    "账号",
+    "协议",
+    "密码",
+    "LoginOk",
+    "OnLogin",
+    "C2SLoginIn"
+  ],
+  "prerequisites": [
+    "只读研究和在独立副本修改；不覆盖原包、不运行恢复模块、不请求真实业务URL。",
+    "本专题是A新编排草稿，引用模块有限accepted不能转移成专题accepted；先核版本、正文SHA和证据。"
+  ],
+  "steps": [
+    {
+      "title": "首页点击只能追到选服，不猜跨页完整顺序",
+      "explanation": "首页OnMessage(1)先隐藏首页再selectserver.Show(True)。这只能确定选服入口，不能直接推出已连接、已显示登录页或已提交登录。",
+      "change": "若需求是改首页按钮/选服入口，应改这一消息分支；若是账号校验，应去登录页，不在这里塞登录成功逻辑。",
+      "check": "分别记录“已见直接调用”和“缺少证据的后续环节”。选服→连接→登录页的完整事件顺序仍需相应模块与原生证据。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 337,
+          "annotation_sha256": "ce4dba86bfb2c9dc71c28b6afdfbac9c3f962b3e8776c037d94dacfc37a5d5d5",
+          "function": "CMainPage.OnMessage",
+          "evidence_ids": [
+            "entry"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "协议勾选不是所有地区共有的门禁",
+      "explanation": "CLoginIn.OnMessage(2)仅在not misc.IsTWServer()内取chk_agree；对象存在且未选中才提示并return。其余路径调用LoginOk。ShowLogin另按g_LangVersion==0选择服务框，不能把两个不同条件硬映射为同一地区规则。",
+      "change": "改协议逻辑先区分IsTWServer和g_LangVersion；保留对象不存在时的候选行为，不凭UI截图猜门禁。",
+      "check": "逐项核TW/非TW、协议控件存在/不存在、勾选/未勾选；确认条件作用域，而不是只测普通路径。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4806,
+          "annotation_sha256": "fe004aeeab7d3c38dd62324a0a522dac2c2dcb04745c963010960e4e0ab9bf0c",
+          "function": "CLoginIn.OnMessage",
+          "evidence_ids": [
+            "message2"
+          ]
+        },
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4806,
+          "annotation_sha256": "fe004aeeab7d3c38dd62324a0a522dac2c2dcb04745c963010960e4e0ab9bf0c",
+          "function": "ShowLogin",
+          "evidence_ids": [
+            "showlogin"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "普通提交：先校验，再发送，再设置错误回调",
+      "explanation": "LoginOk读取账号密码，先写g_User；任一为空返回，密码长度小于6提示，纯数字账号提示；通过才写g_LoginEmail、C2SLoginIn，然后设置LoginInErr错误回调。这里不保存账号，也不证明服务器接受。",
+      "change": "输入规则应定位LoginOk与输入控件约束，而不是改OnLogin。修改规则要同步错误提示/限制，协议兼容性不能靠客户端单方面决定。",
+      "check": "只设计合成边界：空值、短密码、纯数字、通过校验；核发送与错误回调的字面顺序，勿把校验通过记成登录成功。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4806,
+          "annotation_sha256": "fe004aeeab7d3c38dd62324a0a522dac2c2dcb04745c963010960e4e0ab9bf0c",
+          "function": "LoginOk",
+          "evidence_ids": [
+            "loginok"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "保存账号是另一个入口；自动登录也别串错",
+      "explanation": "OnLogin在LoginIn非空时SaveAccount；不是LoginOk内部动作。RandomConnect见OneoffLogin/OneoffLogin2的自动登录路径，不应插进普通按钮链。",
+      "change": "改历史账号行为先查SaveAccount及OnLogin触发方；当前专题不能确认全部成功回调链，保留这段断点。",
+      "check": "分别核按钮提交、服务端成功事件、OnLogin、历史落盘。当前没有原生/服务端验证，不能用“提交即保存”补齐未知。",
+      "references": [
+        {
+          "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+          "entry_index": 4806,
+          "annotation_sha256": "fe004aeeab7d3c38dd62324a0a522dac2c2dcb04745c963010960e4e0ab9bf0c",
+          "function": "OnLogin",
+          "evidence_ids": [
+            "onlogin",
+            "saveaccount",
+            "autologin"
+          ]
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "选服/连接/成功回调的端到端链未在本专题全部核实；不索取或使用真实账号密码。",
+    "每步修改建议与检查清单尚非实机结果；未证实的跨模块连接不补成完整链。",
+    "专题还需非作者独立内容复核；Windows、原生引擎和真实服务端未由本专题验收。"
+  ]
+}

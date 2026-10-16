@@ -59,6 +59,7 @@
     );
   }
   function changeModule(row) {
+    showModules();
     selected = row;
     const hash = "#module=" + encodeURIComponent(row.id);
     if (location.hash !== hash) location.hash = hash;
@@ -93,7 +94,8 @@
         "未找到匹配项；本阶段目录不完整，“搜不到”不等于功能不存在。",
       );
   }
-  function search() {
+  function search(event) {
+    if (event) showModules();
     const tokens = $("query")
       .value.replaceAll("\\", "/")
       .toLowerCase()
@@ -182,8 +184,8 @@
         "这里是已整理子集；空调用列表不证明不存在调用。",
         "notice",
       );
-      for (const f of a.functions) {
-        append(body, "h3", f.name);
+      for (const [index, f] of a.functions.entries()) {
+        append(body, "h3", f.name).id = `function-${index}`;
         append(body, "pre", f.signature || "签名未确认");
         claim(body, f.summary);
         append(body, "p", `静态调用线索：${f.calls.join(" / ") || "尚未整理"}`);
@@ -273,9 +275,98 @@
           body,
           "p",
           `${e.id} → ${e.source_id} L${e.start_line}–${e.end_line}`,
-        );
+        ).id = `evidence-${e.id}`;
     }
   }
+  let selectedGuide = null;
+  function showModules() {
+    $("guide-workspace").hidden = true;
+    $("module-workspace").hidden = false;
+    $("show-guides").setAttribute("aria-pressed", "false");
+    $("show-modules").setAttribute("aria-pressed", "true");
+  }
+  function openReference(ref, section, evidence) {
+    const params = new URLSearchParams({module: ref.module_id, section});
+    if (section === "functions") params.set("function", ref.function);
+    if (evidence) params.set("evidence", evidence);
+    location.hash = params.toString();
+    fromHash();
+  }
+  function renderGuide(guide, updateHash = true) {
+    selectedGuide = guide;
+    window.scrollTo(0, 0);
+    $("guide-workspace").hidden = false;
+    $("module-workspace").hidden = true;
+    $("show-guides").setAttribute("aria-pressed", "true");
+    $("show-modules").setAttribute("aria-pressed", "false");
+    if (updateHash) location.hash = new URLSearchParams({guide: guide.id}).toString();
+    const panel = $("guide-detail"); panel.replaceChildren();
+    append(panel, "h2", guide.title);
+    append(panel, "p", guide.summary);
+    append(panel, "p", `专题草稿 · ${guide.author}编排，未独立审核。引用模块通过不等于专题通过。`, "notice");
+    if (guide.stale_dependencies.length)
+      append(panel, "p", `正文已变化，禁用旧步骤锚点：${guide.stale_dependencies.join(" / ")}`, "notice");
+    append(panel, "h3", "开始前");
+    for (const item of guide.prerequisites) append(panel, "p", "• " + item);
+    const stepsNav = append(panel, "nav", undefined, "steps");
+    stepsNav.setAttribute("aria-label", "专题步骤导航");
+    for (const [index, step] of guide.steps.entries()) {
+      const button = append(stepsNav, "button", `${index + 1}. ${step.title}`);
+      button.onclick = () => $("guide-step-" + (index + 1))?.scrollIntoView?.({block: "start"});
+    }
+    for (const [index, step] of guide.steps.entries()) {
+      append(panel, "h3", `${index + 1}. ${step.title}`).id = `guide-step-${index + 1}`;
+      for (const [label, key] of [["候选中的流程/分支", "explanation"],
+           ["修改入口与建议（待验证）", "change"], ["应如何检查（不是已执行）", "check"]]) {
+        append(panel, "h4", label); append(panel, "p", step[key]);
+      }
+      for (const ref of step.references) {
+        append(panel, "h4", `${ref.path} → ${ref.function}`);
+        append(panel, "p", `引用模块：${reviews[ref.review_status]} · ${ref.reviewer || "无有效审核者"}`);
+        append(panel, "small", `专题绑定正文SHA256: ${ref.annotation_sha256}`);
+        if (!ref.binding_current) {
+          append(panel, "p", "引用已过期；请先更新专题，不按新正文猜接旧结论。"); continue;
+        }
+        const jump = append(panel, "button", `打开函数：${ref.function}`);
+        jump.onclick = () => openReference(ref, "functions");
+        for (const e of ref.evidence) {
+          append(panel, "p", `${e.path} 物理行 ${e.start_line}–${e.end_line}`);
+          const jumpEvidence = append(panel, "button", `定位证据：${e.id}`);
+          jumpEvidence.onclick = () => openReference(ref, "evidence", e.id);
+          append(panel, "small", `来源SHA256: ${e.sha256}`);
+          if (e.verified) {
+            const preview = append(panel, "details");
+            append(preview, "summary", "预览已核字节/行号的来源（至多60物理行，不执行）");
+            append(preview, "pre", e.lines.map(l => `${l.number}: ${l.text}`).join("\n"));
+            if (e.truncated) append(preview, "p", "只预览前60行，非完整来源。");
+          } else append(panel, "p", "本次未校验/加载原文。引用文件物理行与摘录L/R候选原行不是一套编号。");
+        }
+      }
+    }
+    append(panel, "h3", "尚未确认 / 不包含");
+    for (const item of guide.limitations) append(panel, "p", "• " + item);
+  }
+  function filterGuides(updateHash = true) {
+    $("guide-workspace").hidden = false;
+    $("module-workspace").hidden = true;
+    $("show-guides").setAttribute("aria-pressed", "true");
+    $("show-modules").setAttribute("aria-pressed", "false");
+    const tokens = $("guide-query").value.replaceAll("\\", "/").toLowerCase().split(/\s+/).filter(Boolean);
+    const rows = (data.guides || []).filter(g => tokens.every(t => g.search_text.includes(t)));
+    $("guide-results").replaceChildren();
+    $("guide-count").textContent = `${rows.length} 个专题草稿 · 不是全部功能`;
+    for (const guide of rows) {
+      const button = append($("guide-results"), "button", guide.title);
+      append(button, "small", `${guide.steps.length}个步骤 · ${guide.navigation_status === "stale" ? "引用过期" : "草稿未独审"}`);
+      button.onclick = () => renderGuide(guide);
+    }
+    if (rows.length) renderGuide(rows[0], updateHash);
+    else { selectedGuide = null; $("guide-detail").replaceChildren();
+      append($("guide-detail"), "p", "尚无匹配专题；此任务仍待编写，函数列表不等于讲解。"); }
+  }
+  $("show-guides").onclick = () => selectedGuide ? renderGuide(selectedGuide) : filterGuides();
+  $("show-modules").onclick = showModules;
+  $("guide-query").oninput = () => filterGuides();
   $("query").oninput = search;
   $("domain").onchange = search;
   $("review").onchange = search;
@@ -288,16 +379,27 @@
     drawResults();
   };
   function fromHash() {
-    const id = new URLSearchParams(location.hash.slice(1)).get("module");
-    const row = data.modules.find((m) => m.id === id);
+    const params = new URLSearchParams(location.hash.slice(1));
+    const guide = (data.guides || []).find(g => g.id === params.get("guide"));
+    if (guide) { renderGuide(guide, false); return; }
+    const row = data.modules.find(m => m.id === params.get("module"));
     if (row) {
-      selected = row;
-      render();
-      drawResults();
+      showModules(); selected = row;
+      const section = params.get("section");
+      if (["overview", "functions", "resources", "evidence"].includes(section)) tab = section;
+      render(); drawResults();
+      let anchor = null;
+      if (section === "functions" && row.annotation) {
+        const n = row.annotation.functions.findIndex(f => f.name === params.get("function"));
+        if (n >= 0) anchor = $("function-" + n);
+      } else if (section === "evidence") anchor = $("evidence-" + params.get("evidence"));
+      anchor?.scrollIntoView?.({block: "start"});
     }
   }
   window.onhashchange = fromHash;
   search();
   render();
+  filterGuides(false);
+  if (!(data.guides || []).length) showModules();
   fromHash();
 })();

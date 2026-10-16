@@ -63,6 +63,18 @@ class SourcePackageTests(unittest.TestCase):
                 self.assertIsNone(archive.testzip())
         self.assertEqual(outputs[0].read_bytes(), outputs[1].read_bytes())
 
+    def test_task_guide_bytes_survive_source_package_whitelist(self):
+        guide = "script_manual/guides/synthetic.json"
+        raw = b'{"synthetic": "guide package inclusion only"}\n'
+        self.write(guide, raw)
+        output = self.parent / "guide-package.zip"
+        manifest = package.build_package(self.repo, self.tracked, output, "fixture")
+        self.assertEqual(
+            manifest["files"][guide]["sha256"], hashlib.sha256(raw).hexdigest()
+        )
+        with zipfile.ZipFile(output) as archive:
+            self.assertEqual(archive.read(package.PACKAGE_ROOT + "/" + guide), raw)
+
     def test_mismatched_or_missing_evidence_is_not_packaged(self):
         for missing in (False, True):
             with self.subTest(missing=missing):

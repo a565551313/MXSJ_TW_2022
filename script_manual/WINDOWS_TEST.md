@@ -1,3 +1,5 @@
+> 当前仓库正在开发dev4的任务专题入口；本文原test1操作记录对应已上传dev3。它不是完整手册，本轮新功能尚未重新打包。重打包时需按新manifest/版本重新验收，不把旧Windows结果沿用到新稿。
+
 # Windows源码测试包：先读这里
 
 工具：**MXSJScriptManual / 客户端脚本开发手册 0.1.0.dev3**，本次交付编号 `windows-source-test1 / 2026-10-16`。

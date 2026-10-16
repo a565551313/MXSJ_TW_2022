@@ -200,3 +200,15 @@ small {
     max-width: none;
   }
 }
+
+[hidden] { display: none !important; }
+#modebar { display: flex; gap: 12px; padding: 12px 24px; background: #e1eaf2; }
+#modebar button[aria-pressed="true"] { background: #174b6e; color: white; }
+#guide-results button { display: block; width: 100%; margin: 12px 0; text-align: left; }
+#guide-results small { display: block; margin-top: 6px; }
+details { margin: 12px 0; }
+summary { cursor: pointer; color: #176c9c; }
+@media print { #modebar { display: none; } }
+
+.steps { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.steps button { font-size: 13px; text-align: left; }

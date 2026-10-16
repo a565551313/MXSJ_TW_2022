@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QLineEdit,
+    QListWidget,
     QMainWindow,
     QMessageBox,
     QSplitter,
@@ -27,6 +28,7 @@ from PySide6.QtWidgets import (
 from .. import __version__
 from ..core.catalog import load_catalog
 from ..core.export import export_site
+from ..core.guide_render import guide_html
 from ..core.render import REVIEWS, detail_html
 from .jobs import Job
 from .models import ModuleModel
@@ -75,13 +77,45 @@ class ManualWindow(QMainWindow):
         self.coverage = QLabel("目录加载中…")
         self.coverage.setWordWrap(True)
         layout.addWidget(self.coverage)
+        self.workspace_pages = QTabWidget()
+        layout.addWidget(self.workspace_pages, 1)
+        guide_page = QWidget()
+        guide_layout = QVBoxLayout(guide_page)
+        notice = QLabel(
+            "先选实际任务，阅读流程、修改位置、检查方案及证据。"
+            "专题草稿未独审，不把目录数/模块审核数当专题完成数。"
+        )
+        notice.setWordWrap(True)
+        guide_layout.addWidget(notice)
+        self.guide_query = QLineEdit()
+        self.guide_query.setPlaceholderText(
+            "找任务：公告、注册、验证码、Enter、退出、战斗…"
+        )
+        self.guide_query.setAccessibleName("开发专题搜索")
+        guide_layout.addWidget(self.guide_query)
+        guide_splitter = QSplitter()
+        self.guide_list = QListWidget()
+        self.guide_browser = QTextBrowser()
+        self.guide_browser.setOpenLinks(False)
+        self.guide_browser.setOpenExternalLinks(False)
+        self.guide_browser.anchorClicked.connect(self.follow_link)
+        guide_splitter.addWidget(self.guide_list)
+        guide_splitter.addWidget(self.guide_browser)
+        guide_splitter.setSizes([330, 920])
+        guide_layout.addWidget(guide_splitter, 1)
+        self.workspace_pages.addTab(guide_page, "开发任务 / 专题")
+        module_page = QWidget()
+        module_layout = QVBoxLayout(module_page)
+        self.workspace_pages.addTab(module_page, "模块字典 / 目录")
+        self.guide_query.textChanged.connect(self.filter_guides)
+        self.guide_list.currentRowChanged.connect(self.select_guide)
         self.query = QLineEdit()
         self.query.setPlaceholderText(
             "搜索：中文功能 / 包内路径 / 函数名（多词同时匹配）"
         )
         self.query.setClearButtonEnabled(True)
         self.query.setAccessibleName("手册全文搜索")
-        layout.addWidget(self.query)
+        module_layout.addWidget(self.query)
         filters = QHBoxLayout()
         self.domain, self.review = QComboBox(), QComboBox()
         self.domain.addItem("全部领域", "")
@@ -90,7 +124,7 @@ class ManualWindow(QMainWindow):
             self.review.addItem(title, value)
         filters.addWidget(self.domain)
         filters.addWidget(self.review)
-        layout.addLayout(filters)
+        module_layout.addLayout(filters)
         splitter = QSplitter()
         self.table = QTableView()
         self.model = ModuleModel(self)
@@ -118,7 +152,7 @@ class ManualWindow(QMainWindow):
         splitter.addWidget(self.table)
         splitter.addWidget(self.tabs)
         splitter.setSizes([520, 730])
-        layout.addWidget(splitter, 1)
+        module_layout.addWidget(splitter, 1)
         self.setCentralWidget(top)
         self.setStyleSheet(
             "QMainWindow{background:#f2f5f9;}"
@@ -183,7 +217,8 @@ class ManualWindow(QMainWindow):
         self.coverage.setText(
             f"阶段样板 · 目录 {coverage['indexed']}/{coverage['expected_entries']} · "
             f"已写说明 {coverage['annotated']} · 审核通过 {coverage['accepted']} · "
-            "自动提取 / 推测 / 作者静态核对 / 实机记录分别标注，不能互相替代。"
+            f"专题 {len(catalog.guides)} 篇草稿（非独审通过）；"
+            "目录、模块说明、专题覆盖分别计，不是全量讲解。"
         )
         self.domain.blockSignals(True)
         self.domain.clear()
@@ -192,9 +227,38 @@ class ManualWindow(QMainWindow):
             self.domain.addItem(domain, domain)
         self.domain.blockSignals(False)
         self.filter()
+        self.filter_guides()
+        if not self.catalog.guides:
+            self.workspace_pages.setCurrentIndex(1)
         self.statusBar().showMessage(
             f"{catalog.baseline['analysis_id']} · {len(catalog.warnings)} 条警告 · 只读"
         )
+
+    def filter_guides(self):
+        if self.catalog is None:
+            return
+        self.guide_rows = self.catalog.search_guides(self.guide_query.text())
+        self.guide_list.blockSignals(True)
+        self.guide_list.clear()
+        for guide in self.guide_rows:
+            suffix = "（引用已过期）" if guide["stale_dependencies"] else "（草稿）"
+            self.guide_list.addItem(guide["title"] + suffix)
+        self.guide_list.blockSignals(False)
+        if self.guide_rows:
+            selected = getattr(self, "guide_selected_id", None)
+            index = next(
+                (i for i, g in enumerate(self.guide_rows) if g["id"] == selected), 0
+            )
+            self.guide_list.setCurrentRow(index)
+        else:
+            self.guide_browser.setPlainText(
+                "没有匹配的开发专题；这里尚未覆盖该任务，不用函数名列表冒充讲解。"
+            )
+
+    def select_guide(self, index):
+        if 0 <= index < len(getattr(self, "guide_rows", [])):
+            self.guide_selected_id = self.guide_rows[index]["id"]
+            self.guide_browser.setHtml(guide_html(self.guide_rows[index]))
 
     def filter(self):
         if self.catalog is None:
@@ -225,9 +289,14 @@ class ManualWindow(QMainWindow):
             browser.setHtml(detail_html(self.selected, section))
 
     def follow_link(self, url):
-        identity = parse_qs(url.fragment()).get("module", [None])[0]
+        if url.fragment().startswith("guide-step-"):
+            self.guide_browser.scrollToAnchor(url.fragment())
+            return
+        params = parse_qs(url.fragment())
+        identity = params.get("module", [None])[0]
         if identity is None or self.catalog is None:
             return
+        self.workspace_pages.setCurrentIndex(1)
         self.query.clear()
         self.domain.setCurrentIndex(0)
         self.review.setCurrentIndex(0)
@@ -235,7 +304,21 @@ class ManualWindow(QMainWindow):
         for index, row in enumerate(self.model.rows):
             if row["id"] == identity:
                 self.table.selectRow(index)
-                self.tabs.setCurrentIndex(0)
+                section = params.get("section", ["overview"])[0]
+                sections = ["overview", "functions", "resources", "evidence"]
+                tab = sections.index(section) if section in sections else 0
+                self.tabs.setCurrentIndex(tab)
+                anchor = ""
+                function = params.get("function", [None])[0]
+                if section == "functions" and row["annotation"]:
+                    for number, item in enumerate(row["annotation"]["functions"]):
+                        if item["name"] == function:
+                            anchor = f"function-{number}"
+                            break
+                if section == "evidence":
+                    anchor = "evidence-" + params.get("evidence", [""])[0]
+                if anchor:
+                    self.browsers[tab].scrollToAnchor(anchor)
                 return
         self.statusBar().showMessage("关联模块尚未编入本阶段目录。")
 
@@ -266,12 +349,20 @@ class ManualWindow(QMainWindow):
             )
 
     def about(self):
+        coverage = self.catalog.coverage() if self.catalog else None
+        scope = (
+            f"当前目录{coverage['indexed']} / 说明{coverage['annotated']} / "
+            f"有限通过{coverage['accepted']}。"
+            if coverage
+            else "目录未加载。"
+        )
         QMessageBox.information(
             self,
             "关于",
             f"MXSJ 脚本开发手册 {__version__}\n"
             "独立只读工具；源码JSON是唯一底稿。\n"
-            "目前20条目录和1份待复核格式样板，不是全量说明。\n"
+            f"{scope}\n"
+            "目录登记、函数记录、模块有限审核和专题草稿分别计，不是全量讲解。\n"
             "来源摘要/行号校验不代表反编译正确，不运行游戏脚本。\n"
             "Windows/EXE/游戏验收尚未进行。",
         )

@@ -127,6 +127,59 @@ class GuiTests(Fixture):
         self.assertIsNotNone(self.window.catalog)
         self.assertFalse(self.window.jobs)
 
+    def test_task_guide_links_open_exact_function_and_evidence_tabs(self):
+        from urllib.parse import urlencode
+
+        from guide_fixture import install_guide
+
+        install_guide(self)
+        self.window.load()
+        self.wait_idle()
+        self.window.workspace_pages.setCurrentIndex(0)
+        self.assertEqual(self.window.guide_list.count(), 1)
+        self.assertIn("未独立审核", self.window.guide_browser.toPlainText())
+        ref = self.window.catalog.guides[0]["steps"][0]["references"][0]
+        self.window.follow_link(
+            QUrl(
+                "#"
+                + urlencode(
+                    {
+                        "module": ref["module_id"],
+                        "section": "functions",
+                        "function": ref["function"],
+                    }
+                )
+            )
+        )
+        self.assertEqual(self.window.workspace_pages.currentIndex(), 1)
+        self.assertEqual(self.window.tabs.currentIndex(), 1)
+        self.assertEqual(
+            self.window.selected["entry_index"], self.record["entry_index"]
+        )
+        self.window.follow_link(
+            QUrl(
+                "#"
+                + urlencode(
+                    {
+                        "module": ref["module_id"],
+                        "section": "evidence",
+                        "evidence": ref["evidence_ids"][0],
+                    }
+                )
+            )
+        )
+        self.assertEqual(self.window.tabs.currentIndex(), 3)
+
+    def test_guide_search_reports_missing_content_without_faking_completion(self):
+        from guide_fixture import install_guide
+
+        install_guide(self)
+        self.window.load()
+        self.wait_idle()
+        self.window.guide_query.setText("未覆盖任务xyz")
+        self.assertEqual(self.window.guide_list.count(), 0)
+        self.assertIn("尚未覆盖该任务", self.window.guide_browser.toPlainText())
+
     def test_reading_area_receives_vertical_space_not_banner(self):
         self.assertLess(self.window.coverage.height(), 120)
         self.assertGreater(self.window.table.height(), self.window.height() / 2)
