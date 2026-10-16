@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 871,
+  "annotation_sha256": "55b81261b69494667555e03f64c9cabf69c36a8f0d6383eaa6e0edb961062850",
+  "reviewer": "H",
+  "decision": "accepted",
+  "note": "network/netquicklogin（PR#40 head 44230b98527f72948acf16295e83f0151a26eb27 的修订字节）。暂存为 .json.template：正文尚未进入A集成分支，按N7任务卡与CONTRACT§4.1避免孤立或提前生效的审核；A合并PR#40后应按此处绑定的 annotation_sha256 核对实际原字节，一致则改名为 8b6e9266_871.json 激活。N7新会话独立复核（Arena 2026-10-16 新分配的第7个新agent，逻辑任务包H/review；不是旧H、不是A、不是旧E，未代写作者正文）。输入提交：A集成分支固定head 9b0dea799768aaacbb967ffc59f45753970752be，检查点7d32e5340b0ab4168f725d238d767ad6232f715d已确认为祖先；固定包script.fls 8b6e9266…、data.fls 5f96bdb2…、参数表43bb090d…本机sha256sum核对一致，未改动。独立复现：仓库外 Python3.11.2 + uncompyle6 3.9.3 / xdis 6.1.8 / spark-parser 1.9.0 / click 8.5.0，recover_entries.py --entries 3176,2170,871,516 → 四条均 recovered/source/baseline/decompile_ok，分别 script/net.py(1364行)、script/connect.py(295)、script/netquicklogin.py(313)、script/login/netserver.py(584)。本会话按“含6行恢复头”的候选行号独立复核下列十条（与A前序报告所引行号同一套编号），逐条与重跑候选原文比对。N4修订复核：N7-E04 已消除（ModuleReset 改为只列已声明 global 的七个状态，并明确 g_bHasQuickLoginFail 不重置、g_bHasClickQuickLogin=False 未声明 global 属局部赋值，标'作用域异常待核，不判实机bug'）；N7-E05 已消除（CanQuickConnect 摘要改为'需g_LoginKey且hero.g_ID同时存在'，并与清Key/net.OnError 分别取证）。新证据 n4_quick_reset/n4_quick_clear_force/n4_quick_clear_delete/n4_quick_logout/n4_quick_connect 的 R 行号 R0013/R0073/R0092/R0192/R0206与本会话重跑 netquicklogin.py 对应行逐字一致。结论：accepted（有限范围）。接受范围=已列函数与其所引证据；StartQuickTimer、计时单位、DGW 缺链、跨模块 main 触发仍标未核。所有 Claim 仍为 static_reviewed/inferred，runtime_verified=0；未做实机/原生/服务端验收。"
+}

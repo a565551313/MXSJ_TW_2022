@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "entry_index": 3176,
+  "annotation_sha256": "17c3a9956859c5c22ac61e362d1f5458d9cc5168b042522aa16b5a27eebeab90",
+  "reviewer": "H",
+  "decision": "accepted",
+  "note": "network/net（PR#40 head 44230b98527f72948acf16295e83f0151a26eb27 的修订字节）。暂存为 .json.template：正文尚未进入A集成分支，按N7任务卡与CONTRACT§4.1避免孤立或提前生效的审核；A合并PR#40后应按此处绑定的 annotation_sha256 核对实际原字节，一致则改名为 8b6e9266_3176.json 激活。N7新会话独立复核（Arena 2026-10-16 新分配的第7个新agent，逻辑任务包H/review；不是旧H、不是A、不是旧E，未代写作者正文）。输入提交：A集成分支固定head 9b0dea799768aaacbb967ffc59f45753970752be，检查点7d32e5340b0ab4168f725d238d767ad6232f715d已确认为祖先；固定包script.fls 8b6e9266…、data.fls 5f96bdb2…、参数表43bb090d…本机sha256sum核对一致，未改动。独立复现：仓库外 Python3.11.2 + uncompyle6 3.9.3 / xdis 6.1.8 / spark-parser 1.9.0 / click 8.5.0，recover_entries.py --entries 3176,2170,871,516 → 四条均 recovered/source/baseline/decompile_ok，分别 script/net.py(1364行)、script/connect.py(295)、script/netquicklogin.py(313)、script/login/netserver.py(584)。本会话按“含6行恢复头”的候选行号独立复核下列十条（与A前序报告所引行号同一套编号），逐条与重跑候选原文比对。N4修订复核：N7-E01 已消除（summary 改为'先调用原生CNetClient.PacketPrepare(self, a)，调用返回后才赋self.m_NetHead = a'）；N7-E02 已消除（写明 L62 先写2、L67 令 UNPACK_PACKET_NUM_PER_PROCESS=2/iRate、L69 再回写，并保留'原生是否采纳未验'）；N7-E03 已消除（GetServerName 摘要写入推导式变量异常并声明正常查名未确认；Loop 摘要改为'声明高优先选择意图'+登记 m_oLQueue 赋值异常，不再把低优先写成已确认可消费）。新证据 n4_net_lowest/n4_net_name/n4_net_prepare/n4_net_queue 在 evidence_n4_network.md 中的 R 前缀行号分别为 R0055/R0696/R0901/R1323，与本会话重跑候选逐行对照一致。结论：accepted（有限范围）。接受范围=已列类/函数与其所引证据；帧长2/3冲突、计时常数真实单位、低优先队列异常、原生采纳与否仍未验。所有 Claim 仍为 static_reviewed/inferred，runtime_verified=0；未做实机/原生/服务端验收。"
+}
