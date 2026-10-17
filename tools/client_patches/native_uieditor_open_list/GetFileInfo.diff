@@ -1,0 +1,14 @@
+--- original/dgtuieditor.py
++++ compact_local_only/dgtuieditor.py
+@@ -178,10 +178,7 @@
+         return
+ 
+     def GetFileInfo(self):
+-        import file_interface
+-        dFileInfo = file_interface.FILE_INFO
+-        dFileInfoEx = self.GetTmpFileInfo()
+-        return self.CombineFileInfo(dFileInfo, dFileInfoEx)
++        return self.GetTmpFileInfo()
+ 
+     def GetTmpFileInfo(self):
+         sPath = '.\\interface'

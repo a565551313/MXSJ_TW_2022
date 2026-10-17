@@ -183,6 +183,16 @@ PYTHONPATH=src python -m unittest discover -s tests
 启动脚本自检；真实包测试在 `data/` 存在时自动启用
 （全量 807 精灵解码 + 样本像素级往返 + GUI 离屏冒烟）。
 
+## 共享核心（mx_common）
+
+路径哈希（`core/mxhash.py`）、`.dlg` 原生存储（`core/native_layout.py`）、
+输出路径保护（`core/output_paths.py`）、精灵格式常量（`core/sprite_format.py`）
+都不是本包独立维护的实现，而是仓库 `mx_common/` 真源的**字节副本**，由
+`tools/devkit/vendor_core.py` 生成：改逻辑改 `mx_common/`，然后
+`python3 tools/devkit/vendor_core.py --write`；`--check` 有漂移即为错误。
+`.dlg` 与精灵的**行为一致性**（本包 Pillow 落点 vs UI 编辑器 RGBA 落点）
+由 `tools/devkit/tests/test_sprite_parity.py` 交叉验证。
+
 ## 约束
 
 * script.fls 条目是 zlib+5 段 XOR 的定制 Python 字节码，只浏览不解码。

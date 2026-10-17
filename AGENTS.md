@@ -37,8 +37,9 @@
 | `tools/decompiler/` | 双 VM 字节码反编译、5 段 XOR 重打包；`output/` 是反编译文本（**不准确、不可执行，只作线索**） | `notes/opcode_mapping_and_decompilation.md` |
 | `tools/data-parser/` | `universal_fls_tool.py`、`mx_path_hash.py`、`extract_dlg.py`、`i0_sprite.py`、`pe_resource_dump.py`（从 exe/dll 的 `.rsrc` 抽皮肤/光标/版式/字串）、`skin_label_patch.py` + `pe_resource_patch.py`（皮肤改字并原位写回）、精灵格式说明 | `I0_SPRITE_FORMAT.md` |
 | `tools/client_patches/` | 注册 UI 离线预览补丁（只改 entry 337/4007），构建器、测试、冻结资产、CPython 2.5 审计。**v3.3 已由用户判定不规范并作废（2026-10-14），待还原原包并按原生重做，不得再分发** | [`README.md`](tools/client_patches/README.md)、[`V3_3_DELIVERY_AND_ACCEPTANCE.md`](tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md) |
-| `tools/devkit/` | 开发自检工具箱：`check_windows_compat.py`（Windows 兼容静态检查，交付前必跑） | [`README.md`](tools/devkit/README.md) |
+| `tools/devkit/` | 开发自检工具箱：`check_windows_compat.py`（Windows 兼容静态检查，交付前必跑）、`vendor_core.py`（`mx_common/` → 编辑器 `core/` 的共享核心分发器） | [`README.md`](tools/devkit/README.md) |
 | `tools/data-export/`、`tools/data_browser/`、`tools/dis_v43/`、`tools/*.py` | 历史数据导出/浏览/反汇编工具，仍可用但不是现行复核入口 | — |
+| `mx_common/` | 编辑器共享核心**唯一真源**（`mxhash.py`、`native_layout.py`、`output_paths.py`、`sprite_format.py`）；编辑器里的同名文件是 `tools/devkit/vendor_core.py` 生成的副本，**改真源**再用 `--write` 分发 | [`README.md`](mx_common/README.md) |
 | `resource_editor/` | `.fls` 资源包浏览/编辑器（PySide6；core 无 Qt） | [`README.md`](resource_editor/README.md)、`DESIGN.md` |
 | `ui_editor/` | `.dlg` 布局可视化编辑器（PySide6；core 无 Qt） | [`README.md`](ui_editor/README.md)、`DESIGN.md`、`notes/ui_editor_phase2_design.md` |
 | `map_editor/` | 地图解析/渲染/导出 + GIRB 碰撞解码（PySide6 GUI 可选） | [`README.md`](map_editor/README.md)、[`PR25_REVIEW.md`](map_editor/PR25_REVIEW.md) |
@@ -112,7 +113,12 @@
 ## 7. 已知坑（详见 STATUS 与各子项目文档）
 
 - GIRB 碰撞解码仍有 300/429 扇区解不出；现在明确失败而非假成功。不要拿旧的成功率反驳字节级差异。
-- `notes/fls_path_hash_and_dlg.md` 说引擎**线性扫描**目录，而编辑器 P0 修复依据是“有序目录 / 二分寻址 + `r1≠0`”——两者尚未用反汇编统一；改目录写回逻辑前先看 `mx.exe:0x48ECF0`。
+- 0SLF 目录寻址**已判定（2026-10-16，反汇编）**：`.dlg` 走的 LoadFile 链在 `0x60DD00`
+  用 **二分**（`0x60DD35` → `0x60E690` = `lower_bound`，16 字节记录、比 entry_id；返回后
+  `0x60DD3D`/`0x60DD41` 判未命中）。所以**目录必须按 entry_id 升序**，新增/插入条目后
+  其后所有记录的下标都变、`r3` 必须重算。`notes/fls_path_hash_and_dlg.md` §2 的「线性扫描」
+  说的是 `0x48ECF0`（= `ReadFls`）那条路，该文已加更正横幅；细节见
+  `notes/native_dlg_path_cipher.md` §2.1。改目录写回逻辑前先读这两处。
 - `GS2C_PROP_CHANGE` 与 `GS2C_NPC_CHAT_EXT` 在客户端表里同为 152（客户端自身冲突）；链路帧 `0xFF` 续读长度是 **2 字节**。
 - `script.fls` 模块导入不走路径哈希（未解）；`.dlg` 原生路径 XOR 已由真实 LoadFile 静态链定位（见 `notes/native_dlg_path_cipher.md`）；头反推只作旧存储读取兼容，不能用于写包验证。
 - 仓库里**没有任何真实客户端抓包字节**；所有协议结论来自静态分析。

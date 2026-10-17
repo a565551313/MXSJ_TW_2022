@@ -1,0 +1,934 @@
+{
+  "scope": "Native editor DEFAULT_VALUE versus external DEFAULT_PROPS; not engine runtime defaults",
+  "native_defaults": 31,
+  "native_palette": 22,
+  "external_defaults": 38,
+  "external_only_types": [
+    "CAutoDlgBase",
+    "CBitmapFrame",
+    "CBitmapHFrame",
+    "CBitmapVFrame",
+    "CDataWidget",
+    "CEdit",
+    "CTitleTableView"
+  ],
+  "native_only_types": [],
+  "all_shared_field_sets_equal": true,
+  "normalization": "ASCII already decoded; non-ASCII resource paths GBK, other field values Big5; original bytes remain in native_tables.json. Tuple/list distinctions not preserved by snapshot.",
+  "types": [
+    {
+      "type": "CBorder",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHeight",
+          "native": 100,
+          "external": 130
+        },
+        {
+          "field": "iWidth",
+          "native": 100,
+          "external": 252
+        },
+        {
+          "field": "sFileName",
+          "native": "combdialog\\纸底\\",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "border_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CBox",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHeight",
+          "native": 20,
+          "external": 24
+        },
+        {
+          "field": "sName",
+          "native": "loc_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CBoxWithTips",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iTipsDirect",
+          "native": 0,
+          "external": 1
+        },
+        {
+          "field": "iWidth",
+          "native": 100,
+          "external": 55
+        },
+        {
+          "field": "sName",
+          "native": "tips_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CButton",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iMsgId",
+          "native": 0,
+          "external": 1
+        },
+        {
+          "field": "sFileName",
+          "native": "combdialog\\按钮\\问号.igs",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "btn_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CCombCheckButton",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHSpace",
+          "native": 1,
+          "external": 2
+        },
+        {
+          "field": "iHeight",
+          "native": 20,
+          "external": 52
+        },
+        {
+          "field": "iVSpace",
+          "native": 1,
+          "external": 2
+        },
+        {
+          "field": "iWidth",
+          "native": 200,
+          "external": 173
+        },
+        {
+          "field": "sFileName",
+          "native": "combdialog4\\杂图\\队伍头像框\\touxiangkuang.png",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "ccbtn_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CFrame",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHeight",
+          "native": 100,
+          "external": 196
+        },
+        {
+          "field": "iWidth",
+          "native": 100,
+          "external": 291
+        },
+        {
+          "field": "sFileName",
+          "native": "combdialog\\纸底\\",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "frame_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CHFrame",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iWidth",
+          "native": 100,
+          "external": 91
+        },
+        {
+          "field": "sFileName",
+          "native": "combdialog\\主框架\\001\\middle\\",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "hframe_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CHPageButton",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iMsgId",
+          "native": 0,
+          "external": 2
+        },
+        {
+          "field": "iTeam",
+          "native": 0,
+          "external": 1
+        },
+        {
+          "field": "iWidth",
+          "native": 0,
+          "external": 50
+        },
+        {
+          "field": "sFileName",
+          "native": "combdialog\\按钮\\绿上翻页四字.igs",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "hpbtn_def",
+          "external": ""
+        },
+        {
+          "field": "sText",
+          "native": "橫分頁",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CHPagePngButton",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iMsgId",
+          "native": 0,
+          "external": 2
+        },
+        {
+          "field": "iStyle",
+          "native": 44,
+          "external": 43
+        },
+        {
+          "field": "iWidth",
+          "native": 75,
+          "external": 80
+        },
+        {
+          "field": "sFileName",
+          "native": "combdialog4\\三态按钮\\竖分页按钮\\",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "hpbtn_def",
+          "external": ""
+        },
+        {
+          "field": "sText",
+          "native": "橫分頁",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CHPngFrame",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "sFileName",
+          "native": "combdialog\\主框架\\011\\middle\\",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "hframe_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CHotBox",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHeight",
+          "native": 20,
+          "external": 44
+        },
+        {
+          "field": "iMsgId",
+          "native": 0,
+          "external": 1
+        },
+        {
+          "field": "iTipsDirect",
+          "native": 0,
+          "external": 2
+        },
+        {
+          "field": "iWidth",
+          "native": 100,
+          "external": 57
+        },
+        {
+          "field": "sName",
+          "native": "hbox_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CImagesFrame",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iWidth",
+          "native": 0,
+          "external": 205
+        },
+        {
+          "field": "sFileName",
+          "native": "combdialog4\\三态按钮\\关闭\\0.png",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "img_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CList",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHeight",
+          "native": 300,
+          "external": 220
+        },
+        {
+          "field": "iRow",
+          "native": 5,
+          "external": 6
+        },
+        {
+          "field": "iWidth",
+          "native": 100,
+          "external": 230
+        },
+        {
+          "field": "sName",
+          "native": "lst_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CMainFrame",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHeight",
+          "native": 500,
+          "external": 390
+        },
+        {
+          "field": "iWidth",
+          "native": 400,
+          "external": 460
+        },
+        {
+          "field": "sName",
+          "native": "mframe_def",
+          "external": ""
+        },
+        {
+          "field": "sTitle",
+          "native": "默認標題",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CPngList",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHeight",
+          "native": 300,
+          "external": 288
+        },
+        {
+          "field": "iWidth",
+          "native": 100,
+          "external": 187
+        },
+        {
+          "field": "sName",
+          "native": "lst_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CPngNineFrame",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHeight",
+          "native": 100,
+          "external": 143
+        },
+        {
+          "field": "iWidth",
+          "native": 100,
+          "external": 234
+        },
+        {
+          "field": "sFileName",
+          "native": "combdialog\\主框架\\011\\",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "frame_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CPngTable",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHeight",
+          "native": 300,
+          "external": 356
+        },
+        {
+          "field": "iRow",
+          "native": 5,
+          "external": 11
+        },
+        {
+          "field": "iWidth",
+          "native": 215,
+          "external": 437
+        },
+        {
+          "field": "lSubWidth",
+          "native": [
+            100,
+            100
+          ],
+          "external": []
+        },
+        {
+          "field": "sName",
+          "native": "tab_def",
+          "external": ""
+        },
+        {
+          "field": "sTitles",
+          "native": "標題1\\n標題2\\n",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CProgress",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iOffsetX",
+          "native": 2,
+          "external": 0
+        },
+        {
+          "field": "iOffsetY",
+          "native": 1,
+          "external": 0
+        },
+        {
+          "field": "iSpace",
+          "native": 2,
+          "external": 0
+        },
+        {
+          "field": "iType",
+          "native": 2,
+          "external": 0
+        },
+        {
+          "field": "iWidth",
+          "native": 200,
+          "external": 187
+        },
+        {
+          "field": "sBarFileName",
+          "native": "combdialog\\杂图\\完成度进度条.igs",
+          "external": ""
+        },
+        {
+          "field": "sBgFileName",
+          "native": "combdialog\\杂图\\完成度进度条底.igs",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "prg_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CRichTextFrame",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iAlign",
+          "native": 0,
+          "external": 4
+        },
+        {
+          "field": "iFont",
+          "native": 13,
+          "external": 0
+        },
+        {
+          "field": "iWidth",
+          "native": 100,
+          "external": 120
+        },
+        {
+          "field": "lColor",
+          "native": [
+            0,
+            0,
+            0
+          ],
+          "external": []
+        },
+        {
+          "field": "lEnterColor",
+          "native": [
+            0,
+            0,
+            0
+          ],
+          "external": []
+        },
+        {
+          "field": "sName",
+          "native": "rtxt_def",
+          "external": ""
+        },
+        {
+          "field": "sText",
+          "native": "富文本",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CSpriteFrame",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "sFileName",
+          "native": "blog\\love.spr",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "spr_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CTable",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHeight",
+          "native": 300,
+          "external": 287
+        },
+        {
+          "field": "iRow",
+          "native": 5,
+          "external": 10
+        },
+        {
+          "field": "iWidth",
+          "native": 215,
+          "external": 360
+        },
+        {
+          "field": "lSubWidth",
+          "native": [
+            100,
+            100
+          ],
+          "external": []
+        },
+        {
+          "field": "sName",
+          "native": "tab_def",
+          "external": ""
+        },
+        {
+          "field": "sTitles",
+          "native": "標題1\\n標題2\\n",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CTableView",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHeight",
+          "native": 360,
+          "external": 289
+        },
+        {
+          "field": "iWidth",
+          "native": 215,
+          "external": 288
+        },
+        {
+          "field": "sName",
+          "native": "tbview_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CTextButton",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iMsgId",
+          "native": 0,
+          "external": 2
+        },
+        {
+          "field": "iStyle",
+          "native": 41,
+          "external": 0
+        },
+        {
+          "field": "iWidth",
+          "native": 60,
+          "external": 80
+        },
+        {
+          "field": "sFileName",
+          "native": "combdialog4\\三态按钮\\一级按钮\\",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "txtbtn_def",
+          "external": ""
+        },
+        {
+          "field": "sText",
+          "native": "按鈕",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CTextFrame",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iAlign",
+          "native": 0,
+          "external": 1
+        },
+        {
+          "field": "iFont",
+          "native": 13,
+          "external": 0
+        },
+        {
+          "field": "iSpace",
+          "native": 0,
+          "external": 5
+        },
+        {
+          "field": "lColor",
+          "native": [
+            0,
+            0,
+            0
+          ],
+          "external": []
+        },
+        {
+          "field": "sName",
+          "native": "txt_def",
+          "external": ""
+        },
+        {
+          "field": "sText",
+          "native": "默認文本",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CTextFrameEx",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iAlign",
+          "native": 0,
+          "external": 4
+        },
+        {
+          "field": "iFont",
+          "native": 13,
+          "external": 0
+        },
+        {
+          "field": "iWidth",
+          "native": 100,
+          "external": 84
+        },
+        {
+          "field": "lColor",
+          "native": [
+            0,
+            0,
+            0
+          ],
+          "external": []
+        },
+        {
+          "field": "sName",
+          "native": "txt_def",
+          "external": ""
+        },
+        {
+          "field": "sText",
+          "native": "默認文本",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CVFrame",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHeight",
+          "native": 100,
+          "external": 403
+        },
+        {
+          "field": "sFileName",
+          "native": "combdialog\\竖滚动条\\",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "vframe_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CVPageButton",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iMsgId",
+          "native": 0,
+          "external": 11
+        },
+        {
+          "field": "iStyle",
+          "native": 36,
+          "external": 38
+        },
+        {
+          "field": "iTeam",
+          "native": 0,
+          "external": 1
+        },
+        {
+          "field": "iWidth",
+          "native": 0,
+          "external": 60
+        },
+        {
+          "field": "sFileName",
+          "native": "combdialog\\按钮\\侧边翻页.igs",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "vpbtn_def",
+          "external": ""
+        },
+        {
+          "field": "sText",
+          "native": "豎分頁",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CVPagePngButton",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iMsgId",
+          "native": 0,
+          "external": 3
+        },
+        {
+          "field": "iTeam",
+          "native": 0,
+          "external": 1
+        },
+        {
+          "field": "sFileName",
+          "native": "combdialog4\\三态按钮\\竖分页按钮\\",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "vpbtn_def",
+          "external": ""
+        },
+        {
+          "field": "sText",
+          "native": "豎分頁",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CVPngFrame",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHeight",
+          "native": 100,
+          "external": 50
+        },
+        {
+          "field": "sFileName",
+          "native": "combdialog\\竖滚动条\\",
+          "external": ""
+        },
+        {
+          "field": "sName",
+          "native": "vframe_def",
+          "external": ""
+        }
+      ]
+    },
+    {
+      "type": "CVPngScrollBar",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHeight",
+          "native": 300,
+          "external": 234
+        },
+        {
+          "field": "sName",
+          "native": "scroll_def",
+          "external": ""
+        },
+        {
+          "field": "sWidgetType",
+          "native": "CVScrollBar",
+          "external": "CVPngScrollBar"
+        }
+      ]
+    },
+    {
+      "type": "CVScrollBar",
+      "native_only_fields": [],
+      "external_only_fields": [],
+      "value_differences": [
+        {
+          "field": "iHeight",
+          "native": 300,
+          "external": 354
+        },
+        {
+          "field": "sName",
+          "native": "scroll_def",
+          "external": ""
+        }
+      ]
+    }
+  ]
+}

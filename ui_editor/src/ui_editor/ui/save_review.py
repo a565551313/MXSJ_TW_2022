@@ -40,8 +40,12 @@ class SaveReviewDialog(QDialog):
             "散装布局不会嵌入图片；静态未发现引用不等于无引用。取消不改变编辑状态。"
         )
         if to_pack:
-            summary.setText(summary.text() + "\n目标布局按原生路径密钥写入；"
-                            "旧明文/错误密钥会在本次保存时迁移，未改布局不动。")
+            summary.setText(
+                summary.text()
+                + "\n目标条目会按编辑器版式重写（即使没改任何属性，序列化"
+                  "也会归一化字段顺序与写法）；除目标条目、本次写入的图片与"
+                  "明确迁移的旧存储外，其它条目逐字节保持原样。"
+                  "旧明文/错误密钥会在本次保存时迁移为原生路径密钥。")
         if layout_notice:
             summary.setText(summary.text() + "\n" + layout_notice)
         summary.setWordWrap(True)

@@ -1,0 +1,3057 @@
+{
+  "True": true,
+  "False": false,
+  "copy": {
+    "symbol": "import copy"
+  },
+  "WIDGET_TYPE_KEY": "sWidgetType",
+  "WIDGET_X_KEY": "iX",
+  "WIDGET_Y_KEY": "iY",
+  "WIDGET_NAME_KEY": "sName",
+  "WIDGET_MSGID_KEY": "iMsgId",
+  "TYPE_EDIT_ALL": 1,
+  "TYPE_EDIT_DIGIT": 2,
+  "TYPE_EDIT_ALPHA": 3,
+  "TYPE_EDIT_ALNUM": 4,
+  "TYPE_EDIT_COLOR": 5,
+  "TYPE_EDIT_PATH": 6,
+  "TYPE_LIST_BOX": 7,
+  "WIDGET_UPDATE_ERR_NAME": 1,
+  "GetWidgetDeafultValue": {
+    "symbol": "GetWidgetDeafultValue"
+  },
+  "GetWidgetAttrConfig": {
+    "symbol": "GetWidgetAttrConfig"
+  },
+  "GetWidgetTypeName": {
+    "symbol": "GetWidgetTypeName"
+  },
+  "Color2Code": {
+    "symbol": "Color2Code"
+  },
+  "Code2Color4RichText": {
+    "symbol": "Code2Color4RichText"
+  },
+  "Code2Color": {
+    "symbol": "Code2Color"
+  },
+  "WIDGET_TYPE_KEY_2_NAME": {
+    "CBox": {
+      "raw_hex": "a977a6ec",
+      "big5": "定位",
+      "gbk": "﹚��"
+    },
+    "CBoxWithTips": {
+      "raw_hex": "b4a3a5dc",
+      "big5": "提示",
+      "gbk": "矗ボ"
+    },
+    "CHotBox": {
+      "raw_hex": "bcf6b0cf",
+      "big5": "熱區",
+      "gbk": "荐跋"
+    },
+    "CImagesFrame": {
+      "raw_hex": "b9cfa4f9",
+      "big5": "圖片",
+      "gbk": "瓜��"
+    },
+    "CSpriteFrame": "spr",
+    "CMainFrame": {
+      "raw_hex": "a544aed8ac5b",
+      "big5": "主框架",
+      "gbk": "�D�噩["
+    },
+    "CFrame": {
+      "raw_hex": "a445ae63aee6",
+      "big5": "九宮格",
+      "gbk": "�E甤��"
+    },
+    "CBorder": {
+      "raw_hex": "c3f3aac5a445ae63aee6",
+      "big5": "鏤空九宮格",
+      "gbk": "皿�扭E甤��"
+    },
+    "CPngNineFrame": {
+      "raw_hex": "a445ae63aee6",
+      "big5": "九宮格",
+      "gbk": "�E甤��"
+    },
+    "CHFrame": {
+      "raw_hex": "a454ae63aee6beee",
+      "big5": "三宮格橫",
+      "gbk": "�T甤�婢�"
+    },
+    "CHPngFrame": {
+      "raw_hex": "a454ae63aee6beee",
+      "big5": "三宮格橫",
+      "gbk": "�T甤�婢�"
+    },
+    "CVFrame": {
+      "raw_hex": "a454ae63aee6bddd",
+      "big5": "三宮格豎",
+      "gbk": "�T甤�娼�"
+    },
+    "CVPngFrame": {
+      "raw_hex": "a454ae63aee6bddd",
+      "big5": "三宮格豎",
+      "gbk": "�T甤�娼�"
+    },
+    "CButton": {
+      "raw_hex": "abf6b673",
+      "big5": "按鈕",
+      "gbk": "�龆s"
+    },
+    "CTextButton": {
+      "raw_hex": "a4e5a5bbabf6b673",
+      "big5": "文本按鈕",
+      "gbk": "ゅセ�龆s"
+    },
+    "CProgress": {
+      "raw_hex": "b669abd7b1f8",
+      "big5": "進度條",
+      "gbk": "秈�妆�"
+    },
+    "CTextFrame": {
+      "raw_hex": "a4e5a5bba15dbc6fb1f3a15e",
+      "big5": "文本（廢棄）",
+      "gbk": "ゅセ�]紀斌�^"
+    },
+    "CTextFrameEx": {
+      "raw_hex": "a4e5a5bba15db1c0aff2a15e",
+      "big5": "文本（推荐）",
+      "gbk": "ゅセ�]崩�颉^"
+    },
+    "CRichTextFrame": {
+      "raw_hex": "b449a4e5a5bb",
+      "big5": "富文本",
+      "gbk": "碔ゅセ"
+    },
+    "CTable": {
+      "raw_hex": "aaedaee6",
+      "big5": "表格",
+      "gbk": "�懋�"
+    },
+    "CPngTable": {
+      "raw_hex": "aaedaee6",
+      "big5": "表格",
+      "gbk": "�懋�"
+    },
+    "CList": {
+      "raw_hex": "a643aaed",
+      "big5": "列表",
+      "gbk": "�C��"
+    },
+    "CPngList": {
+      "raw_hex": "a643aaed",
+      "big5": "列表",
+      "gbk": "�C��"
+    },
+    "CTableView": {
+      "raw_hex": "b45fa5cea643aaed",
+      "big5": "復用列表",
+      "gbk": "確ノ�C��"
+    },
+    "CCombCheckButton": {
+      "raw_hex": "aaabab7eaee6",
+      "big5": "物品格",
+      "gbk": "��珇��"
+    },
+    "CHPageButton": {
+      "raw_hex": "beeea4c0adb6abf6b673",
+      "big5": "橫分頁按鈕",
+      "gbk": "绢だ�东龆s"
+    },
+    "CHPagePngButton": {
+      "raw_hex": "beeea4c0adb6abf6b673",
+      "big5": "橫分頁按鈕",
+      "gbk": "绢だ�东龆s"
+    },
+    "CVPageButton": {
+      "raw_hex": "bddda4c0adb6abf6b673",
+      "big5": "豎分頁按鈕",
+      "gbk": "捷だ�东龆s"
+    },
+    "CVPagePngButton": {
+      "raw_hex": "bddda4c0adb6abf6b673",
+      "big5": "豎分頁按鈕",
+      "gbk": "捷だ�东龆s"
+    },
+    "CVScrollBar": {
+      "raw_hex": "ba75b0cab1f8",
+      "big5": "滾動條",
+      "gbk": "簎笆兵"
+    },
+    "CVPngScrollBar": {
+      "raw_hex": "ba75b0cab1f8",
+      "big5": "滾動條",
+      "gbk": "簎笆兵"
+    }
+  },
+  "WIDGET_KEY_LIST": [
+    "CBox",
+    "CBoxWithTips",
+    "CHotBox",
+    "CImagesFrame",
+    "CSpriteFrame",
+    "CMainFrame",
+    "CFrame",
+    "CHFrame",
+    "CVFrame",
+    "CButton",
+    "CTextButton",
+    "CProgress",
+    "CTextFrame",
+    "CTextFrameEx",
+    "CRichTextFrame",
+    "CTable",
+    "CList",
+    "CTableView",
+    "CCombCheckButton",
+    "CHPageButton",
+    "CVPageButton",
+    "CVScrollBar"
+  ],
+  "DEFAULT_VALUE": {
+    "CBox": {
+      "sName": "loc_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CBox",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "iRow": 1,
+      "iCol": 1,
+      "iHSpace": 0,
+      "iVSpace": 0,
+      "iWidth": 100,
+      "iHeight": 20
+    },
+    "CImagesFrame": {
+      "sName": "img_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CImagesFrame",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sFileName": {
+        "raw_hex": "636f6d626469616c6f67345cc8fdccacb0b4c5a55cb9d8b1d55c302e706e67",
+        "big5": "combdialog4\\��怓偌聽\\壽敕\\0.png",
+        "gbk": "combdialog4\\三态按钮\\关闭\\0.png"
+      },
+      "iCol": 1,
+      "iVSpace": 0,
+      "iRow": 1,
+      "iHSpace": 0,
+      "iWidth": 0
+    },
+    "CSpriteFrame": {
+      "sName": "spr_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CSpriteFrame",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sFileName": "blog\\love.spr"
+    },
+    "CBoxWithTips": {
+      "sName": "tips_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CBoxWithTips",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "iWidth": 100,
+      "iHeight": 20,
+      "iTipsDirect": 0,
+      "sTips": ""
+    },
+    "CHotBox": {
+      "sName": "hbox_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CHotBox",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "iWidth": 100,
+      "iHeight": 20,
+      "iMsgId": 0,
+      "iTipsDirect": 0,
+      "sTips": ""
+    },
+    "CMainFrame": {
+      "sName": "mframe_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CMainFrame",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sTitle": {
+        "raw_hex": "c071bb7bbcd0c344",
+        "big5": "默認標題",
+        "gbk": "纐粄夹肈"
+      },
+      "iWidth": 400,
+      "iHeight": 500,
+      "iType": 1,
+      "iRatio": 25
+    },
+    "CButton": {
+      "sName": "btn_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CButton",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sFileName": {
+        "raw_hex": "636f6d626469616c6f675cb0b4c5a55ccecabac52e696773",
+        "big5": "combdialog\\偌聽\\恀瘍.igs",
+        "gbk": "combdialog\\按钮\\问号.igs"
+      },
+      "iMsgId": 0,
+      "iTeam": 0,
+      "iRelationNum": 0,
+      "lRelationName": [],
+      "iTipsDirect": 0,
+      "sTips": "",
+      "sSoundPath": ""
+    },
+    "CTextButton": {
+      "sName": "txtbtn_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CTextButton",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "iStyle": 41,
+      "sFileName": {
+        "raw_hex": "636f6d626469616c6f67345cc8fdccacb0b4c5a55cd2bbbcb6b0b4c5a55c",
+        "big5": "combdialog4\\��怓偌聽\\珨撰偌聽\\",
+        "gbk": "combdialog4\\三态按钮\\一级按钮\\"
+      },
+      "sText": {
+        "raw_hex": "abf6b673",
+        "big5": "按鈕",
+        "gbk": "�龆s"
+      },
+      "iWidth": 60,
+      "iMsgId": 0,
+      "iTeam": 0,
+      "iRelationNum": 0,
+      "lRelationName": [],
+      "iTipsDirect": 0,
+      "sTips": "",
+      "sSoundPath": ""
+    },
+    "CTable": {
+      "sName": "tab_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CTable",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sTitles": {
+        "raw_hex": "bcd0c344315c6ebcd0c344325c6e",
+        "big5": "標題1\\n標題2\\n",
+        "gbk": "夹肈1\\n夹肈2\\n"
+      },
+      "iRow": 5,
+      "iWidth": 215,
+      "iHeight": 300,
+      "iMsgId": 100,
+      "lSubWidth": [
+        100,
+        100
+      ]
+    },
+    "CPngTable": {
+      "sName": "tab_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CPngTable",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sTitles": {
+        "raw_hex": "bcd0c344315c6ebcd0c344325c6e",
+        "big5": "標題1\\n標題2\\n",
+        "gbk": "夹肈1\\n夹肈2\\n"
+      },
+      "iRow": 5,
+      "iWidth": 215,
+      "iHeight": 300,
+      "iMsgId": 100,
+      "lSubWidth": [
+        100,
+        100
+      ]
+    },
+    "CList": {
+      "sName": "lst_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CList",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "iRow": 5,
+      "iWidth": 100,
+      "iHeight": 300,
+      "iMsgId": 100
+    },
+    "CPngList": {
+      "sName": "lst_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CPngList",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "iRow": 5,
+      "iWidth": 100,
+      "iHeight": 300,
+      "iMsgId": 100
+    },
+    "CVScrollBar": {
+      "sName": "scroll_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CVScrollBar",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "iHeight": 300
+    },
+    "CVPngScrollBar": {
+      "sName": "scroll_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CVScrollBar",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "iHeight": 300
+    },
+    "CTextFrame": {
+      "sName": "txt_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CTextFrame",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sText": {
+        "raw_hex": "c071bb7ba4e5a5bb",
+        "big5": "默認文本",
+        "gbk": "纐粄ゅセ"
+      },
+      "iSpace": 0,
+      "iFont": 13,
+      "iAlign": 0,
+      "lColor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "CTextFrameEx": {
+      "sName": "txt_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CTextFrameEx",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sText": {
+        "raw_hex": "c071bb7ba4e5a5bb",
+        "big5": "默認文本",
+        "gbk": "纐粄ゅセ"
+      },
+      "iVSpace": 0,
+      "iFont": 13,
+      "iAlign": 0,
+      "bAutoNextLine": true,
+      "iWidth": 100,
+      "iHeight": 20,
+      "lColor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "CRichTextFrame": {
+      "sName": "rtxt_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CRichTextFrame",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sText": {
+        "raw_hex": "b449a4e5a5bb",
+        "big5": "富文本",
+        "gbk": "碔ゅセ"
+      },
+      "iFont": 13,
+      "iAlign": 0,
+      "iWidth": 100,
+      "iHeight": 20,
+      "lColor": [
+        0,
+        0,
+        0
+      ],
+      "bClick": false,
+      "lEnterColor": [
+        0,
+        0,
+        0
+      ],
+      "iMsgId": 0
+    },
+    "CProgress": {
+      "sName": "prg_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CProgress",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "iWidth": 200,
+      "sBarFileName": {
+        "raw_hex": "636f6d626469616c6f675cd4d3cdbc5ccdeab3c9b6c8bdf8b6c8ccf52e696773",
+        "big5": "combdialog\\娸芞\\俇傖僅輛僅沭.igs",
+        "gbk": "combdialog\\杂图\\完成度进度条.igs"
+      },
+      "sBgFileName": {
+        "raw_hex": "636f6d626469616c6f675cd4d3cdbc5ccdeab3c9b6c8bdf8b6c8ccf5b5d72e696773",
+        "big5": "combdialog\\娸芞\\俇傖僅輛僅沭菁.igs",
+        "gbk": "combdialog\\杂图\\完成度进度条底.igs"
+      },
+      "iType": 2,
+      "iOffsetX": 2,
+      "iOffsetY": 1,
+      "iSpace": 2
+    },
+    "CHPageButton": {
+      "sName": "hpbtn_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CHPageButton",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "iStyle": 36,
+      "sFileName": {
+        "raw_hex": "636f6d626469616c6f675cb0b4c5a55cc2ccc9cfb7add2b3cbc4d7d62e696773",
+        "big5": "combdialog\\偌聽\\蟯奻楹珜侐趼.igs",
+        "gbk": "combdialog\\按钮\\绿上翻页四字.igs"
+      },
+      "sText": {
+        "raw_hex": "beeea4c0adb6",
+        "big5": "橫分頁",
+        "gbk": "绢だ��"
+      },
+      "iWidth": 0,
+      "iMsgId": 0,
+      "iTeam": 0,
+      "iRelationNum": 0,
+      "lRelationName": [],
+      "iTipsDirect": 0,
+      "sTips": "",
+      "sSoundPath": ""
+    },
+    "CHPagePngButton": {
+      "sName": "hpbtn_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CHPagePngButton",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "iStyle": 44,
+      "sFileName": {
+        "raw_hex": "636f6d626469616c6f67345cc8fdccacb0b4c5a55ccafab7d6d2b3b0b4c5a55c",
+        "big5": "combdialog4\\��怓偌聽\\旳煦珜偌聽\\",
+        "gbk": "combdialog4\\三态按钮\\竖分页按钮\\"
+      },
+      "sText": {
+        "raw_hex": "beeea4c0adb6",
+        "big5": "橫分頁",
+        "gbk": "绢だ��"
+      },
+      "iWidth": 75,
+      "iMsgId": 0,
+      "iTeam": 0,
+      "iRelationNum": 0,
+      "lRelationName": [],
+      "iTipsDirect": 0,
+      "sTips": "",
+      "sSoundPath": ""
+    },
+    "CVPageButton": {
+      "sName": "vpbtn_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CVPageButton",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "iStyle": 36,
+      "sFileName": {
+        "raw_hex": "636f6d626469616c6f675cb0b4c5a55cb2e0b1dfb7add2b32e696773",
+        "big5": "combdialog\\偌聽\\耜晚楹珜.igs",
+        "gbk": "combdialog\\按钮\\侧边翻页.igs"
+      },
+      "sText": {
+        "raw_hex": "bddda4c0adb6",
+        "big5": "豎分頁",
+        "gbk": "捷だ��"
+      },
+      "iWidth": 0,
+      "iMsgId": 0,
+      "iTeam": 0,
+      "iRelationNum": 0,
+      "lRelationName": [],
+      "iTipsDirect": 0,
+      "sTips": "",
+      "sSoundPath": ""
+    },
+    "CVPagePngButton": {
+      "sName": "vpbtn_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CVPagePngButton",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "iStyle": 44,
+      "sFileName": {
+        "raw_hex": "636f6d626469616c6f67345cc8fdccacb0b4c5a55ccafab7d6d2b3b0b4c5a55c",
+        "big5": "combdialog4\\��怓偌聽\\旳煦珜偌聽\\",
+        "gbk": "combdialog4\\三态按钮\\竖分页按钮\\"
+      },
+      "sText": {
+        "raw_hex": "bddda4c0adb6",
+        "big5": "豎分頁",
+        "gbk": "捷だ��"
+      },
+      "iWidth": 0,
+      "iMsgId": 0,
+      "iTeam": 0,
+      "iRelationNum": 0,
+      "lRelationName": [],
+      "iTipsDirect": 0,
+      "sTips": "",
+      "sSoundPath": ""
+    },
+    "CCombCheckButton": {
+      "sName": "ccbtn_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CCombCheckButton",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sFileName": {
+        "raw_hex": "636f6d626469616c6f67345cd4d3cdbc5cb6d3cee9cdb7cff1bff25c746f757869616e676b75616e672e706e67",
+        "big5": "combdialog4\\娸芞\\勦斪芛砉遺\\touxiangkuang.png",
+        "gbk": "combdialog4\\杂图\\队伍头像框\\touxiangkuang.png"
+      },
+      "iWidth": 200,
+      "iHeight": 20,
+      "iCol": 1,
+      "iVSpace": 1,
+      "iRow": 1,
+      "iHSpace": 1,
+      "iDirection": 0
+    },
+    "CFrame": {
+      "sName": "frame_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CFrame",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sFileName": {
+        "raw_hex": "636f6d626469616c6f675cd6bdb5d75c",
+        "big5": "combdialog\\祧菁\\",
+        "gbk": "combdialog\\纸底\\"
+      },
+      "iWidth": 100,
+      "iHeight": 100
+    },
+    "CBorder": {
+      "sName": "border_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CBorder",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sFileName": {
+        "raw_hex": "636f6d626469616c6f675cd6bdb5d75c",
+        "big5": "combdialog\\祧菁\\",
+        "gbk": "combdialog\\纸底\\"
+      },
+      "iWidth": 100,
+      "iHeight": 100
+    },
+    "CPngNineFrame": {
+      "sName": "frame_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CPngNineFrame",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sFileName": {
+        "raw_hex": "636f6d626469616c6f675cd6f7bff2bcdc5c3031315c",
+        "big5": "combdialog\\翋遺殤\\011\\",
+        "gbk": "combdialog\\主框架\\011\\"
+      },
+      "iWidth": 100,
+      "iHeight": 100
+    },
+    "CHFrame": {
+      "sName": "hframe_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CHFrame",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sFileName": {
+        "raw_hex": "636f6d626469616c6f675cd6f7bff2bcdc5c3030315c6d6964646c655c",
+        "big5": "combdialog\\翋遺殤\\001\\middle\\",
+        "gbk": "combdialog\\主框架\\001\\middle\\"
+      },
+      "iWidth": 100
+    },
+    "CHPngFrame": {
+      "sName": "hframe_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CHPngFrame",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sFileName": {
+        "raw_hex": "636f6d626469616c6f675cd6f7bff2bcdc5c3031315c6d6964646c655c",
+        "big5": "combdialog\\翋遺殤\\011\\middle\\",
+        "gbk": "combdialog\\主框架\\011\\middle\\"
+      },
+      "iWidth": 100
+    },
+    "CVFrame": {
+      "sName": "vframe_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CVFrame",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sFileName": {
+        "raw_hex": "636f6d626469616c6f675ccafab9f6b6afccf55c",
+        "big5": "combdialog\\旳幗雄沭\\",
+        "gbk": "combdialog\\竖滚动条\\"
+      },
+      "iHeight": 100
+    },
+    "CVPngFrame": {
+      "sName": "vframe_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CVPngFrame",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "sFileName": {
+        "raw_hex": "636f6d626469616c6f675ccafab9f6b6afccf55c",
+        "big5": "combdialog\\旳幗雄沭\\",
+        "gbk": "combdialog\\竖滚动条\\"
+      },
+      "iHeight": 100
+    },
+    "CTableView": {
+      "sName": "tbview_def",
+      "iX": 0,
+      "iY": 0,
+      "sWidgetType": "CTableView",
+      "bShow": true,
+      "bLoad": true,
+      "iVersion": 7,
+      "iParentHeight": 0,
+      "lChildren": [],
+      "iWidth": 215,
+      "iHeight": 360,
+      "iRowHeight": 60,
+      "iStep": 60,
+      "bShowBg": 1,
+      "bShowLine": 1,
+      "bShowBgLine": 1,
+      "sStyle": "",
+      "iScrollBarPosType": 1,
+      "iCol": 1
+    }
+  },
+  "COMMON_CONFIG": [
+    {
+      "sKey": "sName",
+      "sName": {
+        "raw_hex": "b1b1a5f3a657",
+        "big5": "控件名",
+        "gbk": "北ン�W"
+      },
+      "iType": 1,
+      "oValueChg": {
+        "symbol": "str"
+      }
+    },
+    {
+      "sKey": "iX",
+      "sName": "x",
+      "iType": 1,
+      "oValueChg": {
+        "symbol": "int"
+      }
+    },
+    {
+      "sKey": "iY",
+      "sName": "y",
+      "iType": 1,
+      "oValueChg": {
+        "symbol": "int"
+      }
+    }
+  ],
+  "TableStyleChgFunc": {
+    "symbol": "TableStyleChgFunc"
+  },
+  "BoolChgFunc": {
+    "symbol": "BoolChgFunc"
+  },
+  "GetFontList": {
+    "symbol": "GetFontList"
+  },
+  "GetOldFontAlight": {
+    "symbol": "GetOldFontAlight"
+  },
+  "GetFontAlight": {
+    "symbol": "GetFontAlight"
+  },
+  "DEFAULT_CONFIG": {
+    "CBox": [
+      {
+        "sKey": "iRow",
+        "sName": {
+          "raw_hex": "a6e6",
+          "big5": "行",
+          "gbk": "︽"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iCol",
+        "sName": {
+          "raw_hex": "a643",
+          "big5": "列",
+          "gbk": "�C"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHSpace",
+        "sName": {
+          "raw_hex": "a4f4a5adb6a1b65a",
+          "big5": "水平間距",
+          "gbk": "�籁�丁禯"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iVSpace",
+        "sName": {
+          "raw_hex": "ababaabdb6a1b65a",
+          "big5": "垂直間距",
+          "gbk": "���蕉《Z"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CImagesFrame": [
+      {
+        "sKey": "iRow",
+        "sName": {
+          "raw_hex": "a6e6",
+          "big5": "行",
+          "gbk": "︽"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iCol",
+        "sName": {
+          "raw_hex": "a643",
+          "big5": "列",
+          "gbk": "�C"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHSpace",
+        "sName": {
+          "raw_hex": "a4f4a5adb6a1b65a",
+          "big5": "水平間距",
+          "gbk": "�籁�丁禯"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iVSpace",
+        "sName": {
+          "raw_hex": "ababaabdb6a1b65a",
+          "big5": "垂直間距",
+          "gbk": "���蕉《Z"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CSpriteFrame": [
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      }
+    ],
+    "CBoxWithTips": [
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iTipsDirect",
+        "sName": {
+          "raw_hex": "b4a3a5dca4e8a656",
+          "big5": "提示方向",
+          "gbk": "矗ボよ�V"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sTips",
+        "sName": {
+          "raw_hex": "b4a3a5dc",
+          "big5": "提示",
+          "gbk": "矗ボ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      }
+    ],
+    "CHotBox": [
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iTipsDirect",
+        "sName": {
+          "raw_hex": "b4a3a5dca4e8a656",
+          "big5": "提示方向",
+          "gbk": "矗ボよ�V"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sTips",
+        "sName": {
+          "raw_hex": "b4a3a5dc",
+          "big5": "提示",
+          "gbk": "矗ボ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iMsgId",
+        "sName": {
+          "raw_hex": "aef8aea76964",
+          "big5": "消息id",
+          "gbk": "����id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CMainFrame": [
+      {
+        "sKey": "sTitle",
+        "sName": {
+          "raw_hex": "bcd0c344",
+          "big5": "標題",
+          "gbk": "夹肈"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iType",
+        "sName": {
+          "raw_hex": "bccba6a1",
+          "big5": "樣式",
+          "gbk": "妓Α"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iRatio",
+        "sName": {
+          "raw_hex": "a4a4b6a1a4f1a8d2",
+          "big5": "中間比例",
+          "gbk": "い丁ゑㄒ"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CButton": [
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iMsgId",
+        "sName": {
+          "raw_hex": "aef8aea76964",
+          "big5": "消息id",
+          "gbk": "����id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iTeam",
+        "sName": {
+          "raw_hex": "a650b2d56964",
+          "big5": "同組id",
+          "gbk": "�P舱id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "lRelationName",
+        "sName": {
+          "raw_hex": "c3f6c170a643aaed",
+          "big5": "關聯列表",
+          "gbk": "闽羛�C��"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "eval"
+        }
+      },
+      {
+        "sKey": "iTipsDirect",
+        "sName": {
+          "raw_hex": "b4a3a5dca4e8a656",
+          "big5": "提示方向",
+          "gbk": "矗ボよ�V"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sTips",
+        "sName": {
+          "raw_hex": "b4a3a5dc",
+          "big5": "提示",
+          "gbk": "矗ボ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "sSoundPath",
+        "sName": {
+          "raw_hex": "adb5aec4b8f4ae7c",
+          "big5": "音效路徑",
+          "gbk": "�诞母舢|"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      }
+    ],
+    "CTextButton": [
+      {
+        "sKey": "iStyle",
+        "sName": {
+          "raw_hex": "bccba6a1",
+          "big5": "樣式",
+          "gbk": "妓Α"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "sText",
+        "sName": {
+          "raw_hex": "a4e5a5bb",
+          "big5": "文本",
+          "gbk": "ゅセ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iMsgId",
+        "sName": {
+          "raw_hex": "aef8aea76964",
+          "big5": "消息id",
+          "gbk": "����id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iTeam",
+        "sName": {
+          "raw_hex": "a650b2d56964",
+          "big5": "同組id",
+          "gbk": "�P舱id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "lRelationName",
+        "sName": {
+          "raw_hex": "c3f6c170a643aaed",
+          "big5": "關聯列表",
+          "gbk": "闽羛�C��"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "eval"
+        }
+      },
+      {
+        "sKey": "iTipsDirect",
+        "sName": {
+          "raw_hex": "b4a3a5dca4e8a656",
+          "big5": "提示方向",
+          "gbk": "矗ボよ�V"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sTips",
+        "sName": {
+          "raw_hex": "b4a3a5dc",
+          "big5": "提示",
+          "gbk": "矗ボ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "sSoundPath",
+        "sName": {
+          "raw_hex": "adb5aec4b8f4ae7c",
+          "big5": "音效路徑",
+          "gbk": "�诞母舢|"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      }
+    ],
+    "CTable": [
+      {
+        "sKey": "sTitles",
+        "sName": {
+          "raw_hex": "aaedc059",
+          "big5": "表頭",
+          "gbk": "�砝Y"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "lSubWidth",
+        "sName": {
+          "raw_hex": "a643bc65",
+          "big5": "列寬",
+          "gbk": "�C糴"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "eval"
+        }
+      },
+      {
+        "sKey": "iRow",
+        "sName": {
+          "raw_hex": "a6e6",
+          "big5": "行",
+          "gbk": "︽"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iMsgId",
+        "sName": {
+          "raw_hex": "aef8aea76964",
+          "big5": "消息id",
+          "gbk": "����id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CPngTable": [
+      {
+        "sKey": "sTitles",
+        "sName": {
+          "raw_hex": "aaedc059",
+          "big5": "表頭",
+          "gbk": "�砝Y"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "lSubWidth",
+        "sName": {
+          "raw_hex": "a643bc65",
+          "big5": "列寬",
+          "gbk": "�C糴"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "eval"
+        }
+      },
+      {
+        "sKey": "iRow",
+        "sName": {
+          "raw_hex": "a6e6",
+          "big5": "行",
+          "gbk": "︽"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iMsgId",
+        "sName": {
+          "raw_hex": "aef8aea76964",
+          "big5": "消息id",
+          "gbk": "����id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CList": [
+      {
+        "sKey": "iRow",
+        "sName": {
+          "raw_hex": "a6e6",
+          "big5": "行",
+          "gbk": "︽"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iMsgId",
+        "sName": {
+          "raw_hex": "aef8aea76964",
+          "big5": "消息id",
+          "gbk": "����id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CPngList": [
+      {
+        "sKey": "iRow",
+        "sName": {
+          "raw_hex": "a6e6",
+          "big5": "行",
+          "gbk": "︽"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iMsgId",
+        "sName": {
+          "raw_hex": "aef8aea76964",
+          "big5": "消息id",
+          "gbk": "����id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CVScrollBar": [
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CVPngScrollBar": [
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CTextFrame": [
+      {
+        "sKey": "sText",
+        "sName": {
+          "raw_hex": "a4e5a5bb",
+          "big5": "文本",
+          "gbk": "ゅセ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iSpace",
+        "sName": {
+          "raw_hex": "a6e6b6a1b65a",
+          "big5": "行間距",
+          "gbk": "︽丁禯"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iFont",
+        "sName": {
+          "raw_hex": "a672c5e9",
+          "big5": "字體",
+          "gbk": "�r砰"
+        },
+        "iType": 7,
+        "oValueChg": {
+          "symbol": "int"
+        },
+        "sLBoxValueList": {
+          "symbol": "GetFontList"
+        }
+      },
+      {
+        "sKey": "iAlign",
+        "sName": {
+          "raw_hex": "b9efbbf4",
+          "big5": "對齊",
+          "gbk": "癸霍"
+        },
+        "iType": 7,
+        "oValueChg": {
+          "symbol": "int"
+        },
+        "sLBoxValueList": {
+          "symbol": "GetOldFontAlight"
+        }
+      },
+      {
+        "sKey": "lColor",
+        "sName": {
+          "raw_hex": "c343a6e2",
+          "big5": "顏色",
+          "gbk": "肅︹"
+        },
+        "iType": 5,
+        "oValueChg": {
+          "symbol": "Code2Color"
+        }
+      }
+    ],
+    "CTextFrameEx": [
+      {
+        "sKey": "sText",
+        "sName": {
+          "raw_hex": "a4e5a5bb",
+          "big5": "文本",
+          "gbk": "ゅセ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iVSpace",
+        "sName": {
+          "raw_hex": "a6e6b6a1b65a",
+          "big5": "行間距",
+          "gbk": "︽丁禯"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iFont",
+        "sName": {
+          "raw_hex": "a672c5e9",
+          "big5": "字體",
+          "gbk": "�r砰"
+        },
+        "iType": 7,
+        "oValueChg": {
+          "symbol": "int"
+        },
+        "sLBoxValueList": {
+          "symbol": "GetFontList"
+        }
+      },
+      {
+        "sKey": "bAutoNextLine",
+        "sName": {
+          "raw_hex": "a6dbb0cab4aba6e6",
+          "big5": "自動換行",
+          "gbk": "�郯蚀�︽"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "BoolChgFunc"
+        }
+      },
+      {
+        "sKey": "iAlign",
+        "sName": {
+          "raw_hex": "b9efbbf4",
+          "big5": "對齊",
+          "gbk": "癸霍"
+        },
+        "iType": 7,
+        "oValueChg": {
+          "symbol": "int"
+        },
+        "sLBoxValueList": {
+          "symbol": "GetFontAlight"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "lColor",
+        "sName": {
+          "raw_hex": "c343a6e2",
+          "big5": "顏色",
+          "gbk": "肅︹"
+        },
+        "iType": 5,
+        "oValueChg": {
+          "symbol": "Code2Color"
+        }
+      }
+    ],
+    "CRichTextFrame": [
+      {
+        "sKey": "sText",
+        "sName": {
+          "raw_hex": "a4e5a5bb",
+          "big5": "文本",
+          "gbk": "ゅセ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iFont",
+        "sName": {
+          "raw_hex": "a672c5e9",
+          "big5": "字體",
+          "gbk": "�r砰"
+        },
+        "iType": 7,
+        "oValueChg": {
+          "symbol": "int"
+        },
+        "sLBoxValueList": {
+          "symbol": "GetFontList"
+        }
+      },
+      {
+        "sKey": "iAlign",
+        "sName": {
+          "raw_hex": "b9efbbf4",
+          "big5": "對齊",
+          "gbk": "癸霍"
+        },
+        "iType": 7,
+        "oValueChg": {
+          "symbol": "int"
+        },
+        "sLBoxValueList": {
+          "symbol": "GetFontAlight"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "lColor",
+        "sName": {
+          "raw_hex": "c343a6e2",
+          "big5": "顏色",
+          "gbk": "肅︹"
+        },
+        "iType": 5,
+        "oValueChg": {
+          "symbol": "Code2Color4RichText"
+        }
+      },
+      {
+        "sKey": "bClick",
+        "sName": {
+          "raw_hex": "afe0a75fc249c0bb",
+          "big5": "能否點擊",
+          "gbk": "�唰_翴阑"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "BoolChgFunc"
+        }
+      },
+      {
+        "sKey": "iMsgId",
+        "sName": {
+          "raw_hex": "aef8aea76964",
+          "big5": "消息id",
+          "gbk": "����id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "lEnterColor",
+        "sName": {
+          "raw_hex": "b669a44ac343a6e2",
+          "big5": "進入顏色",
+          "gbk": "秈�J肅︹"
+        },
+        "iType": 5,
+        "oValueChg": {
+          "symbol": "Code2Color"
+        }
+      }
+    ],
+    "CProgress": [
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sBarFileName",
+        "sName": {
+          "raw_hex": "626172b8f4ae7c",
+          "big5": "bar路徑",
+          "gbk": "bar隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "sBgFileName",
+        "sName": {
+          "raw_hex": "6267b8f4ae7c",
+          "big5": "bg路徑",
+          "gbk": "bg隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iType",
+        "sName": "sBarFileName",
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iOffsetX",
+        "sName": {
+          "raw_hex": "b0beb2be78",
+          "big5": "偏移x",
+          "gbk": "熬簿x"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iOffsetY",
+        "sName": {
+          "raw_hex": "b0beb2be79",
+          "big5": "偏移y",
+          "gbk": "熬簿y"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iSpace",
+        "sName": {
+          "raw_hex": "a8e2c3e4b6a1bbd8",
+          "big5": "兩邊間隙",
+          "gbk": "ㄢ娩丁回"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CHPageButton": [
+      {
+        "sKey": "iStyle",
+        "sName": {
+          "raw_hex": "bccba6a1",
+          "big5": "樣式",
+          "gbk": "妓Α"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "sText",
+        "sName": {
+          "raw_hex": "a4e5a5bb",
+          "big5": "文本",
+          "gbk": "ゅセ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iMsgId",
+        "sName": {
+          "raw_hex": "aef8aea76964",
+          "big5": "消息id",
+          "gbk": "����id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iTeam",
+        "sName": {
+          "raw_hex": "a650b2d56964",
+          "big5": "同組id",
+          "gbk": "�P舱id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "lRelationName",
+        "sName": {
+          "raw_hex": "c3f6c170a643aaed",
+          "big5": "關聯列表",
+          "gbk": "闽羛�C��"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "eval"
+        }
+      },
+      {
+        "sKey": "iTipsDirect",
+        "sName": {
+          "raw_hex": "b4a3a5dca4e8a656",
+          "big5": "提示方向",
+          "gbk": "矗ボよ�V"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sTips",
+        "sName": {
+          "raw_hex": "b4a3a5dc",
+          "big5": "提示",
+          "gbk": "矗ボ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "sSoundPath",
+        "sName": {
+          "raw_hex": "adb5aec4b8f4ae7c",
+          "big5": "音效路徑",
+          "gbk": "�诞母舢|"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      }
+    ],
+    "CHPagePngButton": [
+      {
+        "sKey": "iStyle",
+        "sName": {
+          "raw_hex": "bccba6a1",
+          "big5": "樣式",
+          "gbk": "妓Α"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "sText",
+        "sName": {
+          "raw_hex": "a4e5a5bb",
+          "big5": "文本",
+          "gbk": "ゅセ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iMsgId",
+        "sName": {
+          "raw_hex": "aef8aea76964",
+          "big5": "消息id",
+          "gbk": "����id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iTeam",
+        "sName": {
+          "raw_hex": "a650b2d56964",
+          "big5": "同組id",
+          "gbk": "�P舱id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "lRelationName",
+        "sName": {
+          "raw_hex": "c3f6c170a643aaed",
+          "big5": "關聯列表",
+          "gbk": "闽羛�C��"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "eval"
+        }
+      },
+      {
+        "sKey": "iTipsDirect",
+        "sName": {
+          "raw_hex": "b4a3a5dca4e8a656",
+          "big5": "提示方向",
+          "gbk": "矗ボよ�V"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sTips",
+        "sName": {
+          "raw_hex": "b4a3a5dc",
+          "big5": "提示",
+          "gbk": "矗ボ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "sSoundPath",
+        "sName": {
+          "raw_hex": "adb5aec4b8f4ae7c",
+          "big5": "音效路徑",
+          "gbk": "�诞母舢|"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      }
+    ],
+    "CVPageButton": [
+      {
+        "sKey": "iStyle",
+        "sName": {
+          "raw_hex": "bccba6a1",
+          "big5": "樣式",
+          "gbk": "妓Α"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "sText",
+        "sName": {
+          "raw_hex": "a4e5a5bb",
+          "big5": "文本",
+          "gbk": "ゅセ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iMsgId",
+        "sName": {
+          "raw_hex": "aef8aea76964",
+          "big5": "消息id",
+          "gbk": "����id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iTeam",
+        "sName": {
+          "raw_hex": "a650b2d56964",
+          "big5": "同組id",
+          "gbk": "�P舱id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "lRelationName",
+        "sName": {
+          "raw_hex": "c3f6c170a643aaed",
+          "big5": "關聯列表",
+          "gbk": "闽羛�C��"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "eval"
+        }
+      },
+      {
+        "sKey": "iTipsDirect",
+        "sName": {
+          "raw_hex": "b4a3a5dca4e8a656",
+          "big5": "提示方向",
+          "gbk": "矗ボよ�V"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sTips",
+        "sName": {
+          "raw_hex": "b4a3a5dc",
+          "big5": "提示",
+          "gbk": "矗ボ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "sSoundPath",
+        "sName": {
+          "raw_hex": "adb5aec4b8f4ae7c",
+          "big5": "音效路徑",
+          "gbk": "�诞母舢|"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      }
+    ],
+    "CVPagePngButton": [
+      {
+        "sKey": "iStyle",
+        "sName": {
+          "raw_hex": "bccba6a1",
+          "big5": "樣式",
+          "gbk": "妓Α"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "sText",
+        "sName": {
+          "raw_hex": "a4e5a5bb",
+          "big5": "文本",
+          "gbk": "ゅセ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iMsgId",
+        "sName": {
+          "raw_hex": "aef8aea76964",
+          "big5": "消息id",
+          "gbk": "����id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iTeam",
+        "sName": {
+          "raw_hex": "a650b2d56964",
+          "big5": "同組id",
+          "gbk": "�P舱id"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "lRelationName",
+        "sName": {
+          "raw_hex": "c3f6c170a643aaed",
+          "big5": "關聯列表",
+          "gbk": "闽羛�C��"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "eval"
+        }
+      },
+      {
+        "sKey": "iTipsDirect",
+        "sName": {
+          "raw_hex": "b4a3a5dca4e8a656",
+          "big5": "提示方向",
+          "gbk": "矗ボよ�V"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sTips",
+        "sName": {
+          "raw_hex": "b4a3a5dc",
+          "big5": "提示",
+          "gbk": "矗ボ"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "sSoundPath",
+        "sName": {
+          "raw_hex": "adb5aec4b8f4ae7c",
+          "big5": "音效路徑",
+          "gbk": "�诞母舢|"
+        },
+        "iType": 1,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      }
+    ],
+    "CCombCheckButton": [
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iRow",
+        "sName": {
+          "raw_hex": "a6e6",
+          "big5": "行",
+          "gbk": "︽"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iCol",
+        "sName": {
+          "raw_hex": "a643",
+          "big5": "列",
+          "gbk": "�C"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHSpace",
+        "sName": {
+          "raw_hex": "a4f4a5adb6a1b65a",
+          "big5": "水平間距",
+          "gbk": "�籁�丁禯"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iVSpace",
+        "sName": {
+          "raw_hex": "ababaabdb6a1b65a",
+          "big5": "垂直間距",
+          "gbk": "���蕉《Z"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iDirection",
+        "sName": {
+          "raw_hex": "a4e8a656",
+          "big5": "方向",
+          "gbk": "よ�V"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CFrame": [
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CBorder": [
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CPngNineFrame": [
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CHFrame": [
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CHPngFrame": [
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CVFrame": [
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CVPngFrame": [
+      {
+        "sKey": "sFileName",
+        "sName": {
+          "raw_hex": "b8eab7bdb8f4ae7c",
+          "big5": "資源路徑",
+          "gbk": "戈方隔畖"
+        },
+        "iType": 6,
+        "oValueChg": {
+          "symbol": "str"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ],
+    "CTableView": [
+      {
+        "sKey": "iWidth",
+        "sName": {
+          "raw_hex": "bc65",
+          "big5": "寬",
+          "gbk": "糴"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iHeight",
+        "sName": {
+          "raw_hex": "b0aa",
+          "big5": "高",
+          "gbk": "蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iRowHeight",
+        "sName": {
+          "raw_hex": "a6e6b0aa",
+          "big5": "行高",
+          "gbk": "︽蔼"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iStep",
+        "sName": {
+          "raw_hex": "ba75b0cab9b3afc0",
+          "big5": "滾動像素",
+          "gbk": "簎笆钩��"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "bShowBg",
+        "sName": {
+          "raw_hex": "ac4fa75fc5e3a5dcad49b4ba",
+          "big5": "是否顯示背景",
+          "gbk": "琌�_陪ボ璉春"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "bShowBgLine",
+        "sName": {
+          "raw_hex": "ac4fa75fc5e3a5dcad49b4babd75",
+          "big5": "是否顯示背景線",
+          "gbk": "琌�_陪ボ璉春絬"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "sStyle",
+        "sName": {
+          "raw_hex": "adb7aee6",
+          "big5": "風格",
+          "gbk": "�樊�"
+        },
+        "iType": 4,
+        "oValueChg": {
+          "symbol": "TableStyleChgFunc"
+        }
+      },
+      {
+        "sKey": "iScrollBarPosType",
+        "sName": {
+          "raw_hex": "ba75b0cab1f8a6ecb86dc3feabac",
+          "big5": "滾動條位置類型",
+          "gbk": "簎笆兵�旄m摸��"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      },
+      {
+        "sKey": "iCol",
+        "sName": {
+          "raw_hex": "a643",
+          "big5": "列",
+          "gbk": "�C"
+        },
+        "iType": 2,
+        "oValueChg": {
+          "symbol": "int"
+        }
+      }
+    ]
+  },
+  "_evidence": {
+    "entry_index": 3853,
+    "path": "script/uieditor/widgetconfig.py",
+    "standard_pyc_sha256": "ef22597916721a56a63a0ff9f2a2404b3bed902142a1d0b3d1156495d9254ce2",
+    "assignment_offsets": {
+      "copy": 9,
+      "WIDGET_TYPE_KEY": 15,
+      "WIDGET_X_KEY": 21,
+      "WIDGET_Y_KEY": 27,
+      "WIDGET_NAME_KEY": 33,
+      "WIDGET_MSGID_KEY": 39,
+      "TYPE_EDIT_ALL": 45,
+      "TYPE_EDIT_DIGIT": 51,
+      "TYPE_EDIT_ALPHA": 57,
+      "TYPE_EDIT_ALNUM": 63,
+      "TYPE_EDIT_COLOR": 69,
+      "TYPE_EDIT_PATH": 75,
+      "TYPE_LIST_BOX": 81,
+      "WIDGET_UPDATE_ERR_NAME": 87,
+      "GetWidgetDeafultValue": 96,
+      "GetWidgetAttrConfig": 105,
+      "GetWidgetTypeName": 114,
+      "Color2Code": 123,
+      "Code2Color4RichText": 132,
+      "Code2Color": 141,
+      "WIDGET_TYPE_KEY_2_NAME": 426,
+      "WIDGET_KEY_LIST": 498,
+      "DEFAULT_VALUE": 4926,
+      "COMMON_CONFIG": 5049,
+      "TableStyleChgFunc": 5058,
+      "BoolChgFunc": 5067,
+      "GetFontList": 5076,
+      "GetOldFontAlight": 5085,
+      "GetFontAlight": 5094,
+      "DEFAULT_CONFIG": 12024
+    },
+    "method": "literal-only stack interpretation; no game code executed"
+  }
+}

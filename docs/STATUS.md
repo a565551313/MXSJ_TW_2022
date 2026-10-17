@@ -40,8 +40,8 @@
 
 | 项 | 值 |
 |---|---|
-| 工作分支 | `arena/61deb9e5-mxsj-tw-2022`（当前会话，固定名称；旧分支叙述仅历史） |
-| 基线 | 当前会话从 `8212b26`（PR #33）开始；第二段开工前检查点 `5998c1b` 已推送，第二段已推送`e72aac9`，历史dev3数据包增量见§3.33；当前dev6路径修复`1ad79ce`、源码交付`3791d0c`及网盘见§3.39；未合master |
+| 工作分支 | `arena/6256d39f-mxsj-tw-2022`（本次会话，固定名称）；`arena/61deb9e5-mxsj-tw-2022` 等旧分支叙述仅历史 |
+| 基线 | 本次会话从 `master` 顶端 `5ef8aa2`（本地与远端 `refs/heads/master` 一致）开始；本轮内容见 §3.54；上一会话（`61deb9e5`，从 `8212b26`/PR #33 起）历史见 §3.33/§3.39。均**未合 master** |
 | `master` | 当前会话起始含PR #32/#33；后按明确授权仅合PR #34，未把编辑器/手册工作线合入，不以此断言远程最新顶端 |
 | 最近 PR | PR #34（固定语料交付文档）已按授权审查并合并，merge `8afb53a`；A手册工作未开PR |
 | 合并授权 | PR #34当轮授权已履行；当前工作分支无合master/发布授权 |
@@ -57,10 +57,10 @@
 | 注册原生重做（`tools/registration/`） | 采用 PR #32；用户已确认该版测试无问题 | 保留对方注册源码，不以旧 font1/diag 版本覆盖；尚未接真实注册服务端 | 集成后 42/42 回归；真 2.5.6 重建 SHA `f0253c95…` 与对方记录一致，仅改 337/4007；详 §3.29 |
 | 只读复核链（catalog / API / web） | H/I/J 已收尾 | 可运行，只读 | catalog 34/34；review_api 27/27；验收套件 68 通过 + 2 跳过（需 uvicorn 在 PATH 上）；网页未装 node_modules 未跑 |
 | 地图编辑器 | 一期 + PR #27 修复 + 10-14 补齐约定（`bootstrap.py`、`启动地图编辑器.bat`、`build_exe.bat`、ruff 0） | GIRB 300/429 扇区仍解不出（明确失败）；Windows EXE 未实机构建/冒烟 | **88/88** 通过（含 6 条 bootstrap 测试；GUI 冒烟在沙箱用 Qt offscreen + 桩 libGL 跑过）；ruff 0；wincompat 0/0 |
-| 资源编辑器 | **0.4.3**：任意布局原生导入/替换，保留0.4.2后台清单与打开提速 | 用户已确认600MB打开速度修复有效；按路径明文/旧密文布局自动编码，不执行源码，未改条目不迁移 | 本轮 **118/118**；含新路径保存/重开/修改/再保存、旧错误密钥迁移、中文GBK路径、撤销/高级raw拒绝发布；ruff 0、wincompat 0/0/0、bootstrap自检通过 |
-| UI 编辑器 | **0.8.3**：任意布局新增/再次保存统一原生路径密钥，保留0.8.2路径记忆 | 旧明文/错误key只读打开；明确保存当前布局才迁移，新包继续编辑；未改其它负载原样 | 本轮 **203通过 + 1语料库缺失跳过**（204）；独立原生回读、连续编辑与错误输出拒绝；ruff 0、wincompat 0/0/0、bootstrap自检通过 |
+| 资源编辑器 | **0.4.3**：任意布局原生导入/替换，保留0.4.2后台清单与打开提速 | 用户已确认600MB打开速度修复有效；按路径明文/旧密文布局自动编码，不执行源码，未改条目不迁移 | §3.55 轮：**126/126**（新增打包元数据一致性 2 项、路径编码 6 项；桩库离屏后 GUI 组全跑、零跳过）；无 Qt 环境时 118 通过+33 跳过。共享核心改为 `mx_common/` 真源 + 生成副本。含新路径保存/重开/修改/再保存、旧错误密钥迁移、中文GBK路径、撤销/高级raw拒绝发布；ruff 0、wincompat 0/0/0、bootstrap自检通过 |
+| UI 编辑器 | **0.8.3**：任意布局新增/再次保存统一原生路径密钥，保留0.8.2路径记忆 | 旧明文/错误key只读打开；明确保存当前布局才迁移，新包继续编辑；未改其它负载原样 | §3.59 轮：**260 项 = 259 通过 + 1 外部语料跳过**（新增绘制样例 12 项：38 类全渲染、清单一致性、真实精灵只影响图片类；桩库离屏真跑 GUI）；独立原生回读、连续编辑与错误输出拒绝；ruff 0、wincompat 0/0/0、bootstrap自检通过 |
 | 游戏服务端（`mxsj_server`） | 契约 v0.1 + 设计文档 | **无运行代码**；账号/网关/数据库/地图/战斗均未开始 | 架构测试 150 跑，**1 FAIL + 1 ERROR**（见 §3.1） |
-| `mock_server.py` | 本地模擬伺服器（與 `mock_server (1).py` 同步） | 已修復 `網絡錯誤(007)` 厘秒時鐘、日曆/日程 `misc.SetServerTime` 同步與系統設置/分辨率保存瞬連（`C2GS_QUICKLOGIN=13` / `C2GS_PLAYER_SYSSWITCH=21` / `C2GS_HUODONG=90`） | `--self-test` 全鏈路 6 階段回環通過（詳 §3.54）；待 Windows 實機複測 |
+| `mock_server.py` | 本地模擬伺服器（與 `mock_server (1).py` 同步） | 已修復 `網絡錯誤(007)` 厘秒時鐘、日曆/日程 `misc.SetServerTime` 同步與系統設置/分辨率保存瞬連（`C2GS_QUICKLOGIN=13` / `C2GS_PLAYER_SYSSWITCH=21` / `C2GS_HUODONG=90`） | `--self-test` 全鏈路 6 階段回環通過（詳 §3.72）；待 Windows 實機複測 |
 | 文档 | 10-14 整理：AGENTS.md / STATUS.md / 归档目录；README 已刷新；新增 `docs/PYTHON_TOOL_CONVENTIONS.md`（工具开发约定） | — | 仓库内相对链接全部可解析（脚本校验） |
 | 开发工具箱（`tools/devkit/`） | 0.1.0：`check_windows_compat.py` | 新增；全仓库扫描 1.3 s | **29/29** 通过；`ruff check tools/devkit` 0 报告；工具箱通过自己的规则 |
 
@@ -72,9 +72,11 @@
 - 已核实：重新生成后与已提交证据**逐字段比对只有这一个哈希不同**，地图/NPC 分析结果零差异。
 - 处置 ✅：按上述命令重生成证据后，**还差第二步**——`batch_001/manifest.json` 的 `tool_and_evidence_sha256` 把证据与 `batch_decompile.py` 都按文件哈希钉了一遍，因此必须跟着刷新，否则 `test_review_csv_export.RealBatchTests` 会从 setUpClass ERROR 变成 2 条真 FAIL（该 ERROR 原本把这两条掩盖掉了）。而 `export_review_csv.py` 拒绝写非空目录，所以刷新方式是：`--out /tmp/b001` 干跑 → `cmp` 确认**只有 `manifest.json` 不同**（全部 CSV 逐字节一致）→ 拷贝落位。结果：`server/tests/architecture` **161/161 OK**、`--check` 通过；总 diff = 2 个派生 JSON 共 3 行哈希，`tools/decompiler/batch_decompile.py` 本体未改（只是把它的记录指纹对齐现值）。`server/tests` 里 `review_api.*` 的 3 个 ImportError 是沙箱缺 FastAPI，基线同样红，与本项无关。
 
-### 3.2 逆向结论内部矛盾：目录查找是线性还是有序
-- `notes/fls_path_hash_and_dlg.md` §2 写明引擎对 0SLF 目录**线性扫描**（`0x48ECF0`）；资源/UI 编辑器 0.3.3/0.5.2 的 P0 修复依据是“引擎按有序目录寻址（含二分模拟），新条目追加到尾且 `r1=0` 会查不到”。
-- 两者不能同时成立。修复同时改了排序与 `r1≠0`，真正起作用的可能只是 `r1≠0`（0 疑为哨兵）。需用反汇编回头判定，再统一文档与 docstring。
+### 3.2 ~~逆向结论内部矛盾：目录查找是线性还是有序~~ ✅ 已判定（2026-10-16，反汇编）
+- 判定：`.dlg` 走的真实 LoadFile 链 `0x45D580 → 0x609760 → 0x6097F0 → 0x60DD00` 在 `0x60DD00` 用**二分**定位——`0x60DD35` 调 `0x60E690`，该函数是标准 `std::lower_bound`（`sub %esi,%ecx` + `sar $0x4` 求条数、`sar %edx` 取中点、`cmp %edi,(%esi,%eax,8)` 半区推进），返回后 `0x60DD3D` 判「到 end」、`0x60DD41` 判「entry_id 不等」。**因此目录必须按 entry_id 升序**，新增/插入后其后记录下标全变、`r3` 必须重算——资源/UI 编辑器 0.3.3/0.5.2 的修复方向正确。
+- 反例实测：同一份新条目改成「追加到目录尾」，用精确复刻的 lower_bound 查询 → **查不到**（插值点落在无关 entry_id 上），与 0.5.2 记录的「新图不显示/重开条目变少/卡屏」症状一致；而按编辑器 `patch_pack_copy` 写出的包（真实 `data/passive.fls`，新增 1 布局 + 3 个乱序资源），新条目与全部原条目都能被该复刻定位，未改条目 0 条变化、`r1=0` 0 条。
+- 文档已同步：`notes/fls_path_hash_and_dlg.md` §2 加更正横幅（「线性扫描」那句属 `0x48ECF0` = `ReadFls`，不能用来推断 LoadFile 寻址）；`notes/native_dlg_path_cipher.md` 新增 §2.1（含指令级证据与三条写包推论）；AGENTS §7 该条改写为已判定。
+- 仍有效/未确定：`0x48F170` 的**解目录公式**不受影响（三个闭式常量在 `.text` 各出现 1 次，已逐条比对）；`r1` 解码出的 f1 在查询路径 `+4` 上**未被读取**，故 `r1≠0` 仍是保守防守、不是已证实的引擎要求；本轮**无任何真机包验证**，结论来自副本上的离线判定与算法复刻。
 
 ### 3.3 环境限制（不是缺陷）
 - **本轮脚本编辑器dev6环境已补齐**：真实Qt6.10.3离屏测试，使用固定GitHub来源真实Linux系统ELF库而非空符号桩；双标准VM与Linux pycdc实际构建/运行。以下10-14旧环境描述仅历史，不能代替本轮证据；这些Linux测试材料不进入Windows源码交付包。
@@ -128,7 +130,7 @@
 
 **实测证据**：新增 67 条回归（UI 33、资源 34）。使用 `git archive 9ee68e3` 的仓库外只读基线，资源新增撤销、引用改名取消两条同一探针旧版均 FAIL，本版均 PASS；另补类型缓存旧嗅探回灌与等值类型脏标记的先失败后修复回归。完整进程结果：UI 170 项（169 通过、1 缺全量 dlg 语料库跳过）、资源 97/97，均退出 0；Python 3.11.2 / PySide6 6.8.3 / Pillow 12.3，GUI 仅沙箱 offscreen + 系统库桩件，桩件不入库不交付。无桩件资源 97 项（74 通过、23 GUI 跳过）；UI 无 Qt 12 模块 92 项（91 通过、1 语料库跳过），额外确认测试过程没有 import PySide6。两目录 ruff、Windows 静态检查均 0；bootstrap `--check-only` 均通过；`git diff --check` 通过，锁定 script.fls/key DB SHA 与 AGENTS 完全一致。
 
-**未验/不扩范围**：Windows EXE/桌面快捷键手感、真实完整 `interface.fls`、游戏加载/点击与动态脚本均未验；没有实现自动接线、消息号规划、脚本源码编辑/编译写回、九宫格或包外项目文件。0.8.1 已补成功保存新包后的解析器优先重挂/缓存失效与树挂载，合成布局重开验证通过；真实新图显示仍待实机。诊断只说当前挂载来源未找到，不将其当新包缺失。合成 data.fls（含目录条目）保存后槽位数量、元数据与历史重基线已补专项回归，不外推真实大包/Windows 线程交互验收。未动真实客户端资源、架构证据红灯或注册/服务端代码；未构建 EXE/上传测试包/合并/发布。
+**未验/不扩范围**：Windows EXE/桌面快捷键手感、真实完整 `interface.fls`、游戏加载/点击与动态脚本均未验；没有实现自动接线、消息号规划、脚本源码编辑/编译写回或包外项目文件；九宫格只有 `CPngNineFrame` 的**固定三分近似**（切割线不可配、未与游戏切法比对，M3.3 仍未做）。0.8.1 已补成功保存新包后的解析器优先重挂/缓存失效与树挂载，合成布局重开验证通过；真实新图显示仍待实机。诊断只说当前挂载来源未找到，不将其当新包缺失。合成 data.fls（含目录条目）保存后槽位数量、元数据与历史重基线已补专项回归，不外推真实大包/Windows 线程交互验收。未动真实客户端资源、架构证据红灯或注册/服务端代码；未构建 EXE/上传测试包/合并/发布。
 
 ### 3.8 两项导入交互（本轮：资源 0.4.1 / UI 0.8.1）
 
@@ -1512,10 +1514,344 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 - 真实Chromium153断网file://且CSP开，生产6篇/26步骤/检索空态、12函数证据定位与刷新、专题深链、来源预览、battle待审、hero→npc、390px宽度通过，0脚本/页/CSP错、仅本地文件请求；旧20种子隔离夹具14组浏览器断言也实际通过。不是Qt/Windows/EXE/游戏/专题独审。
 - dev4版本同步源码/pyproject/源包root；本轮未重打ZIP或上传，Drive test1仍是dev3样板旧包。详细MD/JSON：docs/evidence/script_manual_task_guides_dev4_20261016.*；真实导出/浏览器产物在仓库外/home/user/manual-guides-20261016/final-site与final-browser。源码阶段推送，不以测试或新首页冒称全量内容交付。
 
-## 3.54 `mock_server.py` 修復「網絡錯誤(007)」、日曆/日程時間偏移與系統設置分辨率保存卡死（2026-10-17）
+
+## 3.54 目录寻址判定结案 + 版本/文档漂移修复（2026-10-16，会话分支 `arena/6256d39f-mxsj-tw-2022`）
+
+- 用户「先做1、2」：① 给逆向笔记加更正横幅、把判定写进 `native_dlg_path_cipher.md`；② 修文档漂移（九宫格口径、`pyproject` 版本对齐 + 一致性测试）。开工核 `git status` 干净；本轮**未动任何客户端原包/参数表、未改编辑器运行逻辑**（只改 docstring/文档/打包元数据 + 新增只读测试），未合 master、未开 PR。
+- **① 判定**（详见 §3.2 与 `notes/native_dlg_path_cipher.md` §2.1）：`.dlg` 的 LoadFile 链在 `0x60DD00` 调 `0x60E690`——标准 `std::lower_bound`（16 字节步长、比 entry_id），返回后 `0x60DD3D`/`0x60DD41` 判未命中 ⇒ **目录必须按 entry_id 升序**，插入后其后记录 `r3` 必须重算。`notes/fls_path_hash_and_dlg.md` §2 的「线性扫描」加了两处更正（文首横幅 + §2 内联），指明那句属 `0x48ECF0` = `ReadFls`；`0x48F170` 解目录公式仍有效（三个闭式常量在 `.text` 各出现 1 次，已逐条比对反汇编）。AGENTS §7 同一坑改写为已判定并指向新证据。
+- **② 文档漂移**：`painters.py` docstring、`ui_editor/README.md`「格式与保真约定」、`ui_editor/DESIGN.md`、根 `README.md` §2 表、本文件上文、`notes/ui_editor_phase2_design.md` 六处统一为准确口径——**九宫格只有 `CPngNineFrame` 的固定三分近似**（边角不拉伸、切割线不可配、未与游戏切法比对），**M3.3 仍未完成**（切割线编辑 + 2.2 数据摸底未做）。
+- **② 版本对齐**：`ui_editor/pyproject.toml` 0.8.2 → **0.8.3**、`resource_editor/pyproject.toml` 0.4.2 → **0.4.3**（两包 README/`__init__` 早已是前者，属打包元数据落后一版）。新增 `tests/test_packaging.py`（各 2 项，零 Qt、Py3.10 无 `tomllib` 时有正则回退）：钉 `pyproject` 版本 = 包内 `__version__` = README 口径。**先复现**：把版本改回 0.8.2 → 1 FAIL；改回 0.8.3 → OK。
+- 本轮实测（沙箱 PySide6 6.12.0 + gcc 空符号桩库离屏，桩库不入库，做法见 §3.3）：UI 编辑器 **206 = 205 通过 + 1 语料库跳过**；资源编辑器 **120/120（零跳过）**；两者 `ruff check` 0、`check_windows_compat.py` 0/0/0、bootstrap `--check-only` exit 0。另复跑端到端写包（真实 `data/passive.fls` +1 布局）：`mode=added`、条目 41→42、目录升序、原条目全部可被 lower_bound 复刻定位。**无 Windows/EXE/真机/完整语料验收**；判定仍属离线证据，未经游戏回读验证。
+
+## 3.55 共享核心 mx_common + 多实现同源回归 + 语料门槛与路径编码（2026-10-16，会话分支 `arena/6256d39f-mxsj-tw-2022`）
+
+用户「开工」执行分析报告建议 ③（抽共享 core）、⑤（语料门槛）、⑧（统一路径编码）。**本轮只改编辑器源码与测试，未动客户端原包/参数表、未改协议与导出行为、未合 master、未开 PR。**
+
+- **③ 共享核心**：新建仓库根 `mx_common/`（唯一真源）：`mxhash.py`（原逐指令复刻 + 新增严格 `path_hash()`）、`native_layout.py`、`output_paths.py`、`sprite_format.py`（**新**：魔数表/头与帧结构/行长上限/alpha 折算）。新建 `tools/devkit/vendor_core.py`：把这 4 个模块复制到两个编辑器 `core/` 下（副本 = 4 行生成横幅 + 真源全文，**按字节**比对，恒 LF），支持 `--check/--diff/--write/--list`；首次 `--write` 重写 8 份副本后 `--check` 0 报告。`tools/devkit/tests/test_vendor_core.py`（5 例）把「副本必须与真源一致」变成测试，并用临时目录**复现**「改一个字符 → check 报错 → write 修回」。
+- **③ 多实现同源**：`sprite.py`（UI，无 Pillow，输出 RGBA）与 `core/codecs/sprite.py`（资源，Pillow 落点）仍是两种落点，但**格式常量与 alpha 折算收归共享模块**（编辑器内旧私有名保留为别名，`codecs/detect.py` 的 `SPRITE_MAGICS` 不变）；新增 `tools/devkit/tests/test_sprite_parity.py`（9 例）：真实精灵（`data/skill.fls` 里 **唯一一份** I0，3,627 B）两解码器逐帧 RGBA 一致、两边编码器输出互解一致且与源图一致、I1 宽行回退一致、手工构造 T4 真彩两解码器一致、alpha 折算对旧公式 0–255/0–31 逐点等值。**仓库内只有这一份真实精灵样本**，覆盖窄，如实记录。
+- **⑤ 语料门槛**：`ui_editor/tests/test_codec.py` 去掉硬编码沙箱路径 `/home/user/interface_dlg_decoded`，拆成两层——**仓库内最小语料恒跑**（`tools/registration/` 7 个真实布局 + 本包夹具，缺文件即失败，不再因「外面没有语料」整组跳过）；**外部语料**只在 `MXSJ_DLG_CORPUS`（支持 `:` 多目录）给出时跑，**按实际数量上报**（低于 2,000 篇打印提示、不再一刀切 FAIL）。旧行为「指向 8 篇语料 → `8 not greater than 2000` 直接失败、连这 8 篇都不跑」已复现并修掉。
+- **⑧ 路径编码**：全仓清除 `mx_hash(x.encode("gbk","replace"))`（13 处）。查询侧（`FlsPack.contains/read_named`、`known_layout_hashes`、资源编辑器 `known_path_hashes`/扒取命名）把「GBK 不可编码」当作**引擎也寻址不到**：返回未命中/跳过并留痕（`catalog.unencodable_layout_paths()`、`names.unencodable_known_paths()`，**尚未接进 GUI 诊断面板**，列为后续）；写入侧（`pack_build` 附加资源与变更清单、`main_window` 写后校验、资源编辑器 `index_by_path/add_entry_for_path/replace_for_path`）统一走严格 `path_hash()`，不可编码即在写之前抛错。新增 `ui_editor/tests/test_path_encoding.py`（8 例，含「不可编码附加资源 → `PackError` 且不留输出文件」端到端）与 `resource_editor/tests/test_path_encoding.py`（6 例）。
+- **文档**：`AGENTS.md` §2 目录地图加 `mx_common/` 行；`docs/PYTHON_TOOL_CONVENTIONS.md` §1 新增第 7 条「多工具共用核心放 `mx_common/`，生成式副本分发」；两个编辑器 README/DESIGN 说明副本勿手改与语料新口径；`tools/devkit/README.md` 补 vendor_core 用法与用例数。
+- **本轮实测**（沙箱 PySide6 6.12.0 + gcc 空符号桩库离屏）：UI 编辑器 **215 = 214 通过 + 1 语料库跳过**（上一轮 206）；资源编辑器 **126/126**（上一轮 120）；devkit **44**（上一轮 30）；架构 161、catalog 34、review_api 27、map_editor 88 全 OK；手册六闸门 OK（106=93 通过+13 Qt 跳过，N1 32，恢复 27）；`ruff` 0（mx_common/devkit/ui/resource/map）；`check_windows_compat.py`（mx_common+devkit+ui+resource）ERROR 0 / WARNING 0；两个编辑器 `bootstrap.py --check-only` 退出码 0；端到端写包复跑（真实 `data/passive.fls`，+1 布局）：`mode=added`、41→42、目录升序、原条目全部可被 lower_bound 复刻定位。
+- **未验/未做**：Windows/EXE/真机、真实完整 `interface.fls`、游戏内加载与显示；`script_editor` 本轮**未纳入验证**（其 325 项里有 2 个 `xdis` 缺失错误 + 1 个 PySide6 版本钉 `6.10.3`≠沙箱 `6.12.0`，均为环境性、与本轮无关）；`tools/data-parser/extract_dlg.py` 与 `tools/data-parser/mx_path_hash.py` 仍各自独立（未并入 `mx_common/`）；`core/assets.py`、`core/painters.py` import Qt 与「core 零 Qt」约定的差异未处理（分析报告 P2-5）；`main_window.py` 拆分（建议④）未做。
+
+## 3.56 拆 main_window 第一段：写回校验抽到 core/publish.py（2026-10-16，会话分支 `arena/6256d39f-mxsj-tw-2022`）
+
+用户「④」执行分析报告建议④的第一段（报告原文：先给 `write_pack_copy` 抽 `core/publish.py`）。**只重构不扩功能**：写包行为、错误文案、报告字段与抽取前逐条一致；未动客户端原包/参数表，未合 master，未开 PR。
+
+- **抽出内容**（`ui_editor/src/ui_editor/core/publish.py`，241 行，零 Qt）：
+  - `engine_finds()` / `directory_is_sorted()`——模拟引擎二分寻址（`0x60E690` lower_bound + 相等判定）；
+  - `verify_structure()`——条目数 = 原数 + 新增图片 +（新增布局?1:0）、目录无逆序、条目集合一致、布局与每张新图二分命中、除 `changed_ids` 外条目字节未被改（逐条 `read_id` 比对）；
+  - `verify_readback()` / `verify_written_pack()`——回读钩子 :data:`ReadBack` 由调用方注入（GUI 注入全新 AssetResolver，测试注入只读 FlsPack + 原生密钥解码），所以本模块既不 import Qt 也不 import `core.assets`；
+  - 保存前检查：`save_encoding_issues()` / `require_save_encoding()`（编码闸门）、`save_review_plan()` + `SavePlan`（图片行「新增/替换/未引用」、待入包提示、编码问题合并）——原先混在窗口方法里。
+- **窗口侧**：`write_pack_copy` 只保留编排（取 extras、编码闸门、`patch_pack_copy`、报告元数据、状态迁移），校验改调 `publish.verify_written_pack`；`_confirm_save_review` 变成「算数据→弹窗」两段，数据来自 `save_review_plan`；新增 `_fresh_pack_readback` 静态方法作为注入钩子。`ui/main_window.py` 1,713 → 1,633 行（本段共减 80 行；报告④的其余部分——资源树/脚本面板/诊断——早已是独立模块，剩下的主要是菜单/信号/编辑命令的编排，未在本轮动）。
+- **新增测试**：`ui_editor/tests/test_publish.py` **20 例、零 Qt**（此前这段逻辑只能被 GUI 测试间接覆盖）：二分寻址单元；结构检查**逐条反例**（条目数不符、目录乱序、条目集合被换、未列条目被改字节、`layout_added` 计入总数）；回读反例（布局内容不符 / 回读缺失 / 新图不一致 / 回读抛异常被记成报告而非抛出）；真实 `data/passive.fls` 端到端（写出新包 → 零 Qt 回读钩子 → `ok=True`、条目 +2、`changed_entries=0`）；保存前检查（编码闸门拒绝不可 GBK 编码的图片名与布局字段、图片行标签、待入包提示新增/替换、散装保存不嵌入）。
+- **本轮实测**：UI 编辑器 **235 = 234 通过 + 1 外部语料跳过**（上一轮 215）；devkit 44；`ruff` 0；`check_windows_compat.py ui_editor` ERROR 0 / WARNING 0；端到端写包复跑（真实 `data/passive.fls`，+1 布局）：`mode=added`、41→42、目录升序、原条目全部可被 lower_bound 复刻定位。资源编辑器/其它组件本轮未改。
+- **未做/未验**：报告④的其余拆分（资源树面板、脚本面板、诊断面板的进一步解耦；编辑命令与剪贴板逻辑）未动；Windows/EXE/真机与完整语料仍未验。
+
+## 3.57 目标条目重写口径（建议⑦）+ 绘制对照清单（建议⑥）（2026-10-16，会话分支 `arena/6256d39f-mxsj-tw-2022`）
+
+用户「开工」（你选的 ⑥+⑦；两份分析报告按你的选择随本轮提交入库）。**只加事实说明与核对材料，不改写包行为、不改绘制实现**；未动客户端原包/参数表，未合 master，未开 PR。
+
+- **⑦ 目标条目会被怎么写（P2-1）**：`core/publish.py` 新增 `TargetWrite` / `classify_target_write()` / `classify_target_path()`：把「存储层」与「版式层」分开说清楚——`storage` = absent（新增）/ native / legacy（旧密钥）/ plaintext / unreadable（写回会拒绝替换）；`layout_rewritten` = 原明文与编辑器新明文不同（**用户没改任何属性也会真**，序列化会归一化字段顺序与写法）；`migrated` = 旧存储本次改为原生路径密钥；`byte_identical` 只在「原生存储且明文相同」时有意义（XOR 同密钥同明文 ⇒ 存储字节不变）。保存清单首行（`SavePlan.target_write` → `layout_notice`）与保存成功弹窗都带这句；`save_review.py` 的静态口径从「未改布局不动」改成准确版：**目标条目会按编辑器版式重写**，除目标条目、本次写入的图片与明确迁移的旧存储外，其它条目逐字节不动。README「格式与保真约定」同步补证据（8 个真实 `.dlg` 只有 1 个逐字节往返一致）。
+- **⑦ 实测补充（本轮新事实）**：仓库内 7 个真实包（`script.fls`/`data.fls`/`effect.fls`/`skill.fls`/`skill2.fls`/`magicres5.fls`/`passive.fls`）里**一条 `.dlg` 条目都没有**（界面布局在未入库的 `interface.fls`），所以「目标条目分类」的真实验证只能用合成路径：先由编辑器写出原生条目，再对它分类。测试覆盖 absent / native 同明文（字节不变）/ native 异明文（版式重写）/ plaintext / legacy / unreadable 六种，另有真实包端到端：写出新包 → 分类 = absent → 对写出的条目再分类 = native+字节不变 → **无改动再保存一次，目标条目字节逐字节不变** → 改一个字段后明确报「版式重写」。
+- **⑥ 绘制对照清单（P2-4）**：新增 `ui/paint_samples.py`（渲染 + 清单数据）与两个 CLI：`tools/render_paint_samples.py`（38 类样例 PNG + `contact_sheet.png` + `manifest.json`（尺寸/SHA256/绘制函数/是否命中真实资源）；支持 `--pack`/`--assets-dir`/`--image`/`--scale`）、`tools/paint_compare.py`（样例 vs 真机截图 → 并排图 + 差异图 + `*_report.json`：尺寸是否一致、差异像素数与比例、差异包围盒、平均绝对差；**只给统计不给结论**）。新增 `docs/PAINT_CHECKLIST.md`：38 行 × 类型/绘制函数/编辑器画什么/依赖/游戏侧期望/真机截图/差异/结论，**游戏侧各列一律留空**等真机核对。
+- **⑥ 目视核对到的差异（本轮）**：`defaults_data.DEFAULT_PROPS` 38 类 vs `painters._PAINTERS` 37 类 → **`CDataWidget` 没有专用绘制**，走兜底占位框（清单里可见，样例第 10 张就是这个占位框）；20 类模板带图片字段（`CProgress` 用 `sBgFileName`/`sBarFileName`），`--image` 指向真实资源时有且仅有这 20 类渲染不同（机器验证）。
+- **⑥ 机检（`tests/test_paint_samples.py`，12 例）**：38 类全渲染非空且尺寸 = `effective_size`；联络表覆盖全部样例；`manifest.json` 的 SHA256 与实际文件一致；**清单类型集合 == 模板类型集合**、清单绘制函数 == 分发表（以后新增控件类型漏进清单会红）；**「游戏侧各列必须留空」这条规矩被机检**；清单重新生成与仓库那份逐字一致；真实精灵（`data/skill.fls` 唯一一份 I0）作为资源时命中且只影响图片类。
+- **本轮实测**（桩库离屏）：UI 编辑器 **257 = 256 通过 + 1 外部语料跳过**；devkit 44；`ruff` 0；`check_windows_compat ui_editor` 0/0/0；样例渲染冒烟：占位版 38 类 + 联络表 40 文件、真实资源版（散装目录放真实 I0 精灵）20 类渲染改变；`paint_compare.py` 用「样例 + 人为色块」造的真机截图跑通（差异 60 像素 / 3.12% / 包围盒 (2,2,12,8)）；端到端写包复跑 `mode=added`、41→42、升序、原条目全可定位。
+- **未做/未验**：任何「与游戏一致」的结论（必须真机截图人工填表）；`CDataWidget` 虽缺专用绘制但**未改**（属功能决策，先记录）；`interface.fls` 未入库 ⇒ 仓库内无法渲染真实界面图；Windows/EXE/真机仍全部未验。
+
+
+## 3.58 主窗口继续拆分：控件编辑命令（2026-10-17）
+
+用户授权「那你先拆」。行为保持型重构，不新增功能、不修改原包。
+
+- `ui/main_window.py` 的 23 个编辑方法搬到 `ui/commands.py` 的
+  `EditingCommandsMixin`：添加/提升、选择集合、文本焦点分流、复制粘贴、
+  删除与静态引用护栏、锁定/撤销后恢复、右键菜单、控件重排。
+  窗口继承 mixin，保留所有原有方法名和信号连接；mixin 不初始化 QObject，
+  不保存文件。结构刷新与选择回调仍在主窗口。
+- 主窗口 1,638 → 1,296 行；新模块 367 行。④仍未全部完成，主窗口仍超过
+  600 行约定；后续可按文件/资源工作流、动作/菜单组装继续拆分。
+- 实测：AST 对比搬出的 23 个方法与本轮修改前实现全部一致；UI 全套
+  257 项（256 通过、1 外部语料跳过），覆盖复制粘贴/删除/锁定与撤销；
+  devkit 44 通过；ruff 0；wincompat ERROR/WARNING/INFO 均 0；
+  `bootstrap.py --check-only` 退出 0（沙箱 Qt 环境）。
+- 验收边界更正：用户已明确反馈，之前在 Windows 添加控件后游戏里能显示，
+  此项记为用户实测通过，不再描述为完全未验证。本轮重构仅有上述沙箱回归，
+  不将之前的功能验收外推成本轮 Windows/EXE 验收，也不要求重复整套验收。
+
+
+## 3.59 主窗口职责拆分收口至 600 行以内（2026-10-17）
+
+用户授权「继续」。继 §3.58 的编辑命令拆分，本轮仅迁移界面层方法与依赖，
+不改写包行为、不改功能、不碰客户端原包。
+
+- 新增 `ui/workflows.py`（545 行）：27 个方法，包含散装布局/目录/包的
+  打开与导入、保存清单、生成新包、导出 PNG、资源样式加载。
+- 新增 `ui/window_setup.py`（303 行）：5 个方法，包含面板、菜单、工具栏、
+  动作工厂与信号连接。静态方法装饰器一并保留。
+- `MainWindow` 组合三个职责 mixin，继续持有窗口/文档状态、选择与历史回调、
+  诊断/脚本关联和几何编辑编排。主窗口 1,296 → **491 行**；连同前一轮
+  `commands.py`（367 行），这四个窗口模块均不超过 600 行。
+  mixin 不定义初始化方法，不接管 QObject 生命周期。
+- GUI 测试的 mock 查找位置跟随依赖迁移：保存/导入对话框与文件选择框改在
+  `ui.workflows` 打桩；主包缺失路径测试同样在新模块替换目录函数。
+  不保留仅供旧测试使用的无效导入，不降低测试断言。
+- 新增 `tests/test_window_structure.py` 3 项纯 AST 护栏：四个模块行数上限、
+  方法不跨组重复遮蔽、mixin 无 QObject 初始化且窗口继承顺序明确。
+- 实测：本轮搬出的 32 个方法 AST 与修改前完全一致；UI **260 项**
+  （259 通过、1 外部语料跳过）；devkit 44 通过；ruff 0；wincompat
+  ERROR/WARNING/INFO 均 0；`bootstrap.py --check-only` 退出 0。
+  以上为 Linux 沙箱离屏结果，不冒充本轮 Windows/EXE 验收。
+- 当前主窗口拆分的行数目标已达到；不扩展为整个编辑器全部模块均符合
+  行数约定（既存 `pack_build.py`、`painters.py` 的超长问题不在本轮改动内）。
+  用户此前 Windows 添加控件并在游戏中显示的验收结论继续保留。
+
+## 3.60 UI 编辑器 0.8.4：文本编码、来源刷新、布局导出（2026-10-17）
+
+用户明确授权实现这三项；不改变编辑器界面语言、不做简繁转换，不改原包。
+
+- 工具栏增加 Big5（默认）/GBK/UTF-8 文本编码下拉；切换从当前布局原始
+  解密字节重新解析，立即更新画布，不拿乱码文字反向转码、不自动保存。
+  `sText/sTitle/sTitles/sTips` 支持选定编码（包括嵌套容器），资源路径保持
+  GBK，路径哈希和 FLS 加解密规则不变。文档记录编码与原始字节；保存成功
+  更新字节快照，避免切换时恢复成保存前的内容。
+- 保存/存包、导入预检、编码诊断和全新 resolver 回读使用文档编码。
+  保留既有原生 GBK 文件头（按字段混合编码）；UTF-8 可读写不等于目标游戏
+  已支持 UTF-8 字体渲染。不是“全部官服版本已兼容”的结论。
+- 工具栏刷新（F5）：新建 resolver 重开包索引、重扫来源目录（含新增包）、
+  重读当前布局、图片与 ui.lst；成功才替换窗口状态并关闭旧包。保留包顺序、
+  已记路径和待入包图片；取消/读取失败保留当前文档。目录树反映散装布局
+  新增/删除并恢复当前定位。未保存新建布局无来源，刷新不凭空丢掉它。
+- 左侧已有布局右键导出：锁定所点包/文件，散装原字节复制，包内先解密后
+  原字节输出 .dlg，不重排、不改 MD5、不转码；不含当前未保存编辑。
+  灰色缺失节点禁用导出；待入包节点仍用另存为。保护源包、散装源资源及
+  软/硬链接别名，不能通过导出覆盖源文件。
+- 新增 `ui/source_actions.py` 组织这三项；主窗口仍少于 600 行，结构护栏
+  加入新 mixin，不删除旧有的行数/重复方法/QObject 初始化检查。
+- 新增 28 项测试（编码 6、来源 GUI 22），涵盖三编码嵌套往返、GBK 原文、
+  UTF-8 BOM、切换/取消/失败、保存后切换、待入包标记、GBK/UTF-8 写包回读、
+  图片/未命中缓存/样式刷新、包索引更新、新包发现、刷新失败回滚、同名包
+  精确导出、导出未保存编辑隔离、源文件/图片硬链接保护与菜单信号。
+- 本轮实际验证：UI **288 项（287 通过，1 外部语料跳过）**；devkit **44 通过**；ruff 0；
+  Windows 兼容静态扫描 ERROR/WARNING/INFO 均 0；vendor_core --check 通过；
+  bootstrap --check-only 成功。环境为 Python 3.11 + PySide6 的 Linux
+  offscreen，系统缺少图形库，用仓库外空符号桩库支持离屏测试，不入交付。
+  本轮没有新的 Windows/EXE/官服实包验收，没有生成或上传新版 ZIP。
+  用户既有 Windows 添加控件并在游戏中显示的验收继续保留。
+- `data/script.fls` 与密钥库 SHA256 均保持锁定值，资源编辑器本轮未改。
+
+## 3.61 左侧过滤 0 布局 FLS（2026-10-17）
+
+用户要求左侧隐藏 0 布局的包。统一在 `_add_pack_to_tree` 过滤无已识别布局的
+FLS，单包打开、资源目录打开、刷新均生效；resolver 仍挂载它们，图片/其它资源
+读取不受影响。不将“未识别到布局”说成包物理内容必然没有布局。
+更新零布局提示和目录状态统计，移除“空包可在左侧右键导入”的过时提示。
+程序化导入仍可展示待入包节点；丢弃后清除没有其它布局的空包根，不留 0 布局节点。
+调整既有回归，覆盖单包/目录过滤、隐藏包保持挂载、刷新后仍过滤、待入包清理、
+未命中路径不挂空根。UI 288 项（287 通过、1 外部语料跳过），ruff、diff 检查通过；
+Windows 静态检查 ERROR/WARNING/INFO 均 0。本轮没有新增 Windows/EXE 实机验收。
+
+## 3.62 两编辑器独立源码 ZIP 上传云盘（2026-10-17）
+
+用户明确授权分别打包上传 Google Drive。源码快照 `840799ccb7c890bd0571efc402bbf0c0b0a2f9ed`，
+只打包各工具的受版本控制文件；不含游戏 FLS、密钥、venv、空符号桩库、缓存或编译 EXE。
+ZIP 顶层有交付说明，进入 `ui_editor` / `resource_editor` 子目录启动；各自包含
+中文启动 BAT、bootstrap、build_exe.bat 和 spec。UI 包额外含原有 7 份注册布局
+最小测试样本，保持测试的仓库相对路径，不降低缺语料断言；仅作测试，不是部署补丁。
+
+独立解压复测：UI 287 项（280 通过、7 缺外部资源/语料跳过），资源 126 项
+（119 通过、7 缺真实客户端资源跳过）；两包 bootstrap --check-only 通过。
+Linux Qt offscreen + 仓库外桩库，不冒充 Windows EXE/官服实包验收。
+打包前 ruff、Windows 兼容静态检查和共享核心副本检查均通过。
+
+上传到 My Drive 根目录，保留旧包、未更改共享权限。上传后另行 get_file 核对
+文件名、大小、MD5 与本地 ZIP 一致：
+
+| 包 | 字节数 | MD5 | Drive 链接 |
+|---|---:|---|---|
+| ui_editor_0.8.4_source_20261017.zip | 456498 | d9bc58757812db183c1ebb606842faf8 | https://drive.google.com/file/d/1ppId3BylFSIpDE8ccTKiDJY29_IFlTeO/view |
+| resource_editor_0.4.3_source_20261017.zip | 176389 | 2a30149401d6d42b5f8c2f44e7d75ebd | https://drive.google.com/file/d/1r6ZxYDegD2O9hVY60Yg2QqT1PRBayL3O/view |
+
+UI ZIP SHA256：`15c7c0ed785fb34a1b2536bc9f630a15a3eb0e9620f0a88504fc607f60933c87`；
+资源 ZIP SHA256：`4d988aeff1d0d02ab2137a970dc33c3f8195d714e9041260f4e38f724268d6aa`。
+
+
+### 3.63 内置打开列表：原生导入链静态定位（2026-10-17）
+
+本轮按用户“你查”继续，不要求重复搜索、找日志或盲放文件。
+已确定编辑器先显示窗口、再强制读 file_interface.FILE_INFO、再扫描本地interface；
+前置依赖失败能留下空窗口。仓库原包目录缺少正确键 file_interface.s（0x3caabef5）。
+原生 C_sys.PkgImport VA 0x45D1D0 存在普通 Python 导入回退，不是仅支持包内模块。
+查明正确脚本资源键为模块名加 .s，4,951个候选匹配，纠正notes §3/§6旧判断（见新§7）。
+报告：docs/analysis/native_open_list_failure_20261017.md；证据同级evidence目录。
+边界：未取得真实客户端 sys.path，不能指定散装.py准确放置位置；未实机复现异常；
+不把 .py 重命名 .s，未运行恢复模块，未修改script.fls或密钥。下一步为核启动路径设置，
+或在授权范围内设计独立可回滚修复，不能宣称已修好。
+本轮HEAD观测为5ef8aa2，工作文件含前轮大量已交付内容；未重置或批量暂存这些内容，
+未基于旧HEAD盲目补交/推送，保留工作树待按恢复规程核对远端。
+
+
+### 3.64 用户要求完整源码放 Diff：已生成单模块替换候选（2026-10-17）
+
+路径 `tools/client_patches/native_uieditor_open_list/dgtuieditor.py`，643行，
+只改变 entry 918 的 CUIEditorDgt.GetFileInfo；同目录有小范围diff、README及audit.json。
+本轮从锁定原包单条恢复（uncompyle6 3.9.3），保留原始字节字符串为ASCII转义，
+移除反编译器b前缀/非法模块return，并还原4个文档字符串。
+仓库外构建CPython2.5.6并仅compile，不执行模块；60个代码对象与原code递归比对，
+除GetFileInfo外59个的指令、参数、名字、局部变量、标志、堆栈、自由变量、闭包、
+字面量常量均一致（排除源位置元数据）。源码SHA256见audit.json。
+原包/密钥未修改，没有分发FLS；用户自行用脚本编辑器备份、替换、编译，原生验收待做。
+已有自定义修改的模块不可整份覆盖。该目录为Diff交付，不将恢复语料冒充原作者源码。
+HEAD/索引旧版问题沿用3.63：保留现有工作树，未盲目批量提交推送。
+
+### 3.65 完整 dgtuieditor 修复源码云盘交付（2026-10-17）
+
+按用户要求打包并上传 `dgtuieditor_open_list_fix_20261017.zip`，7191字节，
+内含完整643行dgtuieditor.py、README.md、GetFileInfo.diff、audit.json。
+打包前源文件SHA256与审计一致，ZIP CRC及解压源码逐字节核对通过。
+上传后独立get_file复核大小、MD5一致：`fe980a7bc93716eafc17ae9027099e8e`。
+ZIP SHA256：`0bdd83cc82638605f4ebc5d6d210f1fddba7c84150d663e022ac1d507fb61822`。
+Drive：https://drive.google.com/file/d/1kCUs9Q_AbGekYUZJ9Z-Mqv2q5tJ7YelI/view
+My Drive根目录，未改共享权限、未覆盖旧文件；仅源码候选，不含游戏包/密钥。
+
+### 3.66 修正源码交付遗漏：固定XOR长度超限（2026-10-17）
+
+用户反馈 authored marshal exceeds fixed XOR length; no shrink/rescale。
+原因：3.64/3.65仅做compile和原code比对，漏掉native_build.py固定expanded_size限制。
+不放宽边界，不缩放参数。新版完整源码628行，GetFileInfo只返回本地GetTmpFileInfo，
+**功能收窄：不合并包内开发清单；interface不存在/扫描错误仍沿用原生空数据行为。**
+实际经编辑器compile_standard→build_package→独立readback及标准marshal审计通过：
+22398字节 <= 22441，补零43；只改918，其余5001条存储内容核验不变。
+仓库外compact_verified_test.fls仅验证未分发；原包/密钥未改；没有执行恢复模块。
+同目录源码/diff/README/audit已更新；59个非目标代码对象仍与原code一致。
+v2 ZIP6457字节，MD5 337160fda83677cc654271925565dda8，上传后get_file匹配：
+https://drive.google.com/file/d/11DX11YNL_2BaTBRVovHV6LTHXOTKMZiC/view
+旧版不再建议使用；保留旧云盘文件、不改共享权限；Windows/游戏端待验证。
+
+
+### 3.67 用户反馈内置编辑器无法打开：暂停部署（2026-10-17）
+
+用户截图：mx.exe，Version=(0,8,147)，Code=0xC0000005，Address=0x004EE054。
+建议立即退出游戏并恢复本次修改前备份script.fls；v1/v2均不再建议部署。
+README、audit追加暂停标记，不删除源码、不擅自改用户云盘文件。
+本地mxmain.dll同地址指令为 mov esi,[esi+0x30]，位于代码模块装入函数，
+调用链前段从代码对象取得filename；原生import路径调用此前定位的0x4EDFE0。
+只能说明本地二进制映射下加载路径可能访问无效code对象；截图无寄存器/调用栈，
+不能据此断言哪个模块解密失败，也不能确认用户二进制与仓库完全一致。
+本轮追加核查：锁定原包918 decode→encode逐字节等于原解密marshal（22441字节）；
+此自洽结果与前轮离线写包回读均不能替代原生引擎验收，暂不再发猜测补丁。
+下一步需要用户实际生成的出错script.fls（仓库外只读接收）核对实际修改条目、
+头部/目录、负载、固定段参数和原生加载链；不要求用户重复搜索或自行找日志。
+
+### 3.68 已核用户1017script.zip并交付精确回退（2026-10-17）
+
+Drive下载文件1hEAYFKKA5lIeot2Www0tR6J0VVAUYWuB，MD5已核；用户FLS SHA为
+0ee42496e9c69abc4bbcad3aa35ebb232866acfaaa1555dcbacc9575f25aad20。
+918解压加密载荷与我方v2测试构建逐字节相同，非用户贴错代码。
+仅恢复918后整个包SHA精确回到此前c7276deb…已登记用户包（48449597字节），
+保留其余5001条和此前337/4007/4082修改。回退ZIP已CRC/整包SHA核验、上传、独立get_file复核：
+https://drive.google.com/file/d/1G14eDPJMbGMtPYPnN8cs0MJ2iJ5t4gxq/view
+文件48294282字节，MD5 5791e84f8b92b6982e4e1c7623f74545，未改共享权限。
+所有FLS/ZIP/pyc仍仓库外/home/user/crash_1017，下载时落库内google_drive的ZIP已移出。
+报告docs/analysis/native_open_crash_20261017.md，证据同级evidence。
+仍未确诊原生加载崩溃根因，不把离线同源回读当引擎兼容；不再发猜测性修复候选。
+原始输入和密钥未改，未执行恢复模块，无Windows/游戏验收。HEAD旧版与工作树差异仍待恢复核对，
+未批量暂存/覆盖已有工作，未盲推。
+
+### 3.69 用户回退成功；授权直接构建字节码对照测试包（2026-10-17）
+
+用户明确“替换回去就能打开了”，回退恢复内置编辑器启动已实机确认，空列表未验收。
+随后用户要求“你直接改好一个我试试，是不是脚本编辑器的问题”，本轮按此授权构建新候选。
+外部临时文件恢复后缺失，已从Drive取回先前回退ZIP并核MD5及解压c727整包SHA。
+不重新编译/序列化模块、不调用FLS writer：在原生GetFileInfo的49字节窗口改成
+LOAD_FAST self / LOAD_ATTR GetTmpFileInfo / CALL_FUNCTION 0 / RETURN_VALUE，余39字节NOP。
+实际仅29字节变动；marshal总长22441不变，所有元数据/原始常量/行号表序列化布局不变；
+其余59个代码对象不变。新zlib流8436字节＋10字节零尾占满旧8446槽，解压逐字节回读一致。
+整个包长度48449597、头/目录/偏移/长度均不变；目标槽之外所有文件字节完全一致，5001条不变。
+输出FLS SHA256 4bf116d0a6e62848bc1724ddfc67877c5a9db95a52768e8fa1d6f6d520318678。
+16项native codec单测本轮通过，未执行恢复模块、无游戏实机结果；这是用户授权的对照候选，
+不是宣称已确诊或已修好脚本编辑器。若正常可缩小到重编译/序列化/写包链，不能单独定位某算法。
+源码/旧v1/v2仍暂停；本次只列本地interface文件，不合并包内开发清单。
+ZIP script_uieditor_direct_bytecode_test_20261017.zip 48295807字节，MD5
+1d5b430cf97b2e3b59eb211278b7f626；上传后独立get_file核对一致：
+https://drive.google.com/file/d/1q3OCueg5pt1gSNTfG2pOJOcNAXf0UI1U/view
+未改云盘权限。输入/输出FLS、ZIP、构建探针均在/home/user/uieditor_direct_test_20261017。
+repo仅小审计docs/analysis/evidence/native_open_crash_20261017/direct_bytecode_test_audit.json，
+未存原包/密钥/完整游戏包。HEAD旧版保留现有工作树，未盲目批量提交推送。
+
+
+### 3.70 用户实机确认原位补丁：有列表、加载成功（2026-10-17）
+
+用户原话“你的可以，有列表了，加载成功”。对应3.69直接字节码包
+1q3OCueg5pt1gSNTfG2pOJOcNAXf0UI1U，FLS SHA256
+4bf116d0a6e62848bc1724ddfc67877c5a9db95a52768e8fa1d6f6d520318678。
+内置编辑器可打开、显示本地列表、布局加载成功得到用户实测支持。
+同等本地扫描逻辑的全模块重编译版崩溃，而保留原marshal布局/函数长度/包结构的
+原位版成功，将排查主线收窄到重编译/序列化/写包转换链，而非再改用户文件目录。
+尚未单独定位具体错误算法；不把它写成所有脚本编辑器功能或任意扩容写包已通过。
+保留本地文件限定：本版不合并包内开发清单。旧v1/v2源码仍暂停使用，不建议
+将当前可用测试包通过编辑器再次编译覆盖；独立审计已追加用户验收范围。
+下一步独立对比失败重编译版与成功原位版，按复现补测试再改编辑器，
+不得只放宽固定长度保护或以同源codec回读代替原生兼容性验证。
+
+
+### 3.71 脚本编辑器dev7原生cipher修复并交付覆盖更新（2026-10-17）
+
+用户在确认原位包“有列表了，加载成功”后要求修编辑器。本轮已完成代码修复，
+不是继续让用户排查目录，也不再仅靠原位改字节绕过完整重编译。
+
+- 真因：旧catalog研究边界并非客户端真值。918正确4511/9012/13542/18070，
+  旧表第一/第四边界各提前3字节。旧读写共用错误参数，同源往返误报成功。
+  错位分别损伤嵌入路径和`m_dOrgWidgetInfo`，后者被旧v2恢复成`JxCOrgWidgetInfo`。
+- 实现native seed/递推边界，统一接入load_profile、路径索引、语料参数核验与写包。
+  539行不完整/非唯一键通过name-seed及目录hash双核对；两对五键碰撞不任选。
+  共享mxhash新增script_editor分发目标；原包/catalog及SHA未改。
+- 已验收原位包4bf116...自动关联。仅该完整SHA的entry918去掉确定的10零槽尾后
+  严格解压，其他未知尾部/拼接流/截断规则不放宽。实际从此包完成预编译/发布，
+  新输出ceeb3ddf...、48449552字节，仅918替换，其余5001不变。
+- 原包5002项全部严格解码及独立模块名侧客户端算法解密对照通过；真实2.5.6
+  编译628行v3验证源码，60个code中仅GetFileInfo语义不同，59个保持。
+  v3完整源码+diff另存native_uieditor_open_list_v3，旧v1/v2仍暂停，不自动改用户旧稿。
+- 本轮335测试：247通过、88明确跳过、0失败。GUI缺libGL、2.7未配置及外部语料
+  跳过不算通过；未宣称完整发行门禁通过。ruff/Windows兼容0错误0警告/vendor校验通过。
+- 云盘读取旧dev6完整ZIP失败，未重复相同请求。交付dev6覆盖式源码更新，保留已有
+  Windows编译器/引擎；不是完整重装包或EXE。旧EXE不会自动更新，应从原bat启动。
+  实际ZIP覆盖到HEAD旧源码后，隔离安装副本38项通过、零跳过，已验证所需新模块齐全。
+
+[下载dev7源码更新](https://drive.google.com/file/d/1_Ae-5qkZeWtCtGa_94mkIT5PV7KJxPVf/view)
+文件MXSJ_ScriptEditor_0.6.0.dev7_update_20261017.zip，88157字节，
+MD5 `2ca0feb66321a9a2e12547ea6f48bd7f`；上传后get_file重读匹配，位于既定
+script_editor目录，未修改分享权限/旧包。完整修改文件、diff、说明、核验摘要及
+未游戏验收v3参考源码随包；不含FLS/EXE/DLL，不要求替换当前已能运行的游戏包。
+
+报告：[native cipher修复](analysis/native_cipher_fix_20261017.md)；
+[测试/输入核验](analysis/evidence/native_cipher_fix_20261017/verification.json)、
+[交付回执](analysis/evidence/native_cipher_fix_20261017/delivery_receipt.json)、
+[从用户已验收包完整重编译审计](analysis/evidence/native_cipher_fix_20261017/accepted_workflow_audit.json)。
+
+**当前状态：编辑器核心修复、覆盖更新交付完成；修正版完整重编译输出仍未Windows/游戏验收。**
+用户验收过的仍是此前原位包，不能把那次成功写成本轮新包已通过。下一步接受dev7反馈；
+不要求重复证明旧原位包，不再发旧v1/v2，不替换用户个人修改或可用包。
+
+## 3.72 `mock_server.py` 修復「網絡錯誤(007)」、日曆/日程時間偏移與系統設置分辨率保存卡死（2026-10-17）
 
 - **「網絡錯誤(007)」根因與修復**：反組譯 `mxmain.dll`（`C_sys.GetTime` @ `0x4545b0`）確認其返回值為 `(timeGetTime() - start_ms) * 10`（單位 **0.1ms = 10,000 ticks/sec**），`mxgw.SecondGetResult`（entry `2296`）中 `cdt = (G2 - G1) / 100` 為**厘秒（100 ticks/sec）**，看門狗週期 `CreatePyCommand(750 / 1200 / 5400)` 為 **25s / 40s / 180s**（30 FPS 幀數）。舊版 `GS2C_TIME = 31` 下發 Unix 秒（1 tick/sec）導致 40s 週期內 `cdt ≈ 4000 > sdt ≈ 590` 必敗並斷線報 `007`。現改為單調遞增 100Hz 厘秒計數器（`monotonic_centiseconds()`，僅在收到 `C2GS_REQUEST_TIME = 61` 時回覆）。
 - **日曆与日程表時間偏移根因與修復**：`script/misc.py`（entry `3183`）啟動時 `g_RecordTime = 0`，若伺服器未下發觸發 `misc.SetServerTime(tm)` 的封包，`GetServerCurrentTime()` 會將 Windows 開機運行秒數（`C_sys.GetTickCount() / 1000`）疊加到 `time.time()` 上；且 `dlgcalendar.S2CTime`（entry `1425`）監聽 `GS2C_TIME_SECOND = 192`。現於進圖、瞬連及收到 `C2GS_OPEN_UI = 88 (isub=241)` / `C2GS_SCHEDULE = 82` 時同步下發 `GS2C_OPEN_UI = 89 (isub=241)`、`GS2C_PROP_SWITCH = 21 (isub=6)` 與 `GS2C_TIME_SECOND = 192`，並完整回應 `C2GS_SCHEDULE = 82 (isub=1, 2)`。
 - **系統設置/分辨率保存卡死根因與修復**：`dgtbaseopt.Save()`（entry `2373`）在跨 `ratio` 切換分辨率（`視野擴大` $\leftrightarrow$ `800*600`/`1024*768`/`1280*960`）或切換界面風格時會觸發 `netquicklogin.Connect` $\rightarrow$ `main.RestartQuickLogin` $\rightarrow$ `Restart(2, False)`（清空熱鍵、場景與 UI 並建立新連線發送 `C2GS_QUICKLOGIN = 13, sub=2`）。舊版未下發 `GS2C_QUICKLOGIN = 12 (isub=1)` 導致 `g_LoginKey = None` 拋出 `TypeError` 且未處理 `opcode 13 / 21 / 90`。現於登入時下發 `GS2C_OTHER_ASSISTANT = 11 (isub=42)`（`S2CSetRate`）、`GS2C_PROP_SWITCH = 21 (isub=1)` 與 `GS2C_QUICKLOGIN = 12 (isub=1)`，並完整實作 `C2GS_PLAYER_SYSSWITCH = 21`（含 `C2GS_GAME_PUBLIC = 209, sub=5` 分片重組）、`C2GS_HUODONG = 90 ('newchar' sub=11)` 與 `C2GS_QUICKLOGIN = 13 (sub=1, 2)` 瞬連重登。
 - `mock_server.py` 與 `mock_server (1).py` 均已同步並通過 `--self-test` 全鏈路 6 階段回環測試。
 
+
+### 3.73 PR #51 同步master并解决状态记录冲突（2026-10-18）
+
+- 用户报告PR合并冲突；实际仅`docs/STATUS.md`末尾双方追加内容冲突，运行代码无冲突。
+- 保留本分支§3.54–3.71全部记录，以及master的Mock时钟/日历/瞬连修复记录；
+  后者改编号§3.72，对应概览链接同步更新，不覆盖任何一方进度。
+- master的`mock_server.py`、`mock_server (1).py`及quest.story设计文档逐字节保留；
+  script/UI/资源编辑器和共享核心相对dev7提交不变。
+- 本轮重新执行：Mock `--self-test`六阶段回环通过，脚本编辑器38项核心回归通过
+  （零跳过），vendor_core 4模块/9副本一致；无未解决冲突，新增合并差异格式检查通过。
+  没有重新执行335项全量回归，也没有新增Windows/游戏验收。
+- 本轮只将master同步进固定工作分支并推送PR #51，不执行PR合入master。
+- 小审计：`docs/analysis/evidence/pr51_conflict_resolution_20261018.json`。

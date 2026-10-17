@@ -154,7 +154,7 @@ class RealMaterialBuild(unittest.TestCase):
                 hashlib.sha256(source_path.read_bytes()).hexdigest(), expected
             )
 
-    def test_real_mainpage_337_rejected_without_opcode_repairs(self):
+    def test_real_mainpage_337_native_boundaries_remove_false_opcode_error(self):
         location = os.environ.get("MXSJ_M2_REPO")
         executable = os.environ.get("MXSJ_PY25")
         if not location or not executable:
@@ -162,8 +162,8 @@ class RealMaterialBuild(unittest.TestCase):
         source = Path(location) / "data" / "script.fls"
         catalog = Path(location) / "tools" / "decompiler" / "script_fls_keys.json"
         compiler = inspect_compiler(Path(executable), "py25")
-        with tempfile.TemporaryDirectory(prefix="mxscript-m2-reject-") as temp:
-            output = Path(temp) / "never.fls"
+        with tempfile.TemporaryDirectory(prefix="mxscript-m2-calibrated-") as temp:
+            output = Path(temp) / "mainpage-offline.fls"
             with ArchiveDocument(source) as archive:
                 digest = archive.fingerprint()
                 identity = archive.entries[337].identity
@@ -176,16 +176,19 @@ class RealMaterialBuild(unittest.TestCase):
                 )
             from native_fixtures import minimal_pyc
 
-            with self.assertRaisesRegex(ValueError, "unmapped VM25 opcode"):
-                build_package(
-                    source,
-                    output,
-                    source_sha256=digest,
-                    compiler=compiler,
-                    profiles={337: profile},
-                    replacements=(Replacement(337, identity, minimal_pyc("py25")),),
-                )
-            self.assertFalse(output.exists())
+            # The old boundary 8473 cut through a VM instruction. Do not
+            # preserve that research-table bug as a required opcode failure.
+            self.assertEqual(profile.bounds, (2163, 4281, 6390, 8474))
+            report = build_package(
+                source,
+                output,
+                source_sha256=digest,
+                compiler=compiler,
+                profiles={337: profile},
+                replacements=(Replacement(337, identity, minimal_pyc("py25")),),
+            )
+            self.assertEqual(report.unchanged_entries, 5001)
+            self.assertTrue(output.is_file())
 
     def test_actual_script_register_source(self):
         self.exercise("py25")

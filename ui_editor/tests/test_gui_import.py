@@ -58,11 +58,11 @@ class TestGuiImport(unittest.TestCase):
         dialog.exec.return_value = QDialog.Accepted if accepted else QDialog.Rejected
         with (
             mock.patch(
-                "ui_editor.ui.main_window.QFileDialog.getOpenFileName",
+                "ui_editor.ui.workflows.QFileDialog.getOpenFileName",
                 return_value=(str(self.local), ""),
             ),
             mock.patch(
-                "ui_editor.ui.main_window.LayoutImportDialog", return_value=dialog
+                "ui_editor.ui.workflows.LayoutImportDialog", return_value=dialog
             ),
             mock.patch(
                 "ui_editor.ui.main_window.QMessageBox.question",
@@ -166,8 +166,7 @@ class TestGuiImport(unittest.TestCase):
             question.assert_called_once()
         self.window._set_document(LayoutDocument.from_dicts(layout(), None))
         self.assertIsNone(self.window.resource_panel._pending_item)
-        root = self.window.resource_panel._roots[("pack", str(self.src))]
-        self.assertEqual(root.childCount(), 0)
+        self.assertNotIn(("pack", str(self.src)), self.window.resource_panel._roots)
 
     def test_exact_pack_lookup_not_first_mounted_copy(self):
         first, second = self.root / "first.fls", self.root / "second.fls"
@@ -182,6 +181,7 @@ class TestGuiImport(unittest.TestCase):
         self.assertEqual(self.window.doc.to_dicts(), layout("Second"))
 
     def test_context_menu_only_pack_root(self):
+        self.import_dlg()  # 有待入包布局时显示包根；纯资源包默认不入树
         panel = self.window.resource_panel
         root = panel._roots[("pack", str(self.src))]
         seen = []
@@ -227,7 +227,7 @@ class TestGuiImport(unittest.TestCase):
         dialog = mock.Mock()
         dialog.exec.return_value = QDialog.Rejected
         with mock.patch(
-            "ui_editor.ui.main_window.SaveReviewDialog", return_value=dialog
+            "ui_editor.ui.workflows.SaveReviewDialog", return_value=dialog
         ) as review:
             self.assertFalse(
                 self.window._confirm_save_review(

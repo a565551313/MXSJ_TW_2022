@@ -1,9 +1,21 @@
 # UI 编辑器设计方案（已确认，2026-10-13）
 
+## 0.8.4 来源操作与字段编码
+
+`ui/source_actions.py` 独立承接编码切换、刷新、来源布局导出，不继续扩充主窗口。
+文档保存 `text_encoding` 与解密后的 `source_bytes`；切换从原始字节解析，
+不是对已显示文字做转码。成功保存后更新字节快照；保存/导入预检/诊断/新包回读
+沿用文档编码。默认 Big5 的旧 API 保持兼容，资源路径与存储规则不变。
+刷新先构造新 resolver、读取新文档与样式，成功才替换窗口状态并关闭旧包；失败
+关闭临时 resolver 并保留旧文档。保留包优先级、路径登记、待入包图片，丢弃旧缓存。
+树导出锁定节点来源，不用全局同名查找，不通过 serializer，禁止覆盖源资源别名。
+
 ## 0.8.3 原生布局写入与连续编辑
 
-core/native_layout.py 是零Qt、自包含原生路径密钥/字面量/XOR模块，与资源工具
-同一实现（各自包内一份，交付不依赖仓库兄弟目录）。新增、原位/迁移替换、重组
+core/native_layout.py 是零Qt、自包含原生路径密钥/字面量/XOR模块；它与
+core/mxhash.py、core/output_paths.py、core/sprite_format.py 一样，都是仓库
+mx_common/ 真源的**字节副本**（tools/devkit/vendor_core.py 生成，勿手改），
+交付不依赖仓库兄弟目录，改逻辑改真源后 `--write` 分发、`--check` 校验。新增、原位/迁移替换、重组
 回退统一使用路径派生密钥；旧密文头反推只保留读取兼容。_verify_copy 严格按
 目标路径密钥回读新布局，与当前序列化明文逐字比对，错误输出不得发布。
 来源：notes/native_dlg_path_cipher.md 的实际LoadFile方法表及静态调用链。
@@ -75,8 +87,10 @@ src/ui_editor/
 ├── app.py / __main__.py        # 入口
 ├── core/                       # 零 Qt 依赖部分可无头测试
 │   ├── errors.py               # 统一异常
-│   ├── mxhash.py               # 引擎路径哈希（与 tools 复刻同源）
+│   ├── mxhash.py               # 引擎路径哈希 + 严格 path_hash（mx_common 副本）
+│   ├── sprite_format.py        # 精灵格式常量/alpha 折算（mx_common 副本）
 │   ├── pack.py                 # 0SLF 只读容器（惰性索引 + 按哈希查表）
+│   ├── publish.py              # 写回新包后的独立校验 + 保存前检查（零 Qt，可脱窗测）
 │   ├── sprite.py               # I0/T0/I1 精灵解码 → RGBA（无 Pillow）
 │   ├── dlg_codec.py            # .dlg 文本 ⇄ 字典列表（保型往返）
 │   ├── model.py                # 控件树模型 + 新建工厂
@@ -86,13 +100,26 @@ src/ui_editor/
 │   └── painters.py             # 38 类控件近似绘制规则（QtGui）
 └── ui/                         # PySide6 界面
     ├── main_window.py          # 主窗口与工作流
+    ├── commands.py             # 编辑命令 mixin（添加/粘贴/删除/锁定/右键）
+    ├── workflows.py            # 文件/资源包打开、导入、保存、导出 mixin
+    ├── window_setup.py         # 面板/菜单/工具栏/信号组装 mixin
     ├── canvas.py               # 画布场景/图元（选中/拖动/缩放）
     ├── property_panel.py       # 属性面板（按值类型生成编辑器）
-    └── panels.py               # 布局文件树 / 控件树 / 调色板
+    ├── panels.py               # 布局文件树 / 控件树 / 调色板
+    └── paint_samples.py        # 38 类控件绘制样例 + 对照清单生成（tools/ 的 CLI 用）
 ```
 
 ## 关键约定
 
+* **绘制只做「材料可复现」，判定交给人**：`ui/paint_samples.py` 渲染样例与
+  清单，`tools/render_paint_samples.py` / `tools/paint_compare.py` 提供 CLI，
+  结论写进 `docs/PAINT_CHECKLIST.md`（未核对留空，机检见
+  `tests/test_paint_samples.py`）。
+* **写回校验与窗口解耦**：`core/publish.py` 承担「新包算不算写成功」的全部
+  判定（条目数/目录升序/集合/二分命中/未改条目保真/全新解析器回读）与保存前
+  检查（编码闸门、图片清单、待入包提示）；`main_window.write_pack_copy` 只做
+  编排与状态迁移，回读钩子由窗口注入（测试注入只读 FlsPack 版）。
+  反例逐条见 `tests/test_publish.py`（20 例，零 Qt）。
 * **保型往返是硬门槛**：2,706 个已解密 `.dlg` 全部须通过
   「解析 → 序列化 → 再解析」结构一致性测试（list/tuple/bool/
   float/中文字符串都不许丢型或丢字）。
@@ -100,6 +127,9 @@ src/ui_editor/
   生成编辑器，嵌套结构只读展示，字段可增删。
 * 尺寸约定：`iWidth/iHeight` 为正用之，为 0 取图片首帧尺寸
   （网格类按行列推算），再不行用兜底尺寸；坐标相对父控件。
+* 绘制近似边界：`CPngNineFrame` 用**固定三分**做九宫格（切割线不可配，
+  见 README「格式与保真约定」与 `notes/ui_editor_phase2_design.md` §2.3），
+  其余控件按类型近似；精确绘制以进游戏比对为准。
 * 资源按引擎方式寻址：多包并挂、路径哈希查表；缺图画占位框，
   不挡编辑。精灵绘制取首帧（按钮常态），多状态帧放二期。
 * 保存写散装 `.dlg`（原版式、MD5 行重算；显示文本 Big5 与资源路径 GBK 混合编码，按字段编解码）；二期 M1 起可「保存回资源包（生成新包）」：按原生路径 XOR 密钥新增/替换、严格原生回读及逐条校验、原包不动（tools/ui_pack_write_probe.py 已在真实 script.fls 上验证）；0.2.1 起写回走快速补丁（core/pack_build.patch_pack_copy：新包=复制+原位补丁、变长条目迁移至目录原址、仅病态交叠包回退整包重组），校验同步利用"他条 span 不变"跳过读取，大包保存秒级。

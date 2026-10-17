@@ -1,0 +1,115 @@
+{
+  "archive_sha256": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+  "matched_basename_s": 4951,
+  "other_or_unmatched": 26,
+  "known_matches": [
+    {
+      "entry": 918,
+      "path": "script/uieditor/dgtuieditor.py",
+      "resource": "dgtuieditor.s",
+      "id": "0x2be981d6",
+      "computed": "0x2be981d6"
+    },
+    {
+      "entry": 993,
+      "path": "script/uieditor/explorer.py",
+      "resource": "explorer.s",
+      "id": "0x302dcfea",
+      "computed": "0x302dcfea"
+    },
+    {
+      "entry": 2921,
+      "path": "script/lib/os.py",
+      "resource": "os.s",
+      "id": "0x93d64cd6",
+      "computed": "0x93d64cd6"
+    },
+    {
+      "entry": 3931,
+      "path": "script/uieditor/getinterfacefilelist.py",
+      "resource": "getinterfacefilelist.s",
+      "id": "0xc80fc677",
+      "computed": "0xc80fc677"
+    }
+  ],
+  "lookup": {
+    "file_interface.s": {
+      "hash": "0x3caabef5",
+      "entry": null
+    },
+    "file_misc.s": {
+      "hash": "0x5d2df580",
+      "entry": null
+    },
+    "file_item.s": {
+      "hash": "0x1b28c921",
+      "entry": null
+    },
+    "file_config.s": {
+      "hash": "0x88e5ef",
+      "entry": null
+    },
+    "file_script.s": {
+      "hash": "0xe35214bd",
+      "entry": null
+    }
+  },
+  "unmatched_sample": [
+    {
+      "entry": 153,
+      "path": "scripttEPOIEMtBGJO]ALMtBGJO]idedefine.py",
+      "resource": "scripttEPOIEMtBGJO]ALMtBGJO]idedefine.s",
+      "id": "0x7a92e46",
+      "computed": "0xae1081a9"
+    },
+    {
+      "entry": 530,
+      "path": "script/diaMNF}QSDRDOUBDOUDS}ODUdailylottery.py",
+      "resource": "diaMNF}QSDRDOUBDOUDS}ODUdailylottery.s",
+      "id": "0x18c7e484",
+      "computed": "0x955e7220"
+    },
+    {
+      "entry": 632,
+      "path": "script/mxgamSjWUB_@_BOjEC[[SDBDW_XFSBjRZQjRZQEC[[SDBDW_XFSt.py",
+      "resource": "mxgamSjWUB_@_BOjEC[[SDBDW_XFSBjRZQjRZQEC[[SDBDW_XFSt.s",
+      "id": "0x1d5d16e6",
+      "computed": "0xb15a094f"
+    },
+    {
+      "entry": 740,
+      "path": "script/pud4ZvsddoabgrgZpubbigdatainit.py",
+      "resource": "pud4ZvsddoabgrgZpubbigdatainit.s",
+      "id": "0x225b3c7b",
+      "computed": "0xde880698"
+    },
+    {
+      "entry": 1255,
+      "path": "sKZAX/tEPOIEMtZGGCAMJIKCtZGGCAMbackrewarddefines.py",
+      "resource": "tEPOIEMtZGGCAMJIKCtZGGCAMbackrewarddefines.s",
+      "id": "0x3e3e8719",
+      "computed": "0xf3be3cbd"
+    },
+    {
+      "entry": 1458,
+      "path": "script/yard/yardedit/yardeditui/!9*<=<1,.1=/:*ush_farm.py",
+      "resource": ":*ush_farm.s",
+      "id": "0x48518422",
+      "computed": "0xfa86cf46"
+    },
+    {
+      "entry": 2013,
+      "path": "FVG/EAiE@WFVG/EAiE@WF^/YYiPjQebugctrl.py",
+      "resource": "YYiPjQebugctrl.s",
+      "id": "0x64e5d9eb",
+      "computed": "0x776a6799"
+    },
+    {
+      "entry": 2066,
+      "path": "script/mxgame/sevendayVCPEGV~QGTGndaytargetdefine.py",
+      "resource": "sevendayVCPEGV~QGTGndaytargetdefine.s",
+      "id": "0x67c25c7c",
+      "computed": "0xed6eee7e"
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "parsed": 4987,
+  "failed": [
+    63,
+    64,
+    1013,
+    1528,
+    1854,
+    1931,
+    1954,
+    2643,
+    2984,
+    3066,
+    4133,
+    4166,
+    4305,
+    4691,
+    4928
+  ],
+  "hits": [
+    {
+      "entry": 918,
+      "id": 736723414,
+      "path": "script/uieditor/dgtuieditor.py",
+      "refs": [
+        {
+          "function": "<module>/CUIEditorDgt/GetFileInfo",
+          "names": [
+            "file_interface",
+            "FILE_INFO",
+            "GetTmpFileInfo",
+            "CombineFileInfo"
+          ]
+        }
+      ]
+    },
+    {
+      "entry": 993,
+      "id": 808308714,
+      "path": "script/uieditor/explorer.py",
+      "refs": [
+        {
+          "function": "<module>/GetFileInfo",
+          "names": [
+            "file_interface",
+            "FILE_INFO"
+          ]
+        }
+      ]
+    },
+    {
+      "entry": 2751,
+      "id": 2324079430,
+      "path": "script/uieditor/dlguieditor.py",
+      "refs": [
+        {
+          "function": "<module>/CAttrListDlg/GetFileInfo",
+          "names": [
+            "file_interface",
+            "FILE_INFO"
+          ]
+        }
+      ]
+    }
+  ],
+  "seconds": 13.20772409439087,
+  "scope": "data/script.fls, 5002 entries; literal marshal/bytecode inspection only; no game code executed",
+  "limits": "15 entries not structurally parsed by this baseline. Absence from parsed modules does not prove absence from the running client or external modules. Script module IDs do not use resource path hash."
+}

@@ -69,7 +69,7 @@ class TestLayoutReopen(unittest.TestCase):
         first = self.window()
         self.assertEqual(first.resolver.scan_layouts(str(self.pkg)), [])
         with mock.patch(
-            "ui_editor.ui.main_window.QInputDialog.getText",
+            "ui_editor.ui.workflows.QInputDialog.getText",
             return_value=(self.path, True),
         ):
             first.open_pack_path(str(self.pkg))
@@ -118,7 +118,7 @@ class TestLayoutReopen(unittest.TestCase):
         window = self.window()
         with (
             mock.patch(
-                "ui_editor.ui.main_window.QInputDialog.getText",
+                "ui_editor.ui.workflows.QInputDialog.getText",
                 return_value=("wrong/not-present.dlg", True),
             ),
             mock.patch("ui_editor.ui.main_window.QMessageBox.warning") as warning,
@@ -127,9 +127,7 @@ class TestLayoutReopen(unittest.TestCase):
         warning.assert_called_once()
         self.assertIsNone(window.doc)
         self.assertEqual(self.settings.value("known_layout_paths", []), [])
-        self.assertEqual(
-            window.resource_panel._roots[("pack", str(self.pkg))].childCount(), 0
-        )
+        self.assertNotIn(("pack", str(self.pkg)), window.resource_panel._roots)
 
     def test_registration_paths_recognized_without_prior_settings(self):
         data = pack_build.build_archive(

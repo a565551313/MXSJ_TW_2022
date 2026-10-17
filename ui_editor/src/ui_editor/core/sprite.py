@@ -16,6 +16,11 @@
 ``0x40–0x7F`` LIT（不透明字面序列）；``0x80–0xBF`` REP（不透明
 单色重复）；``0xC0–0xFF`` SKIP（透明跳过）。透明等级 5 位，
 ``alpha8 = level * 255 // 31``。
+
+魔数表、行长表规律与 alpha 折算来自共享真源 ``sprite_format``
+（生成副本见本文件所在目录，改真源才是改这里）；本模块只保留
+「解码成 RGBA 字节」这一落点，与资源编辑器的 Pillow 落点由
+``tools/devkit/tests/test_sprite_parity.py`` 交叉验证。
 """
 
 from __future__ import annotations
@@ -24,15 +29,10 @@ import struct
 from dataclasses import dataclass
 
 from .errors import SpriteError
+from .sprite_format import DIRECT_MAGICS, MAGICS, is_sprite
 
-MAGICS = (b"I0", b"T0", b"I1", b"T4", b"T5")
-DIRECT_MAGICS = (b"T4", b"T5")  # 真彩变体：无调色板，像素为 RGB 三字节
-
-__all__ = ["SpriteFrame", "Sprite", "is_sprite", "decode_sprite"]
-
-
-def is_sprite(data: bytes) -> bool:
-    return len(data) >= 26 and data[:2] in MAGICS
+__all__ = ["SpriteFrame", "Sprite", "is_sprite", "decode_sprite",
+           "MAGICS", "DIRECT_MAGICS"]
 
 
 @dataclass

@@ -121,6 +121,8 @@ class LayoutDocument:
                  md5: str | None = None) -> None:
         self.roots: list[Widget] = roots or []
         self.md5 = md5
+        self.text_encoding = "big5"
+        self.source_bytes: bytes | None = None  # 解密后的原始布局，用于切换编码
         # 来源：本地 .dlg 路径，或 (包路径, 资源路径) 二元组（二选一）
         self.source_path: str | None = None
         self.source_pack: tuple[str, str] | None = None

@@ -1,0 +1,368 @@
+test_extreme_count_is_bounded_without_reading_huge_directory (test_archive_diagnostics.ArchiveDiagnosticTests.test_extreme_count_is_bounded_without_reading_huge_directory) ... ok
+test_invalid_first_payload_has_exact_offsets_and_no_repair (test_archive_diagnostics.ArchiveDiagnosticTests.test_invalid_first_payload_has_exact_offsets_and_no_repair) ... ok
+test_truncated_directory_not_confused_with_bad_payload (test_archive_diagnostics.ArchiveDiagnosticTests.test_truncated_directory_not_confused_with_bad_payload) ... ok
+test_valid_report_retains_only_header_directory_hashes_not_payload (test_archive_diagnostics.ArchiveDiagnosticTests.test_valid_report_retains_only_header_directory_hashes_not_payload) ... ok
+test_windows_seek_read_path_preserves_binary_payload (test_archive_diagnostics.ArchiveDiagnosticTests.test_windows_seek_read_path_preserves_binary_payload) ... ok
+test_wrong_magic_and_short_header (test_archive_diagnostics.ArchiveDiagnosticTests.test_wrong_magic_and_short_header) ... ok
+test_change_after_reader_open_before_document_init_is_not_rebaselined (test_archive_revision.ArchiveRevisionTests.test_change_after_reader_open_before_document_init_is_not_rebaselined) ... ok
+test_open_handle_change_refuses_even_if_path_snapshot_matches (test_archive_revision.ArchiveRevisionTests.test_open_handle_change_refuses_even_if_path_snapshot_matches) ... ok
+test_path_identity_change_refuses_even_with_identical_size_and_times (test_archive_revision.ArchiveRevisionTests.test_path_identity_change_refuses_even_with_identical_size_and_times) ... ok
+test_path_snapshot_error_closes_temporary_descriptor (test_archive_revision.ArchiveRevisionTests.test_path_snapshot_error_closes_temporary_descriptor) ... ok
+test_path_stat_and_fstat_differences_do_not_reject_unchanged_package (test_archive_revision.ArchiveRevisionTests.test_path_stat_and_fstat_differences_do_not_reject_unchanged_package) ... ok
+test_direct_gui_entry_refuses_incompatible_qt_before_window_creation (test_bootstrap.BootstrapVersionTests.test_direct_gui_entry_refuses_incompatible_qt_before_window_creation) ... ok
+test_incompatible_preinstalled_qt_must_be_repaired (test_bootstrap.BootstrapVersionTests.test_incompatible_preinstalled_qt_must_be_repaired) ... ok
+test_pinned_qt_is_accepted_and_distribution_declarations_agree (test_bootstrap.BootstrapVersionTests.test_pinned_qt_is_accepted_and_distribution_declarations_agree) ... ok
+test_corrupt_upstream_source_is_refused_before_install (test_bootstrap.RecoveryBootstrapTests.test_corrupt_upstream_source_is_refused_before_install) ... ok
+test_engine_install_failure_does_not_block_gui_dependency_gate (test_bootstrap.RecoveryBootstrapTests.test_engine_install_failure_does_not_block_gui_dependency_gate) ... 正在安装支持当前Python的恢复引擎；使用包内固定提交源码，不使用旧版xdis6.1.8。
+恢复引擎未就绪，仍打开已有编辑器界面；包内恢复可能暂不可用。
+请保留上面的具体错误；版本冲突不是换镜像就能解决，也不要强制忽略Python版本限制。
+ok
+test_full_check_does_not_claim_pass_when_engine_missing (test_bootstrap.RecoveryBootstrapTests.test_full_check_does_not_claim_pass_when_engine_missing) ... MXSJ 脚本编辑器 · 启动自检
+Python 3.11.2：/home/user/editor_writeback_fix/venv/bin/python
+第二恢复引擎尚未安装；主引擎和已有编辑仍可用。
+源码开发目录由维护者运行 build_recovery_engine.py 准备本机引擎；
+Windows 完整源码发行包必须预装对应程序/许可证/完整源码，不自动下载未知程序。
+完整自检失败：恢复引擎未就绪；普通启动仍可打开界面。
+ok
+test_install_only_returns_failure_if_engine_missing_without_opening_gui (test_bootstrap.RecoveryBootstrapTests.test_install_only_returns_failure_if_engine_missing_without_opening_gui) ... MXSJ 脚本编辑器 · 启动自检
+Python 3.11.2：/home/user/editor_writeback_fix/venv/bin/python
+ok
+test_legacy_xdis_is_detected_not_left_with_new_engine (test_bootstrap.RecoveryBootstrapTests.test_legacy_xdis_is_detected_not_left_with_new_engine) ... ok
+test_python314_normal_start_reaches_app_without_recovery_dependency (test_bootstrap.RecoveryBootstrapTests.test_python314_normal_start_reaches_app_without_recovery_dependency) ... MXSJ 脚本编辑器 · 启动自检
+Python 3.11.2：/home/user/editor_writeback_fix/venv/bin/python
+第二恢复引擎尚未安装；主引擎和已有编辑仍可用。
+源码开发目录由维护者运行 build_recovery_engine.py 准备本机引擎；
+Windows 完整源码发行包必须预装对应程序/许可证/完整源码，不自动下载未知程序。
+正在打开编辑器界面…
+ok
+test_qt_install_failure_still_blocks_gui_with_specific_diagnostic (test_bootstrap.RecoveryBootstrapTests.test_qt_install_failure_still_blocks_gui_with_specific_diagnostic) ... Qt安装失败，无法打开界面；请查看pip具体错误（可能为版本/依赖/网络问题）。
+ok
+test_same_version_wrong_source_is_not_accepted (test_bootstrap.RecoveryBootstrapTests.test_same_version_wrong_source_is_not_accepted) ... ok
+test_secondary_check_distinguishes_missing_invalid_and_verified (test_bootstrap.RecoveryBootstrapTests.test_secondary_check_distinguishes_missing_invalid_and_verified) ... 第二恢复引擎尚未安装；主引擎和已有编辑仍可用。
+源码开发目录由维护者运行 build_recovery_engine.py 准备本机引擎；
+Windows 完整源码发行包必须预装对应程序/许可证/完整源码，不自动下载未知程序。
+第二恢复引擎清单/程序/许可证/完整源码校验通过；尚非恢复正确性验收。
+第二恢复引擎未通过校验：bad source SHA；已有稿仍可打开。
+ok
+test_exact_full_digest_only_no_filename_or_directory_guess (test_bundled_catalog.BundledCatalogTests.test_exact_full_digest_only_no_filename_or_directory_guess) ... ok
+test_missing_or_tampered_asset_never_used (test_bundled_catalog.BundledCatalogTests.test_missing_or_tampered_asset_never_used) ... ok
+test_registered_test_digest_does_not_bypass_damaged_payload_validation (test_bundled_catalog.BundledCatalogTests.test_registered_test_digest_does_not_bypass_damaged_payload_validation) ... ok
+test_registered_test_digest_reaches_strict_recovery_not_missing_xor_gate (test_bundled_catalog.BundledCatalogTests.test_registered_test_digest_reaches_strict_recovery_not_missing_xor_gate) ... ok
+test_stage_rechecks_pins_and_refuses_existing_output (test_bundled_catalog.BundledCatalogTests.test_stage_rechecks_pins_and_refuses_existing_output) ... ok
+test_actual_production_map_registers_exact_user_digest_and_unknown_stays_off (test_bundled_catalog.RegisteredPackagePinTests.test_actual_production_map_registers_exact_user_digest_and_unknown_stays_off) ... ok
+test_registered_alias_rejects_missing_or_tampered_asset (test_bundled_catalog.RegisteredPackagePinTests.test_registered_alias_rejects_missing_or_tampered_asset) ... ok
+test_shared_asset_stages_once_with_both_package_pins_intact (test_bundled_catalog.RegisteredPackagePinTests.test_shared_asset_stages_once_with_both_package_pins_intact) ... ok
+test_user_accepted_direct_package_also_auto_associates_exact_digest (test_bundled_catalog.RegisteredPackagePinTests.test_user_accepted_direct_package_also_auto_associates_exact_digest) ... ok
+test_compiler_changed_or_failed_never_replaces_output (test_compiler.CompilerGuards.test_compiler_changed_or_failed_never_replaces_output) ... ok
+test_empty_bundled_manifest_disables_compilation (test_compiler.CompilerGuards.test_empty_bundled_manifest_disables_compilation) ... ok
+test_manifest_hash_checked_before_launch (test_compiler.CompilerGuards.test_manifest_hash_checked_before_launch) ... ok
+test_manifest_path_escape (test_compiler.CompilerGuards.test_manifest_path_escape) ... ok
+test_missing_compiler (test_compiler.CompilerGuards.test_missing_compiler) ... ok
+test_python3_cannot_compile_game_scripts (test_compiler.CompilerGuards.test_python3_cannot_compile_game_scripts) ... ok
+test_standard_output_only_and_encoding_header (test_compiler.CompilerGuards.test_standard_output_only_and_encoding_header) ... ok
+test_timeout_is_explicit (test_compiler.CompilerGuards.test_timeout_is_explicit) ... ok
+test_vm_version_and_magic_must_both_match (test_compiler.CompilerGuards.test_vm_version_and_magic_must_both_match) ... ok
+test_actual_cpython25 (test_compiler.LegacyCompilation.test_actual_cpython25) ... ok
+test_actual_cpython27 (test_compiler.LegacyCompilation.test_actual_cpython27) ... skipped 'py27: set MXSJ_PY27 to actual standard compiler'
+test_bad_codec_or_unencodable (test_core.CoreTests.test_bad_codec_or_unencodable) ... ok
+test_bad_data_central_length (test_core.CoreTests.test_bad_data_central_length) ... ok
+test_bad_data_local_length (test_core.CoreTests.test_bad_data_local_length) ... ok
+test_bad_data_name_length (test_core.CoreTests.test_bad_data_name_length) ... ok
+test_bad_data_trailer (test_core.CoreTests.test_bad_data_trailer) ... ok
+test_bad_project_identity_and_duplicate (test_core.CoreTests.test_bad_project_identity_and_duplicate) ... ok
+test_bounds (test_core.CoreTests.test_bounds) ... ok
+test_data_directory_is_not_source_module (test_core.CoreTests.test_data_directory_is_not_source_module) ... ok
+test_failed_publication_preserves_output_and_cleans_temp (test_core.CoreTests.test_failed_publication_preserves_output_and_cleans_temp) ... ok
+test_hardlink_protected (test_core.CoreTests.test_hardlink_protected) ... ok
+test_independent_copy_core_has_no_qt_or_sibling_imports (test_core.CoreTests.test_independent_copy_core_has_no_qt_or_sibling_imports) ... ok
+test_literal_big5_and_gbk (test_core.CoreTests.test_literal_big5_and_gbk) ... ok
+test_no_fls_writes (test_core.CoreTests.test_no_fls_writes) ... ok
+test_non_utf8_source_rejected (test_core.CoreTests.test_non_utf8_source_rejected) ... ok
+test_open_archive_mutated_in_place_refuses_stale_index (test_core.CoreTests.test_open_archive_mutated_in_place_refuses_stale_index) ... ok
+test_open_archive_replaced_at_path_refuses_stale_index (test_core.CoreTests.test_open_archive_replaced_at_path_refuses_stale_index) ... ok
+test_payload_crossing_directory (test_core.CoreTests.test_payload_crossing_directory) ... ok
+test_portable_project_and_mutated_archive (test_core.CoreTests.test_portable_project_and_mutated_archive) ... ok
+test_project_cannot_overwrite_source_alias (test_core.CoreTests.test_project_cannot_overwrite_source_alias) ... ok
+test_script_lazy_identity_and_stored_bytes (test_core.CoreTests.test_script_lazy_identity_and_stored_bytes) ... ok
+test_symlink_rejected (test_core.CoreTests.test_symlink_rejected) ... ok
+test_truncated_directory (test_core.CoreTests.test_truncated_directory) ... ok
+test_unknown_magic (test_core.CoreTests.test_unknown_magic) ... ok
+test_utf8_bom_read_and_save (test_core.CoreTests.test_utf8_bom_read_and_save) ... ok
+test_all_comment_failure_output_is_not_source (test_corpus_import.CorpusImportTests.test_all_comment_failure_output_is_not_source) ... ok
+test_bad_artifact_hash_length_or_cross_entry_rejected (test_corpus_import.CorpusImportTests.test_bad_artifact_hash_length_or_cross_entry_rejected) ... ok
+test_bool_schema_and_malformed_engine_rejected (test_corpus_import.CorpusImportTests.test_bool_schema_and_malformed_engine_rejected) ... ok
+test_cancellation_before_import_never_reads_artifacts (test_corpus_import.CorpusImportTests.test_cancellation_before_import_never_reads_artifacts) ... ok
+test_different_pyc_is_readable_but_not_verified_origin (test_corpus_import.CorpusImportTests.test_different_pyc_is_readable_but_not_verified_origin) ... ok
+test_exclusion_happens_before_any_artifact_read (test_corpus_import.CorpusImportTests.test_exclusion_happens_before_any_artifact_read) ... ok
+test_index_and_raw_bytes_are_separate_from_editable_source (test_corpus_import.CorpusImportTests.test_index_and_raw_bytes_are_separate_from_editable_source) ... ok
+test_line_and_total_limit_are_fail_closed (test_corpus_import.CorpusImportTests.test_line_and_total_limit_are_fail_closed) ... ok
+test_malformed_engine_record_is_value_error_for_safe_native_fallback (test_corpus_import.CorpusImportTests.test_malformed_engine_record_is_value_error_for_safe_native_fallback) ... ok
+test_original_parameter_numeric_alias_is_not_exact_integer_match (test_corpus_import.CorpusImportTests.test_original_parameter_numeric_alias_is_not_exact_integer_match) ... ok
+test_path_traversal_absolute_windows_alias_and_symlink_rejected (test_corpus_import.CorpusImportTests.test_path_traversal_absolute_windows_alias_and_symlink_rejected) ... ok
+test_reordered_duplicate_missing_and_wrong_archive_records_rejected (test_corpus_import.CorpusImportTests.test_reordered_duplicate_missing_and_wrong_archive_records_rejected) ... ok
+test_repair_parameters_require_exact_strict_byte_equality (test_corpus_import.CorpusImportTests.test_repair_parameters_require_exact_strict_byte_equality) ... ok
+test_whole_manifest_change_detected_not_only_current_row (test_corpus_import.CorpusImportTests.test_whole_manifest_change_detected_not_only_current_row) ... ok
+test_wrong_original_parameters_or_artifact_never_admitted (test_corpus_import.CorpusImportTests.test_wrong_original_parameters_or_artifact_never_admitted) ... ok
+test_124_and_4861_keep_editable_candidates_without_verified_origin (test_corpus_import.RealCorpusImportTests.test_124_and_4861_keep_editable_candidates_without_verified_origin) ... skipped 'opt-in full audited corpus required'
+test_2371_local_repair_delta_not_misrepresented_as_verified (test_corpus_import.RealCorpusImportTests.test_2371_local_repair_delta_not_misrepresented_as_verified) ... skipped 'opt-in full audited corpus required'
+test_eight_real_repairs_match_exact_pyc_and_original_catalog_unchanged (test_corpus_import.RealCorpusImportTests.test_eight_real_repairs_match_exact_pyc_and_original_catalog_unchanged) ... skipped 'opt-in full audited corpus required'
+test_real_large_entry_1182_is_not_blocked_by_live_process_output_limit (test_corpus_import.RealCorpusImportTests.test_real_large_entry_1182_is_not_blocked_by_live_process_output_limit) ... skipped 'opt-in full audited corpus required'
+test_real_repaired_4305_compile_publish_reopen_without_execution (test_corpus_import.RealCorpusImportTests.test_real_repaired_4305_compile_publish_reopen_without_execution) ... skipped 'opt-in full audited corpus required'
+test_both_real_vms_negative_long_recovery_recompiles_exact_constants (test_data_corpus.ActualSignedLongRecoveryTests.test_both_real_vms_negative_long_recovery_recompiles_exact_constants) ... skipped 'actual standard compilers required'
+test_data_does_not_accept_script_xor_catalog_workflow (test_data_corpus.DataCorpusTests.test_data_does_not_accept_script_xor_catalog_workflow) ... ok
+test_existing_destination_never_overwritten (test_data_corpus.DataCorpusTests.test_existing_destination_never_overwritten) ... ok
+test_failed_engines_keep_diagnostics_not_fake_source (test_data_corpus.DataCorpusTests.test_failed_engines_keep_diagnostics_not_fake_source) ... ok
+test_full_build_directory_exclusion_strict_pyc_and_exact_raw_roundtrip (test_data_corpus.DataCorpusTests.test_full_build_directory_exclusion_strict_pyc_and_exact_raw_roundtrip) ... ok
+test_mid_cancel_has_no_usable_manifest_or_source_changes (test_data_corpus.DataCorpusTests.test_mid_cancel_has_no_usable_manifest_or_source_changes) ... ok
+test_nonzero_timestamp_is_preserved_and_accepted_for_vm27 (test_data_corpus.DataCorpusTests.test_nonzero_timestamp_is_preserved_and_accepted_for_vm27) ... ok
+test_pre_cancel_reads_no_payload_and_creates_no_cache (test_data_corpus.DataCorpusTests.test_pre_cancel_reads_no_payload_and_creates_no_cache) ... ok
+test_schema3_vm27_corpus_and_dirty_buffer_resume_without_corpus (test_data_corpus.DataCorpusTests.test_schema3_vm27_corpus_and_dirty_buffer_resume_without_corpus) ... ok
+test_top_level_recovery_failure_remains_visible_after_cache_import (test_data_corpus.DataCorpusTests.test_top_level_recovery_failure_remains_visible_after_cache_import) ... ok
+test_vm_path_identity_and_directory_confusion_are_rejected (test_data_corpus.DataCorpusTests.test_vm_path_identity_and_directory_confusion_are_rejected) ... ok
+test_wrong_magic_cannot_be_labeled_data_standard_pyc (test_data_corpus.DataCorpusTests.test_wrong_magic_cannot_be_labeled_data_standard_pyc) ... ok
+test_every_real_data_entry_candidate_has_exact_strict_origin (test_data_corpus.RealDataCorpusTests.test_every_real_data_entry_candidate_has_exact_strict_origin) ... skipped 'opt-in actual data corpus required'
+test_real_data_corpus_probe_compile_publish_reopen_does_not_execute (test_data_corpus.RealDataCorpusTests.test_real_data_corpus_probe_compile_publish_reopen_does_not_execute) ... skipped 'opt-in actual data corpus required'
+test_real_uuid_direct_browser_opens_without_prebuilt_corpus (test_data_corpus.RealDataCorpusTests.test_real_uuid_direct_browser_opens_without_prebuilt_corpus) ... skipped 'opt-in actual data corpus required'
+test_real_uuid_negative_longs_remain_exact_not_replaced_or_nopped (test_data_corpus.RealDataCorpusTests.test_real_uuid_negative_longs_remain_exact_not_replaced_or_nopped) ... skipped 'opt-in actual data corpus required'
+test_signed_long_invalid_digit_and_absurd_count_are_rejected (test_data_corpus.SignedLegacyLongTests.test_signed_long_invalid_digit_and_absurd_count_are_rejected) ... ok
+test_signed_long_values_zero_positive_negative_and_large_are_exact (test_data_corpus.SignedLegacyLongTests.test_signed_long_values_zero_positive_negative_and_large_are_exact) ... ok
+test_current_replacement_does_not_replace_partial_word (test_gui.GuiTests.test_current_replacement_does_not_replace_partial_word) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_dirty_source_close_cancel_and_save (test_gui.GuiTests.test_dirty_source_close_cancel_and_save) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_dock_layout_persists_only_with_explicit_settings (test_gui.GuiTests.test_dock_layout_persists_only_with_explicit_settings) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_failed_startup_clears_stale_compilers_but_keeps_source_available (test_gui.GuiTests.test_failed_startup_clears_stale_compilers_but_keeps_source_available) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_highlighting_keeps_comments_inside_strings_and_multiline_state (test_gui.GuiTests.test_highlighting_keeps_comments_inside_strings_and_multiline_state) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_large_tree_uses_supported_qt_without_none_reference_corruption (test_gui.GuiTests.test_large_tree_uses_supported_qt_without_none_reference_corruption) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_outline_reference_jump_and_real_opened_source_diff (test_gui.GuiTests.test_outline_reference_jump_and_real_opened_source_diff) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_package_selector_switches_independent_vm_without_rebinding_source (test_gui.GuiTests.test_package_selector_switches_independent_vm_without_rebinding_source) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_project_dirty_close_cancel (test_gui.GuiTests.test_project_dirty_close_cancel) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_reference_source_cannot_compile_save_or_associate (test_gui.GuiTests.test_reference_source_cannot_compile_save_or_associate) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_reference_toolbar_and_indentation_cannot_change_text (test_gui.GuiTests.test_reference_toolbar_and_indentation_cannot_change_text) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_replace_all_is_one_undo_and_duplicate_tab_not_added (test_gui.GuiTests.test_replace_all_is_one_undo_and_duplicate_tab_not_added) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_search_case_whole_word_unicode_and_single_undo (test_gui.GuiTests.test_search_case_whole_word_unicode_and_single_undo) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_smart_indent_and_block_indent_are_undoable (test_gui.GuiTests.test_smart_indent_and_block_indent_are_undoable) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_startup_checks_both_vms_without_open_tab (test_gui.GuiTests.test_startup_checks_both_vms_without_open_tab) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_two_archives_have_separate_identity_and_vm (test_gui.GuiTests.test_two_archives_have_separate_identity_and_vm) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_window_native_build_disabled (test_gui.GuiTests.test_window_native_build_disabled) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_workspace_toolbar_shares_real_actions_and_welcome (test_gui.GuiTests.test_workspace_toolbar_shares_real_actions_and_welcome) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_authored_snapshot_can_reopen_with_source_file_missing (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_authored_snapshot_can_reopen_with_source_file_missing) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_candidate_reopen_after_save_as_preserves_renamed_dirty_buffer (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_candidate_reopen_after_save_as_preserves_renamed_dirty_buffer) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_conflicting_snapshot_is_preflighted_without_adding_widgets (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_conflicting_snapshot_is_preflighted_without_adding_widgets) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_corpus_actions_are_real_menu_entries (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_corpus_actions_are_real_menu_entries) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_draft_save_as_cannot_write_into_corpus_directory (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_draft_save_as_cannot_write_into_corpus_directory) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_imported_candidate_does_not_replace_native_engine_tab (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_imported_candidate_does_not_replace_native_engine_tab) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_missing_corpus_does_not_discard_restored_edit_buffer (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_missing_corpus_does_not_discard_restored_edit_buffer) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_project_restores_unsaved_text_candidates_diagnostics_and_vm (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_project_restores_unsaved_text_candidates_diagnostics_and_vm) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_reopen_project_keeps_existing_dirty_buffer_and_undo_history (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_reopen_project_keeps_existing_dirty_buffer_and_undo_history) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_saving_project_is_enough_to_close_without_saving_py_files (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_saving_project_is_enough_to_close_without_saving_py_files) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_unverified_external_pyc_cannot_reach_native_prepare (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_unverified_external_pyc_cannot_reach_native_prepare) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_verify_catalog_action_writes_new_file_and_leaves_original_untouched (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_verify_catalog_action_writes_new_file_and_leaves_original_untouched) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_data_generation_action_builds_and_associates_vm27_corpus (test_gui_data_corpus.DataCorpusGuiTests.test_data_generation_action_builds_and_associates_vm27_corpus) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_data_manifest_import_is_not_blocked_by_script_only_guard (test_gui_data_corpus.DataCorpusGuiTests.test_data_manifest_import_is_not_blocked_by_script_only_guard) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_data_xor_action_does_not_install_script_catalog (test_gui_data_corpus.DataCorpusGuiTests.test_data_xor_action_does_not_install_script_catalog) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_failed_generation_does_not_mask_live_recovery_with_empty_cache (test_gui_data_corpus.DataCorpusGuiTests.test_failed_generation_does_not_mask_live_recovery_with_empty_cache) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_package_open_and_project_resume_preserve_vm27_edited_candidate (test_gui_data_corpus.DataCorpusGuiTests.test_package_open_and_project_resume_preserve_vm27_edited_candidate) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_all_121_real_data_scripts_open_as_editable_vm27_tabs (test_gui_data_corpus.RealDataCorpusGuiTests.test_all_121_real_data_scripts_open_as_editable_vm27_tabs) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_both_vms_real_unbound_open_edit_review_publish_and_project_reopen (test_gui_module.GuiModuleTests.test_both_vms_real_unbound_open_edit_review_publish_and_project_reopen) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_cancelling_first_save_keeps_recovery_dirty_and_untrusted (test_gui_module.GuiModuleTests.test_cancelling_first_save_keeps_recovery_dirty_and_untrusted) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_old_missing_xor_project_gets_pin_and_retries_without_overwriting_edits (test_gui_module.GuiModuleTests.test_old_missing_xor_project_gets_pin_and_retries_without_overwriting_edits) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_old_recovery_text_is_preserved_with_explicit_warning (test_gui_module.GuiModuleTests.test_old_recovery_text_is_preserved_with_explicit_warning) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_open_archive_auto_pins_catalog_then_recovers_without_manual_source (test_gui_module.GuiModuleTests.test_open_archive_auto_pins_catalog_then_recovers_without_manual_source) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_registered_test_package_auto_binds_then_real_worker_opens_editable_draft (test_gui_module.GuiModuleTests.test_registered_test_package_auto_binds_then_real_worker_opens_editable_draft) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_saved_recovery_file_reopens_as_editable_untrusted_correct_vm (test_gui_module.GuiModuleTests.test_saved_recovery_file_reopens_as_editable_untrusted_correct_vm) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_unbound_missing_catalog_opens_entry_tab_with_reason (test_gui_module.GuiModuleTests.test_unbound_missing_catalog_opens_entry_tab_with_reason) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_data_paths_still_come_from_directory_and_keep_pyo_suffix (test_gui_module_paths.ModulePathGuiTests.test_data_paths_still_come_from_directory_and_keep_pyo_suffix) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_declining_catalog_never_publishes_scanned_names (test_gui_module_paths.ModulePathGuiTests.test_declining_catalog_never_publishes_scanned_names) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_manual_catalog_confirmation_reindexes_existing_unknown_package (test_gui_module_paths.ModulePathGuiTests.test_manual_catalog_confirmation_reindexes_existing_unknown_package) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_open_shows_paths_before_any_double_click_no_binding_or_source (test_gui_module_paths.ModulePathGuiTests.test_open_shows_paths_before_any_double_click_no_binding_or_source) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_project_reopen_also_indexes_paths_without_touching_dirty_buffer (test_gui_module_paths.ModulePathGuiTests.test_project_reopen_also_indexes_paths_without_touching_dirty_buffer) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_cancel_button_stops_recovery_and_keeps_dirty_buffer (test_gui_recovery_candidates.CandidateGuiTests.test_cancel_button_stops_recovery_and_keeps_dirty_buffer) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_candidate_information_does_not_claim_semantic_or_syntax_verification (test_gui_recovery_candidates.CandidateGuiTests.test_candidate_information_does_not_claim_semantic_or_syntax_verification) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_other_candidate_opens_fresh_tab_without_overwriting_dirty_edits (test_gui_recovery_candidates.CandidateGuiTests.test_other_candidate_opens_fresh_tab_without_overwriting_dirty_edits) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_reopening_existing_candidate_preserves_its_edits (test_gui_recovery_candidates.CandidateGuiTests.test_reopening_existing_candidate_preserves_its_edits) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_already_published_but_ui_failure_is_not_reported_as_build_failure (test_gui_workflow.GuiWorkflowTests.test_already_published_but_ui_failure_is_not_reported_as_build_failure) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_cancel_preview_never_asks_output_or_changes_dirty_buffer (test_gui_workflow.GuiWorkflowTests.test_cancel_preview_never_asks_output_or_changes_dirty_buffer) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_native_action_requires_matching_selection_source_vm_and_compiler (test_gui_workflow.GuiWorkflowTests.test_native_action_requires_matching_selection_source_vm_and_compiler) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_project_adoption_rolls_back_partial_widgets (test_gui_workflow.GuiWorkflowTests.test_project_adoption_rolls_back_partial_widgets) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_project_cross_vm_same_source_rejected_before_any_mutation (test_gui_workflow.GuiWorkflowTests.test_project_cross_vm_same_source_rejected_before_any_mutation) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_real_worker_callback_runs_on_gui_thread_and_restores_actions (test_gui_workflow.GuiWorkflowTests.test_real_worker_callback_runs_on_gui_thread_and_restores_actions) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_stale_preview_cannot_start_publish (test_gui_workflow.GuiWorkflowTests.test_stale_preview_cannot_start_publish) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_success_adopts_exact_output_preserves_dirty_text_undo_and_baselines (test_gui_workflow.GuiWorkflowTests.test_success_adopts_exact_output_preserves_dirty_text_undo_and_baselines) ... skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'
+test_both_real_vms_package_recover_edit_compile_publish_reopen (test_module_browser.ModuleBrowserTests.test_both_real_vms_package_recover_edit_compile_publish_reopen) ... 
+  test_both_real_vms_package_recover_edit_compile_publish_reopen (test_module_browser.ModuleBrowserTests.test_both_real_vms_package_recover_edit_compile_publish_reopen) (vm='py27') ... skipped 'actual standard compiler required: py27'
+test_collection_values_and_all_256_bytes_survive_recovery (test_module_browser.ModuleBrowserTests.test_collection_values_and_all_256_bytes_survive_recovery) ... 
+  test_collection_values_and_all_256_bytes_survive_recovery (test_module_browser.ModuleBrowserTests.test_collection_values_and_all_256_bytes_survive_recovery) (vm='py27') ... skipped 'actual standard compiler required: py27'
+test_invalid_vm_and_marshal_rejected_before_worker (test_module_browser.ModuleBrowserTests.test_invalid_vm_and_marshal_rejected_before_worker) ... ok
+test_missing_catalog_opens_diagnostic_not_fake_source (test_module_browser.ModuleBrowserTests.test_missing_catalog_opens_diagnostic_not_fake_source) ... ok
+test_new_source_refuses_existing_and_publication_race (test_module_browser.ModuleBrowserTests.test_new_source_refuses_existing_and_publication_race) ... ok
+test_resource_entry_has_explicit_decode_failure (test_module_browser.ModuleBrowserTests.test_resource_entry_has_explicit_decode_failure) ... ok
+test_stale_worker_protocol_cannot_be_mistaken_for_current_engine (test_module_browser.ModuleBrowserTests.test_stale_worker_protocol_cannot_be_mistaken_for_current_engine) ... ok
+test_unicode_quotes_non_bmp_future_unicode_and_bytes_survive_rendering (test_module_browser.ModuleBrowserTests.test_unicode_quotes_non_bmp_future_unicode_and_bytes_survive_rendering) ... 
+  test_unicode_quotes_non_bmp_future_unicode_and_bytes_survive_rendering (test_module_browser.ModuleBrowserTests.test_unicode_quotes_non_bmp_future_unicode_and_bytes_survive_rendering) (vm='py27') ... skipped 'actual standard compiler required: py27'
+test_unreviewed_binding_cannot_prepare_even_with_valid_source (test_module_browser.ModuleBrowserTests.test_unreviewed_binding_cannot_prepare_even_with_valid_source) ... ok
+test_worker_timeout_never_returns_success_or_executes_module (test_module_browser.ModuleBrowserTests.test_worker_timeout_never_returns_success_or_executes_module) ... ok
+test_wrong_engine_cannot_recover_even_if_gui_was_allowed_to_open (test_module_browser.ModuleBrowserTests.test_wrong_engine_cannot_recover_even_if_gui_was_allowed_to_open) ... ok
+test_real_registration_correct_lists_do_not_bypass_fixed_capacity (test_module_browser.RealModuleBrowserTests.test_real_registration_correct_lists_do_not_bypass_fixed_capacity) ... ok
+test_real_script_and_data_recover_edit_without_original_authored_source (test_module_browser.RealModuleBrowserTests.test_real_script_and_data_recover_edit_without_original_authored_source) ... skipped 'opt-in real packages and actual standard compilers required'
+test_all_paths_without_decompiler_and_bad_entries_are_independent (test_module_paths.ModulePathTests.test_all_paths_without_decompiler_and_bad_entries_are_independent) ... ok
+test_bad_compressed_entry_with_catalog_row_does_not_hide_valid_paths (test_module_paths.ModulePathTests.test_bad_compressed_entry_with_catalog_row_does_not_hide_valid_paths) ... ok
+test_catalog_change_mid_scan_rejects_all_collected_names (test_module_paths.ModulePathTests.test_catalog_change_mid_scan_rejects_all_collected_names) ... ok
+test_catalog_read_count_is_constant_not_once_per_entry (test_module_paths.ModulePathTests.test_catalog_read_count_is_constant_not_once_per_entry) ... ok
+test_catalog_tamper_rejects_whole_index (test_module_paths.ModulePathTests.test_catalog_tamper_rejects_whole_index) ... ok
+test_missing_parameters_are_explicit_not_fake_paths (test_module_paths.ModulePathTests.test_missing_parameters_are_explicit_not_fake_paths) ... ok
+test_names_do_not_depend_on_opcode_translation (test_module_paths.ModulePathTests.test_names_do_not_depend_on_opcode_translation) ... ok
+test_raw_paths_are_not_repr_or_falsely_renamed_pyo (test_module_paths.ModulePathTests.test_raw_paths_are_not_repr_or_falsely_renamed_pyo) ... ok
+test_rejected_filename_does_not_hide_other_entries (test_module_paths.ModulePathTests.test_rejected_filename_does_not_hide_other_entries) ... ok
+test_wrong_archive_pin_is_not_used (test_module_paths.ModulePathTests.test_wrong_archive_pin_is_not_used) ... ok
+test_catalog_and_archive_digest_pins (test_native_build.BuildTests.test_catalog_and_archive_digest_pins) ... ok
+test_data_preserves_directory_padding_names_flags_local_records (test_native_build.BuildTests.test_data_preserves_directory_padding_names_flags_local_records) ... ok
+test_existing_output_source_aliases_refused (test_native_build.BuildTests.test_existing_output_source_aliases_refused) ... ok
+test_full_pyc_mismatch_abort_before_publish (test_native_build.BuildTests.test_full_pyc_mismatch_abort_before_publish) ... ok
+test_generated_script_can_be_reopened_and_edited_again (test_native_build.BuildTests.test_generated_script_can_be_reopened_and_edited_again) ... ok
+test_invalid_identity_duplicate_index_directory_wrong_vm (test_native_build.BuildTests.test_invalid_identity_duplicate_index_directory_wrong_vm) ... ok
+test_late_cpython_marshal_audit_failure_never_publishes (test_native_build.BuildTests.test_late_cpython_marshal_audit_failure_never_publishes) ... ok
+test_publication_failure_leaves_no_temp_or_output (test_native_build.BuildTests.test_publication_failure_leaves_no_temp_or_output) ... ok
+test_racing_output_is_never_overwritten (test_native_build.BuildTests.test_racing_output_is_never_overwritten) ... ok
+test_script_preserves_unsorted_physical_order_gaps_and_tail (test_native_build.BuildTests.test_script_preserves_unsorted_physical_order_gaps_and_tail) ... ok
+test_two_explicit_modules_are_both_verified (test_native_build.BuildTests.test_two_explicit_modules_are_both_verified) ... ok
+test_unchanged_entry_and_header_corruption_abort_before_publish (test_native_build.BuildTests.test_unchanged_entry_and_header_corruption_abort_before_publish) ... ok
+test_xor_boundary_size_and_unrecognized_baseline_fail_closed (test_native_build.BuildTests.test_xor_boundary_size_and_unrecognized_baseline_fail_closed) ... ok
+test_all_5002_original_modules_decode_without_seam_guesses (test_native_cipher.NativeCipherMaterialTests.test_all_5002_original_modules_decode_without_seam_guesses) ... ok
+test_binary_constants_and_character_back_edge_are_pinned (test_native_cipher.NativeCipherMaterialTests.test_binary_constants_and_character_back_edge_are_pinned) ... ok
+test_complete_recompile_matches_name_side_engine_decryption (test_native_cipher.NativeCipherMaterialTests.test_complete_recompile_matches_name_side_engine_decryption) ... ok
+test_all_states_are_bounded_but_keys_are_not_always_unique (test_native_cipher.NativeCipherTests.test_all_states_are_bounded_but_keys_are_not_always_unique) ... ok
+test_catalog_is_immutable_and_uncalibrated_profiles_cannot_write (test_native_cipher.NativeCipherTests.test_catalog_is_immutable_and_uncalibrated_profiles_cannot_write) ... ok
+test_incomplete_research_keys_require_native_name_and_directory_hash (test_native_cipher.NativeCipherTests.test_incomplete_research_keys_require_native_name_and_directory_hash) ... ok
+test_invalid_keys_size_and_import_name_are_rejected (test_native_cipher.NativeCipherTests.test_invalid_keys_size_and_import_name_are_rejected) ... ok
+test_name_and_key_golden_vectors (test_native_cipher.NativeCipherTests.test_name_and_key_golden_vectors) ... ok
+test_only_exact_accepted_package_entry_has_known_ten_zero_slot_padding (test_native_cipher.NativeCipherTests.test_only_exact_accepted_package_entry_has_known_ten_zero_slot_padding) ... ok
+test_help_without_qt (test_native_cli.CliTests.test_help_without_qt) ... ok
+test_no_source_confirmation_never_launches_compiler (test_native_cli.CliTests.test_no_source_confirmation_never_launches_compiler) ... ok
+test_bad_sentinel_extra_args (test_native_codecs.CodecTests.test_bad_sentinel_extra_args) ... ok
+test_depth_limit (test_native_codecs.CodecTests.test_depth_limit) ... ok
+test_ext_arg_and_address_overflow_explicitly_rejected (test_native_codecs.CodecTests.test_ext_arg_and_address_overflow_explicitly_rejected) ... ok
+test_invalid_line_tables_not_clamped (test_native_codecs.CodecTests.test_invalid_line_tables_not_clamped) ... ok
+test_invalid_opcode_or_truncated_instruction (test_native_codecs.CodecTests.test_invalid_opcode_or_truncated_instruction) ... ok
+test_line_overflow_inside_instruction_is_aggregated (test_native_codecs.CodecTests.test_line_overflow_inside_instruction_is_aggregated) ... ok
+test_marshal_all_scalar_shapes_intern_references (test_native_codecs.CodecTests.test_marshal_all_scalar_shapes_intern_references) ... ok
+test_marshal_requires_code_root_and_eof (test_native_codecs.CodecTests.test_marshal_requires_code_root_and_eof) ... ok
+test_minimal_both_vms_exact_marshal (test_native_codecs.CodecTests.test_minimal_both_vms_exact_marshal) ... ok
+test_py25_dispatch_golden_bytes (test_native_codecs.CodecTests.test_py25_dispatch_golden_bytes) ... ok
+test_py27_absolute_jump_coordinates (test_native_codecs.CodecTests.test_py27_absolute_jump_coordinates) ... ok
+test_py27_relative_jump_has_two_golden_coordinates (test_native_codecs.CodecTests.test_py27_relative_jump_has_two_golden_coordinates) ... ok
+test_py27_semantic_opcode_golden_not_py25_numbering (test_native_codecs.CodecTests.test_py27_semantic_opcode_golden_not_py25_numbering) ... ok
+test_real_nops_are_not_stripped_as_sentinels (test_native_codecs.CodecTests.test_real_nops_are_not_stripped_as_sentinels) ... ok
+test_semicolon_zero_line_events_are_not_overflow_padding (test_native_codecs.CodecTests.test_semicolon_zero_line_events_are_not_overflow_padding) ... ok
+test_zlib_limits_trailing_truncation (test_native_codecs.CodecTests.test_zlib_limits_trailing_truncation) ... ok
+test_current_dll_dispatch_without_executing_it (test_native_evidence.DispatchEvidence.test_current_dll_dispatch_without_executing_it) ... ok
+test_snapshot_numbers_match_the_strict_table (test_native_evidence.DispatchEvidence.test_snapshot_numbers_match_the_strict_table) ... ok
+test_full_actual_py25_compile_native_package_readback (test_native_legacy.ActualLegacyBuild.test_full_actual_py25_compile_native_package_readback) ... ok
+test_full_actual_py27_compile_native_package_readback (test_native_legacy.ActualLegacyBuild.test_full_actual_py27_compile_native_package_readback) ... skipped 'actual standard compiler not configured: py27'
+test_actual_data_offline_probe (test_native_legacy.RealMaterialBuild.test_actual_data_offline_probe) ... skipped 'opt-in game materials and compiler required'
+test_actual_script_register_source (test_native_legacy.RealMaterialBuild.test_actual_script_register_source) ... ok
+test_real_mainpage_337_native_boundaries_remove_false_opcode_error (test_native_legacy.RealMaterialBuild.test_real_mainpage_337_native_boundaries_remove_false_opcode_error) ... ok
+test_original_archive_path_uses_secondary_after_primary_timeout (test_recovery_candidates.ActualCorpusTests.test_original_archive_path_uses_secondary_after_primary_timeout) ... skipped 'opt-in corpus samples/pycdc required'
+test_real_both_fail_has_no_fake_source (test_recovery_candidates.ActualCorpusTests.test_real_both_fail_has_no_fake_source) ... skipped 'opt-in corpus samples/pycdc required'
+test_real_complete_pair_keeps_two_candidates_and_origin (test_recovery_candidates.ActualCorpusTests.test_real_complete_pair_keeps_two_candidates_and_origin) ... skipped 'opt-in corpus samples/pycdc required'
+test_real_non_utf8_candidates_keep_exact_engine_bytes (test_recovery_candidates.ActualCorpusTests.test_real_non_utf8_candidates_keep_exact_engine_bytes) ... skipped 'opt-in corpus samples/pycdc required'
+test_real_partial_source_is_editable_but_never_complete (test_recovery_candidates.ActualCorpusTests.test_real_partial_source_is_editable_but_never_complete) ... skipped 'opt-in corpus samples/pycdc required'
+test_real_pathological_primary_times_out_secondary_still_recovers (test_recovery_candidates.ActualCorpusTests.test_real_pathological_primary_times_out_secondary_still_recovers) ... skipped 'opt-in corpus samples/pycdc required'
+test_both_real_vms_second_engine_compile_without_execution (test_recovery_candidates.ActualEngineSmoke.test_both_real_vms_second_engine_compile_without_execution) ... skipped 'verified pycdc required'
+test_bad_magic_rejected_before_any_engine (test_recovery_candidates.CandidateTests.test_bad_magic_rejected_before_any_engine) ... ok
+test_cancellation_does_not_fall_through_to_source_candidate (test_recovery_candidates.CandidateTests.test_cancellation_does_not_fall_through_to_source_candidate) ... ok
+test_complete_fallback_preferred_partial_text_remains_available (test_recovery_candidates.CandidateTests.test_complete_fallback_preferred_partial_text_remains_available) ... ok
+test_excluded_entry_never_reads_payload_or_inspects_module (test_recovery_candidates.CandidateTests.test_excluded_entry_never_reads_payload_or_inspects_module) ... ok
+test_header_only_output_is_failure_not_editable_source (test_recovery_candidates.CandidateTests.test_header_only_output_is_failure_not_editable_source) ... ok
+test_invalid_optional_engine_manifest_keeps_primary_available (test_recovery_candidates.CandidateTests.test_invalid_optional_engine_manifest_keeps_primary_available) ... ok
+test_nul_is_not_silently_dropped (test_recovery_candidates.CandidateTests.test_nul_is_not_silently_dropped) ... ok
+test_optional_engine_absence_keeps_existing_recovery (test_recovery_candidates.CandidateTests.test_optional_engine_absence_keeps_existing_recovery) ... ok
+test_original_bytes_and_full_stderr_survive_display_conversion (test_recovery_candidates.CandidateTests.test_original_bytes_and_full_stderr_survive_display_conversion) ... ok
+test_partial_but_syntactically_valid_never_becomes_complete (test_recovery_candidates.CandidateTests.test_partial_but_syntactically_valid_never_becomes_complete) ... ok
+test_primary_failure_does_not_erase_secondary_candidate (test_recovery_candidates.CandidateTests.test_primary_failure_does_not_erase_secondary_candidate) ... ok
+test_process_status_never_upgraded_by_source_text (test_recovery_candidates.CandidateTests.test_process_status_never_upgraded_by_source_text) ... ok
+test_absence_is_optional (test_recovery_candidates.EngineIntegrityTests.test_absence_is_optional) ... ok
+test_build_runtime_notices_hash_and_staging_preserved (test_recovery_candidates.EngineIntegrityTests.test_build_runtime_notices_hash_and_staging_preserved) ... ok
+test_manifest_and_exact_binary_hash_required (test_recovery_candidates.EngineIntegrityTests.test_manifest_and_exact_binary_hash_required) ... ok
+test_missing_corresponding_source_or_license_blocks_loading (test_recovery_candidates.EngineIntegrityTests.test_missing_corresponding_source_or_license_blocks_loading) ... ok
+test_nonobject_or_deep_manifest_is_rejected_cleanly (test_recovery_candidates.EngineIntegrityTests.test_nonobject_or_deep_manifest_is_rejected_cleanly) ... ok
+test_oversized_manifest_is_not_read_unbounded (test_recovery_candidates.EngineIntegrityTests.test_oversized_manifest_is_not_read_unbounded) ... ok
+test_stage_preserves_source_and_refuses_existing_destination (test_recovery_candidates.EngineIntegrityTests.test_stage_preserves_source_and_refuses_existing_destination) ... ok
+test_wrong_platform_source_or_path_rejected (test_recovery_candidates.EngineIntegrityTests.test_wrong_platform_source_or_path_rejected) ... ok
+test_binary_streams_are_not_decoded (test_recovery_candidates.TransportTests.test_binary_streams_are_not_decoded) ... ok
+test_cancel_before_start_does_not_launch_process (test_recovery_candidates.TransportTests.test_cancel_before_start_does_not_launch_process) ... ok
+test_cancel_running_process_keeps_partial_output (test_recovery_candidates.TransportTests.test_cancel_running_process_keeps_partial_output) ... ok
+test_output_flood_is_bounded_and_never_success (test_recovery_candidates.TransportTests.test_output_flood_is_bounded_and_never_success) ... ok
+test_timeout_preserves_prefix_and_reaps_process (test_recovery_candidates.TransportTests.test_timeout_preserves_prefix_and_reaps_process) ... ok
+test_tar_links_are_rejected (test_runtime_builder.SourceArchiveTests.test_tar_links_are_rejected) ... ok
+test_tar_parent_escape_and_other_roots_are_rejected (test_runtime_builder.SourceArchiveTests.test_tar_parent_escape_and_other_roots_are_rejected) ... ok
+test_tar_root_directory_without_trailing_slash_is_valid (test_runtime_builder.SourceArchiveTests.test_tar_root_directory_without_trailing_slash_is_valid) ... ok
+test_bad_paths_case_collisions_and_windows_names_refused (test_runtime_bundles.BundleTests.test_bad_paths_case_collisions_and_windows_names_refused) ... ok
+test_cli_static_json_and_missing_bundle_exit2 (test_runtime_bundles.BundleTests.test_cli_static_json_and_missing_bundle_exit2) ... ok
+test_dll_stdlib_license_and_exe_changes_rejected_before_any_launch (test_runtime_bundles.BundleTests.test_dll_stdlib_license_and_exe_changes_rejected_before_any_launch) ... ok
+test_duplicate_vm_and_json_fields_refused (test_runtime_bundles.BundleTests.test_duplicate_vm_and_json_fields_refused) ... ok
+test_empty_license_and_oversized_or_bad_manifest_rejected (test_runtime_bundles.BundleTests.test_empty_license_and_oversized_or_bad_manifest_rejected) ... ok
+test_extra_file_and_missing_file_refused (test_runtime_bundles.BundleTests.test_extra_file_and_missing_file_refused) ... ok
+test_file_symlink_guard_without_needing_windows_symlink_privileges (test_runtime_bundles.BundleTests.test_file_symlink_guard_without_needing_windows_symlink_privileges) ... ok
+test_missing_source_license_or_schema1_nonempty_refused (test_runtime_bundles.BundleTests.test_missing_source_license_or_schema1_nonempty_refused) ... ok
+test_mocked_probe_mutation_is_detected_after_subprocess (test_runtime_bundles.BundleTests.test_mocked_probe_mutation_is_detected_after_subprocess) ... ok
+test_mocked_registered_bundle_rechecked_before_compile_and_protected (test_runtime_bundles.BundleTests.test_mocked_registered_bundle_rechecked_before_compile_and_protected) ... ok
+test_mocked_subprocess_generated_extra_pyc_rejects_output (test_runtime_bundles.BundleTests.test_mocked_subprocess_generated_extra_pyc_rejects_output) ... ok
+test_non_windows_execution_forbidden_even_if_static_passes (test_runtime_bundles.BundleTests.test_non_windows_execution_forbidden_even_if_static_passes) ... ok
+test_non_x86_or_wrong_binary_type_even_with_correct_recorded_digest (test_runtime_bundles.BundleTests.test_non_x86_or_wrong_binary_type_even_with_correct_recorded_digest) ... ok
+test_one_vm_cannot_make_complete_distribution (test_runtime_bundles.BundleTests.test_one_vm_cannot_make_complete_distribution) ... ok
+test_optional_skip_ids_correspond_to_actual_opt_in_tests (test_runtime_bundles.BundleTests.test_optional_skip_ids_correspond_to_actual_opt_in_tests) ... ok
+test_pin_detects_manifest_changes_after_registration (test_runtime_bundles.BundleTests.test_pin_detects_manifest_changes_after_registration) ... ok
+test_release_skip_policy_never_allows_gui_or_compiler_skips (test_runtime_bundles.BundleTests.test_release_skip_policy_never_allows_gui_or_compiler_skips) ... ok
+test_source_url_revision_digest_and_crt_license_required (test_runtime_bundles.BundleTests.test_source_url_revision_digest_and_crt_license_required) ... ok
+test_stage_copy_corruption_never_passes (test_runtime_bundles.BundleTests.test_stage_copy_corruption_never_passes) ... ok
+test_stage_copy_failure_cleans_only_new_runtime_folder (test_runtime_bundles.BundleTests.test_stage_copy_failure_cleans_only_new_runtime_folder) ... ok
+test_stage_exact_pair_and_reverify_copied_inventory (test_runtime_bundles.BundleTests.test_stage_exact_pair_and_reverify_copied_inventory) ... ok
+test_staging_destination_inside_input_runtime_tree_refused (test_runtime_bundles.BundleTests.test_staging_destination_inside_input_runtime_tree_refused) ... ok
+test_staging_manifest_change_during_copy_is_not_silently_adopted (test_runtime_bundles.BundleTests.test_staging_manifest_change_during_copy_is_not_silently_adopted) ... ok
+test_static_full_pair_is_explicitly_not_execution_or_game_acceptance (test_runtime_bundles.BundleTests.test_static_full_pair_is_explicitly_not_execution_or_game_acceptance) ... ok
+test_all_four_directory_positions_and_grow_shrink_multi_noop (test_script_layouts.ScriptLayoutTests.test_all_four_directory_positions_and_grow_shrink_multi_noop) ... ok
+test_crossing_directory_with_valid_eof_range_still_rejected (test_script_layouts.ScriptLayoutTests.test_crossing_directory_with_valid_eof_range_still_rejected) ... ok
+test_envelope_rejects_opaque_gap_corruption_and_directory_relocation (test_script_layouts.ScriptLayoutTests.test_envelope_rejects_opaque_gap_corruption_and_directory_relocation) ... ok
+test_header_directory_overlap_and_actual_eof_overflow_remain_rejected (test_script_layouts.ScriptLayoutTests.test_header_directory_overlap_and_actual_eof_overflow_remain_rejected) ... ok
+test_native_build_post_directory_full_codec_readback (test_script_layouts.ScriptLayoutTests.test_native_build_post_directory_full_codec_readback) ... ok
+test_post_directory_reopen_can_continue_editing_without_losing_first_edit (test_script_layouts.ScriptLayoutTests.test_post_directory_reopen_can_continue_editing_without_losing_first_edit) ... ok
+test_recorded_eight_user_rows_are_valid_post_directory_spans (test_script_layouts.ScriptLayoutTests.test_recorded_eight_user_rows_are_valid_post_directory_spans) ... ok
+test_table_at_header_end_is_valid_with_post_directory_payload (test_script_layouts.ScriptLayoutTests.test_table_at_header_end_is_valid_with_post_directory_payload) ... ok
+test_partial_buffer_keeps_symbols_but_is_not_syntax_validation (test_symbols.OutlineTests.test_partial_buffer_keeps_symbols_but_is_not_syntax_validation) ... ok
+test_python2_nested_symbols_without_execution_or_string_false_positives (test_symbols.OutlineTests.test_python2_nested_symbols_without_execution_or_string_false_positives) ... ok
+test_compile_error_reference_vm_and_stale_baseline_leave_state (test_workflow.ActualWorkflowTests.test_compile_error_reference_vm_and_stale_baseline_leave_state) ... ok
+test_existing_output_and_failed_publication_preserve_source_and_state (test_workflow.ActualWorkflowTests.test_existing_output_and_failed_publication_preserve_source_and_state) ... ok
+test_publish_stale_binding_catalog_or_inconsistent_plan_refused (test_workflow.ActualWorkflowTests.test_publish_stale_binding_catalog_or_inconsistent_plan_refused) ... ok
+test_real_both_compilers_preserve_non_utf8_filename_bytes (test_workflow.ActualWorkflowTests.test_real_both_compilers_preserve_non_utf8_filename_bytes) ... 
+  test_real_both_compilers_preserve_non_utf8_filename_bytes (test_workflow.ActualWorkflowTests.test_real_both_compilers_preserve_non_utf8_filename_bytes) (vm='py27') ... skipped 'actual standard compiler not configured: py27'
+test_real_both_vm_preview_publish_save_reopen_and_continue (test_workflow.ActualWorkflowTests.test_real_both_vm_preview_publish_save_reopen_and_continue) ... 
+  test_real_both_vm_preview_publish_save_reopen_and_continue (test_workflow.ActualWorkflowTests.test_real_both_vm_preview_publish_save_reopen_and_continue) (vm='py27') ... skipped 'actual standard compiler not configured: py27'
+test_unselected_binding_rebased_but_sha_and_payload_not_modified (test_workflow.ActualWorkflowTests.test_unselected_binding_rebased_but_sha_and_payload_not_modified) ... ok
+test_filename_raw_interned_and_reference_bytes_not_guessed (test_workflow.InspectionTests.test_filename_raw_interned_and_reference_bytes_not_guessed) ... ok
+test_static_hints_not_comment_string_or_execution (test_workflow.InspectionTests.test_static_hints_not_comment_string_or_execution) ... ok
+test_catalog_read_bounded_even_when_oversized (test_workflow.ProjectStateTests.test_catalog_read_bounded_even_when_oversized) ... ok
+test_changed_catalog_or_package_rejected (test_workflow.ProjectStateTests.test_changed_catalog_or_package_rejected) ... ok
+test_duplicate_binding_catalog_or_bad_filename_rejected (test_workflow.ProjectStateTests.test_duplicate_binding_catalog_or_bad_filename_rejected) ... ok
+test_generator_metadata_still_protects_source_aliases (test_workflow.ProjectStateTests.test_generator_metadata_still_protects_source_aliases) ... ok
+test_project_cannot_overwrite_source_alias (test_workflow.ProjectStateTests.test_project_cannot_overwrite_source_alias) ... ok
+test_schema1_compatibility (test_workflow.ProjectStateTests.test_schema1_compatibility) ... ok
+test_schema2_roundtrip_and_relative_move_without_copies (test_workflow.ProjectStateTests.test_schema2_roundtrip_and_relative_move_without_copies) ... ok
+test_source_all_utf8_preflight_and_missing_file (test_workflow.ProjectStateTests.test_source_all_utf8_preflight_and_missing_file) ... ok
+test_real_data_offline_prepare_publish_reopen_continue (test_workflow.RealRegistrationWorkflowTests.test_real_data_offline_prepare_publish_reopen_continue) ... skipped 'opt-in real package and standard 2.7.13 required'
+test_registration_source_prepare_publish_reopen_continue (test_workflow.RealRegistrationWorkflowTests.test_registration_source_prepare_publish_reopen_continue) ... ok
+test_changed_original_package_rejected_without_any_source_writes (test_workspace_state.WorkspaceStateTests.test_changed_original_package_rejected_without_any_source_writes) ... ok
+test_embedded_authored_buffer_can_resume_without_disk_source (test_workspace_state.WorkspaceStateTests.test_embedded_authored_buffer_can_resume_without_disk_source) ... ok
+test_large_offline_corpus_candidate_over_process_limit_can_continue (test_workspace_state.WorkspaceStateTests.test_large_offline_corpus_candidate_over_process_limit_can_continue) ... ok
+test_malformed_base64_or_snapshot_kind_does_not_gain_trust (test_workspace_state.WorkspaceStateTests.test_malformed_base64_or_snapshot_kind_does_not_gain_trust) ... ok
+test_missing_external_corpus_does_not_lose_saved_draft (test_workspace_state.WorkspaceStateTests.test_missing_external_corpus_does_not_lose_saved_draft) ... ok
+test_policy_report_cannot_be_loaded_as_a_draft (test_workspace_state.WorkspaceStateTests.test_policy_report_cannot_be_loaded_as_a_draft) ... ok
+test_policy_snapshot_is_rejected_on_save_before_output_written (test_workspace_state.WorkspaceStateTests.test_policy_snapshot_is_rejected_on_save_before_output_written) ... ok
+test_portable_relative_paths_move_with_original_and_catalog (test_workspace_state.WorkspaceStateTests.test_portable_relative_paths_move_with_original_and_catalog) ... ok
+test_project_cannot_write_inside_readonly_corpus (test_workspace_state.WorkspaceStateTests.test_project_cannot_write_inside_readonly_corpus) ... ok
+test_size_failure_is_atomic_and_source_aliases_protected (test_workspace_state.WorkspaceStateTests.test_size_failure_is_atomic_and_source_aliases_protected) ... ok
+test_sources_not_overwritten_when_embedded_dirty_text_saved (test_workspace_state.WorkspaceStateTests.test_sources_not_overwritten_when_embedded_dirty_text_saved) ... ok
+test_unsaved_draft_report_and_exact_raw_bytes_roundtrip (test_workspace_state.WorkspaceStateTests.test_unsaved_draft_report_and_exact_raw_bytes_roundtrip) ... ok
+
+----------------------------------------------------------------------
+Ran 335 tests in 106.799s
+
+OK (skipped=88)

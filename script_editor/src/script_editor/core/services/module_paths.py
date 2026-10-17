@@ -11,9 +11,8 @@ import hashlib
 import json
 import zlib
 
-from ..vm.compression import inflate
 from ..vm.marshal_tree import parse
-from ..vm.py25.keys import KeyProfile, read_catalog
+from ..vm.py25.keys import KeyProfile, inflate_script, read_catalog
 
 
 def display_module_path(raw: bytes) -> str:
@@ -57,7 +56,7 @@ def scan_script_paths(archive, catalog):
         try:
             info = rows[str(entry.index)]
             stored = archive.read_stored(entry.index)
-            expanded = inflate(stored)
+            expanded = inflate_script(archive, entry.index)
             profile = KeyProfile(
                 fingerprint,
                 entry.index,
@@ -68,6 +67,7 @@ def scan_script_paths(archive, catalog):
                 tuple(info["bounds"]),
                 len(expanded),
             )
+            profile = profile.calibrated(archive)
             profile.validate(archive, entry.index)
             # Native syntax/metadata validation is independent of whether the
             # opcode converter or a decompiler can recover this module's source.

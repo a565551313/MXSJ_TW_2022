@@ -1,6 +1,11 @@
+# 自动生成，请勿手改：由 tools/devkit/vendor_core.py 从
+# mx_common/native_layout.py 复制（字节相同）。
+# 改共享逻辑：改 mx_common/native_layout.py → --write；校验：--check
+# 详细说明见 mx_common/README.md。
 """Native package .dlg storage: path-derived XOR, with legacy READ compatibility.
 
-Same standalone module is shipped inside both editors. Never execute layout code.
+**Single source of truth** (mx_common/); editors run a byte-identical copy made by
+tools/devkit/vendor_core.py. Never execute layout code.
 Evidence: notes/native_dlg_path_cipher.md. Header-derived keys are read-only aids,
 not the game's decryption rule. Existing plaintext/wrong-key layouts can be edited
 and are migrated to native storage when that layout is explicitly saved/imported.

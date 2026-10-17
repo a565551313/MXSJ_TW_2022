@@ -1,0 +1,42 @@
+--- paused-v2/dgtuieditor.py
++++ v3/dgtuieditor.py
+@@ -518,7 +518,7 @@
+     def __init__(self, oView):
+         delegatebase.CDelegateBase.__init__(self, oView)
+         self.m_sWidgetName = ''
+-        self.JxCOrgWidgetInfo = None
++        self.m_dOrgWidgetInfo = None
+         return
+ 
+     def Init(self):
+@@ -555,10 +555,10 @@
+         dCurWidgetInfo = self.GetView().GetCurWidgetInfo()
+         dChangeInfo = {}
+         for (sAttrKey, oValue) in dCurWidgetInfo.items():
+-            if oValue != self.JxCOrgWidgetInfo[sAttrKey]:
++            if oValue != self.m_dOrgWidgetInfo[sAttrKey]:
+                 dChangeInfo[sAttrKey] = oValue
+ 
+-        if self.JxCOrgWidgetInfo[widgetconfig.WIDGET_TYPE_KEY] in ('CTable', 'CPngTable'):
++        if self.m_dOrgWidgetInfo[widgetconfig.WIDGET_TYPE_KEY] in ('CTable', 'CPngTable'):
+             if 'sTitles' in dChangeInfo or 'lSubWidth' in dChangeInfo:
+                 sTitles = dCurWidgetInfo['sTitles']
+                 if sTitles.endswith('\\n'):
+@@ -570,7 +570,7 @@
+                     return
+                 if 'lSubWidth' in dChangeInfo and 'iWidth' not in dChangeInfo:
+                     dChangeInfo['iWidth'] = sum(dChangeInfo['lSubWidth']) + 15
+-        if self.JxCOrgWidgetInfo[widgetconfig.WIDGET_TYPE_KEY] in ('CButton', 'CTextButton',
++        if self.m_dOrgWidgetInfo[widgetconfig.WIDGET_TYPE_KEY] in ('CButton', 'CTextButton',
+                                                                    'CHPageButton',
+                                                                    'CHPagePngButton',
+                                                                    'CVPageButton',
+@@ -588,7 +588,7 @@
+         if len(sSelectWidgetList) == 1:
+             self.m_sWidgetName = sSelectWidgetList[0]
+             dWidgetInfo = mduieditor.GetUIEditorMgr().GetCurUIWidget(self.m_sWidgetName)
+-            self.JxCOrgWidgetInfo = misc.DeepCopy(dWidgetInfo)
++            self.m_dOrgWidgetInfo = misc.DeepCopy(dWidgetInfo)
+             self.GetView().RefreshAttrPanel(dWidgetInfo, widgetconfig.GetWidgetAttrConfig(dWidgetInfo[widgetconfig.WIDGET_TYPE_KEY]))
+         return
+ 

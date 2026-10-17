@@ -17,5 +17,10 @@ map/*
 __pycache__/
 *.pyc
 
+# 覆盖率产物（生成物，不入库）
+.coverage
+.coverage.*
+htmlcov/
+
 # 云盘下载中转目录（Drive 工具落盘的临时文件，不入库）
 google_drive/

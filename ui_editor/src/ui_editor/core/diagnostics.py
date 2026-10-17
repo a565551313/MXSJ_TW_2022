@@ -103,7 +103,7 @@ def diagnose(
         for key, value in widget.props.items():
             for field, text in _strings(value, key):
                 codec = (
-                    "big5"
+                    doc.text_encoding
                     if field in dlg_codec._BIG5_TEXT_KEYS
                     else "gbk"
                     if field in dlg_codec._GBK_PATH_KEYS

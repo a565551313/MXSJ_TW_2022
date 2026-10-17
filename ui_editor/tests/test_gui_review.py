@@ -233,7 +233,7 @@ class TestGuiReview(unittest.TestCase):
         changes = w.doc.changes()
         target = self.root / "new.dlg"
         with mock.patch(
-            "ui_editor.ui.main_window.SaveReviewDialog.exec", return_value=0
+            "ui_editor.ui.workflows.SaveReviewDialog.exec", return_value=0
         ):
             self.assertFalse(w.save_as(str(target)))
         self.assertFalse(target.exists())
@@ -250,7 +250,7 @@ class TestGuiReview(unittest.TestCase):
         changes = w.doc.changes()
         with (
             mock.patch(
-                "ui_editor.ui.main_window.SaveReviewDialog.exec", return_value=1
+                "ui_editor.ui.workflows.SaveReviewDialog.exec", return_value=1
             ),
             mock.patch("ui_editor.ui.main_window.QMessageBox.warning"),
         ):
@@ -265,7 +265,7 @@ class TestGuiReview(unittest.TestCase):
         w._on_property_changed(self.kid(), "iFuture")
         target = self.root / "new.dlg"
         with mock.patch(
-            "ui_editor.ui.main_window.SaveReviewDialog.exec", return_value=1
+            "ui_editor.ui.workflows.SaveReviewDialog.exec", return_value=1
         ):
             self.assertTrue(w.save_as(str(target)))
         self.assertEqual(w.doc.changes(), [])
@@ -299,7 +299,7 @@ class TestGuiReview(unittest.TestCase):
         w._on_property_changed(self.kid(), "sFileName")
         changes = w.doc.changes()
         with mock.patch(
-            "ui_editor.ui.main_window.SaveReviewDialog", autospec=True
+            "ui_editor.ui.workflows.SaveReviewDialog", autospec=True
         ) as dlg:
             dlg.return_value.exec.return_value = 0
             self.assertFalse(w._confirm_save_review(str(target), to_pack=True))
@@ -325,17 +325,53 @@ class TestGuiReview(unittest.TestCase):
         w.doc.source_pack = (str(src), "ui/test.dlg")
         with (
             mock.patch(
-                "ui_editor.ui.main_window.QFileDialog.getSaveFileName",
+                "ui_editor.ui.workflows.QFileDialog.getSaveFileName",
                 return_value=(str(target), ""),
             ),
             mock.patch(
-                "ui_editor.ui.main_window.SaveReviewDialog.exec", return_value=0
+                "ui_editor.ui.workflows.SaveReviewDialog.exec", return_value=0
             ),
             mock.patch.object(w, "write_pack_copy") as writer,
         ):
             w.save_to_pack_dialog()
         writer.assert_not_called()
         self.assertFalse(target.exists())
+
+    def test_save_review_states_how_the_target_entry_is_written(self):
+        """保存清单必须明说目标条目会被怎么写（P2-1：连没改也会重写）。"""
+        w = self.window
+        src, target = self.root / "source.fls", self.root / "new.fls"
+        plain = dlg_codec.dump_bytes(w.doc.to_dicts())
+        # 源包里是**明文**存储的同一份布局 → 本次保存应报「迁移」
+        src.write_bytes(pack_build.build_archive(
+            [pack_build.RawEntry(mx_hash(b"ui/test.dlg"), 7, plain)]))
+        w.doc.source_pack = (str(src), "ui/test.dlg")
+        with mock.patch("ui_editor.ui.workflows.SaveReviewDialog",
+                        autospec=True) as dlg:
+            dlg.return_value.exec.return_value = 0
+            w._confirm_save_review(str(target), to_pack=True)
+            notice = dlg.call_args.kwargs["layout_notice"]
+        self.assertTrue(notice.startswith("目标条目："), notice)
+        self.assertIn("迁移为原生路径密钥", notice)
+
+    def test_save_review_reports_layout_rewrite_for_foreign_plain(self):
+        """源包里的布局不是编辑器版式时，清单要写明「版式重写」。"""
+        w = self.window
+        src, target = self.root / "source2.fls", self.root / "new2.fls"
+        foreign = (
+            b"# -*- coding: gbk -*-\n\nUI_INFO = [\n"
+            b'    {"sName": "root", "sWidgetType": "CMainFrame",'
+            b' "iWidth": 100, "iHeight": 100, "lChildren": ['
+            b'{"sName": "kid", "sWidgetType": "CTextFrame"}]},\n]\n')
+        src.write_bytes(pack_build.build_archive(
+            [pack_build.RawEntry(mx_hash(b"ui/test.dlg"), 7, foreign)]))
+        w.doc.source_pack = (str(src), "ui/test.dlg")
+        with mock.patch("ui_editor.ui.workflows.SaveReviewDialog",
+                        autospec=True) as dlg:
+            dlg.return_value.exec.return_value = 0
+            w._confirm_save_review(str(target), to_pack=True)
+            notice = dlg.call_args.kwargs["layout_notice"]
+        self.assertIn("版式按编辑器序列化重写", notice)
 
     def test_programmatic_pack_write_rejects_encoding_before_publish(self):
         w = self.window

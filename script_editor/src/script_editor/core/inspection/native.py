@@ -7,7 +7,7 @@ import zlib
 from ..vm.compression import inflate
 from ..vm.marshal_tree import parse
 from ..vm.py25 import codec as py25
-from ..vm.py25.keys import load_profile
+from ..vm.py25.keys import inflate_script, load_profile
 from ..vm.py27 import codec as py27
 
 
@@ -31,7 +31,9 @@ def inspect_module(archive, index, catalog=None):
             archive_sha256=archive.fingerprint(),
             catalog_sha256=catalog.sha256,
         )
-        standard = py25.decode(profile.crypt(inflate(stored)), padding=True)
+        standard = py25.decode(
+            profile.crypt(inflate_script(archive, index)), padding=True
+        )
     else:
         span = archive.index.spans[index]
         if archive.index.metas[index].w1 != 8:

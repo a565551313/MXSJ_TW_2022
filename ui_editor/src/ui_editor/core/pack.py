@@ -16,7 +16,7 @@ import struct
 from pathlib import Path
 
 from .errors import PackError
-from .mxhash import mx_hash
+from .mxhash import path_hash
 
 MAGIC = b"0SLF"
 MASK32 = 0xFFFFFFFF
@@ -106,11 +106,25 @@ class FlsPack:
             raise PackError(f"条目 {index} 读取不完整：{self.path}")
         return data
 
-    def contains(self, name: str) -> bool:
-        """仅按路径哈希判断包里是否有该资源（不读负载，目录核对用）。"""
+    @staticmethod
+    def entry_id_for(name: str) -> int | None:
+        """路径 → entry_id；空名或 GBK 不可编码时返回 None（不静默替换）。"""
         if not name or not name.strip("\\/ "):
-            return False
-        return mx_hash(name.encode("gbk", "replace")) in self._by_id
+            return None
+        try:
+            return path_hash(name)
+        except ValueError:
+            return None
+
+    def contains(self, name: str) -> bool:
+        """仅按路径哈希判断包里是否有该资源（不读负载，目录核对用）。
+
+        名称无法按 GBK 编码时返回 False：引擎用同样的字节寻址，它也查不到。
+        旧实现用 ``encode("gbk", "replace")`` 把不可编码字符换成 ``?``，
+        等于**拿另一个路径去查**（分析报告 P2-2）。
+        """
+        digest = self.entry_id_for(name)
+        return digest is not None and digest in self._by_id
 
     def matched_paths(self, hash_to_path: dict[int, str]) -> list[str]:
         """从 {路径哈希: 路径} 映射里挑出本包实际包含的路径（已排序）。"""
@@ -118,11 +132,12 @@ class FlsPack:
                       if eid in self._by_id)
 
     def read_named(self, name: str) -> bytes | None:
-        """按资源路径读取条目（引擎查表方式），没有返回 None。"""
-        if not name or not name.strip("\\/ "):
-            return None
-        entry_id = mx_hash(name.encode("gbk", "replace"))
-        index = self._by_id.get(entry_id)
+        """按资源路径读取条目（引擎查表方式），没有返回 None。
+
+        不可按 GBK 编码的名称视为不存在，理由同 :meth:`contains`。
+        """
+        entry_id = self.entry_id_for(name)
+        index = None if entry_id is None else self._by_id.get(entry_id)
         if index is None:
             return None
         return self.read_index(index)

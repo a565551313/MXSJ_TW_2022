@@ -38,6 +38,9 @@ PyMethodDef **0x7DB2F0** 前三个 DWORD 是
       0x609AA2 CALL 0x60DD00    包内定位；输出长度/偏移/密钥
         0x60DD11 CALL 0x60E080 路径规范化、哈希、选择加密扩展名
           0x60E105 CALL 0x454860 哈希算术核心
+        0x60DD35 CALL 0x60E690 **lower_bound（二分）**：16 字节步长比 entry_id
+        0x60DD3D cmp 返回位置==end    → 未找到
+        0x60DD41 cmp (返回位置)!=entry_id → 未找到
     0x60977C CALL 0x609790       分配并读全部内容
       0x6097B9 CALL 0x609C80    实际读取与 XOR
 ```
@@ -65,6 +68,36 @@ stored = plaintext XOR repeated_little_endian(key_u32)
 0x454860 的 ROL/两轮 MUL+ADC 与既有 `mx_hash` 的折叠实现对这些非空短
 ASCII 路径一致。新助手用独立逐指令算术复刻，并对 1..255 字节随机 ASCII
 路径与既有实现交叉比对；不扩展宣称所有中文路径/异常路径都已复核。
+
+### 2.1 包内定位是**二分**，不是线性扫描（2026-10-16 补，指令级）
+
+`0x60DD00` 拿到哈希后，把内存中的目录按 **16 字节步长**交给 `0x60E690`，
+该函数是标准 `std::lower_bound`：
+
+```asm
+60e69a: sub %esi,%ecx        ; end - begin
+60e69c: sar $0x4,%ecx        ; ÷16 → 记录条数
+60e6b0: mov %ecx,%eax ; cltd ; sub %edx,%eax ; sar %edx   ; step = count/2
+60e6bd: cmp %edi,(%esi,%eax,8)    ; 比较 *(begin + step*16) 与 key（entry_id）
+60e6c0: jae → count = step        ; key ≤ mid → 取左半
+60e6c2: → begin = mid+1; count -= step+1
+```
+
+返回后再判「等于 end」与「`*it == entry_id`」，两者都要求命中位置精确。
+内存记录与 `0x48F170` 的输出同构：`+0` entry_id、`+4` f1、`+8` len、`+0xc` off
+（命中后 `mov 0xc(%eax)`/`mov 0x8(%eax)` 取长度与偏移）。
+
+**推论（写包必须遵守）**：
+
+1. **包内目录必须按 entry_id 升序**，否则 lower_bound 定位不到；
+2. 新增/插入条目后，**其后所有记录的下标都变了**，`r3` 必须按新下标重算
+   （偏移闭式变换含 `index`），否则会被“找到但读错长度/偏移”——症状是新条目
+   不显示、重开条目数变少、进游戏卡屏；
+3. `+4` 的 f1 在这条查询路径上**没有被读取**，`r1` 的真实用途仍未确定；
+   “保持 r1 非零”属保守防守，不是已被证实的引擎要求。
+
+`0x48ECF0` 那条线性扫描属 `ReadFls`，**不能**用来推断 LoadFile 的寻址方式；
+`notes/fls_path_hash_and_dlg.md` §2 已加对应更正横幅。
 
 | 路径 | entry_id / 哈希 | XOR 密钥字节（小端） |
 |---|---|---|

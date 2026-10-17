@@ -7,10 +7,9 @@ import json
 from dataclasses import replace
 
 from ..inspection.native import inspect_module
-from ..vm.compression import inflate
 from ..vm.marshal_tree import Code, parse
 from ..vm.py25 import codec
-from ..vm.py25.keys import KeyProfile, read_catalog
+from ..vm.py25.keys import KeyProfile, inflate_script, read_catalog
 from ..vm.py27 import codec as py27
 from .module_browser import ModuleReport
 from .recovery_candidates import DRAFT_HEADER, RecoveryCandidate, best_candidate
@@ -52,7 +51,7 @@ def verified_parameters(index, archive, catalog):
             if ref is None:
                 raise ValueError("无标准pyc，不采用参数")
             expected = index.artifact(row, ref, 64 * 1024 * 1024)
-            expanded = inflate(archive.read_stored(entry))
+            expanded = inflate_script(archive, entry)
             profile = KeyProfile(
                 archive.fingerprint(),
                 entry,
@@ -63,6 +62,7 @@ def verified_parameters(index, archive, catalog):
                 tuple(tr["bounds"]),
                 len(expanded),
             )
+            profile = profile.calibrated(archive)
             profile.validate(archive, entry)
             actual = codec.decode(profile.crypt(expanded), padding=True)
             filename = parse(actual[8:]).fields[5].value

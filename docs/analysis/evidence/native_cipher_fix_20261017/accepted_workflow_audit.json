@@ -1,0 +1,21 @@
+{
+  "baseline_sha256": "4bf116d0a6e62848bc1724ddfc67877c5a9db95a52768e8fa1d6f6d520318678",
+  "output_sha256": "ceeb3ddf22e24d1524836ca60427ff5c225171c392b8c519b386225445a934f0",
+  "output_bytes": 48449552,
+  "source_sha256": "b4220a6297d5c710dc85f9653fdf5d2555df9f8ea01b4ab511bc8b9cb4e530f3",
+  "source_lines": 628,
+  "standard_pyc_sha256": "327c7c0fe0dd6c1b09b32c46237699667b97deadabcc098b956933d73e98c173",
+  "compiler_version": "2.5.6",
+  "modified_indexes": [
+    918
+  ],
+  "unchanged_entries": 5001,
+  "code_objects": 60,
+  "unchanged_code_streams_and_nonconstant_fields": 59,
+  "changed_code_names": [
+    "GetFileInfo"
+  ],
+  "independent_engine_decryption_matches_compiled_marshal": true,
+  "baseline_unchanged": true,
+  "game_execution": false
+}

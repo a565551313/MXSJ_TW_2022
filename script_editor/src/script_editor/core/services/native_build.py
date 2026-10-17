@@ -19,7 +19,7 @@ from ..archives.writer import write_data, write_script
 from ..compiler.runner import Compiler, audit_standard
 from ..vm.compression import inflate
 from ..vm.py25 import codec as py25
-from ..vm.py25.keys import KeyProfile
+from ..vm.py25.keys import KeyProfile, inflate_script
 from ..vm.py27 import codec as py27
 
 
@@ -60,7 +60,9 @@ def _native(archive, replacement, profile):
             raise ValueError("script replacement requires digest-bound XOR profile")
         profile.validate(archive, replacement.index)
         # Original must be recognizable without repairs, not just a zlib header.
-        py25.decode(profile.crypt(inflate(stored)), padding=True)
+        py25.decode(
+            profile.crypt(inflate_script(archive, replacement.index)), padding=True
+        )
         native = py25.encode(expected)
         if len(native) > profile.expanded_size:
             raise ValueError(

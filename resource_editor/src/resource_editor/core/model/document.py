@@ -31,7 +31,7 @@ from ..containers import (
     open_archive_path,
 )
 from ..history import Action, History
-from ..mxhash import mx_hash
+from ..mxhash import mx_hash, path_hash
 from ..native_layout import encode_layout, layout_hint, path_bytes
 
 
@@ -279,7 +279,7 @@ class PackDocument:
             raise ValueError("按路径替换只支持0SLF")
         if res_path.strip().lower().endswith(".dlg"):
             res_path = path_bytes(res_path).decode("gbk")
-        entry_id = mx_hash(res_path.encode("gbk", "strict"))
+        entry_id = path_hash(res_path)
         if self.archive.extra_metas[index].entry_id != entry_id:
             raise ValueError("替换路径与目标条目编号不一致")
         if res_path.lower().endswith(".dlg"):
@@ -375,10 +375,18 @@ class PackDocument:
                               meta, name or str(meta.entry_id))
 
     def index_by_path(self, res_path: str) -> int | None:
-        """按资源路径查条目序号（0SLF：算 mx_hash 对 entry_id）。"""
+        """按资源路径查条目序号（0SLF：算 mx_hash 对 entry_id）。
+
+        路径无法按 GBK 编码时返回 None：引擎用同一算法寻址，它也查不到。
+        旧实现 ``encode("gbk", "replace")`` 会拿 ``?`` 顶替再查，属于
+        「静默替换」（分析报告 P2-2）。
+        """
         if self.archive.kind != "0slf":
             return None
-        entry_id = mx_hash(res_path.encode("gbk", "replace"))
+        try:
+            entry_id = path_hash(res_path)
+        except ValueError:
+            return None
         for index, meta in enumerate(self.archive.extra_metas):
             if meta.entry_id == entry_id:
                 return index
@@ -398,7 +406,7 @@ class PackDocument:
         if existing is not None:
             raise ValueError(
                 f"路径已存在于条目 {existing}，请改用替换")
-        entry_id = mx_hash(res_path.encode("gbk", "strict"))
+        entry_id = path_hash(res_path)
         if res_path.lower().endswith(".dlg"):
             entry_id = mx_hash(path_bytes(res_path))
             content = encode_layout(content, entry_id)

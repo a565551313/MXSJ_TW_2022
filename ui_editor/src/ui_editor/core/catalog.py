@@ -14,6 +14,7 @@ from pathlib import Path
 
 _CACHE: list[str] | None = None
 _HASH_CACHE: dict[int, str] | None = None
+_UNENCODABLE: list[str] = []
 
 __all__ = [
     "GENERATION_CURRENT",
@@ -52,16 +53,34 @@ def known_layout_paths() -> list[str]:
 
 
 def known_layout_hashes() -> dict[int, str]:
-    """路径目录的哈希索引：{路径哈希: 路径}（整包扫描时快速相交）。"""
+    """路径目录的哈希索引：{路径哈希: 路径}（整包扫描时快速相交）。
+
+    GBK 不可编码的路径**跳过并留痕**，不参与索引：旧实现用
+    ``encode("gbk", "replace")`` 把字符静默换成 ``?``，算出的哈希指向
+    另一个路径——查得到/查不到都变得不可信（分析报告 P2-2）。引擎只认
+    GBK 字节，这类路径在引擎侧同样寻址不到；清单用
+    :func:`unencodable_layout_paths` 取。
+    """
     global _HASH_CACHE
     if _HASH_CACHE is None:
-        from .mxhash import mx_hash
+        from .mxhash import path_hash
 
         _HASH_CACHE = {}
+        _UNENCODABLE.clear()
         for path in known_layout_paths():
-            _HASH_CACHE.setdefault(mx_hash(path.encode("gbk", "replace")),
-                                   path)
+            try:
+                digest = path_hash(path)
+            except ValueError:
+                _UNENCODABLE.append(path)
+                continue
+            _HASH_CACHE.setdefault(digest, path)
     return dict(_HASH_CACHE)
+
+
+def unencodable_layout_paths() -> list[str]:
+    """内置目录里 GBK 不可编码、因而引擎寻址不到的路径（读表后才有值）。"""
+    known_layout_hashes()
+    return list(_UNENCODABLE)
 
 
 def generation_of(res_path: str) -> str:

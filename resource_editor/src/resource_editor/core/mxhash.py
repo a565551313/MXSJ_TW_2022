@@ -1,11 +1,18 @@
+# 自动生成，请勿手改：由 tools/devkit/vendor_core.py 从
+# mx_common/mxhash.py 复制（字节相同）。
+# 改共享逻辑：改 mx_common/mxhash.py → --write；校验：--check
+# 详细说明见 mx_common/README.md。
 """``0SLF`` 资源包的路径哈希（多益 Mex 引擎资源寻址）复刻实现。
 
 引擎把资源路径哈希为 32 位整数存入目录的 ``entry_id`` 字段，运行
 时用同一哈希查表。本模块是客户端本体 ``mxmain.dll`` 中哈希函数
 （VA ``0x48EF80``）的指令级复刻，与仓库
 ``tools/data-parser/mx_path_hash.py`` 同源，结论见
-``notes/fls_path_hash_and_dlg.md``。放在编辑器内部是为了让工具
-自包含、可独立运行。
+``notes/fls_path_hash_and_dlg.md``。
+
+**本文件是唯一真源**（``mx_common/``）；编辑器里运行的是
+``tools/devkit/vendor_core.py`` 复制出来的同字节副本，改这里才是改
+编辑器（见 ``mx_common/README.md``）。
 
 算法概要：路径字节规范化（``\\`` 改 ``/``、小写转大写）后按小端
 打包成 u32 字数组，追加终止字 ``0x9BE74448``/``0x66F42C48``，
@@ -17,7 +24,7 @@ from __future__ import annotations
 
 MASK32 = 0xFFFFFFFF
 
-__all__ = ["mx_hash"]
+__all__ = ["mx_hash", "path_hash"]
 
 
 def _fold1(product: int) -> int:
@@ -98,3 +105,23 @@ def mx_hash(path: bytes) -> int:
         state_y = _fold2((state_y * mult2) & 0xFFFFFFFFFFFFFFFF)
         state_x = folded
     return (state_y ^ state_x) & MASK32
+
+
+def path_hash(path: str) -> int:
+    """资源路径 → ``entry_id``：按 GBK **严格**编码，不可编码就抛错。
+
+    存在的理由：``path.encode("gbk", "replace")`` 会把不可编码字符静默换成
+    ``?``，于是**哈希的是另一个路径**——查不到也不报错（UI 编辑器分析
+    P2-2）。引擎只认 GBK 字节，无法编码的路径在引擎侧同样寻址不到，
+    所以这里宁可抛 :class:`ValueError` 让调用方决定：报诊断、跳过，
+    还是拒绝写入。
+
+    不做 `native_layout.path_bytes()` 的「包内相对路径」校验：本函数也用于
+    查询（`contains("a/b.png")` 这类），校验由写入侧负责。
+    """
+    try:
+        raw = path.encode("gbk")
+    except UnicodeEncodeError as exc:
+        raise ValueError(
+            f"路径含 GBK 不可编码字符，引擎寻址不到：{path!r}") from exc
+    return mx_hash(raw)

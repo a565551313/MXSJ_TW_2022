@@ -66,6 +66,7 @@ class ResourceTreePanel(QWidget):
     open_pack_layout = Signal(str, str)  # (包路径, 资源路径)
     open_pack_path = Signal(str)
     import_pack_layout = Signal(str)    # 包根右键导入
+    export_layout_requested = Signal(tuple)
     open_loose_file = Signal(str)        # 散装 .dlg 路径
     choose_resource_dir = Signal()
     choose_loose_dir = Signal()
@@ -104,20 +105,40 @@ class ResourceTreePanel(QWidget):
     def _show_context_menu(self, pos) -> None:
         item = self._tree.itemAt(pos)
         data = item.data(0, Qt.ItemDataRole.UserRole) if item else None
-        if not data or data[0] != "packroot":
+        if not data or data[0] not in ("packroot", "file", "pack"):
             return
         menu = QMenu(self)
-        action = menu.addAction("导入布局文件…")
-        action.triggered.connect(lambda: self.import_pack_layout.emit(data[1]))
-        open_action = menu.addAction("按包内路径打开布局…")
-        open_action.triggered.connect(lambda: self.open_pack_path.emit(data[1]))
+        if data[0] in ("file", "pack"):
+            action = menu.addAction("导出布局…")
+            action.setToolTip("导出来源原文，不含未保存编辑，不转换文本编码")
+            action.setEnabled(not item.font(0).italic())
+            action.triggered.connect(
+                lambda: self.export_layout_requested.emit(tuple(data)))
+        elif data[0] == "packroot":
+            action = menu.addAction("导入布局文件…")
+            action.triggered.connect(lambda: self.import_pack_layout.emit(data[1]))
+            open_action = menu.addAction("按包内路径打开布局…")
+            open_action.triggered.connect(lambda: self.open_pack_path.emit(data[1]))
+        else:
+            return
         menu.exec(self._tree.viewport().mapToGlobal(pos))
+
+    def reset_sources(self) -> None:
+        """刷新专用：清除旧节点和搜索展开快照，然后由来源重新填充。"""
+        self._pending_item = None
+        self._saved_expansion = None
+        self._tree.clear()
+        self._roots.clear()
 
     def clear_pending(self) -> None:
         if self._pending_item is not None:
             root = self._pending_item.parent()
             root.takeChild(root.indexOfChild(self._pending_item))
             self._pending_item = None
+            if root.childCount() == 0:
+                data = root.data(0, Qt.ItemDataRole.UserRole)
+                self._roots.pop(("pack", data[1]), None)
+                self._tree.takeTopLevelItem(self._tree.indexOfTopLevelItem(root))
 
     def show_pending(self, pack_path: str, res_path: str) -> None:
         """仅单文档待入包叶子；取消/切换时删除，不假装已在源包里。"""
@@ -128,6 +149,8 @@ class ResourceTreePanel(QWidget):
         leaf.setData(0, Qt.ItemDataRole.UserRole, ("pending", pack_path, res_path))
         leaf.setToolTip(0, "当前编辑文档，尚未写入资源包；保存只生成新包。")
         root.addChild(leaf)
+        if root.childCount() == 1:
+            root.setText(0, f"{Path(pack_path).name}（待入新包）")
         self._pending_item = leaf
         self._search.clear()
         root.setExpanded(True)

@@ -53,6 +53,7 @@ class AssetResolver:
     """多包 + 散装目录的资源查找器（带缓存）。"""
 
     def __init__(self) -> None:
+        self.text_encoding = "big5"
         self._packs: list[FlsPack] = []
         self._loose_dirs: list[Path] = []
         self._bytes_cache: dict[str, bytes | None] = {}
@@ -120,6 +121,39 @@ class AssetResolver:
         self._session_layouts[mx_hash(name.encode("gbk"))] = name
         self._media_cache = None
 
+    def fetch_pack_dlg_bytes(self, pack_path: str | Path, name: str) -> bytes:
+        """从指定包取得解密后的布局字节，不转码、不重排字段。"""
+        pack = self.pack_for(pack_path)
+        data = None if pack is None else pack.read_named(name)
+        if data is None:
+            raise FileNotFoundError(f"包内找不到布局：{name}")
+        return unpack_packed_text(data)
+
+    def reloaded(self, resource_dirs=()) -> AssetResolver:
+        """事务式重开来源，丢掉读取缓存，保留路径登记与待入包图片。"""
+        fresh = AssetResolver()
+        fresh.text_encoding = self.text_encoding
+        fresh._session_layouts = dict(self._session_layouts)
+        fresh._staged = dict(self._staged)
+        try:
+            for path in self.pack_paths:
+                fresh.mount_pack(path)
+            for root in self._loose_dirs:
+                if not root.is_dir():
+                    raise FileNotFoundError(f"来源目录不存在：{root}")
+                fresh.add_loose_dir(root)
+            for root in resource_dirs:
+                for path in sorted(Path(root).iterdir()):
+                    if path.suffix.lower() == ".fls" and fresh.pack_for(path) is None:
+                        try:
+                            fresh.mount_pack(path)
+                        except Exception:
+                            continue  # 与首次挂载一样跳过非 0SLF 格式
+        except Exception:
+            fresh.close()
+            raise
+        return fresh
+
     def fetch_pack_dlg(self, pack_path: str | Path, name: str):
         """锁定树节点对应的包；同名布局不从其它包/散装目录冒取。"""
         pack = self.pack_for(pack_path)
@@ -129,7 +163,8 @@ class AssetResolver:
         if data is None:
             return None
         try:
-            return dlg_codec.parse_bytes(unpack_packed_text(data))
+            return dlg_codec.parse_bytes(
+                unpack_packed_text(data), text_encoding=self.text_encoding)
         except DlgError:
             return None
 
@@ -248,7 +283,8 @@ class AssetResolver:
         if data is None:
             return None
         try:
-            return dlg_codec.parse_bytes(unpack_packed_text(data))
+            return dlg_codec.parse_bytes(
+                unpack_packed_text(data), text_encoding=self.text_encoding)
         except DlgError:
             return None
 

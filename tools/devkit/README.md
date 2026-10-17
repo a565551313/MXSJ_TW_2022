@@ -31,10 +31,24 @@ python3 tools/devkit/check_windows_compat.py --list-rules
 
 启发式说明：`read_text`/`write_text` 只按方法名匹配，同名的自定义方法会误报，用 `# win-ok` 豁免；POSIX API 的检测只认 `import os` / `import signal` 及其别名。
 
+## vendor_core.py — 共享核心分发器
+
+```bash
+python3 tools/devkit/vendor_core.py --list     # 列出 mx_common/ 模块与分发目标
+python3 tools/devkit/vendor_core.py --check    # 0 报告 = 编辑器副本与真源逐字节一致
+python3 tools/devkit/vendor_core.py --diff     # 漂移处打印 unified diff
+python3 tools/devkit/vendor_core.py --write    # 按真源重写副本
+```
+
+`mx_common/` 是路径哈希 / `.dlg` 原生存储 / 输出路径保护 / 精灵格式常量的
+**唯一真源**；编辑器要「一个目录双击就能用」，所以运行时是复制而不是依赖。
+副本 = 4 行生成横幅 + 真源全文，按字节比对（LF/CRLF 差异也会被抓）；
+`tools/devkit/tests/test_vendor_core.py` 在单元测试里跑 `--check`。
+
 ## 测试
 
 ```bash
-python3 -m unittest discover -s tools/devkit/tests -v     # 29 个用例，含“工具箱自身通过自己的规则”
+python3 -m unittest discover -s tools/devkit/tests -v     # 44 个用例：wincompat 自检 + 分发一致性 + 精灵多实现同源
 ruff check tools/devkit                                   # 使用仓库根 ruff.toml
 ```
 

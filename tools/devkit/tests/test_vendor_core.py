@@ -1,0 +1,87 @@
+"""``mx_common/`` 与编辑器副本的分发一致性测试。
+
+背景（`docs/analysis/ui_editor_analysis_20261016.md` P1-2）：同一份格式代码
+曾在两个编辑器里各存一份、靠人记得同步。现在真源在 ``mx_common/``，副本由
+``tools/devkit/vendor_core.py`` 生成——本测试把「必须同步」变成机器判定。
+"""
+
+from __future__ import annotations
+
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from unittest import mock
+
+DEVKIT = Path(__file__).resolve().parents[1]
+REPO_ROOT = DEVKIT.parents[1]
+if str(DEVKIT) not in sys.path:
+    sys.path.insert(0, str(DEVKIT))
+
+import vendor_core  # noqa: E402
+
+
+class VendorDriftTests(unittest.TestCase):
+    def test_repo_copies_match_mx_common(self):
+        """仓库里 8 份副本必须与真源逐字节一致（改真源后忘了分发即红）。"""
+        problems = vendor_core.check()
+        self.assertEqual(
+            problems, [],
+            "副本漂移：\n  - " + "\n  - ".join(problems)
+            + "\n修复：python3 tools/devkit/vendor_core.py --write")
+
+    def test_banner_and_body_are_verbatim(self):
+        """副本 = 生成横幅 + 真源全文（横幅不得吞掉模块 docstring）。"""
+        for path, wanted in vendor_core.expected_files().items():
+            with self.subTest(path=str(path.relative_to(REPO_ROOT))):
+                text = vendor_core.load_text(path)
+                self.assertTrue(text.startswith("# 自动生成，请勿手改："))
+                name = wanted.split("mx_common/", 1)[1].split(" 复制")[0]
+                self.assertEqual(text, vendor_core.rendered(name))
+                body = text.split("\n", 4)[4]
+                self.assertTrue(body.startswith('"""'),
+                                "横幅之后应当仍是模块 docstring")
+
+    def test_write_is_idempotent(self):
+        """干净树上 --write 不应改动任何文件（否则说明比较规则不稳定）。"""
+        before = {path: vendor_core.load_text(path)
+                  for path in vendor_core.expected_files()}
+        changed = vendor_core.write()
+        self.assertEqual(changed, [])
+        after = {path: vendor_core.load_text(path)
+                 for path in vendor_core.expected_files()}
+        self.assertEqual(before, after)
+
+    def test_check_detects_and_write_repairs_drift(self):
+        """钉子测试：故意改一个字符，--check 必须报出来，--write 必须修回。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "mx_common"
+            source.mkdir()
+            (source / "mxhash.py").write_text(
+                '"""真源。"""\n\nVALUE = 1\n', encoding="utf-8")
+            target = root / "tool" / "core" / "mxhash.py"
+            target.parent.mkdir(parents=True)
+            target.write_text("# 已经漂移\nVALUE = 2\n", encoding="utf-8")
+            with mock.patch.object(vendor_core, "REPO_ROOT", root), \
+                    mock.patch.object(vendor_core, "SOURCE_DIR", source), \
+                    mock.patch.object(vendor_core, "DESTINATIONS",
+                                      {"mxhash.py": ("tool/core/mxhash.py",)}):
+                self.assertEqual(len(vendor_core.check()), 1)
+                changed = vendor_core.write()
+                self.assertEqual(changed, [target])
+                self.assertEqual(vendor_core.check(), [])
+
+    def test_shared_sources_stay_dependency_free(self):
+        """真源只能依赖标准库：core 层不许 import Qt/Pillow，否则副本会拖垮它。"""
+        banned = ("PySide6", "PyQt", "PIL")
+        for name in vendor_core.DESTINATIONS:
+            text = vendor_core.load_text(vendor_core.SOURCE_DIR / name)
+            for module in banned:
+                with self.subTest(module=name, banned=module):
+                    self.assertNotIn(f"import {module}", text)
+                    self.assertNotIn(f"from {module}", text)
+
+
+if __name__ == "__main__":
+    unittest.main()
