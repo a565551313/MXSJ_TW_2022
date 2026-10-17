@@ -173,10 +173,24 @@ class RegisteredPackagePinTests(unittest.TestCase):
             ) as copy:
                 report = stage_catalogs(root, target)
             self.assertEqual(
-                {r["archive_sha256"] for r in report}, {self.original, self.registered}
+                {r["archive_sha256"] for r in report},
+                {
+                    self.original,
+                    self.registered,
+                    "4bf116d0a6e62848bc1724ddfc67877c5a9db95a52768e8fa1d6f6d520318678",
+                },
             )
             self.assertEqual(copy.call_count, 1)
             self.assertEqual(audit_catalogs(target), report)
+
+    def test_user_accepted_direct_package_also_auto_associates_exact_digest(self):
+        from script_editor.core.services.bundled_catalog import BUNDLED_CATALOGS
+
+        digest = "4bf116d0a6e62848bc1724ddfc67877c5a9db95a52768e8fa1d6f6d520318678"
+        self.assertEqual(BUNDLED_CATALOGS[digest], BUNDLED_CATALOGS[self.original])
+        root = Path(__file__).resolve().parents[1]
+        self.assertIsNotNone(bundled_catalog(self.archive_stub(digest), root))
+        self.assertIsNone(bundled_catalog(self.archive_stub(digest[:-1] + "9"), root))
 
     def test_registered_alias_rejects_missing_or_tampered_asset(self):
         with tempfile.TemporaryDirectory() as temporary:

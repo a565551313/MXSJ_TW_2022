@@ -1,0 +1,46 @@
+[
+  {
+    "text": "255, 0, 0",
+    "initial": [],
+    "result": [
+      "255",
+      "0",
+      "0"
+    ],
+    "element_types": [
+      "str",
+      "str",
+      "str"
+    ]
+  },
+  {
+    "text": "100, 100",
+    "initial": [],
+    "result": [
+      "100",
+      "100"
+    ],
+    "element_types": [
+      "str",
+      "str"
+    ]
+  },
+  {
+    "text": "255, 0, 0",
+    "initial": [
+      0,
+      0,
+      0
+    ],
+    "result": [
+      255,
+      0,
+      0
+    ],
+    "element_types": [
+      "int",
+      "int",
+      "int"
+    ]
+  }
+]

@@ -1,0 +1,28 @@
+{
+  "path": "/home/user/editor_writeback_fix/MXSJ_ScriptEditor_0.6.0.dev7_update_20261017.zip",
+  "files": 25,
+  "bytes": 88157,
+  "md5": "2ca0feb66321a9a2e12547ea6f48bd7f",
+  "sha256": "2d4fb19aff5fed441a4a2bd55b7e973bd7e0b41f0f7306401468c39b4a9e2ae0",
+  "zip_crc": "passed",
+  "manifest": "all file lengths and hashes passed",
+  "old_versions_and_permissions_modified": false,
+  "drive_id": "1_Ae-5qkZeWtCtGa_94mkIT5PV7KJxPVf",
+  "drive_parent": "1Oknzs5ftrOHpf_jy0vQasYRtJCPoBQmO",
+  "drive_url": "https://drive.google.com/file/d/1_Ae-5qkZeWtCtGa_94mkIT5PV7KJxPVf/view",
+  "drive_get_file_recheck": {
+    "bytes": 88157,
+    "md5": "2ca0feb66321a9a2e12547ea6f48bd7f",
+    "matches_local": true
+  },
+  "overlay_install_check": {
+    "method": "git archive HEAD script_editor, overlay actual ZIP complete files, run isolated installed source/tests",
+    "tests": 38,
+    "passed": 38,
+    "failures": 0,
+    "skipped": 0,
+    "log_sha256": "a5ba0d536ba0947a86368de94aa3e813e74f45b37bc320592ee9f3d1edf3c413"
+  },
+  "game_fls_delivered": false,
+  "permissions_changed": false
+}

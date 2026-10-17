@@ -1,0 +1,436 @@
+{
+  "version": "0.6.0.dev7",
+  "date": "2026-10-17",
+  "delivery": "overlay source update for existing dev6, NOT full Windows binary distribution",
+  "inputs": {
+    "script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "catalog": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+    "mxmain.dll": "637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d"
+  },
+  "tests": {
+    "total": 335,
+    "passed": 247,
+    "skipped": 88,
+    "failures": 0,
+    "seconds": 106.799,
+    "log_sha256": "e7646e2f28be128d2afa9c5da5dea68a736f43960d4d77f9eac42f4983af67ce",
+    "skipped_cases": [
+      {
+        "test": "test_actual_cpython27 (test_compiler.LegacyCompilation.test_actual_cpython27)",
+        "reason": "skipped 'py27: set MXSJ_PY27 to actual standard compiler'"
+      },
+      {
+        "test": "test_124_and_4861_keep_editable_candidates_without_verified_origin (test_corpus_import.RealCorpusImportTests.test_124_and_4861_keep_editable_candidates_without_verified_origin)",
+        "reason": "skipped 'opt-in full audited corpus required'"
+      },
+      {
+        "test": "test_2371_local_repair_delta_not_misrepresented_as_verified (test_corpus_import.RealCorpusImportTests.test_2371_local_repair_delta_not_misrepresented_as_verified)",
+        "reason": "skipped 'opt-in full audited corpus required'"
+      },
+      {
+        "test": "test_eight_real_repairs_match_exact_pyc_and_original_catalog_unchanged (test_corpus_import.RealCorpusImportTests.test_eight_real_repairs_match_exact_pyc_and_original_catalog_unchanged)",
+        "reason": "skipped 'opt-in full audited corpus required'"
+      },
+      {
+        "test": "test_real_large_entry_1182_is_not_blocked_by_live_process_output_limit (test_corpus_import.RealCorpusImportTests.test_real_large_entry_1182_is_not_blocked_by_live_process_output_limit)",
+        "reason": "skipped 'opt-in full audited corpus required'"
+      },
+      {
+        "test": "test_real_repaired_4305_compile_publish_reopen_without_execution (test_corpus_import.RealCorpusImportTests.test_real_repaired_4305_compile_publish_reopen_without_execution)",
+        "reason": "skipped 'opt-in full audited corpus required'"
+      },
+      {
+        "test": "test_both_real_vms_negative_long_recovery_recompiles_exact_constants (test_data_corpus.ActualSignedLongRecoveryTests.test_both_real_vms_negative_long_recovery_recompiles_exact_constants)",
+        "reason": "skipped 'actual standard compilers required'"
+      },
+      {
+        "test": "test_every_real_data_entry_candidate_has_exact_strict_origin (test_data_corpus.RealDataCorpusTests.test_every_real_data_entry_candidate_has_exact_strict_origin)",
+        "reason": "skipped 'opt-in actual data corpus required'"
+      },
+      {
+        "test": "test_real_data_corpus_probe_compile_publish_reopen_does_not_execute (test_data_corpus.RealDataCorpusTests.test_real_data_corpus_probe_compile_publish_reopen_does_not_execute)",
+        "reason": "skipped 'opt-in actual data corpus required'"
+      },
+      {
+        "test": "test_real_uuid_direct_browser_opens_without_prebuilt_corpus (test_data_corpus.RealDataCorpusTests.test_real_uuid_direct_browser_opens_without_prebuilt_corpus)",
+        "reason": "skipped 'opt-in actual data corpus required'"
+      },
+      {
+        "test": "test_real_uuid_negative_longs_remain_exact_not_replaced_or_nopped (test_data_corpus.RealDataCorpusTests.test_real_uuid_negative_longs_remain_exact_not_replaced_or_nopped)",
+        "reason": "skipped 'opt-in actual data corpus required'"
+      },
+      {
+        "test": "test_current_replacement_does_not_replace_partial_word (test_gui.GuiTests.test_current_replacement_does_not_replace_partial_word)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_dirty_source_close_cancel_and_save (test_gui.GuiTests.test_dirty_source_close_cancel_and_save)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_dock_layout_persists_only_with_explicit_settings (test_gui.GuiTests.test_dock_layout_persists_only_with_explicit_settings)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_failed_startup_clears_stale_compilers_but_keeps_source_available (test_gui.GuiTests.test_failed_startup_clears_stale_compilers_but_keeps_source_available)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_highlighting_keeps_comments_inside_strings_and_multiline_state (test_gui.GuiTests.test_highlighting_keeps_comments_inside_strings_and_multiline_state)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_large_tree_uses_supported_qt_without_none_reference_corruption (test_gui.GuiTests.test_large_tree_uses_supported_qt_without_none_reference_corruption)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_outline_reference_jump_and_real_opened_source_diff (test_gui.GuiTests.test_outline_reference_jump_and_real_opened_source_diff)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_package_selector_switches_independent_vm_without_rebinding_source (test_gui.GuiTests.test_package_selector_switches_independent_vm_without_rebinding_source)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_project_dirty_close_cancel (test_gui.GuiTests.test_project_dirty_close_cancel)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_reference_source_cannot_compile_save_or_associate (test_gui.GuiTests.test_reference_source_cannot_compile_save_or_associate)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_reference_toolbar_and_indentation_cannot_change_text (test_gui.GuiTests.test_reference_toolbar_and_indentation_cannot_change_text)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_replace_all_is_one_undo_and_duplicate_tab_not_added (test_gui.GuiTests.test_replace_all_is_one_undo_and_duplicate_tab_not_added)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_search_case_whole_word_unicode_and_single_undo (test_gui.GuiTests.test_search_case_whole_word_unicode_and_single_undo)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_smart_indent_and_block_indent_are_undoable (test_gui.GuiTests.test_smart_indent_and_block_indent_are_undoable)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_startup_checks_both_vms_without_open_tab (test_gui.GuiTests.test_startup_checks_both_vms_without_open_tab)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_two_archives_have_separate_identity_and_vm (test_gui.GuiTests.test_two_archives_have_separate_identity_and_vm)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_window_native_build_disabled (test_gui.GuiTests.test_window_native_build_disabled)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_workspace_toolbar_shares_real_actions_and_welcome (test_gui.GuiTests.test_workspace_toolbar_shares_real_actions_and_welcome)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_authored_snapshot_can_reopen_with_source_file_missing (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_authored_snapshot_can_reopen_with_source_file_missing)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_candidate_reopen_after_save_as_preserves_renamed_dirty_buffer (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_candidate_reopen_after_save_as_preserves_renamed_dirty_buffer)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_conflicting_snapshot_is_preflighted_without_adding_widgets (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_conflicting_snapshot_is_preflighted_without_adding_widgets)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_corpus_actions_are_real_menu_entries (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_corpus_actions_are_real_menu_entries)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_draft_save_as_cannot_write_into_corpus_directory (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_draft_save_as_cannot_write_into_corpus_directory)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_imported_candidate_does_not_replace_native_engine_tab (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_imported_candidate_does_not_replace_native_engine_tab)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_missing_corpus_does_not_discard_restored_edit_buffer (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_missing_corpus_does_not_discard_restored_edit_buffer)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_project_restores_unsaved_text_candidates_diagnostics_and_vm (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_project_restores_unsaved_text_candidates_diagnostics_and_vm)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_reopen_project_keeps_existing_dirty_buffer_and_undo_history (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_reopen_project_keeps_existing_dirty_buffer_and_undo_history)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_saving_project_is_enough_to_close_without_saving_py_files (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_saving_project_is_enough_to_close_without_saving_py_files)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_unverified_external_pyc_cannot_reach_native_prepare (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_unverified_external_pyc_cannot_reach_native_prepare)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_verify_catalog_action_writes_new_file_and_leaves_original_untouched (test_gui_corpus_workspace.CorpusWorkspaceGuiTests.test_verify_catalog_action_writes_new_file_and_leaves_original_untouched)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_data_generation_action_builds_and_associates_vm27_corpus (test_gui_data_corpus.DataCorpusGuiTests.test_data_generation_action_builds_and_associates_vm27_corpus)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_data_manifest_import_is_not_blocked_by_script_only_guard (test_gui_data_corpus.DataCorpusGuiTests.test_data_manifest_import_is_not_blocked_by_script_only_guard)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_data_xor_action_does_not_install_script_catalog (test_gui_data_corpus.DataCorpusGuiTests.test_data_xor_action_does_not_install_script_catalog)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_failed_generation_does_not_mask_live_recovery_with_empty_cache (test_gui_data_corpus.DataCorpusGuiTests.test_failed_generation_does_not_mask_live_recovery_with_empty_cache)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_package_open_and_project_resume_preserve_vm27_edited_candidate (test_gui_data_corpus.DataCorpusGuiTests.test_package_open_and_project_resume_preserve_vm27_edited_candidate)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_all_121_real_data_scripts_open_as_editable_vm27_tabs (test_gui_data_corpus.RealDataCorpusGuiTests.test_all_121_real_data_scripts_open_as_editable_vm27_tabs)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_both_vms_real_unbound_open_edit_review_publish_and_project_reopen (test_gui_module.GuiModuleTests.test_both_vms_real_unbound_open_edit_review_publish_and_project_reopen)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_cancelling_first_save_keeps_recovery_dirty_and_untrusted (test_gui_module.GuiModuleTests.test_cancelling_first_save_keeps_recovery_dirty_and_untrusted)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_old_missing_xor_project_gets_pin_and_retries_without_overwriting_edits (test_gui_module.GuiModuleTests.test_old_missing_xor_project_gets_pin_and_retries_without_overwriting_edits)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_old_recovery_text_is_preserved_with_explicit_warning (test_gui_module.GuiModuleTests.test_old_recovery_text_is_preserved_with_explicit_warning)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_open_archive_auto_pins_catalog_then_recovers_without_manual_source (test_gui_module.GuiModuleTests.test_open_archive_auto_pins_catalog_then_recovers_without_manual_source)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_registered_test_package_auto_binds_then_real_worker_opens_editable_draft (test_gui_module.GuiModuleTests.test_registered_test_package_auto_binds_then_real_worker_opens_editable_draft)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_saved_recovery_file_reopens_as_editable_untrusted_correct_vm (test_gui_module.GuiModuleTests.test_saved_recovery_file_reopens_as_editable_untrusted_correct_vm)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_unbound_missing_catalog_opens_entry_tab_with_reason (test_gui_module.GuiModuleTests.test_unbound_missing_catalog_opens_entry_tab_with_reason)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_data_paths_still_come_from_directory_and_keep_pyo_suffix (test_gui_module_paths.ModulePathGuiTests.test_data_paths_still_come_from_directory_and_keep_pyo_suffix)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_declining_catalog_never_publishes_scanned_names (test_gui_module_paths.ModulePathGuiTests.test_declining_catalog_never_publishes_scanned_names)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_manual_catalog_confirmation_reindexes_existing_unknown_package (test_gui_module_paths.ModulePathGuiTests.test_manual_catalog_confirmation_reindexes_existing_unknown_package)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_open_shows_paths_before_any_double_click_no_binding_or_source (test_gui_module_paths.ModulePathGuiTests.test_open_shows_paths_before_any_double_click_no_binding_or_source)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_project_reopen_also_indexes_paths_without_touching_dirty_buffer (test_gui_module_paths.ModulePathGuiTests.test_project_reopen_also_indexes_paths_without_touching_dirty_buffer)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_cancel_button_stops_recovery_and_keeps_dirty_buffer (test_gui_recovery_candidates.CandidateGuiTests.test_cancel_button_stops_recovery_and_keeps_dirty_buffer)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_candidate_information_does_not_claim_semantic_or_syntax_verification (test_gui_recovery_candidates.CandidateGuiTests.test_candidate_information_does_not_claim_semantic_or_syntax_verification)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_other_candidate_opens_fresh_tab_without_overwriting_dirty_edits (test_gui_recovery_candidates.CandidateGuiTests.test_other_candidate_opens_fresh_tab_without_overwriting_dirty_edits)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_reopening_existing_candidate_preserves_its_edits (test_gui_recovery_candidates.CandidateGuiTests.test_reopening_existing_candidate_preserves_its_edits)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_already_published_but_ui_failure_is_not_reported_as_build_failure (test_gui_workflow.GuiWorkflowTests.test_already_published_but_ui_failure_is_not_reported_as_build_failure)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_cancel_preview_never_asks_output_or_changes_dirty_buffer (test_gui_workflow.GuiWorkflowTests.test_cancel_preview_never_asks_output_or_changes_dirty_buffer)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_native_action_requires_matching_selection_source_vm_and_compiler (test_gui_workflow.GuiWorkflowTests.test_native_action_requires_matching_selection_source_vm_and_compiler)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_project_adoption_rolls_back_partial_widgets (test_gui_workflow.GuiWorkflowTests.test_project_adoption_rolls_back_partial_widgets)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_project_cross_vm_same_source_rejected_before_any_mutation (test_gui_workflow.GuiWorkflowTests.test_project_cross_vm_same_source_rejected_before_any_mutation)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_real_worker_callback_runs_on_gui_thread_and_restores_actions (test_gui_workflow.GuiWorkflowTests.test_real_worker_callback_runs_on_gui_thread_and_restores_actions)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_stale_preview_cannot_start_publish (test_gui_workflow.GuiWorkflowTests.test_stale_preview_cannot_start_publish)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "test_success_adopts_exact_output_preserves_dirty_text_undo_and_baselines (test_gui_workflow.GuiWorkflowTests.test_success_adopts_exact_output_preserves_dirty_text_undo_and_baselines)",
+        "reason": "skipped 'GUI未执行：libGL.so.1: cannot open shared object file: No such file or directory'"
+      },
+      {
+        "test": "  test_both_real_vms_package_recover_edit_compile_publish_reopen (test_module_browser.ModuleBrowserTests.test_both_real_vms_package_recover_edit_compile_publish_reopen) (vm='py27')",
+        "reason": "skipped 'actual standard compiler required: py27'"
+      },
+      {
+        "test": "  test_collection_values_and_all_256_bytes_survive_recovery (test_module_browser.ModuleBrowserTests.test_collection_values_and_all_256_bytes_survive_recovery) (vm='py27')",
+        "reason": "skipped 'actual standard compiler required: py27'"
+      },
+      {
+        "test": "  test_unicode_quotes_non_bmp_future_unicode_and_bytes_survive_rendering (test_module_browser.ModuleBrowserTests.test_unicode_quotes_non_bmp_future_unicode_and_bytes_survive_rendering) (vm='py27')",
+        "reason": "skipped 'actual standard compiler required: py27'"
+      },
+      {
+        "test": "test_real_script_and_data_recover_edit_without_original_authored_source (test_module_browser.RealModuleBrowserTests.test_real_script_and_data_recover_edit_without_original_authored_source)",
+        "reason": "skipped 'opt-in real packages and actual standard compilers required'"
+      },
+      {
+        "test": "test_full_actual_py27_compile_native_package_readback (test_native_legacy.ActualLegacyBuild.test_full_actual_py27_compile_native_package_readback)",
+        "reason": "skipped 'actual standard compiler not configured: py27'"
+      },
+      {
+        "test": "test_actual_data_offline_probe (test_native_legacy.RealMaterialBuild.test_actual_data_offline_probe)",
+        "reason": "skipped 'opt-in game materials and compiler required'"
+      },
+      {
+        "test": "test_original_archive_path_uses_secondary_after_primary_timeout (test_recovery_candidates.ActualCorpusTests.test_original_archive_path_uses_secondary_after_primary_timeout)",
+        "reason": "skipped 'opt-in corpus samples/pycdc required'"
+      },
+      {
+        "test": "test_real_both_fail_has_no_fake_source (test_recovery_candidates.ActualCorpusTests.test_real_both_fail_has_no_fake_source)",
+        "reason": "skipped 'opt-in corpus samples/pycdc required'"
+      },
+      {
+        "test": "test_real_complete_pair_keeps_two_candidates_and_origin (test_recovery_candidates.ActualCorpusTests.test_real_complete_pair_keeps_two_candidates_and_origin)",
+        "reason": "skipped 'opt-in corpus samples/pycdc required'"
+      },
+      {
+        "test": "test_real_non_utf8_candidates_keep_exact_engine_bytes (test_recovery_candidates.ActualCorpusTests.test_real_non_utf8_candidates_keep_exact_engine_bytes)",
+        "reason": "skipped 'opt-in corpus samples/pycdc required'"
+      },
+      {
+        "test": "test_real_partial_source_is_editable_but_never_complete (test_recovery_candidates.ActualCorpusTests.test_real_partial_source_is_editable_but_never_complete)",
+        "reason": "skipped 'opt-in corpus samples/pycdc required'"
+      },
+      {
+        "test": "test_real_pathological_primary_times_out_secondary_still_recovers (test_recovery_candidates.ActualCorpusTests.test_real_pathological_primary_times_out_secondary_still_recovers)",
+        "reason": "skipped 'opt-in corpus samples/pycdc required'"
+      },
+      {
+        "test": "test_both_real_vms_second_engine_compile_without_execution (test_recovery_candidates.ActualEngineSmoke.test_both_real_vms_second_engine_compile_without_execution)",
+        "reason": "skipped 'verified pycdc required'"
+      },
+      {
+        "test": "  test_real_both_compilers_preserve_non_utf8_filename_bytes (test_workflow.ActualWorkflowTests.test_real_both_compilers_preserve_non_utf8_filename_bytes) (vm='py27')",
+        "reason": "skipped 'actual standard compiler not configured: py27'"
+      },
+      {
+        "test": "  test_real_both_vm_preview_publish_save_reopen_and_continue (test_workflow.ActualWorkflowTests.test_real_both_vm_preview_publish_save_reopen_and_continue) (vm='py27')",
+        "reason": "skipped 'actual standard compiler not configured: py27'"
+      },
+      {
+        "test": "test_real_data_offline_prepare_publish_reopen_continue (test_workflow.RealRegistrationWorkflowTests.test_real_data_offline_prepare_publish_reopen_continue)",
+        "reason": "skipped 'opt-in real package and standard 2.7.13 required'"
+      }
+    ]
+  },
+  "whole_original_corpus": {
+    "entries": 5002,
+    "strict_decoded": 5002,
+    "independent_name_side_engine_decrypt_equal": 5002
+  },
+  "golden_918": {
+    "seed": 6141,
+    "keys": [
+      253,
+      168,
+      139,
+      169,
+      142
+    ],
+    "old_bounds": [
+      4508,
+      9012,
+      13542,
+      18067
+    ],
+    "native_bounds": [
+      4511,
+      9012,
+      13542,
+      18070
+    ]
+  },
+  "full_recompile_from_user_accepted_package": {
+    "baseline_sha256": "4bf116d0a6e62848bc1724ddfc67877c5a9db95a52768e8fa1d6f6d520318678",
+    "output_sha256": "ceeb3ddf22e24d1524836ca60427ff5c225171c392b8c519b386225445a934f0",
+    "output_bytes": 48449552,
+    "source_sha256": "b4220a6297d5c710dc85f9653fdf5d2555df9f8ea01b4ab511bc8b9cb4e530f3",
+    "source_lines": 628,
+    "standard_pyc_sha256": "327c7c0fe0dd6c1b09b32c46237699667b97deadabcc098b956933d73e98c173",
+    "compiler_version": "2.5.6",
+    "modified_indexes": [
+      918
+    ],
+    "unchanged_entries": 5001,
+    "code_objects": 60,
+    "unchanged_code_streams_and_nonconstant_fields": 59,
+    "changed_code_names": [
+      "GetFileInfo"
+    ],
+    "independent_engine_decryption_matches_compiled_marshal": true,
+    "baseline_unchanged": true,
+    "game_execution": false
+  },
+  "static": {
+    "ruff": "passed",
+    "windows_compat_errors": 0,
+    "windows_compat_warnings": 0,
+    "vendor_core": "4 modules / 9 copies matched"
+  },
+  "limitations": {
+    "gui_executed_this_turn": false,
+    "new_windows_execution": false,
+    "new_game_execution": false,
+    "release_gate_all_required_tests_passed": false,
+    "runtime_binaries_rebuilt": false,
+    "game_packages_in_delivery": false,
+    "share_permissions_changed": false,
+    "old_full_zip_read_failed_no_retry": true
+  }
+}

@@ -38,8 +38,13 @@ def xor(payload, keys, bounds):
 
 
 def script_fixture(expanded_size=512, two_modules=False, filename=b"authored.py"):
-    keys = [1, 11, 21, 31, 41]
-    bounds = [expanded_size * i // 5 for i in range(1, 5)]
+    # Golden sequence for seed 19084, independent of the product cipher helper.
+    keys = [140, 89, 30, 116, 106]
+    high_bytes = [74, 38, 125, 86]
+    cursor, bounds = 0, []
+    for high in high_bytes:
+        cursor += expanded_size // 5 + high
+        bounds.append(min(cursor, expanded_size))
     native = py25.encode(minimal_pyc("py25", filename=filename))
     stored = zlib.compress(
         xor(native + bytes(expanded_size - len(native)), keys, bounds)

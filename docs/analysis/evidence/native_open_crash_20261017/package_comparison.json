@@ -1,0 +1,64 @@
+{
+  "input_drive_file_id": "1hEAYFKKA5lIeot2Www0tR6J0VVAUYWuB",
+  "zip_name": "1017script.zip",
+  "zip_size": 48290192,
+  "zip_md5": "ea409b61ef320bdd7e8aefcdf9bbf4e9",
+  "package_name": "1017script.fls",
+  "package_size": 48449557,
+  "package_sha256": "0ee42496e9c69abc4bbcad3aa35ebb232866acfaaa1555dcbacc9575f25aad20",
+  "entry_count": 5002,
+  "entry_ids_and_r1_unchanged_against_locked_original": true,
+  "changed_stored_entries_vs_locked_original": [
+    {
+      "i": 337,
+      "identity": "10744DA4",
+      "old_size": 5565,
+      "new_size": 5568,
+      "old_sha": "2106d4958fbb8726d7ce5802ffdbdb73bd7b30f391c50b059a45d83638379045",
+      "new_sha": "e588d440a4b2cca61dbc5c8908ea0885c1b07b03b1d24fd2d62bd492cd45f266",
+      "new_offset": 25900779
+    },
+    {
+      "i": 918,
+      "identity": "2BE981D6",
+      "old_size": 8446,
+      "new_size": 8406,
+      "old_sha": "a5538cd21a06e73080cb3bbcb87f342ae5ec856044c513af744498fe95127101",
+      "new_sha": "2e72d4da1909022ba77d87be077dcb696679ce712b05b0642161629388306c59",
+      "new_offset": 28459844
+    },
+    {
+      "i": 4007,
+      "identity": "CBE3CB90",
+      "old_size": 19399,
+      "new_size": 10844,
+      "old_sha": "743c75c5d5751c28b22ddedb0633428814a2ba431b5ae3c84aa865b1f426b6e5",
+      "new_sha": "a974ddfa1ea8e619f9997be487512ad32cccd3b79f97e78b8f0b9784fc35d194",
+      "new_offset": 43037391
+    },
+    {
+      "i": 4082,
+      "identity": "CF8EA6E5",
+      "old_size": 13869,
+      "new_size": 13876,
+      "old_sha": "b51a3bfb657ae0fddd3ce2c1da60fed867d097693f629c9cd98fa80693a067ff",
+      "new_sha": "9c20640d9efc4ab284c6a599402cd93a2c22fb3318c3293220cdaf676d0cd2e2",
+      "new_offset": 43442484
+    }
+  ],
+  "entry918_expanded_identical_to_our_v2_test_build": true,
+  "entry918_stored_identical_to_our_v2_test_build": false,
+  "stored_difference_explanation": "zlib streams differ, but decompressed encrypted bytes are identical; no assertion of the particular compression library/options used",
+  "reconstructed_pre918_sha256": "c7276deb0af7142c1b249d24299b884cd7320c0e84375cc6ac55f166df1d9ed1",
+  "reconstructed_pre918_size": 48449597,
+  "reconstructed_pre918_matches_previously_registered_exact_fingerprint": true,
+  "reconstruction_changed_indexes_from_user_package": [
+    918
+  ],
+  "unchanged_entries_from_user_package": 5001,
+  "rollback_drive_file_id": "1G14eDPJMbGMtPYPnN8cs0MJ2iJ5t4gxq",
+  "rollback_zip_md5": "5791e84f8b92b6982e4e1c7623f74545",
+  "game_executed": false,
+  "crash_root_cause": "UNRESOLVED; structural/self-readback evidence is not a native engine acceptance test",
+  "excluded_investigation": "scratch arithmetic emulation of on-disk loader not validated against all original entries; not evidence of actual runtime algorithm"
+}

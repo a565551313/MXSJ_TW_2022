@@ -1676,3 +1676,161 @@ Linux Qt offscreen + 仓库外桩库，不冒充 Windows EXE/官服实包验收�
 
 UI ZIP SHA256：`15c7c0ed785fb34a1b2536bc9f630a15a3eb0e9620f0a88504fc607f60933c87`；
 资源 ZIP SHA256：`4d988aeff1d0d02ab2137a970dc33c3f8195d714e9041260f4e38f724268d6aa`。
+
+
+### 3.63 内置打开列表：原生导入链静态定位（2026-10-17）
+
+本轮按用户“你查”继续，不要求重复搜索、找日志或盲放文件。
+已确定编辑器先显示窗口、再强制读 file_interface.FILE_INFO、再扫描本地interface；
+前置依赖失败能留下空窗口。仓库原包目录缺少正确键 file_interface.s（0x3caabef5）。
+原生 C_sys.PkgImport VA 0x45D1D0 存在普通 Python 导入回退，不是仅支持包内模块。
+查明正确脚本资源键为模块名加 .s，4,951个候选匹配，纠正notes §3/§6旧判断（见新§7）。
+报告：docs/analysis/native_open_list_failure_20261017.md；证据同级evidence目录。
+边界：未取得真实客户端 sys.path，不能指定散装.py准确放置位置；未实机复现异常；
+不把 .py 重命名 .s，未运行恢复模块，未修改script.fls或密钥。下一步为核启动路径设置，
+或在授权范围内设计独立可回滚修复，不能宣称已修好。
+本轮HEAD观测为5ef8aa2，工作文件含前轮大量已交付内容；未重置或批量暂存这些内容，
+未基于旧HEAD盲目补交/推送，保留工作树待按恢复规程核对远端。
+
+
+### 3.64 用户要求完整源码放 Diff：已生成单模块替换候选（2026-10-17）
+
+路径 `tools/client_patches/native_uieditor_open_list/dgtuieditor.py`，643行，
+只改变 entry 918 的 CUIEditorDgt.GetFileInfo；同目录有小范围diff、README及audit.json。
+本轮从锁定原包单条恢复（uncompyle6 3.9.3），保留原始字节字符串为ASCII转义，
+移除反编译器b前缀/非法模块return，并还原4个文档字符串。
+仓库外构建CPython2.5.6并仅compile，不执行模块；60个代码对象与原code递归比对，
+除GetFileInfo外59个的指令、参数、名字、局部变量、标志、堆栈、自由变量、闭包、
+字面量常量均一致（排除源位置元数据）。源码SHA256见audit.json。
+原包/密钥未修改，没有分发FLS；用户自行用脚本编辑器备份、替换、编译，原生验收待做。
+已有自定义修改的模块不可整份覆盖。该目录为Diff交付，不将恢复语料冒充原作者源码。
+HEAD/索引旧版问题沿用3.63：保留现有工作树，未盲目批量提交推送。
+
+### 3.65 完整 dgtuieditor 修复源码云盘交付（2026-10-17）
+
+按用户要求打包并上传 `dgtuieditor_open_list_fix_20261017.zip`，7191字节，
+内含完整643行dgtuieditor.py、README.md、GetFileInfo.diff、audit.json。
+打包前源文件SHA256与审计一致，ZIP CRC及解压源码逐字节核对通过。
+上传后独立get_file复核大小、MD5一致：`fe980a7bc93716eafc17ae9027099e8e`。
+ZIP SHA256：`0bdd83cc82638605f4ebc5d6d210f1fddba7c84150d663e022ac1d507fb61822`。
+Drive：https://drive.google.com/file/d/1kCUs9Q_AbGekYUZJ9Z-Mqv2q5tJ7YelI/view
+My Drive根目录，未改共享权限、未覆盖旧文件；仅源码候选，不含游戏包/密钥。
+
+### 3.66 修正源码交付遗漏：固定XOR长度超限（2026-10-17）
+
+用户反馈 authored marshal exceeds fixed XOR length; no shrink/rescale。
+原因：3.64/3.65仅做compile和原code比对，漏掉native_build.py固定expanded_size限制。
+不放宽边界，不缩放参数。新版完整源码628行，GetFileInfo只返回本地GetTmpFileInfo，
+**功能收窄：不合并包内开发清单；interface不存在/扫描错误仍沿用原生空数据行为。**
+实际经编辑器compile_standard→build_package→独立readback及标准marshal审计通过：
+22398字节 <= 22441，补零43；只改918，其余5001条存储内容核验不变。
+仓库外compact_verified_test.fls仅验证未分发；原包/密钥未改；没有执行恢复模块。
+同目录源码/diff/README/audit已更新；59个非目标代码对象仍与原code一致。
+v2 ZIP6457字节，MD5 337160fda83677cc654271925565dda8，上传后get_file匹配：
+https://drive.google.com/file/d/11DX11YNL_2BaTBRVovHV6LTHXOTKMZiC/view
+旧版不再建议使用；保留旧云盘文件、不改共享权限；Windows/游戏端待验证。
+
+
+### 3.67 用户反馈内置编辑器无法打开：暂停部署（2026-10-17）
+
+用户截图：mx.exe，Version=(0,8,147)，Code=0xC0000005，Address=0x004EE054。
+建议立即退出游戏并恢复本次修改前备份script.fls；v1/v2均不再建议部署。
+README、audit追加暂停标记，不删除源码、不擅自改用户云盘文件。
+本地mxmain.dll同地址指令为 mov esi,[esi+0x30]，位于代码模块装入函数，
+调用链前段从代码对象取得filename；原生import路径调用此前定位的0x4EDFE0。
+只能说明本地二进制映射下加载路径可能访问无效code对象；截图无寄存器/调用栈，
+不能据此断言哪个模块解密失败，也不能确认用户二进制与仓库完全一致。
+本轮追加核查：锁定原包918 decode→encode逐字节等于原解密marshal（22441字节）；
+此自洽结果与前轮离线写包回读均不能替代原生引擎验收，暂不再发猜测补丁。
+下一步需要用户实际生成的出错script.fls（仓库外只读接收）核对实际修改条目、
+头部/目录、负载、固定段参数和原生加载链；不要求用户重复搜索或自行找日志。
+
+### 3.68 已核用户1017script.zip并交付精确回退（2026-10-17）
+
+Drive下载文件1hEAYFKKA5lIeot2Www0tR6J0VVAUYWuB，MD5已核；用户FLS SHA为
+0ee42496e9c69abc4bbcad3aa35ebb232866acfaaa1555dcbacc9575f25aad20。
+918解压加密载荷与我方v2测试构建逐字节相同，非用户贴错代码。
+仅恢复918后整个包SHA精确回到此前c7276deb…已登记用户包（48449597字节），
+保留其余5001条和此前337/4007/4082修改。回退ZIP已CRC/整包SHA核验、上传、独立get_file复核：
+https://drive.google.com/file/d/1G14eDPJMbGMtPYPnN8cs0MJ2iJ5t4gxq/view
+文件48294282字节，MD5 5791e84f8b92b6982e4e1c7623f74545，未改共享权限。
+所有FLS/ZIP/pyc仍仓库外/home/user/crash_1017，下载时落库内google_drive的ZIP已移出。
+报告docs/analysis/native_open_crash_20261017.md，证据同级evidence。
+仍未确诊原生加载崩溃根因，不把离线同源回读当引擎兼容；不再发猜测性修复候选。
+原始输入和密钥未改，未执行恢复模块，无Windows/游戏验收。HEAD旧版与工作树差异仍待恢复核对，
+未批量暂存/覆盖已有工作，未盲推。
+
+### 3.69 用户回退成功；授权直接构建字节码对照测试包（2026-10-17）
+
+用户明确“替换回去就能打开了”，回退恢复内置编辑器启动已实机确认，空列表未验收。
+随后用户要求“你直接改好一个我试试，是不是脚本编辑器的问题”，本轮按此授权构建新候选。
+外部临时文件恢复后缺失，已从Drive取回先前回退ZIP并核MD5及解压c727整包SHA。
+不重新编译/序列化模块、不调用FLS writer：在原生GetFileInfo的49字节窗口改成
+LOAD_FAST self / LOAD_ATTR GetTmpFileInfo / CALL_FUNCTION 0 / RETURN_VALUE，余39字节NOP。
+实际仅29字节变动；marshal总长22441不变，所有元数据/原始常量/行号表序列化布局不变；
+其余59个代码对象不变。新zlib流8436字节＋10字节零尾占满旧8446槽，解压逐字节回读一致。
+整个包长度48449597、头/目录/偏移/长度均不变；目标槽之外所有文件字节完全一致，5001条不变。
+输出FLS SHA256 4bf116d0a6e62848bc1724ddfc67877c5a9db95a52768e8fa1d6f6d520318678。
+16项native codec单测本轮通过，未执行恢复模块、无游戏实机结果；这是用户授权的对照候选，
+不是宣称已确诊或已修好脚本编辑器。若正常可缩小到重编译/序列化/写包链，不能单独定位某算法。
+源码/旧v1/v2仍暂停；本次只列本地interface文件，不合并包内开发清单。
+ZIP script_uieditor_direct_bytecode_test_20261017.zip 48295807字节，MD5
+1d5b430cf97b2e3b59eb211278b7f626；上传后独立get_file核对一致：
+https://drive.google.com/file/d/1q3OCueg5pt1gSNTfG2pOJOcNAXf0UI1U/view
+未改云盘权限。输入/输出FLS、ZIP、构建探针均在/home/user/uieditor_direct_test_20261017。
+repo仅小审计docs/analysis/evidence/native_open_crash_20261017/direct_bytecode_test_audit.json，
+未存原包/密钥/完整游戏包。HEAD旧版保留现有工作树，未盲目批量提交推送。
+
+
+### 3.70 用户实机确认原位补丁：有列表、加载成功（2026-10-17）
+
+用户原话“你的可以，有列表了，加载成功”。对应3.69直接字节码包
+1q3OCueg5pt1gSNTfG2pOJOcNAXf0UI1U，FLS SHA256
+4bf116d0a6e62848bc1724ddfc67877c5a9db95a52768e8fa1d6f6d520318678。
+内置编辑器可打开、显示本地列表、布局加载成功得到用户实测支持。
+同等本地扫描逻辑的全模块重编译版崩溃，而保留原marshal布局/函数长度/包结构的
+原位版成功，将排查主线收窄到重编译/序列化/写包转换链，而非再改用户文件目录。
+尚未单独定位具体错误算法；不把它写成所有脚本编辑器功能或任意扩容写包已通过。
+保留本地文件限定：本版不合并包内开发清单。旧v1/v2源码仍暂停使用，不建议
+将当前可用测试包通过编辑器再次编译覆盖；独立审计已追加用户验收范围。
+下一步独立对比失败重编译版与成功原位版，按复现补测试再改编辑器，
+不得只放宽固定长度保护或以同源codec回读代替原生兼容性验证。
+
+
+### 3.71 脚本编辑器dev7原生cipher修复并交付覆盖更新（2026-10-17）
+
+用户在确认原位包“有列表了，加载成功”后要求修编辑器。本轮已完成代码修复，
+不是继续让用户排查目录，也不再仅靠原位改字节绕过完整重编译。
+
+- 真因：旧catalog研究边界并非客户端真值。918正确4511/9012/13542/18070，
+  旧表第一/第四边界各提前3字节。旧读写共用错误参数，同源往返误报成功。
+  错位分别损伤嵌入路径和`m_dOrgWidgetInfo`，后者被旧v2恢复成`JxCOrgWidgetInfo`。
+- 实现native seed/递推边界，统一接入load_profile、路径索引、语料参数核验与写包。
+  539行不完整/非唯一键通过name-seed及目录hash双核对；两对五键碰撞不任选。
+  共享mxhash新增script_editor分发目标；原包/catalog及SHA未改。
+- 已验收原位包4bf116...自动关联。仅该完整SHA的entry918去掉确定的10零槽尾后
+  严格解压，其他未知尾部/拼接流/截断规则不放宽。实际从此包完成预编译/发布，
+  新输出ceeb3ddf...、48449552字节，仅918替换，其余5001不变。
+- 原包5002项全部严格解码及独立模块名侧客户端算法解密对照通过；真实2.5.6
+  编译628行v3验证源码，60个code中仅GetFileInfo语义不同，59个保持。
+  v3完整源码+diff另存native_uieditor_open_list_v3，旧v1/v2仍暂停，不自动改用户旧稿。
+- 本轮335测试：247通过、88明确跳过、0失败。GUI缺libGL、2.7未配置及外部语料
+  跳过不算通过；未宣称完整发行门禁通过。ruff/Windows兼容0错误0警告/vendor校验通过。
+- 云盘读取旧dev6完整ZIP失败，未重复相同请求。交付dev6覆盖式源码更新，保留已有
+  Windows编译器/引擎；不是完整重装包或EXE。旧EXE不会自动更新，应从原bat启动。
+  实际ZIP覆盖到HEAD旧源码后，隔离安装副本38项通过、零跳过，已验证所需新模块齐全。
+
+[下载dev7源码更新](https://drive.google.com/file/d/1_Ae-5qkZeWtCtGa_94mkIT5PV7KJxPVf/view)
+文件MXSJ_ScriptEditor_0.6.0.dev7_update_20261017.zip，88157字节，
+MD5 `2ca0feb66321a9a2e12547ea6f48bd7f`；上传后get_file重读匹配，位于既定
+script_editor目录，未修改分享权限/旧包。完整修改文件、diff、说明、核验摘要及
+未游戏验收v3参考源码随包；不含FLS/EXE/DLL，不要求替换当前已能运行的游戏包。
+
+报告：[native cipher修复](analysis/native_cipher_fix_20261017.md)；
+[测试/输入核验](analysis/evidence/native_cipher_fix_20261017/verification.json)、
+[交付回执](analysis/evidence/native_cipher_fix_20261017/delivery_receipt.json)、
+[从用户已验收包完整重编译审计](analysis/evidence/native_cipher_fix_20261017/accepted_workflow_audit.json)。
+
+**当前状态：编辑器核心修复、覆盖更新交付完成；修正版完整重编译输出仍未Windows/游戏验收。**
+用户验收过的仍是此前原位包，不能把那次成功写成本轮新包已通过。下一步接受dev7反馈；
+不要求重复证明旧原位包，不再发旧v1/v2，不替换用户个人修改或可用包。

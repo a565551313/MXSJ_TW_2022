@@ -14,6 +14,9 @@ from .recovery_dependencies import checked_recovery_source
 # Independent game/DLL materials are deliberately not part of a standalone tool.
 # Only these exact opt-in tests may be absent from a release build environment.
 OPTIONAL_MATERIAL_TESTS = {
+    "test_native_cipher.NativeCipherMaterialTests.test_binary_constants_and_character_back_edge_are_pinned",
+    "test_native_cipher.NativeCipherMaterialTests.test_all_5002_original_modules_decode_without_seam_guesses",
+    "test_native_cipher.NativeCipherMaterialTests.test_complete_recompile_matches_name_side_engine_decryption",
     "test_data_corpus.RealDataCorpusTests.test_every_real_data_entry_candidate_has_exact_strict_origin",
     "test_data_corpus.RealDataCorpusTests.test_real_data_corpus_probe_compile_publish_reopen_does_not_execute",
     "test_data_corpus.RealDataCorpusTests.test_real_uuid_negative_longs_remain_exact_not_replaced_or_nopped",
@@ -36,13 +39,19 @@ OPTIONAL_MATERIAL_TESTS = {
     "test_native_evidence.DispatchEvidence.test_current_dll_dispatch_without_executing_it",
     "test_native_legacy.RealMaterialBuild.test_actual_script_register_source",
     "test_native_legacy.RealMaterialBuild.test_actual_data_offline_probe",
-    "test_native_legacy.RealMaterialBuild.test_real_mainpage_337_rejected_without_opcode_repairs",
+    "test_native_legacy.RealMaterialBuild.test_real_mainpage_337_native_boundaries_remove_false_opcode_error",
     "test_workflow.RealRegistrationWorkflowTests.test_registration_source_prepare_publish_reopen_continue",
     "test_workflow.RealRegistrationWorkflowTests.test_real_data_offline_prepare_publish_reopen_continue",
 }
 
 
 REQUIRED_RELEASE_TESTS = {
+    "test_native_cipher.NativeCipherTests.test_only_exact_accepted_package_entry_has_known_ten_zero_slot_padding",
+    "test_native_cipher.NativeCipherTests.test_incomplete_research_keys_require_native_name_and_directory_hash",
+    "test_native_cipher.NativeCipherTests.test_name_and_key_golden_vectors",
+    "test_native_cipher.NativeCipherTests.test_all_states_are_bounded_but_keys_are_not_always_unique",
+    "test_native_cipher.NativeCipherTests.test_invalid_keys_size_and_import_name_are_rejected",
+    "test_native_cipher.NativeCipherTests.test_catalog_is_immutable_and_uncalibrated_profiles_cannot_write",
     "test_module_paths.ModulePathTests.test_all_paths_without_decompiler_and_bad_entries_are_independent",
     "test_module_paths.ModulePathTests.test_catalog_tamper_rejects_whole_index",
     "test_gui_module_paths.ModulePathGuiTests.test_open_shows_paths_before_any_double_click_no_binding_or_source",

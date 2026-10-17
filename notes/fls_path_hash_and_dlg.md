@@ -194,3 +194,36 @@ dump 指定条目」流程：探针 `interface_probe4.py`（仓库根目录，
 斜杠转义形，哈希后变成双斜杠而全部落空（探针 v6 的教训）。
 UI 编辑器挂载 interface.fls（+ item.fls）即可解析约 99.8% 的
 文件引用图片。
+
+
+## 7. 2026-10-17 更正：script.fls 仍用同一哈希，但键是模块名加 `.s`
+
+上文 §3/§6 所记“script 模块不走本哈希”是当时基于错误候选路径的暂定判断，现已推翻。
+不是 hash 算法不同，而是输入不是 `script/.../module.py`。
+
+本次从 `mxmain.dll` 的 `C_sys.PkgImport` 方法表定位到 VA `0x45D1D0`：
+`0x45D2A8` 引用格式 `%s.s`，`0x45D2C2` 传资源组 `script`，
+`0x45D2C8` 调用资源读取。读取失败跳到 `0x45D2D1`，并在 `0x45D2EF`
+调用普通 Python 导入入口 `0x4EE470`，并非无条件只准包内导入。
+Python 自带 __import__ 的 `0x52E5C5` 也调用同一入口。
+
+实查同一锁定包：可取出路径的 4,977 个基线转译候选里，4,951 个
+`mx_hash(路径末段去扩展名 + '.s') == entry_id`；26 个未匹配路径中有明显
+解码损坏，不把这些候选当准确原路径。不宣称 5,002 个都成功解析。
+
+| 原生键 | hash | entry |
+|---|---|---|
+| dgtuieditor.s | 0x2be981d6 | 918 |
+| explorer.s | 0x302dcfea | 993 |
+| os.s | 0x93d64cd6 | 2921 |
+| getinterfacefilelist.s | 0xc80fc677 | 3931 |
+| file_interface.s | 0x3caabef5 | 原包全部 5,002 条目录无此 ID |
+
+这一结论不依赖15个失败条目的代码解析；目录 ID 本身能完整读取。
+仍不能排除运行客户端的其他包、磁盘模块或 sys.modules 中另有提供者。
+
+证据见 `docs/analysis/evidence/native_open_list_20261017/` 中的
+`pkg_import.asm`、`builtin_import.asm`、`script_file_lookup.asm`、
+`import_key_checks.json`、`native_inputs.json`。
+普通 `.py` 回退加载受运行时 `sys.path` 约束；本次未读出用户运行时路径，
+不把默认 Python 搜索路径字串当成游戏实际路径，不擅自指定落盘目录。

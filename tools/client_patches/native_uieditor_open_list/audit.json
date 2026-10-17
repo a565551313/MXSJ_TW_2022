@@ -1,0 +1,48 @@
+{
+  "original_code_objects": 60,
+  "compile_passed": true,
+  "unchanged_fields_checked": [
+    "co_code",
+    "co_names",
+    "co_varnames",
+    "co_argcount",
+    "co_flags",
+    "co_stacksize",
+    "co_freevars",
+    "co_cellvars",
+    "typed literal constants and nested-code names"
+  ],
+  "unchanged_code_objects": 59,
+  "game_module_executed": false,
+  "excluded_metadata": [
+    "co_filename",
+    "co_firstlineno",
+    "co_lnotab"
+  ],
+  "changed_code_objects": [
+    [
+      "<module>/CUIEditorDgt/GetFileInfo",
+      [
+        "co_code",
+        "co_names",
+        "co_varnames",
+        "co_stacksize",
+        "co_consts (typed literals and nested-code names)"
+      ]
+    ]
+  ],
+  "compiler": "CPython 2.5.6",
+  "native_size": 22398,
+  "fixed_xor_size": 22441,
+  "padding_bytes": 43,
+  "modified_indexes": [
+    918
+  ],
+  "unchanged_entries": 5001,
+  "output_sha256": "46b70062bbf6f4d758889e7a8c0d87b97548bd036c9a72d1f137f9032770f3d3",
+  "source_sha256": "47bc6e80534c6de188622221e2b35d2aab44cb279b28bb081191d97c04352611",
+  "full_native_build_and_readback_passed": true,
+  "game_executed": false,
+  "behavior": "Local interface files only; no pre-generated archive listing.",
+  "deployment_status": "SUSPENDED: user reported native crash 0xC0000005 at 0x004EE054 after replacement; actual generated package not yet inspected"
+}

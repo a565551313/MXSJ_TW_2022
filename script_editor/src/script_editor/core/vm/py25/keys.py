@@ -1,23 +1,43 @@
 """Bind an external catalog to exact package and stored-entry digests.
 
-No directory discovery or boundary estimation. Catalog is factual decode data
-(not an account credential); callers supply both digest pins, including the
-bundled catalog selected by an exact original/registered-test-package SHA.
+No directory discovery or boundary estimation. Catalog keys are evidence,
+not cipher boundaries: calibrate using native arithmetic. Incomplete research
+rows additionally require a matching native name seed and directory hash.
+Callers still supply both digest pins for the exact package and catalog.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from ...archives.document import ArchiveDocument
 from ..compression import inflate
+from .cipher import bounds_from_keys, resolve_parameters, xor_segments
 
 
 def sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def inflate_script(archive: ArchiveDocument, index: int) -> bytes:
+    """Strict zlib, except the exact user-accepted fixed-slot probe's 10 zeros.
+
+    This is a whole-package SHA pin plus entry index, not a general permission
+    for trailing data. Every other package/entry retains strict EOF checking.
+    """
+    stored = archive.read_stored(index)
+    if (
+        archive.fingerprint()
+        == "4bf116d0a6e62848bc1724ddfc67877c5a9db95a52768e8fa1d6f6d520318678"
+        and index == 918
+    ):
+        if not stored.endswith(bytes(10)):
+            raise ValueError("accepted direct-package slot padding differs")
+        stored = stored[:-10]
+    return inflate(stored)
 
 
 @dataclass(frozen=True)
@@ -31,7 +51,25 @@ class KeyProfile:
     bounds: tuple[int, ...]
     expanded_size: int
 
-    def validate(self, archive: ArchiveDocument, index: int):
+    def calibrated(self, archive: ArchiveDocument):
+        # Never modify the pinned research catalog or trust parse-only seams.
+        self._validate_catalog(archive, self.index)
+        try:
+            calibrated = replace(
+                self, bounds=bounds_from_keys(self.keys, self.expanded_size)
+            )
+        except ValueError:
+            data = inflate_script(archive, self.index)
+            if len(data) != self.expanded_size:
+                raise ValueError("XOR profile expanded length mismatch") from None
+            keys, bounds = resolve_parameters(
+                data, self.keys, self.bounds, int(self.identity, 16)
+            )
+            calibrated = replace(self, keys=keys, bounds=bounds)
+        calibrated.validate(archive, self.index)
+        return calibrated
+
+    def _validate_catalog(self, archive: ArchiveDocument, index: int):
         if (
             archive.kind != "0slf"
             or index != self.index
@@ -50,16 +88,24 @@ class KeyProfile:
         ):
             raise ValueError("invalid five-segment XOR profile")
 
+    def validate(self, archive: ArchiveDocument, index: int):
+        self._validate_catalog(archive, index)
+        try:
+            expected = self.keys, bounds_from_keys(self.keys, self.expanded_size)
+        except ValueError:
+            data = inflate_script(archive, index)
+            if len(data) != self.expanded_size:
+                raise ValueError("XOR profile expanded length mismatch") from None
+            expected = resolve_parameters(
+                data, self.keys, self.bounds, int(self.identity, 16)
+            )
+        if (self.keys, self.bounds) != expected:
+            raise ValueError("XOR parameters differ from native cipher arithmetic")
+
     def crypt(self, data: bytes) -> bytes:
         if len(data) != self.expanded_size:
             raise ValueError("XOR payload length changed; boundary rescaling forbidden")
-        points = (0, *self.bounds, len(data))
-        return b"".join(
-            data[points[i] : points[i + 1]].translate(
-                bytes(n ^ self.keys[i] for n in range(256))
-            )
-            for i in range(5)
-        )
+        return xor_segments(data, self.keys, self.bounds)
 
 
 def read_catalog(path: Path) -> bytes:
@@ -100,7 +146,8 @@ def load_profile(
         catalog_sha256,
         tuple(info["keys"]),
         tuple(info["bounds"]),
-        len(inflate(stored)),
+        len(inflate_script(archive, index)),
     )
+    profile = profile.calibrated(archive)
     profile.validate(archive, index)
     return profile

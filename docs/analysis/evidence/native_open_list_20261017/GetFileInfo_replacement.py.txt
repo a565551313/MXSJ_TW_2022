@@ -1,0 +1,17 @@
+    def GetFileInfo(self):
+        dTmpFileInfo = self.GetTmpFileInfo()
+        dTmpFileInfo.setdefault('.', {
+            'sFileList': [],
+            'sDirList': []
+        })
+
+        try:
+            import file_interface
+            dFileInfo = file_interface.FILE_INFO
+        except (ImportError, AttributeError):
+            return dTmpFileInfo
+
+        if not isinstance(dFileInfo, dict):
+            return dTmpFileInfo
+
+        return self.CombineFileInfo(dFileInfo, dTmpFileInfo)

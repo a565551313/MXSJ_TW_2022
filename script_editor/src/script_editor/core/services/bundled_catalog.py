@@ -9,11 +9,15 @@ from pathlib import Path
 from ..project.storage import CatalogRef
 from ..vm.py25.keys import read_catalog
 
-# The original catalog is authorized for delivery. The EXACT derivative below
-# is the user's current test package, identified by their read-only diagnostic.
-# This association permits strict per-entry recovery attempts, NOT source trust
-# or proof that all entries use these boundaries. Unknown derivatives stay off.
+# Exact original/authorized derivative pins only. The 4bf1 package is the
+# direct-bytecode package the user confirmed opens/lists/loads on 2026-10-17.
+# Catalog associations authorize native parameter calibration, not source trust
+# or engine acceptance of future recompiled packages. Unknown packages stay off.
 BUNDLED_CATALOGS = {
+    "4bf116d0a6e62848bc1724ddfc67877c5a9db95a52768e8fa1d6f6d520318678": (
+        "script-original.json",
+        "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+    ),
     "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72": (
         "script-original.json",
         "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",

@@ -38,6 +38,7 @@ DESTINATIONS: dict[str, tuple[str, ...]] = {
     "mxhash.py": (
         "ui_editor/src/ui_editor/core/mxhash.py",
         "resource_editor/src/resource_editor/core/mxhash.py",
+        "script_editor/src/script_editor/core/mxhash.py",
     ),
     "native_layout.py": (
         "ui_editor/src/ui_editor/core/native_layout.py",
