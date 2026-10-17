@@ -52,7 +52,7 @@ class TestMainWindowFlow(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             target = str(Path(tmp) / "out.dlg")
-            with mock.patch("ui_editor.ui.main_window.SaveReviewDialog.exec",
+            with mock.patch("ui_editor.ui.workflows.SaveReviewDialog.exec",
                             return_value=1):
                 self.assertTrue(w.save_as(target))
             from ui_editor.core import dlg_codec
@@ -211,14 +211,14 @@ class TestMainPackMissingList(unittest.TestCase):
         import tempfile
 
         from ui_editor.core import assets as assets_module
-        from ui_editor.ui import main_window as main_module
+        from ui_editor.ui import workflows as workflow_module
         from ui_editor.ui.main_window import MainWindow
 
         window = MainWindow()
         small_catalog = ["dialog/cateroom.dlg", "dialog/gone.dlg"]
-        old_main = main_module.known_layout_paths
+        old_main = workflow_module.known_layout_paths
         old_assets = assets_module.known_layout_paths
-        main_module.known_layout_paths = lambda: list(small_catalog)
+        workflow_module.known_layout_paths = lambda: list(small_catalog)
         assets_module.known_layout_paths = lambda: list(small_catalog)
         try:
             with tempfile.TemporaryDirectory() as tmp:
@@ -231,7 +231,7 @@ class TestMainPackMissingList(unittest.TestCase):
                 self.assertEqual(root.childCount(), 2)  # 1 活 + 1 灰显
                 self.assertIn("包内缺失", root.text(0))
         finally:
-            main_module.known_layout_paths = old_main
+            workflow_module.known_layout_paths = old_main
             assets_module.known_layout_paths = old_assets
             if window.doc is not None:
                 window.doc.dirty = False

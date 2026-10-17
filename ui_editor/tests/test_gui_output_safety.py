@@ -72,7 +72,7 @@ class TestGuiOutputSafety(unittest.TestCase):
 
     def test_png_export_rejects_source_before_rendering(self):
         with mock.patch(
-            "ui_editor.ui.main_window.QFileDialog.getSaveFileName",
+            "ui_editor.ui.workflows.QFileDialog.getSaveFileName",
             return_value=(str(self.src), ""),
         ), mock.patch("ui_editor.ui.main_window.QMessageBox.warning"), \
                 mock.patch.object(self.window.view, "export_image") as render:

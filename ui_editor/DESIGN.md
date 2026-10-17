@@ -91,6 +91,8 @@ src/ui_editor/
 └── ui/                         # PySide6 界面
     ├── main_window.py          # 主窗口与工作流
     ├── commands.py             # 编辑命令 mixin（添加/粘贴/删除/锁定/右键）
+    ├── workflows.py            # 文件/资源包打开、导入、保存、导出 mixin
+    ├── window_setup.py         # 面板/菜单/工具栏/信号组装 mixin
     ├── canvas.py               # 画布场景/图元（选中/拖动/缩放）
     ├── property_panel.py       # 属性面板（按值类型生成编辑器）
     ├── panels.py               # 布局文件树 / 控件树 / 调色板

@@ -58,11 +58,11 @@ class TestGuiImport(unittest.TestCase):
         dialog.exec.return_value = QDialog.Accepted if accepted else QDialog.Rejected
         with (
             mock.patch(
-                "ui_editor.ui.main_window.QFileDialog.getOpenFileName",
+                "ui_editor.ui.workflows.QFileDialog.getOpenFileName",
                 return_value=(str(self.local), ""),
             ),
             mock.patch(
-                "ui_editor.ui.main_window.LayoutImportDialog", return_value=dialog
+                "ui_editor.ui.workflows.LayoutImportDialog", return_value=dialog
             ),
             mock.patch(
                 "ui_editor.ui.main_window.QMessageBox.question",
@@ -227,7 +227,7 @@ class TestGuiImport(unittest.TestCase):
         dialog = mock.Mock()
         dialog.exec.return_value = QDialog.Rejected
         with mock.patch(
-            "ui_editor.ui.main_window.SaveReviewDialog", return_value=dialog
+            "ui_editor.ui.workflows.SaveReviewDialog", return_value=dialog
         ) as review:
             self.assertFalse(
                 self.window._confirm_save_review(
