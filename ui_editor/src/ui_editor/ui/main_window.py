@@ -8,7 +8,6 @@
 
 from __future__ import annotations
 
-from bisect import bisect_left
 from pathlib import Path
 
 from PySide6.QtCore import QMimeData, QSettings, QSize, Qt
@@ -35,7 +34,7 @@ from PySide6.QtWidgets import (
 )
 
 from .. import __version__
-from ..core import dlg_codec, pack_build, snap
+from ..core import dlg_codec, pack_build, publish, snap
 from ..core.assets import AssetResolver
 from ..core.catalog import known_layout_paths
 from ..core.diagnostics import (
@@ -46,7 +45,6 @@ from ..core.diagnostics import (
 )
 from ..core.layout_import import prepare_layout_import, validate_layout_path
 from ..core.model import LayoutDocument, Widget
-from ..core.mxhash import path_hash
 from ..core.output_paths import guard_output
 from ..core.pack import FlsPack
 from ..core.painters import PaintContext
@@ -768,41 +766,23 @@ class MainWindow(QMainWindow):
                                         self.resolver.staged_images())
 
     def _confirm_save_review(self, target: str, *, to_pack: bool) -> bool:
+        """保存前清单：数据部分在 `core.publish.save_review_plan`，这里只弹窗。"""
         if self.doc is None:
             return False
         try:
             guard_output(target, self._pack_sources())
-            staged = self.resolver.staged_images()
-            extras = self._referenced_staged_images()
-            images: list[tuple[str, str, int]] = []
-            if to_pack:
-                with FlsPack(self.doc.source_pack[0]) as pack:
-                    for name, data in extras.items():
-                        kind = "替换图片" if pack.contains(name) else "新增图片"
-                        images.append((kind, name, len(data)))
-                images.extend(("未引用，跳过并保留待入包", name, len(data))
-                              for name, data in staged.items() if name not in extras)
-            else:
-                images.extend(("散装保存不嵌入，保留待入包", name, len(data))
-                              for name, data in staged.items())
-            issues = self._layout_diagnostics()
-            if to_pack:
-                for name in extras:
-                    try:
-                        name.encode("gbk")
-                    except UnicodeEncodeError:
-                        issues.append(Diagnostic(
-                            "错误", "ENCODING", None, "图片资源路径",
-                            f"待写入图片路径无法按 GBK 编码：{name!r}"))
-            notice = ""
-            if to_pack and self.doc.pending_pack_import:
-                with FlsPack(self.doc.source_pack[0]) as pack:
-                    kind = "替换" if pack.contains(self.doc.source_pack[1]) else "新增"
-                notice = (f"导入布局待入包：{kind} {self.doc.source_pack[1]}；"
-                          "不自动接脚本。新增布局明文存储，客户端加载待实机验证。")
-            dialog = SaveReviewDialog(target, self.doc.changes(), issues, images,
-                                      to_pack=to_pack, parent=self,
-                                      layout_notice=notice)
+            pack_path, res_path = (self.doc.source_pack
+                                   if self.doc.source_pack else (None, None))
+            plan = publish.save_review_plan(
+                target=target, to_pack=to_pack,
+                issues=self._layout_diagnostics(),
+                staged=self.resolver.staged_images(),
+                extras=self._referenced_staged_images(),
+                pack_path=pack_path, res_path=res_path,
+                pending_pack_import=self.doc.pending_pack_import)
+            dialog = SaveReviewDialog(target, self.doc.changes(), plan.issues,
+                                      plan.images, to_pack=to_pack,
+                                      parent=self, layout_notice=plan.notice)
             return dialog.exec() == QDialog.Accepted
         except (OSError, ValueError) as exc:
             QMessageBox.warning(self, "保存前检查失败", str(exc))
@@ -810,28 +790,34 @@ class MainWindow(QMainWindow):
 
 
     def _require_save_encoding(self, extras: dict[str, bytes]) -> None:
-        """程序化写回也不能绕过原生字段编码检查；codec 回退仍仅作兼容。"""
-        errors = [issue for issue in diagnose(self.doc) if issue.code == "ENCODING"]
-        for name in extras:
-            try:
-                name.encode("gbk")
-            except UnicodeEncodeError:
-                errors.append(Diagnostic("错误", "ENCODING", None, "图片资源路径",
-                                         f"图片资源路径无法按 GBK 编码：{name!r}"))
-        if errors:
-            raise ValueError("原生字段编码检查未通过："
-                             + "；".join(issue.message for issue in errors))
+        """写回前的编码闸门（实现见 `core.publish.require_save_encoding`）。"""
+        publish.require_save_encoding(self.doc, extras)
+
+    @staticmethod
+    def _fresh_pack_readback(pack_path, res_path: str, names):
+        """回读钩子：用**全新**解析器读目标布局与各新图（`core.publish` 注入用）。
+
+        故意不复用当前窗口的 resolver：新包是在别处写出来的，
+        用它自己的解析器回读才算独立验证。
+        """
+        fresh = AssetResolver()
+        fresh.mount_pack(str(pack_path))
+        try:
+            got = fresh.fetch_dlg(res_path)
+            dicts = None if got is None else got[0]
+            return dicts, {name: fresh.fetch_bytes(name) for name in names}
+        finally:
+            fresh.close()
 
     def write_pack_copy(self, out_path: str) -> dict | None:
         """把当前包内布局写回一个新包文件（原包不动）。返回校验报告。
 
         选图窗新加且被本布局引用到的图片随布局一并写入（按路径
-        新增或替换）。写后硬性校验：条目数 = 原数 + 新增图片数、
-        新增布局计入总数；新包目录按条目号升序且布局与新图都能被二分查找命中
-        （模拟引擎寻址）、条目集合与预期一致、除布局条目与这些
-        图片外每条（按条目号）存储字节一致、用全新解析器回读
-        目标布局与当前文档逐字段一致、新图逐字节回读一致；
-        任一不过返回 None 并说明（弹错在对话框层，这里只记报告）。
+        新增或替换）。写后硬性校验（条目数、目录升序、条目集合、
+        二分命中、未改条目保真、全新解析器回读）已抽到
+        :mod:`ui_editor.core.publish`——那是保存链最危险的一段，
+        现在能脱离窗口直接测（分析报告建议④）；任一不过填
+        ``report["error"]`` 并返回（弹错在对话框层）。
         """
         if self.doc is None or not self.doc.source_pack:
             return None
@@ -853,78 +839,12 @@ class MainWindow(QMainWindow):
                         "images_replaced": len(info["images_replaced"])}
         staged_all = set(self.resolver.staged_images())
         report["staged_unreferenced"] = sorted(staged_all - set(extras))
-        try:
-            from ..core.assets import AssetResolver as _Resolver
-
-            with FlsPack(src_pack) as before, FlsPack(tmp_out) as after:
-                expected = (before.count + len(info["images_added"])
-                            + int(info.get("layout_added", False)))
-                if after.count != expected:
-                    report["error"] = "条目数变化，写回结果不可信"
-                    return report
-                ids_after = after.entry_ids
-                if any(a > b for a, b in
-                       zip(ids_after, ids_after[1:], strict=False)):
-                    report["error"] = ("新包目录未按条目号升序，"
-                                        "引擎可能查不到条目")
-                    return report
-
-                def engine_finds(entry_id: int) -> bool:
-                    """模拟引擎按有序目录二分寻址：找得到才算写入成功。"""
-                    j = bisect_left(ids_after, entry_id)
-                    return j < len(ids_after) and ids_after[j] == entry_id
-
-                added_ids = {path_hash(n)
-                             for n in info["images_added"]}
-                if set(ids_after) != (set(before.entry_ids) | added_ids
-                                      | {path_hash(res_path)}):
-                    report["error"] = "新包条目集合与预期不符，写回结果不可信"
-                    return report
-                for name in [res_path, *extras]:
-                    if not engine_finds(path_hash(name)):
-                        report["error"] = f"新包中二分查找不到：{name}"
-                        return report
-                allowed = set(info["changed_ids"])
-                changed = 0
-                unexpected = 0
-                for entry_id in before.entry_ids:
-                    # core 已在发布前逐字节验证未改条目；此处只
-                    # 统计变化，不再把 span 相同当作保真证据。
-                    if (entry_id not in allowed
-                            and before.span_of(entry_id)
-                            == after.span_of(entry_id)):
-                        continue
-                    if before.read_id(entry_id) != after.read_id(entry_id):
-                        if entry_id in allowed:
-                            changed += 1
-                        else:
-                            unexpected += 1
-                if unexpected:
-                    report["error"] = f"有 {unexpected} 条条目被意外改变"
-                    return report
-                report["changed_entries"] = changed
-                report["entries_after"] = after.count
-            fresh = _Resolver()
-            fresh.mount_pack(tmp_out)
-            try:
-                got = fresh.fetch_dlg(res_path)
-                for name, data in extras.items():
-                    if fresh.fetch_bytes(name) != data:
-                        report["error"] = f"新图 {name} 回读不一致"
-                        return report
-            finally:
-                fresh.close()
-            if got is None:
-                report["error"] = "新包回读目标布局失败"
-                return report
-            dicts = self.doc.to_dicts()
-            if got[0] != dicts:
-                report["error"] = "新包回读内容与当前文档不一致"
-                return report
-        except Exception as exc:
-            report["error"] = f"写回校验失败：{exc}"
+        report.update(publish.verify_written_pack(
+            src_pack=src_pack, out_path=tmp_out, res_path=res_path,
+            extras=extras, expected_dicts=self.doc.to_dicts(), info=info,
+            read_back=self._fresh_pack_readback))
+        if not report.get("ok"):
             return report
-        report["ok"] = True
         # 状态迁移：已验证落盘，标记干净并让后续保存续写新包
         self.resolver.mount_pack(tmp_out, priority=True)
         self._remember_layout(res_path)

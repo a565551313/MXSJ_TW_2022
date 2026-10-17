@@ -80,6 +80,7 @@ src/ui_editor/
 │   ├── mxhash.py               # 引擎路径哈希 + 严格 path_hash（mx_common 副本）
 │   ├── sprite_format.py        # 精灵格式常量/alpha 折算（mx_common 副本）
 │   ├── pack.py                 # 0SLF 只读容器（惰性索引 + 按哈希查表）
+│   ├── publish.py              # 写回新包后的独立校验 + 保存前检查（零 Qt，可脱窗测）
 │   ├── sprite.py               # I0/T0/I1 精灵解码 → RGBA（无 Pillow）
 │   ├── dlg_codec.py            # .dlg 文本 ⇄ 字典列表（保型往返）
 │   ├── model.py                # 控件树模型 + 新建工厂
@@ -96,6 +97,11 @@ src/ui_editor/
 
 ## 关键约定
 
+* **写回校验与窗口解耦**：`core/publish.py` 承担「新包算不算写成功」的全部
+  判定（条目数/目录升序/集合/二分命中/未改条目保真/全新解析器回读）与保存前
+  检查（编码闸门、图片清单、待入包提示）；`main_window.write_pack_copy` 只做
+  编排与状态迁移，回读钩子由窗口注入（测试注入只读 FlsPack 版）。
+  反例逐条见 `tests/test_publish.py`（20 例，零 Qt）。
 * **保型往返是硬门槛**：2,706 个已解密 `.dlg` 全部须通过
   「解析 → 序列化 → 再解析」结构一致性测试（list/tuple/bool/
   float/中文字符串都不许丢型或丢字）。

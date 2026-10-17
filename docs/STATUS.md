@@ -58,7 +58,7 @@
 | 只读复核链（catalog / API / web） | H/I/J 已收尾 | 可运行，只读 | catalog 34/34；review_api 27/27；验收套件 68 通过 + 2 跳过（需 uvicorn 在 PATH 上）；网页未装 node_modules 未跑 |
 | 地图编辑器 | 一期 + PR #27 修复 + 10-14 补齐约定（`bootstrap.py`、`启动地图编辑器.bat`、`build_exe.bat`、ruff 0） | GIRB 300/429 扇区仍解不出（明确失败）；Windows EXE 未实机构建/冒烟 | **88/88** 通过（含 6 条 bootstrap 测试；GUI 冒烟在沙箱用 Qt offscreen + 桩 libGL 跑过）；ruff 0；wincompat 0/0 |
 | 资源编辑器 | **0.4.3**：任意布局原生导入/替换，保留0.4.2后台清单与打开提速 | 用户已确认600MB打开速度修复有效；按路径明文/旧密文布局自动编码，不执行源码，未改条目不迁移 | §3.55 轮：**126/126**（新增打包元数据一致性 2 项、路径编码 6 项；桩库离屏后 GUI 组全跑、零跳过）；无 Qt 环境时 118 通过+33 跳过。共享核心改为 `mx_common/` 真源 + 生成副本。含新路径保存/重开/修改/再保存、旧错误密钥迁移、中文GBK路径、撤销/高级raw拒绝发布；ruff 0、wincompat 0/0/0、bootstrap自检通过 |
-| UI 编辑器 | **0.8.3**：任意布局新增/再次保存统一原生路径密钥，保留0.8.2路径记忆 | 旧明文/错误key只读打开；明确保存当前布局才迁移，新包继续编辑；未改其它负载原样 | §3.55 轮：**215 项 = 214 通过 + 1 外部语料跳过**（新增打包元数据 2 项、路径编码 8 项、仓库内最小语料 1 项；桩库离屏真跑 GUI）；独立原生回读、连续编辑与错误输出拒绝；ruff 0、wincompat 0/0/0、bootstrap自检通过 |
+| UI 编辑器 | **0.8.3**：任意布局新增/再次保存统一原生路径密钥，保留0.8.2路径记忆 | 旧明文/错误key只读打开；明确保存当前布局才迁移，新包继续编辑；未改其它负载原样 | §3.56 轮：**235 项 = 234 通过 + 1 外部语料跳过**（新增 `core/publish.py` 直接测试 20 项：写回校验逐条反例 + 保存前检查；桩库离屏真跑 GUI）；独立原生回读、连续编辑与错误输出拒绝；ruff 0、wincompat 0/0/0、bootstrap自检通过 |
 | 游戏服务端（`mxsj_server`） | 契约 v0.1 + 设计文档 | **无运行代码**；账号/网关/数据库/地图/战斗均未开始 | 架构测试 150 跑，**1 FAIL + 1 ERROR**（见 §3.1） |
 | `mock_server.py` | 历史 Mock，协议号已按客户端修正 | 从未与真机联调；PR #25 顺带改的帧长度 3→2 未单独评审 | 未运行 |
 | 文档 | 10-14 整理：AGENTS.md / STATUS.md / 归档目录；README 已刷新；新增 `docs/PYTHON_TOOL_CONVENTIONS.md`（工具开发约定） | — | 仓库内相对链接全部可解析（脚本校验） |
@@ -1534,3 +1534,17 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 - **文档**：`AGENTS.md` §2 目录地图加 `mx_common/` 行；`docs/PYTHON_TOOL_CONVENTIONS.md` §1 新增第 7 条「多工具共用核心放 `mx_common/`，生成式副本分发」；两个编辑器 README/DESIGN 说明副本勿手改与语料新口径；`tools/devkit/README.md` 补 vendor_core 用法与用例数。
 - **本轮实测**（沙箱 PySide6 6.12.0 + gcc 空符号桩库离屏）：UI 编辑器 **215 = 214 通过 + 1 语料库跳过**（上一轮 206）；资源编辑器 **126/126**（上一轮 120）；devkit **44**（上一轮 30）；架构 161、catalog 34、review_api 27、map_editor 88 全 OK；手册六闸门 OK（106=93 通过+13 Qt 跳过，N1 32，恢复 27）；`ruff` 0（mx_common/devkit/ui/resource/map）；`check_windows_compat.py`（mx_common+devkit+ui+resource）ERROR 0 / WARNING 0；两个编辑器 `bootstrap.py --check-only` 退出码 0；端到端写包复跑（真实 `data/passive.fls`，+1 布局）：`mode=added`、41→42、目录升序、原条目全部可被 lower_bound 复刻定位。
 - **未验/未做**：Windows/EXE/真机、真实完整 `interface.fls`、游戏内加载与显示；`script_editor` 本轮**未纳入验证**（其 325 项里有 2 个 `xdis` 缺失错误 + 1 个 PySide6 版本钉 `6.10.3`≠沙箱 `6.12.0`，均为环境性、与本轮无关）；`tools/data-parser/extract_dlg.py` 与 `tools/data-parser/mx_path_hash.py` 仍各自独立（未并入 `mx_common/`）；`core/assets.py`、`core/painters.py` import Qt 与「core 零 Qt」约定的差异未处理（分析报告 P2-5）；`main_window.py` 拆分（建议④）未做。
+
+## 3.56 拆 main_window 第一段：写回校验抽到 core/publish.py（2026-10-16，会话分支 `arena/6256d39f-mxsj-tw-2022`）
+
+用户「④」执行分析报告建议④的第一段（报告原文：先给 `write_pack_copy` 抽 `core/publish.py`）。**只重构不扩功能**：写包行为、错误文案、报告字段与抽取前逐条一致；未动客户端原包/参数表，未合 master，未开 PR。
+
+- **抽出内容**（`ui_editor/src/ui_editor/core/publish.py`，241 行，零 Qt）：
+  - `engine_finds()` / `directory_is_sorted()`——模拟引擎二分寻址（`0x60E690` lower_bound + 相等判定）；
+  - `verify_structure()`——条目数 = 原数 + 新增图片 +（新增布局?1:0）、目录无逆序、条目集合一致、布局与每张新图二分命中、除 `changed_ids` 外条目字节未被改（逐条 `read_id` 比对）；
+  - `verify_readback()` / `verify_written_pack()`——回读钩子 :data:`ReadBack` 由调用方注入（GUI 注入全新 AssetResolver，测试注入只读 FlsPack + 原生密钥解码），所以本模块既不 import Qt 也不 import `core.assets`；
+  - 保存前检查：`save_encoding_issues()` / `require_save_encoding()`（编码闸门）、`save_review_plan()` + `SavePlan`（图片行「新增/替换/未引用」、待入包提示、编码问题合并）——原先混在窗口方法里。
+- **窗口侧**：`write_pack_copy` 只保留编排（取 extras、编码闸门、`patch_pack_copy`、报告元数据、状态迁移），校验改调 `publish.verify_written_pack`；`_confirm_save_review` 变成「算数据→弹窗」两段，数据来自 `save_review_plan`；新增 `_fresh_pack_readback` 静态方法作为注入钩子。`ui/main_window.py` 1,713 → 1,633 行（本段共减 80 行；报告④的其余部分——资源树/脚本面板/诊断——早已是独立模块，剩下的主要是菜单/信号/编辑命令的编排，未在本轮动）。
+- **新增测试**：`ui_editor/tests/test_publish.py` **20 例、零 Qt**（此前这段逻辑只能被 GUI 测试间接覆盖）：二分寻址单元；结构检查**逐条反例**（条目数不符、目录乱序、条目集合被换、未列条目被改字节、`layout_added` 计入总数）；回读反例（布局内容不符 / 回读缺失 / 新图不一致 / 回读抛异常被记成报告而非抛出）；真实 `data/passive.fls` 端到端（写出新包 → 零 Qt 回读钩子 → `ok=True`、条目 +2、`changed_entries=0`）；保存前检查（编码闸门拒绝不可 GBK 编码的图片名与布局字段、图片行标签、待入包提示新增/替换、散装保存不嵌入）。
+- **本轮实测**：UI 编辑器 **235 = 234 通过 + 1 外部语料跳过**（上一轮 215）；devkit 44；`ruff` 0；`check_windows_compat.py ui_editor` ERROR 0 / WARNING 0；端到端写包复跑（真实 `data/passive.fls`，+1 布局）：`mode=added`、41→42、目录升序、原条目全部可被 lower_bound 复刻定位。资源编辑器/其它组件本轮未改。
+- **未做/未验**：报告④的其余拆分（资源树面板、脚本面板、诊断面板的进一步解耦；编辑命令与剪贴板逻辑）未动；Windows/EXE/真机与完整语料仍未验。
