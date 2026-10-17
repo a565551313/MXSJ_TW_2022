@@ -32,11 +32,15 @@ from pathlib import Path
 
 from .diagnostics import Diagnostic, diagnose
 from .mxhash import path_hash
+from .native_layout import HEADER, decode_native, encode_layout, plain_if_layout
 from .pack import FlsPack
 
 __all__ = [
     "ReadBack",
     "SavePlan",
+    "TargetWrite",
+    "classify_target_path",
+    "classify_target_write",
     "directory_is_sorted",
     "engine_finds",
     "require_save_encoding",
@@ -199,6 +203,7 @@ class SavePlan:
     images: list[tuple[str, str, int]] = field(default_factory=list)
     issues: list[Diagnostic] = field(default_factory=list)
     notice: str = ""
+    target_write: TargetWrite | None = None
 
 
 def save_review_plan(
@@ -211,19 +216,26 @@ def save_review_plan(
     pack_path=None,
     res_path: str | None = None,
     pending_pack_import: bool = False,
+    new_plain: bytes | None = None,
 ) -> SavePlan:
     """保存前改动清单里除「布局改动」之外的那几行（图片/编码/待入包提示）。
 
     ``pack_path`` 给出时用 :class:`FlsPack` 判断每张待写入图片是**新增**还是
-    **替换**（与原实现一致：只按路径哈希判定，不读负载）。
+    **替换**（与原实现一致：只按路径哈希判定，不读负载）；同时用
+    :func:`classify_target_write` 说明**目标条目本身**会被怎么写
+    （新增 / 旧存储迁移 / 版式重写 / 字节不变），这是分析报告 P2-1 的落地。
     """
     issues = list(issues)
     if to_pack:
         issues.extend(_extra_encoding_issues(extras))
     images: list[tuple[str, str, int]] = []
     notice = ""
+    target_write: TargetWrite | None = None
     if to_pack and pack_path is not None:
         with FlsPack(pack_path) as pack:
+            if res_path and new_plain is not None:
+                target_write = classify_target_write(
+                    pack.read_named(res_path), path_hash(res_path), new_plain)
             for name, data in extras.items():
                 kind = "替换图片" if pack.contains(name) else "新增图片"
                 images.append((kind, name, len(data)))
@@ -237,5 +249,101 @@ def save_review_plan(
     else:
         images.extend(("散装保存不嵌入，保留待入包", name, len(data))
                       for name, data in staged.items())
+    if target_write is not None:
+        notice = (target_write.summary
+                  + (("\n" + notice) if notice else ""))
     return SavePlan(target=target, to_pack=to_pack, images=images,
-                    issues=issues, notice=notice)
+                    issues=issues, notice=notice, target_write=target_write)
+
+
+# -- 目标条目会被怎么写（分析报告 P2-1）---------------------------------
+
+
+@dataclass(frozen=True)
+class TargetWrite:
+    """写回时目标条目会发生什么：存储层与版式层分开说清楚。
+
+    `storage`：``absent``（源包没有，属新增）/ ``native``（原生路径密钥）/
+    ``legacy``（旧密钥）/ ``plaintext``（明文）/ ``unreadable``（既不是原生
+    密钥也不是可识别布局——写回会拒绝替换）。
+    `layout_rewritten`：原明文与编辑器即将写入的明文不同（**哪怕用户没改
+    任何属性**，序列化也会归一化字段顺序与写法，见分析报告 P2-1：
+    8 个真实 .dlg 里只有 1 个逐字节往返一致）。
+    `migrated`：旧存储（明文/旧密钥）本次改为原生路径密钥。
+    `byte_identical`：只有原生密钥且明文相同时才有意义（XOR 同密钥同明文
+    ⇒ 存储字节不变）。
+    """
+
+    storage: str
+    layout_rewritten: bool
+    migrated: bool
+    byte_identical: bool | None
+    summary: str
+
+
+def _classify_summary(storage: str, rewritten: bool, migrated: bool,
+                      byte_identical: bool | None) -> str:
+    if storage == "absent":
+        return "目标条目：源包里没有 → 本次新增（原生路径密钥）。"
+    if storage == "unreadable":
+        return ("目标条目：现有字节既不是原生密钥、也不是可识别布局；"
+                "写回会拒绝替换（不是 .dlg 条目）。")
+    if storage == "native":
+        if rewritten:
+            return ("目标条目：原生密钥写入；「版式按编辑器序列化重写」"
+                    "（原明文与新明文不同）→ 该条目字节会变。")
+        if byte_identical:
+            return "目标条目：原生密钥，明文未变 → 该条目字节不变。"
+        return "目标条目：原生密钥，明文未变，但重新编码后存储字节不同。"
+    label = "明文存储" if storage == "plaintext" else "旧密钥存储"
+    if rewritten:
+        return (f"目标条目：{label} → 本次迁移为原生路径密钥，"
+                "而且「版式按编辑器序列化重写」 → 该条目字节会变。")
+    return (f"目标条目：{label} → 本次迁移为原生路径密钥"
+            "（明文内容未变，仅存储层迁移）。")
+
+
+def classify_target_write(stored: bytes | None, entry_id: int,
+                          new_plain: bytes) -> TargetWrite:
+    """判断写回时目标条目是新增/迁移/版式重写/拒绝（不抛异常）。"""
+    if stored is None:
+        return TargetWrite("absent", False, False, None,
+                           _classify_summary("absent", False, False, None))
+    plain0: bytes | None = None
+    storage = "unreadable"
+    try:
+        plain0 = decode_native(stored, entry_id)
+        storage = "native"
+    except ValueError:
+        try:
+            plain0 = plain_if_layout(stored)
+        except ValueError:
+            plain0 = None
+        if plain0 is not None:
+            storage = "plaintext" if stored.startswith(HEADER) else "legacy"
+    if storage == "unreadable":
+        return TargetWrite(storage, False, False, None,
+                           _classify_summary(storage, False, False, None))
+    rewritten = plain0 != new_plain
+    migrated = storage in ("plaintext", "legacy")
+    identical: bool | None = None
+    if storage == "native" and not rewritten:
+        try:
+            identical = encode_layout(new_plain, entry_id) == stored
+        except ValueError:
+            identical = None
+    return TargetWrite(storage, rewritten, migrated, identical,
+                       _classify_summary(storage, rewritten, migrated,
+                                         identical))
+
+
+def classify_target_path(pack_path, res_path: str,
+                         new_plain: bytes) -> TargetWrite:
+    """从源包读出目标条目再分类；读不到（或读失败）按 ``absent`` 处理。"""
+    stored: bytes | None = None
+    try:
+        with FlsPack(pack_path) as pack:
+            stored = pack.read_named(res_path)
+    except Exception:
+        stored = None
+    return classify_target_write(stored, path_hash(res_path), new_plain)

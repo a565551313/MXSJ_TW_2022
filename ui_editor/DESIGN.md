@@ -92,11 +92,16 @@ src/ui_editor/
     ├── main_window.py          # 主窗口与工作流
     ├── canvas.py               # 画布场景/图元（选中/拖动/缩放）
     ├── property_panel.py       # 属性面板（按值类型生成编辑器）
-    └── panels.py               # 布局文件树 / 控件树 / 调色板
+    ├── panels.py               # 布局文件树 / 控件树 / 调色板
+    └── paint_samples.py        # 38 类控件绘制样例 + 对照清单生成（tools/ 的 CLI 用）
 ```
 
 ## 关键约定
 
+* **绘制只做「材料可复现」，判定交给人**：`ui/paint_samples.py` 渲染样例与
+  清单，`tools/render_paint_samples.py` / `tools/paint_compare.py` 提供 CLI，
+  结论写进 `docs/PAINT_CHECKLIST.md`（未核对留空，机检见
+  `tests/test_paint_samples.py`）。
 * **写回校验与窗口解耦**：`core/publish.py` 承担「新包算不算写成功」的全部
   判定（条目数/目录升序/集合/二分命中/未改条目保真/全新解析器回读）与保存前
   检查（编码闸门、图片清单、待入包提示）；`main_window.write_pack_copy` 只做

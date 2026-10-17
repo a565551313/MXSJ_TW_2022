@@ -779,7 +779,8 @@ class MainWindow(QMainWindow):
                 staged=self.resolver.staged_images(),
                 extras=self._referenced_staged_images(),
                 pack_path=pack_path, res_path=res_path,
-                pending_pack_import=self.doc.pending_pack_import)
+                pending_pack_import=self.doc.pending_pack_import,
+                new_plain=dlg_codec.dump_bytes(self.doc.to_dicts()))
             dialog = SaveReviewDialog(target, self.doc.changes(), plan.issues,
                                       plan.images, to_pack=to_pack,
                                       parent=self, layout_notice=plan.notice)
@@ -839,6 +840,9 @@ class MainWindow(QMainWindow):
                         "images_replaced": len(info["images_replaced"])}
         staged_all = set(self.resolver.staged_images())
         report["staged_unreferenced"] = sorted(staged_all - set(extras))
+        target_write = publish.classify_target_path(src_pack, res_path, plain)
+        report["target_write"] = target_write.summary
+        report["target_write_kind"] = target_write.storage
         report.update(publish.verify_written_pack(
             src_pack=src_pack, out_path=tmp_out, res_path=res_path,
             extras=extras, expected_dicts=self.doc.to_dicts(), info=info,
@@ -921,7 +925,8 @@ class MainWindow(QMainWindow):
             f"条目校验通过（改变 {report.get('changed_entries', 0)} 条，"
             f"大小 {report['bytes']} 字节"
             + ("，快速补丁未重写整包" if fast else "") + "）。"
-            + "\n布局已按原生路径密钥写入并回读验证。"
+            + "\n布局已按原生路径密钥写入并回读验证。\n"
+            + str(report.get("target_write", ""))
             + images_note + entries_note + unused_note + "\n\n" + tail)
 
     def save_as(self, path: str | None = None) -> bool:

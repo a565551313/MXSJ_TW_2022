@@ -20,6 +20,7 @@ from ui_editor.core.mxhash import path_hash  # noqa: E402
 from ui_editor.core.native_layout import (  # noqa: E402
     HEADER,
     decode_native,
+    encode_layout,
     plain_if_layout,
 )
 from ui_editor.core.pack import FlsPack  # noqa: E402
@@ -250,6 +251,28 @@ class RealPackEndToEndTests(unittest.TestCase):
             # 新增布局 + 新增图片：原有条目一条都没被重写
             # （changed_entries 只统计**原本就在包里**、且字节确实变了的条目）
             self.assertEqual(report["changed_entries"], 0)
+            self.assertEqual(
+                publish.classify_target_path(
+                    REAL_PACK, res_path, plain).storage, "absent")
+            # 对「编辑器自己写出的原生条目」再分类：明文一致 → 字节不变
+            again = publish.classify_target_path(out, res_path, plain)
+            self.assertEqual(again.storage, "native")
+            self.assertFalse(again.layout_rewritten)
+            self.assertTrue(again.byte_identical)
+            # 复现 P2-1 的反面：无改动再保存一次，目标条目字节逐字节不变
+            out2 = Path(tmp) / "out2.fls"
+            pack_build.patch_pack_copy(out, res_path, plain, out2,
+                                       extra_entries={IMAGE_PATH: IMAGE_BYTES})
+            with FlsPack(out) as first, FlsPack(out2) as second:
+                self.assertEqual(first.read_named(res_path),
+                                 second.read_named(res_path))
+            # 改一个字段 → 明确报「版式重写」
+            dicts, _ = dlg_codec.parse_bytes(plain)
+            dicts[0]["iWidth"] = dicts[0]["iWidth"] + 1
+            edited = dlg_codec.dump_bytes(dicts)
+            self.assertTrue(
+                publish.classify_target_path(
+                    out, res_path, edited).layout_rewritten)
 
 
 class SaveEncodingTests(unittest.TestCase):
@@ -332,6 +355,115 @@ class SaveReviewPlanTests(unittest.TestCase):
         self.assertEqual(len(self.plan(extras=bad, staged=bad).issues), 1)
         self.assertEqual(
             len(self.plan(to_pack=False, extras=bad, staged=bad).issues), 0)
+
+
+def legacy_cipher(plain: bytes, key: bytes = b"\x11\x22\x33\x44") -> bytes:
+    """旧版编辑器写出的 4 字节循环 XOR 密文（0.5.2 之前那条路）。
+
+    读取兼容侧从密文头 4 字节反推密钥（假定明文以 ``# -*-`` 开头），
+    所以任取非零 key 都能被 :func:`plain_if_layout` 认出来；key 全零
+    时密文等于明文，按明文归类（两种写法本来就分不开）。
+    """
+    repeated = (key * (len(plain) // 4 + 1))[:len(plain)]
+    return bytes(a ^ b for a, b in zip(plain, repeated, strict=True))
+
+
+class TargetWriteTests(unittest.TestCase):
+    """目标条目会被怎么写（分析报告 P2-1 的落地，零 Qt）。"""
+
+    ENTRY_ID = LAYOUT_ID
+    PLAIN = HEADER + b'\n# MD5: 0\n\nUI_INFO = [\n\t{\n\t\t"sWidgetType"' \
+        b': "CMainFrame",\n\t\t"sName": "tw",\n\t},\n]\n'
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+
+    def pack_with(self, stored: bytes | None) -> Path:
+        path = self.root / "pack.fls"
+        entries = [] if stored is None else [entry(self.ENTRY_ID, stored)]
+        entries.append(entry(OTHER_ID, b"\x89PNG not a layout"))
+        write_pack(path, entries)
+        return path
+
+    def classify(self, stored: bytes | None, plain: bytes | None = None):
+        return publish.classify_target_write(
+            stored, self.ENTRY_ID, self.PLAIN if plain is None else plain)
+
+    def test_absent_entry_is_a_new_layout(self):
+        result = self.classify(None)
+        self.assertEqual(result.storage, "absent")
+        self.assertFalse(result.layout_rewritten)
+        self.assertIn("新增", result.summary)
+
+    def test_native_same_plain_keeps_entry_bytes(self):
+        stored = encode_layout(self.PLAIN, self.ENTRY_ID)
+        result = self.classify(stored)
+        self.assertEqual(result.storage, "native")
+        self.assertFalse(result.layout_rewritten)
+        self.assertFalse(result.migrated)
+        self.assertTrue(result.byte_identical)
+        self.assertIn("字节不变", result.summary)
+
+    def test_native_different_plain_is_a_layout_rewrite(self):
+        stored = encode_layout(legacy_style_plain(), self.ENTRY_ID)
+        result = self.classify(stored)          # 新明文是编辑器序列化结果
+        self.assertEqual(result.storage, "native")
+        self.assertTrue(result.layout_rewritten)
+        self.assertIn("版式按编辑器序列化重写", result.summary)
+
+    def test_plaintext_storage_migrates_without_rewrite(self):
+        result = self.classify(self.PLAIN)
+        self.assertEqual(result.storage, "plaintext")
+        self.assertEqual((result.migrated, result.layout_rewritten), (True, False))
+        self.assertIn("迁移为原生路径密钥", result.summary)
+
+    def test_legacy_key_storage_migrates_and_may_rewrite(self):
+        stored = legacy_cipher(self.PLAIN)
+        self.assertEqual(plain_if_layout(stored), self.PLAIN)  # 读取兼容认得
+        result = self.classify(stored)
+        self.assertEqual(result.storage, "legacy")
+        self.assertTrue(result.migrated)
+        self.assertFalse(result.layout_rewritten)
+        self.assertIn("旧密钥存储", result.summary)
+
+    def test_unreadable_storage_is_reported_not_guessed(self):
+        result = self.classify(b"\x89PNG\r\n\x1a\n" + b"x" * 40)
+        self.assertEqual(result.storage, "unreadable")
+        self.assertIn("拒绝替换", result.summary)
+
+    def test_classify_target_path_reads_the_source_pack(self):
+        stored = encode_layout(self.PLAIN, self.ENTRY_ID)
+        pack = self.pack_with(stored)
+        result = publish.classify_target_path(pack, RES_PATH, self.PLAIN)
+        self.assertEqual(result.storage, "native")
+        self.assertTrue(result.byte_identical)
+        # 路径不在包里 → 新增；图片条目 → 不可识别（写回会拒绝）
+        self.assertEqual(
+            publish.classify_target_path(pack, "ui/missing.dlg",
+                                         self.PLAIN).storage, "absent")
+        self.assertEqual(
+            publish.classify_target_path(pack, "dialog4/other.png",
+                                         self.PLAIN).storage, "unreadable")
+
+    def test_plan_carries_target_summary_first(self):
+        stored = encode_layout(legacy_style_plain(), self.ENTRY_ID)
+        pack = self.pack_with(stored)
+        plan = publish.save_review_plan(
+            target="out.fls", to_pack=True, issues=[],
+            staged={}, extras={}, pack_path=pack, res_path=RES_PATH,
+            new_plain=self.PLAIN)
+        self.assertIsNotNone(plan.target_write)
+        self.assertEqual(plan.target_write.storage, "native")
+        self.assertTrue(plan.notice.startswith("目标条目："))
+
+
+def legacy_style_plain() -> bytes:
+    """一份「非编辑器版式」的等价布局：字段顺序与写法都不同，结构一致。"""
+    return (HEADER + b"\n# MD5: 0123456789abcdef\n\nUI_INFO = [\n"
+            b'    {\n        "sName": "tw",\n'
+            b'        "sWidgetType": "CMainFrame",\n    },\n]\n')
 
 
 if __name__ == "__main__":

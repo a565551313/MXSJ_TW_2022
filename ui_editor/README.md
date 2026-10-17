@@ -141,6 +141,14 @@
   仓库 `mx_common/`（唯一真源），本包 `core/` 下同名文件是
   `tools/devkit/vendor_core.py` 生成的字节副本，**不要手改**；改真源后跑
   `python3 tools/devkit/vendor_core.py --write`，`--check` 应当 0 报告。
+* **写回时目标条目自身的字节会变**：编辑器按自己的序列化版式重写
+  （字段顺序与写法归一化——实测 8 个真实 `.dlg` 里只有 1 个「解析→
+  序列化」逐字节相同，见 `docs/analysis/ui_editor_analysis_20261016.md`
+  P2-1）；旧明文/旧密钥存储在保存时同时迁移为原生路径密钥。所以
+  「未改条目逐字节保护」**不覆盖目标条目**：除目标条目、本次写入的
+  图片与明确迁移的旧存储外，其它条目逐字节不动。保存清单首行会写明
+  本条目属于哪一种（新增 / 旧存储迁移 / 版式按编辑器序列化重写 /
+  字节不变），保存成功弹窗同样带这句。
 * 尺寸：`iWidth/iHeight` 为正用之，为 0 取图片首帧尺寸
   （`CImagesFrame` 按行列推算）；坐标相对父控件。
 * 绘制是编辑用近似渲染：图片画首帧、文字按钮按 `ui.lst`
@@ -148,6 +156,29 @@
   `CPngNineFrame` 的**固定三分**近似（边角不拉伸、边与中心拉伸，
   切割线不可配、未与游戏切法比对）；M3.3 的切割线编辑与数据摸底
   仍未做，`notes/ui_editor_phase2_design.md` §2.3 的范围不变。
+
+## 绘制对照清单（编辑器 vs 真机）
+
+绘制是最像游戏、也最容易「看起来对」的一层：单测只能证明不崩、尺寸对，
+**证明不了外观一致**。所以这里不改判定方式，只把材料准备好：
+
+```bash
+# 1. 渲染 38 类控件样例（写到仓库外；--image/--assets-dir 可指向真实客户端资源）
+python3 ui_editor/tools/render_paint_samples.py --out /tmp/paint_samples \
+        --pack <interface.fls> --image "combdialog4\\...\\底板800.png"
+# 2. 真机截图后比对（给统计，不给结论）
+python3 ui_editor/tools/paint_compare.py \
+        --editor /tmp/paint_samples/CButton.png --game shot.png --out /tmp/paint_cmp
+```
+
+* 输出：每个类型一张 PNG、`contact_sheet.png` 联络表、`manifest.json`（尺寸 +
+  SHA256 + 该类型走哪个绘制函数 + 是否命中真实资源）；
+* 结论填进 [`docs/PAINT_CHECKLIST.md`](docs/PAINT_CHECKLIST.md)：**没做过真机
+  核对的格子必须留空**，不许预填「一致」（`tests/test_paint_samples.py` 会
+  机检这条规矩、清单与代码的类型/函数一致性、以及 38 类全部渲染不崩）。
+* 仓库内**没有**界面图资源（`interface.fls` 未入库），所以不给
+  `--image/--assets-dir` 时样例走「缺资源占位框」分支——这本身就是要核对的
+  一列；给了真实资源才会走图片/精灵解码。
 
 ## 测试
 
