@@ -2,8 +2,10 @@
 
 ## 0.8.3 原生布局写入与连续编辑
 
-core/native_layout.py 是零Qt、自包含原生路径密钥/字面量/XOR模块，与资源工具
-同一实现（各自包内一份，交付不依赖仓库兄弟目录）。新增、原位/迁移替换、重组
+core/native_layout.py 是零Qt、自包含原生路径密钥/字面量/XOR模块；它与
+core/mxhash.py、core/output_paths.py、core/sprite_format.py 一样，都是仓库
+mx_common/ 真源的**字节副本**（tools/devkit/vendor_core.py 生成，勿手改），
+交付不依赖仓库兄弟目录，改逻辑改真源后 `--write` 分发、`--check` 校验。新增、原位/迁移替换、重组
 回退统一使用路径派生密钥；旧密文头反推只保留读取兼容。_verify_copy 严格按
 目标路径密钥回读新布局，与当前序列化明文逐字比对，错误输出不得发布。
 来源：notes/native_dlg_path_cipher.md 的实际LoadFile方法表及静态调用链。
@@ -75,7 +77,8 @@ src/ui_editor/
 ├── app.py / __main__.py        # 入口
 ├── core/                       # 零 Qt 依赖部分可无头测试
 │   ├── errors.py               # 统一异常
-│   ├── mxhash.py               # 引擎路径哈希（与 tools 复刻同源）
+│   ├── mxhash.py               # 引擎路径哈希 + 严格 path_hash（mx_common 副本）
+│   ├── sprite_format.py        # 精灵格式常量/alpha 折算（mx_common 副本）
 │   ├── pack.py                 # 0SLF 只读容器（惰性索引 + 按哈希查表）
 │   ├── sprite.py               # I0/T0/I1 精灵解码 → RGBA（无 Pillow）
 │   ├── dlg_codec.py            # .dlg 文本 ⇄ 字典列表（保型往返）

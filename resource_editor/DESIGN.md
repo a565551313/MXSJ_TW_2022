@@ -2,7 +2,9 @@
 
 ## 0.4.3 原生布局导入与验证
 
-core/native_layout.py 与UI编辑器相同的自包含字面量/XOR/路径密钥实现。
+core/native_layout.py 与核心共用模块（mxhash/native_layout/output_paths/
+sprite_format）都来自仓库 mx_common/ 真源，由 tools/devkit/vendor_core.py
+复制成包内副本（字节相同、勿手改），交付不依赖仓库兄弟目录。
 add_entry_for_path/replace_for_path 对 .dlg 强制结构与原生编码；内容替换按
 新/旧布局头识别，旧头探测仅读前缀，不因普通图片替换读取整个旧负载。
 保存只对改动布局严格按entry_id派生密钥回读，并比对预期原文字节；原始高级API

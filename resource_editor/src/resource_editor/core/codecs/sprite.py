@@ -13,6 +13,11 @@
 * 逐行生成 token（计数上限 LIT/REP/SKIP 63、RUN 31，自动切分），
   每帧尾部补齐 4 字节对齐（计入末行行长）。
 * I0/T0 行长为 u8：任一行超过 255 字节抛 :class:`EncodeError`。
+
+魔数表与 alpha 折算来自共享真源 ``core/sprite_format``（副本由
+``tools/devkit/vendor_core.py`` 生成）；本模块是「Pillow 落点」，
+与 UI 编辑器的 RGBA 落点由 ``tools/devkit/tests/test_sprite_parity.py``
+交叉验证。
 """
 from __future__ import annotations
 
@@ -22,28 +27,19 @@ from dataclasses import dataclass, field
 from PIL import Image
 
 from ..errors import CodecError, EncodeError
+from ..sprite_format import (
+    DIRECT_MAGICS,
+    MAGICS,
+    OPAQUE,
+    alpha_to_level,
+    is_sprite,
+    level_to_alpha,
+)
 
-SPRITE_MAGICS = (b"I0", b"T0", b"I1", b"T4", b"T5")
-# 真彩变体：无调色板，token 后跟 3 字节 RGB 像素
-DIRECT_MAGICS = (b"T4", b"T5")
-OPAQUE = 255
-
-
-def is_sprite(data: bytes) -> bool:
-    return len(data) >= 26 and data[:2] in SPRITE_MAGICS
-
-
-def _level_to_alpha(level: int) -> int:
-    return level * 255 // 31
-
-
-def _alpha_to_level(alpha: int) -> int:
-    """8 位 alpha 折回 0-31 级；255 视为不透明（返回 OPAQUE 标记）。"""
-    if alpha >= OPAQUE:
-        return OPAQUE
-    if alpha <= 0:
-        return 0
-    return max(1, min(30, round(alpha * 31 / 255)))
+# 兼容旧引用（``codecs/detect.py`` 用 SPRITE_MAGICS，模块内仍叫旧名）
+SPRITE_MAGICS = MAGICS
+_level_to_alpha = level_to_alpha
+_alpha_to_level = alpha_to_level
 
 
 @dataclass

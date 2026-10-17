@@ -131,10 +131,16 @@
 
 ## 格式与保真约定
 
-* 硬门槛：2,706 个已解密 `.dlg` 全部通过「解析 → 序列化 →
-  再解析」结构一致性测试（`tests/test_codec.py`，需语料库在
-  `/home/user/interface_dlg_decoded` 或环境变量
-  `MXSJ_DLG_CORPUS` 指向的目录）。
+* 语料测试分两层（`tests/test_codec.py`）：**仓库内自带的最小语料恒跑**
+  ——`tools/registration/` 的 7 个真实布局 + 本包夹具，走「解析 → 序列化 →
+  再解析」结构一致性；**外部大语料**只在给了 `MXSJ_DLG_CORPUS`（目录，
+  支持多个用 `:` 分隔）时跑，结果**按实际数量上报**，不再硬编码开发沙箱
+  路径、也不再把「语料少于 2,000 篇」直接判失败（那会让一条测试连
+  手里的 7 篇都不跑，见 `docs/analysis/ui_editor_analysis_20261016.md` P1-4）。
+* 共享核心：路径哈希、`.dlg` 原生存储、输出路径保护、精灵格式常量都在
+  仓库 `mx_common/`（唯一真源），本包 `core/` 下同名文件是
+  `tools/devkit/vendor_core.py` 生成的字节副本，**不要手改**；改真源后跑
+  `python3 tools/devkit/vendor_core.py --write`，`--check` 应当 0 报告。
 * 尺寸：`iWidth/iHeight` 为正用之，为 0 取图片首帧尺寸
   （`CImagesFrame` 按行列推算）；坐标相对父控件。
 * 绘制是编辑用近似渲染：图片画首帧、文字按钮按 `ui.lst`

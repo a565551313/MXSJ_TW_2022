@@ -46,7 +46,7 @@ from ..core.diagnostics import (
 )
 from ..core.layout_import import prepare_layout_import, validate_layout_path
 from ..core.model import LayoutDocument, Widget
-from ..core.mxhash import mx_hash
+from ..core.mxhash import path_hash
 from ..core.output_paths import guard_output
 from ..core.pack import FlsPack
 from ..core.painters import PaintContext
@@ -874,15 +874,14 @@ class MainWindow(QMainWindow):
                     j = bisect_left(ids_after, entry_id)
                     return j < len(ids_after) and ids_after[j] == entry_id
 
-                added_ids = {mx_hash(n.encode("gbk", "replace"))
+                added_ids = {path_hash(n)
                              for n in info["images_added"]}
                 if set(ids_after) != (set(before.entry_ids) | added_ids
-                                      | {mx_hash(res_path.encode("gbk"))}):
+                                      | {path_hash(res_path)}):
                     report["error"] = "新包条目集合与预期不符，写回结果不可信"
                     return report
                 for name in [res_path, *extras]:
-                    if not engine_finds(mx_hash(name.encode("gbk",
-                                                             "replace"))):
+                    if not engine_finds(path_hash(name)):
                         report["error"] = f"新包中二分查找不到：{name}"
                         return report
                 allowed = set(info["changed_ids"])

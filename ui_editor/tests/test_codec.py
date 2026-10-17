@@ -81,35 +81,73 @@ class TestValuesRoundTrip(unittest.TestCase):
         self.assertIn("框一".encode("gbk"), data)
 
 
-def _corpus_root():
-    env = os.environ.get("MXSJ_DLG_CORPUS")
-    candidates = [env] if env else []
-    # 开发沙箱里的语料库兜底路径；目录不存在时整组测试 skipTest，Windows 上不受影响。
-    candidates.append("/home/user/interface_dlg_decoded")  # win-ok: 缺则跳过
-    for cand in candidates:
-        if cand and Path(cand).is_dir():
-            return Path(cand)
-    return None
+REPO_ROOT = Path(__file__).resolve().parents[2]
+#: 仓库内自带的真实布局（注册界面模板）：语料可以缺失，但这批必须恒跑
+REPO_CORPUS_DIR = REPO_ROOT / "tools" / "registration"
+REPO_CORPUS_MIN = 7
+#: 外部大语料只有在给定目录时才跑；低于这个数量只按数量上报，不再判失败
+BIG_CORPUS = 2000
+
+
+def _corpus_roots() -> list[Path]:
+    """外部语料目录：只认环境变量，不再硬编码开发沙箱的绝对路径。
+
+    以前这里有 ``/home/user/interface_dlg_decoded`` 兜底，于是「这条硬门槛」
+    在别的机器上要么静默跳过、要么因为语料只有 8 篇而 ``assertGreater(2000)``
+    直接 FAIL——连那 8 篇都不跑（分析报告 P1-4）。现在拆成两条路：
+    仓库内最小语料恒跑，外部语料按数量上报。
+    """
+    raw = os.environ.get("MXSJ_DLG_CORPUS", "")
+    roots = [Path(part) for part in raw.split(os.pathsep) if part.strip()]
+    return [root for root in roots if root.is_dir()]
+
+
+def _roundtrip_failures(files: list[Path]) -> list[str]:
+    """解析→序列化→再解析，结构不一致的文件（最多记 5 个）。"""
+    failures: list[str] = []
+    for path in files:
+        dicts, _ = dlg_codec.parse_bytes(path.read_bytes())
+        again, _ = dlg_codec.parse_text(dlg_codec.dump_text(dicts))
+        if not structures_equal(dicts, again):
+            failures.append(str(path))
+            if len(failures) >= 5:
+                break
+    return failures
+
+
+class TestRepoCorpusRoundTrip(unittest.TestCase):
+    """仓库内自带的最小语料：恒跑，缺文件就红，不允许再「静默跳过」。"""
+
+    def test_repo_corpus_roundtrips(self):
+        real = sorted(REPO_CORPUS_DIR.rglob("*.dlg"))
+        self.assertGreaterEqual(
+            len(real), REPO_CORPUS_MIN,
+            f"{REPO_CORPUS_DIR} 下真实 .dlg 只有 {len(real)} 篇"
+            f"（期望 ≥ {REPO_CORPUS_MIN}）；语料丢了就该修，而不是跳过")
+        files = real + [FIXTURE]
+        failures = _roundtrip_failures(files)
+        self.assertEqual(
+            failures, [],
+            f"共 {len(files)} 篇（仓库内）结构往返不一致")
 
 
 class TestCorpusRoundTrip(unittest.TestCase):
-    """硬门槛：全部已解密 .dlg 经解析→序列化→再解析结构不变。"""
+    """外部语料：可用多少跑多少，结果按数量上报（不再一刀切 2,000 门槛）。"""
 
     def test_all_decoded_files_roundtrip(self):
-        root = _corpus_root()
-        if root is None:
-            self.skipTest("没有 .dlg 语料库（设置 MXSJ_DLG_CORPUS）")
-        files = sorted(root.rglob("*.dlg"))
-        self.assertGreater(len(files), 2000)
-        failures = []
-        for path in files:
-            dicts, _ = dlg_codec.parse_bytes(path.read_bytes())
-            again, _ = dlg_codec.parse_text(dlg_codec.dump_text(dicts))
-            if not structures_equal(dicts, again):
-                failures.append(str(path))
-                if len(failures) >= 5:
-                    break
-        self.assertEqual(failures, [])
+        roots = _corpus_roots()
+        if not roots:
+            self.skipTest(
+                "未提供外部 .dlg 语料库（设置 MXSJ_DLG_CORPUS 指向目录）；"
+                "仓库内最小语料已由 TestRepoCorpusRoundTrip 覆盖")
+        files = sorted({path for root in roots for path in root.rglob("*.dlg")})
+        if not files:
+            self.skipTest(f"语料目录里没有 .dlg：{', '.join(map(str, roots))}")
+        failures = _roundtrip_failures(files)
+        if len(files) < BIG_CORPUS:
+            print(f"[codec] 外部语料仅 {len(files)} 篇"
+                  f"（< {BIG_CORPUS}）：结论按此数量声明，勿写作全量验证")
+        self.assertEqual(failures, [], f"外部语料 {len(files)} 篇中往返不一致")
 
 
 if __name__ == "__main__":

@@ -1,3 +1,7 @@
+# 自动生成，请勿手改：由 tools/devkit/vendor_core.py 从
+# mx_common/output_paths.py 复制（字节相同）。
+# 改共享逻辑：改 mx_common/output_paths.py → --write；校验：--check
+# 详细说明见 mx_common/README.md。
 """输出路径保护：识别文件别名，并约束导出目录边界（零 Qt）。"""
 from __future__ import annotations
 

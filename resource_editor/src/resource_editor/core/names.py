@@ -22,16 +22,18 @@ import re
 from collections.abc import Callable
 from pathlib import Path
 
-from .mxhash import mx_hash
+from .mxhash import path_hash
 
 __all__ = [
     "build_name_map",
     "extract_resource_paths",
     "known_path_hashes",
+    "unencodable_known_paths",
     "unpack_dlg_text",
 ]
 
 _KNOWN_CACHE: dict[int, str] | None = None
+_UNENCODABLE: list[str] = []
 _IMAGE_EXTS = (b".png", b".jpg", b".jpeg", b".bmp", b".tga")
 _QUOTED_RE = re.compile(rb'"((?:[^"\\]|\\.)*)"|\'((?:[^\'\\]|\\.)*)\'')
 _DLG_HEADER = b"# -*- coding: gbk -*-"
@@ -51,13 +53,26 @@ def known_path_hashes() -> dict[int, str]:
                 encoding="utf-8").splitlines()
         except OSError:
             lines = []
+        _UNENCODABLE.clear()
         for line in lines:
             path = line.strip()
-            if path and not path.startswith("#"):
-                table.setdefault(
-                    mx_hash(path.encode("gbk", "replace")), path)
+            if not path or path.startswith("#"):
+                continue
+            try:
+                digest = path_hash(path)
+            except ValueError:
+                # GBK 不可编码：引擎寻址不到，不入表也不静默替换（P2-2）
+                _UNENCODABLE.append(path)
+                continue
+            table.setdefault(digest, path)
         _KNOWN_CACHE = table
     return _KNOWN_CACHE
+
+
+def unencodable_known_paths() -> list[str]:
+    """随包字典里 GBK 不可编码、因而引擎寻址不到的路径（读表后才有值）。"""
+    known_path_hashes()
+    return list(_UNENCODABLE)
 
 
 def _xor4(data: bytes, key: bytes) -> bytes:
@@ -183,8 +198,11 @@ def build_name_map(entry_ids: list[int],
         if plain is None:
             continue
         for candidate in extract_resource_paths(plain):
-            target = by_id.get(
-                mx_hash(candidate.encode("gbk", "replace")))
+            try:
+                digest = path_hash(candidate)
+            except ValueError:
+                continue  # 引擎寻址不到的路径不参与命名
+            target = by_id.get(digest)
             if target is not None and target not in result:
                 result[target] = candidate
     return result

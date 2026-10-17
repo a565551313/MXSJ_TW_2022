@@ -51,7 +51,7 @@ from pathlib import Path
 
 from . import dlg_codec
 from .errors import PackError
-from .mxhash import mx_hash
+from .mxhash import mx_hash, path_hash
 from .native_layout import decode_native, encode_layout, path_bytes, plain_if_layout
 from .output_paths import guard_output
 from .pack import DIR_RECORD_SIZE, MAGIC, MASK32, FlsPack, decode_directory
@@ -460,7 +460,7 @@ def _create_layout_copy(src: Path, out: Path, path: str, plain: bytes,
         existing = set(pack.entry_ids)
     writes = {layout_id: encode_layout(plain, layout_id)}
     for name, data in extras.items():
-        entry_id = mx_hash(name.encode("gbk"))
+        entry_id = path_hash(name)
         if entry_id in writes:
             raise PackError("布局/附加资源路径哈希冲突")
         writes[entry_id] = data
@@ -483,12 +483,12 @@ def _create_layout_copy(src: Path, out: Path, path: str, plain: bytes,
         mode = "rebuild"
     return {"mode": mode, "layout_added": True,
             "images_added": [n for n in extras
-                             if mx_hash(n.encode("gbk")) not in existing],
+                             if path_hash(n) not in existing],
             "images_replaced": [n for n in extras
-                                if mx_hash(n.encode("gbk")) in existing],
+                                if path_hash(n) in existing],
             "changed_ids": sorted({layout_id} | {
-                mx_hash(n.encode("gbk")) for n in extras
-                if mx_hash(n.encode("gbk")) in existing}),
+                path_hash(n) for n in extras
+                if path_hash(n) in existing}),
             "bytes": out.stat().st_size, "out": str(out)}
 
 
@@ -533,7 +533,7 @@ def _patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
         replaced.clear()
         for name in sorted(extras):
             result = patch_raw_entry_in_file(
-                out, mx_hash(name.encode("gbk", "replace")),
+                out, path_hash(name),
                 extras[name])
             (added if result["mode"] == "added"
              else replaced).append(name)
@@ -552,12 +552,11 @@ def _patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
                                           res_path, new_plain))
         apply_extras()
         info = {"mode": "rebuild", "target_index": -1}
-    layout_id = mx_hash(res_path.encode("gbk", "replace"))
+    layout_id = mx_hash(path_bytes(res_path))
     info["images_added"] = added
     info["images_replaced"] = replaced
     info["changed_ids"] = sorted(
-        {layout_id} | {mx_hash(n.encode("gbk", "replace"))
-                       for n in replaced})
+        {layout_id} | {path_hash(n) for n in replaced})
     info["bytes"] = out.stat().st_size
     info["out"] = str(out)
     return info

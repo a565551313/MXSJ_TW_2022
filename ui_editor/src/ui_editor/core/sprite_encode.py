@@ -5,8 +5,10 @@
 锚点与中心点都取左上角 (0, 0)，适合界面静态图与简单动画；
 逐帧调整锚点的高级动画制作不在这里做。
 
-只依赖 Pillow 做图片读取与 256 色量化；编码格式与
-resource_editor/core/codecs/sprite.py 保持一致（I0 优先，
+只依赖 Pillow 做图片读取与 256 色量化；格式常量与 alpha 折算来自
+共享真源 ``sprite_format``，编码规则与
+``resource_editor/core/codecs/sprite.py`` 的一致性由
+``tools/devkit/tests/test_sprite_parity.py`` 交叉验证（I0 优先，
 单行过长自动改用 I1）。
 """
 from __future__ import annotations
@@ -18,18 +20,10 @@ from pathlib import Path
 from PIL import Image, ImageSequence
 
 from .errors import SpriteError
+from .sprite_format import OPAQUE, ROW_LEN_U8_MAX, alpha_to_level
 
-OPAQUE = 255
-
-
-def _alpha_to_level(alpha: int) -> int:
-    """8 位 alpha 折回 0-31 级；255 视为不透明（OPAQUE 标记）。"""
-    if alpha <= 0:
-        return 0
-    if alpha >= 255:
-        return OPAQUE
-    level = round(alpha * 31 / 255)
-    return max(1, min(30, level))
+#: 兼容模块内旧名（与共享真源的 ``alpha_to_level`` 同一实现）
+_alpha_to_level = alpha_to_level
 
 
 def _encode_palette(magic: str,
@@ -173,7 +167,7 @@ def encode_frames(images, magic: str = "I0") -> bytes:
         rows = [_encode_row(row) for row in _map_indices(img, palette)]
         if magic != "I1":
             for row in rows:
-                if len(row) > 255:
+                if len(row) > ROW_LEN_U8_MAX:
                     raise SpriteError(
                         f"单行编码 {len(row)} 字节超过 I0/T0 的行长上限")
         frames_meta.append((0, 0, img.width, img.height))
