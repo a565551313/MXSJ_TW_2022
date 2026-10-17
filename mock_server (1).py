@@ -24,10 +24,25 @@ Simulates the complete normal player lifecycle:
      - Sends `GS2C_MAP_GOTO_M = 97` (places hero at spawn grid coordinates).
      - Sends `GS2C_MAP_ADD_NPC = 99` (spawns interactive teleporter NPC on the map).
      - Sends `GS2C_NOTIFY = 165` (welcome banner in system prompt & chat window).
-     - Handles `C2GS_MAP_MOVE = 54` (walking), `C2GS_HEART_BEAT = 109` -> `GS2C_HEART_BEAT = 69`,
-       `C2GS_REQUEST_TIME = 15` -> `GS2C_TIME = 12`, `C2GS_NPC_LOOK = 55` -> `GS2C_NPC_CHAT_EXT = 152`,
-       `C2GS_NPC_ANSWER = 98` (map teleportation), and `C2GS_PLAYER_CHAT = 149` (chat & `/tp` commands).
-  5. GM / 開發模式 (Developer Mode):
+    - Handles `C2GS_MAP_MOVE = 54` (walking), `C2GS_HEART_BEAT = 63` -> `GS2C_HEART_BEAT = 63`
+      (legacy 109/69 also accepted), `C2GS_NPC_LOOK = 96` -> `GS2C_NPC_CHAT_EXT = 152`,
+      `C2GS_NPC_ANSWER = 98` (map teleportation), and `C2GS_PLAYER_CHAT = 149` (chat & `/tp` commands).
+    - Time sync: every `C2GS_REQUEST_TIME = 61` (also 31 / legacy 15) is answered with **two**
+      packets — `GS2C_TIME = 31` in **deciseconds** (feeds the `mxgw` 網絡錯誤(007) watchdog)
+      plus `GS2C_TIME_SECOND = 192` in **Unix seconds** (feeds the 日曆 `dlgcalendar.S2CTime`).
+  5. 瞬連 / 系統設置保存重連 (Quick Re-login, `GS2C_QUICKLOGIN = 12` / `C2GS_QUICKLOGIN = 13`):
+     - Issues a 4-byte quick-login key after every normal enter (sub=1) so
+       `netquicklogin.g_LoginKey` is never `None`.
+     - Answers `C2GS_QUICKLOGIN` sub=2 (`key` + `pid`), which the client sends after
+       系統設置保存/窗口大小改動 -> `netquicklogin.Connect('切換設置')` ->
+       `main.RestartQuickLogin`, by replaying the full enter-game sequence on the NEW
+       connection; unknown roles get sub=3 (fail) so the client falls back to the login
+       screen instead of hanging mid-restart.
+     - Phase-1 (`CQuickNet`) connections legitimately send no 25-byte seed reply; only the
+       phase-2 (`CMXNet`) handshake carries it — both are tolerated.
+  6. 日曆日程 minimal (`C2GS_SCHEDULE = 82` -> `GS2C_SCHEDULE = 57`):
+     - sub=1 (request data) / sub=2 (open 日曆) -> empty `S2CUpdateDailyIssue` payload.
+  7. GM / 開發模式 (Developer Mode):
      - `ensure_client_ready()` writes `nocheck` as `[game] gm=1` (not an empty file).
        `permission.InitSpecialVersion()` only needs the file to exist, but
        `permission.IsOpenGm()` reads the `[game]` section of THIS file, so an empty
@@ -71,6 +86,7 @@ C2GS_LOGIN_PLAYER_ADD = 3
 C2GS_LOGIN_QUIT = 4
 C2GS_LOGIN_PLAYER_DEL = 7
 C2GS_PING = 8
+C2GS_QUICKLOGIN = 13
 C2GS_PLAYER_ADJUSTPOINT = 16
 # Client sends `C2GS_PLAYER_UPGRADE = 152` (`script/nethero.py::C2SUpgrade`); the same
 # number is also `C2GS_CHECKWG` in the client's table (its own ambiguity), so accept both.
@@ -91,6 +107,7 @@ C2GS_REQUEST_TIME = 61
 C2GS_ANSWERHELLO = 62
 C2GS_HEART_BEAT = 63
 C2GS_TITLE = 67
+C2GS_SCHEDULE = 82
 C2GS_OPEN_UI = 88
 C2GS_ITEMSHOP = 89
 C2GS_NPC_LOOK = 96
@@ -137,6 +154,11 @@ GS2C_LOGIN_PLAYER_ADD = 6
 GS2C_LOGIN_ERROR = 8
 GS2C_LOGIN_PLAYER_DEL = 10
 GS2C_OTHER_ASSISTANT = 11
+# script.fls v2.27.2: 12 = GS2C_QUICKLOGIN -> `netquicklogin.S2CQuickLogin`.
+# (The data.fls legacy table calls 12 `GS2C_TIME` — see GS2C_TIME_LEGACY below.
+#  Never send an op=12 *time* reply to a script.fls client: it would land in
+#  `netquicklogin.S2CQuickLogin` and could mis-parse a random sub=1/3.)
+GS2C_QUICKLOGIN = 12
 GS2C_LOGIN_PLAYER_INFO_END = 14
 GS2C_LOGIN_ACCOUNT_INFO = 15
 GS2C_PROP_INIT = 16
@@ -150,6 +172,10 @@ GS2C_PROP_RESIST = 18
 GS2C_PROP_POWER = 19
 GS2C_PROP_PHOTO = 20
 GS2C_TIME = 31
+# 日曆 `dlgcalendar.S2CTime` (registered at net.py dispatch table, separate from
+# GS2C_TIME): `g_Time = UnpackInt(4)` + `time.localtime(g_Time)` — Unix SECONDS.
+# Never sending this was the "日曆時間 1970" bug; unit differs from op=31 on purpose.
+GS2C_TIME_SECOND = 192
 GS2C_TIME_LEGACY = 12
 GS2C_ITEM_KEY = 32
 GS2C_ITEM_ADD = 33
@@ -167,6 +193,7 @@ GS2C_SUMM_PROP_VIEW = 51
 GS2C_SUMM_PROP_STATE = 52
 GS2C_SUMMON_KEY = 53
 GS2C_SUMM_EQUIP = 54
+GS2C_SCHEDULE = 57
 GS2C_PROP_CHANGELIST = 61
 GS2C_HEART_BEAT = 63
 GS2C_HEART_BEAT_LEGACY = 69
@@ -1782,40 +1809,94 @@ def build_gs2c_heartbeat(legacy: bool = False) -> bytes:
 
 
 def build_gs2c_time(legacy: bool = False) -> bytes:
-    """`GS2C_TIME = 31` (or legacy `12`) -> `mxgw.S2CTime(netobj)` (`t = netobj.UnpackInt(4)`)."""
+    """`GS2C_TIME = 31` (or data.fls legacy `12`) -> `mxgw.S2CTime(netobj)`.
+
+    Payload unit = **deciseconds (1/10 s)** — see the 007 analysis below.
+    """
     op = GS2C_TIME_LEGACY if legacy else GS2C_TIME
-    t = monotonic_unix_seconds()
+    t = monotonic_deciseconds()
     return frame_gs2c(op, struct.pack("<I", t))
 
 
+def build_gs2c_time_second() -> bytes:
+    """`GS2C_TIME_SECOND = 192` -> `dlgcalendar.S2CTime(netobj)` (日曆).
+
+    Payload unit = **Unix seconds** (`g_Time = UnpackInt(4)` +
+    `time.localtime(g_Time)`); also matches `misc.SetServerTime` semantics.
+    """
+    return frame_gs2c(GS2C_TIME_SECOND, struct.pack("<I", monotonic_unix_seconds()))
+
+
+def build_gs2c_quicklogin_key(key: int) -> bytes:
+    """`GS2C_QUICKLOGIN = 12` -> `netquicklogin.S2CQuickLogin`.
+
+    Payload = sub(1B)=1 + key(4B) + itype(1B); `S2CLoginKey` then stores
+    `g_LoginKey = key` — without this packet every 瞬連 reconnect runs with
+    `g_LoginKey = None` (the settings-save freeze).
+    """
+    return frame_gs2c(GS2C_QUICKLOGIN, struct.pack("<BIB", 1, key & 0xFFFFFFFF, 0))
+
+
+def build_gs2c_quicklogin_fail() -> bytes:
+    """`GS2C_QUICKLOGIN = 12` sub=3 -> `netquicklogin.S2CQuickLoginFail`.
+
+    Client side: `ratio.Set800x600()` + `SetQuickLoginFail(True)` + `main.Restart()`
+    — a graceful fallback to the login screen instead of a dead half-restart.
+    """
+    return frame_gs2c(GS2C_QUICKLOGIN, b"\x03")
+
+
+def build_gs2c_schedule_daily_empty() -> bytes:
+    """`GS2C_SCHEDULE = 57` sub=1 -> `netschedule.S2CUpdateDailyIssue`.
+
+    Payload = sub(1B)=1 + daily-count(1B)=0 + will-open-count(1B)=0 +
+    red-point-count(1B)=0 — an empty but structurally valid schedule answer
+    so 日曆/日程 can open without waiting for data the mock does not model.
+    """
+    return frame_gs2c(GS2C_SCHEDULE, b"\x01\x00\x00\x00")
+
+
 # ============================================================================
-# 2b. Time Value: MUST be a Unix timestamp in SECONDS (2026-10-16 修正)
+# 2b. Time Values: TWO opcodes, TWO units (007 分析 · 2026-10-17 修正)
 # ============================================================================
-# 「網絡錯誤(007)，請退出遊戲。」的唯一出處是 `script/core/mxgw.py`
-#   `SecondGetResult`：`sdt = t - g_ServerTime + 550` / `cdt = (G2 - G1) / 100`，
-#   `if cdt > sdt:` → `g_CurCount += 1`；`g_CurCount > MAXCOUNT(3)`（**成功時不歸零**，
-#   只有 `Stop()`/`ModuleReset()` 會清）→ `blacklist.C2SResult(10,0,...)` +
-#   `g_Net.Disconnect()` + `ShowError('網絡錯誤(007)，請退出遊戲。')`。
+# 「網絡錯誤(007)，請退出遊戲。」的唯一出處是 `script/core/mxgw.py` `SecondGetResult`：
+#   `sdt = t - g_ServerTime + 550` / `cdt = G2/100 - G1/100`（客户端
+#   `C_sys.GetTime()` 毫秒 /100 → 100ms 单位），`if cdt > sdt: g_CurCount += 1`；
+#   `g_CurCount >= MAXCOUNT(3)`（成功不归零，仅 `Stop()`/`ModuleReset()` 清）→
+#   `blacklist.C2SResult(10,0,…)` + 延迟 `Disconnect()` + `ShowError('網絡錯誤(007)…')`。
+#   轮询间隔（`Start()`/`FirstGetResult`，CreatePyCommand 30 ticks/s）：
+#   150(5s) → 600(20s) → 1200(40s) → … → 5400(180s) 封顶。
 #
-#   单位：`C_sys.GetTime()` 是**毫秒**（客户端里几十处 `GetTime() - m_xxx < 5000`
-#   的 5 秒防连点都是 5000/10000 这种量级），所以 `cdt` 的单位是 100ms。
-#   看门狗的轮询间隔取自 `mxgw.Start()`/`FirstGetResult`：150 → 600 → 1200 … 5400ms。
+#   * 若 op31 载荷是**秒**：第 80s 轮起 `cdt = 800 > sdt = 80+550 = 630` → 80/100/120s
+#     三连罚 → 约 425s（≈7 分钟）必弹 007 —— 即 2026-10-16「改成 Unix 秒」后的现象。
+#   * 若 op31 载荷是**分秒 (ds)**：任意轮 `cdt = I*10 = sdt - 550 < sdt` 恒成立 → 永不
+#     误判；32 位回绕要到 2037 年，且回绕时 `t < g_ServerTime` 分支会归零不计数。
+#     旧版发分秒从未触发 007，也印证这一点（旧注释里的「每 429.5s 回绕」是错的）。
+#   ⇒ `GS2C_TIME = 31` 必须发**分秒**。
 #
-#   旧实现发的是 `int(time.time() * 10) & 0xFFFFFFFF`（分秒 deciseconds）。它「刚好」
-#   让 cdt≈Δt/100 与服务端差同量级，但**每 429.5 秒回绕一次 32 位**；`g_CurCount`
-#   成功不清零，于是每回绕一次记 1 次失败，约 4 次回绕（≈29 分钟）必然踢人 ——
-#   这就是「总是网络错误 007」的机制。
-#
-#   改为标准 Unix 秒后：服务端差 Δs 满足 `sdt = Δs + 550 ≥ cdt = Δms/100`
-#   （每轮最多 5.4 秒即 54 个 100ms 单位，容差 550 → 富余 55 秒），且 60 年不回绕；
-#   同时与客户端其它两处消费者对齐（都要求 Unix 秒）：
-#     - `dlgcalendar.S2CTime`: `g_Time = UnpackInt(4)` → `time.localtime(g_Time)`
-#     - `misc.GetServerCurrentTime()`: `GetServerTime() + (C_sys.GetTickCount() - g_RecordTime) / 1000`
+#   同一个 `C2GS_REQUEST_TIME = 61`（mxgw 与 dlgcalendar.C2SGetServerTime 共用请求码，
+#   服务端无法区分发起者）必须**同时回两个包**：
+#     - `GS2C_TIME = 31`         → mxgw 看门狗，载荷 = 分秒；
+#     - `GS2C_TIME_SECOND = 192`  → `dlgcalendar.S2CTime`，载荷 = Unix 秒
+#       （此前从未下发 → `g_Time = 0` → 日曆显示 1970 年）。
+#   两个消费者都有保护（mxgw `if len(g_Func)`、日曆 `first = g_Time == 0`），
+#   多收一个包无副作用。
+_TIME_DS_LAST = 0
 _TIME_LAST_SENT = 0
 
 
+def monotonic_deciseconds() -> int:
+    """分秒 (1/10 s)，32 位、单调不减 —— 供 `GS2C_TIME = 31`（mxgw 007 看门狗）。"""
+    global _TIME_DS_LAST
+    now = int(time.time() * 10) & 0xFFFFFFFF
+    if now < _TIME_DS_LAST:
+        now = _TIME_DS_LAST
+    _TIME_DS_LAST = now
+    return now
+
+
 def monotonic_unix_seconds() -> int:
-    """Unix 秒，且**单调不减**（防 NTP/夏令时回拨被看门狗当成客户端作弊）。"""
+    """Unix 秒，且**单调不减**（防 NTP/夏令时回拨）—— 供 `GS2C_TIME_SECOND = 192`（日曆）。"""
     global _TIME_LAST_SENT
     now = int(time.time()) & 0xFFFFFFFF
     if now < _TIME_LAST_SENT:
@@ -1993,6 +2074,16 @@ class AccountStore:
                         return r
             return None
 
+    def find_role_and_account(self, role_id: int) -> tuple[dict[str, Any] | None, str | None]:
+        """Used by quick re-login (`C2GS_QUICKLOGIN` sub=2): a brand-new connection
+        has no session account yet, so resolve BOTH the role and its owner account."""
+        with self.lock:
+            for a_name, a in self.data["accounts"].items():
+                for r in a.get("roles", []):
+                    if int(r.get("id", 0)) == int(role_id):
+                        return r, a_name
+        return None, None
+
     def update_role_pos(self, account: str, role_id: int, map_id: int, x: int, y: int) -> None:
         with self.lock:
             acct = self.data["accounts"].get(account)
@@ -2010,6 +2101,11 @@ class AccountStore:
 # ============================================================================
 # 5. Per-Connection Session Handler
 # ============================================================================
+
+# role_id -> (key, account, issued_at): quick-login keys issued by this process.
+# Not persisted: after a mock restart an old key is still accepted (the mock's
+# goal is reconnectivity, not security) — see `_on_quicklogin_request`.
+QUICK_LOGIN_KEYS: dict[int, tuple[int, str, int]] = {}
 
 
 class ClientSession:
@@ -2216,10 +2312,50 @@ class ClientSession:
         if opcode in (C2GS_REQUEST_TIME, C2GS_TIME, C2GS_REQUEST_TIME_LEGACY):
             is_legacy = opcode == C2GS_REQUEST_TIME_LEGACY
             log(f"[C2GS <- {self.addr[1]}] C2GS_REQUEST_TIME (op={opcode})")
+            # One request -> TWO replies (see §2b): 31 = deciseconds for the mxgw
+            # 007 watchdog, 192 = Unix seconds for the 日曆 dlgcalendar. Both client
+            # handlers are guarded, so the extra packet is always safe.
             self.send_raw(
                 build_gs2c_time(legacy=is_legacy),
-                f"GS2C_TIME(op={GS2C_TIME_LEGACY if is_legacy else GS2C_TIME})",
+                f"GS2C_TIME(op={GS2C_TIME_LEGACY if is_legacy else GS2C_TIME}, unit=deciseconds)",
             )
+            self.send_raw(
+                build_gs2c_time_second(),
+                f"GS2C_TIME_SECOND(op={GS2C_TIME_SECOND}, unit=seconds)",
+            )
+            return
+
+        # 2b. Schedule / 日曆 data (`C2GS_SCHEDULE = 82` -> `netschedule.S2CScheduleProcess`)
+        if opcode == C2GS_SCHEDULE:
+            sub = fields[0] if fields else -1
+            log(f"[C2GS <- {self.addr[1]}] C2GS_SCHEDULE (op=82, sub={sub}, len={len(fields)}B)")
+            if sub in (1, 2):  # 1 = C2SRequestScheduleData, 2 = C2SOpenCalendar(local_time)
+                self.send_raw(
+                    build_gs2c_schedule_daily_empty(),
+                    f"GS2C_SCHEDULE(op={GS2C_SCHEDULE}, sub=1 empty daily issues)",
+                )
+            return
+
+        # 2c. Quick re-login (`C2GS_QUICKLOGIN = 13`) — 系統設置保存 / 窗口大小改動 reconnect.
+        #     Without these branches the client freezes mid-restart (see §header feature 5).
+        if opcode == C2GS_QUICKLOGIN:
+            sub = fields[0] if fields else 0
+            if sub == 1:  # C2SSendLoginKey — client consumes its key on clean logout
+                key = struct.unpack_from("<I", fields, 1)[0] if len(fields) >= 5 else 0
+                log(f"[C2GS <- {self.addr[1]}] C2GS_QUICKLOGIN (op=13, sub=1 SendLoginKey, key=0x{key:08x})")
+                for pid, (k, _acc, _t) in list(QUICK_LOGIN_KEYS.items()):
+                    if k == key:
+                        QUICK_LOGIN_KEYS.pop(pid, None)
+                return
+            if sub == 2 and len(fields) >= 9:  # C2SRequestQuickLogin: key(4) + pid(4)
+                key, pid = struct.unpack_from("<II", fields, 1)
+                log(
+                    f"[C2GS <- {self.addr[1]}] C2GS_QUICKLOGIN (op=13, sub=2 RequestQuickLogin, "
+                    f"key=0x{key:08x}, pid={pid})"
+                )
+                self._on_quicklogin_request(key, pid)
+                return
+            log(f"[C2GS <- {self.addr[1]}] C2GS_QUICKLOGIN (op=13, sub={sub}, len={len(fields)}B) ignored")
             return
 
         # 3. Ping & Quiet In-Map State Packets
@@ -2691,6 +2827,51 @@ class ClientSession:
         x = int(role.get("x", MAPS[map_id]["spawn_x"]))
         y = int(role.get("y", MAPS[map_id]["spawn_y"]))
         self.enter_map(map_id, x, y, send_welcome=True)
+
+        # 6. Issue a quick-login key (`GS2C_QUICKLOGIN = 12` sub=1) only after the
+        #    world is fully loaded. A later 系統設置保存 reconnect
+        #    (`netquicklogin.Connect('切換設置')` -> `main.RestartQuickLogin`) reads
+        #    `netquicklogin.g_LoginKey`; when the mock never sent this packet that
+        #    value was None and the whole reconnect flow stalled (frozen window).
+        self._issue_quicklogin_key(int(role["id"]))
+
+    def _issue_quicklogin_key(self, role_id: int) -> None:
+        key = struct.unpack("<I", os.urandom(4))[0]
+        if len(QUICK_LOGIN_KEYS) > 64:
+            QUICK_LOGIN_KEYS.clear()
+        QUICK_LOGIN_KEYS[role_id] = (key, self.account, int(time.time()))
+        self.send_raw(
+            build_gs2c_quicklogin_key(key),
+            f"GS2C_QUICKLOGIN(op=12, sub=1 key issue, key=0x{key:08x}, role={role_id})",
+        )
+
+    def _on_quicklogin_request(self, key: int, pid: int) -> None:
+        """`C2GS_QUICKLOGIN` sub=2 — the 系統設置保存/窗口大小改動瞬連 reconnect.
+
+        By the time this packet arrives the client has already run
+        `main.RestartQuickLogin` -> `Restart(2)` (world torn down) and is waiting
+        on a brand-new `CMXNet` connection. Silence here = stuck half-restarted
+        client (frozen window), so ALWAYS either replay the full enter-game
+        sequence (PROP_INIT -> items -> skills -> pets -> map -> welcome -> fresh
+        key) or answer sub=3 (client falls back to the login screen).
+
+        Key checking is deliberately liberal: log mismatches, never reject — the
+        mock's goal is reconnectivity, not security.
+        """
+        expected = QUICK_LOGIN_KEYS.get(int(pid))
+        if expected is not None and expected[0] != key:
+            log(
+                f"[QUICKLOGIN] key mismatch for role={pid}: got 0x{key:08x}, "
+                f"expected 0x{expected[0]:08x} — accepting anyway (liberal)"
+            )
+        role, account = self.store.find_role_and_account(int(pid))
+        if role is None or account is None:
+            log(f"[QUICKLOGIN] role pid={pid} not found — sending sub=3 fail (client returns to login)")
+            self.send_raw(build_gs2c_quicklogin_fail(), f"GS2C_QUICKLOGIN(op={GS2C_QUICKLOGIN}, sub=3 fail)")
+            return
+        self.account = account
+        log(f"[QUICKLOGIN] resuming session: account={account!r} role={role.get('name')!r} (id={pid})")
+        self._on_login_player_enter(struct.pack("<I", int(pid)))
 
     def enter_map(self, map_id: int, x: int | None = None, y: int | None = None, send_welcome: bool = False) -> None:
         if map_id not in MAPS:
@@ -3178,13 +3359,37 @@ def run_self_test() -> int:
     assert lines.index("gm=1") < len(lines)
     assert "Found" in ensure_nocheck_gm(tmp_nocheck)  # idempotent
     tmp_nocheck.unlink()
-    # 5d. Time sync (007): the 4-byte value MUST be a Unix timestamp in seconds.
+    # 5d. Time sync (007): TWO opcodes with TWO units — op=31 in deciseconds
+    #     (mxgw.SecondGetResult math) and op=192 in Unix seconds (日曆 dlgcalendar).
     time_pkt = build_gs2c_time()
     assert time_pkt[1] == GS2C_TIME == 31
     assert len(time_pkt) == 2 + 4, "GS2C_TIME payload must be 4 bytes"
-    sent_t = struct.unpack_from("<I", time_pkt, 2)[0]
-    assert abs(sent_t - int(time.time())) <= 5, f"time value must be Unix seconds, got {sent_t}"
-    assert struct.unpack_from("<I", build_gs2c_time(), 2)[0] >= sent_t, "time value must be monotonic"
+    sent_ds = struct.unpack_from("<I", time_pkt, 2)[0]
+    now_ds = int(time.time() * 10) & 0xFFFFFFFF
+    assert abs(sent_ds - now_ds) <= 50, f"GS2C_TIME(31) must be deciseconds, got {sent_ds}"
+    assert struct.unpack_from("<I", build_gs2c_time(), 2)[0] >= sent_ds, "deciseconds must be monotonic"
+    # mxgw 007 math sanity: at every poll interval cdt <= sdt under deciseconds
+    # (with Unix seconds interval 80s would already fail: 800 > 80+550).
+    for interval_s in (20, 40, 60, 80, 100, 120, 140, 160, 180):
+        assert interval_s * 10 <= interval_s * 10 + 550
+    sec_pkt = build_gs2c_time_second()
+    assert sec_pkt[1] == GS2C_TIME_SECOND == 192
+    assert len(sec_pkt) == 2 + 4, "GS2C_TIME_SECOND payload must be 4 bytes"
+    sent_s = struct.unpack_from("<I", sec_pkt, 2)[0]
+    assert abs(sent_s - int(time.time())) <= 5, f"GS2C_TIME_SECOND(192) must be Unix seconds, got {sent_s}"
+    assert struct.unpack_from("<I", build_gs2c_time_second(), 2)[0] >= sent_s, "seconds must be monotonic"
+
+    # 5d2. Quick-login packets (系統設置保存 reconnect must not see g_LoginKey=None)
+    k_pkt = build_gs2c_quicklogin_key(0x12345678)
+    assert k_pkt[1] == GS2C_QUICKLOGIN == 12, "quick-login key packet opcode"
+    assert k_pkt[2] == 1, "GS2C_QUICKLOGIN dispatch reads sub first — key issue must be sub=1"
+    assert struct.unpack_from("<I", k_pkt, 3)[0] == 0x12345678 and k_pkt[7] == 0, "sub=1 + key(4) + itype(1)"
+    assert build_gs2c_quicklogin_fail()[2:] == b"\x03", "quick-login fail = sub 3"
+
+    # 5d3. Schedule empty reply: sub=1 + three zero counts
+    s_pkt = build_gs2c_schedule_daily_empty()
+    assert s_pkt[1] == GS2C_SCHEDULE == 57, "schedule reply opcode"
+    assert s_pkt[2:] == b"\x01\x00\x00\x00", "S2CUpdateDailyIssue empty payload = sub + 3 count bytes"
 
     # 5e. 傳送點全開：每個場景都能走到其他所有場景。
     for mid, mm in MAPS.items():
@@ -3232,13 +3437,19 @@ def run_self_test() -> int:
     srv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     srv_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     srv_sock.bind(("127.0.0.1", 0))
-    srv_sock.listen(1)
+    srv_sock.listen(8)
     port = srv_sock.getsockname()[1]
 
     def _srv_thread() -> None:
-        conn, addr = srv_sock.accept()
-        sess = ClientSession(conn, addr, store, seed=seed, server_num=3)
-        sess.run()
+        # Accept loop: the quick re-login stage below opens a SECOND connection
+        # while the first session is still alive (exactly like the real client).
+        while True:
+            try:
+                conn, addr = srv_sock.accept()
+            except OSError:
+                return
+            sess = ClientSession(conn, addr, store, seed=seed, server_num=3)
+            threading.Thread(target=sess.run, daemon=True).start()
 
     t = threading.Thread(target=_srv_thread, daemon=True)
     t.start()
@@ -3340,6 +3551,11 @@ def run_self_test() -> int:
         assert op_npc == GS2C_MAP_ADD_NPC
     op9, body9 = recv_gs2c()
     assert op9 == GS2C_NOTIFY
+    # Quick-login key issue must arrive once the world is fully loaded (feature 5)
+    op_qk, body_qk = recv_gs2c()
+    assert op_qk == GS2C_QUICKLOGIN == 12, f"expected quick-login key issue, got op={op_qk}"
+    assert body_qk[0] == 1 and len(body_qk) == 6, "GS2C_QUICKLOGIN sub=1 + key(4) + itype(1)"
+    quick_key = struct.unpack_from("<I", body_qk, 1)[0]
 
     # Stage 5: Walk in map (`C2GS_MAP_MOVE = 54`), Click NPC (`C2GS_MIXPACKET = 151` wrapping `C2GS_NPC_LOOK = 96`),
     # Select Teleport Option (`C2GS_NPC_ANSWER = 98`), Open Attribute View (`C2GS_OPEN_UI_NEW = 230`),
@@ -3417,11 +3633,75 @@ def run_self_test() -> int:
     op10, _ = recv_gs2c()
     assert op10 == GS2C_HEART_BEAT
 
+    # Stage 6: dual time reply + schedule reply + quick re-login on a NEW connection
+    # (the exact 系統設置保存 freeze scenario: RestartQuickLogin -> new CMXNet -> op13)
+    send_c2gs(C2GS_REQUEST_TIME, b"")
+    op_t1, body_t1 = recv_gs2c()
+    assert op_t1 == GS2C_TIME == 31 and len(body_t1) == 4, f"first time reply must be op=31, got {op_t1}"
+    t_ds = struct.unpack_from("<I", body_t1, 0)[0]
+    assert abs(t_ds - (int(time.time() * 10) & 0xFFFFFFFF)) <= 50, f"op31 payload must be deciseconds, got {t_ds}"
+    op_t2, body_t2 = recv_gs2c()
+    assert op_t2 == GS2C_TIME_SECOND == 192 and len(body_t2) == 4, f"second time reply must be op=192, got {op_t2}"
+    t_s = struct.unpack_from("<I", body_t2, 0)[0]
+    assert abs(t_s - int(time.time())) <= 5, f"op192 payload must be Unix seconds, got {t_s}"
+
+    send_c2gs(C2GS_SCHEDULE, b"\x02" + struct.pack("<I", t_s))
+    op_sc, body_sc = recv_gs2c()
+    assert op_sc == GS2C_SCHEDULE == 57 and body_sc == b"\x01\x00\x00\x00", "open-日曆 must get empty schedule data"
+
+    # Phase-2 quick connection: hello first, CMXNet DOES send the 25B seed reply
+    cli2 = socket.create_connection(("127.0.0.1", port), timeout=5.0)
+    h2 = cli2.recv(9)
+    assert h2 == hello, "quick connection must also get GS2C_HELLO first"
+    cli2.sendall(compute_hello_reply_bytes(seed) + b"\x00" * 22)
+
+    def recv2() -> tuple[int, bytes]:
+        b0 = cli2.recv(1)[0]
+        if b0 == 0xFF:
+            ext = cli2.recv(MAX_LEN_BYTES)
+            plen = int.from_bytes(ext + b"\x00" * (4 - MAX_LEN_BYTES), "little")
+        else:
+            plen = b0
+        body = b""
+        while len(body) < plen:
+            body += cli2.recv(plen - len(body))
+        return body[0], body[1:]
+
+    # C2SRequestQuickLogin: [op][len+1=10][sub=2][key:4][pid:4][0x00]
+    cli2.sendall(bytes([C2GS_QUICKLOGIN, 10]) + b"\x02" + struct.pack("<II", quick_key, new_role_id) + b"\x00")
+    rq_op, rq_body = recv2()
+    assert rq_op == GS2C_PROP_INIT and len(rq_body) == 403, f"quick re-login must replay PROP_INIT, got op={rq_op}"
+    for _ in range(len(STARTER_ITEMS)):
+        op_i, _ = recv2()
+        assert op_i == GS2C_ITEM_ADD
+    op_ikey, _ = recv2()
+    assert op_ikey == GS2C_ITEM_KEY
+    for _ in range(4):
+        op_sk, _ = recv2()
+        assert op_sk == GS2C_SKILL_LEVEL
+    for _ in range(len(STARTER_PETS)):
+        op_pet, _ = recv2()
+        assert op_pet == GS2C_SUMM_ADD
+    op_pfight2, _ = recv2()
+    assert op_pfight2 == GS2C_SUMM_SET_FIGHT
+    op_m1, _ = recv2()
+    assert op_m1 == GS2C_MAP_SCENE_M
+    op_m2, _ = recv2()
+    assert op_m2 == GS2C_MAP_GOTO_M
+    for _ in range(len(map_npc_spawn_list(tp_first))):
+        op_n, _ = recv2()
+        assert op_n == GS2C_MAP_ADD_NPC
+    op_w2, _ = recv2()
+    assert op_w2 == GS2C_NOTIFY
+    op_qk2, body_qk2 = recv2()
+    assert op_qk2 == GS2C_QUICKLOGIN and body_qk2[0] == 1 and len(body_qk2) == 6, "re-login must issue a fresh quick key"
+    cli2.close()
+
     cli.close()
     srv_sock.close()
     if tmp_db.exists():
         tmp_db.unlink()
-    log("[PASS] All stages (選區 -> 登錄 -> 創角/選角 -> 進圖/全圖NPC載入 -> 點擊NPC對話/傳送 -> 移動/心跳) verified 100%!")
+    log("[PASS] All stages (選區 -> 登錄 -> 創角/選角 -> 進圖/全圖NPC載入 -> 點擊NPC對話/傳送 -> 移動/心跳 -> 時間雙包31/192 -> 日曆日程 -> 瞬連重連) verified 100%!")
     return 0
 
 
