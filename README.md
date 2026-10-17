@@ -1,10 +1,12 @@
 # MXSJ_TW_2022 ·《夢想世界》客户端研究与 Python 服务端重建
 
-> **文档体系（2026-10-14 起）**：
+> **文档导航（2026-10-18 核对）**：
 > - [`AGENTS.md`](AGENTS.md) — 给 Agent / 新成员的接手指南：目录地图、命令、红线、工作方式（长期有效）。
 > - [`docs/STATUS.md`](docs/STATUS.md) — **当前状态**：分支、各组件实测、红灯、等待事项、下一步（每轮更新）。
 > - 本文 — 项目总览：目标、能力边界、各子系统说明、原则与常见问题。
 > - [`docs/PYTHON_TOOL_CONVENTIONS.md`](docs/PYTHON_TOOL_CONVENTIONS.md) — Python 工具 / 编辑器开发约定（PEP 8、PySide6、自检启动脚本、一键 EXE、Linux→Windows 交付检查）。
+> - [`docs/ROADMAP.md`](docs/ROADMAP.md) — 建议阶段、前置条件与验收门槛，不是自动开发授权。
+> - [`docs/MOCK_SERVER.md`](docs/MOCK_SERVER.md) — 本地模拟器用途、安全边界与启动副作用。
 > - [`docs/archive/`](docs/archive/README.md) — 已被取代的历史快照（含原 `AGENT_HANDOFF.md`）。
 
 > 本仓库围绕 TW v2.27.2 客户端材料，开展资源/协议逆向、静态数据复核、可逆客户端界面改造、客户端资源/UI/地图编辑器，以及长期 Python 回合制服务端设计。仓库根目录本身就是一份游戏安装目录，工具与文档叠加其上。
@@ -57,10 +59,8 @@
 
 ### 1.3 分支与集成状态
 
-分支、基线、与 `master` 的差距、PR 状态和合并授权**只在 [`docs/STATUS.md`](docs/STATUS.md) §1 维护**，本文不再保存日期化的分支快照。
-简要脉络：PR #1–#27 已全部合入或关闭（#26 把复核链、注册 UI、设计与地图编辑器带进 `master`，#27 修地图编辑器缺陷）；
-2026-10-13 的资源编辑器、UI 编辑器与 0SLF 路径哈希逆向在工作分支上，截至 STATUS 快照日期尚未合入 `master`。
-合并 #25 当时是带已知问题的集成决定，问题清单见 [PR25_REVIEW.md](map_editor/PR25_REVIEW.md)。
+当前检出基线为 `cb2409a`（PR #51 合并提交），不再沿用旧会话“未合入”的结论。
+会话分支、检查范围与阻塞项只在 [STATUS §1–§2](docs/STATUS.md) 维护；不据此推断远端 master 最新状态。
 
 ## 2. 当前能力与完成度
 
@@ -70,14 +70,16 @@
 | 静态数据提取 | 受限解析、异常复核、可复现导出、来源与覆盖证据 | 不是运行原客户端脚本，也不是正式生产配置 |
 | 首批复核数据 | `batch_001`，递归共 17 个 CSV、总计 22 个文件 | 保留隔离、缺失、歧义；不发布到 `game_data` |
 | 复核 API/网页 | 只读目录加载、查询、搜索、分页、证据展示 | 已有集成验收；不是游戏网关或 GM 后台 |
-| 地图编辑器 | Python/Pillow 格式引擎、PySide6 界面、扫描/渲染/导出、GIRB 碰撞解码 | GIRB 300/429 扇区仍解不出（已消除假成功）；Windows EXE 未实机冒烟 |
-| 资源编辑器 | `.fls` 惰性浏览、精灵预览/替换、按路径导入、音频预览、新包原子保存与导出保护 | 0.3.8；保存后真名关联已修；Windows/进游戏验证仍待验；script.fls 条目只浏览不解码 |
-| UI 编辑器 | `.dlg` 布局编解码、画布编辑/吸附/对齐、撤销重做、按钮态与脚本静态索引、校验后写出新包 | 0.8.3；写包/导出源资源保护已修；九宫格只有 `CPngNineFrame` 的固定三分近似（切割线编辑 M3.3 未做）；完整 `.dlg` 语料库未入库 |
-| 0SLF 路径哈希 / `.dlg` 提取 | 引擎自研哈希复刻、2,706/2,901 `.dlg` 定位解码、`ui.lst` 样式表 | script.fls 模块导入不走此哈希；`.dlg` 原生路径 XOR 已定位，见 [补充结案](notes/native_dlg_path_cipher.md) |
+| 地图编辑器 | Python/Pillow 格式引擎、PySide6 界面、扫描/渲染/导出、GIRB 碰撞解码 | 1034/1035 固定样本 GIRB 300/429 扇区仍解不出（已消除假成功）；Windows EXE 未实机冒烟 |
+| 资源编辑器 | `.fls` 惰性浏览、精灵预览/替换、按路径导入、音频预览、新包原子保存与导出保护 | 0.4.3；原生布局导入与后台识别；Windows/进游戏验证仍待验；script.fls 条目只浏览不解码 |
+| UI 编辑器 | `.dlg` 布局编解码、画布编辑/吸附/对齐、撤销重做、按钮态与脚本静态索引、校验后写出新包 | 0.8.4；字段编码、来源刷新与布局导出；九宫格只有 `CPngNineFrame` 的固定三分近似（切割线编辑 M3.3 未做）；完整 `.dlg` 语料库未入库 |
+| 0SLF 路径哈希 / `.dlg` 提取 | 引擎自研哈希复刻、2,706/2,901 `.dlg` 定位解码、`ui.lst` 样式表 | script 模块以模块名而非 `.dlg` 完整路径绑定身份；`.dlg` 原生路径 XOR 已定位，见 [补充结案](notes/native_dlg_path_cipher.md) |
 | 注册 UI | 采用 PR #32 的原生注册实现、确认文案兜底及字体/异常恢复 | 用户确认该版测试无问题；尚无真实注册服务端，不创建真实账号 |
 | 游戏服务端 | 21 个一级责任区、类型契约、81 个细分工作包 | 业务运行、账号数据库、地图与战斗闭环未实现 |
 | 网关/安全/GM | 可拆分设计、职责、权限、审计和故障边界 | 设计文档，不是已经启动的安全服务 |
-| 根目录 Mock | 历史协议/客户端联调实验脚本 | 不作为正式服务端；默认不启动，先检查副作用 |
+| 脚本编辑器 | 0.6.0.dev7；双 VM 恢复候选、编辑、编译与新包校验 | 候选不等于可信源码；固定容量、身份与原生校验不能放宽 |
+| 脚本手册 | 0.1.0.dev4；登记、说明、专题与审核 | 当前覆盖数见 STATUS；完整登记不等于全量讲解 |
+| 根目录 Mock | 本地协议模拟、登录／进图／部分交互、JSON 存储 | 无正式认证与事务保证；启动有客户端写入副作用，见 [说明](docs/MOCK_SERVER.md) |
 
 ## 3. 仓库结构
 
@@ -95,7 +97,10 @@ MXSJ_TW_2022/
 ├── data/                         FLS 样本（script.fls 等 6 个包；.gitignore 白名单）
 ├── map/                          已纳入仓库的地图样本
 ├── Fonts/                        客户端字体（补丁图片重绘与 UI 编辑器文字渲染使用，不随包分发）
-├── mock_server.py                历史联调 Mock，非正式服务端
+├── mock_server.py                本地协议模拟器，非正式服务端；启动前阅读 docs/MOCK_SERVER.md
+├── mx_common/                    共享核心真源，经 vendor_core 分发至编辑器
+├── script_editor/                双 VM 脚本恢复候选、编辑、编译与新包验证
+├── script_manual/                只读脚本目录、有限说明与审核工具
 ├── resource_editor/              .fls 资源包浏览/编辑器（PySide6；core/gui 分层）
 │   ├── README.md / DESIGN.md     使用说明、版本历史 / 架构决策
 │   ├── src/resource_editor/      core（containers、codecs、services）、gui
@@ -116,7 +121,7 @@ MXSJ_TW_2022/
 │   └── build_exe.bat / *.spec    Windows 一键打包脚本与配置（三个编辑器同构）
 ├── tools/
 │   ├── devkit/                   开发自检工具箱：check_windows_compat.py（交付 Windows 前必跑）
-│   ├── client_patches/           可逆注册 UI 预览、冻结资产、测试与审计、v3.3 交付事实表
+│   ├── client_patches/           已作废的 overlay 注册预览历史，不再分发
 │   ├── decompiler/               双 VM 字节码反编译、5 段 XOR 重打包；output/ 为反编译文本（仅线索）
 │   ├── data-parser/              universal_fls_tool、mx_path_hash、extract_dlg、i0_sprite 等
 │   ├── data-export/              历史数据导出结果
@@ -334,7 +339,7 @@ Windows 打包入口是 `map_editor/build_exe.bat`（2026-10-14 由 `build.bat` 
 | P1 | JSON/PNG 导出可覆盖源地图 | ✅ 已修复（2026-10-12） | 原已在临时副本复现 `.map` 被 JSON 截断覆盖；现在导出前会拒绝写到当前打开或已扫描到的任何源地图路径（含路径别名/大小写/硬链接判断），命中即抛 `ExportBlockedError` 并提示，不再触达写文件 |
 | P2 | 超长解码被裁剪后计为成功；截断操作数被补零接受 | ✅ 已修复（2026-10-12） | 真实扇区 2405 字节的错误输出原本会被截成 2400 字节当作成功；现在结束标记触发时长度必须恰好等于 2400，否则直接报错，`--girb-report` 统计不变 |
 | P2 | 无参数 EXE 入口不打开 GUI | ✅ 已修复（2026-10-12，**仅限分派逻辑，未做 Windows 实机冒烟**） | 原本只有 `--gui` 才进图形分支，而打包配置关闭控制台，双击无参数启动等于“什么都没发生”；现在冻结（PyInstaller）且无参数时自动打开 GUI，开发环境 `python run.py` 无参数行为不变。另新增 `runGUI.py` 入口，不论传什么参数都直接开图形界面 |
-| 审查项 | 同 PR 修改了 Mock 协议行为 | 未处理（超出 map_editor 范围） | 包括 opcode 和扩展长度 3→2 字节，不能称为“纯注释”，需要单独评审 |
+| 审查项 | 同 PR 修改了 Mock 协议行为 | 未处理（超出 map_editor 范围） | 这是当时的 3→2 修改记录；当前 Mock 已按自己的链路使用 3 字节续长，不能将旧审查参数套用当前协议，见 [Mock 边界](docs/MOCK_SERVER.md) |
 
 **GIRB 解码覆盖率仍有缺口，不是“已解决”**：300/429 个真实扇区依旧解不出，上面第一行的修复只是去掉了“假成功”，没有提升覆盖率；**尚未支持的扇区继续明确失败，错误数据不会被伪装成成功。** 此前“101 张图中若干张完全解出”的统计不能在修正后直接沿用，需要用可靠标准重新核验。
 
@@ -342,33 +347,33 @@ Windows 打包入口是 `map_editor/build_exe.bat`（2026-10-14 由 `build.bat` 
 
 ## 8. 资源编辑器与 UI 编辑器
 
-当前资源 **0.4.3** / UI **0.8.3**：任意布局新增/继续修改均按原生路径密钥写入，
+当前资源 **0.4.3** / UI **0.8.4**：任意布局新增/继续修改均按原生路径密钥写入，
 保存验证使用原生规则，不再以编辑器头反推自洽作保证。用户拒绝一次性两路径修复
 作为最终方案后，已改编辑器通用流程；[操作步骤](tools/registration/EDITORS_NATIVE_LAYOUT_WORKFLOW.md)。
-离线资源118项、UI204项（1跳过）通过；Windows/实际注册跳转仍待验。
+最近检查范围与历史实机反馈见 [STATUS](docs/STATUS.md)，不将旧版本计数作为当前全量验收。
 
 两者都是 2026-10-13 新增的独立 PySide6 桌面工具，建立在 [0SLF 路径哈希与 `.dlg` 逆向结案](notes/fls_path_hash_and_dlg.md) 之上：引擎用自研哈希把资源路径映射为 `entry_id`，`.dlg` 布局是 `interface.fls` 内 4 字节 XOR 的 Python 源码。核心解析与界面分离，核心层不依赖 Qt，可无头测试。
 
-### 8.1 资源编辑器（`resource_editor/`，0.3.3）
+### 8.1 资源编辑器（`resource_editor/`，0.4.3）
 
-- 打开任意 `.fls`：`0SLF` 容器（script/skill/skill2/passive/effect/magicres5）与名目录式 `data.fls`。只读目录建索引实现**大包秒开**（1 GB 包 0.07 秒），条目与缩略图按需加载。
+- 打开任意 `.fls`：`0SLF` 容器（script/skill/skill2/passive/effect/magicres5）与名目录式 `data.fls`。先建目录索引，条目与缩略图按需加载；旧 1 GB／0.07 秒是特定索引阶段测量，不是所有资源完成识别的耗时保证。
 - 预览：精灵 I0/T0/I1 动画播放、帧列表、调色板；`script.fls` 条目只浏览不解码；`effect.fls` 41 个未破译条目仅 Hex 查看。
-- 编辑：PNG 替换精灵帧（带往返误差报告）、原始数据替换、按路径导入（路径哈希即条目号）、帧图转精灵导入、条目增删与撤销；保存时 `.bak` 备份 + 原子替换，未改条目逐字节原样。
+- 编辑：PNG 替换精灵帧（带往返误差报告）、原始数据替换、按路径导入（路径哈希即条目号）、帧图转精灵导入、条目增删与撤销；保存只生成新包，拒绝覆盖源资源及别名；发布前校验，未改条目逐字节原样。
 - 真名识别：内置 2,901 条布局路径字典，再从已命名 `.dlg` 扒出图片引用反查，`interface.fls` 中绝大多数 UI 图片可显示真名。
 - 导出：单条目 / 选中 / 整页 / 整包，按真名建目录树。
 
-### 8.2 UI 编辑器（`ui_editor/`，0.5.2）
+### 8.2 UI 编辑器（`ui_editor/`，0.8.4）
 
 - 打开散装 `.dlg` 或直接从 `.fls` 包内打开；左侧资源树按代际着色（现役新 UI / 第三代 / 死引用），`ui.lst` 自动作为样式表。
 - 画布点选、拖动、改尺寸，边缘/中线吸附与参考线，网格/标尺，多选对齐与等距分布；右侧属性面板按类型编辑任意字段；38 种控件的默认属性来自 47,139 个真实控件普查。
 - 撤销/重做 50 步；按钮正常/按下/悬停/禁用四态预览（切法是否与游戏一致以进游戏比对为准）。
-- 保存：写回原版式 `.dlg` 文本（`# -*- coding: gbk -*-` 头；显示文本 Big5、资源路径 GBK 分字段编解码）；「保存回资源包」生成新包、原包不动、写后逐条校验；可把新图片添加进包并自动转成游戏精灵格式；导出 PNG 对照。
-- 硬门槛：2,706 个已解密 `.dlg` 全部通过「解析 → 序列化 → 再解析」一致性测试（语料库未入库，由 `MXSJ_DLG_CORPUS` 指向）。
+- 保存：写回原版式 `.dlg` 文本（`# -*- coding: gbk -*-` 头；显示文本默认 Big5，可选择 GBK／UTF-8，资源路径仍 GBK；UTF-8 不代表游戏支持）；「保存回资源包」生成新包、原包不动、写后逐条校验；可把新图片添加进包并自动转成游戏精灵格式；导出 PNG 对照。
+- 外部语料回归：历史曾对 2,706 个已解密 `.dlg` 做往返一致性检查；语料未入库，由 `MXSJ_DLG_CORPUS` 指向。本轮未执行，不能当作当前全量通过。
 
 ### 8.3 共同边界与注意事项
 
-- **写回必须维持目录不变量**（0.3.3 / 0.5.2 的 P0 修复）：目录按 `entry_id` 升序、新增条目 `r1≠0`，否则游戏查不到新条目甚至卡屏。曾用旧版加图保存过的包，用新版打开再保存一次即可修复。该不变量与 `notes/` 中“引擎线性扫描目录”的结论尚未用反汇编统一，见 [STATUS §3.2](docs/STATUS.md)。
-- 只在客户端测试副本上使用；生成的新包与原包分离；与原版客户端的最终兼容性需要 Windows 原生进游戏验证，截至 STATUS 快照日期尚无用户反馈。
+- **写回必须维持目录不变量**：LoadFile 的二分寻址已由反汇编确认，目录按 `entry_id` 升序；`r1≠0` 保持为保守防守，不能称作已证实的引擎要求。旧包先在副本上验证，不承诺任意损坏包重新保存即可修复。见 [原生寻址结案](notes/native_dlg_path_cipher.md)。
+- 只在客户端测试副本上使用；生成的新包与原包分离；与原版客户端的最终兼容性需要 Windows 原生进游戏验证，已有特定版本／场景的用户反馈，但不等于完整验收。
 - 运行与测试：
 
 ```bash
@@ -382,66 +387,35 @@ python ui_editor/bootstrap.py [布局文件|目录|资源包]
 
 Windows 用户可直接双击 `resource_editor/启动编辑器.bat`、`ui_editor/启动UI编辑器.bat`（自动检查并安装依赖，失败原因写入同目录启动日志）。GUI 测试需要桌面环境；无 `libGL` 的无头环境只能跑核心测试。设计决策与路线见各自 `DESIGN.md` 和 [UI 编辑器二期设计](notes/ui_editor_phase2_design.md)。
 
-### 8.4 独立脚本编辑器（`script_editor/`，0.5.1.dev1）
+### 8.4 独立脚本编辑器（`script_editor/`，0.6.0.dev7）
 
 独立 PySide6 工具，支持 `script.fls` / `data.fls` 双包浏览、包内脚本恢复草稿、
 多标签编辑及项目续编；源码保存与生成新包分离，恢复稿须人工核验采用后才进入原生编译流程。
 支持标准 CPython 2.5.6 / 2.7.13 编译、严格双 VM 转换、完整回读及未改条目校验，原包只读。
 已交付的源码 ZIP 包含双 Windows 编译器及获授权的固定原包匹配参数；
 Git 不存放生成的编译器二进制，仅克隆仓库需按运行时文档重建，不能冒充完整交付 ZIP。
-0.5.1 修复 Python 3.14 依赖兼容问题；Windows EXE / 客户端执行仍待验收。
+dev7 按原生模块名与分段算法校准读写；研究参数可解析不代表正确。最新 dev7 是覆盖式源码更新，不是重新发行完整编译器包；Windows EXE／完整重编译新包的游戏执行仍需独立验收。
 入口：[工具 README](script_editor/README.md)，最新交付和测试见 [STATUS](docs/STATUS.md)。
 
 ## 9. 客户端注册界面预览
 
 ### 9.1 当前版本和交互范围
 
-当前候选为 **v3.3 控件修正版**，实现与证据位于 `tools/client_patches/`。
-
-- 首页入口改为简体「注册账号」。
-- 首页不预先加载注册模块，只有点击入口才加载；先准备目标页面，成功后再隐藏当前页面。
-- 协议页参考选区后服务条款布局；表单参考现有新登录布局/底图，不实例化旧登录控制器来借用业务流程。
-- 三个字段：邮箱、密码、确认密码。
-- 注册动作执行必填、邮箱格式/长度、密码 6–16 位和两次输入一致性检查；邮箱限制为基础 ASCII、最多 32 字符。
-- 合法输入也只显示离线提示，不创建账号，不保存凭据，不模拟注册成功。
-- Info「离线预览说明」直接显示「離線預覽，未送出。」；它不读取字段、不先做必填校验。
-- 上一步/拒绝不保存、不提交；保留原选区和登录流程。
-
-这是局部离线预览，不是整个客户端的断网沙箱。未改动的公告、官网、登录等部分仍可能保留原联网行为。
+现行原生实现位于 [tools/registration](tools/registration/README.md)，采用 PR #32 的版本。
+用户确认仅适用于该版测试范围，不推广为所有后续生成包或完整注册服务验收。
+**尚未连接真实注册服务，不创建真实账号。** 未修改的客户端部分仍可能保留原联网行为。
 
 ### 9.2 必须区分的版本事实
 
-| 版本 | 真实状态 |
-|---|---|
-| v1 / v2.1 | 曾收到局部导航/表单反馈，不能推广为后续版本验收 |
-| v3 | 用户实际报告游戏窗口黑屏，已停用，不应继续分发 |
-| v3.2 | 用户截图显示新协议/表单，但按钮、说明入口和光标等存在缺陷 |
-| v3.3 | 已修正相关控件接口、按钮图片与层级；90 项测试、22 项 CPython 审计通过；**尚未收到原生验收反馈** |
-
-v3.3 只修改 FLS 的 entry `337` / `4007`，其余 5000 条保持不变，原选区后条款/登录 entry `4806` 未改。原始 FLS 与密钥数据库不应被覆盖。
+- `tools/client_patches/` 的 v3/v3.2/v3.3 overlay、整图按钮与包外散图方案已作废，不再等待验收或分发。
+- 原生 `.dlg`／脚本方案与旧 overlay 是不同实现，旧测试计数不能作为新方案证据。
+- 历史字体／布局修复与 PR #32 用户反馈按版本追溯，见 [STATUS](docs/STATUS.md)。
 
 ### 9.3 重建、安装和恢复
 
-使用已提交冻结资产重建候选的示例：
-
-```bash
-python tools/client_patches/build_visual_preview.py \
-  --allow-unverified-candidate \
-  --output-dir ../mxsj-registration-v3_3-candidate
-```
-
-`--allow-unverified-candidate` 是明确承认尚未完成原生验收的保护开关，不代表绕过验证后就可正式发布。输出应使用仓库外新目录，输入版本/哈希不匹配时必须停止，不能强行套用。
-
-安装原则：
-
-1. 关闭游戏和更新器，准备完整客户端测试副本，备份其 `data/script.fls`。
-2. 核对版本和原包哈希。
-3. **同时更新生成的 FLS 与全部 8 张 PNG**；图片子目录沿用 `photo/registration_preview_v3`，不能因为名称未变就沿用旧图片。
-4. 只合并该图片子目录，不替换或删除整个 `photo`。
-5. 用假数据检查协议、返回、字段输入、鼠标焦点、Tab、闪烁光标、密码遮罩和离线分流。
-6. 若再次黑屏/崩溃，保留脱敏日志与哈希，停止盲试，关闭客户端后恢复备份。
-
-安装细节、已交付候选的哈希/链接、原生复测清单见 [v3.3 交付事实表](tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md)；开发说明见 [客户端补丁 README](tools/client_patches/README.md)、[v3.3 修正记录](tools/client_patches/REGISTRATION_CONTROL_FIX_V3_3.md)、[v3 黑屏自查](tools/client_patches/V3_STARTUP_SELF_AUDIT.md)。
+只按[原生实现说明](tools/registration/README.md)和[编辑器原生布局流程](tools/registration/EDITORS_NATIVE_LAYOUT_WORKFLOW.md)准备明确版本的测试副本。
+保留原包与摘要；输出新包，不覆盖仓库输入；失败后停止盲试并恢复已知备份。
+旧 README 的 v3.3 安装命令已移入[作废历史](docs/archive/2026-10-18-readme-registration.md)，不可作为操作入口。
 
 ## 10. Python 游戏服务端架构
 
@@ -483,24 +457,9 @@ python tools/client_patches/build_visual_preview.py \
 
 ### 11.1 最近已记录结果
 
-下表是**长期参考的套件清单与范围说明**；每个套件最近一次**实际运行**的结果（含红灯）记录在 [docs/STATUS.md §2](docs/STATUS.md)，以那里为准。测试计数按范围列出，不应简单相加作为项目完成率。
-
-| 范围 | 已记录结果 | 证据 / 局限 |
-|---|---|---|
-| 客户端补丁单元测试 | 90 通过 | [交接复核 JSON](notes/handoff/2026-10-12-checks.json) |
-| CPython 2.5 执行审计 | 22 通过 | [v3.3 审计](tools/client_patches/V3_3_RUNTIME_AUDIT.json)，图形/输入/调度仍有替身边界 |
-| 服务端架构 | ~150 项（2026-10-14 实测 1 FAIL + 1 ERROR，见 STATUS §3.1） | 证明目录/契约/静态边界与证据指纹，不证明玩法正确 |
-| 文件名映射 | 96/96 | 不是 5002 个模块已全部恢复 |
-| 批次核验 | 22 文件通过 | 递归含 17 CSV，仍为复核候选 |
-| 复核目录 / API | 34 / 27 通过 | 已有阶段集成记录 |
-| 复核网页 | 112 通过、9 在线项默认跳过 | 单独在线联调 12 通过包含相关在线项，不可直接累加 |
-| 独立复核验收套件 | 68 通过（2 项真实浏览器默认跳过） | 与地图编辑器历史上的 68 项是不同套件 |
-| 真实 Chromium | 16 场景完成 | 复核网页验收，不是游戏原生客户端验收 |
-| 地图编辑器 | 82 通过（PR #27 后；#25 时为 68） | 未覆盖全部已发现缺陷，不能据此信任 GIRB 输出 |
-| 资源编辑器 | 核心 29 通过 + 2 跳过；GUI/批量操作需桌面 | 真实包测试在 `data/` 存在时启用 |
-| UI 编辑器 | 核心 37 通过 + 1 跳过；GUI/绘制/写包需桌面 | 2,706 条 `.dlg` 往返测试需语料库（`MXSJ_DLG_CORPUS`） |
-
-只读复核工具的完整结果见 [ACCEPTANCE.md](server/docs/review_browser/ACCEPTANCE.md)。历史报告中的临时绝对路径是当时运行坐标，不是稳定的安装依赖。
+**当前计数、环境、跳过与未执行范围统一见 [STATUS §2](docs/STATUS.md)**，对应[本轮命令记录](docs/analysis/evidence/documentation_refresh_20261018.json)。
+架构测试只证明契约／结构，Catalog/API 测试只证明复核链，Mock 回环不等于真实客户端，编辑器回读不等于游戏语义。
+完整复核工具的历史验收见 [ACCEPTANCE.md](server/docs/review_browser/ACCEPTANCE.md)；旧 Qt／浏览器／Windows 记录按原日期和版本理解，不计入本轮结果。
 
 ### 11.2 常用复跑命令
 
@@ -557,15 +516,9 @@ REVIEW_API_BASE=http://127.0.0.1:8000 npx vitest run src/api/liveBackend.test.ts
 
 ### 12.1 优先处理的工作
 
-排序后的待办与阻塞项以 [docs/STATUS.md §4–§5](docs/STATUS.md) 为准；下面是长期有效的工作方向：
-
-1. **完成 v3.3 原生验收闭环。** 按按钮、焦点、光标、遮罩、验证、返回、再次进入逐项记录，不把部分截图当成整体通过。
-2. **保持证据指纹与工具同步。** 改动被证据 JSON 钉死的工具（如 `batch_decompile.py`）后必须重新生成证据并逐字段 diff，否则架构套件变红。
-3. **提升而不是伪装 GIRB 覆盖率。** 用原解压子程序的字节级结果加回归用例；失败保持未知。
-4. **编辑器实机验证。** 在 Windows + 真实 `interface.fls` 上验证写回的新图/布局进游戏可见；统一“目录线性扫描 vs 有序寻址”的结论。
-5. **独立审查协议行为修正。** 核对 `mock_server.py` 中 opcode、包长度与真实客户端处理，避免“注释修正”掩盖运行变化。
-6. **继续数据证据复核。** 保留隔离与歧义，明确何时能进入正式配置；不要为了填满表而编造规则。
-7. **落实第一条真实服务端链路。** 从网关、账号、区服角色范围和持久化边界入手，逐步打通注册至地图；不并行宣称全玩法已实现。
+当前阻塞项以 [STATUS §2](docs/STATUS.md) 为准，建议阶段与验收门槛见 [ROADMAP](docs/ROADMAP.md)。
+顺序为：文档与检查基线 → Windows／原生交付验证 → 正式服务端最小链路 → 任务奖励闭环 → 地图／战斗扩展。
+这些是待授权实施的规划，本轮不新增 CI、升级依赖或实现游戏服务。旧 overlay 注册 v3.3 不再列入验收任务。
 
 ### 12.2 开发时的停止条件
 
@@ -611,9 +564,9 @@ REVIEW_API_BASE=http://127.0.0.1:8000 npx vitest run src/api/liveBackend.test.ts
 | 想知道客户端 `mx.exe` / `mxmain.dll` / `mxLauncher.exe` 能逆向到什么程度 | [客户端二进制可逆性实测](notes/client_binary_reversibility.md)（出不了源码；54% 镜像是加密壳；原生类名不在明文里） |
 | 要抽客户端/启动器的图与版式（皮肤、光标、对话框、字串） | `python3 tools/data-parser/pe_resource_dump.py mxLauncher.exe --dump out/rsrc`；资源包主体在 `data/*.fls` 与 `update.ini`，见[可逆性实测 §6–§7](notes/client_binary_reversibility.md) |
 | 要改启动器皮肤上的文字（繁→简）并写回 exe | `skin_label_patch.py` 改图 + `--pad-to` 凑长度，再用 `pe_resource_patch.py` 原位写回 `.rsrc`；步骤与边界见[可逆性实测 §9](notes/client_binary_reversibility.md) |
-| 修改注册预览 | [客户端补丁说明](tools/client_patches/README.md)、[v3.3 修正](tools/client_patches/REGISTRATION_CONTROL_FIX_V3_3.md)、[v3.3 交付事实表](tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md) |
+| 修改注册预览 | [原生注册](tools/registration/README.md)、[编辑器流程](tools/registration/EDITORS_NATIVE_LAYOUT_WORKFLOW.md)；旧 overlay 禁止分发 |
 | 设计接入与运维 | [GATEWAY.md](server/docs/GATEWAY.md)、[GATEWAY_SECURITY_GM.md](server/docs/GATEWAY_SECURITY_GM.md) |
-| 了解历史研究 | [work 索引](work/dream-world-connect-login-map/INDEX.md)，客户端侧权威现状 [client-status-20261012.md](work/dream-world-connect-login-map/report/client-status-20261012.md) |
+| 了解历史研究 | [work 索引](work/dream-world-connect-login-map/INDEX.md)，2026-10-12 客户端研究快照 [client-status-20261012.md](work/dream-world-connect-login-map/report/client-status-20261012.md) |
 
 归档目录里的文档保留的是写作当时的“下一步 / 分支 / 计数”，不应静默把它们理解为最新承诺；现行状态只看 `docs/STATUS.md`。
 
@@ -621,7 +574,7 @@ REVIEW_API_BASE=http://127.0.0.1:8000 npx vitest run src/api/liveBackend.test.ts
 
 **Q：现在能一条命令启动游戏服务端吗？**
 
-不能。可以启动复核工具，不等于已有游戏账号、地图、战斗或持久化服务。
+正式游戏服务端不能。只读复核工具和本地 Mock 有运行入口，但不是安全认证、事务持久化与完整玩法服务；Mock 先读 [副作用说明](docs/MOCK_SERVER.md)。
 
 **Q：是否需要现在就安装 PostgreSQL？**
 
@@ -629,7 +582,7 @@ REVIEW_API_BASE=http://127.0.0.1:8000 npx vitest run src/api/liveBackend.test.ts
 
 **Q：地图编辑器测试全绿，为什么还标为有问题？**
 
-现有用例没有覆盖所有复杂压缩路径。独立对照已经发现长度正确但内容错误、超长被截断和导出覆盖源文件的问题；测试通过只能说明所覆盖断言通过。
+现有用例没有覆盖所有复杂压缩路径。历史假成功、静默截断与覆盖源文件问题已有修复，仍未解的 GIRB 扇区是另一限制；见 PR25_REVIEW 的逐项更新，测试通过只证明所覆盖断言。
 
 **Q：为什么历史文档里有两个“68 项测试”？**
 
@@ -637,7 +590,7 @@ REVIEW_API_BASE=http://127.0.0.1:8000 npx vitest run src/api/liveBackend.test.ts
 
 **Q：资源编辑器 / UI 编辑器能直接改线上客户端吗？**
 
-不建议。它们生成新包、原包不动，但与原版客户端的最终兼容性要在 Windows 测试副本里进游戏验证；曾用 0.3.3 / 0.5.2 之前版本新增过条目的包，先用新版重新保存一次修复目录。
+不建议。它们生成新包、原包不动，但与原版客户端的最终兼容性要在 Windows 测试副本里进游戏验证；旧工具生成包应先在备份副本检查目录和负载，不保证任意旧包重新保存即可修复。
 
 **Q：网页正常打开，是否代表数据可以作为正式规则？**
 
@@ -645,7 +598,7 @@ REVIEW_API_BASE=http://127.0.0.1:8000 npx vitest run src/api/liveBackend.test.ts
 
 **Q：v3.3 是否已经证明解决黑屏和所有界面问题？**
 
-已定位旧 v3 的具体错误，并对后续候选执行离线/兼容性检查；但 v3.3 的 Windows 原生验收仍待反馈，不能提前作此保证。
+不是。v3/v3.2/v3.3 整体方案已被否决并作废，不能继续安装或等待验收；现行原生实现见第 9 节。
 
 **Q：能否直接运行旧 Mock 来补全链路？**
 

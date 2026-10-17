@@ -1,5 +1,8 @@
 # MXSJ Python 服务端工程骨架
 
+> **三条链路分开维护**：正式 `mxsj_server` 仍只有设计与契约；只读 Catalog/API/Web 已实现；根目录 Mock 已有本地模拟交互，但无正式认证与事务保证，启动前读 [Mock 边界](../docs/MOCK_SERVER.md)。
+> 最近测试统一见 [STATUS](../docs/STATUS.md)，下一阶段建议见 [ROADMAP](../docs/ROADMAP.md)。目录与接口测试通过不代表游戏服务可部署。
+
 > 接手请先读根目录 [AGENTS.md](../AGENTS.md)（规则与地图）和 [docs/STATUS.md](../docs/STATUS.md)（当前状态、红灯、下一步）。2026-10-12 的完整交接快照已归档至 [docs/archive/](../docs/archive/README.md)。
 
 **状态：模块边界与内部接口 v0.1 草案。游戏运行时尚无网络服务、数据库实现或可游玩业务；独立只读复核 API/网页已交付。**

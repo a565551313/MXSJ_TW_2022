@@ -6,7 +6,7 @@
 ## 0. 这是什么 / 不是什么
 
 - 围绕《夢想世界》台服客户端 **v2.27.2**（多益网络）的逆向研究 + 工具链 + Python 私服重建。仓库根目录**就是一份游戏安装目录**，上面叠加了工具与文档。
-- **不是**可游玩的服务端，也**不是**已验收的客户端发行版。服务端目前只有契约与设计（`server/src/mxsj_server/` 无运行代码）。
+- **不是**可游玩的服务端，也**不是**已验收的客户端发行版。正式服务端目前只有契约与设计（`server/src/mxsj_server/` 无业务运行实现）；根目录 Mock 已有本地交互模拟，但不是正式服务。
 - 项目原则：**能展示 ≠ 能运行，能运行 ≠ 正确，测试通过 ≠ 原生验收完成。** 所有完成声明都要有范围、版本和可追溯证据。
 
 ## 1. 开始前的 60 秒
@@ -33,12 +33,14 @@
 | `docs/DECOMPILE_CORPUS.md` | 全量反编译语料（79 MB / 5,517 份 `.py`）**要不要建、怎么建**：30 秒决策表、实测过的重建配方、4 个已复现的坑 | [`notes/opcode_mapping_and_decompilation.md`](notes/opcode_mapping_and_decompilation.md) §4.5–§4.6 |
 | `docs/PYTHON_TOOL_CONVENTIONS.md` | Python 工具 / 编辑器开发约定（PEP 8、PySide6、自检启动脚本、一键 EXE、Windows 交付检查） | 本文 §5 |
 | `notes/` | 逆向**结案**笔记：双 VM opcode 表、0SLF 路径哈希与 `.dlg`、游戏数据 | 各文件自述 |
-| `work/dream-world-connect-login-map/` | 早期研究区（297 份笔记、证据、报告、专项工具）；客户端侧权威现状 = `report/client-status-20261012.md` | [`INDEX.md`](work/dream-world-connect-login-map/INDEX.md) |
+| `work/dream-world-connect-login-map/` | 早期研究区（297 份笔记、证据、报告、专项工具）；2026-10-12 客户端研究快照 = `report/client-status-20261012.md`，不替代当前 STATUS | [`INDEX.md`](work/dream-world-connect-login-map/INDEX.md) |
 | `tools/decompiler/` | 双 VM 字节码反编译、5 段 XOR 重打包；`output/` 是反编译文本（**不准确、不可执行，只作线索**） | `notes/opcode_mapping_and_decompilation.md` |
 | `tools/data-parser/` | `universal_fls_tool.py`、`mx_path_hash.py`、`extract_dlg.py`、`i0_sprite.py`、`pe_resource_dump.py`（从 exe/dll 的 `.rsrc` 抽皮肤/光标/版式/字串）、`skin_label_patch.py` + `pe_resource_patch.py`（皮肤改字并原位写回）、精灵格式说明 | `I0_SPRITE_FORMAT.md` |
-| `tools/client_patches/` | 注册 UI 离线预览补丁（只改 entry 337/4007），构建器、测试、冻结资产、CPython 2.5 审计。**v3.3 已由用户判定不规范并作废（2026-10-14），待还原原包并按原生重做，不得再分发** | [`README.md`](tools/client_patches/README.md)、[`V3_3_DELIVERY_AND_ACCEPTANCE.md`](tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md) |
+| `tools/client_patches/` | 注册 UI 离线预览补丁（只改 entry 337/4007），构建器、测试、冻结资产、CPython 2.5 审计。**v3.3 已由用户判定不规范并作废（2026-10-14），不得再分发；现行原生实现见 `tools/registration/`** | [`README.md`](tools/client_patches/README.md)、[`V3_3_DELIVERY_AND_ACCEPTANCE.md`](tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md) |
 | `tools/devkit/` | 开发自检工具箱：`check_windows_compat.py`（Windows 兼容静态检查，交付前必跑）、`vendor_core.py`（`mx_common/` → 编辑器 `core/` 的共享核心分发器） | [`README.md`](tools/devkit/README.md) |
 | `tools/data-export/`、`tools/data_browser/`、`tools/dis_v43/`、`tools/*.py` | 历史数据导出/浏览/反汇编工具，仍可用但不是现行复核入口 | — |
+| `script_editor/` | 双 VM 脚本恢复候选、编辑／编译／新包验证；Git 不含完整运行时发行材料 | [`README.md`](script_editor/README.md) |
+| `script_manual/` | 只读脚本目录、有限说明、专题和摘要绑定审核 | [`README.md`](script_manual/README.md) |
 | `mx_common/` | 编辑器共享核心**唯一真源**（`mxhash.py`、`native_layout.py`、`output_paths.py`、`sprite_format.py`）；编辑器里的同名文件是 `tools/devkit/vendor_core.py` 生成的副本，**改真源**再用 `--write` 分发 | [`README.md`](mx_common/README.md) |
 | `resource_editor/` | `.fls` 资源包浏览/编辑器（PySide6；core 无 Qt） | [`README.md`](resource_editor/README.md)、`DESIGN.md` |
 | `ui_editor/` | `.dlg` 布局可视化编辑器（PySide6；core 无 Qt） | [`README.md`](ui_editor/README.md)、`DESIGN.md`、`notes/ui_editor_phase2_design.md` |
@@ -46,7 +48,7 @@
 | `server/src/mxsj_server/` | 游戏服务端**骨架**：21 个模块只有 `contracts.py` | [`server/README.md`](server/README.md)、`server/docs/*.md` |
 | `server/src/mxsj_catalog/` + `server/apps/review_api/` + `server/apps/review_web/` | 只读静态数据复核链（加载器 → FastAPI → React） | `server/docs/review_browser/` |
 | `server/docs/csv_checks/batch_001/` | 首批待审 CSV + manifest + 证据（**不是**正式配置） | `server/docs/csv_checks/BATCH_001.md` |
-| `mock_server.py` | 历史联调 Mock（协议真值已按客户端修正，但从未与真机联调） | 文件头 docstring |
+| `mock_server.py` | 本地协议模拟器，有登录／进图／交互与客户端写入副作用，不作正式服务端 | [`边界与副作用`](docs/MOCK_SERVER.md) |
 | `data/*.fls`、`map/*.map`、`Fonts/`、`mx.exe`、`mxmain.dll`、`exe/python27*.dll` | 工具与逆向依赖的客户端材料；`.gitignore` 只白名单了部分 | — |
 | 其余根目录 `*.dll/*.exe/*.pak/music*/log/` | 客户端运行时与用户日志，工具不依赖；部分日志被 `work/.../evidence` 引用 | — |
 
@@ -62,10 +64,12 @@
 | 地图编辑器 | `Pillow>=10`；GUI 另需 PySide6 + 桌面 | `(cd map_editor && python3 -m unittest discover -s tests)`；`python3 map_editor/run.py --scan .` |
 | 资源编辑器 | PySide6 + Pillow | `(cd resource_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`；运行 `PYTHONPATH=resource_editor/src python3 -m resource_editor data`（或 `python3 resource_editor/bootstrap.py`） |
 | UI 编辑器 | PySide6（+Pillow 转精灵）；`.dlg` 语料库在 `MXSJ_DLG_CORPUS` | `(cd ui_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`；运行 `python3 ui_editor/bootstrap.py` |
-| 开发工具箱 / 风格检查 | 标准库；ruff 另装（`pip install ruff`，根 `ruff.toml` 为默认配置） | `python3 -m unittest discover -s tools/devkit/tests`；`python3 tools/devkit/check_windows_compat.py <dir>`；`ruff check <dir>` |
+| 脚本编辑器 | 本目录 requirements；旧 VM 编译器／恢复引擎材料另见运行时文档 | `PYTHONPATH=script_editor/src python3 -m unittest discover -s script_editor/tests`；`python3 script_editor/bootstrap.py --check-only` |
+| 脚本手册 | 本目录 requirements；核心校验需 jsonschema，GUI 需 PySide6 | `PYTHONPATH=script_manual/src python3 -m mxsj_manual validate --verify-evidence --repository . --require-full-inventory`；`python3 script_manual/check_manual.py`（统一闸门还需开发依赖） |
+| 开发工具箱 / 风格检查 | 检查脚本为标准库；完整测试还需 Pillow；ruff 另装（`pip install ruff`，根 `ruff.toml` 为默认配置） | `python3 -m unittest discover -s tools/devkit/tests`；`python3 tools/devkit/check_windows_compat.py <dir>`；`ruff check <dir>` |
 
 - 用仓库**外**的 venv（`python3 -m venv ../mxsj-venv`）；系统 pip 受 PEP 668 保护。
-- 无 `libGL.so.1` 的沙箱跑不了任何 Qt 测试（`test_gui*`、`test_painters`、`test_pack_build`、`test_batch_ops` 会 ImportError）；这是环境限制，**记录为未执行，不算通过**。
+- 每轮重新探测 Python、Qt 与系统库；缺依赖可能导致导入失败或跳过。**跳过／未执行不算通过**，历史沙箱库与离屏结果不证明当前环境或 Windows 可用。
 - 冻结客户端片段需要 CPython **2.5.6**（仅编译/审计用，见 `tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md` §5），不是服务端运行版本。
 
 ## 4. 红线（违反任何一条都要先停下来问）
@@ -84,7 +88,7 @@
 **仓库与协作**
 8. 不 `git add` 生成的 FLS/ZIP、`node_modules`、编译器、浏览器缓存。新增大二进制前先问。
 9. 不切分支、不 force-push、不合入 `master`、不发布生产，除非用户当轮明确授权。PR 描述里**行为变更**（协议号、封包长度、导出写入、配置路径）必须写明，不能写成“只改注释”。
-10. 不自动启动根目录 `mock_server.py` 对真实客户端；先审查参数与副作用。
+10. 不自动启动根目录 `mock_server.py` 对真实客户端；先读 `docs/MOCK_SERVER.md`。默认启动可能改 FLS、写开发模式并监听所有地址；`--no-patch` 不等于完全只读。自测也有固定临时文件副作用。
 11. 不索取、不记录真实账号、密码、票据、密钥；不改 Drive 权限、不发邮件。
 
 **原生优先（用户 2026-10-14 定，适用于一切面向客户端的功能）**
@@ -112,16 +116,16 @@
 
 ## 7. 已知坑（详见 STATUS 与各子项目文档）
 
-- GIRB 碰撞解码仍有 300/429 扇区解不出；现在明确失败而非假成功。不要拿旧的成功率反驳字节级差异。
+- GIRB 在 1034/1035 固定样本中仍有 300/429 扇区解不出（不是全地图统计）；现在明确失败而非假成功。不要拿旧的成功率反驳字节级差异。
 - 0SLF 目录寻址**已判定（2026-10-16，反汇编）**：`.dlg` 走的 LoadFile 链在 `0x60DD00`
   用 **二分**（`0x60DD35` → `0x60E690` = `lower_bound`，16 字节记录、比 entry_id；返回后
   `0x60DD3D`/`0x60DD41` 判未命中）。所以**目录必须按 entry_id 升序**，新增/插入条目后
   其后所有记录的下标都变、`r3` 必须重算。`notes/fls_path_hash_and_dlg.md` §2 的「线性扫描」
   说的是 `0x48ECF0`（= `ReadFls`）那条路，该文已加更正横幅；细节见
   `notes/native_dlg_path_cipher.md` §2.1。改目录写回逻辑前先读这两处。
-- `GS2C_PROP_CHANGE` 与 `GS2C_NPC_CHAT_EXT` 在客户端表里同为 152（客户端自身冲突）；链路帧 `0xFF` 续读长度是 **2 字节**。
-- `script.fls` 模块导入不走路径哈希（未解）；`.dlg` 原生路径 XOR 已由真实 LoadFile 静态链定位（见 `notes/native_dlg_path_cipher.md`）；头反推只作旧存储读取兼容，不能用于写包验证。
-- 仓库里**没有任何真实客户端抓包字节**；所有协议结论来自静态分析。
+- 历史协议号／帧结论必须绑定具体链路：旧记录有 `0xFF` 后续读 2 字节，当前 Mock 使用 `MAX_LEN_BYTES=3`。不要套用无版本的“协议真值”；先读 `docs/MOCK_SERVER.md`，修改需独立证据。
+- `script.fls` 模块导入不走 `.dlg` 的完整路径寻址；当前脚本编辑器以模块名 seed 与 `hash(basename + ".s")` 绑定身份（见 `script_editor/src/script_editor/core/vm/py25/cipher.py`）；`.dlg` 原生路径 XOR 已由真实 LoadFile 静态链定位（见 `notes/native_dlg_path_cipher.md`）；头反推只作旧存储读取兼容，不能用于写包验证。
+- 静态分析、Mock 回环、用户实机反馈和真实抓包是不同证据。不能把回环生成的报文称为真实客户端抓包；也不能沿用旧文档断言全部研究材料的覆盖范围。
 - 反编译产物 ≠ 可回编译源码（2026-10-15 用自建 CPython 2.5.6 实测）：这批 `.pyo` 的模块码对象以 RETURN_VALUE 收尾，uncompyle6 如实还原成模块顶层一句 `return`，于是 4,998 个产物里有 3,220 个**只因这一行** `compile()` 不过（剥掉后 75.4% 可编译）。走「编辑后回编译」管线前必须先剥它，并对候选文件做一次 `compile()` 校验；第二引擎 pycdc 的产物没有这个伪影，但自身语法错误率更高（48.4% 可编译），只用于阅读与交叉印证（详见 `notes/opcode_mapping_and_decompilation.md` §4.6）。
 - 清点 `script.fls` 的反编译产物**必须扫目录**，别按 `script_entries.jsonl` 的 `current_filename` 匹配：12 个条目的包内自报文件名带位元污染（含 `\x00`/`?`/`*`），`batch_decompile` 写文件时会抛 `OSError` 而**静默零产物**；catalog 无名条目则落在 `script/unknown/`。2026-10-15 复核：所谓「26 条无产物」= 13 条清点误差 + 9 条可救 + 4 条无解。定点恢复用 `tools/decompiler/recover_entries.py`（只读复用 `batch_decompile`，它的 SHA 被 `agent_e_reproduction.json` 锁定，不要改）。
 - 「某模块不在 `script.fls` 里」这类结论要先回查条目自报路径再下判断：`servicedata` 曾被判缺失，实际是无名条目 `1931` → `script/data/servicedata.py`，真条款全文一直在包内，而客户端就是裸名 `import servicedata`（`script/data` 在 import 路径上）。
@@ -132,10 +136,8 @@
 - 本版本 `interface.GCODE = BIG5`，但 `GetGameRegion()` 被 `script/delegate.py` 覆盖成 `'cn'`，
   即台服构建用的是**简中屏蔽词子集**（表现是命中变 `*`，不是乱码）。做简体化时别用简繁转换
   掩盖解码错误（`裏`/`羣` 等在 cp950 不可编码，会静默丢字）。
-- `tools/decompiler/batch_decompile.py` 整池并行会被个别超大字节码模块- **别默认全量反编译语料存在**：它按红线只写在仓库外，沙箱重置就没。要判断「某符号在整档有没有定义者」这类否定命题，先按 [`docs/DECOMPILE_CORPUS.md`](docs/DECOMPILE_CORPUS.md) §2 的秒级捷径（单条救回 + 数标识符，实测 2.3 s/条）；只有语义级全档检索才花小时级重建全量。该文 §4 的坑 P1（用错解释器会把 5,002 条全写成 52 字节占位且退出码 0）是本轮实测出来的。
-（实测 entry 2371
-  `preload_mov`、2679 `wingtypeposdata`）堵死——uncompyle6 在几千常量的数据表上指数级爆炸。
-  补跑全量请用「一条一子进程 + 超时」驱动；产物 62 MB 级别，不要入库。
+- **别默认全量反编译语料存在**：生成物写在仓库外，环境变化后需重新确认。全档符号检索前先读 [`docs/DECOMPILE_CORPUS.md`](docs/DECOMPILE_CORPUS.md)，优先定点恢复；只有确需语义级全档检索才重建全量。
+- `tools/decompiler/batch_decompile.py` 整池并行可能被超大常量模块堵住（历史 entry 2371 `preload_mov`、2679 `wingtypeposdata`）；补跑采用逐条子进程与超时，生成物不入库。
 - `tools/decompiler/output/` 下的 `.py` 是反编译输出，有缺失和错误，不是源码。
 
 ## 8. 术语

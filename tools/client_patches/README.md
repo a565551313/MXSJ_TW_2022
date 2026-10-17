@@ -1,5 +1,7 @@
 # 客户端局部测试补丁：注册流程预览
 
+> 现行实现请转到 [原生注册](../registration/README.md)。本页下方所有“当前候选”、构建和安装步骤均为作废方案的历史，不是可执行交付建议。
+
 > **⛔ 已作废（2026-10-14）**：用户判定本专题的 overlay 做法不规范（代码拼凑控件、整图烤字按钮、包外散图，非游戏原生实现），v3 / v3.2 / v3.3 全部停止分发，不再等待原生验收。测试副本请按 STATUS 还原原包；重做方向为「原生 `.dlg` + 原生脚本套路」，并入 UI 编辑器 × script.fls 联动（见 `docs/STATUS.md` §5）。以下内容仅作历史记录保留。原生优先规矩见 `AGENTS.md` §4 第 12、13 条。
 
 > 接手请先读根目录 [AGENTS.md](../../AGENTS.md) 与 [docs/STATUS.md](../../docs/STATUS.md)。本专题的交付哈希/链接、FLS 封装参数、构建/审计命令、Windows 安装回退与原生验收清单集中在 [V3_3_DELIVERY_AND_ACCEPTANCE.md](V3_3_DELIVERY_AND_ACCEPTANCE.md)（原根目录 `AGENT_HANDOFF.md` 的事实部分，原文已归档）。
