@@ -2396,13 +2396,21 @@ class ClientSession:
             return
 
         # 2. Time Sync (`C2GS_REQUEST_TIME = 61` / `C2GS_TIME = 31` in `script.fls`, `15` in `data.fls`)
+        #    Note: `mxgw` and `dlgcalendar.C2SGetServerTime()` both send `C2GS_REQUEST_TIME = 61`.
+        #    Reply with `GS2C_TIME = 31` (100Hz centiseconds for `mxgw`) AND `GS2C_TIME_SECOND = 192`
+        #    (Unix seconds for `dlgcalendar.S2CTime`). Both client handlers are guarded.
         if opcode in (C2GS_REQUEST_TIME, C2GS_TIME, C2GS_REQUEST_TIME_LEGACY):
             is_legacy = opcode == C2GS_REQUEST_TIME_LEGACY
             log(f"[C2GS <- {self.addr[1]}] C2GS_REQUEST_TIME (op={opcode})")
             self.send_raw(
                 build_gs2c_time(legacy=is_legacy),
-                f"GS2C_TIME(op={GS2C_TIME_LEGACY if is_legacy else GS2C_TIME})",
+                f"GS2C_TIME(op={GS2C_TIME_LEGACY if is_legacy else GS2C_TIME}, unit=centiseconds)",
             )
+            if not is_legacy:
+                self.send_raw(
+                    build_gs2c_time_second(),
+                    f"GS2C_TIME_SECOND(op={GS2C_TIME_SECOND}, unit=seconds)",
+                )
             return
 
         # 3. System Settings Switch (`C2GS_PLAYER_SYSSWITCH = 21` -> `nethero.C2SSaveSetting` / `C2SSavePrice` / `C2SSaveSystemData`)
@@ -3851,6 +3859,8 @@ def run_self_test() -> int:
     send_c2gs(C2GS_REQUEST_TIME, b"")
     op_t1, body_t1 = recv_gs2c()
     assert op_t1 == GS2C_TIME and struct.unpack_from("<I", body_t1, 0)[0] >= 10000
+    op_t2, body_t2 = recv_gs2c()
+    assert op_t2 == GS2C_TIME_SECOND and abs(struct.unpack_from("<I", body_t2, 0)[0] - int(time.time())) <= 5
 
     send_c2gs(C2GS_OPEN_UI, b"\xf1")  # isub = 241 (`nethero.C2SRefreshServerTime`)
     op_r1, body_r1 = recv_gs2c()
