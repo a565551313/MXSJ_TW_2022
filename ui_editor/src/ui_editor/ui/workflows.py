@@ -101,7 +101,9 @@ class FileWorkflowsMixin:
 
     def _add_pack_to_tree(self, pack_path: str,
                           layouts: list[str]) -> None:
-        """包入树；近乎全量的主 UI 包再挂包内缺失（灰显）名单。"""
+        """只将有已识别布局的包入树；图片包仍挂载供资源读取。"""
+        if not layouts:
+            return
         missing: list[str] = []
         if len(layouts) * 2 >= len(known_layout_paths()):
             missing = self.resolver.missing_layouts(pack_path)
@@ -121,7 +123,7 @@ class FileWorkflowsMixin:
                 self, "没有布局文件",
                 f"该资源包内没有已识别的布局：\n{path}\n\n"
                 "（图片等其它资源已照常挂载，打开布局时可自动取图；"
-                "可在左侧包节点右键导入本地布局。）")
+                "左侧已隐藏这个 0 布局包。）")
         elif count > 0:
             self._update_status(
                 f"已挂载 {Path(path).name}：识别到 {count} 个布局，"
@@ -242,14 +244,15 @@ class FileWorkflowsMixin:
                 continue
             layouts = self.resolver.scan_layouts(str(pack_file))
             if not layouts:
-                skipped += 1  # 无已识别布局也入树，允许右键新增
+                skipped += 1  # 保留资源挂载，但不在布局树显示
+                continue
             self._add_pack_to_tree(str(pack_file), layouts)
             added += 1
         self._try_load_styles()
         self.scene.refresh_all()
         self._update_status(
             f"资源目录：{path}；新入树 {added} 个包"
-            f"（其中 {skipped} 个无已识别布局，可右键导入）。{self.resolver.summary}；"
+            f"（另隐藏 {skipped} 个无已识别布局的包）。{self.resolver.summary}；"
             "双击包中布局即可切换打开。")
 
     def open_resource_dir_dialog(self) -> None:

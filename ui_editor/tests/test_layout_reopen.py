@@ -127,9 +127,7 @@ class TestLayoutReopen(unittest.TestCase):
         warning.assert_called_once()
         self.assertIsNone(window.doc)
         self.assertEqual(self.settings.value("known_layout_paths", []), [])
-        self.assertEqual(
-            window.resource_panel._roots[("pack", str(self.pkg))].childCount(), 0
-        )
+        self.assertNotIn(("pack", str(self.pkg)), window.resource_panel._roots)
 
     def test_registration_paths_recognized_without_prior_settings(self):
         data = pack_build.build_archive(

@@ -135,6 +135,10 @@ class ResourceTreePanel(QWidget):
             root = self._pending_item.parent()
             root.takeChild(root.indexOfChild(self._pending_item))
             self._pending_item = None
+            if root.childCount() == 0:
+                data = root.data(0, Qt.ItemDataRole.UserRole)
+                self._roots.pop(("pack", data[1]), None)
+                self._tree.takeTopLevelItem(self._tree.indexOfTopLevelItem(root))
 
     def show_pending(self, pack_path: str, res_path: str) -> None:
         """仅单文档待入包叶子；取消/切换时删除，不假装已在源包里。"""
@@ -145,6 +149,8 @@ class ResourceTreePanel(QWidget):
         leaf.setData(0, Qt.ItemDataRole.UserRole, ("pending", pack_path, res_path))
         leaf.setToolTip(0, "当前编辑文档，尚未写入资源包；保存只生成新包。")
         root.addChild(leaf)
+        if root.childCount() == 1:
+            root.setText(0, f"{Path(pack_path).name}（待入新包）")
         self._pending_item = leaf
         self._search.clear()
         root.setExpanded(True)
