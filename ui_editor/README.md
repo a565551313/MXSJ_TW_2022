@@ -138,7 +138,10 @@
 * 尺寸：`iWidth/iHeight` 为正用之，为 0 取图片首帧尺寸
   （`CImagesFrame` 按行列推算）；坐标相对父控件。
 * 绘制是编辑用近似渲染：图片画首帧、文字按钮按 `ui.lst`
-  的 TBStyle 着色、文字按 `iFont` 字体表绘制。
+  的 TBStyle 着色、文字按 `iFont` 字体表绘制。九宫格目前只有
+  `CPngNineFrame` 的**固定三分**近似（边角不拉伸、边与中心拉伸，
+  切割线不可配、未与游戏切法比对）；M3.3 的切割线编辑与数据摸底
+  仍未做，`notes/ui_editor_phase2_design.md` §2.3 的范围不变。
 
 ## 测试
 

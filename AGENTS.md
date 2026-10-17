@@ -112,7 +112,12 @@
 ## 7. 已知坑（详见 STATUS 与各子项目文档）
 
 - GIRB 碰撞解码仍有 300/429 扇区解不出；现在明确失败而非假成功。不要拿旧的成功率反驳字节级差异。
-- `notes/fls_path_hash_and_dlg.md` 说引擎**线性扫描**目录，而编辑器 P0 修复依据是“有序目录 / 二分寻址 + `r1≠0`”——两者尚未用反汇编统一；改目录写回逻辑前先看 `mx.exe:0x48ECF0`。
+- 0SLF 目录寻址**已判定（2026-10-16，反汇编）**：`.dlg` 走的 LoadFile 链在 `0x60DD00`
+  用 **二分**（`0x60DD35` → `0x60E690` = `lower_bound`，16 字节记录、比 entry_id；返回后
+  `0x60DD3D`/`0x60DD41` 判未命中）。所以**目录必须按 entry_id 升序**，新增/插入条目后
+  其后所有记录的下标都变、`r3` 必须重算。`notes/fls_path_hash_and_dlg.md` §2 的「线性扫描」
+  说的是 `0x48ECF0`（= `ReadFls`）那条路，该文已加更正横幅；细节见
+  `notes/native_dlg_path_cipher.md` §2.1。改目录写回逻辑前先读这两处。
 - `GS2C_PROP_CHANGE` 与 `GS2C_NPC_CHAT_EXT` 在客户端表里同为 152（客户端自身冲突）；链路帧 `0xFF` 续读长度是 **2 字节**。
 - `script.fls` 模块导入不走路径哈希（未解）；`.dlg` 原生路径 XOR 已由真实 LoadFile 静态链定位（见 `notes/native_dlg_path_cipher.md`）；头反推只作旧存储读取兼容，不能用于写包验证。
 - 仓库里**没有任何真实客户端抓包字节**；所有协议结论来自静态分析。
