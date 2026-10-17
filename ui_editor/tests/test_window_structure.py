@@ -11,6 +11,7 @@ GROUPS = {
     "main_window.py": "MainWindow",
     "commands.py": "EditingCommandsMixin",
     "workflows.py": "FileWorkflowsMixin",
+    "source_actions.py": "SourceActionsMixin",
     "window_setup.py": "WindowSetupMixin",
 }
 
@@ -42,7 +43,7 @@ class WindowStructureTests(unittest.TestCase):
     def test_mixins_do_not_take_over_qobject_initialization(self):
         window = class_node("main_window.py")
         self.assertEqual([base.id for base in window.bases], [
-            "EditingCommandsMixin", "FileWorkflowsMixin",
+            "EditingCommandsMixin", "FileWorkflowsMixin", "SourceActionsMixin",
             "WindowSetupMixin", "QMainWindow",
         ])
         for filename in GROUPS:

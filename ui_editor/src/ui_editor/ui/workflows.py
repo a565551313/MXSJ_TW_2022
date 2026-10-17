@@ -37,12 +37,15 @@ class FileWorkflowsMixin:
         if not self._confirm_discard():
             return
         try:
-            dicts, md5 = dlg_codec.parse_bytes(Path(path).read_bytes())
+            data = Path(path).read_bytes()
+            dicts, md5 = dlg_codec.parse_bytes(
+                data, text_encoding=self.resolver.text_encoding)
         except Exception as exc:
             QMessageBox.warning(self, "打开失败", str(exc))
             return
         doc = LayoutDocument.from_dicts(dicts, md5)
         doc.source_path = str(path)
+        doc.source_bytes = data
         self.resolver.add_loose_dir(Path(path).parent)
         self._try_load_styles()
         self._set_document(doc)
@@ -57,6 +60,8 @@ class FileWorkflowsMixin:
             self.open_layout_file(path)
 
     def open_layout_dir(self, path: str) -> None:
+        if path not in self._layout_dirs:
+            self._layout_dirs.append(path)
         self.resource_panel.add_loose_dir(path)
         self.resolver.add_loose_dir(path)
         local_lst = Path(path) / "ui.lst"
@@ -142,6 +147,7 @@ class FileWorkflowsMixin:
                 raise ValueError("该包中找不到可解析布局；"
                                  "请核对保存的新包和当时填写的路径。")
             doc = LayoutDocument.from_dicts(*result)
+            doc.source_bytes = self.resolver.fetch_pack_dlg_bytes(pack_path, path)
         except Exception as exc:
             QMessageBox.warning(self, "按路径打开失败", str(exc))
             return
@@ -168,7 +174,8 @@ class FileWorkflowsMixin:
         try:
             with FlsPack(pack_path) as pack:
                 doc, replacing = prepare_layout_import(
-                    pack, dialog.path, Path(filename).read_bytes())
+                    pack, dialog.path, Path(filename).read_bytes(),
+                    text_encoding=self.resolver.text_encoding)
         except Exception as exc:
             QMessageBox.warning(self, "导入布局失败", str(exc))
             return
@@ -218,12 +225,15 @@ class FileWorkflowsMixin:
         dicts, md5 = result
         doc = LayoutDocument.from_dicts(dicts, md5)
         doc.source_pack = (pack_path, res_path)
+        doc.source_bytes = self.resolver.fetch_pack_dlg_bytes(pack_path, res_path)
         self._try_load_styles()
         self._set_document(doc)
         self.resource_panel.reveal_selection(("pack", pack_path, res_path))
 
     def open_resource_dir(self, path: str) -> None:
         """从资源目录打开：挂载目录内全部包并逐个入树。"""
+        if path not in self._resource_dirs:
+            self._resource_dirs.append(path)
         before = {str(p) for p in self.resolver.pack_paths}
         self.resolver.mount_dir(path)
         added = skipped = 0
@@ -306,7 +316,8 @@ class FileWorkflowsMixin:
                 extras=self._referenced_staged_images(),
                 pack_path=pack_path, res_path=res_path,
                 pending_pack_import=self.doc.pending_pack_import,
-                new_plain=dlg_codec.dump_bytes(self.doc.to_dicts()))
+                new_plain=dlg_codec.dump_bytes(
+                    self.doc.to_dicts(), text_encoding=self.doc.text_encoding))
             dialog = SaveReviewDialog(target, self.doc.changes(), plan.issues,
                                       plan.images, to_pack=to_pack,
                                       parent=self, layout_notice=plan.notice)
@@ -321,13 +332,15 @@ class FileWorkflowsMixin:
         publish.require_save_encoding(self.doc, extras)
 
     @staticmethod
-    def _fresh_pack_readback(pack_path, res_path: str, names):
+    def _fresh_pack_readback(pack_path, res_path: str, names,
+                             text_encoding: str = "big5"):
         """回读钩子：用**全新**解析器读目标布局与各新图（`core.publish` 注入用）。
 
         故意不复用当前窗口的 resolver：新包是在别处写出来的，
         用它自己的解析器回读才算独立验证。
         """
         fresh = AssetResolver()
+        fresh.text_encoding = text_encoding
         fresh.mount_pack(str(pack_path))
         try:
             got = fresh.fetch_dlg(res_path)
@@ -351,7 +364,8 @@ class FileWorkflowsMixin:
         src_pack, res_path = self.doc.source_pack
         extras = self._referenced_staged_images()
         self._require_save_encoding(extras)
-        plain = dlg_codec.dump_bytes(self.doc.to_dicts())
+        plain = dlg_codec.dump_bytes(
+            self.doc.to_dicts(), text_encoding=self.doc.text_encoding)
         tmp_out = str(out_path)
         info = pack_build.patch_pack_copy(
             src_pack, res_path, plain, tmp_out, extra_entries=extras,
@@ -372,7 +386,10 @@ class FileWorkflowsMixin:
         report.update(publish.verify_written_pack(
             src_pack=src_pack, out_path=tmp_out, res_path=res_path,
             extras=extras, expected_dicts=self.doc.to_dicts(), info=info,
-            read_back=self._fresh_pack_readback))
+            read_back=(self._fresh_pack_readback
+                       if self.doc.text_encoding == "big5" else
+                       lambda p, r, n: self._fresh_pack_readback(
+                           p, r, n, self.doc.text_encoding))))
         if not report.get("ok"):
             return report
         # 状态迁移：已验证落盘，标记干净并让后续保存续写新包
@@ -382,6 +399,7 @@ class FileWorkflowsMixin:
         self.doc.pending_pack_import = False
         self.resource_panel.clear_pending()
         self.doc.mark_saved()
+        self.doc.source_bytes = plain
         self.doc.source_pack = (tmp_out, res_path)
         self.resource_panel.expand_pack(tmp_out)
         self.resource_panel.reveal_selection(("pack", tmp_out, res_path))
@@ -490,12 +508,14 @@ class FileWorkflowsMixin:
             if not self._confirm_save_review(path, to_pack=False):
                 return False
             self._require_save_encoding({})
-            data = dlg_codec.dump_bytes(self.doc.to_dicts())
+            data = dlg_codec.dump_bytes(
+                self.doc.to_dicts(), text_encoding=self.doc.text_encoding)
             Path(path).write_bytes(data)
         except (OSError, ValueError) as exc:
             QMessageBox.warning(self, "保存失败", str(exc))
             return False
         self.doc.mark_saved()
+        self.doc.source_bytes = data
         self._update_title()
         self._update_status(f"已保存：{path}")
         return True

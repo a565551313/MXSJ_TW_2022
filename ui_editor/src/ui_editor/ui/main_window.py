@@ -34,12 +34,14 @@ from .diagnostics_panel import DiagnosticsPanel
 from .panels import PalettePanel, ResourceTreePanel, WidgetTreePanel
 from .property_panel import PropertyPanel
 from .script_panel import ScriptPanel
+from .source_actions import SourceActionsMixin
 from .window_setup import WindowSetupMixin
 from .workflows import FileWorkflowsMixin
 
 
 class MainWindow(
-    EditingCommandsMixin, FileWorkflowsMixin, WindowSetupMixin, QMainWindow
+    EditingCommandsMixin, FileWorkflowsMixin, SourceActionsMixin,
+    WindowSetupMixin, QMainWindow
 ):
     """UI 编辑器主窗口。"""
 
@@ -56,6 +58,8 @@ class MainWindow(
                     self.resolver.remember_layout(path)
                 except (ValueError, TypeError, AttributeError):
                     pass  # 损坏设置不阻塞启动，也不加入候选
+        self._resource_dirs: list[str] = []
+        self._layout_dirs: list[str] = []
         self.styles = StyleBook()
         self.ctx = PaintContext(assets=self.resolver, styles=self.styles)
         self.script_index: ScriptIndex = get_default_index()
@@ -105,6 +109,8 @@ class MainWindow(
 
     def _set_document(self, doc: LayoutDocument | None) -> None:
         self._loading = True
+        if doc is not None:
+            doc.text_encoding = self.resolver.text_encoding
         self.resource_panel.clear_pending()
         self.doc = doc
         self.diagnostics_panel.reset()

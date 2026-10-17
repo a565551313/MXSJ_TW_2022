@@ -27,16 +27,16 @@ def validate_layout_path(value: str) -> str:
     return value
 
 
-def _check_import_encoding(value, key=None) -> None:
+def _check_import_encoding(value, key=None, text_encoding="big5") -> None:
     if isinstance(value, dict):
         for field, child in value.items():
-            _check_import_encoding(child, field)
+            _check_import_encoding(child, field, text_encoding)
     elif isinstance(value, (list, tuple)):
         for child in value:
-            _check_import_encoding(child, key)
+            _check_import_encoding(child, key, text_encoding)
     elif isinstance(value, str):
         codec = (
-            "big5"
+            text_encoding
             if key in dlg_codec._BIG5_TEXT_KEYS
             else "gbk"
             if key in dlg_codec._GBK_PATH_KEYS
@@ -52,13 +52,15 @@ def _check_import_encoding(value, key=None) -> None:
 
 
 def prepare_layout_import(
-    pack: FlsPack, path: str, data: bytes
+    pack: FlsPack, path: str, data: bytes, *, text_encoding: str = "big5"
 ) -> tuple[LayoutDocument, bool]:
     """验证后返回编辑文档与是否替换；不写源包、不执行布局源码。"""
     path = validate_layout_path(path)
-    dicts, md5 = dlg_codec.parse_bytes(data)
-    _check_import_encoding(dicts)
+    dicts, md5 = dlg_codec.parse_bytes(data, text_encoding=text_encoding)
+    _check_import_encoding(dicts, text_encoding=text_encoding)
     doc = LayoutDocument.from_dicts(dicts, md5)
+    doc.text_encoding = text_encoding
+    doc.source_bytes = data
     errors = [issue for issue in diagnose(doc) if issue.code == "ENCODING"]
     if errors:
         raise ValueError("布局字段编码错误：" + "；".join(i.message for i in errors))
@@ -67,7 +69,8 @@ def prepare_layout_import(
     if replacing:
         try:
             previous, old_md5 = dlg_codec.parse_bytes(
-                unpack_packed_text(pack.read_named(path))
+                unpack_packed_text(pack.read_named(path)),
+                text_encoding=text_encoding
             )
             LayoutDocument.from_dicts(previous, old_md5)
         except Exception as exc:

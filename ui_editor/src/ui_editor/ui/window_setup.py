@@ -9,6 +9,7 @@ from __future__ import annotations
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
+    QComboBox,
     QLabel,
     QMenu,
     QSplitter,
@@ -63,6 +64,12 @@ class WindowSetupMixin:
             file_menu, "从资源包打开布局…", self.open_from_pack)
         self._add_action(file_menu, "从资源目录打开布局…",
                          self.open_resource_dir_dialog)
+        self._act_reload = self._add_action(
+            file_menu, "从来源刷新", self.refresh_sources, QKeySequence("F5"))
+        self._act_reload.setIcon(self.style().standardIcon(
+            self.style().StandardPixmap.SP_BrowserReload))
+        self._act_reload.setIconText("刷新")
+        self._act_reload.setToolTip("从磁盘重新加载布局、目录与资源（F5）")
         file_menu.addSeparator()
         self._add_action(file_menu, "新建布局", self.new_layout,
                          QKeySequence.StandardKey.New)
@@ -190,6 +197,17 @@ class WindowSetupMixin:
         self.addToolBar(Qt.ToolBarArea.TopToolBarArea, bar)
         bar.addAction(self._act_open_file)
         bar.addAction(self._act_open_pack)
+        bar.addAction(self._act_reload)
+        bar.addWidget(QLabel(" 文本编码：", self))
+        self._encoding_combo = QComboBox(self)
+        self._encoding_combo.setObjectName("layoutTextEncoding")
+        for label, codec in (("Big5（繁体）", "big5"),
+                             ("GBK（简体）", "gbk"), ("UTF-8", "utf-8")):
+            self._encoding_combo.addItem(label, codec)
+        self._encoding_combo.setToolTip(
+            "按所选编码重新读取布局文本；资源路径仍为 GBK，不自动保存或简繁转换")
+        self._encoding_combo.currentIndexChanged.connect(self.change_text_encoding)
+        bar.addWidget(self._encoding_combo)
         bar.addSeparator()
         bar.addAction(self._undo_action)
         bar.addAction(self._redo_action)
@@ -275,6 +293,7 @@ class WindowSetupMixin:
         return action
 
     def _connect_signals(self) -> None:
+        self.resource_panel.export_layout_requested.connect(self.export_layout)
         self.resource_panel.open_pack_layout.connect(
             self._open_pack_layout)
         self.resource_panel.import_pack_layout.connect(self.import_pack_layout)
