@@ -60,7 +60,7 @@
 | 资源编辑器 | **0.4.3**：任意布局原生导入/替换，保留0.4.2后台清单与打开提速 | 用户已确认600MB打开速度修复有效；按路径明文/旧密文布局自动编码，不执行源码，未改条目不迁移 | 本轮 **118/118**；含新路径保存/重开/修改/再保存、旧错误密钥迁移、中文GBK路径、撤销/高级raw拒绝发布；ruff 0、wincompat 0/0/0、bootstrap自检通过 |
 | UI 编辑器 | **0.8.3**：任意布局新增/再次保存统一原生路径密钥，保留0.8.2路径记忆 | 旧明文/错误key只读打开；明确保存当前布局才迁移，新包继续编辑；未改其它负载原样 | 本轮 **203通过 + 1语料库缺失跳过**（204）；独立原生回读、连续编辑与错误输出拒绝；ruff 0、wincompat 0/0/0、bootstrap自检通过 |
 | 游戏服务端（`mxsj_server`） | 契约 v0.1 + 设计文档 | **无运行代码**；账号/网关/数据库/地图/战斗均未开始 | 架构测试 150 跑，**1 FAIL + 1 ERROR**（见 §3.1） |
-| `mock_server.py` | 历史 Mock，协议号已按客户端修正 | 从未与真机联调；PR #25 顺带改的帧长度 3→2 未单独评审 | 未运行 |
+| `mock_server.py` | 本地模擬伺服器（與 `mock_server (1).py` 同步） | 已修復 `網絡錯誤(007)` 厘秒時鐘、日曆/日程 `misc.SetServerTime` 同步與系統設置/分辨率保存瞬連（`C2GS_QUICKLOGIN=13` / `C2GS_PLAYER_SYSSWITCH=21` / `C2GS_HUODONG=90`） | `--self-test` 全鏈路 6 階段回環通過（詳 §3.54）；待 Windows 實機複測 |
 | 文档 | 10-14 整理：AGENTS.md / STATUS.md / 归档目录；README 已刷新；新增 `docs/PYTHON_TOOL_CONVENTIONS.md`（工具开发约定） | — | 仓库内相对链接全部可解析（脚本校验） |
 | 开发工具箱（`tools/devkit/`） | 0.1.0：`check_windows_compat.py` | 新增；全仓库扫描 1.3 s | **29/29** 通过；`ruff check tools/devkit` 0 报告；工具箱通过自己的规则 |
 
@@ -1511,3 +1511,11 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 - 本轮最终六闸门：106=93pass+13Qt skip，N1独立32、恢复27通过；strict/full/evidence、ruff/spec、Windows静态184路径/38源、0错/警告。新增合成加载/失效/坏引用/转义/预览/缓存冲突/打包字节保全测试；两项新Qt交互仅写未执行。实际安装PySide6-Essentials6.10.3尝试offscreen，缺libGL.so.1，未使用桩库，不把跳过算通过。
 - 真实Chromium153断网file://且CSP开，生产6篇/26步骤/检索空态、12函数证据定位与刷新、专题深链、来源预览、battle待审、hero→npc、390px宽度通过，0脚本/页/CSP错、仅本地文件请求；旧20种子隔离夹具14组浏览器断言也实际通过。不是Qt/Windows/EXE/游戏/专题独审。
 - dev4版本同步源码/pyproject/源包root；本轮未重打ZIP或上传，Drive test1仍是dev3样板旧包。详细MD/JSON：docs/evidence/script_manual_task_guides_dev4_20261016.*；真实导出/浏览器产物在仓库外/home/user/manual-guides-20261016/final-site与final-browser。源码阶段推送，不以测试或新首页冒称全量内容交付。
+
+## 3.54 `mock_server.py` 修復「網絡錯誤(007)」、日曆/日程時間偏移與系統設置分辨率保存卡死（2026-10-17）
+
+- **「網絡錯誤(007)」根因與修復**：反組譯 `mxmain.dll`（`C_sys.GetTime` @ `0x4545b0`）確認其返回值為 `(timeGetTime() - start_ms) * 10`（單位 **0.1ms = 10,000 ticks/sec**），`mxgw.SecondGetResult`（entry `2296`）中 `cdt = (G2 - G1) / 100` 為**厘秒（100 ticks/sec）**，看門狗週期 `CreatePyCommand(750 / 1200 / 5400)` 為 **25s / 40s / 180s**（30 FPS 幀數）。舊版 `GS2C_TIME = 31` 下發 Unix 秒（1 tick/sec）導致 40s 週期內 `cdt ≈ 4000 > sdt ≈ 590` 必敗並斷線報 `007`。現改為單調遞增 100Hz 厘秒計數器（`monotonic_centiseconds()`，僅在收到 `C2GS_REQUEST_TIME = 61` 時回覆）。
+- **日曆与日程表時間偏移根因與修復**：`script/misc.py`（entry `3183`）啟動時 `g_RecordTime = 0`，若伺服器未下發觸發 `misc.SetServerTime(tm)` 的封包，`GetServerCurrentTime()` 會將 Windows 開機運行秒數（`C_sys.GetTickCount() / 1000`）疊加到 `time.time()` 上；且 `dlgcalendar.S2CTime`（entry `1425`）監聽 `GS2C_TIME_SECOND = 192`。現於進圖、瞬連及收到 `C2GS_OPEN_UI = 88 (isub=241)` / `C2GS_SCHEDULE = 82` 時同步下發 `GS2C_OPEN_UI = 89 (isub=241)`、`GS2C_PROP_SWITCH = 21 (isub=6)` 與 `GS2C_TIME_SECOND = 192`，並完整回應 `C2GS_SCHEDULE = 82 (isub=1, 2)`。
+- **系統設置/分辨率保存卡死根因與修復**：`dgtbaseopt.Save()`（entry `2373`）在跨 `ratio` 切換分辨率（`視野擴大` $\leftrightarrow$ `800*600`/`1024*768`/`1280*960`）或切換界面風格時會觸發 `netquicklogin.Connect` $\rightarrow$ `main.RestartQuickLogin` $\rightarrow$ `Restart(2, False)`（清空熱鍵、場景與 UI 並建立新連線發送 `C2GS_QUICKLOGIN = 13, sub=2`）。舊版未下發 `GS2C_QUICKLOGIN = 12 (isub=1)` 導致 `g_LoginKey = None` 拋出 `TypeError` 且未處理 `opcode 13 / 21 / 90`。現於登入時下發 `GS2C_OTHER_ASSISTANT = 11 (isub=42)`（`S2CSetRate`）、`GS2C_PROP_SWITCH = 21 (isub=1)` 與 `GS2C_QUICKLOGIN = 12 (isub=1)`，並完整實作 `C2GS_PLAYER_SYSSWITCH = 21`（含 `C2GS_GAME_PUBLIC = 209, sub=5` 分片重組）、`C2GS_HUODONG = 90 ('newchar' sub=11)` 與 `C2GS_QUICKLOGIN = 13 (sub=1, 2)` 瞬連重登。
+- `mock_server.py` 與 `mock_server (1).py` 均已同步並通過 `--self-test` 全鏈路 6 階段回環測試。
+

@@ -26,7 +26,22 @@ Simulates the complete normal player lifecycle:
      - Sends `GS2C_NOTIFY = 165` (welcome banner in system prompt & chat window).
      - Handles `C2GS_MAP_MOVE = 54` (walking), `C2GS_HEART_BEAT = 109` -> `GS2C_HEART_BEAT = 69`,
        `C2GS_REQUEST_TIME = 15` -> `GS2C_TIME = 12`, `C2GS_NPC_LOOK = 55` -> `GS2C_NPC_CHAT_EXT = 152`,
-       `C2GS_NPC_ANSWER = 56` (map teleportation), and `C2GS_PLAYER_CHAT = 123` (chat & `/tp` commands).
+       `C2GS_NPC_ANSWER = 98` (map teleportation), and `C2GS_PLAYER_CHAT = 149` (chat & `/tp` commands).
+  5. GM / 開發模式 (Developer Mode):
+     - `ensure_client_ready()` writes `nocheck` as `[game] gm=1` (not an empty file).
+       `permission.InitSpecialVersion()` only needs the file to exist, but
+       `permission.IsOpenGm()` reads the `[game]` section of THIS file, so an empty
+       `nocheck` leaves `$`-commands in the chat box silently dropped.
+
+OPCODE NOTE (audited 2026-10-16 against the client's own tables)
+---------------------------------------------------------------
+Every opcode below was re-checked against `data/script.fls` `idx=3970`
+(`script/protocol.py`) and the client's dispatch table in `idx=3176` (`script/net.py`),
+which registers handlers as `table[GS2C_XXX] = {...}` in source order (a later
+registration with the same number shadows an earlier one).  Three values in the
+upstream copy contradicted those tables and are corrected here; each site carries
+an inline comment saying what the client actually does.  The legacy `_LEGACY`
+aliases are kept so the mock still answers older `data.fls` builds.
 """
 
 from __future__ import annotations
@@ -56,8 +71,12 @@ C2GS_LOGIN_PLAYER_ADD = 3
 C2GS_LOGIN_QUIT = 4
 C2GS_LOGIN_PLAYER_DEL = 7
 C2GS_PING = 8
+C2GS_QUICKLOGIN = 13
 C2GS_PLAYER_ADJUSTPOINT = 16
-C2GS_PLAYER_UPGRADE = 17
+# Client sends `C2GS_PLAYER_UPGRADE = 152` (`script/nethero.py::C2SUpgrade`); the same
+# number is also `C2GS_CHECKWG` in the client's table (its own ambiguity), so accept both.
+C2GS_PLAYER_UPGRADE = 152
+C2GS_PLAYER_UPGRADE_LEGACY = 17
 C2GS_PROP_NEWPOINT = 17
 C2GS_PLAYER_SWITCH = 18
 C2GS_PLAYER_SYSSWITCH = 21
@@ -73,8 +92,12 @@ C2GS_REQUEST_TIME = 61
 C2GS_ANSWERHELLO = 62
 C2GS_HEART_BEAT = 63
 C2GS_TITLE = 67
+C2GS_SCHEDULE_LEGACY = 69
+C2GS_SCHEDULE = 82
+C2GS_OPEN_UI_LEGACY = 60
 C2GS_OPEN_UI = 88
 C2GS_ITEMSHOP = 89
+C2GS_HUODONG = 90
 C2GS_NPC_LOOK = 96
 C2GS_NPC_COMMAND = 97
 C2GS_NPC_ANSWER = 98
@@ -119,13 +142,20 @@ GS2C_LOGIN_PLAYER_ADD = 6
 GS2C_LOGIN_ERROR = 8
 GS2C_LOGIN_PLAYER_DEL = 10
 GS2C_OTHER_ASSISTANT = 11
+GS2C_QUICKLOGIN = 12
 GS2C_LOGIN_PLAYER_INFO_END = 14
 GS2C_LOGIN_ACCOUNT_INFO = 15
 GS2C_PROP_INIT = 16
-GS2C_PROP_CHANGE = 17
+# `script/protocol.py` says `GS2C_PROP_CHANGE = 152`, but `script/net.py` registers
+# `GS2C_NPC_CHAT_EXT` (also 152) *later* in source order, so the single-prop-change
+# handler is shadowed and unreachable in v2.27.2; opcode 17 has no handler at all.
+# => Prop changes are sent as a one-entry `GS2C_PROP_CHANGELIST = 61` instead
+#    (`nethero.S2CMultiPropChange` = `[count:1B] + count * S2CPropChange(...)`).
+GS2C_PROP_CHANGE = 152  # reference only - unreachable, do NOT send
 GS2C_PROP_RESIST = 18
 GS2C_PROP_POWER = 19
 GS2C_PROP_PHOTO = 20
+GS2C_PROP_SWITCH = 21
 GS2C_TIME = 31
 GS2C_TIME_LEGACY = 12
 GS2C_ITEM_KEY = 32
@@ -144,6 +174,7 @@ GS2C_SUMM_PROP_VIEW = 51
 GS2C_SUMM_PROP_STATE = 52
 GS2C_SUMMON_KEY = 53
 GS2C_SUMM_EQUIP = 54
+GS2C_SCHEDULE = 57
 GS2C_PROP_CHANGELIST = 61
 GS2C_HEART_BEAT = 63
 GS2C_HEART_BEAT_LEGACY = 69
@@ -153,19 +184,25 @@ GS2C_MAP_SCENE_M = 96
 GS2C_MAP_GOTO_M = 97
 GS2C_MAP_ADD_PLAYER = 98
 GS2C_MAP_ADD_NPC = 99
-GS2C_MAP_DEL = 100
+# Client: `GS2C_MAP_DEL = 85` (idx=3970); 100 is `GS2C_MAP_ADD_GOODS` in the same table,
+# so sending 100 here would be parsed by `netmap.S2CMapAddGoods` instead.
+GS2C_MAP_DEL = 85
 GS2C_MAP_EFFECT = 102
 GS2C_MAP_SUMMON = 105
-GS2C_MAP_CHANGE_SHAPE = 107
+# Client's name/value is `GS2C_CHANGE_SHAPE = 106` -> `netmap.S2CChangeShape`;
+# 107 is `GS2C_MAP_STORE` (`netmap.S2CMapStore`) in the same table.
+GS2C_CHANGE_SHAPE = 106
 GS2C_NPC_CHAT = 144
 GS2C_NPC_CHAT_EXT = 152
 GS2C_SUMMON_INFO = 161
 GS2C_ITEM_INFO = 162
 GS2C_NOTIFY_EXT = 164
 GS2C_NOTIFY = 165
+GS2C_HUODONG_OP = 166
 GS2C_PLAYER_CHAT = 167
 GS2C_MESSAGE = 169
 GS2C_ITEM_INFO_EX = 190
+GS2C_TIME_SECOND = 192
 GS2C_TITLE = 200
 GS2C_ITEM_OTHER = 205
 GS2C_GAME_PUBLIC = 209
@@ -472,6 +509,33 @@ MAPS: dict[int, dict[str, Any]] = {
 }
 
 
+def _open_all_portals() -> None:
+    """傳送點全開：每個場景都補上通往**其餘所有場景**的傳送陣（無等級/任務門檻）。
+
+    既有（手工按原版主城動線寫的）傳送陣保留；缺的方向按場景 id 排序補在
+    (3, 10+8*i) 這條左側邊線上，半徑 4 —— mock 自己的地圖資料是合成的，
+    這裡只保證「任何場景都能走到任何場景」，不會動客戶端任何檔案。
+    """
+    for mid, m in MAPS.items():
+        have = {int(p.get("target_map", 0)) for p in m.get("portals", [])}
+        others = [o for o in sorted(MAPS) if o != mid and o not in have]
+        for i, target in enumerate(others):
+            m.setdefault("portals", []).append(
+                {
+                    "x": 3,
+                    "y": 10 + 8 * i,
+                    "radius": 4,
+                    "target_map": target,
+                    "target_x": int(MAPS[target].get("spawn_x", 20)),
+                    "target_y": int(MAPS[target].get("spawn_y", 20)),
+                    "desc": MAPS[target]["name"],
+                }
+            )
+
+
+_open_all_portals()
+
+
 def ts() -> str:
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
@@ -637,6 +701,91 @@ def patch_script_fls_setseed(repo_root: Path, restore: bool = False) -> bool:
     return True
 
 
+NOCHECK_SECTION = "game"
+NOCHECK_GM_KEY = "gm"
+NOCHECK_GM_VALUE = "1"
+
+
+def ensure_nocheck_gm(nocheck_path: Path) -> str:
+    """Guarantees `nocheck` carries `[game] gm=1`; returns one log line.
+
+    One file, two mutually independent switches -- both are needed:
+
+    * `permission.InitSpecialVersion()` is literally `os.path.exists('nocheck')`,
+      so an **empty** file already releases the ~9 `GetSpecialVersion()` gates.
+    * `permission.IsOpenGm()` is `GetPermission('gm')`, which reads **this file's
+      `[game]` section** (`cfg.GetSysDict('nocheck')` -> `cfg.readanalyser`);
+      the value must be exactly the string `'1'`.
+
+    With an empty file the second one is false, and `clientcommand.DoCommand`
+    returns on its very first line (`if not permission.IsOpenGm(): return`).
+    A `$command` typed in the chat box is then dropped before it is even sent
+    as a chat packet -- which is exactly the "typing commands does nothing" symptom.
+
+    `cfg.readanalyser` lowercases **keys only** (`parts[0].strip().lower()`);
+    section names are stored verbatim, so the header must be `[game]`.
+
+    Reads/writes as latin-1 so any pre-existing non-UTF8 bytes round-trip untouched.
+    """
+    header = f"[{NOCHECK_SECTION}]"
+    entry = f"{NOCHECK_GM_KEY}={NOCHECK_GM_VALUE}"
+
+    if not nocheck_path.exists():
+        nocheck_path.write_text(f"{header}\n{entry}\n", encoding="latin-1")
+        return f"[OK] Created {nocheck_path} with {header} {entry} (GM $ commands enabled)"
+
+    try:
+        text = nocheck_path.read_text(encoding="latin-1")
+    except OSError as exc:
+        return f"[WARN] 無法讀取 {nocheck_path}: {exc}"
+
+    lines = text.splitlines()
+    section_at = next((i for i, line in enumerate(lines) if line.strip() == header), None)
+
+    if section_at is None:
+        if lines and lines[-1].strip():
+            lines.append("")
+        lines += [header, entry]
+    else:
+        end = len(lines)
+        for i in range(section_at + 1, len(lines)):
+            if lines[i].strip().startswith("["):
+                end = i
+                break
+        key_at = None
+        for i in range(section_at + 1, end):
+            key, sep, _value = lines[i].partition("=")
+            if sep and key.strip().lower() == NOCHECK_GM_KEY:
+                key_at = i
+                break
+        if key_at is None:
+            lines.insert(end, entry)
+        elif lines[key_at].partition("=")[2].strip() == NOCHECK_GM_VALUE:
+            return f"[OK] Found {nocheck_path} with {header} {entry}"
+        else:
+            lines[key_at] = entry
+
+    nocheck_path.write_text("\n".join(lines) + "\n", encoding="latin-1")
+    return f"[OK] Fixed {nocheck_path}: {header} {entry} (GM $ commands enabled)"
+
+
+def _is_git_tracked(path: Path) -> bool:
+    """True if `path` is tracked by the surrounding git work tree (best effort)."""
+    import subprocess
+
+    try:
+        out = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", path.name],
+            cwd=str(path.parent),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return out.returncode == 0
+
+
 def ensure_client_ready(repo_root: Path, patch_fls: bool = True) -> None:
     """Ensures `nocheck`, `server.ini`, and `data/script.fls` are ready for local play."""
     fls_path = repo_root / "data" / "script.fls"
@@ -649,13 +798,17 @@ def ensure_client_ready(repo_root: Path, patch_fls: bool = True) -> None:
         return
 
     nocheck_path = repo_root / "nocheck"
-    if not nocheck_path.exists():
-        nocheck_path.write_bytes(b"")
-        log(f"[OK] Created {nocheck_path} (enables GetSpecialVersion() local/GM mode)")
-    else:
-        log(f"[OK] Found {nocheck_path} (GetSpecialVersion() == True)")
+    log(ensure_nocheck_gm(nocheck_path))
 
     if patch_fls:
+        if _is_git_tracked(fls_path):
+            log("=" * 72)
+            log(f"[WARN] {fls_path} 是 git 追蹤的檔案，為了不動到倉庫內容，本次【不】打補丁。")
+            log("[WARN] 若確實要用本機客戶端連進來，請自行在複製出來的客戶端目錄執行：")
+            log("       python mock_server.py --patch-client     # 打補丁（先備份 .bak）")
+            log("       python mock_server.py --restore-client   # 還原")
+            log("=" * 72)
+            return
         try:
             patch_script_fls_setseed(repo_root, restore=False)
         except PermissionError:
@@ -670,18 +823,44 @@ def ensure_client_ready(repo_root: Path, patch_fls: bool = True) -> None:
 # ============================================================================
 
 
+# Continuation bytes after the `0xFF` escape of a long body.
+#
+# The constructor of the native client sets this field to 2, but the client's own
+# script layer overrides it at connect time, so the wire format this client really
+# reads is **3** bytes:
+#   * `mx.exe` VA 0x4AB23F (constructor): `c7 87 90 69 00 00 02 00 00 00` -> `[+0x6990] = 2`
+#   * `mx.exe` VA 0x4AB5B7 (`CNetClient::RecvPacket`, 0x4AB540): reads `[+0x6990]`
+#     continuation bytes after seeing `0xFF`
+#   * `mx.exe` VA 0x468400 (`net.SetMaxLenBytes` implementation, PyMethodDef at
+#     0x7E0FD0): `8b 4d fc 8d 41 fe 83 f8 02 77 1b 8b ... 89 88 90 69 00 00` =
+#     accept only 2/3/4, then `mov [eax+0x6990], ecx` - the SAME field as above
+#   * `data/script.fls` idx=3176 (`script/net.py`), `CNet.__init__`: `self.SetMaxLenBytes(3)`
+#     runs on every client-side connection, so the effective value is 3.
+# Sending 2 continuation bytes makes the client read the opcode byte as part of the
+# length (e.g. `FF 94 01 10 ...` -> L = 0x100194) and it waits forever: the only long
+# packet in this build is `GS2C_PROP_INIT` (body 404 B), i.e. the packet that switches
+# the client from the loading screen into the map.
+MAX_LEN_BYTES = 3
+
+
 def frame_gs2c(opcode: int, payload: bytes = b"") -> bytes:
     """
     Wraps a GS2C packet for `CNetClient::RecvPacket` (`0x004ab540`):
       - `body = bytes([opcode]) + payload`
       - If `len(body) < 0xFF`: `bytes([len(body)]) + body`
-      - If `len(body) >= 0xFF`: `b'\\xff' + struct.pack('<I', len(body))[:3] + body`
+      - If `len(body) >= 0xFF`: `b'\\xff' + <len(body) as MAX_LEN_BYTES little-endian> + body`
+        (`MAX_LEN_BYTES = 3`, see the comment above - do not lower it to 2)
     """
     body = bytes([opcode & 0xFF]) + payload
     n = len(body)
     if n < 0xFF:
         return bytes([n]) + body
-    return b"\xff" + struct.pack("<I", n)[:3] + body
+    if n >= 1 << (8 * MAX_LEN_BYTES):
+        raise ValueError(
+            f"body {n}B does not fit in MAX_LEN_BYTES={MAX_LEN_BYTES}; "
+            "the client cannot frame it (split the packet instead)"
+        )
+    return b"\xff" + n.to_bytes(MAX_LEN_BYTES, "little") + body
 
 
 def build_gs2c_hello(seed: int = 0x12345678, server_num: int = 3, is_cert: int = 0) -> bytes:
@@ -888,19 +1067,30 @@ def build_gs2c_prop_init(role: dict[str, Any]) -> bytes:
     return frame_gs2c(GS2C_PROP_INIT, bytes(buf))
 
 
+def _frame_prop_change(entry: bytes) -> bytes:
+    """Wraps ONE prop change into `GS2C_PROP_CHANGELIST = 61` (`[count=1] + entry`).
+
+    Why not the dedicated `GS2C_PROP_CHANGE` opcode: see the constant comment above -
+    it is shadowed by `GS2C_NPC_CHAT_EXT` in this client build and 17 has no handler,
+    so a single prop change can only reach the client through the changelist packet
+    (`nethero.S2CMultiPropChange`, which loops `S2CPropChange` per entry).
+    """
+    return frame_gs2c(GS2C_PROP_CHANGELIST, bytes([1]) + entry)
+
+
 def build_gs2c_prop_change_word(idx: int, val: int) -> bytes:
-    """`GS2C_PROP_CHANGE = 17` for a 2-byte `TWORD` field at `ITEM_SERVERINIT[idx]`."""
-    return frame_gs2c(GS2C_PROP_CHANGE, struct.pack("<BH", idx & 0xFF, val & 0xFFFF))
+    """`GS2C_PROP_CHANGELIST`, one 2-byte `TWORD` field at `ITEM_SERVERINIT[idx]`."""
+    return _frame_prop_change(struct.pack("<BH", idx & 0xFF, val & 0xFFFF))
 
 
 def build_gs2c_prop_change_byte(idx: int, val: int) -> bytes:
-    """`GS2C_PROP_CHANGE = 17` for a 1-byte `TBYTE` field at `ITEM_SERVERINIT[idx]`."""
-    return frame_gs2c(GS2C_PROP_CHANGE, struct.pack("<BB", idx & 0xFF, val & 0xFF))
+    """`GS2C_PROP_CHANGELIST`, one 1-byte `TBYTE` field at `ITEM_SERVERINIT[idx]`."""
+    return _frame_prop_change(struct.pack("<BB", idx & 0xFF, val & 0xFF))
 
 
 def build_gs2c_prop_change_str(idx: int, text: str, fixed_len: int) -> bytes:
-    """`GS2C_PROP_CHANGE = 17` for a fixed-length string field at `ITEM_SERVERINIT[idx]`."""
-    return frame_gs2c(GS2C_PROP_CHANGE, bytes([idx & 0xFF]) + encode_big5(text, fixed_len))
+    """`GS2C_PROP_CHANGELIST`, one fixed-length string field at `ITEM_SERVERINIT[idx]`."""
+    return _frame_prop_change(bytes([idx & 0xFF]) + encode_big5(text, fixed_len))
 
 
 def build_gs2c_open_ui_new_attr(sub_type: int) -> bytes:
@@ -1256,7 +1446,7 @@ def build_gs2c_map_summon(owner_id: int, pet_info: dict[str, Any] | None) -> byt
 
 def build_gs2c_map_change_shape(role_id: int, shape: int, title: str = "夢想開拓者", title_id: int = 101) -> bytes:
     """
-    `GS2C_MAP_CHANGE_SHAPE = 107` -> `netmap.S2CChangeShape(netobj)`:
+    `GS2C_CHANGE_SHAPE = 106` -> `netmap.S2CChangeShape(netobj)`:
       - `iObjID`: 4B LE
       - `iShape`: 2B LE
       - `desc`: `prop.UnpackDesc` (`1B = 0`)
@@ -1292,7 +1482,7 @@ def build_gs2c_map_change_shape(role_id: int, shape: int, title: str = "夢想�
         + tb
         + struct.pack("<BIBBBBBB", 1, 0, 0, 0, 0, 0, 0, 0)
     )
-    return frame_gs2c(GS2C_MAP_CHANGE_SHAPE, payload)
+    return frame_gs2c(GS2C_CHANGE_SHAPE, payload)
 
 
 def build_gs2c_map_scene_m(
@@ -1424,6 +1614,158 @@ def build_gs2c_npc_chat_ext(
     return frame_gs2c(GS2C_NPC_CHAT_EXT, payload)
 
 
+# ============================================================================
+# 3b. 原版 NPC 佈局（entry 2601 `npcposdata` / 2804 / 1799 的导出）
+# ============================================================================
+# 客户端里「一般 NPC 點他彈哪幾個選單」在服務端，但 NPC 的識別資料是齊的：
+#   `notes/npc_dialogue_and_options/out/npc_layout.json`
+#   （由 `notes/npc_dialogue_and_options/make_npc_layout.py` 從已入庫 CSV 生成，
+#     1,335 條 / 430 場景 / 337 個 npcid）
+# mock 用它把每個場景的 NPC 換成**原版站位與名字**，對話正文按客戶端原格式
+# （`dlgnpc.ParseWord1`：`P`/`N(icon,name)` 開頭、`Q`/`L`/`M`/`R`/`O` 為選項）重建。
+NPC_LAYOUT: dict[str, Any] = {}
+NPC_LAYOUT_PATH: Path | None = None
+
+
+def load_npc_layout(path: Path | None) -> Path | None:
+    """載入原版 NPC 佈局；找不到就回 None（此時沿用 mock 內建 NPC 名單）。"""
+    global NPC_LAYOUT, NPC_LAYOUT_PATH
+    candidates: list[Path] = []
+    if path is not None:
+        candidates.append(path)
+    here = Path(__file__).resolve().parent
+    candidates += [
+        here / "npc_layout.json",
+        here / "notes" / "npc_dialogue_and_options" / "out" / "npc_layout.json",
+    ]
+    for cand in candidates:
+        try:
+            data = json.loads(cand.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(data, dict) and isinstance(data.get("scenes"), dict):
+            NPC_LAYOUT = data
+            NPC_LAYOUT_PATH = cand
+            return cand
+    return None
+
+
+def authentic_npcs(scene_id: int, limit: int = 0) -> list[dict[str, Any]]:
+    """回傳某場景的**全部**原版 NPC（含站位/名字/分類）；`limit > 0` 時才截斷。
+
+    原版單場景最多 52 個（明月城 1054），所以預設不截斷＝「還原所有 NPC」；
+    保留 `limit` 供呼叫方（如自檢或除錯）限縮。"""
+    scenes = NPC_LAYOUT.get("scenes")
+    if not isinstance(scenes, dict):
+        return []
+    sc = scenes.get(str(scene_id))
+    if not isinstance(sc, dict):
+        return []
+    out = []
+    rows = sc.get("npcs") or []
+    if limit and limit > 0:
+        rows = rows[:limit]
+    for n in rows:
+        if not isinstance(n, dict):
+            continue
+        out.append(
+            {
+                "id": int(n.get("npcid") or 0) or (70000 + len(out)),
+                "shape": int(n.get("icon") or 3007),
+                "icon": int(n.get("icon") or 3007),
+                "npc_type": int(n.get("type") or 0) or int(n.get("icon") or 3007),
+                "x": int(n.get("x") or 0),
+                "y": int(n.get("y") or 0),
+                "dir": 3,
+                "name": str(n.get("name") or "神秘人"),
+                "real_name": str(n.get("real_name") or ""),
+                "title": str(n.get("real_name") or sc.get("name") or ""),
+                "kind": str(n.get("kind") or "default"),
+                "shape_key": str(n.get("shape") or ""),
+                "authentic": True,
+            }
+        )
+    return out
+
+
+def is_teleporter(npc: dict[str, Any]) -> bool:
+    """傳送人：mock 自帶的、或原版資料裡名字含「傳送/車伕」的 NPC。"""
+    if npc.get("teleporter") or npc.get("kind") == "transport":
+        return True
+    name = str(npc.get("name") or "")
+    return any(w in name for w in ("傳送", "車伕", "船伕"))
+
+
+def map_npc_spawn_list(map_id: int) -> list[dict[str, Any]]:
+    """某場景實際下發的 NPC 名單 = 原版站位（entry 2601）+ mock 自己的傳送人。"""
+    m = MAPS.get(map_id) or {}
+    authentic = authentic_npcs(int(m.get("scene", map_id)))
+    out = list(authentic)
+    used = {int(n["id"]) for n in out}
+    for own in m.get("npcs") or ([m["npc"]] if m.get("npc") else []):
+        if authentic and not is_teleporter(own):
+            continue
+        # 原版 npcid 可能與 mock 自編 id 撞號（例：永澤城傳送人 4405 撞「錢莊」4405），
+        # 撞號就給自編 NPC 換一個高位 id，避免客戶端點 A 觸發 B。
+        if int(own.get("id", 0)) in used:
+            own = dict(own)
+            nid = int(own.get("id", 0)) + 100000
+            while nid in used:
+                nid += 1
+            own["id"] = nid
+        used.add(int(own["id"]))
+        out.append(own)
+    return out
+
+
+def scene_display_name(scene_id: int) -> str:
+    scenes = NPC_LAYOUT.get("scenes")
+    if isinstance(scenes, dict):
+        sc = scenes.get(str(scene_id))
+        if isinstance(sc, dict) and sc.get("name"):
+            return str(sc["name"])
+    if scene_id in MAPS:
+        return str(MAPS[scene_id]["name"])
+    return f"場景{scene_id}"
+
+
+def npc_dialogue_text(npc: dict[str, Any]) -> str:
+    """按 `dlgnpc.ParseWord1` 的原格式生成對話正文（`P N(icon,name)` + `Q選項`）。"""
+    name = str(npc.get("name") or "神秘人")
+    real = str(npc.get("real_name") or "")
+    kind = str(npc.get("kind") or "default")
+    icon = int(npc.get("icon") or 3007)
+    if kind == "shop":
+        body = f"客官您好，這裡是#Y{name}#n。"
+        if real and real != name:
+            body = f"客官您好，我是#Y{real}#n，負責{name}的買賣。"
+        opts = ["我想買東西", "我想賣東西", "我先看看"]
+    elif kind == "storage":
+        body = "少俠的貴重物品放在我這兒最安全，倉庫隨時為您開放。"
+        opts = ["我要存取物品", "我想擴充倉庫", "沒事了"]
+    elif kind == "king":
+        body = f"朕乃此地之主#Y{real or name}#n。少俠有事啟奏，無事退朝。"
+        opts = ["拜見國王", "我想了解國事", "告退"]
+    elif kind == "teacher":
+        body = "武學之道，貴在專精。少俠想學哪一門流派的心法招式？"
+        opts = ["我想學習技能", "我想重置技能", "我只是看看"]
+    elif kind == "guide":
+        body = "初入江湖的少俠，按 #GTab#n 開小地圖可以點 NPC 自動尋路；想練級就往城外走。"
+        opts = ["哪裡適合練級？", "怎麼操作？", "謝謝"]
+    elif kind == "quest":
+        body = "此地事務繁忙，少俠若有力氣，不妨幫我跑一趟。"
+        opts = ["我想接任務", "我想回報任務", "我再想想"]
+    elif kind == "transport":
+        body = f"我是#Y{name}#n，可免費送您前往各大主城與練級場景！"
+        opts = []  # 傳送人由 _on_npc_look 單獨處理（保留可用的傳送選項）
+    else:
+        body = npc.get("greeting") or f"這位少俠面生得很，路過{scene_display_name(int(npc.get('scene', 0)))}可要進來坐坐？"
+        opts = ["我想聽聽這裡的傳聞", "沒事了"]
+    lines = [f"P N({icon},{name})", body]
+    lines += [f"Q{opt}" for opt in opts]
+    return "\n".join(lines)
+
+
 def build_gs2c_notify(msg: str, sub: int = 2) -> bytes:
     """
     `GS2C_NOTIFY = 165` -> `netchat.S2CSysNotify(netobj)`:
@@ -1450,10 +1792,199 @@ def build_gs2c_heartbeat(legacy: bool = False) -> bytes:
 
 
 def build_gs2c_time(legacy: bool = False) -> bytes:
-    """`GS2C_TIME = 31` (or legacy `12`) -> `mxgw.S2CTime(netobj)` (`t = netobj.UnpackInt(4)`)."""
+    """
+    `GS2C_TIME = 31` (or legacy `12`) -> `mxgw.S2CTime(netobj)` (`t = netobj.UnpackInt(4)`).
+    MUST be sent in **centiseconds (100 ticks/sec)**, NEVER Unix seconds!
+    """
     op = GS2C_TIME_LEGACY if legacy else GS2C_TIME
-    t_ticks = int(time.time() * 10) & 0xFFFFFFFF
-    return frame_gs2c(op, struct.pack("<I", t_ticks))
+    t = monotonic_centiseconds()
+    return frame_gs2c(op, struct.pack("<I", t))
+
+
+# ============================================================================
+# 2b. Time Sync Architecture (`mxgw.py` vs `dlgcalendar.py` vs `misc.py`)
+# ============================================================================
+# 客戶端有兩套完全獨立、單位不同的時間協議，切勿混用：
+#
+# 1. 反變速齒輪看門狗 (`script/core/mxgw.py` + `mxmain.dll` `C_sys.GetTime` @ `0x4545b0`)：
+#    - 請求：`C2GS_REQUEST_TIME = 61` (`0x3D`)
+#    - 回應：`GS2C_TIME = 31` (`0x1F`) -> `mxgw.S2CTime(netobj)`
+#    - 關鍵逆向實證：`mxmain.dll` 中 `C_sys.GetTime()` (`0x4545b0`) 執行：
+#        `eax = timeGetTime() - g_StartTickMs; eax = eax * 10;`
+#      返回值單位是 **0.1 毫秒 (10,000 ticks/sec)**！（例如 `dgtbaseopt.py` 中 10 秒冷卻寫作 `+ 100000`）。
+#      而 `CreatePyCommand(750 / 1200 / 5400)` 的參數是 **30 FPS 幀數**（即 25 秒、40 秒、180 秒）。
+#    - 在 `mxgw.SecondGetResult(t)` 中：
+#        `cdt = g_ClientSecondTime / 100 - g_ClientFirstTime / 100`  (單位：**厘秒 centiseconds = 100 ticks/sec**)
+#        `sdt = t - g_ServerTime + 550`                              (容差：550 厘秒 = 5.50 秒)
+#      若伺服器發送 Unix 秒 (1 tick/sec)，在 40 秒週期內 `cdt ≈ 4000` 而 `sdt ≈ 40 + 550 = 590`，
+#      必然觸發 `cdt > sdt`，累計滿 3 次即斷線並報「網絡錯誤(007)，請退出遊戲。」！
+#    - 正確做法：`GS2C_TIME = 31` 必須發送自伺服器啟動起算的單調遞增 **厘秒 (100 ticks/sec)**，
+#      初始基準為 `10,000`（可連續運行 497 天不溢位 32 位元無符號整數），且**僅在收到 `C2GS_REQUEST_TIME` 時回覆**。
+#
+# 2. 遊戲內日曆 (`dlgcalendar.py`) 與日程表 (`dlgschedule.py`/`dlgnewschedule.py`/`misc.py`)：
+#    - `misc.GetServerCurrentTime()` 計算公式為：
+#        `iCurrentTick = C_sys.GetTickCount() / 1000`
+#        `return (iCurrentTick - g_RecordTime) + g_ServerTime`
+#      客戶端啟動時 `g_ServerTime = int(time.time())`，但 **`g_RecordTime = 0`**！
+#      若伺服器未下發觸發 `misc.SetServerTime(tm)` 的封包，`g_RecordTime` 維持為 `0`，
+#      導致 `GetServerCurrentTime()` 把 **Windows 開機至今的系統運行秒數 (`GetTickCount()/1000`)**
+#      直接加到當前 Unix 時間上，造成本機日程/日曆時間嚴重超前數天至數週！
+#    - 正確做法：在角色登入、瞬連重登、以及收到 `C2GS_OPEN_UI = 88 (isub=241)` / `C2GS_SCHEDULE = 82` 時，
+#      主動下發：
+#        a) `GS2C_OPEN_UI = 89, isub = 241, iTime = unix_seconds` (`netopenui.S2CRefreshServerTime` -> `misc.SetServerTime`)
+#        b) `GS2C_PROP_SWITCH = 21, isub = 6` (`nethero.S2CPropSwitch` -> `misc.SetServerTime` + 開服天數/等級上限)
+#        c) `GS2C_TIME_SECOND = 192, iTime = unix_seconds` (`dlgcalendar.S2CTime`)
+_SERVER_START_MONO = time.monotonic()
+_CENTI_LAST_SENT = 10000
+_TIME_LAST_SENT = 0
+
+
+def monotonic_centiseconds() -> int:
+    """單調不減的 100Hz 厘秒計數器（供 `GS2C_TIME = 31` / `mxgw.S2CTime` 使用）。"""
+    global _CENTI_LAST_SENT
+    elapsed_cs = int((time.monotonic() - _SERVER_START_MONO) * 100) + 10000
+    now_cs = elapsed_cs & 0x7FFFFFFF
+    if now_cs < _CENTI_LAST_SENT:
+        now_cs = _CENTI_LAST_SENT
+    _CENTI_LAST_SENT = now_cs
+    return now_cs
+
+
+def monotonic_unix_seconds() -> int:
+    """標準 Unix 秒，且單調不減（供日曆 `GS2C_TIME_SECOND = 192` 與 `misc.SetServerTime` 使用）。"""
+    global _TIME_LAST_SENT
+    now = int(time.time()) & 0xFFFFFFFF
+    if now < _TIME_LAST_SENT:
+        now = _TIME_LAST_SENT
+    _TIME_LAST_SENT = now
+    return now
+
+
+def build_gs2c_time_second(unix_ts: int | None = None) -> bytes:
+    """`GS2C_TIME_SECOND = 192` -> `dlgcalendar.S2CTime(netobj)` (`g_Time = netobj.UnpackInt(4)`)."""
+    t = monotonic_unix_seconds() if unix_ts is None else (int(unix_ts) & 0xFFFFFFFF)
+    return frame_gs2c(GS2C_TIME_SECOND, struct.pack("<I", t))
+
+
+def build_gs2c_refresh_server_time(unix_ts: int | None = None) -> bytes:
+    """
+    `GS2C_OPEN_UI = 89, isub = 241` -> `netopenui.S2CRefreshServerTime(netobj)`:
+    calls `misc.SetServerTime(iTime)` which sets `g_ServerTime = iTime` AND
+    `g_RecordTime = C_sys.GetTickCount() / 1000`.
+    """
+    t = monotonic_unix_seconds() if unix_ts is None else (int(unix_ts) & 0xFFFFFFFF)
+    return frame_gs2c(GS2C_OPEN_UI, struct.pack("<BI", 241, t))
+
+
+def build_gs2c_prop_switch_server_time(
+    unix_ts: int | None = None,
+    server_state: int = 1,
+    open_days: int = 365,
+    max_level: int = 165,
+    next_days: int = 30,
+    next_max_level: int = 170,
+    server_name: str = "縮小燈",
+) -> bytes:
+    """
+    `GS2C_PROP_SWITCH = 21, isub = 6` -> `nethero.S2CPropSwitch(netobj)`:
+    calls `misc.SetServerTime(tm)` and initializes server open days / max level.
+    """
+    t = monotonic_unix_seconds() if unix_ts is None else (int(unix_ts) & 0xFFFFFFFF)
+    payload = struct.pack(
+        "<BIHHHHB16sB",
+        6,
+        t,
+        server_state & 0xFFFF,
+        open_days & 0xFFFF,
+        max_level & 0xFFFF,
+        next_days & 0xFFFF,
+        next_max_level & 0xFF,
+        encode_big5(server_name, 16),
+        1,
+    )
+    return frame_gs2c(GS2C_PROP_SWITCH, payload)
+
+
+def build_gs2c_schedule_sync() -> list[bytes]:
+    """
+    `GS2C_SCHEDULE = 57` (`dlgnewschedule.S2CSchedule` / `dlgschedule.S2CSchedule`):
+      - `iSub = 1`: `[1, iCount=0, iDefaultShow=0]` (`<BBB`)
+      - `iSub = 2`: `[2, iCount=0]` (`<BB`)
+      - `iSub = 4`: `[4, iTotalAct=100, iCurAct=200, iCount=0, iOpenedCount=0]` (`<BHHBB`)
+      - `iSub = 7`: `[7, bFirstOpen=0]` (`<BB`)
+    """
+    return [
+        frame_gs2c(GS2C_SCHEDULE, struct.pack("<BBB", 1, 0, 0)),
+        frame_gs2c(GS2C_SCHEDULE, struct.pack("<BB", 2, 0)),
+        frame_gs2c(GS2C_SCHEDULE, struct.pack("<BHHBB", 4, 100, 200, 0, 0)),
+        frame_gs2c(GS2C_SCHEDULE, struct.pack("<BB", 7, 0)),
+    ]
+
+
+def build_gs2c_schedule_week(unix_ts: int | None = None) -> bytes:
+    """
+    `GS2C_OPEN_UI = 89, isub = 222, iisub = 4` -> `dlgnewschedule.S2CNewSchedule`:
+    7-day week preview starting from local time (`iTime:4B` + 7 * `(day_ts:4B, count:1B)`).
+    """
+    base_ts = monotonic_unix_seconds() if unix_ts is None else (int(unix_ts) & 0xFFFFFFFF)
+    buf = bytearray(struct.pack("<BBI", 222, 4, base_ts))
+    for day_idx in range(7):
+        day_ts = (base_ts + day_idx * 86400) & 0xFFFFFFFF
+        buf.extend(struct.pack("<IB", day_ts, 0))
+    return frame_gs2c(GS2C_OPEN_UI, bytes(buf))
+
+
+def build_gs2c_set_rate(isset: int = 1) -> bytes:
+    """
+    `GS2C_OTHER_ASSISTANT = 11, isub = 42` -> `netcommon.S2CSetRate(netobj)`:
+    calls `main.SetRate()` which reads `ratio` and `scale` from `mx.ini`,
+    sets `ratio.RATIO` (`1` or `2`), and calls `game.FullScreen()` (`C_sys.WndResize` + `C_sys.SetWndScale`).
+    """
+    return frame_gs2c(GS2C_OTHER_ASSISTANT, struct.pack("<BB", 42, isset & 0xFF))
+
+
+def build_gs2c_prop_switch_setting(switch_val: int) -> bytes:
+    """
+    `GS2C_PROP_SWITCH = 21, isub = 1` -> `nethero.S2CPropSwitch(netobj)`:
+    updates `dlgsysopt.g_Settings` and calls `dlgsysopt.ResetSaved()` -> `game.FullScreen()`,
+    applying any saved window resolution (`scale`) immediately!
+    """
+    return frame_gs2c(GS2C_PROP_SWITCH, struct.pack("<BI", 1, switch_val & 0xFFFFFFFF))
+
+
+def build_gs2c_prop_switch_price(price_val: int) -> bytes:
+    """`GS2C_PROP_SWITCH = 21, isub = 9` -> `dlgsysopt.InitPrice(iPrice)`."""
+    return frame_gs2c(GS2C_PROP_SWITCH, struct.pack("<BI", 9, price_val & 0xFFFFFFFF))
+
+
+def build_gs2c_quicklogin_key(login_key: int = 0x514C4B59, itype: int = 1) -> bytes:
+    """
+    `GS2C_QUICKLOGIN = 12, isub = 1` -> `netquicklogin.S2CLoginKey(netobj)`:
+    sets `netquicklogin.g_LoginKey = key` so `RestartQuickLogin` (triggered when saving
+    resolution/ratio or UI style in System Settings) can send `C2SRequestQuickLogin(key, pid)`.
+    """
+    return frame_gs2c(GS2C_QUICKLOGIN, struct.pack("<BIB", 1, login_key & 0xFFFFFFFF, itype & 0xFF))
+
+
+def build_gs2c_quicklogin_success() -> bytes:
+    """
+    `GS2C_QUICKLOGIN = 12, isub = 2` -> `netquicklogin.S2CLoginSuccess(netobj)`:
+    closes quicklogin dialog and runs `resetcontrol.DoNewResetClear()`.
+    Must be sent BEFORE `GS2C_PROP_INIT = 16` during QuickLogin so `DoNewResetClear()`
+    does not wipe the newly created `addon` HUD panel.
+    """
+    return frame_gs2c(GS2C_QUICKLOGIN, b"\x02")
+
+
+def build_gs2c_newchar_switch_ui(ui_style: int) -> bytes:
+    """
+    `GS2C_HUODONG_OP = 166`, `'newchar'`, `iSub = 12` (`S2C_SWITCH_UI`) ->
+    `netnewcharres.S2CSwitchUIStyle(netobj)`: saves new UI style to `mx.ini` and triggers
+    `newoptglobalfunc.ChangeStyleQuickLogin(iRealStyle)`.
+    """
+    tag = b"newchar"
+    payload = bytes([len(tag)]) + tag + struct.pack("<BB", 12, ui_style & 0xFF)
+    return frame_gs2c(GS2C_HUODONG_OP, payload)
 
 
 # ============================================================================
@@ -1625,18 +2156,33 @@ class AccountStore:
                         return r
             return None
 
+    def get_role_and_account(self, role_id: int) -> tuple[str, dict[str, Any]] | None:
+        with self.lock:
+            for acct_name, acct in self.data.get("accounts", {}).items():
+                for r in acct.get("roles", []):
+                    if int(r.get("id", 0)) == role_id:
+                        return acct_name, r
+            return None
+
     def update_role_pos(self, account: str, role_id: int, map_id: int, x: int, y: int) -> None:
         with self.lock:
             acct = self.data["accounts"].get(account)
-            if not acct:
-                return
-            for r in acct["roles"]:
-                if int(r.get("id", 0)) == role_id:
-                    r["map_id"] = map_id
-                    r["x"] = x
-                    r["y"] = y
-                    self._save()
-                    return
+            if acct:
+                for r in acct["roles"]:
+                    if int(r.get("id", 0)) == role_id:
+                        r["map_id"] = map_id
+                        r["x"] = x
+                        r["y"] = y
+                        self._save()
+                        return
+            for a in self.data.get("accounts", {}).values():
+                for r in a.get("roles", []):
+                    if int(r.get("id", 0)) == role_id:
+                        r["map_id"] = map_id
+                        r["x"] = x
+                        r["y"] = y
+                        self._save()
+                        return
 
 
 # ============================================================================
@@ -1664,6 +2210,11 @@ class ClientSession:
         self.pets: dict[int, dict[str, Any]] = {int(p["id"]): dict(p) for p in STARTER_PETS}
         self.recv_buf = bytearray()
         self.hello_verified = False
+        self.login_key: int = 0x514C4B59
+        self.sys_switch: int = 0
+        self.max_price: int = 99999999
+        self.split_cmd: int | None = None
+        self.split_buf = bytearray()
 
     def send_raw(self, data: bytes, label: str = "") -> None:
         self.conn.sendall(data)
@@ -1854,28 +2405,101 @@ class ClientSession:
             )
             return
 
-        # 3. Ping & Quiet In-Map State Packets
+        # 3. System Settings Switch (`C2GS_PLAYER_SYSSWITCH = 21` -> `nethero.C2SSaveSetting` / `C2SSavePrice` / `C2SSaveSystemData`)
+        if opcode == C2GS_PLAYER_SYSSWITCH:
+            self._on_player_sysswitch(fields)
+            return
+
+        # 4. Open UI / Refresh Server Time (`C2GS_OPEN_UI = 88` or legacy `60`)
+        if opcode in (C2GS_OPEN_UI, C2GS_OPEN_UI_LEGACY):
+            isub = fields[0] if fields else 0
+            if isub == 241:
+                # `nethero.C2SRefreshServerTime()` -> reply with `GS2C_OPEN_UI = 89, isub = 241`
+                log(f"[C2GS <- {self.addr[1]}] C2GS_OPEN_UI (op={opcode}, isub=241 C2SRefreshServerTime)")
+                self.send_raw(
+                    build_gs2c_refresh_server_time(),
+                    "GS2C_OPEN_UI(op=89, isub=241 S2CRefreshServerTime)",
+                )
+                self.send_raw(
+                    build_gs2c_time_second(),
+                    "GS2C_TIME_SECOND(op=192, S2CTime)",
+                )
+            return
+
+        # 5. In-Game Calendar & Schedule (`C2GS_SCHEDULE = 82` or legacy `69`)
+        if opcode in (C2GS_SCHEDULE, C2GS_SCHEDULE_LEGACY):
+            isub = fields[0] if fields else 1
+            log(f"[C2GS <- {self.addr[1]}] C2GS_SCHEDULE (op={opcode}, isub={isub})")
+            self.send_raw(
+                build_gs2c_refresh_server_time(),
+                "GS2C_OPEN_UI(op=89, isub=241 S2CRefreshServerTime)",
+            )
+            self.send_raw(
+                build_gs2c_time_second(),
+                "GS2C_TIME_SECOND(op=192, S2CTime)",
+            )
+            if isub == 1:
+                for pkt in build_gs2c_schedule_sync():
+                    self.send_raw(pkt, "GS2C_SCHEDULE(op=57)")
+            elif isub == 2:
+                self.send_raw(
+                    build_gs2c_schedule_week(),
+                    "GS2C_OPEN_UI(op=89, isub=222, iisub=4 ScheduleWeek)",
+                )
+            return
+
+        # 6. HuoDong / UI Style Switch (`C2GS_HUODONG = 90` -> `'newchar'` `C2SSwitchUIStyle`)
+        if opcode == C2GS_HUODONG:
+            self._on_huodong(fields)
+            return
+
+        # 7. QuickLogin (`C2GS_QUICKLOGIN = 13` -> resolution/ratio/UI-style switch & reconnect)
+        if opcode == C2GS_QUICKLOGIN:
+            self._on_quicklogin(fields)
+            return
+
+        # 8. Ping & Quiet In-Map State Packets
         if opcode in (
             C2GS_PING,
             C2GS_PING_LEGACY,
             C2GS_PLAYER_SWITCH,
-            C2GS_PLAYER_SYSSWITCH,
             C2GS_TASK_GET,
             C2GS_TASK,
             C2GS_ANSWERHELLO,
-            C2GS_OPEN_UI,
-            C2GS_CHECKWG,
+            # NOTE: `C2GS_CHECKWG` deliberately NOT here - it shares 152 with
+            # `C2GS_PLAYER_UPGRADE` and is disambiguated below by payload length.
             C2GS_PLAYER_CMD,
         ):
             return
 
-        # 4. `C2GS_GAME_PUBLIC = 209` (`script.fls`) or `250` (`data.fls`)
+        # 9. `C2GS_GAME_PUBLIC = 209` (`script.fls`) or `250` (`data.fls`)
         if opcode in (C2GS_GAME_PUBLIC, C2GS_GAME_PUBLIC_LEGACY):
             sub = fields[0] if fields else 0
             log(
                 f"[C2GS <- {self.addr[1]}] C2GS_GAME_PUBLIC (op={opcode}, sub={sub}, "
                 f"len={len(fields)}B)"
             )
+            # Sub 5 = C2GS_SUB_SPLIT (`netpublic.SplitPacketSend`, e.g. `SaveHideGamehotkey` -> `C2SSaveSystemData`)
+            if sub == 5 and len(fields) >= 3:
+                flag = fields[1]
+                if flag == 0 and len(fields) >= 4:
+                    self.split_cmd = fields[2]
+                    chunk_len = fields[3]
+                    self.split_buf = bytearray(fields[4 : 4 + chunk_len])
+                elif flag in (1, 2):
+                    chunk_len = fields[2]
+                    self.split_buf.extend(fields[3 : 3 + chunk_len])
+                    if flag == 2 and self.split_cmd is not None:
+                        reassembled_cmd = self.split_cmd
+                        reassembled_fields = bytes(self.split_buf)
+                        self.split_cmd = None
+                        self.split_buf.clear()
+                        log(
+                            f"[C2GS <- {self.addr[1]}] Reassembled C2GS_SUB_SPLIT -> "
+                            f"cmd={reassembled_cmd}, len={len(reassembled_fields)}B"
+                        )
+                        self.handle_c2gs_packet(reassembled_cmd, reassembled_fields)
+                return
             # Sub 52 = C2GS_SUB_GM_NEW (`C2SPlayerWizard`)
             if sub == 52 and len(fields) >= 3:
                 jlen = struct.unpack_from("<H", fields, 1)[0]
@@ -2022,9 +2646,15 @@ class ClientSession:
             self._on_player_adjustpoint(fields)
             return
 
-        # 11. Character Level-Up (`C2GS_PLAYER_UPGRADE = 17`)
-        if opcode == C2GS_PLAYER_UPGRADE:
+        # 11. Character Level-Up & Stat Allocation (`C2GS_PLAYER_UPGRADE = 152` in v2.27.2;
+        #     the legacy 17 is accepted too so older builds keep working).
+        #     `nethero.C2SUpgrade` sends an EMPTY payload, which distinguishes it from
+        #     `C2GS_CHECKWG`, the other client constant carrying 152.
+        if opcode == C2GS_PLAYER_UPGRADE_LEGACY or (opcode == C2GS_PLAYER_UPGRADE and not fields):
             self._on_player_upgrade()
+            return
+        if opcode == C2GS_CHECKWG:  # op=152 with a payload: anti-cheat ping, stay silent
+            log(f"[C2GS <- {self.addr[1]}] C2GS_CHECKWG (op=152, len={len(fields)}B) ignored")
             return
 
         # 12. Assistant Operations (`C2GS_ASSISTANT_OP = 192` -> upgrade check, auto-point, etc.)
@@ -2285,7 +2915,12 @@ class ClientSession:
             roles = self.store.get_or_create_account(self.account, "")
             role = roles[0]
             role["id"] = role_id
+        self._enter_role_world(role, send_welcome=True)
+
+    def _enter_role_world(self, role: dict[str, Any], send_welcome: bool = True) -> None:
         self.active_role = role
+        self.sys_switch = int(role.get("sys_switch", self.sys_switch))
+        self.max_price = int(role.get("max_price", self.max_price))
 
         # 1. Send GS2C_PROP_INIT = 16 (initializes hero.g_Prop and switches gamectrl to GAMING)
         prop_pkt = build_gs2c_prop_init(role)
@@ -2315,9 +2950,155 @@ class ClientSession:
             map_id = 1025
         x = int(role.get("x", MAPS[map_id]["spawn_x"]))
         y = int(role.get("y", MAPS[map_id]["spawn_y"]))
-        self.enter_map(map_id, x, y, send_welcome=True)
+        self.enter_map(map_id, x, y, send_welcome=send_welcome)
+
+        # 6. Post-login world sync:
+        #    - Resolution & ratio initialization (`GS2C_OTHER_ASSISTANT = 11, isub=42` -> `main.SetRate()`)
+        #    - System settings switch (`GS2C_PROP_SWITCH = 21, isub=1` -> `dlgsysopt.ResetSaved()`)
+        #    - Server time & calendar sync (`GS2C_PROP_SWITCH = 21, isub=6`, `GS2C_OPEN_UI = 89, isub=241`, `GS2C_TIME_SECOND = 192`)
+        #    - QuickLogin key (`GS2C_QUICKLOGIN = 12, isub=1` -> `netquicklogin.S2CLoginKey`)
+        #    Note: NEVER send `GS2C_TIME = 31` here unsolicited (`mxgw.S2CTime` only expects it after `C2GS_REQUEST_TIME = 61`).
+        self._send_world_bootstrap_sync()
+
+    def _send_world_bootstrap_sync(self) -> None:
+        now_sec = monotonic_unix_seconds()
+        self.send_raw(build_gs2c_set_rate(1), "GS2C_OTHER_ASSISTANT(op=11, isub=42 S2CSetRate)")
+        self.send_raw(
+            build_gs2c_prop_switch_setting(self.sys_switch),
+            f"GS2C_PROP_SWITCH(op=21, isub=1 setting=0x{self.sys_switch:08x})",
+        )
+        self.send_raw(
+            build_gs2c_prop_switch_server_time(now_sec),
+            f"GS2C_PROP_SWITCH(op=21, isub=6 server_time={now_sec})",
+        )
+        self.send_raw(
+            build_gs2c_refresh_server_time(now_sec),
+            f"GS2C_OPEN_UI(op=89, isub=241 S2CRefreshServerTime={now_sec})",
+        )
+        self.send_raw(
+            build_gs2c_time_second(now_sec),
+            f"GS2C_TIME_SECOND(op=192, S2CTime={now_sec})",
+        )
+        self.send_raw(
+            build_gs2c_quicklogin_key(self.login_key, 1),
+            f"GS2C_QUICKLOGIN(op=12, isub=1 login_key=0x{self.login_key:08x})",
+        )
+
+    def _on_player_sysswitch(self, fields: bytes) -> None:
+        if not fields:
+            return
+        sub = fields[0]
+        if sub == 1 and len(fields) >= 5:
+            # `nethero.C2SSaveSetting(setting:4B)` -> reply with `GS2C_PROP_SWITCH = 21, isub = 1`
+            # which triggers `dlgsysopt.ResetSaved()` -> `game.FullScreen()` (`SetWndSize` + `SetWndScale`).
+            switch_val = struct.unpack_from("<I", fields, 1)[0]
+            self.sys_switch = switch_val
+            if self.active_role is not None:
+                self.active_role["sys_switch"] = switch_val
+                self.store._save()
+            log(f"[SYSOPT] C2GS_PLAYER_SYSSWITCH (op=21, sub=1 C2SSaveSetting): switch=0x{switch_val:08x}")
+            self.send_raw(
+                build_gs2c_prop_switch_setting(switch_val),
+                f"GS2C_PROP_SWITCH(op=21, isub=1 setting=0x{switch_val:08x})",
+            )
+        elif sub == 7 and len(fields) >= 5:
+            # `nethero.C2SSavePrice(price:4B)` -> reply with `GS2C_PROP_SWITCH = 21, isub = 9`
+            price_val = struct.unpack_from("<I", fields, 1)[0]
+            self.max_price = price_val
+            if self.active_role is not None:
+                self.active_role["max_price"] = price_val
+                self.store._save()
+            log(f"[SYSOPT] C2GS_PLAYER_SYSSWITCH (op=21, sub=7 C2SSavePrice): price={price_val}")
+            self.send_raw(
+                build_gs2c_prop_switch_price(price_val),
+                f"GS2C_PROP_SWITCH(op=21, isub=9 price={price_val})",
+            )
+        elif sub in (2, 3, 5):
+            # `nethero.C2SSaveSystemData` (hotkeys / system data)
+            log(f"[SYSOPT] C2GS_PLAYER_SYSSWITCH (op=21, sub={sub} C2SSaveSystemData, len={len(fields)}B)")
+            if self.active_role is not None:
+                self.active_role[f"sysdata_{sub}"] = fields[1:].decode("latin-1", errors="ignore")
+                self.store._save()
+
+    def _on_huodong(self, fields: bytes) -> None:
+        if len(fields) < 2:
+            return
+        tag_len = fields[0]
+        if len(fields) < 1 + tag_len:
+            return
+        tag = fields[1 : 1 + tag_len].decode("ascii", errors="ignore")
+        rest = fields[1 + tag_len :]
+        log(f"[C2GS <- {self.addr[1]}] C2GS_HUODONG (op=90, tag={tag!r}, rest={rest.hex()})")
+        if tag == "newchar" and len(rest) >= 2 and rest[0] == 11:
+            # `netnewcharres.C2SSwitchUIStyle(style)` sends `iSub=11, iStyle=style+1`
+            ui_style = rest[1]
+            if self.active_role is not None:
+                self.active_role["ui_style"] = ui_style
+                self.store._save()
+            self.send_raw(
+                build_gs2c_newchar_switch_ui(ui_style),
+                f"GS2C_HUODONG_OP(op=166, newchar S2CSwitchUIStyle={ui_style})",
+            )
+
+    def _on_quicklogin(self, fields: bytes) -> None:
+        if not fields:
+            return
+        sub = fields[0]
+        if sub == 1:
+            # `netquicklogin.C2SRefreshLoginKey()`
+            log(f"[QUICKLOGIN] C2GS_QUICKLOGIN (op=13, sub=1 C2SRefreshLoginKey)")
+            self.send_raw(
+                build_gs2c_quicklogin_key(self.login_key, 1),
+                f"GS2C_QUICKLOGIN(op=12, isub=1 login_key=0x{self.login_key:08x})",
+            )
+        elif sub == 2 and len(fields) >= 9:
+            # `netquicklogin.C2SRequestQuickLogin(key:4B, pid:4B)`
+            # Triggered when saving resolution/ratio (`視野擴大` <-> `800*600`/`1024*768`/`1280*960`)
+            # or switching UI style (`界面風格`) in System Settings (`dgtbaseopt.Save()`).
+            req_key, pid = struct.unpack_from("<II", fields, 1)
+            log(
+                f"[QUICKLOGIN] C2GS_QUICKLOGIN (op=13, sub=2 C2SRequestQuickLogin): "
+                f"key=0x{req_key:08x}, pid={pid}"
+            )
+            found = self.store.get_role_and_account(pid)
+            if found is not None:
+                acct_name, role = found
+                self.account = acct_name
+            else:
+                roles = self.store.get_or_create_account(self.account, "")
+                role = roles[0]
+                role["id"] = pid
+            # 1. Send `GS2C_QUICKLOGIN = 12, isub = 2` (`S2CLoginSuccess`) FIRST so
+            #    `resetcontrol.DoNewResetClear()` runs BEFORE `S2CPropInit` builds the HUD!
+            self.send_raw(
+                build_gs2c_quicklogin_success(),
+                "GS2C_QUICKLOGIN(op=12, isub=2 S2CLoginSuccess)",
+            )
+            # 2. Re-enter role world (sends `GS2C_PROP_INIT`, items, skills, pets, map, NPCs,
+            #    and `_send_world_bootstrap_sync()` which runs `S2CSetRate` -> `main.SetRate()`).
+            self._enter_role_world(role, send_welcome=False)
+            self.send_raw(
+                build_gs2c_notify("#G系統設置已成功切換並生效！#n", sub=1),
+                "GS2C_NOTIFY(op=165, QuickLogin complete)",
+            )
 
     def enter_map(self, map_id: int, x: int | None = None, y: int | None = None, send_welcome: bool = False) -> None:
+        if map_id not in MAPS:
+            # 傳送點全開：客戶端資料裡有 430 個場景，mock 只內建 6 個；
+            # 走到/傳送到未知場景時就地建場（名字取自 entry 2601/2804 匯出的場景表），
+            # 而不是悄悄退回清風村（舊行為會讓玩家以為傳送失敗）。
+            MAPS[map_id] = {
+                "scene": map_id,
+                "mapid": map_id,
+                "minimapid": map_id,
+                "name": scene_display_name(map_id),
+                "spawn_x": 10,
+                "spawn_y": 10,
+                "npc": {},
+                "npcs": [],
+                "portals": [],
+            }
+            _open_all_portals()
         m = MAPS.get(map_id, MAPS[1025])
         spawn_x = x if x is not None else int(m["spawn_x"])
         spawn_y = y if y is not None else int(m["spawn_y"])
@@ -2355,7 +3136,9 @@ class ClientSession:
         self.send_raw(goto_pkt, f"GS2C_MAP_GOTO_M(op=97, x={spawn_x}, y={spawn_y})")
 
         # 3. GS2C_MAP_ADD_NPC = 99 (spawn all authentic map NPCs + teleporter NPC)
-        npc_list = m.get("npcs") or ([m["npc"]] if m.get("npc") else [])
+        #    原版站位優先：entry 2601 `npcposdata` 匯出的該場景 NPC 名單（名字/座標/類別），
+        #    再接上 mock 自己的傳送人（傳送點由它提供），避免自編 NPC 蓋掉原版人物。
+        npc_list = map_npc_spawn_list(int(m["scene"]))
         for npc_item in npc_list:
             npc_pkt = build_gs2c_map_add_npc(npc_item)
             self.send_raw(
@@ -2482,9 +3265,9 @@ class ClientSession:
             r["title_color"] = tcolor
             self.store._save()
             # Update m_Title (idx=16), m_TitleID (idx=17), m_TitleColor (idx=64)
-            self.send_raw(build_gs2c_prop_change_str(16, title_str, 60), f"GS2C_PROP_CHANGE(m_Title={title_str!r})")
-            self.send_raw(build_gs2c_prop_change_word(17, tid), f"GS2C_PROP_CHANGE(m_TitleID={tid})")
-            self.send_raw(build_gs2c_prop_change_byte(64, tcolor), f"GS2C_PROP_CHANGE(m_TitleColor={tcolor})")
+            self.send_raw(build_gs2c_prop_change_str(16, title_str, 60), f"GS2C_PROP_CHANGELIST(m_Title={title_str!r})")
+            self.send_raw(build_gs2c_prop_change_word(17, tid), f"GS2C_PROP_CHANGELIST(m_TitleID={tid})")
+            self.send_raw(build_gs2c_prop_change_byte(64, tcolor), f"GS2C_PROP_CHANGELIST(m_TitleColor={tcolor})")
             self.send_raw(build_gs2c_open_ui_titles(r), "GS2C_OPEN_UI(op=89, sub=183 Titles)")
             if title_str:
                 self.send_raw(build_gs2c_notify(f"#G稱謂已更換為【{title_str}】！#n", sub=1), "GS2C_NOTIFY")
@@ -2548,53 +3331,71 @@ class ClientSession:
         cur_map_id = int(self.active_role.get("map_id", 1025)) if self.active_role else 1025
         m = MAPS.get(cur_map_id, MAPS[1025])
         npc = m["npc"]
-        for cand in m.get("npcs", []):
+        # 以**實際下發**的名單查（原版站位 + 傳送人），不是 mock 內建設定
+        all_npcs = map_npc_spawn_list(cur_map_id)
+        for cand in all_npcs:
             if int(cand.get("id", 0)) == npc_id:
                 npc = cand
                 break
+        self.last_npc = dict(npc)
+        self.last_npc["map_id"] = cur_map_id
 
-        greeting = npc.get(
-            "greeting",
-            f"少俠好！這裡是#Y{m['name']}#n，我是#G{npc['name']}#n，請問有什麼可以幫您？",
-        )
-        dialog_text = (
-            f"{greeting}\n"
-            f"Q傳送至【明月城】(1054)\n"
-            f"Q傳送至【清風村】(1025)\n"
-            f"Q傳送至【永澤城】(1001)\n"
-            f"Q傳送至【香葉城】(1007)\n"
-            f"Q傳送至【天水平原】(1005)\n"
-            f"Q傳送至【長風島】(1028)\n"
-            f"Q恢復滿氣血法力並領取 100 萬兩銀幣\n"
-            f"Q角色連升 10 級 (刷新全屬性)\n"
-            f"Q我只是路過"
-        )
+        if is_teleporter(npc):
+            # 傳送人：保留**可用**的傳送選項（「傳送點全開」就是這裡每個城市都能進）
+            greeting = npc.get(
+                "greeting",
+                f"少俠好！這裡是#Y{m['name']}#n，我是#G{npc['name']}#n，想到哪裡去？",
+            )
+            dialog_text = greeting + "\n" + "\n".join(
+                f"Q傳送至【{MAPS[mid]['name']}】({mid})" for mid in sorted(MAPS)
+            )
+            if self.active_role:
+                dialog_text += "\nQ恢復滿氣血法力並領取 100 萬兩銀幣"
+                dialog_text += "\nQ角色連升 10 級 (刷新全屬性)"
+            dialog_text += "\nQ我只是路過"
+        else:
+            dialog_text = npc_dialogue_text(npc)
+
         pkt = build_gs2c_npc_chat_ext(
             npc_id=npc_id,
             icon=int(npc.get("icon", npc.get("shape", 3007))),
-            name=str(npc.get("name", "傳送人")),
+            name=str(npc.get("name", "神秘人")),
             msg=dialog_text,
             response_id=100,
         )
-        self.send_raw(pkt, f"GS2C_NPC_CHAT_EXT(op=152, id={npc_id}, npc={npc['name']!r})")
+        tag = "原版" if npc.get("authentic") else "內建"
+        self.send_raw(
+            pkt,
+            f"GS2C_NPC_CHAT_EXT(op=152, id={npc_id}, {tag} npc={npc['name']!r}, kind={npc.get('kind', 'teleporter')})",
+        )
 
     def _on_npc_answer(self, choice: int, response_id: int) -> None:
-        tp_targets = {
-            1: (1054, "明月城"),
-            2: (1025, "清風村"),
-            3: (1001, "永澤城"),
-            4: (1007, "香葉城"),
-            5: (1005, "天水平原"),
-            6: (1028, "長風島"),
-        }
+        npc = getattr(self, "last_npc", None) or {}
+        if not is_teleporter(npc):
+            # 一般 NPC：選項一律回「敬請期待」（原版選單在服務端，客戶端只有 NPC 識別資料）
+            self.send_raw(
+                build_gs2c_npc_chat_ext(
+                    npc_id=int(npc.get("id", 0)) & 0xFFFFFFFF,
+                    icon=int(npc.get("icon", npc.get("shape", 3007))),
+                    name=str(npc.get("name", "神秘人")),
+                    msg=f"P N({int(npc.get('icon', 3007))},{npc.get('name', '神秘人')})\n"
+                    f"（選項「{choice}」）這個功能#Y敬請期待#n，少俠改日再來看看。\nQ我知道了",
+                    response_id=100,
+                ),
+                f"GS2C_NPC_CHAT_EXT(op=152, id={npc.get('id')}, 敬請期待 choice={choice})",
+            )
+            return
+
+        tp_targets = {i: mid for i, mid in enumerate(sorted(MAPS), start=1)}
         if choice in tp_targets:
-            target_id, target_name = tp_targets[choice]
+            target_id = tp_targets[choice]
+            target_name = MAPS[target_id]["name"]
             self.enter_map(target_id)
             self.send_raw(
                 build_gs2c_notify(f"#G已為您傳送至【{target_name}】({target_id})！#n", sub=2),
                 "GS2C_NOTIFY",
             )
-        elif choice == 7:
+        elif choice == len(tp_targets) + 1:
             if self.active_role:
                 self.active_role["cash"] = int(self.active_role.get("cash", 888888)) + 1000000
                 self.store._save()
@@ -2603,7 +3404,7 @@ class ClientSession:
                 build_gs2c_notify("#Y氣血與法力已完全恢復，並獲得 1,000,000 兩銀幣！#n", sub=2),
                 "GS2C_NOTIFY",
             )
-        elif choice == 8:
+        elif choice == len(tp_targets) + 2:
             if self.active_role:
                 new_lv = min(165, int(self.active_role.get("level", 60)) + 10)
                 self.active_role["level"] = new_lv
@@ -2643,7 +3444,7 @@ class ClientSession:
                 self.store._save()
                 role_id = int(r["id"])
                 self.send_raw(build_gs2c_prop_init(r), f"GS2C_PROP_INIT(shape={new_shape})")
-                self.send_raw(build_gs2c_map_change_shape(role_id, new_shape), f"GS2C_MAP_CHANGE_SHAPE(shape={new_shape})")
+                self.send_raw(build_gs2c_map_change_shape(role_id, new_shape), f"GS2C_CHANGE_SHAPE(shape={new_shape})")
                 sname = SHAPE_NAMES.get(new_shape, str(new_shape))
                 self.send_raw(
                     build_gs2c_notify(f"#G角色外型已切換為：{sname} (shape={new_shape})！#n", sub=2),
@@ -2684,6 +3485,13 @@ def run_self_test() -> int:
     seed = 0x13572468
     hello = build_gs2c_hello(seed=seed, server_num=3, is_cert=0)
     assert len(hello) == 9 and hello[0] == 8 and hello[1] == GS2C_HELLO
+
+    # 0. Long-packet framing: 0xFF + 3 continuation bytes (see MAX_LEN_BYTES above).
+    assert MAX_LEN_BYTES == 3, "client's CNet.__init__ calls SetMaxLenBytes(3)"
+    esc = frame_gs2c(99, b"\x00" * 300)
+    assert esc[0] == 0xFF and len(esc) == 1 + MAX_LEN_BYTES + 301
+    assert int.from_bytes(esc[1 : 1 + MAX_LEN_BYTES], "little") == 301, "body length = 301"
+    assert esc[1 + MAX_LEN_BYTES] == 99, "next byte must be the opcode, not 0x00"
     u_seed, u_srv, u_cert = struct.unpack_from("<IHB", hello, 2)
     assert (u_seed, u_srv, u_cert) == (seed, 3, 0)
     r3 = compute_hello_reply_bytes(seed)
@@ -2712,8 +3520,12 @@ def run_self_test() -> int:
     # 4. GS2C_PROP_INIT (408 bytes total: 0xFF + 3B len(404) + op(16) + 403B payload)
     prop_pkt = build_gs2c_prop_init(sample_role)
     assert prop_pkt[0] == 0xFF
-    ext_len = struct.unpack_from("<I", prop_pkt[1:4] + b"\x00")[0]
-    assert ext_len == 404 and len(prop_pkt) == 4 + 404 and prop_pkt[4] == GS2C_PROP_INIT
+    ext_len = int.from_bytes(prop_pkt[1 : 1 + MAX_LEN_BYTES], "little")
+    assert (
+        ext_len == 404
+        and len(prop_pkt) == 1 + MAX_LEN_BYTES + 404
+        and prop_pkt[1 + MAX_LEN_BYTES] == GS2C_PROP_INIT
+    ), "long body (entry-map PROP_INIT) framing"
 
     # 5. GS2C_MAP_SCENE_M & GS2C_MAP_GOTO_M & GS2C_MAP_ADD_NPC
     scene_pkt = build_gs2c_map_scene_m(1025, 1025, 1025, 75, 52, "清風村")
@@ -2722,6 +3534,105 @@ def run_self_test() -> int:
     assert len(goto_pkt) == 6 and goto_pkt[0] == 5 and goto_pkt[1] == GS2C_MAP_GOTO_M
     npc_pkt = build_gs2c_map_add_npc(MAPS[1025]["npc"])
     assert npc_pkt[1] == GS2C_MAP_ADD_NPC
+
+    # 5b. Opcode audit regressions (client `idx=3970` protocol.py + `idx=3176` net.py):
+    #     these three must never drift back to the values the upstream copy had.
+    assert GS2C_MAP_DEL == 85, "GS2C_MAP_DEL must be 85 (100 is GS2C_MAP_ADD_GOODS)"
+    assert GS2C_CHANGE_SHAPE == 106, "GS2C_CHANGE_SHAPE must be 106 (107 is GS2C_MAP_STORE)"
+    assert C2GS_PLAYER_UPGRADE == 152 and C2GS_PLAYER_UPGRADE_LEGACY == 17
+
+    # Prop changes ride a 1-entry GS2C_PROP_CHANGELIST (61), because 152 is shadowed
+    # by GS2C_NPC_CHAT_EXT and 17 has no handler in this client build.
+    pc_word = build_gs2c_prop_change_word(17, 101)
+    assert pc_word[1] == GS2C_PROP_CHANGELIST == 61
+    assert pc_word[2:] == bytes([1, 17]) + struct.pack("<H", 101), "1-entry changelist payload"
+    pc_byte = build_gs2c_prop_change_byte(64, 3)
+    assert pc_byte[2:] == bytes([1, 64, 3])
+    pc_str = build_gs2c_prop_change_str(16, "開拓者", 60)
+    assert pc_str[2:] == bytes([1, 16]) + encode_big5("開拓者", 60)
+
+    shape_pkt = build_gs2c_map_change_shape(10001, 5)
+    assert shape_pkt[1] == GS2C_CHANGE_SHAPE
+
+    # 5c. GM mode: `nocheck` must carry `[game] gm=1`, not be an empty file.
+    tmp_nocheck = Path("/tmp/test_mock_nocheck")
+    if tmp_nocheck.exists():
+        tmp_nocheck.unlink()
+    ensure_nocheck_gm(tmp_nocheck)
+    assert tmp_nocheck.read_text(encoding="latin-1").splitlines()[:2] == ["[game]", "gm=1"]
+    tmp_nocheck.write_text("gm=0\n[game]\nother=2\n", encoding="latin-1")
+    ensure_nocheck_gm(tmp_nocheck)
+    lines = tmp_nocheck.read_text(encoding="latin-1").splitlines()
+    assert lines[0] == "gm=0" and "other=2" in lines           # unrelated keys preserved
+    assert lines.index("[game]") < lines.index("gm=1")          # gm=1 inside [game]
+    assert lines.index("gm=1") < len(lines)
+    assert "Found" in ensure_nocheck_gm(tmp_nocheck)  # idempotent
+    tmp_nocheck.unlink()
+    # 5d. Time sync (007 watchdog vs Calendar/Schedule Unix seconds):
+    #     - `GS2C_TIME = 31` (`mxgw.S2CTime`) MUST be centiseconds (100 ticks/sec) so
+    #       `sdt = t - g_ServerTime + 550 >= cdt = (G2 - G1) / 100` (where `C_sys.GetTime` is 10,000 ticks/sec).
+    #     - `GS2C_TIME_SECOND = 192` (`dlgcalendar.S2CTime`) and `GS2C_OPEN_UI = 89, isub = 241`
+    #       (`netopenui.S2CRefreshServerTime` -> `misc.SetServerTime`) MUST be Unix seconds.
+    time_pkt = build_gs2c_time()
+    assert time_pkt[1] == GS2C_TIME == 31
+    assert len(time_pkt) == 2 + 4, "GS2C_TIME payload must be 4 bytes"
+    sent_cs = struct.unpack_from("<I", time_pkt, 2)[0]
+    assert sent_cs >= 10000, f"GS2C_TIME centisecond counter must start >= 10000, got {sent_cs}"
+    assert struct.unpack_from("<I", build_gs2c_time(), 2)[0] >= sent_cs, "GS2C_TIME must be monotonic"
+    # Verify mxgw.SecondGetResult math over 25s (750 frames), 40s (1200 frames), and 180s (5400 frames):
+    for interval_sec in (25, 40, 180):
+        g1 = 1_000_000
+        g2 = g1 + interval_sec * 10000  # C_sys.GetTime() is 0.1ms (10,000 ticks/sec)
+        cdt = g2 // 100 - g1 // 100     # centiseconds
+        srv_t1 = sent_cs
+        srv_t2 = srv_t1 + interval_sec * 100
+        sdt = srv_t2 - srv_t1 + 550
+        assert cdt <= sdt, f"mxgw 007 check failed for {interval_sec}s: cdt={cdt} > sdt={sdt}"
+
+    tsec_pkt = build_gs2c_time_second()
+    assert tsec_pkt[1] == GS2C_TIME_SECOND == 192
+    sent_unix = struct.unpack_from("<I", tsec_pkt, 2)[0]
+    assert abs(sent_unix - int(time.time())) <= 5, f"GS2C_TIME_SECOND must be Unix seconds, got {sent_unix}"
+    ref_pkt = build_gs2c_refresh_server_time()
+    assert ref_pkt[1] == GS2C_OPEN_UI == 89 and ref_pkt[2] == 241
+    assert abs(struct.unpack_from("<I", ref_pkt, 3)[0] - int(time.time())) <= 5
+
+    # 5e. 傳送點全開：每個場景都能走到其他所有場景。
+    for mid, mm in MAPS.items():
+        targets = {int(p["target_map"]) for p in mm.get("portals", [])}
+        missing = [o for o in MAPS if o != mid and o not in targets]
+        assert not missing, f"map {mid} missing portals to {missing}"
+
+    # 5f. 原版 NPC 佈局（若使用者帶了 npc_layout.json）。
+    if NPC_LAYOUT:
+        assert authentic_npcs(1025), "scene 1025 must have authentic NPCs"
+        shop = next((n for n in authentic_npcs(1054) if n.get("kind") == "shop"), None)
+        assert shop is not None, "scene 1054 must contain a shop NPC"
+        body = npc_dialogue_text(shop)
+        assert body.startswith("P N(") and "\nQ" in body, "dialogue must use the original P/Q line format"
+        assert scene_display_name(1001) == "永澤城"
+        assert len(authentic_npcs(1054)) == 52, "明月城應還原全部 52 個原版 NPC（不截斷）"
+        assert len(authentic_npcs(1025)) == 14, "清風村應為 14 個原版 NPC"
+        trunc = [sid for sid in [int(k) for k in list(NPC_LAYOUT["scenes"])]
+                 if len(map_npc_spawn_list(sid)) < len(authentic_npcs(sid))]
+        assert not trunc, f"下發名單不得少於原版名單，被截斷的場景：{trunc[:5]}"
+        log(f"[PASS] 原版 NPC 佈局：{len(NPC_LAYOUT['scenes'])} 場景 / "
+            f"{sum(len(v.get('npcs') or []) for v in NPC_LAYOUT['scenes'].values())} NPC 全部還原"
+            f"（1054 明月城 {len(authentic_npcs(1054))} 個、1025 清風村 {len(authentic_npcs(1025))} 個）。")
+    else:
+        log("[WARN] 未載入 npc_layout.json：原版 NPC 佈局檢查跳過（--npc-layout 可指定）。")
+
+    # 5g. 屬性面板（GS2C_PROP_INIT = 16）：載荷必須是 12 + 391 = 403 位元組，
+    #     因此線上封包必然 >255 → 依賴 3 位元組長度前綴（見 MAX_LEN_BYTES）。
+    sample = {"id": 10001, "name": "測試", "level": 60, "shape": 111}
+    prop_pkt = build_gs2c_prop_init(sample)
+    # 403B 載荷 → 走 `0xFF` 逃逸：`0xFF | len(3B) | opcode | payload`
+    assert prop_pkt[0] == 0xFF, "PROP_INIT (403B payload) must use the 0xFF escape"
+    assert prop_pkt[4] == GS2C_PROP_INIT == 16
+    assert int.from_bytes(prop_pkt[1:4], "little") == 404, "frame length = opcode(1) + 403"
+    assert MAX_LEN_BYTES == 3, "PROP_INIT cannot be framed with a 2-byte length"
+
+    log("[PASS] Opcode audit + GM-mode (nocheck) regressions verified.")
 
     # 6. End-to-end loopback socket test across all 4 stages
     tmp_db = Path("/tmp/test_mock_accounts.json")
@@ -2732,13 +3643,17 @@ def run_self_test() -> int:
     srv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     srv_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     srv_sock.bind(("127.0.0.1", 0))
-    srv_sock.listen(1)
+    srv_sock.listen(4)
     port = srv_sock.getsockname()[1]
 
     def _srv_thread() -> None:
-        conn, addr = srv_sock.accept()
-        sess = ClientSession(conn, addr, store, seed=seed, server_num=3)
-        sess.run()
+        while True:
+            try:
+                conn, addr = srv_sock.accept()
+            except OSError:
+                break
+            sess = ClientSession(conn, addr, store, seed=seed, server_num=3)
+            threading.Thread(target=sess.run, daemon=True).start()
 
     t = threading.Thread(target=_srv_thread, daemon=True)
     t.start()
@@ -2758,8 +3673,8 @@ def run_self_test() -> int:
     def recv_gs2c() -> tuple[int, bytes]:
         b0 = cli.recv(1)[0]
         if b0 == 0xFF:
-            ext = cli.recv(3)
-            plen = struct.unpack("<I", ext + b"\x00")[0]
+            ext = cli.recv(MAX_LEN_BYTES)
+            plen = int.from_bytes(ext + b"\x00" * (4 - MAX_LEN_BYTES), "little")
         else:
             plen = b0
         body = b""
@@ -2768,12 +3683,28 @@ def run_self_test() -> int:
         return body[0], body[1:]
 
     # Stage 2: Send C2GS_LOGIN_ACCOUNT_ENTER = 1
+    # Real v2.27.2 `netlogin.C2SLoginIn` layout (entry 4082), verified 2026-10-12
+    # from the bytecode: PacketAddS(name, 32) at co_code 176, PacketAddS(pwd, 20)
+    # at co_code 192.  `fields` excludes the cmd byte, so name is at 4..35 and
+    # pwd at 36..55.  The previous 40B/32B shape only matched the `data/data.fls`
+    # bot path, so this test was exercising the wrong parser branch.
     login_fields = (
-        b"\x00"
-        + encode_big5("testuser01", 40)
-        + encode_big5("e10adc3949ba59abbe56e057f20f883e", 32)
-        + b"\x00" * 94
+        b"\x00"                                  # iScriptV1 (0 or 0x80 if mini)
+        + b"\x02"                                # CLIENT_VERSION[1]
+        + struct.pack("<H", 27)                  # CLIENT_VERSION[2]
+        + encode_big5("testuser01", 32)          # name   (32B fixed)
+        + encode_big5("e10adc3949ba59abbe56e057f20f883e", 20)  # pwd (20B fixed)
+        + b"\x00" * 4                            # C_sys.GetVersion()
+        + b"\x02\x1b\x00\x00"                    # update.ini [Setting] Version
+        + b"\x7f\x00\x00\x01"                    # localip
+        + b"\x00" * 8                            # adsid (hi, lo)
+        + b"\x00"                                # len(tgId) = 0
+        + b"\x00" * 4                            # driveid
+        + b"\x11\x22\x33\x44\x55\x66"            # mac (no length prefix)
     )
+    assert len(login_fields) == 87
+    assert login_fields[1:4] == b"\x02\x1b\x00", "must take the script.fls branch"
+    assert login_fields[4:36].startswith(b"testuser01")
     send_c2gs(C2GS_LOGIN_ACCOUNT_ENTER, login_fields)
     op1, body1 = recv_gs2c()
     assert op1 == GS2C_LOGIN_ACCOUNT_INFO and body1[0] == 1
@@ -2818,12 +3749,27 @@ def run_self_test() -> int:
     assert op6 == GS2C_MAP_SCENE_M
     op7, body7 = recv_gs2c()
     assert op7 == GS2C_MAP_GOTO_M
-    expected_npcs = len(MAPS[1025]["npcs"])
+    expected_npcs = len(map_npc_spawn_list(1025))
     for _ in range(expected_npcs):
         op_npc, _ = recv_gs2c()
         assert op_npc == GS2C_MAP_ADD_NPC
     op9, body9 = recv_gs2c()
     assert op9 == GS2C_NOTIFY
+    # Verify post-login world bootstrap sync packets (resolution rate, sys_switch, server time, calendar, quicklogin key)
+    op_rate, body_rate = recv_gs2c()
+    assert op_rate == GS2C_OTHER_ASSISTANT and body_rate == b"\x2a\x01"
+    op_sw1, body_sw1 = recv_gs2c()
+    assert op_sw1 == GS2C_PROP_SWITCH and body_sw1[0] == 1
+    op_sw6, body_sw6 = recv_gs2c()
+    assert op_sw6 == GS2C_PROP_SWITCH and body_sw6[0] == 6
+    op_ref, body_ref = recv_gs2c()
+    assert op_ref == GS2C_OPEN_UI and body_ref[0] == 241
+    op_tsec, body_tsec = recv_gs2c()
+    assert op_tsec == GS2C_TIME_SECOND and len(body_tsec) == 4
+    op_qlk, body_qlk = recv_gs2c()
+    assert op_qlk == GS2C_QUICKLOGIN and body_qlk[0] == 1
+    login_key = struct.unpack_from("<I", body_qlk, 1)[0]
+    assert login_key == 0x514C4B59
 
     # Stage 5: Walk in map (`C2GS_MAP_MOVE = 54`), Click NPC (`C2GS_MIXPACKET = 151` wrapping `C2GS_NPC_LOOK = 96`),
     # Select Teleport Option (`C2GS_NPC_ANSWER = 98`), Open Attribute View (`C2GS_OPEN_UI_NEW = 230`),
@@ -2836,17 +3782,32 @@ def run_self_test() -> int:
     op_chat, _ = recv_gs2c()
     assert op_chat == GS2C_NPC_CHAT_EXT
 
-    # Test C2GS_NPC_ANSWER = 98 (2-byte `responseID=100, choice=1` -> teleport to 明月城 1054)
+    # Test C2GS_NPC_ANSWER = 98 (2-byte `responseID=100, choice=1`)
+    # 傳送人選項 1 = `sorted(MAPS)[0]`（傳送點全開後由 MAPS 決定，不再硬編碼城市）
+    tp_first = sorted(MAPS)[0]
     send_c2gs(C2GS_NPC_ANSWER, struct.pack("<BB", 100, 1))
     op_tp_scene, _ = recv_gs2c()
     assert op_tp_scene == GS2C_MAP_SCENE_M
     op_tp_goto, _ = recv_gs2c()
     assert op_tp_goto == GS2C_MAP_GOTO_M
-    for _ in range(len(MAPS[1054]["npcs"])):
+    for _ in range(len(map_npc_spawn_list(tp_first))):
         op_tp_npc, _ = recv_gs2c()
         assert op_tp_npc == GS2C_MAP_ADD_NPC
     op_tp_notify, _ = recv_gs2c()
     assert op_tp_notify == GS2C_NOTIFY
+
+    # Test 一般 NPC（原版站位）：點擊 -> 原格式對話；選項 -> 一律回「敬請期待」
+    plain = next((n for n in map_npc_spawn_list(tp_first) if not is_teleporter(n)), None)
+    assert plain is not None, "該場景應至少有一個非傳送人 NPC"
+    send_c2gs(C2GS_MIXPACKET, struct.pack("<IBBH", new_role_id, 3, C2GS_NPC_LOOK, 4) + struct.pack("<I", plain["id"]))
+    op_plain, body_plain = recv_gs2c()
+    assert op_plain == GS2C_NPC_CHAT_EXT
+    assert b"P N(" in body_plain, "原版對話格式：P N(icon,name) 開頭"
+    assert b"Q" in body_plain, "原版對話必須帶選項（Q 開頭的行）"
+    send_c2gs(C2GS_NPC_ANSWER, struct.pack("<BB", 100, 1))
+    op_expect, body_expect = recv_gs2c()
+    assert op_expect == GS2C_NPC_CHAT_EXT, "一般 NPC 的選項必須回對話（不是傳送）"
+    assert "敬請期待".encode("big5") in body_expect, "選項回覆必須是「敬請期待」"
 
     # Test 查看屬性 / 屬性總覽 (`C2GS_OPEN_UI_NEW = 230` -> `GS2C_OPEN_UI_NEW = 234`)
     send_c2gs(C2GS_OPEN_UI_NEW, struct.pack("<HBB", 162, 49, 1))
@@ -2863,15 +3824,110 @@ def run_self_test() -> int:
     op_pview, _ = recv_gs2c()
     assert op_pview == GS2C_SUMM_PROP_VIEW
 
+    # Level-up must be dispatched on the client's own opcode (152) *and* the legacy 17.
+    # Each upgrade emits PROP_INIT + NOTIFY, so drain both and ignore interleaved noise.
+    def upgrade_round(op: int) -> list[int]:
+        send_c2gs(op, b"")
+        seen: list[int] = []
+        while not (GS2C_PROP_INIT in seen and GS2C_NOTIFY in seen):  # PROP_INIT + NOTIFY
+            op_i, _ = recv_gs2c()
+            seen.append(op_i)
+            assert len(seen) < 6, f"upgrade(op={op}) produced no GS2C_PROP_INIT"
+        return seen
+
+    assert GS2C_PROP_INIT in upgrade_round(C2GS_PLAYER_UPGRADE), "upgrade(152) dispatch failed"
+    assert GS2C_PROP_INIT in upgrade_round(C2GS_PLAYER_UPGRADE_LEGACY), "upgrade(17) dispatch failed"
+    # A 152 packet WITH a payload is the colliding C2GS_CHECKWG and must be swallowed.
+    send_c2gs(C2GS_CHECKWG, b"\x00\x01\x02\x03")
+    send_c2gs(C2GS_HEART_BEAT, b"")
+    op_check, _ = recv_gs2c()
+    assert op_check == GS2C_HEART_BEAT, f"CHECKWG(152,payload) not swallowed: op={op_check}"
+
     send_c2gs(C2GS_HEART_BEAT, b"")
     op10, _ = recv_gs2c()
     assert op10 == GS2C_HEART_BEAT
 
+    # Stage 6A: Time Sync (`C2GS_REQUEST_TIME = 61`) & Calendar/Schedule (`C2GS_OPEN_UI = 88, isub=241`, `C2GS_SCHEDULE = 82`)
+    send_c2gs(C2GS_REQUEST_TIME, b"")
+    op_t1, body_t1 = recv_gs2c()
+    assert op_t1 == GS2C_TIME and struct.unpack_from("<I", body_t1, 0)[0] >= 10000
+
+    send_c2gs(C2GS_OPEN_UI, b"\xf1")  # isub = 241 (`nethero.C2SRefreshServerTime`)
+    op_r1, body_r1 = recv_gs2c()
+    assert op_r1 == GS2C_OPEN_UI and body_r1[0] == 241
+    op_r2, body_r2 = recv_gs2c()
+    assert op_r2 == GS2C_TIME_SECOND and abs(struct.unpack_from("<I", body_r2, 0)[0] - int(time.time())) <= 5
+
+    send_c2gs(C2GS_SCHEDULE, b"\x01")
+    op_sc_ref, _ = recv_gs2c()
+    assert op_sc_ref == GS2C_OPEN_UI
+    op_sc_ts, _ = recv_gs2c()
+    assert op_sc_ts == GS2C_TIME_SECOND
+    for expected_sub in (1, 2, 4, 7):
+        op_sc, body_sc = recv_gs2c()
+        assert op_sc == GS2C_SCHEDULE and body_sc[0] == expected_sub
+
+    send_c2gs(C2GS_SCHEDULE, b"\x02")
+    assert recv_gs2c()[0] == GS2C_OPEN_UI
+    assert recv_gs2c()[0] == GS2C_TIME_SECOND
+    op_wk, body_wk = recv_gs2c()
+    assert op_wk == GS2C_OPEN_UI and body_wk[0] == 222 and body_wk[1] == 4
+
+    # Stage 6B: System Settings Save (`C2GS_PLAYER_SYSSWITCH = 21`, `C2GS_GAME_PUBLIC = 209 sub=5`, `C2GS_HUODONG = 90`)
+    send_c2gs(C2GS_PLAYER_SYSSWITCH, struct.pack("<BI", 1, 0x12345678))
+    op_sys1, body_sys1 = recv_gs2c()
+    assert op_sys1 == GS2C_PROP_SWITCH and body_sys1 == struct.pack("<BI", 1, 0x12345678)
+
+    send_c2gs(C2GS_PLAYER_SYSSWITCH, struct.pack("<BI", 7, 50000000))
+    op_sys7, body_sys7 = recv_gs2c()
+    assert op_sys7 == GS2C_PROP_SWITCH and body_sys7 == struct.pack("<BI", 9, 50000000)
+
+    # Split packet (`netpublic.SplitPacketSend` -> `C2GS_GAME_PUBLIC = 209, sub = 5`)
+    hotkey_payload = b"\x02" + b"1:112|2:113|" * 22
+    chunk0 = hotkey_payload[:200]
+    chunk1 = hotkey_payload[200:]
+    send_c2gs(C2GS_GAME_PUBLIC, bytes([5, 0, C2GS_PLAYER_SYSSWITCH, len(chunk0)]) + chunk0)
+    send_c2gs(C2GS_GAME_PUBLIC, bytes([5, 2, len(chunk1)]) + chunk1)
+
+    # UI Style switch (`C2GS_HUODONG = 90`, `'newchar'`, `iSub = 11`, `iStyle = 4`)
+    send_c2gs(C2GS_HUODONG, b"\x07newchar\x0b\x04")
+    op_hd, body_hd = recv_gs2c()
+    assert op_hd == GS2C_HUODONG_OP and body_hd == b"\x07newchar\x0c\x04"
+
     cli.close()
+
+    # Stage 6C: QuickLogin Reconnect (`netquicklogin.Connect` -> `RestartQuickLogin` -> `C2GS_QUICKLOGIN = 13, sub = 2`)
+    cli_ql = socket.create_connection(("127.0.0.1", port), timeout=5.0)
+    h_ql = cli_ql.recv(9)
+    assert h_ql == hello, "QuickLogin GS2C_HELLO mismatch"
+    cli_ql.sendall(compute_hello_reply_bytes(seed) + b"\x00" * 22)
+    ql_fields = struct.pack("<BII", 2, login_key, new_role_id)
+    cli_ql.sendall(bytes([C2GS_QUICKLOGIN, len(ql_fields) + 1]) + ql_fields + b"\x00")
+
+    def recv_gs2c_ql() -> tuple[int, bytes]:
+        b0 = cli_ql.recv(1)[0]
+        if b0 == 0xFF:
+            ext = cli_ql.recv(MAX_LEN_BYTES)
+            plen = int.from_bytes(ext + b"\x00" * (4 - MAX_LEN_BYTES), "little")
+        else:
+            plen = b0
+        body = b""
+        while len(body) < plen:
+            body += cli_ql.recv(plen - len(body))
+        return body[0], body[1:]
+
+    # First packet on QuickLogin MUST be `GS2C_QUICKLOGIN = 12, isub = 2` (`S2CLoginSuccess`)
+    op_ql_ok, body_ql_ok = recv_gs2c_ql()
+    assert op_ql_ok == GS2C_QUICKLOGIN and body_ql_ok == b"\x02"
+    # Followed by `GS2C_PROP_INIT = 16` and full world entry
+    op_ql_prop, body_ql_prop = recv_gs2c_ql()
+    assert op_ql_prop == GS2C_PROP_INIT and len(body_ql_prop) == 403
+    cli_ql.close()
+
     srv_sock.close()
     if tmp_db.exists():
         tmp_db.unlink()
-    log("[PASS] All stages (選區 -> 登錄 -> 創角/選角 -> 進圖/全圖NPC載入 -> 點擊NPC對話/傳送 -> 移動/心跳) verified 100%!")
+    log("[PASS] All stages (選區 -> 登錄 -> 創角/選角 -> 進圖/全圖NPC載入 -> 點擊NPC對話/傳送 -> 移動/心跳/時間日曆同步/系統設置與分辨率瞬連) verified 100%!")
     return 0
 
 
@@ -2906,6 +3962,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="《夢想世界》(MXSJ TW 2022) Local Mock Server (選區 -> 登錄 -> 創角/選角 -> 進入地圖)"
     )
+    parser.add_argument(
+        "--npc-layout",
+        default=None,
+        help="原版 NPC 佈局 JSON（預設找 mock_server.py 同目錄的 npc_layout.json "
+        "或 notes/npc_dialogue_and_options/out/npc_layout.json）",
+    )
     parser.add_argument("--host", default="0.0.0.0", help="Bind address (default: 0.0.0.0)")
     parser.add_argument("--port", type=int, default=3134, help="Bind TCP port (default: 3134)")
     parser.add_argument(
@@ -2933,7 +3995,7 @@ def main() -> int:
     parser.add_argument(
         "--patch-client",
         action="store_true",
-        help="Ensure nocheck & patch data/script.fls SetSeed bypass, then exit",
+        help="Ensure nocheck ([game] gm=1) & patch data/script.fls SetSeed bypass, then exit",
     )
     parser.add_argument(
         "--restore-client",
@@ -2948,6 +4010,13 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = find_repo_root(args.root)
+
+    layout_path = load_npc_layout(Path(args.npc_layout) if args.npc_layout else None)
+    if layout_path is not None:
+        total = sum(len(sc.get("npcs") or []) for sc in NPC_LAYOUT["scenes"].values())
+        log(f"[NPC] 原版佈局已載入：{layout_path}（{len(NPC_LAYOUT['scenes'])} 場景 / {total} NPC）")
+    else:
+        log("[NPC] 未找到 npc_layout.json，沿用內建 NPC 名單（可用 --npc-layout 指定）")
 
     if args.self_test:
         return run_self_test()
