@@ -1652,3 +1652,27 @@ FLS，单包打开、资源目录打开、刷新均生效；resolver 仍挂载�
 调整既有回归，覆盖单包/目录过滤、隐藏包保持挂载、刷新后仍过滤、待入包清理、
 未命中路径不挂空根。UI 288 项（287 通过、1 外部语料跳过），ruff、diff 检查通过；
 Windows 静态检查 ERROR/WARNING/INFO 均 0。本轮没有新增 Windows/EXE 实机验收。
+
+## 3.62 两编辑器独立源码 ZIP 上传云盘（2026-10-17）
+
+用户明确授权分别打包上传 Google Drive。源码快照 `840799ccb7c890bd0571efc402bbf0c0b0a2f9ed`，
+只打包各工具的受版本控制文件；不含游戏 FLS、密钥、venv、空符号桩库、缓存或编译 EXE。
+ZIP 顶层有交付说明，进入 `ui_editor` / `resource_editor` 子目录启动；各自包含
+中文启动 BAT、bootstrap、build_exe.bat 和 spec。UI 包额外含原有 7 份注册布局
+最小测试样本，保持测试的仓库相对路径，不降低缺语料断言；仅作测试，不是部署补丁。
+
+独立解压复测：UI 287 项（280 通过、7 缺外部资源/语料跳过），资源 126 项
+（119 通过、7 缺真实客户端资源跳过）；两包 bootstrap --check-only 通过。
+Linux Qt offscreen + 仓库外桩库，不冒充 Windows EXE/官服实包验收。
+打包前 ruff、Windows 兼容静态检查和共享核心副本检查均通过。
+
+上传到 My Drive 根目录，保留旧包、未更改共享权限。上传后另行 get_file 核对
+文件名、大小、MD5 与本地 ZIP 一致：
+
+| 包 | 字节数 | MD5 | Drive 链接 |
+|---|---:|---|---|
+| ui_editor_0.8.4_source_20261017.zip | 456498 | d9bc58757812db183c1ebb606842faf8 | https://drive.google.com/file/d/1ppId3BylFSIpDE8ccTKiDJY29_IFlTeO/view |
+| resource_editor_0.4.3_source_20261017.zip | 176389 | 2a30149401d6d42b5f8c2f44e7d75ebd | https://drive.google.com/file/d/1r6ZxYDegD2O9hVY60Yg2QqT1PRBayL3O/view |
+
+UI ZIP SHA256：`15c7c0ed785fb34a1b2536bc9f630a15a3eb0e9620f0a88504fc607f60933c87`；
+资源 ZIP SHA256：`4d988aeff1d0d02ab2137a970dc33c3f8195d714e9041260f4e38f724268d6aa`。
