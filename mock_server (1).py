@@ -71,6 +71,7 @@ C2GS_LOGIN_PLAYER_ADD = 3
 C2GS_LOGIN_QUIT = 4
 C2GS_LOGIN_PLAYER_DEL = 7
 C2GS_PING = 8
+C2GS_QUICKLOGIN = 13
 C2GS_PLAYER_ADJUSTPOINT = 16
 # Client sends `C2GS_PLAYER_UPGRADE = 152` (`script/nethero.py::C2SUpgrade`); the same
 # number is also `C2GS_CHECKWG` in the client's table (its own ambiguity), so accept both.
@@ -91,8 +92,12 @@ C2GS_REQUEST_TIME = 61
 C2GS_ANSWERHELLO = 62
 C2GS_HEART_BEAT = 63
 C2GS_TITLE = 67
+C2GS_SCHEDULE_LEGACY = 69
+C2GS_SCHEDULE = 82
+C2GS_OPEN_UI_LEGACY = 60
 C2GS_OPEN_UI = 88
 C2GS_ITEMSHOP = 89
+C2GS_HUODONG = 90
 C2GS_NPC_LOOK = 96
 C2GS_NPC_COMMAND = 97
 C2GS_NPC_ANSWER = 98
@@ -137,6 +142,7 @@ GS2C_LOGIN_PLAYER_ADD = 6
 GS2C_LOGIN_ERROR = 8
 GS2C_LOGIN_PLAYER_DEL = 10
 GS2C_OTHER_ASSISTANT = 11
+GS2C_QUICKLOGIN = 12
 GS2C_LOGIN_PLAYER_INFO_END = 14
 GS2C_LOGIN_ACCOUNT_INFO = 15
 GS2C_PROP_INIT = 16
@@ -149,6 +155,7 @@ GS2C_PROP_CHANGE = 152  # reference only - unreachable, do NOT send
 GS2C_PROP_RESIST = 18
 GS2C_PROP_POWER = 19
 GS2C_PROP_PHOTO = 20
+GS2C_PROP_SWITCH = 21
 GS2C_TIME = 31
 GS2C_TIME_LEGACY = 12
 GS2C_ITEM_KEY = 32
@@ -167,6 +174,7 @@ GS2C_SUMM_PROP_VIEW = 51
 GS2C_SUMM_PROP_STATE = 52
 GS2C_SUMMON_KEY = 53
 GS2C_SUMM_EQUIP = 54
+GS2C_SCHEDULE = 57
 GS2C_PROP_CHANGELIST = 61
 GS2C_HEART_BEAT = 63
 GS2C_HEART_BEAT_LEGACY = 69
@@ -190,9 +198,11 @@ GS2C_SUMMON_INFO = 161
 GS2C_ITEM_INFO = 162
 GS2C_NOTIFY_EXT = 164
 GS2C_NOTIFY = 165
+GS2C_HUODONG_OP = 166
 GS2C_PLAYER_CHAT = 167
 GS2C_MESSAGE = 169
 GS2C_ITEM_INFO_EX = 190
+GS2C_TIME_SECOND = 192
 GS2C_TITLE = 200
 GS2C_ITEM_OTHER = 205
 GS2C_GAME_PUBLIC = 209
@@ -1782,46 +1792,199 @@ def build_gs2c_heartbeat(legacy: bool = False) -> bytes:
 
 
 def build_gs2c_time(legacy: bool = False) -> bytes:
-    """`GS2C_TIME = 31` (or legacy `12`) -> `mxgw.S2CTime(netobj)` (`t = netobj.UnpackInt(4)`)."""
+    """
+    `GS2C_TIME = 31` (or legacy `12`) -> `mxgw.S2CTime(netobj)` (`t = netobj.UnpackInt(4)`).
+    MUST be sent in **centiseconds (100 ticks/sec)**, NEVER Unix seconds!
+    """
     op = GS2C_TIME_LEGACY if legacy else GS2C_TIME
-    t = monotonic_unix_seconds()
+    t = monotonic_centiseconds()
     return frame_gs2c(op, struct.pack("<I", t))
 
 
 # ============================================================================
-# 2b. Time Value: MUST be a Unix timestamp in SECONDS (2026-10-16 修正)
+# 2b. Time Sync Architecture (`mxgw.py` vs `dlgcalendar.py` vs `misc.py`)
 # ============================================================================
-# 「網絡錯誤(007)，請退出遊戲。」的唯一出處是 `script/core/mxgw.py`
-#   `SecondGetResult`：`sdt = t - g_ServerTime + 550` / `cdt = (G2 - G1) / 100`，
-#   `if cdt > sdt:` → `g_CurCount += 1`；`g_CurCount > MAXCOUNT(3)`（**成功時不歸零**，
-#   只有 `Stop()`/`ModuleReset()` 會清）→ `blacklist.C2SResult(10,0,...)` +
-#   `g_Net.Disconnect()` + `ShowError('網絡錯誤(007)，請退出遊戲。')`。
+# 客戶端有兩套完全獨立、單位不同的時間協議，切勿混用：
 #
-#   单位：`C_sys.GetTime()` 是**毫秒**（客户端里几十处 `GetTime() - m_xxx < 5000`
-#   的 5 秒防连点都是 5000/10000 这种量级），所以 `cdt` 的单位是 100ms。
-#   看门狗的轮询间隔取自 `mxgw.Start()`/`FirstGetResult`：150 → 600 → 1200 … 5400ms。
+# 1. 反變速齒輪看門狗 (`script/core/mxgw.py` + `mxmain.dll` `C_sys.GetTime` @ `0x4545b0`)：
+#    - 請求：`C2GS_REQUEST_TIME = 61` (`0x3D`)
+#    - 回應：`GS2C_TIME = 31` (`0x1F`) -> `mxgw.S2CTime(netobj)`
+#    - 關鍵逆向實證：`mxmain.dll` 中 `C_sys.GetTime()` (`0x4545b0`) 執行：
+#        `eax = timeGetTime() - g_StartTickMs; eax = eax * 10;`
+#      返回值單位是 **0.1 毫秒 (10,000 ticks/sec)**！（例如 `dgtbaseopt.py` 中 10 秒冷卻寫作 `+ 100000`）。
+#      而 `CreatePyCommand(750 / 1200 / 5400)` 的參數是 **30 FPS 幀數**（即 25 秒、40 秒、180 秒）。
+#    - 在 `mxgw.SecondGetResult(t)` 中：
+#        `cdt = g_ClientSecondTime / 100 - g_ClientFirstTime / 100`  (單位：**厘秒 centiseconds = 100 ticks/sec**)
+#        `sdt = t - g_ServerTime + 550`                              (容差：550 厘秒 = 5.50 秒)
+#      若伺服器發送 Unix 秒 (1 tick/sec)，在 40 秒週期內 `cdt ≈ 4000` 而 `sdt ≈ 40 + 550 = 590`，
+#      必然觸發 `cdt > sdt`，累計滿 3 次即斷線並報「網絡錯誤(007)，請退出遊戲。」！
+#    - 正確做法：`GS2C_TIME = 31` 必須發送自伺服器啟動起算的單調遞增 **厘秒 (100 ticks/sec)**，
+#      初始基準為 `10,000`（可連續運行 497 天不溢位 32 位元無符號整數），且**僅在收到 `C2GS_REQUEST_TIME` 時回覆**。
 #
-#   旧实现发的是 `int(time.time() * 10) & 0xFFFFFFFF`（分秒 deciseconds）。它「刚好」
-#   让 cdt≈Δt/100 与服务端差同量级，但**每 429.5 秒回绕一次 32 位**；`g_CurCount`
-#   成功不清零，于是每回绕一次记 1 次失败，约 4 次回绕（≈29 分钟）必然踢人 ——
-#   这就是「总是网络错误 007」的机制。
-#
-#   改为标准 Unix 秒后：服务端差 Δs 满足 `sdt = Δs + 550 ≥ cdt = Δms/100`
-#   （每轮最多 5.4 秒即 54 个 100ms 单位，容差 550 → 富余 55 秒），且 60 年不回绕；
-#   同时与客户端其它两处消费者对齐（都要求 Unix 秒）：
-#     - `dlgcalendar.S2CTime`: `g_Time = UnpackInt(4)` → `time.localtime(g_Time)`
-#     - `misc.GetServerCurrentTime()`: `GetServerTime() + (C_sys.GetTickCount() - g_RecordTime) / 1000`
+# 2. 遊戲內日曆 (`dlgcalendar.py`) 與日程表 (`dlgschedule.py`/`dlgnewschedule.py`/`misc.py`)：
+#    - `misc.GetServerCurrentTime()` 計算公式為：
+#        `iCurrentTick = C_sys.GetTickCount() / 1000`
+#        `return (iCurrentTick - g_RecordTime) + g_ServerTime`
+#      客戶端啟動時 `g_ServerTime = int(time.time())`，但 **`g_RecordTime = 0`**！
+#      若伺服器未下發觸發 `misc.SetServerTime(tm)` 的封包，`g_RecordTime` 維持為 `0`，
+#      導致 `GetServerCurrentTime()` 把 **Windows 開機至今的系統運行秒數 (`GetTickCount()/1000`)**
+#      直接加到當前 Unix 時間上，造成本機日程/日曆時間嚴重超前數天至數週！
+#    - 正確做法：在角色登入、瞬連重登、以及收到 `C2GS_OPEN_UI = 88 (isub=241)` / `C2GS_SCHEDULE = 82` 時，
+#      主動下發：
+#        a) `GS2C_OPEN_UI = 89, isub = 241, iTime = unix_seconds` (`netopenui.S2CRefreshServerTime` -> `misc.SetServerTime`)
+#        b) `GS2C_PROP_SWITCH = 21, isub = 6` (`nethero.S2CPropSwitch` -> `misc.SetServerTime` + 開服天數/等級上限)
+#        c) `GS2C_TIME_SECOND = 192, iTime = unix_seconds` (`dlgcalendar.S2CTime`)
+_SERVER_START_MONO = time.monotonic()
+_CENTI_LAST_SENT = 10000
 _TIME_LAST_SENT = 0
 
 
+def monotonic_centiseconds() -> int:
+    """單調不減的 100Hz 厘秒計數器（供 `GS2C_TIME = 31` / `mxgw.S2CTime` 使用）。"""
+    global _CENTI_LAST_SENT
+    elapsed_cs = int((time.monotonic() - _SERVER_START_MONO) * 100) + 10000
+    now_cs = elapsed_cs & 0x7FFFFFFF
+    if now_cs < _CENTI_LAST_SENT:
+        now_cs = _CENTI_LAST_SENT
+    _CENTI_LAST_SENT = now_cs
+    return now_cs
+
+
 def monotonic_unix_seconds() -> int:
-    """Unix 秒，且**单调不减**（防 NTP/夏令时回拨被看门狗当成客户端作弊）。"""
+    """標準 Unix 秒，且單調不減（供日曆 `GS2C_TIME_SECOND = 192` 與 `misc.SetServerTime` 使用）。"""
     global _TIME_LAST_SENT
     now = int(time.time()) & 0xFFFFFFFF
     if now < _TIME_LAST_SENT:
         now = _TIME_LAST_SENT
     _TIME_LAST_SENT = now
     return now
+
+
+def build_gs2c_time_second(unix_ts: int | None = None) -> bytes:
+    """`GS2C_TIME_SECOND = 192` -> `dlgcalendar.S2CTime(netobj)` (`g_Time = netobj.UnpackInt(4)`)."""
+    t = monotonic_unix_seconds() if unix_ts is None else (int(unix_ts) & 0xFFFFFFFF)
+    return frame_gs2c(GS2C_TIME_SECOND, struct.pack("<I", t))
+
+
+def build_gs2c_refresh_server_time(unix_ts: int | None = None) -> bytes:
+    """
+    `GS2C_OPEN_UI = 89, isub = 241` -> `netopenui.S2CRefreshServerTime(netobj)`:
+    calls `misc.SetServerTime(iTime)` which sets `g_ServerTime = iTime` AND
+    `g_RecordTime = C_sys.GetTickCount() / 1000`.
+    """
+    t = monotonic_unix_seconds() if unix_ts is None else (int(unix_ts) & 0xFFFFFFFF)
+    return frame_gs2c(GS2C_OPEN_UI, struct.pack("<BI", 241, t))
+
+
+def build_gs2c_prop_switch_server_time(
+    unix_ts: int | None = None,
+    server_state: int = 1,
+    open_days: int = 365,
+    max_level: int = 165,
+    next_days: int = 30,
+    next_max_level: int = 170,
+    server_name: str = "縮小燈",
+) -> bytes:
+    """
+    `GS2C_PROP_SWITCH = 21, isub = 6` -> `nethero.S2CPropSwitch(netobj)`:
+    calls `misc.SetServerTime(tm)` and initializes server open days / max level.
+    """
+    t = monotonic_unix_seconds() if unix_ts is None else (int(unix_ts) & 0xFFFFFFFF)
+    payload = struct.pack(
+        "<BIHHHHB16sB",
+        6,
+        t,
+        server_state & 0xFFFF,
+        open_days & 0xFFFF,
+        max_level & 0xFFFF,
+        next_days & 0xFFFF,
+        next_max_level & 0xFF,
+        encode_big5(server_name, 16),
+        1,
+    )
+    return frame_gs2c(GS2C_PROP_SWITCH, payload)
+
+
+def build_gs2c_schedule_sync() -> list[bytes]:
+    """
+    `GS2C_SCHEDULE = 57` (`dlgnewschedule.S2CSchedule` / `dlgschedule.S2CSchedule`):
+      - `iSub = 1`: `[1, iCount=0, iDefaultShow=0]` (`<BBB`)
+      - `iSub = 2`: `[2, iCount=0]` (`<BB`)
+      - `iSub = 4`: `[4, iTotalAct=100, iCurAct=200, iCount=0, iOpenedCount=0]` (`<BHHBB`)
+      - `iSub = 7`: `[7, bFirstOpen=0]` (`<BB`)
+    """
+    return [
+        frame_gs2c(GS2C_SCHEDULE, struct.pack("<BBB", 1, 0, 0)),
+        frame_gs2c(GS2C_SCHEDULE, struct.pack("<BB", 2, 0)),
+        frame_gs2c(GS2C_SCHEDULE, struct.pack("<BHHBB", 4, 100, 200, 0, 0)),
+        frame_gs2c(GS2C_SCHEDULE, struct.pack("<BB", 7, 0)),
+    ]
+
+
+def build_gs2c_schedule_week(unix_ts: int | None = None) -> bytes:
+    """
+    `GS2C_OPEN_UI = 89, isub = 222, iisub = 4` -> `dlgnewschedule.S2CNewSchedule`:
+    7-day week preview starting from local time (`iTime:4B` + 7 * `(day_ts:4B, count:1B)`).
+    """
+    base_ts = monotonic_unix_seconds() if unix_ts is None else (int(unix_ts) & 0xFFFFFFFF)
+    buf = bytearray(struct.pack("<BBI", 222, 4, base_ts))
+    for day_idx in range(7):
+        day_ts = (base_ts + day_idx * 86400) & 0xFFFFFFFF
+        buf.extend(struct.pack("<IB", day_ts, 0))
+    return frame_gs2c(GS2C_OPEN_UI, bytes(buf))
+
+
+def build_gs2c_set_rate(isset: int = 1) -> bytes:
+    """
+    `GS2C_OTHER_ASSISTANT = 11, isub = 42` -> `netcommon.S2CSetRate(netobj)`:
+    calls `main.SetRate()` which reads `ratio` and `scale` from `mx.ini`,
+    sets `ratio.RATIO` (`1` or `2`), and calls `game.FullScreen()` (`C_sys.WndResize` + `C_sys.SetWndScale`).
+    """
+    return frame_gs2c(GS2C_OTHER_ASSISTANT, struct.pack("<BB", 42, isset & 0xFF))
+
+
+def build_gs2c_prop_switch_setting(switch_val: int) -> bytes:
+    """
+    `GS2C_PROP_SWITCH = 21, isub = 1` -> `nethero.S2CPropSwitch(netobj)`:
+    updates `dlgsysopt.g_Settings` and calls `dlgsysopt.ResetSaved()` -> `game.FullScreen()`,
+    applying any saved window resolution (`scale`) immediately!
+    """
+    return frame_gs2c(GS2C_PROP_SWITCH, struct.pack("<BI", 1, switch_val & 0xFFFFFFFF))
+
+
+def build_gs2c_prop_switch_price(price_val: int) -> bytes:
+    """`GS2C_PROP_SWITCH = 21, isub = 9` -> `dlgsysopt.InitPrice(iPrice)`."""
+    return frame_gs2c(GS2C_PROP_SWITCH, struct.pack("<BI", 9, price_val & 0xFFFFFFFF))
+
+
+def build_gs2c_quicklogin_key(login_key: int = 0x514C4B59, itype: int = 1) -> bytes:
+    """
+    `GS2C_QUICKLOGIN = 12, isub = 1` -> `netquicklogin.S2CLoginKey(netobj)`:
+    sets `netquicklogin.g_LoginKey = key` so `RestartQuickLogin` (triggered when saving
+    resolution/ratio or UI style in System Settings) can send `C2SRequestQuickLogin(key, pid)`.
+    """
+    return frame_gs2c(GS2C_QUICKLOGIN, struct.pack("<BIB", 1, login_key & 0xFFFFFFFF, itype & 0xFF))
+
+
+def build_gs2c_quicklogin_success() -> bytes:
+    """
+    `GS2C_QUICKLOGIN = 12, isub = 2` -> `netquicklogin.S2CLoginSuccess(netobj)`:
+    closes quicklogin dialog and runs `resetcontrol.DoNewResetClear()`.
+    Must be sent BEFORE `GS2C_PROP_INIT = 16` during QuickLogin so `DoNewResetClear()`
+    does not wipe the newly created `addon` HUD panel.
+    """
+    return frame_gs2c(GS2C_QUICKLOGIN, b"\x02")
+
+
+def build_gs2c_newchar_switch_ui(ui_style: int) -> bytes:
+    """
+    `GS2C_HUODONG_OP = 166`, `'newchar'`, `iSub = 12` (`S2C_SWITCH_UI`) ->
+    `netnewcharres.S2CSwitchUIStyle(netobj)`: saves new UI style to `mx.ini` and triggers
+    `newoptglobalfunc.ChangeStyleQuickLogin(iRealStyle)`.
+    """
+    tag = b"newchar"
+    payload = bytes([len(tag)]) + tag + struct.pack("<BB", 12, ui_style & 0xFF)
+    return frame_gs2c(GS2C_HUODONG_OP, payload)
 
 
 # ============================================================================
@@ -1993,18 +2156,33 @@ class AccountStore:
                         return r
             return None
 
+    def get_role_and_account(self, role_id: int) -> tuple[str, dict[str, Any]] | None:
+        with self.lock:
+            for acct_name, acct in self.data.get("accounts", {}).items():
+                for r in acct.get("roles", []):
+                    if int(r.get("id", 0)) == role_id:
+                        return acct_name, r
+            return None
+
     def update_role_pos(self, account: str, role_id: int, map_id: int, x: int, y: int) -> None:
         with self.lock:
             acct = self.data["accounts"].get(account)
-            if not acct:
-                return
-            for r in acct["roles"]:
-                if int(r.get("id", 0)) == role_id:
-                    r["map_id"] = map_id
-                    r["x"] = x
-                    r["y"] = y
-                    self._save()
-                    return
+            if acct:
+                for r in acct["roles"]:
+                    if int(r.get("id", 0)) == role_id:
+                        r["map_id"] = map_id
+                        r["x"] = x
+                        r["y"] = y
+                        self._save()
+                        return
+            for a in self.data.get("accounts", {}).values():
+                for r in a.get("roles", []):
+                    if int(r.get("id", 0)) == role_id:
+                        r["map_id"] = map_id
+                        r["x"] = x
+                        r["y"] = y
+                        self._save()
+                        return
 
 
 # ============================================================================
@@ -2032,6 +2210,11 @@ class ClientSession:
         self.pets: dict[int, dict[str, Any]] = {int(p["id"]): dict(p) for p in STARTER_PETS}
         self.recv_buf = bytearray()
         self.hello_verified = False
+        self.login_key: int = 0x514C4B59
+        self.sys_switch: int = 0
+        self.max_price: int = 99999999
+        self.split_cmd: int | None = None
+        self.split_buf = bytearray()
 
     def send_raw(self, data: bytes, label: str = "") -> None:
         self.conn.sendall(data)
@@ -2213,38 +2396,118 @@ class ClientSession:
             return
 
         # 2. Time Sync (`C2GS_REQUEST_TIME = 61` / `C2GS_TIME = 31` in `script.fls`, `15` in `data.fls`)
+        #    Note: `mxgw` and `dlgcalendar.C2SGetServerTime()` both send `C2GS_REQUEST_TIME = 61`.
+        #    Reply with `GS2C_TIME = 31` (100Hz centiseconds for `mxgw`) AND `GS2C_TIME_SECOND = 192`
+        #    (Unix seconds for `dlgcalendar.S2CTime`). Both client handlers are guarded.
         if opcode in (C2GS_REQUEST_TIME, C2GS_TIME, C2GS_REQUEST_TIME_LEGACY):
             is_legacy = opcode == C2GS_REQUEST_TIME_LEGACY
             log(f"[C2GS <- {self.addr[1]}] C2GS_REQUEST_TIME (op={opcode})")
             self.send_raw(
                 build_gs2c_time(legacy=is_legacy),
-                f"GS2C_TIME(op={GS2C_TIME_LEGACY if is_legacy else GS2C_TIME})",
+                f"GS2C_TIME(op={GS2C_TIME_LEGACY if is_legacy else GS2C_TIME}, unit=centiseconds)",
             )
+            if not is_legacy:
+                self.send_raw(
+                    build_gs2c_time_second(),
+                    f"GS2C_TIME_SECOND(op={GS2C_TIME_SECOND}, unit=seconds)",
+                )
             return
 
-        # 3. Ping & Quiet In-Map State Packets
+        # 3. System Settings Switch (`C2GS_PLAYER_SYSSWITCH = 21` -> `nethero.C2SSaveSetting` / `C2SSavePrice` / `C2SSaveSystemData`)
+        if opcode == C2GS_PLAYER_SYSSWITCH:
+            self._on_player_sysswitch(fields)
+            return
+
+        # 4. Open UI / Refresh Server Time (`C2GS_OPEN_UI = 88` or legacy `60`)
+        if opcode in (C2GS_OPEN_UI, C2GS_OPEN_UI_LEGACY):
+            isub = fields[0] if fields else 0
+            if isub == 241:
+                # `nethero.C2SRefreshServerTime()` -> reply with `GS2C_OPEN_UI = 89, isub = 241`
+                log(f"[C2GS <- {self.addr[1]}] C2GS_OPEN_UI (op={opcode}, isub=241 C2SRefreshServerTime)")
+                self.send_raw(
+                    build_gs2c_refresh_server_time(),
+                    "GS2C_OPEN_UI(op=89, isub=241 S2CRefreshServerTime)",
+                )
+                self.send_raw(
+                    build_gs2c_time_second(),
+                    "GS2C_TIME_SECOND(op=192, S2CTime)",
+                )
+            return
+
+        # 5. In-Game Calendar & Schedule (`C2GS_SCHEDULE = 82` or legacy `69`)
+        if opcode in (C2GS_SCHEDULE, C2GS_SCHEDULE_LEGACY):
+            isub = fields[0] if fields else 1
+            log(f"[C2GS <- {self.addr[1]}] C2GS_SCHEDULE (op={opcode}, isub={isub})")
+            self.send_raw(
+                build_gs2c_refresh_server_time(),
+                "GS2C_OPEN_UI(op=89, isub=241 S2CRefreshServerTime)",
+            )
+            self.send_raw(
+                build_gs2c_time_second(),
+                "GS2C_TIME_SECOND(op=192, S2CTime)",
+            )
+            if isub == 1:
+                for pkt in build_gs2c_schedule_sync():
+                    self.send_raw(pkt, "GS2C_SCHEDULE(op=57)")
+            elif isub == 2:
+                self.send_raw(
+                    build_gs2c_schedule_week(),
+                    "GS2C_OPEN_UI(op=89, isub=222, iisub=4 ScheduleWeek)",
+                )
+            return
+
+        # 6. HuoDong / UI Style Switch (`C2GS_HUODONG = 90` -> `'newchar'` `C2SSwitchUIStyle`)
+        if opcode == C2GS_HUODONG:
+            self._on_huodong(fields)
+            return
+
+        # 7. QuickLogin (`C2GS_QUICKLOGIN = 13` -> resolution/ratio/UI-style switch & reconnect)
+        if opcode == C2GS_QUICKLOGIN:
+            self._on_quicklogin(fields)
+            return
+
+        # 8. Ping & Quiet In-Map State Packets
         if opcode in (
             C2GS_PING,
             C2GS_PING_LEGACY,
             C2GS_PLAYER_SWITCH,
-            C2GS_PLAYER_SYSSWITCH,
             C2GS_TASK_GET,
             C2GS_TASK,
             C2GS_ANSWERHELLO,
-            C2GS_OPEN_UI,
             # NOTE: `C2GS_CHECKWG` deliberately NOT here - it shares 152 with
             # `C2GS_PLAYER_UPGRADE` and is disambiguated below by payload length.
             C2GS_PLAYER_CMD,
         ):
             return
 
-        # 4. `C2GS_GAME_PUBLIC = 209` (`script.fls`) or `250` (`data.fls`)
+        # 9. `C2GS_GAME_PUBLIC = 209` (`script.fls`) or `250` (`data.fls`)
         if opcode in (C2GS_GAME_PUBLIC, C2GS_GAME_PUBLIC_LEGACY):
             sub = fields[0] if fields else 0
             log(
                 f"[C2GS <- {self.addr[1]}] C2GS_GAME_PUBLIC (op={opcode}, sub={sub}, "
                 f"len={len(fields)}B)"
             )
+            # Sub 5 = C2GS_SUB_SPLIT (`netpublic.SplitPacketSend`, e.g. `SaveHideGamehotkey` -> `C2SSaveSystemData`)
+            if sub == 5 and len(fields) >= 3:
+                flag = fields[1]
+                if flag == 0 and len(fields) >= 4:
+                    self.split_cmd = fields[2]
+                    chunk_len = fields[3]
+                    self.split_buf = bytearray(fields[4 : 4 + chunk_len])
+                elif flag in (1, 2):
+                    chunk_len = fields[2]
+                    self.split_buf.extend(fields[3 : 3 + chunk_len])
+                    if flag == 2 and self.split_cmd is not None:
+                        reassembled_cmd = self.split_cmd
+                        reassembled_fields = bytes(self.split_buf)
+                        self.split_cmd = None
+                        self.split_buf.clear()
+                        log(
+                            f"[C2GS <- {self.addr[1]}] Reassembled C2GS_SUB_SPLIT -> "
+                            f"cmd={reassembled_cmd}, len={len(reassembled_fields)}B"
+                        )
+                        self.handle_c2gs_packet(reassembled_cmd, reassembled_fields)
+                return
             # Sub 52 = C2GS_SUB_GM_NEW (`C2SPlayerWizard`)
             if sub == 52 and len(fields) >= 3:
                 jlen = struct.unpack_from("<H", fields, 1)[0]
@@ -2660,7 +2923,12 @@ class ClientSession:
             roles = self.store.get_or_create_account(self.account, "")
             role = roles[0]
             role["id"] = role_id
+        self._enter_role_world(role, send_welcome=True)
+
+    def _enter_role_world(self, role: dict[str, Any], send_welcome: bool = True) -> None:
         self.active_role = role
+        self.sys_switch = int(role.get("sys_switch", self.sys_switch))
+        self.max_price = int(role.get("max_price", self.max_price))
 
         # 1. Send GS2C_PROP_INIT = 16 (initializes hero.g_Prop and switches gamectrl to GAMING)
         prop_pkt = build_gs2c_prop_init(role)
@@ -2690,7 +2958,137 @@ class ClientSession:
             map_id = 1025
         x = int(role.get("x", MAPS[map_id]["spawn_x"]))
         y = int(role.get("y", MAPS[map_id]["spawn_y"]))
-        self.enter_map(map_id, x, y, send_welcome=True)
+        self.enter_map(map_id, x, y, send_welcome=send_welcome)
+
+        # 6. Post-login world sync:
+        #    - Resolution & ratio initialization (`GS2C_OTHER_ASSISTANT = 11, isub=42` -> `main.SetRate()`)
+        #    - System settings switch (`GS2C_PROP_SWITCH = 21, isub=1` -> `dlgsysopt.ResetSaved()`)
+        #    - Server time & calendar sync (`GS2C_PROP_SWITCH = 21, isub=6`, `GS2C_OPEN_UI = 89, isub=241`, `GS2C_TIME_SECOND = 192`)
+        #    - QuickLogin key (`GS2C_QUICKLOGIN = 12, isub=1` -> `netquicklogin.S2CLoginKey`)
+        #    Note: NEVER send `GS2C_TIME = 31` here unsolicited (`mxgw.S2CTime` only expects it after `C2GS_REQUEST_TIME = 61`).
+        self._send_world_bootstrap_sync()
+
+    def _send_world_bootstrap_sync(self) -> None:
+        now_sec = monotonic_unix_seconds()
+        self.send_raw(build_gs2c_set_rate(1), "GS2C_OTHER_ASSISTANT(op=11, isub=42 S2CSetRate)")
+        self.send_raw(
+            build_gs2c_prop_switch_setting(self.sys_switch),
+            f"GS2C_PROP_SWITCH(op=21, isub=1 setting=0x{self.sys_switch:08x})",
+        )
+        self.send_raw(
+            build_gs2c_prop_switch_server_time(now_sec),
+            f"GS2C_PROP_SWITCH(op=21, isub=6 server_time={now_sec})",
+        )
+        self.send_raw(
+            build_gs2c_refresh_server_time(now_sec),
+            f"GS2C_OPEN_UI(op=89, isub=241 S2CRefreshServerTime={now_sec})",
+        )
+        self.send_raw(
+            build_gs2c_time_second(now_sec),
+            f"GS2C_TIME_SECOND(op=192, S2CTime={now_sec})",
+        )
+        self.send_raw(
+            build_gs2c_quicklogin_key(self.login_key, 1),
+            f"GS2C_QUICKLOGIN(op=12, isub=1 login_key=0x{self.login_key:08x})",
+        )
+
+    def _on_player_sysswitch(self, fields: bytes) -> None:
+        if not fields:
+            return
+        sub = fields[0]
+        if sub == 1 and len(fields) >= 5:
+            # `nethero.C2SSaveSetting(setting:4B)` -> reply with `GS2C_PROP_SWITCH = 21, isub = 1`
+            # which triggers `dlgsysopt.ResetSaved()` -> `game.FullScreen()` (`SetWndSize` + `SetWndScale`).
+            switch_val = struct.unpack_from("<I", fields, 1)[0]
+            self.sys_switch = switch_val
+            if self.active_role is not None:
+                self.active_role["sys_switch"] = switch_val
+                self.store._save()
+            log(f"[SYSOPT] C2GS_PLAYER_SYSSWITCH (op=21, sub=1 C2SSaveSetting): switch=0x{switch_val:08x}")
+            self.send_raw(
+                build_gs2c_prop_switch_setting(switch_val),
+                f"GS2C_PROP_SWITCH(op=21, isub=1 setting=0x{switch_val:08x})",
+            )
+        elif sub == 7 and len(fields) >= 5:
+            # `nethero.C2SSavePrice(price:4B)` -> reply with `GS2C_PROP_SWITCH = 21, isub = 9`
+            price_val = struct.unpack_from("<I", fields, 1)[0]
+            self.max_price = price_val
+            if self.active_role is not None:
+                self.active_role["max_price"] = price_val
+                self.store._save()
+            log(f"[SYSOPT] C2GS_PLAYER_SYSSWITCH (op=21, sub=7 C2SSavePrice): price={price_val}")
+            self.send_raw(
+                build_gs2c_prop_switch_price(price_val),
+                f"GS2C_PROP_SWITCH(op=21, isub=9 price={price_val})",
+            )
+        elif sub in (2, 3, 5):
+            # `nethero.C2SSaveSystemData` (hotkeys / system data)
+            log(f"[SYSOPT] C2GS_PLAYER_SYSSWITCH (op=21, sub={sub} C2SSaveSystemData, len={len(fields)}B)")
+            if self.active_role is not None:
+                self.active_role[f"sysdata_{sub}"] = fields[1:].decode("latin-1", errors="ignore")
+                self.store._save()
+
+    def _on_huodong(self, fields: bytes) -> None:
+        if len(fields) < 2:
+            return
+        tag_len = fields[0]
+        if len(fields) < 1 + tag_len:
+            return
+        tag = fields[1 : 1 + tag_len].decode("ascii", errors="ignore")
+        rest = fields[1 + tag_len :]
+        log(f"[C2GS <- {self.addr[1]}] C2GS_HUODONG (op=90, tag={tag!r}, rest={rest.hex()})")
+        if tag == "newchar" and len(rest) >= 2 and rest[0] == 11:
+            # `netnewcharres.C2SSwitchUIStyle(style)` sends `iSub=11, iStyle=style+1`
+            ui_style = rest[1]
+            if self.active_role is not None:
+                self.active_role["ui_style"] = ui_style
+                self.store._save()
+            self.send_raw(
+                build_gs2c_newchar_switch_ui(ui_style),
+                f"GS2C_HUODONG_OP(op=166, newchar S2CSwitchUIStyle={ui_style})",
+            )
+
+    def _on_quicklogin(self, fields: bytes) -> None:
+        if not fields:
+            return
+        sub = fields[0]
+        if sub == 1:
+            # `netquicklogin.C2SRefreshLoginKey()`
+            log(f"[QUICKLOGIN] C2GS_QUICKLOGIN (op=13, sub=1 C2SRefreshLoginKey)")
+            self.send_raw(
+                build_gs2c_quicklogin_key(self.login_key, 1),
+                f"GS2C_QUICKLOGIN(op=12, isub=1 login_key=0x{self.login_key:08x})",
+            )
+        elif sub == 2 and len(fields) >= 9:
+            # `netquicklogin.C2SRequestQuickLogin(key:4B, pid:4B)`
+            # Triggered when saving resolution/ratio (`視野擴大` <-> `800*600`/`1024*768`/`1280*960`)
+            # or switching UI style (`界面風格`) in System Settings (`dgtbaseopt.Save()`).
+            req_key, pid = struct.unpack_from("<II", fields, 1)
+            log(
+                f"[QUICKLOGIN] C2GS_QUICKLOGIN (op=13, sub=2 C2SRequestQuickLogin): "
+                f"key=0x{req_key:08x}, pid={pid}"
+            )
+            found = self.store.get_role_and_account(pid)
+            if found is not None:
+                acct_name, role = found
+                self.account = acct_name
+            else:
+                roles = self.store.get_or_create_account(self.account, "")
+                role = roles[0]
+                role["id"] = pid
+            # 1. Send `GS2C_QUICKLOGIN = 12, isub = 2` (`S2CLoginSuccess`) FIRST so
+            #    `resetcontrol.DoNewResetClear()` runs BEFORE `S2CPropInit` builds the HUD!
+            self.send_raw(
+                build_gs2c_quicklogin_success(),
+                "GS2C_QUICKLOGIN(op=12, isub=2 S2CLoginSuccess)",
+            )
+            # 2. Re-enter role world (sends `GS2C_PROP_INIT`, items, skills, pets, map, NPCs,
+            #    and `_send_world_bootstrap_sync()` which runs `S2CSetRate` -> `main.SetRate()`).
+            self._enter_role_world(role, send_welcome=False)
+            self.send_raw(
+                build_gs2c_notify("#G系統設置已成功切換並生效！#n", sub=1),
+                "GS2C_NOTIFY(op=165, QuickLogin complete)",
+            )
 
     def enter_map(self, map_id: int, x: int | None = None, y: int | None = None, send_welcome: bool = False) -> None:
         if map_id not in MAPS:
@@ -3178,13 +3576,34 @@ def run_self_test() -> int:
     assert lines.index("gm=1") < len(lines)
     assert "Found" in ensure_nocheck_gm(tmp_nocheck)  # idempotent
     tmp_nocheck.unlink()
-    # 5d. Time sync (007): the 4-byte value MUST be a Unix timestamp in seconds.
+    # 5d. Time sync (007 watchdog vs Calendar/Schedule Unix seconds):
+    #     - `GS2C_TIME = 31` (`mxgw.S2CTime`) MUST be centiseconds (100 ticks/sec) so
+    #       `sdt = t - g_ServerTime + 550 >= cdt = (G2 - G1) / 100` (where `C_sys.GetTime` is 10,000 ticks/sec).
+    #     - `GS2C_TIME_SECOND = 192` (`dlgcalendar.S2CTime`) and `GS2C_OPEN_UI = 89, isub = 241`
+    #       (`netopenui.S2CRefreshServerTime` -> `misc.SetServerTime`) MUST be Unix seconds.
     time_pkt = build_gs2c_time()
     assert time_pkt[1] == GS2C_TIME == 31
     assert len(time_pkt) == 2 + 4, "GS2C_TIME payload must be 4 bytes"
-    sent_t = struct.unpack_from("<I", time_pkt, 2)[0]
-    assert abs(sent_t - int(time.time())) <= 5, f"time value must be Unix seconds, got {sent_t}"
-    assert struct.unpack_from("<I", build_gs2c_time(), 2)[0] >= sent_t, "time value must be monotonic"
+    sent_cs = struct.unpack_from("<I", time_pkt, 2)[0]
+    assert sent_cs >= 10000, f"GS2C_TIME centisecond counter must start >= 10000, got {sent_cs}"
+    assert struct.unpack_from("<I", build_gs2c_time(), 2)[0] >= sent_cs, "GS2C_TIME must be monotonic"
+    # Verify mxgw.SecondGetResult math over 25s (750 frames), 40s (1200 frames), and 180s (5400 frames):
+    for interval_sec in (25, 40, 180):
+        g1 = 1_000_000
+        g2 = g1 + interval_sec * 10000  # C_sys.GetTime() is 0.1ms (10,000 ticks/sec)
+        cdt = g2 // 100 - g1 // 100     # centiseconds
+        srv_t1 = sent_cs
+        srv_t2 = srv_t1 + interval_sec * 100
+        sdt = srv_t2 - srv_t1 + 550
+        assert cdt <= sdt, f"mxgw 007 check failed for {interval_sec}s: cdt={cdt} > sdt={sdt}"
+
+    tsec_pkt = build_gs2c_time_second()
+    assert tsec_pkt[1] == GS2C_TIME_SECOND == 192
+    sent_unix = struct.unpack_from("<I", tsec_pkt, 2)[0]
+    assert abs(sent_unix - int(time.time())) <= 5, f"GS2C_TIME_SECOND must be Unix seconds, got {sent_unix}"
+    ref_pkt = build_gs2c_refresh_server_time()
+    assert ref_pkt[1] == GS2C_OPEN_UI == 89 and ref_pkt[2] == 241
+    assert abs(struct.unpack_from("<I", ref_pkt, 3)[0] - int(time.time())) <= 5
 
     # 5e. 傳送點全開：每個場景都能走到其他所有場景。
     for mid, mm in MAPS.items():
@@ -3232,13 +3651,17 @@ def run_self_test() -> int:
     srv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     srv_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     srv_sock.bind(("127.0.0.1", 0))
-    srv_sock.listen(1)
+    srv_sock.listen(4)
     port = srv_sock.getsockname()[1]
 
     def _srv_thread() -> None:
-        conn, addr = srv_sock.accept()
-        sess = ClientSession(conn, addr, store, seed=seed, server_num=3)
-        sess.run()
+        while True:
+            try:
+                conn, addr = srv_sock.accept()
+            except OSError:
+                break
+            sess = ClientSession(conn, addr, store, seed=seed, server_num=3)
+            threading.Thread(target=sess.run, daemon=True).start()
 
     t = threading.Thread(target=_srv_thread, daemon=True)
     t.start()
@@ -3340,6 +3763,21 @@ def run_self_test() -> int:
         assert op_npc == GS2C_MAP_ADD_NPC
     op9, body9 = recv_gs2c()
     assert op9 == GS2C_NOTIFY
+    # Verify post-login world bootstrap sync packets (resolution rate, sys_switch, server time, calendar, quicklogin key)
+    op_rate, body_rate = recv_gs2c()
+    assert op_rate == GS2C_OTHER_ASSISTANT and body_rate == b"\x2a\x01"
+    op_sw1, body_sw1 = recv_gs2c()
+    assert op_sw1 == GS2C_PROP_SWITCH and body_sw1[0] == 1
+    op_sw6, body_sw6 = recv_gs2c()
+    assert op_sw6 == GS2C_PROP_SWITCH and body_sw6[0] == 6
+    op_ref, body_ref = recv_gs2c()
+    assert op_ref == GS2C_OPEN_UI and body_ref[0] == 241
+    op_tsec, body_tsec = recv_gs2c()
+    assert op_tsec == GS2C_TIME_SECOND and len(body_tsec) == 4
+    op_qlk, body_qlk = recv_gs2c()
+    assert op_qlk == GS2C_QUICKLOGIN and body_qlk[0] == 1
+    login_key = struct.unpack_from("<I", body_qlk, 1)[0]
+    assert login_key == 0x514C4B59
 
     # Stage 5: Walk in map (`C2GS_MAP_MOVE = 54`), Click NPC (`C2GS_MIXPACKET = 151` wrapping `C2GS_NPC_LOOK = 96`),
     # Select Teleport Option (`C2GS_NPC_ANSWER = 98`), Open Attribute View (`C2GS_OPEN_UI_NEW = 230`),
@@ -3417,11 +3855,89 @@ def run_self_test() -> int:
     op10, _ = recv_gs2c()
     assert op10 == GS2C_HEART_BEAT
 
+    # Stage 6A: Time Sync (`C2GS_REQUEST_TIME = 61`) & Calendar/Schedule (`C2GS_OPEN_UI = 88, isub=241`, `C2GS_SCHEDULE = 82`)
+    send_c2gs(C2GS_REQUEST_TIME, b"")
+    op_t1, body_t1 = recv_gs2c()
+    assert op_t1 == GS2C_TIME and struct.unpack_from("<I", body_t1, 0)[0] >= 10000
+    op_t2, body_t2 = recv_gs2c()
+    assert op_t2 == GS2C_TIME_SECOND and abs(struct.unpack_from("<I", body_t2, 0)[0] - int(time.time())) <= 5
+
+    send_c2gs(C2GS_OPEN_UI, b"\xf1")  # isub = 241 (`nethero.C2SRefreshServerTime`)
+    op_r1, body_r1 = recv_gs2c()
+    assert op_r1 == GS2C_OPEN_UI and body_r1[0] == 241
+    op_r2, body_r2 = recv_gs2c()
+    assert op_r2 == GS2C_TIME_SECOND and abs(struct.unpack_from("<I", body_r2, 0)[0] - int(time.time())) <= 5
+
+    send_c2gs(C2GS_SCHEDULE, b"\x01")
+    op_sc_ref, _ = recv_gs2c()
+    assert op_sc_ref == GS2C_OPEN_UI
+    op_sc_ts, _ = recv_gs2c()
+    assert op_sc_ts == GS2C_TIME_SECOND
+    for expected_sub in (1, 2, 4, 7):
+        op_sc, body_sc = recv_gs2c()
+        assert op_sc == GS2C_SCHEDULE and body_sc[0] == expected_sub
+
+    send_c2gs(C2GS_SCHEDULE, b"\x02")
+    assert recv_gs2c()[0] == GS2C_OPEN_UI
+    assert recv_gs2c()[0] == GS2C_TIME_SECOND
+    op_wk, body_wk = recv_gs2c()
+    assert op_wk == GS2C_OPEN_UI and body_wk[0] == 222 and body_wk[1] == 4
+
+    # Stage 6B: System Settings Save (`C2GS_PLAYER_SYSSWITCH = 21`, `C2GS_GAME_PUBLIC = 209 sub=5`, `C2GS_HUODONG = 90`)
+    send_c2gs(C2GS_PLAYER_SYSSWITCH, struct.pack("<BI", 1, 0x12345678))
+    op_sys1, body_sys1 = recv_gs2c()
+    assert op_sys1 == GS2C_PROP_SWITCH and body_sys1 == struct.pack("<BI", 1, 0x12345678)
+
+    send_c2gs(C2GS_PLAYER_SYSSWITCH, struct.pack("<BI", 7, 50000000))
+    op_sys7, body_sys7 = recv_gs2c()
+    assert op_sys7 == GS2C_PROP_SWITCH and body_sys7 == struct.pack("<BI", 9, 50000000)
+
+    # Split packet (`netpublic.SplitPacketSend` -> `C2GS_GAME_PUBLIC = 209, sub = 5`)
+    hotkey_payload = b"\x02" + b"1:112|2:113|" * 22
+    chunk0 = hotkey_payload[:200]
+    chunk1 = hotkey_payload[200:]
+    send_c2gs(C2GS_GAME_PUBLIC, bytes([5, 0, C2GS_PLAYER_SYSSWITCH, len(chunk0)]) + chunk0)
+    send_c2gs(C2GS_GAME_PUBLIC, bytes([5, 2, len(chunk1)]) + chunk1)
+
+    # UI Style switch (`C2GS_HUODONG = 90`, `'newchar'`, `iSub = 11`, `iStyle = 4`)
+    send_c2gs(C2GS_HUODONG, b"\x07newchar\x0b\x04")
+    op_hd, body_hd = recv_gs2c()
+    assert op_hd == GS2C_HUODONG_OP and body_hd == b"\x07newchar\x0c\x04"
+
     cli.close()
+
+    # Stage 6C: QuickLogin Reconnect (`netquicklogin.Connect` -> `RestartQuickLogin` -> `C2GS_QUICKLOGIN = 13, sub = 2`)
+    cli_ql = socket.create_connection(("127.0.0.1", port), timeout=5.0)
+    h_ql = cli_ql.recv(9)
+    assert h_ql == hello, "QuickLogin GS2C_HELLO mismatch"
+    cli_ql.sendall(compute_hello_reply_bytes(seed) + b"\x00" * 22)
+    ql_fields = struct.pack("<BII", 2, login_key, new_role_id)
+    cli_ql.sendall(bytes([C2GS_QUICKLOGIN, len(ql_fields) + 1]) + ql_fields + b"\x00")
+
+    def recv_gs2c_ql() -> tuple[int, bytes]:
+        b0 = cli_ql.recv(1)[0]
+        if b0 == 0xFF:
+            ext = cli_ql.recv(MAX_LEN_BYTES)
+            plen = int.from_bytes(ext + b"\x00" * (4 - MAX_LEN_BYTES), "little")
+        else:
+            plen = b0
+        body = b""
+        while len(body) < plen:
+            body += cli_ql.recv(plen - len(body))
+        return body[0], body[1:]
+
+    # First packet on QuickLogin MUST be `GS2C_QUICKLOGIN = 12, isub = 2` (`S2CLoginSuccess`)
+    op_ql_ok, body_ql_ok = recv_gs2c_ql()
+    assert op_ql_ok == GS2C_QUICKLOGIN and body_ql_ok == b"\x02"
+    # Followed by `GS2C_PROP_INIT = 16` and full world entry
+    op_ql_prop, body_ql_prop = recv_gs2c_ql()
+    assert op_ql_prop == GS2C_PROP_INIT and len(body_ql_prop) == 403
+    cli_ql.close()
+
     srv_sock.close()
     if tmp_db.exists():
         tmp_db.unlink()
-    log("[PASS] All stages (選區 -> 登錄 -> 創角/選角 -> 進圖/全圖NPC載入 -> 點擊NPC對話/傳送 -> 移動/心跳) verified 100%!")
+    log("[PASS] All stages (選區 -> 登錄 -> 創角/選角 -> 進圖/全圖NPC載入 -> 點擊NPC對話/傳送 -> 移動/心跳/時間日曆同步/系統設置與分辨率瞬連) verified 100%!")
     return 0
 
 
