@@ -90,6 +90,7 @@ src/ui_editor/
 │   └── painters.py             # 38 类控件近似绘制规则（QtGui）
 └── ui/                         # PySide6 界面
     ├── main_window.py          # 主窗口与工作流
+    ├── commands.py             # 编辑命令 mixin（添加/粘贴/删除/锁定/右键）
     ├── canvas.py               # 画布场景/图元（选中/拖动/缩放）
     ├── property_panel.py       # 属性面板（按值类型生成编辑器）
     ├── panels.py               # 布局文件树 / 控件树 / 调色板

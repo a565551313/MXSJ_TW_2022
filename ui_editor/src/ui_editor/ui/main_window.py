@@ -10,23 +10,20 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QMimeData, QSettings, QSize, Qt
-from PySide6.QtGui import QAction, QGuiApplication, QKeySequence
+from PySide6.QtCore import QSettings, QSize, Qt
+from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
     QFileDialog,
     QInputDialog,
     QLabel,
-    QLineEdit,
     QMainWindow,
     QMenu,
     QMessageBox,
-    QPlainTextEdit,
     QSplitter,
     QStatusBar,
     QTabWidget,
-    QTextEdit,
     QToolBar,
     QToolButton,
     QVBoxLayout,
@@ -53,6 +50,7 @@ from ..core.script_index import ScriptIndex, get_default_index
 from ..core.styles import StyleBook
 from . import icons
 from .canvas import CanvasView, LayoutScene
+from .commands import EditingCommandsMixin
 from .diagnostics_panel import DiagnosticsPanel
 from .layout_import_dialog import LayoutImportDialog
 from .panels import PalettePanel, ResourceTreePanel, WidgetTreePanel
@@ -61,7 +59,7 @@ from .save_review import SaveReviewDialog
 from .script_panel import ScriptPanel
 
 
-class MainWindow(QMainWindow):
+class MainWindow(EditingCommandsMixin, QMainWindow):
     """UI 编辑器主窗口。"""
 
     def __init__(self) -> None:
@@ -1017,346 +1015,6 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
     # 编辑操作
     # ------------------------------------------------------------------
-    def current_selection(self) -> Widget | None:
-        return self._selected
-
-    def add_widget(self, wtype: str) -> None:
-        if self.doc is None:
-            QMessageBox.information(self, "没有布局",
-                                    "请先打开或新建一个布局。")
-            return
-        widget = self.doc.new_widget(wtype, parent=self._selected)
-        self.doc.checkpoint()
-        self._refresh_structure()
-        self._select_widget(widget)
-        self._update_title()
-
-    def _add_child_from_tree(self) -> None:
-        target = self.tree_panel.current_widget() or self._selected
-        if target is None:
-            QMessageBox.information(self, "未选中控件",
-                                    "请先在控件树或画布中选中一个父控件。")
-            return
-        wtype = self.palette_panel.current_type()
-        if wtype is None:
-            QMessageBox.information(self, "未选控件类型",
-                                    "请先在控件调色板中选中要添加的类型。")
-            return
-        if self.doc is None:
-            return
-        widget = self.doc.new_widget(wtype, parent=target)
-        self.doc.checkpoint()
-        self._refresh_structure()
-        self._select_widget(widget)
-        self._update_title()
-
-    def _add_root_from_tree(self) -> None:
-        """按调色板选中的类型新建一个顶级控件。"""
-        if self.doc is None:
-            QMessageBox.information(self, "没有布局",
-                                    "请先打开或新建一个布局。")
-            return
-        wtype = self.palette_panel.current_type()
-        if wtype is None:
-            QMessageBox.information(self, "未选控件类型",
-                                    "请先在控件调色板中选中要添加的类型。")
-            return
-        widget = self.doc.new_widget(wtype, parent=None)
-        self.doc.checkpoint()
-        self._refresh_structure()
-        self._select_widget(widget)
-        self._update_title()
-
-    def promote_selected_to_root(self) -> None:
-        """把当前控件提升为顶级控件（坐标换算，位置不跳）。"""
-        widget = self._selected or self.tree_panel.current_widget()
-        if self.doc is None or widget is None:
-            QMessageBox.information(self, "未选中控件",
-                                    "请先选中要提升的控件。")
-            return
-        if widget.parent is None:
-            QMessageBox.information(self, "已是顶级控件",
-                                    "这个控件本来就在顶层。")
-            return
-        self.doc.move_to_root(widget)
-        self.doc.checkpoint()
-        self._refresh_structure()
-        self._select_widget(widget)
-        self._update_title()
-
-    # -- 画布右键菜单与复制/粘贴/删除 --------------------------------
-    _MIME_WIDGETS = "application/x-mxsj-widget+json"
-
-    def _selected_widgets(self) -> list[Widget]:
-        """当前生效的多选控件（按文档顺序，祖先已选则不带其子孙）。"""
-        if self.doc is None:
-            return []
-        try:
-            items = self.scene.selectedItems()
-        except RuntimeError:
-            items = []
-        picked = [item.widget for item in items]
-        if not picked and self._selected is not None:
-            picked = [self._selected]
-        chosen = {id(w) for w in picked}
-
-        def has_chosen_ancestor(w: Widget) -> bool:
-            node = w.parent
-            while node is not None:
-                if id(node) in chosen:
-                    return True
-                node = node.parent
-            return False
-
-        order = {id(w): i for i, w in enumerate(self.doc.all_widgets())}
-        return sorted((w for w in picked if not has_chosen_ancestor(w)),
-                      key=lambda w: order.get(id(w), 0))
-
-    def _focused_text_editor(self):
-        """焦点在文本输入里时，复制/粘贴/删除应作用于文本而非控件。"""
-        fw = QApplication.focusWidget()
-        if isinstance(fw, (QLineEdit, QTextEdit, QPlainTextEdit)):
-            return fw
-        return None
-
-    def _edit_copy(self) -> None:
-        fw = self._focused_text_editor()
-        if fw is not None:
-            fw.copy()
-            return
-        self.copy_selected_widgets()
-
-    def _edit_paste(self) -> None:
-        fw = self._focused_text_editor()
-        if fw is not None:
-            fw.paste()
-            return
-        self.paste_widgets()
-
-    def _edit_delete(self) -> None:
-        fw = self._focused_text_editor()
-        if fw is not None:
-            if isinstance(fw, QLineEdit):
-                fw.del_() if hasattr(fw, "del_") else fw.backspace()
-            else:
-                fw.textCursor().removeSelectedText()
-            return
-        self.delete_selected()
-
-    def copy_selected_widgets(self) -> None:
-        """把选中的控件（含子树）序列化进系统剪贴板。"""
-        import json
-
-        widgets = self._selected_widgets()
-        if not widgets:
-            return
-        payload = json.dumps([w.to_dict() for w in widgets],
-                             ensure_ascii=False).encode("utf-8")
-        mime = QMimeData()
-        mime.setData(self._MIME_WIDGETS, payload)
-        mime.setText(payload.decode("utf-8"))
-        QGuiApplication.clipboard().setMimeData(mime)
-        self._sync_edit_actions()
-        self._update_status(f"已复制 {len(widgets)} 个控件")
-
-    def _clipboard_payload(self) -> list[dict] | None:
-        """读剪贴板中的控件负载（本工具复制的），无效返回 None。"""
-        import json
-
-        clipboard = QGuiApplication.clipboard()
-        mime = clipboard.mimeData()
-        raw = None
-        if mime is not None and mime.hasFormat(self._MIME_WIDGETS):
-            raw = bytes(mime.data(self._MIME_WIDGETS))
-        elif mime is not None and mime.hasText():
-            raw = mime.text().encode("utf-8")
-        if not raw:
-            return None
-        try:
-            data = json.loads(raw.decode("utf-8"))
-        except (ValueError, UnicodeDecodeError):
-            return None
-        if (not isinstance(data, list) or not data
-                or not all(isinstance(d, dict) for d in data)):
-            return None
-        return data
-
-    def paste_widgets(self) -> None:
-        """把剪贴板控件粘进文档：作为当前选中控件的同级（无选择挂顶层）。
-
-        位置统一偏移 (16,16) 免与原件重叠；整组粘贴算一步撤销。
-        名字保持原样（脚本按 sName 认领，需要改名请在属性面板改）。
-        """
-        if self.doc is None:
-            return
-        payload = self._clipboard_payload()
-        if not payload:
-            return
-        clones = [Widget.from_dict(d) for d in payload]
-        selection = self._selected_widgets()
-        anchor = selection[0] if selection else None
-        parent = anchor.parent if anchor is not None else None
-        siblings = (parent.children if parent is not None
-                    else self.doc.roots)
-        index = (siblings.index(anchor) + 1 if anchor is not None
-                 else None)
-        for clone in clones:
-            clone.set_geometry(x=clone.x + 16, y=clone.y + 16)
-            self.doc.insert_widget(clone, parent,
-                                   None if index is None else index)
-            if index is not None:
-                index += 1
-        self.doc.checkpoint()
-        self._refresh_structure()
-        self._select_widget(clones[0])
-        self._update_title()
-        self._update_status(f"已粘贴 {len(clones)} 个控件")
-
-    def delete_selected(self) -> None:
-        if self.doc is None:
-            return
-        targets = self._selected_widgets()
-        if not targets:
-            current = self.tree_panel.current_widget()
-            targets = [current] if current is not None else []
-        if not targets:
-            return
-        blocked = [w for w in targets
-                   if any(node.locked for node in w.walk())]
-        if blocked:
-            targets = [w for w in targets if w not in blocked]
-            names = "、".join(w.name or "(无名)" for w in blocked[:3])
-            self._update_status(
-                f"「{names}」已锁定（或其内有锁定控件），先解锁再删除。")
-            if not targets:
-                return
-        descendants = sum(len(list(w.walk())) - 1 for w in targets)
-        impacts = reference_impacts(
-            (node.name for root in targets for node in root.walk()),
-            self._script_link())
-        if descendants or impacts:
-            note = ("\n\n静态索引发现受影响引用（包含整棵子树）：\n"
-                    + self._impact_text(impacts)
-                    + "\n只删除布局控件，不改脚本，不自动接线；"
-                      "静态索引可能漏动态引用或版本变化。"
-                    if impacts else "")
-            answer = QMessageBox.question(
-                self, "删除控件" if not impacts else "删除可能影响脚本引用（静态）",
-                f"将删除 {len(targets)} 个控件及其 {descendants} 个"
-                "子控件，确定吗？" + note,
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No)
-            if answer != QMessageBox.StandardButton.Yes:
-                return
-        parent = targets[0].parent
-        for widget in targets:
-            self.doc.remove_widget(widget)
-        self.doc.checkpoint()
-        self._refresh_structure()
-        self._select_widget(parent)
-        self._update_title()
-
-    def _sync_edit_actions(self) -> None:
-        """按选择与剪贴板状态置灰复制/粘贴/删除（菜单与右键菜单共用）。"""
-        has_widgets = self.doc is not None and bool(self._selected_widgets())
-        self._act_copy.setEnabled(has_widgets)
-        self._act_delete.setEnabled(has_widgets)
-        self._act_paste.setEnabled(
-            self.doc is not None and self._clipboard_payload() is not None)
-        self._sync_lock_action()
-
-    # -- 控件锁定（布局时防手滑；编辑器状态，不进文档/撤销） ------
-    def _sync_lock_action(self) -> None:
-        """锁定按钮按当前选择置灰/勾选（全锁才打勾，不回弹信号）。"""
-        from PySide6.QtCore import QSignalBlocker
-
-        if not hasattr(self, "_act_lock"):
-            return
-        widgets = self._selected_widgets() if self.doc is not None else []
-        self._act_lock.setEnabled(bool(widgets))
-        with QSignalBlocker(self._act_lock):
-            self._act_lock.setChecked(
-                bool(widgets) and all(w.locked for w in widgets))
-
-    def _toggle_lock(self, on: bool) -> None:
-        widgets = self._selected_widgets()
-        if widgets:
-            self._apply_lock(widgets, on)
-
-    def _apply_lock(self, widgets: list, on: bool) -> None:
-        """把锁定状态应用到一组控件（工具栏/右键/控件树共用）。"""
-        for widget in widgets:
-            widget.locked = on
-            item = self.scene.item_for(widget)
-            if item is not None:
-                item.apply_lock()
-            self.tree_panel.set_lock_icon(widget)
-        self._sync_lock_action()
-        names = "、".join(w.name or "(无名)" for w in widgets[:3])
-        if len(widgets) > 3:
-            names += " 等"
-        self._update_status(
-            f"已锁定 {len(widgets)} 个控件（{names}）：画布上拖不动、"
-            "缩不了、删不掉；排其他控件不会碰歪它们。再点一次解锁。"
-            if on else
-            f"已解锁 {len(widgets)} 个控件（{names}）。")
-
-    def _locked_paths(self) -> list[list[int]]:
-        """全部已锁定控件的序号路径（撤销重建对象后按它恢复锁定）。"""
-        if self.doc is None:
-            return []
-        paths = []
-        for widget in self.doc.all_widgets():
-            if widget.locked:
-                path = self._selection_path(widget)
-                if path is not None:
-                    paths.append(path)
-        return paths
-
-    def _restore_locks(self, paths: list[list[int]]) -> None:
-        for path in paths:
-            widget = self._resolve_path(path)
-            if widget is None:
-                continue
-            widget.locked = True
-            item = self.scene.item_for(widget)
-            if item is not None:
-                item.apply_lock()
-        self.tree_panel.refresh_locks()
-
-    def build_canvas_context_menu(self, widget: Widget | None) -> QMenu:
-        """画布右键菜单（不在此处 exec，便于测试与复用）。"""
-        if widget is not None and widget not in self._selected_widgets():
-            self._select_widget(widget)
-        self._sync_edit_actions()
-        menu = QMenu(self)
-        menu.addAction(self._act_copy)
-        menu.addAction(self._act_paste)
-        menu.addAction(self._act_delete)
-        menu.addSeparator()
-        menu.addAction(self._act_lock)
-        return menu
-
-    def _show_canvas_context_menu(self, global_pos, widget) -> None:
-        if self.doc is None:
-            return
-        self.build_canvas_context_menu(widget).exec(global_pos)
-
-    def _reorder_widget(self, widget: Widget, delta: int) -> None:
-        if self.doc is None:
-            return
-        siblings = self.doc.siblings_of(widget)
-        index = siblings.index(widget)
-        target = index + delta
-        if not 0 <= target < len(siblings):
-            return
-        siblings[index], siblings[target] = siblings[target], siblings[index]
-        self.doc.dirty = True
-        self.doc.checkpoint()
-        self._refresh_structure()
-        self._select_widget(widget)
-        self._update_title()
-
     def _refresh_structure(self) -> None:
         self.scene.set_document(self.doc)
         self.tree_panel.build(self.doc)
