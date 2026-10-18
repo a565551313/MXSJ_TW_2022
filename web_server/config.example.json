@@ -1,0 +1,11 @@
+{
+  "content_root": "public",
+  "resources": [
+    {
+      "url": "/example.txt",
+      "file": "example.txt",
+      "content_type": "text/plain",
+      "max_age": 0
+    }
+  ]
+}
