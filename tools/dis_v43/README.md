@@ -1,5 +1,8 @@
 # dis_v43 — v4.3 映射驱动的自定义字节码对齐反汇编器
 
+> **状态：历史复现／专项反汇编**，不是当前双 VM 通用解码入口。下面 v4.3 映射、Python 版本与上下文猜测仅属于当时样本，不覆盖当前编辑器原生转换结论。日常恢复／编辑优先 [脚本编辑器](../../script_editor/README.md)；不能宣称两者 CLI 完全等价。
+> 输入是指定 marshal 与映射材料，输出反汇编供核对，不执行恢复模块。依赖本目录 parse_marshal；本轮未重跑，见 [依赖清单](../DEPENDENCIES.md)。
+
 **来源**：并行任务 P3（连接流程与 Connect() 复核），2026-10-10。
 结果报告：`work/dream-world-connect-login-map/notes/parallel-20261010/P3-result.md`。
 

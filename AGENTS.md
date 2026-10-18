@@ -34,9 +34,10 @@
 | `docs/PYTHON_TOOL_CONVENTIONS.md` | Python 工具 / 编辑器开发约定（PEP 8、PySide6、自检启动脚本、一键 EXE、Windows 交付检查） | 本文 §5 |
 | `notes/` | 逆向**结案**笔记：双 VM opcode 表、0SLF 路径哈希与 `.dlg`、游戏数据 | 各文件自述 |
 | `work/dream-world-connect-login-map/` | 早期研究区（297 份笔记、证据、报告、专项工具）；2026-10-12 客户端研究快照 = `report/client-status-20261012.md`，不替代当前 STATUS | [`INDEX.md`](work/dream-world-connect-login-map/INDEX.md) |
+| `tools/README.md` / `tools/DEPENDENCIES.md` | 工具生命周期、推荐入口与运行／证据／说明三类依赖；移动或淘汰前必读 | [工具索引](tools/README.md)、[依赖清单](tools/DEPENDENCIES.md) |
 | `tools/decompiler/` | 双 VM 字节码反编译、5 段 XOR 重打包；`output/` 是反编译文本（**不准确、不可执行，只作线索**） | `notes/opcode_mapping_and_decompilation.md` |
 | `tools/data-parser/` | `universal_fls_tool.py`、`mx_path_hash.py`、`extract_dlg.py`、`i0_sprite.py`、`pe_resource_dump.py`（从 exe/dll 的 `.rsrc` 抽皮肤/光标/版式/字串）、`skin_label_patch.py` + `pe_resource_patch.py`（皮肤改字并原位写回）、精灵格式说明 | `I0_SPRITE_FORMAT.md` |
-| `tools/client_patches/` | 注册 UI 离线预览补丁（只改 entry 337/4007），构建器、测试、冻结资产、CPython 2.5 审计。**v3.3 已由用户判定不规范并作废（2026-10-14），不得再分发；现行原生实现见 `tools/registration/`** | [`README.md`](tools/client_patches/README.md)、[`V3_3_DELIVERY_AND_ACCEPTANCE.md`](tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md) |
+| `tools/client_patches/` | 混合专题：注册 overlay v3/v3.2/v3.3 已停用；内置 UI 列表旧 v1/v2 暂停，v3 为未原生验收源码参考；不可整体判废 | [`分专题状态`](tools/client_patches/README.md) |
 | `tools/devkit/` | 开发自检工具箱：`check_windows_compat.py`（Windows 兼容静态检查，交付前必跑）、`vendor_core.py`（`mx_common/` → 编辑器 `core/` 的共享核心分发器） | [`README.md`](tools/devkit/README.md) |
 | `tools/data-export/`、`tools/data_browser/`、`tools/dis_v43/`、`tools/*.py` | 历史数据导出/浏览/反汇编工具，仍可用但不是现行复核入口 | — |
 | `script_editor/` | 双 VM 脚本恢复候选、编辑／编译／新包验证；Git 不含完整运行时发行材料 | [`README.md`](script_editor/README.md) |

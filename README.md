@@ -120,8 +120,9 @@ MXSJ_TW_2022/
 │   ├── 启动地图编辑器.bat / bootstrap.py  Windows 一键启动 / 自检入口
 │   └── build_exe.bat / *.spec    Windows 一键打包脚本与配置（三个编辑器同构）
 ├── tools/
+│   ├── README.md / DEPENDENCIES.md  工具状态、推荐入口和依赖清单
 │   ├── devkit/                   开发自检工具箱：check_windows_compat.py（交付 Windows 前必跑）
-│   ├── client_patches/           已作废的 overlay 注册预览历史，不再分发
+│   ├── client_patches/           混合专题：overlay 停用；内置 UI 候选状态见子目录
 │   ├── decompiler/               双 VM 字节码反编译、5 段 XOR 重打包；output/ 为反编译文本（仅线索）
 │   ├── data-parser/              universal_fls_tool、mx_path_hash、extract_dlg、i0_sprite 等
 │   ├── data-export/              历史数据导出结果
@@ -247,6 +248,8 @@ npm run dev
 详情见 [后端说明](server/docs/review_browser/BACKEND.md)、[API 契约](server/docs/review_browser/API_CONTRACT.md)、[网页说明](server/apps/review_web/README.md) 和 [集成验收](server/docs/review_browser/ACCEPTANCE.md)。
 
 ## 6. 客户端资源与数据研究
+
+选工具先读 [tools 总索引](tools/README.md)；日常入口被接替不等于旧工具无依赖。移动／清理前查 [依赖清单](tools/DEPENDENCIES.md)，本轮仅文档分类，没有淘汰算法或删除数据。
 
 ### 6.1 材料覆盖不代表逻辑恢复
 
