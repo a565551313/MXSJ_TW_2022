@@ -36,10 +36,17 @@ def main(argv=None):
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except Exception as exc:
-        # Do not record arbitrary exception text: it might contain user input.
-        Path(__file__).with_name("启动日志.txt").write_text(
-            f"Startup failed: {type(exc).__name__}\n",
-            encoding="utf-8",
-        )
+    except Exception:
+        # Bootstrap may fail before the shared logger can even be imported.
+        try:
+            Path(__file__).with_name("启动日志.txt").write_text(
+                "BOOTSTRAP_FAILED: check Python, dependencies and configuration.\n",
+                encoding="utf-8",
+            )
+        except OSError:
+            pass
+        try:
+            sys.stderr.write("BOOTSTRAP_FAILED; check local runtime prerequisites.\n")
+        except OSError:
+            pass
         raise SystemExit(1) from None

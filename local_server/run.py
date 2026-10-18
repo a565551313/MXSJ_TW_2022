@@ -8,6 +8,7 @@ import getpass
 import json
 import shlex
 import sys
+import time
 import uuid
 from dataclasses import asdict
 from pathlib import Path
@@ -20,12 +21,14 @@ from mxsj_server.contracts.common import DomainError
 from mxsj_server.modules.account.contracts import LoginRequest
 from mxsj_server.modules.character.contracts import CreateCharacter
 from mxsj_server.modules.character.domain.creation import CreationPolicy
+from mxsj_server.observability.events import EventLogger, emergency, safe_error
+from mxsj_server.observability.tracing import bind
 from mxsj_server.persistence.sqlite.store import SQLiteStore
 
 
 def read_config(path: Path):
     raw = json.loads(path.read_text(encoding="utf-8-sig"))
-    if set(raw) != {"database", "realm_id", "session_ttl_ms", "creation"}:
+    if set(raw) - {"logging"} != {"database", "realm_id", "session_ttl_ms", "creation"}:
         raise ValueError("Unknown or missing configuration keys")
     creation = raw["creation"]
     if set(creation) != {"max_characters", "allowed_pairs"}:
@@ -46,7 +49,27 @@ def read_config(path: Path):
     db = Path(raw["database"])
     if not db.is_absolute():
         db = path.absolute().parent / db
-    return db, raw["realm_id"], raw["session_ttl_ms"], policy
+    logs = raw.get("logging", {})
+    if not isinstance(logs, dict) or set(logs) - {
+        "directory",
+        "max_bytes",
+        "backups",
+        "level",
+    }:
+        raise ValueError("Invalid logging keys")
+    directory = logs.get("directory", "var/logs")
+    if not isinstance(directory, str) or not directory:
+        raise ValueError("Invalid log directory")
+    directory = Path(directory)
+    if not directory.is_absolute():
+        directory = path.absolute().parent / directory
+    log_options = {
+        "directory": directory,
+        "max_bytes": logs.get("max_bytes", 5_242_880),
+        "backups": logs.get("backups", 5),
+        "level": logs.get("level", "INFO"),
+    }
+    return db, raw["realm_id"], raw["session_ttl_ms"], policy, log_options
 
 
 def password() -> bytes:
@@ -114,8 +137,11 @@ async def console(services):
             else:
                 print("Unknown command or arguments")
         except DomainError as exc:
-            print(f"{exc.code}: {exc}")
+            print(safe_error(exc))
         except ValueError:
+            services.events.emit(
+                "console.rejected", outcome="failed", error_code="INVALID_ARGUMENT"
+            )
             print("INVALID_ARGUMENT")
         except EOFError:
             break
@@ -126,7 +152,7 @@ async def console(services):
                 ctx, account_id=ctx.account_id, reason="console exit"
             )
         except DomainError as exc:
-            print(f"Exit revoke: {exc.code}")
+            print(f"Exit revoke: {safe_error(exc)}")
 
 
 def main(argv=None) -> int:
@@ -135,44 +161,95 @@ def main(argv=None) -> int:
     parser.add_argument("command", choices=("init-db", "check", "provision", "console"))
     parser.add_argument("--account", help="Required for operator-only provision")
     args = parser.parse_args(argv)
+    events = EventLogger()  # Safe console fallback if configuration is unreadable.
+    lifecycle = {"trace_id": uuid.uuid4().hex}
+    result_code = 1
+    started = time.monotonic_ns()
     try:
-        db, realm, ttl, policy = read_config(args.config)
-        store = SQLiteStore(db)
-        if args.command == "init-db":
-            # Explicit operator action; creates only the selected database directory.
-            db.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-            store.initialize()
-            print("Database schema initialized (or already current)")
-        elif args.command == "check":
-            store.check()
-            print("Database/schema check passed; no game listener implemented yet")
-        else:
-            services = open_local(db, realm_id=realm, policy=policy, session_ttl_ms=ttl)
-            if args.command == "provision":
-                if not args.account:
-                    raise ValueError("--account is required")
-                secret = password()
-                if secret != getpass.getpass("Confirm password: ").encode("utf-8"):
-                    raise ValueError("Password confirmation differs")
-                account_id = asyncio.run(
-                    services.accounts.provision(args.account, secret)
-                )
-                print(f"Provisioned account_id={account_id}")
+        db, realm, ttl, policy, log_options = read_config(args.config)
+        # Fail startup before DB writes if required log output cannot open/lock.
+        events = EventLogger.open(**log_options)
+        with bind(events, realm_id=realm) as lifecycle:
+            events.emit("process.start", outcome="started", **lifecycle)
+            events.emit("config.validated", **lifecycle)
+            store = SQLiteStore(db, events=events)
+            if args.command == "init-db":
+                db.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+                store.initialize()
+                print("Database schema initialized (or already current)")
+            elif args.command == "check":
+                store.check()
+                print("Database/schema check passed; no game listener implemented yet")
             else:
-                asyncio.run(console(services))
-        return 0
+                services = open_local(
+                    db,
+                    realm_id=realm,
+                    policy=policy,
+                    session_ttl_ms=ttl,
+                    events=events,
+                )
+                if args.command == "provision":
+                    if not args.account:
+                        raise ValueError("--account is required")
+                    secret = password()
+                    if secret != getpass.getpass("Confirm password: ").encode("utf-8"):
+                        raise ValueError("Password confirmation differs")
+                    account_id = asyncio.run(
+                        services.accounts.provision(args.account, secret)
+                    )
+                    print(f"Provisioned account_id={account_id}")
+                else:
+                    asyncio.run(console(services))
+        result_code = 0
     except DomainError as exc:
-        print(f"{exc.code}: {exc}", file=sys.stderr)
-        return 1
-    except (ValueError, TypeError, KeyError, OSError):
+        events.emit(
+            "process.failed",
+            outcome="failed",
+            error_code=safe_error(exc),
+            exception=exc,
+            **lifecycle,
+        )
+        print(safe_error(exc), file=sys.stderr)
+        result_code = 1
+    except (ValueError, TypeError, KeyError, OSError) as exc:
+        events.emit(
+            "process.failed",
+            outcome="failed",
+            error_code="CONFIGURATION_ERROR",
+            exception=exc,
+            **lifecycle,
+        )
         print(
-            "Configuration/input error; check config and private data directory",
+            "Configuration/log setup/input error; inspect sanitized diagnostics",
             file=sys.stderr,
         )
-        return 2
+        result_code = 2
     except KeyboardInterrupt:
-        # No token is printed; an interrupted session expires or is replaced at login.
-        return 130
+        events.emit(
+            "process.failed", outcome="unknown", error_code="INTERRUPTED", **lifecycle
+        )
+        result_code = 130
+    except Exception as exc:
+        events.emit(
+            "process.failed",
+            outcome="failed",
+            error_code="INTERNAL_ERROR",
+            exception=exc,
+            **lifecycle,
+        )
+        print("INTERNAL_ERROR; inspect sanitized diagnostics", file=sys.stderr)
+        result_code = 1
+    finally:
+        events.emit(
+            "process.stop",
+            outcome="succeeded" if result_code == 0 else "failed",
+            duration_ms=(time.monotonic_ns() - started) // 1_000_000,
+            **lifecycle,
+        )
+        events.close()
+        if events.health()["failures"]:
+            emergency()  # Explicit exit warning, without changing committed results.
+    return result_code
 
 
 if __name__ == "__main__":

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import re
-import uuid
 from collections.abc import Callable
 
 from mxsj_server.contracts.common import CommandSource, DomainError, RequestContext
+from mxsj_server.observability.events import DEFAULT_EVENTS, EventLogger
+from mxsj_server.observability.tracing import mark, note, observed, trace_id
 from mxsj_server.persistence.ports import Store, UnitOfWork
 from mxsj_server.runtime.tickets import ticket_digest
 
@@ -30,14 +31,26 @@ def fence(uow: UnitOfWork, ctx: RequestContext, realm: int, now_ms: int) -> None
     ):
         raise DomainError("UNAUTHENTICATED")
     row = uow.sessions.current(ctx.account_id, realm)
-    if row is None or row.epoch != ctx.session_epoch or row.expires_at_ms <= now_ms:
+    if row is None or row.epoch != ctx.session_epoch:
+        note("session.stale", error_code="UNAUTHENTICATED")
+        raise DomainError("UNAUTHENTICATED")
+    if row.expires_at_ms <= now_ms:
+        note("session.expired", error_code="UNAUTHENTICATED")
         raise DomainError("UNAUTHENTICATED")
 
 
 class SessionAuthority:
-    def __init__(self, store: Store, realm_id: int, clock: Callable[[], int]):
+    def __init__(
+        self,
+        store: Store,
+        realm_id: int,
+        clock: Callable[[], int],
+        events: EventLogger | None = None,
+    ):
         self.store, self.realm_id, self.clock = store, realm_id, clock
+        self.events = events if events is not None else DEFAULT_EVENTS
 
+    @observed("session.context")
     async def context(
         self,
         ticket: str,
@@ -45,6 +58,7 @@ class SessionAuthority:
         *,
         character_id: int | None = None,
     ) -> RequestContext:
+        mark(operation_id=op_id)
         digest, op_id = ticket_digest(ticket), operation_id(op_id)
         if character_id is not None and (
             type(character_id) is not int or character_id <= 0
@@ -54,11 +68,11 @@ class SessionAuthority:
         def load() -> RequestContext:
             with self.store.transaction() as uow:
                 row = uow.sessions.by_ticket(digest)
-                if (
-                    row is None
-                    or row.realm_id != self.realm_id
-                    or row.expires_at_ms <= self.clock()
-                ):
+                if row is None or row.realm_id != self.realm_id:
+                    raise DomainError("UNAUTHENTICATED")
+                mark(account_id=row.account_id, session_epoch=row.epoch)
+                if row.expires_at_ms <= self.clock():
+                    note("session.expired", error_code="UNAUTHENTICATED")
                     raise DomainError("UNAUTHENTICATED")
                 if (
                     character_id is not None
@@ -68,7 +82,7 @@ class SessionAuthority:
                     raise DomainError("FORBIDDEN")
                 return RequestContext(
                     operation_id=op_id,
-                    trace_id=uuid.uuid4().hex,
+                    trace_id=trace_id(),
                     realm_id=row.realm_id,
                     account_id=row.account_id,
                     character_id=character_id,

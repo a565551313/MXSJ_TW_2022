@@ -9,15 +9,20 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from mxsj_server.contracts.common import DomainError
+from mxsj_server.observability.events import DEFAULT_EVENTS, EventLogger
+from mxsj_server.observability.tracing import observed_sync, span
 from mxsj_server.persistence.sqlite import schema
 from mxsj_server.persistence.sqlite.repositories import SQLiteUnitOfWork
 
 
 class SQLiteStore:
-    def __init__(self, path: Path, *, timeout: float = 2.0):
+    def __init__(
+        self, path: Path, *, timeout: float = 2.0, events: EventLogger | None = None
+    ):
         path = Path(path).absolute()
         if path.suffix.lower() not in {".sqlite3", ".sqlite", ".db"}:
             raise ValueError("Database path must end in .sqlite3, .sqlite or .db")
+        self.events = events if events is not None else DEFAULT_EVENTS
         self.path, self.timeout = path, timeout
         self._guard_path()
 
@@ -63,6 +68,7 @@ class SQLiteStore:
         if row is None or row[0] != schema.CHECKSUM:
             raise DomainError("SCHEMA_MISMATCH", "Migration checksum differs")
 
+    @observed_sync("database.initialize")
     def initialize(self) -> None:
         """Operator-only, idempotent; refuse unknown schemas without repair/reset."""
         if not self.path.parent.is_dir():
@@ -119,6 +125,7 @@ class SQLiteStore:
                 finally:
                     conn.close()
 
+    @observed_sync("database.check")
     def check(self) -> None:
         """No auto-creation or migration. Missing/corrupt databases fail closed."""
         with self._connection() as conn:
@@ -130,10 +137,11 @@ class SQLiteStore:
 
     @contextmanager
     def transaction(self) -> Iterator[SQLiteUnitOfWork]:
-        with self._connection() as conn:
-            # One writer, including session fence and idempotency lookup. A
-            # PostgreSQL implementation must replace this with explicit locks.
-            conn.execute("BEGIN IMMEDIATE")
-            self._validate(conn)
-            yield SQLiteUnitOfWork(conn)
-            conn.commit()
+        with span(self.events, "database.transaction"):
+            with self._connection() as conn:
+                # One writer, including session fence and idempotency lookup. A
+                # PostgreSQL implementation must replace this with explicit locks.
+                conn.execute("BEGIN IMMEDIATE")
+                self._validate(conn)
+                yield SQLiteUnitOfWork(conn)
+                conn.commit()

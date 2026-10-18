@@ -11,6 +11,8 @@ from dataclasses import asdict
 from mxsj_server.contracts.common import CommandReceipt, DomainError, RequestContext
 from mxsj_server.modules.character.contracts import CharacterView, CreateCharacter
 from mxsj_server.modules.character.domain.creation import CreationPolicy
+from mxsj_server.observability.events import DEFAULT_EVENTS, EventLogger
+from mxsj_server.observability.tracing import mark, observed
 from mxsj_server.persistence.ports import Store
 from mxsj_server.runtime.sessions import fence
 
@@ -22,7 +24,9 @@ class CharacterService:
         realm_id: int,
         clock: Callable[[], int],
         policy: CreationPolicy,
+        events: EventLogger | None = None,
     ):
+        self.events = events if events is not None else DEFAULT_EVENTS
         self.store, self.realm_id, self.clock, self.policy = (
             store,
             realm_id,
@@ -30,6 +34,7 @@ class CharacterService:
             policy,
         )
 
+    @observed("character.list")
     async def list_characters(self, ctx: RequestContext) -> tuple[CharacterView, ...]:
         def load():
             with self.store.transaction() as uow:
@@ -38,6 +43,7 @@ class CharacterService:
 
         return await asyncio.to_thread(load)
 
+    @observed("character.create")
     async def create(
         self, ctx: RequestContext, request: CreateCharacter
     ) -> CharacterView:
@@ -63,6 +69,7 @@ class CharacterService:
                 if previous is not None:
                     if previous.request_hash != fingerprint:
                         raise DomainError("IDEMPOTENCY_CONFLICT")
+                    mark(replay=True)
                     return CharacterView(**json.loads(previous.response))
                 if (
                     len(uow.characters.list_owned(ctx.account_id, self.realm_id))
@@ -92,6 +99,7 @@ class CharacterService:
 
         return await asyncio.to_thread(create)
 
+    @observed("character.enter_world")
     async def enter_world(
         self,
         ctx: RequestContext,

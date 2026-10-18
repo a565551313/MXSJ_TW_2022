@@ -21,6 +21,8 @@ from mxsj_server.modules.account.domain.security import (
     password_bytes,
     verify_password,
 )
+from mxsj_server.observability.events import DEFAULT_EVENTS, EventLogger
+from mxsj_server.observability.tracing import mark, observed
 from mxsj_server.persistence.ports import Store
 from mxsj_server.runtime.sessions import fence, operation_id
 from mxsj_server.runtime.tickets import ticket_digest
@@ -33,12 +35,15 @@ class AccountService:
         realm_id: int,
         clock: Callable[[], int],
         ttl_ms: int,
+        events: EventLogger | None = None,
     ):
         self.store, self.realm_id, self.clock = store, realm_id, clock
+        self.events = events if events is not None else DEFAULT_EVENTS
         self.ttl_ms = ttl_ms
         # Equal-cost password work for unknown accounts (never a valid login).
         self.dummy = encode_password(secrets.token_urlsafe(32).encode("ascii"))
 
+    @observed("account.provision")
     async def provision(self, name: str, credential: bytes) -> int:
         """Trusted local operator, not a player API or auto-registration on login."""
         key, credential = account_key(name), password_bytes(credential)
@@ -52,6 +57,7 @@ class AccountService:
 
         return await asyncio.to_thread(create)
 
+    @observed("account.authenticate")
     async def authenticate(self, request: LoginRequest) -> LoginResult:
         if request.protocol_version != "operator-utf8-v1":
             raise DomainError(
@@ -78,9 +84,14 @@ class AccountService:
                 if fresh != account:
                     raise DomainError("UNAUTHENTICATED")
                 expiry = self.clock() + self.ttl_ms
-                uow.sessions.replace(
+                previous = uow.sessions.current(account.account_id, self.realm_id)
+                new_session = uow.sessions.replace(
                     account.account_id, self.realm_id, ticket_digest(ticket), expiry
                 )
+            mark(
+                takeover=previous is not None and previous.expires_at_ms > self.clock(),
+                session_epoch=new_session.epoch,
+            )
             return LoginResult(
                 account_id=account.account_id,
                 session_ticket=ticket,
@@ -89,6 +100,7 @@ class AccountService:
 
         return await asyncio.to_thread(login)
 
+    @observed("account.revoke")
     async def revoke_sessions(
         self,
         ctx: RequestContext,
@@ -121,6 +133,7 @@ class AccountService:
                 if previous is not None:
                     if previous.request_hash != fingerprint:
                         raise DomainError("IDEMPOTENCY_CONFLICT")
+                    mark(replay=True)
                     return CommandReceipt(
                         operation_id=ctx.operation_id,
                         revision=json.loads(previous.response)["epoch"],

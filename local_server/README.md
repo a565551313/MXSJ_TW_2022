@@ -72,7 +72,31 @@ quit
 重启后账号、角色、幂等回执与会话代数仍在 SQLite 中。
 
 Windows 也可在准备配置／建号后双击 `启动本地测试服.bat`，进入的是**操作员控制台，不是可进图服务**。
-不自动下载依赖或改系统设置。`bootstrap.py` 异常日志只写异常类型，避免记录凭据。
+不自动下载依赖或改系统设置。`bootstrap.py` 无法加载共享日志时仅写固定 `BOOTSTRAP_FAILED` 提示，避免记录异常原文。
+
+## 日志配置与排错
+
+共享业务与数据库日志默认同时输出 stderr 和配置文件所在目录下的 `var/logs/server.jsonl`。
+旧配置不含 `logging` 仍兼容；可加入：
+
+```json
+"logging": {
+  "directory": "var/logs",
+  "level": "INFO",
+  "max_bytes": 5242880,
+  "backups": 5
+}
+```
+
+相对目录以配置文件为基准，非当前工作目录。目录需由可信操作员独占管理；不要放在客户端资源目录或公开共享目录。
+默认保留当前文件与 5 份轮替备份；同目录只允许一个进程写入。排查事务成功细节可设 `DEBUG`。
+通过 `trace_id` 关联会话、业务与数据库，通过 `operation_id_sha256` 关联幂等重试，不记录操作 ID 原文。
+不记录密码、密码哈希、票据、账号名、角色名、请求正文或原始异常消息。
+
+无法建立日志时启动失败且不建库；运行时写失败发 `MXSJ_LOGGING_DEGRADED` 告警，不把已提交业务改报失败。
+协程取消为 `CANCELLED_UNKNOWN`，不能据此认定回滚；使用同一 operation_id 重试。
+**这是诊断日志，不是资产／奖励事务审计账本**。详细事件、字段、脱敏与故障边界见
+[共享日志说明](../server/src/mxsj_server/observability/README.md)。Windows ACL／锁尚未实机验证。
 
 ## 规则不是“本地放宽版”
 
@@ -98,6 +122,7 @@ SQLite 单事务连接使用 `BEGIN IMMEDIATE` 串行化写入（此阶段读用
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s server/tests/local_runtime -v
+PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s server/tests/observability -v
 PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s server/tests/architecture
 ```
 
