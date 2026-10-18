@@ -1,0 +1,2 @@
+# Python >=3.10; current CLI/core uses only the standard library.
+# Add PySide6>=6.4 when the actual desktop GUI is implemented, not before.

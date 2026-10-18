@@ -23,7 +23,7 @@
 | 组件 | 当前能力／版本 | 本轮检查与边界 |
 |---|---|---|
 | 共享服务端／SQLite 本地模式 | 账号认证、会话／撤销、角色元数据创建查询、事务／幂等及 `local_server/` 操作员控制台；其余模块主要为契约 | 新增 **38/38**、架构 **161/161**；真实临时 SQLite 并发、提交失败与新 Python 进程恢复通过。无客户端 TCP／进图、完整创角、PostgreSQL 或 Windows EXE 验收 |
-| 独立客户端 Web 服务 | [web_server](../web_server/README.md)，Python 3.11+，独立部署的只读 WSGI 基础；GET／HEAD、ETag、资源白名单和启动快照 | 本轮文本发布扩展共 22 项测试通过、配置自检／ruff／Windows 静态检查通过；支持 Big5／CRLF 公告与五字段基础区服列表；尚未实现原生更新生成、大文件续传、发布后台及生产部署，未做 Windows 客户端验收 |
+| 独立客户端 Web 服务 | [web_server](../web_server/README.md)，Python 3.11+，独立部署的只读 WSGI 基础；GET／HEAD、ETag、资源白名单和启动快照 | 本轮工程整改 **35 项测试通过**、自检／ruff／Windows 静态检查通过；wheel 独立安装可运行；两种 spec 干跑因缺 libpython 阻塞，Windows 未验。支持 Big5／CRLF 公告与基础区服列表，尚未实现原生更新生成、大文件续传、发布后台及生产部署，未做 Windows 客户端验收 |
 | 共享诊断日志 | UTC JSONL／stderr、轮替保留、字段白名单、trace／操作 ID 摘要、业务与 DB 结果、单进程目录锁、写失败告警 | **26/26** 专项通过；非事务资产审计，Windows 锁／ACL／EXE 未实机；[说明](../server/src/mxsj_server/observability/README.md) |
 | 静态复核链 | Catalog → FastAPI → React，只读候选数据，不是游戏网关 | Catalog **34**、API **27** 通过；网页类型检查／构建通过，测试 **112 通过、9 跳过**；本轮未做实时后端／真实浏览器验收 |
 | 脚本编辑器 | **0.6.0.dev7**，双 VM、双恢复引擎、原生分段修复、新包构建 | 选定核心 **38 通过、3 跳过**（41 项）；未跑全套 GUI、旧 VM 完整环境或 Windows／游戏验收；历史 dev6 全量结果不能替代本轮 |
@@ -85,6 +85,18 @@
 按用户要求，将已知公告／客服公告／基础区服列表写入 web_server：新增 UTF-8 操作员内容输入、严格 Big5／CRLF 生成器、假数据示例及三个只读 HTTP 路径。生成只写全新 release 目录，不改客户端配置或资源；未知更新接口继续 404。
 [LEGACY_FORMATS](../web_server/LEGACY_FORMATS.md) 记录候选代码依据，以及 reserve/type、可选 serverid、列表附加段、HTTP 特性、更新清单与包格式等未核验事项。基础五字段列表不等于完整原生选服兼容；没有伪造更新成功或客户端验收。
 本轮 22 项 Web 测试通过，含字节输出、Big5 严格编码、CRLF、字段拒绝、不覆写发布和未知接口 404；lint、配置自检与 Windows 静态检查通过。未运行 Windows 客户端、未探测官方 URL、未重跑游戏服务端测试。
+
+### Web Python 工程规范整改（2026-10-18）
+
+用户指出 web_server 未按 `PYTHON_TOOL_CONVENTIONS.md` 完整交付并要求整改。本轮重排为 `src/mxsj_web_server/{core,gui,data}`，GUI 仅预留边界说明，**不擅自实现仍在讨论的桌面窗口／远程后台**。
+新增 pyproject／统一版本 **0.2.1**、包入口、requirements／开发依赖、自检 bootstrap、ASCII／CRLF 双击 BAT、两模式 PyInstaller spec 与构建 BAT；保留 run.py/content.py 为薄 CLI 入口。示例资源迁入包内只读 data；默认可写配置在 APPDATA/MXSJWebServer（无 APPDATA 时为用户主目录），不写安装包；显式发布目录仍由操作员选择。
+
+- **Linux 已做**：35 项 unittest（原功能回归、独立中文空格路径、无副作用自检、版本一致性、依赖镜像流程替身、profile 不覆盖、源程序 HTTP 回环与关闭、spec 两模式结构测试），ruff 零报告，自检及 Windows 静态检查通过；构建 wheel 并在独立 venv、仓库外目录通过入口版本／配置检查。
+- **构建阻塞**：onedir／onefile 均实际尝试 PyInstaller 干跑，但缺少 `libpython3.11.so.1.0` 而失败。结构替身测试不是打包成功，本轮无 EXE 产物。
+- **Windows 待验**：BAT、自装依赖、两模式 EXE、中文路径、实际 APPDATA 权限、关闭后进程清理、原生客户端读取；Python 3.10 仅语法边界检查，实测解释器为 3.11.2。
+- **已知功能边界**：当前是 CLI，注册 console-scripts、EXE console=True；尚无 QApplication、GUI、远程后台、后台开关或 Qt 验收。以后真实 GUI 按 PySide6／gui-scripts／console=False 交付，不能把预留目录称作完成。公网部署、未知更新格式及发布管理仍未实现。
+
+证据：[Web 工程规范检查](analysis/evidence/web_server_standards_20261018.json)。原客户端资源、配置和游戏服务端代码未改。
 
 ### 历史导航
 

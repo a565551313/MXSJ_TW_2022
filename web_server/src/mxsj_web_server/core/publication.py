@@ -4,17 +4,16 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 import stat
 from dataclasses import dataclass
 from pathlib import Path
 
-ROUTE = re.compile(r"/[A-Za-z0-9_/-]+(?:\.[A-Za-z0-9_-]+)?\Z")
-TYPES = frozenset(
-    {"text/plain", "text/html", "application/json", "application/octet-stream"}
+from mxsj_web_server.core.constants import (
+    MAX_FILE_BYTES,
+    MAX_TOTAL_BYTES,
+    ROUTE,
+    TYPES,
 )
-MAX_FILE_BYTES = 8 * 1024 * 1024
-MAX_TOTAL_BYTES = 32 * 1024 * 1024
 
 
 @dataclass(frozen=True)

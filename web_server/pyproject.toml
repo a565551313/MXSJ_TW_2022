@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mxsj-web-server"
+version = "0.2.1"
+description = "独立客户端 Web 文本分发服务"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+# No gui-scripts until an actual PySide6 window exists.
+[project.scripts]
+mxsj-web-server = "mxsj_web_server.app:main"
+mxsj-web-content = "mxsj_web_server.app:content_main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+mxsj_web_server = ["data/*.json", "data/public/*.txt", "gui/README.md"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B"]

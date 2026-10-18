@@ -4,3 +4,5 @@ config.json
 var/
 build/
 dist/
+启动日志.txt
+*.egg-info/

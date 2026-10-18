@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-18",
+  "base_commit": "245e3e8a91500014e606b99ea8361405b56cecfe",
+  "version": "0.2.1",
+  "scope": "Python project standards refactor only; GUI/admin requirements not implemented",
+  "environment": {
+    "os": "Linux",
+    "python": "3.11.2",
+    "declared_min_python": "3.10",
+    "python_310_verification": "AST syntax check only; no 3.10 runtime test"
+  },
+  "checks": [
+    {
+      "command": "python3 -m unittest discover -s web_server/tests -v",
+      "passed": 35
+    },
+    {
+      "command": "ruff check web_server",
+      "result": "0 findings"
+    },
+    {
+      "command": "python3 web_server/bootstrap.py --check-only",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 web_server/run.py --version",
+      "output": "0.2.1"
+    },
+    {
+      "command": "python3 tools/devkit/check_windows_compat.py web_server --no-git --strict",
+      "result": "0 errors, 0 warnings"
+    },
+    {
+      "command": "python -m build --wheel web_server",
+      "result": "passed; output kept outside repository"
+    },
+    {
+      "command": "install wheel --no-deps into independent venv; outside repository run console entry --version and --check-only plus python -m mxsj_web_server --check-only",
+      "result": "passed"
+    },
+    {
+      "command": "PyInstaller web_server.spec (onedir and WEB_SERVER_ONEFILE=1)",
+      "result": "both blocked: libpython3.11.so.1.0 missing; no EXE produced"
+    }
+  ],
+  "boundaries": [
+    "Spec stand-in structural tests do not prove an executable build",
+    "No Windows BAT/EXE/native client acceptance",
+    "No PySide6 GUI, no remote admin or admin switch implementation",
+    "Current package uses console-scripts and console=True intentionally",
+    "No game service or client configuration/resource modifications"
+  ],
+  "coverage": [
+    "Chinese/space standalone source directory",
+    "Package version and import boundary",
+    "No-overwrite profile initialization",
+    "Source/frozen resource locations",
+    "Bootstrap mirrors and dependency recheck (mocked; no network)",
+    "Bootstrap traceback, argument forwarding and version rejection",
+    "Loopback HTTP health and clean server thread shutdown",
+    "Existing 22 Web format/publication regressions"
+  ]
+}

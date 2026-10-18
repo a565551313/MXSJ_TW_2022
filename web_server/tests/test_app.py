@@ -13,8 +13,9 @@ from wsgiref.util import setup_testing_defaults
 from wsgiref.validate import validator
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-from app import create_app  # noqa: E402
+sys.path.insert(0, str(ROOT / "src"))
+DATA = ROOT / "src/mxsj_web_server/data"
+from mxsj_web_server.core.publication import create_app  # noqa: E402  # Source checkout.
 
 
 class PublicationTests(unittest.TestCase):

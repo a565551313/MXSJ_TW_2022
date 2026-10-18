@@ -10,20 +10,21 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-from app import create_app  # noqa: E402
-from content import build, render, text_bytes  # noqa: E402
+sys.path.insert(0, str(ROOT / "src"))
+DATA = ROOT / "src/mxsj_web_server/data"
+from mxsj_web_server.core.content import build, render, text_bytes  # noqa: E402  # Source checkout.
+from mxsj_web_server.core.publication import create_app  # noqa: E402  # Source checkout.
 
 
 class ContentTests(unittest.TestCase):
     def setUp(self):
         self.raw = json.loads(
-            (ROOT / "content.example.json").read_text(encoding="utf-8")
+            (DATA / "content.example.json").read_text(encoding="utf-8")
         )
 
     def test_checked_in_samples_match_generator(self):
         for name, body in render(self.raw).items():
-            self.assertEqual((ROOT / "public" / name).read_bytes(), body)
+            self.assertEqual((DATA / "public" / name).read_bytes(), body)
             self.assertFalse(body.startswith(b"\xef\xbb\xbf"))
             self.assertNotIn(b"\n", body.replace(b"\r\n", b""))
             body.decode("big5")
@@ -74,7 +75,7 @@ class ContentTests(unittest.TestCase):
     def test_release_serves_exact_bytes_and_unknown_updates_404(self):
         with tempfile.TemporaryDirectory() as folder:
             destination = Path(folder) / "release"
-            build(ROOT / "content.example.json", destination)
+            build(DATA / "content.example.json", destination)
             app = create_app(destination / "config.json")
             for name, body in render(self.raw).items():
                 response = []
@@ -97,7 +98,7 @@ class ContentTests(unittest.TestCase):
                 )
                 self.assertEqual(response, ["404 Not Found"])
             with self.assertRaises(FileExistsError):
-                build(ROOT / "content.example.json", destination)
+                build(DATA / "content.example.json", destination)
             self.assertEqual(
                 (destination / "server.txt").read_bytes(),
                 render(self.raw)["server.txt"],

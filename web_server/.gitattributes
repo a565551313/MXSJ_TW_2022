@@ -1,4 +1,4 @@
 # Legacy response fixtures are exact Big5/CRLF bytes, not Git-normalized text.
-public/news.txt -text -diff
-public/service.txt -text -diff
-public/server.txt -text -diff
+src/mxsj_web_server/data/public/news.txt -text -diff
+src/mxsj_web_server/data/public/service.txt -text -diff
+src/mxsj_web_server/data/public/server.txt -text -diff
