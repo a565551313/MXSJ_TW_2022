@@ -1,5 +1,7 @@
 # 资源编辑器设计方案（已确认，2026-10-13）
 
+> **阅读约定（2026-10-18）**：本文同时保留不同版本的设计和演进记录，不是完成清单。当前版本／已实现功能以本目录 [README](README.md) 与源码为准，测试及原生验收范围见 [STATUS](../docs/STATUS.md)；未落实的设计不能据此标为已交付。
+
 ## 0.4.3 原生布局导入与验证
 
 core/native_layout.py 与核心共用模块（mxhash/native_layout/output_paths/

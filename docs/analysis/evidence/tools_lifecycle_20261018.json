@@ -1,0 +1,34 @@
+{
+  "date_local": "2026-10-18",
+  "timezone": "Asia/Shanghai",
+  "baseline": "886915c2611e661d7c51b057a7a5a8b6cc4038c0",
+  "branch": "arena/a101be51-mxsj-tw-2022",
+  "scope": "Tools lifecycle phase 1: static source review and Markdown only; this JSON is new evidence. No algorithm edits, moves, removals, regenerated index, recovery or package builds.",
+  "recovery": {
+    "previous_local_head": "cb2409aa883814018c8479c5d359a8a845b24d8a",
+    "remote_head": "886915c2611e661d7c51b057a7a5a8b6cc4038c0",
+    "paths_byte_matched_before_metadata_only_alignment": 26
+  },
+  "architecture": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s server/tests/architecture",
+    "result": "161 passed, zero skips",
+    "output_tail": ".................................................................................................................................................................\n----------------------------------------------------------------------\nRan 161 tests in 31.595s\n\nOK\n"
+  },
+  "checks": {
+    "existing_non_markdown_tracked_blobs_unchanged": 2342,
+    "relative_markdown_targets_checked": 246,
+    "missing_targets": [],
+    "diff_check": 0,
+    "limit": "No external URL or rendered anchor checks; dependency examples are not exhaustive dynamic graph."
+  },
+  "locked_inputs": {
+    "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+  },
+  "not_run": [
+    "GUI",
+    "Windows/game",
+    "frontend/API suites",
+    "decompile/repack/index regeneration"
+  ]
+}

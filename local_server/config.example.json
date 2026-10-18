@@ -1,0 +1,20 @@
+{
+  "database": "var/local.sqlite3",
+  "realm_id": 1,
+  "session_ttl_ms": 3600000,
+  "creation": {
+    "max_characters": 3,
+    "allowed_pairs": [
+      [
+        111,
+        1
+      ]
+    ]
+  },
+  "logging": {
+    "directory": "var/logs",
+    "level": "INFO",
+    "max_bytes": 5242880,
+    "backups": 5
+  }
+}

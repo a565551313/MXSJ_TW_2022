@@ -1,5 +1,9 @@
 # MXSJ 资源编辑器
 
+> **当前版本 0.4.3**（源码 `src/resource_editor/__init__.py`）。能力与历史版本说明如下；最近实测／未执行范围统一见 [STATUS](../docs/STATUS.md)。
+> 保存只生成新包，拒绝覆盖源资源及别名，未改条目保持原样；共享核心来自 [mx_common](../mx_common/README.md)，不能手改副本。
+> 原生布局导入不执行脚本；用户对特定大包提速的确认不代表所有资源、Windows EXE 或游戏加载已验收。
+
 梦想世界（MXSJ / Duoyi）客户端 `data/*.fls` 资源包的浏览与编辑工具，
 PySide6 GUI，核心解析与界面分离（设计见 [DESIGN.md](DESIGN.md)）。
 

@@ -1,0 +1,363 @@
+{
+  "date_local": "2026-10-18",
+  "timezone": "Asia/Shanghai",
+  "code_baseline": "cb2409aa883814018c8479c5d359a8a845b24d8a",
+  "branch": "arena/a101be51-mxsj-tw-2022",
+  "scope": "Documentation refresh; no Qt, Windows, game, real-client Mock, full editor suite or live browser acceptance executed. Mock self-test result belongs to preceding analysis turn, not repeated here.",
+  "python": "Python 3.11.2",
+  "node": "v22.22.3",
+  "python_packages": [
+    {
+      "name": "annotated-doc",
+      "version": "0.0.5"
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.8.0"
+    },
+    {
+      "name": "anyio",
+      "version": "4.15.1"
+    },
+    {
+      "name": "attrs",
+      "version": "26.1.0"
+    },
+    {
+      "name": "certifi",
+      "version": "2026.7.22"
+    },
+    {
+      "name": "click",
+      "version": "8.5.0"
+    },
+    {
+      "name": "fastapi",
+      "version": "0.143.3"
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0"
+    },
+    {
+      "name": "httpcore",
+      "version": "1.0.9"
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1"
+    },
+    {
+      "name": "idna",
+      "version": "3.20"
+    },
+    {
+      "name": "jsonschema",
+      "version": "4.26.0"
+    },
+    {
+      "name": "jsonschema-specifications",
+      "version": "2025.9.1"
+    },
+    {
+      "name": "opentelemetry-api",
+      "version": "1.45.1"
+    },
+    {
+      "name": "pillow",
+      "version": "13.0.0"
+    },
+    {
+      "name": "pip",
+      "version": "23.0.1"
+    },
+    {
+      "name": "pydantic",
+      "version": "2.14.1"
+    },
+    {
+      "name": "pydantic_core",
+      "version": "2.50.1"
+    },
+    {
+      "name": "referencing",
+      "version": "0.37.0"
+    },
+    {
+      "name": "rpds-py",
+      "version": "2026.9.1"
+    },
+    {
+      "name": "setuptools",
+      "version": "66.1.1"
+    },
+    {
+      "name": "starlette",
+      "version": "1.8.0"
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0"
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.4"
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.54.0"
+    }
+  ],
+  "inputs": {
+    "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+  },
+  "checks": [
+    {
+      "name": "architecture",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "server/tests/architecture"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "output_tail": ".................................................................................................................................................................\n----------------------------------------------------------------------\nRan 161 tests in 25.405s\n\nOK\n"
+    },
+    {
+      "name": "catalog",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "server/tests/catalog"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "output_tail": "..................................\n----------------------------------------------------------------------\nRan 34 tests in 0.910s\n\nOK\n"
+    },
+    {
+      "name": "review_api",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "server/tests/review_api"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "output_tail": "/home/user/mxsj-analysis-venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\n...........................\n----------------------------------------------------------------------\nRan 27 tests in 0.351s\n\nOK\n"
+    },
+    {
+      "name": "devkit",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/devkit/tests"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "output_tail": "............................................\n----------------------------------------------------------------------\nRan 44 tests in 0.080s\n\nOK\n"
+    },
+    {
+      "name": "script_selected",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "test_core",
+        "test_native_cipher",
+        "test_script_layouts"
+      ],
+      "environment": {
+        "PYTHONPATH": "script_editor/src:script_editor/tests"
+      },
+      "exit_code": 0,
+      "output_tail": "........................sss..............\n----------------------------------------------------------------------\nRan 41 tests in 0.257s\n\nOK (skipped=3)\n"
+    },
+    {
+      "name": "map",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "map_editor/tests"
+      ],
+      "environment": {
+        "PYTHONPATH": "map_editor/src"
+      },
+      "exit_code": 0,
+      "output_tail": "MXSJ 地图编辑器 · 启动自检\nPython 3.11.2：/home/user/mxsj-analysis-venv/bin/python\n环境已就绪，可以打开编辑器。\nMXSJ 地图编辑器 · 启动自检\nPython 3.11.2：/home/user/mxsj-analysis-venv/bin/python\nMXSJ 地图编辑器 · 启动自检\nPython 3.11.2：/home/user/mxsj-analysis-venv/bin/python\n正在打开编辑器界面…\n客户端目录 : /home/user/MXSJ_TW_2022/map\n扫描文件数 : 8\n发现地图   : 8\n扫描耗时   : 0.00s\nscript.fls : (未找到)\nmx.exe     : (未找到)\n场景名表   : /home/user/MXSJ_TW_2022/map_editor/data/scenes_tw_v2_27_2.json\n\n编号      名称                  尺寸                扇区    记录  大小\n--------------------------------------------------------------------\n1034    修羅森林                5600x3000        234   364  5151 KB\n1035    落雪冰原                4800x3000        195   486  5384 KB\n2101    民宅房屋                2000x1500         49     0  175 KB\n2111    華宅房屋                2000x1500         49     0  211 KB\n2112    華宅二樓                2000x1500         49     0  206 KB\n2122    豪宅二樓                2000x1500         49     0  254 KB\n2303    —                   2000x1500         49    32  223 KB\n2504    —                   4500x3000        195     0  5539 KB\n\n.s............../home/user/MXSJ_TW_2022/map_editor/tests/test_cli_and_isolation.py:293: ResourceWarning: unclosed file <_io.BufferedReader name='/home/user/MXSJ_TW_2022/map/1034.map'>\n  code = main([\"--scan\", str(SAMPLES), \"--girb-dump\", \"1034:2\"])\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n./home/user/MXSJ_TW_2022/map_editor/tests/test_cli_and_isolation.py:312: ResourceWarning: unclosed file <_io.BufferedReader name='/home/user/MXSJ_TW_2022/map/2101.map'>\n  code = main([\"--scan\", str(SAMPLES), \"--girb-dump\", \"2101\"])\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n.[错误] --girb-dump 的 N 必须是整数，收到 'abc'\n......................................................................\n----------------------------------------------------------------------\nRan 88 tests in 2.339s\n\nOK (skipped=1)\n"
+    },
+    {
+      "name": "manual",
+      "command": [
+        "python",
+        "-m",
+        "mxsj_manual",
+        "validate",
+        "--verify-evidence",
+        "--repository",
+        ".",
+        "--require-full-inventory"
+      ],
+      "environment": {
+        "PYTHONPATH": "script_manual/src"
+      },
+      "exit_code": 0,
+      "output_tail": "{\"expected_entries\": 5135, \"indexed\": 5135, \"annotated\": 20, \"accepted\": 16, \"excluded\": 1}\n"
+    },
+    {
+      "name": "vendor",
+      "command": [
+        "python",
+        "tools/devkit/vendor_core.py",
+        "--check"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "output_tail": "[vendor_core] OK：4 个模块的副本与 mx_common/ 真源逐字节一致（共 9 份副本）。\n"
+    },
+    {
+      "name": "source_map",
+      "command": [
+        "python",
+        "server/tools/verify_source_map.py"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "output_tail": "Filename verification: 96/96; not gameplay verification.\n"
+    },
+    {
+      "name": "web_typecheck",
+      "command": [
+        "npm",
+        "--prefix",
+        "server/apps/review_web",
+        "run",
+        "typecheck"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "output_tail": "\n> mxsj-review-web@0.1.0 typecheck\n> tsc --noEmit\n\n"
+    },
+    {
+      "name": "web_tests",
+      "command": [
+        "npm",
+        "--prefix",
+        "server/apps/review_web",
+        "test"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "output_tail": "\n> mxsj-review-web@0.1.0 test\n> vitest run\n\n\n RUN  v3.2.7 /home/user/MXSJ_TW_2022/server/apps/review_web\n\n ✓ src/pages/MapsNpcsPage.test.tsx (6 tests) 2653ms\n   ✓ map and NPC page > queries each map dataset separately and pages it  533ms\n   ✓ map and NPC page > switches datasets through their own endpoint without merging rows  409ms\n   ✓ map and NPC page > shows duplicate keys of one scene instead of folding them  543ms\n   ✓ map and NPC page > searches each source through the backend  527ms\n   ✓ map and NPC page > counts agreement categories over the whole dataset and filters by scene  472ms\n ✓ src/App.test.tsx (6 tests) 1325ms\n   ✓ review browser shell > navigates between the six review pages against the real API  662ms\n   ✓ review browser shell > offers no editing, deleting, importing or publishing action anywhere  384ms\n ✓ src/pages/ItemsPage.test.tsx (6 tests) 782ms\n   ✓ items page > searches through the backend and shows both 鹿茸 rows  427ms\n ✓ src/pages/SkillsPage.test.tsx (5 tests) 690ms\n   ✓ skills page > searches an ambiguous name and keeps both rows  408ms\n ✓ src/pages/PetsPage.test.tsx (6 tests) 771ms\n   ✓ pets page > marks the quarantined and the missing pet on the page they appear  319ms\n ✓ src/pages/AnomaliesPage.test.tsx (7 tests) 689ms\n ✓ src/pages/OverviewPage.test.tsx (5 tests) 249ms\n ✓ src/App.errorBoundary.test.tsx (1 test) 225ms\n ✓ src/api/reviewApi.test.ts (15 tests) 68ms\n ✓ src/api/liveBackend.test.ts (12 tests | 9 skipped) 42ms\n ✓ src/components/SafeText.test.tsx (5 tests) 44ms\n ✓ src/api/client.test.ts (12 tests) 38ms\n ✓ src/lib/invariants.test.ts (5 tests) 37ms\n ✓ src/api/paginationIntegrity.test.ts (9 tests) 27ms\n ✓ src/test/architectureGuards.test.ts (11 tests) 24ms\n ✓ src/lib/hex.test.ts (5 tests) 11ms\n ✓ src/api/contract.test.ts (5 tests) 12ms\n\n Test Files  17 passed (17)\n      Tests  112 passed | 9 skipped (121)\n   Start at  22:51:47\n   Duration  18.99s (transform 488ms, setup 1.92s, collect 1.15s, tests 7.69s, environment 5.28s, prepare 941ms)\n\n"
+    },
+    {
+      "name": "web_build",
+      "command": [
+        "npm",
+        "--prefix",
+        "server/apps/review_web",
+        "run",
+        "build"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "output_tail": "\n> mxsj-review-web@0.1.0 build\n> vite build\n\nvite v7.3.7 building client environment for production...\ntransforming...\n✓ 57 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                   0.64 kB │ gzip:  0.47 kB\ndist/assets/index-25GCofCq.css   10.54 kB │ gzip:  2.83 kB\ndist/assets/index-CNWlzN3L.js   316.99 kB │ gzip: 96.25 kB │ map: 1,359.46 kB\n✓ built in 1.56s\n"
+    },
+    {
+      "name": "npm_audit",
+      "command": [
+        "npm",
+        "audit",
+        "--prefix",
+        "server/apps/review_web",
+        "--json"
+      ],
+      "environment": {},
+      "exit_code": 1,
+      "output_tail": "ical\",\n          \"cwe\": [\n            \"CWE-1321\"\n          ],\n          \"cvss\": {\n            \"score\": 0,\n            \"vectorString\": null\n          },\n          \"range\": \"<=2.1.0\"\n        },\n        {\n          \"source\": 1241261,\n          \"name\": \"tinypool\",\n          \"dependency\": \"tinypool\",\n          \"title\": \"Tinypool: Prototype Pollution Gadget to RCE in run() options\",\n          \"url\": \"https://github.com/advisories/GHSA-85c8-ppgw-ccpr\",\n          \"severity\": \"critical\",\n          \"cwe\": [\n            \"CWE-94\",\n            \"CWE-1321\"\n          ],\n          \"cvss\": {\n            \"score\": 0,\n            \"vectorString\": null\n          },\n          \"range\": \"<2.1.2\"\n        }\n      ],\n      \"effects\": [\n        \"vitest\"\n      ],\n      \"range\": \"<=2.1.1\",\n      \"nodes\": [\n        \"node_modules/tinypool\"\n      ],\n      \"fixAvailable\": {\n        \"name\": \"vitest\",\n        \"version\": \"5.0.5\",\n        \"isSemVerMajor\": true\n      }\n    },\n    \"vitest\": {\n      \"name\": \"vitest\",\n      \"severity\": \"critical\",\n      \"isDirect\": true,\n      \"via\": [\n        \"@vitest/mocker\",\n        {\n          \"source\": 1193683,\n          \"name\": \"vitest\",\n          \"dependency\": \"vitest\",\n          \"title\": \"Vitest: Path Traversal / Arbitrary File Read via @vitest/mocker Redirect Mock\",\n          \"url\": \"https://github.com/advisories/GHSA-82fw-gwwq-j7x9\",\n          \"severity\": \"moderate\",\n          \"cwe\": [\n            \"CWE-22\"\n          ],\n          \"cvss\": {\n            \"score\": 5.9,\n            \"vectorString\": \"CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N\"\n          },\n          \"range\": \">=2.1.0 <4.1.11\"\n        },\n        \"tinypool\"\n      ],\n      \"effects\": [],\n      \"range\": \"0.0.95 - 4.1.10\",\n      \"nodes\": [\n        \"node_modules/vitest\"\n      ],\n      \"fixAvailable\": {\n        \"name\": \"vitest\",\n        \"version\": \"5.0.5\",\n        \"isSemVerMajor\": true\n      }\n    }\n  },\n  \"metadata\": {\n    \"vulnerabilities\": {\n      \"info\": 0,\n      \"low\": 0,\n      \"moderate\": 1,\n      \"high\": 0,\n      \"critical\": 2,\n      \"total\": 3\n    },\n    \"dependencies\": {\n      \"prod\": 4,\n      \"dev\": 210,\n      \"optional\": 53,\n      \"peer\": 8,\n      \"peerOptional\": 0,\n      \"total\": 213\n    }\n  }\n}\n"
+    }
+  ],
+  "dependency_audit_summary": {
+    "metadata": {
+      "vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 1,
+        "high": 0,
+        "critical": 2,
+        "total": 3
+      },
+      "dependencies": {
+        "prod": 4,
+        "dev": 210,
+        "optional": 53,
+        "peer": 8,
+        "peerOptional": 0,
+        "total": 213
+      }
+    },
+    "packages": {
+      "@vitest/mocker": {
+        "severity": "moderate",
+        "isDirect": false,
+        "fixAvailable": {
+          "name": "vitest",
+          "version": "5.0.5",
+          "isSemVerMajor": true
+        }
+      },
+      "tinypool": {
+        "severity": "critical",
+        "isDirect": false,
+        "fixAvailable": {
+          "name": "vitest",
+          "version": "5.0.5",
+          "isSemVerMajor": true
+        }
+      },
+      "vitest": {
+        "severity": "critical",
+        "isDirect": true,
+        "fixAvailable": {
+          "name": "vitest",
+          "version": "5.0.5",
+          "isSemVerMajor": true
+        }
+      }
+    },
+    "interpretation": "Development/test dependency chain; exploitability not assessed, no upgrade applied."
+  },
+  "documentation_checks": {
+    "relative_paths": {
+      "relative_links_checked": 279,
+      "missing": []
+    },
+    "versions_from_ast": {
+      "resource_editor": "0.4.3",
+      "ui_editor": "0.8.4",
+      "script_editor": "0.6.0.dev7",
+      "script_manual": "0.1.0.dev4"
+    },
+    "status_historical_headings_preserved": 79,
+    "only_markdown_and_this_evidence_changed": true,
+    "git_diff_check_exit_code": 0,
+    "locked_input_hashes_match": true,
+    "scope": "Relative Markdown file targets outside fenced code; external URLs not fetched. Historical STATUS heading text preserved; not a full rendered-anchor/browser audit."
+  },
+  "script_selected_skip_reason": "Three NativeCipherMaterialTests require explicit opt-in original-package/DLL material; no full 5002-entry or real compiler audit performed."
+}

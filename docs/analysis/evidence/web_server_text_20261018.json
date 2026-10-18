@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-18",
+  "base_commit": "b572c144a06f22a67ce63951e667486120e9665f",
+  "scope": "Known legacy announcement and five-field server-list subset; not native client acceptance",
+  "checks": {
+    "web_tests": 22,
+    "ruff": "passed",
+    "config_check_only": "passed",
+    "windows_static": "0 errors, 0 warnings"
+  },
+  "output_encoding": "strict Big5, CRLF, no BOM",
+  "not_verified": [
+    "Original bytecode control-flow validation",
+    "Windows native client/launcher acceptance",
+    "reserve/type semantics, optional serverid, auxiliary sections",
+    "Native update/filemd5/servernotice formats and patch containers",
+    "Historical official endpoint availability"
+  ],
+  "unknown_endpoints": "404, no fake latest-version response"
+}

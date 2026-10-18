@@ -1,0 +1,65 @@
+{
+  "date_local": "2026-10-18",
+  "timezone": "Asia/Shanghai",
+  "baseline": "afd09f7f5f73055c8036298ec52fb19fdef0b5be",
+  "branch": "arena/a101be51-mxsj-tw-2022",
+  "scope": "Shared account/session/character metadata foundation with SQLite and offline operator console. No game listener, PostgreSQL, full character initialization or world implementation.",
+  "environment": {
+    "python": "3.11.2",
+    "sqlite": "3.40.1",
+    "ruff": "ruff 0.17.1"
+  },
+  "commands": {
+    "local_tests": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s server/tests/local_runtime -v",
+    "architecture": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s server/tests/architecture",
+    "bootstrap": "python3 local_server/bootstrap.py --check-only",
+    "windows_static_local_entry": "python3 tools/devkit/check_windows_compat.py local_server --strict",
+    "ruff": "ruff check: newly authored server source files, local_server Python entrypoints and server/tests/local_runtime (not whole historical server tree or PyInstaller spec execution)"
+  },
+  "results": {
+    "local_tests": {
+      "passed": 38,
+      "skipped": 0
+    },
+    "architecture": {
+      "passed": 161,
+      "skipped": 0
+    },
+    "ruff": "0 reports",
+    "bootstrap": "passed",
+    "windows_static_local_entry": "0 error / 0 warning / 0 info",
+    "relative_link_targets_checked": 202,
+    "missing_targets": [],
+    "git_diff_cached_check": 0
+  },
+  "outputs": {
+    "local_tests": "test_local_launcher_does_not_import_mock_or_patch_client (test_boundaries.BoundaryTests.test_local_launcher_does_not_import_mock_or_patch_client) ... ok\ntest_shared_business_has_no_driver_or_old_mock_dependency (test_boundaries.BoundaryTests.test_shared_business_has_no_driver_or_old_mock_dependency) ... ok\ntest_storage_ports_do_not_expose_sql_or_connections (test_boundaries.BoundaryTests.test_storage_ports_do_not_expose_sql_or_connections) ... ok\ntest_account_case_collision_and_policy (test_local_runtime.RuntimeTests.test_account_case_collision_and_policy) ... ok\ntest_actual_commit_failure_does_not_acknowledge (test_local_runtime.RuntimeTests.test_actual_commit_failure_does_not_acknowledge) ... ok\ntest_busy_database_is_bounded_and_retryable (test_local_runtime.RuntimeTests.test_busy_database_is_bounded_and_retryable) ... ok\ntest_cannot_revoke_someone_else (test_local_runtime.RuntimeTests.test_cannot_revoke_someone_else) ... ok\ntest_create_is_persistent_after_new_service_and_connection (test_local_runtime.RuntimeTests.test_create_is_persistent_after_new_service_and_connection) ... ok\ntest_database_has_neither_password_nor_raw_ticket (test_local_runtime.RuntimeTests.test_database_has_neither_password_nor_raw_ticket) ... ok\ntest_enter_world_does_not_fake_success (test_local_runtime.RuntimeTests.test_enter_world_does_not_fake_success) ... ok\ntest_exception_after_yield_rolls_back_and_never_returns_success (test_local_runtime.RuntimeTests.test_exception_after_yield_rolls_back_and_never_returns_success) ... ok\ntest_expiry_checked_again_inside_mutation (test_local_runtime.RuntimeTests.test_expiry_checked_again_inside_mutation) ... ok\ntest_invalid_character_inputs (test_local_runtime.RuntimeTests.test_invalid_character_inputs) ... ok\ntest_invalid_ticket_and_operation_id (test_local_runtime.RuntimeTests.test_invalid_ticket_and_operation_id) ... ok\ntest_legacy_credential_not_silently_treated_as_password (test_local_runtime.RuntimeTests.test_legacy_credential_not_silently_treated_as_password) ... ok\ntest_login_replaces_old_ticket_and_fences_queued_context (test_local_runtime.RuntimeTests.test_login_replaces_old_ticket_and_fences_queued_context) ... ok\ntest_name_uniqueness_and_character_limit (test_local_runtime.RuntimeTests.test_name_uniqueness_and_character_limit) ... ok\ntest_other_account_cannot_select_or_enter_role (test_local_runtime.RuntimeTests.test_other_account_cannot_select_or_enter_role) ... ok\ntest_parallel_duplicate_is_one_character (test_local_runtime.RuntimeTests.test_parallel_duplicate_is_one_character) ... ok\ntest_parallel_same_name_different_keys_has_one_winner (test_local_runtime.RuntimeTests.test_parallel_same_name_different_keys_has_one_winner) ... ok\ntest_receipt_write_failure_rolls_back_character (test_local_runtime.RuntimeTests.test_receipt_write_failure_rolls_back_character) ... ok\ntest_revoke_retry_returns_receipt_without_revoking_new_login (test_local_runtime.RuntimeTests.test_revoke_retry_returns_receipt_without_revoking_new_login) ... ok\ntest_revoke_survives_restart (test_local_runtime.RuntimeTests.test_revoke_survives_restart) ... ok\ntest_same_key_different_payload_rejected (test_local_runtime.RuntimeTests.test_same_key_different_payload_rejected) ... ok\ntest_same_key_same_payload_returns_original_receipt_after_relogin (test_local_runtime.RuntimeTests.test_same_key_same_payload_returns_original_receipt_after_relogin) ... ok\ntest_session_and_character_survive_a_fresh_python_process (test_local_runtime.RuntimeTests.test_session_and_character_survive_a_fresh_python_process) ... ok\ntest_unknown_account_is_not_registered (test_local_runtime.RuntimeTests.test_unknown_account_is_not_registered) ... ok\ntest_wrong_password_rejected (test_local_runtime.RuntimeTests.test_wrong_password_rejected) ... ok\ntest_wrong_realm_or_admin_source_cannot_bypass_fence (test_local_runtime.RuntimeTests.test_wrong_realm_or_admin_source_cannot_bypass_fence) ... ok\ntest_bad_suffix_and_aliases_rejected (test_local_runtime.StoreAndCLITests.test_bad_suffix_and_aliases_rejected) ... ok\ntest_bootstrap_check_only_has_no_database_side_effect (test_local_runtime.StoreAndCLITests.test_bootstrap_check_only_has_no_database_side_effect) ... ok\ntest_cli_subprocess_init_check_and_noninteractive_provision (test_local_runtime.StoreAndCLITests.test_cli_subprocess_init_check_and_noninteractive_provision) ... ok\ntest_corrupt_database_is_not_replaced (test_local_runtime.StoreAndCLITests.test_corrupt_database_is_not_replaced) ... ok\ntest_foreign_database_is_not_replaced (test_local_runtime.StoreAndCLITests.test_foreign_database_is_not_replaced) ... ok\ntest_foreign_keys_enforced_and_rollback (test_local_runtime.StoreAndCLITests.test_foreign_keys_enforced_and_rollback) ... ok\ntest_future_schema_and_checksum_are_rejected (test_local_runtime.StoreAndCLITests.test_future_schema_and_checksum_are_rejected) ... ok\ntest_initialization_is_idempotent (test_local_runtime.StoreAndCLITests.test_initialization_is_idempotent) ... ok\ntest_missing_db_is_not_created_by_check (test_local_runtime.StoreAndCLITests.test_missing_db_is_not_created_by_check) ... ok\n\n----------------------------------------------------------------------\nRan 38 tests in 5.670s\n\nOK\n",
+    "architecture": ".................................................................................................................................................................\n----------------------------------------------------------------------\nRan 161 tests in 30.558s\n\nOK\n",
+    "ruff": "All checks passed!\n",
+    "bootstrap": "Python 3.11.2, SQLite 3.40.1; standard library only\n",
+    "windows_static_local_entry": "[wincompat] 根目录 /home/user/MXSJ_TW_2022；文件列表来源 git；文件名检查 10 项，源码/脚本扫描 4 个；ERROR 0，WARNING 0，INFO 0\n"
+  },
+  "unchanged_inputs_and_legacy_mock": {
+    "mock_server.py": "afaff8413c56ce66571dbf4a2f66602dd117aa1ebfbdee9451ecc36cdde5d77e",
+    "mock_server (1).py": "afaff8413c56ce66571dbf4a2f66602dd117aa1ebfbdee9451ecc36cdde5d77e",
+    "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+  },
+  "not_executed": [
+    "Windows BAT/EXE build or runtime",
+    "real game client",
+    "legacy TCP packets",
+    "PostgreSQL adapter/transactions",
+    "full gameplay/character initialization",
+    "frontend/API/editor suites",
+    "original game module execution"
+  ],
+  "known_boundaries": [
+    "Trusted local operator only; provisioning is not exposed as player registration.",
+    "SQLite BEGIN IMMEDIATE serializes transactions, not a throughput design.",
+    "Future PostgreSQL must supply equivalent lock/fencing semantics; not a connection-string-only switch.",
+    "Explicit allowlist and minimal character metadata are not complete original gameplay rules.",
+    "Worker cancellation may leave commit outcome unknown; retries must use same operation_id.",
+    "Windows console spec supplied but not built or executed."
+  ]
+}

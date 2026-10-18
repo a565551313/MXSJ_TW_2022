@@ -1,0 +1,29 @@
+{
+  "content_root": "public",
+  "resources": [
+    {
+      "url": "/example.txt",
+      "file": "example.txt",
+      "content_type": "text/plain",
+      "max_age": 0
+    },
+    {
+      "url": "/news.txt",
+      "file": "news.txt",
+      "content_type": "text/plain",
+      "max_age": 0
+    },
+    {
+      "url": "/service.txt",
+      "file": "service.txt",
+      "content_type": "text/plain",
+      "max_age": 0
+    },
+    {
+      "url": "/server.txt",
+      "file": "server.txt",
+      "content_type": "text/plain",
+      "max_age": 0
+    }
+  ]
+}

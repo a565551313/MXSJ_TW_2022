@@ -1,5 +1,7 @@
 # mx_common —— 编辑器共享核心（唯一真源）
 
+> **维护入口**：当前副本数量与检查结果以 [STATUS](../docs/STATUS.md) 为准。改真源后先分发，再测试受影响编辑器；精灵交叉测试需要 Pillow。共享副本一致只证明字节同步，不证明原生客户端兼容；具体格式仍需独立对照。
+
 | 模块 | 内容 | 分发到 |
 |---|---|---|
 | `mxhash.py` | 路径哈希 `mx_hash()`（`mxmain.dll` VA `0x48EF80` 的指令级复刻）+ 严格的 `path_hash()` | ui_editor、resource_editor 的 `core/` |

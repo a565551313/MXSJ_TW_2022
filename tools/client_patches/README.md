@@ -1,4 +1,18 @@
-# 客户端局部测试补丁：注册流程预览
+# 客户端补丁研究区：分专题状态
+
+
+> **本目录不是整体作废**。状态须按专题判断，详见 [工具索引](../README.md) 与 [依赖清单](../DEPENDENCIES.md)。本轮不修改、构建或部署任何补丁。
+
+| 内容 | 当前状态 | 操作边界 |
+|---|---|---|
+| 注册 overlay v3/v3.2/v3.3、visual_assets 及对应构建器 | 停用：方案已被否决 | 不再分发；现行注册见 [registration](../registration/README.md) |
+| [native_uieditor_open_list](native_uieditor_open_list/README.md) | 旧内置 UI 列表源码 v1/v2，暂停部署 | 旧回读记录不代表恢复使用 |
+| [native_uieditor_open_list_v3](native_uieditor_open_list_v3/README.md) | 研究专用：属性名修正后的完整源码参考 | 无可直接部署 FLS；尚未 Windows／游戏验收，不替换已验收原位包 |
+| build_registration_preview.py 等辅助函数／测试 | 旧实现仍有复现消费者 | 例如 ui_pack_write_probe 导入；停止分发不等于可直接删除 |
+
+## 以下为已作废注册 overlay 的历史记录
+
+本节内“当前候选”、构建／安装指令均是原日期历史，不适用于上方内置编辑器源码专题，也不是现行交付建议。
 
 > **⛔ 已作废（2026-10-14）**：用户判定本专题的 overlay 做法不规范（代码拼凑控件、整图烤字按钮、包外散图，非游戏原生实现），v3 / v3.2 / v3.3 全部停止分发，不再等待原生验收。测试副本请按 STATUS 还原原包；重做方向为「原生 `.dlg` + 原生脚本套路」，并入 UI 编辑器 × script.fls 联动（见 `docs/STATUS.md` §5）。以下内容仅作历史记录保留。原生优先规矩见 `AGENTS.md` §4 第 12、13 条。
 

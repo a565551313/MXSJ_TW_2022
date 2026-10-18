@@ -1,6 +1,10 @@
 # tools/devkit — 开发自检工具箱
 
-给在 Linux 沙箱里写代码、最终交付到 Windows 的 Agent 用。约定全文见 [`docs/PYTHON_TOOL_CONVENTIONS.md`](../../docs/PYTHON_TOOL_CONVENTIONS.md)。纯标准库，Python 3.10+，Windows 上也能跑。
+> 当前测试范围与结果统一见 [STATUS](../../docs/STATUS.md)。静态检查和副本分发脚本使用标准库，**完整测试还需 Pillow**（精灵跨实现回归），不能再按纯标准库套件理解。
+>
+> 仓库外虚拟环境安装 `python -m pip install Pillow` 后，从仓库根运行 `python -m unittest discover -s tools/devkit/tests` 和 `python tools/devkit/vendor_core.py --check`。不要手改生成副本。
+
+给在 Linux 沙箱里写代码、最终交付到 Windows 的 Agent 用。约定全文见 [`docs/PYTHON_TOOL_CONVENTIONS.md`](../../docs/PYTHON_TOOL_CONVENTIONS.md)。静态检查脚本使用标准库，Python 3.10+；完整测试的依赖与平台边界见上方说明。
 
 ## check_windows_compat.py — Windows 兼容性静态检查
 

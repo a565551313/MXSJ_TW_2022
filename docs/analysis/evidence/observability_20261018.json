@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-18",
+  "branch": "arena/a101be51-mxsj-tw-2022",
+  "base_commit": "f6185b9397c33707a528cb88fd600fad6b015383",
+  "scope": "Shared structured diagnostics, SQLite and offline operator CLI; not transactional asset audit",
+  "environment": {"os": "Linux", "python": "3.11.2", "sqlite": "3.40.1"},
+  "checks": [
+    {"command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s server/tests/observability", "passed": 26, "seconds": 2.262},
+    {"command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s server/tests/local_runtime", "passed": 38, "seconds": 6.311},
+    {"command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s server/tests/architecture", "passed": 161, "seconds": 29.949},
+    {"command": "ruff check <all changed and added Python files>", "result": "passed"},
+    {"command": "python3 local_server/bootstrap.py --check-only", "result": "passed"},
+    {"command": "python3 tools/devkit/check_windows_compat.py local_server server/src/mxsj_server/observability --no-git --strict", "result": "0 errors, 0 warnings"},
+    {"command": "git diff --check", "result": "passed"}
+  ],
+  "coverage": [
+    "Allowlisted fields and exception frames; password, password hash, ticket and input excluded",
+    "Real file rotation, retention, POSIX permissions, symlink/hardlink rejection",
+    "Cross-process directory exclusion and crash lock release",
+    "Write/format failures preserve business results and emit bounded emergency warning",
+    "SQLite reader-blocked commit and receipt failure never emit business success",
+    "Replay, conflict, takeover, stale/expired sessions, revocation",
+    "Context propagation across worker threads and concurrent requests",
+    "Cancelled waiter reports unknown even after worker commit; same-key retry replays",
+    "Legacy config, repeated CLI open and failed log initialization before DB creation"
+  ],
+  "lint_boundary": "Broad shared-source lint also inspected: 58 pre-existing contracts formatting findings; not changed or claimed clean. Changed-file lint passed.",
+  "locked_inputs_sha256": {
+    "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb"
+  },
+  "not_verified_or_not_implemented": [
+    "Windows runtime locks, ACLs, BAT and EXE execution",
+    "PostgreSQL, TCP game listener, real client world entry",
+    "Transactional asset audit/outbox, centralized log collection and metrics",
+    "Hostile concurrent filesystem path replacement",
+    "Durable log delivery when both file and stderr fail"
+  ]
+}

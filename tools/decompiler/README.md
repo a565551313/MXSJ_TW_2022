@@ -1,0 +1,24 @@
+# 双 VM 研究管线：不是默认编辑交付入口
+
+状态：**研究专用＋历史复现，仍有构建和证据依赖**。日常恢复／编辑／编译优先 [脚本编辑器](../../script_editor/README.md)。
+本目录没有整体停用；依赖表见 [DEPENDENCIES](../DEPENDENCIES.md)，全量语料操作先读 [DECOMPILE_CORPUS](../../docs/DECOMPILE_CORPUS.md)。
+
+| 文件 | 用途／输入范围 | 输出与限制 |
+|---|---|---|
+| `batch_decompile.py` | 固定 script/data 包的研究转译、批量反编译；被多处 import | 写源码候选、pyc、清单；超时／失败必须保留。data 包分支会调用 universal_fls_tool |
+| `recover_entries.py` | 定点救回、历史参数修复梯；复用 batch 管线 | 写候选及诊断，可能调用旧脚本索引解析器；不是原生语义保证 |
+| `crosscheck_pycdc.py` | 第二引擎交叉检查；复用 recover_entries | 写独立候选／诊断；不把两个引擎都运行当成两者都成功 |
+| `pack_and_encrypt.py` | 旧正向转换／重包，原生注册构建仍加载它 | 产生新包；不同调用的边界要单独核验，不能套用编辑器 dev7 的安全／分段修复声明 |
+| `script_fls_keys.json` | 锁定的研究参数输入 | 不改、不搬、不随便重算；旧边界不是客户端真值 |
+| `output/` | 历史恢复文本、索引及清单 | 不准确、不可执行；某些探针读取其中 opcode／manifest，不能整体当缓存删掉 |
+| `test_*.py` | 对应工具回归 | 不证明全量恢复或 Windows 原生加载正确 |
+
+## 使用边界
+
+当前脚本编辑器 dev7 以原生模块名和分段算法校准读写；这不意味着本目录所有工具已经同步更新。
+“marshal 能解析”“pyc 能编译”“旧工具自己读回相同”不能证明分段和游戏语义正确。
+源码 SHA 被 `server/docs/csv_checks/agent_e_reproduction.json`、批次 manifest 等记录约束；改注释也可能使证据失效。
+
+本轮仅静态审查调用关系，没有运行批量恢复、执行恢复脚本、编译新候选或生成 FLS。
+复现时使用固定输入、仓库外新输出、单条超时与原始诊断；不放宽原包保护和敏感条目排除。
+后续迁移须比较失败项、条目身份、常量及输出差异并审查证据，不能直接把 imports 指向新实现。

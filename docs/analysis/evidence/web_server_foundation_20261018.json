@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-18",
+  "base_commit": "a39b89c25d824395fde2f9e7d95e766db708fed5",
+  "scope": "Independent Python read-only WSGI publication foundation; no native update compatibility claim",
+  "checks": [
+    {
+      "command": "python3 -m unittest discover -s web_server/tests",
+      "passed": 14
+    },
+    {
+      "command": "ruff check web_server",
+      "result": "passed"
+    },
+    {
+      "command": "python3 tools/devkit/check_windows_compat.py web_server --no-git --strict",
+      "result": "0 errors, 0 warnings"
+    },
+    {
+      "command": "python3 web_server/run.py --config web_server/config.example.json --check-only",
+      "result": "passed"
+    }
+  ],
+  "not_verified": [
+    "Windows client/launcher",
+    "Production WSGI/proxy/TLS deployment",
+    "Native server/update/file manifest formats",
+    "Range/large patch distribution",
+    "Multi-replica publication consistency"
+  ],
+  "unchanged": [
+    "update.ini",
+    "server.ini",
+    "data/script.fls",
+    "tools/decompiler/script_fls_keys.json",
+    "mock_server.py"
+  ]
+}

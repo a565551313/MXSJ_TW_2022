@@ -1,0 +1,87 @@
+{
+  "date": "2026-10-18",
+  "version": "0.3.0",
+  "base_commit": "3c36e359ee7b38d298ccd1dd66781191eb0af14e",
+  "scope": "Candidate local PySide6 manager and independent browser administration sharing publication/runtime/security core",
+  "environment": {
+    "os": "Linux",
+    "python": "3.11.2"
+  },
+  "checks": [
+    {
+      "command": "QT_QPA_PLATFORM=offscreen python -m unittest discover -s web_server/tests -v",
+      "total": 63,
+      "passed": 60,
+      "skipped": 3,
+      "seconds": 4.624,
+      "skip_reason": "GUI tests cannot import Qt widgets: libGL.so.1 unavailable"
+    },
+    {
+      "command": "ruff check web_server",
+      "result": "0 findings"
+    },
+    {
+      "command": "python web_server/bootstrap.py --check-only --core-only",
+      "exit_code": 0
+    },
+    {
+      "command": "python web_server/bootstrap.py --check-only",
+      "exit_code": 2,
+      "reason": "Qt native library libGL.so.1 missing"
+    },
+    {
+      "command": "node --check web_server/src/mxsj_web_server/web/admin/static/admin.js",
+      "result": "passed; syntax only, not browser interaction"
+    },
+    {
+      "command": "python tools/devkit/check_windows_compat.py web_server --no-git --strict",
+      "result": "0 errors, 0 warnings"
+    },
+    {
+      "command": "build wheel; install --no-deps in separate venv; outside repo run version/core check and instantiate manager/static assets",
+      "result": "passed; does not test GUI dependencies"
+    },
+    {
+      "command": "PyInstaller web_server.spec onedir and WEB_SERVER_ONEFILE=1",
+      "exit_codes": [
+        1,
+        1
+      ],
+      "reason": "libpython3.11.so.1.0 missing; no executable produced"
+    }
+  ],
+  "tested_boundaries": [
+    "Real independent HTTP sockets; public/admin isolation",
+    "Start/pause/resume/restart/stop, port conflicts, stopped sessions",
+    "Single-controller lock and restart recovery",
+    "Password authentication, cookie flags, CSRF, Origin/Host and login rate limits",
+    "HTTPS-origin administration rejects peers not in trusted proxy networks",
+    "IPv4/IPv6 CIDR, deny priority, expiry, empty whitelist and local repair",
+    "Forwarded IP trust chain",
+    "Optimistic revision conflict, immutable versions, switching and rollback",
+    "Commit failure preserves active content; log failure preserves committed result",
+    "Diagnostic redaction, rotation and POSIX permissions",
+    "Parallel local/remote lifecycle actions do not deadlock",
+    "Package/static resource completeness and existing legacy text regressions"
+  ],
+  "not_verified": [
+    "Windows native GUI/tray/DPI/window close interaction",
+    "Actual modern browser UI interaction",
+    "Windows BAT/EXE packaging and process cleanup",
+    "Native legacy client compatibility",
+    "Public production load/TLS reverse proxy deployment"
+  ],
+  "remaining_features": [
+    "Native patch/update manifest formats",
+    "Multi-admin/MFA/RBAC",
+    "Global table undo stack; recent profiles/layout persistence",
+    "Windows service installer; centralized log collection"
+  ],
+  "security_limits": [
+    "Single operator/admin identity, OS-private management directory required",
+    "TLS terminates at trusted reverse proxy; no built-in certificate provisioning",
+    "Bounded standard-library HTTP origin is not an upstream anti-DDoS product",
+    "Lifecycle/security diagnostics are not transactional or tamper-proof audit",
+    "Audit DB has no automatic retention; offline maintenance required"
+  ]
+}
