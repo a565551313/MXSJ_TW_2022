@@ -54,6 +54,69 @@ def content_main(argv: list[str] | None = None, *, raise_errors: bool = False) -
     return 0
 
 
+def create_manager(directory: Path):
+    from mxsj_web_server.core.manager import Manager
+    from mxsj_web_server.web.gateway import dispatch
+
+    initial = json.loads(
+        (resource_directory() / "content.example.json").read_text(encoding="utf-8-sig")
+    )
+    static = Path(__file__).resolve().parent / "web/admin/static"
+    if getattr(sys, "frozen", False):
+        static = Path(sys._MEIPASS) / "mxsj_web_server/web/admin/static"
+    return Manager(directory, initial, static, dispatch)
+
+
+def management_main(
+    directory: Path, *, headless=False, enable_admin=False, set_password=False
+):
+    manager = create_manager(directory)
+    if headless or set_password:
+        try:
+            if set_password:
+                import getpass
+
+                if not sys.stdin.isatty():
+                    raise ValueError("设置密码必须使用交互终端")
+                password = getpass.getpass("管理员密码：")
+                if password != getpass.getpass("再次输入："):
+                    raise ValueError("两次密码不一致")
+                manager.set_password(password)
+                return 0
+            manager.control("public", "start")
+            if enable_admin:
+                manager.control("admin", "start")
+            import threading
+
+            stopped = threading.Event()
+            import signal
+
+            old_handler = signal.signal(signal.SIGTERM, lambda *_: stopped.set())
+            try:
+                stopped.wait()
+            except KeyboardInterrupt:
+                pass
+            finally:
+                signal.signal(signal.SIGTERM, old_handler)
+        finally:
+            manager.close()
+        return 0
+    try:
+        from PySide6.QtWidgets import QApplication
+
+        from mxsj_web_server.gui.main_window import MainWindow
+
+        application = QApplication.instance() or QApplication(sys.argv[:1])
+        application.setQuitOnLastWindowClosed(False)
+        application.setApplicationName("MXSJWebServer")
+        application.setApplicationVersion(__version__)
+        window = MainWindow(manager)
+        window.show()
+        return application.exec()
+    finally:
+        manager.close()
+
+
 def main(argv: list[str] | None = None, *, raise_errors: bool = False) -> int:
     args_list = list(sys.argv[1:] if argv is None else argv)
     for stream in (sys.stdout, sys.stderr):
@@ -62,9 +125,14 @@ def main(argv: list[str] | None = None, *, raise_errors: bool = False) -> int:
     if args_list[:1] == ["content"]:
         return content_main(args_list[1:], raise_errors=raise_errors)
     parser = argparse.ArgumentParser(
-        description="Web 文本分发服务（当前仅命令行，无管理 GUI）"
+        description="Web 服务管理器：本地 GUI、独立公开服务与管理后台"
     )
     parser.add_argument("--version", action="version", version=__version__)
+    parser.add_argument("--gui", action="store_true")
+    parser.add_argument("--headless", action="store_true")
+    parser.add_argument("--state-dir", type=Path)
+    parser.add_argument("--enable-admin", action="store_true")
+    parser.add_argument("--set-admin-password", action="store_true")
     parser.add_argument("--config", type=Path)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8080)
@@ -75,7 +143,32 @@ def main(argv: list[str] | None = None, *, raise_errors: bool = False) -> int:
     args = parser.parse_args(args_list)
     if args.init_example and args.config:
         parser.error("--init-example and --config cannot be used together")
+    if args.gui and args.headless:
+        parser.error("--gui and --headless are mutually exclusive")
+    if args.enable_admin and not args.headless:
+        parser.error(
+            "--enable-admin requires --headless; GUI always starts with listeners off"
+        )
+    if args.config and (args.gui or args.headless or args.set_admin_password):
+        parser.error(
+            "--config is the legacy read-only runner; management uses --state-dir"
+        )
     try:
+        if (
+            not args.check_only
+            and not args.init_example
+            and (not args.config or args.gui or args.headless)
+        ):
+            directory = (
+                args.state_dir
+                or user_directory(os.environ.get("APPDATA"), Path.home()) / "manager"
+            )
+            return management_main(
+                directory,
+                headless=args.headless,
+                enable_admin=args.enable_admin,
+                set_password=args.set_admin_password,
+            )
         if args.init_example:
             initialize_example(resource_directory(), args.init_example)
             print("已生成独立示例配置；未启动服务，未修改客户端。")
@@ -117,3 +210,57 @@ def main(argv: list[str] | None = None, *, raise_errors: bool = False) -> int:
         )
         return 1
     return 0
+
+
+def entry_main(argv: list[str] | None = None) -> int:
+    """Frozen/windowed entry still leaves diagnostics and an error dialog."""
+    try:
+        return main(argv, raise_errors=True)
+    except Exception:
+        import traceback
+        from datetime import datetime, timezone
+
+        text = traceback.format_exc()
+        directory = user_directory(os.environ.get("APPDATA"), Path.home())
+        try:
+            directory.mkdir(parents=True, exist_ok=True)
+            with (directory / "启动日志.txt").open("a", encoding="utf-8") as stream:
+                stream.write(
+                    f"[{datetime.now(timezone.utc).isoformat()}] "
+                    f"Python {sys.version}\n{text}\n"
+                )
+        except OSError:
+            pass
+        args = list(sys.argv[1:] if argv is None else argv)
+        cli = any(
+            flag in args
+            for flag in (
+                "--headless",
+                "--check-only",
+                "--config",
+                "content",
+                "--set-admin-password",
+                "--init-example",
+            )
+        )
+        if cli:
+            if sys.stderr:
+                print("WEB_START_FAILED: inspect user startup log", file=sys.stderr)
+            return 1
+        try:
+            from PySide6.QtWidgets import QApplication, QMessageBox
+
+            application = QApplication.instance() or QApplication(sys.argv[:1])
+            QMessageBox.critical(
+                None,
+                "启动失败",
+                "请检查管理目录、端口和依赖。启动诊断保存在用户目录，分享前请脱敏。",
+            )
+            del application
+        except (ImportError, OSError):
+            if sys.stderr:
+                print(
+                    "WEB_START_FAILED: inspect user startup log and Qt dependencies",
+                    file=sys.stderr,
+                )
+        return 1

@@ -628,5 +628,5 @@ REVIEW_API_BASE=http://127.0.0.1:8000 npx vitest run src/api/liveBackend.test.ts
 ## 独立客户端 Web 分发服务
 
 [`web_server/`](web_server/README.md)：Python 独立子项目，面向公告、区服列表与更新分发，
-可与游戏服务端分开部署。目前为只读 HTTP／WSGI 基础，不是已经验收的原生更新平台；
+可与游戏服务端分开部署。目前已有文本发布核心、本地 PySide6 管理器与独立浏览器后台的候选实现，不是已验收的原生更新平台；
 客户端格式、生产部署与发布管理边界见子项目说明。

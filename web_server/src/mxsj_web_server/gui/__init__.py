@@ -1,3 +1,3 @@
-"""Reserved for the agreed PySide6 GUI; no GUI implementation yet."""
+"""PySide6 desktop management; no Qt imports in core."""
 
 from __future__ import annotations

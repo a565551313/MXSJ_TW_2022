@@ -1,7 +1,7 @@
-# GUI 边界（未实现）
+# PySide6 本地管理器
 
-后续界面仅使用 PySide6，由 app.py 装配 QApplication。窗口／控件放本目录，
-只调用 core 的公开接口，不在 Qt 回调中做文件 IO／解析，长任务交给 QThread／QThreadPool。
+MainWindow 通过 Worker/QThreadPool 调用共享 Manager，耗时 I/O、密码哈希、服务启停不在 UI 线程运行。
+菜单、工具栏、托盘复用 QAction；关闭确认默认取消，最小化时托盘不可用则正常留在任务栏。
+本地保存带版本校验，不无提示覆盖远程修改；公开／管理监听相互独立，后台开关仅本地可控。
 
-用户已要求本地 GUI、远程 Web 后台及本地控制后台开关；具体功能仍在讨论，
-本轮仅整改工程标准，不实现窗口、远程后台或其鉴权，不安装无用途的 Qt 依赖。
+当前 UI 代码已实现，Windows 实机和系统托盘仍待验。沙盒缺 libGL.so.1，Qt offscreen 测试明确跳过，不能算通过。

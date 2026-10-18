@@ -39,7 +39,7 @@ class ProjectTests(unittest.TestCase):
             ast.parse(path.read_text(encoding="utf-8"), feature_version=(3, 10))
 
     def test_core_does_not_import_gui_or_network_runner(self):
-        for path in (ROOT / "src/mxsj_web_server/core").glob("*.py"):
+        for path in (ROOT / "src/mxsj_web_server/core").rglob("*.py"):
             tree = ast.parse(path.read_text(encoding="utf-8"))
             for node in ast.walk(tree):
                 if isinstance(node, ast.Import):
@@ -88,7 +88,12 @@ class ProjectTests(unittest.TestCase):
     def test_bootstrap_check_has_no_profile_or_listener(self):
         with tempfile.TemporaryDirectory() as tmp:
             result = subprocess.run(
-                [sys.executable, str(ROOT / "bootstrap.py"), "--check-only"],
+                [
+                    sys.executable,
+                    str(ROOT / "bootstrap.py"),
+                    "--check-only",
+                    "--core-only",
+                ],
                 env={**os.environ, "APPDATA": tmp, "PYTHONDONTWRITEBYTECODE": "1"},
                 capture_output=True,
                 timeout=15,
@@ -158,7 +163,7 @@ class ProjectTests(unittest.TestCase):
                 "PYTHONDONTWRITEBYTECODE": "1",
             }
             commands = [
-                [str(target / "bootstrap.py"), "--check-only"],
+                [str(target / "bootstrap.py"), "--check-only", "--core-only"],
                 ["-m", "mxsj_web_server", "--version"],
                 [
                     str(target / "run.py"),
@@ -230,7 +235,7 @@ class ProjectTests(unittest.TestCase):
                 )
             self.assertEqual(calls["exe"]["exclude_binaries"], not single)
             self.assertEqual("collect" in calls, not single)
-            self.assertTrue(calls["exe"]["console"])
+            self.assertFalse(calls["exe"]["console"])
             self.assertEqual(calls["analysis"]["datas"][0][1], "mxsj_web_server/data")
 
     def test_source_http_health_and_clean_shutdown(self):

@@ -1,4 +1,4 @@
-"""自检并启动；当前是命令行服务，GUI 尚未实现。"""
+"""自检并启动 PySide6 管理器；支持独立核心自检。"""
 
 from __future__ import annotations
 
@@ -63,6 +63,8 @@ def log_failure(text: str) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
+    core_only = "--core-only" in args
+    args = [arg for arg in args if arg != "--core-only"]
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(errors="replace")
@@ -74,6 +76,9 @@ def main(argv: list[str] | None = None) -> int:
         if not ensure_dependencies():
             print("依赖安装失败；请检查网络或手动安装 requirements.txt。")
             return 2
+        if "--check-only" in args and not core_only:
+            # Installing PySide6 alone does not prove native Qt libraries exist.
+            importlib.import_module("PySide6.QtWidgets")
         sys.path.insert(0, str(HERE / "src"))
         from mxsj_web_server.app import main as app_main
 

@@ -23,7 +23,7 @@
 | 组件 | 当前能力／版本 | 本轮检查与边界 |
 |---|---|---|
 | 共享服务端／SQLite 本地模式 | 账号认证、会话／撤销、角色元数据创建查询、事务／幂等及 `local_server/` 操作员控制台；其余模块主要为契约 | 新增 **38/38**、架构 **161/161**；真实临时 SQLite 并发、提交失败与新 Python 进程恢复通过。无客户端 TCP／进图、完整创角、PostgreSQL 或 Windows EXE 验收 |
-| 独立客户端 Web 服务 | [web_server](../web_server/README.md)，Python 3.11+，独立部署的只读 WSGI 基础；GET／HEAD、ETag、资源白名单和启动快照 | 本轮工程整改 **35 项测试通过**、自检／ruff／Windows 静态检查通过；wheel 独立安装可运行；两种 spec 干跑因缺 libpython 阻塞，Windows 未验。支持 Big5／CRLF 公告与基础区服列表，尚未实现原生更新生成、大文件续传、发布后台及生产部署，未做 Windows 客户端验收 |
+| 独立客户端 Web 服务 | [web_server](../web_server/README.md) **0.3.0**：PySide6 GUI、浏览器后台、独立监听启停／暂停、文本发布与回退、访问控制及诊断／审计候选实现 | 本轮 **60 项通过、3 项 GUI 跳过**；Qt 原生 libGL 缺失，GUI／Windows／浏览器视觉交互未验。HTTP 管理与权限边界使用真实回环测试；未知原生更新格式仍未实现 |
 | 共享诊断日志 | UTC JSONL／stderr、轮替保留、字段白名单、trace／操作 ID 摘要、业务与 DB 结果、单进程目录锁、写失败告警 | **26/26** 专项通过；非事务资产审计，Windows 锁／ACL／EXE 未实机；[说明](../server/src/mxsj_server/observability/README.md) |
 | 静态复核链 | Catalog → FastAPI → React，只读候选数据，不是游戏网关 | Catalog **34**、API **27** 通过；网页类型检查／构建通过，测试 **112 通过、9 跳过**；本轮未做实时后端／真实浏览器验收 |
 | 脚本编辑器 | **0.6.0.dev7**，双 VM、双恢复引擎、原生分段修复、新包构建 | 选定核心 **38 通过、3 跳过**（41 项）；未跑全套 GUI、旧 VM 完整环境或 Windows／游戏验收；历史 dev6 全量结果不能替代本轮 |
@@ -97,6 +97,20 @@
 - **已知功能边界**：当前是 CLI，注册 console-scripts、EXE console=True；尚无 QApplication、GUI、远程后台、后台开关或 Qt 验收。以后真实 GUI 按 PySide6／gui-scripts／console=False 交付，不能把预留目录称作完成。公网部署、未知更新格式及发布管理仍未实现。
 
 证据：[Web 工程规范检查](analysis/evidence/web_server_standards_20261018.json)。原客户端资源、配置和游戏服务端代码未改。
+
+### Web 管理器与双入口第一版（2026-10-18）
+
+用户确认八模块设计并明确“开始编写”。本轮在独立 web_server 内实现 0.3.0 候选：
+- PySide6 本地管理器：菜单、用户指定顺序的工具栏、七个管理页面、独立后台开关、托盘菜单与最小化恢复、关闭二次确认；耗时操作经 Worker，不在 GUI 线程执行。
+- 现代浏览器后台：单管理员登录／会话、公告与区服编辑、预览／保存、生成版本／切换回退、设置／ACL、日志导出、公开服务控制。后台监听控制及密码重置仅本地。
+- 共用 Manager：SQLite 独立状态与不可变文本版本、全局 revision 冲突保护、发布指针与内容审计同事务；失败不替换已发布内存快照。两项监听默认关闭，用户需保存→生成→发布。
+- 安全：随机盐 scrypt、短期内存会话、CSRF／Origin／Host、HTTPS 后台可信代理来源限制、两套 CIDR 名单与有效期、可信转发链、登录／请求限流。单目录单进程锁，绑定失败不自动换端口。
+- 公开暂停为503、后台暂停只读、停止释放端口并撤销后台会话；有界线程／请求体／socket 超时。日志轮替、敏感字段排除、写失败告警；监听生命周期诊断不宣称事务审计。
+
+**Linux 已做**：63 项测试中 60 通过、3 GUI 因缺 libGL.so.1 跳过；真实 HTTP 权限／生命周期／发布失败／回退测试，ruff、Windows 静态与 JavaScript 语法检查通过；wheel 独立安装核心和后台资源检查通过。
+**未验／阻塞**：完整 bootstrap 自检返回2（Qt原生库缺失），core-only 自检通过；PyInstaller 缺 libpython3.11.so.1.0。没有 Windows EXE、托盘／DPI／窗口截图或真实浏览器交互验收，不将静态／HTTP测试算 GUI 通过。
+**功能限制**：单管理员、无 MFA／多人 RBAC／Windows Service 安装；桌面编辑菜单作用于文本控件，表格无全局撤销栈，布局持久化／最近配置未实现。后台设置暂为 JSON 编辑器。原生更新包与清单仍未恢复，禁止假报更新成功；服务不是直接面向公网的抗 DDoS／TLS 产品，须按部署说明加反向代理和网络限制。
+证据见 [Web 管理器检查](analysis/evidence/web_server_management_20261018.json)，使用方式见 [README](../web_server/README.md) 与 [管理设计](../web_server/docs/MANAGEMENT.md)。游戏服务、旧 Mock 和原始客户端资源不变。
 
 ### 历史导航
 

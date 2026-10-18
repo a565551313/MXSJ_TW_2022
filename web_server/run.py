@@ -8,6 +8,6 @@ from pathlib import Path
 if __name__ == "__main__":
     if not getattr(sys, "frozen", False):
         sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
-    from mxsj_web_server.app import main
+    from mxsj_web_server.app import entry_main
 
-    raise SystemExit(main())
+    raise SystemExit(entry_main())

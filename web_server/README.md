@@ -1,172 +1,130 @@
-# web_server — 独立客户端 Web 分发服务
+# web_server — Web 服务管理器 0.3.0
 
-Python 3.10+ 独立子项目，可将本目录复制到另一台服务器运行。无需游戏服务端源码、数据库或 TCP 网关。
-版本：**0.2.1 工程规范整改版**。现已实现显式资源白名单的只读 WSGI 应用；并非已经通过原生启动器验收的更新平台。
+独立 Python 3.10+ 项目，不依赖游戏服务端。已写入 PySide6 本地 GUI、浏览器管理后台与共享管理核心。
+**当前是候选实现，不是已经完成 Windows／原生客户端／公网生产验收的发行版。**
+原生文本格式边界见 [LEGACY_FORMATS](LEGACY_FORMATS.md)，部署与安全约束见 [管理设计](docs/MANAGEMENT.md)。
 
-## 职责与边界
+## 本地 GUI
 
-目标：公告、区服发现、版本／文件清单及后续补丁分发。与游戏 TCP、GM 发布端和只读 review_api 分离。
-
-| 内容 | 当前状态 |
-|---|---|
-| GET／HEAD、ETag／304、可配置缓存 | 已实现；按文件原始字节响应，不转编码 |
-| `/healthz` | 仅表示 Web 应用存活，不代表区服在线或更新发布完整 |
-| 公告／列表／清单托管 | 已支持 Big5／CRLF 公告和五字段基础区服列表生成；不生成更新清单 |
-| 客户端 `server.txt`、`httpupdate.txt`、`filemd5.txt` 格式 | 待核验；不等同于已有本地 server.ini 格式 |
-| 大补丁、Range／断点续传、签名发布／回滚 | 未实现；应独立交给下载源／CDN，后续另验收 |
-| 发布后台、鉴权、上传、数据库 | 未实现，也不开放匿名写接口 |
-| Windows 原生启动器／客户端验收 | 未执行 |
-
-**示例发布 `/news.txt`、`/service.txt`、`/server.txt` 和 `/example.txt`，均为假测试内容，不是官方公告或已上线区服。不会返回虚假的“已是最新版本”，也不会读取或改写根目录客户端配置。**
-未知路径（包括未配置的原生更新 URL）返回 404，不回退到首页或假成功。
-
-## 运行与自检
-
-运行所需只有 Python 标准库，无第三方依赖。在仓库根目录：
+Windows 双击 `启动Web服务.bat`，或：
 
 ```bash
-python web_server/bootstrap.py --check-only
-python web_server/run.py --version
+python web_server/bootstrap.py
+# 明确选择管理数据目录：
+python web_server/run.py --gui --state-dir C:/private/MXSJWebServer
+```
+
+bootstrap 按项目标准检查／安装 PySide6，CLI/headless 核心不导入 Qt。
+默认管理数据在 `%APPDATA%/MXSJWebServer/manager`；无 APPDATA 时用用户主目录下 MXSJWebServer/manager。
+无参数启动打开 GUI，**两项监听默认均停止，且首次没有管理员密码、没有已发布内容**。
+所有读写管理数据与 GUI 资源分开，不写安装包；同一管理目录只允许一个管理器进程。
+
+页面：总览、新闻公告、客服公告、区服列表、发布管理、服务设置、日志／审计。
+菜单：文件、编辑、内容、发布、服务、视图、帮助。
+工具栏严格按以下顺序：
+
+```text
+公开服务：启动／暂停（继续）／重启／停止
+→ 校验／预览
+→ Web 后台：启动／暂停（继续）／重启／停止
+→ 帮助／设置
+```
+
+- 两组服务独立监听、独立控制；公开服务默认 127.0.0.1:8080，后台 127.0.0.1:8081。
+- 最小化进入托盘，双击恢复；托盘不可用则留在任务栏。托盘菜单复用同一 QAction。
+- 关闭窗口／托盘退出均确认：隐藏到托盘、停止服务并退出、取消（默认）。没有自动开机启动或 Windows Service 安装。
+- 桌面与浏览器共用 draft/settings revision，冲突必须重新加载合并，不静默覆盖。
+- 先保存草稿→生成版本→查看差异→发布；可切换到旧版本回退。版本保存于独立 SQLite 管理库，最多 200 份。
+- 校验／预览针对当前内容；预览为文本，不冒充游戏原生显示。更新包／未知清单明确未实现。
+- 监听地址、端口、对外域名设置保存后需重启对应服务；IP 名单和限流即时生效。
+- 编辑菜单作用于当前支持对应操作的文本控件；表格尚无全局撤销栈。未实现自定义布局持久化／最近配置列表。
+
+## 浏览器后台
+
+1. 在本地“服务 → 设置／重置管理员密码”初始化 12–256 字符密码。
+2. 本地启动后台；浏览器打开设置中的管理对外地址，使用密码登录（当前单一 admin 身份）。
+3. 登录后可编辑公告与区服、保存草稿、生成／预览／切换版本，查看导出日志，修改访问规则，控制公开服务。
+
+后台监听开关、管理员密码重置及后台监听 IP／端口／域名只允许本地修改。
+后台暂停时仍可登录查看、预览及退出，不允许保存、发布或控制公开服务；本地 GUI 仍可操作。
+后台停止／重启会清除会话，但不会停止公开服务。单纯刷新浏览器不会自动覆盖未保存编辑。
+浏览器设置页当前为经过严格服务端校验的 JSON 编辑器；本地设置页为表单／规则表格。
+
+## 无界面运行
+
+先通过本地 GUI 配置数据；远程 Linux 可用交互终端初始化管理员密码（不接受命令行明文密码）：
+
+```bash
+python web_server/run.py --state-dir /private/web-profile --set-admin-password
+python web_server/run.py --headless --state-dir /private/web-profile
+# 明确要求本次启动后台，默认不开：
+python web_server/run.py --headless --state-dir /private/web-profile --enable-admin
+```
+
+管理配置持久化于 management.sqlite3，不与游戏数据库共用。无界面入口 Ctrl+C 会停止监听并清理。
+GUI 与 headless 不能同时使用同一目录；不要额外启动另一份无访问控制的旧开发 runner 来冒充受管服务。
+
+## 安全、黑白名单与日志
+
+- 两项服务分别配置 allow／black／white。白名单模式仅允许白名单，黑名单拒绝优先；空白名单拒绝全部网络来源，本地 GUI 不受限。
+- 支持 IPv4／IPv6 CIDR、备注、到期 Unix 秒（0 永久）；过期规则不参与匹配。
+- 仅当真实 socket 来源在 trusted_proxies 内才解析 X-Forwarded-For，从右向左剥除可信代理；不信任任意客户端自报来源。
+- 非本机后台要求 HTTPS 对外地址，TLS 在可信反向代理终止；应用本身没有 TLS 证书管理。HTTPS 后台只接受已配置可信代理的 socket 来源；还须用防火墙限制后端端口直连，不能仅填写 HTTPS 域名就宣称已加密。
+- scrypt 随机盐存储管理员密码；会话随机、仅内存、30 分钟过期，最多 32 个；退出／停后台／重置密码失效。
+- POST 要求精确 Origin、JSON 与会话 CSRF token；管理 Host 白名单、HttpOnly/SameSite=Strict Cookie，HTTPS 对外地址时加 Secure。无 CORS 放行，无任意 SQL／shell／脚本入口。
+- 登录每 IP 每分钟 5 次、全局 30 次；普通请求限流可配置。每项监听最多 16 个并发连接，请求体最多 1 MiB、路径 2048 字符、socket 空闲超时 3 秒。
+- 日志为受限字段 JSONL，5 MiB、5 份备份；不记录密码、Cookie、票据、CSRF、请求正文、query 或原始异常文本。陌生路径只记占位符。
+- 诊断写失败不替换已提交业务结果，stderr 固定告警，GUI 状态显示累计故障；文件日志不是防篡改审计。
+- 内容／设置／发布指针与审计同 SQLite 事务；诊断、登录及监听生命周期日志不具备事务审计保证。审计当前不自动清理，需离线备份维护。
+
+## 原生格式与旧 CLI
+
+已支持的正文：`/news.txt`、`/service.txt`、`/server.txt`（严格 Big5、CRLF、无 BOM）。
+未配置的 `/httpupdate.txt`、`/filemd5.txt`、`/servernotice.txt` 等返回 404；未发布已知正文时返回 503。
+`/healthz` 仅表示 Web 服务可响应，不代表游戏区服在线。
+未知原生清单／补丁／列表附加段不猜测，完整格式依据仍见 LEGACY_FORMATS。
+
+旧只读 CLI 保留用于独立文本托管测试，**它不具备管理器的 ACL／会话／生命周期功能**：
+
+```bash
 python web_server/run.py --init-example web_server/var/profile-001
-python web_server/run.py --config web_server/var/profile-001/config.json
-python -m unittest discover -s web_server/tests -v
-```
-
-本地开发地址：`http://127.0.0.1:8080/news.txt`；健康检查 `/healthz`。
-Windows 同样使用上述 Python 命令（可用 `py -3` 替换 `python`）。没有本轮已构建或验收的 EXE。
-预览容器中需显式 `--host 0.0.0.0`；对外部署不使用这个开发 runner。
-
-示例资源位于 `src/mxsj_web_server/data/`；用 `--init-example` 复制到独立的新目录后编辑，
-不要修改包内样本。将实际发布内容放入专用目录（例如忽略入库的 `var/releases/v001`），
-配置 `content_root` 及 `resources`。content_root 相对配置文件定位，不依赖 shell 当前目录。
-资源条目示意（文件须事先准备好）：
-
-```json
-{
-  "url": "/news.txt",
-  "file": "news.txt",
-  "content_type": "text/plain",
-  "max_age": 0
-}
-```
-
-不隐式附加 charset、不转换字节；原始 Big5 等编码须由发布者根据客户端证据确认。
-每个文件最大 8 MiB，总快照最大 32 MiB，最多 128 项；超过限制必须转独立下载源，不为了大包无限扩大内存。
-路径不自动映射磁盘目录，禁止目录浏览、越界路径、符号链接和硬链接资源。文件名 URL 为有限 ASCII 格式。
-HTML 默认设置限制性 CSP，无脚本／外部资源；旧内嵌浏览器能否支持须实测，不把它当新管理前端。
-
-## 发布与部署
-
-- 开发 runner 是标准库单进程同步 WSGI 服务器，**不是生产 HTTP 服务器**；没有公网防护、容量或 TLS 验收。
-- 生产使用经过部署验证的 WSGI server＋反向代理。应用工厂为 `mxsj_web_server.core.publication.create_app(config_path)`；源码部署设置 `PYTHONPATH=src`，也可安装本项目 wheel。
-  WSGI server、TLS／证书、超时、请求／连接限制和依赖锁定由后续部署方案选定，当前不声称已具备生产安装包。
-- Python 应用在启动时读取完整资源快照，请求期间不读取发布目录。更新文件后必须重新加载应用／重启。
-- 发布到新的、不可变的 release 目录，验证后再切换配置并重新加载；不要在线覆盖正在加载的文件。
-  目录须由可信发布者独占管理；不抵御恶意并发文件替换。
-- 多 worker／多副本发布期间仍可能新旧并存；本实现不保证集群原子发布。先上传补丁，再发布清单，保留旧版本下载路径。
-- 可独立放到任意满足客户端网络兼容性的主机；公告／列表短缓存，带版本号补丁可由独立 CDN 长缓存。
-- 旧客户端的 TLS、重定向、压缩、Range 和缓存兼容性需要逐项验证，不能默认现代浏览器可用就等于启动器可用。
-- ETag 是传输缓存标识，不是数字签名；原生 MD5 清单也不是来源可信证明。更新源安全、签名／信任链另行设计。
-- 发布权限必须与公开读取分离；不让此服务直连游戏数据库，也不在此服务发放游戏票据。
-
-## 日志
-
-开发 runner 的请求日志仅输出固定事件和状态码，不记录 URL、query、请求头或文件内容；启动失败仅固定错误提示。
-`bootstrap.py` 的启动异常按项目约定写入同目录 `启动日志.txt`，包含 UTC 时间、Python 版本及完整 traceback；仅供本地排错，分享前须审查脱敏。配置／网络请求不得放入真实凭据。
-当前没有访问日志持久化轮替、发布审计或生产异常诊断系统；不依赖另一个项目的 logger。
-生产 WSGI／代理访问日志也需单独配置脱敏、保留和权限，不能误以为应用不记录就代表代理不会记录。
-
-## 下一步
-
-1. 固定原生启动器／客户端实际请求及响应格式、编码、错误处理证据。
-2. 使用独立假数据验证公告、刷新区服列表，不访问历史官方地址。
-3. 定义版本清单、不可变下载路径、校验与发布／回滚流程。
-4. 选定生产部署方式，补独立结构化日志、资源限制与网络集成测试。
-5. Windows 原生启动器验证后，才更新兼容性结论；不提前修改原客户端 update.ini/server.ini。
-
-## 生成公告与基础区服列表
-
-编辑 UTF-8 的 profile 中 `content.json`，填写 news、service 和 groups。reserve/type 是不透明字段，示例采用已有样本的 `3`／`&`；不推断其意义。
-生成到**不存在的新目录**（再次执行须换 release 名称，不自动覆盖）：
-
-```bash
 python web_server/content.py --source web_server/var/profile-001/content.json --output web_server/var/releases/demo-001
 python web_server/run.py --config web_server/var/releases/demo-001/config.json --check-only
 python web_server/run.py --config web_server/var/releases/demo-001/config.json
 ```
 
-输出 news.txt、service.txt、server.txt 和仅发布这三份文件的 config.json；文件为严格 Big5、CRLF，无 BOM。
-不可编码文字、字段注入、重复分组、无效 IP／端口会拒绝；完整发布前验证，不静默替换字符。
-不支持可选 serverid 或列表附加段，基础列表并未经过客户端界面验收；当前不支持更新包生成。
-具体字段证据、未知项及后续核验入口见 [原生格式记录](LEGACY_FORMATS.md)。
+生成只写新目录，不覆盖客户端或旧发布；不会访问官方地址或自动修改客户端 update.ini/server.ini。
 
-## 标准目录与启动入口
+## 工程结构与验证
 
 ```text
-web_server/
-├─ pyproject.toml                  # 元数据、版本、console-scripts、ruff
-├─ requirements.txt               # 当前运行核心仅标准库
-├─ requirements-dev.txt           # ruff／PyInstaller／build
-├─ bootstrap.py                   # 自检、按需安装依赖、启动诊断
-├─ 启动Web服务.bat                 # CRLF／ASCII，双击启动当前 CLI
-├─ build_exe.bat                   # 测试通过才构建
-├─ web_server.spec                # onedir／onefile；当前 console=True
-├─ run.py                         # 无 pip 安装的轻量入口
-├─ content.py                     # 兼容旧生成命令的薄入口
-├─ src/mxsj_web_server/
-│  ├─ __init__.py                 # __version__
-│  ├─ __main__.py                 # python -m mxsj_web_server
-│  ├─ app.py                      # 应用装配；当前 CLI，非 Qt 窗口
-│  ├─ core/                       # HTTP／生成／路径逻辑，不依赖 Qt
-│  ├─ gui/                        # 待实现的 PySide6 边界，现仅说明
-│  └─ data/                       # 只读示例 JSON 与 Big5／CRLF 文件
-└─ tests/                         # unittest，无 Qt 依赖
+src/mxsj_web_server/
+├─ app.py                    # GUI／headless／兼容 CLI 装配
+├─ core/
+│  ├─ content.py             # 原生文本生成
+│  ├─ manager.py             # 共享用例协调
+│  ├─ configuration/         # 设置和 SQLite 管理状态
+│  ├─ publishing/            # 版本渲染与差异
+│  ├─ runtime/               # 有界 HTTP 监听与停止
+│  ├─ security/              # 密码／会话／ACL／限流
+│  └─ observability/         # 脱敏轮替日志
+├─ gui/                      # PySide6 菜单／工具栏／托盘／页面／Worker
+├─ web/admin/                # API 和静态浏览器后台
+├─ web/public/               # 玩家只读资源路由
+├─ web/gateway.py            # 公开／管理边界
+└─ data/                     # 只读假数据示例
 ```
 
-源码运行不要求 pip 安装本包：双击 BAT 或 `python bootstrap.py` 即可。
-无参数启动会在 `%APPDATA%\MXSJWebServer\` 初始化假数据配置并启动本地开发服务；
-未设置 APPDATA 时使用用户主目录下的 MXSJWebServer，不写安装目录。
-配置已存在则读取，不覆盖；目录存在但初始化不完整时明确报错，操作员检查后选择新的目录。
-`--check-only` 无参数时只校验包内示例，不创建用户目录、不启动监听。
-显式 `--config` 使用指定路径；资源路径相对于该配置，不相对于当前工作目录。
-冻结只读资源来自 `_MEIPASS/mxsj_web_server/data`，和可写用户配置分离。
-
-`bootstrap.py` 支持透传参数，检查 Python >=3.10；当前无需安装第三方运行依赖。
-以后确需依赖时，按导入名／pip 名表检查，官方源→清华→阿里镜像尝试并复检；
-自检失败返回 2，成功返回 0；BAT 失败保留窗口，不闪退。
-
-**GUI 和远程后台仍待需求讨论，并未实现。** 因此当前注册 console-scripts，而不是虚假的 gui-scripts；
-EXE 保留控制台，双击不会凭空打开管理窗口。后续真实 GUI 必须用 PySide6，补 QApplication／gui-scripts，
-任务线程、布局／DPI 和退出清理验收，然后改 GUI EXE 为 console=False。
-
-## 测试与 Windows 构建
-
 ```bash
+pip install -r web_server/requirements-dev.txt
+python web_server/bootstrap.py --check-only                 # 包含 Qt 原生库导入检查
+python web_server/bootstrap.py --check-only --core-only     # 仅核心检查，不等于 GUI 可用
 python -m unittest discover -s web_server/tests -v
-python web_server/bootstrap.py --check-only
 ruff check web_server
 python tools/devkit/check_windows_compat.py web_server --strict
 ```
 
-Windows 双击 `build_exe.bat`：创建 venv → 开发依赖 → 自检 → ruff → unittest → PyInstaller。
-默认产物 `dist\MXSJWebServer\MXSJWebServer.exe`；设置 `WEB_SERVER_ONEFILE=1` 后运行同一 BAT 可构建单文件版本。
-两个版本都以 run.py 为入口，运行时不会 pip 安装依赖；使用示例：
-
-```text
-MXSJWebServer.exe --version
-MXSJWebServer.exe --check-only
-MXSJWebServer.exe --config C:\private\profile\config.json
-MXSJWebServer.exe content --source C:\private\content.json --output C:\private\release-002
-```
-
-版本号以 pyproject.toml、__version__、README 和 `--version` 保持一致。
-Linux 只能干跑 spec、检查资源收集与 Linux 产物入口；**不能交付或宣称 Windows EXE 已通过**。
-Windows 待验：中文／空格路径、首次双击自检、关闭后无残留进程、两种 EXE、用户目录写入及客户端读取。
-当前整改单元测试不包含 GUI；未执行不算通过。独立管理后台鉴权、生产 HTTP 部署仍未实现。
-
-### 本轮检查记录（0.2.1）
-
-- Linux／Python 3.11.2：35 项 unittest、ruff、自检、Windows 静态检查通过；wheel 独立安装入口验证通过。
-- onedir／onefile spec 均尝试干跑，但沙盒缺少 `libpython3.11.so.1.0`，构建失败，无 EXE 产物。
-- spec 结构测试使用替身验证装配参数，不替代真实构建；没有使用桩库冒充可运行产物。
-- Windows／Python 3.10 实机、GUI 均未验。具体记录见仓库 STATUS 及证据文件。
+Windows 双击 build_exe.bat：自检→ruff→测试→PyInstaller；默认 onedir，`WEB_SERVER_ONEFILE=1` 选择单文件。
+GUI EXE console=False，不会运行时 pip 安装；冻结入口数据／网页资源随 spec 打包。
+**当前沙盒缺 libGL.so.1，Qt offscreen 测试跳过；缺 libpython3.11.so.1.0，EXE 干跑不能完成。**
+Windows 窗口、托盘、DPI、退出行为、BAT／EXE和真实浏览器视觉交互仍待实测，不以 HTTP 测试替代。
