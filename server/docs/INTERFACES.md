@@ -1,7 +1,5 @@
 # 内部接口契约 v0.1
 
-> **状态入口**：本文是正式服务端的设计约束，不是根目录 Mock 的实现说明。当前实现／测试边界见 [STATUS](../../docs/STATUS.md)，最小链路与验收顺序见 [ROADMAP](../../docs/ROADMAP.md)。该横幅原为文档整理范围；现已新增账号／角色共享实现与 SQLite 事务，详 [local_server](../../local_server/README.md)。公开 Protocol 签名未改，当前未接网络服务。
-
 ## 0. 状态与适用范围
 
 当前是可分工的起步接口草案，不是完整玩法 API，也不是原版线协议。

@@ -1,0 +1,37 @@
+"""内部公开契约 v0.1 草案；仅类型定义，不能作为已实现或已验证协议。
+
+校验、授权、事务及错误语义见 server/docs/INTERFACES.md。
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Protocol
+
+from mxsj_local_server.core.contracts.common import (
+    CommandReceipt,
+    PageRequest,
+    RequestContext,
+)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class MailSummary:
+    mail_id: int
+    subject: str
+    read: bool
+    has_unclaimed_attachments: bool
+    expires_at_ms: int | None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class MailPage:
+    items: tuple[MailSummary, ...]
+    next_cursor: str | None
+
+
+class MailAPI(Protocol):
+    async def list_inbox(self, ctx: RequestContext, page: PageRequest) -> MailPage: ...
+    async def claim_attachments(
+        self, ctx: RequestContext, *, mail_id: int
+    ) -> CommandReceipt: ...

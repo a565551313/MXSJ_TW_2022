@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-18",
+  "version": "0.2.0",
+  "source_snapshot": "143904e78e68782dc5b824a50e4b8c55f52dc661",
+  "checks": {
+    "unittest": {
+      "total": 68,
+      "passed": 68,
+      "command": "python -m unittest discover -s tests -t . -v"
+    },
+    "ruff": "passed",
+    "windows_static": "0 errors, 0 warnings",
+    "standalone_copy": "isolated Python; Unicode/space path; check-only, init-db, check and logs passed",
+    "installed_wheel": "outside checkout; isolated Python; init-db, check and logs passed",
+    "formal_server": "git diff cb2409aa -- server is empty"
+  },
+  "not_verified": [
+    "Windows runtime and EXE",
+    "GUI (directories only)",
+    "Native client login and gameplay",
+    "Full formal-server behavioral equivalence"
+  ]
+}

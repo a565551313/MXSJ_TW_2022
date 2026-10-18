@@ -1,0 +1,3 @@
+"""共享契约由集成负责人维护，不放具体玩法规则。"""
+
+from __future__ import annotations

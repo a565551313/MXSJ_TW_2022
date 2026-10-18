@@ -10,9 +10,7 @@ if errorlevel 1 goto failed
 .venv\Scripts\python.exe bootstrap.py --check-only
 if errorlevel 1 goto failed
 set "PYTHONDONTWRITEBYTECODE=1"
-.venv\Scripts\python.exe -m unittest discover -s ..\server\tests\local_runtime -v
-if errorlevel 1 goto failed
-.venv\Scripts\python.exe -m unittest discover -s ..\server\tests\observability -v
+.venv\Scripts\python.exe -m unittest discover -s tests -t . -v
 if errorlevel 1 goto failed
 .venv\Scripts\python.exe -m PyInstaller --noconfirm --clean local_server.spec
 if errorlevel 1 goto failed

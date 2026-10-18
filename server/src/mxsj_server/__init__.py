@@ -1,1 +1,1 @@
-"""Shared server core; SQLite local account/character slice, no game listener yet."""
+"""MXSJ 服务端工程骨架；尚无可启动服务器。"""
