@@ -23,7 +23,7 @@
 | 组件 | 当前能力／版本 | 本轮检查与边界 |
 |---|---|---|
 | 共享服务端／SQLite 本地模式 | 账号认证、会话／撤销、角色元数据创建查询、事务／幂等及 `local_server/` 操作员控制台；其余模块主要为契约 | 新增 **38/38**、架构 **161/161**；真实临时 SQLite 并发、提交失败与新 Python 进程恢复通过。无客户端 TCP／进图、完整创角、PostgreSQL 或 Windows EXE 验收 |
-| 独立客户端 Web 服务 | [web_server](../web_server/README.md)，Python 3.11+，独立部署的只读 WSGI 基础；GET／HEAD、ETag、资源白名单和启动快照 | 本轮 14 项测试通过、配置自检／ruff／Windows 静态检查通过；尚未实现原生更新生成、大文件续传、发布后台及生产部署，未做 Windows 客户端验收 |
+| 独立客户端 Web 服务 | [web_server](../web_server/README.md)，Python 3.11+，独立部署的只读 WSGI 基础；GET／HEAD、ETag、资源白名单和启动快照 | 本轮文本发布扩展共 22 项测试通过、配置自检／ruff／Windows 静态检查通过；支持 Big5／CRLF 公告与五字段基础区服列表；尚未实现原生更新生成、大文件续传、发布后台及生产部署，未做 Windows 客户端验收 |
 | 共享诊断日志 | UTC JSONL／stderr、轮替保留、字段白名单、trace／操作 ID 摘要、业务与 DB 结果、单进程目录锁、写失败告警 | **26/26** 专项通过；非事务资产审计，Windows 锁／ACL／EXE 未实机；[说明](../server/src/mxsj_server/observability/README.md) |
 | 静态复核链 | Catalog → FastAPI → React，只读候选数据，不是游戏网关 | Catalog **34**、API **27** 通过；网页类型检查／构建通过，测试 **112 通过、9 跳过**；本轮未做实时后端／真实浏览器验收 |
 | 脚本编辑器 | **0.6.0.dev7**，双 VM、双恢复引擎、原生分段修复、新包构建 | 选定核心 **38 通过、3 跳过**（41 项）；未跑全套 GUI、旧 VM 完整环境或 Windows／游戏验收；历史 dev6 全量结果不能替代本轮 |
@@ -79,6 +79,12 @@
 支持原始字节 GET／HEAD、ETag／304、缓存控制和仅反映 Web 存活的 healthz；无目录浏览／匿名写入口，资源显式白名单、路径和链接校验、文件与快照大小限制。
 运行目录需由可信发布者管理，采用启动快照；多副本切换不是原子发布。开发 runner 不用于公网生产，生产 WSGI／代理、TLS、更新信任链、Range 下载、完整日志及发布管理仍待实现或选型。
 验证：`python -m unittest discover -s web_server/tests -v` 14 项；配置 check-only、ruff 和 Windows 静态检查通过。仅本子项目验收，不重跑或继承全仓库运行验收；未进行真实客户端／Windows EXE／生产部署测试。
+
+### Web 已知文本格式落地（2026-10-18）
+
+按用户要求，将已知公告／客服公告／基础区服列表写入 web_server：新增 UTF-8 操作员内容输入、严格 Big5／CRLF 生成器、假数据示例及三个只读 HTTP 路径。生成只写全新 release 目录，不改客户端配置或资源；未知更新接口继续 404。
+[LEGACY_FORMATS](../web_server/LEGACY_FORMATS.md) 记录候选代码依据，以及 reserve/type、可选 serverid、列表附加段、HTTP 特性、更新清单与包格式等未核验事项。基础五字段列表不等于完整原生选服兼容；没有伪造更新成功或客户端验收。
+本轮 22 项 Web 测试通过，含字节输出、Big5 严格编码、CRLF、字段拒绝、不覆写发布和未知接口 404；lint、配置自检与 Windows 静态检查通过。未运行 Windows 客户端、未探测官方 URL、未重跑游戏服务端测试。
 
 ### 历史导航
 

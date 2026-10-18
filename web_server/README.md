@@ -1,7 +1,7 @@
 # web_server — 独立客户端 Web 分发服务
 
 Python 3.11+ 独立子项目，可将本目录复制到另一台服务器运行。无需游戏服务端源码、数据库或 TCP 网关。
-版本：**0.1.0 基础版**。现已实现显式资源白名单的只读 WSGI 应用；并非已经通过原生启动器验收的更新平台。
+版本：**0.2.0 文本发布版**。现已实现显式资源白名单的只读 WSGI 应用；并非已经通过原生启动器验收的更新平台。
 
 ## 职责与边界
 
@@ -11,13 +11,13 @@ Python 3.11+ 独立子项目，可将本目录复制到另一台服务器运行�
 |---|---|
 | GET／HEAD、ETag／304、可配置缓存 | 已实现；按文件原始字节响应，不转编码 |
 | `/healthz` | 仅表示 Web 应用存活，不代表区服在线或更新发布完整 |
-| 公告／列表／清单托管 | 可显式映射已验证文件；不会生成或猜测原生格式 |
+| 公告／列表／清单托管 | 已支持 Big5／CRLF 公告和五字段基础区服列表生成；不生成更新清单 |
 | 客户端 `server.txt`、`httpupdate.txt`、`filemd5.txt` 格式 | 待核验；不等同于已有本地 server.ini 格式 |
 | 大补丁、Range／断点续传、签名发布／回滚 | 未实现；应独立交给下载源／CDN，后续另验收 |
 | 发布后台、鉴权、上传、数据库 | 未实现，也不开放匿名写接口 |
 | Windows 原生启动器／客户端验收 | 未执行 |
 
-**示例只发布 `/example.txt`，不会返回虚假的“已是最新版本”，也不会读取或改写根目录客户端配置。**
+**示例发布 `/news.txt`、`/service.txt`、`/server.txt` 和 `/example.txt`，均为假测试内容，不是官方公告或已上线区服。不会返回虚假的“已是最新版本”，也不会读取或改写根目录客户端配置。**
 未知路径（包括未配置的原生更新 URL）返回 404，不回退到首页或假成功。
 
 ## 运行与自检
@@ -30,7 +30,7 @@ python web_server/run.py --config web_server/config.example.json
 python -m unittest discover -s web_server/tests -v
 ```
 
-本地开发地址：`http://127.0.0.1:8080/example.txt`；健康检查 `/healthz`。
+本地开发地址：`http://127.0.0.1:8080/news.txt`；健康检查 `/healthz`。
 Windows 同样使用上述 Python 命令（可用 `py -3` 替换 `python`）。没有本轮已构建或验收的 EXE。
 预览容器中需显式 `--host 0.0.0.0`；对外部署不使用这个开发 runner。
 
@@ -79,3 +79,19 @@ HTML 默认设置限制性 CSP，无脚本／外部资源；旧内嵌浏览器�
 3. 定义版本清单、不可变下载路径、校验与发布／回滚流程。
 4. 选定生产部署方式，补独立结构化日志、资源限制与网络集成测试。
 5. Windows 原生启动器验证后，才更新兼容性结论；不提前修改原客户端 update.ini/server.ini。
+
+## 生成公告与基础区服列表
+
+编辑 UTF-8 的 `content.example.json` 副本，填写 news、service 和 groups。reserve/type 是不透明字段，示例采用已有样本的 `3`／`&`；不推断其意义。
+生成到**不存在的新目录**（再次执行须换 release 名称，不自动覆盖）：
+
+```bash
+python web_server/content.py --source web_server/content.example.json --output web_server/var/releases/demo-001
+python web_server/run.py --config web_server/var/releases/demo-001/config.json --check-only
+python web_server/run.py --config web_server/var/releases/demo-001/config.json
+```
+
+输出 news.txt、service.txt、server.txt 和仅发布这三份文件的 config.json；文件为严格 Big5、CRLF，无 BOM。
+不可编码文字、字段注入、重复分组、无效 IP／端口会拒绝；完整发布前验证，不静默替换字符。
+不支持可选 serverid 或列表附加段，基础列表并未经过客户端界面验收；当前不支持更新包生成。
+具体字段证据、未知项及后续核验入口见 [原生格式记录](LEGACY_FORMATS.md)。
