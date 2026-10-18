@@ -16,8 +16,8 @@ def main(argv=None):
     if sys.version_info < (3, 11) or sqlite3.sqlite_version_info < (3, 24, 0):
         print("Python >=3.11 and SQLite >=3.24 required", file=sys.stderr)
         return 1
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "server/src"))
-    from mxsj_server.bootstrap.local import open_local  # noqa: F401
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+    from mxsj_local_server.core.bootstrap.local import open_local  # noqa: F401
 
     print(
         f"Python {sys.version.split()[0]}, SQLite {sqlite3.sqlite_version}; "
@@ -28,7 +28,7 @@ def main(argv=None):
     if args.config is None:
         print("Copy config.example.json to config.json; run init-db explicitly first.")
         return 2
-    from run import main as run
+    from mxsj_local_server.app import main as run
 
     return run(["--config", str(args.config), "console"])
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except Exception:
-        # Bootstrap may fail before the shared logger can even be imported.
+        # Bootstrap may fail before the local logger can even be imported.
         try:
             Path(__file__).with_name("启动日志.txt").write_text(
                 "BOOTSTRAP_FAILED: check Python, dependencies and configuration.\n",

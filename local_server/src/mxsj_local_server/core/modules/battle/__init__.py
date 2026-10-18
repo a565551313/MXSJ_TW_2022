@@ -1,0 +1,3 @@
+"""战斗运行时与结算协调。业务实现尚未开始，公开接口见 contracts.py。"""
+
+from __future__ import annotations

@@ -4,7 +4,7 @@ from pathlib import Path
 root = Path(SPECPATH)
 a = Analysis(
     [str(root / "run.py")],
-    pathex=[str(root.parent / "server" / "src")],
+    pathex=[str(root / "src")],
     binaries=[], datas=[], hiddenimports=[],
     hookspath=[], hooksconfig={}, runtime_hooks=[], excludes=[],
     noarchive=False,
