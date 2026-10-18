@@ -6,7 +6,7 @@
 ## 0. 这是什么 / 不是什么
 
 - 围绕《夢想世界》台服客户端 **v2.27.2**（多益网络）的逆向研究 + 工具链 + Python 私服重建。仓库根目录**就是一份游戏安装目录**，上面叠加了工具与文档。
-- **不是**可游玩的服务端，也**不是**已验收的客户端发行版。正式服务端目前只有契约与设计（`server/src/mxsj_server/` 无业务运行实现）；根目录 Mock 已有本地交互模拟，但不是正式服务。
+- **不是**可游玩的服务端，也**不是**已验收的客户端发行版。共享服务端已有账号／会话／角色元数据的 SQLite 本地基础（`local_server/` 入口），其余主要为契约与设计，尚无客户端监听／进图或 PostgreSQL 实现；根目录 Mock 已有本地交互模拟，但不是正式服务。
 - 项目原则：**能展示 ≠ 能运行，能运行 ≠ 正确，测试通过 ≠ 原生验收完成。** 所有完成声明都要有范围、版本和可追溯证据。
 
 ## 1. 开始前的 60 秒
@@ -46,7 +46,8 @@
 | `resource_editor/` | `.fls` 资源包浏览/编辑器（PySide6；core 无 Qt） | [`README.md`](resource_editor/README.md)、`DESIGN.md` |
 | `ui_editor/` | `.dlg` 布局可视化编辑器（PySide6；core 无 Qt） | [`README.md`](ui_editor/README.md)、`DESIGN.md`、`notes/ui_editor_phase2_design.md` |
 | `map_editor/` | 地图解析/渲染/导出 + GIRB 碰撞解码（PySide6 GUI 可选） | [`README.md`](map_editor/README.md)、[`PR25_REVIEW.md`](map_editor/PR25_REVIEW.md) |
-| `server/src/mxsj_server/` | 游戏服务端**骨架**：21 个模块只有 `contracts.py` | [`server/README.md`](server/README.md)、`server/docs/*.md` |
+| `local_server/` | 共享服务端 SQLite 本地启动配置／操作员控制台；无客户端改包或网络监听 | [`README.md`](local_server/README.md) |
+| `server/src/mxsj_server/` | 共享服务端：账号／角色第一阶段实现，其余主要为契约；不得把本地控制台称作可进图服务 | [`server/README.md`](server/README.md)、`server/docs/*.md` |
 | `server/src/mxsj_catalog/` + `server/apps/review_api/` + `server/apps/review_web/` | 只读静态数据复核链（加载器 → FastAPI → React） | `server/docs/review_browser/` |
 | `server/docs/csv_checks/batch_001/` | 首批待审 CSV + manifest + 证据（**不是**正式配置） | `server/docs/csv_checks/BATCH_001.md` |
 | `mock_server.py` | 本地协议模拟器，有登录／进图／交互与客户端写入副作用，不作正式服务端 | [`边界与副作用`](docs/MOCK_SERVER.md) |
@@ -58,6 +59,7 @@
 | 组件 | 依赖 | 测试 / 运行 |
 |---|---|---|
 | 客户端补丁 | Python 3.11+ 标准库 | `python3 -m unittest discover -s tools/client_patches` |
+| SQLite 本地基础 | Python 3.11+ 标准库，SQLite >=3.24 | `python3 local_server/bootstrap.py --check-only`；`python3 -m unittest discover -s server/tests/local_runtime`；显式初始化／建号见 local_server README |
 | 服务端骨架 / 来源映射 / 批次核验 | 标准库 | `python3 -m unittest discover -s server/tests/architecture`；`python3 server/tools/verify_source_map.py`；`python3 server/tools/export_review_csv.py --check` |
 | 复核目录 / API | `pip install -r server/apps/review_api/requirements.txt` | `python3 -m unittest discover -s server/tests/catalog`；`… -s server/tests/review_api`；运行 `python3 server/apps/review_api/main.py --host 0.0.0.0 --port 8000` |
 | 复核验收套件 | 同上，且 `uvicorn` 必须在 `python3` 的 PATH 环境里（测试会**原样执行文档里的启动命令**） | `python3 -m unittest discover -s server/tests/review_browser_acceptance` |

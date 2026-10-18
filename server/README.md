@@ -1,15 +1,15 @@
-# MXSJ Python 服务端工程骨架
+# MXSJ Python 共享服务端与本地测试模式
 
-> **三条链路分开维护**：正式 `mxsj_server` 仍只有设计与契约；只读 Catalog/API/Web 已实现；根目录 Mock 已有本地模拟交互，但无正式认证与事务保证，启动前读 [Mock 边界](../docs/MOCK_SERVER.md)。
+> **三条链路分开维护**：`mxsj_server` 已有 SQLite 本地账号／会话／角色基础实现，其余仍为设计与契约；只读 Catalog/API/Web 已实现；根目录 Mock 已有本地模拟交互，但无正式认证与事务保证，启动前读 [Mock 边界](../docs/MOCK_SERVER.md)。
 > 最近测试统一见 [STATUS](../docs/STATUS.md)，下一阶段建议见 [ROADMAP](../docs/ROADMAP.md)。目录与接口测试通过不代表游戏服务可部署。
 
 > 接手请先读根目录 [AGENTS.md](../AGENTS.md)（规则与地图）和 [docs/STATUS.md](../docs/STATUS.md)（当前状态、红灯、下一步）。2026-10-12 的完整交接快照已归档至 [docs/archive/](../docs/archive/README.md)。
 
-**状态：模块边界与内部接口 v0.1 草案。游戏运行时尚无网络服务、数据库实现或可游玩业务；独立只读复核 API/网页已交付。**
+**状态：共享业务第一阶段已实现账号认证、会话 fencing、角色元数据创建／查询和 SQLite 事务。启动入口见 [local_server](../local_server/README.md)。尚无游戏网络监听、完整角色初始化、进图／战斗或 PostgreSQL 适配。独立只读复核 API/网页保持独立。**
 
-本地与公区共用业务代码与数据一致性要求；本次只建立多人开发基线。
+本地与正式环境共用业务服务与规则，通过存储端口隔离数据库；不维护两套玩法实现。
 没有修改客户端、FLS、原有 Mock 或旧逆向工具；没有将客户端脚本当作可信服务端运行。
-Pygame 不属于本项目服务端依赖。技术方向为 asyncio + PostgreSQL；具体依赖锁定由基础设施组统一完成。
+Pygame 不属于本项目服务端依赖。技术方向为 asyncio；本地 SQLite 已实现，正式 PostgreSQL 尚待实现及独立并发验收。
 
 ## 完整度说明（补充盘点）
 
@@ -57,16 +57,17 @@ tests/simulation/   战斗模拟与机器人测试
 tools/ deploy/    配置导出、运维和部署预留
 ```
 
-## 检查骨架
+## 检查共享基础与骨架
 
 仅需要 Python 3.11+ 标准库；生产 Python 版本和依赖尚未锁定。
 从仓库根目录运行：
 
 ```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s server/tests/local_runtime -v
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s server/tests/architecture -v
 PYTHONDONTWRITEBYTECODE=1 python3 server/tools/verify_source_map.py
 ```
 
 这些测试只证明目录、契约和静态依赖边界，不证明玩法、协议兼容性或持久化正确。
-目前没有可游玩服务端的启动命令，不能将契约文件直接部署为游戏服务器。
+目前没有可游玩服务端的启动命令；本地账号／角色控制台入口为 `local_server/run.py`，不能将它当作已接通客户端的游戏服务器。
 只读数据复核工具另见 [验收与运行说明](docs/review_browser/ACCEPTANCE.md)，不属于游戏网关。

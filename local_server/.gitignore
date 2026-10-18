@@ -1,0 +1,8 @@
+var/
+config.json
+启动日志.txt
+__pycache__/
+.venv/
+build/
+dist/
+*.spec.bak

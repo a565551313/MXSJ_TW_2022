@@ -1,0 +1,1 @@
+# Python >=3.11; runtime uses only standard-library sqlite3/asyncio/hashlib.
