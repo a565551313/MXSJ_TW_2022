@@ -7,7 +7,24 @@
 现有布局修改，也能从空白新建布局。布局格式、路径哈希、包内
 解密均来自本仓库的逆向结案成果（见 `notes/fls_path_hash_and_dlg.md`）。
 
-当前版本：**0.8.4**（布局文本编码选择、来源刷新、树右键导出）。
+当前版本：**0.8.5**（目录型基路径不再误报缺图）。
+
+## 0.8.5：目录型基路径归类（不再误报缺图）
+
+- 以 `\` 或 `/` 结尾的 `sFileName/sBarFileName/sBgFileName/sSoundPath`
+  是**目录型基路径**（三态按钮序号帧、边框 left/middle/right 等子图由
+  运行时拼接，包内没有这个名字，属探针 v7 结案的 706 条伪引用）。
+  布局诊断不再报 `RESOURCE_MISSING`，改报 **`RESOURCE_DIR_BASE`（提示）**。
+- 探测 `基路径+0.png`（引擎 `GetInitPath` 同款候选帧）作线索：
+  命中报「候选帧可解析」，未命中也**只提示不判缺**——0.png 缺席可能是
+  left/middle/right 等其它拼名族（如 `输入底框\`）。未挂载资源来源时
+  也照常归类，不与 `RESOURCES_NOT_CHECKED` 冲突。
+- 画布拼帧预览（按控件族取 `0.png`/`left1.png` 等真图）**未做**，目录
+  基路径在画布上仍显示占位框；`.spr`（`CSpriteFrame`）解码悬案不变。
+- 实测：`tests.test_diagnostics` 21/21（含 3 项新回归）；无 Qt 核心套件
+  通过；本沙箱缺 `libGL.so.1`，Qt/GUI 模块未执行（跳过不算通过）；
+  ruff 0 报告、`check_windows_compat` 0 ERROR。Windows/GUI/官服实包
+  未验收；不改 `.dlg` 字段值与任何客户端资源。
 
 ## 0.8.4：编码、刷新与布局导出
 
