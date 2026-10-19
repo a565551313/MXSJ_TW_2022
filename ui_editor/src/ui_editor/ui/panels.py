@@ -90,7 +90,8 @@ class ResourceTreePanel(QWidget):
         self._search.setClearButtonEnabled(True)
         self._search.textChanged.connect(self._apply_search)
         layout.addWidget(self._search)
-        hint = QLabel("双击布局即可切换打开；包节点右键可导入本地布局（待存新包）。"
+        hint = QLabel("双击布局在新标签页打开（已打开的切回其标签，不丢编辑）；"
+                      "包节点右键可导入本地布局（待存新包）。"
                       "绿色为现役新 UI，橙色为第三代，灰色斜体为包内缺失。")
         hint.setWordWrap(True)
         layout.addWidget(hint)

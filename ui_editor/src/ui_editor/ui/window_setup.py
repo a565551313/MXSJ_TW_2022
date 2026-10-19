@@ -318,5 +318,108 @@ class WindowSetupMixin:
         self.scene.selectionChanged.connect(self._on_scene_selection)
 
     # ------------------------------------------------------------------
-    # 文档打开/新建/保存
+    # 多标签编辑会话（画布共享，切换换文档；ui/tabs.py 存状态）
     # ------------------------------------------------------------------
+    def _session_index(self, key: tuple | None) -> int:
+        if key is None:
+            return -1
+        for i, session in enumerate(self._sessions):
+            if session.key == key:
+                return i
+        return -1
+
+    def _save_session_state(self, session) -> None:
+        session.snapshot(self._selected, self._selection_anchor)
+
+    def _add_session(self, doc, key: tuple | None) -> None:
+        from .tabs import EditorSession
+
+        session = EditorSession(doc, key, self.view)
+        self._sessions.append(session)
+        self._tab_bar.blockSignals(True)
+        self._tab_bar.addTab(session.label())
+        self._tab_bar.blockSignals(False)
+
+    def _remove_session(self, index: int) -> None:
+        """无确认移除一个标签；移除激活页时切邻页或回到空态。"""
+        was_active = self._sessions[index] is self._active
+        self._sessions.pop(index)
+        self._tab_bar.blockSignals(True)
+        self._tab_bar.removeTab(index)
+        self._tab_bar.blockSignals(False)
+        if not was_active:
+            return
+        self._active = None
+        if self._sessions:
+            self._activate_session(min(index, len(self._sessions) - 1))
+        else:
+            self._set_document(None)
+
+    def _activate_session(self, index: int) -> None:
+        """切到某标签：共享画布换文档，还回该标签的选择与缩放/平移。"""
+        if not 0 <= index < len(self._sessions):
+            return
+        if self._tab_bar.currentIndex() != index:
+            self._tab_bar.blockSignals(True)
+            self._tab_bar.setCurrentIndex(index)
+            self._tab_bar.blockSignals(False)
+        old = self._active
+        session = self._sessions[index]
+        if old is not None and old is not session and old in self._sessions:
+            self._save_session_state(old)
+        self._active = session
+        self._doc = session.doc
+        self._selected = None
+        self._selection_anchor = session.selection_anchor
+        self._loading = True
+        if session.doc is not None:
+            session.doc.text_encoding = self.resolver.text_encoding
+        self.resource_panel.clear_pending()
+        if session.doc is not None and session.doc.pending_pack_import:
+            self.resource_panel.show_pending(*session.doc.source_pack)
+        self.scene.set_document(session.doc)
+        self.tree_panel.build(session.doc)
+        self.props_panel.set_widget(None)
+        self._loading = False
+        self._apply_script_link(session.doc)
+        self._select_widget(session.selected)
+        if session.transform is not None:
+            self.view.setTransform(session.transform)
+        self._update_title()
+        self._update_status(
+            f"已切换到标签：{session.label()}"
+            f"（共 {len(self._sessions)} 个标签）")
+
+    def _open_in_tab(self, doc, key: tuple | None) -> None:
+        """打开布局进新标签；同来源已开则切回旧标签（不丢未保存编辑）。"""
+        idx = self._session_index(key)
+        if idx >= 0:
+            self._activate_session(idx)
+            return
+        self._add_session(doc, key)
+        self._activate_session(len(self._sessions) - 1)
+        doc.reset_history()
+        self._sync_history_actions()
+        self.view.fit_content()
+
+    def _close_tab(self, index: int) -> None:
+        """标签关闭按钮：脏/待入包先确认丢弃，再移除该标签。"""
+        if not 0 <= index < len(self._sessions):
+            return
+        if not self._confirm_discard(self._sessions[index].doc):
+            return
+        self._remove_session(index)
+
+    def _on_tab_changed(self, index: int) -> None:
+        if 0 <= index < len(self._sessions):
+            self._activate_session(index)
+
+    def _dirty_docs(self) -> list:
+        """全部未保存（或待入新包）的文档：关窗/刷新前逐个确认。"""
+        seen = [s.doc for s in self._sessions]
+        docs = [d for d in seen if d is not None and
+                (d.dirty or d.pending_pack_import)]
+        if self._doc is not None and self._doc not in seen and (
+                self._doc.dirty or self._doc.pending_pack_import):
+            docs.append(self._doc)
+        return docs

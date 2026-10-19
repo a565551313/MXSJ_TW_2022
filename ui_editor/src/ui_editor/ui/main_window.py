@@ -13,6 +13,9 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QStatusBar,
+    QTabBar,
+    QVBoxLayout,
+    QWidget,
 )
 
 from .. import __version__
@@ -36,6 +39,7 @@ from .panels import PalettePanel, ResourceTreePanel, WidgetTreePanel
 from .property_panel import PropertyPanel
 from .script_panel import ScriptPanel
 from .source_actions import SourceActionsMixin
+from .tabs import EditorSession
 from .window_setup import WindowSetupMixin
 from .workflows import FileWorkflowsMixin
 
@@ -64,7 +68,9 @@ class MainWindow(
         self.styles = StyleBook()
         self.ctx = PaintContext(assets=self.resolver, styles=self.styles)
         self.script_index: ScriptIndex = get_default_index()
-        self.doc: LayoutDocument | None = None
+        self._doc: LayoutDocument | None = None
+        self._sessions: list[EditorSession] = []
+        self._active: EditorSession | None = None
         self._selected: Widget | None = None
         self._selection_anchor: list[int] | None = None
         self._syncing_selection = False
@@ -74,7 +80,21 @@ class MainWindow(
                                  self._on_geometry_committed)
         self.view = CanvasView(self.scene)
         self.view.context_menu_handler = self._show_canvas_context_menu
-        self.setCentralWidget(self.view)
+        # 多标签：标签栏 + 共享画布；切标签换文档，各标签自存选择/缩放
+        self._tab_bar = QTabBar()
+        self._tab_bar.setDocumentMode(True)
+        self._tab_bar.setTabsClosable(True)
+        self._tab_bar.setExpanding(False)
+        self._tab_bar.setUsesScrollButtons(True)
+        self._tab_bar.currentChanged.connect(self._on_tab_changed)
+        self._tab_bar.tabCloseRequested.connect(self._close_tab)
+        central = QWidget()
+        central_layout = QVBoxLayout(central)
+        central_layout.setContentsMargins(0, 0, 0, 0)
+        central_layout.setSpacing(0)
+        central_layout.addWidget(self._tab_bar)
+        central_layout.addWidget(self.view, 1)
+        self.setCentralWidget(central)
 
         self.resource_panel = ResourceTreePanel()
         self.tree_panel = WidgetTreePanel()
@@ -99,21 +119,52 @@ class MainWindow(
     # ------------------------------------------------------------------
     # 界面组装
     # ------------------------------------------------------------------
-    def _confirm_discard(self) -> bool:
-        if self.doc is None or not (self.doc.dirty or self.doc.pending_pack_import):
+    def _get_doc(self) -> LayoutDocument | None:
+        """当前标签的文档（各标签共用画布，此属性指向激活页）。"""
+        return self._doc
+
+    def _set_doc(self, value: LayoutDocument | None) -> None:
+        """外部直接赋值入口（测试/工具）：None=撤销当前标签。"""
+        if value is None:
+            if self._active is not None and self._active in self._sessions:
+                self._remove_session(self._sessions.index(self._active))
+            else:
+                self._doc = None
+            return
+        self._doc = value
+        if self._active is not None:
+            self._active.doc = value
+        else:
+            self._set_document(value)
+
+    doc = property(_get_doc, _set_doc)
+
+    def _confirm_discard(self, doc: LayoutDocument | None = None) -> bool:
+        target = self.doc if doc is None else doc
+        if target is None or not (target.dirty or target.pending_pack_import):
             return True
         answer = QMessageBox.question(
             self, "未保存的修改",
-            "当前布局有未保存的修改，确定丢弃吗？",
+            f"布局「{target.display_name}」有未保存的修改，确定丢弃吗？",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         return answer == QMessageBox.StandardButton.Yes
 
     def _set_document(self, doc: LayoutDocument | None) -> None:
+        if self._active is None and doc is not None:
+            self._add_session(doc, EditorSession.key_of(doc))
+            self._tab_bar.blockSignals(True)
+            self._tab_bar.setCurrentIndex(len(self._sessions) - 1)
+            self._tab_bar.blockSignals(False)
+            self._active = self._sessions[-1]
         self._loading = True
         if doc is not None:
             doc.text_encoding = self.resolver.text_encoding
         self.resource_panel.clear_pending()
-        self.doc = doc
+        self._doc = doc
+        if self._active is not None:
+            self._active.doc = doc
+            # 就地换文档可能改变来源身份（如导入待入包）：同步会话键
+            self._active.key = EditorSession.key_of(doc)
         self.diagnostics_panel.reset()
         self._selected = None
         self.scene.set_document(doc)
@@ -477,6 +528,9 @@ class MainWindow(
         pending = self.doc and (self.doc.dirty or self.doc.pending_pack_import)
         star = "*" if pending else ""
         self.setWindowTitle(f"{name}{star} — MXSJ UI 编辑器 {__version__}")
+        if self._active is not None and self._active in self._sessions:
+            self._tab_bar.setTabText(
+                self._sessions.index(self._active), self._active.label())
 
     def _update_status(self, text: str) -> None:
         self.statusBar().showMessage(text)
@@ -490,9 +544,10 @@ class MainWindow(
             "逆向结案成果。")
 
     def closeEvent(self, event) -> None:  # noqa: N802
-        if not self._confirm_discard():
-            event.ignore()
-            return
+        for doc in self._dirty_docs():
+            if not self._confirm_discard(doc):
+                event.ignore()
+                return
         self.resolver.close()
         super().closeEvent(event)
 
