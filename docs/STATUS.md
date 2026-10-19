@@ -2094,6 +2094,40 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   既有 GUI 契约核对：双击待入包叶子不确认不换文档、切换编码/刷新/
   关窗的 `_confirm_discard` 语义、`window.doc = None` 清空入口均兼容。
 
+### ui_editor 导出素材（原格式，2026-10-19，第十四轮）——版本 0.10.6
+
+**画布菜单变化**（面板布局不变）。用户要求：画布右键控件菜单加「导出
+素材」，且「什么格式就什么格式」——资源本身是什么格式/扩展名就按原格式
+导出，不强制转格式。
+
+- `core/asset_export.py`（新，纯逻辑零 Qt）：
+  - `asset_paths_of(widget)`：按 `sFileName` / `sBgFileName` /
+    `sBarFileName` / `sSoundPath` 收集资源路径（去重保序、跳过空值）；
+  - `detect_extension(data, name)`：**按内容**判扩展名——PNG/JPEG/GIF/
+    BMP/RIFF-WAVE/OggS/ID3|MP3 帧/TGA 尾标 → 标准后缀；`is_sprite`
+    命中（I0/T0/I1/T1/T4/T5）→ 沿用资源路径原扩展名（无则 `.igs`）；
+    认不出 → 原扩展名。**不做任何格式转换**；
+  - `export_targets(assets, name)`：`fetch_bytes` 取原字节 → 建议文件名按
+    内容扩展名；`.spr` 用 `decode_spr_text` + `frame_sources` 找帧图源，
+    包内读得到就一并导出；`unique_target` 重名加 `-2/-3`；
+  - `export_raw_assets(assets, widget, dest, protected_paths)`：写盘前
+    `guard_output` 防覆盖源资源/符号链接，返回 `(写出文件, 缺失资源)`。
+- `ui/commands.py`：`build_canvas_context_menu` 在选中控件时插入
+  **「导出素材」子菜单**（`_add_export_asset_menu`）：「按原格式导出…」
+  （默认，调 `export_raw_assets`）与「转成图片导出（精灵逐帧 PNG）…」
+  （复用既有 `image_export.export_image_files`）；无素材字段时显示灰色
+  提示项。`export_widget_assets(widgets, convert=False)`：`resolver` 取字节
+  → 选目录（`_asset_export_dir`，测试可 mock）→ 逐控件导出 → 状态栏汇总
+  「已导出 A、B 等 N 个文件 到 目录；M 个资源包内找不到：X」。
+- 测试：`tests/test_asset_export.py` 13 项（8 种真格式嗅探、路径写错按内容
+  纠正、未知/精灵保留原扩展名、字段收集与去重、原字节写出、`.spr` 连带
+  帧图、重名序号、缺失资源、重复导出不覆盖）；
+  `tests/test_gui_asset_export.py` 6 项（菜单项与子菜单、无素材灰提示、
+  原格式导出落到 `.jpg`、多字段、缺失报状态、取消目录不写）。全量
+  **430 项 0 失败（1 skip）**；ruff 0；wincompat 0/0/0。
+- 边界：「转成图片」仍会解精灵为 PNG（用户点明要图片时才用）；`.spr` 帧图
+  源若不在同期资源包内则只导 `.spr` 本身；导出目录由用户每次选择，不记忆。
+
 ### ui_editor 颜色吸管（屏幕取色，2026-10-19，第十三轮）——版本 0.10.5
 
 **面板变化**（画布不变）。用户问颜色选择器有没有吸管。此前用的是
