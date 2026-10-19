@@ -80,8 +80,16 @@ class BusyOverlay(QWidget):
             "#busyPanel { background: #23272e; border: 1px solid #3a4150;"
             " border-radius: 6px; }")
         self._title = QLabel("", self._panel)
+        # 深色面板（#23272e）上标题/百分比必须白字（用户实测黑字看不清）
+        self._title.setStyleSheet("color: #ffffff;")
         self._bar = QProgressBar(self._panel)
         self._bar.setMinimumWidth(320)
+        self._bar.setStyleSheet(
+            "QProgressBar { color: #ffffff; background: #3a4150;"
+            " border: 1px solid #4a5364; border-radius: 4px;"
+            " text-align: center; min-height: 18px; }"
+            "QProgressBar::chunk { background: #3d7eff;"
+            " border-radius: 3px; }")
         self._detail = QLabel("", self._panel)
         self._detail.setStyleSheet("color: #aab4c4;")
         self._cancel = QPushButton("取消", self._panel)
