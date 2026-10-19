@@ -36,7 +36,8 @@ class TestBusyOverlayColors(unittest.TestCase):
 
         from ui_editor.ui.busy import BusyOverlay
 
-        overlay = BusyOverlay(QWidget())
+        host = QWidget()  # 父控件要活着，否则子 QLabel 会被回收
+        overlay = BusyOverlay(host)
         self.assertIn("color:", overlay._detail.styleSheet())
 
 

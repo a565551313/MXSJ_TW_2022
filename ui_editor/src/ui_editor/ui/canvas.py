@@ -163,13 +163,24 @@ class WidgetItem(QGraphicsItem):
             item = item.parentItem()
         return False
 
+    def _parent_box(self) -> tuple[float, float] | None:
+        """父控件的有效尺寸（父图元按图片撑开时的真实像素）；未知返回 None。"""
+        parent_item = self.parentItem()
+        if parent_item is None:
+            return None
+        width = float(getattr(parent_item, "_width", 0.0))
+        height = float(getattr(parent_item, "_height", 0.0))
+        if width <= 0 or height <= 0:
+            return None
+        return width, height
+
     def _clamped_position(self, value):
         """拖动限制在父控件矩形内（父就是子的画布）。"""
-        parent = self.widget.parent
-        if parent is None:
+        box = self._parent_box()
+        if box is None:
             return value
-        max_x = max(0.0, float(parent.width) - self._width)
-        max_y = max(0.0, float(parent.height) - self._height)
+        max_x = max(0.0, box[0] - self._width)
+        max_y = max(0.0, box[1] - self._height)
         return QPointF(min(max(value.x(), 0.0), max_x),
                        min(max(value.y(), 0.0), max_y))
 
@@ -316,12 +327,12 @@ class WidgetItem(QGraphicsItem):
                 if "n" in handle:
                     y -= 8 - h
                 h = 8
-        parent = self.widget.parent
-        if parent is not None:  # 缩放也限制在父矩形内
-            x = min(max(x, 0.0), max(0.0, float(parent.width) - 8.0))
-            y = min(max(y, 0.0), max(0.0, float(parent.height) - 8.0))
-            w = min(w, max(8.0, float(parent.width) - x))
-            h = min(h, max(8.0, float(parent.height) - y))
+        box = self._parent_box()
+        if box is not None:  # 缩放也限制在父矩形内
+            x = min(max(x, 0.0), max(0.0, box[0] - 8.0))
+            y = min(max(y, 0.0), max(0.0, box[1] - 8.0))
+            w = min(w, max(8.0, box[0] - x))
+            h = min(h, max(8.0, box[1] - y))
         self.widget.set_geometry(x=int(round(x)), y=int(round(y)),
                                  width=int(round(w)), height=int(round(h)))
         self.prepareGeometryChange()

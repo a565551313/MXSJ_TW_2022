@@ -2094,6 +2094,37 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   既有 GUI 契约核对：双击待入包叶子不确认不换文档、切换编码/刷新/
   关窗的 `_confirm_discard` 语义、`window.doc = None` 清空入口均兼容。
 
+### ui_editor 颜色选择器接列表颜色（2026-10-19，第九轮）——版本 0.10.1
+
+**面板变化**（画布不变）。用户实测「颜色选择器呢」：0.10.0 的色块只
+接了标量属性，而真实 `.dlg` 的颜色几乎都是列表。证据：原生属性面板把
+颜色当 `iType 5`、`Code2Color` 生成 3/6/9 个整数（
+`docs/analysis/evidence/widgetconfig_20261017/native_tables.json`、
+`docs/analysis/native_widgetconfig_comparison_20261017.md` §1.5）；本仓库
+真实布局统计 `lColor` 3 个数 13 处 / 6 个数 12 处 / 9 个数 5 处、
+`lNormalColor` 3 个数 1 处；新建控件默认 `lColor: []`。
+
+- `core/colors.py`：`color_groups`（0/1/2/3 组，非 3 的倍数或含非
+  整数返回 None）、`group_color`、`set_group_color`（保持 list/tuple
+  类型与长度、越界夹 0~255）、`list_text`。
+- `ui/property_panel.py`：列表颜色每组一个色块（空表给 `＋`），点色块
+  只改该组 RGB；输入框保留，文本改后组数变化则重建面板让色块重排；
+  非 3 倍数/含非整数仍走普通序列编辑器。标量颜色行为不变。
+- **顺带修 0.10.0 的回归**：父内夹取原来用 `iWidth/iHeight` 原值，
+  父控件宽高为 0（靠图片撑开）时会把子控件压成 8×8 或贴左上角。现在
+  统一用有效像素尺寸（画布取父图元实际尺寸、命令层用
+  `painters.effective_size`），尺寸未知（<=0）时不夹、只保证非负。
+- 测试：`tests/test_colors.py` 增 6 项列表颜色（17 项全绿）；GUI
+  `tests/test_gui_color_picker.py` 扩到 8 项（含真实 6 元组选色、空表
+  添加、文本改类型保持、非法长度回退）。
+- **沙箱首次跑通 Qt**：用 /tmp 下自建 stub（GL/EGL/XKB/DBus 用空符号
+  且带版本脚本，fontconfig/freetype/X11 用系统真库）让 offscreen 可用，
+  全量 **375 项 0 失败（1 skip）**，含所有 GUI 用例。顺带修了 3 个
+  一直没被跑到的测试自身缺陷：导出回调签名（`got.extend` 被按两参
+  调用）、`QHeaderView.resizeMode` → `sectionResizeMode`、遮罩详情
+  用例没有保住父控件导致子 QLabel 被回收；等比缩放/锁定用例先给根
+  控件显式 400×300 画布，免得被新的父内夹取挡住。
+
 ### ui_editor 父子级 / 取色器 / 拖框多选（2026-10-19，第八轮）——版本 0.10.0
 
 **画布与面板都有变化**。用户要求：①控件树 ←→ 设父子级 + 右键「置父 ▸」

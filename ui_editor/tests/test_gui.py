@@ -892,6 +892,9 @@ class TestWidgetLockGui(unittest.TestCase):
         self._tmp.cleanup()
 
     def _add_button(self, parent=None):
+        # 根控件在迷你包里是 0x0（靠图片撑开），这里显式给大画布，
+        # 免得子控件缩放被「父就是子画布」的夹取规则挡住。
+        self.doc.roots[0].set_geometry(width=400, height=300)
         widget = self.doc.new_widget(
             "CButton", parent=parent or self.doc.roots[0])
         widget.set_geometry(x=10, y=10, width=100, height=50)
@@ -1069,6 +1072,9 @@ class TestAspectResize(unittest.TestCase):
         self._tmp.cleanup()
 
     def _add_button(self):
+        # 根控件在迷你包里是 0x0（靠图片撑开），显式给大画布，
+        # 让等比缩放的数值不被父矩形夹住。
+        self.doc.roots[0].set_geometry(width=400, height=300)
         widget = self.doc.new_widget("CButton", parent=self.doc.roots[0])
         widget.set_geometry(x=10, y=10, width=100, height=50)
         self.window._refresh_structure()
@@ -1252,7 +1258,7 @@ class TestImagePicker(unittest.TestCase):
         got: list = []
         dialog = ResourcePickerDialog(
             None, "t", ["a\\x.png", "a\\y.png"], "", None,
-            export_handler=got.extend)
+            export_handler=lambda paths, _dlg: got.extend(paths))
         dialog._list.item(1).setSelected(True)
         dialog._choose_export()
         self.assertEqual(got, ["a\\y.png"])
@@ -1525,7 +1531,11 @@ class TestWidgetTreeHeader(unittest.TestCase):
         tree = panel._tree
         self.assertEqual(tree.columnCount(), 2)
         header = tree.header()
-        self.assertEqual(header.resizeMode(0), QHeaderView.ResizeMode.Stretch)
-        self.assertEqual(header.resizeMode(1), QHeaderView.ResizeMode.Fixed)
-        self.assertEqual(tree.columnWidth(1), 24)
+        self.assertEqual(header.sectionResizeMode(0),
+                         QHeaderView.ResizeMode.Stretch)
+        self.assertEqual(header.sectionResizeMode(1),
+                         QHeaderView.ResizeMode.Fixed)
+        # 锁图标列固定为窄列（不同样式会带 1~2px 边距）
+        self.assertLessEqual(tree.columnWidth(1), 30)
+        self.assertGreaterEqual(tree.columnWidth(1), 24)
         self.assertFalse(header.stretchLastSection())

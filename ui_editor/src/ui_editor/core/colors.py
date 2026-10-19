@@ -16,7 +16,8 @@ import re
 
 __all__ = [
     "is_color_key", "parse_color", "format_like", "to_text",
-    "coerce_like", "has_alpha",
+    "coerce_like", "has_alpha", "color_groups", "group_color",
+    "set_group_color", "list_text",
 ]
 
 _RGB_MAX = 0xFFFFFF
@@ -153,3 +154,60 @@ def coerce_like(original: object, text: str) -> object:
     if isinstance(original, str):
         return text
     return original
+
+
+# -- 列表形式的颜色（真实 .dlg 的主力写法） ---------------------------
+# 原生属性面板把颜色当 iType 5，Code2Color 生成 3/6/9 个整数（1~3 组
+# RGB）；实测真实布局里 lColor 就是 [r,g,b] / 两组 / 三组。这里按“每组
+# 3 个整数”处理，容器类型（list/tuple）与长度保持不变。
+_GROUP_SIZE = 3
+_GROUP_LENGTHS = (3, 6, 9)
+
+
+def color_groups(value: object) -> int | None:
+    """列表颜色的组数：0=空表（可添加一组），3/6/9 个整数时为 1~3。
+
+    不是可编辑的列表颜色（长度不对、含非整数、越界）返回 None，
+    调用方应退回普通文本编辑器。
+    """
+    if not isinstance(value, (list, tuple)):
+        return None
+    if len(value) == 0:
+        return 0
+    if len(value) not in _GROUP_LENGTHS:
+        return None
+    for item in value:
+        if isinstance(item, bool) or not isinstance(item, int):
+            return None
+        if not 0 <= item <= 255:
+            return None
+    return len(value) // _GROUP_SIZE
+
+
+def group_color(value: object, index: int) -> tuple[int, int, int, int] | None:
+    """取第 index 组 (r, g, b, 255)；越界返回 None。"""
+    if not isinstance(value, (list, tuple)):
+        return None
+    start = index * _GROUP_SIZE
+    if start < 0 or start + _GROUP_SIZE > len(value):
+        return None
+    return (value[start], value[start + 1], value[start + 2], 255)
+
+
+def set_group_color(value: object, index: int,
+                    rgba: tuple[int, int, int, int]) -> object:
+    """改第 index 组并保持容器类型/长度；空表时补成一组 RGB。"""
+    items = list(value) if isinstance(value, (list, tuple)) else []
+    start = index * _GROUP_SIZE
+    if start + _GROUP_SIZE > len(items):
+        items.extend([0] * (start + _GROUP_SIZE - len(items)))
+    red, green, blue, _alpha = (max(0, min(255, int(c))) for c in rgba)
+    items[start:start + _GROUP_SIZE] = [red, green, blue]
+    return tuple(items) if isinstance(value, tuple) else items
+
+
+def list_text(value: object) -> str:
+    """列表颜色在输入框里的文本（与普通序列编辑器同一写法）。"""
+    if isinstance(value, (list, tuple)):
+        return ", ".join(str(item) for item in value)
+    return str(value)
