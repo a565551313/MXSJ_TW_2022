@@ -86,3 +86,49 @@ class TestCoerce(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestColorLists(unittest.TestCase):
+    """真实 .dlg 的颜色是 3/6/9 个整数的列表（原生 Code2Color 1~3 组）。"""
+
+    def test_group_count(self):
+        self.assertEqual(colors.color_groups([255, 255, 255]), 1)
+        self.assertEqual(colors.color_groups([1, 2, 3, 4, 5, 6]), 2)
+        self.assertEqual(colors.color_groups((1, 2, 3, 4, 5, 6, 7, 8, 9)), 3)
+        self.assertEqual(colors.color_groups([]), 0)
+        self.assertIsNone(colors.color_groups([1, 2, 3, 4]))
+        self.assertIsNone(colors.color_groups([1, 2, 300]))
+        self.assertIsNone(colors.color_groups([1.0, 2, 3]))
+        self.assertIsNone(colors.color_groups("255,0,0"))
+        self.assertIsNone(colors.color_groups(0xFF0000))
+
+    def test_group_color(self):
+        self.assertEqual(colors.group_color([1, 2, 3, 4, 5, 6], 0),
+                         (1, 2, 3, 255))
+        self.assertEqual(colors.group_color([1, 2, 3, 4, 5, 6], 1),
+                         (4, 5, 6, 255))
+        self.assertIsNone(colors.group_color([1, 2, 3], 1))
+        self.assertIsNone(colors.group_color([], 0))
+
+    def test_set_group_keeps_container_and_length(self):
+        self.assertEqual(colors.set_group_color([1, 2, 3, 4, 5, 6], 1,
+                                                (9, 8, 7, 255)),
+                         [1, 2, 3, 9, 8, 7])
+        self.assertEqual(colors.set_group_color((1, 2, 3), 0,
+                                                (9, 8, 7, 255)),
+                         (9, 8, 7))
+        self.assertEqual(len(colors.set_group_color(
+            [1, 2, 3, 4, 5, 6], 0, (0, 0, 0, 255))), 6)
+
+    def test_empty_list_gets_first_group(self):
+        self.assertEqual(colors.set_group_color([], 0, (9, 8, 7, 255)),
+                         [9, 8, 7])
+
+    def test_values_are_clamped(self):
+        self.assertEqual(colors.set_group_color([], 0, (300, -5, 7, 255)),
+                         [255, 0, 7])
+
+    def test_list_text(self):
+        self.assertEqual(colors.list_text([255, 0, 0]), "255, 0, 0")
+        self.assertEqual(colors.list_text((1, 2, 3)), "1, 2, 3")
+        self.assertEqual(colors.list_text([]), "")

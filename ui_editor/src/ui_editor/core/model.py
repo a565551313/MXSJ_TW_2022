@@ -324,18 +324,31 @@ class LayoutDocument:
         return None
 
     @staticmethod
-    def clamp_into(parent: Widget | None, x: float, y: float,
+    def clamp_into(box: tuple[int, int] | None, x: float, y: float,
                    width: int, height: int) -> tuple[int, int]:
-        """把子控件左上角夹进父矩形；父比子小时贴左上角，不缩小控件。"""
-        if parent is None:
-            return int(round(x)), int(round(y))
-        max_x = max(0, parent.width - width)
-        max_y = max(0, parent.height - height)
-        return (min(max(int(round(x)), 0), max_x),
-                min(max(int(round(y)), 0), max_y))
+        """把子控件左上角夹进父矩形（box=父的有效像素尺寸）。
+
+        box 为 None 或某一维 <=0 表示尺寸未知（父控件宽高为 0、靠图片
+        撑开但当前解析不到），只保证坐标非负、不按未知尺寸夹，避免把
+        子控件压到左上角。
+        """
+        ix, iy = int(round(x)), int(round(y))
+        if box is None:
+            return max(ix, 0), max(iy, 0)
+        box_w, box_h = box
+        if box_w > 0:
+            ix = min(max(ix, 0), max(0, box_w - width))
+        else:
+            ix = max(ix, 0)
+        if box_h > 0:
+            iy = min(max(iy, 0), max(0, box_h - height))
+        else:
+            iy = max(iy, 0)
+        return ix, iy
 
     def set_parent(self, widget: Widget, parent: Widget | None,
-                   index: int | None = None) -> None:
+                   index: int | None = None,
+                   parent_size: tuple[int, int] | None = None) -> None:
         """把控件挂到 parent 下（None=顶级），父就是子的坐标系。
 
         子坐标换算为相对新父左上角的局部坐标，并夹进父矩形（超出部分
@@ -350,13 +363,20 @@ class LayoutDocument:
             siblings.append(widget)
         else:
             siblings.insert(index, widget)
-        x, y = self.clamp_into(parent, abs_x - px, abs_y - py,
+        box = parent_size
+        if box is None and parent is not None:
+            box = (parent.width, parent.height)
+        x, y = self.clamp_into(box, abs_x - px, abs_y - py,
                                widget.width, widget.height)
         widget.set_geometry(x=x, y=y)
         self.dirty = True
 
-    def indent_widget(self, widget: Widget) -> str | None:
-        """降一级：挂成上一个同级控件的子控件；返回失败原因或 None。"""
+    def indent_widget(self, widget: Widget, sizer=None) -> str | None:
+        """降一级：挂成上一个同级控件的子控件；返回失败原因或 None。
+
+        sizer(控件) 返回该控件的有效像素尺寸，用来把子控件夹进父矩形；
+        不给则退回 ``iWidth/iHeight``。
+        """
         siblings = self.siblings_of(widget)
         index = siblings.index(widget)
         if index == 0:
@@ -365,17 +385,21 @@ class LayoutDocument:
         reason = self.reparent_reason(widget, target)
         if reason is not None:
             return reason
-        self.set_parent(widget, target)
+        size = sizer(target) if sizer is not None else None
+        self.set_parent(widget, target, parent_size=size)
         return None
 
-    def outdent_widget(self, widget: Widget) -> str | None:
+    def outdent_widget(self, widget: Widget, sizer=None) -> str | None:
         """升一级：脱离父控件，成为父控件的下一个同级。"""
         parent = widget.parent
         if parent is None:
             return "它已经是顶级控件。"
         siblings = self.siblings_of(parent)
-        self.set_parent(widget, parent.parent,
-                        index=siblings.index(parent) + 1)
+        new_parent = parent.parent
+        size = (sizer(new_parent) if sizer is not None
+                and new_parent is not None else None)
+        self.set_parent(widget, new_parent,
+                        index=siblings.index(parent) + 1, parent_size=size)
         return None
 
     @property

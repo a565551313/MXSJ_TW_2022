@@ -232,10 +232,12 @@ class PropertyPanel(QWidget):
 
     # -- 各类型编辑器 -------------------------------------------------
     def _make_editor(self, key: str, value: object) -> QWidget | None:
-        if (not isinstance(value, bool) and isinstance(value, (int, str))
-                and colors.is_color_key(key)
-                and colors.parse_color(value) is not None):
-            return self._color_editor(key, value)
+        if colors.is_color_key(key):
+            if (not isinstance(value, bool) and isinstance(value, (int, str))
+                    and colors.parse_color(value) is not None):
+                return self._color_editor(key, value)
+            if colors.color_groups(value) is not None:
+                return self._color_editor(key, value)
         if isinstance(value, bool):
             box = QCheckBox()
             box.setChecked(value)
@@ -288,60 +290,121 @@ class PropertyPanel(QWidget):
         return None
 
     def _color_editor(self, key: str, value: object) -> QWidget:
-        """颜色属性：直接输入框 + 右侧色块取色器。
+        """颜色属性：输入框 + 每组一个色块取色器。
 
-        写回保持原值的表示形式（整数/逗号串/十六进制），避免把一个
-        int 颜色改成字符串后游戏读不了。
+        两类真实写法都支持：
+        * 标量（``iColor`` 整数、``"255,0,0"``、``"#RRGGBB"``）——写回保持
+          原表示形式，避免把一个 int 改成字符串后游戏读不了；
+        * 列表（真实 .dlg 的主力：``lColor`` = 3/6/9 个整数，即 1~3 组
+          RGB，与原生 Code2Color 一致）——一组一个色块，写回保持容器类型
+          与长度；空表给一个色块，选色后补成一组 RGB。
         """
+        groups = colors.color_groups(value)
+        is_list = groups is not None
         row = QWidget()
         layout = QHBoxLayout(row)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(4)
-        edit = QLineEdit(colors.to_text(value))
-        swatch = QToolButton()
-        swatch.setFixedSize(30, 22)
-        swatch.setToolTip("选择颜色（写回时保持原来的写法：整数/逗号串/十六进制）")
+        if is_list:
+            edit = QLineEdit(colors.list_text(value))
+            edit.setToolTip(
+                "逗号分隔的整数：每组 3 个数是一色（与游戏格式一致）；"
+                "右侧色块按组改色")
+        else:
+            edit = QLineEdit(colors.to_text(value))
+            edit.setToolTip(
+                "选择颜色（写回时保持原来的写法：整数/逗号串/十六进制）")
+        swatch_count = 1 if not is_list else max(1, groups)
+        swatches = []
+        for index in range(swatch_count):
+            button = QToolButton()
+            button.setFixedSize(30, 22)
+            if is_list:
+                if groups == 0:
+                    button.setText("＋")
+                    button.setToolTip("当前为空，点此添加一组颜色")
+                else:
+                    button.setToolTip(f"第 {index + 1} 组颜色（R,G,B）")
+            else:
+                button.setToolTip(
+                    "选择颜色（写回时保持原来的写法：整数/逗号串/十六进制）")
+            swatches.append(button)
+            layout.addWidget(button)
 
-        def paint_swatch() -> None:
-            current = self._widget.props.get(key) if self._widget else value
-            rgba = colors.parse_color(current)
-            if rgba is None:
-                swatch.setStyleSheet("")
-                return
-            red, green, blue, _alpha = rgba
-            swatch.setStyleSheet(
-                "QToolButton{border:1px solid #7a8291;border-radius:3px;"
-                f"background:rgb({red},{green},{blue});}}")
+        def current_value():
+            if self._widget is not None and key in self._widget.props:
+                return self._widget.props[key]
+            return value
+
+        def paint_swatches() -> None:
+            current = current_value()
+            for index, button in enumerate(swatches):
+                if is_list:
+                    rgba = colors.group_color(current, index)
+                    if rgba is not None:
+                        button.setText("")
+                else:
+                    rgba = colors.parse_color(current)
+                if rgba is None:
+                    button.setStyleSheet("")
+                    continue
+                red, green, blue, _alpha = rgba
+                button.setStyleSheet(
+                    "QToolButton{border:1px solid #7a8291;border-radius:3px;"
+                    f"background:rgb({red},{green},{blue});}}")
 
         def commit_text() -> None:
-            new_value = colors.coerce_like(value, edit.text())
-            if self._commit(key, new_value):
-                edit.setText(colors.to_text(new_value))
-                paint_swatch()
+            if is_list:
+                new_value = _parse_sequence(edit.text(), value)
+                if not self._commit(key, new_value):
+                    return
+                if colors.color_groups(new_value) != groups:
+                    self._rebuild()  # 组数变了，色块要重排
+                    return
+            else:
+                new_value = colors.coerce_like(value, edit.text())
+                if not self._commit(key, new_value):
+                    return
+            edit.setText(colors.list_text(new_value) if is_list
+                         else colors.to_text(new_value))
+            paint_swatches()
 
-        def pick() -> None:
-            rgba = (colors.parse_color(edit.text())
-                    or colors.parse_color(value))
-            initial = QColor(*rgba) if rgba is not None else QColor("white")
-            chosen = QColorDialog.getColor(
-                initial, self, f"选择颜色：{key}",
-                QColorDialog.ColorDialogOption.ShowAlphaChannel)
-            if not chosen.isValid():
-                return
-            new_value = colors.format_like(
-                value, (chosen.red(), chosen.green(), chosen.blue(),
-                        chosen.alpha()))
-            if self._commit(key, new_value):
-                edit.setText(colors.to_text(new_value))
-                paint_swatch()
+        def make_pick(index: int):
+            def pick() -> None:
+                current = current_value()
+                if is_list:
+                    rgba = colors.group_color(current, index)
+                else:
+                    rgba = (colors.parse_color(edit.text())
+                            or colors.parse_color(current))
+                initial = (QColor(*rgba) if rgba is not None
+                           else QColor("white"))
+                title = (f"选择颜色：{key}" if not is_list
+                         else f"选择颜色：{key} 第 {index + 1} 组")
+                chosen = QColorDialog.getColor(
+                    initial, self, title,
+                    QColorDialog.ColorDialogOption.ShowAlphaChannel)
+                if not chosen.isValid():
+                    return
+                chosen_rgba = (chosen.red(), chosen.green(), chosen.blue(),
+                               chosen.alpha())
+                if is_list:
+                    new_value = colors.set_group_color(
+                        current_value(), index, chosen_rgba)
+                else:
+                    new_value = colors.format_like(current, chosen_rgba)
+                if not self._commit(key, new_value):
+                    return
+                edit.setText(colors.list_text(new_value) if is_list
+                             else colors.to_text(new_value))
+                paint_swatches()
+            return pick
 
         edit.editingFinished.connect(commit_text)
-        swatch.clicked.connect(pick)
+        for index, button in enumerate(swatches):
+            button.clicked.connect(make_pick(index))
         layout.addWidget(edit, 1)
-        layout.addWidget(swatch)
-        paint_swatch()
-        self._getters[key] = lambda v: (edit.setText(colors.to_text(v)),
-                                        paint_swatch())
+        paint_swatches()
         return row
 
     _IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif",

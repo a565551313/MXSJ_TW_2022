@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QTextEdit,
 )
 
+from ..core import painters
 from ..core.diagnostics import reference_impacts
 from ..core.model import Widget
 
@@ -106,11 +107,13 @@ class EditingCommandsMixin:
             if reason is not None:
                 self._update_status(reason)
                 return
+        size = (painters.effective_size(parent, self.ctx)
+                if parent is not None else None)
         moved: list[Widget] = []
         for widget in targets:
             if widget.parent is parent:
                 continue
-            self.doc.set_parent(widget, parent)
+            self.doc.set_parent(widget, parent, parent_size=size)
             moved.append(widget)
         if not moved:
             self._update_status("选中的控件已经在这个父控件下。")
@@ -129,7 +132,8 @@ class EditingCommandsMixin:
         if self.doc is None or widget is None:
             self._update_status("请先选中要降级的控件。")
             return
-        reason = self.doc.indent_widget(widget)
+        reason = self.doc.indent_widget(
+            widget, sizer=lambda w: painters.effective_size(w, self.ctx))
         if reason is not None:
             self._update_status(reason)
             return
@@ -145,7 +149,8 @@ class EditingCommandsMixin:
         if self.doc is None or widget is None:
             self._update_status("请先选中要升级的控件。")
             return
-        reason = self.doc.outdent_widget(widget)
+        reason = self.doc.outdent_widget(
+            widget, sizer=lambda w: painters.effective_size(w, self.ctx))
         if reason is not None:
             self._update_status(reason)
             return
