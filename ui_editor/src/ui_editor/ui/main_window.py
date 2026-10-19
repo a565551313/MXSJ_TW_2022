@@ -320,8 +320,17 @@ class MainWindow(
             selected = self.scene.selectedItems()
         except RuntimeError:
             return  # 窗口销毁过程中场景已释放，忽略残响信号
-        widget = selected[0].widget if selected else None
-        # 多选（Ctrl+点）时不能回灌单选同步，否则其余选中会被冲掉
+        widgets = [it.widget for it in selected if hasattr(it, "widget")]
+        if len(widgets) > 1 and self.doc is not None:
+            # 多选（Ctrl+点/拖框）时按文档顺序取第一个当主选中，属性面板
+            # 只编辑它；状态栏报数量，删/复制/锁定仍作用于整组。
+            order = {id(w): i for i, w in enumerate(self.doc.all_widgets())}
+            widgets.sort(key=lambda w: order.get(id(w), 0))
+            self._update_status(
+                f"已选中 {len(widgets)} 个控件（属性面板编辑最上层"
+                f"「{widgets[0].name or '(未命名)'}」）")
+        widget = widgets[0] if widgets else None
+        # 多选时不能回灌单选同步，否则其余选中会被冲掉
         self._select_widget(widget, sync_scene=False)
         self._sync_edit_actions()
 

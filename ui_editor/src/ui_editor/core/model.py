@@ -301,6 +301,83 @@ class LayoutDocument:
         widget.set_geometry(x=abs_x, y=abs_y)
         self.dirty = True
 
+    # -- 父子级（置父 / 箭头升降级） ---------------------------------
+    def reparent_reason(self, widget: Widget,
+                        parent: Widget | None) -> str | None:
+        """不能把 widget 挂到 parent 下的原因；可以则返回 None。
+
+        防环（挂到自己或子孙下面）与锁定护栏：自身或子孙已锁定时不改
+        结构，与删除护栏一致。
+        """
+        if parent is None:
+            return None
+        if parent is widget:
+            return "不能把控件挂到它自己下面。"
+        node: Widget | None = parent
+        while node is not None:
+            if node is widget:
+                return "不能把控件挂到它自己的子孙下面。"
+            node = node.parent
+        if any(node.locked for node in widget.walk()):
+            name = widget.name or "(未命名)"
+            return f"「{name}」或它的子控件已锁定，先解锁再改父子级。"
+        return None
+
+    @staticmethod
+    def clamp_into(parent: Widget | None, x: float, y: float,
+                   width: int, height: int) -> tuple[int, int]:
+        """把子控件左上角夹进父矩形；父比子小时贴左上角，不缩小控件。"""
+        if parent is None:
+            return int(round(x)), int(round(y))
+        max_x = max(0, parent.width - width)
+        max_y = max(0, parent.height - height)
+        return (min(max(int(round(x)), 0), max_x),
+                min(max(int(round(y)), 0), max_y))
+
+    def set_parent(self, widget: Widget, parent: Widget | None,
+                   index: int | None = None) -> None:
+        """把控件挂到 parent 下（None=顶级），父就是子的坐标系。
+
+        子坐标换算为相对新父左上角的局部坐标，并夹进父矩形（超出部分
+        自动挪进来），保证置父后子控件落在父"画布"内。
+        """
+        abs_x, abs_y = self.abs_position(widget)
+        self.siblings_of(widget).remove(widget)
+        px, py = self.abs_position(parent) if parent is not None else (0, 0)
+        widget.parent = parent
+        siblings = parent.children if parent is not None else self.roots
+        if index is None:
+            siblings.append(widget)
+        else:
+            siblings.insert(index, widget)
+        x, y = self.clamp_into(parent, abs_x - px, abs_y - py,
+                               widget.width, widget.height)
+        widget.set_geometry(x=x, y=y)
+        self.dirty = True
+
+    def indent_widget(self, widget: Widget) -> str | None:
+        """降一级：挂成上一个同级控件的子控件；返回失败原因或 None。"""
+        siblings = self.siblings_of(widget)
+        index = siblings.index(widget)
+        if index == 0:
+            return "它已经是同级第一个，没有可挂靠的上一个同级控件。"
+        target = siblings[index - 1]
+        reason = self.reparent_reason(widget, target)
+        if reason is not None:
+            return reason
+        self.set_parent(widget, target)
+        return None
+
+    def outdent_widget(self, widget: Widget) -> str | None:
+        """升一级：脱离父控件，成为父控件的下一个同级。"""
+        parent = widget.parent
+        if parent is None:
+            return "它已经是顶级控件。"
+        siblings = self.siblings_of(parent)
+        self.set_parent(widget, parent.parent,
+                        index=siblings.index(parent) + 1)
+        return None
+
     @property
     def display_name(self) -> str:
         if self.source_path:

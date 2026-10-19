@@ -311,6 +311,9 @@ class WindowSetupMixin:
         self.tree_panel.add_root_requested.connect(self._add_root_from_tree)
         self.tree_panel.promote_requested.connect(
             self.promote_selected_to_root)
+        self.tree_panel.indent_requested.connect(self.indent_selected)
+        self.tree_panel.outdent_requested.connect(self.outdent_selected)
+        self.tree_panel.set_parent_requested.connect(self.reparent_to)
         self.tree_panel.delete_requested.connect(self.delete_selected)
         self.tree_panel.reorder_requested.connect(self._reorder_widget)
         self.palette_panel.add_requested.connect(self.add_widget)
