@@ -130,6 +130,23 @@ class TestExportRaw(unittest.TestCase):
         self.assertEqual(written, [])
         self.assertEqual(missing, ["gone.png"])
 
+    def test_invalid_path_is_reported_not_raised(self):
+        """resolver 对非法路径抛 ValueError 时，导出降级为「缺失」。"""
+
+        class StrictAssets(FakeAssets):
+            def fetch_bytes(self, name):
+                if name.startswith(("/", "C:")):
+                    raise ValueError(f"资源路径必须是包内相对路径：{name!r}")
+                return super().fetch_bytes(name)
+
+        assets = StrictAssets({"ok.png": PNG})
+        widget = self._widget(sFileName="C:\\abs\\evil.png",
+                              sBgFileName="ok.png")
+        written, missing = asset_export.export_raw_assets(
+            assets, widget, self.dest)
+        self.assertEqual([p.name for p in written], ["ok.png"])
+        self.assertEqual(len(missing), 1)
+
     def test_repeat_export_does_not_overwrite(self):
         assets = FakeAssets({"a.png": PNG})
         widget = self._widget(sFileName="a.png")
