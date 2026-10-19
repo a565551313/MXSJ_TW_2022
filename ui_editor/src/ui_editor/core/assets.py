@@ -14,9 +14,10 @@ import os
 import re
 from pathlib import Path
 
-from PySide6.QtGui import QImage
+from PySide6.QtCore import QRect
+from PySide6.QtGui import QImage, QPainter
 
-from . import dlg_codec, sprite
+from . import dir_base, dlg_codec, sprite
 from .catalog import known_layout_hashes, known_layout_paths
 from .errors import DlgError
 from .pack import FlsPack
@@ -47,6 +48,68 @@ def _scan_media_in_text(text: str) -> set[str]:
 def _looks_media(text: str) -> bool:
     return (("\\" in text or "/" in text)
             and text.lower().endswith(_MEDIA_EXTS))
+
+
+def _stitch_row(images: list[QImage]) -> QImage:
+    """横拼：等高画布，逐块原尺寸、垂直居中（近似横框预览）。"""
+    height = max(img.height() for img in images)
+    width = sum(img.width() for img in images)
+    out = QImage(width, height, QImage.Format.Format_RGBA8888)
+    out.fill(0)
+    painter = QPainter(out)
+    try:
+        x = 0
+        for img in images:
+            painter.drawImage(x, (height - img.height()) // 2, img)
+            x += img.width()
+    finally:
+        painter.end()
+    return out
+
+
+def _stitch_column(images: list[QImage]) -> QImage:
+    """竖拼：等宽画布，逐块原尺寸、水平居中（近似竖框预览）。"""
+    width = max(img.width() for img in images)
+    height = sum(img.height() for img in images)
+    out = QImage(width, height, QImage.Format.Format_RGBA8888)
+    out.fill(0)
+    painter = QPainter(out)
+    try:
+        y = 0
+        for img in images:
+            painter.drawImage((width - img.width()) // 2, y, img)
+            y += img.height()
+    finally:
+        painter.end()
+    return out
+
+
+def _stitch_grid(images: list[QImage], columns: int) -> QImage:
+    """九片拼装：行列规整化，每块拉伸填满格（近似九宫格预览）。"""
+    rows = len(images) // columns
+    col_w = [
+        max(images[r * columns + c].width() for r in range(rows))
+        for c in range(columns)
+    ]
+    row_h = [
+        max(images[r * columns + c].height() for c in range(columns))
+        for r in range(rows)
+    ]
+    out = QImage(sum(col_w), sum(row_h), QImage.Format.Format_RGBA8888)
+    out.fill(0)
+    painter = QPainter(out)
+    try:
+        y = 0
+        for r in range(rows):
+            x = 0
+            for c in range(columns):
+                target = QRect(x, y, col_w[c], row_h[r])
+                painter.drawImage(target, images[r * columns + c])
+                x += col_w[c]
+            y += row_h[r]
+    finally:
+        painter.end()
+    return out
 
 
 class AssetResolver:
@@ -311,8 +374,13 @@ class AssetResolver:
 
     def _load_image(self, name: str) -> list[QImage] | None:
         data = self.fetch_bytes(name)
-        if data is None:
-            return None
+        frames = self._decode_frames(data) if data is not None else None
+        if frames is not None:
+            return frames
+        return self._compose_dir_base(name)
+
+    @staticmethod
+    def _decode_frames(data: bytes) -> list[QImage] | None:
         if data[:4] == b"\x89PNG" or data[:2] == b"\xff\xd8" \
                 or data[:3] == b"GIF" or data[:2] == b"BM":
             image = QImage.fromData(data)
@@ -331,6 +399,34 @@ class AssetResolver:
                 images.append(image.copy())
             return images or None
         return None
+
+    def _piece_exists(self, name: str) -> bool:
+        return self._staged_lookup(name) is not None or self._exists(name)
+
+    def _compose_dir_base(self, name: str) -> list[QImage] | None:
+        """目录型基路径：按拼名族合成预览帧（规则见 :mod:`.dir_base`）。
+
+        序号帧族逐文件成帧（按钮态预览可用）；横/竖/九片族拼成一张
+        近似预览图。拼不出任何整族时返回 None，走原占位框。
+        """
+        chosen = dir_base.plan(name, self._piece_exists)
+        if chosen is None:
+            return None
+        frames = [self._load_single_image(piece) for piece in chosen.pieces]
+        if not frames or any(img is None for img in frames):
+            return None
+        images = [img for img in frames if img is not None]
+        if chosen.kind == "frames":
+            return images
+        if chosen.kind == "h_slice":
+            return [_stitch_row(images)]
+        if chosen.kind == "v_slice":
+            return [_stitch_column(images)]
+        return [_stitch_grid(images, 3)]
+
+    def _load_single_image(self, name: str) -> QImage | None:
+        frames = self._load_image(name)
+        return frames[0] if frames else None
 
     def close(self) -> None:
         for pack in self._packs:
