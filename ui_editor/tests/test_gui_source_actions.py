@@ -186,7 +186,9 @@ class SourceActionTests(unittest.TestCase):
         self.window.open_layout_file(str(self.file))
         self.window.doc.roots[0].props["sText"] = "已经编辑保存"
         out = self.root / "saved.dlg"
-        with mock.patch("ui_editor.ui.workflows.SaveReviewDialog.exec", return_value=1):
+        with mock.patch(
+                "ui_editor.ui.save_workflows.SaveReviewDialog.exec",
+                return_value=1):
             self.assertTrue(self.window.save_as(str(out)))
         self.assertEqual(dlg_codec.parse_bytes(out.read_bytes(), text_encoding="gbk")
                          [0][0]["sText"], "已经编辑保存")
@@ -202,11 +204,11 @@ class SourceActionTests(unittest.TestCase):
         old = b"old target bytes"
         out.write_bytes(old)
         with mock.patch(
-                "ui_editor.ui.workflows.SaveReviewDialog.exec",
+                "ui_editor.ui.save_workflows.SaveReviewDialog.exec",
                 return_value=1,
         ):
             with mock.patch(
-                    "ui_editor.ui.workflows.os.replace",
+                    "ui_editor.ui.save_workflows.os.replace",
                     side_effect=OSError("publish failed"),
             ):
                 with mock.patch(

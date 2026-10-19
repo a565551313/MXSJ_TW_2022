@@ -221,7 +221,16 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                 "继续的话，保存回资源包时会用新图替换它，确定吗？")
             if answer != QMessageBox.StandardButton.Yes:
                 return
-        self._on_stage(res_path, data)
+        try:
+            self._on_stage(res_path, data)
+        except ValueError as exc:
+            # 0.11.0 起资源层直接拒绝绝对路径/`..`/GBK 不可编码等名字；
+            # 必须在这里说出来，否则用户只看到「点确定没反应」。
+            QMessageBox.warning(
+                self, "这个名字不能用",
+                f"{res_path}\n\n{exc}\n\n"
+                "请换一个只用中文、英文、数字、下划线的包内相对路径。")
+            return
         self.add_staged_path(res_path)
 
     def _choose_add(self) -> None:

@@ -233,7 +233,7 @@ class TestGuiReview(unittest.TestCase):
         changes = w.doc.changes()
         target = self.root / "new.dlg"
         with mock.patch(
-            "ui_editor.ui.workflows.SaveReviewDialog.exec", return_value=0
+            "ui_editor.ui.save_workflows.SaveReviewDialog.exec", return_value=0
         ):
             self.assertFalse(w.save_as(str(target)))
         self.assertFalse(target.exists())
@@ -250,7 +250,7 @@ class TestGuiReview(unittest.TestCase):
         changes = w.doc.changes()
         with (
             mock.patch(
-                "ui_editor.ui.workflows.SaveReviewDialog.exec", return_value=1
+                "ui_editor.ui.save_workflows.SaveReviewDialog.exec", return_value=1
             ),
             mock.patch("ui_editor.ui.main_window.QMessageBox.warning"),
         ):
@@ -265,7 +265,7 @@ class TestGuiReview(unittest.TestCase):
         w._on_property_changed(self.kid(), "iFuture")
         target = self.root / "new.dlg"
         with mock.patch(
-            "ui_editor.ui.workflows.SaveReviewDialog.exec", return_value=1
+            "ui_editor.ui.save_workflows.SaveReviewDialog.exec", return_value=1
         ):
             self.assertTrue(w.save_as(str(target)))
         self.assertEqual(w.doc.changes(), [])
@@ -299,7 +299,7 @@ class TestGuiReview(unittest.TestCase):
         w._on_property_changed(self.kid(), "sFileName")
         changes = w.doc.changes()
         with mock.patch(
-            "ui_editor.ui.workflows.SaveReviewDialog", autospec=True
+            "ui_editor.ui.save_workflows.SaveReviewDialog", autospec=True
         ) as dlg:
             dlg.return_value.exec.return_value = 0
             self.assertFalse(w._confirm_save_review(str(target), to_pack=True))
@@ -329,7 +329,7 @@ class TestGuiReview(unittest.TestCase):
                 return_value=(str(target), ""),
             ),
             mock.patch(
-                "ui_editor.ui.workflows.SaveReviewDialog.exec", return_value=0
+                "ui_editor.ui.save_workflows.SaveReviewDialog.exec", return_value=0
             ),
             mock.patch.object(w, "write_pack_copy") as writer,
         ):
@@ -346,7 +346,7 @@ class TestGuiReview(unittest.TestCase):
         src.write_bytes(pack_build.build_archive(
             [pack_build.RawEntry(mx_hash(b"ui/test.dlg"), 7, plain)]))
         w.doc.source_pack = (str(src), "ui/test.dlg")
-        with mock.patch("ui_editor.ui.workflows.SaveReviewDialog",
+        with mock.patch("ui_editor.ui.save_workflows.SaveReviewDialog",
                         autospec=True) as dlg:
             dlg.return_value.exec.return_value = 0
             w._confirm_save_review(str(target), to_pack=True)
@@ -366,7 +366,7 @@ class TestGuiReview(unittest.TestCase):
         src.write_bytes(pack_build.build_archive(
             [pack_build.RawEntry(mx_hash(b"ui/test.dlg"), 7, foreign)]))
         w.doc.source_pack = (str(src), "ui/test.dlg")
-        with mock.patch("ui_editor.ui.workflows.SaveReviewDialog",
+        with mock.patch("ui_editor.ui.save_workflows.SaveReviewDialog",
                         autospec=True) as dlg:
             dlg.return_value.exec.return_value = 0
             w._confirm_save_review(str(target), to_pack=True)
@@ -414,9 +414,11 @@ class TestGuiReview(unittest.TestCase):
         w.doc.source_pack = (str(src), "ui/test.dlg")
         name = "images/😀.png"
         self.kid().props["sUnknownPath"] = name
-        w.resolver.stage_image(name, b"pending")
-        target = self.root / "new.fls"
+        # 0.11.0 起在挂账那一刻就按 GBK 闸门拒绝（原来要到写包才报），
+        # 拒绝照样有效，只是更早、且选图窗会弹出可读提示。
         with self.assertRaisesRegex(ValueError, "GBK"):
-            w.write_pack_copy(str(target))
-        self.assertFalse(target.exists())
-        self.assertEqual(w.resolver.staged_images(), {name: b"pending"})
+            w.resolver.stage_image(name, b"pending")
+        self.assertEqual(w.resolver.staged_images(), {})
+        target = self.root / "new.fls"
+        w.write_pack_copy(str(target))
+        self.assertTrue(target.exists())  # 没挂账就没有坏图，写包照常

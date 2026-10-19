@@ -124,3 +124,26 @@ def distribute_positions(rects: list[Rect], axis: str,
             result[idx] = (rect[0], cursor)
         cursor += size(rect) + gap
     return result
+
+
+def clamp_in_parent(box: tuple[int, int] | None, x: float, y: float,
+                    width: int, height: int) -> tuple[float, float, bool]:
+    """把坐标夹回父矩形，返回 (x, y, 是否被夹)。
+
+    ``box`` 为父的有效像素尺寸；None 表示顶级控件（没有父框，不夹）。
+    父某一维 <=0 表示尺寸未知，该维只保证非负，不按未知尺寸硬夹。
+    """
+    if box is None:
+        return x, y, False
+    box_w, box_h = box
+    cx, cy = x, y
+    if box_w > 0:
+        cx = min(max(x, 0.0), max(0.0, box_w - width))
+    else:
+        cx = max(x, 0.0)
+    if box_h > 0:
+        cy = min(max(y, 0.0), max(0.0, box_h - height))
+    else:
+        cy = max(y, 0.0)
+    clamped = (cx != x) or (cy != y)
+    return cx, cy, clamped
