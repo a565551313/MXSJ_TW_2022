@@ -143,3 +143,101 @@ class TestLockedWidgetIgnoredOnCanvas(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestRubberBandFromLockedArea(unittest.TestCase):
+    """锁定控件那块区域当空白画布：可以从上面按住拖框选别的控件。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.main_window import MainWindow
+
+        self.window = MainWindow()
+        self.window.resize(1000, 700)
+        self.window.show()
+        self.window.new_layout()  # 干净画布，避免夹具控件叠在上面
+        self.doc = self.window.doc
+        self.frame = self.doc.roots[0]
+        self.frame.set_geometry(x=10, y=10, width=400, height=300)
+        self.locked = self._add("CBox", 20, 20, 100, 40)
+        self.first = self._add("CButton", 170, 30, 60, 24)
+        self.second = self._add("CTextFrame", 170, 70, 60, 24)
+        self.window._refresh_structure()
+        self.window.view.fit_content()
+        self.window._apply_lock([self.locked], True)
+        self.window._select_widget(None)
+        self._app.processEvents()
+
+    def _add(self, wtype, x, y, w, h):
+        widget = self.doc.new_widget(wtype, parent=self.frame)
+        widget.set_geometry(x=x, y=y, width=w, height=h)
+        return widget
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+
+    def _drag_from_locked(self, end_scene):
+        from PySide6.QtCore import QPointF, Qt
+        from PySide6.QtTest import QTest
+
+        view = self.window.view
+        viewport = view.viewport()
+        start = view.mapFromScene(QPointF(40, 40))  # 锁定控件内部
+        end = view.mapFromScene(end_scene)
+        self.assertTrue(view._locked_top(start))
+        QTest.mousePress(viewport, Qt.MouseButton.LeftButton,
+                         Qt.KeyboardModifier.NoModifier, start)
+        QTest.mouseMove(viewport, start + (end - start) * 0.5, 10)
+        QTest.mouseMove(viewport, end, 10)
+        QTest.mouseRelease(viewport, Qt.MouseButton.LeftButton,
+                           Qt.KeyboardModifier.NoModifier, end)
+        self._app.processEvents()
+
+    def test_drag_from_locked_area_selects_other_widgets(self):
+        from PySide6.QtCore import QPointF
+
+        self._drag_from_locked(QPointF(280, 110))
+        selected = {getattr(item, "widget", None) for item
+                    in self.window.scene.selectedItems()}
+        self.assertIn(self.first, selected)
+        self.assertIn(self.second, selected)
+        self.assertNotIn(self.locked, selected)
+        self.assertIn("已选中", self.window.statusBar().currentMessage())
+
+    def test_drag_from_locked_area_does_not_move_parent(self):
+        from PySide6.QtCore import QPointF
+
+        before = (self.frame.x, self.frame.y)
+        self._drag_from_locked(QPointF(280, 110))
+        self.assertEqual((self.frame.x, self.frame.y), before)
+        self.assertEqual((self.first.x, self.first.y), (170, 30))
+
+    def test_small_drag_from_locked_area_keeps_click_through(self):
+        from PySide6.QtCore import QPointF, Qt
+        from PySide6.QtTest import QTest
+
+        view = self.window.view
+        start = view.mapFromScene(QPointF(40, 40))
+        QTest.mouseClick(view.viewport(), Qt.MouseButton.LeftButton,
+                         Qt.KeyboardModifier.NoModifier, start)
+        self._app.processEvents()
+        selected = [getattr(item, "widget", None) for item
+                    in self.window.scene.selectedItems()]
+        self.assertEqual(selected, [self.frame])  # 单击仍穿透到下层
+
+    def test_band_from_locked_area_never_selects_locked(self):
+        from PySide6.QtCore import QPointF
+
+        self._drag_from_locked(QPointF(400, 320))  # 框住整块父控件
+        self.assertFalse(self.window.scene.item_for(self.locked).isSelected())
+        self.assertIn(self.first,
+                      {getattr(i, "widget", None) for i
+                       in self.window.scene.selectedItems()})
