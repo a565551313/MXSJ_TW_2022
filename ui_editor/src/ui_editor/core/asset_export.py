@@ -109,7 +109,12 @@ def export_targets(assets, name: str) -> list[tuple[str, bytes]]:
 
     `.spr` 帧时表连带它指名的帧图源文件（同一个包里读得到才带）。
     """
-    data = assets.fetch_bytes(name)
+    try:
+        data = assets.fetch_bytes(name)
+    except ValueError:
+        # 0.11.0 起 resolver 对绝对路径/非法段/符号链接越界直接拒绝；
+        # 导出不能因此中断整个批次，按「取不到」处理并在状态栏点名。
+        return []
     if data is None:
         return []
     base = _basename(name)
@@ -118,7 +123,10 @@ def export_targets(assets, name: str) -> list[tuple[str, bytes]]:
     if name.lower().endswith(".spr"):
         text = decode_spr_text(data) or ""
         for source in frame_sources(name, text):
-            sibling = assets.fetch_bytes(source)
+            try:
+                sibling = assets.fetch_bytes(source)
+            except ValueError:
+                continue
             if sibling is None:
                 continue
             source_base = _basename(source)

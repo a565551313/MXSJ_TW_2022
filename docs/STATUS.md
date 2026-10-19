@@ -2094,6 +2094,64 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   既有 GUI 契约核对：双击待入包叶子不确认不换文档、切换编码/刷新/
   关窗的 `_confirm_discard` 语义、`window.doc = None` 清空入口均兼容。
 
+### ui_editor 对齐夹父 / 非法图名提示 / 保存不建目录 / 拆分 workflows（2026-10-20，第十六轮）——版本 0.11.2
+
+用户拍板：①③ 按建议处理（拦但要提示、不擅自建目录），②④ 按现状修行，
+另对「对齐/分布是否夹回父矩形」选 **A：夹回父内**。
+
+- **A 对齐夹父**：`core/snap.clamp_in_parent(box, x, y, w, h)`（纯函数，
+  box=None 表示顶级不夹）；`main_window.apply_alignment` /
+  `apply_distribute` 落地前夹进父矩形，状态栏追加「其中 N 个被父控件
+  边界挡住」，未被夹时不加这句。
+- **① 非法图名**：`ui/image_picker._stage_one` 捕获 `on_stage` 抛的
+  `ValueError` → 弹「这个名字不能用」+ 原因 + 改名建议，不挂账；
+  `resolver.stage_image` 仍按 0.11.0 的 GBK 闸门拒绝（拒绝照旧有效，
+  只是更早且可读）。原用例改为断言「挂账即拒 + 无挂账 + 写包照常」。
+- **③ 另存为不建目录**：`save_workflows._write_to` 删掉
+  `target.parent.mkdir(parents=True)`，改为目标父目录不存在时抛
+  `ValueError("目标文件夹不存在：…")`，由既有异常处理弹警告并保持旧文件。
+- **② 挂账键分隔符**：0.11.0 起 `staged_images()` 键统一为 `/`，
+  `test_gui` 未用上图片报告的断言改为 `/` 写法（报告与挂账同一写法）。
+- **④ 拆分**：`ui/workflows.py` 620 → 310 行，新增 `ui/save_workflows.py`
+  （335 行，`SaveWorkflowsMixin`：save/save_as/_write_to/write_pack_copy/
+  save_to_pack_dialog/_confirm_save_review/_require_save_encoding/
+  _fresh_pack_readback/_pack_sources/export_png）；`MainWindow` 基类表
+  加入 `SaveWorkflowsMixin`（仍无 `__init__`、无 QObject 初始化）；
+  `tests/test_window_structure.py` 的 GROUPS/基类表同步；11 处
+  `mock.patch("ui_editor.ui.workflows.SaveReviewDialog…")` 改指新模块，
+  `os.replace` 补丁同理。
+- 测试：新增 `tests/test_gui_align_clamp.py` 5 项（右对齐不出父 + 状态栏
+  提示、父内对齐不加提示、底部对齐夹回、分布不出父、顶级不夹）与
+  `test_gui.TestImagePicker.test_stage_one_rejects_bad_name_with_message`。
+  全量 **444 项 0 失败（1 skip）**；ruff 0；wincompat 0/0/0。
+- master `5895916` 带来的 4 项红灯已全部转绿（①③②④）。
+
+### ui_editor 导出素材兼容资源路径校验（2026-10-20，第十五轮）——版本 0.11.1
+
+**行为变化**（菜单不变）。合并 master 0.11.0（`5895916`）后发现：0.11.0 的
+`AssetResolver._resource_name` 会对绝对路径/盘符/`..`/GBK 不可编码/符号链接
+越界直接抛 `ValueError`，而 0.10.6 的导出素材未处理这一异常。
+
+- `core/asset_export.py`：`export_targets` 捕获 `fetch_bytes` 的 `ValueError`
+  → 该资源按「缺失」返回；`.spr` 帧图源逐个 try/except，坏路径只跳过那一张。
+- `ui/commands.py`：`export_widget_assets` 的「转成图片」分支同样捕获，
+  记入 missing，状态栏点名；多选批次不再被一个坏控件中断。
+- 测试：`tests/test_asset_export.py` 增 1 项（`StrictAssets` 对 `C:\` 抛
+  ValueError → 只导好路径、坏路径进 missing），共 14 项。全量 **439 项，
+  4 项失败是 master `5895916` 自带**（见下），与本轮无关；ruff 0。
+- **master 自带失败（已复现，与本轮无关）**：
+  1. `test_unknown_image_path_field_cannot_bypass_gbk_write_guard` ——
+     `stage_image("images/😀.png")` 现在直接抛 `ValueError`，而用例期望
+     挂账成功、到 `write_pack_copy` 时才报 GBK；
+  2. `test_unreferenced_staged_image_flagged_not_written` ——
+     `staged_unreferenced` 报告里变成规范化后的 `newdir/…`，用例期望原样
+     `newdir\…`；
+  3. `test_failed_loose_save_keeps_baseline_and_unknown_fields` ——
+     `save_as(不存在目录/new.dlg)` 现在返回 True（原子保存会连父目录一起建），
+     用例期望 False；
+  4. `test_window_modules_stay_within_size_limit(workflows.py)` —— 620 行，
+     超出 600 行守限。
+
 ### ui_editor 导出素材（原格式，2026-10-19，第十四轮）——版本 0.10.6
 
 **画布菜单变化**（面板布局不变）。用户要求：画布右键控件菜单加「导出

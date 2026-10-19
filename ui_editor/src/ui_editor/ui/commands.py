@@ -469,9 +469,13 @@ class EditingCommandsMixin:
             if convert:
                 for widget in widgets:
                     for _key, name in asset_paths_of(widget):
+                        try:
+                            data = assets.fetch_bytes(name)
+                        except ValueError:
+                            missing.append(name)
+                            continue
                         files = export_image_files(
-                            name, assets.fetch_bytes(name),
-                            assets.fetch_image(name), directory,
+                            name, data, assets.fetch_image(name), directory,
                             protected_paths=assets.pack_paths)
                         if files:
                             written.extend(files)

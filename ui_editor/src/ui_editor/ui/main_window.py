@@ -37,6 +37,7 @@ from .commands import EditingCommandsMixin
 from .diagnostics_panel import DiagnosticsPanel
 from .panels import PalettePanel, ResourceTreePanel, WidgetTreePanel
 from .property_panel import PropertyPanel
+from .save_workflows import SaveWorkflowsMixin
 from .script_panel import ScriptPanel
 from .source_actions import SourceActionsMixin
 from .tabs import EditorSession
@@ -46,7 +47,7 @@ from .workflows import FileWorkflowsMixin
 
 class MainWindow(
     BusyHostMixin, EditingCommandsMixin, FileWorkflowsMixin,
-    SourceActionsMixin, WindowSetupMixin, QMainWindow
+    SaveWorkflowsMixin, SourceActionsMixin, WindowSetupMixin, QMainWindow
 ):
     """UI 编辑器主窗口。"""
 
@@ -474,6 +475,15 @@ class MainWindow(
             if on else
             "等比缩放已关闭：拖动把手自由缩放（按住 Shift 拖动可临时等比）。")
 
+    def _clamp_in_parent(self, widget: Widget,
+                         x: float, y: float) -> tuple[float, float, int]:
+        """对齐/分布算出的坐标夹回父矩形，返回 (x, y, 是否被夹)。"""
+        parent = widget.parent
+        box = None if parent is None else (parent.width, parent.height)
+        cx, cy, clamped = snap.clamp_in_parent(
+            box, x, y, widget.width, widget.height)
+        return cx, cy, int(clamped)
+
     def _selected_group(self):
         """画布多选的同级控件组；返回 (基准控件, 组内控件)。"""
         if self.doc is None:
@@ -504,15 +514,21 @@ class MainWindow(
                 "（锁定控件不会被移动）。")
             return
         ref_rect = (ref.x, ref.y, ref.width, ref.height)
+        clamped = 0
         for w in targets:
             x, y = snap.align_position(
                 ref_rect, (w.x, w.y, w.width, w.height), mode)
+            x, y, was_clamped = self._clamp_in_parent(w, x, y)
+            clamped += was_clamped
             w.set_geometry(x=int(round(x)), y=int(round(y)))
             self.scene.refresh_widget(w)
         self.doc.checkpoint()
         self.doc.dirty = True
         self._update_title()
-        self._update_status(f"已按基准「{ref.name}」对齐 {len(targets)} 个控件。")
+        note = (f"（其中 {clamped} 个被父控件边界挡住，差几个像素没完全对齐）"
+                if clamped else "")
+        self._update_status(
+            f"已按基准「{ref.name}」对齐 {len(targets)} 个控件{note}。")
 
     def apply_distribute(self, axis: str) -> None:
         """三个以上同级控件沿 axis 等距分布（首尾不动）。"""
@@ -525,15 +541,20 @@ class MainWindow(
                 "等距分布需要至少三个未锁定的同级控件被选中。")
             return
         rects = [(w.x, w.y, w.width, w.height) for w in group]
+        clamped = 0
         for w, (x, y) in zip(
                 group, snap.distribute_positions(rects, axis), strict=True):
+            x, y, was_clamped = self._clamp_in_parent(w, x, y)
+            clamped += was_clamped
             w.set_geometry(x=int(round(x)), y=int(round(y)))
             self.scene.refresh_widget(w)
         self.doc.checkpoint()
         self.doc.dirty = True
         self._update_title()
         direction = "横" if axis == "x" else "纵"
-        self._update_status(f"已沿{direction}向等距分布 {len(group)} 个控件。")
+        note = (f"（其中 {clamped} 个被父控件边界挡住）" if clamped else "")
+        self._update_status(
+            f"已沿{direction}向等距分布 {len(group)} 个控件{note}。")
 
     # ------------------------------------------------------------------
     # 视图/状态

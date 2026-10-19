@@ -52,7 +52,7 @@ class TestMainWindowFlow(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             target = str(Path(tmp) / "out.dlg")
-            with mock.patch("ui_editor.ui.workflows.SaveReviewDialog.exec",
+            with mock.patch("ui_editor.ui.save_workflows.SaveReviewDialog.exec",
                             return_value=1):
                 self.assertTrue(w.save_as(target))
             from ui_editor.core import dlg_codec
@@ -573,22 +573,23 @@ class TestSaveWithUnreferencedStagedImage(unittest.TestCase):
             doc = self.window.doc
             self.assertIsNotNone(doc)
             self.window.resolver.stage_image(
-                "newdir\\未用上的圖.png", b"\x89PNGunused")
+                "newdir/未用上的圖.png", b"\x89PNGunused")
             doc.dirty = True
             out = str(Path(tmp) / "interface_patched.fls")
             report = self.window.write_pack_copy(out)
             self.assertTrue(report.get("ok"), report)
             self.assertEqual(report.get("images_added"), 0)
+            # 0.11.0 起挂账键统一成 "/" 分隔（报告与挂账同一写法）
             self.assertEqual(report.get("staged_unreferenced"),
-                             ["newdir\\未用上的圖.png"])
+                             ["newdir/未用上的圖.png"])
             self.assertEqual(report.get("entries_after"), 1)  # 原包 1 条、无新增
             # 账未销：还在挂账里，可换个布局再保存写入
-            self.assertIn("newdir\\未用上的圖.png",
+            self.assertIn("newdir/未用上的圖.png",
                           self.window.resolver.staged_images())
             from ui_editor.core.pack import FlsPack
             with FlsPack(out) as pack:
                 self.assertEqual(pack.count, 1)
-                self.assertFalse(pack.contains("newdir\\未用上的圖.png"))
+                self.assertFalse(pack.contains("newdir/未用上的圖.png"))
 
 
 class TestCanvasClipboardAndContextMenu(unittest.TestCase):
@@ -1252,6 +1253,24 @@ class TestImagePicker(unittest.TestCase):
         dialog._stage_one("newdir\\pic.png", b"BYTES")
         self.assertEqual(staged, {"newdir\\pic.png": b"BYTES"})
         self.assertEqual(dialog.selected_path(), "newdir\\pic.png")
+        dialog.close()
+
+    def test_stage_one_rejects_bad_name_with_message(self):
+        """名字含 GBK 不可编码字符：拦下来并弹提示（不能静默）。"""
+        from ui_editor.ui.image_picker import ResourcePickerDialog
+
+        staged: dict = {}
+        dialog = ResourcePickerDialog(
+            None, "t", [], "", None,
+            on_stage=lambda p, d: staged.update({p: d}))
+        dialog._on_stage = mock.Mock(side_effect=ValueError(
+            "资源路径含 GBK 不可编码字符：'images/😀.png'"))
+        with mock.patch(
+                "ui_editor.ui.image_picker.QMessageBox.warning") as warning:
+            dialog._stage_one("images/😀.png", b"X")
+        self.assertEqual(staged, {})
+        self.assertIn("这个名字不能用", warning.call_args[0][1])
+        self.assertNotIn("images/😀.png", dialog.selected_path() or "")
         dialog.close()
 
     def test_export_handler_receives_selection(self):
