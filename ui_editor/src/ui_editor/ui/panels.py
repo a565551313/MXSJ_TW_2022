@@ -8,6 +8,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor
 from PySide6.QtWidgets import (
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -356,6 +357,12 @@ class WidgetTreePanel(QWidget):
         self._tree.setColumnCount(2)
         self._tree.setColumnWidth(1, 24)
         self._tree.header().setStretchLastSection(False)
+        # 名称列拉伸吃满面板宽（否则默认 Interactive 固定宽，空宽
+        # 白白浪费、名称被 … 截断）；第二列锁图标固定 24px。
+        self._tree.header().setSectionResizeMode(
+            0, QHeaderView.ResizeMode.Stretch)
+        self._tree.header().setSectionResizeMode(
+            1, QHeaderView.ResizeMode.Fixed)
         self._tree.currentItemChanged.connect(self._on_current_changed)
         self._tree.itemClicked.connect(self._on_item_clicked)
         layout.addWidget(self._tree, 1)

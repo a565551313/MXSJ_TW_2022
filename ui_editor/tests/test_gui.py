@@ -1506,3 +1506,26 @@ class TestButtonStatePreview(unittest.TestCase):
             # 按下态取竖条中段（纯绿），各分量以绿为主
             self.assertGreater(pressed[1], 150)
             self.assertLess(pressed[0], 80)
+
+
+class TestWidgetTreeHeader(unittest.TestCase):
+    """控件树名称列拉伸占满面板宽（回归：列宽够却显示 …）。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def test_name_column_stretches_lock_column_fixed(self):
+        from PySide6.QtWidgets import QHeaderView
+
+        from ui_editor.ui.panels import WidgetTreePanel
+
+        panel = WidgetTreePanel()
+        tree = panel._tree
+        self.assertEqual(tree.columnCount(), 2)
+        header = tree.header()
+        self.assertEqual(header.resizeMode(0), QHeaderView.ResizeMode.Stretch)
+        self.assertEqual(header.resizeMode(1), QHeaderView.ResizeMode.Fixed)
+        self.assertEqual(tree.columnWidth(1), 24)
+        self.assertFalse(header.stretchLastSection())

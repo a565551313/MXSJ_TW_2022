@@ -2064,3 +2064,13 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   0 失败（24 个 Qt 导入错误=沙箱无 libGL，预有）；ruff 0；wincompat
   0/0/0。resource_editor 测试 25 项中 16 个 Qt 导入错误（预有）0 失败。
   不改 `.dlg` 字段值、不改客户端资源。
+
+### ui_editor 控件树名称列拉伸（2026-10-19，第五轮）——版本 0.8.9
+
+**面板小修**（画布/诊断面板无变化）：左侧控件树名称列此前是 Qt 默认
+Interactive 固定宽（`setStretchLastSection(False)` 后无人接管），面板
+再宽名称也被 `…` 截断。修：`panels.WidgetTreePanel` 名称列（第 0 列）
+`QHeaderView.Stretch` 吃满面板宽，锁图标列（第 1 列）`Fixed` 24px。
+回归测试 `test_gui.TestWidgetTreeHeader` 锁两列 resize 模式（沙箱缺
+PySide6 不执行，随 GUI 套件在本机跑）。ruff 0；全量 0 失败（25 个 Qt
+导入错误=预有+本条新增用例）。
