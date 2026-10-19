@@ -10,6 +10,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from PIL import Image  # noqa: E402
 
 from ui_editor.core import sprite, sprite_encode  # noqa: E402
+from ui_editor.core.errors import Cancelled  # noqa: E402
 
 
 def _img(w: int, h: int, color) -> Image.Image:
@@ -50,6 +51,58 @@ class TestSpriteEncode(unittest.TestCase):
             self.assertEqual(count, 4)
             decoded = sprite.decode_sprite(data)
             self.assertEqual(decoded.frame_count, 4)
+
+
+class TestFrameFileHooks(unittest.TestCase):
+    """批量转精灵的进度/取消钩子（忙碌遮罩接入用）。"""
+
+    class Recorder:
+        def __init__(self):
+            self.calls = []
+
+        def report(self, done, total, text):
+            self.calls.append((done, total, text))
+
+    def _files(self, root: Path, n: int = 3) -> list[str]:
+        paths = []
+        for i in range(n):
+            path = root / f"{i:02d}.png"
+            _img(6, 4, (i * 40, 90, 120, 255)).save(path)
+            paths.append(str(path))
+        return paths
+
+    def test_load_frame_files_progress_to_total(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            paths = self._files(root, 3)
+            rec = TestFrameFileHooks.Recorder()
+            frames = sprite_encode.load_frame_files(paths, progress=rec.report)
+            self.assertEqual(len(frames), 3)
+            self.assertTrue(rec.calls)
+            self.assertEqual({c[1] for c in rec.calls}, {3})
+            self.assertEqual(rec.calls[-1][0], 2)  # done 从 0 起报，收尾 n-1
+
+    def test_load_frame_files_cancel_raises(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            paths = self._files(root, 3)
+
+            def stop():
+                return True
+
+            with self.assertRaises(Cancelled):
+                sprite_encode.load_frame_files(paths, cancelled=stop)
+
+    def test_sprite_bytes_from_files_passes_hooks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            paths = self._files(root, 2)
+            rec = TestFrameFileHooks.Recorder()
+            data, count = sprite_encode.sprite_bytes_from_files(
+                paths, progress=rec.report, cancelled=lambda: False)
+            self.assertEqual(count, 2)
+            self.assertTrue(sprite.is_sprite(data))
+            self.assertTrue(rec.calls)
 
 
 class TestDirectColorSprites(unittest.TestCase):

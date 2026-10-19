@@ -19,7 +19,7 @@ from pathlib import Path
 
 from PIL import Image, ImageSequence
 
-from .errors import SpriteError
+from .errors import Cancelled, SpriteError
 from .sprite_format import OPAQUE, ROW_LEN_U8_MAX, alpha_to_level
 
 #: 兼容模块内旧名（与共享真源的 ``alpha_to_level`` 同一实现）
@@ -203,12 +203,22 @@ def _natural_key(name: str):
             for part in re.split(r"(\d+)", name)]
 
 
-def load_frame_files(paths) -> list:
-    """按文件名自然序读帧图（01、02…），GIF 展开为多帧。"""
+def load_frame_files(paths, *, progress=None, cancelled=None) -> list:
+    """按文件名自然序读帧图（01、02…），GIF 展开为多帧。
+
+    ``progress(done, total, text)``/``cancelled()`` 供批量转精灵走
+    忙碌遮罩；取消时抛 :class:`~ui_editor.core.errors.Cancelled`。
+    """
     frames = []
     ordered = sorted((Path(p) for p in paths),
                        key=lambda p: _natural_key(p.name))
-    for path in ordered:
+    total = len(ordered)
+    for done, path in enumerate(ordered, 1):
+        if cancelled is not None and cancelled():
+            raise Cancelled("转精灵已取消")
+        if progress is not None:
+            progress(done - 1, total,
+                     f"读取帧 {path.name}（{done}/{total}）…")
         try:
             with Image.open(path) as img:
                 if getattr(img, "is_animated", False):
@@ -223,9 +233,13 @@ def load_frame_files(paths) -> list:
     return frames
 
 
-def sprite_bytes_from_files(paths) -> tuple[bytes, int]:
-    """文件列表 → (精灵字节, 帧数)。行过长自动退到 I1 格式。"""
-    frames = load_frame_files(paths)
+def sprite_bytes_from_files(paths, *, progress=None,
+                            cancelled=None) -> tuple[bytes, int]:
+    """文件列表 → (精灵字节, 帧数)。行过长自动退到 I1 格式。
+
+    ``progress``/``cancelled`` 作用于逐帧读取阶段（编码阶段很短）。
+    """
+    frames = load_frame_files(paths, progress=progress, cancelled=cancelled)
     try:
         return encode_frames(frames, "I0"), len(frames)
     except SpriteError:

@@ -2002,3 +2002,30 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   `上文字底\`、`勾选框底\` 三条实际命中哪族）。
 - `.spr`（CSpriteFrame）解码悬案不变；选图窗清单仍不含 `.spr` 与基路径
   子图（入口缺口，未做）。不改 `.dlg` 字段值、不改客户端资源。
+
+### ui_editor 忙碌遮罩进度条（2026-10-19，同日第三轮）
+
+用户要求所有可能卡住无响应的操作都有进度反馈：黑色半透明罩盖住界面 +
+中央进度条读真实进度。方案=重活进后台线程+信号回传、混合进度样式
+（能算报 `done/total`，否则滚动条）、取消按钮仅给写包/导出/转精灵三类
+安全回滚场景（「按你推荐的来吧」确认）。
+
+- 新增 `ui/busy.py`：`BusyOverlay`（半透明罩+进度面板）、`BusyHostMixin.
+  run_busy`（worker 线程+Qt 信号+本地事件循环同步返回；失败原样重抛，
+  取消抛 `core.errors.Cancelled`）、输入事件过滤器防重入。MainWindow 与
+  选图窗 ResourcePickerDialog 都可当遮罩宿主。
+- 五类卡点接入：打开资源包/资源目录、sFileName 选图窗整理清单、F5 从
+  来源刷新、保存回资源包（写包+全量逐条保真校验）、批量导出/多帧转
+  精灵。写包校验取消时**删除未验证的新包**（原包不动、状态不迁移）；
+  批量导出取消后已导出的保留；挂载/刷新不给取消。
+- 核心钩子：`publish.verify_structure`/`verify_written_pack`、
+  `assets.media_candidates`/`mount_dir`、`sprite_encode.load_frame_files`
+  加 `progress`/`cancelled`；`Cancelled` 穿透 verify 的兜底 except（测试
+  抓到的真 bug：首版被吞成 error 报告）；`FlsPack.read_index` 加线程锁。
+- 实测：无 Qt 核心套件 150 项 OK（新增进度/取消 6 项）；全量 discover
+  217 项中仅剩 24 个 Qt 导入错误（沙箱缺 libGL，预有）与 0 失败。
+  **遮罩/worker/信号的 GUI 路径沙箱未执行**，待用户本机手测五类卡点
+  （重点：完整客户端挂载时清单进度、写包校验进度、取消写包后原包无损）。
+- 顺手修正：`pyproject.toml` 版本此前滞留 0.8.4（0.8.5/0.8.6 都漏更，
+  版本一致性测试抓到）；主窗口基类白名单登记 BusyHostMixin；workflows.py
+  压回 600 行守限内。版本 0.8.7。不改 `.dlg` 字段值、不改客户端资源。

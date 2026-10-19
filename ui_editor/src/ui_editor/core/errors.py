@@ -17,3 +17,7 @@ class DlgError(UiEditorError):
 
 class SpriteError(UiEditorError):
     """精灵字节解码失败或格式不受支持。"""
+
+
+class Cancelled(UiEditorError):
+    """长操作被用户取消（结果作废，由调用方决定清理产物）。"""

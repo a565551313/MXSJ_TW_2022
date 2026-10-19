@@ -28,6 +28,7 @@ from ..core.model import LayoutDocument, Widget
 from ..core.painters import PaintContext
 from ..core.script_index import ScriptIndex, get_default_index
 from ..core.styles import StyleBook
+from .busy import BusyHostMixin
 from .canvas import CanvasView, LayoutScene
 from .commands import EditingCommandsMixin
 from .diagnostics_panel import DiagnosticsPanel
@@ -40,8 +41,8 @@ from .workflows import FileWorkflowsMixin
 
 
 class MainWindow(
-    EditingCommandsMixin, FileWorkflowsMixin, SourceActionsMixin,
-    WindowSetupMixin, QMainWindow
+    BusyHostMixin, EditingCommandsMixin, FileWorkflowsMixin,
+    SourceActionsMixin, WindowSetupMixin, QMainWindow
 ):
     """UI 编辑器主窗口。"""
 

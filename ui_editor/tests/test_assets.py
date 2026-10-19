@@ -47,6 +47,15 @@ def make_sprite() -> bytes:
             + bytes(palette) + row1 + row2)
 
 
+def make_recorder(calls: list):
+    """具名进度记录器（unittest 探针不用 lambda）。"""
+
+    def record(done, total, text):
+        calls.append((done, total, text))
+
+    return record
+
+
 def xor4(data: bytes, key: bytes) -> bytes:
     return bytes(b ^ key[i & 3] for i, b in enumerate(data))
 
@@ -98,6 +107,36 @@ class TestAssetResolver(unittest.TestCase):
             try:
                 self.assertEqual(resolver.media_candidates(),
                                  ["test/pic.igs"])
+            finally:
+                resolver.close()
+
+    def test_media_candidates_progress_hook(self):
+        # 忙碌遮罩：首次整理清单报真实进度（done 单调 → total）
+        dlg_plain = dlg_codec.dump_bytes(
+            [{"sWidgetType": "CMainFrame", "sName": "root",
+              "lChildren": [
+                  {"sWidgetType": "CImage", "sFileName": "test/pic.igs"}]}],
+            md5="0" * 32)
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "cand.fls"
+            pack_path.write_bytes(build_pack([
+                ("test/pic.igs", make_sprite()),
+                ("booth.dlg", xor4(dlg_plain, b"\x5a\xa5\x11\x7e")),
+            ]))
+            resolver = AssetResolver()
+            resolver.mount_pack(pack_path)
+            try:
+                calls = []
+                resolver.media_candidates(
+                    progress=make_recorder(calls))
+                self.assertTrue(calls, "应有进度回调")
+                self.assertEqual({c[1] for c in calls}, {1})  # 1 条已知布局
+                self.assertEqual(calls[-1][0], 1)
+                # 缓存命中后不再回调（一次性重活）
+                calls.clear()
+                self.assertEqual(resolver.media_candidates(
+                    progress=make_recorder(calls)), ["test/pic.igs"])
+                self.assertEqual(calls, [])
             finally:
                 resolver.close()
 

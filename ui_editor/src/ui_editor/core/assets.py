@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Callable
 from pathlib import Path
 
 from PySide6.QtCore import QRect
@@ -137,16 +138,27 @@ class AssetResolver:
         self._media_cache = None
         return pack
 
-    def mount_dir(self, dirpath: str | Path) -> int:
-        """挂载一个目录：其中的 *.fls 全部打开，目录本身作散装根。"""
+    def mount_dir(self, dirpath: str | Path, *,
+                  progress: Callable[[int, int, str], None] | None = None
+                  ) -> int:
+        """挂载一个目录：其中的 *.fls 全部打开，目录本身作散装根。
+
+        ``progress(done, total, text)`` 回报逐包挂载进度（忙碌遮罩用）。
+        """
         root = Path(dirpath)
+        fls_files = sorted(root.glob("*.fls")) + sorted(root.glob("*.FLS"))
         count = 0
-        for fls in sorted(root.glob("*.fls")) + sorted(root.glob("*.FLS")):
+        total = max(len(fls_files), 1)
+        for done, fls in enumerate(fls_files, 1):
+            if progress is not None:
+                progress(done - 1, total, f"挂载 {fls.name}（{done}/{total}）…")
             try:
                 self.mount_pack(fls)
                 count += 1
             except Exception:
                 continue  # 非 0SLF 的包（如 data.fls）跳过
+        if progress is not None:
+            progress(total, total, "登记散文件目录…")
         self.add_loose_dir(root)
         return count
 
@@ -278,34 +290,47 @@ class AssetResolver:
                 return self._staged[key]
         return None
 
-    def media_candidates(self) -> list[str]:
+    def media_candidates(
+        self, progress: Callable[[int, int, str], None] | None = None
+    ) -> list[str]:
         """包内可选媒体资源路径清单（供"从资源包选择"对话框）。
 
         0SLF 包不存文件名，能列出的名字来自已知布局：逐个解开
         已命名的 .dlg，把里面引用的图片/音频路径扒出来，再只留
         挂载的包/目录里真有的。首次构建需解开全部已命名布局
-        （一次性，结果缓存；挂载变化自动失效）。
+        （一次性，结果缓存；挂载变化自动失效）。完整客户端两千
+        多条布局是重活：``progress(done, total, text)`` 回报进度。
         """
         if self._media_cache is not None:
             return self._media_cache
         found: set[str] = set()
+        todo = []
         for pack in self._packs:
-            layouts = pack.matched_paths(known_layout_hashes() | self._session_layouts)
-            for layout in layouts:
-                data = pack.read_named(layout)
-                if data is None:
-                    continue
-                # 只做文本扫描（不完整解析布局），大包也够快
-                text = unpack_packed_text(data).decode(
-                    "gb18030", "surrogateescape")
-                found.update(_scan_media_in_text(text))
+            layouts = pack.matched_paths(
+                known_layout_hashes() | self._session_layouts)
+            todo.extend((pack, layout) for layout in layouts)
+        total = len(todo)
+        for done, (pack, layout) in enumerate(todo, 1):
+            if progress is not None and (done == 1 or done == total
+                                         or done % 16 == 0):
+                progress(done, total, f"整理包内资源清单 {done}/{total}")
+            data = pack.read_named(layout)
+            if data is None:
+                continue
+            # 只做文本扫描（不完整解析布局），大包也够快
+            text = unpack_packed_text(data).decode(
+                "gb18030", "surrogateescape")
+            found.update(_scan_media_in_text(text))
         self._media_cache = sorted(
             path for path in found if self._exists(path))
         return self._media_cache
 
-    def candidates_with_staged(self) -> list[str]:
+    def candidates_with_staged(
+        self, progress: Callable[[int, int, str], None] | None = None
+    ) -> list[str]:
         """选图窗清单：包内候选 + 已挂账待入包的新图。"""
-        return sorted(set(self.media_candidates()) | set(self._staged))
+        return sorted(
+            set(self.media_candidates(progress)) | set(self._staged))
 
     @property
     def summary(self) -> str:

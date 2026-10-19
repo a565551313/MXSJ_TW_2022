@@ -31,6 +31,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .diagnostics import Diagnostic, diagnose
+from .errors import Cancelled
 from .mxhash import path_hash
 from .native_layout import HEADER, decode_native, encode_layout, plain_if_layout
 from .pack import FlsPack
@@ -73,8 +74,15 @@ def directory_is_sorted(entry_ids: Sequence[int]) -> bool:
 
 
 def verify_structure(*, src_pack, out_path, res_path: str, extras: Mapping,
-                     info: Mapping) -> dict:
-    """结构检查（条目数/升序/集合/二分命中/未改条目保真）。"""
+                     info: Mapping,
+                     progress: Callable[[int, int, str], None] | None = None,
+                     cancelled: Callable[[], bool] | None = None) -> dict:
+    """结构检查（条目数/升序/集合/二分命中/未改条目保真）。
+
+    逐条保真是全包读取的重活：``progress(done, total, text)`` 回报进度；
+    ``cancelled()`` 为真时抛 :class:`~ui_editor.core.errors.Cancelled`
+    （结果作废，调用方清理未验证产物），不写入 ``report``。
+    """
     report: dict = {}
     try:
         with FlsPack(src_pack) as before, FlsPack(out_path) as after:
@@ -99,7 +107,13 @@ def verify_structure(*, src_pack, out_path, res_path: str, extras: Mapping,
             allowed = set(info["changed_ids"])
             changed = 0
             unexpected = 0
-            for entry_id in before.entry_ids:
+            total = len(before.entry_ids)
+            for done, entry_id in enumerate(before.entry_ids, 1):
+                if cancelled is not None and cancelled():
+                    raise Cancelled("写回校验已取消")
+                if progress is not None and (done == 1 or done == total
+                                             or done % 32 == 0):
+                    progress(done, total, f"逐条保真校验 {done}/{total}")
                 if (entry_id not in allowed
                         and before.span_of(entry_id) == after.span_of(entry_id)):
                     continue
@@ -113,6 +127,8 @@ def verify_structure(*, src_pack, out_path, res_path: str, extras: Mapping,
                 return report
             report["changed_entries"] = changed
             report["entries_after"] = after.count
+    except Cancelled:
+        raise  # 用户取消原样上抛（结果作废），不当成校验失败
     except Exception as exc:  # 结构检查自身失败同样只记报告
         report["error"] = f"写回校验失败：{exc}"
     return report
@@ -148,10 +164,17 @@ def verify_written_pack(
     expected_dicts: list[dict],
     info: Mapping,
     read_back: ReadBack,
+    progress: Callable[[int, int, str], None] | None = None,
+    cancelled: Callable[[], bool] | None = None,
 ) -> dict:
-    """结构 + 回读检查；返回报告片段（``ok`` 或 ``error``）。"""
+    """结构 + 回读检查；返回报告片段（``ok`` 或 ``error``）。
+
+    ``progress``/``cancelled`` 只作用于结构检查的逐条保真循环，
+    取消时抛 :class:`~ui_editor.core.errors.Cancelled`。
+    """
     report = verify_structure(src_pack=src_pack, out_path=out_path,
-                              res_path=res_path, extras=extras, info=info)
+                              res_path=res_path, extras=extras, info=info,
+                              progress=progress, cancelled=cancelled)
     if "error" not in report:
         report.update(verify_readback(read_back=read_back, out_path=out_path,
                                       res_path=res_path, extras=extras,

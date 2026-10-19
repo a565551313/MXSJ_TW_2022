@@ -15,6 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from ui_editor.core import dlg_codec, pack_build, publish  # noqa: E402
+from ui_editor.core.errors import Cancelled  # noqa: E402
 from ui_editor.core.model import LayoutDocument  # noqa: E402
 from ui_editor.core.mxhash import path_hash  # noqa: E402
 from ui_editor.core.native_layout import (  # noqa: E402
@@ -457,6 +458,55 @@ class TargetWriteTests(unittest.TestCase):
         self.assertIsNotNone(plan.target_write)
         self.assertEqual(plan.target_write.storage, "native")
         self.assertTrue(plan.notice.startswith("目标条目："))
+
+
+class ProgressCancelTests(unittest.TestCase):
+    """忙碌遮罩钩子：逐条保真循环的真实进度与安全取消。"""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.src = self.root / "src.fls"
+        write_pack(self.src, src_entries())
+        self.out = self.root / "out.fls"
+        entries = src_entries() + [entry(IMAGE_ID, IMAGE_BYTES)]
+        entries[0] = entry(LAYOUT_ID, b"rewritten layout bytes")
+        write_pack(self.out, entries)
+
+    def verify(self, *, progress=None, cancelled=None) -> dict:
+        return publish.verify_written_pack(
+            src_pack=self.src, out_path=self.out, res_path=RES_PATH,
+            extras={IMAGE_PATH: IMAGE_BYTES}, expected_dicts=EXPECTED_DICTS,
+            info=info(), read_back=good_read_back(),
+            progress=progress, cancelled=cancelled)
+
+    def test_progress_reports_monotonic_to_total(self):
+        calls: list = []
+
+        def record(done, total, text):
+            calls.append((done, total, text))
+
+        report = self.verify(progress=record)
+        self.assertTrue(report["ok"], report)
+        self.assertTrue(calls, "应有进度回调")
+        self.assertEqual({c[1] for c in calls}, {2})  # 总量=src 条目数
+        self.assertEqual(calls[-1][0], 2)  # 收尾报到 total
+        self.assertEqual([c[0] for c in calls], sorted(c[0] for c in calls))
+
+    def test_cancelled_raises_before_report_written(self):
+        def stop():
+            return True
+
+        with self.assertRaises(Cancelled):
+            self.verify(cancelled=stop)
+
+    def test_not_cancelled_completes_normally(self):
+        def keep_going():
+            return False
+
+        report = self.verify(cancelled=keep_going)
+        self.assertTrue(report["ok"], report)
 
 
 def legacy_style_plain() -> bytes:

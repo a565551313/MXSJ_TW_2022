@@ -6,11 +6,10 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from pathlib import Path
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QApplication,
     QDialog,
     QFileDialog,
     QInputDialog,
@@ -20,6 +19,7 @@ from PySide6.QtWidgets import (
 from ..core import dlg_codec, pack_build, publish
 from ..core.assets import AssetResolver
 from ..core.catalog import known_layout_paths
+from ..core.errors import Cancelled
 from ..core.layout_import import prepare_layout_import, validate_layout_path
 from ..core.model import LayoutDocument
 from ..core.output_paths import guard_output
@@ -87,17 +87,24 @@ class FileWorkflowsMixin:
         布局，由用户在左侧资源树（可按名称搜索）双击决定。
         """
         try:
-            if self.resolver.pack_for(pack_path) is None:
-                self.resolver.mount_pack(pack_path)
+            layouts = self.run_busy(
+                f"挂载资源包 {Path(pack_path).name}",
+                lambda h: self._mount_and_scan(pack_path, h))
         except Exception as exc:
             QMessageBox.warning(self, "挂载资源包失败", str(exc))
             return -1
-        layouts = self.resolver.scan_layouts(pack_path)
         self._add_pack_to_tree(pack_path, layouts)
         self.resource_panel.expand_pack(pack_path)
         self._try_load_styles()
         self.scene.refresh_all()
         return len(layouts)
+
+    def _mount_and_scan(self, pack_path: str, handle) -> list[str]:
+        handle.report(0, 2, "读取资源包索引…")
+        if self.resolver.pack_for(pack_path) is None:
+            self.resolver.mount_pack(pack_path)
+        handle.report(1, 2, "扫描已知布局…")
+        return self.resolver.scan_layouts(pack_path)
 
     def _add_pack_to_tree(self, pack_path: str,
                           layouts: list[str]) -> None:
@@ -233,20 +240,23 @@ class FileWorkflowsMixin:
         self.resource_panel.reveal_selection(("pack", pack_path, res_path))
 
     def open_resource_dir(self, path: str) -> None:
-        """从资源目录打开：挂载目录内全部包并逐个入树。"""
+        """从资源目录打开：挂载目录内全部包并逐个入树（忙碌遮罩后跑）。"""
         if path not in self._resource_dirs:
             self._resource_dirs.append(path)
         before = {str(p) for p in self.resolver.pack_paths}
-        self.resolver.mount_dir(path)
+        try:
+            scanned = self.run_busy(
+                f"挂载资源目录 {Path(path).name or path}",
+                lambda h: self._mount_dir_scanned(path, before, h))
+        except Exception as exc:
+            QMessageBox.warning(self, "挂载资源包失败", str(exc))
+            return
         added = skipped = 0
-        for pack_file in self.resolver.pack_paths:
-            if str(pack_file) in before:
-                continue
-            layouts = self.resolver.scan_layouts(str(pack_file))
+        for pack_file, layouts in scanned:
             if not layouts:
                 skipped += 1  # 保留资源挂载，但不在布局树显示
                 continue
-            self._add_pack_to_tree(str(pack_file), layouts)
+            self._add_pack_to_tree(pack_file, layouts)
             added += 1
         self._try_load_styles()
         self.scene.refresh_all()
@@ -254,6 +264,14 @@ class FileWorkflowsMixin:
             f"资源目录：{path}；新入树 {added} 个包"
             f"（另隐藏 {skipped} 个无已识别布局的包）。{self.resolver.summary}；"
             "双击包中布局即可切换打开。")
+
+    def _mount_dir_scanned(self, path: str, before: set[str],
+                           handle) -> list[tuple[str, list[str]]]:
+        """后台任务：挂载目录内全部包并扫描（经遮罩回调进度）。"""
+        self.resolver.mount_dir(path, progress=handle.report)
+        handle.report(0, 1, "扫描已知布局…")
+        return [(str(p), self.resolver.scan_layouts(str(p)))
+                for p in self.resolver.pack_paths if str(p) not in before]
 
     def open_resource_dir_dialog(self) -> None:
         path = QFileDialog.getExistingDirectory(
@@ -352,7 +370,8 @@ class FileWorkflowsMixin:
         finally:
             fresh.close()
 
-    def write_pack_copy(self, out_path: str) -> dict | None:
+    def write_pack_copy(self, out_path: str, *, progress=None,
+                        cancelled=None) -> dict | None:
         """把当前包内布局写回一个新包文件（原包不动）。返回校验报告。
 
         选图窗新加且被本布局引用到的图片随布局一并写入（按路径
@@ -361,6 +380,9 @@ class FileWorkflowsMixin:
         :mod:`ui_editor.core.publish`——那是保存链最危险的一段，
         现在能脱离窗口直接测（分析报告建议④）；任一不过填
         ``report["error"]`` 并返回（弹错在对话框层）。
+
+        ``progress``/``cancelled`` 透传给逐条保真校验；取消抛
+        :class:`core.errors.Cancelled`（状态不迁移，调用方删未验证产物）。
         """
         if self.doc is None or not self.doc.source_pack:
             return None
@@ -389,6 +411,7 @@ class FileWorkflowsMixin:
         report.update(publish.verify_written_pack(
             src_pack=src_pack, out_path=tmp_out, res_path=res_path,
             extras=extras, expected_dicts=self.doc.to_dicts(), info=info,
+            progress=progress, cancelled=cancelled,
             read_back=(self._fresh_pack_readback
                        if self.doc.text_encoding == "big5" else
                        lambda p, r, n: self._fresh_pack_readback(
@@ -427,14 +450,20 @@ class FileWorkflowsMixin:
         if not self._confirm_save_review(path, to_pack=True):
             return
         self._update_status("正在写回资源包并校验…")
-        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         try:
-            report = self.write_pack_copy(path)
+            report = self.run_busy(
+                "写回资源包并校验…",
+                lambda h: self.write_pack_copy(
+                    path, progress=h.report, cancelled=lambda: h.cancelled),
+                cancellable=True, cancellable_text="取消（删除未验证的新包）")
+        except Cancelled:
+            with suppress(OSError):
+                Path(path).unlink(missing_ok=True)
+            self._update_status("写回已取消：未验证的新包已删除，原包未动。")
+            return
         except Exception as exc:
             QMessageBox.warning(self, "写回失败", str(exc))
             return
-        finally:
-            QApplication.restoreOverrideCursor()
         if not report or not report.get("ok"):
             QMessageBox.warning(
                 self, "写回校验未通过",
