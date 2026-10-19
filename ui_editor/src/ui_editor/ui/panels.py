@@ -323,6 +323,9 @@ class WidgetTreePanel(QWidget):
     promote_requested = Signal()
     delete_requested = Signal()
     reorder_requested = Signal(object, int)  # (控件, -1 上移/+1 下移)
+    indent_requested = Signal()            # → 挂成上一个同级的子控件
+    outdent_requested = Signal()           # ← 升一级，与父同级
+    set_parent_requested = Signal(object)  # 置父（None=设为顶级）
 
     def __init__(self) -> None:
         super().__init__()
@@ -345,11 +348,22 @@ class WidgetTreePanel(QWidget):
         down_btn = QToolButton()
         down_btn.setText("↓")
         down_btn.setToolTip("下移")
+        self._outdent_btn = QToolButton()
+        self._outdent_btn.setText("←")
+        self._outdent_btn.setToolTip(
+            "升一级：脱离父控件，成为父控件的下一个同级（已在顶层则不可用）")
+        self._indent_btn = QToolButton()
+        self._indent_btn.setText("→")
+        self._indent_btn.setToolTip(
+            "降一级：成为上一个同级控件的子控件（父就是它的画布）")
+        self._outdent_btn.clicked.connect(self.outdent_requested)
+        self._indent_btn.clicked.connect(self.indent_requested)
         self._add_btn.clicked.connect(self.add_child_requested)
         self._del_btn.clicked.connect(self.delete_requested)
         up_btn.clicked.connect(lambda: self._reorder(-1))
         down_btn.clicked.connect(lambda: self._reorder(1))
         for btn in (self._add_btn, add_root_btn, promote_btn,
+                    self._outdent_btn, self._indent_btn,
                     self._del_btn, up_btn, down_btn):
             bar.addWidget(btn)
         layout.addLayout(bar)
@@ -366,17 +380,23 @@ class WidgetTreePanel(QWidget):
             1, QHeaderView.ResizeMode.Fixed)
         self._tree.currentItemChanged.connect(self._on_current_changed)
         self._tree.itemClicked.connect(self._on_item_clicked)
+        self._tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._tree.customContextMenuRequested.connect(self._show_widget_menu)
         layout.addWidget(self._tree, 1)
         self._items: dict[int, QTreeWidgetItem] = {}
         self._widgets: dict[int, Widget] = {}
         self._current: Widget | None = None
+        self._doc: LayoutDocument | None = None
         self._syncing = False
+        self._refresh_parent_buttons()
 
     def build(self, doc: LayoutDocument | None) -> None:
         self._tree.clear()
         self._items = {}
         self._widgets = {}
         self._current = None
+        self._doc = doc
+        self._refresh_parent_buttons()
         if doc is None:
             return
 
@@ -437,6 +457,46 @@ class WidgetTreePanel(QWidget):
         self._syncing = True
         self._tree.setCurrentItem(item)
         self._syncing = False
+        self._refresh_parent_buttons()
+
+    def _refresh_parent_buttons(self) -> None:
+        """←→ 可用性：→ 需要有上一个同级，← 需要有父控件。"""
+        widget = self._current
+        has_previous = False
+        if widget is not None and self._doc is not None:
+            try:
+                siblings = self._doc.siblings_of(widget)
+                has_previous = siblings.index(widget) > 0
+            except ValueError:
+                has_previous = False
+        self._indent_btn.setEnabled(widget is not None and has_previous)
+        self._outdent_btn.setEnabled(
+            widget is not None and widget.parent is not None)
+
+    def _show_widget_menu(self, pos) -> None:
+        """控件树右键：置父 ▸ / 设为顶级 / 删除。"""
+        item = self._tree.itemAt(pos)
+        if item is None or self._doc is None:
+            return
+        widget = self._find(item.data(0, Qt.ItemDataRole.UserRole))
+        if widget is None:
+            return
+        if widget is not self._current:
+            self._tree.setCurrentItem(item)
+        from .hierarchy import build_parent_menu
+
+        menu = QMenu(self)
+        menu.addMenu(build_parent_menu(self, self._doc, [widget],
+                                       self.set_parent_requested.emit))
+        promote = menu.addAction("设为顶级")
+        promote.setEnabled(widget.parent is not None)
+        promote.triggered.connect(
+            lambda _checked=False: self.promote_requested.emit())
+        menu.addSeparator()
+        delete_action = menu.addAction("删除")
+        delete_action.triggered.connect(
+            lambda _checked=False: self.delete_requested.emit())
+        menu.exec(self._tree.viewport().mapToGlobal(pos))
 
     def current_widget(self) -> Widget | None:
         return self._current
@@ -450,6 +510,7 @@ class WidgetTreePanel(QWidget):
             return
         widget_id = item.data(0, Qt.ItemDataRole.UserRole) if item else None
         self._current = self._find(widget_id)
+        self._refresh_parent_buttons()
         self.widget_selected.emit(self._current)
 
     def _find(self, widget_id: int | None) -> Widget | None:

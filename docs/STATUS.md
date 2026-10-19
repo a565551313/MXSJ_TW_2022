@@ -2094,6 +2094,35 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   既有 GUI 契约核对：双击待入包叶子不确认不换文档、切换编码/刷新/
   关窗的 `_confirm_discard` 语义、`window.doc = None` 清空入口均兼容。
 
+### ui_editor 父子级 / 取色器 / 拖框多选（2026-10-19，第八轮）——版本 0.10.0
+
+**画布与面板都有变化**。用户要求：①控件树 ←→ 设父子级 + 右键「置父 ▸」
+与「设为顶级」；②颜色属性除直接输入外要颜色选择器；③画布按住拖动框选
+多选。经确认的语义：**置父后父就是子的画布**——置父时子自动挪进父矩形，
+之后拖动/缩放都限制在父内，父不做视觉裁剪（游戏是否裁剪未验证）。
+
+- `core/model.py`：`reparent_reason`（防环 + 锁定护栏）、`set_parent`
+  （绝对→局部坐标换算 + 夹进父矩形）、`indent_widget`/`outdent_widget`、
+  `clamp_into`。
+- `ui/hierarchy.py`：置父候选（排除自身与子孙、按深度缩进）与共用子菜单。
+- `ui/panels.py`：←→ 按钮（可用性随选择刷新）、控件树右键菜单
+  （置父 ▸ / 设为顶级 / 删除）。
+- `ui/commands.py`：`reparent_to`（整组预检、整组一步撤销）、
+  `indent_selected`/`outdent_selected`；画布右键菜单加置父与设为顶级。
+- `ui/canvas.py`：`DragMode.RubberBandDrag` + `IntersectsItemShape`
+  （空白处拖框多选，控件上按下仍是拖动）；拖动 `_clamped_position`
+  限制父内、缩放同步限父；`_has_selected_ancestor` 冻结子图元自身位移，
+  修「父子同选拖动子控件位移翻倍 / 局部坐标被改错」。
+- `ui/property_panel.py` + `core/colors.py`：颜色键识别、解析与**按原
+  写法回写**（整数/负数 alpha/逗号串/十六进制），输入框右侧色块按钮弹
+  `QColorDialog`；列表颜色不接管。
+- 测试：`tests/test_model_reparent.py`（11 项纯逻辑）、`tests/test_colors.py`
+  （11 项纯逻辑）沙箱已跑绿；`tests/test_gui_reparent.py`、
+  `tests/test_gui_color_picker.py` 为 GUI 用例（沙箱缺 libGL 不执行，本机跑）。
+  ruff 0；全量 0 失败（29 Qt 导入错误=预有 27 + 两个新 GUI 模块）。
+- 边界：不裁剪；`.dlg` 只改 `lChildren` 归属，不新增字段，`sFileName`
+  原值不动；游戏运行时「父动子随」「父裁剪子」未验证。
+
 ### ui_editor 遮罩文字白字（2026-10-19，第七轮）——版本 0.9.1
 
 **遮罩面板小修**（画布/诊断面板无变化）：用户实测忙碌遮罩上

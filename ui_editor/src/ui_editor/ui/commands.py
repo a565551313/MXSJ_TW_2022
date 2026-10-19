@@ -92,6 +92,69 @@ class EditingCommandsMixin:
         self._select_widget(widget)
         self._update_title()
 
+    def reparent_to(self, parent: Widget | None) -> None:
+        """把选中的控件挂到 parent 下（None=顶层）；整组算一步撤销。"""
+        if self.doc is None:
+            return
+        targets = self._selected_widgets()
+        if not targets:
+            self._update_status("请先选中要改父级的控件。")
+            return
+        # 先整组预检，避免前几个已经挪了才被锁定/防环拦下
+        for widget in targets:
+            reason = self.doc.reparent_reason(widget, parent)
+            if reason is not None:
+                self._update_status(reason)
+                return
+        moved: list[Widget] = []
+        for widget in targets:
+            if widget.parent is parent:
+                continue
+            self.doc.set_parent(widget, parent)
+            moved.append(widget)
+        if not moved:
+            self._update_status("选中的控件已经在这个父控件下。")
+            return
+        self.doc.checkpoint()
+        self._refresh_structure()
+        self._select_widget(moved[0])
+        self._update_title()
+        where = f"「{parent.name or '(未命名)'}」下" if parent else "顶层"
+        self._update_status(
+            f"已把 {len(moved)} 个控件挂到{where}（坐标已换算并夹进父矩形）。")
+
+    def indent_selected(self) -> None:
+        """→ 降级：挂成上一个同级控件的子控件。"""
+        widget = self._selected or self.tree_panel.current_widget()
+        if self.doc is None or widget is None:
+            self._update_status("请先选中要降级的控件。")
+            return
+        reason = self.doc.indent_widget(widget)
+        if reason is not None:
+            self._update_status(reason)
+            return
+        self.doc.checkpoint()
+        self._refresh_structure()
+        self._select_widget(widget)
+        self._update_title()
+        self._update_status("已降为上一个同级控件的子控件。")
+
+    def outdent_selected(self) -> None:
+        """← 升级：脱离父控件，成为父控件的下一个同级。"""
+        widget = self._selected or self.tree_panel.current_widget()
+        if self.doc is None or widget is None:
+            self._update_status("请先选中要升级的控件。")
+            return
+        reason = self.doc.outdent_widget(widget)
+        if reason is not None:
+            self._update_status(reason)
+            return
+        self.doc.checkpoint()
+        self._refresh_structure()
+        self._select_widget(widget)
+        self._update_title()
+        self._update_status("已升一级（与父控件同级）。")
+
     # -- 画布右键菜单与复制/粘贴/删除 --------------------------------
     _MIME_WIDGETS = "application/x-mxsj-widget+json"
 
@@ -342,6 +405,15 @@ class EditingCommandsMixin:
         menu.addAction(self._act_paste)
         menu.addAction(self._act_delete)
         menu.addSeparator()
+        widgets = self._selected_widgets()
+        if widget is not None and widgets:
+            from .hierarchy import build_parent_menu
+
+            menu.addMenu(build_parent_menu(self, self.doc, widgets,
+                                           self.reparent_to))
+            promote = menu.addAction("设为顶级")
+            promote.setEnabled(any(w.parent is not None for w in widgets))
+            promote.triggered.connect(self.promote_selected_to_root)
         menu.addAction(self._act_lock)
         return menu
 

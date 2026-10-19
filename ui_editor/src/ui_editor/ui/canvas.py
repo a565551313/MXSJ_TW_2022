@@ -137,7 +137,12 @@ class WidgetItem(QGraphicsItem):
     def itemChange(self, change, value):  # noqa: N802 (Qt 命名)
         if (change == QGraphicsItem.GraphicsItemChange.ItemPositionChange
                 and not self._syncing):
+            # 父子同时被选中拖动时，子控件靠父图元带着走；否则 Qt 会把
+            # 父子各搬一次，子控件实际位移翻倍、局部坐标也被改错。
+            if self._has_selected_ancestor():
+                return self.pos()
             value = self._snapped_position(value)
+            value = self._clamped_position(value)
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged \
                 and not self._syncing:
             pos = self.pos()
@@ -147,6 +152,27 @@ class WidgetItem(QGraphicsItem):
         return super().itemChange(change, value)
 
     # -- 拖动吸附 -----------------------------------------------------
+    def _has_selected_ancestor(self) -> bool:
+        """祖先里是否有被选中且能被拖动的（拖动时以最上层祖先为准）。"""
+        item = self.parentItem()
+        while item is not None:
+            if (item.isSelected()
+                    and item.flags()
+                    & QGraphicsItem.GraphicsItemFlag.ItemIsMovable):
+                return True
+            item = item.parentItem()
+        return False
+
+    def _clamped_position(self, value):
+        """拖动限制在父控件矩形内（父就是子的画布）。"""
+        parent = self.widget.parent
+        if parent is None:
+            return value
+        max_x = max(0.0, float(parent.width) - self._width)
+        max_y = max(0.0, float(parent.height) - self._height)
+        return QPointF(min(max(value.x(), 0.0), max_x),
+                       min(max(value.y(), 0.0), max_y))
+
     def _snapped_position(self, value):
         """拖动中把坐标贴到同级控件/父边缘，返回修正后坐标（QPointF）。
 
@@ -290,6 +316,12 @@ class WidgetItem(QGraphicsItem):
                 if "n" in handle:
                     y -= 8 - h
                 h = 8
+        parent = self.widget.parent
+        if parent is not None:  # 缩放也限制在父矩形内
+            x = min(max(x, 0.0), max(0.0, float(parent.width) - 8.0))
+            y = min(max(y, 0.0), max(0.0, float(parent.height) - 8.0))
+            w = min(w, max(8.0, float(parent.width) - x))
+            h = min(h, max(8.0, float(parent.height) - y))
         self.widget.set_geometry(x=int(round(x)), y=int(round(y)),
                                  width=int(round(w)), height=int(round(h)))
         self.prepareGeometryChange()
@@ -446,7 +478,10 @@ class CanvasView(QGraphicsView):
         self.setRenderHints(QPainter.RenderHint.Antialiasing
                             | QPainter.RenderHint.SmoothPixmapTransform)
         self.setBackgroundBrush(QColor(38, 40, 46))
-        self.setDragMode(QGraphicsView.DragMode.NoDrag)
+        self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
+        # 拖框擦到控件就选中；在控件上按下仍是拖动控件本身。
+        self.setRubberBandSelectionMode(
+            Qt.ItemSelectionMode.IntersectsItemShape)
         self.setTransformationAnchor(
             QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         # 主窗口注入的右键菜单处理器：handler(global_pos, 命中的控件|None)
@@ -479,7 +514,7 @@ class CanvasView(QGraphicsView):
 
     def keyReleaseEvent(self, event) -> None:  # noqa: N802
         if event.key() == Qt.Key.Key_Space and not event.isAutoRepeat():
-            self.setDragMode(QGraphicsView.DragMode.NoDrag)
+            self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
             event.accept()
             return
         super().keyReleaseEvent(event)

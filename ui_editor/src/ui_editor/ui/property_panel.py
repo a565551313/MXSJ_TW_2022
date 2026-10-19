@@ -11,8 +11,10 @@ from __future__ import annotations
 from html import escape
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QCheckBox,
+    QColorDialog,
     QDialog,
     QDoubleSpinBox,
     QFileDialog,
@@ -30,6 +32,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..core import colors
 from ..core.model import Widget
 
 _LONG_TEXT_KEYS = {"sText", "sTitles", "sTips", "sTitle"}
@@ -229,6 +232,10 @@ class PropertyPanel(QWidget):
 
     # -- 各类型编辑器 -------------------------------------------------
     def _make_editor(self, key: str, value: object) -> QWidget | None:
+        if (not isinstance(value, bool) and isinstance(value, (int, str))
+                and colors.is_color_key(key)
+                and colors.parse_color(value) is not None):
+            return self._color_editor(key, value)
         if isinstance(value, bool):
             box = QCheckBox()
             box.setChecked(value)
@@ -279,6 +286,63 @@ class PropertyPanel(QWidget):
                 self._commit(k, _parse_sequence(e.text(), raw)))
             return edit
         return None
+
+    def _color_editor(self, key: str, value: object) -> QWidget:
+        """颜色属性：直接输入框 + 右侧色块取色器。
+
+        写回保持原值的表示形式（整数/逗号串/十六进制），避免把一个
+        int 颜色改成字符串后游戏读不了。
+        """
+        row = QWidget()
+        layout = QHBoxLayout(row)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(4)
+        edit = QLineEdit(colors.to_text(value))
+        swatch = QToolButton()
+        swatch.setFixedSize(30, 22)
+        swatch.setToolTip("选择颜色（写回时保持原来的写法：整数/逗号串/十六进制）")
+
+        def paint_swatch() -> None:
+            current = self._widget.props.get(key) if self._widget else value
+            rgba = colors.parse_color(current)
+            if rgba is None:
+                swatch.setStyleSheet("")
+                return
+            red, green, blue, _alpha = rgba
+            swatch.setStyleSheet(
+                "QToolButton{border:1px solid #7a8291;border-radius:3px;"
+                f"background:rgb({red},{green},{blue});}}")
+
+        def commit_text() -> None:
+            new_value = colors.coerce_like(value, edit.text())
+            if self._commit(key, new_value):
+                edit.setText(colors.to_text(new_value))
+                paint_swatch()
+
+        def pick() -> None:
+            rgba = (colors.parse_color(edit.text())
+                    or colors.parse_color(value))
+            initial = QColor(*rgba) if rgba is not None else QColor("white")
+            chosen = QColorDialog.getColor(
+                initial, self, f"选择颜色：{key}",
+                QColorDialog.ColorDialogOption.ShowAlphaChannel)
+            if not chosen.isValid():
+                return
+            new_value = colors.format_like(
+                value, (chosen.red(), chosen.green(), chosen.blue(),
+                        chosen.alpha()))
+            if self._commit(key, new_value):
+                edit.setText(colors.to_text(new_value))
+                paint_swatch()
+
+        edit.editingFinished.connect(commit_text)
+        swatch.clicked.connect(pick)
+        layout.addWidget(edit, 1)
+        layout.addWidget(swatch)
+        paint_swatch()
+        self._getters[key] = lambda v: (edit.setText(colors.to_text(v)),
+                                        paint_swatch())
+        return row
 
     _IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif",
                    ".igs")
