@@ -76,8 +76,11 @@ class FlsPack:
             clen, doff = decode_directory(index, raw)
             if doff + clen > size:
                 raise PackError(f"条目 {index} 负载越界：{self.path}")
+            if raw[0] in by_id:
+                raise PackError(
+                    f"目录包含重复 entry_id {raw[0]}：{self.path}")
             spans.append((doff, clen))
-            by_id.setdefault(raw[0], index)
+            by_id[raw[0]] = index
             ids.append(raw[0])
         return spans, by_id, ids
 

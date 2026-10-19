@@ -2,6 +2,17 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class ResourceIssue:
+    """资源解析失败的可见记录，不把损坏输入伪装成普通缺图。"""
+
+    code: str
+    path: str
+    message: str
+
 
 class UiEditorError(Exception):
     """核心层全部异常的基类。"""

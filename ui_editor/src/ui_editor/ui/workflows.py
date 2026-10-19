@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+import os
+import tempfile
 from contextlib import suppress
 from pathlib import Path
 
@@ -537,17 +539,36 @@ class FileWorkflowsMixin:
     def _write_to(self, path: str) -> bool:
         if self.doc is None:
             return False
+        temp_path: Path | None = None
         try:
-            guard_output(path, self._pack_sources())
+            target = Path(path)
+            guard_output(target, self._pack_sources())
             if not self._confirm_save_review(path, to_pack=False):
                 return False
             self._require_save_encoding({})
             data = dlg_codec.dump_bytes(
                 self.doc.to_dicts(), text_encoding=self.doc.text_encoding)
-            Path(path).write_bytes(data)
-        except (OSError, ValueError) as exc:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with tempfile.NamedTemporaryFile(
+                    prefix=f".{target.name}.", suffix=".tmp",
+                    dir=target.parent, delete=False) as handle:
+                temp_path = Path(handle.name)
+                handle.write(data)
+                handle.flush()
+                os.fsync(handle.fileno())
+            parsed, _ = dlg_codec.parse_bytes(
+                temp_path.read_bytes(), text_encoding=self.doc.text_encoding)
+            if parsed != self.doc.to_dicts():
+                raise ValueError("临时布局回读与当前文档不一致")
+            os.replace(temp_path, target)
+            temp_path = None
+        except (OSError, ValueError, UnicodeError) as exc:
             QMessageBox.warning(self, "保存失败", str(exc))
             return False
+        finally:
+            if temp_path is not None:
+                with suppress(OSError):
+                    temp_path.unlink()
         self.doc.mark_saved()
         self.doc.source_bytes = data
         self._update_title()

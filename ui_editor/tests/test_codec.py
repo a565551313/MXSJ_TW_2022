@@ -80,6 +80,12 @@ class TestValuesRoundTrip(unittest.TestCase):
             [{"sWidgetType": "CBox", "sName": "框一"}])
         self.assertIn("框一".encode("gbk"), data)
 
+    def test_unrepresentable_text_does_not_fallback_to_gb18030(self):
+        with self.assertRaises(UnicodeEncodeError):
+            dlg_codec.dump_bytes([
+                {"sWidgetType": "CTextFrame", "sText": "𠀀"}
+            ], text_encoding="big5")
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 #: 仓库内自带的真实布局（注册界面模板）：语料可以缺失，但这批必须恒跑

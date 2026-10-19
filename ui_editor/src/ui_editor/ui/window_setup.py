@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QLabel,
     QMenu,
+    QSpinBox,
     QSplitter,
     QTabWidget,
     QToolBar,
@@ -253,6 +254,13 @@ class WindowSetupMixin:
         align_btn.setMenu(align_menu)
         bar.addWidget(align_btn)
         self._align_btn = align_btn
+        self._animation_frame = QSpinBox(self)
+        self._animation_frame.setRange(0, 0)
+        self._animation_frame.setPrefix("帧 ")
+        self._animation_frame.setToolTip(
+            "选择 .spr/精灵的预览帧；不会修改布局或资源")
+        self._animation_frame.valueChanged.connect(self._set_animation_frame)
+        bar.addWidget(self._animation_frame)
         state_btn = QToolButton(self)
         state_btn.setText("按钮态")
         state_btn.setIcon(icons.icon_button_state())
@@ -282,6 +290,52 @@ class WindowSetupMixin:
         self._zoom_label = QLabel("100%", self)
         self.statusBar().addPermanentWidget(self._zoom_label)
         self.view.zoom_changed.connect(self._on_zoom_changed)
+
+    def _refresh_animation_frame_control(self) -> None:
+        """按当前文档的 .spr 资源更新帧选择器，不修改布局。"""
+        control = getattr(self, "_animation_frame", None)
+        if control is None:
+            return
+        maximum = 0
+        if self.doc is not None:
+            names = {
+                str(widget.props.get(key, ""))
+                for widget in self.doc.all_widgets()
+                for key in ("sFileName", "sBgFileName", "sBarFileName")
+                if str(widget.props.get(key, ""))
+            }
+            for name in sorted(names):
+                if name.lower().endswith(".spr"):
+                    asset = self.resolver.fetch_animation(name)
+                    if asset is not None:
+                        maximum = max(maximum, len(asset.frames) - 1)
+        control.blockSignals(True)
+        control.setRange(0, max(0, maximum))
+        control.setValue(min(control.value(), max(0, maximum)))
+        control.blockSignals(False)
+
+    def _set_animation_frame(self, frame: int) -> None:
+        self.ctx.animation_frame = frame
+        self.ctx._pixmaps.clear()
+        self.scene.refresh_all()
+        asset_note = ""
+        if self.doc is not None:
+            for widget in self.doc.all_widgets():
+                for key in ("sFileName", "sBgFileName", "sBarFileName"):
+                    name = str(widget.props.get(key, "") or "")
+                    if not name.lower().endswith(".spr"):
+                        continue
+                    asset = self.resolver.fetch_animation(name)
+                    if asset is not None:
+                        item = asset.frame(frame)
+                        asset_note = (
+                            f"；{name} 当前帧号 {item.frame_id if item else '—'}，"
+                            f"时长 {item.duration if item else '—'}"
+                        )
+                        break
+                if asset_note:
+                    break
+        self._update_status(f"动画预览帧：{frame}{asset_note}")
 
     @staticmethod
     def _add_action(menu, text, slot, shortcut=None) -> QAction:

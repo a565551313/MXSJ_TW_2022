@@ -7,7 +7,47 @@
 现有布局修改，也能从空白新建布局。布局格式、路径哈希、包内
 解密均来自本仓库的逆向结案成果（见 `notes/fls_path_hash_and_dlg.md`）。
 
-当前版本：**0.10.6**（画布右键导出素材、原格式导出、父子级、取色器含屏幕吸管、拖框多选、锁定无视、粘贴自动重命名）。
+当前版本：**0.11.0**（资源路径边界保护、散装布局原子保存、.spr 帧时序预览、外部精灵包解析与资源诊断）。
+
+## 0.11.0：资源安全、动画帧和保存可靠性
+
+- 散装资源查找拒绝绝对路径、盘符路径、`.`/`..` 段、非法编码和符号链接越界；
+  损坏包、读取失败、解码失败和外部精灵包缺失会记录到资源诊断。
+- `.spr` 不再只返回首帧：帧号、duration 和缺失帧被保留为动画模型，工具栏可切换
+  预览帧；`PackageName`/`BranchPath` 指向已挂载包时按来源解析。
+- 散装 `.dlg` 保存先写临时文件、回读校验、`fsync` 后原子替换，写入失败时保留旧文件。
+- 0SLF 重复 `entry_id`、异常 `lChildren` 和目标编码不可表示的文本均明确拒绝。
+- 当前仍未完成 Windows 实机、完整 Qt 画布和原生客户端加载验收。
+
+### Windows 验证
+
+在 Windows PowerShell 中，从仓库根目录执行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\ui_editor\verify_windows.ps1
+```
+
+如果完整 GUI 测试触发 Qt 原生崩溃，可按单个测试模块定位：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\ui_editor\verify_windows.ps1 `
+  -Mode module -TestModule test_gui_source_actions.py
+```
+
+只运行静态检查时可以跳过测试：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\ui_editor\verify_windows.ps1 `
+  -Mode check -Check ruff
+powershell -ExecutionPolicy Bypass -File .\ui_editor\verify_windows.ps1 `
+  -Mode check -Check wincompat
+```
+
+脚本是纯 ASCII，兼容 Windows PowerShell 5.1；它会优先使用
+`C:\Users\\<用户名>\\AppData\\Local\\Programs\\Python\\Python314\\python.exe`，在仓库外创建
+`D:\mxsj-venv`，安装当前编辑器和 `ruff`，然后运行单元测试、字节码编译、ruff 及 Windows
+兼容检查。脚本退出码为 0 才表示这四项检查都通过；Windows 实机画布、EXE 和真实客户端
+加载仍需单独验收。
 
 ## 0.10.6：画布右键「导出素材」——什么格式就什么格式
 

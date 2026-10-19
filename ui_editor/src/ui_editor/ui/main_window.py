@@ -176,6 +176,8 @@ class MainWindow(
         self._sync_history_actions()
         if doc is not None:
             self.view.fit_content()
+        if hasattr(self, "_refresh_animation_frame_control"):
+            self._refresh_animation_frame_control()
         self._update_title()
         count = len(doc.all_widgets()) if doc else 0
         link_note = self._apply_script_link(doc)
@@ -234,11 +236,19 @@ class MainWindow(
     def _layout_diagnostics(self) -> list[Diagnostic]:
         if self.doc is None:
             return []
-        return diagnose(
+        issues = diagnose(
             self.doc, link=self._script_link(),
             resource_exists=(self.resolver.resource_exists
                              if self.resolver.has_sources else None),
             staged_paths=self.resolver.staged_images())
+        issues.extend(
+            Diagnostic("错误" if issue.code in {
+                       "RESOURCE_PACK_CORRUPT", "RESOURCE_READ_ERROR",
+                       "RESOURCE_INVALID_PATH"} else "警告",
+                       issue.code, None, "资源路径",
+                       f"{issue.path}：{issue.message}")
+            for issue in self.resolver.issues)
+        return issues
 
     def run_diagnostics(self) -> None:
         self.diagnostics_panel.set_issues(self._layout_diagnostics())

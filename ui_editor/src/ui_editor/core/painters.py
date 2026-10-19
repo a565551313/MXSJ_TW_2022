@@ -36,18 +36,29 @@ class PaintContext:
     styles: StyleBook = field(default_factory=StyleBook)
     show_names: bool = True
     button_state: str = "normal"  # 按钮状态预览：normal/pressed/hover/disabled
+    animation_frame: int = 0  # .spr/精灵画布预览帧（仅预览，不写回）
     # 代码皮肤绑定：控件名 -> SkinRef（脚本在原地现造的按钮，静态推断）
     code_skins: dict = field(default_factory=dict)
     _pixmaps: dict[tuple[str, int], QPixmap] = field(default_factory=dict)
 
-    def pixmap(self, name: str, frame: int = 0) -> QPixmap | None:
+    def pixmap(self, name: str, frame: int | None = None) -> QPixmap | None:
+        if frame is None:
+            frame = self.animation_frame if name.lower().endswith(".spr") else 0
         key = (name.replace("/", "\\"), frame)
         if key in self._pixmaps:
             return self._pixmaps[key]
         result: QPixmap | None = None
-        frames = self.assets.fetch_image(name)
-        if frames and 0 <= frame < len(frames):
-            result = QPixmap.fromImage(frames[frame])
+        if name.lower().endswith(".spr"):
+            asset = self.assets.fetch_animation(name)
+            animation_frame = asset.frame(frame) if asset is not None else None
+            image = (animation_frame.image
+                     if animation_frame is not None else None)
+            if image is not None:
+                result = QPixmap.fromImage(image)
+        else:
+            frames = self.assets.fetch_image(name)
+            if frames and 0 <= frame < len(frames):
+                result = QPixmap.fromImage(frames[frame])
         self._pixmaps[key] = result
         return result
 

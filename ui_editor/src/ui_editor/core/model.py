@@ -90,11 +90,16 @@ class Widget:
     def from_dict(cls, data: dict, parent: Widget | None = None) -> Widget:
         props = {k: v for k, v in data.items() if k != "lChildren"}
         widget = cls(props, parent)
-        children = data.get("lChildren") or []
-        if isinstance(children, list):
-            for child in children:
-                if isinstance(child, dict):
-                    widget.children.append(cls.from_dict(child, widget))
+        if "lChildren" not in data:
+            children = []
+        else:
+            children = data["lChildren"]
+            if not isinstance(children, list):
+                raise ValueError("lChildren 必须是控件字典列表")
+        for child in children:
+            if not isinstance(child, dict):
+                raise ValueError("lChildren 只能包含控件字典")
+            widget.children.append(cls.from_dict(child, widget))
         return widget
 
     def to_dict(self) -> dict:

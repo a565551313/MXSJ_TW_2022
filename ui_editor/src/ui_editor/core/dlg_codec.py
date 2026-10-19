@@ -179,12 +179,9 @@ def _encode_string(value: str, key: str | None, text_encoding: str) -> str:
         codec = "gbk"
     else:
         return value
-    try:
-        raw = value.encode(codec, "surrogateescape")
-    except UnicodeEncodeError:
-        # 个别 Big5/GBK 未收录的新字（如用户输入的生僻字）退回
-        # GB18030 字节，避免保存时崩溃；主流文本不受影响。
-        raw = value.encode("gb18030", "surrogateescape")
+    # surrogateescape 保留原始文件中无法按 GB18030 解码的字节；
+    # 目标编码无法表示普通 Unicode 字符时仍直接抛错，不做 GB18030 回退。
+    raw = value.encode(codec, "surrogateescape")
     return raw.decode("gb18030", "surrogateescape")
 
 

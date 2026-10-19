@@ -195,6 +195,26 @@ class SourceActionTests(unittest.TestCase):
         self.assertEqual(self.text(), "已经编辑保存")
         self.assertEqual(self.file.read_bytes(), self.data)
 
+    def test_loose_save_failure_keeps_existing_target(self):
+        self.choose("gbk")
+        self.window.open_layout_file(str(self.file))
+        out = self.root / "existing.dlg"
+        old = b"old target bytes"
+        out.write_bytes(old)
+        with mock.patch(
+                "ui_editor.ui.workflows.SaveReviewDialog.exec",
+                return_value=1,
+        ):
+            with mock.patch(
+                    "ui_editor.ui.workflows.os.replace",
+                    side_effect=OSError("publish failed"),
+            ):
+                with mock.patch(
+                        "ui_editor.ui.workflows.QMessageBox.warning",
+                ):
+                    self.assertFalse(self.window.save_as(str(out)))
+        self.assertEqual(out.read_bytes(), old)
+
     def test_pack_save_roundtrip_with_gbk_and_utf8(self):
         for codec, text in (("gbk", "设置简体中文"), ("utf-8", "简体繁體🙂")):
             with self.subTest(codec=codec):

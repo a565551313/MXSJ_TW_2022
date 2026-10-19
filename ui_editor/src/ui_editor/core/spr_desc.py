@@ -12,7 +12,8 @@
 
 from __future__ import annotations
 
-__all__ = ["decode_spr_text", "parse_frame_table", "frame_sources"]
+__all__ = ["decode_spr_text", "parse_frame_table", "frame_sources",
+           "parse_images"]
 
 
 def _xor4(data: bytes, key: bytes) -> bytes:
@@ -167,7 +168,15 @@ def frame_sources(name: str, text: str = "") -> tuple[str, ...]:
         return same_name
     sep = "\\" if "\\" in base else ("/" if "/" in base else "")
     dir_prefix = base.rsplit(sep, 1)[0] + sep if sep else ""
-    external = tuple(f"{dir_prefix}{f}" for f in info["files"] if f)
+    branch = str(info.get("branch", "") or "")
+    branch = branch.replace("/", "\\")
+    if branch and not branch.endswith("\\"):
+        branch += "\\"
+    package = str(info.get("package", "") or "")
+    external = tuple(
+        f"{package}:{branch}{f}" if package else f"{dir_prefix}{f}"
+        for f in info["files"] if f
+    )
     return external + same_name
 
 

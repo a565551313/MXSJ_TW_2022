@@ -66,9 +66,9 @@ class TestSprDesc(unittest.TestCase):
         self.assertEqual(info["package"], "magic")
         self.assertTrue(info["palpro"].startswith("259"))
         self.assertEqual(parse_images("[frames]\n0 3\n"), {})
-        # [images] 指明的文件排候选首位，同名仍兜底（无 sep 的纯名）
+        # [images] 记录外部包和分支，候选保留来源，避免同名资源串包。
         got = frame_sources("x.spr", text)
-        self.assertEqual(got, ("magic0307.igs", "x.igs", "x.png"))
+        self.assertEqual(got, ("magic:res\\magic0307.igs", "x.igs", "x.png"))
 
 
 if __name__ == "__main__":

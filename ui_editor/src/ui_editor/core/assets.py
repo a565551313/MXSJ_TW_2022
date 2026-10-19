@@ -13,14 +13,14 @@ from __future__ import annotations
 import os
 import re
 from collections.abc import Callable
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 from PySide6.QtCore import QRect
 from PySide6.QtGui import QImage, QPainter
 
-from . import dir_base, dlg_codec, spr_desc, sprite
+from . import animation, dir_base, dlg_codec, spr_desc, sprite
 from .catalog import known_layout_hashes, known_layout_paths
-from .errors import DlgError
+from .errors import DlgError, ResourceIssue
 from .pack import FlsPack
 from .pack_build import unpack_packed_text  # noqa: F401  转发
 from .styles import StyleBook
@@ -28,7 +28,7 @@ from .styles import StyleBook
 __all__ = ["AssetResolver", "unpack_packed_text"]
 
 _MEDIA_EXTS = (".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif",
-               ".igs", ".wav", ".mp3", ".ogg")
+               ".igs", ".spr", ".wav", ".mp3", ".ogg")
 
 
 _QUOTED_STR_RE = re.compile(r'"((?:[^"\\]|\\.)*)"|\'((?:[^\'\\]|\\.)*)\'')
@@ -122,19 +122,28 @@ class AssetResolver:
         self._loose_dirs: list[Path] = []
         self._bytes_cache: dict[str, bytes | None] = {}
         self._image_cache: dict[str, list[QImage] | None] = {}
+        self._animation_cache: dict[str, animation.AnimationAsset | None] = {}
         self._media_cache: list[str] | None = None
         self._session_layouts: dict[int, str] = {}  # 用户明确给出的路径；仅本会话
         self._staged: dict[str, bytes] = {}  # 选图窗新加、待随包写入
+        self._issues: list[ResourceIssue] = []
 
     # -- 挂载 -----------------------------------------------------
     def mount_pack(self, path: str | Path, *, priority: bool = False) -> FlsPack:
-        pack = FlsPack(path)
+        normalized = Path(path).resolve()
+        for index, existing in enumerate(self._packs):
+            if existing.path.resolve() == normalized:
+                if priority and index != 0:
+                    self._packs.insert(0, self._packs.pop(index))
+                return existing
+        pack = FlsPack(normalized)
         if priority:
             self._packs.insert(0, pack)
         else:
             self._packs.append(pack)
         self._bytes_cache.clear()
         self._image_cache.clear()
+        self._animation_cache.clear()
         self._media_cache = None
         return pack
 
@@ -155,7 +164,8 @@ class AssetResolver:
             try:
                 self.mount_pack(fls)
                 count += 1
-            except Exception:
+            except Exception as exc:
+                self._record_issue("RESOURCE_PACK_CORRUPT", str(fls), str(exc))
                 continue  # 非 0SLF 的包（如 data.fls）跳过
         if progress is not None:
             progress(total, total, "登记散文件目录…")
@@ -163,20 +173,31 @@ class AssetResolver:
         return count
 
     def add_loose_dir(self, dirpath: str | Path) -> None:
-        root = Path(dirpath)
+        root = Path(dirpath).resolve()
         if root not in self._loose_dirs:
             self._loose_dirs.append(root)
             self._media_cache = None
+            self._animation_cache.clear()
 
     @property
     def pack_paths(self) -> list[Path]:
         return [pack.path for pack in self._packs]
 
+    @property
+    def issues(self) -> tuple[ResourceIssue, ...]:
+        """当前来源解析问题，供状态栏/诊断面板展示。"""
+        return tuple(self._issues)
+
+    def _record_issue(self, code: str, path: str, message: str) -> None:
+        issue = ResourceIssue(code, path, message)
+        if issue not in self._issues:
+            self._issues.append(issue)
+
     def pack_for(self, path: str | Path) -> FlsPack | None:
         """按路径取已挂载的包（未挂载返回 None）。"""
-        target = str(path)
+        target = Path(path).resolve()
         for pack in self._packs:
-            if str(pack.path) == target:
+            if pack.path.resolve() == target:
                 return pack
         return None
 
@@ -222,7 +243,9 @@ class AssetResolver:
                     if path.suffix.lower() == ".fls" and fresh.pack_for(path) is None:
                         try:
                             fresh.mount_pack(path)
-                        except Exception:
+                        except Exception as exc:
+                            fresh._record_issue(
+                                "RESOURCE_PACK_CORRUPT", str(path), str(exc))
                             continue  # 与首次挂载一样跳过非 0SLF 格式
         except Exception:
             fresh.close()
@@ -252,21 +275,81 @@ class AssetResolver:
     def has_sources(self) -> bool:
         return bool(self._packs or self._loose_dirs)
 
+    @staticmethod
+    def _resource_name(name: str, *, allow_directory: bool = False) -> str:
+        """校验并规范化包内/散装资源路径。"""
+        if not isinstance(name, str):
+            raise ValueError("资源路径必须是字符串")
+        value = name.strip().replace("\\", "/")
+        if not value or PureWindowsPath(value).drive \
+                or PureWindowsPath(value).is_absolute() \
+                or value.startswith("/"):
+            raise ValueError(f"资源路径必须是包内相对路径：{name!r}")
+        trailing = value.endswith("/")
+        parts = value.split("/")
+        if trailing:
+            parts.pop()
+        if (not parts or any(not part or part in (".", "..")
+                             or any(ord(char) < 32 for char in part)
+                             or any(char in '<>:\\"|?*' for char in part)
+                             for part in parts)):
+            raise ValueError(f"资源路径含非法段：{name!r}")
+        if trailing and not allow_directory:
+            raise ValueError(f"资源路径不能以目录分隔符结尾：{name!r}")
+        normalized = "/".join(parts) + ("/" if trailing else "")
+        try:
+            normalized.encode("gbk")
+        except UnicodeEncodeError as exc:
+            raise ValueError(f"资源路径含 GBK 不可编码字符：{name!r}") from exc
+        return normalized
+
+    @staticmethod
+    def _loose_candidate(root: Path, name: str) -> Path:
+        root_resolved = root.resolve()
+        candidate = (root / name.replace("/", os.sep)).resolve()
+        try:
+            candidate.relative_to(root_resolved)
+        except ValueError as exc:
+            raise ValueError(f"资源路径越出挂载目录：{name!r}") from exc
+        return candidate
+
     def resource_exists(self, name: str) -> bool:
         """只查当前挂载来源与待入包图；不解码负载，供静态诊断使用。"""
-        return self._staged_lookup(name) is not None or self._exists(name)
+        try:
+            normalized = self._resource_name(name)
+        except ValueError as exc:
+            self._record_issue("RESOURCE_INVALID_PATH", str(name), str(exc))
+            return False
+        return (self._staged_lookup(normalized) is not None
+                or self._exists(normalized))
 
     def _exists(self, name: str) -> bool:
         """资源是否真在某个包/散装目录里（只查索引与文件存在性）。"""
+        try:
+            normalized = self._resource_name(name)
+        except ValueError as exc:
+            self._record_issue("RESOURCE_INVALID_PATH", str(name), str(exc))
+            return False
         for pack in self._packs:
-            if pack.contains(name):
+            if pack.contains(normalized):
                 return True
-        rel = Path(name.replace("\\", os.sep).replace("/", os.sep))
-        return any((root / rel).is_file() for root in self._loose_dirs)
+        for root in self._loose_dirs:
+            try:
+                if self._loose_candidate(root, normalized).is_file():
+                    return True
+            except ValueError as exc:
+                self._record_issue("RESOURCE_INVALID_PATH", normalized,
+                                   str(exc))
+        return False
 
     # -- 待入包图片（选图窗"添加到包"挂账） ----------------------
     def stage_image(self, res_path: str, data: bytes) -> None:
         """登记一张新图：预览立即可见，保存回资源包时一并写入。"""
+        try:
+            res_path = self._resource_name(res_path)
+        except ValueError as exc:
+            self._record_issue("RESOURCE_INVALID_PATH", str(res_path), str(exc))
+            raise
         self._staged[res_path] = data
         for key in (res_path, res_path.replace("/", "\\"),
                     res_path.replace("\\", "/")):
@@ -339,28 +422,41 @@ class AssetResolver:
     # -- 查找 -----------------------------------------------------
     def fetch_bytes(self, name: str) -> bytes | None:
         """按资源路径取原始字节（待入包图片优先，其次包/散装目录）。"""
-        if not name or not name.strip("\\/ "):
-            return None
-        staged = self._staged_lookup(name)
+        try:
+            normalized = self._resource_name(name)
+        except ValueError as exc:
+            self._record_issue("RESOURCE_INVALID_PATH", str(name), str(exc))
+            raise
+        staged = self._staged_lookup(normalized)
         if staged is not None:
             return staged
-        cache_key = name.replace("/", "\\")
+        cache_key = normalized.replace("/", "\\")
         if cache_key in self._bytes_cache:
             return self._bytes_cache[cache_key]
         data: bytes | None = None
         for pack in self._packs:
             try:
-                data = pack.read_named(name)
-            except Exception:
-                data = None
+                data = pack.read_named(normalized)
+            except Exception as exc:
+                self._record_issue("RESOURCE_READ_ERROR", normalized, str(exc))
+                raise
             if data is not None:
                 break
         if data is None:
-            rel = Path(name.replace("\\", os.sep).replace("/", os.sep))
             for root in self._loose_dirs:
-                candidate = root / rel
+                try:
+                    candidate = self._loose_candidate(root, normalized)
+                except ValueError as exc:
+                    self._record_issue("RESOURCE_INVALID_PATH", normalized,
+                                       str(exc))
+                    continue
                 if candidate.is_file():
-                    data = candidate.read_bytes()
+                    try:
+                        data = candidate.read_bytes()
+                    except OSError as exc:
+                        self._record_issue("RESOURCE_READ_ERROR", normalized,
+                                           str(exc))
+                        raise
                     break
         self._bytes_cache[cache_key] = data
         return data
@@ -386,44 +482,99 @@ class AssetResolver:
         except Exception:
             return None
 
+    def fetch_animation(self, name: str) -> animation.AnimationAsset | None:
+        """读取 .spr 的帧号/时长和对应像素，保留非连续帧号。"""
+        try:
+            normalized = self._resource_name(name)
+        except ValueError as exc:
+            self._record_issue("RESOURCE_INVALID_PATH", str(name), str(exc))
+            return None
+        cache_key = normalized.replace("/", "\\")
+        if cache_key in self._animation_cache:
+            return self._animation_cache[cache_key]
+        data = self.fetch_bytes(normalized)
+        text = spr_desc.decode_spr_text(data) if data is not None else None
+        if data is None or text is None:
+            self._record_issue("RESOURCE_DECODE_ERROR", normalized,
+                               ".spr 描述符无法解码")
+            self._animation_cache[cache_key] = None
+            return None
+        table = spr_desc.parse_frame_table(text)
+        images: list[QImage] | None = None
+        package = ""
+        branch = ""
+        info = spr_desc.parse_images(text)
+        if info:
+            package = str(info.get("package", "") or "")
+            branch = str(info.get("branch", "") or "")
+        for candidate in spr_desc.frame_sources(normalized, text):
+            sibling = self._fetch_sprite_source(candidate)
+            if sibling is None:
+                continue
+            images = self._decode_frames(sibling)
+            if images:
+                break
+        if images is None:
+            self._record_issue("RESOURCE_MISSING", normalized,
+                               "找不到 .spr 对应的精灵帧资源")
+            self._animation_cache[cache_key] = None
+            return None
+        asset = animation.build_animation(
+            normalized, table, images, package=package, branch=branch)
+        self._animation_cache[cache_key] = asset
+        if not asset.complete:
+            self._record_issue("RESOURCE_FRAME_MISSING", normalized,
+                               "帧表中有帧号没有对应像素")
+        return asset
+
+    def _fetch_sprite_source(self, name: str) -> bytes | None:
+        """按 ``package:branch/path`` 解析 .spr 的外部包指针。"""
+        if ":" not in name:
+            return self.fetch_bytes(name)
+        package, resource = name.split(":", 1)
+        resource = resource.replace("\\", "/")
+        for pack in self._packs:
+            if pack.path.stem.casefold() == package.casefold():
+                data = pack.read_named(resource)
+                if data is not None:
+                    return data
+        self._record_issue("RESOURCE_PACKAGE_MISSING", name,
+                           f"未挂载 .spr 指定资源包：{package}")
+        return None
+
     def fetch_image(self, name: str) -> list[QImage] | None:
         """按路径取图片帧：PNG/JPG 单帧，精灵多帧；失败返回 None。"""
-        if not name or not name.strip("\\/ "):
+        try:
+            normalized = self._resource_name(name, allow_directory=True)
+        except ValueError as exc:
+            self._record_issue("RESOURCE_INVALID_PATH", str(name), str(exc))
             return None
-        cache_key = name.replace("/", "\\")
+        cache_key = normalized.replace("/", "\\")
         if cache_key in self._image_cache:
             return self._image_cache[cache_key]
-        frames = self._load_image(name)
+        frames = self._load_image(normalized)
         self._image_cache[cache_key] = frames
         return frames
 
     def _load_image(self, name: str) -> list[QImage] | None:
+        if dir_base.is_dir_base(name):
+            return self._compose_dir_base(name)
         if name.lower().endswith(".spr"):
             return self._load_spr(name)
         data = self.fetch_bytes(name)
         frames = self._decode_frames(data) if data is not None else None
         if frames is not None:
             return frames
-        return self._compose_dir_base(name)
+        if data is not None:
+            self._record_issue("RESOURCE_DECODE_ERROR", name,
+                               "资源字节不是可识别的图片或精灵格式")
+        return None
 
     def _load_spr(self, name: str) -> list[QImage] | None:
-        """.spr 是 XOR 的帧时表（非图像）：取同名 .igs/.png 精灵出帧。
-
-        画布静态显示精灵各帧（预览取首帧）；帧表里的每帧时长供
-        动画用（暂未接时间轴）。描述符解不出或同名精灵缺失仍占位。
-        """
-        data = self.fetch_bytes(name)
-        text = spr_desc.decode_spr_text(data) if data is not None else None
-        if data is None or text is None:
+        asset = self.fetch_animation(name)
+        if asset is None:
             return None
-        for candidate in spr_desc.frame_sources(name, text):
-            sibling = self.fetch_bytes(candidate)
-            if sibling is None:
-                continue
-            frames = self._decode_frames(sibling)
-            if frames:
-                return frames
-        return None
+        return [image for image in asset.images if image is not None]
 
     @staticmethod
     def _decode_frames(data: bytes) -> list[QImage] | None:

@@ -35,6 +35,16 @@ class TestWidgetDictRoundTrip(unittest.TestCase):
         doc = LayoutDocument.from_dicts(dicts, None)
         self.assertEqual(doc.to_dicts()[0]["iFuture"], 9)
 
+    def test_malformed_children_are_rejected(self):
+        with self.assertRaises(ValueError):
+            LayoutDocument.from_dicts([
+                {"sWidgetType": "CBox", "lChildren": {}}
+            ], None)
+        with self.assertRaises(ValueError):
+            LayoutDocument.from_dicts([
+                {"sWidgetType": "CBox", "lChildren": ["lost"]}
+            ], None)
+
 
 class TestFactory(unittest.TestCase):
     def test_widget_types_cover_corpus(self):

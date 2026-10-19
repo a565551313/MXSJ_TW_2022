@@ -168,6 +168,29 @@ class TestAssetResolver(unittest.TestCase):
         self.assertIsNone(self.resolver.fetch_dlg("dialog/none.dlg"))
         self.assertIsNone(self.resolver.fetch_bytes("nope.png"))
 
+    def test_loose_resource_paths_cannot_escape_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "resources"
+            root.mkdir()
+            outside = Path(tmp) / "outside.png"
+            outside.write_bytes(b"outside")
+            resolver = AssetResolver()
+            resolver.add_loose_dir(root)
+            try:
+                self.assertIsNone(resolver.fetch_bytes("missing.png"))
+                absolute = str(outside.resolve())
+                for name in ("../outside.png", absolute,
+                             "C:\\\\outside.png"):
+                    with self.subTest(name=name):
+                        with self.assertRaises(ValueError):
+                            resolver.fetch_bytes(name)
+            finally:
+                resolver.close()
+
+    def test_staged_resource_path_is_validated(self):
+        with self.assertRaises(ValueError):
+            self.resolver.stage_image("../escape.png", b"data")
+
     def test_fetch_sprite_image(self):
         frames = self.resolver.fetch_image("test/pic.igs")
         self.assertIsNotNone(frames)
