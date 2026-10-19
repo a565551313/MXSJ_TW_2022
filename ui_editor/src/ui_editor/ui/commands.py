@@ -413,6 +413,93 @@ class EditingCommandsMixin:
                 item.apply_lock()
         self.tree_panel.refresh_locks()
 
+    # -- 导出素材（右键） --------------------------------------------
+    def _add_export_asset_menu(self, menu: QMenu, widgets: list) -> None:
+        """右键「导出素材」子菜单：原格式 / 转成图片。"""
+        from ..core.asset_export import asset_paths_of
+
+        paths = [name for widget in widgets for _k, name in
+                 asset_paths_of(widget)]
+        submenu = menu.addMenu("导出素材")
+        submenu.setToolTip("把这个控件引用的图片/精灵/音效导出成文件")
+        if not paths:
+            empty = submenu.addAction("（这个控件没有图片或音效素材）")
+            empty.setEnabled(False)
+            return
+        raw = submenu.addAction("按原格式导出…")
+        raw.setToolTip(
+            "包里是什么格式就导出什么格式：PNG/JPG/GIF/BMP/TGA 原样写字节，"
+            "游戏精灵保留原名（.igs/.png），.spr 连帧图一起导出")
+        raw.triggered.connect(
+            lambda _checked=False: self.export_widget_assets(widgets))
+        converted = submenu.addAction("转成图片导出（精灵逐帧 PNG）…")
+        converted.setToolTip("方便直接查看/编辑：精灵会解成逐帧 PNG")
+        converted.triggered.connect(
+            lambda _checked=False: self.export_widget_assets(
+                widgets, convert=True))
+
+    def _asset_export_dir(self) -> str | None:
+        from PySide6.QtWidgets import QFileDialog
+
+        return QFileDialog.getExistingDirectory(
+            self, "选择素材导出到的文件夹")
+
+    def export_widget_assets(self, widgets: list,
+                             convert: bool = False) -> None:
+        """把控件引用的素材导出到用户选的文件夹。
+
+        convert=False：按原格式写原始字节（默认）；
+        convert=True：精灵解成逐帧 PNG，方便查看/编辑。
+        """
+        from pathlib import Path
+
+        from ..core.asset_export import asset_paths_of, export_raw_assets
+        from .image_export import export_image_files
+
+        assets = self.resolver
+        if assets is None:
+            self._update_status("没有挂载资源包，取不到素材字节。")
+            return
+        directory = self._asset_export_dir()
+        if not directory:
+            return
+        written: list[Path] = []
+        missing: list[str] = []
+        try:
+            if convert:
+                for widget in widgets:
+                    for _key, name in asset_paths_of(widget):
+                        files = export_image_files(
+                            name, assets.fetch_bytes(name),
+                            assets.fetch_image(name), directory,
+                            protected_paths=assets.pack_paths)
+                        if files:
+                            written.extend(files)
+                        else:
+                            missing.append(name)
+            else:
+                for widget in widgets:
+                    files, lost = export_raw_assets(
+                        assets, widget, directory,
+                        protected_paths=assets.pack_paths)
+                    written.extend(files)
+                    missing.extend(lost)
+        except ValueError as exc:  # guard_output 拒绝
+            self._update_status(f"导出被拒绝：{exc}")
+            return
+        if written:
+            names = "、".join(path.name for path in written[:4])
+            more = f" 等 {len(written)} 个文件" if len(written) > 4 else ""
+            note = (f"；{len(missing)} 个资源包内找不到："
+                    + "、".join(missing[:3]) if missing else "")
+            self._update_status(
+                f"已导出 {names}{more} 到 {directory}{note}")
+        else:
+            self._update_status(
+                "没有可导出的素材"
+                + (f"（包内找不到：{'、'.join(missing[:3])}）"
+                   if missing else "。"))
+
     def build_canvas_context_menu(self, widget: Widget | None) -> QMenu:
         """画布右键菜单（不在此处 exec，便于测试与复用）。"""
         if widget is not None and widget not in self._selected_widgets():
@@ -425,6 +512,7 @@ class EditingCommandsMixin:
         menu.addSeparator()
         widgets = self._selected_widgets()
         if widget is not None and widgets:
+            self._add_export_asset_menu(menu, widgets)
             from .hierarchy import build_parent_menu
 
             menu.addMenu(build_parent_menu(self, self.doc, widgets,
