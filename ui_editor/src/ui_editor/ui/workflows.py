@@ -34,8 +34,6 @@ class FileWorkflowsMixin:
     """主窗口界面层的职责分组，不独立创建窗口。"""
 
     def open_layout_file(self, path: str) -> None:
-        if not self._confirm_discard():
-            return
         try:
             data = Path(path).read_bytes()
             dicts, md5 = dlg_codec.parse_bytes(
@@ -48,7 +46,7 @@ class FileWorkflowsMixin:
         doc.source_bytes = data
         self.resolver.add_loose_dir(Path(path).parent)
         self._try_load_styles()
-        self._set_document(doc)
+        self._open_in_tab(doc, ("file", str(path)))
         self.resource_panel.reveal_selection(("file", str(path)))
 
     def open_layout_file_dialog(self) -> None:
@@ -160,12 +158,10 @@ class FileWorkflowsMixin:
         except Exception as exc:
             QMessageBox.warning(self, "按路径打开失败", str(exc))
             return
-        if not self._confirm_discard():
-            return
         doc.source_pack = (pack_path, path)
         self._remember_layout(path)
         self.resource_panel.add_known_layout(pack_path, path)
-        self._set_document(doc)
+        self._open_in_tab(doc, ("pack", pack_path, path))
         self.resource_panel._search.clear()
         self.resource_panel.expand_pack(pack_path)
         self.resource_panel.reveal_selection(("pack", pack_path, path))
@@ -205,14 +201,22 @@ class FileWorkflowsMixin:
             f"已导入 {dialog.path}（待入新包），可预览/编辑；"
             "保存前查看改动清单。未带图片，未接脚本，原包未修改。")
 
-    def _open_pack_layout(self, pack_path: str, res_path: str,
-                          skip_discard: bool = False) -> None:
-        """从包中打开一个布局（树双击与对话框共用）。包顺带入树。"""
-        if (self.doc and self.doc.pending_pack_import
+    def _open_pack_layout(self, pack_path: str, res_path: str) -> None:
+        """从包中打开一个布局（树双击与对话框共用）。
+
+        同来源布局开过就切回它的标签（保留未保存编辑），否则开新标签；
+        包顺带入树。
+        """
+        if (self.doc is not None and self.doc.pending_pack_import
                 and self.doc.source_pack == (pack_path, res_path)):
             self.resource_panel.reveal_selection(("pending", pack_path, res_path))
             return
-        if not skip_discard and not self._confirm_discard():
+        idx = self._session_index(("pack", pack_path, res_path))
+        if idx >= 0:
+            self._activate_session(idx)
+            pending = (self.doc is not None and self.doc.pending_pack_import)
+            self.resource_panel.reveal_selection(
+                ("pending" if pending else "pack", pack_path, res_path))
             return
         try:
             if self.resolver.pack_for(pack_path) is None:
@@ -236,7 +240,7 @@ class FileWorkflowsMixin:
         doc.source_pack = (pack_path, res_path)
         doc.source_bytes = self.resolver.fetch_pack_dlg_bytes(pack_path, res_path)
         self._try_load_styles()
-        self._set_document(doc)
+        self._open_in_tab(doc, ("pack", pack_path, res_path))
         self.resource_panel.reveal_selection(("pack", pack_path, res_path))
 
     def open_resource_dir(self, path: str) -> None:
@@ -282,13 +286,11 @@ class FileWorkflowsMixin:
             self.open_resource_dir(path)
 
     def new_layout(self) -> None:
-        if not self._confirm_discard():
-            return
         doc = LayoutDocument()
         frame = doc.new_widget("CMainFrame")
         frame.props["sTitle"] = "新對話框"
         doc.dirty = True
-        self._set_document(doc)
+        self._open_in_tab(doc, None)
         self._select_widget(frame)
 
     def save(self) -> None:

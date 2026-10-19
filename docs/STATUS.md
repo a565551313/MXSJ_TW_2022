@@ -2065,6 +2065,45 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   0/0/0。resource_editor 测试 25 项中 16 个 Qt 导入错误（预有）0 失败。
   不改 `.dlg` 字段值、不改客户端资源。
 
+### ui_editor 多标签布局编辑（2026-10-19，第六轮）——版本 0.9.0
+
+**主窗口交互变化**（画布绘制/诊断面板无变化）：打开布局不再顶掉当前
+编辑，改为标签页。用户原话需求：「每次双击一个布局不关闭上一个，
+新建一个标签页打开」。
+
+- 行为：双击/按路径打开/新建=新标签；**同来源重开=切回旧标签**（不丢
+  编辑、不开重复页）；各标签独立保留文档、撤销历史、选择、缩放/平移；
+  标签「名称*」星标=未保存/待入包；✕ 关闭（脏标签先确认）；关最后一个
+  回空态；F5 重读全部标签（无来源新建页跳过保留）；关窗逐个确认脏标签。
+  保存/导出/诊断/属性等仍作用于 `window.doc`（=激活标签）。
+- 实现：`ui/tabs.py` 新增（EditorSession 纯状态，无 Qt 依赖：key_of
+  来源身份/label 星标/snapshot 快照）；`window_setup.WindowSetupMixin`
+  加标签编排 9 方法（_open_in_tab/_activate_session/_close_tab 等，
+  画布共享、切标签换文档）；`main_window`：`doc` 改 property（getter/
+  setter 配 `property(_get_doc, _set_doc)` 避开结构测试同名 FunctionDef
+  判定）、中央=QTabBar+共享画布、`_confirm_discard(doc)` 参数化、
+  `_set_document` 就地换文档并同步会话来源键（导入待入包会改身份）、
+  closeEvent 循环确认；workflows 四个打开入口去 `_confirm_discard` 改
+  `_open_in_tab`；source_actions F5 `_reload_bundle` 逐标签重读。
+- 已知边界：导入布局（待入新包）仍替换当前标签（待入包叶子单文档
+  语义）；同来源判定=（包路径,资源路径）/（散装路径）。
+- 测试：`tests/test_tabs.py` 纯态 4 项（沙箱已跑）+ `tests/test_gui_tabs.py`
+  GUI 7 项（沙箱缺 PySide6 不执行，本机跑）；test_window_structure 3/3
+  （main_window 553/window_setup 425/workflows 599 行，守限 600 内）；
+  全量 0 失败（26 Qt 导入错误=预有 25+本条）；ruff 0；wincompat 0/0/0。
+  既有 GUI 契约核对：双击待入包叶子不确认不换文档、切换编码/刷新/
+  关窗的 `_confirm_discard` 语义、`window.doc = None` 清空入口均兼容。
+
+### ui_editor 遮罩文字白字（2026-10-19，第七轮）——版本 0.9.1
+
+**遮罩面板小修**（画布/诊断面板无变化）：用户实测忙碌遮罩上
+「整理包内资源清单」标题与进度条百分比是黑字、在深色面板上看不清。
+修：`ui/busy.py` 的 `BusyOverlay` 标题样式 `color:#ffffff`；进度条
+整套样式（槽 #3a4150/块 #3d7eff/文本 #ffffff，min-height 18px——
+只上 color 会让 ::chunk 不绘制，故连槽带块一起）。详情行 #aab4c4
+原样。回归 `tests/test_gui_busy.py` 2 项锁配色（沙箱缺 PySide6 不
+执行，本机跑）。ruff 0；全量 0 失败（26 Qt 导入错误=预有）。版本 0.9.1。
+
 ### ui_editor 控件树名称列拉伸（2026-10-19，第五轮）——版本 0.8.9
 
 **面板小修**（画布/诊断面板无变化）：左侧控件树名称列此前是 Qt 默认

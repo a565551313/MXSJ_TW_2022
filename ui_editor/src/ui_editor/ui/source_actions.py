@@ -64,10 +64,11 @@ class SourceActionsMixin:
         if not self.resolver.has_sources and not self._layout_dirs:
             QMessageBox.information(self, "刷新", "请先打开布局文件、目录或资源包。")
             return
-        if not self._confirm_discard():
-            return
+        for doc in self._dirty_docs():
+            if not self._confirm_discard(doc):
+                return
         try:
-            fresh, doc, book, layouts = self.run_busy(
+            fresh, docs, book, layouts = self.run_busy(
                 "从来源刷新（重开资源包并重扫）…",
                 lambda h: self._reload_bundle(h))
         except Exception as exc:
@@ -86,34 +87,60 @@ class SourceActionsMixin:
         for root in self._layout_dirs:
             self.resource_panel.add_loose_dir(root)
         self.resource_panel._apply_search(self.resource_panel._search.text())
-        self._set_document(doc)
-        if doc is not None:
-            key = (("file", doc.source_path) if doc.source_path else
-                   ("pack", *doc.source_pack))
+        # 逐标签换上重读内容（清选择快照）；活动标签同步界面。
+        pairs = ([(s, s.doc) for s in self._sessions]
+                 or [(None, self._doc)])
+        active_new = None
+        for (session, _was), nd in zip(pairs, docs, strict=True):
+            if nd is None:
+                continue
+            if session is not None:
+                session.doc = nd
+                session.selected = None
+                session.selection_anchor = None
+                if session is self._active:
+                    active_new = nd
+            else:
+                active_new = nd
+        if active_new is not None:
+            self._set_document(active_new)
+        elif self._doc is None:
+            self._set_document(None)
+        if self._doc is not None and (
+                self._doc.source_path or self._doc.source_pack):
+            key = (("file", self._doc.source_path) if self._doc.source_path
+                   else ("pack", *self._doc.source_pack))
             self.resource_panel.reveal_selection(key)
         old.close()
         self.scene.refresh_all()
         self._update_status("已从磁盘重新加载布局、目录列表、资源包、图片与样式。")
 
     def _reload_bundle(self, handle):
-        """后台任务：重开全部来源并重读当前布局/样式/布局清单。
+        """后台任务：重开全部来源并重读全部标签布局/样式/布局清单。
 
-        出错时关掉半成品 fresh 再原样重抛（调用方提示后保留现状）。
+        未保存且无来源的标签跳过（内容保留）；读取失败原样重抛
+        （调用方提示后整单保留现状）。出错时关掉半成品 fresh。
         """
         fresh = None
         try:
             handle.report(0, 3, "重开资源包…")
             fresh = self.resolver.reloaded(self._resource_dirs)
-            doc = None
-            if self.doc is not None:
-                handle.report(1, 3, "重读当前布局…")
-                data = self._source_bytes(self.doc, fresh)
+            pairs = ([(s, s.doc) for s in self._sessions]
+                     or [(None, self._doc)])
+            docs: list = []
+            for i, (_session, was) in enumerate(pairs):
+                if was is None or not (was.source_path or was.source_pack):
+                    docs.append(None)  # 无来源（如新建页）：跳过保留
+                    continue
+                handle.report(1, 3, f"重读布局 {i + 1}/{len(pairs)}…")
+                data = self._source_bytes(was, fresh)
                 dicts, md5 = dlg_codec.parse_bytes(
                     data, text_encoding=fresh.text_encoding)
-                doc = LayoutDocument.from_dicts(dicts, md5)
-                doc.source_bytes = data
-                doc.source_path = self.doc.source_path
-                doc.source_pack = self.doc.source_pack
+                nd = LayoutDocument.from_dicts(dicts, md5)
+                nd.source_bytes = data
+                nd.source_path = was.source_path
+                nd.source_pack = was.source_pack
+                docs.append(nd)
             # 样式也从新来源读取，不能保留上次 ui.lst 的缓存。
             handle.report(2, 3, "扫描布局与样式…")
             book = fresh.fetch_styles() or StyleBook()
@@ -128,7 +155,7 @@ class SourceActionsMixin:
             if fresh is not None:
                 fresh.close()
             raise
-        return fresh, doc, book, layouts
+        return fresh, docs, book, layouts
 
     def export_layout(self, source: tuple) -> None:
         """树节点的来源快照导出，不导出当前未保存编辑、不改变编码。"""
