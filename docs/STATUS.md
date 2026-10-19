@@ -11,10 +11,10 @@
 | 项 | 当前核实值 |
 |---|---|
 | 会话分支 | `arena/e0fb7c91-mxsj-tw-2022`（active，固定名称） |
-| 本轮起点 | `7259dd11`（当前检出基线，已含 PR #52/#53 合并） |
-| 集成边界 | ui_editor 目录型基路径诊断归类在当前分支，尚未合并 master |
-| 本轮授权 | 用户确认「先修吧」：先做诊断归类（①）；画布拼帧预览（②）与 `.spr` 解码待后续 |
-| 本轮证据 | `tests.test_diagnostics` 21/21（含 3 项新回归）、无 Qt 核心套件通过、ruff 0 报告、`check_windows_compat` 0 ERROR；Qt/GUI 模块沙箱缺 `libGL.so.1` 未执行，详见本轮记录 |
+| 本轮起点 | `4c3acaada`（PR #54 已合并 master：0.8.5 诊断归类） |
+| 集成边界 | ui_editor 0.8.6 画布拼帧预览在当前分支，尚未合并 master |
+| 本轮授权 | 用户要求画布直接出图（「还是都是占位」）：实现 ② 拼帧预览 |
+| 本轮证据 | `tests.test_dir_base` 9 项 + `tests.test_diagnostics` 21/21、ruff 0、`check_windows_compat` 0 ERROR；Qt 合成路径沙箱缺 `libGL.so.1` 未执行，画布效果待 Windows/本机实测 |
 
 ## 2. 组件状态与实测
 
@@ -30,7 +30,7 @@
 | 静态复核链 | Catalog → FastAPI → React，只读候选数据，不是游戏网关 | Catalog **34**、API **27** 通过；网页类型检查／构建通过，测试 **112 通过、9 跳过**；本轮未做实时后端／真实浏览器验收 |
 | 脚本编辑器 | **0.6.0.dev7**，双 VM、双恢复引擎、原生分段修复、新包构建 | 选定核心 **38 通过、3 跳过**（41 项）；未跑全套 GUI、旧 VM 完整环境或 Windows／游戏验收；历史 dev6 全量结果不能替代本轮 |
 | 资源编辑器 | **0.4.3**，后台识别、撤销、原生布局导入／替换、新包保护 | 本轮未跑完整套件；共享核心检查通过。用户曾确认特定大包打开提速，不外推所有资源兼容 |
-| UI 编辑器 | **0.8.5**，目录型基路径归类（`RESOURCE_DIR_BASE`，不再误报缺图）；0.8.4 编码/刷新/布局导出仍在 | 本轮 `tests.test_diagnostics` 21/21；画布拼帧预览（②）与 `.spr` 解码未做；九宫格近似与完整语料限制仍在，历史实现见 §3.60–§3.61 |
+| UI 编辑器 | **0.8.6**，目录型基路径画布拼帧预览（序号帧/横三片/九片/竖三片四族合成）+ 0.8.5 诊断归类 | `test_dir_base` 9 项 + `test_diagnostics` 21/21；Qt 合成路径沙箱未执行、画布待实测；`.spr` 解码仍未做 |
 | 地图编辑器 | 一期只读解析／预览／导出 | **87 通过、1 跳过**（88 项）；有未关闭文件 ResourceWarning；1034/1035 固定样本的 GIRB **300/429** 扇区仍未解，不是全游戏统计 |
 | 脚本手册 | **0.1.0.dev4**，只读目录、说明、专题与审核链 | 严格来源／完整登记校验通过：**5135 登记／20 说明／16 有限通过／1 排除**；四份战斗说明待非作者独审，专题不继承模块审核 |
 | 共享核心／开发工具箱 | `mx_common` 唯一真源，生成副本独立交付 | **4 模块／9 副本一致**；devkit **44 通过**（含 Pillow 精灵交叉测试） |
@@ -1983,3 +1983,94 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   条目字节（预期哈希 `0x1310B991`）才能定案「未找到 vs 未解码」。
 - 下一步：用户验证 `勾选框底\0.png` 等子图候选；或提供 interface.fls 后
   批量枚举各基路径子图、推进 ② 与 SPR 悬案。
+
+### ui_editor 画布拼帧预览（2026-10-19，同日第二轮）
+
+用户反馈 0.8.5 合入后「还是都是占位」——0.8.5 只修诊断文字，画布渲染
+是 ②。本轮实现 ②：新增 `core/dir_base.py`（无 Qt 拼名规则），`assets.py`
+在目录型基路径取不到文件时按族合成预览图，绘图层零改动。
+
+- 拼名族（按优先级，整组齐了才算）：序号帧 `0.png`…`N.png`（GetInitPath
+  /SetFrame，官服实测）→ 横三片 `left1+middle+right2` 等 → 九片
+  `top/left.png`…（**先于竖三片**，避免九片集被 v_slice 抢判——测试
+  抓到的真 bug）→ 竖三片 `top/middle/bottom`。序号帧逐文件成帧，按钮
+  态预览可切帧；片族拼成近似预览图；都拼不出仍占位（原行为）。
+- 实测：`tests.test_dir_base` 9 项 + `tests.test_diagnostics` 21/21（30
+  项全绿）、ruff 0、`check_windows_compat` 0 ERROR/0 WARNING。**Qt 图像
+  合成路径（`_stitch_row/_stitch_column/_stitch_grid`）沙箱缺 libGL 未
+  执行**，画布效果待用户本机/Windows 验收（重点看 `输入底框\`、
+  `上文字底\`、`勾选框底\` 三条实际命中哪族）。
+- `.spr`（CSpriteFrame）解码悬案不变；选图窗清单仍不含 `.spr` 与基路径
+  子图（入口缺口，未做）。不改 `.dlg` 字段值、不改客户端资源。
+
+### ui_editor 忙碌遮罩进度条（2026-10-19，同日第三轮）
+
+用户要求所有可能卡住无响应的操作都有进度反馈：黑色半透明罩盖住界面 +
+中央进度条读真实进度。方案=重活进后台线程+信号回传、混合进度样式
+（能算报 `done/total`，否则滚动条）、取消按钮仅给写包/导出/转精灵三类
+安全回滚场景（「按你推荐的来吧」确认）。
+
+- 新增 `ui/busy.py`：`BusyOverlay`（半透明罩+进度面板）、`BusyHostMixin.
+  run_busy`（worker 线程+Qt 信号+本地事件循环同步返回；失败原样重抛，
+  取消抛 `core.errors.Cancelled`）、输入事件过滤器防重入。MainWindow 与
+  选图窗 ResourcePickerDialog 都可当遮罩宿主。
+- 五类卡点接入：打开资源包/资源目录、sFileName 选图窗整理清单、F5 从
+  来源刷新、保存回资源包（写包+全量逐条保真校验）、批量导出/多帧转
+  精灵。写包校验取消时**删除未验证的新包**（原包不动、状态不迁移）；
+  批量导出取消后已导出的保留；挂载/刷新不给取消。
+- 核心钩子：`publish.verify_structure`/`verify_written_pack`、
+  `assets.media_candidates`/`mount_dir`、`sprite_encode.load_frame_files`
+  加 `progress`/`cancelled`；`Cancelled` 穿透 verify 的兜底 except（测试
+  抓到的真 bug：首版被吞成 error 报告）；`FlsPack.read_index` 加线程锁。
+- 实测：无 Qt 核心套件 150 项 OK（新增进度/取消 6 项）；全量 discover
+  217 项中仅剩 24 个 Qt 导入错误（沙箱缺 libGL，预有）与 0 失败。
+  **遮罩/worker/信号的 GUI 路径沙箱未执行**，待用户本机手测五类卡点
+  （重点：完整客户端挂载时清单进度、写包校验进度、取消写包后原包无损）。
+- 顺手修正：`pyproject.toml` 版本此前滞留 0.8.4（0.8.5/0.8.6 都漏更，
+  版本一致性测试抓到）；主窗口基类白名单登记 BusyHostMixin；workflows.py
+  压回 600 行守限内。版本 0.8.7。不改 `.dlg` 字段值、不改客户端资源。
+
+### ui_editor `.spr` 出帧 + bg 单图族（2026-10-19，第四轮）——版本 0.8.8
+
+界面.fls 全量探针（5 分段，23 分钟）定案三悬案后的画布落地。**本轮全是
+画布变化，诊断面板无变化**（验收口径：用户以画布可见效果验收）。
+
+- **`.spr` 结案**（`notes/fls_path_hash_and_dlg.md` §10 有格式全档）：
+  `.spr`=4 字节循环 XOR 的 INI 帧时表（`[frames]` 帧号+时长 tick），
+  像素在同名 `.igs`；56/56 解码成功（53 `[frames]`、1 `[frames]\t`、
+  2 首行残缺）。新增 `core/spr_desc.py`：确定性解码（段名前缀反推→
+  频率恢复→≤512B 穷举；INI 形态校验+帧表结构分择优，帧从 0 起的先验
+  压住同分假解）、`parse_images`（`[images]` 外部指图）、`frame_sources`
+  （指名→同名 `.igs`/`.png`）。`assets._load_spr` 出帧，画布不再占位。
+  2 例外部指图（及时雨/引天雷→`magic.fls` 的 `magic0307.igs`，含
+  `PalPro` 调色板换算表）当前挂载未含，维持文本视图。
+- **T1 精灵格式**：`T1`=`T0` 的 u16 行长变体。定版证据：烟2_.igs
+  Σu16 行长 1,293,468 = 调色板后像素流长 1,293,468 精确相等（u8 假说
+  否证）；18 帧目录与帧时表 18 行对上。真源 `mx_common/sprite_format.
+  py` 加 `T1`（MAGICS/PALETTE_MAGICS/文档），`vendor_core --write`
+  同步 2 副本；ui_editor `core/sprite.py` 与 resource_editor
+  `core/codecs/sprite.py` 同修（行长 u16、调色板 768B RGB888）。
+  姊媚精灵魔数分布：T0×27、T1×21、I0×5、T5×1。
+- **bg 单图族**：`dir_base.plan` 族序 frames→h_slice→nine_slice→v_slice→
+  **single**（`bg.png`/`bg.igs` 兜底）；`assets._compose_dir_base` 认
+  `single`。官服 6 例命中（`九宫\二级界面底\`、`新登陆界面\头像框阴影\`
+  等），画布不再空白。
+- 真包验收：56/56 `.spr` 帧时表可解；54/56 同名像素出帧（2 例外部包
+  除外；其中流派默认标记/领奖特效 2 例帧表比精灵多 1 帧，显示按精灵
+  帧数钳制，动画阶段再对表）。三案例基路径族归属：`输入底框\`=h_slice、
+  `上文字底\`=h_slice、`三态按钮\勾选框底\`=frames 0..3.png（探针报告
+  `google_drive/interface_probe_report.json` 为证）。
+- 测试：新增 8 项（spr_desc 6、bg single 1、T1 1）；全量 discover 225 项
+  0 失败（24 个 Qt 导入错误=沙箱无 libGL，预有）；ruff 0；wincompat
+  0/0/0。resource_editor 测试 25 项中 16 个 Qt 导入错误（预有）0 失败。
+  不改 `.dlg` 字段值、不改客户端资源。
+
+### ui_editor 控件树名称列拉伸（2026-10-19，第五轮）——版本 0.8.9
+
+**面板小修**（画布/诊断面板无变化）：左侧控件树名称列此前是 Qt 默认
+Interactive 固定宽（`setStretchLastSection(False)` 后无人接管），面板
+再宽名称也被 `…` 截断。修：`panels.WidgetTreePanel` 名称列（第 0 列）
+`QHeaderView.Stretch` 吃满面板宽，锁图标列（第 1 列）`Fixed` 24px。
+回归测试 `test_gui.TestWidgetTreeHeader` 锁两列 resize 模式（沙箱缺
+PySide6 不执行，随 GUI 套件在本机跑）。ruff 0；全量 0 失败（25 个 Qt
+导入错误=预有+本条新增用例）。

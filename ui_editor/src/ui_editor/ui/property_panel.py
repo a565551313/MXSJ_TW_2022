@@ -12,7 +12,6 @@ from html import escape
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
-    QApplication,
     QCheckBox,
     QDialog,
     QDoubleSpinBox,
@@ -298,20 +297,26 @@ class PropertyPanel(QWidget):
         from .image_picker import ResourcePickerDialog
 
         exts = self._AUDIO_EXTS if key == "sSoundPath" else self._IMAGE_EXTS
-        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-        try:
-            candidates = [p for p in assets.candidates_with_staged()
-                          if p.lower().endswith(exts)]
-        finally:
-            QApplication.restoreOverrideCursor()
+
+        # 首次要解开全部已命名布局整理清单（完整客户端很慢）：
+        # 放忙碌遮罩后跑，真实进度 `done/total`，不冻结界面。
+        from .busy import run_busy_or_plain
+
+        def build_candidates(h):
+            return [p for p in assets.candidates_with_staged(h.report)
+                    if p.lower().endswith(exts)]
+
+        candidates = run_busy_or_plain(
+            self.window(), "整理包内资源清单（首次较慢）…", build_candidates)
 
         def thumb(path: str):
             frames = assets.fetch_image(path)
             return frames[0] if frames else None
 
-        def export_handler(paths: list[str]) -> None:
+        def export_handler(paths: list[str], host=None) -> None:
             from pathlib import Path
 
+            from .busy import run_busy_or_plain
             from .image_export import export_image_files
 
             def one(path: str, dest_dir, dest_name=None):
@@ -335,8 +340,22 @@ class PropertyPanel(QWidget):
                         self, "选择导出到的文件夹")
                     if not directory:
                         return
-                    for path in paths:
-                        written.extend(one(path, directory))
+
+                    def bulk(h):
+                        out: list = []
+                        total = len(paths)
+                        for i, path in enumerate(paths, 1):
+                            if h.cancelled:
+                                return out  # 已导出的保留，未导出的停
+                            h.report(i - 1, total,
+                                     f"导出 {path}（{i}/{total}）…")
+                            out.extend(one(path, directory))
+                        return out
+
+                    written = run_busy_or_plain(
+                        host or self, "批量导出图片…", bulk,
+                        maximum=len(paths), cancellable=True,
+                        cancellable_text="取消（已导出的保留）")
             except (OSError, ValueError) as exc:
                 QMessageBox.warning(self, "导出失败", str(exc))
                 return

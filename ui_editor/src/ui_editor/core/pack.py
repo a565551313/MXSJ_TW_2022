@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import struct
+import threading
 from pathlib import Path
 
 from .errors import PackError
@@ -40,6 +41,8 @@ class FlsPack:
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
         self._fh = open(self.path, "rb")
+        # 后台任务与界面绘制可能并发取条目：seek+read 必须整体串行。
+        self._io_lock = threading.Lock()
         try:
             self._spans, self._by_id, self._ids = self._read_index()
         except Exception:
@@ -98,10 +101,11 @@ class FlsPack:
         return None if index is None else self.read_index(index)
 
     def read_index(self, index: int) -> bytes:
-        """按条目下标读取存储字节。"""
+        """按条目下标读取存储字节（内部加锁，支持并发调用）。"""
         offset, length = self._spans[index]
-        self._fh.seek(offset)
-        data = self._fh.read(length)
+        with self._io_lock:
+            self._fh.seek(offset)
+            data = self._fh.read(length)
         if len(data) != length:
             raise PackError(f"条目 {index} 读取不完整：{self.path}")
         return data
@@ -143,7 +147,8 @@ class FlsPack:
         return self.read_index(index)
 
     def close(self) -> None:
-        self._fh.close()
+        with self._io_lock:
+            self._fh.close()
 
     def __enter__(self) -> FlsPack:
         return self

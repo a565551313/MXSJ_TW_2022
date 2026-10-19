@@ -66,30 +66,11 @@ class SourceActionsMixin:
             return
         if not self._confirm_discard():
             return
-        fresh = None
         try:
-            fresh = self.resolver.reloaded(self._resource_dirs)
-            doc = None
-            if self.doc is not None:
-                data = self._source_bytes(self.doc, fresh)
-                dicts, md5 = dlg_codec.parse_bytes(
-                    data, text_encoding=fresh.text_encoding)
-                doc = LayoutDocument.from_dicts(dicts, md5)
-                doc.source_bytes = data
-                doc.source_path = self.doc.source_path
-                doc.source_pack = self.doc.source_pack
-            # 样式也从新来源读取，不能保留上次 ui.lst 的缓存。
-            book = fresh.fetch_styles() or StyleBook()
-            for root in reversed(self._layout_dirs):
-                local_lst = Path(root) / "ui.lst"
-                if local_lst.is_file():
-                    book = StyleBook.parse_bytes(local_lst.read_bytes())
-                    break
-            layouts = [(str(path), fresh.scan_layouts(path))
-                       for path in fresh.pack_paths]
+            fresh, doc, book, layouts = self.run_busy(
+                "从来源刷新（重开资源包并重扫）…",
+                lambda h: self._reload_bundle(h))
         except Exception as exc:
-            if fresh is not None:
-                fresh.close()
             QMessageBox.warning(self, "刷新失败", f"保留当前布局与来源。\n{exc}")
             return
         old = self.resolver
@@ -113,6 +94,41 @@ class SourceActionsMixin:
         old.close()
         self.scene.refresh_all()
         self._update_status("已从磁盘重新加载布局、目录列表、资源包、图片与样式。")
+
+    def _reload_bundle(self, handle):
+        """后台任务：重开全部来源并重读当前布局/样式/布局清单。
+
+        出错时关掉半成品 fresh 再原样重抛（调用方提示后保留现状）。
+        """
+        fresh = None
+        try:
+            handle.report(0, 3, "重开资源包…")
+            fresh = self.resolver.reloaded(self._resource_dirs)
+            doc = None
+            if self.doc is not None:
+                handle.report(1, 3, "重读当前布局…")
+                data = self._source_bytes(self.doc, fresh)
+                dicts, md5 = dlg_codec.parse_bytes(
+                    data, text_encoding=fresh.text_encoding)
+                doc = LayoutDocument.from_dicts(dicts, md5)
+                doc.source_bytes = data
+                doc.source_path = self.doc.source_path
+                doc.source_pack = self.doc.source_pack
+            # 样式也从新来源读取，不能保留上次 ui.lst 的缓存。
+            handle.report(2, 3, "扫描布局与样式…")
+            book = fresh.fetch_styles() or StyleBook()
+            for root in reversed(self._layout_dirs):
+                local_lst = Path(root) / "ui.lst"
+                if local_lst.is_file():
+                    book = StyleBook.parse_bytes(local_lst.read_bytes())
+                    break
+            layouts = [(str(path), fresh.scan_layouts(path))
+                       for path in fresh.pack_paths]
+        except Exception:
+            if fresh is not None:
+                fresh.close()
+            raise
+        return fresh, doc, book, layouts
 
     def export_layout(self, source: tuple) -> None:
         """树节点的来源快照导出，不导出当前未保存编辑、不改变编码。"""

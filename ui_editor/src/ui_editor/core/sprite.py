@@ -1,11 +1,11 @@
-"""``I0`` / ``T0`` / ``I1`` / ``T4`` / ``T5`` 精灵解码（输出逐帧 RGBA 字节）。
+"""``I0`` / ``T0`` / ``I1`` / ``T1`` / ``T4`` / ``T5`` 精灵解码（输出逐帧 RGBA 字节）。
 
 格式已经字节级验证（见仓库 ``tools/data-parser/i0_sprite.py``），
 此处移植为不依赖 Pillow 的实现，解码结果直接喂 ``QImage``。
 
 布局：14 字节头 ``<2sHHHHHH``（魔数、版本、帧数、画布宽高、中心
 点）；帧目录每帧 ``<HHHH``（关键点 x/y、帧宽高）；u32 总行数；
-行长表（I0/T0/T4 每行 u8，I1/T5 每行 u16）；调色板（T0 为
+行长表（I0/T0/T4 每行 u8，I1/T1/T5 每行 u16）；调色板（T0/T1 为
 256×RGB888，I0/I1 为 256×RGB565；T4/T5 无调色板，行内 token
 后跟 3 字节 RGB 真彩像素，2026-10-14 在真实 item.fls 上定版）；
 随后是逐帧逐行的 RLE 像素流（每帧数据按 4 字节对齐，填充计入
@@ -58,7 +58,7 @@ class Sprite:
 class _SpriteParser:
     def __init__(self, data: bytes) -> None:
         if not is_sprite(data):
-            raise SpriteError("不是 I0/T0/I1 精灵")
+            raise SpriteError("不是 I0/T0/I1/T4/T5 精灵")
         self.data = data
         self.direct = data[:2] in DIRECT_MAGICS
         (self.magic, _ver, self.frame_count, self.canvas_w, self.canvas_h,
@@ -72,14 +72,15 @@ class _SpriteParser:
         off += 4
         if total_lines != sum(f[3] for f in self.frame_dims):
             raise SpriteError("总行数与帧高之和不一致")
-        len_size = 2 if self.magic in (b"I1", b"T5") else 1
+        len_size = 2 if self.magic in (b"I1", b"T1", b"T5") else 1
         fmt = "<H" if len_size == 2 else "<B"
         self.lens = [
             struct.unpack_from(fmt, data, off + i * len_size)[0]
             for i in range(total_lines)
         ]
         off += total_lines * len_size
-        pal_size = 0 if self.direct else (768 if self.magic == b"T0" else 512)
+        pal_size = (0 if self.direct
+                    else (768 if self.magic in (b"T0", b"T1") else 512))
         if off + pal_size > len(data):
             raise SpriteError("调色板越界")
         self.palette = ([] if self.direct
@@ -88,7 +89,7 @@ class _SpriteParser:
         self.rows_offset = off
 
     def _decode_palette(self, pal: bytes) -> list[tuple[int, int, int]]:
-        if self.magic == b"T0":
+        if self.magic in (b"T0", b"T1"):
             return [(pal[3 * i], pal[3 * i + 1], pal[3 * i + 2])
                     for i in range(256)]
         colors = []

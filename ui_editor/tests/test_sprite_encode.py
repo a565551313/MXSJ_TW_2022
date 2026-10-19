@@ -10,6 +10,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from PIL import Image  # noqa: E402
 
 from ui_editor.core import sprite, sprite_encode  # noqa: E402
+from ui_editor.core.errors import Cancelled  # noqa: E402
 
 
 def _img(w: int, h: int, color) -> Image.Image:
@@ -50,6 +51,58 @@ class TestSpriteEncode(unittest.TestCase):
             self.assertEqual(count, 4)
             decoded = sprite.decode_sprite(data)
             self.assertEqual(decoded.frame_count, 4)
+
+
+class TestFrameFileHooks(unittest.TestCase):
+    """批量转精灵的进度/取消钩子（忙碌遮罩接入用）。"""
+
+    class Recorder:
+        def __init__(self):
+            self.calls = []
+
+        def report(self, done, total, text):
+            self.calls.append((done, total, text))
+
+    def _files(self, root: Path, n: int = 3) -> list[str]:
+        paths = []
+        for i in range(n):
+            path = root / f"{i:02d}.png"
+            _img(6, 4, (i * 40, 90, 120, 255)).save(path)
+            paths.append(str(path))
+        return paths
+
+    def test_load_frame_files_progress_to_total(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            paths = self._files(root, 3)
+            rec = TestFrameFileHooks.Recorder()
+            frames = sprite_encode.load_frame_files(paths, progress=rec.report)
+            self.assertEqual(len(frames), 3)
+            self.assertTrue(rec.calls)
+            self.assertEqual({c[1] for c in rec.calls}, {3})
+            self.assertEqual(rec.calls[-1][0], 2)  # done 从 0 起报，收尾 n-1
+
+    def test_load_frame_files_cancel_raises(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            paths = self._files(root, 3)
+
+            def stop():
+                return True
+
+            with self.assertRaises(Cancelled):
+                sprite_encode.load_frame_files(paths, cancelled=stop)
+
+    def test_sprite_bytes_from_files_passes_hooks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            paths = self._files(root, 2)
+            rec = TestFrameFileHooks.Recorder()
+            data, count = sprite_encode.sprite_bytes_from_files(
+                paths, progress=rec.report, cancelled=lambda: False)
+            self.assertEqual(count, 2)
+            self.assertTrue(sprite.is_sprite(data))
+            self.assertTrue(rec.calls)
 
 
 class TestDirectColorSprites(unittest.TestCase):
@@ -100,6 +153,55 @@ class TestDirectColorSprites(unittest.TestCase):
                 self.assertEqual(px(3, 0), (0, 0, 255, 16 * 255 // 31))
                 self.assertEqual(px(0, 1), (10, 20, 30, 255))
                 self.assertEqual(px(3, 1), (200, 100, 50, 255))
+
+
+class TestT1PaletteWide(unittest.TestCase):
+    """T1 = T0 的 u16 行长变体（调色板 256×RGB888）。
+
+    2026-10-19 在 interface.fls 的 .spr 姊媚精灵（烟2_.igs 等 21 例）
+    上按「Σ行长=像素流长」定版；u8 假说被 Σ 精确相等否证。
+    """
+
+    @staticmethod
+    def _bytes() -> bytes:
+        import struct
+
+        rows = [
+            bytes([0xC1, 0x42, 0x07, 0x08, 0x2F, 0x09, 0x00]),
+            bytes([0x02, 0x1F, 0x05, 0x82, 0x06, 0x00]),
+        ]
+        pad = (-sum(len(r) for r in rows)) % 4
+        rows[-1] += b"\x00" * pad
+        lens = [len(r) for r in rows]
+        pal = bytearray()
+        for i in range(256):
+            pal += bytes((i, (2 * i) & 0xFF, 255 - i))
+        out = struct.pack("<2sHHHHHH", b"T1", 1, 1, 4, 2, 0, 0)
+        out += struct.pack("<HHHH", 0, 0, 4, 2)
+        out += struct.pack("<I", 2)
+        out += b"".join(struct.pack("<H", n) for n in lens)  # T1：u16 行长
+        out += bytes(pal)
+        return out + b"".join(rows)
+
+    def test_t1_decode(self):
+        data = self._bytes()
+        self.assertTrue(sprite.is_sprite(data))
+        decoded = sprite.decode_sprite(data)
+        self.assertEqual(decoded.frame_count, 1)
+        frame = decoded.frames[0]
+        self.assertEqual((frame.width, frame.height), (4, 2))
+        rgba = frame.rgba
+
+        def px(x, y, rgba=rgba):
+            i = (y * 4 + x) * 4
+            return tuple(rgba[i:i + 4])
+
+        self.assertEqual(px(0, 0), (0, 0, 0, 0))
+        self.assertEqual(px(1, 0), (7, 14, 248, 255))
+        self.assertEqual(px(2, 0), (8, 16, 247, 255))
+        self.assertEqual(px(3, 0), (9, 18, 246, 15 * 255 // 31))
+        self.assertEqual(px(0, 1), (5, 10, 250, 255))
+        self.assertEqual(px(2, 1), (6, 12, 249, 255))
 
 
 if __name__ == "__main__":

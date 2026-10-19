@@ -30,6 +30,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from ..core.errors import Cancelled
+from .busy import BusyHostMixin, run_busy_or_plain
+
 _ROLE_PATH = Qt.ItemDataRole.UserRole
 _THUMB_BATCH = 24
 
@@ -38,14 +41,14 @@ def _basename(path: str) -> str:
     return path.replace("\\", "/").rstrip("/").split("/")[-1]
 
 
-class ResourcePickerDialog(QDialog):
+class ResourcePickerDialog(BusyHostMixin, QDialog):
     """包内资源选择窗：搜索过滤 + 网格缩略图 + 单选确认。"""
 
     def __init__(self, parent, title: str, paths: list[str],
                  current: str = "",
                  thumb_provider: Callable[[str], object] | None = None,
                  on_stage: Callable[[str, bytes], None] | None = None,
-                 export_handler: Callable[[list[str]], None] | None = None):
+                 export_handler: Callable[[list[str], object], None] | None = None):
         super().__init__(parent)
         self.setWindowTitle(title)
         self.resize(760, 540)
@@ -147,7 +150,8 @@ class ResourcePickerDialog(QDialog):
             return
         paths = self.chosen_paths()
         if paths:
-            self._export_handler(paths)
+            # 第二参数 = 忙碌遮罩宿主（本对话框），批量导出在遮罩后跑。
+            self._export_handler(paths, self)
 
     def add_staged_path(self, res_path: str) -> None:
         """把一张刚加进来的新图并入列表并选中它。"""
@@ -246,8 +250,17 @@ class ResourcePickerDialog(QDialog):
         if convert:
             from ..core import sprite_encode
 
+            def work(h):
+                return sprite_encode.sprite_bytes_from_files(
+                    files, progress=h.report, cancelled=lambda: h.cancelled)
+
             try:
-                data, count = sprite_encode.sprite_bytes_from_files(files)
+                data, count = run_busy_or_plain(
+                    self, "多帧精灵转换…", work,
+                    cancellable=True, cancellable_text="取消转换")
+            except Cancelled:
+                self._count.setText("已取消转换，未挂账任何文件。")
+                return
             except Exception as exc:
                 QMessageBox.warning(self, "转精灵失败", str(exc))
                 return
