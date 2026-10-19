@@ -2094,6 +2094,108 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   既有 GUI 契约核对：双击待入包叶子不确认不换文档、切换编码/刷新/
   关窗的 `_confirm_discard` 语义、`window.doc = None` 清空入口均兼容。
 
+### ui_editor 颜色吸管（屏幕取色，2026-10-19，第十三轮）——版本 0.10.5
+
+**面板变化**（画布不变）。用户问颜色选择器有没有吸管。此前用的是
+`QColorDialog.getColor(...)`，Windows 下走**系统原生**颜色对话框，原生
+对话框没有屏幕吸管，只能手输色值。
+
+- `ui/property_panel.py`：新增 `_build_color_dialog`（`QColorDialog` 实例，
+  开 `DontUseNativeDialog` + `ShowAlphaChannel`）、`_eyedropper_button`
+  （按英文原文「Pick Screen Color / Screen Color」找吸管按钮，兼容不同
+  翻译）、`_pick_color(initial, title, start_with_eyedropper=False)`
+  （自动点吸管按钮用 `QTimer.singleShot(0, button.click)`，exec 后取
+  `currentColor()`，取消返回 None）。
+- 颜色行里每个色块旁新增 **💧 吸管按钮**（标量 1 个、列表每组 1 个）：
+  点它直接进入吸管取色状态；点色块仍打开同一对话框的手选界面。
+  tooltip 标注「吸管：直接从屏幕吸取颜色（写入第 n 组）」。
+- 对话框外观由系统原生改为 Qt 自带（吸管存在的前提），功能更全：alpha
+  滑杆、吸管、自定义色板；写回规则不变（标量保持原写法、列表每组 3 个
+  整数且类型/长度不变）。
+- 测试：`tests/test_gui_color_picker.py` 增 5 项（吸管按钮每组一个且写对组、
+  对话框是 Qt 实现且含吸管按钮、取消返回 None、确认返回所选颜色含 alpha、
+  点💧后对话框自动进入吸管状态），共 13 项；另修一处旧用例（原来 mock
+  `QColorDialog.getColor`，改造后已不用该入口，改为 mock `_pick_color`，
+  否则会真的弹出模态框卡住）。全量 **411 项 0 失败（1 skip）**；ruff 0；
+  wincompat 0/0/0。
+- 边界：吸管取当前屏幕像素，多屏不同缩放可能有偏移；编辑器自身窗口
+  遮住的区域吸不到；offscreen 沙箱无法验证真实抓屏，只验证了入口与状态。
+
+### ui_editor 粘贴自动重命名（2026-10-19，第十二轮）——版本 0.10.4
+
+**编辑行为变化**（画布/面板布局不变）。用户要求：复制的控件粘贴后自动
+改名——`BTN` → `BTN_1` → `BTN_2`；`BTN_1` 的副本 → `BTN_1_1` → `BTN_1_2`。
+此前粘贴保留原名（原设计理由：脚本按 `sName` 认领），代价是副本与原控件
+同名，诊断里出现重复名，且脚本可能认领到副本。
+
+- `core/model.py`：`unique_variant_name(base, used)`（不重名原样返回；重名
+  则加 `_n`，n 从 1 起跳过已占用；空名不参与）、`rename_copies(clones,
+  reserved)`（逐个 clone 走整棵子树，重名才改，返回改名数量）。
+- `ui/commands.py` `paste_widgets`：粘贴前用文档现有名字建 `used`，先改名
+  再插入（插入时同时更新 used，保证一次粘一组也不撞名）；状态栏改为
+  「已粘贴 N 个控件（M 个重名的已自动改名）：首个为 …」；整次粘贴仍是一
+  步撤销。不重名（例如原件已删）则保持原名。
+- 测试：`tests/test_model_reparent.py` 增 `TestPasteNaming` 7 项（后缀序列、
+  带后缀基底累加、不重名保留、空名、子树改名、连续两次、整组不撞名）；
+  新增 `tests/test_gui_paste_names.py` 7 项（连续粘贴、原件两次、全文档唯一、
+  状态栏文案、子树改名、单步撤销、删原件后保留原名）；`test_gui` 里原
+  「粘贴保留同名」断言改为「重名副本加 _1」。全量 **406 项 0 失败
+  （1 skip）**；ruff 0；wincompat 0/0/0。
+- 边界：改名只发生在粘贴那一刻，之后仍可在属性面板改名（走既有脚本引用
+  护栏）；脚本里写死的旧名不会自动跟着改，需要手动接线。
+
+### ui_editor 锁定区域当空白画布可框选（2026-10-19，第十一轮）——版本 0.10.3
+
+**画布交互变化**。用户追问：既然画布无视锁定控件，能不能从它上面按住
+拖动去框选别的控件。实测 0.10.2 不行——锁定图元不接收鼠标键，按下会
+穿透到下面的父控件，拖动等于拖父控件。
+
+- `ui/canvas.py`：新增 `_locked_top(pos)`（该点最上层图元是否锁定）；
+  左键在锁定控件上按下时走**自绘框选**：`mousePress` 记起点与 Ctrl 修饰、
+  `mouseMove` 超过 3px 显示 `QRubberBand`、`mouseRelease` 用
+  `scene.items(QPainterPath, IntersectsItemShape)` 只选可选中图元
+  （锁定图元没有 ItemIsSelectable，天然选不进）。Ctrl 起手=追加选择。
+- 未产生位移（单击）时保持既有穿透语义：选中下面那一层的控件
+  （`_click_through`），与 0.10.2 一致；右键穿透不变；空格/中键平移不变。
+- 取舍：被锁定控件整块盖住的未锁定控件，从被盖处按下会是框选而非拖动
+  该控件，需挪到露出的位置拖。
+- 测试：`tests/test_gui_lock_ignore.py` 增 4 项（锁定区起手框选选中其他
+  控件、不移动父控件、单击仍穿透、整块框选也选不进锁定控件），共 14 项；
+  全量 **392 项 0 失败（1 skip）**；ruff 0；wincompat 0/0/0。
+- offscreen 实机鼠标验证：从锁定控件内部按下拖到右上，选中 button1/
+  textframe1/mainframe1，锁定控件未选中、父控件未被拖动，状态栏报
+  「已选中 3 个控件」。
+
+### ui_editor 锁定控件在画布完全无视（2026-10-19，第十轮）——版本 0.10.2
+
+**画布交互变化**（绘制/面板布局不变）。用户要求：「被锁定的控件在画布
+中要完全无视它，画布中要完全点不到」。此前锁定只挡移动/缩放/删除，仍可
+点中它（原设计是为了在画布上解锁）。
+
+- `ui/canvas.py` `WidgetItem.apply_lock`：锁定 → 不接收任何鼠标键
+  （`setAcceptedMouseButtons(NoButton)`，按下穿透到下一层）、去掉
+  `ItemIsSelectable`/`ItemIsMovable`/`ItemSendsGeometryChanges`，若已选中
+  先取消；解锁恢复三个标志与鼠标键。选中框/把手不再画在锁定控件上。
+- `CanvasView.widget_at(pos)`：右键命中跳过锁定控件，落到下一层；`items()`
+  顺序天然是叠放顺序，等于「视而不见」。
+- `main_window._select_widget`：从控件树/诊断选中锁定控件只更新属性面板与
+  树，不把它放进画布选择。
+- `commands._apply_lock`：锁定前记住当前选择（取消选中会清空），锁完把
+  面板/树选择补回来；状态栏文案改为「画布上点不到、选不中、框选不到、
+  拖不动；在控件树点锁图标解锁」。
+- 吸附参考也排除锁定控件（`_snapped_position` 的 siblings 过滤），
+  「完全无视」不只在点击层面。
+- 解锁路径：控件树第 2 列锁图标（原有能力）；父控件锁定仍不影响子控件。
+- 测试：新增 `tests/test_gui_lock_ignore.py` 10 项（鼠标键、可选/可移标志、
+  程序置选无效、锁定掉选、右键穿透、树选不进画布、框选跳过、解锁恢复、
+  仍可见、吸附不参考锁定）；`test_gui.TestWidgetLockGui` 里「锁定仍可选中」
+  改为「锁定后不可选中」。全量 **385 项 0 失败（1 skip）**；ruff 0；
+  wincompat 0/0/0。实机 offscreen 验证：在锁定按钮上左键单击选中的是背后
+  的父控件、右键菜单目标是父控件、拖框不选它。
+- 拖框多选补真实鼠标回归：`tests/test_gui_selection_band.py` 3 项（空白处
+  按住拖出选框选中复数控件并报数量；微小拖框不选中；在控件上按下是拖
+  控件本身、只选一个）。全量 388 项 0 失败（1 skip）。
+
 ### ui_editor 颜色选择器接列表颜色（2026-10-19，第九轮）——版本 0.10.1
 
 **面板变化**（画布不变）。用户实测「颜色选择器呢」：0.10.0 的色块只

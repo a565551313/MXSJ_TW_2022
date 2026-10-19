@@ -11,13 +11,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QImage, QPainter, QPen
+from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, Qt, Signal
+from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsScene,
     QGraphicsSceneMouseEvent,
     QGraphicsView,
+    QRubberBand,
     QWidget,
 )
 
@@ -105,18 +106,31 @@ class WidgetItem(QGraphicsItem):
             self.child_items.append(item)
 
     def apply_lock(self) -> None:
-        """按锁定状态刷新图元标志并重绘。
+        """按锁定状态刷新图元的交互能力并重绘。
 
-        锁定后仍可选中（为了能解锁），但不可拖动；徽标与把手在
-        :meth:`paint` 中按状态处理。父控件锁定不影响子图元。
+        锁定 = 画布上**完全无视**这个控件：不可点击、不可选中、框选
+        扫不到，鼠标按下直接穿透到下面的控件（不接收任何鼠标键）；
+        仍照常绘制并按状态画右上角挂锁徽标。解锁回到控件树点锁图标。
+        父控件锁定不影响子图元（子控件仍可单独操作）。
         """
-        flags = (
-            QGraphicsItem.GraphicsItemFlag.ItemIsSelectable
-            | QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges
-        )
-        if not self.widget.locked:
-            flags |= QGraphicsItem.GraphicsItemFlag.ItemIsMovable
-        self.setFlags(flags)
+        if self.widget.locked:
+            if self.isSelected():
+                self.setSelected(False)
+            self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
+            self.setFlag(
+                QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
+            self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
+            self.setFlag(
+                QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges,
+                False)
+        else:
+            self.setAcceptedMouseButtons(Qt.MouseButton.AllButtons)
+            self.setFlag(
+                QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
+            self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
+            self.setFlag(
+                QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges,
+                True)
         self.update()
 
     # -- 几何同步 ---------------------------------------------------
@@ -201,12 +215,13 @@ class WidgetItem(QGraphicsItem):
         widget = self.widget
         parent = widget.parent
         if parent is not None:
-            siblings = [c for c in parent.children if c is not widget]
+            siblings = [c for c in parent.children
+                        if c is not widget and not c.locked]
             parent_size = (float(parent.width), float(parent.height))
         else:
             doc = getattr(scene, "document", None)
             siblings = [r for r in (doc.roots if doc else [])
-                        if r is not widget]
+                        if r is not widget and not r.locked]
             parent_size = None
         others = [(float(c.x), float(c.y), float(c.width),
                    float(c.height)) for c in siblings]
@@ -237,7 +252,7 @@ class WidgetItem(QGraphicsItem):
             painter.setPen(QPen(QColor(255, 90, 90), 1,
                                 Qt.PenStyle.DashLine))
             painter.drawRect(self.boundingRect())
-        if self.isSelected():
+        if self.isSelected() and not self.widget.locked:
             rect = self.boundingRect()
             painter.setPen(QPen(QColor(80, 200, 255), 1,
                                 Qt.PenStyle.DashLine))
@@ -497,15 +512,27 @@ class CanvasView(QGraphicsView):
             QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         # 主窗口注入的右键菜单处理器：handler(global_pos, 命中的控件|None)
         self.context_menu_handler = None
+        # 锁定控件区域当空白画布：手动框选状态（见 mousePressEvent）
+        self._band_origin: QPoint | None = None
+        self._band_widget: QRubberBand | None = None
+        self._band_additive = False
+        self._band_dragged = False
 
     def contextMenuEvent(self, event) -> None:  # noqa: N802
         if self.context_menu_handler is None:
             super().contextMenuEvent(event)
             return
-        item = self.itemAt(event.pos())
-        widget = getattr(item, "widget", None) if item is not None else None
-        self.context_menu_handler(event.globalPos(), widget)
+        self.context_menu_handler(event.globalPos(),
+                                  self.widget_at(event.pos()))
         event.accept()
+
+    def widget_at(self, pos) -> Widget | None:
+        """视图坐标 pos 处的控件；锁定控件视而不见（穿透到下一层）。"""
+        for item in self.items(pos):
+            widget = getattr(item, "widget", None)
+            if widget is not None and not widget.locked:
+                return widget
+        return None
 
     def wheelEvent(self, event) -> None:  # noqa: N802
         factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15
@@ -530,6 +557,14 @@ class CanvasView(QGraphicsView):
             return
         super().keyReleaseEvent(event)
 
+    def _locked_top(self, pos: QPoint) -> bool:
+        """该点最上面的图元是否锁定（锁定 = 当它不存在）。"""
+        for item in self.items(pos):
+            widget = getattr(item, "widget", None)
+            if widget is not None:
+                return bool(widget.locked)
+        return False
+
     def mousePressEvent(self, event) -> None:  # noqa: N802
         if event.button() == Qt.MouseButton.MiddleButton:
             self._pan_start = (
@@ -539,9 +574,33 @@ class CanvasView(QGraphicsView):
             self.setCursor(Qt.CursorShape.ClosedHandCursor)
             event.accept()
             return
+        # 在锁定控件上按下：这块区域当空白画布，拖动就是拖框多选
+        # （否则会穿透到下面的父控件，变成拖父控件）。
+        if (event.button() == Qt.MouseButton.LeftButton
+                and self.dragMode() == QGraphicsView.DragMode.RubberBandDrag
+                and self._locked_top(event.position().toPoint())):
+            self._band_origin = event.position().toPoint()
+            self._band_additive = bool(
+                event.modifiers() & Qt.KeyboardModifier.ControlModifier)
+            self._band_dragged = False
+            event.accept()
+            return
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event) -> None:  # noqa: N802
+        if self._band_origin is not None:
+            rect = QRect(self._band_origin,
+                         event.position().toPoint()).normalized()
+            if not self._band_dragged and (rect.width() > 3
+                                           or rect.height() > 3):
+                self._band_dragged = True
+                self._band_widget = QRubberBand(
+                    QRubberBand.Shape.Rectangle, self.viewport())
+                self._band_widget.show()
+            if self._band_widget is not None:
+                self._band_widget.setGeometry(rect)
+            event.accept()
+            return
         if getattr(self, "_pan_start", None) is not None:
             start, h0, v0 = self._pan_start
             delta = event.position().toPoint() - start
@@ -551,7 +610,45 @@ class CanvasView(QGraphicsView):
             return
         super().mouseMoveEvent(event)
 
+    def _finish_band(self, rect: QRect) -> None:
+        """按框选范围选中未锁定的控件（锁定控件本来就选不中）。"""
+        scene = self.scene()
+        if not self._band_additive:
+            scene.clearSelection()
+        path = QPainterPath()
+        path.addRect(self.mapToScene(rect).boundingRect())
+        for item in scene.items(
+                path, Qt.ItemSelectionMode.IntersectsItemShape):
+            if item.flags() & QGraphicsItem.GraphicsItemFlag.ItemIsSelectable:
+                item.setSelected(True)
+
+    def _click_through(self, pos: QPoint) -> None:
+        """锁定控件上的单击：当作点它下面那一层（与右键穿透一致）。"""
+        for item in self.items(pos):
+            widget = getattr(item, "widget", None)
+            if widget is not None and not widget.locked:
+                self.scene().clearSelection()
+                item.setSelected(True)
+                return
+
     def mouseReleaseEvent(self, event) -> None:  # noqa: N802
+        if self._band_origin is not None:
+            rect = QRect(self._band_origin,
+                         event.position().toPoint()).normalized()
+            origin = self._band_origin
+            dragged = self._band_dragged
+            self._band_origin = None
+            self._band_dragged = False
+            if self._band_widget is not None:
+                self._band_widget.hide()
+                self._band_widget.deleteLater()
+                self._band_widget = None
+            if dragged:
+                self._finish_band(rect)
+            else:
+                self._click_through(origin)
+            event.accept()
+            return
         if getattr(self, "_pan_start", None) is not None:
             self._pan_start = None
             self.unsetCursor()

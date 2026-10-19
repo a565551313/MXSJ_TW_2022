@@ -261,7 +261,10 @@ class EditingCommandsMixin:
         """把剪贴板控件粘进文档：作为当前选中控件的同级（无选择挂顶层）。
 
         位置统一偏移 (16,16) 免与原件重叠；整组粘贴算一步撤销。
-        名字保持原样（脚本按 sName 认领，需要改名请在属性面板改）。
+        名字：与文档里已有控件重名时自动加后缀（``BTN`` → ``BTN_1``、
+        再粘 → ``BTN_2``；``BTN_1`` 复制后粘贴 → ``BTN_1_1``），子树里的
+        重名子控件同样处理；不重名则保持原名。这样副本不会顶掉脚本对
+        原控件的 sName 认领，也不会在诊断里变成重复名。
         """
         if self.doc is None:
             return
@@ -276,6 +279,8 @@ class EditingCommandsMixin:
                     else self.doc.roots)
         index = (siblings.index(anchor) + 1 if anchor is not None
                  else None)
+        used = {w.name for w in self.doc.all_widgets()}
+        renamed = self.doc.rename_copies(clones, used)
         for clone in clones:
             clone.set_geometry(x=clone.x + 16, y=clone.y + 16)
             self.doc.insert_widget(clone, parent,
@@ -286,7 +291,10 @@ class EditingCommandsMixin:
         self._refresh_structure()
         self._select_widget(clones[0])
         self._update_title()
-        self._update_status(f"已粘贴 {len(clones)} 个控件")
+        note = (f"（{renamed} 个重名的已自动改名）" if renamed else "")
+        self._update_status(
+            f"已粘贴 {len(clones)} 个控件{note}："
+            f"首个为「{clones[0].name or '(未命名)'}」")
 
     def delete_selected(self) -> None:
         if self.doc is None:
@@ -361,19 +369,24 @@ class EditingCommandsMixin:
 
     def _apply_lock(self, widgets: list, on: bool) -> None:
         """把锁定状态应用到一组控件（工具栏/右键/控件树共用）。"""
+        previous = self._selected
         for widget in widgets:
             widget.locked = on
             item = self.scene.item_for(widget)
             if item is not None:
                 item.apply_lock()
             self.tree_panel.set_lock_icon(widget)
+        if previous is not None and previous.locked:
+            # 锁定后画布不再选它（取消选中会清空当前选择），
+            # 这里把面板/树的选择补回来，方便继续查看或解锁
+            self._select_widget(previous, sync_scene=False)
         self._sync_lock_action()
         names = "、".join(w.name or "(无名)" for w in widgets[:3])
         if len(widgets) > 3:
             names += " 等"
         self._update_status(
-            f"已锁定 {len(widgets)} 个控件（{names}）：画布上拖不动、"
-            "缩不了、删不掉；排其他控件不会碰歪它们。再点一次解锁。"
+            f"已锁定 {len(widgets)} 个控件（{names}）：画布上点不到、"
+            "选不中、框选不到、拖不动；在控件树点锁图标解锁。"
             if on else
             f"已解锁 {len(widgets)} 个控件（{names}）。")
 

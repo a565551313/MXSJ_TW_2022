@@ -652,7 +652,8 @@ class TestCanvasClipboardAndContextMenu(unittest.TestCase):
         siblings = self.doc.roots[0].children
         self.assertEqual(len(siblings), before + 1)
         pasted = siblings[siblings.index(button) + 1]
-        self.assertEqual(pasted.name, button.name)
+        # 重名的副本自动加后缀（BTN → BTN_1），避免顶掉脚本对原名的认领
+        self.assertEqual(pasted.name, f"{button.name}_1")
         self.assertEqual((pasted.x, pasted.y), (button.x + 16, button.y + 16))
         self.assertTrue(self.doc.undo())  # 整组粘贴一步可撤销
         self.assertEqual(len(self.doc.roots[0].children), before)
@@ -943,8 +944,9 @@ class TestWidgetLockGui(unittest.TestCase):
         item = w.scene.item_for(button)
         self.assertFalse(item.flags()
                          & QGraphicsItem.GraphicsItemFlag.ItemIsMovable)
-        self.assertTrue(item.flags()
-                        & QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+        # 锁定后画布完全无视它：连可选标志都不给（点不到/选不中）
+        self.assertFalse(item.flags()
+                         & QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.assertFalse(w.doc.dirty)   # 锁定只是编辑器状态，不标脏
         self.assertFalse(w.doc.can_undo)  # 也不进撤销时间线
         w._act_lock.trigger()

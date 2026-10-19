@@ -130,3 +130,84 @@ class TestArrows(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestPasteNaming(unittest.TestCase):
+    """粘贴重命名：BTN → BTN_1 → BTN_2；BTN_1 的副本 → BTN_1_1 → BTN_1_2。"""
+
+    def _doc(self):
+        doc = LayoutDocument()
+        doc.new_widget("CMainFrame")
+        return doc
+
+    def test_plain_suffix_sequence(self):
+        doc = self._doc()
+        widget = doc.new_widget("CButton")
+        widget.name = "BTN"
+        used = {w.name for w in doc.all_widgets()}
+        self.assertEqual(doc.unique_variant_name("BTN", used), "BTN_1")
+        used.add("BTN_1")
+        self.assertEqual(doc.unique_variant_name("BTN", used), "BTN_2")
+        used.add("BTN_2")
+        self.assertEqual(doc.unique_variant_name("BTN", used), "BTN_3")
+
+    def test_suffix_base_accumulates(self):
+        doc = self._doc()
+        widget = doc.new_widget("CButton")
+        widget.name = "BTN_1"
+        used = {w.name for w in doc.all_widgets()}
+        self.assertEqual(doc.unique_variant_name("BTN_1", used), "BTN_1_1")
+        used.add("BTN_1_1")
+        self.assertEqual(doc.unique_variant_name("BTN_1", used), "BTN_1_2")
+
+    def test_free_name_is_kept(self):
+        doc = self._doc()
+        self.assertEqual(doc.unique_variant_name("FREE"), "FREE")
+
+    def test_empty_name_kept(self):
+        doc = self._doc()
+        self.assertEqual(doc.unique_variant_name(""), "")
+
+    def test_rename_copies_handles_subtree(self):
+        doc = LayoutDocument.from_dicts([
+            {"sWidgetType": "CMainFrame", "sName": "main", "lChildren": [
+                {"sWidgetType": "CButton", "sName": "BTN", "lChildren": [
+                    {"sWidgetType": "CTextFrame", "sName": "txt",
+                     "lChildren": []},
+                ]},
+            ]},
+        ], None)
+        clone = doc.roots[0].children[0].clone()
+        changed = doc.rename_copies([clone])
+        self.assertEqual(changed, 2)
+        self.assertEqual(clone.name, "BTN_1")
+        self.assertEqual(clone.children[0].name, "txt_1")
+        # 原控件没被动
+        self.assertEqual(doc.roots[0].children[0].name, "BTN")
+
+    def test_rename_copies_twice(self):
+        doc = LayoutDocument.from_dicts([
+            {"sWidgetType": "CMainFrame", "sName": "main", "lChildren": [
+                {"sWidgetType": "CButton", "sName": "BTN", "lChildren": []},
+            ]},
+        ], None)
+        original = doc.roots[0].children[0]
+        first = original.clone()
+        doc.rename_copies([first])
+        doc.insert_widget(first, doc.roots[0])
+        second = original.clone()
+        doc.rename_copies([second])
+        doc.insert_widget(second, doc.roots[0])
+        self.assertEqual((first.name, second.name), ("BTN_1", "BTN_2"))
+        self.assertEqual(original.name, "BTN")
+
+    def test_group_paste_gets_distinct_names(self):
+        doc = LayoutDocument.from_dicts([
+            {"sWidgetType": "CMainFrame", "sName": "main", "lChildren": [
+                {"sWidgetType": "CButton", "sName": "BTN", "lChildren": []},
+                {"sWidgetType": "CButton", "sName": "BTN2", "lChildren": []},
+            ]},
+        ], None)
+        clones = [child.clone() for child in doc.roots[0].children]
+        doc.rename_copies(clones)
+        self.assertEqual([c.name for c in clones], ["BTN_1", "BTN2_1"])

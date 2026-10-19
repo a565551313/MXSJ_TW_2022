@@ -293,7 +293,9 @@ class MainWindow(
         try:
             for item in self.scene.selectedItems():
                 item.setSelected(False)
-            if widget is not None:
+            # 锁定的控件在画布上完全无视：树/诊断点它只更新面板，
+            # 不让它进画布选择（画布上也点不到它）。
+            if widget is not None and not widget.locked:
                 item = self.scene.item_for(widget)
                 if item is not None:
                     item.setSelected(True)
