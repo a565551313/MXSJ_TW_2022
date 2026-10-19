@@ -21,7 +21,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..core import fidelity
+from ..core.model import Widget
 from . import icons
+from .canvas import FidelityView
 
 
 class WindowSetupMixin:
@@ -289,7 +292,28 @@ class WindowSetupMixin:
         # 状态栏右端常驻缩放百分比
         self._zoom_label = QLabel("100%", self)
         self.statusBar().addPermanentWidget(self._zoom_label)
+        # 选中控件的绘制保真度（原生/近似/模拟），常驻、不抢临时消息
+        self._fidelity_label = QLabel("", self)
+        self._fidelity_label.setToolTip(
+            "当前选中控件的绘制依据：原生=有实据，近似=文档化推断，"
+            "模拟=编辑器自己加的效果")
+        self.statusBar().addPermanentWidget(self._fidelity_label)
         self.view.zoom_changed.connect(self._on_zoom_changed)
+
+    def _update_fidelity_label(self, widget: Widget | None) -> None:
+        """状态栏常驻一段保真度说明：这件控件的画法有没有实据。"""
+        label = getattr(self, "_fidelity_label", None)
+        if label is None:
+            return
+        if widget is None:
+            label.setText("")
+            return
+        try:
+            text = fidelity.summary(widget, FidelityView(self.ctx),
+                                    self.ctx.button_state)
+        except Exception:  # 标注失败不能影响选择
+            text = ""
+        label.setText(text[:60])
 
     def _refresh_animation_frame_control(self) -> None:
         """按当前文档的 .spr 资源更新帧选择器，不修改布局。"""

@@ -2094,6 +2094,67 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   既有 GUI 契约核对：双击待入包叶子不确认不换文档、切换编码/刷新/
   关窗的 `_confirm_discard` 语义、`window.doc = None` 清空入口均兼容。
 
+### ui_editor 画布原生还原度（2026-10-20，第十七轮）——版本 0.12.0
+
+用户定的本轮目标「0.12.0：画布原生状态和切片规则修正」，三步优先：九宫格
+切割线、按钮状态映射、运行时显示字段。**先统计再改、没实据的保持标注**。
+
+**证据边界（先说清楚）**：仓库里没有 `interface.fls`（`data/` 只有 data/
+effect/magicres5/passive/script/skill/skill2 七个包，无 UI 资源），所以本轮
+**无法**产出真实样本的切片/状态统计数据。能立的证据只有：反编译
+`combdialog.py` 的拼名族字面量（`left1/middle/right2`、`top/left%s`）、
+`dir_base` 已实测的族优先级、以及切片文件**自身像素尺寸**。凡超出这些的
+（单图九宫格的切割线、按钮状态顺序）一律标「近似/未核实」，不猜。
+
+- **① 切片按资源切割线**：新增 `core/slicing.py`（纯逻辑）——`Piece/Cell/
+  SlicePlan` + `layout(plan, w, h, blank)`；横三片两端按各自像素宽固定、
+  竖三片两端按像素高固定、九片列宽取该列最大像素宽/行高取该行最大像素高，
+  四角原样、四边单向拉伸、中心双向拉伸；目标小于固定块总和时按比例缩
+  （不出负尺寸、不越界）；`blank` 里的整块全透明切片**不绘制**（不铺白底）。
+  `assets.fetch_slice(name)` 返回 `SliceRecipe(kind, names, images, blank)`
+  （新增 `image_is_blank` 用 Alpha8 判全透明，带缓存）。`painters._draw_slice`
+  在 `_paint_frame/_paint_image/_paint_button/_paint_nine` 里优先于整图拉伸；
+  `_paint_nine` 只剩「单图 → 固定三分」这一条近似路径（并改为走
+  `slicing.layout` + `_map_axis`，边界不再溢出）。
+- **② 保真度三档**：新增 `core/fidelity.py`（纯逻辑）——`NATIVE/APPROX/
+  SIMULATED`、`Marker(level, code, text)`、`markers(widget, view, state)`、
+  `summary(...)`；`BUTTON_STATE_INDEX`（pressed=1/hover=2/disabled=3）搬到这里
+  并**注明顺序未与客户端核实**，画布取帧一律标「近似」。资源侧接口由
+  `ui/canvas.FidelityView` 适配（`slice_kind/frame_count/image_size`）。
+  画布 `WidgetItem` 新增 `fidelity` 缓存与 `_paint_fidelity_badge`（只标
+  近似/模拟，原生不标；缺图标「占位」）；`refresh_widget/refresh_all` 重算。
+  状态栏新增常驻 `_fidelity_label`（选中控件时更新，见 `window_setup`）。
+- **③ 运行时显示字段**：新增 `core/runtime_state.py`（纯逻辑）——`truthy`
+  兼容 bool/int/`"0"/"1"/"true"/"false"`/单元素列表，`state_of` 返回
+  SHOWN/HIDDEN/NOT_LOADED/UNKNOWN（字段缺失 = UNKNOWN，不当隐藏）。
+  `painters.paint_widget` 对 HIDDEN/NOT_LOADED 压暗到 0.45 + 虚线框 + 角标
+  「运行时隐藏 bShow=0」/「bLoad=0 可能不加载」。诊断新增 `RUNTIME_HIDDEN`、
+  `RUNTIME_NOT_LOADED`（均为**提示**）与 `RENDER_APPROX`（单图九宫格固定三分），
+  与 `RESOURCE_MISSING`（警告）各自独立，同一控件可同时命中。
+- **顺带修真 bug**：`MainWindow.__init__` 里 `setStatusBar(QStatusBar())` 在
+  `_build_menus()`（内含 `_build_toolbar`，把 `_zoom_label` 挂到
+  `statusBar()`）之后执行，旧状态栏连同常驻标签被销毁——**缩放百分比一直
+  没显示过**。改为状态栏先建，`_zoom_label`/`_fidelity_label` 常驻可用。
+  `main_window.py` 因此超 600 行，`_update_fidelity_label` 移到
+  `window_setup.py`（598 行 / 506 行，均在守限内）。
+- **统计工具**：`ui_editor/tools/interface_probe.py` 新增 `image_size`
+  （PNG/GIF/JPEG 头解析，无 Qt）、`slice_stats`（逐族打印切片真实像素）、
+  `button_state_stats`（统计 `sDownImageName`/`sMouseOverImageName`/
+  `sDisabledImageName`/`sCheckedImageName` 出现次数与「图高/控件高」比例分布），
+  报告里为 `[4b/5]` 段并写入 JSON。用真 interface.fls 跑一次即可判定按钮
+  状态到底有没有显式字段，再定映射。
+- 测试：`test_slicing.py` 14 项（角固定/边拉伸、非等宽、非等高、不越界、
+  跨边界不重叠、全透明跳过、块数校验、横/竖三片、普通拉伸）、
+  `test_fidelity.py` 15 项（三档判定、按钮状态按帧序=近似/无帧=模拟、
+  字段写法、缺字段不判隐藏）、`test_gui_native_fidelity.py` 15 项（像素级
+  验证切片真的按 10px 角画而不是三等分、透明块不铺底、目标过小不溢出、
+  隐藏与缺图渲染不同、角标、状态栏常驻标签在忙碌任务后仍有效、诊断四码
+  分项）、`test_interface_probe_stats.py` 6 项。全量 **495 项 0 失败（1 skip）**；
+  ruff 0；wincompat 0/0/0。
+- 未做/未验：切割线编辑 UI（M3.3 的「图片旁加九宫格按钮」仍未做）；按钮
+  状态顺序仍无实据（工具已就绪，等 interface.fls 实测）；`.spr` 自动播放/
+  时间轴（用户列的下一批）；Windows 实机截图对照未做。
+
 ### ui_editor 对齐夹父 / 非法图名提示 / 保存不建目录 / 拆分 workflows（2026-10-20，第十六轮）——版本 0.11.2
 
 用户拍板：①③ 按建议处理（拦但要提示、不擅自建目录），②④ 按现状修行，

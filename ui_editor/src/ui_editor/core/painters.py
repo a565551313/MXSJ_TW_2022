@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen, QPixmap
 
+from . import fidelity, runtime_state, slicing
 from .assets import AssetResolver
 from .model import Widget
 from .styles import StyleBook
@@ -225,6 +226,52 @@ def _rect(w: Widget, ctx: PaintContext) -> QRectF:
     return QRectF(0, 0, width, height)
 
 
+def _draw_slice(p: QPainter, w: Widget, ctx: PaintContext, name: str) -> bool:
+    """目录型基路径的切片：按**资源切片自己的像素**当切割线贴合控件。
+
+    返回 True 表示已按切片画完（含「切片取不到」的 False 交给调用方）。
+    全透明的切片不画：底下内容照常露出，不铺白底。
+    """
+    recipe = ctx.assets.fetch_slice(name)
+    if recipe is None:
+        return False
+    rect = _rect(w, ctx)
+    plan = recipe.plan()
+    for cell in slicing.layout(plan, rect.width(), rect.height(),
+                               recipe.blank):
+        image = recipe.images[cell.index]
+        pixmap = QPixmap.fromImage(image)
+        p.drawPixmap(QRectF(*cell.dst), pixmap, QRectF(*cell.src))
+    return True
+
+
+def _runtime_hidden(w: Widget) -> str:
+    """"hidden"/"not_loaded"/其他。画布要把它和「资源加载失败」分开。"""
+    state = runtime_state.state_of(w)
+    return state if state in (runtime_state.HIDDEN,
+                              runtime_state.NOT_LOADED) else ""
+
+
+def _paint_runtime_note(p: QPainter, w: Widget, ctx: PaintContext,
+                        state: str) -> None:
+    """运行时隐藏/不加载的角标：虚线框 + 中文说明（近似预览仍画在下面）。"""
+    rect = _rect(w, ctx)
+    p.save()
+    p.setBrush(Qt.BrushStyle.NoBrush)
+    p.setPen(QPen(QColor(224, 168, 60), 1, Qt.PenStyle.DashLine))
+    p.drawRect(rect.adjusted(0.5, 0.5, -0.5, -0.5))
+    label = ("运行时隐藏 bShow=0" if state == runtime_state.HIDDEN
+             else "bLoad=0 可能不加载")
+    font = _small_font()
+    p.setFont(font)
+    text_w = p.fontMetrics().horizontalAdvance(label) + 10
+    chip = QRectF(2, max(0.0, rect.height() - 16), text_w, 14)
+    p.fillRect(chip, QColor(224, 168, 60, 210))
+    p.setPen(QColor(40, 30, 10))
+    p.drawText(chip, Qt.AlignmentFlag.AlignCenter, label)
+    p.restore()
+
+
 def _paint_main_frame(p: QPainter, w: Widget, ctx: PaintContext) -> None:
     rect = _rect(w, ctx)
     gradient = QLinearGradient(rect.topLeft(), rect.bottomLeft())
@@ -250,6 +297,8 @@ def _paint_main_frame(p: QPainter, w: Widget, ctx: PaintContext) -> None:
 def _paint_frame(p: QPainter, w: Widget, ctx: PaintContext) -> None:
     rect = _rect(w, ctx)
     name = str(w.props.get("sFileName", "") or "")
+    if name and _draw_slice(p, w, ctx, name):
+        return
     pixmap = ctx.pixmap(name) if name else None
     if pixmap is not None:
         p.drawPixmap(rect, pixmap, QRectF(pixmap.rect()))
@@ -268,6 +317,8 @@ def _paint_frame(p: QPainter, w: Widget, ctx: PaintContext) -> None:
 def _paint_image(p: QPainter, w: Widget, ctx: PaintContext) -> None:
     rect = _rect(w, ctx)
     name = str(w.props.get("sFileName", "") or "")
+    if name and _draw_slice(p, w, ctx, name):
+        return
     pixmap = ctx.pixmap(name) if name else None
     if pixmap is None:
         _placeholder(p, rect, name.replace("\\", "/").split("/")[-1]
@@ -277,29 +328,45 @@ def _paint_image(p: QPainter, w: Widget, ctx: PaintContext) -> None:
 
 
 def _paint_nine(p: QPainter, w: Widget, ctx: PaintContext) -> None:
-    """九宫格：源图按三分切，边角不变形、边与中心拉伸。"""
+    """九宫格：**单图**按固定三分切（切割线未与客户端核实，近似）。
+
+    目录型九片资源不走这里——那是 :func:`_draw_slice` 按资源切片尺寸拼，
+    属于原生。这里是 ``CPngNineFrame`` 只有一张图的情形：三分线是编辑器
+    的近似，边角不拉伸、边与中心拉伸。
+    """
     rect = _rect(w, ctx)
     name = str(w.props.get("sFileName", "") or "")
+    if name and _draw_slice(p, w, ctx, name):
+        return
     pixmap = ctx.pixmap(name) if name else None
     if pixmap is None:
         _placeholder(p, rect, name.replace("\\", "/").split("/")[-1]
                      or _name_label(w), ctx)
         return
-    sw, sh = pixmap.width() / 3.0, pixmap.height() / 3.0
-    dw = min(sw, rect.width() / 2.0)
-    dh = min(sh, rect.height() / 2.0)
-    src_x = [0.0, sw, 2 * sw]
-    src_y = [0.0, sh, 2 * sh]
-    dst_x = [0.0, dw, rect.width() - dw]
-    dst_y = [0.0, dh, rect.height() - dh]
-    dst_w = [dw, rect.width() - 2 * dw, dw]
-    dst_h = [dh, rect.height() - 2 * dh, dh]
-    for row in range(3):
-        for col in range(3):
-            src = QRectF(src_x[col], src_y[row], sw, sh)
-            dst = QRectF(dst_x[col], dst_y[row], dst_w[col], dst_h[row])
-            if dst.width() > 0 and dst.height() > 0:
-                p.drawPixmap(dst, pixmap, src)
+    piece = slicing.Piece(pixmap.width(), pixmap.height())
+    plan = slicing.nine_slice((piece,) * 9)
+    thirds = slicing.layout(plan, pixmap.width(), pixmap.height())
+    # 源图三分：用「按原图尺寸布局」的结果反推每块的源矩形
+    for cell in thirds:
+        src = cell.dst
+        dst_x = _map_axis(src[0], src[2], rect.width(), pixmap.width())
+        dst_y = _map_axis(src[1], src[3], rect.height(), pixmap.height())
+        if dst_x[1] > 0 and dst_y[1] > 0:
+            p.drawPixmap(QRectF(dst_x[0], dst_y[0], dst_x[1], dst_y[1]),
+                         pixmap, QRectF(*src))
+
+
+def _map_axis(start: float, size: float, target: float,
+              source: float) -> tuple[float, float]:
+    """一维九宫格映射：两端固定，中间吃掉剩余；不够时按比例缩。"""
+    if source <= 0 or target <= 0:
+        return 0.0, 0.0
+    edge = min(size, target / 2.0) if size * 2 > target else size
+    if start <= 0:
+        return 0.0, edge
+    if start + size >= source - 0.001:
+        return target - edge, edge
+    return edge, max(0.0, target - 2 * edge)
 
 
 def _paint_grid(p: QPainter, w: Widget, ctx: PaintContext) -> None:
@@ -331,7 +398,7 @@ def _paint_grid(p: QPainter, w: Widget, ctx: PaintContext) -> None:
 
 
 # -- 按钮多状态（M3.2：精灵帧 / 竖条多态 / 模拟三路） ----------------
-_BUTTON_STATE_INDEX = {"pressed": 1, "hover": 2, "disabled": 3}
+_BUTTON_STATE_INDEX = fidelity.BUTTON_STATE_INDEX  # 顺序未核实，见 fidelity
 
 
 def state_slice(img_w: int, img_h: int, widget_w: int, widget_h: int,
@@ -416,6 +483,8 @@ def _paint_button(p: QPainter, w: Widget, ctx: PaintContext) -> None:
     if _paint_code_skin(p, w, ctx):
         return
     name = str(w.props.get("sFileName", "") or "")
+    if name and _draw_slice(p, w, ctx, name):
+        return
     pixmap = ctx.pixmap(name) if name else None
     if pixmap is not None:
         stated = _button_state_pixmap(ctx, name, w) if name else None
@@ -627,5 +696,18 @@ _PAINTERS = {
 
 
 def paint_widget(p: QPainter, w: Widget, ctx: PaintContext) -> None:
-    """把一个控件画在本地 (0,0) 处（子控件由场景的父子图元处理）。"""
+    """把一个控件画在本地 (0,0) 处（子控件由场景的父子图元处理）。
+
+    运行时隐藏（``bShow=0``）或 ``bLoad=0`` 的控件**照常画**（布局里确实
+    有它），但压暗 + 虚线框 + 角标说明——与「资源加载失败」的红色占位框
+    在视觉上完全不同，避免把两种问题混为一谈。
+    """
+    state = _runtime_hidden(w)
+    if not state:
+        _PAINTERS.get(w.wtype, _paint_fallback)(p, w, ctx)
+        return
+    p.save()
+    p.setOpacity(0.45)
     _PAINTERS.get(w.wtype, _paint_fallback)(p, w, ctx)
+    p.restore()
+    _paint_runtime_note(p, w, ctx, state)

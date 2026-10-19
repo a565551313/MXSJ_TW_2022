@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..core import painters, snap
+from ..core import fidelity, painters, snap
 from ..core.model import LayoutDocument, Widget
 from ..core.painters import PaintContext
 
@@ -79,6 +79,24 @@ def aspect_resize(handle: str, x0: float, y0: float, w0: float, h0: float,
     return x, y, w, h
 
 
+class FidelityView:
+    """把资源解析器适配成 :mod:`ui_editor.core.fidelity` 需要的查询接口。"""
+
+    def __init__(self, ctx: PaintContext) -> None:
+        self._ctx = ctx
+
+    def slice_kind(self, name: str) -> str | None:
+        recipe = self._ctx.assets.fetch_slice(name)
+        return recipe.kind if recipe is not None else None
+
+    def frame_count(self, name: str) -> int:
+        frames = self._ctx.assets.fetch_image(name)
+        return len(frames) if frames else 0
+
+    def image_size(self, name: str) -> tuple[int, int] | None:
+        return self._ctx.frame_size(name)
+
+
 class WidgetItem(QGraphicsItem):
     """一个控件对应的画布图元。"""
 
@@ -99,6 +117,8 @@ class WidgetItem(QGraphicsItem):
             | None = None
         self.setPos(widget.x, widget.y)
         self.apply_lock()
+        self.fidelity: list = []
+        self.refresh_fidelity()
         self.child_items: list[WidgetItem] = []
         for child in widget.children:
             item = WidgetItem(child, ctx, on_geometry, on_commit)
@@ -265,8 +285,43 @@ class WidgetItem(QGraphicsItem):
                     painter.drawRect(QRectF(cx - _HANDLE / 2,
                                             cy - _HANDLE / 2,
                                             _HANDLE, _HANDLE))
+        self._paint_fidelity_badge(painter)
         if self.widget.locked:
             self._paint_lock_badge(painter)
+
+    def refresh_fidelity(self) -> None:
+        """重新算这件控件的绘制保真度（原生/近似/模拟，见 core.fidelity）。"""
+        try:
+            view = FidelityView(self.ctx)
+            self.fidelity = fidelity.markers(
+                self.widget, view, self.ctx.button_state)
+        except Exception:  # 保真度只是标注，算不出来不能影响绘制
+            self.fidelity = []
+
+    def _paint_fidelity_badge(self, painter: QPainter) -> None:
+        """右下角小角标：只标「近似」「模拟」，原生不打扰视线。"""
+        marks = [m for m in self.fidelity if m.level != fidelity.NATIVE]
+        if not marks:
+            return
+        worst = marks[0]
+        for marker in marks:
+            if marker.level == fidelity.SIMULATED:
+                worst = marker
+                break
+        label = worst.level
+        if worst.code in ("missing_placeholder",):
+            label = "占位"
+        painter.save()
+        painter.setFont(painters._small_font())
+        width = painter.fontMetrics().horizontalAdvance(label) + 8
+        rect = QRectF(max(0.0, self._width - width - 2),
+                      max(0.0, self._height - 15.0), width, 13.0)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(fidelity.MARKERS.get(worst.level, "#888888")))
+        painter.drawRoundedRect(rect, 3, 3)
+        painter.setPen(QColor(24, 24, 24))
+        painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, label)
+        painter.restore()
 
     def _paint_lock_badge(self, painter: QPainter) -> None:
         """右上角橙色小挂锁：未选中也看得见这件控件锁住了。"""
@@ -484,11 +539,13 @@ class LayoutScene(QGraphicsScene):
         item = self.item_for(widget)
         if item is not None:
             item.refresh_geometry()
+            item.refresh_fidelity()   # 换图/改 bShow 后角标跟着变
             item.update()
 
     def refresh_all(self) -> None:
         for item in self._items.values():
             item.refresh_geometry()
+            item.refresh_fidelity()
         if self.items():
             rect = self.itemsBoundingRect()
             self.setSceneRect(rect.adjusted(-40, -40, 40, 40))
