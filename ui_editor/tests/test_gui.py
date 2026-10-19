@@ -652,7 +652,8 @@ class TestCanvasClipboardAndContextMenu(unittest.TestCase):
         siblings = self.doc.roots[0].children
         self.assertEqual(len(siblings), before + 1)
         pasted = siblings[siblings.index(button) + 1]
-        self.assertEqual(pasted.name, button.name)
+        # 重名的副本自动加后缀（BTN → BTN_1），避免顶掉脚本对原名的认领
+        self.assertEqual(pasted.name, f"{button.name}_1")
         self.assertEqual((pasted.x, pasted.y), (button.x + 16, button.y + 16))
         self.assertTrue(self.doc.undo())  # 整组粘贴一步可撤销
         self.assertEqual(len(self.doc.roots[0].children), before)

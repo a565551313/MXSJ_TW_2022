@@ -261,7 +261,10 @@ class EditingCommandsMixin:
         """把剪贴板控件粘进文档：作为当前选中控件的同级（无选择挂顶层）。
 
         位置统一偏移 (16,16) 免与原件重叠；整组粘贴算一步撤销。
-        名字保持原样（脚本按 sName 认领，需要改名请在属性面板改）。
+        名字：与文档里已有控件重名时自动加后缀（``BTN`` → ``BTN_1``、
+        再粘 → ``BTN_2``；``BTN_1`` 复制后粘贴 → ``BTN_1_1``），子树里的
+        重名子控件同样处理；不重名则保持原名。这样副本不会顶掉脚本对
+        原控件的 sName 认领，也不会在诊断里变成重复名。
         """
         if self.doc is None:
             return
@@ -276,6 +279,8 @@ class EditingCommandsMixin:
                     else self.doc.roots)
         index = (siblings.index(anchor) + 1 if anchor is not None
                  else None)
+        used = {w.name for w in self.doc.all_widgets()}
+        renamed = self.doc.rename_copies(clones, used)
         for clone in clones:
             clone.set_geometry(x=clone.x + 16, y=clone.y + 16)
             self.doc.insert_widget(clone, parent,
@@ -286,7 +291,10 @@ class EditingCommandsMixin:
         self._refresh_structure()
         self._select_widget(clones[0])
         self._update_title()
-        self._update_status(f"已粘贴 {len(clones)} 个控件")
+        note = (f"（{renamed} 个重名的已自动改名）" if renamed else "")
+        self._update_status(
+            f"已粘贴 {len(clones)} 个控件{note}："
+            f"首个为「{clones[0].name or '(未命名)'}」")
 
     def delete_selected(self) -> None:
         if self.doc is None:

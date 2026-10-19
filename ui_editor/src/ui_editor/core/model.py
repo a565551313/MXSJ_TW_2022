@@ -240,6 +240,45 @@ class LayoutDocument:
             index += 1
         return f"{prefix}{index}"
 
+    def unique_variant_name(self, base: str,
+                            used: set[str] | None = None) -> str:
+        """复制粘贴用名：``BTN`` → ``BTN_1``、``BTN_1`` → ``BTN_1_1``。
+
+        不重名时原样返回；重名则加 ``_n``（n 从 1 起，跳过已占用的
+        编号）。``used`` 传已占用名字集合（调用方批量处理时自己维护）。
+        空名字不参与改名（无名控件保持无名）。
+        """
+        if not base:
+            return base
+        names = used if used is not None else {w.name for w in self.all_widgets()}
+        if base not in names:
+            return base
+        index = 1
+        while f"{base}_{index}" in names:
+            index += 1
+        return f"{base}_{index}"
+
+    def rename_copies(self, clones: list[Widget],
+                      reserved: set[str] | None = None) -> list[int]:
+        """给刚粘贴进来的控件（含子树）改掉重名的名字，返回改了几个。
+
+        名字重名才改（不重名保持原样），规则见 :meth:`unique_variant_name`；
+        子树里的重名子控件同样处理，避免与原件子控件撞名。
+        """
+        used = reserved
+        if used is None:
+            used = {w.name for w in self.all_widgets()}
+        changed = 0
+        for root in clones:
+            for widget in root.walk():
+                new_name = self.unique_variant_name(widget.name, used)
+                if new_name != widget.name:
+                    widget.name = new_name
+                    changed += 1
+                if widget.name:
+                    used.add(widget.name)
+        return changed
+
     def new_widget(self, wtype: str, parent: Widget | None = None,
                    index: int | None = None) -> Widget:
         """按默认模板新建一个控件并挂入文档，返回该控件。"""
