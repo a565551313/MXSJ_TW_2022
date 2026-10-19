@@ -70,7 +70,11 @@ def _whole(names: tuple[str, ...], exists: Callable[[str], bool]) -> bool:
 
 
 def plan(name: str, exists: Callable[[str], bool]) -> DirBasePlan | None:
-    """按族优先级返回第一组齐装的拼名方案；都拼不出返回 None。"""
+    """按族优先级返回第一组齐装的拼名方案；都拼不出返回 None。
+
+    序：序号帧 → 横三片 → 九片 → 竖三片 → `bg` 单图（拼图族缺一块
+    即换下族，单图族兜底）。
+    """
     if not is_dir_base(name):
         return None
     series = frame_series(name, exists)
@@ -127,4 +131,8 @@ def plan(name: str, exists: Callable[[str], bool]) -> DirBasePlan | None:
             full = tuple(name + piece for piece in pieces)
             if _whole(full, exists):
                 return DirBasePlan(kind, full)
+    # bg 单图族（官服 1019 实测 6 例）：整目录就一张 bg，直接整图用。
+    for piece in ("bg.png", "bg.igs"):
+        if exists(name + piece):
+            return DirBasePlan("single", (name + piece,))
     return None

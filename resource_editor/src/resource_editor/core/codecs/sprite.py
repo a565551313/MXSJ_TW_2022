@@ -1,4 +1,4 @@
-"""I0 / T0 / I1 / T4 / T5 精灵编解码。
+"""I0 / T0 / I1 / T1 / T4 / T5 精灵编解码。
 
 格式规格见 ``tools/data-parser/I0_SPRITE_FORMAT.md``，I0/T0/I1
 解码已对全部 807 个精灵字节级验证。T4/T5 是 2026-10-14 在真实
@@ -169,7 +169,7 @@ class Sprite:
 def decode_sprite(data: bytes) -> Sprite:
     """解析精灵字节，失败抛 :class:`CodecError`。"""
     if not is_sprite(data):
-        raise CodecError("不是 I0/T0/I1 精灵数据")
+        raise CodecError("不是 I0/T0/I1/T4/T5 精灵数据")
     magic = data[:2].decode("ascii")
     try:
         (_m, version, nfr, w, h, cx, cy) = struct.unpack_from("<2sHHHHHH", data, 0)
@@ -184,7 +184,7 @@ def decode_sprite(data: bytes) -> Sprite:
         raise CodecError(f"精灵头解析失败：{exc}") from exc
     if total_lines != sum(f[3] for f in frames):
         raise CodecError("totalLines 与帧高之和不符")
-    len_fmt = "<H" if magic in ("I1", "T5") else "<B"
+    len_fmt = "<H" if magic in ("I1", "T1", "T5") else "<B"
     len_size = struct.calcsize(len_fmt)
     lens = [
         struct.unpack_from(len_fmt, data, off + i * len_size)[0]
@@ -192,7 +192,7 @@ def decode_sprite(data: bytes) -> Sprite:
     ]
     off += total_lines * len_size
     direct = data[:2] in DIRECT_MAGICS
-    pal_size = 0 if direct else (768 if magic == "T0" else 512)
+    pal_size = 0 if direct else (768 if magic in ("T0", "T1") else 512)
     pal_raw = data[off:off + pal_size]
     if len(pal_raw) < pal_size:
         raise CodecError("调色板数据不完整")
@@ -218,7 +218,7 @@ def decode_sprite(data: bytes) -> Sprite:
 
 
 def _decode_palette(magic: str, pal_raw: bytes) -> list[tuple[int, int, int]]:
-    if magic == "T0":
+    if magic in ("T0", "T1"):
         return [
             (pal_raw[3 * i], pal_raw[3 * i + 1], pal_raw[3 * i + 2])
             for i in range(256)
@@ -233,7 +233,7 @@ def _decode_palette(magic: str, pal_raw: bytes) -> list[tuple[int, int, int]]:
 
 
 def _encode_palette(magic: str, palette: list[tuple[int, int, int]]) -> bytes:
-    if magic == "T0":
+    if magic in ("T0", "T1"):
         out = bytearray()
         for r, g, b in palette:
             out.extend((r, g, b))

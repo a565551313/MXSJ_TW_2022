@@ -137,6 +137,20 @@ class TestDirBase(unittest.TestCase):
         self.assertIsNone(dir_base.plan("images/a.png", exists_from("images/a.png")))
         self.assertIsNone(dir_base.plan("dead\\", exists_from("dead\\0.png.bak")))
 
+    def test_bg_single_family(self):
+        # 官服 1019 实测 6 例：整目录一张 bg.png，单图族兜底出整图
+        base = "mainmenu3\\任务栏\\透明底框\\"
+        chosen = dir_base.plan(base, exists_from(base + "bg.png"))
+        assert chosen is not None
+        self.assertEqual(chosen.kind, "single")
+        self.assertEqual(chosen.pieces, (base + "bg.png",))
+        # 有整族拼图/序号帧时不让位给单图
+        base = "x\\"
+        names = [base + "0.png", base + "1.png", base + "bg.png"]
+        chosen = dir_base.plan(base, exists_from(*names))
+        assert chosen is not None
+        self.assertEqual(chosen.kind, "frames")
+
 
 if __name__ == "__main__":
     unittest.main()

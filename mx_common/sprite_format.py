@@ -1,4 +1,4 @@
-"""精灵格式（``I0``/``T0``/``I1``/``T4``/``T5``）的共享常量与换算。
+"""精灵格式（``I0``/``T0``/``I1``/``T1``/``T4``/``T5``）的共享常量与换算。
 
 **唯一真源**：编辑器与工具里的解码/编码实现（`ui_editor/core/sprite.py`、
 `ui_editor/core/sprite_encode.py`、`resource_editor/core/codecs/sprite.py`）
@@ -11,8 +11,11 @@ i0_sprite.py`（Pillow 参考实现）。
 
 布局：14 字节头 ``<2sHHHHHH``（魔数、版本、帧数、画布宽高、中心点）；
 帧目录每帧 ``<HHHH``（关键点 x/y、帧宽高）；u32 总行数；行长表
-（I0/T0/T4 用 u8，I1/T5 用 u16）；调色板（T0 为 256×RGB888，
+（I0/T0/T4 用 u8，I1/T1/T5 用 u16）；调色板（T0/T1 为 256×RGB888，
 I0/I1 为 256×RGB565；T4/T5 无调色板，token 后跟 3 字节 RGB）。
+
+``T1`` = ``T0`` 的 u16 行长变体（与 I0→I1、T4→T5 同构）；2026-10-19 在
+interface.fls 的 .spr 姊媚精灵（烟2_.igs 等 21 例）上按「Σ行长=像素流长」定版。
 
 行内算子按高位分段：``0x00`` 行尾；``0x01–0x1F`` RUN（计数 5 位，
 后跟 alpha 等级与索引）；``0x20–0x3F`` SINGLE（alpha 等级在 token
@@ -44,11 +47,11 @@ __all__ = [
     "level_to_alpha",
 ]
 
-MAGICS: tuple[bytes, ...] = (b"I0", b"T0", b"I1", b"T4", b"T5")
+MAGICS: tuple[bytes, ...] = (b"I0", b"T0", b"I1", b"T1", b"T4", b"T5")
 #: 真彩变体：无调色板，行内 token 之后是 3 字节 RGB 像素
 DIRECT_MAGICS: tuple[bytes, ...] = (b"T4", b"T5")
-#: 带调色板的变体（T0 为 RGB888，I0/I1 为 RGB565）
-PALETTE_MAGICS: tuple[bytes, ...] = (b"I0", b"T0", b"I1")
+#: 带调色板的变体（T0/T1 为 RGB888，I0/I1 为 RGB565）
+PALETTE_MAGICS: tuple[bytes, ...] = (b"I0", b"T0", b"I1", b"T1")
 
 HEADER_STRUCT = "<2sHHHHHH"
 FRAME_STRUCT = "<HHHH"

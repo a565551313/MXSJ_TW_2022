@@ -2029,3 +2029,38 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
 - 顺手修正：`pyproject.toml` 版本此前滞留 0.8.4（0.8.5/0.8.6 都漏更，
   版本一致性测试抓到）；主窗口基类白名单登记 BusyHostMixin；workflows.py
   压回 600 行守限内。版本 0.8.7。不改 `.dlg` 字段值、不改客户端资源。
+
+### ui_editor `.spr` 出帧 + bg 单图族（2026-10-19，第四轮）——版本 0.8.8
+
+界面.fls 全量探针（5 分段，23 分钟）定案三悬案后的画布落地。**本轮全是
+画布变化，诊断面板无变化**（验收口径：用户以画布可见效果验收）。
+
+- **`.spr` 结案**（`notes/fls_path_hash_and_dlg.md` §10 有格式全档）：
+  `.spr`=4 字节循环 XOR 的 INI 帧时表（`[frames]` 帧号+时长 tick），
+  像素在同名 `.igs`；56/56 解码成功（53 `[frames]`、1 `[frames]\t`、
+  2 首行残缺）。新增 `core/spr_desc.py`：确定性解码（段名前缀反推→
+  频率恢复→≤512B 穷举；INI 形态校验+帧表结构分择优，帧从 0 起的先验
+  压住同分假解）、`parse_images`（`[images]` 外部指图）、`frame_sources`
+  （指名→同名 `.igs`/`.png`）。`assets._load_spr` 出帧，画布不再占位。
+  2 例外部指图（及时雨/引天雷→`magic.fls` 的 `magic0307.igs`，含
+  `PalPro` 调色板换算表）当前挂载未含，维持文本视图。
+- **T1 精灵格式**：`T1`=`T0` 的 u16 行长变体。定版证据：烟2_.igs
+  Σu16 行长 1,293,468 = 调色板后像素流长 1,293,468 精确相等（u8 假说
+  否证）；18 帧目录与帧时表 18 行对上。真源 `mx_common/sprite_format.
+  py` 加 `T1`（MAGICS/PALETTE_MAGICS/文档），`vendor_core --write`
+  同步 2 副本；ui_editor `core/sprite.py` 与 resource_editor
+  `core/codecs/sprite.py` 同修（行长 u16、调色板 768B RGB888）。
+  姊媚精灵魔数分布：T0×27、T1×21、I0×5、T5×1。
+- **bg 单图族**：`dir_base.plan` 族序 frames→h_slice→nine_slice→v_slice→
+  **single**（`bg.png`/`bg.igs` 兜底）；`assets._compose_dir_base` 认
+  `single`。官服 6 例命中（`九宫\二级界面底\`、`新登陆界面\头像框阴影\`
+  等），画布不再空白。
+- 真包验收：56/56 `.spr` 帧时表可解；54/56 同名像素出帧（2 例外部包
+  除外；其中流派默认标记/领奖特效 2 例帧表比精灵多 1 帧，显示按精灵
+  帧数钳制，动画阶段再对表）。三案例基路径族归属：`输入底框\`=h_slice、
+  `上文字底\`=h_slice、`三态按钮\勾选框底\`=frames 0..3.png（探针报告
+  `google_drive/interface_probe_report.json` 为证）。
+- 测试：新增 8 项（spr_desc 6、bg single 1、T1 1）；全量 discover 225 项
+  0 失败（24 个 Qt 导入错误=沙箱无 libGL，预有）；ruff 0；wincompat
+  0/0/0。resource_editor 测试 25 项中 16 个 Qt 导入错误（预有）0 失败。
+  不改 `.dlg` 字段值、不改客户端资源。

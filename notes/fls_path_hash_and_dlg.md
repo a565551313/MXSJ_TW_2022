@@ -227,3 +227,44 @@ Python 自带 __import__ 的 `0x52E5C5` 也调用同一入口。
 `import_key_checks.json`、`native_inputs.json`。
 普通 `.py` 回退加载受运行时 `sys.path` 约束；本次未读出用户运行时路径，
 不把默认 Python 搜索路径字串当成游戏实际路径，不擅自指定落盘目录。
+
+## 10. `.spr` 帧时表格式（2026-10-19 结案）
+
+`.spr`（CSpriteFrame，如 `烟2_.spr`）**不是精灵/图像**：整文件是 4 字节
+循环 XOR 的文本（INI），23~299 字节。登录界面
+`combdialog4\新登陆界面\界面特效\登录界面\烟\烟2_.spr`（89B）密钥
+`2e a7 dd 80` 解出：
+
+```ini
+[frames]
+0 5
+1 5
+2 5
+…
+```
+
+即「帧号 + 时长 tick」的**帧时表**；界面.fls 56 例引用全在包、全部可解
+（53 `[frames]`、1 `[frames]\t`、2 首行残缺）。两个及以上节共存时
+（如 `[info]`/`[images]` + `[frames]`）全文件同一密钥。
+
+- **像素源**：同名 `Xxx_.igs`（烟2_.igs 实证 T1 精灵 18 帧对帧表 18 行）
+  或 `.png`。少数是 `[images]` 外部指图（及时雨/引天雷）：
+
+  ```ini
+  [images]
+  FileName1=magic0307.igs
+  PackageName=magic
+  BranchPath=res\
+  PalPro=259 0 0 0 108 292 0 59 0
+  ```
+
+  像素在**别的 .fls 包**（magic 包的 magic0307.igs）、不与 .spr 同名；
+  `PalPro` 是调色板换算表（9 个整数，用途待动画阶段再核）。
+- **姊妹精灵魔数分布**（56 例）：T0×27、T1×21、I0×5、T5×1。
+  **T1 = T0 的 u16 行长变体**（与 I0→I1、T4→T5 同构）：14B 头 +
+  帧目录 + u32 总行数 + **u16 行长表** + 768B RGB888 调色板 + RLE 像素流。
+  定版证据：烟2_.igs Σu16 行长 = 调色板后像素流长（1,293,468 精确相等），
+  u8 假说被 Σ 否证。
+- **落地**：`ui_editor/src/ui_editor/core/spr_desc.py`（decode_spr_text/
+  parse_frame_table/parse_images/frame_sources）+ `assets._load_spr`
+  （画布出帧）；格式常量真源 `mx_common/sprite_format.py`（含 T1）。

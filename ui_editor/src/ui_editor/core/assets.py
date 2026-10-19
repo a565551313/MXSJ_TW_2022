@@ -18,7 +18,7 @@ from pathlib import Path
 from PySide6.QtCore import QRect
 from PySide6.QtGui import QImage, QPainter
 
-from . import dir_base, dlg_codec, sprite
+from . import dir_base, dlg_codec, spr_desc, sprite
 from .catalog import known_layout_hashes, known_layout_paths
 from .errors import DlgError
 from .pack import FlsPack
@@ -398,11 +398,32 @@ class AssetResolver:
         return frames
 
     def _load_image(self, name: str) -> list[QImage] | None:
+        if name.lower().endswith(".spr"):
+            return self._load_spr(name)
         data = self.fetch_bytes(name)
         frames = self._decode_frames(data) if data is not None else None
         if frames is not None:
             return frames
         return self._compose_dir_base(name)
+
+    def _load_spr(self, name: str) -> list[QImage] | None:
+        """.spr 是 XOR 的帧时表（非图像）：取同名 .igs/.png 精灵出帧。
+
+        画布静态显示精灵各帧（预览取首帧）；帧表里的每帧时长供
+        动画用（暂未接时间轴）。描述符解不出或同名精灵缺失仍占位。
+        """
+        data = self.fetch_bytes(name)
+        text = spr_desc.decode_spr_text(data) if data is not None else None
+        if data is None or text is None:
+            return None
+        for candidate in spr_desc.frame_sources(name, text):
+            sibling = self.fetch_bytes(candidate)
+            if sibling is None:
+                continue
+            frames = self._decode_frames(sibling)
+            if frames:
+                return frames
+        return None
 
     @staticmethod
     def _decode_frames(data: bytes) -> list[QImage] | None:
@@ -441,7 +462,7 @@ class AssetResolver:
         if not frames or any(img is None for img in frames):
             return None
         images = [img for img in frames if img is not None]
-        if chosen.kind == "frames":
+        if chosen.kind in ("frames", "single"):
             return images
         if chosen.kind == "h_slice":
             return [_stitch_row(images)]

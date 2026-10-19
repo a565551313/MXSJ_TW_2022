@@ -155,5 +155,54 @@ class TestDirectColorSprites(unittest.TestCase):
                 self.assertEqual(px(3, 1), (200, 100, 50, 255))
 
 
+class TestT1PaletteWide(unittest.TestCase):
+    """T1 = T0 的 u16 行长变体（调色板 256×RGB888）。
+
+    2026-10-19 在 interface.fls 的 .spr 姊媚精灵（烟2_.igs 等 21 例）
+    上按「Σ行长=像素流长」定版；u8 假说被 Σ 精确相等否证。
+    """
+
+    @staticmethod
+    def _bytes() -> bytes:
+        import struct
+
+        rows = [
+            bytes([0xC1, 0x42, 0x07, 0x08, 0x2F, 0x09, 0x00]),
+            bytes([0x02, 0x1F, 0x05, 0x82, 0x06, 0x00]),
+        ]
+        pad = (-sum(len(r) for r in rows)) % 4
+        rows[-1] += b"\x00" * pad
+        lens = [len(r) for r in rows]
+        pal = bytearray()
+        for i in range(256):
+            pal += bytes((i, (2 * i) & 0xFF, 255 - i))
+        out = struct.pack("<2sHHHHHH", b"T1", 1, 1, 4, 2, 0, 0)
+        out += struct.pack("<HHHH", 0, 0, 4, 2)
+        out += struct.pack("<I", 2)
+        out += b"".join(struct.pack("<H", n) for n in lens)  # T1：u16 行长
+        out += bytes(pal)
+        return out + b"".join(rows)
+
+    def test_t1_decode(self):
+        data = self._bytes()
+        self.assertTrue(sprite.is_sprite(data))
+        decoded = sprite.decode_sprite(data)
+        self.assertEqual(decoded.frame_count, 1)
+        frame = decoded.frames[0]
+        self.assertEqual((frame.width, frame.height), (4, 2))
+        rgba = frame.rgba
+
+        def px(x, y, rgba=rgba):
+            i = (y * 4 + x) * 4
+            return tuple(rgba[i:i + 4])
+
+        self.assertEqual(px(0, 0), (0, 0, 0, 0))
+        self.assertEqual(px(1, 0), (7, 14, 248, 255))
+        self.assertEqual(px(2, 0), (8, 16, 247, 255))
+        self.assertEqual(px(3, 0), (9, 18, 246, 15 * 255 // 31))
+        self.assertEqual(px(0, 1), (5, 10, 250, 255))
+        self.assertEqual(px(2, 1), (6, 12, 249, 255))
+
+
 if __name__ == "__main__":
     unittest.main()
