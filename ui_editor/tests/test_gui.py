@@ -943,8 +943,9 @@ class TestWidgetLockGui(unittest.TestCase):
         item = w.scene.item_for(button)
         self.assertFalse(item.flags()
                          & QGraphicsItem.GraphicsItemFlag.ItemIsMovable)
-        self.assertTrue(item.flags()
-                        & QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+        # 锁定后画布完全无视它：连可选标志都不给（点不到/选不中）
+        self.assertFalse(item.flags()
+                         & QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.assertFalse(w.doc.dirty)   # 锁定只是编辑器状态，不标脏
         self.assertFalse(w.doc.can_undo)  # 也不进撤销时间线
         w._act_lock.trigger()

@@ -361,19 +361,24 @@ class EditingCommandsMixin:
 
     def _apply_lock(self, widgets: list, on: bool) -> None:
         """把锁定状态应用到一组控件（工具栏/右键/控件树共用）。"""
+        previous = self._selected
         for widget in widgets:
             widget.locked = on
             item = self.scene.item_for(widget)
             if item is not None:
                 item.apply_lock()
             self.tree_panel.set_lock_icon(widget)
+        if previous is not None and previous.locked:
+            # 锁定后画布不再选它（取消选中会清空当前选择），
+            # 这里把面板/树的选择补回来，方便继续查看或解锁
+            self._select_widget(previous, sync_scene=False)
         self._sync_lock_action()
         names = "、".join(w.name or "(无名)" for w in widgets[:3])
         if len(widgets) > 3:
             names += " 等"
         self._update_status(
-            f"已锁定 {len(widgets)} 个控件（{names}）：画布上拖不动、"
-            "缩不了、删不掉；排其他控件不会碰歪它们。再点一次解锁。"
+            f"已锁定 {len(widgets)} 个控件（{names}）：画布上点不到、"
+            "选不中、框选不到、拖不动；在控件树点锁图标解锁。"
             if on else
             f"已解锁 {len(widgets)} 个控件（{names}）。")
 
