@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from . import dlg_codec
+from . import dlg_codec, runtime_state
 from .script_index import LayoutLink
 
 if TYPE_CHECKING:
@@ -247,6 +247,49 @@ def diagnose(
                         f"已挂载资源中未找到：{value}；可能在尚未挂载的包/热更新中。",
                     )
                 )
+    # 绘制保真度：单图九宫格的切割线没有实据，静态就能判，直接标出来
+    for path, widget in entries:
+        if widget.wtype != "CPngNineFrame":
+            continue
+        name = widget.props.get("sFileName")
+        if not isinstance(name, str) or not name or name.endswith(("\\", "/")):
+            continue
+        issues.append(
+            Diagnostic(
+                "提示",
+                "RENDER_APPROX",
+                path,
+                "sFileName",
+                "单图九宫格按固定三分切：.dlg 没有切割线字段，"
+                "切割位置未与客户端核实；画布角标同样标「近似」。",
+            )
+        )
+
+    # 运行时可见性：布局里有、运行时隐藏/不加载——与「资源加载失败」分开报
+    for path, widget in entries:
+        state = runtime_state.state_of(widget)
+        if state == runtime_state.HIDDEN:
+            issues.append(
+                Diagnostic(
+                    "提示",
+                    "RUNTIME_HIDDEN",
+                    path,
+                    "bShow",
+                    "bShow=0：布局里存在、运行时隐藏。画布上压暗并标"
+                    "「运行时隐藏」，不是缺图。",
+                )
+            )
+        elif state == runtime_state.NOT_LOADED:
+            issues.append(
+                Diagnostic(
+                    "提示",
+                    "RUNTIME_NOT_LOADED",
+                    path,
+                    "bLoad",
+                    "bLoad=0：字段字面意思是运行时不加载这个控件；"
+                    "具体行为未与客户端核实，画布按「可能不显示」标注。",
+                )
+            )
     for name, paths in names.items():
         if len(paths) > 1:
             for path in paths:

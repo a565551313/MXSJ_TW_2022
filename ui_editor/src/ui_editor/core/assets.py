@@ -13,19 +13,20 @@ from __future__ import annotations
 import os
 import re
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path, PureWindowsPath
 
 from PySide6.QtCore import QRect
 from PySide6.QtGui import QImage, QPainter
 
-from . import animation, dir_base, dlg_codec, spr_desc, sprite
+from . import animation, dir_base, dlg_codec, slicing, spr_desc, sprite
 from .catalog import known_layout_hashes, known_layout_paths
 from .errors import DlgError, ResourceIssue
 from .pack import FlsPack
 from .pack_build import unpack_packed_text  # noqa: F401  转发
 from .styles import StyleBook
 
-__all__ = ["AssetResolver", "unpack_packed_text"]
+__all__ = ["AssetResolver", "SliceRecipe", "unpack_packed_text"]
 
 _MEDIA_EXTS = (".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif",
                ".igs", ".spr", ".wav", ".mp3", ".ogg")
@@ -113,6 +114,40 @@ def _stitch_grid(images: list[QImage], columns: int) -> QImage:
     return out
 
 
+@dataclass(frozen=True)
+class SliceRecipe:
+    """一套可切片的资源：族名、各块（路径+像素）、哪些块全透明。
+
+    ``kind`` 与 :mod:`ui_editor.core.dir_base` 同族（h_slice/v_slice/
+    nine_slice）；切片尺寸直接来自这些文件的真实像素——这是切割线的
+    唯一证据来源，不按控件尺寸反推。
+    """
+
+    kind: str
+    names: tuple[str, ...]
+    images: tuple[QImage, ...]
+    blank: frozenset[int] = frozenset()
+
+    def plan(self):
+        """转成纯几何的 :class:`ui_editor.core.slicing.SlicePlan`。"""
+        pieces = tuple(slicing.Piece(image.width(), image.height())
+                       for image in self.images)
+        if self.kind == "h_slice":
+            return slicing.h_slice(*pieces)
+        if self.kind == "v_slice":
+            return slicing.v_slice(*pieces)
+        return slicing.nine_slice(pieces)
+
+
+def image_is_blank(image: QImage) -> bool:
+    """整张图全透明？用于「透明切片不绘制」的判定。"""
+    if image.isNull():
+        return True
+    alpha = image.convertToFormat(QImage.Format.Format_Alpha8)
+    data = bytes(alpha.constBits())
+    return not data or max(data) == 0
+
+
 class AssetResolver:
     """多包 + 散装目录的资源查找器（带缓存）。"""
 
@@ -123,6 +158,7 @@ class AssetResolver:
         self._bytes_cache: dict[str, bytes | None] = {}
         self._image_cache: dict[str, list[QImage] | None] = {}
         self._animation_cache: dict[str, animation.AnimationAsset | None] = {}
+        self._slice_cache: dict[str, SliceRecipe | None] = {}
         self._media_cache: list[str] | None = None
         self._session_layouts: dict[int, str] = {}  # 用户明确给出的路径；仅本会话
         self._staged: dict[str, bytes] = {}  # 选图窗新加、待随包写入
@@ -144,6 +180,7 @@ class AssetResolver:
         self._bytes_cache.clear()
         self._image_cache.clear()
         self._animation_cache.clear()
+        self._slice_cache.clear()
         self._media_cache = None
         return pack
 
@@ -178,6 +215,7 @@ class AssetResolver:
             self._loose_dirs.append(root)
             self._media_cache = None
             self._animation_cache.clear()
+            self._slice_cache.clear()
 
     @property
     def pack_paths(self) -> list[Path]:
@@ -620,6 +658,31 @@ class AssetResolver:
         if chosen.kind == "v_slice":
             return [_stitch_column(images)]
         return [_stitch_grid(images, 3)]
+
+    def fetch_slice(self, name: str) -> SliceRecipe | None:
+        """目录型基路径的切片资源（横三片/竖三片/九片）；不是切片返回 None。
+
+        序号帧族与单图族不属于切片（前者是多状态帧、后者是整图），
+        由 :meth:`fetch_image` 照旧返回帧列表。
+        """
+        if not dir_base.is_dir_base(name):
+            return None
+        cache_key = name.replace("/", "\\")
+        if cache_key in self._slice_cache:
+            return self._slice_cache[cache_key]
+        chosen = dir_base.plan(name, self._piece_exists)
+        recipe: SliceRecipe | None = None
+        if chosen is not None and chosen.kind in ("h_slice", "v_slice",
+                                                  "nine_slice"):
+            images = [self._load_single_image(piece) for piece in chosen.pieces]
+            if all(image is not None for image in images):
+                kept = [image for image in images if image is not None]
+                blank = frozenset(index for index, image in enumerate(kept)
+                                  if image_is_blank(image))
+                recipe = SliceRecipe(chosen.kind, chosen.pieces,
+                                     tuple(kept), blank)
+        self._slice_cache[cache_key] = recipe
+        return recipe
 
     def _load_single_image(self, name: str) -> QImage | None:
         frames = self._load_image(name)

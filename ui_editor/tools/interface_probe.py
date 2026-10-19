@@ -117,6 +117,104 @@ def collect_file_fields(layouts: list[dict]) -> dict[str, set[str]]:
     return fields
 
 
+
+def image_size(data: bytes) -> tuple[int, int] | None:
+    """从字节读图片宽高：PNG/JPEG/GIF 头即可，不需要 Qt。"""
+    if data[:8] == b"\x89PNG\r\n\x1a\n" and len(data) >= 24:
+        return (int.from_bytes(data[16:20], "big"),
+                int.from_bytes(data[20:24], "big"))
+    if data[:6] in (b"GIF87a", b"GIF89a") and len(data) >= 10:
+        return (int.from_bytes(data[6:8], "little"),
+                int.from_bytes(data[8:10], "little"))
+    if data[:2] == b"\xff\xd8":
+        index = 2
+        while index + 9 < len(data):
+            if data[index] != 0xFF:
+                index += 1
+                continue
+            marker = data[index + 1]
+            length = int.from_bytes(data[index + 2:index + 4], "big")
+            if marker in (0xC0, 0xC1, 0xC2) and index + 9 < len(data):
+                return (int.from_bytes(data[index + 7:index + 9], "big"),
+                        int.from_bytes(data[index + 5:index + 7], "big"))
+            index += 2 + max(2, length)
+    return None
+
+
+def slice_stats(pack: FlsPack, item: FlsPack | None, plans: dict[str, dict],
+                ) -> dict:
+    """切片族的真实像素尺寸：切割线的唯一证据来源（无 Qt，只读图片头）。"""
+    stats: dict = {"families": {}, "samples": []}
+    for base, info in plans.items():
+        if info["kind"] not in ("h_slice", "v_slice", "nine_slice"):
+            continue
+        sizes = {}
+        for piece in info["pieces"]:
+            found = None
+            for source in (pack, item):
+                if source is None or not source.contains(piece):
+                    continue
+                try:
+                    found = image_size(source.read_named(piece) or b"")
+                except Exception:
+                    found = None
+                if found:
+                    break
+            sizes[piece] = found
+        stats["families"][info["kind"]] = (
+            stats["families"].get(info["kind"], 0) + 1)
+        if len(stats["samples"]) < 12:
+            stats["samples"].append({"base": base, "kind": info["kind"],
+                                     "sizes": sizes})
+    return stats
+
+
+def button_state_stats(layouts: list[dict], pack: FlsPack,
+                       item: FlsPack | None) -> dict:
+    """按钮状态证据摸底：状态字段出现次数 + 图高与控件高的比例。"""
+    button_types = {"CButton", "CHPageButton", "CVPageButton",
+                    "CHPagePngButton", "CVPagePngButton", "CTextButton"}
+    state_fields = ("sDownImageName", "sMouseOverImageName",
+                    "sDisabledImageName", "sCheckedImageName")
+    field_hits: Counter = Counter()
+    ratios: Counter = Counter()
+    frames_seen: Counter = Counter()
+    for root in layouts:
+        widgets: list = []
+        walk_widgets([root], widgets)
+        for widget in widgets:
+            for field in state_fields:
+                if widget.get(field):
+                    field_hits[field] += 1
+            if widget.get("sWidgetType") not in button_types:
+                continue
+            name = widget.get("sFileName")
+            if not isinstance(name, str) or not name or name.endswith(("\\", "/")):
+                continue
+            height = widget.get("iHeight")
+            data = None
+            for source in (pack, item):
+                if source is None or not source.contains(name):
+                    continue
+                try:
+                    data = source.read_named(name)
+                except Exception:
+                    data = None
+                if data:
+                    break
+            size = image_size(data or b"")
+            if size is None or not isinstance(height, int) or height <= 0:
+                continue
+            parts = round(size[1] / height, 2)
+            ratios[parts] += 1
+            frames_seen[size] += 1
+    return {
+        "state_fields": dict(field_hits),
+        "height_ratio": dict(ratios.most_common(20)),
+        "top_sizes": [[list(size), count]
+                      for size, count in frames_seen.most_common(20)],
+    }
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("fls", help="interface.fls 路径")
@@ -196,6 +294,23 @@ def main() -> int:
             print(f"        [{marker}] {base} -> {text}")
         if not matched:
             print(f"        [{marker}] 无同名基路径")
+
+    print("[4b/5] 切片尺寸与按钮状态证据 …")
+    stats = slice_stats(pack, item, plans)
+    button_stats = button_state_stats(layouts, pack, item)
+    report["slice_stats"] = stats
+    report["button_state_stats"] = button_stats
+    print("      切片族实例：" +
+          "，".join(f"{k}={v}" for k, v in sorted(
+              stats["families"].items())) or "（无）")
+    for sample in stats["samples"][:6]:
+        print(f"        {sample['kind']} {sample['base']} -> {sample['sizes']}")
+    print("      按钮状态字段出现次数：" +
+          ("，".join(f"{k}={v}" for k, v in
+                     sorted(button_stats["state_fields"].items())) or "（无）"))
+    print("      图高/控件高 比例分布：" +
+          ("，".join(f"{k}x={v}" for k, v in
+                     button_stats["height_ratio"].items()) or "（无样本）"))
 
     print("[5/5] .spr 悬案 …")
     spr_refs = sorted(p for p in file_refs if p.lower().endswith(".spr"))

@@ -107,12 +107,14 @@ class MainWindow(
         self.diagnostics_panel.refresh_requested.connect(self.run_diagnostics)
         self.diagnostics_panel.path_chosen.connect(self._select_diagnostic_path)
         self.palette_panel = PalettePanel()
+        # 状态栏要在建工具栏之前：工具栏把缩放/保真度常驻标签挂到
+        # statusBar() 上，晚一步 setStatusBar 换新栏会把旧栏连同标签一起销毁。
+        self.setStatusBar(QStatusBar())
         self._build_docks()
         self._build_menus()
         self._connect_signals()
         # 删除键由「删除控件」QAction 统一接管（_edit_delete 带文本焦点分流）
 
-        self.setStatusBar(QStatusBar())
         self._update_title()
         self._update_status("就绪：打开一个 .dlg、布局目录，或从资源包打开。")
         self.resize(1360, 860)
@@ -313,6 +315,7 @@ class MainWindow(
         finally:
             self._syncing_selection = False
         self._sync_lock_action()
+        self._update_fidelity_label(widget)
 
     def _select_from_tree(self, widget: Widget | None) -> None:
         self._select_widget(widget)
