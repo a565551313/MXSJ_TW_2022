@@ -9,12 +9,16 @@ from ui_editor.core.model import Widget
 
 
 class FakeView:
-    """只回答保真度需要的三个问题。"""
+    """只回答保真度需要的三个问题（+ 可选的绘制来源）。"""
 
-    def __init__(self, slices=None, frames=None, sizes=None):
+    def __init__(self, slices=None, frames=None, sizes=None, source=None):
         self._slices = slices or {}
         self._frames = frames or {}
         self._sizes = sizes or {}
+        self._source = source
+
+    def source_kind(self, widget):
+        return self._source
 
     def slice_kind(self, name):
         return self._slices.get(name)
@@ -129,6 +133,35 @@ class TestFidelityMarkers(unittest.TestCase):
         view = FakeView(slices={"a\\": "h_slice"}, frames={"a\\": 1})
         w = widget("CFrame", sFileName="a\\")
         self.assertTrue(fidelity.summary(w, view).startswith(fidelity.NATIVE))
+
+    def test_drawn_source_drives_the_badge(self):
+        """画的是皮肤就不能标占位：来源由绘制层给，角标照着标。"""
+        w = widget("CTextButton", sFileName="a\\")
+        cases = {
+            "style_skin": ("样式表", fidelity.APPROX, "style_skin"),
+            "button_style": ("编辑器默认色", fidelity.SIMULATED,
+                             "button_style"),
+            "editor_default": ("默认配色", fidelity.SIMULATED,
+                               "editor_default"),
+            "code_skin": ("脚本现造", fidelity.APPROX, "code_skin"),
+            "placeholder": ("占位框", fidelity.SIMULATED,
+                            "missing_placeholder"),
+        }
+        for source, (word, level, code) in cases.items():
+            found = fidelity.markers(w, FakeView(source=source))
+            self.assertEqual(len(found), 1, source)
+            self.assertEqual(found[0].level, level, source)
+            self.assertIn(word, found[0].text, source)
+            self.assertEqual(found[0].code, code, source)
+
+    def test_no_image_type_reports_nothing(self):
+        w = widget("CTextFrame", sFileName="a.png")
+        self.assertEqual(fidelity.markers(w, FakeView(source="none")), [])
+
+    def test_dir_base_placeholder_says_slices(self):
+        w = widget("CFrame", sFileName="dir\\")
+        found = fidelity.markers(w, FakeView(source="placeholder"))
+        self.assertIn("切片族", found[0].text)
 
     def test_marker_palette_has_all_levels(self):
         for level in (fidelity.NATIVE, fidelity.APPROX, fidelity.SIMULATED):

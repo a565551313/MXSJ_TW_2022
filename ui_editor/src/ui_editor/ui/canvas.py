@@ -96,6 +96,10 @@ class FidelityView:
     def image_size(self, name: str) -> tuple[int, int] | None:
         return self._ctx.frame_size(name)
 
+    def source_kind(self, widget) -> str:
+        """绘制层实际用的那条路（code_skin/style_skin/placeholder…）。"""
+        return painters.resolve_source(widget, self._ctx)
+
 
 class WidgetItem(QGraphicsItem):
     """一个控件对应的画布图元。"""

@@ -53,6 +53,28 @@ class Marker:
     text: str
 
 
+#: 与 :mod:`ui_editor.core.painters` 的 `SOURCE_*` 同值（不反向依赖 Qt 模块）
+_SRC_NONE = "none"
+_SRC_CODE_SKIN = "code_skin"
+_SRC_SLICE = "slice"
+_SRC_IMAGE = "image"
+_SRC_STYLE_SKIN = "style_skin"
+_SRC_BUTTON_STYLE = "button_style"
+_SRC_EDITOR_DEFAULT = "editor_default"
+_SRC_PLACEHOLDER = "placeholder"
+
+
+def _source_of(widget, view) -> str | None:
+    """绘制来源；view 不支持时返回 None（走旧的资源探测路径）。"""
+    getter = getattr(view, "source_kind", None)
+    if getter is None:
+        return None
+    try:
+        return getter(widget)
+    except Exception:  # 标注失败不影响绘制，退回过探测
+        return None
+
+
 def _image_name(widget) -> str:
     key = "sBgFileName" if widget.wtype == "CProgress" else "sFileName"
     value = widget.props.get(key)
@@ -75,6 +97,40 @@ def markers(widget, view, button_state: str = "normal") -> list[Marker]:
                              "bLoad=0：可能不加载这个控件；语义未与客户端核实。"))
 
     name = _image_name(widget)
+    source = _source_of(widget, view)
+    if source is not None:
+        # 绘制层直接告诉我们画的是哪条路（皮肤/切片/图/占位），不再自己猜
+        if source == _SRC_NONE:
+            return result
+        if source == _SRC_CODE_SKIN:
+            result.append(Marker(
+                APPROX, "code_skin",
+                "脚本现造按钮：按代码皮肤绘制（静态索引推断，"
+                "客户端由脚本运行时创建）。"))
+            return result
+        if source == _SRC_STYLE_SKIN:
+            result.append(Marker(
+                APPROX, "style_skin",
+                "图片取不到，按 ui.lst 的 iStyle 样式表配色绘制"
+                "（客户端实际外观未核实）。"))
+            return result
+        if source == _SRC_BUTTON_STYLE:
+            result.append(Marker(
+                SIMULATED, "button_style",
+                "没有图片，iStyle 也没给出常态色：底色是编辑器默认色。"))
+            return result
+        if source == _SRC_EDITOR_DEFAULT:
+            result.append(Marker(
+                SIMULATED, "editor_default",
+                "图片取不到：按编辑器默认配色绘制，不是客户端画面。"))
+            return result
+        if source == _SRC_PLACEHOLDER:
+            text = ("目录型基路径没拼出任何切片族：画的是编辑器占位框。"
+                    if name.endswith(("\\", "/")) else
+                    "资源取不到：画的是编辑器占位框，不是客户端画面。")
+            result.append(Marker(SIMULATED, "missing_placeholder", text))
+            return result
+
     if not name:
         return result
 

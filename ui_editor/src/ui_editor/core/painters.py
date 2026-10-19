@@ -457,6 +457,76 @@ def _simulate_state_overlay(p: QPainter, rect: QRectF,
         p.fillRect(rect, QColor(128, 128, 128, 110))
 
 
+#: 绘制来源：画布实际用哪条路画出来的（角标与诊断据此判定，不再各算一套）
+SOURCE_CODE_SKIN = "code_skin"          # 脚本现造按钮的皮肤图
+SOURCE_SLICE = "slice"                  # 目录型基路径的横/竖/九片
+SOURCE_IMAGE = "image"                  # 单图或 .spr 帧
+SOURCE_STYLE_SKIN = "style_skin"        # ui.lst 里 iStyle 指定的按钮皮肤
+SOURCE_BUTTON_STYLE = "button_style"    # 按控件类型画的按钮底色（无 iStyle）
+SOURCE_EDITOR_DEFAULT = "editor_default"  # 编辑器默认配色（进度条等）
+SOURCE_PLACEHOLDER = "placeholder"      # 只有占位框
+SOURCE_NONE = "none"                    # 这类控件本来就不画图
+
+#: 会去查图片的控件类型（其余类型按样式/文字画，不涉及缺图）
+IMAGE_TYPES = frozenset({
+    "CFrame", "CHFrame", "CVFrame", "CBorder", "CBox",
+    "CBitmapFrame", "CBitmapHFrame", "CBitmapVFrame", "CSpriteFrame",
+    "CHPngFrame", "CVPngFrame", "CPngNineFrame",
+    "CImagesFrame", "CPngList", "CCombCheckButton",
+    "CButton", "CHPageButton", "CVPageButton",
+    "CHPagePngButton", "CVPagePngButton", "CTextButton",
+    "CProgress",
+})
+
+#: 图片取不到时按 ui.lst 的 iStyle 画按钮底色的类型
+STYLE_BUTTON_TYPES = frozenset({
+    "CTextButton", "CButton", "CHPageButton", "CVPageButton",
+    "CHPagePngButton", "CVPagePngButton",
+})
+
+
+def style_button_color(w: Widget, ctx: PaintContext) -> QColor | None:
+    """`iStyle` 在 ui.lst 里查到的按钮常态色；查不到返回 None（不猜）。"""
+    style = ctx.styles.tbstyle(_int(w, "iStyle"))
+    if not style:
+        return None
+    return _color_from_style(style.get("ButtonNormalColor", ""), None)
+
+
+def _code_skin_pixmap(w: Widget, ctx: PaintContext):
+    binding = ctx.code_skins.get(w.name)
+    if binding is None:
+        return None
+    return ctx.pixmap(binding.skin, 0)
+
+
+def resolve_source(w: Widget, ctx: PaintContext) -> str:
+    """这件控件**实际**会用哪条路画（与 :func:`paint_widget` 同源判定）。
+
+    顺序与各 painter 内一致：代码皮肤 → 切片 → 图/精灵帧 → iStyle 样式
+    按钮 → 占位框。角标、状态栏、诊断都读这一个结果，避免「画的是皮肤、
+    标的是占位」这种自相矛盾。
+    """
+    if w.wtype not in IMAGE_TYPES:
+        return SOURCE_NONE
+    if _code_skin_pixmap(w, ctx) is not None:
+        return SOURCE_CODE_SKIN
+    name = str(w.props.get(_image_key(w), "") or "")
+    if name:
+        if ctx.assets.fetch_slice(name) is not None:
+            return SOURCE_SLICE
+        if ctx.pixmap(name) is not None:
+            return SOURCE_IMAGE
+    if w.wtype in STYLE_BUTTON_TYPES:
+        if style_button_color(w, ctx) is not None:
+            return SOURCE_STYLE_SKIN
+        return SOURCE_BUTTON_STYLE   # 有兜底底色，不会是占位框
+    if w.wtype == "CProgress":
+        # 底图取不到时画的是深色底 + 绿色填充条，不是占位框
+        return SOURCE_EDITOR_DEFAULT
+    return SOURCE_PLACEHOLDER
+
+
 def _paint_code_skin(p: QPainter, w: Widget, ctx: PaintContext) -> bool:
     """脚本在占位控件原地现造按钮时，按代码皮肤画（静态索引推断）。
 
@@ -464,10 +534,8 @@ def _paint_code_skin(p: QPainter, w: Widget, ctx: PaintContext) -> bool:
     给了绑定且皮肤图取得到才接管绘制，取不到图时回落原画法。
     """
     binding = ctx.code_skins.get(w.name)
-    if binding is None:
-        return False
-    pixmap = ctx.pixmap(binding.skin, 0)
-    if pixmap is None:
+    pixmap = _code_skin_pixmap(w, ctx)
+    if binding is None or pixmap is None:
         return False
     rect = _rect(w, ctx)
     p.drawPixmap(rect, pixmap, QRectF(pixmap.rect()))
@@ -494,11 +562,13 @@ def _paint_button(p: QPainter, w: Widget, ctx: PaintContext) -> None:
             p.drawPixmap(rect, pixmap, QRectF(pixmap.rect()))
             _simulate_state_overlay(p, rect, ctx)
         return
+    # 图取不到时用 ui.lst 的 iStyle 底色（有就按样式画，没有才用编辑器默认色）
+    base = style_button_color(w, ctx) or QColor(108, 124, 152)
     gradient = QLinearGradient(rect.topLeft(), rect.bottomLeft())
-    gradient.setColorAt(0, QColor(108, 124, 152))
-    gradient.setColorAt(1, QColor(72, 86, 110))
+    gradient.setColorAt(0, base.lighter(115))
+    gradient.setColorAt(1, base)
     p.setBrush(gradient)
-    p.setPen(QPen(QColor(170, 185, 210), 1))
+    p.setPen(QPen(base.lighter(150), 1))
     p.drawRoundedRect(rect.adjusted(0.5, 0.5, -0.5, -0.5), 3, 3)
     if ctx.show_names:
         _draw_text(p, rect, w.name, _small_font(), QColor(230, 236, 248), 1)
@@ -509,6 +579,9 @@ def _paint_text_button(p: QPainter, w: Widget, ctx: PaintContext) -> None:
     if _paint_code_skin(p, w, ctx):
         return
     name = str(w.props.get("sFileName", "") or "")
+    if name and _draw_slice(p, w, ctx, name):   # 目录型基路径同样按切片拼
+        _paint_text_overlay(p, w, ctx, rect)
+        return
     pixmap = ctx.pixmap(name) if name else None
     if pixmap is not None:
         stated = _button_state_pixmap(ctx, name, w) if name else None
@@ -530,6 +603,12 @@ def _paint_text_button(p: QPainter, w: Widget, ctx: PaintContext) -> None:
         p.setBrush(gradient)
         p.setPen(QPen(color.darker(140), 1))
         p.drawRoundedRect(rect.adjusted(0.5, 0.5, -0.5, -0.5), 3, 3)
+    _paint_text_overlay(p, w, ctx, rect)
+
+
+def _paint_text_overlay(p: QPainter, w: Widget, ctx: PaintContext,
+                        rect: QRectF) -> None:
+    """文字按钮的文字（含 tTextOffset 偏移）。"""
     offset = w.props.get("tTextOffset")
     dx = dy = 0.0
     if isinstance(offset, (list, tuple)) and len(offset) >= 2:

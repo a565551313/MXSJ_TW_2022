@@ -243,7 +243,8 @@ class MainWindow(
             self.doc, link=self._script_link(),
             resource_exists=(self.resolver.resource_exists
                              if self.resolver.has_sources else None),
-            staged_paths=self.resolver.staged_images())
+            staged_paths=self.resolver.staged_images(),
+            styles=self.styles)
         issues.extend(
             Diagnostic("错误" if issue.code in {
                        "RESOURCE_PACK_CORRUPT", "RESOURCE_READ_ERROR",

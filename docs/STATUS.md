@@ -2094,6 +2094,43 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   既有 GUI 契约核对：双击待入包叶子不确认不换文档、切换编码/刷新/
   关窗的 `_confirm_discard` 语义、`window.doc = None` 清空入口均兼容。
 
+### ui_editor 角标跟随实际画法（2026-10-20，第十八轮）——版本 0.12.1
+
+用户实测反馈：「红色占位？但是我看到皮肤了啊」，并补充该按钮 `sFileName`
+是目录型基路径 `combdialog4\三态按钮\一级按钮\`、改 `iStyle` 数值颜色会变。
+复现确认：`fidelity.markers` 只查 `fetch_image(sFileName)`，取不到即判
+`missing_placeholder`；而 `_paint_text_button` 在图片取不到时用
+`ui.lst` 的 `ButtonNormalColor` 画皮肤（沙箱像素验：iStyle=0 → `#ffffc6`，
+iStyle=1 → `#677896`）。**画对了、标错了。**
+
+- `core/painters.py`：新增 `resolve_source(w, ctx)` 与 `SOURCE_*` 常量，
+  顺序与各 painter 内完全一致：代码皮肤 → 切片 → 图/精灵帧 → `iStyle`
+  样式 → 按钮兜底色 → 占位；`IMAGE_TYPES`/`STYLE_BUTTON_TYPES`/
+  `style_button_color` 一并导出给角标与诊断共用。`_code_skin_pixmap` 抽出
+  供绘制与判定共用；`_paint_button` 补 `iStyle` 底色（有才用）；
+  `_paint_text_button` 补**切片**分支（目录型基路径不再整图拉伸），文字
+  叠加抽成 `_paint_text_overlay` 供两条路复用。
+- `core/fidelity.py`：改为先问 `view.source_kind(widget)`——
+  `code_skin`/`style_skin`/`button_style`/`editor_default`/`placeholder`/
+  `none` 各有专门文案与档位（皮肤=近似、编辑器默认色/占位=模拟），
+  目录型基路径的占位文案改为「没拼出任何切片族」。view 不支持
+  `source_kind` 时退回旧的资源探测路径（向后兼容）。
+- `ui/canvas.FidelityView.source_kind` 转发 `painters.resolve_source`；
+  状态栏 `_fidelity_label` 因此自动跟着改。
+- `core/diagnostics.py`：`diagnose(..., styles=None)` 新增
+  `RENDER_STYLE_SKIN`（提示）——图片不可用但 `iStyle` 有常态色时说明
+  「按样式表配色绘制，不是占位框」；不再与 `RESOURCE_MISSING` 混淆。
+  `main_window._layout_diagnostics` 传入 `self.styles`。
+- 测试：`test_gui_native_fidelity.TestDrawnSourceBadge` 9 项（iStyle 0/1
+  颜色不同且都不是占位、无样式按钮=编辑器默认色、进度条=默认配色、代码
+  皮肤像素+角标非占位、真空缺仍占位、目录基路径占位文案含「切片族」、
+  能拼出九片的文字按钮走切片并标原生），`test_fidelity` 增 3 项
+  （来源驱动角标、无图类型不报、目录基路径文案），诊断增 2 项
+  （`RENDER_STYLE_SKIN` 命中/有图时不命中）。全量 **508 项 0 失败
+  （1 skip）**；ruff 0；wincompat 0/0/0。
+- 边界：`iStyle` 只是「编辑器能查到的配色」，客户端按钮是否还有贴图/
+  高光/状态色未核实，故标「近似」；代码皮肤仍是静态索引推断。
+
 ### ui_editor 画布原生还原度（2026-10-20，第十七轮）——版本 0.12.0
 
 用户定的本轮目标「0.12.0：画布原生状态和切片规则修正」，三步优先：九宫格

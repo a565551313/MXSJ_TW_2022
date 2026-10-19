@@ -298,10 +298,167 @@ class TestDiagnosticsVisibility(unittest.TestCase):
         found = diagnostics.diagnose(doc, resource_exists=lambda name: True)
         self.assertIn("RENDER_APPROX", [issue.code for issue in found])
 
+    def test_style_skin_is_reported_as_style_not_missing(self):
+        from ui_editor.core.styles import StyleBook
+        book = StyleBook.parse_bytes(
+            (Path(__file__).parent / "fixtures" / "ui_mini.lst").read_bytes())
+        doc = LayoutDocument()
+        frame = doc.new_widget("CMainFrame")
+        button = doc.new_widget("CTextButton", parent=frame)
+        button.props.update({"sName": "一级按钮",
+                             "sFileName": "combdialog4\\三态按钮\\一级按钮\\",
+                             "iStyle": 0, "sText": "确定"})
+        found = diagnostics.diagnose(doc, styles=book,
+                                     resource_exists=lambda name: False)
+        codes = [issue.code for issue in found]
+        self.assertIn("RENDER_STYLE_SKIN", codes)
+        self.assertNotIn("RESOURCE_MISSING", codes)
+        entry = next(i for i in found if i.code == "RENDER_STYLE_SKIN")
+        self.assertEqual(entry.severity, "提示")
+        self.assertIn("iStyle=0", entry.message)
+
+    def test_image_backed_button_is_not_style_skin(self):
+        from ui_editor.core.styles import StyleBook
+        book = StyleBook.parse_bytes(
+            (Path(__file__).parent / "fixtures" / "ui_mini.lst").read_bytes())
+        doc = LayoutDocument()
+        frame = doc.new_widget("CMainFrame")
+        button = doc.new_widget("CTextButton", parent=frame)
+        button.props.update({"sName": "b", "sFileName": "ui\\btn.png",
+                             "iStyle": 0})
+        found = diagnostics.diagnose(doc, styles=book,
+                                     resource_exists=lambda name: True)
+        self.assertNotIn("RENDER_STYLE_SKIN", [i.code for i in found])
+
     def test_sliced_dir_base_is_not_marked_approx(self):
         doc = self._doc(sWidgetType="CPngNineFrame", sFileName="nine\\")
         found = diagnostics.diagnose(doc, resource_exists=lambda name: True)
         self.assertNotIn("RENDER_APPROX", [issue.code for issue in found])
+
+
+
+
+class TestDrawnSourceBadge(_NeedsGui):
+    """角标必须跟着「实际怎么画的」走，不能只看 sFileName。
+
+    用户实测：`combdialog4\\三态按钮\\一级按钮\\` 这种目录型基路径拼不出切片时，
+    按钮按 ui.lst 的 iStyle 画出了皮肤（改 iStyle 颜色会变），角标却报占位。
+    """
+
+    def setUp(self):
+        from ui_editor.core.styles import StyleBook
+        self.book = StyleBook.parse_bytes(
+            (Path(__file__).parent / "fixtures" / "ui_mini.lst").read_bytes())
+        self.base = "combdialog4\\三态按钮\\一级按钮\\"
+
+    def _ctx(self, assets, skins=None):
+        ctx = PaintContext(assets=assets, styles=self.book)
+        if skins:
+            ctx.code_skins = skins
+        return ctx
+
+    def _widget(self, **props):
+        data = {"sWidgetType": "CTextButton", "sName": "一级按钮",
+                "sFileName": self.base, "iWidth": 60, "iHeight": 24,
+                "sText": "确定"}
+        data.update(props)
+        return Widget(data)
+
+    def _one(self, name):
+        from ui_editor.core import fidelity
+        from ui_editor.ui.canvas import FidelityView
+        return fidelity.markers(self.widget_, FidelityView(self.ctx))
+
+    def _render(self):
+        image = QImage(60, 24, QImage.Format.Format_RGBA8888)
+        image.fill(QColor(0, 0, 0, 0))
+        painter = QPainter(image)
+        try:
+            painters.paint_widget(painter, self.widget_, self.ctx)
+        finally:
+            painter.end()
+        return image
+
+    def test_istyle_color_drawn_and_badge_says_style_not_placeholder(self):
+        from ui_editor.core import fidelity
+        from ui_editor.core.painters import resolve_source
+        self.widget_ = self._widget(iStyle=0)
+        self.ctx = self._ctx(FakeAssets({}))
+        image = self._render()
+        self.assertEqual(pixel(image, 30, 12), (255, 255, 198, 255))  # 浅黄
+        self.assertEqual(resolve_source(self.widget_, self.ctx),
+                         "style_skin")
+        found = self._one("x")
+        self.assertEqual([m.code for m in found], ["style_skin"])
+        self.assertEqual(found[0].level, fidelity.APPROX)
+
+    def test_changing_istyle_changes_color_but_never_says_placeholder(self):
+        colors, codes = [], []
+        for index in (0, 1):
+            self.widget_ = self._widget(iStyle=index)
+            self.ctx = self._ctx(FakeAssets({}))
+            colors.append(pixel(self._render(), 30, 12))
+            codes.extend(m.code for m in self._one("x"))
+        self.assertNotEqual(colors[0], colors[1])       # 颜色确实随 iStyle 变
+        self.assertNotIn("missing_placeholder", codes)
+
+    def test_plain_button_without_style_is_editor_default_not_placeholder(self):
+        self.widget_ = self._widget(sWidgetType="CButton", iStyle=99,
+                                    sFileName="")
+        self.ctx = self._ctx(FakeAssets({}))
+        found = self._one("x")
+        self.assertEqual([m.code for m in found], ["button_style"])
+
+    def test_progress_without_image_is_editor_default(self):
+        self.widget_ = Widget({"sWidgetType": "CProgress", "sName": "p",
+                               "sBgFileName": "ui\\bar.png",
+                               "iWidth": 60, "iHeight": 24})
+        self.ctx = self._ctx(FakeAssets({}))
+        self.assertEqual([m.code for m in self._one("x")], ["editor_default"])
+
+    def test_code_skin_badge_is_not_placeholder(self):
+        from ui_editor.core.script_index import SkinRef
+        skin = SkinRef("login", 1, "C", "f", "CreateBtn", "skins\\btn.png",
+                       "开始", None)
+        self.widget_ = self._widget(sWidgetType="CButton", iStyle=None,
+                                    sFileName=self.base)
+        self.ctx = self._ctx(
+            FakeAssets({"skins\\btn.png": png_bytes(60, 24,
+                                                     (255, 0, 0, 255))}),
+            skins={"一级按钮": skin})
+        self.assertEqual(pixel(self._render(), 30, 12), (255, 0, 0, 255))
+        found = self._one("x")
+        self.assertEqual([m.code for m in found], ["code_skin"])
+        self.assertIn("脚本现造", found[0].text)
+
+    def test_true_missing_still_placeholder(self):
+        self.widget_ = Widget({"sWidgetType": "CBitmapFrame", "sName": "m",
+                               "sFileName": "gone.png",
+                               "iWidth": 60, "iHeight": 24})
+        self.ctx = self._ctx(FakeAssets({}))
+        found = self._one("x")
+        self.assertEqual([m.code for m in found], ["missing_placeholder"])
+
+    def test_dir_base_missing_placeholder_mentions_slices(self):
+        self.widget_ = self._widget(sWidgetType="CFrame", iStyle=None)
+        self.ctx = self._ctx(FakeAssets({}))
+        found = self._one("x")
+        self.assertEqual(found[0].code, "missing_placeholder")
+        self.assertIn("切片族", found[0].text)
+
+    def test_text_button_dir_base_that_composes_uses_slices(self):
+        """目录型基路径能拼出九片时，文字按钮也按切片画（不再整图拉伸）。"""
+        files = {}
+        for piece in ("top/left.png", "top.png", "top/right.png",
+                      "middle/left.png", "middle.png", "middle/right.png",
+                      "bottom/left.png", "bottom.png", "bottom/right.png"):
+            files[(self.base + piece).replace("/", "\\")] = png_bytes(
+                5, 5, (0, 200, 255, 255))
+        self.widget_ = self._widget()
+        self.ctx = self._ctx(FakeAssets(files))
+        image = self._render()
+        self.assertEqual(pixel(image, 30, 12), (0, 200, 255, 255))
+        self.assertEqual([m.code for m in self._one("x")], ["native_nine_slice"])
 
 
 if __name__ == "__main__":
