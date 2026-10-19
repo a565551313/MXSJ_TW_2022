@@ -85,6 +85,32 @@ def _strings(value: object, key: str) -> Iterator[tuple[str, str]]:
             yield from _strings(item, key)
 
 
+def _dir_base_message(
+    value: str, resource_exists: Callable[[str], bool] | None
+) -> str:
+    """目录型基路径（资源字段以斜杠结尾）的诊断文案。
+
+    控件运行时在其下拼接子图（GetInitPath 候选帧 ``0.png``、边框类
+    left/middle/right 等），按文件查表必然落空，不能报缺图。仅探测
+    ``基路径+0.png`` 作为线索：缺席也不判缺（其它拼名族不叫 0.png）。
+    """
+    base = (
+        "目录型基路径：运行时在其下拼子图"
+        "（如按钮序号帧 0.png、边框 left/middle/right），"
+        "本身不是文件，不按缺图处理"
+    )
+    if resource_exists is None:
+        return base + "。"
+    frame = value + "0.png"
+    if resource_exists(frame):
+        return base + f"；候选帧 {frame} 在当前挂载来源中可解析。"
+    return (
+        base
+        + f"；候选帧 {frame} 未在当前挂载来源中找到"
+        "（不代表缺图，可能为其它子图拼名）。"
+    )
+
+
 def diagnose(
     doc: LayoutDocument,
     *,
@@ -196,6 +222,19 @@ def diagnose(
                         key,
                         "当前引用待入包资源：保存新包时一并写入，"
                         "散装 .dlg 不会嵌入图片。",
+                    )
+                )
+            elif value.endswith(("\\", "/")):
+                # 目录型基路径：三态按钮序号帧、边框 left/middle/right
+                # 等子图由运行时拼接，条目里没有这个名字（探针 v7 的
+                # 706 条伪引用），按文件查表报缺图是误报。
+                issues.append(
+                    Diagnostic(
+                        "提示",
+                        "RESOURCE_DIR_BASE",
+                        path,
+                        key,
+                        _dir_base_message(value, resource_exists),
                     )
                 )
             elif resource_exists is not None and not resource_exists(value):
