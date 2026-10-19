@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from html import escape
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -289,6 +289,47 @@ class PropertyPanel(QWidget):
             return edit
         return None
 
+    def _build_color_dialog(self, initial: QColor,
+                            title: str) -> QColorDialog:
+        """颜色对话框：用 Qt 自己的实现（非系统原生）。
+
+        Windows 原生颜色对话框没有屏幕吸管；Qt 版本自带
+        「吸管 / Pick Screen Color」，可以从屏幕上任意位置吸取颜色。
+        """
+        dialog = QColorDialog(initial, self)
+        dialog.setWindowTitle(title)
+        dialog.setOption(
+            QColorDialog.ColorDialogOption.ShowAlphaChannel, True)
+        dialog.setOption(
+            QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
+        return dialog
+
+    @staticmethod
+    def _eyedropper_button(dialog: QColorDialog):
+        """对话框里的吸管按钮（不同 Qt 翻译文案不同，按英文原文找）。"""
+        from PySide6.QtWidgets import QPushButton
+
+        for button in dialog.findChildren(QPushButton):
+            text = button.text().replace("&", "").strip().lower()
+            if "pick screen color" in text or "screen color" in text:
+                return button
+        return None
+
+    def _pick_color(self, initial: QColor, title: str,
+                    *, start_with_eyedropper: bool = False) -> QColor | None:
+        """弹颜色对话框；start_with_eyedropper 时直接进入吸管状态。"""
+        dialog = self._build_color_dialog(initial, title)
+        if start_with_eyedropper:
+            button = self._eyedropper_button(dialog)
+            if button is not None:
+                QTimer.singleShot(0, button.click)
+        accepted = dialog.exec() == QDialog.DialogCode.Accepted
+        chosen = dialog.currentColor()
+        dialog.deleteLater()
+        if not accepted or not chosen.isValid():
+            return None
+        return chosen
+
     def _color_editor(self, key: str, value: object) -> QWidget:
         """颜色属性：输入框 + 每组一个色块取色器。
 
@@ -316,6 +357,7 @@ class PropertyPanel(QWidget):
                 "选择颜色（写回时保持原来的写法：整数/逗号串/十六进制）")
         swatch_count = 1 if not is_list else max(1, groups)
         swatches = []
+        droppers = []
         for index in range(swatch_count):
             button = QToolButton()
             button.setFixedSize(30, 22)
@@ -324,12 +366,21 @@ class PropertyPanel(QWidget):
                     button.setText("＋")
                     button.setToolTip("当前为空，点此添加一组颜色")
                 else:
-                    button.setToolTip(f"第 {index + 1} 组颜色（R,G,B）")
+                    button.setToolTip(
+                        f"第 {index + 1} 组颜色（R,G,B）；旁边💧可吸屏幕颜色")
             else:
                 button.setToolTip(
-                    "选择颜色（写回时保持原来的写法：整数/逗号串/十六进制）")
+                    "选择颜色（旁边💧可从屏幕吸取；写回保持原写法）")
             swatches.append(button)
             layout.addWidget(button)
+            dropper = QToolButton()
+            dropper.setText("💧")  # 吸管
+            dropper.setFixedSize(24, 22)
+            dropper.setToolTip(
+                "吸管：直接从屏幕吸取颜色"
+                + ("" if not is_list else f"（写入第 {index + 1} 组）"))
+            droppers.append(dropper)
+            layout.addWidget(dropper)
 
         def current_value():
             if self._widget is not None and key in self._widget.props:
@@ -369,7 +420,7 @@ class PropertyPanel(QWidget):
                          else colors.to_text(new_value))
             paint_swatches()
 
-        def make_pick(index: int):
+        def make_pick(index: int, use_eyedropper: bool = False):
             def pick() -> None:
                 current = current_value()
                 if is_list:
@@ -381,10 +432,9 @@ class PropertyPanel(QWidget):
                            else QColor("white"))
                 title = (f"选择颜色：{key}" if not is_list
                          else f"选择颜色：{key} 第 {index + 1} 组")
-                chosen = QColorDialog.getColor(
-                    initial, self, title,
-                    QColorDialog.ColorDialogOption.ShowAlphaChannel)
-                if not chosen.isValid():
+                chosen = self._pick_color(
+                    initial, title, start_with_eyedropper=use_eyedropper)
+                if chosen is None:
                     return
                 chosen_rgba = (chosen.red(), chosen.green(), chosen.blue(),
                                chosen.alpha())
@@ -403,6 +453,8 @@ class PropertyPanel(QWidget):
         edit.editingFinished.connect(commit_text)
         for index, button in enumerate(swatches):
             button.clicked.connect(make_pick(index))
+        for index, dropper in enumerate(droppers):
+            dropper.clicked.connect(make_pick(index, use_eyedropper=True))
         layout.addWidget(edit, 1)
         paint_swatches()
         return row

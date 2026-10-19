@@ -2094,6 +2094,33 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   既有 GUI 契约核对：双击待入包叶子不确认不换文档、切换编码/刷新/
   关窗的 `_confirm_discard` 语义、`window.doc = None` 清空入口均兼容。
 
+### ui_editor 颜色吸管（屏幕取色，2026-10-19，第十三轮）——版本 0.10.5
+
+**面板变化**（画布不变）。用户问颜色选择器有没有吸管。此前用的是
+`QColorDialog.getColor(...)`，Windows 下走**系统原生**颜色对话框，原生
+对话框没有屏幕吸管，只能手输色值。
+
+- `ui/property_panel.py`：新增 `_build_color_dialog`（`QColorDialog` 实例，
+  开 `DontUseNativeDialog` + `ShowAlphaChannel`）、`_eyedropper_button`
+  （按英文原文「Pick Screen Color / Screen Color」找吸管按钮，兼容不同
+  翻译）、`_pick_color(initial, title, start_with_eyedropper=False)`
+  （自动点吸管按钮用 `QTimer.singleShot(0, button.click)`，exec 后取
+  `currentColor()`，取消返回 None）。
+- 颜色行里每个色块旁新增 **💧 吸管按钮**（标量 1 个、列表每组 1 个）：
+  点它直接进入吸管取色状态；点色块仍打开同一对话框的手选界面。
+  tooltip 标注「吸管：直接从屏幕吸取颜色（写入第 n 组）」。
+- 对话框外观由系统原生改为 Qt 自带（吸管存在的前提），功能更全：alpha
+  滑杆、吸管、自定义色板；写回规则不变（标量保持原写法、列表每组 3 个
+  整数且类型/长度不变）。
+- 测试：`tests/test_gui_color_picker.py` 增 5 项（吸管按钮每组一个且写对组、
+  对话框是 Qt 实现且含吸管按钮、取消返回 None、确认返回所选颜色含 alpha、
+  点💧后对话框自动进入吸管状态），共 13 项；另修一处旧用例（原来 mock
+  `QColorDialog.getColor`，改造后已不用该入口，改为 mock `_pick_color`，
+  否则会真的弹出模态框卡住）。全量 **411 项 0 失败（1 skip）**；ruff 0；
+  wincompat 0/0/0。
+- 边界：吸管取当前屏幕像素，多屏不同缩放可能有偏移；编辑器自身窗口
+  遮住的区域吸不到；offscreen 沙箱无法验证真实抓屏，只验证了入口与状态。
+
 ### ui_editor 粘贴自动重命名（2026-10-19，第十二轮）——版本 0.10.4
 
 **编辑行为变化**（画布/面板布局不变）。用户要求：复制的控件粘贴后自动

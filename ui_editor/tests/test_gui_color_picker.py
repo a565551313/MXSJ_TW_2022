@@ -96,7 +96,7 @@ class TestColorPicker(unittest.TestCase):
         from unittest import mock
 
         from PySide6.QtGui import QColor
-        from PySide6.QtWidgets import QColorDialog, QToolButton
+        from PySide6.QtWidgets import QToolButton
 
         panel, model = self._panel({
             "sWidgetType": "CTextFrame", "sName": "t", "iX": 0, "iY": 0,
@@ -104,7 +104,7 @@ class TestColorPicker(unittest.TestCase):
             "lColor": [91, 255, 226, 0, 73, 80]})
         swatches = [b for b in panel.findChildren(QToolButton)
                     if "组颜色" in b.toolTip()]
-        with mock.patch.object(QColorDialog, "getColor",
+        with mock.patch.object(panel, "_pick_color",
                                return_value=QColor(10, 20, 30)):
             swatches[1].click()
         self.assertIsInstance(model.props["lColor"], list)
@@ -131,6 +131,103 @@ class TestColorPicker(unittest.TestCase):
         edit.setText("9, 8, 7")
         edit.editingFinished.emit()
         self.assertEqual(model.props["lColor"], [9, 8, 7])
+
+    def test_dropper_per_group_uses_eyedropper(self):
+        from unittest import mock
+
+        from PySide6.QtGui import QColor
+        from PySide6.QtWidgets import QToolButton
+
+        panel, model = self._panel({
+            "sWidgetType": "CTextFrame", "sName": "t", "iX": 0, "iY": 0,
+            "iWidth": 10, "iHeight": 10,
+            "lColor": [1, 2, 3, 4, 5, 6]})
+        droppers = [b for b in panel.findChildren(QToolButton)
+                    if "吸管" in b.toolTip()]
+        self.assertEqual(len(droppers), 2)
+        with mock.patch.object(panel, "_pick_color",
+                               return_value=QColor(7, 8, 9)) as picked:
+            droppers[1].click()
+        self.assertEqual(picked.call_args.kwargs.get("start_with_eyedropper"),
+                         True)
+        self.assertEqual(model.props["lColor"], [1, 2, 3, 7, 8, 9])
+
+    def test_dialog_is_qt_own_with_eyedropper_button(self):
+        from PySide6.QtGui import QColor
+        from PySide6.QtWidgets import QColorDialog
+
+        panel, _model = self._panel({
+            "sWidgetType": "CButton", "sName": "b", "iX": 0, "iY": 0,
+            "iWidth": 10, "iHeight": 10, "iColor": 0x112233})
+        dialog = panel._build_color_dialog(QColor(1, 2, 3), "t")
+        self.assertTrue(dialog.testOption(
+            QColorDialog.ColorDialogOption.DontUseNativeDialog))
+        self.assertTrue(dialog.testOption(
+            QColorDialog.ColorDialogOption.ShowAlphaChannel))
+        button = panel._eyedropper_button(dialog)
+        self.assertIsNotNone(button)  # 「Pick Screen Color」吸管
+        dialog.deleteLater()
+
+    def test_eyedropper_starts_in_pick_mode(self):
+        """点💧后对话框一打开就自动按「吸管」按钮进入取色状态。"""
+        from unittest import mock
+
+        from PySide6.QtGui import QColor
+        from PySide6.QtWidgets import QApplication, QColorDialog, QDialog, QPushButton
+
+        panel, _model = self._panel({
+            "sWidgetType": "CButton", "sName": "b", "iX": 0, "iY": 0,
+            "iWidth": 10, "iHeight": 10, "iColor": 0x112233})
+        clicked = []
+        fake = QPushButton()
+        fake.clicked.connect(lambda: clicked.append(True))
+
+        def fake_exec():
+            QApplication.processEvents()  # 让 singleShot(0) 触发
+            return QDialog.DialogCode.Rejected
+
+        with mock.patch.object(panel, "_eyedropper_button",
+                               return_value=fake), \
+                mock.patch.object(QColorDialog, "exec",
+                                  side_effect=fake_exec), \
+                mock.patch.object(QColorDialog, "currentColor",
+                                  return_value=QColor(1, 2, 3)):
+            panel._pick_color(QColor("white"), "t",
+                              start_with_eyedropper=True)
+        self.assertEqual(clicked, [True])
+
+    def test_pick_color_returns_none_when_cancelled(self):
+        from unittest import mock
+
+        from PySide6.QtGui import QColor
+        from PySide6.QtWidgets import QColorDialog, QDialog
+
+        panel, _model = self._panel({
+            "sWidgetType": "CButton", "sName": "b", "iX": 0, "iY": 0,
+            "iWidth": 10, "iHeight": 10, "iColor": 0x112233})
+        with mock.patch.object(QColorDialog, "exec",
+                               return_value=QDialog.DialogCode.Rejected), \
+                mock.patch.object(QColorDialog, "currentColor",
+                                  return_value=QColor(1, 2, 3)):
+            self.assertIsNone(panel._pick_color(QColor("white"), "t"))
+
+    def test_pick_color_returns_chosen_color(self):
+        from unittest import mock
+
+        from PySide6.QtGui import QColor
+        from PySide6.QtWidgets import QColorDialog, QDialog
+
+        panel, _model = self._panel({
+            "sWidgetType": "CButton", "sName": "b", "iX": 0, "iY": 0,
+            "iWidth": 10, "iHeight": 10, "iColor": 0x112233})
+        with mock.patch.object(QColorDialog, "exec",
+                               return_value=QDialog.DialogCode.Accepted), \
+                mock.patch.object(QColorDialog, "currentColor",
+                                  return_value=QColor(4, 5, 6, 128)):
+            chosen = panel._pick_color(QColor("white"), "t",
+                                       start_with_eyedropper=True)
+        self.assertEqual((chosen.red(), chosen.green(), chosen.blue(),
+                          chosen.alpha()), (4, 5, 6, 128))
 
     def test_invalid_list_falls_back_to_plain_editor(self):
         from PySide6.QtWidgets import QToolButton

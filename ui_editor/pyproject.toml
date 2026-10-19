@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mxsj-ui-editor"
-version = "0.10.4"
+version = "0.10.5"
 description = "梦想世界（MXSJ）客户端 UI 布局（.dlg）可视化编辑器"
 readme = "README.md"
 requires-python = ">=3.10"
