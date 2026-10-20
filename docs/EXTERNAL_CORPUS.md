@@ -2,42 +2,54 @@
 
 > **本文只管一件事**：真 `.dlg` 语料和反编译语料**去哪儿拿、怎么解开、怎么校验、哪些边界**。
 > 「要不要自己建反编译语料、怎么建」看 [`DECOMPILE_CORPUS.md`](DECOMPILE_CORPUS.md)——能直接取现成的就别重跑几小时。
->
-> **本轮取证口径**：2026-10-20 只读了 Drive 的元数据（目录/文件名/大小/修改时间/官方校验清单），
-> **没有下载任何分卷、没有解压、没有跑语料用例**。本文出现的字节数与 SHA 都有来源；
-> 没有来源的（例如 interface 分卷自身的 SHA-256）明确标「待实测」，不要拿别的数字冒充。
 
-## 1. 两个目录（事实，2026-10-20 读自 Drive）
+## 0. 取用规则（先看这条）
 
-| 目录 | Drive folder id | 改时间 | 内容 |
+1. **只用用户指定的两个目录**：`interface1019` 与 `MXSJ_CORPUS`（都在 My Drive 根下）。
+   根目录里散落的同名整包/清单**不是**取用来源，别拿它替代目录内容。
+2. **目录是活的**：里面的文件会随开发进度更新（换包、增删卷、重打包）。
+   所以——
+   - **每次取用先列目录**，按当时实际看到的文件取，别照着本文表格硬编码文件名；
+   - 本文 `§1` 的 id / 大小 / SHA 只是 **2026-10-20 的快照**，只用于「当时是什么样」；
+   - 目录内容与本文不一致时，**以目录为准**，并回写本文 `§5` 的变更记录（见 §5）。
+3. **字节级校验以同批清单为准**：语料带官方 `..._ARCHIVES.sha256`；清单被换代时同样以新的为准，
+   不要把旧 SHA 当成「文件被篡改」的证据——先看是不是换了基线。
+4. 下载/解压产物**一律在仓库外**，不入库（红线 §4-8）。
+
+`§1` 以下凡是写死的数字都受这条约束：**快照，不是契约**。
+
+## 1. 两个目录（2026-10-20 快照）
+
+| 目录 | Drive folder id | 当时改时间 | 当时内容 |
 |---|---|---|---|
-| `interface1019`（My Drive 根下） | `1Xz6eXwbyIm8HrXOXL_sJALYYZovAr8Zs` | 2026-10-19T03:37Z | `interface.fls` 的**分卷 ZIP**，共 4 个文件 |
-| `MXSJ_CORPUS`（My Drive 根下） | `1zT36d47NsosEjfns4jxJIPlsi4B6AGZN` | 2026-10-16T10:47Z | 全量**反编译语料**，10 个独立 ZIP |
+| `interface1019` | `1Xz6eXwbyIm8HrXOXL_sJALYYZovAr8Zs` | 2026-10-19T03:37Z | `interface.fls` 的**分卷**，4 个文件 |
+| `MXSJ_CORPUS` | `1zT36d47NsosEjfns4jxJIPlsi4B6AGZN` | 2026-10-16T10:47Z | 全量**反编译语料**，10 个独立 ZIP |
 
-### 1.1 `interface.fls`（界面布局与图片的真包）
+### 1.1 `interface1019`（界面布局与图片的真包）
 
-分卷是**一个 zip 被切开**，`interface.zip` 是最后一段，`interface.z01/z02/z03` 是前三段：
+分卷是**一个 zip 被切开**：`interface.zip` 是最后一段，`interface.z01/z02/z03` 是前三段。
 
-| 文件 | id | 大小（B） |
+| 文件（当时） | id | 大小（B） |
 |---|---|---:|
 | `interface.z01` | `1H2qLiOMhwgp58pl9aDFv9A9m-IEn77K7` | 94,371,840 |
 | `interface.z02` | `1Dy48zoe09ffP_JiyTFsimYQqz-Ym0PTD` | 94,371,840 |
 | `interface.z03` | `1Om_nYzEiJM0o8T9Fu_DmYDUXmzzbzkyS` | 94,371,840 |
 | `interface.zip` | `1rL0IV46QiL4ysc4bz4ZCDLMmLfkXb7C7` | 77,782,093 |
-| 合计 | — | **360,897,613** |
+| 合计 | — | 360,897,613 |
 
-My Drive 根还有一份整包 `interface1019.zip`（id `1hDLskWjCueEoJvoDDby87rRhuZynCTAs`，360,897,609 B，
-2026-10-19T02:54Z）。它比分卷合计**小 4 字节**；两者是否同一份内容**未下载核对**，按用户说明以**分卷**为准。
+`interface.fls` 里是布局 `.dlg` 与界面图片——仓库里**没有**这个包（`data/` 只有
+script/data/effect/skill/skill2/magicres5/passive），所以「真布局往返」「真切片/真按钮皮肤」
+「真图渲染」这些结论只能用它验。
 
-`interface.fls` 里是 2,706+ 个 `.dlg` 布局与界面图片——仓库里**没有**这个包（`data/` 只有 script/data/effect/skill/skill2/magicres5/passive），
-所以「真布局往返」「真切片/真按钮皮肤」「真图渲染」这些结论都只能用它验。
+> 分卷是「按当时的打包结果」切的。若目录里换成整包或重新分卷，**卷号/文件名会变**，
+> 解压前先 `7z l` 看是哪一种。
 
 ### 1.2 `MXSJ_CORPUS`（`data/script.fls` 的反编译语料）
 
-固定基线 **`8212b26` / 2026-10-15**，10 卷**全部是独立 ZIP**（索引明确写「不做二进制拼接」），
+当时基线 **`8212b26` / 2026-10-15**，10 卷**全部是独立 ZIP**（索引明确写「不做二进制拼接」），
 合计 **152,769,019 B**（与 `DELIVERY_INDEX.md` 记的总压缩大小、与目录里 10 个文件大小求和三者一致）。
 
-| 卷 | id | 大小（B） | SHA-256（官方清单） |
+| 卷（当时） | id | 大小（B） | SHA-256（同批清单） |
 |---|---|---:|---|
 | part01 | `1XctBMWekB2yfDGnfy2KUQgrIxjCIEfYm` | 23,312,078 | `95ccc52384b8a196d7fa75cf0e0dc4047d3670fd3f13aa939324e004101e7e08` |
 | part02 | `1iSlzbF5rdyxhVK2lMUX92TvhFBnznYZi` | 18,641,599 | `ec4991d1742627607e2e4b83b73592bd787a48a86968ebd091acfa29bcebd670` |
@@ -50,83 +62,88 @@ My Drive 根还有一份整包 `interface1019.zip`（id `1hDLskWjCueEoJvoDDby87r
 | part09 | `19vafs3m5Pr1P3ekOo4PUDKl7aNcPFV3H` | 5,140,639 | `7fb13b824f987fe6ccf2d6bef9f4f748543005d36c3b0eca4fc0cdd12b2256ab` |
 | part10 | `1-9B4ww1GPpzyu9d2sBNzSrF-shVJ58n5` | 2,999,196 | `fdea0dbc34b2bb2985749a245273c4030db0600f3c830ac4b9aa4f9560a512c7` |
 
-同目录/根目录的配套小文件（都在 My Drive 根，`0AM2SnEVIISYdUk9PVA` 下）：
-
-- `MXSJ_CORPUS_8212b26_20261015_ARCHIVES.sha256`（`1FLksxEL5ZbXzH0LTz2U63wfjk0Keuve6`，1,060 B）——上表 SHA 的出处；
-- `MXSJ_CORPUS_8212b26_20261015_DELIVERY_INDEX.md`（`1nIUskEGc1pkECGZIi3ZqUB8exmv8Zgrm`）——统计口径、十卷下载表、编辑器对接口；
-- `..._upload_receipts.json`、`..._archive-verification.json`——上传回执与归档校验回执；
-- 先行样例 `MXSJ_CORPUS_SAMPLE_8212b26_20261015.zip`（446,379 B）与双引擎失败 entry 82 补充包（58,020 B）。
+同批签发的说明文件（正文出处，随换代一起换）：`..._DELIVERY_INDEX.md`（统计口径、卷表、
+编辑器对接口）、`..._ARCHIVES.sha256`（上表 SHA 的出处）、`..._upload_receipts.json`、
+`..._archive-verification.json`；另有小体积先行样例包与失败 entry 82 补充包。**按需取，不是每次都全下。**
 
 **语料是什么/不是什么**（照 `DELIVERY_INDEX.md`，别外推）：是 5,002 条 entry 的**反编译候选**；
 `entry 1288` 只保留 `excluded_by_policy`；「完整输出标记」是启发式，不是语义正确率；
-≠ 可回编译源码（要回编必须走 CPython 2.5 真编译那条路）。**不含**原始 `script.fls`/`interface.fls`、不含参数表。
+≠ 可回编译源码（要回编必须走 CPython 2.5 真编译那条路）。**不含**原始 `script.fls`/`interface.fls`、
+不含参数表。
 
 ## 2. 该用哪个
 
 | 要回答的问题 | 用 |
 |---|---|
-| 真 `.dlg` 全量往返、真实切片/按钮状态、真图渲染、游戏内布局 | `interface1019`（`interface.fls`） |
+| 真 `.dlg` 全量往返、真实切片/按钮状态、真图渲染、游戏内布局 | `interface1019` |
 | 谁加载哪个布局、按钮皮肤/消息号 | 仓库内 `tools/script_link/build_script_index.py` 产物（已入库，别下载语料） |
 | 「符号 X 在全档有没有定义者」、语义级全档检索 | `MXSJ_CORPUS` |
 | 只查某一条 entry 的代码 | `tools/decompiler/recover_entries.py --entries N`（秒级，见 `DECOMPILE_CORPUS.md` §2） |
 
-## 3. 取用（产物一律在仓库外）
+## 3. 取用（先列目录，再动手；产物在仓库外）
 
 ```sh
-OUT=/home/user/ext && mkdir -p "$OUT"          # 仓库外，别放进仓库
+OUT=/home/user/ext && mkdir -p "$OUT"      # 仓库外，别放进仓库
+```
+
+**第 0 步（每次都做）**：先看目录现在有什么——文件名、数量、总大小按当时的实际值，
+和 §1 不同就以目录为准（并在 §5 记一笔）：
+
+```sh
+# 有 Drive 连接器时直接列目录；否则用 rclone/gcloud 等本地工具列同一目录
+# 关心的只有：文件数、文件名、字节数、修改时间
 ```
 
 **interface.fls（分卷）**
 
 ```sh
 # 4 个文件下载到同一目录后，解最后一个 .zip；7z/unzip 会按 .z01→.z02→.z03 自动续卷
-7z x -o"$OUT/mxsj" interface.zip               # 或： unzip interface.zip -d "$OUT/mxsj"
-# 解出的目录结构以实际为准；找到 interface.fls 后记下真实路径
+7z x -o"$OUT/mxsj" interface.zip            # 或： unzip interface.zip -d "$OUT/mxsj"
 find "$OUT/mxsj" -maxdepth 3 -iname 'interface.fls'
 ```
 
 - `.z01/.z02/.z03` **不能**单独解压，也**不要** `cat` 拼接（它们本来就是同一个 zip 的卷）；
-- 想先看里面有什么：`7z l interface.zip`（同样需要三卷在同目录）。
+- 先看内容：`7z l interface.zip`（同样需要各卷在同目录）；
+- 若目录换成了整包（单个 `.zip`），直接解它，不要去找 `.z0x`。
 
-**反编译语料（10 个独立 ZIP）**
+**反编译语料（10 个独立 ZIP，不是拼接包）**
 
 ```sh
-cd "$OUT" && sha256sum -c MXSJ_CORPUS_8212b26_20261015_ARCHIVES.sha256   # 先对官方清单
+cd "$OUT"
+sha256sum -c MXSJ_CORPUS_*_ARCHIVES.sha256     # 用同批清单；换了基线就换清单
 mkdir -p corpus
-for z in MXSJ_CORPUS_8212b26_20261015_part*.zip; do
-  unzip -q -o "$z" -d corpus        # 10 个卷解到同一个空目录，不是拼包
+for z in MXSJ_CORPUS_*_part*.zip; do
+  unzip -q -o "$z" -d corpus                    # 所有卷解到同一个空目录
 done
 ```
 
-- 解压后再跑一次产物自校验：`corpus/SHA256SUMS`（索引 §6 记录归档后 185,048 个文件逐字节校验通过）；
+- 解压后再跑产物自校验：`corpus/SHA256SUMS`（索引记录归档后 185,048 个文件逐字节校验通过）；
 - 入口：`full/manifest.audited.jsonl`（主键 `(archive_sha256, entry_index)`，不是文件名），
   报告在 `reports/`，版本/工具指纹在 `versions.json`、`external-tools.sha256`。
 
 **把语料指给编辑器/回归用例**
 
 ```sh
-export MXSJ_DLG_CORPUS="$OUT/mxsj/interface"     # 支持 ':' 分隔多目录；数量按实际上报
+export MXSJ_DLG_CORPUS="$OUT/mxsj/interface"   # 支持 ':' 分隔多目录；数量按实际上报
 (cd ui_editor && PYTHONPATH=src python3 -m unittest tests.test_codec)
 ```
 
 ## 4. 边界（违反就先停下来问）
 
-1. **不入库**：分卷、解压后的 `.dlg`、反编译语料都不进 git（红线 §4-8）；仓库里只留本文件和命令。
+1. **不入库**：分卷、解压出的 `.dlg`、反编译语料都不进 git（红线 §4-8）；仓库只留本文与命令。
 2. **不覆盖原始包**：`data/script.fls`、`interface.fls`、密钥表一个字节都不动；编辑器一律「原包不动、另存新包」。
-3. **不擅自上传/改权限**：这份 Drive 是用户提供的取用位置，不是我们的备份盘；不加分享、不改权限、不删卷。
-4. **只读解析**：语料不执行、不 `eval`；`.dlg` 只当数据解析。
-5. **校验先行**：语料用官方 `ARCHIVES.sha256` 对；`interface` 分卷**没有公开校验和**，
-   下载后自己 `sha256sum` 一遍并记进本节（表待填，别拿别的数字冒充）。
-6. **未验不宣称**：截至 2026-10-20 只核了元数据；「真 `.dlg` 全量往返通过」「真切片与游戏一致」
-   这些结论要等真跑完再写进 `STATUS`，并按实际数量上报。
+3. **不擅自动 Drive**：不加分享、不改权限、不删卷、不覆盖上传；目录归用户维护，我们只用**目录里当前存在**的文件。
+4. **不拿根目录杂物替代目录**：整包副本、旧清单等只作参考，取用位置就是用户指定的两个目录。
+5. **只读解析**：语料不执行、不 `eval`；`.dlg` 只当数据解析。
+6. **未验不宣称**：截至 2026-10-20 只核了元数据，未下载/未解压/未跑用例。
+   「真 `.dlg` 全量往返通过」「真切片与游戏一致」要等真跑完再写进 `STATUS`，并按实际数量上报。
 
-## 5. 待补（下次真正取用时填）
+## 5. 目录变更记录（每次发现内容变了就加一行）
 
-| 项 | 值 |
-|---|---|
-| `interface.fls` 实际路径 / 解压后条目数 | 待实测 |
-| `interface.z01` SHA-256 | 待实测 |
-| `interface.z02` SHA-256 | 待实测 |
-| `interface.z03` SHA-256 | 待实测 |
-| `interface.zip` SHA-256 | 待实测 |
-| `MXSJ_DLG_CORPUS` 指向后 `test_codec` 实际解的篇数 | 待实测 |
+| 日期 | 目录 | 观察到什么 | 处理 |
+|---|---|---|---|
+| 2026-10-20 | `interface1019` | 4 文件：`interface.z01/z02/z03` 各 94,371,840 B + `interface.zip` 77,782,093 B | 记为快照；未下载 |
+| 2026-10-20 | `MXSJ_CORPUS` | 10 卷独立 ZIP，合计 152,769,019 B，基线 `8212b26`/2026-10-15 | 记为快照；SHA 抄自同批清单；未下载 |
+
+下次真正取用时补：`interface.fls` 实际路径、解压后条目数、各卷 SHA-256、
+`MXSJ_DLG_CORPUS` 指向后 `test_codec` 实际篇数——**按当时的目录内容测，不套用本文旧表**。

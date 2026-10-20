@@ -9,8 +9,9 @@
 > [`notes/opcode_mapping_and_decompilation.md`](../notes/opcode_mapping_and_decompilation.md) §4.5–§4.6；
 > 本文不重复结论，只给可执行配方与判断依据。
 
-> **先看有没有现成的**：固定基线 `8212b26` 的全量语料已打成 10 个 ZIP 放在 Google Drive（含官方 SHA-256 清单），
-> 位置与取用命令见 [`EXTERNAL_CORPUS.md`](EXTERNAL_CORPUS.md)。要的是「同一基线、现成可验」就用那份，别重跑几小时；
+> **先看有没有现成的**：全量语料已按基线打成 ZIP 放在 Google Drive 的 `MXSJ_CORPUS` 目录（随附 SHA-256 清单），
+> 位置与取用命令见 [`EXTERNAL_CORPUS.md`](EXTERNAL_CORPUS.md)。目录**会随开发更新**（换基线就换卷与清单），
+> 取用前先列目录、以目录为准。要的是「现成可验」就用那份，别重跑几小时；
 > 本文剩下的是「要自己新建一份 / 换工具版本重建」的配方。
 
 ## 0. 先花 30 秒决定（给 AI 的决策表）

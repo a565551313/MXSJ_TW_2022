@@ -52,7 +52,7 @@
 | `server/docs/csv_checks/batch_001/` | 首批待审 CSV + manifest + 证据（**不是**正式配置） | `server/docs/csv_checks/BATCH_001.md` |
 | `mock_server.py` | 本地协议模拟器，有登录／进图／交互与客户端写入副作用，不作正式服务端 | [`边界与副作用`](docs/MOCK_SERVER.md) |
 | `data/*.fls`、`map/*.map`、`Fonts/`、`mx.exe`、`mxmain.dll`、`exe/python27*.dll` | 工具与逆向依赖的客户端材料；`.gitignore` 只白名单了部分 | — |
-| Google Drive 外部包（`interface1019` 分卷 = 真 `interface.fls`；`MXSJ_CORPUS` 10 卷 = 反编译语料） | 仓库里**没有** `interface.fls`；这两处是取用处，产物一律留仓库外、不入库 | [`docs/EXTERNAL_CORPUS.md`](docs/EXTERNAL_CORPUS.md) |
+| Google Drive 外部包（`interface1019` = 真 `interface.fls` 分卷；`MXSJ_CORPUS` = 全量反编译语料） | 仓库里**没有** `interface.fls`，只能从这两个目录取；**目录内容会随开发更新，每次先列目录、以目录为准**；产物一律留仓库外、不入库 | [`docs/EXTERNAL_CORPUS.md`](docs/EXTERNAL_CORPUS.md) |
 | 其余根目录 `*.dll/*.exe/*.pak/music*/log/` | 客户端运行时与用户日志，工具不依赖；部分日志被 `work/.../evidence` 引用 | — |
 
 ## 3. 环境与命令（从仓库根目录执行）

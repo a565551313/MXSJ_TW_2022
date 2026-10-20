@@ -733,8 +733,8 @@ powershell -ExecutionPolicy Bypass -File .\ui_editor\verify_windows.ps1 `
   支持多个用 `:` 分隔）时跑，结果**按实际数量上报**，不再硬编码开发沙箱
   路径、也不再把「语料少于 2,000 篇」直接判失败（那会让一条测试连
   手里的 7 篇都不跑，见 `docs/analysis/ui_editor_analysis_20261016.md` P1-4）。
-  真 `interface.fls` 与全量语料从哪儿取、怎么校验，见
-  [`docs/EXTERNAL_CORPUS.md`](../docs/EXTERNAL_CORPUS.md)。
+  真 `interface.fls` 与全量语料从用户指定的 Drive 目录取（**目录会随开发更新，先列目录再看**），
+  校验与解压命令见 [`docs/EXTERNAL_CORPUS.md`](../docs/EXTERNAL_CORPUS.md)。
 * 共享核心：路径哈希、`.dlg` 原生存储、输出路径保护、精灵格式常量都在
   仓库 `mx_common/`（唯一真源），本包 `core/` 下同名文件是
   `tools/devkit/vendor_core.py` 生成的字节副本，**不要手改**；改真源后跑
