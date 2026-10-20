@@ -2094,6 +2094,40 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   既有 GUI 契约核对：双击待入包叶子不确认不换文档、切换编码/刷新/
   关窗的 `_confirm_discard` 语义、`window.doc = None` 清空入口均兼容。
 
+### ui_editor 工具栏「编码」「帧」统一下拉风格（2026-10-20，第二十一轮）——版本 0.12.4
+
+用户指出工具栏两个控件与其他不符：文本编码要改成「对齐」「按钮态」那种
+风格、缩写「编码」；帧同样换风格，但小箭头下拉后用**横向滑块**表示数值。
+
+- `ui/toolbar_controls.py` 新增：`build_encoding_button`（`QToolButton`
+  `ToolButtonTextUnderIcon` + `InstantPopup`，菜单三项 checkable，
+  文案 Big5（繁体）/GBK（简体）/UTF-8）、`build_frame_button`
+  （菜单里放 `QWidgetAction` 装一个 QWidget：读数标签「预览帧 N / M」+
+  横向 `QSlider`，最小宽度 260）。两者与「对齐」「按钮态」共用同一套
+  按钮样式常量（`_dropdown`）。
+- `ui/window_setup.py`：删掉 `QComboBox`/`QSpinBox` 两处旧控件与
+  「 文本编码：」标签，改用 `_encoding_btn`/`_frame_slider`+
+  `_frame_readout`/`_frame_btn`；`_refresh_animation_frame_control` 改为
+  设滑块范围并刷新读数与按钮提示，新增 `_refresh_frame_readout`；
+  `_set_animation_frame` 先刷读数再改 `ctx.animation_frame`。
+- `ui/source_actions.py`：`change_text_encoding(encoding: str)` 改签名
+  （原为下拉框 index），切换成功/取消/无文档都调
+  `_restore_encoding_choice` 让菜单勾选与 `resolver.text_encoding` 一致，
+  避免「勾着 GBK 实际仍 Big5」。
+- `ui/icons.py` 新增 `icon_encoding`（带字母 A 的纸片）、`icon_frame`
+  （带齿孔胶片格 + 播放三角），与既有图标同一画法。
+- 测试：新增 `tests/test_gui_toolbar_controls.py` 15 项——四个下拉按钮
+  样式/弹出模式一致、缩写为「编码」「帧」、工具栏里再无 QComboBox/
+  QSpinBox、菜单文案与只勾一项、点当前项勾回去、取消切换勾选回退、
+  滑块在 QWidgetAction 里且为横向、范围随 `.spr` 帧数、无 `.spr` 时
+  0/0、拖动改 `ctx.animation_frame`、读数与提示同步、状态栏仍报帧。
+  `test_gui_source_actions` 的 `choose()` 改调 `change_text_encoding(codec)`
+  并断言勾选状态（原断言下拉框 `currentData`）。全量 **569 项 0 失败
+  （1 skip）**；ruff 0；wincompat 0/0/0。
+- 边界：滑块只按帧序号（非连续帧号仍以序号为准，读数旁不显示 frame_id；
+  状态栏保留 frame_id/duration）；编码菜单仍是编辑器读文本用的编码，
+  不代表游戏客户端支持该编码。
+
 ### ui_editor 标签锁定与资源树替换布局（2026-10-20，第二十轮）——版本 0.12.3
 
 用户要求两件事：①标签右键要能锁定/解锁，被锁定的标签不被批量关闭、

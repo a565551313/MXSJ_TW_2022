@@ -24,16 +24,20 @@ class SourceActionsMixin:
         raise ValueError("当前布局尚未保存，没有可重新读取的来源。")
 
     def _restore_encoding_choice(self) -> None:
-        with QSignalBlocker(self._encoding_combo):
-            self._encoding_combo.setCurrentIndex(
-                self._encoding_combo.findData(self.resolver.text_encoding))
+        """「编码」下拉菜单的勾选状态对齐当前真正生效的编码。"""
+        actions = getattr(self, "_encoding_actions", {})
+        for codec, action in actions.items():
+            with QSignalBlocker(action):
+                action.setChecked(codec == self.resolver.text_encoding)
 
-    def change_text_encoding(self, index: int) -> None:
-        encoding = self._encoding_combo.itemData(index)
+    def change_text_encoding(self, encoding: str) -> None:
+        """按 codec 值切换布局文本编码（菜单项与代码调用共用）。"""
         if encoding == self.resolver.text_encoding:
+            self._restore_encoding_choice()  # 点回已选项：勾回去
             return
         if self.doc is None:
             self.resolver.text_encoding = encoding
+            self._restore_encoding_choice()
             return
         if not self._confirm_discard():
             self._restore_encoding_choice()
@@ -56,6 +60,7 @@ class SourceActionsMixin:
             return
         self.resolver.text_encoding = encoding
         self._set_document(doc)
+        self._restore_encoding_choice()
         if doc.pending_pack_import:
             self.resource_panel.show_pending(*doc.source_pack)
         self._update_status(f"布局文本已按 {encoding.upper()} 重新读取；源文件未修改。")

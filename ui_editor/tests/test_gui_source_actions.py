@@ -61,8 +61,11 @@ class SourceActionTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def choose(self, codec):
-        combo = self.window._encoding_combo
-        combo.setCurrentIndex(combo.findData(codec))
+        self.window.change_text_encoding(codec)
+
+    def checked(self):
+        return [codec for codec, action in self.window._encoding_actions.items()
+                if action.isChecked()]
 
     def text(self):
         return self.window.doc.roots[0].props["sText"]
@@ -73,8 +76,9 @@ class SourceActionTests(unittest.TestCase):
         self.window._open_pack_layout(str(self.pack), self.name)
 
     def test_toolbar_choices_and_refresh(self):
-        self.assertEqual([self.window._encoding_combo.itemData(i) for i in range(3)],
+        self.assertEqual(list(self.window._encoding_actions),
                          ["big5", "gbk", "utf-8"])
+        self.assertEqual(self.checked(), ["big5"])
         self.assertIn(self.window._act_reload, self.window._toolbar.actions())
         self.assertEqual(self.window._act_reload.shortcut().toString(), "F5")
 
@@ -107,7 +111,7 @@ class SourceActionTests(unittest.TestCase):
             self.choose("gbk")
         self.assertIs(self.window.doc, old)
         self.assertTrue(old.dirty)
-        self.assertEqual(self.window._encoding_combo.currentData(), "big5")
+        self.assertEqual(self.checked(), ["big5"])
 
     def test_unsaved_new_document_switch_is_not_lost(self):
         self.window.new_layout()
@@ -116,7 +120,7 @@ class SourceActionTests(unittest.TestCase):
               mock.patch("ui_editor.ui.source_actions.QMessageBox.warning") as warn):
             self.choose("gbk")
         self.assertIs(self.window.doc, old)
-        self.assertEqual(self.window._encoding_combo.currentData(), "big5")
+        self.assertEqual(self.checked(), ["big5"])
         warn.assert_called_once()
 
     def test_loose_refresh_reloads_file_list_image_and_style(self):
@@ -328,7 +332,7 @@ class SourceActionTests(unittest.TestCase):
         with mock.patch("ui_editor.ui.source_actions.QMessageBox.warning") as warn:
             self.choose("gbk")
         self.assertIs(self.window.doc, old)
-        self.assertEqual(self.window._encoding_combo.currentData(), "big5")
+        self.assertEqual(self.checked(), ["big5"])
         self.assertEqual(self.window.resolver.text_encoding, "big5")
         warn.assert_called_once()
 
