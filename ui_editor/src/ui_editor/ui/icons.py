@@ -210,6 +210,19 @@ def icon_names() -> QIcon:
     return _end(pixmap, p)
 
 
+def icon_badge() -> QIcon:
+    """保真度角标开关：右下角的小色块（近似=橙、模拟=红）。"""
+    pixmap, p = _begin()
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor("#8a94a6"))
+    p.drawRoundedRect(QRectF(5, 5, 18, 18), 3, 3)
+    p.setBrush(QColor("#e0a83c"))
+    p.drawRoundedRect(QRectF(12, 13, 9, 7), 2, 2)
+    p.setBrush(QColor("#e0645c"))
+    p.drawRoundedRect(QRectF(17, 8, 6, 5), 2, 2)
+    return _end(pixmap, p)
+
+
 def icon_grid() -> QIcon:
     """网格开关：浅灰点阵。"""
     pixmap, p = _begin()

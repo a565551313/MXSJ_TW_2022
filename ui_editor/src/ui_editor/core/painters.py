@@ -36,6 +36,7 @@ class PaintContext:
     assets: AssetResolver
     styles: StyleBook = field(default_factory=StyleBook)
     show_names: bool = True
+    show_badges: bool = True   # 右下角保真度角标（原生/近似/模拟），可关
     button_state: str = "normal"  # 按钮状态预览：normal/pressed/hover/disabled
     animation_frame: int = 0  # .spr/精灵画布预览帧（仅预览，不写回）
     # 代码皮肤绑定：控件名 -> SkinRef（脚本在原地现造的按钮，静态推断）

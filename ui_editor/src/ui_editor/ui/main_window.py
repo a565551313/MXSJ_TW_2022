@@ -40,6 +40,7 @@ from .property_panel import PropertyPanel
 from .save_workflows import SaveWorkflowsMixin
 from .script_panel import ScriptPanel
 from .source_actions import SourceActionsMixin
+from .tab_menu import TabMenuMixin
 from .tabs import EditorSession
 from .window_setup import WindowSetupMixin
 from .workflows import FileWorkflowsMixin
@@ -47,7 +48,8 @@ from .workflows import FileWorkflowsMixin
 
 class MainWindow(
     BusyHostMixin, EditingCommandsMixin, FileWorkflowsMixin,
-    SaveWorkflowsMixin, SourceActionsMixin, WindowSetupMixin, QMainWindow
+    SaveWorkflowsMixin, SourceActionsMixin, TabMenuMixin, WindowSetupMixin,
+    QMainWindow
 ):
     """UI 编辑器主窗口。"""
 
@@ -112,6 +114,7 @@ class MainWindow(
         self.setStatusBar(QStatusBar())
         self._build_docks()
         self._build_menus()
+        self._setup_tab_context_menu()
         self._connect_signals()
         # 删除键由「删除控件」QAction 统一接管（_edit_delete 带文本焦点分流）
 
@@ -563,10 +566,6 @@ class MainWindow(
     # ------------------------------------------------------------------
     # 视图/状态
     # ------------------------------------------------------------------
-    def _toggle_names(self, on: bool) -> None:
-        self.ctx.show_names = on
-        self.scene.refresh_all()
-
     def _update_title(self) -> None:
         self._sync_history_actions()
         self.diagnostics_panel.mark_stale()

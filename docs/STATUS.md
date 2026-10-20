@@ -2094,6 +2094,40 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   既有 GUI 契约核对：双击待入包叶子不确认不换文档、切换编码/刷新/
   关窗的 `_confirm_discard` 语义、`window.doc = None` 清空入口均兼容。
 
+### ui_editor 角标开关与标签右键菜单（2026-10-20，第十九轮）——版本 0.12.2
+
+用户新增两项需求：工具栏能显示/隐藏画布角标；标签右键菜单要有
+「关闭当前 / 关闭左侧全部 / 关闭右侧全部 / 关闭全部」。
+
+- **角标开关**：`PaintContext.show_badges`（默认 True）；
+  `WidgetItem._paint_fidelity_badge` 先看这个开关，关掉一笔不画（选中框、
+  锁徽标、控件绘制均不受影响，状态栏 `_fidelity_label` 也不受）。工具栏
+  「角标」`_badges_action`（新图标 `icons.icon_badge`）+ 视图菜单
+  「显示绘制保真度角标」共用同一 QAction；`_toggle_badges` 改 ctx 后
+  `scene.refresh_all()` 并给出状态栏提示。
+- **标签右键菜单**：新增 `ui/tab_menu.py`（`TabMenuMixin`，104 行）——
+  `_setup_tab_context_menu`（`CustomContextMenu`）、`build_tab_context_menu(index)`
+  （不 exec，可测）、`_show_tab_context_menu`（右键先激活该标签，
+  「关闭当前标签」才名副其实）、`_exec_tab_menu`（单独一层便于测试替换）、
+  `_close_tab_range(start, stop)`（**从右往左**关、下标不漂移）、
+  `_close_tab_except(keep)`、`_active_index`。菜单项：关闭当前标签 /
+  关闭左侧全部 / 关闭右侧全部 / 关闭其他 / 关闭全部，边界状态按标签位置
+  置灰（第一个没有左侧、最后一个没有右侧、单标签时多选项全灰）。
+  每个标签仍走 `_confirm_discard` 单独确认；跳过数进状态栏汇总。
+- 结构：`window_setup.py` 608 行、`main_window.py` 608 行双双超 600 守限，
+  故把标签菜单整段抽到 `ui/tab_menu.py`，并把视角开关
+  `_toggle_names`/`_toggle_badges` 从 `main_window` 移到 `window_setup`
+  （现为 531 / 598 / 104 行）；`MainWindow` 基类表加入 `TabMenuMixin`，
+  `tests/test_window_structure.py` 的 GROUPS 与基类断言同步。
+- 测试：新增 `tests/test_gui_tab_menu.py` 17 项——角标默认开且工具栏有
+  「角标」按钮、关掉后角标像素确实不再绘制（真 QPainter 出图比对）、
+  关掉不影响状态栏说明、菜单五项文案与位置边界置灰、单标签/空态、
+  关闭当前/左侧/右侧/其他/全部、脏标签跳过与确认后关闭、关闭激活标签
+  自动切邻页、右键先激活。全量 **525 项 0 失败（1 skip）**；ruff 0；
+  wincompat 0/0/0。
+- 边界：角标开关不写入配置（重启回到默认打开）；批量关闭不提供
+  「全部保存」，需要保存的先逐个保存。
+
 ### ui_editor 角标跟随实际画法（2026-10-20，第十八轮）——版本 0.12.1
 
 用户实测反馈：「红色占位？但是我看到皮肤了啊」，并补充该按钮 `sFileName`

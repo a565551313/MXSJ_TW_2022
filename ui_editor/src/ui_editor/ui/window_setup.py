@@ -102,6 +102,14 @@ class WindowSetupMixin:
         names_action.toggled.connect(self._toggle_names)
         view_menu.addAction(names_action)
         self._names_action = names_action
+        badges_action = QAction("显示绘制保真度角标", self, checkable=True)
+        badges_action.setChecked(True)
+        badges_action.setToolTip(
+            "画布控件右下角的「近似/模拟」小角标：关掉只影响角标，"
+            "不影响绘制本身与状态栏说明")
+        badges_action.toggled.connect(self._toggle_badges)
+        view_menu.addAction(badges_action)
+        self._badges_action = badges_action
         self._act_grid = QAction("显示网格与标尺", self, checkable=True)
         self._act_grid.toggled.connect(self._toggle_grid)
         view_menu.addAction(self._act_grid)
@@ -223,6 +231,11 @@ class WindowSetupMixin:
         bar.addAction(self._act_fit)
         bar.addAction(self._act_actual)
         bar.addAction(self._names_action)
+        self._badges_action.setIcon(icons.icon_badge())
+        self._badges_action.setIconText("角标")
+        self._badges_action.setToolTip(
+            "显示/隐藏绘制保真度角标（近似=橙、模拟=红）")
+        bar.addAction(self._badges_action)
         # 网格/标尺开关与对齐下拉都进工具栏（常用手势不走菜单）
         self._act_grid.setIcon(icons.icon_grid())
         self._act_grid.setIconText("网格")
@@ -314,6 +327,18 @@ class WindowSetupMixin:
         except Exception:  # 标注失败不能影响选择
             text = ""
         label.setText(text[:60])
+
+    def _toggle_names(self, on: bool) -> None:
+        self.ctx.show_names = on
+        self.scene.refresh_all()
+
+    def _toggle_badges(self, on: bool) -> None:
+        """工具栏/视图菜单的「角标」开关：只影响右下角保真度小角标。"""
+        self.ctx.show_badges = on
+        self.scene.refresh_all()
+        self._update_status(
+            "已显示绘制保真度角标（近似=橙、模拟=红）。" if on
+            else "已隐藏绘制保真度角标（状态栏说明仍可用）。")
 
     def _refresh_animation_frame_control(self) -> None:
         """按当前文档的 .spr 资源更新帧选择器，不修改布局。"""

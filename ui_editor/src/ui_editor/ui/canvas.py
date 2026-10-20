@@ -303,7 +303,12 @@ class WidgetItem(QGraphicsItem):
             self.fidelity = []
 
     def _paint_fidelity_badge(self, painter: QPainter) -> None:
-        """右下角小角标：只标「近似」「模拟」，原生不打扰视线。"""
+        """右下角小角标：只标「近似」「模拟」，原生不打扰视线。
+
+        工具栏「角标」开关关掉时完全不画（选中框、锁徽标不受影响）。
+        """
+        if not getattr(self.ctx, "show_badges", True):
+            return
         marks = [m for m in self.fidelity if m.level != fidelity.NATIVE]
         if not marks:
             return
