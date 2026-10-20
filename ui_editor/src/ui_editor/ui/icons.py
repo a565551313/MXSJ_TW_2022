@@ -210,6 +210,53 @@ def icon_names() -> QIcon:
     return _end(pixmap, p)
 
 
+def icon_badge() -> QIcon:
+    """保真度角标开关：右下角的小色块（近似=橙、模拟=红）。"""
+    pixmap, p = _begin()
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor("#8a94a6"))
+    p.drawRoundedRect(QRectF(5, 5, 18, 18), 3, 3)
+    p.setBrush(QColor("#e0a83c"))
+    p.drawRoundedRect(QRectF(12, 13, 9, 7), 2, 2)
+    p.setBrush(QColor("#e0645c"))
+    p.drawRoundedRect(QRectF(17, 8, 6, 5), 2, 2)
+    return _end(pixmap, p)
+
+
+def icon_encoding() -> QIcon:
+    """文本编码：带字母 A 的纸片（编码=文本怎么存）。"""
+    pixmap, p = _begin()
+    p.setPen(_pen("#7a6a4d"))
+    p.setBrush(QColor("#f7f2e6"))
+    p.drawRoundedRect(QRectF(4.5, 5, 19, 18), 3, 3)
+    p.setPen(_pen("#2f6fb4", 1.8))
+    p.drawLine(QPointF(9.5, 19), QPointF(14, 9))
+    p.drawLine(QPointF(14, 9), QPointF(18.5, 19))
+    p.drawLine(QPointF(11.4, 15.2), QPointF(16.6, 15.2))
+    return _end(pixmap, p)
+
+
+def icon_frame() -> QIcon:
+    """帧：带齿孔的胶片格，中间一个播放三角。"""
+    pixmap, p = _begin()
+    p.setPen(_pen("#4a5a72"))
+    p.setBrush(QColor("#e7edf6"))
+    p.drawRoundedRect(QRectF(4.5, 6, 19, 16), 2.5, 2.5)
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor("#4a5a72"))
+    for y in (9.0, 13.0, 17.0):
+        p.drawRect(QRectF(6, y, 2.2, 2.2))
+        p.drawRect(QRectF(19.8, y, 2.2, 2.2))
+    p.setBrush(QColor("#2f6fb4"))
+    path = QPainterPath()
+    path.moveTo(QPointF(12.2, 10.5))
+    path.lineTo(QPointF(18.0, 14.0))
+    path.lineTo(QPointF(12.2, 17.5))
+    path.closeSubpath()
+    p.drawPath(path)
+    return _end(pixmap, p)
+
+
 def icon_grid() -> QIcon:
     """网格开关：浅灰点阵。"""
     pixmap, p = _begin()

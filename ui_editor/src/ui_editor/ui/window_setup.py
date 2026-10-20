@@ -9,10 +9,8 @@ from __future__ import annotations
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
-    QComboBox,
     QLabel,
     QMenu,
-    QSpinBox,
     QSplitter,
     QTabWidget,
     QToolBar,
@@ -25,6 +23,7 @@ from ..core import fidelity
 from ..core.model import Widget
 from . import icons
 from .canvas import FidelityView
+from .toolbar_controls import build_encoding_button, build_frame_button
 
 
 class WindowSetupMixin:
@@ -102,6 +101,14 @@ class WindowSetupMixin:
         names_action.toggled.connect(self._toggle_names)
         view_menu.addAction(names_action)
         self._names_action = names_action
+        badges_action = QAction("显示绘制保真度角标", self, checkable=True)
+        badges_action.setChecked(True)
+        badges_action.setToolTip(
+            "画布控件右下角的「近似/模拟」小角标：关掉只影响角标，"
+            "不影响绘制本身与状态栏说明")
+        badges_action.toggled.connect(self._toggle_badges)
+        view_menu.addAction(badges_action)
+        self._badges_action = badges_action
         self._act_grid = QAction("显示网格与标尺", self, checkable=True)
         self._act_grid.toggled.connect(self._toggle_grid)
         view_menu.addAction(self._act_grid)
@@ -202,16 +209,10 @@ class WindowSetupMixin:
         bar.addAction(self._act_open_file)
         bar.addAction(self._act_open_pack)
         bar.addAction(self._act_reload)
-        bar.addWidget(QLabel(" 文本编码：", self))
-        self._encoding_combo = QComboBox(self)
-        self._encoding_combo.setObjectName("layoutTextEncoding")
-        for label, codec in (("Big5（繁体）", "big5"),
-                             ("GBK（简体）", "gbk"), ("UTF-8", "utf-8")):
-            self._encoding_combo.addItem(label, codec)
-        self._encoding_combo.setToolTip(
-            "按所选编码重新读取布局文本；资源路径仍为 GBK，不自动保存或简繁转换")
-        self._encoding_combo.currentIndexChanged.connect(self.change_text_encoding)
-        bar.addWidget(self._encoding_combo)
+        # 文本编码：与「对齐」「按钮态」同款下拉按钮，缩写「编码」
+        self._encoding_btn, self._encoding_actions = build_encoding_button(
+            self, self.change_text_encoding)
+        bar.addWidget(self._encoding_btn)
         bar.addSeparator()
         bar.addAction(self._undo_action)
         bar.addAction(self._redo_action)
@@ -223,6 +224,11 @@ class WindowSetupMixin:
         bar.addAction(self._act_fit)
         bar.addAction(self._act_actual)
         bar.addAction(self._names_action)
+        self._badges_action.setIcon(icons.icon_badge())
+        self._badges_action.setIconText("角标")
+        self._badges_action.setToolTip(
+            "显示/隐藏绘制保真度角标（近似=橙、模拟=红）")
+        bar.addAction(self._badges_action)
         # 网格/标尺开关与对齐下拉都进工具栏（常用手势不走菜单）
         self._act_grid.setIcon(icons.icon_grid())
         self._act_grid.setIconText("网格")
@@ -257,13 +263,10 @@ class WindowSetupMixin:
         align_btn.setMenu(align_menu)
         bar.addWidget(align_btn)
         self._align_btn = align_btn
-        self._animation_frame = QSpinBox(self)
-        self._animation_frame.setRange(0, 0)
-        self._animation_frame.setPrefix("帧 ")
-        self._animation_frame.setToolTip(
-            "选择 .spr/精灵的预览帧；不会修改布局或资源")
-        self._animation_frame.valueChanged.connect(self._set_animation_frame)
-        bar.addWidget(self._animation_frame)
+        # 预览帧：同款下拉按钮，小箭头里是横向滑块
+        self._frame_btn, self._frame_slider, self._frame_readout = (
+            build_frame_button(self, self._set_animation_frame))
+        bar.addWidget(self._frame_btn)
         state_btn = QToolButton(self)
         state_btn.setText("按钮态")
         state_btn.setIcon(icons.icon_button_state())
@@ -315,9 +318,21 @@ class WindowSetupMixin:
             text = ""
         label.setText(text[:60])
 
+    def _toggle_names(self, on: bool) -> None:
+        self.ctx.show_names = on
+        self.scene.refresh_all()
+
+    def _toggle_badges(self, on: bool) -> None:
+        """工具栏/视图菜单的「角标」开关：只影响右下角保真度小角标。"""
+        self.ctx.show_badges = on
+        self.scene.refresh_all()
+        self._update_status(
+            "已显示绘制保真度角标（近似=橙、模拟=红）。" if on
+            else "已隐藏绘制保真度角标（状态栏说明仍可用）。")
+
     def _refresh_animation_frame_control(self) -> None:
-        """按当前文档的 .spr 资源更新帧选择器，不修改布局。"""
-        control = getattr(self, "_animation_frame", None)
+        """按当前文档的 .spr 资源更新帧滑块范围，不修改布局。"""
+        control = getattr(self, "_frame_slider", None)
         if control is None:
             return
         maximum = 0
@@ -337,8 +352,24 @@ class WindowSetupMixin:
         control.setRange(0, max(0, maximum))
         control.setValue(min(control.value(), max(0, maximum)))
         control.blockSignals(False)
+        self._refresh_frame_readout(control.value(), max(0, maximum))
+
+    def _refresh_frame_readout(self, frame: int, maximum: int) -> None:
+        """滑块上方的「预览帧 3 / 7」与按钮悬停提示同步。"""
+        readout = getattr(self, "_frame_readout", None)
+        if readout is not None:
+            readout.setText(f"预览帧 {frame} / {maximum}")
+        button = getattr(self, "_frame_btn", None)
+        if button is not None:
+            button.setToolTip(
+                f"动画预览帧（缩写：帧）：当前 {frame} / {maximum}。\n"
+                "点小箭头拖横向滑块选帧；只影响画布预览，"
+                "不修改布局或资源。")
 
     def _set_animation_frame(self, frame: int) -> None:
+        slider = getattr(self, "_frame_slider", None)
+        self._refresh_frame_readout(
+            frame, slider.maximum() if slider is not None else frame)
         self.ctx.animation_frame = frame
         self.ctx._pixmaps.clear()
         self.scene.refresh_all()
@@ -372,6 +403,8 @@ class WindowSetupMixin:
 
     def _connect_signals(self) -> None:
         self.resource_panel.export_layout_requested.connect(self.export_layout)
+        self.resource_panel.replace_layout_requested.connect(
+            self.replace_layout_dialog)
         self.resource_panel.open_pack_layout.connect(
             self._open_pack_layout)
         self.resource_panel.import_pack_layout.connect(self.import_pack_layout)
@@ -420,6 +453,7 @@ class WindowSetupMixin:
         self._tab_bar.blockSignals(True)
         self._tab_bar.addTab(session.label())
         self._tab_bar.blockSignals(False)
+        self._refresh_tab_marks()
 
     def _remove_session(self, index: int) -> None:
         """无确认移除一个标签；移除激活页时切邻页或回到空态。"""
@@ -428,6 +462,7 @@ class WindowSetupMixin:
         self._tab_bar.blockSignals(True)
         self._tab_bar.removeTab(index)
         self._tab_bar.blockSignals(False)
+        self._refresh_tab_marks()
         if not was_active:
             return
         self._active = None

@@ -52,6 +52,7 @@
 | `server/docs/csv_checks/batch_001/` | 首批待审 CSV + manifest + 证据（**不是**正式配置） | `server/docs/csv_checks/BATCH_001.md` |
 | `mock_server.py` | 本地协议模拟器，有登录／进图／交互与客户端写入副作用，不作正式服务端 | [`边界与副作用`](docs/MOCK_SERVER.md) |
 | `data/*.fls`、`map/*.map`、`Fonts/`、`mx.exe`、`mxmain.dll`、`exe/python27*.dll` | 工具与逆向依赖的客户端材料；`.gitignore` 只白名单了部分 | — |
+| Google Drive 外部包（`interface1019` = 真 `interface.fls` 分卷；`MXSJ_CORPUS` = 全量反编译语料） | 仓库里**没有** `interface.fls`，只能从这两个目录取；**目录内容会随开发更新，每次先列目录、以目录为准**；产物一律留仓库外、不入库 | [`docs/EXTERNAL_CORPUS.md`](docs/EXTERNAL_CORPUS.md) |
 | 其余根目录 `*.dll/*.exe/*.pak/music*/log/` | 客户端运行时与用户日志，工具不依赖；部分日志被 `work/.../evidence` 引用 | — |
 
 ## 3. 环境与命令（从仓库根目录执行）
@@ -66,7 +67,7 @@
 | 复核网页 | Node ≥ 20.19，`npm ci --prefix server/apps/review_web` | `npm --prefix server/apps/review_web run typecheck && npm --prefix server/apps/review_web test`；开发 `npm run dev`（Vite 监听 0.0.0.0:5173，代理 `/api` 到 127.0.0.1:8000） |
 | 地图编辑器 | `Pillow>=10`；GUI 另需 PySide6 + 桌面 | `(cd map_editor && python3 -m unittest discover -s tests)`；`python3 map_editor/run.py --scan .` |
 | 资源编辑器 | PySide6 + Pillow | `(cd resource_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`；运行 `PYTHONPATH=resource_editor/src python3 -m resource_editor data`（或 `python3 resource_editor/bootstrap.py`） |
-| UI 编辑器 | PySide6（+Pillow 转精灵）；`.dlg` 语料库在 `MXSJ_DLG_CORPUS` | `(cd ui_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`；运行 `python3 ui_editor/bootstrap.py` |
+| UI 编辑器 | PySide6（+Pillow 转精灵）；`.dlg` 语料库在 `MXSJ_DLG_CORPUS`（Drive 取用见 [`docs/EXTERNAL_CORPUS.md`](docs/EXTERNAL_CORPUS.md)） | `(cd ui_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`；运行 `python3 ui_editor/bootstrap.py` |
 | 脚本编辑器 | 本目录 requirements；旧 VM 编译器／恢复引擎材料另见运行时文档 | `PYTHONPATH=script_editor/src python3 -m unittest discover -s script_editor/tests`；`python3 script_editor/bootstrap.py --check-only` |
 | 脚本手册 | 本目录 requirements；核心校验需 jsonschema，GUI 需 PySide6 | `PYTHONPATH=script_manual/src python3 -m mxsj_manual validate --verify-evidence --repository . --require-full-inventory`；`python3 script_manual/check_manual.py`（统一闸门还需开发依赖） |
 | 开发工具箱 / 风格检查 | 检查脚本为标准库；完整测试还需 Pillow；ruff 另装（`pip install ruff`，根 `ruff.toml` 为默认配置） | `python3 -m unittest discover -s tools/devkit/tests`；`python3 tools/devkit/check_windows_compat.py <dir>`；`ruff check <dir>` |

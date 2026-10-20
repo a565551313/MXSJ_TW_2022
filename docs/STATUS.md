@@ -2094,6 +2094,179 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   既有 GUI 契约核对：双击待入包叶子不确认不换文档、切换编码/刷新/
   关窗的 `_confirm_discard` 语义、`window.doc = None` 清空入口均兼容。
 
+### 外部材料位置入档：Drive 上的 interface.fls 分卷与全量语料（2026-10-20，第二十二轮）——仅文档
+
+用户提供取用位置：Google Drive `interface1019` 目录是 `interface.fls` 的分卷；
+`MXSJ_CORPUS` 目录是全量语料（当时 10 个独立 ZIP）。此前「仓库没有 `interface.fls`、
+语料只能自己建」的结论，现在有了指定来源。用户同时明确两条口径：
+**只按这两个目录取用**；**目录内容会随开发进度更新**。
+
+- 新增 [`docs/EXTERNAL_CORPUS.md`](EXTERNAL_CORPUS.md)，开篇 §0 立「活目录」规则：
+  每次取用先列目录、按当时实际文件取；本文表格只是 2026-10-20 快照，
+  与目录不一致时**以目录为准**并回写 §5 变更记录；校验用同批清单，
+  清单换代时同样以新为准，不把旧 SHA 差异当篡改。根目录散落的同名整包/旧清单
+  明确「不是取用来源」。
+- 文中给：两个目录的 folder id、当时每个文件的 id/字节数、语料十卷的官方 SHA-256
+  （抄自 `MXSJ_CORPUS_8212b26_20261015_ARCHIVES.sha256`）、分卷不单独解/不 cat 拼接、
+  语料解到同一空目录、`MXSJ_DLG_CORPUS` 指回去跑 `test_codec` 的方法，以及红线
+  （不入库、不覆盖原包、不擅自动 Drive 权限、只读解析）。
+- 交叉链接：`AGENTS.md` §2 材料表新增一行 + UI 编辑器行；`README.md` 外部语料回归段；
+  `docs/DECOMPILE_CORPUS.md` 顶部「先看有没有现成的」；`ui_editor/README.md` 语料测试节。
+- **取证口径**：本轮只读 Drive 元数据（文件名/大小/时间/同批 SHA 清单），
+  **没有下载、没有解压、没有跑语料用例**；未测项标「待实测」，没有编数字。
+- 未改代码、未改版本号；全量测试基线仍为 569 项 0 失败（1 skip）。
+
+### ui_editor 工具栏「编码」「帧」统一下拉风格（2026-10-20，第二十一轮）——版本 0.12.4
+
+用户指出工具栏两个控件与其他不符：文本编码要改成「对齐」「按钮态」那种
+风格、缩写「编码」；帧同样换风格，但小箭头下拉后用**横向滑块**表示数值。
+
+- `ui/toolbar_controls.py` 新增：`build_encoding_button`（`QToolButton`
+  `ToolButtonTextUnderIcon` + `InstantPopup`，菜单三项 checkable，
+  文案 Big5（繁体）/GBK（简体）/UTF-8）、`build_frame_button`
+  （菜单里放 `QWidgetAction` 装一个 QWidget：读数标签「预览帧 N / M」+
+  横向 `QSlider`，最小宽度 260）。两者与「对齐」「按钮态」共用同一套
+  按钮样式常量（`_dropdown`）。
+- `ui/window_setup.py`：删掉 `QComboBox`/`QSpinBox` 两处旧控件与
+  「 文本编码：」标签，改用 `_encoding_btn`/`_frame_slider`+
+  `_frame_readout`/`_frame_btn`；`_refresh_animation_frame_control` 改为
+  设滑块范围并刷新读数与按钮提示，新增 `_refresh_frame_readout`；
+  `_set_animation_frame` 先刷读数再改 `ctx.animation_frame`。
+- `ui/source_actions.py`：`change_text_encoding(encoding: str)` 改签名
+  （原为下拉框 index），切换成功/取消/无文档都调
+  `_restore_encoding_choice` 让菜单勾选与 `resolver.text_encoding` 一致，
+  避免「勾着 GBK 实际仍 Big5」。
+- `ui/icons.py` 新增 `icon_encoding`（带字母 A 的纸片）、`icon_frame`
+  （带齿孔胶片格 + 播放三角），与既有图标同一画法。
+- 测试：新增 `tests/test_gui_toolbar_controls.py` 15 项——四个下拉按钮
+  样式/弹出模式一致、缩写为「编码」「帧」、工具栏里再无 QComboBox/
+  QSpinBox、菜单文案与只勾一项、点当前项勾回去、取消切换勾选回退、
+  滑块在 QWidgetAction 里且为横向、范围随 `.spr` 帧数、无 `.spr` 时
+  0/0、拖动改 `ctx.animation_frame`、读数与提示同步、状态栏仍报帧。
+  `test_gui_source_actions` 的 `choose()` 改调 `change_text_encoding(codec)`
+  并断言勾选状态（原断言下拉框 `currentData`）。全量 **569 项 0 失败
+  （1 skip）**；ruff 0；wincompat 0/0/0。
+- 边界：滑块只按帧序号（非连续帧号仍以序号为准，读数旁不显示 frame_id；
+  状态栏保留 frame_id/duration）；编码菜单仍是编辑器读文本用的编码，
+  不代表游戏客户端支持该编码。
+
+### ui_editor 标签锁定与资源树替换布局（2026-10-20，第二十轮）——版本 0.12.3
+
+用户要求两件事：①标签右键要能锁定/解锁，被锁定的标签不被批量关闭、
+只能单独关闭；②左侧资源树右键 `.dlg` 增加「替换布局」——用选中的
+`.dlg` 顶掉这个布局，名字与路径不变（用户原话：「把 xxx.fls 里的
+a.dlg 替换了」）。
+
+- **标签锁定**：`EditorSession.locked`（纯会话状态，不进布局文件、
+  不置脏、不影响保存/撤销）；右键菜单首项在「锁定标签 / 解锁标签」间
+  切换；锁定中的标签右侧显示锁形图标并带悬停说明。批量关闭
+  （左/右/其他/全部）经 `_close_range` 统一跳过锁定项：先分类统计
+  (关掉, 未保存跳过, 锁定跳过)，再由 `_report_batch_close` 一次汇总，
+  「关闭其他」两段合并只报一条。单独「关闭当前标签」与标签 ✕ 照旧可关，
+  脏标签仍需确认。`_refresh_tab_marks` 在增/删/锁/批量关闭后同步图标。
+- **替换布局**：资源树文件与包内布局节点右键新增「替换布局…」
+  （缺失的灰斜体条目置灰）。`ui/resource_menu.py` 抽出菜单构建器
+  （只搭菜单不 exec，便于测试）；`panels.py` 新增
+  `replace_layout_requested` 信号。`ui/replace_layout.py`
+  （`ReplaceLayoutMixin`）负责流程：选文件 → 解析 → 按目标身份开/换标签。
+  * 包内布局：走既有 `prepare_layout_import` 预检（相对 GBK 路径、
+    结构、编码），基线=包里原内容，标为「待入新包」；原 `.fls` 一字节
+    不动，按「存包」生成新包才落盘。
+  * 散装 `.dlg`：`LayoutDocument.begin_inplace_replace`（新增）以替换前
+    磁盘内容为对照基线，标为未保存；按「保存」写回原路径，仍受
+    「不自动建缺失父文件夹」「非法资源名拦截」约束。
+  * 目标已开标签 → 确认丢弃后原地换内容（同名同路径，不新开重复页）；
+    未开 → 按目标键开新标签。来源与目标同一文件、解析失败、包打不开
+    均弹可读提示且目标不动。
+- 结构：`panels.py` 584 行（菜单抽走后仍守 600）；新增
+  `replace_layout.py`、`resource_menu.py`；`test_window_structure.py`
+  GROUPS 与基类表同步加入 `ReplaceLayoutMixin`。
+- 测试：`test_gui_tab_menu.py` 扩到 27 项（锁定切换、锁图标与提示、
+  锁定不置脏、全部/左右/其他跳过锁定并汇总、单个照关、锁定脏标签不问、
+  删标签后锁标记跟随）；新增 `test_gui_replace_layout.py` 19 项
+  （菜单文案与置灰、散装替换保名保路径且不落盘、状态栏说明、未开标签
+  时新开、同文件/坏文件/用户选「不」都不改目标、包内替换保包内路径且
+  原包字节不变、二次替换更新同标签）。全量 **554 项 0 失败（1 skip）**；
+  ruff 0；wincompat 0/0/0。
+- 既有用例按现状同步：`test_gui_import`/`test_gui_source_actions` 的右键
+  菜单用例改 patch `ui_editor.ui.resource_menu.QMenu`（菜单构建已迁出，
+  旧 patch 会放真菜单弹模态）；`test_gui_native_fidelity` 三处「固定像素
+  点取色」改为主色面积判定 `color_share`（渐变皮肤+文字抗锯齿会让固定
+  采样点落在字上，字体度量随环境变）。
+- 边界：锁定状态不写配置（重启丢失）；批量关闭不提供「全部保存」；
+  替换不自动保存，也不改脚本接线。
+
+### ui_editor 角标开关与标签右键菜单（2026-10-20，第十九轮）——版本 0.12.2
+
+用户新增两项需求：工具栏能显示/隐藏画布角标；标签右键菜单要有
+「关闭当前 / 关闭左侧全部 / 关闭右侧全部 / 关闭全部」。
+
+- **角标开关**：`PaintContext.show_badges`（默认 True）；
+  `WidgetItem._paint_fidelity_badge` 先看这个开关，关掉一笔不画（选中框、
+  锁徽标、控件绘制均不受影响，状态栏 `_fidelity_label` 也不受）。工具栏
+  「角标」`_badges_action`（新图标 `icons.icon_badge`）+ 视图菜单
+  「显示绘制保真度角标」共用同一 QAction；`_toggle_badges` 改 ctx 后
+  `scene.refresh_all()` 并给出状态栏提示。
+- **标签右键菜单**：新增 `ui/tab_menu.py`（`TabMenuMixin`，104 行）——
+  `_setup_tab_context_menu`（`CustomContextMenu`）、`build_tab_context_menu(index)`
+  （不 exec，可测）、`_show_tab_context_menu`（右键先激活该标签，
+  「关闭当前标签」才名副其实）、`_exec_tab_menu`（单独一层便于测试替换）、
+  `_close_tab_range(start, stop)`（**从右往左**关、下标不漂移）、
+  `_close_tab_except(keep)`、`_active_index`。菜单项：关闭当前标签 /
+  关闭左侧全部 / 关闭右侧全部 / 关闭其他 / 关闭全部，边界状态按标签位置
+  置灰（第一个没有左侧、最后一个没有右侧、单标签时多选项全灰）。
+  每个标签仍走 `_confirm_discard` 单独确认；跳过数进状态栏汇总。
+- 结构：`window_setup.py` 608 行、`main_window.py` 608 行双双超 600 守限，
+  故把标签菜单整段抽到 `ui/tab_menu.py`，并把视角开关
+  `_toggle_names`/`_toggle_badges` 从 `main_window` 移到 `window_setup`
+  （现为 531 / 598 / 104 行）；`MainWindow` 基类表加入 `TabMenuMixin`，
+  `tests/test_window_structure.py` 的 GROUPS 与基类断言同步。
+- 测试：新增 `tests/test_gui_tab_menu.py` 17 项——角标默认开且工具栏有
+  「角标」按钮、关掉后角标像素确实不再绘制（真 QPainter 出图比对）、
+  关掉不影响状态栏说明、菜单五项文案与位置边界置灰、单标签/空态、
+  关闭当前/左侧/右侧/其他/全部、脏标签跳过与确认后关闭、关闭激活标签
+  自动切邻页、右键先激活。全量 **525 项 0 失败（1 skip）**；ruff 0；
+  wincompat 0/0/0。
+- 边界：角标开关不写入配置（重启回到默认打开）；批量关闭不提供
+  「全部保存」，需要保存的先逐个保存。
+
+### ui_editor 角标跟随实际画法（2026-10-20，第十八轮）——版本 0.12.1
+
+用户实测反馈：「红色占位？但是我看到皮肤了啊」，并补充该按钮 `sFileName`
+是目录型基路径 `combdialog4\三态按钮\一级按钮\`、改 `iStyle` 数值颜色会变。
+复现确认：`fidelity.markers` 只查 `fetch_image(sFileName)`，取不到即判
+`missing_placeholder`；而 `_paint_text_button` 在图片取不到时用
+`ui.lst` 的 `ButtonNormalColor` 画皮肤（沙箱像素验：iStyle=0 → `#ffffc6`，
+iStyle=1 → `#677896`）。**画对了、标错了。**
+
+- `core/painters.py`：新增 `resolve_source(w, ctx)` 与 `SOURCE_*` 常量，
+  顺序与各 painter 内完全一致：代码皮肤 → 切片 → 图/精灵帧 → `iStyle`
+  样式 → 按钮兜底色 → 占位；`IMAGE_TYPES`/`STYLE_BUTTON_TYPES`/
+  `style_button_color` 一并导出给角标与诊断共用。`_code_skin_pixmap` 抽出
+  供绘制与判定共用；`_paint_button` 补 `iStyle` 底色（有才用）；
+  `_paint_text_button` 补**切片**分支（目录型基路径不再整图拉伸），文字
+  叠加抽成 `_paint_text_overlay` 供两条路复用。
+- `core/fidelity.py`：改为先问 `view.source_kind(widget)`——
+  `code_skin`/`style_skin`/`button_style`/`editor_default`/`placeholder`/
+  `none` 各有专门文案与档位（皮肤=近似、编辑器默认色/占位=模拟），
+  目录型基路径的占位文案改为「没拼出任何切片族」。view 不支持
+  `source_kind` 时退回旧的资源探测路径（向后兼容）。
+- `ui/canvas.FidelityView.source_kind` 转发 `painters.resolve_source`；
+  状态栏 `_fidelity_label` 因此自动跟着改。
+- `core/diagnostics.py`：`diagnose(..., styles=None)` 新增
+  `RENDER_STYLE_SKIN`（提示）——图片不可用但 `iStyle` 有常态色时说明
+  「按样式表配色绘制，不是占位框」；不再与 `RESOURCE_MISSING` 混淆。
+  `main_window._layout_diagnostics` 传入 `self.styles`。
+- 测试：`test_gui_native_fidelity.TestDrawnSourceBadge` 9 项（iStyle 0/1
+  颜色不同且都不是占位、无样式按钮=编辑器默认色、进度条=默认配色、代码
+  皮肤像素+角标非占位、真空缺仍占位、目录基路径占位文案含「切片族」、
+  能拼出九片的文字按钮走切片并标原生），`test_fidelity` 增 3 项
+  （来源驱动角标、无图类型不报、目录基路径文案），诊断增 2 项
+  （`RENDER_STYLE_SKIN` 命中/有图时不命中）。全量 **508 项 0 失败
+  （1 skip）**；ruff 0；wincompat 0/0/0。
+- 边界：`iStyle` 只是「编辑器能查到的配色」，客户端按钮是否还有贴图/
+  高光/状态色未核实，故标「近似」；代码皮肤仍是静态索引推断。
+
 ### ui_editor 画布原生还原度（2026-10-20，第十七轮）——版本 0.12.0
 
 用户定的本轮目标「0.12.0：画布原生状态和切片规则修正」，三步优先：九宫格

@@ -11,6 +11,8 @@ GROUPS = {
     "main_window.py": "MainWindow",
     "commands.py": "EditingCommandsMixin",
     "save_workflows.py": "SaveWorkflowsMixin",
+    "tab_menu.py": "TabMenuMixin",
+    "replace_layout.py": "ReplaceLayoutMixin",
     "workflows.py": "FileWorkflowsMixin",
     "source_actions.py": "SourceActionsMixin",
     "window_setup.py": "WindowSetupMixin",
@@ -45,8 +47,8 @@ class WindowStructureTests(unittest.TestCase):
         window = class_node("main_window.py")
         self.assertEqual([base.id for base in window.bases], [
             "BusyHostMixin", "EditingCommandsMixin", "FileWorkflowsMixin",
-            "SaveWorkflowsMixin", "SourceActionsMixin", "WindowSetupMixin",
-            "QMainWindow",
+            "SaveWorkflowsMixin", "SourceActionsMixin", "TabMenuMixin",
+            "ReplaceLayoutMixin", "WindowSetupMixin", "QMainWindow",
         ])
         for filename in GROUPS:
             if filename == "main_window.py":

@@ -37,9 +37,11 @@ from .commands import EditingCommandsMixin
 from .diagnostics_panel import DiagnosticsPanel
 from .panels import PalettePanel, ResourceTreePanel, WidgetTreePanel
 from .property_panel import PropertyPanel
+from .replace_layout import ReplaceLayoutMixin
 from .save_workflows import SaveWorkflowsMixin
 from .script_panel import ScriptPanel
 from .source_actions import SourceActionsMixin
+from .tab_menu import TabMenuMixin
 from .tabs import EditorSession
 from .window_setup import WindowSetupMixin
 from .workflows import FileWorkflowsMixin
@@ -47,7 +49,8 @@ from .workflows import FileWorkflowsMixin
 
 class MainWindow(
     BusyHostMixin, EditingCommandsMixin, FileWorkflowsMixin,
-    SaveWorkflowsMixin, SourceActionsMixin, WindowSetupMixin, QMainWindow
+    SaveWorkflowsMixin, SourceActionsMixin, TabMenuMixin,
+    ReplaceLayoutMixin, WindowSetupMixin, QMainWindow
 ):
     """UI 编辑器主窗口。"""
 
@@ -112,6 +115,7 @@ class MainWindow(
         self.setStatusBar(QStatusBar())
         self._build_docks()
         self._build_menus()
+        self._setup_tab_context_menu()
         self._connect_signals()
         # 删除键由「删除控件」QAction 统一接管（_edit_delete 带文本焦点分流）
 
@@ -243,7 +247,8 @@ class MainWindow(
             self.doc, link=self._script_link(),
             resource_exists=(self.resolver.resource_exists
                              if self.resolver.has_sources else None),
-            staged_paths=self.resolver.staged_images())
+            staged_paths=self.resolver.staged_images(),
+            styles=self.styles)
         issues.extend(
             Diagnostic("错误" if issue.code in {
                        "RESOURCE_PACK_CORRUPT", "RESOURCE_READ_ERROR",
@@ -562,10 +567,6 @@ class MainWindow(
     # ------------------------------------------------------------------
     # 视图/状态
     # ------------------------------------------------------------------
-    def _toggle_names(self, on: bool) -> None:
-        self.ctx.show_names = on
-        self.scene.refresh_all()
-
     def _update_title(self) -> None:
         self._sync_history_actions()
         self.diagnostics_panel.mark_stale()

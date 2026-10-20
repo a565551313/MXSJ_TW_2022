@@ -96,6 +96,10 @@ class FidelityView:
     def image_size(self, name: str) -> tuple[int, int] | None:
         return self._ctx.frame_size(name)
 
+    def source_kind(self, widget) -> str:
+        """绘制层实际用的那条路（code_skin/style_skin/placeholder…）。"""
+        return painters.resolve_source(widget, self._ctx)
+
 
 class WidgetItem(QGraphicsItem):
     """一个控件对应的画布图元。"""
@@ -299,7 +303,12 @@ class WidgetItem(QGraphicsItem):
             self.fidelity = []
 
     def _paint_fidelity_badge(self, painter: QPainter) -> None:
-        """右下角小角标：只标「近似」「模拟」，原生不打扰视线。"""
+        """右下角小角标：只标「近似」「模拟」，原生不打扰视线。
+
+        工具栏「角标」开关关掉时完全不画（选中框、锁徽标不受影响）。
+        """
+        if not getattr(self.ctx, "show_badges", True):
+            return
         marks = [m for m in self.fidelity if m.level != fidelity.NATIVE]
         if not marks:
             return

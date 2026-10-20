@@ -85,6 +85,13 @@ def _strings(value: object, key: str) -> Iterator[tuple[str, str]]:
             yield from _strings(item, key)
 
 
+#: 图片不可用时按 iStyle 样式表画底色的按钮类型（与 painters 同口径）
+_STYLE_BUTTON_TYPES = frozenset({
+    "CTextButton", "CButton", "CHPageButton", "CVPageButton",
+    "CHPagePngButton", "CVPagePngButton",
+})
+
+
 def _dir_base_message(
     value: str, resource_exists: Callable[[str], bool] | None
 ) -> str:
@@ -117,6 +124,7 @@ def diagnose(
     link: LayoutLink | None = None,
     resource_exists: Callable[[str], bool] | None = None,
     staged_paths: Iterable[str] = (),
+    styles=None,
 ) -> list[Diagnostic]:
     """零尺寸可能由精灵/原生样式决定；越界、缺图与脚本均为静态提示。"""
     issues = []
@@ -264,6 +272,35 @@ def diagnose(
                 "切割位置未与客户端核实；画布角标同样标「近似」。",
             )
         )
+
+    # 图片取不到但会按 ui.lst 的 iStyle 画按钮：这是样式皮肤，不是缺图占位
+    if styles is not None:
+        for path, widget in entries:
+            if widget.wtype not in _STYLE_BUTTON_TYPES:
+                continue
+            index = widget.props.get("iStyle")
+            if not isinstance(index, int) or isinstance(index, bool):
+                continue
+            style = styles.tbstyle(index)
+            if not style.get("ButtonNormalColor"):
+                continue
+            name = widget.props.get("sFileName")
+            resolvable = bool(
+                isinstance(name, str) and name
+                and not name.endswith(("\\", "/"))
+                and (resource_exists is None or resource_exists(name)))
+            if resolvable:
+                continue
+            issues.append(
+                Diagnostic(
+                    "提示",
+                    "RENDER_STYLE_SKIN",
+                    path,
+                    "iStyle",
+                    f"图片不可用，画布按 ui.lst 的 iStyle={index} 样式表配色"
+                    "绘制按钮（不是占位框）；客户端实际外观未核实。",
+                )
+            )
 
     # 运行时可见性：布局里有、运行时隐藏/不加载——与「资源加载失败」分开报
     for path, widget in entries:
