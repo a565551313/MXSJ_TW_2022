@@ -397,6 +397,8 @@ class WindowSetupMixin:
 
     def _connect_signals(self) -> None:
         self.resource_panel.export_layout_requested.connect(self.export_layout)
+        self.resource_panel.replace_layout_requested.connect(
+            self.replace_layout_dialog)
         self.resource_panel.open_pack_layout.connect(
             self._open_pack_layout)
         self.resource_panel.import_pack_layout.connect(self.import_pack_layout)
@@ -445,6 +447,7 @@ class WindowSetupMixin:
         self._tab_bar.blockSignals(True)
         self._tab_bar.addTab(session.label())
         self._tab_bar.blockSignals(False)
+        self._refresh_tab_marks()
 
     def _remove_session(self, index: int) -> None:
         """无确认移除一个标签；移除激活页时切邻页或回到空态。"""
@@ -453,6 +456,7 @@ class WindowSetupMixin:
         self._tab_bar.blockSignals(True)
         self._tab_bar.removeTab(index)
         self._tab_bar.blockSignals(False)
+        self._refresh_tab_marks()
         if not was_active:
             return
         self._active = None

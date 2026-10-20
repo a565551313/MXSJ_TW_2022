@@ -28,6 +28,7 @@ from ..core.catalog import (
     generation_of,
 )
 from ..core.model import WIDGET_TYPES, LayoutDocument, Widget
+from .resource_menu import build_resource_menu
 
 _COLOR_CURRENT = QBrush(QColor("#1a7f37"))
 _COLOR_TRANSITIONAL = QBrush(QColor("#9a6700"))
@@ -68,6 +69,7 @@ class ResourceTreePanel(QWidget):
     open_pack_path = Signal(str)
     import_pack_layout = Signal(str)    # 包根右键导入
     export_layout_requested = Signal(tuple)
+    replace_layout_requested = Signal(tuple)  # 用所选 .dlg 内容替换该布局
     open_loose_file = Signal(str)        # 散装 .dlg 路径
     choose_resource_dir = Signal()
     choose_loose_dir = Signal()
@@ -109,19 +111,13 @@ class ResourceTreePanel(QWidget):
         data = item.data(0, Qt.ItemDataRole.UserRole) if item else None
         if not data or data[0] not in ("packroot", "file", "pack"):
             return
-        menu = QMenu(self)
-        if data[0] in ("file", "pack"):
-            action = menu.addAction("导出布局…")
-            action.setToolTip("导出来源原文，不含未保存编辑，不转换文本编码")
-            action.setEnabled(not item.font(0).italic())
-            action.triggered.connect(
-                lambda: self.export_layout_requested.emit(tuple(data)))
-        elif data[0] == "packroot":
-            action = menu.addAction("导入布局文件…")
-            action.triggered.connect(lambda: self.import_pack_layout.emit(data[1]))
-            open_action = menu.addAction("按包内路径打开布局…")
-            open_action.triggered.connect(lambda: self.open_pack_path.emit(data[1]))
-        else:
+        menu = build_resource_menu(
+            self, data, missing=bool(item.font(0).italic()),
+            on_export=self.export_layout_requested.emit,
+            on_import=self.import_pack_layout.emit,
+            on_open_path=self.open_pack_path.emit,
+            on_replace=self.replace_layout_requested.emit)
+        if menu is None:
             return
         menu.exec(self._tree.viewport().mapToGlobal(pos))
 

@@ -289,19 +289,27 @@ class SourceActionTests(unittest.TestCase):
         panel.export_layout_requested.disconnect(self.window.export_layout)
         panel.export_layout_requested.connect(seen.append)
         with (mock.patch.object(panel._tree, "itemAt", return_value=leaf),
-              mock.patch("ui_editor.ui.panels.QMenu") as menu):
+              mock.patch("ui_editor.ui.resource_menu.QMenu") as menu):
+            export, replace = mock.Mock(), mock.Mock()
+            menu.return_value.addAction.side_effect = [export, replace]
             panel._show_context_menu(QPoint())
-            menu.return_value.addAction.assert_called_once_with("导出布局…")
-            action = menu.return_value.addAction.return_value
-            action.triggered.connect.call_args.args[0]()
+            self.assertEqual(
+                [call.args[0]
+                 for call in menu.return_value.addAction.call_args_list],
+                ["导出布局…", "替换布局…"])
+            export.triggered.connect.call_args.args[0]()
         self.assertEqual(seen, [("pack", str(self.pack), self.name)])
         font = leaf.font(0)
         font.setItalic(True)
         leaf.setFont(0, font)
         with (mock.patch.object(panel._tree, "itemAt", return_value=leaf),
-              mock.patch("ui_editor.ui.panels.QMenu") as menu):
+              mock.patch("ui_editor.ui.resource_menu.QMenu") as menu):
+            export, replace = mock.Mock(), mock.Mock()
+            menu.return_value.addAction.side_effect = [export, replace]
             panel._show_context_menu(QPoint())
-            menu.return_value.addAction.return_value.setEnabled.assert_called_with(False)
+            # 包内缺失的布局：导出与替换都置灰（替换也无从谈起）
+            export.setEnabled.assert_called_with(False)
+            replace.setEnabled.assert_called_with(False)
 
     def test_confirmed_switch_discards_edits_but_uses_source_snapshot(self):
         self.window.open_layout_file(str(self.file))

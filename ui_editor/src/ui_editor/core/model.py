@@ -145,6 +145,15 @@ class LayoutDocument:
         self.pending_pack_import = True
         self.dirty = True
 
+    def begin_inplace_replace(self, previous: list[dict]) -> None:
+        """原地替换内容（散装文件）：以替换前的磁盘内容为清单基线。
+
+        不设 ``pending_pack_import``：目标还是原来那个文件，按普通保存
+        落盘即可；只是把「改了哪些」的对照起点定在被替换前的内容。
+        """
+        self._saved_state = copy.deepcopy(previous)
+        self.dirty = True
+
     def mark_saved(self) -> None:
         """仅成功写入后建立清单基线；保留撤销时间线。"""
         self._saved_state = self._snapshot()

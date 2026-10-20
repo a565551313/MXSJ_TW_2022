@@ -93,6 +93,28 @@ def pixel(image, x, y):
     return (color.red(), color.green(), color.blue(), color.alpha())
 
 
+def color_share(image, expected, tol: int = 20) -> float:
+    """图像里「接近 expected」的不透明像素占比。
+
+    皮肤可能带渐变、圆角边框，文字抗锯齿也会盖住中心那几个像素，
+    所以不挑固定采样点：按色差容差统计面积，再看主色是不是它。
+    """
+    total = image.width() * image.height()
+    if not total:
+        return 0.0
+    hit = 0
+    for y in range(image.height()):
+        for x in range(image.width()):
+            color = image.pixelColor(x, y)
+            if color.alpha() == 0:
+                continue
+            if all(abs(color_channel - want) <= tol for color_channel, want in zip(
+                    (color.red(), color.green(), color.blue()),
+                    expected[:3], strict=True)):
+                hit += 1
+    return hit / total
+
+
 class _NeedsGui(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -385,7 +407,8 @@ class TestDrawnSourceBadge(_NeedsGui):
         self.widget_ = self._widget(iStyle=0)
         self.ctx = self._ctx(FakeAssets({}))
         image = self._render()
-        self.assertEqual(pixel(image, 30, 12), (255, 255, 198, 255))  # 浅黄
+        self.assertGreaterEqual(  # 浅黄占主体，说明走的是样式表皮肤
+            color_share(image, (255, 255, 198)), 0.5)
         self.assertEqual(resolve_source(self.widget_, self.ctx),
                          "style_skin")
         found = self._one("x")
@@ -426,7 +449,8 @@ class TestDrawnSourceBadge(_NeedsGui):
             FakeAssets({"skins\\btn.png": png_bytes(60, 24,
                                                      (255, 0, 0, 255))}),
             skins={"一级按钮": skin})
-        self.assertEqual(pixel(self._render(), 30, 12), (255, 0, 0, 255))
+        self.assertGreaterEqual(
+            color_share(self._render(), (255, 0, 0)), 0.5)
         found = self._one("x")
         self.assertEqual([m.code for m in found], ["code_skin"])
         self.assertIn("脚本现造", found[0].text)
@@ -457,7 +481,8 @@ class TestDrawnSourceBadge(_NeedsGui):
         self.widget_ = self._widget()
         self.ctx = self._ctx(FakeAssets(files))
         image = self._render()
-        self.assertEqual(pixel(image, 30, 12), (0, 200, 255, 255))
+        self.assertGreaterEqual(
+            color_share(image, (0, 200, 255)), 0.5)
         self.assertEqual([m.code for m in self._one("x")], ["native_nine_slice"])
 
 

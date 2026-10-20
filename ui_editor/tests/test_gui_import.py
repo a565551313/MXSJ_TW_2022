@@ -189,7 +189,7 @@ class TestGuiImport(unittest.TestCase):
         panel.import_pack_layout.connect(seen.append)
         with (
             mock.patch.object(panel._tree, "itemAt", return_value=root),
-            mock.patch("ui_editor.ui.panels.QMenu") as menu,
+            mock.patch("ui_editor.ui.resource_menu.QMenu") as menu,
         ):
             action = mock.Mock()
             menu.return_value.addAction.side_effect = [action, mock.Mock()]
@@ -202,7 +202,7 @@ class TestGuiImport(unittest.TestCase):
         self.import_dlg()
         with (
             mock.patch.object(panel._tree, "itemAt", return_value=panel._pending_item),
-            mock.patch("ui_editor.ui.panels.QMenu") as menu,
+            mock.patch("ui_editor.ui.resource_menu.QMenu") as menu,
         ):
             panel._show_context_menu(QPoint())
             menu.assert_not_called()

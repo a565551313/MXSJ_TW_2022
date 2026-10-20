@@ -114,8 +114,8 @@ class TestTabContextMenu(_NeedsGui):
         self.open_tabs(3)
         items = self.menu_items(1)
         self.assertEqual(list(items), [
-            "关闭当前标签", "关闭左侧全部标签", "关闭右侧全部标签",
-            "关闭其他标签", "关闭全部标签"])
+            "锁定标签", "关闭当前标签", "关闭左侧全部标签",
+            "关闭右侧全部标签", "关闭其他标签", "关闭全部标签"])
 
     def test_enablement_at_edges(self):
         self.open_tabs(3)
@@ -214,6 +214,92 @@ class TestTabContextMenu(_NeedsGui):
             self.window._show_tab_context_menu(tab_rect.center())
         execute.assert_called_once()
         self.assertEqual(self.window._tab_bar.currentIndex(), 2)
+
+
+class TestTabLock(_NeedsGui):
+    """锁定只是标签会话状态：批量关闭跳过，单独关闭照旧。"""
+
+    def test_menu_toggles_lock_text(self):
+        self.open_tabs(2)
+        self.assertIn("锁定标签", self.menu_items(0))
+        self.menu_items(0)["锁定标签"].trigger()
+        self.assertTrue(self.window._sessions[0].locked)
+        self.assertIn("解锁标签", self.menu_items(0))
+        self.menu_items(0)["解锁标签"].trigger()
+        self.assertFalse(self.window._sessions[0].locked)
+
+    def test_locked_tab_shows_mark_and_tooltip(self):
+        self.open_tabs(2)
+        self.assertTrue(self.window._tab_bar.tabIcon(0).isNull())
+        self.window._set_tab_locked(0, True)
+        self.assertFalse(self.window._tab_bar.tabIcon(0).isNull())
+        self.assertIn("锁定", self.window._tab_bar.tabToolTip(0))
+        self.window._set_tab_locked(0, False)
+        self.assertTrue(self.window._tab_bar.tabIcon(0).isNull())
+        self.assertEqual(self.window._tab_bar.tabToolTip(0), "")
+
+    def test_lock_does_not_dirty_document(self):
+        sessions = self.open_tabs(1)
+        self.window._set_tab_locked(0, True)
+        self.assertFalse(sessions[0].doc.dirty)
+        self.assertIn("已锁定", self.window.statusBar().currentMessage())
+
+    def test_close_all_skips_locked_tabs(self):
+        sessions = self.open_tabs(4)
+        self.window._set_tab_locked(1, True)
+        self.window._set_tab_locked(3, True)
+        self.window._close_tab_range(0, 4)
+        self.assertEqual(self.window._sessions, [sessions[1], sessions[3]])
+        self.assertEqual(self.window._tab_bar.count(), 2)
+        message = self.window.statusBar().currentMessage()
+        self.assertIn("已关闭 2 个标签", message)
+        self.assertIn("2 个已锁定", message)
+
+    def test_close_others_skips_locked(self):
+        sessions = self.open_tabs(4)
+        self.window._set_tab_locked(0, True)
+        self.window._close_tab_except(2)
+        self.assertEqual(self.window._sessions,
+                         [sessions[0], sessions[2]])
+        self.assertIn("1 个已锁定", self.window.statusBar().currentMessage())
+
+    def test_close_left_and_right_skip_locked(self):
+        sessions = self.open_tabs(5)
+        self.window._set_tab_locked(1, True)
+        self.window._set_tab_locked(4, True)
+        self.window._close_tab_range(0, 5)
+        self.assertEqual(self.window._sessions, [sessions[1], sessions[4]])
+
+    def test_single_tab_close_still_closes_locked(self):
+        sessions = self.open_tabs(2)
+        self.window._set_tab_locked(0, True)
+        self.window._close_tab(0)
+        self.assertEqual(self.window._sessions, [sessions[1]])
+
+    def test_locked_dirty_tab_is_not_confirmed(self):
+        sessions = self.open_tabs(2)
+        sessions[0].doc.dirty = True
+        self.window._set_tab_locked(0, True)
+        with mock.patch.object(self.window, "_confirm_discard",
+                               side_effect=lambda doc: doc is not sessions[0].doc):
+            self.window._close_tab_range(0, 2)
+        self.assertEqual(self.window._sessions, [sessions[0]])
+        self.assertIn("1 个已锁定", self.window.statusBar().currentMessage())
+
+    def test_marks_follow_tab_removal(self):
+        sessions = self.open_tabs(3)
+        self.window._set_tab_locked(2, True)
+        self.window._close_tab(0)
+        self.assertEqual(self.window._sessions, [sessions[1], sessions[2]])
+        self.assertTrue(self.window._tab_bar.tabIcon(0).isNull())
+        self.assertFalse(self.window._tab_bar.tabIcon(1).isNull())
+        self.assertTrue(sessions[2].locked)
+
+    def test_lock_state_is_per_session_not_document(self):
+        sessions = self.open_tabs(2)
+        self.window._set_tab_locked(1, True)
+        self.assertFalse(sessions[0].locked)
+        self.assertNotIn("locked", sessions[0].doc.__dict__)
 
 
 if __name__ == "__main__":

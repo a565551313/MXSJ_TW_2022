@@ -26,6 +26,9 @@ class EditorSession:
         self.selection_anchor: list[int] | None = None
         self.transform: Any = None  # QTransform 不进类型标注：本模块无 Qt 依赖
         self._view = view
+        # 标签锁定：只影响批量关闭（左/右/其他/全部），单独关闭仍然可以。
+        # 不进布局文件，也不影响保存；关掉编辑器就没了。
+        self.locked = False
 
     @staticmethod
     def key_of(doc: LayoutDocument | None) -> tuple | None:

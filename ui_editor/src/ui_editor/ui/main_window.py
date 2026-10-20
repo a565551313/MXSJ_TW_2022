@@ -37,6 +37,7 @@ from .commands import EditingCommandsMixin
 from .diagnostics_panel import DiagnosticsPanel
 from .panels import PalettePanel, ResourceTreePanel, WidgetTreePanel
 from .property_panel import PropertyPanel
+from .replace_layout import ReplaceLayoutMixin
 from .save_workflows import SaveWorkflowsMixin
 from .script_panel import ScriptPanel
 from .source_actions import SourceActionsMixin
@@ -48,8 +49,8 @@ from .workflows import FileWorkflowsMixin
 
 class MainWindow(
     BusyHostMixin, EditingCommandsMixin, FileWorkflowsMixin,
-    SaveWorkflowsMixin, SourceActionsMixin, TabMenuMixin, WindowSetupMixin,
-    QMainWindow
+    SaveWorkflowsMixin, SourceActionsMixin, TabMenuMixin,
+    ReplaceLayoutMixin, WindowSetupMixin, QMainWindow
 ):
     """UI 编辑器主窗口。"""
 
