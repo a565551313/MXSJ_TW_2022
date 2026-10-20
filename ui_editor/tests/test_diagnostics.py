@@ -177,8 +177,8 @@ class TestDiagnostics(unittest.TestCase):
         self.assertEqual(issue.path, (0, 0))
         self.assertIn("不按缺图处理", issue.message)
 
-    def test_dir_base_probe_initial_frame_and_forward_slash(self):
-        """候选帧探测用 GetInitPath 同款 基路径+0.png；命中/缺席都不判缺。"""
+    def test_dir_base_probe_reports_matched_family(self):
+        """诊断报出「命中了哪一族」，与画布同一套拼名规则；缺席也不判缺。"""
         doc = make_doc()
         widget = doc.roots[0].children[0]
         widget.props["sFileName"] = "combdialog4/新登陆界面/上文字底/"
@@ -186,12 +186,12 @@ class TestDiagnostics(unittest.TestCase):
 
         def exists(name):
             probed.append(name)
-            return name.endswith("0.png")
+            return name.endswith(("0l.png", "0c.png", "0r.png"))
 
         issues = diagnose(doc, resource_exists=exists)
-        self.assertEqual(probed, ["combdialog4/新登陆界面/上文字底/0.png"])
+        self.assertIn("combdialog4/新登陆界面/上文字底/0l.png", probed)
         issue = next(i for i in issues if i.code == "RESOURCE_DIR_BASE")
-        self.assertIn("可解析", issue.message)
+        self.assertIn("三态横片", issue.message)
         self.assertNotIn("RESOURCE_MISSING", {i.code for i in issues})
         probed.clear()
 
@@ -200,9 +200,9 @@ class TestDiagnostics(unittest.TestCase):
             return False
 
         issues = diagnose(doc, resource_exists=absent)
-        self.assertEqual(probed, ["combdialog4/新登陆界面/上文字底/0.png"])
+        self.assertIn("combdialog4/新登陆界面/上文字底/0.png", probed)
         issue = next(i for i in issues if i.code == "RESOURCE_DIR_BASE")
-        self.assertIn("未在当前挂载来源中找到", issue.message)
+        self.assertIn("没拼出任何已知族", issue.message)
         self.assertIn("不代表缺图", issue.message)
         self.assertNotIn("RESOURCE_MISSING", {i.code for i in issues})
 

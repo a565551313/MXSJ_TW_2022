@@ -641,8 +641,9 @@ class AssetResolver:
     def _compose_dir_base(self, name: str) -> list[QImage] | None:
         """目录型基路径：按拼名族合成预览帧（规则见 :mod:`.dir_base`）。
 
-        序号帧族逐文件成帧（按钮态预览可用）；横/竖/九片族拼成一张
-        近似预览图。拼不出任何整族时返回 None，走原占位框。
+        序号帧族逐文件成帧（按钮态预览可用）；三态横片族每个状态拼一行
+        成帧（帧号 = 状态号，按钮状态预览直接取帧）；横/竖/九片族拼成一
+        张近似预览图。拼不出任何整族时返回 None，走原占位框。
         """
         chosen = dir_base.plan(name, self._piece_exists)
         if chosen is None:
@@ -653,6 +654,9 @@ class AssetResolver:
         images = [img for img in frames if img is not None]
         if chosen.kind in ("frames", "single"):
             return images
+        if chosen.kind == "h_state":
+            return [_stitch_row(images[index * 3:index * 3 + 3])
+                    for index in range(chosen.states)]
         if chosen.kind == "h_slice":
             return [_stitch_row(images)]
         if chosen.kind == "v_slice":
@@ -660,10 +664,11 @@ class AssetResolver:
         return [_stitch_grid(images, 3)]
 
     def fetch_slice(self, name: str) -> SliceRecipe | None:
-        """目录型基路径的切片资源（横三片/竖三片/九片）；不是切片返回 None。
+        """目录型基路径的切片资源（三态横片/横三片/竖三片/九片）。
 
-        序号帧族与单图族不属于切片（前者是多状态帧、后者是整图），
-        由 :meth:`fetch_image` 照旧返回帧列表。
+        三态横片返回**0 号态**的三块（常态），几何同样是横三片；其它状态
+        由 :meth:`fetch_image` 的帧列表提供（帧号 = 状态号）。序号帧族与
+        单图族不属于切片（前者是多状态整图、后者是一张图），返回 None。
         """
         if not dir_base.is_dir_base(name):
             return None
@@ -672,15 +677,16 @@ class AssetResolver:
             return self._slice_cache[cache_key]
         chosen = dir_base.plan(name, self._piece_exists)
         recipe: SliceRecipe | None = None
-        if chosen is not None and chosen.kind in ("h_slice", "v_slice",
-                                                  "nine_slice"):
-            images = [self._load_single_image(piece) for piece in chosen.pieces]
+        if chosen is not None and chosen.kind in ("h_state", "h_slice",
+                                                  "v_slice", "nine_slice"):
+            pieces = chosen.state_pieces(0)
+            images = [self._load_single_image(piece) for piece in pieces]
             if all(image is not None for image in images):
                 kept = [image for image in images if image is not None]
                 blank = frozenset(index for index, image in enumerate(kept)
                                   if image_is_blank(image))
-                recipe = SliceRecipe(chosen.kind, chosen.pieces,
-                                     tuple(kept), blank)
+                kind = "h_slice" if chosen.kind == "h_state" else chosen.kind
+                recipe = SliceRecipe(kind, pieces, tuple(kept), blank)
         self._slice_cache[cache_key] = recipe
         return recipe
 

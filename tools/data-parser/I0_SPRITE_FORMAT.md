@@ -57,6 +57,24 @@ sprites, export raw as-is): `interface.fls` entries starting with
 (PCM / GSM610 tag 49 / IMA-ADPCM tag 17) plus tiny GBK text
 redirect records like `1 weapon3\士兵攻击.wav`.
 
+## I4: 16-bit direct colour (2026-10-20, from real interface.fls)
+
+`interface.fls` 的 `.igs` 图里还有 `I4`：与 T4 同构，但**行内颜色是 2 字节
+RGB565 小端**（不是 3 字节 RGB888），无调色板，行长表 **u8**。
+
+* 判定（真包样本，729 个目录型基路径里 3 个族的九片/三片全是 I4）：
+  按 2 字节解，`totalLines == sum(frameH)` 之后每行都正好铺满帧宽并收尾；
+  按 3 字节解则行行越界。
+* `combdialog\游戏知道\三宫\知道蓝分割线\left.igs`（50×2）解出
+  `(0,149,230)` 纯蓝，与「蓝分割线」的命名相符——这也是判定 565 小端
+  而非大端的旁证（大端会得到偏黄绿的颜色）。
+* 4×4 的九片角块也是 I4（例如 `combdialog2\杂图\聊天气泡左\middle\middle.igs`，
+  46 B，单行 `0x84 0xf2 0x4e 0x00` = REP×4 + RGB565 `0x4ef2`）。
+* 已实现：`mx_common/sprite_format.py`（`MAGICS`/`DIRECT_MAGICS` 加入 `I4`，
+  新增 `DIRECT_COLOR_BYTES = {I4: 2, T4: 3, T5: 3}`、`U16_LEN_MAGICS`），
+  `ui_editor/core/sprite.py` 与 `resource_editor/core/codecs/sprite.py` 两个落点；
+  在这批真样本上两边 RGBA 逐字节一致。编码器仍只写 I0/T0/I1。
+
 ## Non-sprite entries in the same packs
 
 * **PNG**: 26 entries each in skill.fls / skill2.fls, 31 in magicres5.fls

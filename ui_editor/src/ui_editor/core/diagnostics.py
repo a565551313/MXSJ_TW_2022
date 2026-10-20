@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from . import dlg_codec, runtime_state
+from . import dir_base, dlg_codec, runtime_state
 from .script_index import LayoutLink
 
 if TYPE_CHECKING:
@@ -92,30 +92,48 @@ _STYLE_BUTTON_TYPES = frozenset({
 })
 
 
+#: 拼名族 → 诊断里给人看的名字
+_DIR_BASE_KIND_LABEL = {
+    "h_state": "三态横片",
+    "frames": "序号帧",
+    "nine_slice": "九片",
+    "h_slice": "横三片",
+    "v_slice": "竖三片",
+    "single": "单图",
+}
+
+
 def _dir_base_message(
     value: str, resource_exists: Callable[[str], bool] | None
 ) -> str:
     """目录型基路径（资源字段以斜杠结尾）的诊断文案。
 
-    控件运行时在其下拼接子图（GetInitPath 候选帧 ``0.png``、边框类
-    left/middle/right 等），按文件查表必然落空，不能报缺图。仅探测
-    ``基路径+0.png`` 作为线索：缺席也不判缺（其它拼名族不叫 0.png）。
+    控件运行时在其下拼接子图（按钮三态横片 ``0l/0c/0r``、边框
+    left/middle/right、九片 ``top/left`` …），按文件查表必然落空，
+    不能报缺图。挂了资源来源就用 :func:`dir_base.plan` 报出**实际命中的
+    拼名族**（与画布同一套规则，2026-10-20 按 interface.fls 全量实测校准）。
     """
     base = (
         "目录型基路径：运行时在其下拼子图"
-        "（如按钮序号帧 0.png、边框 left/middle/right），"
+        "（如按钮三态 0l/0c/0r、边框 left/middle/right、九片 top/left），"
         "本身不是文件，不按缺图处理"
     )
     if resource_exists is None:
         return base + "。"
-    frame = value + "0.png"
-    if resource_exists(frame):
-        return base + f"；候选帧 {frame} 在当前挂载来源中可解析。"
-    return (
-        base
-        + f"；候选帧 {frame} 未在当前挂载来源中找到"
-        "（不代表缺图，可能为其它子图拼名）。"
-    )
+    chosen = dir_base.plan(value, resource_exists)
+    if chosen is None:
+        return base + ("；当前挂载来源里没拼出任何已知族"
+                       "（不代表缺图，可能是资源未挂全）。")
+    label = _DIR_BASE_KIND_LABEL.get(chosen.kind, chosen.kind)
+    if chosen.kind == "h_state":
+        detail = f"{label}（{chosen.states} 态）"
+    elif chosen.kind == "frames":
+        detail = f"{label}（{len(chosen.pieces)} 帧）"
+    elif chosen.kind == "single":
+        detail = f"{label}（{chosen.pieces[0].rsplit(chr(92), 1)[-1]}）"
+    else:
+        detail = f"{label}（{len(chosen.pieces)} 块）"
+    return base + f"；当前挂载来源里命中【{detail}】族，画布按它绘制。"
 
 
 def diagnose(

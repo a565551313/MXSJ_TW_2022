@@ -1,20 +1,33 @@
 """目录型基路径的子图拼名规则（纯逻辑、无 Qt）。
 
-``sFileName`` 等资源字段以 ``\\``/``/`` 结尾的是目录型基路径：引擎运行时
-在其下拼接子图，包内没有基路径本身这个条目（探针 v7 的 706 条伪引用）。
-拼名族按来源分四类，本模块只负责「拼出哪几个名字、按什么结构拼」：
+``sFileName`` 等资源字段以 ``\\\\``/``/`` 结尾的是目录型基路径：引擎运行时
+在其下拼接子图，包内没有基路径本身这个条目。
 
-1. **序号帧**（三态按钮/勾选族）：``0.png`` 起连号，``GetInitPath`` 取
-   ``\\0.png``、``SetFrame(n)`` 换 ``n.png``（interface.py 字节码；
-   ``声音按钮\\`` 经用户实测 0/1/2.png）；
-2. **横三片**（横框族）：``left1.png``+``middle.png``+``right2.png`` 等
-   （combdialog.py ``CreatePngHFrame_New`` 字面量）；
-3. **竖三片**（竖框族）：``top.png``+``middle.png``+``bottom.png``；
-4. **九片**（九宫格族）：``top/left.png`` … ``bottom/right.png``
-   （``top/left%s``/``middle%s`` 等字面量，``%s`` 为扩展名）。
+拼名族**按 interface.fls 全量实测定版**（2026-10-20，614,482,967 B、
+2,697 篇 ``.dlg``、729 个目录型基路径全部探测过，结果见
+``docs/EXTERNAL_CORPUS.md``）：
 
-候选按族优先级整组尝试，缺一块即换下一族；命中族即返回。图像取用与
-合成由 :mod:`ui_editor.core.assets` 负责，本模块不加载任何图片。
+1. **三态横片**（``CTextButton``/``CHPagePngButton``/``CVPagePngButton``）：
+   ``0l.png``+``0c.png``+``0r.png``、``1l``… 每个状态是横三片，状态数即
+   连号段长度（实测 2～5 态）。状态序号就是文件名前缀，**哪个序号是悬停/
+   按下仍未与客户端核实**；
+2. **序号帧**（``CButton`` 等）：``0.png`` 起连号，整张一行一态；``.igs``
+   与 ``.png`` 同族不混用；
+3. **九片**（``CPngNineFrame``/``CFrame``/``CBorder``）：``top/left`` …
+   ``bottom/right`` 共 9 块，中列是 ``top/middle``、``middle/middle``、
+   ``bottom/middle``——**没有** 平铺的 ``top.png``/``middle.png``/``bottom.png``
+   （实测 124 个九片基路径，全部 9 块齐装）；
+4. **横三片**（``CHPngFrame``/``CHFrame``/``CProgress``）：``left`` +
+   ``middle`` + ``right``（实测 105 个）；
+5. **竖三片**（``CVPngFrame``/``CVFrame``）：``top`` + ``middle`` + ``bottom``
+   （实测 22 个）；
+6. **单图**：整目录只有一张 ``bg``/``middle``（实测 10 个）。
+
+整族同扩展名（``.png`` 或 ``.igs``）：实测包里没有一族混扩展名的情况，
+故按扩展名整组尝试，缺一块即换下一族。
+
+早前版本按反编译字面量写下的 ``left1.png``/``right2.png``/平铺 ``top.png``
+三块九片在真语料上 **0 命中**（前者保留为兜底候选，后者已删）。
 """
 
 from __future__ import annotations
@@ -22,23 +35,59 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-__all__ = ["DirBasePlan", "is_dir_base", "plan", "frame_series"]
+__all__ = ["DirBasePlan", "is_dir_base", "plan", "frame_series", "state_series"]
 
-#: 序号帧最多收集到几帧（游戏按钮族实测到 2，SetFrame(3) 另有目录；留余量）
+#: 序号帧/状态最多收到第几号（实测按钮最多 5 态，留余量）
 FRAME_MAX = 8
+
+#: 同族候选扩展名（按优先级；整族同扩展名）
+EXTS = (".png", ".igs")
+
+#: 九片：行 × 列（顺序必须是 nine_slice 要的行优先九块）
+GRID_PIECES = tuple(
+    f"{row}/{column}"
+    for row in ("top", "middle", "bottom")
+    for column in ("left", "middle", "right")
+)
 
 
 @dataclass(frozen=True)
 class DirBasePlan:
-    """一族拼名方案：``kind`` 为 frames/h_slice/v_slice/nine_slice。"""
+    """一族拼名方案。
+
+    ``kind``：
+
+    - ``h_state``：三态横片，``pieces`` 是 ``状态数 × 3`` 条（``0l 0c 0r
+      1l 1c 1r …``），按状态分行；
+    - ``frames``：``pieces`` 每项是一帧整图；
+    - ``nine_slice``/``h_slice``/``v_slice``：``pieces`` 依次是九/三块；
+    - ``single``：一张整图。
+    """
 
     kind: str
     pieces: tuple[str, ...]
+
+    @property
+    def states(self) -> int:
+        """按钮态数（``h_state`` 家族）；其它家族为 1。"""
+        return len(self.pieces) // 3 if self.kind == "h_state" else 1
+
+    def state_pieces(self, index: int = 0) -> tuple[str, ...]:
+        """取某态的横三片（``index`` 越界按 0 处理）。"""
+        if self.kind != "h_state":
+            return self.pieces
+        count = self.states
+        index = index if 0 <= index < count else 0
+        return self.pieces[index * 3:index * 3 + 3]
 
 
 def is_dir_base(name: str) -> bool:
     """资源值以斜杠结尾即目录型基路径。"""
     return bool(name) and name.endswith(("\\", "/"))
+
+
+def _whole(names: tuple[str, ...], exists: Callable[[str], bool]) -> bool:
+    return all(exists(name) for name in names)
 
 
 def frame_series(
@@ -47,7 +96,7 @@ def frame_series(
     """序号帧族：``0.png``/``0.igs`` 起连号收集；没有 0 号帧不算此族。"""
 
     def pick(index: int) -> str | None:
-        for ext in (".png", ".igs"):
+        for ext in EXTS:
             candidate = f"{name}{index}{ext}"
             if exists(candidate):
                 return candidate
@@ -65,74 +114,82 @@ def frame_series(
     return tuple(pieces)
 
 
-def _whole(names: tuple[str, ...], exists: Callable[[str], bool]) -> bool:
-    return all(exists(name) for name in names)
+def state_series(
+    name: str, exists: Callable[[str], bool]
+) -> tuple[str, ...] | None:
+    """三态横片族：``{n}l``+``{n}c``+``{n}r`` 同扩展名连号收集。
+
+    返回按状态平铺的 ``3 × 状态数`` 条路径；没有 0 号态返回 None。
+    """
+    for ext in EXTS:
+        pieces: list[str] = []
+        for index in range(FRAME_MAX):
+            trio = tuple(f"{name}{index}{side}{ext}" for side in "lcr")
+            if not _whole(trio, exists):
+                break
+            pieces.extend(trio)
+        if pieces:
+            return tuple(pieces)
+    return None
+
+
+def _grid(name: str, ext: str) -> tuple[str, ...]:
+    return tuple(name + piece + ext for piece in GRID_PIECES)
+
+
+#: 各族候选（同族同扩展名，整组齐装才算命中）
+_H_SLICES = (
+    ("left.png", "middle.png", "right.png"),
+    ("left.igs", "middle.igs", "right.igs"),
+    # 反编译字面量的历史候选：真语料 0 命中，仅作兜底
+    ("left1.png", "middle.png", "right2.png"),
+    ("left2.png", "middle.png", "right1.png"),
+)
+_V_SLICES = (("top.png", "middle.png", "bottom.png"),
+             ("top.igs", "middle.igs", "bottom.igs"))
+_SINGLES = (
+    ("bg.png",), ("bg.igs",),
+    ("middle.png",), ("middle.igs",),
+    # 整个目录只有九片正中那一块（实测 combdialog\\主框架\\石纹\\，203 处引用）
+    ("middle/middle.png",), ("middle/middle.igs",),
+)
 
 
 def plan(name: str, exists: Callable[[str], bool]) -> DirBasePlan | None:
     """按族优先级返回第一组齐装的拼名方案；都拼不出返回 None。
 
-    序：序号帧 → 横三片 → 九片 → 竖三片 → `bg` 单图（拼图族缺一块
-    即换下族，单图族兜底）。
+    序：三态横片 → 九片 → 横三片 → 竖三片 → 序号帧 → 单图。
+
+    拼图族（三片/九片）一律先于整图族：
+
+    - 九片必须先于横三片：48 个九片基路径同时有平铺 ``left/middle/right``
+      （``CPngNineFrame``），按九片切才对；
+    - 横三片必须先于序号帧：``combdialog4\\杂图\\经验进度条\\`` 这类
+      ``CProgress`` 既有 ``0.png``（成品整条 134×14）又有 ``left/middle/
+      right``（8+16+8，中间可拉伸），客户端按切片拉伸，整图会画出死尺寸。
     """
     if not is_dir_base(name):
         return None
+    states = state_series(name, exists)
+    if states is not None:
+        return DirBasePlan("h_state", states)
+    for ext in EXTS:
+        pieces = _grid(name, ext)
+        if _whole(pieces, exists):
+            return DirBasePlan("nine_slice", pieces)
+    for candidates in _H_SLICES:
+        pieces = tuple(name + piece for piece in candidates)
+        if _whole(pieces, exists):
+            return DirBasePlan("h_slice", pieces)
+    for candidates in _V_SLICES:
+        pieces = tuple(name + piece for piece in candidates)
+        if _whole(pieces, exists):
+            return DirBasePlan("v_slice", pieces)
     series = frame_series(name, exists)
     if series is not None:
         return DirBasePlan("frames", series)
-    for kind, candidates in (
-        (
-            "h_slice",
-            (
-                ("left1.png", "middle.png", "right2.png"),
-                ("left2.png", "middle.png", "right1.png"),
-                ("left.png", "middle.png", "right.png"),
-                ("left.igs", "middle.igs", "right.igs"),
-            ),
-        ),
-        (
-            # 九片必须先于竖片：九片集含 top/middle/bottom.png，
-            # 整组校验前先试九片，否则真九宫格会被误判成竖三片。
-            "nine_slice",
-            (
-                (
-                    "top/left.png",
-                    "top.png",
-                    "top/right.png",
-                    "middle/left.png",
-                    "middle.png",
-                    "middle/right.png",
-                    "bottom/left.png",
-                    "bottom.png",
-                    "bottom/right.png",
-                ),
-                (
-                    "top/left.igs",
-                    "top.igs",
-                    "top/right.igs",
-                    "middle/left.igs",
-                    "middle.igs",
-                    "middle/right.igs",
-                    "bottom/left.igs",
-                    "bottom.igs",
-                    "bottom/right.igs",
-                ),
-            ),
-        ),
-        (
-            "v_slice",
-            (
-                ("top.png", "middle.png", "bottom.png"),
-                ("top.igs", "middle.igs", "bottom.igs"),
-            ),
-        ),
-    ):
-        for pieces in candidates:
-            full = tuple(name + piece for piece in pieces)
-            if _whole(full, exists):
-                return DirBasePlan(kind, full)
-    # bg 单图族（官服 1019 实测 6 例）：整目录就一张 bg，直接整图用。
-    for piece in ("bg.png", "bg.igs"):
-        if exists(name + piece):
-            return DirBasePlan("single", (name + piece,))
+    for candidates in _SINGLES:
+        pieces = tuple(name + piece for piece in candidates)
+        if _whole(pieces, exists):
+            return DirBasePlan("single", pieces)
     return None

@@ -86,52 +86,78 @@ class TestDirBase(unittest.TestCase):
         self.assertEqual(chosen.kind, "v_slice")
 
     def test_nine_slice(self):
-        """整组九片优先于竖三片（九片集含 top/middle/bottom，不能被抢先）。"""
-        base = "上文字底/"
-        pieces = (
-            "top/left.png",
-            "top.png",
-            "top/right.png",
-            "middle/left.png",
-            "middle.png",
-            "middle/right.png",
-            "bottom/left.png",
-            "bottom.png",
-            "bottom/right.png",
-        )
+        """九片按实测命名：中列是 ``*/middle``，没有平铺的 top/middle/bottom。"""
+        base = "combdialog\\内框架\\"
+        pieces = [f"{row}/{col}.igs"
+                  for row in ("top", "middle", "bottom")
+                  for col in ("left", "middle", "right")]
         chosen = dir_base.plan(base, exists_from(*(base + p for p in pieces)))
         assert chosen is not None
         self.assertEqual(chosen.kind, "nine_slice")
         self.assertEqual(len(chosen.pieces), 9)
+        self.assertEqual(chosen.pieces[1], base + "top/middle.igs")
+        self.assertEqual(chosen.pieces[4], base + "middle/middle.igs")
+        # 老版本的平铺命名不该再命中九片（真语料 0 命中）
+        legacy = ("top/left.png", "top.png", "top/right.png",
+                  "middle/left.png", "middle.png", "middle/right.png",
+                  "bottom/left.png", "bottom.png", "bottom/right.png")
+        chosen = dir_base.plan(
+            "old/", exists_from(*("old/" + p for p in legacy)))
+        self.assertNotEqual(getattr(chosen, "kind", None), "nine_slice")
 
-    def test_priority_frames_then_slices(self):
-        base = "b/"
-        names = [
-            base + "0.png",
-            base + "left1.png",
-            base + "middle.png",
-            base + "right2.png",
-        ]
+    def test_h_state_family(self):
+        """三态横片：0l/0c/0r … 连号，状态数记在 plan 上。"""
+        base = "combdialog4\\三态按钮\\黄色分页按钮\\"
+        names = []
+        for index in range(4):
+            names += [f"{base}{index}{side}.png" for side in "lcr"]
         chosen = dir_base.plan(base, exists_from(*names))
         assert chosen is not None
-        self.assertEqual(chosen.kind, "frames")
-        # 无 0 号帧时横片优先于九片
+        self.assertEqual(chosen.kind, "h_state")
+        self.assertEqual(chosen.states, 4)
+        self.assertEqual(chosen.state_pieces(0),
+                         (base + "0l.png", base + "0c.png", base + "0r.png"))
+        self.assertEqual(chosen.state_pieces(2),
+                         (base + "2l.png", base + "2c.png", base + "2r.png"))
+        # 缺一块即整态作废，不半态成族
+        broken = [base + "0l.png", base + "0c.png", base + "0r.png",
+                  base + "1l.png", base + "1r.png"]
+        chosen = dir_base.plan(base, exists_from(*broken))
+        assert chosen is not None
+        self.assertEqual(chosen.states, 1)
+
+    def test_single_middle_piece(self):
+        """整目录只有九片正中一块：按单图兜底（combdialog\\主框架\\石纹\\）。"""
+        base = "combdialog\\主框架\\石纹\\"
+        chosen = dir_base.plan(base, exists_from(base + "middle/middle.igs"))
+        assert chosen is not None
+        self.assertEqual(chosen.kind, "single")
+        self.assertEqual(chosen.pieces, (base + "middle/middle.igs",))
+
+    def test_priority_slices_then_frames(self):
+        """拼图族压过整图族（实测 CProgress 既有 0.png 又有 left/middle/right）。"""
+        base = "combdialog4\\杂图\\经验进度条\\"
+        names = [base + "0.png", base + "left.png", base + "middle.png",
+                 base + "right.png"]
+        chosen = dir_base.plan(base, exists_from(*names))
+        assert chosen is not None
+        self.assertEqual(chosen.kind, "h_slice")
+        # 九片压过横三片：48 个 CPngNineFrame 基路径两种都有
         names = [
             base + "left.png",
             base + "middle.png",
             base + "right.png",
-            base + "top/left.png",
-            base + "top.png",
-            base + "top/right.png",
-            base + "middle/left.png",
-            base + "middle/right.png",
-            base + "bottom/left.png",
-            base + "bottom.png",
-            base + "bottom/right.png",
-        ]
+        ] + [f"{base}{row}/{col}.png"
+             for row in ("top", "middle", "bottom")
+             for col in ("left", "middle", "right")]
         chosen = dir_base.plan(base, exists_from(*names))
         assert chosen is not None
-        self.assertEqual(chosen.kind, "h_slice")
+        self.assertEqual(chosen.kind, "nine_slice")
+        # 没有任何拼图族时才轮到序号帧
+        names = [base + "0.png", base + "1.png", base + "2.png"]
+        chosen = dir_base.plan(base, exists_from(*names))
+        assert chosen is not None
+        self.assertEqual(chosen.kind, "frames")
 
     def test_plan_rejects_file_names_and_dead_dirs(self):
         self.assertIsNone(dir_base.plan("images/a.png", exists_from("images/a.png")))

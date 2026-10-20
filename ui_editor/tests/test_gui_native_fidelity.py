@@ -38,6 +38,24 @@ class FakeAssets:
         return self.files.get(name.replace("/", "\\"))
 
     def fetch_image(self, name):
+        if name.endswith(("\\", "/")):
+            # 目录型基路径：按拼名族把各块拼成帧列表（与真解析器同规则）
+            from ui_editor.core import dir_base
+            key = name.replace("/", "\\")
+
+            def exists(candidate):
+                return candidate.replace("/", "\\") in self.files
+
+            chosen = dir_base.plan(key, exists)
+            if chosen is None:
+                return None
+            images = []
+            for piece in chosen.pieces:
+                frames = self._load(piece)
+                if not frames:
+                    return None
+                images.append(frames[0])
+            return images
         return self._load(name)
 
     def _load(self, name):
@@ -58,16 +76,18 @@ class FakeAssets:
             return candidate.replace("/", "\\") in self.files
 
         chosen = dir_base.plan(key, exists)
-        if chosen is None or chosen.kind not in ("h_slice", "v_slice",
-                                                 "nine_slice"):
+        if chosen is None or chosen.kind not in ("h_state", "h_slice",
+                                                 "v_slice", "nine_slice"):
             return None
-        images = [self._load(piece) for piece in chosen.pieces]
+        pieces = chosen.state_pieces(0)   # 三态按钮取 0 号态（常态）
+        images = [self._load(piece) for piece in pieces]
         if any(image is None for image in images):
             return None
         flat = [image[0] for image in images if image is not None]
         blank = frozenset(i for i, image in enumerate(flat)
                           if image_is_blank(image))
-        return SliceRecipe(chosen.kind, chosen.pieces, tuple(flat), blank)
+        kind = "h_slice" if chosen.kind == "h_state" else chosen.kind
+        return SliceRecipe(kind, pieces, tuple(flat), blank)
 
     def frame_size(self, name):
         frames = self._load(name)
@@ -129,15 +149,16 @@ class TestSliceRendering(_NeedsGui):
         base = "frame\\"
         files = {}
         # 九片：四角红、上边绿、左边蓝、中心白 …用不同颜色区分拉伸行为
+        # 九片按实测命名：中列是 top/middle、middle/middle、bottom/middle
         colors = {
             "top/left.png": (255, 0, 0, 255),
-            "top.png": (0, 255, 0, 255),
+            "top/middle.png": (0, 255, 0, 255),
             "top/right.png": (255, 0, 0, 255),
             "middle/left.png": (0, 0, 255, 255),
-            "middle.png": (255, 255, 255, 255),
+            "middle/middle.png": (255, 255, 255, 255),
             "middle/right.png": (0, 0, 255, 255),
             "bottom/left.png": (255, 0, 0, 255),
-            "bottom.png": (0, 255, 0, 255),
+            "bottom/middle.png": (0, 255, 0, 255),
             "bottom/right.png": (255, 0, 0, 255),
         }
         for piece, color in colors.items():
@@ -173,11 +194,12 @@ class TestSliceRendering(_NeedsGui):
     def test_transparent_piece_is_skipped(self):
         base = "nine\\"
         files = {}
-        for piece in ("top/left.png", "top.png", "top/right.png",
-                      "middle/left.png", "middle/right.png",
-                      "bottom/left.png", "bottom.png", "bottom/right.png"):
+        for piece in ("top/left.png", "top/middle.png", "top/right.png",
+                      "middle/left.png", "middle/middle.png",
+                      "middle/right.png", "bottom/left.png",
+                      "bottom/middle.png", "bottom/right.png"):
             files[(base + piece).replace("/", "\\")] = png_bytes(5, 5)
-        files[(base + "middle.png").replace("/", "\\")] = blank_png(5, 5)
+        files[(base + "middle/middle.png").replace("/", "\\")] = blank_png(5, 5)
         widget = Widget({"sWidgetType": "CFrame", "sName": "n",
                          "sFileName": base, "iWidth": 100, "iHeight": 50})
         image = render(widget, FakeAssets(files), size=(100, 50))
@@ -473,9 +495,9 @@ class TestDrawnSourceBadge(_NeedsGui):
     def test_text_button_dir_base_that_composes_uses_slices(self):
         """目录型基路径能拼出九片时，文字按钮也按切片画（不再整图拉伸）。"""
         files = {}
-        for piece in ("top/left.png", "top.png", "top/right.png",
-                      "middle/left.png", "middle.png", "middle/right.png",
-                      "bottom/left.png", "bottom.png", "bottom/right.png"):
+        for piece in ("top/left.png", "top/middle.png", "top/right.png",
+                      "middle/left.png", "middle/middle.png", "middle/right.png",
+                      "bottom/left.png", "bottom/middle.png", "bottom/right.png"):
             files[(self.base + piece).replace("/", "\\")] = png_bytes(
                 5, 5, (0, 200, 255, 255))
         self.widget_ = self._widget()
@@ -484,6 +506,40 @@ class TestDrawnSourceBadge(_NeedsGui):
         self.assertGreaterEqual(
             color_share(image, (0, 200, 255)), 0.5)
         self.assertEqual([m.code for m in self._one("x")], ["native_nine_slice"])
+
+    def test_text_button_state_slices_are_native_and_draw_state_zero(self):
+        """三态按钮的 ``0l/0c/0r`` 是横三片：常态按切片画，且标「原生」。
+
+        实测：``combdialog4\\三态按钮\\一级按钮\\`` 里是 0l/0c/0r … 2l/2c/2r，
+        共 3 态、每态 3 块；老逻辑只认 ``0.png`` 连号，整族一条都画不出来。
+        """
+        files = {}
+        for state, color in enumerate(((0, 200, 255, 255),
+                                       (255, 160, 0, 255),
+                                       (120, 120, 120, 255))):
+            for side, width in (("l", 6), ("c", 20), ("r", 6)):
+                name = f"{self.base}{state}{side}.png"
+                files[name.replace("/", "\\")] = png_bytes(width, 24, color)
+        self.widget_ = self._widget()
+        self.ctx = self._ctx(FakeAssets(files))
+        image = self._render()
+        self.assertGreaterEqual(color_share(image, (0, 200, 255)), 0.5)
+        self.assertEqual([m.code for m in self._one("x")], ["native_h_slice"])
+
+    def test_three_state_images_stay_frames_not_placeholders(self):
+        """``0/1/2.png`` 整图三态的按钮（CButton）画 0 号帧，不报占位。"""
+        files = {}
+        for state, color in enumerate(((0, 200, 255, 255),
+                                       (255, 160, 0, 255),
+                                       (120, 120, 120, 255))):
+            files[(self.base + f"{state}.png").replace("/", "\\")] = png_bytes(
+                60, 24, color)
+        self.widget_ = self._widget(sWidgetType="CButton")
+        self.ctx = self._ctx(FakeAssets(files))
+        image = self._render()
+        self.assertGreaterEqual(color_share(image, (0, 200, 255)), 0.5)
+        codes = [m.code for m in self._one("x")]
+        self.assertNotIn("missing_placeholder", codes)
 
 
 if __name__ == "__main__":
