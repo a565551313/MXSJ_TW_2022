@@ -46,3 +46,48 @@ class TestImageExportSafety(unittest.TestCase):
                 export_image_files("a.png", b"\x89PNG\r\n\x1a\nDATA", None,
                                    root / "out", "../escape.png")
             self.assertFalse((root / "escape.png").exists())
+
+
+class TestBatchNameReservation(unittest.TestCase):
+    """批量导出共用 used_names：同名素材加序号，绝不静默覆盖本批先写的。"""
+
+    def test_same_basename_gets_suffix_instead_of_overwriting(self):
+        first = b"\x89PNG\r\n\x1a\nAAAA"
+        second = b"\x89PNG\r\n\x1a\nBBBB"
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            used: set[str] = set()
+            a = export_image_files("a\\btn.png", first, None, root,
+                                   used_names=used)
+            b = export_image_files("b\\btn.png", second, None, root,
+                                   used_names=used)
+            self.assertEqual([p.name for p in a], ["btn.png"])
+            self.assertEqual([p.name for p in b], ["btn-2.png"])
+            self.assertEqual((root / "btn.png").read_bytes(), first)
+            self.assertEqual((root / "btn-2.png").read_bytes(), second)
+
+    def test_frame_names_reserved_per_stem(self):
+        frames = [mock.Mock(), mock.Mock()]
+        for frame in frames:
+            frame.save.return_value = True
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            used: set[str] = set()
+            a = export_image_files("a\\hero.igs", b"I0", frames, root,
+                                   used_names=used)
+            b = export_image_files("b\\hero.igs", b"I0", frames, root,
+                                   used_names=used)
+            self.assertEqual([p.name for p in a],
+                             ["hero-0.png", "hero-1.png"])
+            self.assertEqual([p.name for p in b],
+                             ["hero-0-2.png", "hero-1-2.png"])
+
+    def test_without_batch_set_keeps_single_export_overwrite(self):
+        first = b"\x89PNG\r\n\x1a\nAAAA"
+        second = b"\x89PNG\r\n\x1a\nBBBB"
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            export_image_files("a\\btn.png", first, None, root)
+            out = export_image_files("a\\btn.png", second, None, root)
+            self.assertEqual([p.name for p in out], ["btn.png"])
+            self.assertEqual((root / "btn.png").read_bytes(), second)

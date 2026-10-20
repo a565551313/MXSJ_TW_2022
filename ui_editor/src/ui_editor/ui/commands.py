@@ -450,10 +450,18 @@ class EditingCommandsMixin:
 
         convert=False：按原格式写原始字节（默认）；
         convert=True：精灵解成逐帧 PNG，方便查看/编辑。
+
+        批量语义（多选导出时用户可见）：同一个资源路径只导一次；不同资源
+        恰好同名的，后写的加序号而不是覆盖先写的；某个目标被
+        ``guard_output`` 拒绝只跳过它，其余照常导出，最后在状态栏一并汇报。
         """
         from pathlib import Path
 
-        from ..core.asset_export import asset_paths_of, export_raw_assets
+        from ..core.asset_export import (
+            asset_paths_of,
+            export_raw_assets,
+            source_key,
+        )
         from .image_export import export_image_files
 
         assets = self.resolver
@@ -465,40 +473,56 @@ class EditingCommandsMixin:
             return
         written: list[Path] = []
         missing: list[str] = []
-        try:
-            if convert:
-                for widget in widgets:
-                    for _key, name in asset_paths_of(widget):
-                        try:
-                            data = assets.fetch_bytes(name)
-                        except ValueError:
+        rejected: list[tuple[str, str]] = []
+        seen: set[str] = set()          # 本批已导出的资源路径
+        used_names: set[str] = set()    # 本批已占用的输出文件名（小写）
+        if convert:
+            for widget in widgets:
+                for _key, name in asset_paths_of(widget):
+                    if source_key(name) in seen:
+                        continue
+                    seen.add(source_key(name))
+                    try:
+                        data = assets.fetch_bytes(name)
+                        if data is None:
                             missing.append(name)
                             continue
                         files = export_image_files(
                             name, data, assets.fetch_image(name), directory,
-                            protected_paths=assets.pack_paths)
-                        if files:
-                            written.extend(files)
-                        else:
-                            missing.append(name)
-            else:
-                for widget in widgets:
-                    files, lost = export_raw_assets(
-                        assets, widget, directory,
-                        protected_paths=assets.pack_paths)
-                    written.extend(files)
-                    missing.extend(lost)
-        except ValueError as exc:  # guard_output 拒绝
-            self._update_status(f"导出被拒绝：{exc}")
-            return
+                            protected_paths=assets.pack_paths,
+                            used_names=used_names)
+                    except (OSError, ValueError) as exc:
+                        # 单个资源被拒/写不出不能连累整批：记账后继续。
+                        rejected.append((name, str(exc)))
+                        continue
+                    if files:
+                        written.extend(files)
+                    else:
+                        missing.append(name)
+        else:
+            for widget in widgets:
+                files, lost = export_raw_assets(
+                    assets, widget, directory,
+                    protected_paths=assets.pack_paths,
+                    seen=seen, rejected=rejected)
+                written.extend(files)
+                missing.extend(lost)
         if written:
             names = "、".join(path.name for path in written[:4])
             more = f" 等 {len(written)} 个文件" if len(written) > 4 else ""
             note = (f"；{len(missing)} 个资源包内找不到："
                     + "、".join(missing[:3]) if missing else "")
+            if rejected:
+                note += (f"；{len(rejected)} 个被拒绝："
+                         + "、".join(name for name, _why in rejected[:2]))
             self._update_status(
                 f"已导出 {names}{more} 到 {directory}{note}")
         else:
+            if rejected:
+                name, why = rejected[0]
+                self._update_status(
+                    f"导出被拒绝（{len(rejected)} 个）：{name} —— {why}")
+                return
             self._update_status(
                 "没有可导出的素材"
                 + (f"（包内找不到：{'、'.join(missing[:3])}）"
