@@ -2094,6 +2094,26 @@ script_editor目录，未修改分享权限/旧包。完整修改文件、diff�
   既有 GUI 契约核对：双击待入包叶子不确认不换文档、切换编码/刷新/
   关窗的 `_confirm_discard` 语义、`window.doc = None` 清空入口均兼容。
 
+### 外部材料位置入档：Drive 上的 interface.fls 分卷与全量语料（2026-10-20，第二十二轮）——仅文档
+
+用户提供取用位置：Google Drive `interface1019` 目录是 `interface.fls` 的四个分卷
+（`interface.z01`/`z02`/`z03` 各 94,371,840 B + `interface.zip` 77,782,093 B，合计
+360,897,613 B）；`MXSJ_CORPUS` 目录是全量语料，10 个独立 ZIP（合计 152,769,019 B）。
+此前「仓库没有 `interface.fls`、语料要自己建」的结论，现在有了可复现来源。
+
+- 新增 [`docs/EXTERNAL_CORPUS.md`](EXTERNAL_CORPUS.md)：两个目录的 Drive folder id、
+  每个文件的 id/字节数/改时间、语料 10 卷的官方 SHA-256（抄自
+  `MXSJ_CORPUS_8212b26_20261015_ARCHIVES.sha256`）、配套索引/回执/样例文件、
+  分卷与语料的解压命令（分卷不单独解、语料不二进制拼接）、`MXSJ_DLG_CORPUS`
+  指回去跑 `test_codec` 的方法，以及红线（不入库、不覆盖原包、不擅自动 Drive 权限、只读解析）。
+- 交叉链接：`AGENTS.md` §2 材料表新增一行、UI 编辑器行补链接；`README.md` 外部语料回归那行；
+  `docs/DECOMPILE_CORPUS.md` 顶部加「先看有没有现成的」；`ui_editor/README.md` 语料测试节。
+- **取证口径**：本轮只读 Drive 元数据（文件名/大小/时间/官方 SHA 清单），
+  **没有下载、没有解压、没有跑语料用例**；`interface` 各卷自身 SHA-256 等未测项在文末
+  「待补」表里标「待实测」，没有编数字。根目录另有整包 `interface1019.zip`
+  （360,897,609 B，比分卷合计小 4 字节），是否同内容未核对，取用以分卷为准。
+- 未改代码、未改版本号、未跑测试（纯文档）；全量测试基线仍为上一轮的 569 项 0 失败（1 skip）。
+
 ### ui_editor 工具栏「编码」「帧」统一下拉风格（2026-10-20，第二十一轮）——版本 0.12.4
 
 用户指出工具栏两个控件与其他不符：文本编码要改成「对齐」「按钮态」那种
