@@ -14,6 +14,7 @@
 | 地图预览／导出 | [地图编辑器](../map_editor/README.md) | 未解碰撞不是可通行 |
 | 静态数据异常复核 | [只读复核系统](../server/README.md) | 与旧 SQLite 数据集不完全等价 |
 | 脚本说明与来源 | [脚本手册](../script_manual/README.md) | 完整登记不等于完整讲解 |
+| 原生游戏 TCP 算法／离线复现 | [native_channel](native_channel/README.md) | 候选兼容层；目标保护包装器与真实客户端联网待验 |
 | Windows 检查／共享核心同步 | [devkit](devkit/README.md) | 静态检查不替代实机 |
 | PE 资源／专项逆向／历史复现 | 下表对应工具 | 先确认样本、输出和副作用 |
 

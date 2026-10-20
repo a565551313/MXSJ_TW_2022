@@ -1,0 +1,116 @@
+3176 script/net.py ('<module>', 'CNet', '__init__')
+names: (b'm_IP', b'm_Port', b'False', b'm_bIsCache', b'm_NetFunction', b'm_NetSpecialFunction', b'm_WarCmd', b'SetMaxLenBytes', b'SetProcessSvrCmdNumPerFrame', b'UNPACK_PACKET_NUM_PER_PROCESS')
+0 124 1
+3 124 0
+6 95 0 b'm_IP'
+9 124 2
+12 124 0
+15 95 1 b'm_Port'
+18 116 2 b'False'
+21 124 0
+24 95 3 b'm_bIsCache'
+27 104 0
+30 124 0
+33 95 4 b'm_NetFunction'
+36 104 0
+39 124 0
+42 95 5 b'm_NetSpecialFunction'
+45 104 0
+48 124 0
+51 95 6 b'm_WarCmd'
+54 124 0
+57 105 7 b'SetMaxLenBytes'
+60 100 1 3
+63 131 1
+66 1 None
+67 124 0
+70 105 8 b'SetProcessSvrCmdNumPerFrame'
+73 116 9 b'UNPACK_PACKET_NUM_PER_PROCESS'
+76 131 1
+79 1 None
+80 100 0 None
+83 83 None
+4082 script/login/netlogin.py ('<module>', 'S2CHello')
+names: (b'UnpackInt', b'g_ServerNum', b'certmgr', b'SetIsCertLogin', b'net', b'g_Net', b'SetSeed', b'True', b'm_Hello', b'NakedSend', b'chr', b'audio', b'InitChatAudio', b'hasattr', b'netquicklogin', b'C_object', b'CBaseObject', b'None', b'CreatePyCommand', b'SetCanQuickLogin', b'selectserver', b'Show', b'False', b'commondialog', b'HideMessageBox', b'loginin', b'ShowLogin', b'g_PingTimer', b'mainpage')
+0 124 0
+3 105 0 b'UnpackInt'
+6 100 1 4
+9 131 1
+12 125 1
+15 124 0
+18 105 0 b'UnpackInt'
+21 100 2 2
+24 131 1
+27 97 1 b'g_ServerNum'
+30 124 0
+33 105 0 b'UnpackInt'
+36 100 3 1
+39 131 1
+42 125 2
+45 100 4 -1
+48 100 0 None
+51 107 2
+54 125 3
+57 124 3
+60 105 3 b'SetIsCertLogin'
+63 124 2
+66 131 1
+69 1 None
+70 116 4 b'net'
+73 105 5 b'g_Net'
+76 105 6 b'SetSeed'
+79 124 1
+82 131 1
+85 1 None
+86 116 7 b'True'
+89 116 4 b'net'
+92 105 5 b'g_Net'
+95 95 8 b'm_Hello'
+98 100 5 b'seed1:%x'
+101 124 1
+104 22 None
+105 71 None
+106 72 None
+107 100 6 4294967296
+110 124 1
+113 23 None
+114 125 1
+117 124 1
+120 100 7 3227993
+123 22 None
+124 100 8 2562088
+127 23 None
+128 100 9 6636321
+131 65 None
+132 125 1
+135 124 0
+138 105 9 b'NakedSend'
+141 116 10 b'chr'
+144 124 1
+147 100 10 256
+150 22 None
+151 131 1
+154 116 10 b'chr'
+157 124 1
+160 100 10 256
+163 21 None
+164 100 10 256
+167 22 None
+168 131 1
+171 23 None
+172 116 10 b'chr'
+175 124 1
+178 100 11 65536
+181 21 None
+182 100 10 256
+185 22 None
+186 131 1
+189 23 None
+190 100 12 b'\x00'
+193 23 None
+194 100 12 b'\x00'
+197 100 13 21
+200 20 None
+201 23 None
+202 131 1
+205 1 None

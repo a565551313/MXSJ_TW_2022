@@ -59,3 +59,10 @@ git grep -n -E 'shared_decoder|tool_and_evidence_sha256' -- server/docs/csv_chec
 3. 明确接受或拒绝每类差异；有游戏语义影响时增加独立原生验证。
 4. 再改调用、测试和必要证据；旧证据保留历史，不用改期望值掩盖行为变化。
 5. 完成消费者迁移及外部工作流核查后才决定归档。停用候选也先检查辅助函数依赖。
+
+## 原生 TCP 候选模块（2026-10-20）
+
+- R：`native_channel/src` 与普通单元测试只依赖 Python ≥3.10 标准库。
+- R/E：可选 `tests/native_oracle.py` 依赖 pefile 2024.8.26、Unicorn 2.1.4 和摘要锁定的 `mxmain.dll`、`exe/render.dll`；不调用 Windows DLL 入口。
+- R/E：`tests/script_evidence.py` 只读复用 `script_link/build_script_index.py` / decompiler 管线，校验 script.fls 与 key DB 摘要；不执行游戏模块。
+- E：`native_channel/evidence/vectors.json` 是原生指令模拟的假数据预期值，不能随兼容实现任意更新；变更需重新运行独立 oracle。
