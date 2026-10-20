@@ -58,6 +58,38 @@ def _dlg(title: str) -> bytes:
         md5="0" * 32)
 
 
+
+class TestUnpackPackedText(unittest.TestCase):
+    """包内文本还原：明文直返、XOR 按 4 字节密钥还原、别把密文当明文。"""
+
+    def test_plain_dlg_and_ini_pass_through(self):
+        plain = _dlg("x")
+        self.assertEqual(unpack_packed_text(plain), plain)
+        ini = b"[UI]\n0=btn.png\n"
+        self.assertEqual(unpack_packed_text(ini), ini)
+
+    def test_xor_with_per_file_key(self):
+        plain = _dlg("y")
+        key = b"\x78\xc7\xae\x39"
+        stored = bytes(b ^ key[i & 3] for i, b in enumerate(plain))
+        self.assertTrue(stored.startswith(b"["))     # 首字节恰好是 '['
+        self.assertEqual(unpack_packed_text(stored), plain)
+
+    def test_ciphertext_starting_with_bracket_is_not_plaintext(self):
+        """真包实测：5 篇 .dlg 的密文首字节正好是 '['（密钥 78c7ae39）。
+
+        旧实现只看首字节 ``[`` 就当明文返回，于是正文是乱码、解析报
+        「找不到 UI_INFO」；修复后按密钥还原。
+        """
+        plain = _dlg("z")
+        key = b"\x78\x11\x22\x33"   # chr(0x23) ^ 0x78 == "["
+        stored = bytes(b ^ key[i & 3] for i, b in enumerate(plain))
+        self.assertEqual(stored[:1], b"[")
+        restored = unpack_packed_text(stored)
+        self.assertTrue(restored.startswith(b"# -*- coding: gbk -*-"))
+        self.assertEqual(restored, plain)
+
+
 class TestReplaceDlgEntry(unittest.TestCase):
     def setUp(self):
         self.key_a = b"\x5a\xa5\x11\x7e"

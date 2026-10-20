@@ -155,6 +155,39 @@ class TestDirectColorSprites(unittest.TestCase):
                 self.assertEqual(px(3, 1), (200, 100, 50, 255))
 
 
+class TestI4DirectColor(unittest.TestCase):
+    """I4 = 行内 2 字节 RGB565、无调色板的真彩精灵。
+
+    2026-10-20 在 interface.fls 的 .igs 上定版：``combdialog2\\杂图\\
+    聊天气泡左\\`` / ``聊天底图\\right\\`` 的九片与
+    ``combdialog\\游戏知道\\三宫\\知道蓝分割线\\`` 的横三片全是 I4。
+    夹具就是包里的原始字节（逐字节抄录），断言尺寸与颜色。
+    """
+
+    #: combdialog\\游戏知道\\三宫\\知道蓝分割线\\left.igs（50×2，整片纯蓝）
+    BLUE = bytes.fromhex(
+        "49340100010032000200000000000000000032000200020000000404"
+        "b2bc0400b2bc0400")
+
+    def test_i4_decodes_rgb565(self):
+        data = self.BLUE
+        self.assertTrue(sprite.is_sprite(data))
+        decoded = sprite.decode_sprite(data)
+        self.assertEqual(decoded.magic, "I4")
+        frame = decoded.frames[0]
+        self.assertEqual((frame.width, frame.height), (50, 2))
+        # 0x04bc → RGB565 小端 → (0, 149, 230)，与「蓝分割线」的命名相符
+        for index in (0, 49 * 4):
+            self.assertEqual(tuple(frame.rgba[index:index + 4]),
+                             (0, 149, 230, 255))
+
+    def test_i4_with_truncated_row_is_not_mistaken_for_3byte(self):
+        """按 3 字节 RGB 解会把行读穿：解析器必须按 DIRECT_COLOR_BYTES 取 2。"""
+        from ui_editor.core.sprite_format import DIRECT_COLOR_BYTES
+        self.assertEqual(DIRECT_COLOR_BYTES[b"I4"], 2)
+        self.assertEqual(DIRECT_COLOR_BYTES[b"T4"], 3)
+
+
 class TestT1PaletteWide(unittest.TestCase):
     """T1 = T0 的 u16 行长变体（调色板 256×RGB888）。
 

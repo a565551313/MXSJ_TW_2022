@@ -180,14 +180,32 @@ def unpack_packed_text(data: bytes) -> bytes:
     先按已知文件头反推 4 字节密钥；不成再用列频率法恢复（明文
     本身列频率得全零密钥）；都不成时原样返回，交给上层报错。
     """
-    if data.startswith(_KNOWN_HEADER[:5]) or data[:1] == b"[":
-        return data  # .dlg 明文或 ui.lst（INI）
+    if data.startswith(_KNOWN_HEADER[:5]) or _looks_plain_text(data):
+        # .dlg 明文，或 ui.lst 这种以 ``[`` 开头的 INI 明文。
+        # 注意：不能只看首字节是不是 ``[``——实测有 5 篇 .dlg 的密文首字节
+        # 正好落在 0x5B（如 ``dialog/home/log.dlg``，XOR 密钥 78c7ae39），
+        # 曾因此被当明文原样返回，解析报「找不到 UI_INFO」。
+        return data
     key = bytes(a ^ b for a, b in
                 zip(data[:4], _HEADER_PREFIX4, strict=False))
     decoded = _xor4(data, key)
     if decoded.startswith(_KNOWN_HEADER):
         return decoded
     return _xor4(data, _recover_key_by_frequency(data))
+
+
+def _looks_plain_text(data: bytes) -> bool:
+    """以 ``[`` 开头且头段几乎全是可打印文本 → 当作 INI 类的明文。
+
+    密文（XOR 后）也会有首字节恰好是 ``[`` 的情况，所以再要求可打印比例，
+    避免把密文当明文放过去（真包实测 5 例）。
+    """
+    head = data[:256]
+    if not head or head[:1] != b"[":
+        return False
+    printable = sum(1 for byte in head
+                    if 32 <= byte < 127 or byte in (9, 10, 13))
+    return printable / len(head) >= 0.95
 
 
 def _recover_key_by_frequency(data: bytes) -> bytes:

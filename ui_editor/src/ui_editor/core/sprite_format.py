@@ -2,7 +2,7 @@
 # mx_common/sprite_format.py 复制（字节相同）。
 # 改共享逻辑：改 mx_common/sprite_format.py → --write；校验：--check
 # 详细说明见 mx_common/README.md。
-"""精灵格式（``I0``/``T0``/``I1``/``T1``/``T4``/``T5``）的共享常量与换算。
+"""精灵格式（``I0``/``T0``/``I1``/``T1``/``I4``/``T4``/``T5``）的共享常量与换算。
 
 **唯一真源**：编辑器与工具里的解码/编码实现（`ui_editor/core/sprite.py`、
 `ui_editor/core/sprite_encode.py`、`resource_editor/core/codecs/sprite.py`）
@@ -21,6 +21,13 @@ I0/I1 为 256×RGB565；T4/T5 无调色板，token 后跟 3 字节 RGB）。
 ``T1`` = ``T0`` 的 u16 行长变体（与 I0→I1、T4→T5 同构）；2026-10-19 在
 interface.fls 的 .spr 姊媚精灵（烟2_.igs 等 21 例）上按「Σ行长=像素流长」定版。
 
+``I4`` = **行内 2 字节 RGB565 真彩、无调色板**（``T4`` 的 16 位色变体），
+2026-10-20 在 interface.fls 的 ``.igs`` 图上定版：729 个目录型基路径里
+``combdialog2\\杂图\\聊天气泡左\\`` 等 3 个族的九片/三片全是 ``I4``。
+判定依据是「按 2 字节解，四角/中片每一行都正好铺满帧宽并以行尾收尾；
+按 3 字节解则行行越界」，且 ``知道蓝分割线`` 解出的颜色是蓝色（与命名相符）。
+``I4`` 的行长表仍是 u8。
+
 行内算子按高位分段：``0x00`` 行尾；``0x01–0x1F`` RUN（计数 5 位，
 后跟 alpha 等级与索引）；``0x20–0x3F`` SINGLE（alpha 等级在 token
 里）；``0x40–0x7F`` LIT（不透明字面序列，计数 6 位）；``0x80–0xBF``
@@ -32,6 +39,7 @@ from __future__ import annotations
 
 __all__ = [
     "ALPHA_LEVELS",
+    "DIRECT_COLOR_BYTES",
     "DIRECT_MAGICS",
     "FRAME_DIR_ENTRY_SIZE",
     "FRAME_STRUCT",
@@ -46,16 +54,21 @@ __all__ = [
     "PALETTE_MAGICS",
     "ROW_ALIGN",
     "ROW_LEN_U8_MAX",
+    "U16_LEN_MAGICS",
     "alpha_to_level",
     "is_sprite",
     "level_to_alpha",
 ]
 
-MAGICS: tuple[bytes, ...] = (b"I0", b"T0", b"I1", b"T1", b"T4", b"T5")
-#: 真彩变体：无调色板，行内 token 之后是 3 字节 RGB 像素
-DIRECT_MAGICS: tuple[bytes, ...] = (b"T4", b"T5")
+MAGICS: tuple[bytes, ...] = (b"I0", b"T0", b"I1", b"T1", b"I4", b"T4", b"T5")
+#: 无调色板变体：行内 token 之后是真彩色像素（字节数见 DIRECT_COLOR_BYTES）
+DIRECT_MAGICS: tuple[bytes, ...] = (b"I4", b"T4", b"T5")
+#: 每个无调色板变体的行内颜色字节数：I4 是 RGB565（2），T4/T5 是 RGB888（3）
+DIRECT_COLOR_BYTES: dict[bytes, int] = {b"I4": 2, b"T4": 3, b"T5": 3}
 #: 带调色板的变体（T0/T1 为 RGB888，I0/I1 为 RGB565）
 PALETTE_MAGICS: tuple[bytes, ...] = (b"I0", b"T0", b"I1", b"T1")
+#: 行长表用 u16 的变体（其余用 u8，含 I4）
+U16_LEN_MAGICS: tuple[bytes, ...] = (b"I1", b"T1", b"T5")
 
 HEADER_STRUCT = "<2sHHHHHH"
 FRAME_STRUCT = "<HHHH"
@@ -78,7 +91,7 @@ MAX_LIT_COUNT = 0x3F
 
 #: 每帧像素流按 4 字节对齐，填充计入末行行长
 ROW_ALIGN = 4
-#: I0/T0 行长表为 u8：单行编码后不得超过 255 字节（I1/T5 用 u16）
+#: 行长表为 u8 的变体：单行编码后不得超过 255 字节（U16_LEN_MAGICS 用 u16）
 ROW_LEN_U8_MAX = 255
 
 

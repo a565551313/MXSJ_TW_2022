@@ -1,4 +1,4 @@
-"""``I0`` / ``T0`` / ``I1`` / ``T1`` / ``T4`` / ``T5`` 精灵解码（输出逐帧 RGBA 字节）。
+"""精灵解码：``I0/T0/I1/T1/I4/T4/T5`` → 逐帧 RGBA 字节。
 
 格式已经字节级验证（见仓库 ``tools/data-parser/i0_sprite.py``），
 此处移植为不依赖 Pillow 的实现，解码结果直接喂 ``QImage``。
@@ -9,7 +9,8 @@
 256×RGB888，I0/I1 为 256×RGB565；T4/T5 无调色板，行内 token
 后跟 3 字节 RGB 真彩像素，2026-10-14 在真实 item.fls 上定版）；
 随后是逐帧逐行的 RLE 像素流（每帧数据按 4 字节对齐，填充计入
-末行长度）。
+末行长度）。``I4`` 是「行内 2 字节 RGB565、无调色板」的真彩变体
+（2026-10-20 在 interface.fls 的 .igs 上定版，见 ``sprite_format``）。
 
 行内算子（低位为计数/等级）：``0x00`` 行尾；``0x01–0x1F`` RUN
 （半透明色块）；``0x20–0x3F`` SINGLE（单像素半透明）；
@@ -29,7 +30,13 @@ import struct
 from dataclasses import dataclass
 
 from .errors import SpriteError
-from .sprite_format import DIRECT_MAGICS, MAGICS, is_sprite
+from .sprite_format import (
+    DIRECT_COLOR_BYTES,
+    DIRECT_MAGICS,
+    MAGICS,
+    U16_LEN_MAGICS,
+    is_sprite,
+)
 
 __all__ = ["SpriteFrame", "Sprite", "is_sprite", "decode_sprite",
            "MAGICS", "DIRECT_MAGICS"]
@@ -58,9 +65,11 @@ class Sprite:
 class _SpriteParser:
     def __init__(self, data: bytes) -> None:
         if not is_sprite(data):
-            raise SpriteError("不是 I0/T0/I1/T4/T5 精灵")
+            raise SpriteError("不是 I0/T0/I1/I4/T4/T5 精灵")
         self.data = data
         self.direct = data[:2] in DIRECT_MAGICS
+        # 无调色板真彩每像素的颜色字节数：I4=2（RGB565）、T4/T5=3（RGB888）
+        self.color_bytes = DIRECT_COLOR_BYTES.get(data[:2], 0)
         (self.magic, _ver, self.frame_count, self.canvas_w, self.canvas_h,
          _cx, _cy) = struct.unpack_from("<2sHHHHHH", data, 0)
         off = 14
@@ -72,7 +81,7 @@ class _SpriteParser:
         off += 4
         if total_lines != sum(f[3] for f in self.frame_dims):
             raise SpriteError("总行数与帧高之和不一致")
-        len_size = 2 if self.magic in (b"I1", b"T1", b"T5") else 1
+        len_size = 2 if self.magic in U16_LEN_MAGICS else 1
         fmt = "<H" if len_size == 2 else "<B"
         self.lens = [
             struct.unpack_from(fmt, data, off + i * len_size)[0]
@@ -157,48 +166,59 @@ def _decode_row(line: bytes, width: int) -> list[tuple[int, int]]:
     return px
 
 
-def _decode_row_direct(
-    line: bytes, width: int
-) -> list[tuple[tuple[int, int, int], int]]:
-    """解真彩（T4/T5）一行，返回 [((r, g, b), alpha8), ...]。
+def _color_at(line: bytes, pos: int, size: int) -> tuple[int, int, int]:
+    """从行内取一个真彩色：``size`` 为 3 时是 RGB888，为 2 时是 RGB565 小端。"""
+    if size == 2:
+        v = line[pos] | (line[pos + 1] << 8)
+        return (((v >> 11) & 0x1F) * 255 // 31,
+                ((v >> 5) & 0x3F) * 255 // 63,
+                (v & 0x1F) * 255 // 31)
+    return (line[pos], line[pos + 1], line[pos + 2])
 
-    算子与调色板版一一对应，只是索引字节换成 3 字节 RGB。
+
+def _decode_row_direct(
+    line: bytes, width: int, color_bytes: int = 3
+) -> list[tuple[tuple[int, int, int], int]]:
+    """解真彩（I4/T4/T5）一行，返回 [((r, g, b), alpha8), ...]。
+
+    算子与调色板版一一对应，只是索引字节换成真彩色：``T4/T5`` 3 字节
+    RGB888，``I4`` 2 字节 RGB565 小端。
     """
     px: list[tuple[tuple[int, int, int], int]] = []
+    cb = color_bytes
     i, n = 0, len(line)
     while i < n and len(px) < width:
         b = line[i]
         i += 1
         if b == 0x00:  # 行尾
             break
-        elif b < 0x20:  # RUN：cnt, alpha, RGB
-            if i + 3 >= n:
+        elif b < 0x20:  # RUN：cnt, alpha, 颜色
+            if i + 1 + cb > n:
                 break
             cnt = b & 0x1F
             alpha = line[i] * 255 // 31
-            color = (line[i + 1], line[i + 2], line[i + 3])
-            i += 4
+            color = _color_at(line, i + 1, cb)
+            i += 1 + cb
             px.extend([(color, alpha)] * min(cnt, width - len(px)))
-        elif b < 0x40:  # SINGLE：RGB，alpha 在 token 内
-            if i + 2 >= n:
+        elif b < 0x40:  # SINGLE：颜色，alpha 在 token 内
+            if i + cb > n:
                 break
-            px.append(((line[i], line[i + 1], line[i + 2]),
-                       (b & 0x1F) * 255 // 31))
-            i += 3
-        elif b < 0x80:  # LIT：不透明 RGB 序列
+            px.append((_color_at(line, i, cb), (b & 0x1F) * 255 // 31))
+            i += cb
+        elif b < 0x80:  # LIT：不透明颜色序列
             for _ in range(b & 0x3F):
-                if i + 2 >= n:
+                if i + cb > n:
                     break
                 if len(px) < width:
-                    px.append(((line[i], line[i + 1], line[i + 2]), 255))
-                i += 3
+                    px.append((_color_at(line, i, cb), 255))
+                i += cb
         elif b < 0xC0:  # REP：不透明单色重复
-            if i + 2 >= n:
+            if i + cb > n:
                 break
             cnt = b & 0x3F
-            color = (line[i], line[i + 1], line[i + 2])
+            color = _color_at(line, i, cb)
             px.extend([(color, 255)] * min(cnt, width - len(px)))
-            i += 3
+            i += cb
         else:  # SKIP：透明像素
             px.extend([((0, 0, 0), 0)] * min(b & 0x3F, width - len(px)))
     return px
@@ -214,7 +234,7 @@ def decode_sprite(data: bytes) -> Sprite:
         for y, line in enumerate(all_rows[fi]):
             base = y * fw * 4
             if parser.direct:
-                row = _decode_row_direct(line, fw)
+                row = _decode_row_direct(line, fw, parser.color_bytes)
             else:
                 row = [((parser.palette[idx]), alpha)
                        for idx, alpha in _decode_row(line, fw)]
