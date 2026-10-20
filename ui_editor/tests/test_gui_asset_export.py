@@ -116,6 +116,75 @@ class TestCanvasExportAssets(unittest.TestCase):
             self.window.export_widget_assets([widget])
         self.assertEqual(list(self.dest.iterdir()), [])
 
+    def _resolver_with_frames(self, files):
+        resolver = self._fake_resolver(files)
+        resolver.fetch_image.return_value = None
+        return resolver
+
+    def test_convert_same_basename_does_not_overwrite(self):
+        png_a = PNG + b"A"
+        png_b = PNG + b"B"
+        w1 = self._widget(sFileName="a\\btn.png")
+        w2 = self._widget(sFileName="b\\btn.png")
+        self.window.resolver = self._resolver_with_frames({
+            "a\\btn.png": png_a, "b\\btn.png": png_b})
+        with mock.patch.object(self.window, "_asset_export_dir",
+                               return_value=str(self.dest)):
+            self.window.export_widget_assets([w1, w2], convert=True)
+        self.assertEqual(sorted(p.name for p in self.dest.iterdir()),
+                         ["btn-2.png", "btn.png"])
+        self.assertEqual((self.dest / "btn.png").read_bytes(), png_a)
+        self.assertEqual((self.dest / "btn-2.png").read_bytes(), png_b)
+        self.assertIn("已导出", self.window.statusBar().currentMessage())
+
+    def test_convert_shared_asset_exported_once(self):
+        w1 = self._widget(sFileName="img\\bg.png")
+        w2 = self._widget("CButton", sFileName="img\\bg.png")
+        self.window.resolver = self._resolver_with_frames({
+            "img\\bg.png": PNG})
+        with mock.patch.object(self.window, "_asset_export_dir",
+                               return_value=str(self.dest)):
+            self.window.export_widget_assets([w1, w2], convert=True)
+        self.assertEqual(sorted(p.name for p in self.dest.iterdir()),
+                         ["bg.png"])
+
+    def test_raw_shared_asset_exported_once(self):
+        w1 = self._widget(sFileName="img\\bg.png")
+        w2 = self._widget("CButton", sFileName="img\\bg.png")
+        self.window.resolver = self._fake_resolver({"img\\bg.png": PNG})
+        with mock.patch.object(self.window, "_asset_export_dir",
+                               return_value=str(self.dest)):
+            self.window.export_widget_assets([w1, w2])
+        self.assertEqual(sorted(p.name for p in self.dest.iterdir()),
+                         ["bg.png"])
+
+    def test_rejected_target_reported_without_losing_the_rest(self):
+        # 导出目录里预存悬空符号链接：第一个控件被拒，第二个照常导出。
+        (self.dest / "btn.png").symlink_to(self.dest / "missing")
+        w1 = self._widget(sFileName="a\\btn.png")
+        w2 = self._widget("CButton", sFileName="ok\\keep.png")
+        self.window.resolver = self._fake_resolver({
+            "a\\btn.png": PNG, "ok\\keep.png": PNG})
+        with mock.patch.object(self.window, "_asset_export_dir",
+                               return_value=str(self.dest)):
+            self.window.export_widget_assets([w1, w2])
+        self.assertTrue((self.dest / "keep.png").exists())
+        message = self.window.statusBar().currentMessage()
+        self.assertIn("已导出", message)
+        self.assertIn("被拒绝", message)
+        self.assertIn("btn.png", message)
+
+    def test_all_rejected_reports_reason(self):
+        (self.dest / "btn.png").symlink_to(self.dest / "missing")
+        widget = self._widget(sFileName="a\\btn.png")
+        self.window.resolver = self._fake_resolver({"a\\btn.png": PNG})
+        with mock.patch.object(self.window, "_asset_export_dir",
+                               return_value=str(self.dest)):
+            self.window.export_widget_assets([widget])
+        message = self.window.statusBar().currentMessage()
+        self.assertIn("被拒绝", message)
+        self.assertIn("符号链接", message)
+
 
 if __name__ == "__main__":
     unittest.main()
