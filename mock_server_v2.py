@@ -3661,24 +3661,25 @@ def run_self_test() -> int:
     h_rx = cli.recv(9)
     assert h_rx == hello, "Stage 1 GS2C_HELLO mismatch"
     # Send 25-byte NakedSend reply
-    cli.sendall(compute_hello_reply_bytes(seed) + b"\x00" * 22)
+    cli.sendall(_nc_hello_reply(seed))
 
-    # Helper to send native CPacket C2GS frame `[opcode][len+1][fields][0x00]`
+    # v2: 创建客户端加密通道（握手后所有通信都加密）
+    cch = _NativeChannel(seed, "client")
+    pending_packets: list = []
+
+    # Helper to send encrypted C2GS packet
     def send_c2gs(op: int, f: bytes) -> None:
-        cli.sendall(bytes([op, len(f) + 1]) + f + b"\x00")
+        cli.sendall(cch.send(op, f))
 
-    # Helper to read one GS2C frame
+    # Helper to read one encrypted GS2C packet
     def recv_gs2c() -> tuple[int, bytes]:
-        b0 = cli.recv(1)[0]
-        if b0 == 0xFF:
-            ext = cli.recv(MAX_LEN_BYTES)
-            plen = int.from_bytes(ext + b"\x00" * (4 - MAX_LEN_BYTES), "little")
-        else:
-            plen = b0
-        body = b""
-        while len(body) < plen:
-            body += cli.recv(plen - len(body))
-        return body[0], body[1:]
+        while not pending_packets:
+            chunk = cli.recv(4096)
+            if not chunk:
+                raise AssertionError("server closed connection")
+            pending_packets.extend(cch.feed(chunk))
+        pkt = pending_packets.pop(0)
+        return pkt.command, pkt.payload
 
     # Stage 2: Send C2GS_LOGIN_ACCOUNT_ENTER = 1
     # Real v2.27.2 `netlogin.C2SLoginIn` layout (entry 4082), verified 2026-10-12
@@ -3900,21 +3901,23 @@ def run_self_test() -> int:
     cli_ql = socket.create_connection(("127.0.0.1", port), timeout=5.0)
     h_ql = cli_ql.recv(9)
     assert h_ql == hello, "QuickLogin GS2C_HELLO mismatch"
-    cli_ql.sendall(compute_hello_reply_bytes(seed) + b"\x00" * 22)
+    cli_ql.sendall(_nc_hello_reply(seed))
+    
+    # v2: 创建 QuickLogin 客户端加密通道
+    cch_ql = _NativeChannel(seed, "client")
+    pending_ql: list = []
+    
     ql_fields = struct.pack("<BII", 2, login_key, new_role_id)
-    cli_ql.sendall(bytes([C2GS_QUICKLOGIN, len(ql_fields) + 1]) + ql_fields + b"\x00")
+    cli_ql.sendall(cch_ql.send(C2GS_QUICKLOGIN, ql_fields))
 
     def recv_gs2c_ql() -> tuple[int, bytes]:
-        b0 = cli_ql.recv(1)[0]
-        if b0 == 0xFF:
-            ext = cli_ql.recv(MAX_LEN_BYTES)
-            plen = int.from_bytes(ext + b"\x00" * (4 - MAX_LEN_BYTES), "little")
-        else:
-            plen = b0
-        body = b""
-        while len(body) < plen:
-            body += cli_ql.recv(plen - len(body))
-        return body[0], body[1:]
+        while not pending_ql:
+            chunk = cli_ql.recv(4096)
+            if not chunk:
+                raise AssertionError("server closed connection (QuickLogin)")
+            pending_ql.extend(cch_ql.feed(chunk))
+        pkt = pending_ql.pop(0)
+        return pkt.command, pkt.payload
 
     # First packet on QuickLogin MUST be `GS2C_QUICKLOGIN = 12, isub = 2` (`S2CLoginSuccess`)
     op_ql_ok, body_ql_ok = recv_gs2c_ql()
