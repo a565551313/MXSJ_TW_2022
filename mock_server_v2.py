@@ -2291,9 +2291,19 @@ class ClientSession:
 
             # Step 2: Wait for the 25-byte NakedSend seed reply from the client.
             # Probes and background checks may arrive before the reply.
+            # Security: bound pre-handshake buffer to prevent memory exhaustion.
+            MAX_PRE_HANDSHAKE_BUFFER = 1 << 20  # 1 MB
             while True:
                 if not self._read_some():
                     log(f"[DISCONNECT] {self.addr[0]}:{self.addr[1]} closed connection before handshake.")
+                    return
+
+                # Reject unbounded pre-handshake buffering
+                if len(self.recv_buf) > MAX_PRE_HANDSHAKE_BUFFER:
+                    log(
+                        f"[ERROR] {self.addr[0]}:{self.addr[1]} exceeded pre-handshake buffer "
+                        f"({len(self.recv_buf)}B > {MAX_PRE_HANDSHAKE_BUFFER}B); closing connection."
+                    )
                     return
 
                 # Background probe: dgwconnecttest TEST_HELLO

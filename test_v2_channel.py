@@ -78,8 +78,12 @@ def test_handshake_and_encrypted_communication():
 
     def server_thread():
         try:
+            # Set timeout so we don't hang forever if client fails
+            server_sock.settimeout(5.0)
             conn, addr = server_sock.accept()
             print(f"[服务器] 接受连接: {addr}")
+            # Set timeout on the connection socket too
+            conn.settimeout(5.0)
 
             # 发送 HELLO（明文）
             from mxsj_native_channel.core.channel import hello
