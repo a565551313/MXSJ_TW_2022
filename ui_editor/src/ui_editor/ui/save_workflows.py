@@ -277,15 +277,16 @@ class SaveWorkflowsMixin:
         try:
             target = Path(path)
             guard_output(target, self._pack_sources())
+            if not target.parent.is_dir():
+                # 不替用户建目录：路径多半是打错的，悄悄建出来会让人
+                # 以为存到了原来的地方（导出素材才按目录建）。放在保存前
+                # 复核之前：打错目录时不必先点一遍「保存前检查」。
+                raise ValueError(f"目标文件夹不存在：{target.parent}")
             if not self._confirm_save_review(path, to_pack=False):
                 return False
             self._require_save_encoding({})
             data = dlg_codec.dump_bytes(
                 self.doc.to_dicts(), text_encoding=self.doc.text_encoding)
-            if not target.parent.is_dir():
-                # 不替用户建目录：路径多半是打错的，悄悄建出来会让人
-                # 以为存到了原来的地方（导出素材才按目录建）。
-                raise ValueError(f"目标文件夹不存在：{target.parent}")
             with tempfile.NamedTemporaryFile(
                     prefix=f".{target.name}.", suffix=".tmp",
                     dir=target.parent, delete=False) as handle:

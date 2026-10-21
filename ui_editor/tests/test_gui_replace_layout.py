@@ -255,6 +255,36 @@ class TestReplaceInPack(_NeedsGui):
         self.assertEqual(len(self.window._sessions), 1)
         self.assertEqual(len(self.window.doc.all_widgets()), 2)
 
+    def test_second_replace_keeps_pending_marker(self):
+        """替换已打开的包内布局后，资源树仍要显示「待入新包」叶子。"""
+        data = ("pack", str(self.pack), "dialog/a.dlg")
+        self.window.replace_layout_with(data, str(self.source))
+        self.assertIsNotNone(self.window.resource_panel._pending_item)
+        again = self.root / "c.dlg"
+        again.write_bytes(dlg_codec.dump_bytes(layout("再換", 1)))
+        with mock.patch.object(self.window, "_confirm_discard",
+                               return_value=True):
+            self.assertTrue(self.window.replace_layout_with(data, str(again)))
+        item = self.window.resource_panel._pending_item
+        self.assertIsNotNone(item)
+        self.assertIn("待入新包", item.text(0))
+        self.assertTrue(self.window.doc.pending_pack_import)
+
+    def test_second_replace_reveals_pending_leaf(self):
+        data = ("pack", str(self.pack), "dialog/a.dlg")
+        self.window.replace_layout_with(data, str(self.source))
+        self.window._activate_session(0)
+        self.window.resource_panel.clear_pending()
+        self.assertIsNone(self.window.resource_panel._pending_item)
+        again = self.root / "c.dlg"
+        again.write_bytes(dlg_codec.dump_bytes(layout("再換", 1)))
+        with mock.patch.object(self.window, "_confirm_discard",
+                               return_value=True):
+            self.window.replace_layout_with(data, str(again))
+        item = self.window.resource_panel._pending_item
+        self.assertIsNotNone(item)
+        self.assertIs(self.window.resource_panel._tree.currentItem(), item)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -51,6 +51,15 @@ class TestImageSize(unittest.TestCase):
         self.assertIsNone(probe.image_size(b""))
 
 
+class TestFormatFamilies(unittest.TestCase):
+    def test_empty_shows_placeholder(self):
+        self.assertEqual(probe.format_families({}), "（无）")
+
+    def test_names_are_sorted(self):
+        self.assertEqual(probe.format_families({"nine_slice": 2, "h_slice": 1}),
+                         "h_slice=1，nine_slice=2")
+
+
 class TestSliceStats(unittest.TestCase):
     def test_piece_sizes_are_reported(self):
         """切片尺寸来自资源本身：这是「切割线」的唯一证据。"""

@@ -93,7 +93,13 @@ class ReplaceLayoutMixin:
             self._set_document(doc)
         else:
             self._open_in_tab(doc, key)
-        self.resource_panel.reveal_selection(key)
+        if doc.pending_pack_import and doc.source_pack is not None:
+            # _set_document 只清旧标记、不重挂；换进来的文档仍是「待入新包」，
+            # 资源树要立刻显示它，并定位到那个待入包叶子。
+            self.resource_panel.show_pending(*doc.source_pack)
+            self.resource_panel.reveal_selection(("pending", *doc.source_pack))
+        else:
+            self.resource_panel.reveal_selection(key)
         count = len(doc.all_widgets())
         self._update_status(
             f"已用 {source.name} 的内容替换 {name}：{count} 个控件；"

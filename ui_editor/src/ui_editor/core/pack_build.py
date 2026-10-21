@@ -180,32 +180,41 @@ def unpack_packed_text(data: bytes) -> bytes:
     先按已知文件头反推 4 字节密钥；不成再用列频率法恢复（明文
     本身列频率得全零密钥）；都不成时原样返回，交给上层报错。
     """
-    if data.startswith(_KNOWN_HEADER[:5]) or _looks_plain_text(data):
-        # .dlg 明文，或 ui.lst 这种以 ``[`` 开头的 INI 明文。
-        # 注意：不能只看首字节是不是 ``[``——实测有 5 篇 .dlg 的密文首字节
-        # 正好落在 0x5B（如 ``dialog/home/log.dlg``，XOR 密钥 78c7ae39），
-        # 曾因此被当明文原样返回，解析报「找不到 UI_INFO」。
+    if data.startswith(_KNOWN_HEADER[:5]):
+        # .dlg 明文直返。
         return data
+    # 先按已知文件头试解一次：加密 .dlg 的密钥首字节恒为 0x78（明文以
+    # ``# -*-`` 开头），所以**所有**密文的首字节都是 ``[``。若先做 INI
+    # 判定，篇目头段 GBK 占比高时会被当明文原样返回（解析报「找不到
+    # UI_INFO」）。已知头解不开，才轮到 ui.lst 这种以 ``[`` 开头的明文。
     key = bytes(a ^ b for a, b in
                 zip(data[:4], _HEADER_PREFIX4, strict=False))
     decoded = _xor4(data, key)
     if decoded.startswith(_KNOWN_HEADER):
         return decoded
+    if _looks_plain_text(data):
+        # ui.lst 等 INI 明文：已知头解不开，且首段几乎没有控制字节。
+        return data
     return _xor4(data, _recover_key_by_frequency(data))
 
 
 def _looks_plain_text(data: bytes) -> bool:
-    """以 ``[`` 开头且头段几乎全是可打印文本 → 当作 INI 类的明文。
+    """以 ``[`` 开头且头段几乎不含控制字节 → 当作 INI 类的明文。
 
-    密文（XOR 后）也会有首字节恰好是 ``[`` 的情况，所以再要求可打印比例，
-    避免把密文当明文放过去（真包实测 5 例）。
+    XOR 密文的标志是**控制字节成堆**，不是高位字节：``ui.lst`` 的字体名
+    是 GBK（常见 ``[Font]`` 紧跟中文名），按「只算 ASCII 可打印」会把它
+    误判成密文，再走频率法就可能把明文打乱。所以这里只把 C0 控制字节
+    （Tab/LF/CR 除外）与 DEL 记为非文本，GBK 等高位字节照算文本。
+
+    仍需这层判定：密文（XOR 后）也会有首字节恰好是 ``[`` 的情况（真包
+    实测 5 例），不能只看首字节。
     """
     head = data[:256]
     if not head or head[:1] != b"[":
         return False
-    printable = sum(1 for byte in head
-                    if 32 <= byte < 127 or byte in (9, 10, 13))
-    return printable / len(head) >= 0.95
+    control = sum(1 for byte in head
+                  if (byte < 32 and byte not in (9, 10, 13)) or byte == 127)
+    return control / len(head) <= 0.02
 
 
 def _recover_key_by_frequency(data: bytes) -> bytes:

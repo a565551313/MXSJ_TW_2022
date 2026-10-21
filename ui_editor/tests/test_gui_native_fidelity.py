@@ -66,6 +66,9 @@ class FakeAssets:
         return None if image.isNull() else [image]
 
     def fetch_slice(self, name):
+        return self.fetch_slice_state(name, 0)
+
+    def fetch_slice_state(self, name, index=0):
         from ui_editor.core import dir_base
         from ui_editor.core.assets import SliceRecipe, image_is_blank
         if not name.endswith(("\\", "/")):
@@ -79,7 +82,11 @@ class FakeAssets:
         if chosen is None or chosen.kind not in ("h_state", "h_slice",
                                                  "v_slice", "nine_slice"):
             return None
-        pieces = chosen.state_pieces(0)   # 三态按钮取 0 号态（常态）
+        if chosen.kind != "h_state" and index:
+            return None
+        if chosen.kind == "h_state" and index >= chosen.states:
+            return None
+        pieces = chosen.state_pieces(index)   # 三态按钮：该态的三块
         images = [self._load(piece) for piece in pieces]
         if any(image is None for image in images):
             return None
@@ -290,6 +297,38 @@ class TestCanvasBadge(_NeedsGui):
             window.deleteLater()
             self._app.processEvents()
 
+    def test_button_state_switch_refreshes_fidelity_label(self):
+        """切按钮态后状态栏保真度要跟着变，不能停在切换前的分类。"""
+        window = self._window()
+        base = "combdialog4\\三态按钮\\一级按钮\\"
+        files = {}
+        for state, color in enumerate(((0, 200, 255, 255),
+                                       (255, 160, 0, 255))):
+            for side, width in (("l", 6), ("c", 20), ("r", 6)):
+                files[f"{base}{state}{side}.png"] = png_bytes(width, 24, color)
+        try:
+            window.new_layout()
+            doc = window.doc
+            window.ctx.assets = FakeAssets(files)
+            widget = doc.new_widget("CTextButton", parent=doc.roots[0])
+            widget.props.update({"sFileName": base, "iWidth": 60,
+                                 "iHeight": 24, "sText": "确定"})
+            window._refresh_structure()
+            window._select_widget(widget)
+            normal = window._fidelity_label.text()
+            window.set_button_state("pressed")
+            pressed = window._fidelity_label.text()
+            self.assertTrue(normal.startswith("原生"))
+            self.assertTrue(pressed.startswith("近似"))
+            self.assertIn("态切片", pressed)
+            self.assertNotEqual(normal, pressed)
+        finally:
+            if window.doc is not None:
+                window.doc.dirty = False
+            window.close()
+            window.deleteLater()
+            self._app.processEvents()
+
     def test_status_bar_labels_survive_busy_task(self):
         """常驻标签不能被忙碌遮罩/状态栏重建弄丢（曾整栏被替换销毁）。"""
         from shiboken6 import isValid
@@ -341,6 +380,52 @@ class TestDiagnosticsVisibility(unittest.TestCase):
         doc = self._doc(sWidgetType="CPngNineFrame", sFileName="btn.png")
         found = diagnostics.diagnose(doc, resource_exists=lambda name: True)
         self.assertIn("RENDER_APPROX", [issue.code for issue in found])
+
+    def test_code_skin_uses_first_reference_like_the_canvas(self):
+        """画布只绑 refs[0]：第一条缺图时诊断不能因后面有图就闭嘴。"""
+        from ui_editor.core.script_index import LayoutLink, SkinRef
+        from ui_editor.core.styles import StyleBook
+        book = StyleBook.parse_bytes(
+            (Path(__file__).parent / "fixtures" / "ui_mini.lst").read_bytes())
+
+        def ref(skin):
+            return SkinRef("m", 0, "C", "f", "s", skin, "", None)
+
+        doc = LayoutDocument()
+        frame = doc.new_widget("CMainFrame")
+        button = doc.new_widget("CTextButton", parent=frame)
+        button.props.update({"sName": "一级按钮", "sFileName": "",
+                             "iStyle": 0, "sText": "确定"})
+        link = LayoutLink(path="dialog/a.dlg", skins={"一级按钮": [
+            ref("missing.png"), ref("ok.png")]})
+        found = diagnostics.diagnose(doc, link=link, styles=book,
+                                     resource_exists=lambda n: n == "ok.png")
+        self.assertIn("RENDER_STYLE_SKIN", [i.code for i in found])
+        only_ok = LayoutLink(path="dialog/a.dlg",
+                             skins={"一级按钮": [ref("ok.png")]})
+        found = diagnostics.diagnose(doc, link=only_ok, styles=book,
+                                     resource_exists=lambda n: True)
+        self.assertNotIn("RENDER_STYLE_SKIN", [i.code for i in found])
+
+    def test_dlg_color_is_not_reported_as_style_skin(self):
+        """CTextButton 用 lNormalColor 时，不能报「按 ui.lst 配色」。"""
+        from ui_editor.core.styles import StyleBook
+        book = StyleBook.parse_bytes(
+            (Path(__file__).parent / "fixtures" / "ui_mini.lst").read_bytes())
+        doc = LayoutDocument()
+        frame = doc.new_widget("CMainFrame")
+        button = doc.new_widget("CTextButton", parent=frame)
+        button.props.update({"sName": "一级按钮", "sFileName": "",
+                             "iStyle": 0, "sText": "确定",
+                             "lNormalColor": [10, 120, 200]})
+        found = diagnostics.diagnose(doc, styles=book,
+                                     resource_exists=lambda name: False)
+        self.assertNotIn("RENDER_STYLE_SKIN", [i.code for i in found])
+        # 打包整数写法（0xRRGGBB）与画布同口径
+        button.props["lNormalColor"] = 0x0A78C8
+        found = diagnostics.diagnose(doc, styles=book,
+                                     resource_exists=lambda name: False)
+        self.assertNotIn("RENDER_STYLE_SKIN", [i.code for i in found])
 
     def test_style_skin_is_reported_as_style_not_missing(self):
         from ui_editor.core.styles import StyleBook
@@ -408,13 +493,17 @@ class TestDrawnSourceBadge(_NeedsGui):
         data.update(props)
         return Widget(data)
 
-    def _one(self, name):
+    def _one(self, name=None):
         from ui_editor.core import fidelity
         from ui_editor.ui.canvas import FidelityView
         return fidelity.markers(self.widget_, FidelityView(self.ctx))
 
+
     def _render(self):
-        image = QImage(60, 24, QImage.Format.Format_RGBA8888)
+        return self._render_size(60, 24)
+
+    def _render_size(self, width, height):
+        image = QImage(width, height, QImage.Format.Format_RGBA8888)
         image.fill(QColor(0, 0, 0, 0))
         painter = QPainter(image)
         try:
@@ -422,6 +511,18 @@ class TestDrawnSourceBadge(_NeedsGui):
         finally:
             painter.end()
         return image
+
+    def _render_state(self, state):
+        self.ctx.button_state = state
+        try:
+            return self._render()
+        finally:
+            self.ctx.button_state = "normal"
+
+    def _one_state(self, state):
+        from ui_editor.core import fidelity
+        from ui_editor.ui.canvas import FidelityView
+        return fidelity.markers(self.widget_, FidelityView(self.ctx), state)
 
     def test_istyle_color_drawn_and_badge_says_style_not_placeholder(self):
         from ui_editor.core import fidelity
@@ -540,6 +641,144 @@ class TestDrawnSourceBadge(_NeedsGui):
         self.assertGreaterEqual(color_share(image, (0, 200, 255)), 0.5)
         codes = [m.code for m in self._one("x")]
         self.assertNotIn("missing_placeholder", codes)
+
+
+class TestSingleImageNineAndButtonStates(_NeedsGui):
+    """单图九宫格与按钮态：画出来的必须和角标说的一致。"""
+
+    def setUp(self):
+        self.base = "combdialog4\\三态按钮\\一级按钮\\"
+        self.widget_ = None
+        self.ctx = None
+
+    def _ctx(self, assets):
+        return PaintContext(assets=assets)
+
+    def _widget(self, **props):
+        data = {"sWidgetType": "CTextButton", "sName": "一级按钮",
+                "sFileName": self.base, "iWidth": 60, "iHeight": 24,
+                "sText": "确定"}
+        data.update(props)
+        return Widget(data)
+
+    def _render(self, width=60, height=24):
+        image = QImage(width, height, QImage.Format.Format_RGBA8888)
+        image.fill(QColor(0, 0, 0, 0))
+        painter = QPainter(image)
+        try:
+            painters.paint_widget(painter, self.widget_, self.ctx)
+        finally:
+            painter.end()
+        return image
+
+    def _render_state(self, state):
+        self.ctx.button_state = state
+        try:
+            return self._render()
+        finally:
+            self.ctx.button_state = "normal"
+
+    def _markers(self, state="normal"):
+        from ui_editor.core import fidelity
+        from ui_editor.ui.canvas import FidelityView
+        self.ctx.button_state = state
+        try:
+            return fidelity.markers(self.widget_, FidelityView(self.ctx), state)
+        finally:
+            self.ctx.button_state = "normal"
+
+    def test_single_image_nine_paints_center_when_scaled_up(self):
+        """单图九宫格放大时中心也要画（旧实现只画四个角，中间留十字空洞）。"""
+        self.widget_ = self._widget(sWidgetType="CPngNineFrame",
+                                    sFileName="btn.png",
+                                    iWidth=90, iHeight=90)
+        self.ctx = self._ctx(FakeAssets(
+            {"btn.png": png_bytes(30, 30, (0, 200, 255, 255))}))
+        image = self._render(90, 90)
+        self.assertGreaterEqual(pixel(image, 45, 45)[3], 200)   # 正中
+        self.assertGreaterEqual(pixel(image, 45, 5)[3], 200)    # 上边中段
+        self.assertGreaterEqual(pixel(image, 5, 45)[3], 200)    # 左边中段
+        self.assertGreaterEqual(
+            color_share(image, (0, 200, 255, 255)), 0.9)
+
+    def _state_files(self):
+        files = {}
+        for state, color in enumerate(((0, 200, 255, 255),
+                                       (255, 160, 0, 255),
+                                       (120, 120, 120, 255))):
+            for side, width in (("l", 6), ("c", 20), ("r", 6)):
+                files[f"{self.base}{state}{side}.png".replace("/", "\\")] = (
+                    png_bytes(width, 24, color))
+        return files
+
+    def test_text_button_draws_real_state_slices(self):
+        """三态横片有真态切片：切到「按下」要画 1l/1c/1r，不是常态+蒙版。"""
+        self.widget_ = self._widget()
+        self.ctx = self._ctx(FakeAssets(self._state_files()))
+        pressed = self._render_state("pressed")
+        self.assertGreaterEqual(color_share(pressed, (255, 160, 0, 255)), 0.5)
+        self.assertEqual([m.code for m in self._markers("pressed")],
+                         ["native_h_slice", "state_slice_by_index"])
+
+    def test_state_switch_on_warm_cache_shows_each_state(self):
+        """同一 context 先画常态再切态：不能复用常态缓存（PR #68 复核）。
+
+        旧实现的缓存键只有 (name, cell)，0/1 态共用同一批 QPixmap：常态
+        画过一次后，按下仍显示常态图，角标却说「该态切片」。
+        """
+        self.widget_ = self._widget()
+        self.ctx = self._ctx(FakeAssets(self._state_files()))
+        normal = self._render_state("normal")
+        pressed = self._render_state("pressed")
+        again = self._render_state("normal")
+        self.assertGreaterEqual(color_share(normal, (0, 200, 255, 255)), 0.5)
+        self.assertGreaterEqual(color_share(pressed, (255, 160, 0, 255)), 0.5)
+        self.assertGreaterEqual(color_share(again, (0, 200, 255, 255)), 0.5)
+        self.assertLess(color_share(pressed, (0, 200, 255, 255)), 0.3)
+
+    def test_text_button_without_state_slices_falls_back_to_overlay(self):
+        """九片族没有按钮态：切态时画模拟蒙版，角标要报「模拟」。"""
+        files = {}
+        for piece in ("top/left.png", "top/middle.png", "top/right.png",
+                      "middle/left.png", "middle/middle.png",
+                      "middle/right.png", "bottom/left.png",
+                      "bottom/middle.png", "bottom/right.png"):
+            files[(self.base + piece).replace("/", "\\")] = png_bytes(
+                5, 5, (0, 200, 255, 255))
+        self.widget_ = self._widget()
+        self.ctx = self._ctx(FakeAssets(files))
+        normal = self._render()
+        pressed = self._render_state("pressed")
+        self.assertGreater(color_share(normal, (0, 200, 255, 255)),
+                           color_share(pressed, (0, 200, 255, 255)))
+        self.assertIn("state_overlay",
+                      [m.code for m in self._markers("pressed")])
+
+    def test_lnormal_color_badge_matches_painter(self):
+        """CTextButton 的 lNormalColor 是画布真用的颜色，角标不能报默认色。"""
+        self.widget_ = self._widget(sFileName="", lNormalColor=[10, 120, 200],
+                                    iStyle=3)
+        self.ctx = self._ctx(FakeAssets({}))
+        self.assertEqual(painters.resolve_source(self.widget_, self.ctx),
+                         painters.SOURCE_DLG_COLOR)
+        self.assertEqual([m.code for m in self._markers()], ["dlg_color"])
+
+    def test_slice_cells_are_cached_between_paints(self):
+        """切片 QPixmap 要缓存：拖动重绘不能每帧逐块 QImage→QPixmap。"""
+        files = {}
+        for piece in ("top/left.png", "top/middle.png", "top/right.png",
+                      "middle/left.png", "middle/middle.png",
+                      "middle/right.png", "bottom/left.png",
+                      "bottom/middle.png", "bottom/right.png"):
+            files[(self.base + piece).replace("/", "\\")] = png_bytes(
+                5, 5, (0, 200, 255, 255))
+        self.widget_ = self._widget()
+        self.ctx = self._ctx(FakeAssets(files))
+        self._render()
+        first = len(self.ctx._pixmaps)
+        self._render()
+        self.assertEqual(len(self.ctx._pixmaps), first)
+        self.assertTrue(any("#slice" in key[0] for key in self.ctx._pixmaps))
 
 
 if __name__ == "__main__":

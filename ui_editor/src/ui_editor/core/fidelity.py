@@ -63,7 +63,9 @@ class Marker:
 _SRC_NONE = "none"
 _SRC_CODE_SKIN = "code_skin"
 _SRC_SLICE = "slice"
+_SRC_SLICE_STATE = "slice_state"
 _SRC_IMAGE = "image"
+_SRC_DLG_COLOR = "dlg_color"
 _SRC_STYLE_SKIN = "style_skin"
 _SRC_BUTTON_STYLE = "button_style"
 _SRC_EDITOR_DEFAULT = "editor_default"
@@ -79,6 +81,13 @@ def _source_of(widget, view) -> str | None:
         return getter(widget)
     except Exception:  # 标注失败不影响绘制，退回过探测
         return None
+
+
+#: 有按钮态预览的控件类型（与 painters 同口径）
+_BUTTON_TYPES = frozenset({
+    "CButton", "CHPageButton", "CVPageButton",
+    "CHPagePngButton", "CVPagePngButton", "CTextButton",
+})
 
 
 def _image_name(widget) -> str:
@@ -114,6 +123,12 @@ def markers(widget, view, button_state: str = "normal") -> list[Marker]:
                 "脚本现造按钮：按代码皮肤绘制（静态索引推断，"
                 "客户端由脚本运行时创建）。"))
             return result
+        if source == _SRC_DLG_COLOR:
+            result.append(Marker(
+                APPROX, "dlg_color",
+                "图片取不到，按 .dlg 的 lNormalColor 画底色"
+                "（不是 ui.lst；客户端实际外观未核实）。"))
+            return result
         if source == _SRC_STYLE_SKIN:
             result.append(Marker(
                 APPROX, "style_skin",
@@ -146,6 +161,17 @@ def markers(widget, view, button_state: str = "normal") -> list[Marker]:
             NATIVE, "native_" + kind,
             f"{_SLICE_LABEL[kind]}：切割线来自资源切片本身，"
             "四角/两端按原像素、中间拉伸。"))
+        if button_state != "normal" and widget.wtype in _BUTTON_TYPES:
+            if source == _SRC_SLICE_STATE:
+                result.append(Marker(
+                    APPROX, "state_slice_by_index",
+                    "按钮态按文件名前缀取该态切片；"
+                    "哪个序号是悬停/按下未与客户端核实。"))
+            else:
+                result.append(Marker(
+                    SIMULATED, "state_overlay",
+                    "该切片族没有真实按钮态：按下/悬停/禁用是"
+                    "编辑器压暗/提亮/灰化的模拟效果。"))
         return result
 
     frames = view.frame_count(name) if view is not None else 0
@@ -175,9 +201,7 @@ def markers(widget, view, button_state: str = "normal") -> list[Marker]:
                 result.append(Marker(APPROX, "stretched_image",
                                      "整图拉伸到控件尺寸（客户端切法未核实）。"))
 
-    if button_state != "normal" and widget.wtype in (
-            "CButton", "CHPageButton", "CVPageButton",
-            "CHPagePngButton", "CVPagePngButton", "CTextButton"):
+    if button_state != "normal" and widget.wtype in _BUTTON_TYPES:
         index = BUTTON_STATE_INDEX.get(button_state)
         if index is not None and frames > index:
             result.append(Marker(APPROX, "state_by_frame_order",

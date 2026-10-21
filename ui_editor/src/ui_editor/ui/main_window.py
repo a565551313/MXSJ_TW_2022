@@ -28,7 +28,7 @@ from ..core.diagnostics import (
     widget_at_path,
 )
 from ..core.model import LayoutDocument, Widget
-from ..core.painters import PaintContext
+from ..core.painters import PaintContext, effective_size
 from ..core.script_index import ScriptIndex, get_default_index
 from ..core.styles import StyleBook
 from .busy import BusyHostMixin
@@ -461,6 +461,7 @@ class MainWindow(
         仅预览，不改文档；具体切法对不对以游戏内显示为准（M3.2）。
         """
         self.ctx.button_state = state
+        self._update_fidelity_label(self._selected)  # 状态栏说明跟着切
         labels = {"normal": "正常", "pressed": "按下",
                   "hover": "悬停", "disabled": "禁用"}
         for group in (self._button_state_actions,
@@ -485,11 +486,11 @@ class MainWindow(
 
     def _clamp_in_parent(self, widget: Widget,
                          x: float, y: float) -> tuple[float, float, int]:
-        """对齐/分布算出的坐标夹回父矩形，返回 (x, y, 是否被夹)。"""
-        parent = widget.parent
-        box = None if parent is None else (parent.width, parent.height)
-        cx, cy, clamped = snap.clamp_in_parent(
-            box, x, y, widget.width, widget.height)
+        """夹回父矩形：父用有效尺寸但不兜底，子按兜底尺寸。"""
+        box = (None if widget.parent is None else
+               effective_size(widget.parent, self.ctx, fallback=False))
+        width, height = effective_size(widget, self.ctx)
+        cx, cy, clamped = snap.clamp_in_parent(box, x, y, width, height)
         return cx, cy, int(clamped)
 
     def _selected_group(self):

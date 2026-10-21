@@ -36,12 +36,14 @@ class PaintContext:
     assets: AssetResolver
     styles: StyleBook = field(default_factory=StyleBook)
     show_names: bool = True
-    show_badges: bool = True   # 右下角保真度角标（原生/近似/模拟），可关
     button_state: str = "normal"  # 按钮状态预览：normal/pressed/hover/disabled
     animation_frame: int = 0  # .spr/精灵画布预览帧（仅预览，不写回）
     # 代码皮肤绑定：控件名 -> SkinRef（脚本在原地现造的按钮，静态推断）
     code_skins: dict = field(default_factory=dict)
     _pixmaps: dict[tuple[str, int], QPixmap] = field(default_factory=dict)
+    # 右下角保真度角标（原生/近似/模拟），可关。放最后：不能插进
+    # button_state 等既有字段之前，否则外部按位置构造会静默错位。
+    show_badges: bool = True
 
     def pixmap(self, name: str, frame: int | None = None) -> QPixmap | None:
         if frame is None:
@@ -63,6 +65,21 @@ class PaintContext:
                 result = QPixmap.fromImage(frames[frame])
         self._pixmaps[key] = result
         return result
+
+    def slice_pixmap(self, name: str, index: int, image,
+                     state: int = 0) -> QPixmap:
+        """切片块转 QPixmap 并缓存：拖动/缩放时不再逐帧重复上传。
+
+        ``state`` 必须进键：三态横片的每个态是不同文件，但 cell 下标
+        都是 0..2；只按 ``(name, index)`` 缓存会让先画的常态图一直顶替
+        按下/悬停态（0.12.7 初版的真实缺陷）。
+        """
+        key = (name.replace("/", "\\") + f"#slice{state}", index)
+        cached = self._pixmaps.get(key)
+        if cached is None:
+            cached = QPixmap.fromImage(image)
+            self._pixmaps[key] = cached
+        return cached
 
     def frame_size(self, name: str) -> tuple[int, int] | None:
         pixmap = self.pixmap(name, 0)
@@ -88,8 +105,14 @@ def _int(widget: Widget, key: str, default: int = 0) -> int:
         else default
 
 
-def effective_size(widget: Widget, ctx: PaintContext) -> tuple[int, int]:
-    """控件的有效像素尺寸（见模块头注的约定）。"""
+def effective_size(widget: Widget, ctx: PaintContext, *,
+                   fallback: bool = True) -> tuple[int, int]:
+    """控件的有效像素尺寸（见模块头注的约定）。
+
+    ``fallback=False`` 时不用兜底尺寸：两项都测不出来就保留 <=0 的
+    「未知」。几何夹取要用这个模式——兜底尺寸只是编辑器画占位框时的
+    视觉尺寸，不能当成真实的父边界（见 ``snap.clamp_in_parent``）。
+    """
     width, height = widget.width, widget.height
     if width > 0 and height > 0:
         return width, height
@@ -106,10 +129,11 @@ def effective_size(widget: Widget, ctx: PaintContext) -> tuple[int, int]:
             width = fw
         if height <= 0:
             height = fh
-    if width <= 0:
-        width = 120 if widget.wtype == "CMainFrame" else 80
-    if height <= 0:
-        height = 90 if widget.wtype == "CMainFrame" else 24
+    if fallback:
+        if width <= 0:
+            width = 120 if widget.wtype == "CMainFrame" else 80
+        if height <= 0:
+            height = 90 if widget.wtype == "CMainFrame" else 24
     return width, height
 
 
@@ -227,13 +251,18 @@ def _rect(w: Widget, ctx: PaintContext) -> QRectF:
     return QRectF(0, 0, width, height)
 
 
-def _draw_slice(p: QPainter, w: Widget, ctx: PaintContext, name: str) -> bool:
+def _draw_slice(p: QPainter, w: Widget, ctx: PaintContext, name: str,
+                state: int = 0) -> bool:
     """目录型基路径的切片：按**资源切片自己的像素**当切割线贴合控件。
 
+    ``state`` 是按钮态序号（0 = 常态）：三态横片族有真态切片，其余族
+    没有，取不到就返回 False 交给调用方。
+
     返回 True 表示已按切片画完（含「切片取不到」的 False 交给调用方）。
-    全透明的切片不画：底下内容照常露出，不铺白底。
+    全透明的切片不画：底下内容照常露出，不铺白底。切片图转 QPixmap
+    走 :meth:`PaintContext.slice_pixmap` 缓存，拖动/缩放时不重复上传。
     """
-    recipe = ctx.assets.fetch_slice(name)
+    recipe = ctx.assets.fetch_slice_state(name, state)
     if recipe is None:
         return False
     rect = _rect(w, ctx)
@@ -241,7 +270,7 @@ def _draw_slice(p: QPainter, w: Widget, ctx: PaintContext, name: str) -> bool:
     for cell in slicing.layout(plan, rect.width(), rect.height(),
                                recipe.blank):
         image = recipe.images[cell.index]
-        pixmap = QPixmap.fromImage(image)
+        pixmap = ctx.slice_pixmap(name, cell.index, image, state)
         p.drawPixmap(QRectF(*cell.dst), pixmap, QRectF(*cell.src))
     return True
 
@@ -344,30 +373,9 @@ def _paint_nine(p: QPainter, w: Widget, ctx: PaintContext) -> None:
         _placeholder(p, rect, name.replace("\\", "/").split("/")[-1]
                      or _name_label(w), ctx)
         return
-    piece = slicing.Piece(pixmap.width(), pixmap.height())
-    plan = slicing.nine_slice((piece,) * 9)
-    thirds = slicing.layout(plan, pixmap.width(), pixmap.height())
-    # 源图三分：用「按原图尺寸布局」的结果反推每块的源矩形
-    for cell in thirds:
-        src = cell.dst
-        dst_x = _map_axis(src[0], src[2], rect.width(), pixmap.width())
-        dst_y = _map_axis(src[1], src[3], rect.height(), pixmap.height())
-        if dst_x[1] > 0 and dst_y[1] > 0:
-            p.drawPixmap(QRectF(dst_x[0], dst_y[0], dst_x[1], dst_y[1]),
-                         pixmap, QRectF(*src))
-
-
-def _map_axis(start: float, size: float, target: float,
-              source: float) -> tuple[float, float]:
-    """一维九宫格映射：两端固定，中间吃掉剩余；不够时按比例缩。"""
-    if source <= 0 or target <= 0:
-        return 0.0, 0.0
-    edge = min(size, target / 2.0) if size * 2 > target else size
-    if start <= 0:
-        return 0.0, edge
-    if start + size >= source - 0.001:
-        return target - edge, edge
-    return edge, max(0.0, target - 2 * edge)
+    for src, dst in slicing.nine_thirds_cells(
+            pixmap.width(), pixmap.height(), rect.width(), rect.height()):
+        p.drawPixmap(QRectF(*dst), pixmap, QRectF(*src))
 
 
 def _paint_grid(p: QPainter, w: Widget, ctx: PaintContext) -> None:
@@ -460,8 +468,10 @@ def _simulate_state_overlay(p: QPainter, rect: QRectF,
 
 #: 绘制来源：画布实际用哪条路画出来的（角标与诊断据此判定，不再各算一套）
 SOURCE_CODE_SKIN = "code_skin"          # 脚本现造按钮的皮肤图
-SOURCE_SLICE = "slice"                  # 目录型基路径的横/竖/九片
+SOURCE_SLICE = "slice"                  # 目录型基路径的横/竖/九片（常态）
+SOURCE_SLICE_STATE = "slice_state"      # 三态横片里该按钮态的真切片
 SOURCE_IMAGE = "image"                  # 单图或 .spr 帧
+SOURCE_DLG_COLOR = "dlg_color"          # CTextButton 的 lNormalColor 底色
 SOURCE_STYLE_SKIN = "style_skin"        # ui.lst 里 iStyle 指定的按钮皮肤
 SOURCE_BUTTON_STYLE = "button_style"    # 按控件类型画的按钮底色（无 iStyle）
 SOURCE_EDITOR_DEFAULT = "editor_default"  # 编辑器默认配色（进度条等）
@@ -514,11 +524,21 @@ def resolve_source(w: Widget, ctx: PaintContext) -> str:
         return SOURCE_CODE_SKIN
     name = str(w.props.get(_image_key(w), "") or "")
     if name:
+        state = _BUTTON_STATE_INDEX.get(ctx.button_state, 0)
+        if (state and w.wtype in STYLE_BUTTON_TYPES
+                and ctx.assets.fetch_slice_state(name, state) is not None):
+            return SOURCE_SLICE_STATE
         if ctx.assets.fetch_slice(name) is not None:
             return SOURCE_SLICE
         if ctx.pixmap(name) is not None:
             return SOURCE_IMAGE
     if w.wtype in STYLE_BUTTON_TYPES:
+        # _paint_text_button 先看 lNormalColor，再看 iStyle 的常态色。
+        if (w.wtype == "CTextButton"
+                and w.props.get("lNormalColor")
+                and _color_from_value(w.props.get("lNormalColor"), None)
+                is not None):
+            return SOURCE_DLG_COLOR
         if style_button_color(w, ctx) is not None:
             return SOURCE_STYLE_SKIN
         return SOURCE_BUTTON_STYLE   # 有兜底底色，不会是占位框
@@ -552,8 +572,15 @@ def _paint_button(p: QPainter, w: Widget, ctx: PaintContext) -> None:
     if _paint_code_skin(p, w, ctx):
         return
     name = str(w.props.get("sFileName", "") or "")
-    if name and _draw_slice(p, w, ctx, name):
-        return
+    state = _BUTTON_STATE_INDEX.get(ctx.button_state, 0)
+    if name:
+        if state and _draw_slice(p, w, ctx, name, state):
+            return  # 该态有真切片：横三片按资源尺寸拼，不是模拟
+        if _draw_slice(p, w, ctx, name):
+            # 目录型按钮没有该态切片时，至少让「按下/悬停/禁用」有可见反馈，
+            # 与普通整图按钮的模拟口径一致；角标据此报「模拟」。
+            _simulate_state_overlay(p, rect, ctx)
+            return
     pixmap = ctx.pixmap(name) if name else None
     if pixmap is not None:
         stated = _button_state_pixmap(ctx, name, w) if name else None
@@ -580,9 +607,15 @@ def _paint_text_button(p: QPainter, w: Widget, ctx: PaintContext) -> None:
     if _paint_code_skin(p, w, ctx):
         return
     name = str(w.props.get("sFileName", "") or "")
-    if name and _draw_slice(p, w, ctx, name):   # 目录型基路径同样按切片拼
-        _paint_text_overlay(p, w, ctx, rect)
-        return
+    state = _BUTTON_STATE_INDEX.get(ctx.button_state, 0)
+    if name:   # 目录型基路径同样按切片拼；有真态切片就画真态
+        if state and _draw_slice(p, w, ctx, name, state):
+            _paint_text_overlay(p, w, ctx, rect)
+            return
+        if _draw_slice(p, w, ctx, name):
+            _simulate_state_overlay(p, rect, ctx)
+            _paint_text_overlay(p, w, ctx, rect)
+            return
     pixmap = ctx.pixmap(name) if name else None
     if pixmap is not None:
         stated = _button_state_pixmap(ctx, name, w) if name else None

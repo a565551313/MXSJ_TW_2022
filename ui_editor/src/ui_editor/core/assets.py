@@ -667,23 +667,38 @@ class AssetResolver:
         """目录型基路径的切片资源（三态横片/横三片/竖三片/九片）。
 
         三态横片返回**0 号态**的三块（常态），几何同样是横三片；其它状态
-        由 :meth:`fetch_image` 的帧列表提供（帧号 = 状态号）。序号帧族与
-        单图族不属于切片（前者是多状态整图、后者是一张图），返回 None。
+        由 :meth:`fetch_slice_state` 给出。序号帧族与单图族不属于切片
+        （前者是多状态整图、后者是一张图），返回 None。
+        """
+        return self.fetch_slice_state(name, 0)
+
+    def fetch_slice_state(self, name: str, index: int = 0) -> SliceRecipe | None:
+        """某一按钮态的切片（帧号 = 态号，仅三态横片族有真态）。
+
+        ``index`` 越界或该族没有真实态时返回 None——调用方据此决定是
+        画常态再加模拟效果，还是直接画该态的真切片。
         """
         if not dir_base.is_dir_base(name):
             return None
-        cache_key = name.replace("/", "\\")
+        index = max(0, int(index))
+        cache_key = name.replace("/", "\\") + (f"#{index}" if index else "")
         if cache_key in self._slice_cache:
             return self._slice_cache[cache_key]
         chosen = dir_base.plan(name, self._piece_exists)
         recipe: SliceRecipe | None = None
         if chosen is not None and chosen.kind in ("h_state", "h_slice",
                                                   "v_slice", "nine_slice"):
-            pieces = chosen.state_pieces(0)
-            images = [self._load_single_image(piece) for piece in pieces]
-            if all(image is not None for image in images):
+            if chosen.kind != "h_state" and index:
+                pieces: tuple[str, ...] | None = None
+            elif chosen.kind == "h_state" and index >= chosen.states:
+                pieces = None
+            else:
+                pieces = chosen.state_pieces(index)
+            images = ([self._load_single_image(piece) for piece in pieces]
+                      if pieces is not None else [])
+            if images and all(image is not None for image in images):
                 kept = [image for image in images if image is not None]
-                blank = frozenset(index for index, image in enumerate(kept)
+                blank = frozenset(cell for cell, image in enumerate(kept)
                                   if image_is_blank(image))
                 kind = "h_slice" if chosen.kind == "h_state" else chosen.kind
                 recipe = SliceRecipe(kind, pieces, tuple(kept), blank)
