@@ -1,0 +1,5 @@
+ruff==0.17.1
+pyinstaller>=6.0
+# Optional, only for tests/native_oracle.py:
+pefile==2024.8.26
+unicorn==2.1.4

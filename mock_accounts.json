@@ -1,0 +1,27 @@
+{
+  "next_role_id": 10002,
+  "accounts": {
+    "player01": {
+      "md5_pass": "",
+      "roles": [
+        {
+          "id": 10001,
+          "name": "夢想少俠",
+          "icon": 1,
+          "shape": 111,
+          "color": 0,
+          "level": 60,
+          "school": 1,
+          "liupai": 1001,
+          "race": 1,
+          "point": 200,
+          "cash": 888888,
+          "map_id": 1025,
+          "x": 75,
+          "y": 52,
+          "time": 1792542907
+        }
+      ]
+    }
+  }
+}

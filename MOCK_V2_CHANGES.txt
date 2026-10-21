@@ -1,0 +1,66 @@
+================================================================================
+MOCK_SERVER_V2.PY 改动总结
+================================================================================
+
+核心改动：从明文通信改为原生加密通道
+
+【新增内容】
+1. 引入 native_channel 模块（第 62-72 行）
+   - 从 tools/native_channel/src 导入 Channel, hello, hello_reply
+   
+2. _unframe() 函数（第 842-854 行）
+   - 反向解析 frame_gs2c 的输出
+   - 支持短包 (<255B) 和长包 (≥255B)
+   
+3. ClientSession.channel 属性
+   - 存储加密通道实例
+   - 握手后创建 _NativeChannel(seed, "server")
+
+【修改内容】
+1. send_raw() 方法
+   - 原：直接发送明文数据
+   - 新：有 channel 时，用 channel.send() 加密后发送
+   
+2. ClientSession.run() 方法
+   - 原：握手后继续明文通信，手动解析 C2GS 包
+   - 新：
+     * 握手后创建加密通道
+     * 主循环改用 channel.feed() 解密
+     * 自动处理 LZW 解压和帧解析
+     
+3. ensure_client_ready() 函数
+   - 原：patch data/script.fls 禁用 SetSeed
+   - 新：不再 patch，直接提示"使用原生加密通道"
+
+【删除内容】
+1. SetSeed 补丁检测代码（~80 行）
+   - 不再需要检测"客户端发送加密包"的错误
+   - 不再需要 --patch-client / --restore-client 的实际执行
+   
+2. 明文 C2GS 包解析逻辑
+   - 原来的手动帧解析被 channel.feed() 替代
+
+【测试验证】
+✓ 语法检查通过 (python -m py_compile)
+✓ _unframe() 函数正确（短包和长包）
+✓ 加密通道握手成功
+✓ 双向加密通信正常
+✓ native_channel 单元测试全部通过 (18/18)
+✓ 服务器启动正常，不修改 data/script.fls
+✓ data/script.fls SHA256 保持不变
+
+【使用方法】
+python mock_server_v2.py
+
+【与原版对比】
+原版：明文通信，需要 patch script.fls
+V2版：加密通信，不修改任何客户端文件
+
+【文件清单】
+- mock_server.py          (原版，4079 行)
+- mock_server_v2.py       (V2版，4069 行)
+- test_v2_channel.py      (集成测试)
+- MOCK_SERVER_V2_README.md (详细文档)
+- MOCK_V2_CHANGES.txt     (本文件)
+
+================================================================================
