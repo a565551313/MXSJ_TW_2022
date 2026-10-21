@@ -1,5 +1,13 @@
 # 项目当前状态（STATUS）
 
+> **2026-10-21 项目 skill**：会话分支 `coderabbit/project-analysis/6aa25aac` 已
+> fast-forward 同步 master `e65e386`。新增
+> [mxsj-project](../.agents/skills/mxsj-project/SKILL.md)，包含最新状态读取、
+> 原生 TCP/Mock/编辑器/服务端入口和证据分级流程；仓库源文件同时安装至当前
+> 环境的 Codex skills 目录。skill 结构校验、仓库路径检查及安装副本一致性检查
+> 通过。此项只改 skill 和状态说明，未重跑应用测试、未启动 Mock 或客户端，
+> 不变更此前应用验收结论。新会话可用 `$mxsj-project` 调用。
+
 > **2026-10-20 原生 TCP 专项（分支 `coderabbit/project-analysis/6aa25aac`）**：
 > 新增独立 [native_channel 0.1.0](../tools/native_channel/README.md) 与
 > [握手/派生/密码器/帧研究](../notes/native_tcp_channel.md)。目标 mxmain 派生、
