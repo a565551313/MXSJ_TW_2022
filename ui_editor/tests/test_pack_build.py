@@ -12,6 +12,7 @@ from ui_editor.core.native_layout import key_for_path  # noqa: E402
 from ui_editor.core.pack import FlsPack  # noqa: E402
 from ui_editor.core.pack_build import (  # noqa: E402
     RawEntry,
+    _looks_plain_text,  # noqa: E402
     build_archive,
     fresh_r1,
     parse_archive,
@@ -74,6 +75,23 @@ class TestUnpackPackedText(unittest.TestCase):
         stored = bytes(b ^ key[i & 3] for i, b in enumerate(plain))
         self.assertTrue(stored.startswith(b"["))     # 首字节恰好是 '['
         self.assertEqual(unpack_packed_text(stored), plain)
+
+    def test_gbk_heavy_ciphertext_is_decoded_not_kept_as_text(self):
+        """头段 GBK 占比高的密文不能被 INI 明文规则吞掉（PR #68 复核）。
+
+        加密 .dlg 的密钥首字节恒为 0x78（明文以 ``# -*-`` 开头），所以密文
+        首字节一定是 ``[``；只看「控制字节少」会把它当明文返回。必须先按
+        已知文件头试解。
+        """
+        header = b"# -*- coding: gbk -*-"
+        plain = header + (
+            '\nUI_INFO = [{"X": "' + "測" * 180 + '"}]\n').encode("gbk")
+        for key in (b"\x78\x00\x00\x00", b"\x78\xff\xff\xff"):
+            with self.subTest(key=key.hex()):
+                stored = bytes(b ^ key[i & 3] for i, b in enumerate(plain))
+                self.assertEqual(stored[:1], b"[")
+                self.assertTrue(_looks_plain_text(stored))  # 旧判定会放行
+                self.assertEqual(unpack_packed_text(stored), plain)
 
     def test_ciphertext_starting_with_bracket_is_not_plaintext(self):
         """真包实测：5 篇 .dlg 的密文首字节正好是 '['（密钥 78c7ae39）。

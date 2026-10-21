@@ -381,6 +381,52 @@ class TestDiagnosticsVisibility(unittest.TestCase):
         found = diagnostics.diagnose(doc, resource_exists=lambda name: True)
         self.assertIn("RENDER_APPROX", [issue.code for issue in found])
 
+    def test_code_skin_uses_first_reference_like_the_canvas(self):
+        """画布只绑 refs[0]：第一条缺图时诊断不能因后面有图就闭嘴。"""
+        from ui_editor.core.script_index import LayoutLink, SkinRef
+        from ui_editor.core.styles import StyleBook
+        book = StyleBook.parse_bytes(
+            (Path(__file__).parent / "fixtures" / "ui_mini.lst").read_bytes())
+
+        def ref(skin):
+            return SkinRef("m", 0, "C", "f", "s", skin, "", None)
+
+        doc = LayoutDocument()
+        frame = doc.new_widget("CMainFrame")
+        button = doc.new_widget("CTextButton", parent=frame)
+        button.props.update({"sName": "一级按钮", "sFileName": "",
+                             "iStyle": 0, "sText": "确定"})
+        link = LayoutLink(path="dialog/a.dlg", skins={"一级按钮": [
+            ref("missing.png"), ref("ok.png")]})
+        found = diagnostics.diagnose(doc, link=link, styles=book,
+                                     resource_exists=lambda n: n == "ok.png")
+        self.assertIn("RENDER_STYLE_SKIN", [i.code for i in found])
+        only_ok = LayoutLink(path="dialog/a.dlg",
+                             skins={"一级按钮": [ref("ok.png")]})
+        found = diagnostics.diagnose(doc, link=only_ok, styles=book,
+                                     resource_exists=lambda n: True)
+        self.assertNotIn("RENDER_STYLE_SKIN", [i.code for i in found])
+
+    def test_dlg_color_is_not_reported_as_style_skin(self):
+        """CTextButton 用 lNormalColor 时，不能报「按 ui.lst 配色」。"""
+        from ui_editor.core.styles import StyleBook
+        book = StyleBook.parse_bytes(
+            (Path(__file__).parent / "fixtures" / "ui_mini.lst").read_bytes())
+        doc = LayoutDocument()
+        frame = doc.new_widget("CMainFrame")
+        button = doc.new_widget("CTextButton", parent=frame)
+        button.props.update({"sName": "一级按钮", "sFileName": "",
+                             "iStyle": 0, "sText": "确定",
+                             "lNormalColor": [10, 120, 200]})
+        found = diagnostics.diagnose(doc, styles=book,
+                                     resource_exists=lambda name: False)
+        self.assertNotIn("RENDER_STYLE_SKIN", [i.code for i in found])
+        # 打包整数写法（0xRRGGBB）与画布同口径
+        button.props["lNormalColor"] = 0x0A78C8
+        found = diagnostics.diagnose(doc, styles=book,
+                                     resource_exists=lambda name: False)
+        self.assertNotIn("RENDER_STYLE_SKIN", [i.code for i in found])
+
     def test_style_skin_is_reported_as_style_not_missing(self):
         from ui_editor.core.styles import StyleBook
         book = StyleBook.parse_bytes(
@@ -673,6 +719,22 @@ class TestSingleImageNineAndButtonStates(_NeedsGui):
         self.assertGreaterEqual(color_share(pressed, (255, 160, 0, 255)), 0.5)
         self.assertEqual([m.code for m in self._markers("pressed")],
                          ["native_h_slice", "state_slice_by_index"])
+
+    def test_state_switch_on_warm_cache_shows_each_state(self):
+        """同一 context 先画常态再切态：不能复用常态缓存（PR #68 复核）。
+
+        旧实现的缓存键只有 (name, cell)，0/1 态共用同一批 QPixmap：常态
+        画过一次后，按下仍显示常态图，角标却说「该态切片」。
+        """
+        self.widget_ = self._widget()
+        self.ctx = self._ctx(FakeAssets(self._state_files()))
+        normal = self._render_state("normal")
+        pressed = self._render_state("pressed")
+        again = self._render_state("normal")
+        self.assertGreaterEqual(color_share(normal, (0, 200, 255, 255)), 0.5)
+        self.assertGreaterEqual(color_share(pressed, (255, 160, 0, 255)), 0.5)
+        self.assertGreaterEqual(color_share(again, (0, 200, 255, 255)), 0.5)
+        self.assertLess(color_share(pressed, (0, 200, 255, 255)), 0.3)
 
     def test_text_button_without_state_slices_falls_back_to_overlay(self):
         """九片族没有按钮态：切态时画模拟蒙版，角标要报「模拟」。"""

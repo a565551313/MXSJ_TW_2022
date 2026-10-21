@@ -66,9 +66,15 @@ class PaintContext:
         self._pixmaps[key] = result
         return result
 
-    def slice_pixmap(self, name: str, index: int, image) -> QPixmap:
-        """切片块转 QPixmap 并缓存：拖动/缩放时不再逐帧重复上传。"""
-        key = (name.replace("/", "\\") + "#slice", index)
+    def slice_pixmap(self, name: str, index: int, image,
+                     state: int = 0) -> QPixmap:
+        """切片块转 QPixmap 并缓存：拖动/缩放时不再逐帧重复上传。
+
+        ``state`` 必须进键：三态横片的每个态是不同文件，但 cell 下标
+        都是 0..2；只按 ``(name, index)`` 缓存会让先画的常态图一直顶替
+        按下/悬停态（0.12.7 初版的真实缺陷）。
+        """
+        key = (name.replace("/", "\\") + f"#slice{state}", index)
         cached = self._pixmaps.get(key)
         if cached is None:
             cached = QPixmap.fromImage(image)
@@ -99,8 +105,14 @@ def _int(widget: Widget, key: str, default: int = 0) -> int:
         else default
 
 
-def effective_size(widget: Widget, ctx: PaintContext) -> tuple[int, int]:
-    """控件的有效像素尺寸（见模块头注的约定）。"""
+def effective_size(widget: Widget, ctx: PaintContext, *,
+                   fallback: bool = True) -> tuple[int, int]:
+    """控件的有效像素尺寸（见模块头注的约定）。
+
+    ``fallback=False`` 时不用兜底尺寸：两项都测不出来就保留 <=0 的
+    「未知」。几何夹取要用这个模式——兜底尺寸只是编辑器画占位框时的
+    视觉尺寸，不能当成真实的父边界（见 ``snap.clamp_in_parent``）。
+    """
     width, height = widget.width, widget.height
     if width > 0 and height > 0:
         return width, height
@@ -117,10 +129,11 @@ def effective_size(widget: Widget, ctx: PaintContext) -> tuple[int, int]:
             width = fw
         if height <= 0:
             height = fh
-    if width <= 0:
-        width = 120 if widget.wtype == "CMainFrame" else 80
-    if height <= 0:
-        height = 90 if widget.wtype == "CMainFrame" else 24
+    if fallback:
+        if width <= 0:
+            width = 120 if widget.wtype == "CMainFrame" else 80
+        if height <= 0:
+            height = 90 if widget.wtype == "CMainFrame" else 24
     return width, height
 
 
@@ -257,7 +270,7 @@ def _draw_slice(p: QPainter, w: Widget, ctx: PaintContext, name: str,
     for cell in slicing.layout(plan, rect.width(), rect.height(),
                                recipe.blank):
         image = recipe.images[cell.index]
-        pixmap = ctx.slice_pixmap(name, cell.index, image)
+        pixmap = ctx.slice_pixmap(name, cell.index, image, state)
         p.drawPixmap(QRectF(*cell.dst), pixmap, QRectF(*cell.src))
     return True
 

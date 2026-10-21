@@ -92,6 +92,25 @@ _STYLE_BUTTON_TYPES = frozenset({
 })
 
 
+def _usable_color(value: object) -> bool:
+    """`.dlg` 的颜色值能否被画布解析出颜色（无 Qt 版 `_color_from_value`）。
+
+    真包与 fixtures 里的 ``lNormalColor`` 是 ``[r, g, b(, a)]``；也接受
+    单个打包整数 ``0xRRGGBB`` 与 ``[打包整数]``，与画布同口径。
+    """
+    if isinstance(value, bool) or value is None:
+        return False
+    if isinstance(value, int):
+        return 0 <= value <= 0xFFFFFF
+    if isinstance(value, (list, tuple)) and value:
+        nums = [v for v in value
+                if isinstance(v, int) and not isinstance(v, bool)]
+        if len(nums) >= 3 and all(0 <= n <= 255 for n in nums[:3]):
+            return True
+        return bool(nums) and 0 <= nums[0] <= 0xFFFFFF
+    return False
+
+
 def _parses_rgb(text: object) -> bool:
     """ui.lst 的 ``ButtonNormalColor`` 能否解析成 RGB（与画布同规则）。"""
     try:
@@ -103,11 +122,16 @@ def _parses_rgb(text: object) -> bool:
 
 def _code_skin_available(widget: Widget, link: LayoutLink | None,
                          resource_exists: Callable[[str], bool] | None) -> bool:
-    """脚本给这个控件绑的皮肤图，在当前来源里取得图吗（画布据此接管绘制）。"""
+    """脚本给这个控件绑的皮肤图，在当前来源里取得图吗（画布据此接管绘制）。
+
+    只看**第一条**引用：画布的 ``skin_bindings`` 就是 ``refs[0]``，
+    这里若用 ``any(所有引用)``，会出现「后面某条有图 → 诊断不报，
+    画布却因第一条缺图而不画皮肤」的错位。
+    """
     if link is None or resource_exists is None:
         return False
     refs = link.skins.get(widget.name) or []
-    return any(resource_exists(ref.skin) for ref in refs)
+    return bool(refs) and resource_exists(refs[0].skin)
 
 
 #: 拼名族 → 诊断里给人看的名字
@@ -325,6 +349,11 @@ def diagnose(
             if not _parses_rgb(style.get("ButtonNormalColor", "")):
                 continue
             if _code_skin_available(widget, link, resource_exists):
+                continue
+            if (widget.wtype == "CTextButton"
+                    and _usable_color(widget.props.get("lNormalColor"))):
+                # 画布先看 .dlg 的 lNormalColor，轮不到 ui.lst 配色；
+                # 再报「按 iStyle 配色」就是与画布相反的说明。
                 continue
             name = widget.props.get("sFileName")
             if isinstance(name, str) and name:

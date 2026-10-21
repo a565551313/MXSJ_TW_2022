@@ -486,9 +486,9 @@ class MainWindow(
 
     def _clamp_in_parent(self, widget: Widget,
                          x: float, y: float) -> tuple[float, float, int]:
-        """夹回父矩形（用有效尺寸：图片尺寸控件的 iWidth/iHeight 是 0）。"""
-        parent = widget.parent
-        box = None if parent is None else effective_size(parent, self.ctx)
+        """夹回父矩形：父用有效尺寸但不兜底，子按兜底尺寸。"""
+        box = (None if widget.parent is None else
+               effective_size(widget.parent, self.ctx, fallback=False))
         width, height = effective_size(widget, self.ctx)
         cx, cy, clamped = snap.clamp_in_parent(box, x, y, width, height)
         return cx, cy, int(clamped)

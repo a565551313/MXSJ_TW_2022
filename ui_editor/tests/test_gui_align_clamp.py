@@ -117,6 +117,19 @@ class TestAlignClampIntoParent(unittest.TestCase):
         self.assertEqual((x, y), (300.0, 250.0))
         self.assertEqual(clamped, 1)
 
+    def test_unknown_parent_size_does_not_clamp(self):
+        """父既无显式尺寸也取不到图：不能拿 80×24 兜底占位框硬夹（PR #68）。"""
+        box = self._child("BOX", x=0, y=0, w=0, h=0)
+        child = self.doc.new_widget("CButton", parent=box)
+        child.set_geometry(x=0, y=0, width=50, height=20)
+        self.window._refresh_structure()
+        x, y, clamped = self.window._clamp_in_parent(child, 999, 999)
+        self.assertEqual((x, y), (999.0, 999.0))
+        self.assertEqual(clamped, 0)
+        # 负坐标仍然要抬回 0（未知维度只保证非负）
+        self.assertEqual(self.window._clamp_in_parent(child, -5, -7)[:2],
+                         (0.0, 0.0))
+
     def test_image_sized_parent_is_clamped_with_effective_size(self):
         """父容器 iWidth=0（按 200×100 图片显示）时子控件不能越出可见边缘。"""
         from PySide6.QtGui import QColor, QImage
