@@ -93,6 +93,55 @@ class TestAlignClampIntoParent(unittest.TestCase):
         self.window.apply_alignment("left")
         self.assertEqual(root_b.x, -30)  # 顶级没有父框，保持严格对齐
 
+    def test_image_sized_child_is_clamped_with_effective_size(self):
+        """子控件 iWidth/iHeight=0（按图片尺寸显示）时也要夹得住。"""
+        from PySide6.QtGui import QColor, QImage
+
+        class _Images:
+            def fetch_image(self, name):
+                if name != "a.png":
+                    return None
+                image = QImage(100, 50, QImage.Format.Format_RGBA8888)
+                image.fill(QColor(1, 2, 3, 255))
+                return [image]
+
+            def fetch_animation(self, name):
+                return None
+
+        self.window.ctx.assets = _Images()
+        child = self._child("IMG", x=0, y=0, w=0, h=0)
+        child.props["sFileName"] = "a.png"
+        self.window._refresh_structure()
+        x, y, clamped = self.window._clamp_in_parent(child, 999, 999)
+        # 父 400×300、子按图片 100×50：右/下各留出自身尺寸
+        self.assertEqual((x, y), (300.0, 250.0))
+        self.assertEqual(clamped, 1)
+
+    def test_image_sized_parent_is_clamped_with_effective_size(self):
+        """父容器 iWidth=0（按 200×100 图片显示）时子控件不能越出可见边缘。"""
+        from PySide6.QtGui import QColor, QImage
+
+        class _Images:
+            def fetch_image(self, name):
+                if name != "box.png":
+                    return None
+                image = QImage(200, 100, QImage.Format.Format_RGBA8888)
+                image.fill(QColor(1, 2, 3, 255))
+                return [image]
+
+            def fetch_animation(self, name):
+                return None
+
+        self.window.ctx.assets = _Images()
+        box = self._child("BOX", x=0, y=0, w=0, h=0)
+        box.props["sFileName"] = "box.png"
+        child = self.doc.new_widget("CButton", parent=box)
+        child.set_geometry(x=0, y=0, width=50, height=20)
+        self.window._refresh_structure()
+        x, y, clamped = self.window._clamp_in_parent(child, 999, 999)
+        self.assertEqual((x, y), (150.0, 80.0))
+        self.assertEqual(clamped, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

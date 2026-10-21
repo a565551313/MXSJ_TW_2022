@@ -92,6 +92,24 @@ _STYLE_BUTTON_TYPES = frozenset({
 })
 
 
+def _parses_rgb(text: object) -> bool:
+    """ui.lst 的 ``ButtonNormalColor`` 能否解析成 RGB（与画布同规则）。"""
+    try:
+        nums = [int(token) for token in str(text or "").split()]
+    except ValueError:
+        return False
+    return len(nums) >= 3 and all(0 <= value <= 255 for value in nums[:3])
+
+
+def _code_skin_available(widget: Widget, link: LayoutLink | None,
+                         resource_exists: Callable[[str], bool] | None) -> bool:
+    """脚本给这个控件绑的皮肤图，在当前来源里取得图吗（画布据此接管绘制）。"""
+    if link is None or resource_exists is None:
+        return False
+    refs = link.skins.get(widget.name) or []
+    return any(resource_exists(ref.skin) for ref in refs)
+
+
 #: 拼名族 → 诊断里给人看的名字
 _DIR_BASE_KIND_LABEL = {
     "h_state": "三态横片",
@@ -291,7 +309,11 @@ def diagnose(
             )
         )
 
-    # 图片取不到但会按 ui.lst 的 iStyle 画按钮：这是样式皮肤，不是缺图占位
+    # 图片取不到但会按 ui.lst 的 iStyle 画按钮：这是样式皮肤，不是缺图占位。
+    # 必须和画布同一套判定，否则「画的是切片、面板说图片不可用」自相矛盾：
+    #   * 颜色串要能真的解析出 RGB，画布才会用这条样式；
+    #   * 目录型基路径能拼出族就按切片画（dir_base.plan）；
+    #   * 绑定的代码皮肤取得图时，画布画的是皮肤。
     if styles is not None:
         for path, widget in entries:
             if widget.wtype not in _STYLE_BUTTON_TYPES:
@@ -300,15 +322,19 @@ def diagnose(
             if not isinstance(index, int) or isinstance(index, bool):
                 continue
             style = styles.tbstyle(index)
-            if not style.get("ButtonNormalColor"):
+            if not _parses_rgb(style.get("ButtonNormalColor", "")):
+                continue
+            if _code_skin_available(widget, link, resource_exists):
                 continue
             name = widget.props.get("sFileName")
-            resolvable = bool(
-                isinstance(name, str) and name
-                and not name.endswith(("\\", "/"))
-                and (resource_exists is None or resource_exists(name)))
-            if resolvable:
-                continue
+            if isinstance(name, str) and name:
+                if name.endswith(("\\", "/")):
+                    # 目录型：有拼名族就走切片；判定不了（没挂来源）时不猜。
+                    if (resource_exists is None
+                            or dir_base.plan(name, resource_exists) is not None):
+                        continue
+                elif resource_exists is None or resource_exists(name):
+                    continue
             issues.append(
                 Diagnostic(
                     "提示",

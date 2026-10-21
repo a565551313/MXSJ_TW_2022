@@ -162,6 +162,27 @@ class TestFrameButton(_NeedsGui):
         self.assertIn("2 / 3", self.window._frame_readout.text())
         self.assertIn("2 / 3", self.window._frame_btn.toolTip())
 
+    def test_shrinking_range_moves_canvas_to_clamped_frame(self):
+        """帧数变少时滑块被夹，画布必须跟着换帧（旧实现只改读数）。"""
+        self._document_with_spr(7)
+        self.window._refresh_animation_frame_control()
+        self.window._frame_slider.setValue(6)
+        self.assertEqual(self.window.ctx.animation_frame, 6)
+        self._document_with_spr(4)          # 只剩 0..3
+        self.window._refresh_animation_frame_control()
+        self.assertEqual(self.window._frame_slider.value(), 3)
+        self.assertEqual(self.window.ctx.animation_frame, 3)
+        self.assertIn("3 / 3", self.window._frame_readout.text())
+
+    def test_unchanged_frame_is_kept_on_refresh(self):
+        """帧数没变时刷新不应把当前预览帧打回 0。"""
+        self._document_with_spr(5)
+        self.window._refresh_animation_frame_control()
+        self.window._frame_slider.setValue(3)
+        self.window._refresh_animation_frame_control()
+        self.assertEqual(self.window._frame_slider.value(), 3)
+        self.assertEqual(self.window.ctx.animation_frame, 3)
+
     def test_status_message_still_explains_frame(self):
         self._document_with_spr(3)
         self.window._refresh_animation_frame_control()

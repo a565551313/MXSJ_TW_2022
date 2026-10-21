@@ -133,6 +133,9 @@ class LayoutDocument:
         self.source_pack: tuple[str, str] | None = None
         self.dirty = False
         self.pending_pack_import = False  # 未落到新包，即使撤销至导入状态仍待保存
+        # 原地替换（散装文件）：重建文档（如切换文本编码）时要带回的基线
+        self.inplace_replace = False
+        self.inplace_baseline: list[dict] | None = None
         # 撤销/重做时间线：to_dicts() 快照列表，_h_index 指当前状态
         self._history: list[list[dict]] = []
         self._h_index = -1
@@ -143,6 +146,8 @@ class LayoutDocument:
         """导入以原包内容为清单基线；新增布局以空列表为基线。"""
         self._saved_state = copy.deepcopy(previous)
         self.pending_pack_import = True
+        self.inplace_replace = False
+        self.inplace_baseline = None
         self.dirty = True
 
     def begin_inplace_replace(self, previous: list[dict]) -> None:
@@ -152,12 +157,16 @@ class LayoutDocument:
         落盘即可；只是把「改了哪些」的对照起点定在被替换前的内容。
         """
         self._saved_state = copy.deepcopy(previous)
+        self.inplace_replace = True
+        self.inplace_baseline = copy.deepcopy(previous)
         self.dirty = True
 
     def mark_saved(self) -> None:
         """仅成功写入后建立清单基线；保留撤销时间线。"""
         self._saved_state = self._snapshot()
         self.dirty = False
+        self.inplace_replace = False
+        self.inplace_baseline = None
         self._last_merge_key = None
 
     def changes(self) -> list[LayoutChange]:

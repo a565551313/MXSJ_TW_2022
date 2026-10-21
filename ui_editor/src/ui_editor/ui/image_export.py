@@ -42,14 +42,23 @@ def _suffixed(filename: str, index: int) -> str:
     return f"{stem}-{index}.{suffix}"
 
 
-def _reserve_names(names: list[str], used: set[str] | None) -> list[str]:
-    """在批量导出里为一批目标占名，重名整体加序号，绝不覆盖本批已写出的。"""
+def _reserve_names(names: list[str], used: set[str] | None,
+                   dest: Path | None = None) -> list[str]:
+    """在批量导出里为一批目标占名，重名整体加序号。
+
+    批量导出（``used`` 不为 None）既不覆盖本批先写出的文件，也不覆盖
+    目标文件夹里**已存在**的同名文件；单张导出（``used is None``）保持
+    旧行为——那是用户指定的目标名，覆盖是有意的。
+    """
     if used is None:
         return names
     index = 1
     while True:
         candidate = [_suffixed(name, index) for name in names]
-        if not any(name.lower() in used for name in candidate):
+        taken = any(name.lower() in used for name in candidate)
+        if not taken and dest is not None:
+            taken = any((dest / name).exists() for name in candidate)
+        if not taken:
             used.update(name.lower() for name in candidate)
             return candidate
         index += 1
@@ -75,13 +84,14 @@ def export_image_files(res_path: str, data: bytes | None,
     name = dest_name or _basename(res_path)
     sources = list(protected_paths)
     if data is not None and data.startswith(_REAL_MAGICS):
-        [name] = _reserve_names([name], used_names)
+        [name] = _reserve_names([name], used_names, dest)
         out = dest / name
         guard_output(out, sources, dest)
         out.write_bytes(data)
         return [out]
     if frames:
-        names = _reserve_names(_frame_names(name, len(frames)), used_names)
+        names = _reserve_names(_frame_names(name, len(frames)), used_names,
+                               dest)
         paths = [dest / item for item in names]
         for out in paths:
             guard_output(out, sources, dest)
@@ -95,7 +105,7 @@ def export_image_files(res_path: str, data: bytes | None,
     if data is not None:
         # 解不出帧的精灵/实在认不出的字节：原样留一份，同样参与批量占名。
         [fallback] = _reserve_names([dest_name or _basename(res_path)],
-                                    used_names)
+                                    used_names, dest)
         out = dest / fallback
         guard_output(out, sources, dest)
         out.write_bytes(data)

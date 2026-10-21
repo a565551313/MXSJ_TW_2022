@@ -54,6 +54,11 @@ class SourceActionsMixin:
             doc.source_pack = self.doc.source_pack
             if self.doc.pending_pack_import:
                 doc.begin_pack_import(self.doc._saved_state)
+            elif (self.doc.inplace_replace
+                  and self.doc.inplace_baseline is not None):
+                # 原地替换还没落盘：重建后仍是「替换了但未保存」，
+                # 基线沿用替换前那份，关标签时才会提示。
+                doc.begin_inplace_replace(self.doc.inplace_baseline)
         except Exception as exc:
             self._restore_encoding_choice()
             QMessageBox.warning(self, "切换编码失败", str(exc))

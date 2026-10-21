@@ -13,6 +13,14 @@ PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 16
 JPG = b"\xff\xd8\xff\xe0" + b"\x00" * 16
 
 
+def dangling_link(test, path, target):
+    """建一个悬空符号链接；系统不允许时跳过该用例（Windows 默认无权限）。"""
+    try:
+        path.symlink_to(target)
+    except (OSError, NotImplementedError):
+        test.skipTest("当前系统不允许创建符号链接")
+
+
 class TestCanvasExportAssets(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -160,7 +168,7 @@ class TestCanvasExportAssets(unittest.TestCase):
 
     def test_rejected_target_reported_without_losing_the_rest(self):
         # 导出目录里预存悬空符号链接：第一个控件被拒，第二个照常导出。
-        (self.dest / "btn.png").symlink_to(self.dest / "missing")
+        dangling_link(self, self.dest / "btn.png", self.dest / "missing")
         w1 = self._widget(sFileName="a\\btn.png")
         w2 = self._widget("CButton", sFileName="ok\\keep.png")
         self.window.resolver = self._fake_resolver({
@@ -175,7 +183,7 @@ class TestCanvasExportAssets(unittest.TestCase):
         self.assertIn("btn.png", message)
 
     def test_all_rejected_reports_reason(self):
-        (self.dest / "btn.png").symlink_to(self.dest / "missing")
+        dangling_link(self, self.dest / "btn.png", self.dest / "missing")
         widget = self._widget(sFileName="a\\btn.png")
         self.window.resolver = self._fake_resolver({"a\\btn.png": PNG})
         with mock.patch.object(self.window, "_asset_export_dir",

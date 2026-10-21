@@ -19,6 +19,14 @@ MP3 = b"ID3" + b"\x00" * 16
 TGA = b"\x00" * 20 + b"TRUEVISION-XFILE." + b"\x00"
 
 
+def dangling_link(test, path, target):
+    """建一个悬空符号链接；系统不允许时跳过该用例（Windows 默认无权限）。"""
+    try:
+        path.symlink_to(target)
+    except (OSError, NotImplementedError):
+        test.skipTest("当前系统不允许创建符号链接")
+
+
 class FakeAssets:
     def __init__(self, files):
         self.files = dict(files)
@@ -260,7 +268,7 @@ class TestBatchExport(unittest.TestCase):
 
     def test_rejected_target_does_not_abort_remaining(self):
         # 导出目录里预存一个悬空符号链接，命中 guard_output 的「拒写符号链接」。
-        (self.dest / "a.png").symlink_to(self.dest / "missing")
+        dangling_link(self, self.dest / "a.png", self.dest / "missing")
         assets = FakeAssets({"a.png": PNG, "ok.png": PNG})
         widget = self._widget(sFileName="a.png", sBgFileName="ok.png")
         rejected: list[tuple[str, str]] = []
@@ -272,7 +280,7 @@ class TestBatchExport(unittest.TestCase):
         self.assertFalse((self.dest / "missing").exists())
 
     def test_rejected_still_raises_without_collector(self):
-        (self.dest / "a.png").symlink_to(self.dest / "missing")
+        dangling_link(self, self.dest / "a.png", self.dest / "missing")
         assets = FakeAssets({"a.png": PNG})
         with self.assertRaises(ValueError):
             asset_export.export_raw_assets(

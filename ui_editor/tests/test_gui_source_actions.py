@@ -393,3 +393,41 @@ class SourceActionTests(unittest.TestCase):
                 self.window.export_layout(("file", str(self.file)))
             warn.assert_called_once()
             self.assertEqual(image.read_bytes(), b"source image")
+
+    def test_switch_keeps_inplace_replace_dirty_state(self):
+        """替换散装布局后切编码：仍是「替换未保存」，关标签要提示。"""
+        self.window.open_layout_file(str(self.file))
+        source = self.root / "other.dlg"
+        source.write_bytes(raw_text("替换进来的内容"))
+        self.assertTrue(self.window.replace_layout_with(
+            ("file", str(self.file)), str(source)))
+        displaced = self.window.doc
+        self.assertTrue(displaced.inplace_replace)
+        self.assertTrue(displaced.dirty)
+        self.assertGreater(len(displaced.changes()), 0)
+        with mock.patch.object(self.window, "_confirm_discard",
+                               return_value=True):
+            self.choose("gbk")
+        doc = self.window.doc
+        self.assertIsNot(doc, displaced)
+        self.assertEqual(self.text(), "替换进来的内容")
+        self.assertTrue(doc.dirty)
+        self.assertTrue(doc.inplace_replace)
+        self.assertGreater(len(doc.changes()), 0)
+
+    def test_switch_after_save_does_not_revive_replace_state(self):
+        """替换后已保存→再切编码不能又变回未保存。"""
+        self.window.open_layout_file(str(self.file))
+        source = self.root / "other.dlg"
+        source.write_bytes(raw_text("替换进来的内容"))
+        self.assertTrue(self.window.replace_layout_with(
+            ("file", str(self.file)), str(source)))
+        with mock.patch.object(self.window, "_confirm_save_review",
+                               return_value=True):
+            self.assertTrue(self.window._write_to(str(self.file)))
+        self.assertFalse(self.window.doc.inplace_replace)
+        with mock.patch.object(self.window, "_confirm_discard",
+                               return_value=True):
+            self.choose("gbk")
+        self.assertFalse(self.window.doc.inplace_replace)
+        self.assertFalse(self.window.doc.dirty)

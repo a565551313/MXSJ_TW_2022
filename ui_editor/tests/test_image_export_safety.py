@@ -91,3 +91,30 @@ class TestBatchNameReservation(unittest.TestCase):
             out = export_image_files("a\\btn.png", second, None, root)
             self.assertEqual([p.name for p in out], ["btn.png"])
             self.assertEqual((root / "btn.png").read_bytes(), second)
+
+    def test_batch_does_not_overwrite_existing_files_on_disk(self):
+        """批量导出也不能覆盖目标文件夹里**已有**的同名文件（README 的承诺）。"""
+        old = b"\x89PNG\r\n\x1a\nOLD!"
+        first = b"\x89PNG\r\n\x1a\nAAAA"
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "btn.png").write_bytes(old)
+            out = export_image_files("a\\btn.png", first, None, root,
+                                     used_names=set())
+            self.assertEqual([p.name for p in out], ["btn-2.png"])
+            self.assertEqual((root / "btn.png").read_bytes(), old)
+            self.assertEqual((root / "btn-2.png").read_bytes(), first)
+
+    def test_batch_keeps_all_frames_clear_of_existing_files(self):
+        frames = [mock.Mock(), mock.Mock()]
+        for frame in frames:
+            frame.save.return_value = True
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "hero-1.png").write_bytes(b"OLD")
+            out = export_image_files("a\\hero.igs", b"I0", frames, root,
+                                     used_names=set())
+            # 整组一起换名：不会出现 hero-0.png 覆盖、hero-1 改名这种半吊子
+            self.assertEqual([p.name for p in out],
+                             ["hero-0-2.png", "hero-1-2.png"])
+            self.assertEqual((root / "hero-1.png").read_bytes(), b"OLD")

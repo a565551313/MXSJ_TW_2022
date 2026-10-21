@@ -348,11 +348,18 @@ class WindowSetupMixin:
                     asset = self.resolver.fetch_animation(name)
                     if asset is not None:
                         maximum = max(maximum, len(asset.frames) - 1)
+        previous = control.value()
+        top = max(0, maximum)
         control.blockSignals(True)
-        control.setRange(0, max(0, maximum))
-        control.setValue(min(control.value(), max(0, maximum)))
+        control.setRange(0, top)
+        control.setValue(min(control.value(), top))
         control.blockSignals(False)
-        self._refresh_frame_readout(control.value(), max(0, maximum))
+        frame = control.value()
+        if frame != previous:
+            # 夹值后画布也要真的换帧，否则读数变了、画面还是旧帧。
+            self._set_animation_frame(frame)
+        else:
+            self._refresh_frame_readout(frame, top)
 
     def _refresh_frame_readout(self, frame: int, maximum: int) -> None:
         """滑块上方的「预览帧 3 / 7」与按钮悬停提示同步。"""

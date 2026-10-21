@@ -28,8 +28,10 @@ __all__ = [
     "Cell",
     "Piece",
     "SlicePlan",
+    "fixed_thirds",
     "h_slice",
     "nine_slice",
+    "nine_thirds_cells",
     "layout",
     "stretch",
     "v_slice",
@@ -42,10 +44,10 @@ BLANK_SKIP_DOC = (
 
 @dataclass(frozen=True)
 class Piece:
-    """一块切片的像素尺寸（内容由绘制层提供）。"""
+    """一块切片的像素尺寸（内容由绘制层提供；单图三分可能带小数）。"""
 
-    width: int
-    height: int
+    width: float
+    height: float
 
 
 @dataclass(frozen=True)
@@ -93,6 +95,30 @@ def v_slice(top: Piece, middle: Piece, bottom: Piece) -> SlicePlan:
 
 def nine_slice(pieces: tuple[Piece, ...]) -> SlicePlan:
     return SlicePlan("nine_slice", pieces)
+
+
+def fixed_thirds(width: float, height: float) -> SlicePlan:
+    """单图九宫格的固定三分（`.dlg` 没有切割字段，切割线是编辑器近似）。"""
+    piece = Piece(float(width) / 3.0, float(height) / 3.0)
+    return nine_slice((piece,) * 9)
+
+
+def nine_thirds_cells(
+    src_w: float, src_h: float, dst_w: float, dst_h: float
+) -> tuple[tuple[tuple[float, float, float, float],
+                  tuple[float, float, float, float]], ...]:
+    """单图九宫格：源图固定三分，源格与目标格**按 index** 对齐。
+
+    只按目标尺寸布局一次是不够的：源格必须始终是原图的九块三分
+    （``src_w/3 × src_h/3``），而不是"按原图尺寸再布局一次"得到的
+    四块半图。返回 ``[(src_rect, dst_rect), ...]``，目标过小时被压成 0
+    的格子不出现在结果里。
+    """
+    plan = fixed_thirds(src_w, src_h)
+    sources = {cell.index: cell.dst for cell in layout(plan, src_w, src_h)}
+    return tuple((sources[cell.index], cell.dst)
+                 for cell in layout(plan, dst_w, dst_h)
+                 if cell.index in sources)
 
 
 def _fit(first: float, last: float, total: float) -> tuple[float, float, float]:

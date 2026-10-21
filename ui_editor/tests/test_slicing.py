@@ -136,5 +136,47 @@ class TestPlainStretch(unittest.TestCase):
         self.assertEqual(cells[0].src, (0.0, 0.0, 32.0, 16.0))
 
 
+class TestSingleImageThirds(unittest.TestCase):
+    """单图九宫格：源图固定三分，源格按 index 对齐，中间不能空。"""
+
+    def test_center_is_painted_when_target_is_larger(self):
+        cells = slicing.nine_thirds_cells(30, 30, 90, 90)
+        self.assertEqual(len(cells), 9)
+        by_src = {src: dst for src, dst in cells}
+        # 源格是真正的三分（10×10），不是半图（15×15）
+        self.assertIn((10.0, 10.0, 10.0, 10.0), by_src)
+        # 四角保持原像素 10×10，中心双向拉伸铺满剩余
+        self.assertEqual(by_src[(10.0, 10.0, 10.0, 10.0)],
+                         (10.0, 10.0, 70.0, 70.0))
+        # 九块拼起来正好盖满目标，没有空洞
+        covered = sum(dst[2] * dst[3] for _src, dst in cells)
+        self.assertAlmostEqual(covered, 90 * 90)
+
+    def test_source_thirds_cover_non_multiple_sizes(self):
+        cells = slicing.nine_thirds_cells(31, 29, 80, 50)
+        right = max(src[0] + src[2] for src, _dst in cells)
+        bottom = max(src[1] + src[3] for src, _dst in cells)
+        self.assertAlmostEqual(right, 31.0)
+        self.assertAlmostEqual(bottom, 29.0)
+        self.assertEqual(len(cells), 9)
+
+    def test_tiny_source_still_maps_nine_cells(self):
+        cells = slicing.nine_thirds_cells(2, 2, 60, 60)
+        self.assertEqual(len(cells), 9)
+        self.assertAlmostEqual(cells[4][0][2], 2 / 3, places=6)
+
+    def test_target_smaller_than_source_drops_zero_cells_only(self):
+        cells = slicing.nine_thirds_cells(30, 30, 10, 10)
+        self.assertGreaterEqual(len(cells), 4)   # 四角至少还在
+        for _src, dst in cells:
+            self.assertGreater(dst[2], 0)
+            self.assertGreater(dst[3], 0)
+
+    def test_fixed_thirds_piece_is_float(self):
+        piece = slicing.fixed_thirds(7, 5).pieces[0]
+        self.assertAlmostEqual(piece.width, 7 / 3)
+        self.assertAlmostEqual(piece.height, 5 / 3)
+
+
 if __name__ == "__main__":
     unittest.main()

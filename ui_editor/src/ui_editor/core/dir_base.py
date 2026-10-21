@@ -4,7 +4,7 @@
 在其下拼接子图，包内没有基路径本身这个条目。
 
 拼名族**按 interface.fls 全量实测定版**（2026-10-20，614,482,967 B、
-2,697 篇 ``.dlg``、729 个目录型基路径全部探测过，结果见
+2,708 篇 ``.dlg``、729 个目录型基路径全部探测过，结果见
 ``docs/EXTERNAL_CORPUS.md``）：
 
 1. **三态横片**（``CTextButton``/``CHPagePngButton``/``CVPagePngButton``）：
@@ -16,7 +16,7 @@
 3. **九片**（``CPngNineFrame``/``CFrame``/``CBorder``）：``top/left`` …
    ``bottom/right`` 共 9 块，中列是 ``top/middle``、``middle/middle``、
    ``bottom/middle``——**没有** 平铺的 ``top.png``/``middle.png``/``bottom.png``
-   （实测 124 个九片基路径，全部 9 块齐装）；
+   （实测 130 个九片基路径，全部 9 块齐装）；
 4. **横三片**（``CHPngFrame``/``CHFrame``/``CProgress``）：``left`` +
    ``middle`` + ``right``（实测 105 个）；
 5. **竖三片**（``CVPngFrame``/``CVFrame``）：``top`` + ``middle`` + ``bottom``

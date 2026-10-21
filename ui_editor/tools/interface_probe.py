@@ -132,13 +132,27 @@ def image_size(data: bytes) -> tuple[int, int] | None:
             if data[index] != 0xFF:
                 index += 1
                 continue
-            marker = data[index + 1]
-            length = int.from_bytes(data[index + 2:index + 4], "big")
-            if marker in (0xC0, 0xC1, 0xC2) and index + 9 < len(data):
-                return (int.from_bytes(data[index + 7:index + 9], "big"),
-                        int.from_bytes(data[index + 5:index + 7], "big"))
-            index += 2 + max(2, length)
+            # JPEG 允许标记前出现任意多个 0xFF 填充字节（ITU-T T.81 B.1.1.2），
+            # 不跳过会把填充后的 SOF 当成段长读，尺寸就丢了。
+            marker_at = index + 1
+            while marker_at < len(data) and data[marker_at] == 0xFF:
+                marker_at += 1
+            if marker_at + 1 >= len(data):
+                return None
+            marker = data[marker_at]
+            length = int.from_bytes(data[marker_at + 1:marker_at + 3], "big")
+            if marker in (0xC0, 0xC1, 0xC2) and marker_at + 8 <= len(data):
+                return (int.from_bytes(data[marker_at + 6:marker_at + 8],
+                                       "big"),
+                        int.from_bytes(data[marker_at + 4:marker_at + 6],
+                                       "big"))
+            index = marker_at + 1 + max(2, length)
     return None
+
+
+def format_families(families: dict[str, int]) -> str:
+    """切片族实例的打印文本：空表必须显示「（无）」。"""
+    return "，".join(f"{k}={v}" for k, v in sorted(families.items())) or "（无）"
 
 
 def slice_stats(pack: FlsPack, item: FlsPack | None, plans: dict[str, dict],
@@ -300,9 +314,7 @@ def main() -> int:
     button_stats = button_state_stats(layouts, pack, item)
     report["slice_stats"] = stats
     report["button_state_stats"] = button_stats
-    print("      切片族实例：" +
-          "，".join(f"{k}={v}" for k, v in sorted(
-              stats["families"].items())) or "（无）")
+    print("      切片族实例：" + format_families(stats["families"]))
     for sample in stats["samples"][:6]:
         print(f"        {sample['kind']} {sample['base']} -> {sample['sizes']}")
     print("      按钮状态字段出现次数：" +

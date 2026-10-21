@@ -188,7 +188,7 @@ def export_raw_assets(assets, widget, dest_dir, protected_paths=(),
             seen.update(source_key(item[2]) for item in targets)
             if not targets:
                 continue
-        for filename, data, _source in targets:
+        for filename, data, source in targets:
             out = unique_target(dest, filename)
             try:
                 guard_output(out, sources, dest)
@@ -196,7 +196,9 @@ def export_raw_assets(assets, widget, dest_dir, protected_paths=(),
             except (OSError, ValueError) as exc:
                 if rejected is None:
                     raise
-                rejected.append((name, str(exc)))
+                # 记**真正被拒的那份来源**：`.spr` 连带帧图被拒时主资源
+                # 其实已经写出去了，报 .spr 会让用户以为它没导出。
+                rejected.append((source, str(exc)))
                 continue
             written.append(out)
     return written, missing
