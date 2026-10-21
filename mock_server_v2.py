@@ -797,7 +797,7 @@ def _is_git_tracked(path: Path) -> bool:
 
 
 def ensure_client_ready(repo_root: Path, patch_fls: bool = True) -> None:
-    """v2: 確保 nocheck 和 server.ini 就緒。不再 patch script.fls（原生加密通道已支援）。"""
+    """v2: 確保 nocheck 和 server.ini 就緒。檢查並還原 v1 的 SetSeed 補丁。"""
     fls_path = repo_root / "data" / "script.fls"
     if not fls_path.exists():
         log("=" * 72)
@@ -809,7 +809,37 @@ def ensure_client_ready(repo_root: Path, patch_fls: bool = True) -> None:
     nocheck_path = repo_root / "nocheck"
     log(ensure_nocheck_gm(nocheck_path))
 
-    # v2: 不再需要 patch script.fls，原生加密通道直接處理 SetSeed 加密。
+    # v2: 檢查 script.fls 是否被 v1 打過 SetSeed NOP 補丁
+    if fls_path.exists():
+        try:
+            arch = bytearray(fls_path.read_bytes())
+            if arch[:4] == b"0SLF":
+                count = struct.unpack_from("<I", arch, 8)[0]
+                idx_off = struct.unpack_from("<I", arch, 8)[0]
+                if NETLOGIN_IDX < count:
+                    raw_ent = struct.unpack_from("<IIII", arch, idx_off + NETLOGIN_IDX * 16)
+                    eid, r1, r2, r3 = raw_ent
+                    if eid == NETLOGIN_EID:
+                        clen = (((r1 * eid + 0x0DF25E) & 0xFFFFFFFF) ^ r2) & 0xFFFFFFFF
+                        doff = (((r2 * NETLOGIN_IDX * 0x00F718FE + 0x0D59D16C) & 0xFFFFFFFF) ^ r3) & 0xFFFFFFFF
+                        exp = zlib.decompress(bytes(arch[doff : doff + clen]))
+                        dec = _xor_segments(exp, NETLOGIN_KEYS, NETLOGIN_BOUNDS)
+                        
+                        # 檢查是否包含 v1 的 NOP 補丁
+                        if SETSEED_NOP_EXACT_BYTES in dec or SETSEED_NOP_BYTES in dec:
+                            log("=" * 72)
+                            log("[ERROR] 檢測到 data/script.fls 仍被 v1 打過 SetSeed NOP 補丁！")
+                            log("v2 使用原生加密通道，但客戶端如果沒有 SetSeed 會導致通信失敗。")
+                            log("解決方法：")
+                            log("  1. 運行: python mock_server_v2.py --restore-client")
+                            log("  2. 或手動從 Git 還原: git checkout HEAD -- data/script.fls")
+                            log("=" * 72)
+                            raise RuntimeError(
+                                "data/script.fls 仍被 v1 補丁修改，請先還原後再啟動 v2"
+                            )
+        except (OSError, ValueError) as exc:
+            log(f"[WARN] 無法檢查 script.fls 補丁狀態: {exc}")
+
     if patch_fls:
         log("[INFO] v2: 使用原生 TCP 加密通道，不需要修改 data/script.fls。")
 
@@ -3993,17 +4023,17 @@ def main() -> int:
     parser.add_argument(
         "--no-patch",
         action="store_true",
-        help="Do not auto-patch data/script.fls (SetSeed bypass) on startup",
+        help="Deprecated: v2 no longer patches script.fls (ignored for backward compatibility)",
     )
     parser.add_argument(
         "--patch-client",
         action="store_true",
-        help="Ensure nocheck ([game] gm=1) & patch data/script.fls SetSeed bypass, then exit",
+        help="Deprecated: v2 no longer patches script.fls. Just ensures nocheck GM file, then exits",
     )
     parser.add_argument(
         "--restore-client",
         action="store_true",
-        help="Restore original data/script.fls from data/script.fls.bak, then exit",
+        help="Restore original data/script.fls if it was patched by v1 (removes SetSeed NOP bypass), then exit",
     )
     parser.add_argument(
         "--self-test",

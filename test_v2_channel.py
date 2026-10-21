@@ -20,10 +20,47 @@ sys.path.insert(0, str(Path(__file__).parent))
 import mock_server_v2 as mock_v2
 
 
+def test_unframe_function():
+    """测试 _unframe 函数"""
+    print("\n" + "=" * 60)
+    print("测试 1: _unframe 函数")
+    print("=" * 60)
+
+    # 测试短包
+    opcode = 69
+    payload = b"test"
+    framed = mock_v2.frame_gs2c(opcode, payload)
+    print(f"原始: opcode={opcode}, payload={payload.hex()}")
+    print(f"封帧: {framed.hex()}")
+
+    opcode2, payload2 = mock_v2._unframe(framed)
+    print(f"解帧: opcode={opcode2}, payload={payload2.hex()}")
+
+    assert opcode2 == opcode, f"短包 opcode 不匹配: 期望 {opcode}, 实际 {opcode2}"
+    assert payload2 == payload, f"短包 payload 不匹配: 期望 {payload.hex()}, 实际 {payload2.hex()}"
+    print("✓ 短包测试通过")
+
+    # 测试长包（>255 字节）
+    opcode = 16
+    payload = bytes(range(256)) * 2  # 512 字节
+    framed = mock_v2.frame_gs2c(opcode, payload)
+    print(f"\n长包: opcode={opcode}, payload={len(payload)}B")
+    print(f"封帧: {len(framed)}B, 前 10 字节: {framed[:10].hex()}")
+
+    opcode2, payload2 = mock_v2._unframe(framed)
+    print(f"解帧: opcode={opcode2}, payload={len(payload2)}B")
+
+    assert opcode2 == opcode, f"长包 opcode 不匹配: 期望 {opcode}, 实际 {opcode2}"
+    assert payload2 == payload, f"长包 payload 不匹配: 长度期望 {len(payload)}, 实际 {len(payload2)}"
+    print("✓ 长包测试通过")
+
+    print("=" * 60)
+
+
 def test_handshake_and_encrypted_communication():
     """测试握手和加密通信"""
     print("=" * 60)
-    print("测试 1: 原生加密通道握手")
+    print("测试 2: 原生加密通道握手")
     print("=" * 60)
 
     seed = 0x12345678
@@ -151,79 +188,33 @@ def test_handshake_and_encrypted_communication():
 
     server_sock.close()
 
-    if errors:
-        print("\n" + "=" * 60)
-        print("测试失败:")
-        for err in errors:
-            print(f"  ✗ {err}")
-        print("=" * 60)
-        return False
-    else:
-        print("\n" + "=" * 60)
-        print("测试 1 通过 ✓")
-        print("=" * 60)
-        return True
+    # 检查线程是否正常结束
+    assert not t1.is_alive(), "服务器线程未正常结束（超时）"
+    assert not t2.is_alive(), "客户端线程未正常结束（超时）"
+    assert not errors, f"测试失败: {errors}"
 
-
-def test_unframe_function():
-    """测试 _unframe 函数"""
     print("\n" + "=" * 60)
-    print("测试 2: _unframe 函数")
+    print("测试 2 通过 ✓")
     print("=" * 60)
-
-    # 测试短包
-    opcode = 69
-    payload = b"test"
-    framed = mock_v2.frame_gs2c(opcode, payload)
-    print(f"原始: opcode={opcode}, payload={payload.hex()}")
-    print(f"封帧: {framed.hex()}")
-
-    opcode2, payload2 = mock_v2._unframe(framed)
-    print(f"解帧: opcode={opcode2}, payload={payload2.hex()}")
-
-    if opcode2 != opcode or payload2 != payload:
-        print("✗ 短包测试失败")
-        return False
-    print("✓ 短包测试通过")
-
-    # 测试长包（>255 字节）
-    opcode = 16
-    payload = bytes(range(256)) * 2  # 512 字节
-    framed = mock_v2.frame_gs2c(opcode, payload)
-    print(f"\n长包: opcode={opcode}, payload={len(payload)}B")
-    print(f"封帧: {len(framed)}B, 前 10 字节: {framed[:10].hex()}")
-
-    opcode2, payload2 = mock_v2._unframe(framed)
-    print(f"解帧: opcode={opcode2}, payload={len(payload2)}B")
-
-    if opcode2 != opcode or payload2 != payload:
-        print("✗ 长包测试失败")
-        return False
-    print("✓ 长包测试通过")
-
-    print("=" * 60)
-    return True
 
 
 if __name__ == "__main__":
-    success = True
+    print("=" * 60)
+    print("mock_server_v2.py 集成测试")
+    print("=" * 60)
 
     try:
-        success = test_unframe_function() and success
-        success = test_handshake_and_encrypted_communication() and success
+        test_unframe_function()
+        test_handshake_and_encrypted_communication()
+    except AssertionError as e:
+        print(f"\n✗ 测试失败: {e}")
+        sys.exit(1)
     except Exception as e:
-        print(f"\n测试异常: {e}")
+        print(f"\n✗ 测试异常: {e}")
         import traceback
         traceback.print_exc()
-        success = False
-
-    if success:
-        print("\n" + "=" * 60)
-        print("所有测试通过 ✓✓✓")
-        print("=" * 60)
-        sys.exit(0)
-    else:
-        print("\n" + "=" * 60)
-        print("部分测试失败 ✗✗✗")
-        print("=" * 60)
         sys.exit(1)
+
+    print("\n" + "=" * 60)
+    print("所有测试通过 ✓✓✓")
+    print("=" * 60)
