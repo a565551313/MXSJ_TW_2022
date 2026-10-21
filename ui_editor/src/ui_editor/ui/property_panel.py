@@ -498,13 +498,15 @@ class PropertyPanel(QWidget):
             from .busy import run_busy_or_plain
             from .image_export import export_image_files
 
-            def one(path: str, dest_dir, dest_name=None):
+            def one(path: str, dest_dir, dest_name=None, used_names=None):
                 return export_image_files(
                     path, assets.fetch_bytes(path),
                     assets.fetch_image(path), dest_dir, dest_name,
-                    protected_paths=assets.pack_paths)
+                    protected_paths=assets.pack_paths,
+                    used_names=used_names)
 
             written: list = []
+            rejected: list = []
             try:
                 if len(paths) == 1:
                     base = paths[0].replace("\\", "/").split("/")[-1]
@@ -522,27 +524,42 @@ class PropertyPanel(QWidget):
 
                     def bulk(h):
                         out: list = []
+                        bad: list = []
+                        used: set = set()   # 本批已占用文件名，同名加序号
                         total = len(paths)
                         for i, path in enumerate(paths, 1):
                             if h.cancelled:
-                                return out  # 已导出的保留，未导出的停
+                                return out, bad  # 已导出的保留，未导出的停
                             h.report(i - 1, total,
                                      f"导出 {path}（{i}/{total}）…")
-                            out.extend(one(path, directory))
-                        return out
+                            try:
+                                out.extend(one(path, directory,
+                                               used_names=used))
+                            except (OSError, ValueError) as exc:
+                                # 单个资源被拒绝只跳过它，其余照常导出。
+                                bad.append((path, str(exc)))
+                        return out, bad
 
-                    written = run_busy_or_plain(
+                    written, rejected = run_busy_or_plain(
                         host or self, "批量导出图片…", bulk,
                         maximum=len(paths), cancellable=True,
                         cancellable_text="取消（已导出的保留）")
             except (OSError, ValueError) as exc:
                 QMessageBox.warning(self, "导出失败", str(exc))
                 return
+            reject_note = (f"\n{len(rejected)} 个被拒绝，未写出：\n"
+                           + "\n".join(path for path, _why in rejected[:3])
+                           if rejected else "")
             if written:
                 QMessageBox.information(
                     self, "导出完成",
                     f"已导出 {len(written)} 个文件，第一个在：\n"
-                    f"{written[0]}")
+                    f"{written[0]}{reject_note}")
+            elif rejected:
+                QMessageBox.warning(
+                    self, "导出失败",
+                    f"{len(rejected)} 个资源被拒绝写入：\n"
+                    f"{rejected[0][1]}")
             else:
                 QMessageBox.warning(
                     self, "导出失败", "这些资源在包里取不到内容。")

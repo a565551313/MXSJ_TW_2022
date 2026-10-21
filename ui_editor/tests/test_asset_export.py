@@ -179,5 +179,105 @@ class TestExportRaw(unittest.TestCase):
             descriptor)
 
 
+class TestBatchExport(unittest.TestCase):
+    """批量导出：同一资源只导一次、被拒绝不中断、`.spr` 帧图也不重复。"""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.dest = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _widget(self, **props):
+        base = {"sWidgetType": "CButton", "sName": "b"}
+        base.update(props)
+        return Widget(base)
+
+    def test_shared_asset_exported_once_across_widgets(self):
+        assets = FakeAssets({"img\\bg.png": PNG})
+        seen: set[str] = set()
+        written = []
+        for _ in range(3):
+            files, _missing = asset_export.export_raw_assets(
+                assets, self._widget(sFileName="img\\bg.png"), self.dest,
+                seen=seen)
+            written.extend(files)
+        self.assertEqual([p.name for p in written], ["bg.png"])
+        self.assertEqual(sorted(p.name for p in self.dest.iterdir()),
+                         ["bg.png"])
+
+    def test_separator_spelling_counts_as_same_resource(self):
+        assets = FakeAssets({"img\\bg.png": PNG})
+        seen: set[str] = set()
+        widgets = [self._widget(sFileName="img\\bg.png"),
+                   self._widget(sFileName="img/bg.png")]
+        written = []
+        for widget in widgets:
+            files, _missing = asset_export.export_raw_assets(
+                assets, widget, self.dest, seen=seen)
+            written.extend(files)
+        self.assertEqual([p.name for p in written], ["bg.png"])
+
+    def test_distinct_resources_with_same_basename_keep_both(self):
+        other = PNG + b"OTHER"
+        assets = FakeAssets({"a\\btn.png": PNG, "b\\btn.png": other})
+        seen: set[str] = set()
+        written = []
+        for widget in (self._widget(sFileName="a\\btn.png"),
+                       self._widget(sFileName="b\\btn.png")):
+            files, _missing = asset_export.export_raw_assets(
+                assets, widget, self.dest, seen=seen)
+            written.extend(files)
+        # 两份真素材都保留：后写的加序号，不覆盖也不丢。
+        self.assertEqual([p.name for p in written],
+                         ["btn.png", "btn-2.png"])
+        self.assertEqual((self.dest / "btn.png").read_bytes(), PNG)
+        self.assertEqual((self.dest / "btn-2.png").read_bytes(), other)
+
+    def test_spr_frame_source_not_duplicated(self):
+        from ui_editor.core import spr_desc
+
+        plain = b"[frames]\n0 100\n[images]\nFileName1=real.igs\n"
+        key = b"!@#$"
+        repeated = (key * (len(plain) // 4 + 1))[:len(plain)]
+        descriptor = (int.from_bytes(plain, "little")
+                      ^ int.from_bytes(repeated, "little")).to_bytes(
+                          len(plain), "little")
+        self.assertIn("[images]", spr_desc.decode_spr_text(descriptor))
+        assets = FakeAssets({"anim\\x.spr": descriptor,
+                             "anim\\y.spr": descriptor,
+                             "anim\\real.igs": PNG})
+        seen: set[str] = set()
+        written = []
+        for widget in (self._widget(sFileName="anim\\x.spr"),
+                       self._widget(sFileName="anim\\y.spr")):
+            files, _missing = asset_export.export_raw_assets(
+                assets, widget, self.dest, seen=seen)
+            written.extend(files)
+        self.assertEqual([p.name for p in written],
+                         ["x.spr", "real.png", "y.spr"])
+
+    def test_rejected_target_does_not_abort_remaining(self):
+        # 导出目录里预存一个悬空符号链接，命中 guard_output 的「拒写符号链接」。
+        (self.dest / "a.png").symlink_to(self.dest / "missing")
+        assets = FakeAssets({"a.png": PNG, "ok.png": PNG})
+        widget = self._widget(sFileName="a.png", sBgFileName="ok.png")
+        rejected: list[tuple[str, str]] = []
+        written, _missing = asset_export.export_raw_assets(
+            assets, widget, self.dest, rejected=rejected)
+        self.assertEqual([p.name for p in written], ["ok.png"])
+        self.assertEqual([name for name, _why in rejected], ["a.png"])
+        self.assertIn("符号链接", rejected[0][1])
+        self.assertFalse((self.dest / "missing").exists())
+
+    def test_rejected_still_raises_without_collector(self):
+        (self.dest / "a.png").symlink_to(self.dest / "missing")
+        assets = FakeAssets({"a.png": PNG})
+        with self.assertRaises(ValueError):
+            asset_export.export_raw_assets(
+                assets, self._widget(sFileName="a.png"), self.dest)
+
+
 if __name__ == "__main__":
     unittest.main()

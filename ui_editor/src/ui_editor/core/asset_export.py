@@ -22,7 +22,7 @@ from .sprite_format import is_sprite
 
 __all__ = [
     "asset_paths_of", "detect_extension", "is_audio_name",
-    "export_targets", "export_raw_assets", "unique_target",
+    "export_targets", "export_raw_assets", "source_key", "unique_target",
 ]
 
 # 控件里可能指向素材的属性（顺序即导出顺序）
@@ -83,6 +83,15 @@ def detect_extension(data: bytes | None, name: str = "") -> str:
     return original
 
 
+def source_key(name: str) -> str:
+    """资源路径的比较键：只统一分隔符与首尾空白，不折叠大小写。
+
+    包内路径是否区分大小写由引擎决定，这里不做猜测；批量导出只把
+    **完全同一个资源路径**当成重复，「同名不同目录」仍按两份素材导出。
+    """
+    return name.replace("/", "\\").strip()
+
+
 def unique_target(dest_dir, filename: str) -> Path:
     """目标目录里重名时加 ``-2``、``-3``…，不覆盖已有文件。"""
     dest = Path(dest_dir)
@@ -104,10 +113,12 @@ def _basename(name: str) -> str:
     return base or "asset"
 
 
-def export_targets(assets, name: str) -> list[tuple[str, bytes]]:
-    """一个资源路径要导出的全部文件：[(建议文件名, 原始字节)]。
+def export_targets(assets, name: str) -> list[tuple[str, bytes, str]]:
+    """一个资源路径要导出的全部文件：[(建议文件名, 原始字节, 来源资源路径)]。
 
-    `.spr` 帧时表连带它指名的帧图源文件（同一个包里读得到才带）。
+    `.spr` 帧时表连带它指名的帧图源文件（同一个包里读得到才带）。第三个
+    元素是这份字节真正来自哪个资源路径，批量导出靠它做跨控件去重——
+    两个 `.spr` 指向同一张帧图时只导一次。
     """
     try:
         data = assets.fetch_bytes(name)
@@ -119,7 +130,7 @@ def export_targets(assets, name: str) -> list[tuple[str, bytes]]:
         return []
     base = _basename(name)
     stem = base[:base.rfind(".")] if "." in base[1:] else base
-    targets = [(f"{stem}{detect_extension(data, name)}", data)]
+    targets = [(f"{stem}{detect_extension(data, name)}", data, name)]
     if name.lower().endswith(".spr"):
         text = decode_spr_text(data) or ""
         for source in frame_sources(name, text):
@@ -133,16 +144,26 @@ def export_targets(assets, name: str) -> list[tuple[str, bytes]]:
             source_stem = (source_base[:source_base.rfind(".")]
                            if "." in source_base[1:] else source_base)
             targets.append((f"{source_stem}{detect_extension(sibling, source)}",
-                            sibling))
+                            sibling, source))
     return targets
 
 
-def export_raw_assets(assets, widget, dest_dir,
-                      protected_paths=()) -> tuple[list[Path], list[str]]:
+def export_raw_assets(assets, widget, dest_dir, protected_paths=(),
+                      seen: set[str] | None = None,
+                      rejected: list[tuple[str, str]] | None = None,
+                      ) -> tuple[list[Path], list[str]]:
     """把控件用到的素材**按原格式**写到 dest_dir。
 
     返回 ``(写出的文件, 找不到的资源路径)``。文件名按内容判定扩展名，
     重名自动加序号；写入前走 ``guard_output`` 防覆盖源资源/符号链接。
+
+    ``seen`` / ``rejected`` 供批量导出共用（一次导出多控件时必传）：
+
+    * ``seen``  已导出的资源路径集合，同一个资源只导一次——多选里几个控件
+      共用一张背景图，不会再产出 ``bg-2.png`` 这种副本；
+    * ``rejected`` 收集被 ``guard_output`` 拒绝的目标，``(资源路径, 原因)``。
+      传了就**跳过该目标继续导剩下的**而不是整批中止，并且抛出前已写出的
+      文件仍然在返回值里；不传则维持旧行为直接抛。
     """
     from .output_paths import guard_output
 
@@ -152,13 +173,30 @@ def export_raw_assets(assets, widget, dest_dir,
     missing: list[str] = []
     sources = list(protected_paths)
     for _key, name in asset_paths_of(widget):
+        if seen is not None and source_key(name) in seen:
+            continue
         targets = export_targets(assets, name)
         if not targets:
+            if seen is not None:
+                seen.add(source_key(name))
             missing.append(name)
             continue
-        for filename, data in targets:
+        if seen is not None:
+            # .spr 连带导出的帧图可能是另一个控件已经导过的同一个资源。
+            targets = [item for item in targets
+                       if source_key(item[2]) not in seen]
+            seen.update(source_key(item[2]) for item in targets)
+            if not targets:
+                continue
+        for filename, data, _source in targets:
             out = unique_target(dest, filename)
-            guard_output(out, sources, dest)
-            out.write_bytes(data)
+            try:
+                guard_output(out, sources, dest)
+                out.write_bytes(data)
+            except (OSError, ValueError) as exc:
+                if rejected is None:
+                    raise
+                rejected.append((name, str(exc)))
+                continue
             written.append(out)
     return written, missing
