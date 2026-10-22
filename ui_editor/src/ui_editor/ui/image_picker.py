@@ -41,12 +41,12 @@ _THUMB_BATCH = 24
 
 #: 新建族可选的拼名类型（顺序即下拉框顺序）
 _FAMILY_KINDS = (
-    ("h_state", "三态横片：0l/0c/0r，每 3 张一个态（按钮）"),
-    ("nine_slice", "九片：top/left … bottom/right（9 张，边框/九宫格）"),
-    ("h_slice", "横三片：left/middle/right（3 张，横向边框/进度条）"),
-    ("v_slice", "竖三片：top/middle/bottom（3 张，纵向边框）"),
-    ("frames", "序号帧：0/1/2…（N 张，一个序号一个态）"),
-    ("single", "单图：bg（1 张）"),
+    ("h_state", "按钮横片：左 + 中 + 右三片拼成一个状态（每 3 张一个状态）"),
+    ("nine_slice", "九宫格边框：9 张，上/中/下 × 左/中/右"),
+    ("h_slice", "横向三片边框：左 + 中（拉伸）+ 右"),
+    ("v_slice", "纵向三片边框：上 + 中（拉伸）+ 下"),
+    ("frames", "逐帧动画：每张一帧，按 0、1、2… 排"),
+    ("single", "单张图：整个目录就一张"),
 )
 
 
@@ -128,6 +128,8 @@ class FamilyImportDialog(QDialog):
 
         self._hint = QLabel(self)
         self._hint.setWordWrap(True)
+        self._summary = QLabel(self)
+        self._summary.setWordWrap(True)
         self._preview = QPlainTextEdit(self)
         self._preview.setReadOnly(True)
         self._preview.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
@@ -145,6 +147,7 @@ class FamilyImportDialog(QDialog):
         layout.addWidget(self._hint)
         layout.addWidget(QLabel("族类型：", self))
         layout.addWidget(self._kind)
+        layout.addWidget(self._summary)
         layout.addWidget(QLabel("这一族的目录路径（包里没有它，运行时拼子图）：", self))
         layout.addWidget(self._base)
         layout.addWidget(QLabel("写进包的条目：", self))
@@ -154,6 +157,34 @@ class FamilyImportDialog(QDialog):
         self._refresh()
 
     # ------------------------------------------------------------ 映射 ----
+    def summary_text(self) -> str:
+        """当前族类型 + 张数的白话说明（用户最容易在这里犯迷糊）。"""
+        kind = self._kind.currentData()
+        count = len(self._files)
+        if kind == "h_state":
+            if count % 3:
+                return (f"{count} 张不是 3 的倍数：按钮每 3 张（左/中/右）"
+                        "算一个状态，要按 3、6、9… 张来选。")
+            states = count // 3
+            if states == 1:
+                return ("3 张 = 1 个状态（常态）：左边 0l、中间 0c、右边 0r；"
+                        "中间那片会被拉伸填满按钮。")
+            return (f"{count} 张 = {states} 个状态：0 号是常态，"
+                    "后面的序号是悬停/按下等（哪个序号对应哪种，未与客户端核实）。")
+        if kind == "nine_slice":
+            return ("9 张 = 上/中/下 × 左/中/右：四角不动，四条边和中心会被拉伸。"
+                    if count == 9 else f"{count} 张：九宫格必须正好 9 张。")
+        if kind in ("h_slice", "v_slice"):
+            which = "左 + 中 + 右" if kind == "h_slice" else "上 + 中 + 下"
+            return (f"3 张 = {which}：两边固定、中间那片拉伸填满。"
+                    if count == 3 else f"{count} 张：这种边框必须正好 3 张。")
+        if kind == "frames":
+            return (f"{count} 张 = {count} 帧：每张是整个画面的一帧，"
+                    "按 0、1、2… 编号。")
+        if kind == "single":
+            return "1 张 = 整个目录只有这一张图。" if count == 1 else "单图只能 1 张。"
+        return ""
+
     def _family_pairs(self) -> tuple[list[tuple[str, str]], str | None]:
         """[(族内相对名, 本地文件)] 与错误说明。"""
         kind = self._kind.currentData()
@@ -189,6 +220,7 @@ class FamilyImportDialog(QDialog):
             existing = [rel for rel, _path in pairs
                         if self._exists(base + rel.replace("/", "\\")
                                         + self.ext)]
+        self._summary.setText(self.summary_text())
         lines = [f"{rel.replace('/', chr(92))}{self.ext}   ←   {Path(path).name}"
                  for rel, path in pairs]
         self._preview.setPlainText("\n".join(lines))

@@ -1451,6 +1451,49 @@ class TestImagePicker(unittest.TestCase):
             self.assertTrue(ok.isEnabled())
             dialog.close()
 
+    def test_family_dialog_explains_how_many_images_are_a_button(self):
+        """最容易犯迷糊的地方：3 张 = 1 个状态，不是"必须三态"。"""
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            three = [_write_png(Path(tmp) / f"{name}.png")
+                     for name in ("0l", "0c", "0r")]
+            dialog = FamilyImportDialog(None, three, "", "h_state", ".png")
+            self.assertIn("3 张 = 1 个状态", dialog.summary_text())
+            self.assertIn("拉伸", dialog.summary_text())
+            dialog.close()
+
+            six = [_write_png(Path(tmp) / f"{index}{side}.png", 20 + index)
+                   for index in (0, 1) for side in "lcr"]
+            dialog = FamilyImportDialog(None, six, "", "h_state", ".png")
+            self.assertIn("2 个状态", dialog.summary_text())
+            self.assertIn("常态", dialog.summary_text())
+            dialog.close()
+
+            nine = [_write_png(Path(tmp) / f"{row}-{column}.png",
+                               20 + index)
+                    for index, (row, column) in enumerate(
+                        (r, c) for r in ("top", "middle", "bottom")
+                        for c in ("left", "middle", "right"))]
+            dialog = FamilyImportDialog(None, nine, "", "nine_slice", ".png")
+            self.assertIn("四角不动", dialog.summary_text())
+            dialog.close()
+
+    def test_family_dialog_blocks_four_images_for_a_button(self):
+        from PySide6.QtWidgets import QDialogButtonBox
+
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{index}.png", 20 + index)
+                     for index in range(4)]
+            dialog = FamilyImportDialog(None, files, "", "h_state", ".png")
+            dialog._base.setText("a\\b\\")
+            self.assertIn("不是 3 的倍数", dialog.summary_text())
+            self.assertFalse(dialog._buttons.button(
+                QDialogButtonBox.StandardButton.Ok).isEnabled())
+            dialog.close()
+
     def test_family_dialog_orders_unknown_names_by_selection(self):
         """文件名认不出族内命名时按选择顺序分配，并提示可能错位。"""
         from ui_editor.ui.image_picker import FamilyImportDialog
