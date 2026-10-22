@@ -91,9 +91,26 @@ def verify_structure(*, src_pack, out_path, res_path: str, extras: Mapping,
     report: dict = {}
     try:
         # 就地写回（src 与 out 是同一个文件）时，「写前」的句柄拿到的
-        # 已经是写后的内容，逐条比对只会得出 0 条，别当成真在报告。
+        # 已经是写后的内容：条目数与「新增布局」都已在写前由
+        # :func:`ui_editor.core.pack_build._verify_copy` 对照源包校验过，
+        # 这里再拿同一个文件自比自只会误报（第二次批量保存加一个布局，
+        # 就会被判成「条目数变化」）。所以同文件只做目录/寻址检查。
         same_file = Path(src_pack).resolve() == Path(out_path).resolve()
         paths = list(layout_paths) if layout_paths is not None else [res_path]
+        if same_file:
+            with FlsPack(out_path) as after:
+                ids_after = after.entry_ids
+                if not directory_is_sorted(ids_after):
+                    report["error"] = (
+                        "新包目录未按条目号升序，引擎可能查不到条目")
+                    return report
+                for name in [*paths, *extras]:
+                    if not engine_finds(ids_after, path_hash(name)):
+                        report["error"] = f"新包中二分查找不到：{name}"
+                        return report
+                report["changed_entries"] = None
+                report["entries_after"] = after.count
+            return report
         with FlsPack(src_pack) as before, FlsPack(out_path) as after:
             before_ids = set(before.entry_ids)
             new_layouts = [path for path in paths
@@ -147,7 +164,7 @@ def verify_structure(*, src_pack, out_path, res_path: str, extras: Mapping,
             if unexpected:
                 report["error"] = f"有 {unexpected} 条条目被意外改变"
                 return report
-            report["changed_entries"] = None if same_file else changed
+            report["changed_entries"] = changed
             report["entries_after"] = after.count
     except Cancelled:
         raise  # 用户取消原样上抛（结果作废），不当成校验失败

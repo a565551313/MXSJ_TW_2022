@@ -243,6 +243,20 @@ class TestGuiImport(unittest.TestCase):
                          [(local_a, "custom/new.dlg"), (local_b, "topic/c.dlg")])
         dialog.deleteLater()
 
+
+    def test_batch_dialog_normalizes_paths(self):
+        """表格里看到的路径就是写进包的路径：去空格、反斜杠转 /。"""
+        local = self.root / "n.dlg"
+        local.write_bytes(self.local.read_bytes())
+        dialog = BatchImportDialog(str(self.src), [])
+        dialog.add_local_files([str(local)])
+        dialog.rows[0].path = "  custom\\sub\\a.dlg  "
+        dialog._refresh()
+        self.assertEqual(dialog.rows[0].path, "custom/sub/a.dlg")
+        self.assertEqual(dialog.compute_statuses(), ["新增"])
+        self.assertEqual(dialog.entries(), [(local, "custom/sub/a.dlg")])
+        dialog.deleteLater()
+
     def test_batch_dialog_keeps_folder_structure(self):
         folder = self.root / "ui_pack"
         (folder / "login").mkdir(parents=True)

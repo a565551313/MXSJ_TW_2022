@@ -60,14 +60,18 @@
 
 | 项 | 结果 |
 | --- | --- |
-| 全套回归（沙箱 offscreen） | **744 项**：743 通过、1 跳过、0 错误 |
-| 新增包级测试 `test_pack_copy_many.py` | 12 项通过 |
-| 新增界面级测试 `test_gui_batch_import.py` | 7 项通过 |
+| 全套回归（沙箱 offscreen） | **756 项**：755 通过、1 跳过、0 错误 |
+| 新增包级测试 `test_pack_copy_many.py` | 16 项通过 |
+| 新增界面级测试 `test_gui_batch_import.py` | 14 项通过 |
 | `ruff check` / `check_windows_compat` | 0 / 0/0/0 |
 | Windows 实机 | **未验**（本机只有沙箱 offscreen） |
 | 批量对话框观感 | 仅 offscreen 截图，见 `docs/analysis/ui_batch_import_0150/` |
 
 边界：写包仍是「整包复制」，批量省的是重复次数，不是把包体改成增量写。
+
+PR #73 的 14 条 AI 审查已逐条复核，**全部属实**并修复（同文件二次保存误报、
+散装另存可覆盖输出包、队列布局不许新建、Windows 覆盖打开中的包等），
+判定与证据见 [`docs/analysis/ai_review_audit_pr73_20261022.md`](../docs/analysis/ai_review_audit_pr73_20261022.md)。
 
 ## 0.14.0：打开 / 保存 / 导入 / 导出重新规划
 

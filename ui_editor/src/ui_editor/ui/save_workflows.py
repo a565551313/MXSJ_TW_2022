@@ -124,7 +124,7 @@ class SaveWorkflowsMixin:
         if self.doc is None:
             return False
         try:
-            guard_output(target, self._pack_sources())
+            guard_output(target, self._pack_sources(for_pack_write=to_pack))
             pack_path, res_path = (self.doc.source_pack
                                    if self.doc.source_pack else (None, None))
             extra_layouts = (self._pending_layout_dicts(pack_path)
@@ -287,10 +287,16 @@ class SaveWorkflowsMixin:
         """
         # 写包本身也要进度：复制 614 MB、逐条校验 5.3 万条，机械盘上
         # 是十几秒到一分钟的活，只转圈会被当成卡死。
+        # 队列里的布局是「待入包」的新路径，必须允许新建；当前文档只有
+        # 自己也是待入包时才允许。否则在「包里已有布局」的标签上按 Ctrl+S
+        # 会拿新路径去 _plan_patch，报「包中找不到条目」，整批都存不进去。
+        create_paths = set(layouts) - {res_path}
+        if pending_import:
+            create_paths.add(res_path)
         info = pack_build.patch_pack_copy_many(
             src_pack, layouts, tmp_out, extra_entries=extras,
-            protected_paths=self._pack_sources(),
-            allow_create=pending_import,
+            protected_paths=self._pack_sources(for_pack_write=True),
+            allow_create=create_paths or False,
             allow_overwrite_self=overwrite_self,
             progress=progress, cancelled=cancelled)
         report: dict = {"out": tmp_out, "bytes": info["bytes"],
@@ -381,13 +387,17 @@ class SaveWorkflowsMixin:
         src_pack, res_path = self.doc.source_pack
         if not self._confirm_save_review(path, to_pack=True):
             return False
-        # 这两个事实在界面线程抓好再交给后台：后台只写文件，不再回头读
-        # 文档状态；两次写包也不会互相覆盖（各用各的参数）。
+        # 这两个事实在界面线程抓好再交给后台：后台只写文件、不回头读文档。
         pending_import = bool(self.doc.pending_pack_import)
         encoding = self.doc.text_encoding
         # 批量导入的布局和当前布局一起写：一次复制、一次校验、一次替换。
         extra_layouts = self._pending_layout_dicts(src_pack)
         extra_layouts.pop(res_path, None)
+        # Windows 不能 os.replace 覆盖打开中的文件：写前放掉句柄，写后挂回。
+        released = False
+        if (Path(path).resolve() == Path(src_pack).resolve()
+                and self._is_own_output(path)):
+            released = self.resolver.release_pack(path)
         self._update_status("正在写回资源包并校验…")
         try:
             report = self.run_busy(
@@ -400,13 +410,19 @@ class SaveWorkflowsMixin:
         except Cancelled:
             # patch_pack_copy 在 os.replace 之前取消，并自己删掉临时文件；
             # path 可能是用户选来覆盖的旧包，这里不能删。
+            if released:
+                self.resolver.mount_pack(path, priority=True)
             self._update_status(
                 "写回已取消：没有写出新包，原包与目标文件都没动。")
             return False
         except Exception as exc:
+            if released:
+                self.resolver.mount_pack(path, priority=True)
             QMessageBox.warning(self, "写回失败", str(exc))
             return False
         if not report or not report.get("ok"):
+            if released:
+                self.resolver.mount_pack(path, priority=True)
             QMessageBox.warning(
                 self, "写回校验未通过",
                 (report or {}).get("error", "未知错误")
@@ -481,11 +497,14 @@ class SaveWorkflowsMixin:
         self._update_title()
         return True
 
-    def _pack_sources(self) -> list[Path]:
+    def _pack_sources(self, *, for_pack_write: bool = False) -> list[Path]:
         """受保护的源包：游戏原包、其它已挂载包、同目录里还没挂载的包。
 
-        当前文档**自己写出来的**输出包不算源——它是保存目标。不排除的话，
-        第二次 Ctrl+S 会被 `guard_output` 当成「覆盖源资源」拒掉（实测）。
+        只有**写回资源包**（``for_pack_write=True``）时，当前文档自己写出来
+        的输出包不算源——它是这次的保存目标；不排除的话，第二次 Ctrl+S 会被
+        `guard_output` 当成「覆盖源资源」拒掉（实测）。**另存为散装 .dlg**
+        时必须继续保护它：否则选中上次的输出包，`.fls` 会被整包写成 `.dlg`
+        明文，包里几十万条资源一次丢光。
         """
         sources = list(self.resolver.pack_paths)
         if self.doc and self.doc.source_pack:
@@ -498,7 +517,7 @@ class SaveWorkflowsMixin:
                                if path.suffix.lower() == ".fls")
             except OSError:
                 continue
-        own = self._own_output_pack()
+        own = self._own_output_pack() if for_pack_write else None
         kept: list[Path] = []
         seen: set[str] = set()
         for path in sources:

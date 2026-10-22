@@ -599,17 +599,21 @@ def _patch_pack_copy_many(archive_path, layouts: dict[str, bytes], out_path,
 
     added: list[str] = []
     replaced: list[str] = []
-    if progress is not None:
-        progress(0, 1, "写入新包：复制源包…")
-    try:
-        _copy_with_progress(src, out, progress, cancelled)
-        _check_cancel(cancelled)
-        if not need_rebuild:
+    if not need_rebuild:
+        if progress is not None:
+            progress(0, 1, "写入新包：复制源包…")
+        try:
+            _copy_with_progress(src, out, progress, cancelled)
+            _check_cancel(cancelled)
             apply_layouts(out)
             apply_extras(out)
-    except _RebuildNeeded:
-        need_rebuild = True
+        except _RebuildNeeded:
+            need_rebuild = True
     if need_rebuild:
+        # 复制/补丁可能只做了一半：回退整包重组前先清空计数，否则同一张
+        # 新图会被重复算进 images_added，写后校验误判「条目数变化」。
+        added.clear()
+        replaced.clear()
         if progress is not None:
             progress(0, 0, "整包重组（旧包目录需要修复，较慢）…")
         _check_cancel(cancelled)
@@ -731,16 +735,18 @@ def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
 def patch_pack_copy_many(archive_path, layouts: dict[str, bytes],
                          out_path, extra_entries: dict | None = None,
                          protected_paths: Iterable[str | Path] = (),
-                         allow_create: bool = False, progress=None,
-                         cancelled=None,
+                         allow_create: bool | Iterable[str] = False,
+                         progress=None, cancelled=None,
                          allow_overwrite_self: bool = False) -> dict:
     """只生成新包（可一次写多个布局）：禁止源包/别名，临时副本验证后原子发布。
 
     构建、补丁或校验失败均不改变源包和已有输出。protected_paths
     由 GUI 传入其余已挂载资源，以防输出覆盖另一个源包。
-    allow_create 默认关闭；显式开启后仅接受预检合格的 .dlg，缺失时
-    按原生路径密钥新增/替换，已有明文或错误密钥的目标布局会迁移；
-    其它未改条目保持原字节。客户端实机仍需验收。
+    ``allow_create``：默认关闭；``True`` 表示允许新增 ``layouts`` 里的
+    全部路径，也可以只给**待入包**那几个路径（GUI 的批量导入就是这种：
+    当前标签可能是包里已有的布局，只有队列里的布局需要新建）。允许新增
+    的路径仅接受预检合格的 .dlg，缺失时按原生路径密钥新增/替换，已有
+    明文或错误密钥的目标布局会迁移；其它未改条目保持原字节。
 
     批量导入走这个入口：``layouts`` 里的条目一次复制包体、一次校验、
     一次原子替换，不会为每个布局各写一遍整包。
@@ -780,18 +786,24 @@ def patch_pack_copy_many(archive_path, layouts: dict[str, bytes],
             if name.lower().endswith(".dlg"):
                 raise PackError("附加图片入口不接受.dlg；请作为目标布局保存")
         with FlsPack(src) as pack:
-            if allow_create:
-                from .layout_import import (
-                    prepare_layout_import,
-                    validate_layout_path,
-                )
+            from .layout_import import prepare_layout_import, validate_layout_path
 
-                for path, plain in layouts.items():
-                    path = validate_layout_path(path)
-                    prepare_layout_import(pack, path, plain)
+            if allow_create is True:
+                create = set(layouts)
+            elif allow_create:
+                # 统一按包内写法比较（去空格、反斜杠转 /）
+                create = {validate_layout_path(str(path))
+                          for path in allow_create}
             else:
-                for path, plain in layouts.items():
-                    _plan_patch(src, path, plain)  # 输入无效时不创建输出
+                create = set()
+            for path, plain in layouts.items():
+                if path in create:
+                    prepare_layout_import(
+                        pack, validate_layout_path(path), plain)
+                else:
+                    # 不在待入队里的路径必须是源包已有条目；写错路径时
+                    # 这里直接报「包中找不到条目」，不悄悄新建。
+                    _plan_patch(src, path, plain)
         with tempfile.NamedTemporaryFile(
             prefix=f".{out.name}.", suffix=".tmp", dir=out.parent,
             delete=False,

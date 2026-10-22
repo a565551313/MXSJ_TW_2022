@@ -76,11 +76,16 @@ class ImportQueueMixin:
                 and doc_now.source_pack[0] != pack_path
                 and doc_now.origin_pack == pack_path):
             queue_path = doc_now.source_pack[0]
+        own_output = doc_now.output_pack if doc_now is not None else None
+        own_target = (
+            bool(own_output)
+            and Path(own_output).resolve() == Path(queue_path).resolve())
         for doc in docs.values():
             doc.source_pack = (queue_path, doc.source_pack[1])
             doc.origin_pack = pack_path
-            if queue_path != pack_path:
-                # 已经在写新包了：这批导入也跟着写进同一个新包
+            if queue_path != pack_path or own_target:
+                # 已经在写新包了（或这批就是要补进自己上次的输出包）：
+                # 保存时应该写回那个包，而不是再问一次路径。
                 doc.output_pack = queue_path
 
         store = self._pending_imports.setdefault(queue_path, {})
@@ -183,12 +188,17 @@ class ImportQueueMixin:
             doc.pending_pack_import = False
             doc.mark_saved()
             doc.source_pack = (str(out_pack), path)
+            # 记住输出包：这些文档已经在新包里，下次 Ctrl+S 必须静默写回
+            # 同一个包；漏了这句，打开队列里的布局再保存会再问一次路径，
+            # 默认名还叫 _edited2（第二个输出包）。
+            doc.output_pack = str(out_pack)
         # 队列里也可能有已打开标签的（打开过的从队列里拿出去过），
         # 一并把来源改成新包，避免下次保存又去写源包。
         for doc in self._docs_with_pending_pack(source_pack):
             doc.pending_pack_import = False
             doc.mark_saved()
             doc.source_pack = (str(out_pack), doc.source_pack[1])
+            doc.output_pack = str(out_pack)
         for path in written:
             self._remember_layout(str(path))
             self.resource_panel.add_known_layout(str(out_pack), str(path))

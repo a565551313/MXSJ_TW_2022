@@ -202,6 +202,22 @@ class AssetResolver:
         self._drop_caches()
         return pack
 
+    def release_pack(self, path: str | Path) -> bool:
+        """关掉并摘下一个已挂载的包，返回是否真的摘下了。
+
+        Windows 不能在目标文件仍被打开时 ``os.replace``：写回「上次那个
+        输出包」之前必须先放手，写完再 :meth:`mount_pack`/`reload_pack`。
+        POSIX 上替换打开中的文件没问题，但统一走同一条路，省得平台分支。
+        """
+        target = Path(path).resolve()
+        for index, pack in enumerate(self._packs):
+            if pack.path.resolve() == target:
+                pack.close()
+                del self._packs[index]
+                self._drop_caches()
+                return True
+        return False
+
     def reload_pack(self, path: str | Path) -> FlsPack:
         """重开一个已挂载的包（同一个文件被原地覆盖后必须调用）。
 

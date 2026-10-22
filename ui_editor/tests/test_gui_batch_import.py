@@ -93,6 +93,7 @@ class BatchImportGuiTests(unittest.TestCase):
 
     def _save(self) -> str:
         out = str(self.root / "interface_edited.fls")
+        self.warnings = []
         with mock.patch(
                 "ui_editor.ui.save_workflows.QFileDialog.getSaveFileName",
                 lambda *a, **k: (out, "")), \
@@ -104,7 +105,8 @@ class BatchImportGuiTests(unittest.TestCase):
                 lambda *a, **k: None), \
              mock.patch(
                 "ui_editor.ui.save_workflows.QMessageBox.warning",
-                lambda *a, **k: None):
+                lambda *a, **k: self.warnings.append(
+                    (a[1], str(a[2])) if len(a) > 2 else (a[0], ""))):
             self.window.save()
         return out
 
@@ -141,6 +143,7 @@ class BatchImportGuiTests(unittest.TestCase):
             self.assertTrue(self._has(out, f"custom/a{i}.dlg"), i)
         message = self.window.statusBar().currentMessage()
         self.assertIn("2 个导入布局", message)  # 当前打开的那个另外算
+        self.assertEqual(self.warnings, [], "保存不该弹任何警告")
         # 源包一个字节没动
         self.assertEqual(self.src.read_bytes(), build_archive_raw(_dlg("Base")))
 
@@ -152,10 +155,16 @@ class BatchImportGuiTests(unittest.TestCase):
         self._import([(path, f"p/s{i}.dlg") for i, path in enumerate(second)])
         self.assertEqual(self._pending(), ["p/s0.dlg", "p/s1.dlg"])
         out = self._save()
+        self.assertEqual(self.warnings, [],
+                         "第二次写回同一个包也要通过校验")
         self.assertEqual(sorted(p.name for p in self.root.glob("*.fls")),
                          ["interface.fls", "interface_edited.fls"])
         for path in ("p/f0.dlg", "p/f1.dlg", "p/s0.dlg", "p/s1.dlg"):
             self.assertTrue(self._has(out, path), path)
+        self.assertEqual(self.window._pending_imports, {})
+        self.assertEqual(self._pending(), [])
+        self.assertFalse(self.window.doc.pending_pack_import)
+        self.assertFalse(self.window.doc.dirty)
 
     def test_review_lists_batched_layouts_before_writing(self):
         files = [self._local(f"ui/r{i}.dlg", f"R{i}") for i in range(2)]
@@ -192,6 +201,114 @@ class BatchImportGuiTests(unittest.TestCase):
             str(self.src), self.window.resolver.scan_layouts(str(self.src)))
         self.window._restore_pending_items()
         self.assertEqual(self._pending(), ["m/k0.dlg", "m/k1.dlg"])
+
+
+    # -- 2026-10-22 PR #73 复核修：保存链边界 ---------------------------
+    def test_in_place_save_releases_mounted_handle(self):
+        """写回同一个包前要放开 resolver 的句柄（Windows 才替换得动）。"""
+        first = self._local("ui/h.dlg", "H")
+        self._import([(first, "h/h.dlg")])
+        out = self._save()
+        seen = []
+        real = self.window._write_pack_copy_file
+
+        def spy(path, **kwargs):
+            seen.append(self.window.resolver.pack_for(path))
+            return real(path, **kwargs)
+
+        with mock.patch.object(self.window, "_write_pack_copy_file", spy):
+            self._save()
+        self.assertEqual(self.warnings, [])
+        self.assertEqual(seen, [None], "写之前句柄必须已释放")
+        self.assertIsNotNone(self.window.resolver.pack_for(out),
+                             "写完后要重新挂回来")
+
+    def test_batch_save_from_existing_layout_tab(self):
+        """在「包里已有布局」的标签上按 Ctrl+S，队列里的新布局也要能存。"""
+        new = self._local("ui/n.dlg", "N")
+        self._import([(new, "new/new.dlg")])
+        self.window._open_pack_layout(str(self.src), "dialog/base.dlg")
+        self.assertFalse(self.window.doc.pending_pack_import)
+        out = self._save()
+        self.assertEqual(self.warnings, [], "队列布局要允许新建")
+        self.assertTrue(self._has(out, "new/new.dlg"))
+        self.assertTrue(self._has(out, "dialog/base.dlg"))
+
+    def test_opened_queue_layout_remembers_output_pack(self):
+        """保存后，从队列里打开过的文档也要记住输出包，别再问一次路径。"""
+        files = [self._local(f"ui/o{i}.dlg", f"O{i}") for i in range(3)]
+        self._import([(path, f"o/o{i}.dlg") for i, path in enumerate(files)])
+        self.window._open_pending_layout(str(self.src), "o/o1.dlg")
+        out = self._save()
+        self.assertEqual(self.warnings, [])
+        self.assertEqual(self.window.doc.output_pack, out)
+        for session in self.window._sessions:
+            if session.doc is not None:
+                self.assertEqual(session.doc.output_pack, out)
+        # 再存一次：必须还是同一个包，不生成第二个输出包
+        self._save()
+        self.assertEqual(self.warnings, [])
+        self.assertEqual(sorted(p.name for p in self.root.glob("*.fls")),
+                         ["interface.fls", "interface_edited.fls"])
+
+    def test_import_into_own_output_pack_keeps_writing_there(self):
+        """已经保存过一次的包再导入布局，Ctrl+S 仍写这个包。"""
+        first = self._local("ui/u0.dlg", "U0")
+        self._import([(first, "u/u0.dlg")])
+        out = self._save()
+        self.assertEqual(self.warnings, [])
+        second = self._local("ui/u1.dlg", "U1")
+        known = self.window.resolver.scan_layouts(out)
+        dialog = BatchImportDialog(out, known, self.window)
+        dialog.add_local_files([str(second)])
+        dialog.rows[-1].path = "u/u1.dlg"
+        dialog._refresh()
+        self._dialogs.append(dialog)
+        with mock.patch(
+                "ui_editor.ui.import_queue.BatchImportDialog",
+                return_value=dialog), \
+             mock.patch.object(dialog, "exec", return_value=QDialog.Accepted):
+            self.window.import_pack_layout(out)
+        self._save()
+        self.assertEqual(self.warnings, [], "导入自己的输出包要能写回")
+        self.assertTrue(self._has(out, "u/u1.dlg"))
+        self.assertEqual(sorted(p.name for p in self.root.glob("*.fls")),
+                         ["interface.fls", "interface_edited.fls"])
+
+    def test_refresh_keeps_pending_leaves_after_tab_switch(self):
+        files = [self._local(f"ui/w{i}.dlg", f"W{i}") for i in range(2)]
+        self._import([(path, f"w/w{i}.dlg") for i, path in enumerate(files)])
+        self.window._open_pack_layout(str(self.src), "dialog/base.dlg")
+        self.window.refresh_sources()
+        self.assertEqual(self._pending(), ["w/w0.dlg", "w/w1.dlg"],
+                         "刷新后待入叶子不能被 _set_document 清掉")
+
+    def test_standalone_save_refuses_own_output_pack(self):
+        """「另存为散装 .dlg」不能把上次的输出包写成明文。"""
+        first = self._local("ui/v.dlg", "V")
+        self._import([(first, "v/v.dlg")])
+        out = self._save()
+        before = Path(out).read_bytes()
+        warnings: list[tuple[str, str]] = []
+        with mock.patch(
+                "ui_editor.ui.save_workflows.SaveReviewDialog.exec",
+                return_value=1), \
+             mock.patch(
+                "ui_editor.ui.save_workflows.QMessageBox.warning",
+                lambda _p, title, text, *a, **k: warnings.append(
+                    (title, str(text)))):
+            ok = self.window._write_to(out)
+        self.assertFalse(ok)
+        self.assertEqual(Path(out).read_bytes(), before, "源包一个字节都不能动")
+        self.assertEqual(warnings[0][0], "保存失败")
+
+    def test_encoding_switch_keeps_output_pack(self):
+        first = self._local("ui/e.dlg", "E")
+        self._import([(first, "e/e.dlg")])
+        out = self._save()
+        self.window.change_text_encoding("utf-8")
+        self.assertEqual(self.window.doc.output_pack, out)
+        self.assertEqual(self.window.doc.origin_pack, str(self.src))
 
     def test_import_skips_broken_file_and_keeps_the_rest(self):
         self._local("ui/ok.dlg", "OK")

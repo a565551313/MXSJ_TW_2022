@@ -17,6 +17,7 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from ui_editor.core import pack_build, publish  # noqa: E402
 from ui_editor.core.errors import PackError  # noqa: E402
 from ui_editor.core.mxhash import mx_hash  # noqa: E402
 from ui_editor.core.native_layout import (  # noqa: E402
@@ -224,6 +225,118 @@ class BatchWriteTests(unittest.TestCase):
             layouts["dialog/a.dlg"], mx_hash(pb("dialog/a.dlg"))))
         self.assertEqual(stored_b, encode_layout(
             layouts["dialog/b.dlg"], mx_hash(pb("dialog/b.dlg"))))
+
+
+
+    # -- 2026-10-22 复核修：同文件二次保存 / 重组回退 -------------------
+    def test_second_save_in_place_verifies_added_layout(self):
+        """第二次保存（src == out）新增布局后，结构校验不能自比自。"""
+        out = self.root / "edited.fls"
+        patch_pack_copy_many(
+            str(self.src), {"dialog/existing.dlg": _dlg("First")}, str(out))
+        info = patch_pack_copy_many(
+            str(out), {"dialog/existing.dlg": _dlg("Second"),
+                       "dialog/added.dlg": _dlg("Added")}, str(out),
+            allow_create={"dialog/added.dlg"}, allow_overwrite_self=True)
+        self.assertEqual(info["layouts_added"], ["dialog/added.dlg"])
+        report = publish.verify_structure(
+            src_pack=out, out_path=out, res_path="dialog/existing.dlg",
+            extras={}, info=info,
+            layout_paths=["dialog/existing.dlg", "dialog/added.dlg"])
+        self.assertNotIn("error", report)
+        self.assertIsNone(report["changed_entries"])
+        self.assertEqual(report["entries_after"], 4)  # 源 3 + 第二次新增 1
+
+    def test_rebuild_resets_image_counts_after_partial_extras(self):
+        """补图途中回退整包重组时，images_added 不能把已记过的图再算一遍。"""
+        out = self.root / "rebuilt.fls"
+        real = pack_build.patch_raw_entry_in_file
+        calls = {"n": 0}
+
+        def flaky(path, entry_id, stored):
+            calls["n"] += 1
+            if calls["n"] == 3:          # 第 2 张图写完、第 3 张开始前失败
+                raise _RebuildNeeded("模拟负载交叠")
+            return real(path, entry_id, stored)
+
+        extras = {"image/a.png": b"PNG-A", "image/b.png": b"PNG-B",
+                  "image/c.png": b"PNG-C"}
+        with mock.patch.object(pack_build, "patch_raw_entry_in_file", flaky):
+            info = patch_pack_copy_many(
+                str(self.src), {"dialog/existing.dlg": _dlg("Edited")},
+                str(out), extra_entries=extras)
+        self.assertEqual(info["mode"], "rebuild")
+        self.assertEqual(sorted(info["images_added"]), sorted(extras),
+                         "每张新图只能计一次")
+        report = publish.verify_structure(
+            src_pack=self.src, out_path=out, res_path="dialog/existing.dlg",
+            extras=extras, info=info)
+        self.assertNotIn("error", report)
+
+    def test_rebuild_does_not_copy_whole_pack_first(self):
+        """已知要整包重组的包，不该先复制一遍再丢掉。"""
+        unsorted_pack = self.root / "unsorted.fls"
+        names = ["dialog/a.dlg", "dialog/z.dlg"]
+        names.sort(key=lambda n: mx_hash(n.encode("gbk")), reverse=True)
+        unsorted_pack.write_bytes(_archive_unsorted([
+            (name, _dlg(name), b"\x00\x00\x00\x00") for name in names]))
+        out = self.root / "rebuilt2.fls"
+        copied = []
+        real = pack_build._copy_with_progress
+
+        def spy(src, dst, *args, **kwargs):
+            copied.append(Path(dst).name)
+            return real(src, dst, *args, **kwargs)
+
+        with mock.patch.object(pack_build, "_copy_with_progress", spy):
+            info = patch_pack_copy_many(
+                str(unsorted_pack), {"dialog/a.dlg": _dlg("Edited")},
+                str(out))
+        self.assertEqual(info["mode"], "rebuild")
+        self.assertEqual(copied, [], "整包重组路径不该先复制")
+
+    def test_entries_can_be_created_selectively(self):
+        """只给队列里的新路径开创建；当前标签写错路径仍然报错。"""
+        out = self.root / "selective.fls"
+        with self.assertRaises(PackError):
+            patch_pack_copy_many(
+                str(self.src),
+                {"dialog/existing.dlg": _dlg("Edit"),
+                 "dialog/typo.dlg": _dlg("Typo")},
+                str(out), allow_create=False)
+        info = patch_pack_copy_many(
+            str(self.src),
+            {"dialog/existing.dlg": _dlg("Edit"),
+             "dialog/queued.dlg": _dlg("Queued")},
+            str(out), allow_create={"dialog/queued.dlg"})
+        self.assertEqual(info["layouts_added"], ["dialog/queued.dlg"])
+        with self.assertRaises(PackError):
+            patch_pack_copy_many(
+                str(self.src), {"dialog/typo2.dlg": _dlg("Typo")},
+                str(self.root / "typo.fls"),
+                allow_create={"dialog/somewhere_else.dlg"})
+
+
+def _archive_unsorted(specs):
+    """同 test_pack_build._archive，但故意保持传入顺序（目录逆序）。"""
+    import struct
+
+    entries, payload = [], bytearray()
+    offset = 12
+    for i, (name, plain, key) in enumerate(specs):
+        stored = bytes(b ^ key[j & 3] for j, b in enumerate(plain))
+        entry_id = mx_hash(name.encode("gbk"))
+        r1 = 1000 + i * 77
+        clen, doff = len(stored), offset
+        r2 = (((r1 * entry_id + 0x0DF25E) & 0xFFFFFFFF) ^ clen) & 0xFFFFFFFF
+        r3 = (((r2 * i * 0x00F718FE + 0x0D59D16C) & 0xFFFFFFFF)
+              ^ doff) & 0xFFFFFFFF
+        entries.append((entry_id, r1, r2, r3))
+        payload.extend(stored)
+        offset += clen
+    head = b"0SLF" + struct.pack("<II", len(specs), offset)
+    return head + bytes(payload) + b"".join(
+        struct.pack("<IIII", *entry) for entry in entries)
 
 
 if __name__ == "__main__":

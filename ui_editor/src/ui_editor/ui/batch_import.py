@@ -212,6 +212,14 @@ class BatchImportDialog(QDialog):
 
     # -- 表格同步 -----------------------------------------------------
     def _refresh(self) -> None:
+        # 包内路径先规范化（去首尾空格、反斜杠转 /）：表格里看到什么，
+        # 写包时用的就是什么。不规范化的话，状态判定用的是规范路径，
+        # 写后校验却拿原始字符串算哈希，会误报「条目集合不符」。
+        for row in self.rows:
+            try:
+                row.path = validate_layout_path(row.path)
+            except (ValueError, UnicodeEncodeError):
+                pass                      # 留给状态列去报「无效路径」
         self.table.blockSignals(True)
         self.table.setRowCount(len(self.rows))
         self._statuses = self.compute_statuses()
@@ -284,8 +292,9 @@ class BatchImportDialog(QDialog):
 
     # -- 结果 ---------------------------------------------------------
     def entries(self) -> list[tuple[Path, str]]:
-        """校验通过后的 (本地文件, 包内路径) 列表。"""
-        return [(self.rows[index].local, self.rows[index].path)
+        """校验通过后的 (本地文件, 包内路径) 列表；路径已规范化。"""
+        return [(self.rows[index].local,
+                 validate_layout_path(self.rows[index].path))
                 for index, status in enumerate(self._statuses)
                 if status in ("新增", "替换")]
 

@@ -52,6 +52,10 @@ class SourceActionsMixin:
             doc.source_bytes = data
             doc.source_path = self.doc.source_path
             doc.source_pack = self.doc.source_pack
+            # 记住的保存目标与原始来源也要跟着走：丢一个，下次 Ctrl+S
+            # 就会重新问路径（默认名还是 _edited2），标题也丢了来源包名。
+            doc.output_pack = self.doc.output_pack
+            doc.origin_pack = self.doc.origin_pack
             if self.doc.pending_pack_import:
                 doc.begin_pack_import(self.doc._saved_state)
             elif (self.doc.inplace_replace
@@ -100,8 +104,6 @@ class SourceActionsMixin:
             self._add_pack_to_tree(path, names)
         for root in self._layout_dirs:
             self.resource_panel.add_loose_dir(root)
-        self._restore_pending_items()
-        self.resource_panel._apply_search(self.resource_panel._search.text())
         # 逐标签换上重读内容（清选择快照）；活动标签同步界面。
         pairs = ([(s, s.doc) for s in self._sessions]
                  or [(None, self._doc)])
@@ -121,6 +123,10 @@ class SourceActionsMixin:
             self._set_document(active_new)
         elif self._doc is None:
             self._set_document(None)
+        # `_set_document` 会 clear_pending()：待入叶子必须在这之后再挂回来，
+        # 否则刷新一次「（待入新包）」就全从树上消失了。
+        self._restore_pending_items()
+        self.resource_panel._apply_search(self.resource_panel._search.text())
         if self._doc is not None and (
                 self._doc.source_path or self._doc.source_pack):
             key = (("file", self._doc.source_path) if self._doc.source_path
@@ -159,6 +165,8 @@ class SourceActionsMixin:
                 nd.source_bytes = data
                 nd.source_path = was.source_path
                 nd.source_pack = was.source_pack
+                nd.output_pack = was.output_pack
+                nd.origin_pack = was.origin_pack
                 docs.append(nd)
             # 样式也从新来源读取，不能保留上次 ui.lst 的缓存。
             handle.report(2, 3, "扫描布局与样式…")
