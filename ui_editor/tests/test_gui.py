@@ -1435,7 +1435,9 @@ class TestImagePicker(unittest.TestCase):
         assets = mock.Mock()
         assets._packs = [object()]
         assets.candidates_with_staged.return_value = [base, "a\\bg.png"]
-        pieces = {base + name + ".png"
+        other = base.replace("登录按钮", "注册按钮")
+        pieces = {family + name + ".png"
+                  for family in (base, other)
                   for name in ("0l", "0c", "0r", "1l", "1c", "1r")}
         assets.resource_exists.side_effect = (
             lambda name: name.replace("/", "\\") in pieces)
@@ -1492,6 +1494,19 @@ class TestImagePicker(unittest.TestCase):
             names = sorted(p.name for p in Path(tmp).iterdir())
             self.assertEqual(names, ["0c.png", "0l.png", "0r.png",
                                      "1c.png", "1l.png", "1r.png"])
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(
+                    QFileDialog, "getExistingDirectory", return_value=tmp), \
+                    mock.patch.object(QFileDialog, "getSaveFileName") as save, \
+                    mock.patch("ui_editor.ui.property_panel.QMessageBox"):
+                captured["export_handler"]([base, other])
+            self.assertFalse(save.called)
+            self.assertEqual(
+                sorted(p.name for p in Path(tmp).iterdir()),
+                ["注册按钮-0c.png", "注册按钮-0l.png", "注册按钮-0r.png",
+                 "注册按钮-1c.png", "注册按钮-1l.png", "注册按钮-1r.png",
+                 "登录按钮-0c.png", "登录按钮-0l.png", "登录按钮-0r.png",
+                 "登录按钮-1c.png", "登录按钮-1l.png", "登录按钮-1r.png"])
         panel.deleteLater()
 
     def test_family_dialog_maps_by_name_not_order(self):

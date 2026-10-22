@@ -1,5 +1,7 @@
 # 项目当前状态（STATUS）
 
+> **2026-10-22：UI 编辑器选图窗批量导出复核修复**（分支 `arena/28ca29c4-mxsj-tw-2022`）：多拼名族一起导出时，按基路径传递已计算的区分前缀，避免文件名退化为 `0l-2.png`；新增选图窗多族导出回归断言。Ruff、`py_compile` 与 `test_asset_export.py` 的 29 项通过；选图窗 GUI 定向测试因系统缺少 `libGL.so.1` 无法启动，未验。
+
 > **2026-10-22 客户端伤害研究归档**（分支 `coderabbit/project-analysis/6aa25aac`，
 > 起点 `3264485`；下文其他会话的组件快照不代表本轮测试）：新增
 > [研究总笔记](../notes/client_damage_formula.md)与

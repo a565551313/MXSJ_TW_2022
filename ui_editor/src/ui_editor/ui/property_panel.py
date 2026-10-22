@@ -506,19 +506,22 @@ class PropertyPanel(QWidget):
         def export_handler(paths: list[str], host=None) -> None:
             from pathlib import Path
 
+            from ..core.asset_export import family_prefixes, source_key
             from .busy import run_busy_or_plain
             from .image_export import export_image_files
 
-            def one(path: str, dest_dir, dest_name=None, used_names=None):
+            def one(path: str, dest_dir, dest_name=None, used_names=None,
+                    prefix=""):
                 if dir_base.is_dir_base(path):
                     # 拼名族按族内每块子图导出（与画布右键导出同一套命名）。
                     from ..core.asset_export import dir_piece_name, export_targets
 
                     written: list = []
-                    for _name, data, source in export_targets(assets, path):
+                    for _name, data, source in export_targets(
+                            assets, path, prefix=prefix):
                         written.extend(export_image_files(
                             source, data, assets.fetch_image(source), dest_dir,
-                            dir_piece_name(source, path),
+                            dir_piece_name(source, path, prefix),
                             protected_paths=assets.pack_paths,
                             used_names=used_names))
                     return written
@@ -549,6 +552,7 @@ class PropertyPanel(QWidget):
                         out: list = []
                         bad: list = []
                         used: set = set()   # 本批已占用文件名，同名加序号
+                        prefixes = family_prefixes(paths)
                         total = len(paths)
                         for i, path in enumerate(paths, 1):
                             if h.cancelled:
@@ -556,8 +560,10 @@ class PropertyPanel(QWidget):
                             h.report(i - 1, total,
                                      f"导出 {path}（{i}/{total}）…")
                             try:
+                                prefix = prefixes.get(source_key(path), "")
                                 out.extend(one(path, directory,
-                                               used_names=used))
+                                               used_names=used,
+                                               prefix=prefix))
                             except (OSError, ValueError) as exc:
                                 # 单个资源被拒绝只跳过它，其余照常导出。
                                 bad.append((path, str(exc)))
