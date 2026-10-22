@@ -134,6 +134,86 @@ class TestDirBaseExport(unittest.TestCase):
         self.assertEqual(
             asset_export.dir_piece_name(DIR_BASE + "top/left.igs", DIR_BASE),
             "top-left.igs")
+        # 批量导出多个族时的前缀
+        self.assertEqual(
+            asset_export.dir_piece_stem(DIR_BASE + "0l.png", DIR_BASE,
+                                        "登录按钮-"),
+            "登录按钮-0l")
+        self.assertEqual(
+            asset_export.dir_piece_name(DIR_BASE + "top/left.igs", DIR_BASE,
+                                        "登录按钮-"),
+            "登录按钮-top-left.igs")
+
+    def test_unreadable_piece_is_reported(self):
+        """族里某块取不出（None / 被拒）时不能把残族当完整导出。"""
+        family = [f"{index}{side}.png" for index in (0, 1) for side in "lcr"]
+
+        class HalfReadable(FakeAssets):
+            def __init__(self, files, unavailable, exc=None):
+                super().__init__(files)
+                self.unavailable = set(unavailable)
+                self.exc = exc
+
+            def resource_exists(self, name):
+                key = name.replace("/", "\\")
+                return key in self.files or key in self.unavailable
+
+            def fetch_bytes(self, name):
+                key = name.replace("/", "\\")
+                if key in self.unavailable and self.exc is not None:
+                    raise self.exc
+                return super().fetch_bytes(name)
+
+        for exc in (None, ValueError("资源路径被拒绝")):
+            with self.subTest(exc=exc):
+                dest = Path(tempfile.mkdtemp(dir=self.dest))
+                files = dir_files(family)
+                del files[DIR_BASE + "0c.png"]     # 索引里有、取字节取不到
+                assets = HalfReadable(files,
+                                      [DIR_BASE + "0c.png"], exc)
+                written, missing = asset_export.export_raw_assets(
+                    assets, self._widget(), dest)
+                self.assertEqual(len(written), 5)
+                self.assertNotIn("0c.png", {p.name for p in written})
+                self.assertEqual(len(missing), 1)
+                self.assertIn("0c.png", missing[0])
+                self.assertIn("子图读取失败", missing[0])
+
+    def test_family_prefixes_disambiguate_same_named_folders(self):
+        other = DIR_BASE.replace("登录按钮", "注册按钮")
+        prefixes = asset_export.family_prefixes([DIR_BASE, other])
+        self.assertEqual(prefixes[DIR_BASE], "登录按钮-")
+        self.assertEqual(prefixes[other], "注册按钮-")
+        # 单族批次不加前缀，文件名保持 0l.png
+        self.assertEqual(asset_export.family_prefixes([DIR_BASE, DIR_BASE]), {})
+        # 两族末级同名时退到上一级
+        deep_a = "combdialog4\\a\\登录按钮\\"
+        deep_b = "combdialog5\\b\\登录按钮\\"
+        deep = asset_export.family_prefixes([deep_a, deep_b])
+        self.assertEqual(deep[deep_a], "a-登录按钮-")
+        self.assertEqual(deep[deep_b], "b-登录按钮-")
+
+    def test_batch_prefix_keeps_families_apart(self):
+        other = DIR_BASE.replace("登录按钮", "注册按钮")
+        family = ["0l.png", "0c.png", "0r.png"]
+        files = dir_files(family)
+        files.update({(other + piece).replace("/", "\\"): PNG
+                      for piece in family})
+        assets = FakeAssets(files)
+        prefixes = asset_export.family_prefixes([DIR_BASE, other])
+        first, _ = asset_export.export_raw_assets(
+            assets, self._widget(), self.dest, family_prefixes=prefixes)
+        second, _ = asset_export.export_raw_assets(
+            assets, self._widget(sFileName=other), self.dest,
+            family_prefixes=prefixes)
+        names = {p.name for p in first + second}
+        self.assertEqual(len([p for p in first if p.name.startswith("登录按钮-")]),
+                         3)
+        self.assertEqual(len([p for p in second if p.name.startswith("注册按钮-")]),
+                         3)
+        self.assertEqual(names, {"登录按钮-0l.png", "登录按钮-0c.png",
+                                 "登录按钮-0r.png", "注册按钮-0l.png",
+                                 "注册按钮-0c.png", "注册按钮-0r.png"})
 
 
 class TestDetectExtension(unittest.TestCase):

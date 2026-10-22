@@ -31,8 +31,8 @@ from .sprite_format import is_sprite
 __all__ = [
     "asset_paths_of", "detect_extension", "is_audio_name",
     "dir_base_pieces", "dir_piece_name", "dir_piece_stem", "export_paths",
-    "export_targets", "export_raw_assets", "source_key", "unique_target",
-    "unexported_label",
+    "export_targets", "export_raw_assets", "family_prefixes", "source_key",
+    "unique_target", "unexported_label",
 ]
 
 # 控件里可能指向素材的属性（顺序即导出顺序）
@@ -154,32 +154,63 @@ def export_paths(assets, name: str) -> list[str]:
     return list(dir_base_pieces(assets, name) or ())
 
 
-def dir_piece_stem(piece: str, base: str) -> str:
+def dir_piece_stem(piece: str, base: str, prefix: str = "") -> str:
     """目录型子图的导出文件名主干（``…\\登录按钮\\0l.png`` → ``0l``）。
 
     取**族内相对路径**并用 ``-`` 连接：九片的 ``top/left`` 与 ``bottom/left``
     都叫 ``left.png``，只取 basename 会互相覆盖、加序号成 ``left-2.png``，
     看不出是哪一块。
+
+    ``prefix`` 是批量导出时区分不同拼名族的前缀（见 :func:`family_prefixes`）：
+    两个按钮族都产出 ``0l.png``，加前缀后是 ``登录按钮-0l.png`` /
+    ``注册按钮-0l.png``，文件名自己说明是哪一族。
     """
     rel = piece[len(base):] if base and piece.startswith(base) else piece
     rel = rel.replace("\\", "/").strip("/")
     if not rel:
-        return _basename(piece)
+        return f"{prefix}{_basename(piece)}"
     head, _, tail = rel.rpartition("/")
     if "." in tail[1:]:
         tail = tail[:tail.rfind(".")]
     if not tail:
-        return _basename(piece)
-    return f"{head}-{tail}" if head else tail
+        return f"{prefix}{_basename(piece)}"
+    stem = f"{head}-{tail}" if head else tail
+    return f"{prefix}{stem}"
 
 
-def dir_piece_name(piece: str, base: str) -> str:
+def dir_piece_name(piece: str, base: str, prefix: str = "") -> str:
     """目录型子图在「转成图片」导出时的文件名（保留原扩展名）。
 
     内容是真 PNG 时 ``export_image_files`` 直接用它；是精灵时按它取主干
     拼 ``-0/-1`` 帧名；解不出时也照这个名字原样写字节。
     """
-    return f"{dir_piece_stem(piece, base)}{_name_ext(piece)}"
+    return f"{dir_piece_stem(piece, base, prefix)}{_name_ext(piece)}"
+
+
+def family_prefixes(names) -> dict[str, str]:
+    """批量导出里区分不同拼名族的文件名前缀（``{比较键: 前缀}``）。
+
+    只有同一批出现**两个以上不同基路径**时才需要前缀；单族批次返回空字典，
+    文件名保持 ``0l.png`` 原样。前缀取能把这些基路径彼此区分开的**最短尾部
+    路径段**，用 ``-`` 连接并补尾缀：``…\\登录按钮\\`` → ``登录按钮-``；
+    两个族恰好同名（都叫 ``登录按钮``）时自动退到上一级
+    （``三态按钮-登录按钮-``），避免前缀自己也撞名。
+    """
+    bases: list[str] = []
+    for name in names:
+        key = source_key(name)
+        if key not in bases:
+            bases.append(key)
+    if len(bases) < 2:
+        return {}
+    parts = {base: [seg for seg in base.split("\\") if seg] for base in bases}
+    longest = max(len(segs) for segs in parts.values())
+    for depth in range(1, longest + 1):
+        tails = {base: "-".join(segs[-depth:]) for base, segs in parts.items()}
+        if len(set(tails.values())) == len(bases):
+            return {base: f"{tails[base]}-" for base in bases}
+    # 整条路径都分不开（同一个基路径不会走到这里）：退回完整路径。
+    return {base: base.replace("\\", "-").strip("-") + "-" for base in bases}
 
 
 def unexported_label(assets, name: str) -> str:
@@ -189,22 +220,36 @@ def unexported_label(assets, name: str) -> str:
     return name
 
 
-def _dir_base_targets(assets, name: str) -> list[tuple[str, bytes, str]]:
-    """目录型基路径：族内每块子图各一个导出目标（原字节、原语义文件名）。"""
+def _dir_base_targets(assets, name: str,
+                      unavailable: list[str] | None = None,
+                      prefix: str = "",
+                      ) -> list[tuple[str, bytes, str]]:
+    """目录型基路径：族内每块子图各一个导出目标（原字节、原语义文件名）。
+
+    ``unavailable`` 传了就收集**读不出**的子图（取不到字节或被路径校验拒绝），
+    让批量导出能在状态栏点名缺了哪一块，而不是把残族当成完整导出。
+    """
     targets: list[tuple[str, bytes, str]] = []
     for piece in dir_base_pieces(assets, name) or ():
         try:
             data = assets.fetch_bytes(piece)
         except ValueError:
+            if unavailable is not None:
+                unavailable.append(piece)
             continue
         if data is None:
+            if unavailable is not None:
+                unavailable.append(piece)
             continue
-        stem = dir_piece_stem(piece, name)
+        stem = dir_piece_stem(piece, name, prefix)
         targets.append((f"{stem}{detect_extension(data, piece)}", data, piece))
     return targets
 
 
-def export_targets(assets, name: str) -> list[tuple[str, bytes, str]]:
+def export_targets(assets, name: str,
+                   unavailable: list[str] | None = None,
+                   prefix: str = "",
+                   ) -> list[tuple[str, bytes, str]]:
     """一个资源路径要导出的全部文件：[(建议文件名, 原始字节, 来源资源路径)]。
 
     `.spr` 帧时表连带它指名的帧图源文件（同一个包里读得到才带）。第三个
@@ -215,7 +260,7 @@ def export_targets(assets, name: str) -> list[tuple[str, bytes, str]]:
     这个条目，直接 ``fetch_bytes`` 会被路径校验拒绝。
     """
     if dir_base.is_dir_base(name):
-        return _dir_base_targets(assets, name)
+        return _dir_base_targets(assets, name, unavailable, prefix)
     try:
         data = assets.fetch_bytes(name)
     except ValueError:
@@ -247,6 +292,7 @@ def export_targets(assets, name: str) -> list[tuple[str, bytes, str]]:
 def export_raw_assets(assets, widget, dest_dir, protected_paths=(),
                       seen: set[str] | None = None,
                       rejected: list[tuple[str, str]] | None = None,
+                      family_prefixes: dict[str, str] | None = None,
                       ) -> tuple[list[Path], list[str]]:
     """把控件用到的素材**按原格式**写到 dest_dir。
 
@@ -260,6 +306,9 @@ def export_raw_assets(assets, widget, dest_dir, protected_paths=(),
     * ``rejected`` 收集被 ``guard_output`` 拒绝的目标，``(资源路径, 原因)``。
       传了就**跳过该目标继续导剩下的**而不是整批中止，并且抛出前已写出的
       文件仍然在返回值里；不传则维持旧行为直接抛。
+    * ``family_prefixes`` 批量导出多个拼名族时的文件名前缀（见
+      :func:`family_prefixes`）；同一族里的子图读不出时也会进 ``missing``，
+      不把残族当成完整导出。
     """
     from .output_paths import guard_output
 
@@ -268,14 +317,21 @@ def export_raw_assets(assets, widget, dest_dir, protected_paths=(),
     written: list[Path] = []
     missing: list[str] = []
     sources = list(protected_paths)
+    prefixes = dict(family_prefixes or {})
     for _key, name in asset_paths_of(widget):
         if seen is not None and source_key(name) in seen:
             continue
-        targets = export_targets(assets, name)
+        unreadable: list[str] = []
+        targets = export_targets(assets, name, unreadable,
+                                 prefixes.get(source_key(name), ""))
+        if unreadable:
+            missing.extend(f"{piece}（子图读取失败）" for piece in unreadable)
         if not targets:
             if seen is not None:
                 seen.add(source_key(name))
-            missing.append(unexported_label(assets, name))
+            # 整族都读不出时逐块点过名了，不再笼统说「拼不出整族」。
+            if not unreadable:
+                missing.append(unexported_label(assets, name))
             continue
         if seen is not None:
             # .spr 连带导出的帧图可能是另一个控件已经导过的同一个资源。

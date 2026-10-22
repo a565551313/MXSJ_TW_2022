@@ -462,6 +462,7 @@ class EditingCommandsMixin:
             dir_piece_name,
             export_paths,
             export_raw_assets,
+            family_prefixes,
             source_key,
             unexported_label,
         )
@@ -479,11 +480,15 @@ class EditingCommandsMixin:
         rejected: list[tuple[str, str]] = []
         seen: set[str] = set()          # 本批已导出的资源路径
         used_names: set[str] = set()    # 本批已占用的输出文件名（小写）
+        # 一批有多个拼名族时前缀族名，免得后一族变成看不出出处的 0l-2.png。
+        families = family_prefixes(
+            name for widget in widgets for _key, name in asset_paths_of(widget))
         if convert:
             for widget in widgets:
                 for _key, name in asset_paths_of(widget):
                     if source_key(name) in seen:
                         continue
+                    prefix = families.get(source_key(name), "")
                     paths = export_paths(assets, name)
                     if not paths:
                         # 目录型基路径拼不出整族：说明原因，别把校验器的
@@ -498,11 +503,14 @@ class EditingCommandsMixin:
                         # 目录型子图按族内相对路径命名（top-left.png），
                         # 否则九片的 top/bottom 会挤成 left.png、left-2.png。
                         dest_name = (None if path == name
-                                     else dir_piece_name(path, name))
+                                     else dir_piece_name(path, name, prefix))
                         try:
                             data = assets.fetch_bytes(path)
                             if data is None:
-                                missing.append(path)
+                                # 目录型子图缺块要说清是「读取失败」，
+                                # 普通资源维持原来的裸路径。
+                                missing.append(path if path == name else
+                                               f"{path}（子图读取失败）")
                                 continue
                             files = export_image_files(
                                 path, data, assets.fetch_image(path), directory,
@@ -522,7 +530,8 @@ class EditingCommandsMixin:
                 files, lost = export_raw_assets(
                     assets, widget, directory,
                     protected_paths=assets.pack_paths,
-                    seen=seen, rejected=rejected)
+                    seen=seen, rejected=rejected,
+                    family_prefixes=families)
                 written.extend(files)
                 missing.extend(lost)
         if written:

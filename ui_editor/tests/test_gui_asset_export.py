@@ -109,6 +109,7 @@ class TestCanvasExportAssets(unittest.TestCase):
                          ["bg.png", "btn.png"])
 
     DIR_BASE = "combdialog4\\新登陆界面\\三态按钮\\登录按钮\\"
+    OTHER_BASE = DIR_BASE.replace("登录按钮", "注册按钮")
 
     def _dir_files(self, family):
         return {(self.DIR_BASE + piece).replace("/", "\\"): PNG
@@ -158,6 +159,59 @@ class TestCanvasExportAssets(unittest.TestCase):
         self.assertIn("top-left.png", names)
         self.assertIn("bottom-left.png", names)
         self.assertNotIn("left.png", names)
+
+    def test_batch_two_families_prefix_names(self):
+        """一批导两个按钮族：文件名带族名，不能变成 0l-2.png。"""
+        family = ["0l.png", "0c.png", "0r.png"]
+        files = self._dir_files(family)
+        files.update({(self.OTHER_BASE + piece).replace("/", "\\"): PNG
+                      for piece in family})
+        first = self._widget("CTextButton", sFileName=self.DIR_BASE)
+        second = self._widget("CTextButton", sFileName=self.OTHER_BASE)
+        self.window.resolver = self._fake_resolver(files)
+        with mock.patch.object(self.window, "_asset_export_dir",
+                               return_value=str(self.dest)):
+            self.window.export_widget_assets([first, second])
+        self.assertEqual(
+            sorted(p.name for p in self.dest.iterdir()),
+            ["注册按钮-0c.png", "注册按钮-0l.png", "注册按钮-0r.png",
+             "登录按钮-0c.png", "登录按钮-0l.png", "登录按钮-0r.png"])
+
+    def test_batch_two_families_prefix_names_when_convert(self):
+        family = ["0l.png", "0c.png", "0r.png"]
+        files = self._dir_files(family)
+        files.update({(self.OTHER_BASE + piece).replace("/", "\\"): PNG
+                      for piece in family})
+        first = self._widget("CTextButton", sFileName=self.DIR_BASE)
+        second = self._widget("CTextButton", sFileName=self.OTHER_BASE)
+        self.window.resolver = self._fake_resolver(files)
+        with mock.patch.object(self.window, "_asset_export_dir",
+                               return_value=str(self.dest)):
+            self.window.export_widget_assets([first, second], convert=True)
+        names = {p.name for p in self.dest.iterdir()}
+        self.assertIn("登录按钮-0l.png", names)
+        self.assertIn("注册按钮-0l.png", names)
+        self.assertNotIn("0l-2.png", names)
+
+    def test_unreadable_piece_is_reported_in_status(self):
+        """索引里有、取字节取不到的子图要点名，不能当成完整导出。"""
+        family = ["0l.png", "0c.png", "0r.png"]
+        files = self._dir_files(family)
+        del files[(self.DIR_BASE + "0c.png").replace("/", "\\")]
+        widget = self._widget("CTextButton", sFileName=self.DIR_BASE)
+        resolver = self._fake_resolver(files)
+        resolver.resource_exists.side_effect = (
+            lambda name: name.replace("/", "\\") in files
+            or name == self.DIR_BASE + "0c.png")
+        self.window.resolver = resolver
+        with mock.patch.object(self.window, "_asset_export_dir",
+                               return_value=str(self.dest)):
+            self.window.export_widget_assets([widget])
+        self.assertEqual(len(list(self.dest.iterdir())), 2)
+        message = self.window.statusBar().currentMessage()
+        self.assertIn("个资源没导出", message)
+        self.assertIn("0c.png", message)
+        self.assertIn("子图读取失败", message)
 
     def test_unresolved_dir_base_explains_family_not_path_error(self):
         """缺块时要说「拼不出整族子图」，不能把校验器的话甩给用户。"""
