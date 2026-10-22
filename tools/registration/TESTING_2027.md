@@ -46,6 +46,7 @@ GetObject('btn_Protect').IsSelected()
 
 日志在 `photo\register_diag.txt`，关键行：
 
+- `terms layout begin build=2027-10-22`：**第一行**，有它才说明本包的脚本已在跑。
 - `terms layout ready` / `form layout ready`：两个布局都取到了。
 - `check btn_fiveaccount ready=0` / `check btn_isee ready=0`：勾选框读到原生状态
   （`ready` 后是初始值）。若变成 `check ... read api missing`，说明这版客户端没有

@@ -391,7 +391,7 @@ def _HintColor():
 def _CreateFormEdit(parent, edit_class, name, limit, font):
     """按 chgpwd.py 的 CEDIT 調用建編輯框，但先確認版式錨點在不在。
 
-    regform.dlg 沒導入/導入路徑填錯時，原生工厂只會讓界面「點了沒反應」；
+    register2027.dlg 沒導入/導入路徑填錯時，原生工厂只會讓界面「點了沒反應」；
     這裡先查 GetObject，缺就留一條明確的 anchor missing 記錄再拋。
     """
     _Diag("form edit %s anchor begin" % name)
@@ -453,7 +453,8 @@ class CRegTermsPanel(combdialog.CCombPanel):
     """
 
     def __init__(self, parent):
-        _Diag("terms layout begin")
+        # 換版式後日誌第一行帶版本標記：用戶只看這一行就能確認新腳本已生效。
+        _Diag("terms layout begin build=2027-10-22")
         combdialog.CCombPanel.__init__(self, parent, DLG_TERMS)
         _Diag("terms layout ready")
         import chatoutput

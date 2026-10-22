@@ -226,6 +226,9 @@ assert ('ResetFromCursor',) in EVENTS
 cout = [e for e in EVENTS if e[0] == 'COutput'][-1]
 assert cout[1] == g['TERMS_FALLBACK']
 assert all(isinstance(line, str) for line in cout[1])
+# 換版式後第一行日誌帶版本標記，用戶看這一行的 build= 就知道新腳本生效了。
+assert 'terms layout begin build=2027-10-22' in open(
+    'photo\\register_diag.txt', 'rb').read()
 print 'terms fallback + native cursor protocol OK'
 
 # 2. Form: new layout anchors, tab order, password masking, default unchecked.
