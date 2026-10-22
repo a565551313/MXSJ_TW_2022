@@ -38,7 +38,7 @@ from dataclasses import dataclass
 __all__ = [
     "DirBasePlan", "KIND_LABELS", "WIDGET_KINDS", "describe", "frame_series",
     "guess_kind", "is_dir_base", "map_stems_to_pieces", "match_kind",
-    "naming_hint", "piece_names", "plan", "state_series",
+    "naming_hint", "piece_names", "plan", "probe_pieces", "state_series",
 ]
 
 #: 序号帧/状态最多收到第几号（实测按钮最多 5 态，留余量）
@@ -334,6 +334,42 @@ def guess_kind(count: int, widget_type: str | None = None) -> str | None:
         if piece_names(kind, count) is not None:
             return kind
     return None
+
+
+#: 探测"这个目录里到底有什么"时试的名字（相对族目录、不含扩展名）。
+#: 包里条目只存哈希、没有文件名，只能按候选名去问"在不在"——所以这张
+#: 表要覆盖所有实测见过的写法，才谈得上"看得见里面是什么"。
+_PROBE_STEMS: tuple[str, ...] = (
+    *(f"{index}{side}" for index in range(FRAME_MAX) for side in "lcr"),
+    *(str(index) for index in range(FRAME_MAX * 2)),
+    "left", "middle", "right", "top", "bottom",
+    *(f"{row}-{column}" for row in ("top", "middle", "bottom")
+      for column in ("left", "middle", "right")),
+    *(f"{row}/{column}" for row in ("top", "middle", "bottom")
+      for column in ("left", "middle", "right")),
+    "tl", "tm", "tr", "ml", "mm", "mr", "bl", "bm", "br",
+    "bg", "middle/middle",
+    # 反编译字面量里的历史写法（真语料 0 命中，但用户手上可能有）
+    "left1", "left2", "right1", "right2",
+)
+
+
+def probe_pieces(name: str, exists: Callable[[str], bool]) -> tuple[str, ...]:
+    """按候选名探一遍，返回这个目录里**实际存在**的子图（含扩展名）。
+
+    包里没有"目录"这个条目，条目名也只是哈希——想知道某个基路径下面到底
+    有哪几张图，只能拿候选名逐个问。用于选图窗的"里面是什么"说明：
+    即使这个命名规则 :func:`plan` 认不出来，也能把找到的文件列给用户。
+    """
+    if not is_dir_base(name):
+        return ()
+    found: list[str] = []
+    for stem in _PROBE_STEMS:
+        for ext in EXTS:
+            candidate = f"{name}{stem}{ext}"
+            if exists(candidate):
+                found.append(f"{stem}{ext}")
+    return tuple(found)
 
 
 def describe(chosen: DirBasePlan | None) -> str | None:

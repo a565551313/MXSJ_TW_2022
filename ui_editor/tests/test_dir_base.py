@@ -336,3 +336,32 @@ class TestNamingRecognition(unittest.TestCase):
         self.assertIn("左", dir_base.naming_hint("h_state", 3))
         self.assertIn("top-left", dir_base.naming_hint("nine_slice", 9))
         self.assertIn("frame0", dir_base.naming_hint("frames", 3))
+
+
+class TestProbePieces(unittest.TestCase):
+    """「这个目录里到底有什么」：包里只有哈希，只能按候选名逐个问。"""
+
+    def test_probe_lists_every_known_spelling(self):
+        known = {
+            "a/btn/0l.png", "a/btn/0c.png", "a/btn/0r.png",
+            "a/btn/left1.png", "a/btn/weird.png",
+        }
+        found = dir_base.probe_pieces(
+            "a/btn/", lambda name: name.replace("\\", "/") in known)
+        # 认得的三种列出来；认不出的 weird.png 不该冒充
+        self.assertEqual(set(found), {"0l.png", "0c.png", "0r.png",
+                                      "left1.png"})
+
+    def test_probe_covers_frames_and_nine_slice(self):
+        known = {"a/x/0.png", "a/x/1.png", "a/x/top-left.png",
+                 "a/x/middle/right.igs"}
+        found = dir_base.probe_pieces(
+            "a/x/", lambda name: name.replace("\\", "/") in known)
+        self.assertIn("0.png", found)
+        self.assertIn("1.png", found)
+        self.assertIn("top-left.png", found)
+        self.assertIn("middle/right.igs", found)
+
+    def test_probe_empty_directory_is_empty(self):
+        self.assertEqual(dir_base.probe_pieces("a/none/", lambda _n: False), ())
+        self.assertEqual(dir_base.probe_pieces("a/none", lambda _n: True), ())

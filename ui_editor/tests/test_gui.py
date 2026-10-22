@@ -1657,6 +1657,7 @@ class TestImagePicker(unittest.TestCase):
             # 用户报「3 张整图被拼成一条」：这里必须直说每张只是三分之一，
             # 并指向序号帧
             self.assertIn("三分之一", summary)
+            self.assertNotIn("**", summary)   # 界面上不该出现 markdown 记号
             self.assertIn("序号帧", summary)
             dialog.close()
 

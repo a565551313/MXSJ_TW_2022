@@ -257,12 +257,12 @@ class FamilyImportDialog(QDialog):
         if kind == "h_state":
             if count % 3:
                 return (f"{count} 张不是 3 的倍数：按钮横片是每 3 张拼成"
-                        "**一个**状态，要按 3、6、9… 张来选。")
+                        "一个状态，要按 3、6、9… 张来选。")
             states = count // 3
             if states == 1:
-                return ("3 张 = 按钮的 1 个状态：每张只是按钮的**三分之一**"
+                return ("3 张 = 按钮的 1 个状态：每张只是按钮的三分之一"
                         "（0l 左片 + 0c 中片 + 0r 右片，中片会被拉伸）。\n"
-                        "如果这 3 张各自都是**一整个按钮**（三个状态），"
+                        "如果这 3 张各自都是一整个按钮（三个状态），"
                         "把族类型改成「序号帧」，不要用这个。")
             return (f"{count} 张 = {states} 个状态 × 每态三片：0 号是常态，"
                     "后面的序号是悬停/按下等（哪个序号对应哪种，未与客户端"
@@ -275,7 +275,7 @@ class FamilyImportDialog(QDialog):
             return (f"3 张 = {which}：两边固定、中间那片拉伸填满。"
                     if count == 3 else f"{count} 张：这种边框必须正好 3 张。")
         if kind == "frames":
-            return (f"{count} 张 = {count} 个状态（帧）：每张都是**完整的**按钮图，"
+            return (f"{count} 张 = {count} 个状态（帧）：每张都是完整的按钮图，"
                     "按 0、1、2… 编号——0 是常态，1/2 是悬停/按下等"
                     "（哪个序号对应哪种，未与客户端核实）。\n"
                     "导出回来的 0.png/1.png/2.png 就是这种。")
@@ -847,9 +847,9 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
 
     #: 各族"游戏怎么用这些图"的一句话（选中目录时显示）
     _KIND_USAGE = {
-        "h_state": "这 3 张（或每 3 张）拼成按钮的**一个状态**：左片 0l + "
+        "h_state": "这 3 张（或每 3 张）拼成按钮的一个状态：左片 0l + "
                    "中片 0c + 右片 0r，中间那片会被拉伸填满按钮。",
-        "frames": "每张都是**一整张**按钮图：0 是常态、1/2 是悬停/按下等，"
+        "frames": "每张都是一整张按钮图：0 是常态、1/2 是悬停/按下等，"
                   "画布只显示第 1 张。",
         "nine_slice": "9 张按 3×3 拼：四角不动，四条边和中心被拉伸。",
         "h_slice": "左 + 中 + 右 三片横向拼，中片拉伸。",
@@ -877,10 +877,15 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         lines = [path.rstrip("\\/").replace("/", "\\").rsplit("\\", 1)[-1]
                  + "\\ 这个目录"]
         if pieces:
-            lines.append("里面 " + str(len(pieces)) + " 张：" +
+            lines.append("里面查到 " + str(len(pieces)) + " 张：" +
                          "、".join(pieces))
+            if kind is None:
+                lines.append("这几张按工具的命名规则拼不成一整族——可能是"
+                             "别的写法（缺块、或与实测没见过的新规则），"
+                             "画布会显示占位框。")
         else:
-            lines.append("里面拼不出完整的族（缺图），画布会显示占位框。")
+            lines.append("按常见写法没查到图：要么这个目录在包里是空的，"
+                         "要么子图名是工具没见过的写法。")
         usage = self._KIND_USAGE.get(kind or "")
         if usage:
             lines.append("游戏怎么用：" + usage)
