@@ -77,12 +77,18 @@ def verify_structure(*, src_pack, out_path, res_path: str, extras: Mapping,
                      info: Mapping,
                      layout_paths: Sequence[str] | None = None,
                      progress: Callable[[int, int, str], None] | None = None,
-                     cancelled: Callable[[], bool] | None = None) -> dict:
+                     cancelled: Callable[[], bool] | None = None,
+                     trusted_copy: bool = False) -> dict:
     """结构检查（条目数/升序/集合/二分命中/未改条目保真）。
 
     ``layout_paths``：本次一共写了哪些布局条目（批量导入时不止一个）；
     不传就只看 ``res_path``。新增布局按 ``info["layouts_added"]`` 计数，
     旧调用方的 ``info["layout_added"]`` 仍然认。
+
+    ``trusted_copy``：调用方已用 :func:`ui_editor.core.pack_build._verify_copy`
+    在同一个临时文件上对着源包逐条比过未改条目（保存链就是这种），这里
+    跳过那轮全包扫描，只比**允许改动的那几条**（布局与替换图），得出同样的
+    ``changed_entries``。省一次 614 MB 级读取，结论不变。
 
     逐条保真是全包读取的重活：``progress(done, total, text)`` 回报进度；
     ``cancelled()`` 为真时抛 :class:`~ui_editor.core.errors.Cancelled`
@@ -144,6 +150,15 @@ def verify_structure(*, src_pack, out_path, res_path: str, extras: Mapping,
                     report["error"] = f"新包中二分查找不到：{name}"
                     return report
             allowed = set(info["changed_ids"])
+            if trusted_copy:
+                # 未改条目已由 _verify_copy 逐字节比过；这里只数「允许改动
+                # 且确实变了」的条目，通常是 1 篇布局 + 少数几张图。
+                changed = sum(1 for entry_id in allowed
+                              if before.read_id(entry_id)
+                              != after.read_id(entry_id))
+                report["changed_entries"] = changed
+                report["entries_after"] = after.count
+                return report
             changed = 0
             unexpected = 0
             total = len(before.entry_ids)
@@ -206,6 +221,7 @@ def verify_written_pack(
     extra_layouts: Mapping[str, list[dict]] | None = None,
     progress: Callable[[int, int, str], None] | None = None,
     cancelled: Callable[[], bool] | None = None,
+    trusted_copy: bool = False,
 ) -> dict:
     """结构 + 回读检查；返回报告片段（``ok`` 或 ``error``）。
 
@@ -219,7 +235,8 @@ def verify_written_pack(
     report = verify_structure(src_pack=src_pack, out_path=out_path,
                               res_path=res_path, extras=extras, info=info,
                               layout_paths=[res_path, *extra_layouts],
-                              progress=progress, cancelled=cancelled)
+                              progress=progress, cancelled=cancelled,
+                              trusted_copy=trusted_copy)
     if "error" not in report:
         report.update(verify_readback(read_back=read_back, out_path=out_path,
                                       res_path=res_path, extras=extras,

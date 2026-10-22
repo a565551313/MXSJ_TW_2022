@@ -317,6 +317,46 @@ class BatchWriteTests(unittest.TestCase):
                 allow_create={"dialog/somewhere_else.dlg"})
 
 
+    def test_verify_hook_runs_before_replacing_target(self):
+        """verify 钩子失败时目标文件不能已经被换掉（尤其目标是原包时）。"""
+        out = self.root / "inplace.fls"
+        patch_pack_copy_many(
+            str(self.src), {"dialog/existing.dlg": _dlg("First")}, str(out))
+        good = out.read_bytes()
+        seen = []
+
+        def verify(tmp_path, info):
+            seen.append((Path(tmp_path).name, info["mode"]))
+            raise PackError("模拟校验失败")
+
+        with self.assertRaises(PackError):
+            patch_pack_copy_many(
+                str(out), {"dialog/existing.dlg": _dlg("Second")}, str(out),
+                allow_create=False, allow_overwrite_self=True, verify=verify)
+        self.assertTrue(seen, "钩子要在替换前被调用")
+        self.assertTrue(seen[0][0].endswith(".tmp"), "钩子拿到的是临时文件")
+        self.assertEqual(out.read_bytes(), good, "目标文件保持原样")
+        leftovers = [p.name for p in self.root.iterdir()
+                     if p.name.endswith(".tmp")]
+        self.assertEqual(leftovers, [], "临时文件要清掉")
+
+    def test_verify_hook_runs_when_target_is_a_new_pack(self):
+        """新包路径同样先校验再替换。"""
+        out = self.root / "fresh.fls"
+        patch_pack_copy_many(str(self.src),
+                             {"dialog/existing.dlg": _dlg("A")}, str(out))
+        good = out.read_bytes()
+
+        def verify(tmp_path, info):
+            raise PackError("不许替换")
+
+        with self.assertRaises(PackError):
+            patch_pack_copy_many(str(self.src),
+                                 {"dialog/existing.dlg": _dlg("B")}, str(out),
+                                 verify=verify)
+        self.assertEqual(out.read_bytes(), good)
+
+
 def _archive_unsorted(specs):
     """同 test_pack_build._archive，但故意保持传入顺序（目录逆序）。"""
     import struct

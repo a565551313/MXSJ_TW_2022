@@ -72,9 +72,12 @@ class ImportQueueMixin:
         # 用户再右点源包导入时，也排到新包那条队里，否则保存时会漏掉。
         queue_path = pack_path
         doc_now = self.doc
-        if (doc_now is not None and doc_now.source_pack
+        if (not self._loose_mode()
+                and doc_now is not None and doc_now.source_pack
                 and doc_now.source_pack[0] != pack_path
                 and doc_now.origin_pack == pack_path):
+            # 严格模式：当前标签已经写成新包了，就排到新包那条队里。
+            # 宽松模式不转：保存本来就回原包，队列要跟着原包走。
             queue_path = doc_now.source_pack[0]
         own_output = doc_now.output_pack if doc_now is not None else None
         own_target = (

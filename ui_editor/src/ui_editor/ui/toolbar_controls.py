@@ -1,4 +1,4 @@
-"""工具栏上的两个「下拉按钮」：文本编码与预览帧。
+"""工具栏上的几个「下拉按钮」：文本编码、预览帧与保存模式。
 
 和「对齐」「按钮态」同一套外观：``ToolButtonTextUnderIcon`` +
 ``InstantPopup``，按钮文字两三个字（编码 / 帧），点小箭头才展开。
@@ -6,6 +6,10 @@
 * 编码：菜单里三个可勾选项（Big5（繁体）/ GBK（简体）/ UTF-8），
   勾上的就是当前正用来读布局文本的那个；切换走
   :meth:`ui_editor.ui.source_actions.SourceActionsMixin.change_text_encoding`。
+* 模式：两项可勾选（严格模式 / 宽松模式）。严格＝原包只读、Ctrl+S 写
+  编辑器自己的输出包；宽松＝Ctrl+S 直接改写布局所在的资源包。切换由
+  :meth:`ui_editor.ui.save_mode.SaveModeMixin.choose_save_mode` 处理
+  （切到宽松要二次确认）。
 * 帧：菜单里不是条目，而是一块横向滑块（``QWidgetAction`` 装一个
   QWidget），拖到哪帧就预览哪帧，上面一行「预览帧 3 / 7」实时显示。
   范围由当前布局里的 ``.spr`` 帧数决定（见
@@ -30,8 +34,10 @@ from . import icons
 
 __all__ = [
     "ENCODING_CHOICES",
+    "MODE_CHOICES",
     "build_encoding_button",
     "build_frame_button",
+    "build_mode_button",
 ]
 
 # (菜单文案, 编码值)；顺序就是菜单顺序，第一项为默认。
@@ -44,6 +50,14 @@ ENCODING_CHOICES = (
 _ENCODING_TIP = (
     "布局文本编码（缩写：编码）。切换会按所选编码重新读取布局文本；\n"
     "资源路径仍为 GBK，不自动保存或简繁转换。")
+# (菜单文案, 模式值)；顺序就是菜单顺序，第一项为默认。
+MODE_CHOICES = (
+    ("严格模式（原包只读）", "strict"),
+    ("宽松模式（直接写原包）", "loose"),
+)
+_MODE_TIP = (
+    "保存模式（缩写：模式）：严格＝Ctrl+S 写编辑器自己的输出包，原包只读；\n"
+    "宽松＝Ctrl+S 直接改写布局所在的资源包（无备份，切过去要二次确认）。")
 _FRAME_TIP = (
     "动画预览帧（缩写：帧）：点小箭头拖横向滑块选帧；\n"
     "只影响画布预览，不修改布局或资源。")
@@ -104,3 +118,22 @@ def build_frame_button(host, on_change) -> tuple[QToolButton, QSlider, QLabel]:
     button.setMenu(menu)
     slider.valueChanged.connect(on_change)
     return button, slider, readout
+
+def build_mode_button(host, on_choose) -> tuple[QToolButton, dict[str, QAction]]:
+    """「模式」下拉按钮；返回 (按钮, {模式: QAction})。"""
+    button = _dropdown(host, "模式", icons.icon_mode(), _MODE_TIP)
+    button.setObjectName("saveModeButton")
+    menu = QMenu(button)
+    actions: dict[str, QAction] = {}
+    for label, mode in MODE_CHOICES:
+        action = menu.addAction(label)
+        action.setCheckable(True)
+        action.setChecked(mode == "strict")
+        action.setToolTip(
+            "原包只读，Ctrl+S 写编辑器自己的输出包" if mode == "strict"
+            else "Ctrl+S 直接改写布局所在的资源包（无备份）")
+        action.triggered.connect(
+            lambda _checked=False, mode=mode: on_choose(mode))
+        actions[mode] = action
+    button.setMenu(menu)
+    return button, actions

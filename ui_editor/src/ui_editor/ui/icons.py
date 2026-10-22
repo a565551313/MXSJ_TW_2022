@@ -352,3 +352,23 @@ def icon_aspect() -> QIcon:
     head.closeSubpath()
     p.drawPath(head)
     return _end(pixmap, p)
+
+def icon_mode(loose: bool = False) -> QIcon:
+    """模式：表盘指针。严格＝蓝色指针偏左；宽松＝红色指针指到底。"""
+    pixmap, p = _begin()
+    color = "#c0392b" if loose else "#274b7a"
+    fill = "#f6d3ce" if loose else "#d8e6f8"
+    p.setPen(_pen(color, 1.8))
+    p.setBrush(QColor(fill))
+    p.drawEllipse(QRectF(4.5, 4.5, 19, 19))
+    # 三格刻度：左＝严格、中＝常规、右＝宽松
+    p.setPen(_pen(color, 1.4))
+    p.setBrush(QColor(color))
+    for x in (9.0, 14.0, 19.0):
+        p.drawEllipse(QPointF(x, 21.5), 1.1, 1.1)
+    p.setPen(_pen(color, 2.2))
+    p.drawLine(QPointF(14, 13.5), QPointF(19.2 if loose else 10.2, 8.4))
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor(color))
+    p.drawEllipse(QPointF(14, 13.5), 1.9, 1.9)
+    return _end(pixmap, p)

@@ -18,7 +18,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .. import __version__
 from ..core import snap
 from ..core.assets import AssetResolver
 from ..core.diagnostics import (
@@ -31,7 +30,6 @@ from ..core.model import LayoutDocument, Widget
 from ..core.painters import PaintContext, effective_size
 from ..core.script_index import ScriptIndex, get_default_index
 from ..core.styles import StyleBook
-from . import status_text
 from .busy import BusyHostMixin
 from .canvas import CanvasView, LayoutScene
 from .commands import EditingCommandsMixin
@@ -40,6 +38,8 @@ from .import_queue import ImportQueueMixin
 from .panels import PalettePanel, ResourceTreePanel, WidgetTreePanel
 from .property_panel import PropertyPanel
 from .replace_layout import ReplaceLayoutMixin
+from .save_mode import SaveModeMixin
+from .save_targets import SaveTargetsMixin
 from .save_workflows import SaveWorkflowsMixin
 from .script_panel import ScriptPanel
 from .source_actions import SourceActionsMixin
@@ -51,14 +51,17 @@ from .workflows import FileWorkflowsMixin
 
 class MainWindow(
     BusyHostMixin, EditingCommandsMixin, FileWorkflowsMixin,
-    ImportQueueMixin, SaveWorkflowsMixin, SourceActionsMixin,
-    TabMenuMixin, ReplaceLayoutMixin, WindowSetupMixin, QMainWindow
+    ImportQueueMixin, SaveModeMixin, SaveTargetsMixin, SaveWorkflowsMixin,
+    SourceActionsMixin, TabMenuMixin, ReplaceLayoutMixin, WindowSetupMixin,
+    QMainWindow
 ):
     """UI 编辑器主窗口。"""
 
     def __init__(self) -> None:
         super().__init__()
         self._settings = QSettings("MXSJ", "UIEditor")
+        # 保存模式要在建工具栏之前读出来（按钮与状态栏都按它标红）。
+        self._init_save_mode()
         self.resolver = AssetResolver()
         paths = self._settings.value("known_layout_paths", [])
         if isinstance(paths, str):
@@ -573,17 +576,6 @@ class MainWindow(
     # ------------------------------------------------------------------
     # 视图/状态
     # ------------------------------------------------------------------
-    def _update_title(self) -> None:
-        self._sync_history_actions()
-        self.diagnostics_panel.mark_stale()
-        self.setWindowTitle(status_text.window_title(self.doc, __version__))
-        label = getattr(self, "_source_label", None)
-        if label is not None:
-            label.setText(status_text.place_hint(self.doc))
-        if self._active is not None and self._active in self._sessions:
-            self._tab_bar.setTabText(
-                self._sessions.index(self._active), self._active.label())
-
     def _update_status(self, text: str) -> None:
         self.statusBar().showMessage(text)
 

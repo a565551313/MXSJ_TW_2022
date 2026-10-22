@@ -19,9 +19,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .. import __version__
 from ..core import fidelity
 from ..core.model import Widget
-from . import icons
+from . import icons, status_text
 from .canvas import FidelityView
 from .file_menu import (
     add_action,
@@ -154,6 +155,23 @@ class WindowSetupMixin:
         self._add_action(help_menu, "关于", lambda: show_about(self))
         self._build_toolbar()
 
+    def _update_title(self) -> None:
+        """标题栏与状态栏常驻文案：从哪来、Ctrl+S 会写到哪、当前什么模式。"""
+        self._sync_history_actions()
+        self.diagnostics_panel.mark_stale()
+        loose = self._loose_mode()
+        self.setWindowTitle(
+            status_text.window_title(self.doc, __version__, loose=loose))
+        label = getattr(self, "_source_label", None)
+        if label is not None:
+            label.setText(status_text.place_hint(self.doc, loose=loose))
+            # 宽松模式常驻红字：状态栏一眼能看出「Ctrl+S 会写原包」。
+            label.setStyleSheet("color:#c0392b; font-weight:600;"
+                                if loose else "")
+        if self._active is not None and self._active in self._sessions:
+            self._tab_bar.setTabText(
+                self._sessions.index(self._active), self._active.label())
+
     def _build_toolbar(self) -> None:
         """顶部图标工具栏：与菜单共用同一 QAction（状态同步）。"""
         for action, icon, tip, short in (
@@ -216,6 +234,8 @@ class WindowSetupMixin:
         self._encoding_btn, self._encoding_actions = build_encoding_button(
             self, self.change_text_encoding)
         bar.addWidget(self._encoding_btn)
+        # 保存模式：严格（原包只读）/ 宽松（直接写原包），切宽松要二次确认
+        self._build_mode_control(bar)
         bar.addSeparator()
         bar.addAction(self._act_fit)
         bar.addAction(self._act_actual)

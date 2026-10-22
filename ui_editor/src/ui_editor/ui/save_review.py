@@ -29,12 +29,16 @@ class SaveReviewDialog(QDialog):
         parent=None,
         layout_notice: str = "",
         layouts: list[tuple[str, str, int]] | None = None,
+        in_place: bool = False,
     ):
         super().__init__(parent)
         self.setWindowTitle("保存前改动清单")
         self.resize(920, 540)
         layout = QVBoxLayout(self)
-        operation = "生成新资源包（原包不动）" if to_pack else "写入散装 .dlg"
+        if to_pack and in_place:
+            operation = "直接改写原资源包（宽松模式，无备份、不可撤销）"
+        else:
+            operation = "生成新资源包（原包不动）" if to_pack else "写入散装 .dlg"
         layouts = list(layouts or [])
         summary = QLabel(
             f"{operation}\n输出：{target}\n布局改动 {len(changes)} 项 · "
@@ -44,7 +48,13 @@ class SaveReviewDialog(QDialog):
             "布局按树位置比较，重排/移动会表现为字段与增删差异；未知字段也列出。\n"
             "散装布局不会嵌入图片；静态未发现引用不等于无引用。取消不改变编辑状态。"
         )
-        if to_pack:
+        if to_pack and in_place:
+            summary.setText(
+                summary.text()
+                + "\n⚠ 宽松模式：这次会改写上面这个原包本身，不生成新包、"
+                  "不留备份；覆盖后无法在编辑器里撤销。"
+                  "\n写前检查与写后逐条校验照常执行。")
+        elif to_pack:
             summary.setText(
                 summary.text()
                 + "\n目标条目会按编辑器版式重写（即使没改任何属性，序列化"
@@ -112,7 +122,10 @@ class SaveReviewDialog(QDialog):
             | QDialogButtonBox.StandardButton.Cancel
         )
         save = buttons.button(QDialogButtonBox.StandardButton.Save)
-        save.setText("确认生成新包" if to_pack else "确认保存布局")
+        if to_pack and in_place:
+            save.setText("确认改写原包")
+        else:
+            save.setText("确认生成新包" if to_pack else "确认保存布局")
         buttons.button(QDialogButtonBox.StandardButton.Cancel).setText("取消")
         if any(issue.code == "ENCODING" for issue in issues):
             save.setEnabled(False)
