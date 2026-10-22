@@ -459,8 +459,11 @@ class EditingCommandsMixin:
 
         from ..core.asset_export import (
             asset_paths_of,
+            dir_piece_name,
+            export_paths,
             export_raw_assets,
             source_key,
+            unexported_label,
         )
         from .image_export import export_image_files
 
@@ -481,24 +484,39 @@ class EditingCommandsMixin:
                 for _key, name in asset_paths_of(widget):
                     if source_key(name) in seen:
                         continue
-                    seen.add(source_key(name))
-                    try:
-                        data = assets.fetch_bytes(name)
-                        if data is None:
-                            missing.append(name)
-                            continue
-                        files = export_image_files(
-                            name, data, assets.fetch_image(name), directory,
-                            protected_paths=assets.pack_paths,
-                            used_names=used_names)
-                    except (OSError, ValueError) as exc:
-                        # 单个资源被拒/写不出不能连累整批：记账后继续。
-                        rejected.append((name, str(exc)))
+                    paths = export_paths(assets, name)
+                    if not paths:
+                        # 目录型基路径拼不出整族：说明原因，别把校验器的
+                        # 「不能以目录分隔符结尾」当成用户的错。
+                        seen.add(source_key(name))
+                        missing.append(unexported_label(assets, name))
                         continue
-                    if files:
-                        written.extend(files)
-                    else:
-                        missing.append(name)
+                    for path in paths:
+                        if source_key(path) in seen:
+                            continue
+                        seen.add(source_key(path))
+                        # 目录型子图按族内相对路径命名（top-left.png），
+                        # 否则九片的 top/bottom 会挤成 left.png、left-2.png。
+                        dest_name = (None if path == name
+                                     else dir_piece_name(path, name))
+                        try:
+                            data = assets.fetch_bytes(path)
+                            if data is None:
+                                missing.append(path)
+                                continue
+                            files = export_image_files(
+                                path, data, assets.fetch_image(path), directory,
+                                dest_name,
+                                protected_paths=assets.pack_paths,
+                                used_names=used_names)
+                        except (OSError, ValueError) as exc:
+                            # 单个资源被拒/写不出不能连累整批：记账后继续。
+                            rejected.append((path, str(exc)))
+                            continue
+                        if files:
+                            written.extend(files)
+                        else:
+                            missing.append(path)
         else:
             for widget in widgets:
                 files, lost = export_raw_assets(
@@ -510,7 +528,7 @@ class EditingCommandsMixin:
         if written:
             names = "、".join(path.name for path in written[:4])
             more = f" 等 {len(written)} 个文件" if len(written) > 4 else ""
-            note = (f"；{len(missing)} 个资源包内找不到："
+            note = (f"；{len(missing)} 个资源没导出："
                     + "、".join(missing[:3]) if missing else "")
             if rejected:
                 note += (f"；{len(rejected)} 个被拒绝："
@@ -525,8 +543,7 @@ class EditingCommandsMixin:
                 return
             self._update_status(
                 "没有可导出的素材"
-                + (f"（包内找不到：{'、'.join(missing[:3])}）"
-                   if missing else "。"))
+                + (f"（{'、'.join(missing[:3])}）" if missing else "。"))
 
     def build_canvas_context_menu(self, widget: Widget | None) -> QMenu:
         """画布右键菜单（不在此处 exec，便于测试与复用）。"""

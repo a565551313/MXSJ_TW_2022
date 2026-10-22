@@ -11,18 +11,28 @@
 
 `.spr` 不是图片而是 XOR 过的帧时表，控件实际显示的是它指名的帧图；
 导出 `.spr` 时连带导出这些帧图源文件。
+
+``sFileName`` 等以 ``\\``/``/`` 结尾的是**目录型基路径**（包里没有这个条目，
+客户端运行时才拼出 ``0l.png``、``top/left.png`` 这些子图）：导出时按
+:mod:`.dir_base` 的拼名族展开成**每块子图**，文件名保留族内相对路径
+（``top-left.png``），否则九片的 ``top/left`` 与 ``bottom/left`` 会撞名。
+拼不出整族时说明「拼不出子图族」，而不是让路径校验器抛出
+「不能以目录分隔符结尾」——那句话对用户没有意义。
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
+from . import dir_base
 from .spr_desc import decode_spr_text, frame_sources
 from .sprite_format import is_sprite
 
 __all__ = [
     "asset_paths_of", "detect_extension", "is_audio_name",
+    "dir_base_pieces", "dir_piece_name", "dir_piece_stem", "export_paths",
     "export_targets", "export_raw_assets", "source_key", "unique_target",
+    "unexported_label",
 ]
 
 # 控件里可能指向素材的属性（顺序即导出顺序）
@@ -113,13 +123,99 @@ def _basename(name: str) -> str:
     return base or "asset"
 
 
+def dir_base_pieces(assets, name: str) -> tuple[str, ...] | None:
+    """目录型基路径拼出的子图路径；非目录型或拼不出整族返回 None。
+
+    数据来源与画布/诊断同一个 :func:`dir_base.plan`：整族齐装才算命中，
+    所以「拼不出」通常意味着缺块，而不是路径写错。
+    """
+    if not dir_base.is_dir_base(name):
+        return None
+    exists = getattr(assets, "resource_exists", None)
+    if not callable(exists):
+        return None
+    try:
+        chosen = dir_base.plan(name, exists)
+    except ValueError:
+        return None
+    if chosen is None or not chosen.pieces:
+        return None
+    return chosen.pieces
+
+
+def export_paths(assets, name: str) -> list[str]:
+    """一条控件引用真正要导出的资源路径。
+
+    目录型基路径展开成拼名族里的每一块子图；其余就是它自己。拼不出整族
+    时返回空列表，调用方用 :func:`unexported_label` 说明原因。
+    """
+    if not dir_base.is_dir_base(name):
+        return [name]
+    return list(dir_base_pieces(assets, name) or ())
+
+
+def dir_piece_stem(piece: str, base: str) -> str:
+    """目录型子图的导出文件名主干（``…\\登录按钮\\0l.png`` → ``0l``）。
+
+    取**族内相对路径**并用 ``-`` 连接：九片的 ``top/left`` 与 ``bottom/left``
+    都叫 ``left.png``，只取 basename 会互相覆盖、加序号成 ``left-2.png``，
+    看不出是哪一块。
+    """
+    rel = piece[len(base):] if base and piece.startswith(base) else piece
+    rel = rel.replace("\\", "/").strip("/")
+    if not rel:
+        return _basename(piece)
+    head, _, tail = rel.rpartition("/")
+    if "." in tail[1:]:
+        tail = tail[:tail.rfind(".")]
+    if not tail:
+        return _basename(piece)
+    return f"{head}-{tail}" if head else tail
+
+
+def dir_piece_name(piece: str, base: str) -> str:
+    """目录型子图在「转成图片」导出时的文件名（保留原扩展名）。
+
+    内容是真 PNG 时 ``export_image_files`` 直接用它；是精灵时按它取主干
+    拼 ``-0/-1`` 帧名；解不出时也照这个名字原样写字节。
+    """
+    return f"{dir_piece_stem(piece, base)}{_name_ext(piece)}"
+
+
+def unexported_label(assets, name: str) -> str:
+    """没导出时的状态栏标签：目录型要说明是「拼不出族」而不是「找不到」。"""
+    if dir_base.is_dir_base(name):
+        return f"{name}（目录型基路径：包里拼不出整族子图）"
+    return name
+
+
+def _dir_base_targets(assets, name: str) -> list[tuple[str, bytes, str]]:
+    """目录型基路径：族内每块子图各一个导出目标（原字节、原语义文件名）。"""
+    targets: list[tuple[str, bytes, str]] = []
+    for piece in dir_base_pieces(assets, name) or ():
+        try:
+            data = assets.fetch_bytes(piece)
+        except ValueError:
+            continue
+        if data is None:
+            continue
+        stem = dir_piece_stem(piece, name)
+        targets.append((f"{stem}{detect_extension(data, piece)}", data, piece))
+    return targets
+
+
 def export_targets(assets, name: str) -> list[tuple[str, bytes, str]]:
     """一个资源路径要导出的全部文件：[(建议文件名, 原始字节, 来源资源路径)]。
 
     `.spr` 帧时表连带它指名的帧图源文件（同一个包里读得到才带）。第三个
     元素是这份字节真正来自哪个资源路径，批量导出靠它做跨控件去重——
     两个 `.spr` 指向同一张帧图时只导一次。
+
+    目录型基路径（结尾 ``\\``/``/``）展开成拼名族的每块子图：包里没有基路径
+    这个条目，直接 ``fetch_bytes`` 会被路径校验拒绝。
     """
+    if dir_base.is_dir_base(name):
+        return _dir_base_targets(assets, name)
     try:
         data = assets.fetch_bytes(name)
     except ValueError:
@@ -179,7 +275,7 @@ def export_raw_assets(assets, widget, dest_dir, protected_paths=(),
         if not targets:
             if seen is not None:
                 seen.add(source_key(name))
-            missing.append(name)
+            missing.append(unexported_label(assets, name))
             continue
         if seen is not None:
             # .spr 连带导出的帧图可能是另一个控件已经导过的同一个资源。

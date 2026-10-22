@@ -37,6 +37,104 @@ class FakeAssets:
         self.requested.append(name)
         return self.files.get(name.replace("/", "\\"))
 
+    def resource_exists(self, name):
+        return name.replace("/", "\\") in self.files
+
+
+DIR_BASE = "combdialog4\\新登陆界面\\三态按钮\\登录按钮\\"
+
+
+def dir_files(family, data=PNG):
+    """目录型基路径的子图夹具：``family`` 是族内相对路径（如 ``0l.png``）。"""
+    return {(DIR_BASE + piece).replace("/", "\\"): data
+            for piece in family}
+
+
+class TestDirBaseExport(unittest.TestCase):
+    """目录型基路径要按拼名族展开，不能拿基路径本身去取字节。"""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.dest = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _widget(self, **props):
+        return Widget({"sWidgetType": "CTextButton", "sName": "登录按钮",
+                       "sFileName": DIR_BASE, **props})
+
+    def test_export_paths_expands_family(self):
+        family = [f"{index}{side}.png" for index in (0, 1) for side in "lcr"]
+        assets = FakeAssets(dir_files(family))
+        paths = asset_export.export_paths(assets, DIR_BASE)
+        self.assertEqual(len(paths), 6)
+        self.assertTrue(all(path.startswith(DIR_BASE) for path in paths))
+        self.assertEqual(asset_export.export_paths(assets, "img\\btn.png"),
+                         ["img\\btn.png"])
+
+    def test_raw_export_writes_every_state_piece(self):
+        family = [f"{index}{side}.png" for index in (0, 1) for side in "lcr"]
+        files = dir_files(family)
+        written, missing = asset_export.export_raw_assets(
+            FakeAssets(files), self._widget(), self.dest)
+        self.assertEqual(missing, [])
+        self.assertEqual(sorted(p.name for p in written),
+                         ["0c.png", "0l.png", "0r.png",
+                          "1c.png", "1l.png", "1r.png"])
+        self.assertEqual((self.dest / "1c.png").read_bytes(),
+                         files[(DIR_BASE + "1c.png")])
+
+    def test_nine_slice_piece_names_keep_the_row(self):
+        family = [f"{row}/{column}.png"
+                  for row in ("top", "middle", "bottom")
+                  for column in ("left", "middle", "right")]
+        written, _missing = asset_export.export_raw_assets(
+            FakeAssets(dir_files(family)), self._widget(), self.dest)
+        self.assertEqual(len(written), 9)
+        self.assertEqual(
+            sorted(p.name for p in written),
+            ["bottom-left.png", "bottom-middle.png", "bottom-right.png",
+             "middle-left.png", "middle-middle.png", "middle-right.png",
+             "top-left.png", "top-middle.png", "top-right.png"])
+        # 九片同名不同行：不能挤成 left.png / left-2.png
+        self.assertNotIn("left.png", {p.name for p in written})
+
+    def test_unresolved_family_is_reported_with_reason(self):
+        # 只有 0l：0c/0r 缺失 → 拼不出族，要说明原因而不是报「找不到」
+        assets = FakeAssets(dir_files(["0l.png"]))
+        written, missing = asset_export.export_raw_assets(
+            assets, self._widget(), self.dest)
+        self.assertEqual(written, [])
+        self.assertEqual(len(missing), 1)
+        self.assertIn("目录型基路径", missing[0])
+        self.assertIn("拼不出整族子图", missing[0])
+        # 基路径本身从没被当成资源去取字节
+        self.assertNotIn(DIR_BASE, assets.requested)
+
+    def test_pieces_are_deduped_across_widgets(self):
+        family = [f"{index}{side}.png" for index in (0, 1) for side in "lcr"]
+        assets = FakeAssets(dir_files(family))
+        seen: set[str] = set()
+        first, _ = asset_export.export_raw_assets(
+            assets, self._widget(), self.dest, seen=seen)
+        second, missing = asset_export.export_raw_assets(
+            assets, self._widget(), self.dest, seen=seen)
+        self.assertEqual(len(first), 6)
+        self.assertEqual(second, [])
+        self.assertEqual(missing, [])
+        self.assertEqual(len(list(self.dest.iterdir())), 6)
+
+    def test_piece_stem_keeps_family_path(self):
+        self.assertEqual(
+            asset_export.dir_piece_stem(DIR_BASE + "0l.png", DIR_BASE), "0l")
+        self.assertEqual(
+            asset_export.dir_piece_stem(DIR_BASE + "top/left.png", DIR_BASE),
+            "top-left")
+        self.assertEqual(
+            asset_export.dir_piece_name(DIR_BASE + "top/left.igs", DIR_BASE),
+            "top-left.igs")
+
 
 class TestDetectExtension(unittest.TestCase):
     def test_real_formats(self):

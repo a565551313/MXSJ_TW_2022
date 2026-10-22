@@ -57,6 +57,8 @@ class TestCanvasExportAssets(unittest.TestCase):
         resolver.pack_paths = []
         resolver.fetch_bytes.side_effect = (
             lambda name: files.get(name.replace("/", "\\")))
+        resolver.resource_exists.side_effect = (
+            lambda name: name.replace("/", "\\") in files)
         return resolver
 
     def _menu_titles(self, menu):
@@ -105,6 +107,70 @@ class TestCanvasExportAssets(unittest.TestCase):
             self.window.export_widget_assets([widget])
         self.assertEqual(sorted(p.name for p in self.dest.iterdir()),
                          ["bg.png", "btn.png"])
+
+    DIR_BASE = "combdialog4\\新登陆界面\\三态按钮\\登录按钮\\"
+
+    def _dir_files(self, family):
+        return {(self.DIR_BASE + piece).replace("/", "\\"): PNG
+                for piece in family}
+
+    def test_raw_export_expands_dir_base_into_state_pieces(self):
+        """目录型基路径不能直接当资源取字节（用户实测报「导出被拒绝」）。"""
+        family = [f"{index}{side}.png" for index in (0, 1) for side in "lcr"]
+        files = self._dir_files(family)
+        widget = self._widget("CTextButton", sFileName=self.DIR_BASE)
+        self.window.resolver = self._fake_resolver(files)
+        with mock.patch.object(self.window, "_asset_export_dir",
+                               return_value=str(self.dest)):
+            self.window.export_widget_assets([widget])
+        self.assertEqual(
+            sorted(p.name for p in self.dest.iterdir()),
+            ["0c.png", "0l.png", "0r.png", "1c.png", "1l.png", "1r.png"])
+        message = self.window.statusBar().currentMessage()
+        self.assertIn("已导出", message)
+        self.assertNotIn("被拒绝", message)
+
+    def test_convert_export_expands_dir_base_into_state_pieces(self):
+        family = [f"{index}{side}.png" for index in (0, 1) for side in "lcr"]
+        files = self._dir_files(family)
+        widget = self._widget("CTextButton", sFileName=self.DIR_BASE)
+        self.window.resolver = self._fake_resolver(files)
+        with mock.patch.object(self.window, "_asset_export_dir",
+                               return_value=str(self.dest)):
+            self.window.export_widget_assets([widget], convert=True)
+        self.assertEqual(
+            sorted(p.name for p in self.dest.iterdir()),
+            ["0c.png", "0l.png", "0r.png", "1c.png", "1l.png", "1r.png"])
+        self.assertNotIn("被拒绝",
+                         self.window.statusBar().currentMessage())
+
+    def test_dir_base_nine_slice_keeps_row_in_filename(self):
+        family = [f"{row}/{column}.png"
+                  for row in ("top", "middle", "bottom")
+                  for column in ("left", "middle", "right")]
+        widget = self._widget("CPngNineFrame", sFileName=self.DIR_BASE)
+        self.window.resolver = self._fake_resolver(self._dir_files(family))
+        with mock.patch.object(self.window, "_asset_export_dir",
+                               return_value=str(self.dest)):
+            self.window.export_widget_assets([widget], convert=True)
+        names = {p.name for p in self.dest.iterdir()}
+        self.assertEqual(len(names), 9)
+        self.assertIn("top-left.png", names)
+        self.assertIn("bottom-left.png", names)
+        self.assertNotIn("left.png", names)
+
+    def test_unresolved_dir_base_explains_family_not_path_error(self):
+        """缺块时要说「拼不出整族子图」，不能把校验器的话甩给用户。"""
+        widget = self._widget("CTextButton", sFileName=self.DIR_BASE)
+        self.window.resolver = self._fake_resolver(
+            self._dir_files(["0l.png"]))
+        with mock.patch.object(self.window, "_asset_export_dir",
+                               return_value=str(self.dest)):
+            self.window.export_widget_assets([widget])
+        message = self.window.statusBar().currentMessage()
+        self.assertIn("没有可导出的素材", message)
+        self.assertIn("拼不出整族子图", message)
+        self.assertNotIn("目录分隔符", message)
 
     def test_export_missing_resource_reports(self):
         widget = self._widget(sFileName="gone.png")
