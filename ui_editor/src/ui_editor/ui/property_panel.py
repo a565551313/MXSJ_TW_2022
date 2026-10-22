@@ -503,6 +503,19 @@ class PropertyPanel(QWidget):
         def family_label(path: str) -> str | None:
             return dir_base.describe(dir_base.plan(path, assets.resource_exists))
 
+        def family_pieces(path: str) -> list[str] | None:
+            """这个基路径下**实际有哪些子图**（选图窗悬停提示用）。"""
+            chosen = dir_base.plan(path, assets.resource_exists)
+            if chosen is None:
+                return None
+            return [piece.replace("\\", "/").split("/")[-1]
+                    for piece in chosen.pieces]
+
+        def family_kind(path: str) -> str | None:
+            """这个基路径按哪种拼名族拼（按钮横片/序号帧…）。"""
+            chosen = dir_base.plan(path, assets.resource_exists)
+            return chosen.kind if chosen is not None else None
+
         def export_handler(paths: list[str], host=None) -> None:
             from pathlib import Path
 
@@ -631,7 +644,9 @@ class PropertyPanel(QWidget):
             export_handler=export_handler,
             family_label=family_label,
             widget_type=widget_type if isinstance(widget_type, str) else None,
-            exists=assets.resource_exists)
+            exists=assets.resource_exists,
+            family_pieces=family_pieces,
+            family_kind=family_kind)
         if (dialog.exec() == QDialog.DialogCode.Accepted
                 and dialog.selected_path()):
             edit.setText(dialog.selected_path())

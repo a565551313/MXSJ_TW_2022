@@ -1573,6 +1573,76 @@ class TestImagePicker(unittest.TestCase):
             self.assertTrue(ok.isEnabled())
             dialog.close()
 
+    def test_exported_whole_images_are_not_turned_into_slices(self):
+        """3 张整图（导出回来的 0/1/2.png）默认必须是序号帧，不是按钮横片。
+
+        旧实现无条件按控件类型来：按钮控件 + 0/1/2.png → 0l/0c/0r，
+        三张**整**按钮图各取三分之一拼成一条（用户报「三张图拼在一起」）。
+        """
+        from ui_editor.ui.image_picker import choose_family_kind
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{index}.png", 20 + index)
+                     for index in range(3)]
+            self.assertEqual(choose_family_kind(files, "CTextButton"),
+                             "frames")
+            self.assertEqual(choose_family_kind(files, None), "frames")
+            # 文件名已经是族内名（0l/0c/0r）就当按钮横片
+            slices = [_write_png(Path(tmp) / f"0{side}.png", 20 + index)
+                      for index, side in enumerate("lcr")]
+            self.assertEqual(choose_family_kind(slices, "CTextButton"),
+                             "h_state")
+
+    def test_position_words_follow_the_widget(self):
+        """left/middle/right 是"位置"：按钮上要 0l/0c/0r，边框上才是 h_slice。"""
+        from ui_editor.ui.image_picker import choose_family_kind
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{name}.png", 20 + index)
+                     for index, name in enumerate(
+                         ("left", "middle", "right"))]
+            self.assertEqual(choose_family_kind(files, "CTextButton"),
+                             "h_state")
+            self.assertEqual(choose_family_kind(files, "CHPngFrame"),
+                             "h_slice")
+            # 没有控件类型时不该瞎猜成按钮
+            self.assertEqual(choose_family_kind(files, None), "h_slice")
+
+    def test_family_dialog_preview_differs_by_kind(self):
+        """保存前就要能看出"拼成一条"还是"一整张"：预览图必须不同。"""
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{index}.png", 20 + index)
+                     for index in range(3)]
+            shots = {}
+            for kind in ("h_state", "frames"):
+                dialog = FamilyImportDialog(None, files, "", kind, ".png")
+                pixmap = dialog._pic.pixmap()
+                self.assertIsNotNone(pixmap)
+                shots[kind] = (pixmap.width(), pixmap.height())
+                self.assertIn("拼出来是这样", dialog._pic_caption.text())
+                dialog.close()
+        # 按钮横片 = 三片并排（宽约 3 倍）；序号帧 = 一张
+        self.assertGreater(shots["h_state"][0], shots["frames"][0] * 2)
+
+    def test_picker_says_what_is_inside_a_directory(self):
+        """选中一个目录型基路径时，要直接说明里面有哪些图、游戏怎么用。"""
+        from ui_editor.ui.image_picker import ResourcePickerDialog
+
+        base = "combdialog4\\新登陆界面\\三态按钮\\登录按钮\\"
+        dialog = ResourcePickerDialog(
+            None, "t", [base], base, None,
+            family_label=lambda _p: "按钮横片 · 1 态",
+            family_pieces=lambda _p: ["0l.png", "0c.png", "0r.png"],
+            family_kind=lambda _p: "h_state")
+        dialog._list.setCurrentItem(dialog._list.item(0))
+        detail = dialog._detail.text()
+        self.assertTrue(dialog._detail.isVisibleTo(dialog))
+        self.assertIn("0l.png", detail)
+        self.assertIn("拉伸", detail)        # 说明它是一片而不是一整张
+        dialog.close()
+
     def test_family_dialog_explains_how_many_images_are_a_button(self):
         """最容易犯迷糊的地方：3 张 = 1 个状态，不是"必须三态"。"""
         from ui_editor.ui.image_picker import FamilyImportDialog
@@ -1581,8 +1651,13 @@ class TestImagePicker(unittest.TestCase):
             three = [_write_png(Path(tmp) / f"{name}.png")
                      for name in ("0l", "0c", "0r")]
             dialog = FamilyImportDialog(None, three, "", "h_state", ".png")
-            self.assertIn("3 张 = 1 个状态", dialog.summary_text())
-            self.assertIn("拉伸", dialog.summary_text())
+            summary = dialog.summary_text()
+            self.assertIn("3 张 = 按钮的 1 个状态", summary)
+            self.assertIn("拉伸", summary)
+            # 用户报「3 张整图被拼成一条」：这里必须直说每张只是三分之一，
+            # 并指向序号帧
+            self.assertIn("三分之一", summary)
+            self.assertIn("序号帧", summary)
             dialog.close()
 
             six = [_write_png(Path(tmp) / f"{index}{side}.png", 20 + index)

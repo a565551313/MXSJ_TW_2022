@@ -15,7 +15,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from PySide6.QtCore import QBuffer, QSize, Qt, QTimer
-from PySide6.QtGui import QIcon, QImage, QPixmap
+from PySide6.QtGui import QColor, QIcon, QImage, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -40,15 +40,56 @@ from .busy import BusyHostMixin, run_busy_or_plain
 _ROLE_PATH = Qt.ItemDataRole.UserRole
 _THUMB_BATCH = 24
 
-#: 新建族可选的拼名类型（顺序即下拉框顺序）
+#: 新建族可选的拼名类型（顺序即下拉框顺序）。
+#: 每种都写明"一张图是按钮的多少"——用户最容易在这里选错：
+#: 按钮横片的每张只是**三分之一**，整图多态要用序号帧。
 _FAMILY_KINDS = (
-    ("h_state", "按钮横片：左 + 中 + 右三片拼成一个状态（每 3 张一个状态）"),
+    ("h_state", "按钮横片：每张只是按钮的 1/3（0l 左片、0c 中片、0r 右片拼成"
+                "一个状态）"),
+    ("frames", "序号帧：每张都是完整的按钮图，0 / 1 / 2… 就是第 1/2/3 个状态"),
     ("nine_slice", "九宫格边框：9 张，上/中/下 × 左/中/右"),
     ("h_slice", "横向三片边框：左 + 中（拉伸）+ 右"),
     ("v_slice", "纵向三片边框：上 + 中（拉伸）+ 下"),
-    ("frames", "逐帧动画：每张一帧，按 0、1、2… 排"),
     ("single", "单张图：整个目录就一张"),
 )
+
+
+#: 只表示"位置"的类型：左/中/右 这类名字既能当横三片的块，也能当按钮横片
+#: 的左中右片——到底写哪个名字由控件决定。
+_POSITION_KINDS = frozenset({"h_slice", "v_slice"})
+
+
+def choose_family_kind(names, widget_type: str | None = None) -> str | None:
+    """新建族时预选类型：**文件名的结构 > 位置的别名 > 控件默认 > 张数**。
+
+    文件名已经说明结构时听文件名的——``0/1/2.png`` 是一张一整图（序号帧），
+    ``0l/0c/0r.png`` 才是按钮横片。旧实现无条件按控件来，把"导出 3 张
+    整图再导回来"变成了 0l/0c/0r，三张整图各取三分之一拼成一条——
+    这正是用户报的"三张图拼在一起"。
+
+    只有 ``left/middle/right`` 这种**位置词**才让控件作主：它们既能是
+    横三片的块，也能是按钮的左中右片，游戏要哪套名字由控件决定。
+    """
+    items = [str(name) for name in names]
+    if not items:
+        return None
+    stems = [Path(name).stem for name in items]
+    matched = dir_base.match_kind(items)
+    widget_kind = dir_base.WIDGET_KINDS.get(widget_type or "")
+
+    def usable(kind: str | None) -> bool:
+        return kind is not None and dir_base.piece_names(
+            kind, len(items)) is not None
+
+    if usable(matched):
+        if (matched in _POSITION_KINDS and usable(widget_kind)
+                and dir_base.map_stems_to_pieces(stems, widget_kind)
+                is not None):
+            return widget_kind
+        return matched
+    if usable(widget_kind):
+        return widget_kind
+    return dir_base.guess_kind(len(items), widget_type)
 
 
 def _basename(path: str) -> str:
@@ -158,6 +199,15 @@ class FamilyImportDialog(QDialog):
         self._hint.setWordWrap(True)
         self._summary = QLabel(self)
         self._summary.setWordWrap(True)
+        # 拼出来的样子：用户报"效果不对"就是因为只在保存后才能看见结果。
+        self._pic_caption = QLabel(
+            "按当前族类型拼出来是这样（左边那一小块就是预览）：", self)
+        self._pic_caption.setWordWrap(True)
+        self._pic = QLabel(self)
+        self._pic.setMinimumHeight(96)
+        self._pic.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._pic.setStyleSheet(
+            "background: #eceff3; border: 1px solid #c7ccd4; border-radius: 4px;")
         self._preview = QPlainTextEdit(self)
         self._preview.setReadOnly(True)
         self._preview.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
@@ -186,6 +236,8 @@ class FamilyImportDialog(QDialog):
         layout.addWidget(QLabel("族类型：", self))
         layout.addWidget(self._kind)
         layout.addWidget(self._summary)
+        layout.addWidget(self._pic_caption)
+        layout.addWidget(self._pic)
         layout.addWidget(QLabel(
             "这一族的目录路径：新按钮就写一个新目录名；"
             "写已有目录 = 替换那个按钮的图。", self))
@@ -204,14 +256,17 @@ class FamilyImportDialog(QDialog):
         count = len(self._files)
         if kind == "h_state":
             if count % 3:
-                return (f"{count} 张不是 3 的倍数：按钮每 3 张（左/中/右）"
-                        "算一个状态，要按 3、6、9… 张来选。")
+                return (f"{count} 张不是 3 的倍数：按钮横片是每 3 张拼成"
+                        "**一个**状态，要按 3、6、9… 张来选。")
             states = count // 3
             if states == 1:
-                return ("3 张 = 1 个状态（常态）：左边 0l、中间 0c、右边 0r；"
-                        "中间那片会被拉伸填满按钮。")
-            return (f"{count} 张 = {states} 个状态：0 号是常态，"
-                    "后面的序号是悬停/按下等（哪个序号对应哪种，未与客户端核实）。")
+                return ("3 张 = 按钮的 1 个状态：每张只是按钮的**三分之一**"
+                        "（0l 左片 + 0c 中片 + 0r 右片，中片会被拉伸）。\n"
+                        "如果这 3 张各自都是**一整个按钮**（三个状态），"
+                        "把族类型改成「序号帧」，不要用这个。")
+            return (f"{count} 张 = {states} 个状态 × 每态三片：0 号是常态，"
+                    "后面的序号是悬停/按下等（哪个序号对应哪种，未与客户端"
+                    "核实）。\n每张只是按钮的三分之一——不是一张一整图。")
         if kind == "nine_slice":
             return ("9 张 = 上/中/下 × 左/中/右：四角不动，四条边和中心会被拉伸。"
                     if count == 9 else f"{count} 张：九宫格必须正好 9 张。")
@@ -220,8 +275,10 @@ class FamilyImportDialog(QDialog):
             return (f"3 张 = {which}：两边固定、中间那片拉伸填满。"
                     if count == 3 else f"{count} 张：这种边框必须正好 3 张。")
         if kind == "frames":
-            return (f"{count} 张 = {count} 帧：每张是整个画面的一帧，"
-                    "按 0、1、2… 编号。")
+            return (f"{count} 张 = {count} 个状态（帧）：每张都是**完整的**按钮图，"
+                    "按 0、1、2… 编号——0 是常态，1/2 是悬停/按下等"
+                    "（哪个序号对应哪种，未与客户端核实）。\n"
+                    "导出回来的 0.png/1.png/2.png 就是这种。")
         if kind == "single":
             return "1 张 = 整个目录只有这一张图。" if count == 1 else "单图只能 1 张。"
         return ""
@@ -263,6 +320,80 @@ class FamilyImportDialog(QDialog):
             return "", "目录路径要相对包内，并用结尾斜杠表示这是一个目录。"
         return value, None
 
+    @staticmethod
+    def _montage(images: list[QImage], columns: int,
+                 max_height: int = 110) -> QPixmap | None:
+        """把若干张图按 ``columns`` 列排成一张预览（等比缩放）。"""
+        if not images:
+            return None
+        tallest = max(image.height() for image in images) or 1
+        scale = min(1.0, max_height / tallest)
+        scaled = [image.scaled(
+            max(1, int(image.width() * scale)),
+            max(1, int(image.height() * scale)),
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation)
+            for image in images]
+        rows = (len(scaled) + columns - 1) // columns
+        width = max(sum(cell.width() for cell in scaled[row * columns:
+                                                       (row + 1) * columns])
+                    for row in range(rows))
+        height = sum(max(cell.height() for cell in scaled[row * columns:
+                                                          (row + 1) * columns])
+                     for row in range(rows))
+        canvas = QPixmap(max(1, width), max(1, height))
+        canvas.fill(QColor(236, 239, 243))
+        painter = QPainter(canvas)
+        y = 0
+        for row in range(rows):
+            cells = scaled[row * columns:(row + 1) * columns]
+            x = 0
+            for cell in cells:
+                painter.drawPixmap(x, y, QPixmap.fromImage(cell))
+                x += cell.width()
+            y += max(cell.height() for cell in cells)
+        painter.end()
+        return canvas
+
+    def _update_picture(self, pairs, kind: str) -> None:
+        """按当前族类型把选中的图拼一下，让用户**保存前**就看见结果。
+
+        这是"效果不对"最直接的补救：按钮横片的 3 张是拼成一条，
+        序号帧只显示第 0 帧——两者一眼就能分辨，不用等保存回包。
+        """
+        images: list[QImage] = []
+        for _rel, path in pairs:
+            image = QImage(str(path))
+            if not image.isNull():
+                images.append(image)
+        if not images:
+            self._pic.setText("（.igs 精灵没法在这里预览，保存后看画布）")
+            return
+        if kind == "frames":
+            pixmap = self._montage(images[:1], 1)
+            note = "序号帧：画布上显示第 0 帧（完整一张图）"
+        elif kind == "h_state":
+            pixmap = self._montage(images[:3], 3)
+            note = "按钮横片：三片拼成一条（中间那片会被拉伸）"
+        elif kind == "h_slice":
+            pixmap = self._montage(images[:3], 3)
+            note = "横三片：左 + 中 + 右拼成一条"
+        elif kind == "v_slice":
+            pixmap = self._montage(images[:3], 1)
+            note = "竖三片：上 + 中 + 下竖着拼"
+        elif kind == "nine_slice":
+            pixmap = self._montage(images[:9], 3)
+            note = "九片：3 × 3 拼起来"
+        else:
+            pixmap = self._montage(images[:1], 1)
+            note = "单图"
+        if pixmap is None:
+            self._pic.clear()
+            return
+        self._pic.setPixmap(pixmap)
+        self._pic_caption.setText(
+            f"按当前族类型拼出来是这样（{note}）。对不上就换族类型：")
+
     def _existing_pieces(self, base: str, pairs) -> list[str]:
         """这个目录里已经有的同名子图（**不管扩展名**）。
 
@@ -292,8 +423,9 @@ class FamilyImportDialog(QDialog):
                 f"{rel.replace('/', chr(92))}{self.ext}   ←   "
                 f"{Path(path).name}{mark}")
         self._preview.setPlainText("\n".join(lines))
-        notes = []
         kind = self._kind.currentData()
+        self._update_picture(pairs, kind)
+        notes = []
         if error is None:
             if self.order_rule == "name":
                 notes.append("文件名就是族内命名，按名字对应"
@@ -368,7 +500,9 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                  export_handler: Callable[[list[str], object], None] | None = None,
                  family_label: Callable[[str], str | None] | None = None,
                  widget_type: str | None = None,
-                 exists: Callable[[str], bool] | None = None):
+                 exists: Callable[[str], bool] | None = None,
+                 family_pieces: Callable[[str], list[str] | None] | None = None,
+                 family_kind: Callable[[str], str | None] | None = None):
         super().__init__(parent)
         self.setWindowTitle(title)
         self.resize(760, 540)
@@ -378,6 +512,10 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._export_handler = export_handler
         # 目录型基路径（拼名族）的一句话说明：回调返回 None 表示不是族。
         self._family_label = family_label
+        # 这个目录里到底有哪些子图（悬停提示用）：回调返回 None 表示不是族。
+        self._family_pieces = family_pieces
+        # 这个目录按哪种方式拼（按钮横片/序号帧…），给选中后的说明用。
+        self._family_kind = family_kind
         self._widget_type = widget_type      # 新建族时按控件类型预选族类型
         self._exists = exists                # 判断包里是否已有同名条目
         self._staged_paths: set[str] = set()
@@ -403,6 +541,14 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._only_families.setVisible(
             any(dir_base.is_dir_base(path) for path in all_paths))
         self._count = QLabel(self)
+        # 选中一个目录型基路径时，直接说清"里面是什么、游戏怎么用"。
+        self._detail = QLabel(self)
+        self._detail.setWordWrap(True)
+        self._detail.setTextFormat(Qt.TextFormat.PlainText)
+        self._detail.setStyleSheet(
+            "background: #f4f6f8; border: 1px solid #ccd2da; "
+            "border-radius: 4px; padding: 6px;")
+        self._detail.hide()
 
         self._list = QListWidget(self)
         self._list.setViewMode(QListWidget.ViewMode.IconMode)
@@ -413,6 +559,9 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._list.setSelectionMode(
             QListWidget.SelectionMode.ExtendedSelection)
         self._list.itemDoubleClicked.connect(lambda _i: self.accept())
+        self._list.currentItemChanged.connect(
+            lambda current, _prev: self._show_detail(
+                str(current.data(_ROLE_PATH)) if current is not None else ""))
 
         self._thumb_timer = QTimer(self)
         self._thumb_timer.setInterval(30)
@@ -462,6 +611,7 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         layout.addWidget(self._only_families)
         layout.addWidget(self._count)
         layout.addWidget(self._list, 1)
+        layout.addWidget(self._detail)
         layout.addLayout(bottom)
 
         self._refilter()
@@ -604,17 +754,9 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         except (OSError, ValueError) as exc:
             QMessageBox.warning(self, "读图失败", str(exc))
             return
-        # 控件类型优先：按钮就该写 0l/0c/0r。用户把文件叫成 left/middle/right
-        # 是"左中右"的意思，直接按名字写会得到一个游戏拼不出来的族。
-        preferred = dir_base.WIDGET_KINDS.get(self._widget_type or "")
-        matched = dir_base.match_kind([Path(f).name for f in files])
-        kind = None
-        if preferred and dir_base.piece_names(preferred, len(files)):
-            kind = preferred
-        if matched == "nine_slice" and kind != "nine_slice":
-            kind = matched      # 九宫格命名很明确，压过控件默认
-        if kind is None:
-            kind = matched or dir_base.guess_kind(len(files), self._widget_type)
+        # 先看文件名说明的结构（0/1/2 = 序号帧、0l/0c/0r = 按钮横片），
+        # 再看控件默认。详见 choose_family_kind。
+        kind = choose_family_kind(files, self._widget_type)
         dialog = FamilyImportDialog(
             self, files, self._suggested_family_path(), kind, ext, self._exists)
         if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -703,6 +845,48 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
             return
         self._stage_one(res_path, data)
 
+    #: 各族"游戏怎么用这些图"的一句话（选中目录时显示）
+    _KIND_USAGE = {
+        "h_state": "这 3 张（或每 3 张）拼成按钮的**一个状态**：左片 0l + "
+                   "中片 0c + 右片 0r，中间那片会被拉伸填满按钮。",
+        "frames": "每张都是**一整张**按钮图：0 是常态、1/2 是悬停/按下等，"
+                  "画布只显示第 1 张。",
+        "nine_slice": "9 张按 3×3 拼：四角不动，四条边和中心被拉伸。",
+        "h_slice": "左 + 中 + 右 三片横向拼，中片拉伸。",
+        "v_slice": "上 + 中 + 下 三片纵向拼，中片拉伸。",
+        "single": "整个目录只有这一张图，直接用。",
+    }
+
+    def _show_detail(self, path: str) -> None:
+        """选中目录型基路径时，把"里面是什么"写清楚（用户最容易在这里犯迷糊）。"""
+        if not path or not dir_base.is_dir_base(path):
+            self._detail.hide()
+            return
+        pieces = None
+        if self._family_pieces is not None:
+            try:
+                pieces = self._family_pieces(path)
+            except Exception:
+                pieces = None
+        kind = None
+        if self._family_kind is not None:
+            try:
+                kind = self._family_kind(path)
+            except Exception:
+                kind = None
+        lines = [path.rstrip("\\/").replace("/", "\\").rsplit("\\", 1)[-1]
+                 + "\\ 这个目录"]
+        if pieces:
+            lines.append("里面 " + str(len(pieces)) + " 张：" +
+                         "、".join(pieces))
+        else:
+            lines.append("里面拼不出完整的族（缺图），画布会显示占位框。")
+        usage = self._KIND_USAGE.get(kind or "")
+        if usage:
+            lines.append("游戏怎么用：" + usage)
+        self._detail.setText("\n".join(lines))
+        self._detail.show()
+
     def _family_note(self, path: str) -> str | None:
         """路径是拼名族时返回一句话说明，否则 None（结果缓存）。"""
         if not dir_base.is_dir_base(path) or self._family_label is None:
@@ -737,9 +921,20 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
             item = QListWidgetItem(text, self._list)
             item.setData(_ROLE_PATH, path)
             if dir_base.is_dir_base(path):
+                pieces = None
+                if self._family_pieces is not None:
+                    try:
+                        pieces = self._family_pieces(path)
+                    except Exception:
+                        pieces = None
+                inside = (f"\n里面有 {len(pieces)} 张："
+                          + "、".join(pieces[:12])
+                          + ("…" if len(pieces) > 12 else "")
+                          if pieces else "")
                 item.setToolTip(
-                    f"{path}\n拼名族：包里没有这个目录条目，游戏运行时在其下"
-                    "拼子图；选它=把这个目录路径写进属性，导出时按族展开。")
+                    f"{path}{inside}\n拼名族：包里没有这个目录条目，"
+                    "游戏运行时在其下拼子图；选它=把这个目录路径写进属性，"
+                    "导出时按族展开。")
             else:
                 item.setToolTip(path)
             item.setIcon(blank)
