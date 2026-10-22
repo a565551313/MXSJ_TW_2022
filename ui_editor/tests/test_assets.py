@@ -138,6 +138,45 @@ class TestAssetResolver(unittest.TestCase):
             finally:
                 resolver.close()
 
+    def test_staged_family_listed_as_one_directory(self):
+        """新建族挂账后：候选列族本身，不把每张子图单独列出来。"""
+        self.resolver.stage_image("fam/btn/0l.png", b"\x89PNGL")
+        self.resolver.stage_image("fam/btn/0c.png", b"\x89PNGC")
+        self.resolver.stage_image("fam/btn/0r.png", b"\x89PNGR")
+        self.resolver.stage_image("fam/solo.png", b"\x89PNGS")
+        families = self.resolver.staged_families()
+        self.assertEqual(list(families), ["fam\\btn\\"])
+        self.assertEqual(len(families["fam\\btn\\"]), 3)
+        candidates = self.resolver.candidates_with_staged()
+        self.assertIn("fam\\btn\\", candidates)
+        self.assertIn("fam/solo.png", candidates)
+        self.assertNotIn("fam/btn/0l.png", candidates)
+
+    def test_staged_nine_slice_folds_to_base_not_rows(self):
+        """九片的子图挂在 top/ 等子目录下，族仍是外层目录，不能拆成三个族。"""
+        self.resolver.stage_image("ui/panel/top/left.png", b"P")
+        self.resolver.stage_image("ui/panel/top/middle.png", b"P")
+        self.resolver.stage_image("ui/panel/top/right.png", b"P")
+        self.resolver.stage_image("ui/panel/middle/left.png", b"P")
+        self.resolver.stage_image("ui/panel/middle/middle.png", b"P")
+        self.resolver.stage_image("ui/panel/middle/right.png", b"P")
+        self.resolver.stage_image("ui/panel/bottom/left.png", b"P")
+        self.resolver.stage_image("ui/panel/bottom/middle.png", b"P")
+        self.resolver.stage_image("ui/panel/bottom/right.png", b"P")
+        families = self.resolver.staged_families()
+        self.assertEqual(list(families), ["ui\\panel\\"])
+        self.assertEqual(len(families["ui\\panel\\"]), 9)
+        candidates = self.resolver.candidates_with_staged()
+        self.assertEqual(candidates, ["ui\\panel\\"])
+
+    def test_staged_family_needs_the_whole_set(self):
+        # 半套（缺 0c/0r）不是族：不能折叠，否则用户看不到那几张
+        self.resolver.stage_image("fam/half/0l.png", b"\x89PNGL")
+        self.resolver.stage_image("fam/half/1l.png", b"\x89PNG1L")
+        self.assertEqual(self.resolver.staged_families(), {})
+        self.assertIn("fam/half/0l.png",
+                      self.resolver.candidates_with_staged())
+
     def test_media_candidates_progress_hook(self):
         # 忙碌遮罩：首次整理清单报真实进度（done 单调 → total）
         dlg_plain = dlg_codec.dump_bytes(

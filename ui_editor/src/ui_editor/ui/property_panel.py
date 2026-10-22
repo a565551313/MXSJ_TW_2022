@@ -587,13 +587,18 @@ class PropertyPanel(QWidget):
                 QMessageBox.warning(
                     self, "导出失败", "这些资源在包里取不到内容。")
 
+        widget_type = None
+        if self._widget is not None:
+            widget_type = self._widget.props.get("sWidgetType")
         dialog = ResourcePickerDialog(
             self, "从资源包选择（选完保存回包不丢图）",
             candidates, edit.text(),
             thumb if key != "sSoundPath" else None,
             on_stage=assets.stage_image,
             export_handler=export_handler,
-            family_label=family_label)
+            family_label=family_label,
+            widget_type=widget_type if isinstance(widget_type, str) else None,
+            exists=assets.resource_exists)
         if (dialog.exec() == QDialog.DialogCode.Accepted
                 and dialog.selected_path()):
             edit.setText(dialog.selected_path())

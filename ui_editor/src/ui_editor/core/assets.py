@@ -468,12 +468,53 @@ class AssetResolver:
         except ValueError:
             return False
 
+    def staged_families(self) -> dict[str, list[str]]:
+        """已挂账的图里能拼成**整族**的：``{目录型基路径: [子图路径…]}``。
+
+        新建族是一次挂账多张子图（``…\\登录按钮\\0l.png`` …），布局里只
+        引用目录路径；清单里列族本身而不是一堆子图，用户才看得懂。
+        只看已挂账的图，且要整族齐装——半套不算族。
+        """
+        # 每级祖先目录都算候选：九片的子图挂在 面板/top/ 下，族基路径却是 面板/。
+        candidates: set[str] = set()
+        for path in self._staged:
+            parts = path.replace("\\", "/").split("/")[:-1]
+            for depth in range(1, len(parts) + 1):
+                candidates.add("/".join(parts[:depth]))
+        families: dict[str, list[str]] = {}
+        claimed: set[str] = set()
+        # 先浅后深：九片的 top/ 目录自己也能拼成横三片，必须让外层先认领。
+        for parent in sorted(candidates, key=lambda item: item.count("/")):
+            base = parent.replace("/", "\\") + "\\"
+
+            def exists(name: str) -> bool:
+                # plan 传进来的是拼好的**完整**子图路径，直接查挂账表。
+                return self._staged_lookup(name) is not None
+
+            chosen = dir_base.plan(base, exists)
+            if chosen is None:
+                continue
+            members = {path for path in self._staged
+                      if path.replace("\\", "/").startswith(parent + "/")}
+            if members <= claimed:
+                continue          # 已经被外层的族认领（九片的每一行）
+            # 多出来的块（半套的第二态等）不算整族：折叠掉用户就看不到它们了。
+            pieces = {piece.replace("\\", "/") for piece in chosen.pieces}
+            if pieces != members:
+                continue
+            families[base] = sorted(members)
+            claimed |= members
+        return families
+
     def candidates_with_staged(
         self, progress: Callable[[int, int, str], None] | None = None
     ) -> list[str]:
-        """选图窗清单：包内候选 + 已挂账待入包的新图。"""
+        """选图窗清单：包内候选 + 已挂账的新图（新建的族只列目录路径）。"""
+        families = self.staged_families()
+        pieces = {piece for group in families.values() for piece in group}
         return sorted(
-            set(self.media_candidates(progress)) | set(self._staged))
+            set(self.media_candidates(progress)) | set(self._staged) - pieces
+            | set(families))
 
     @property
     def summary(self) -> str:

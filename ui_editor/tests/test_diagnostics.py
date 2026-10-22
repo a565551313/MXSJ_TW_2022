@@ -316,6 +316,24 @@ class TestLayoutReview(unittest.TestCase):
         )
         self.assertEqual(len(staged), 3)  # 筛选本身不销账
 
+    def test_staged_family_pieces_follow_the_directory_reference(self):
+        """新建族：布局只引用目录，族下子图也要算被引用（否则保存会丢掉）。"""
+        base = "combdialog4\\新登陆界面\\三态按钮\\登录按钮\\"
+        roots = [{"sWidgetType": "CTextButton", "sFileName": base}]
+        staged = {
+            "combdialog4/新登陆界面/三态按钮/登录按钮/0l.png": b"L",
+            "combdialog4/新登陆界面/三态按钮/登录按钮/0c.png": b"C",
+            "combdialog4/新登陆界面/三态按钮/登录按钮/0r.png": b"R",
+            # 前缀相同但不在族里：不能顺手带上
+            "combdialog4/新登陆界面/三态按钮/登录按钮2/0l.png": b"X",
+            "combdialog4/新登陆界面/别的图.png": b"Y",
+        }
+        self.assertEqual(
+            sorted(referenced_staged_images(roots, staged)),
+            ["combdialog4/新登陆界面/三态按钮/登录按钮/0c.png",
+             "combdialog4/新登陆界面/三态按钮/登录按钮/0l.png",
+             "combdialog4/新登陆界面/三态按钮/登录按钮/0r.png"])
+
     def test_redo_type_change_is_dirty_even_if_python_values_compare_equal(self):
         doc = LayoutDocument.from_dicts([{"iFuture": 1}], None)
         doc.reset_history()

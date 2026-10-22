@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from . import dir_base
+
 
 @dataclass(frozen=True)
 class LayoutChange:
@@ -66,7 +68,12 @@ def layout_changes(before: list[dict], after: list[dict]) -> list[LayoutChange]:
 def referenced_staged_images(
     roots: list[dict], staged: dict[str, bytes]
 ) -> dict[str, bytes]:
-    """与原写包策略一致：匹配任意字符串属性，未知原生字段不漏掉。"""
+    """与原写包策略一致：匹配任意字符串属性，未知原生字段不漏掉。
+
+    目录型基路径（``…\\登录按钮\\``）另算：布局引用的是**目录**，
+    而挂账的是它下面的子图（``…\\0l.png``）。不认这一层，新建的族
+    在保存回包时会被当成"未被引用"丢掉，布局变成一个空族。
+    """
     texts: set[str] = set()
     stack: list = [roots]
     while stack:
@@ -77,8 +84,17 @@ def referenced_staged_images(
             stack.extend(value.values())
         elif isinstance(value, (list, tuple)):
             stack.extend(value)
+    families: list[str] = []
+    for text in texts:
+        if not dir_base.is_dir_base(text):
+            continue
+        base = text.replace("/", "\\").rstrip("\\")
+        if base:
+            families.append(base + "\\")
     return {
         path: data
         for path, data in staged.items()
         if path.replace("/", "\\").lower() in texts
+        or any(path.replace("/", "\\").lower().startswith(base)
+               for base in families)
     }

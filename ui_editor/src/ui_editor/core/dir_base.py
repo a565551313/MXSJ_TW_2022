@@ -35,7 +35,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-__all__ = ["DirBasePlan", "is_dir_base", "plan", "frame_series", "state_series"]
+__all__ = [
+    "DirBasePlan", "KIND_LABELS", "WIDGET_KINDS", "describe", "frame_series",
+    "guess_kind", "is_dir_base", "match_kind", "piece_names", "plan",
+    "state_series",
+]
 
 #: 序号帧/状态最多收到第几号（实测按钮最多 5 态，留余量）
 FRAME_MAX = 8
@@ -91,9 +95,94 @@ class DirBasePlan:
         return self.pieces[index * 3:index * 3 + 3]
 
 
+#: 控件类型 → 新建族时的推荐拼名类型（与上面实测定版的族一致）
+WIDGET_KINDS = {
+    "CTextButton": "h_state",
+    "CHPagePngButton": "h_state",
+    "CVPagePngButton": "h_state",
+    "CPngNineFrame": "nine_slice",
+    "CFrame": "nine_slice",
+    "CBorder": "nine_slice",
+    "CHPngFrame": "h_slice",
+    "CHFrame": "h_slice",
+    "CProgress": "h_slice",
+    "CVPngFrame": "v_slice",
+    "CVFrame": "v_slice",
+    "CButton": "frames",
+}
+
+
 def is_dir_base(name: str) -> bool:
     """资源值以斜杠结尾即目录型基路径。"""
     return bool(name) and name.endswith(("\\", "/"))
+
+
+def piece_names(kind: str, count: int) -> tuple[str, ...] | None:
+    """新建族时 ``count`` 张图对应的族内相对名（不含扩展名）。
+
+    张数与该族对不上返回 None（三态横片要 3 的倍数、九片正好 9 张…）：
+    拼名族是"整族齐装"才生效，张数不对写进包也拼不出来。
+    """
+    if count <= 0:
+        return None
+    if kind == "h_state":
+        if count % 3 or count > FRAME_MAX * 3:
+            return None
+        return tuple(f"{index}{side}"
+                     for index in range(count // 3) for side in "lcr")
+    if kind == "nine_slice":
+        return GRID_PIECES if count == len(GRID_PIECES) else None
+    if kind == "h_slice":
+        return ("left", "middle", "right") if count == 3 else None
+    if kind == "v_slice":
+        return ("top", "middle", "bottom") if count == 3 else None
+    if kind == "single":
+        return ("bg",) if count == 1 else None
+    if kind == "frames":
+        if 1 <= count <= FRAME_MAX:
+            return tuple(str(index) for index in range(count))
+        return None
+    return None
+
+
+def _stem_of(name: str) -> str:
+    """文件名 → 族内相对名：去扩展名，导出的 ``top-left`` 还原成 ``top/left``。"""
+    base = str(name).replace("\\", "/").rstrip("/").split("/")[-1]
+    if "." in base[1:]:
+        base = base[:base.rfind(".")]
+    return base
+
+
+def match_kind(names) -> str | None:
+    """按**文件名**认出这是哪一种族（导出 → 改图 → 导回来的往返）。
+
+    ``0l/0c/0r`` 走三态横片、``top-left`` … 走九片、``left/middle/right``
+    走横三片、纯数字走序号帧。认不出返回 None——那种情况由用户选类型，
+    按顺序分配族内名。
+    """
+    items = list(names)
+    stems = {_stem_of(name).replace("-", "/").lower() for name in items}
+    count = len(items)
+    for kind in ("h_state", "nine_slice", "h_slice", "v_slice", "frames",
+                 "single"):
+        expected = piece_names(kind, count)
+        if expected is None:
+            continue
+        if stems == {name.replace("-", "/").lower() for name in expected}:
+            return kind
+    return None
+
+
+def guess_kind(count: int, widget_type: str | None = None) -> str | None:
+    """没认出文件名时的推荐类型：先看控件，再看张数。"""
+    preferred = WIDGET_KINDS.get(widget_type or "")
+    if preferred and piece_names(preferred, count) is not None:
+        return preferred
+    for kind in ("nine_slice", "h_state", "h_slice", "v_slice", "single",
+                 "frames"):
+        if piece_names(kind, count) is not None:
+            return kind
+    return None
 
 
 def describe(chosen: DirBasePlan | None) -> str | None:
