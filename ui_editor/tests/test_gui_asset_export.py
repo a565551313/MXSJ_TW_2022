@@ -70,8 +70,10 @@ class TestCanvasExportAssets(unittest.TestCase):
         menu = self.window.build_canvas_context_menu(widget)
         titles = self._menu_titles(menu)
         self.assertIn("导出素材", titles)
-        submenu = next(a.menu() for a in menu.actions()
-                       if a.text() == "导出素材")
+        # 先把 QAction 列表存下来：生成器里的临时 QAction 包装一旦被回收，
+        # PySide 会连带把 action.menu() 的返回值标成已删除。
+        actions = menu.actions()
+        submenu = next(a.menu() for a in actions if a.text() == "导出素材")
         subs = self._menu_titles(submenu)
         self.assertTrue(any("按原格式" in text for text in subs))
         self.assertTrue(any("转成图片" in text for text in subs))
@@ -79,12 +81,14 @@ class TestCanvasExportAssets(unittest.TestCase):
     def test_widget_without_assets_shows_disabled_hint(self):
         widget = self._widget("CTextFrame")
         menu = self.window.build_canvas_context_menu(widget)
-        submenu = next(a.menu() for a in menu.actions()
-                       if a.text() == "导出素材")
-        actions = submenu.actions()
-        self.assertEqual(len(actions), 1)
-        self.assertIn("没有图片或音效素材", actions[0].text())
-        self.assertFalse(actions[0].isEnabled())
+        # 先把 QAction 列表存下来：生成器里的临时 QAction 包装一旦被回收，
+        # PySide 会连带把 action.menu() 的返回值标成已删除。
+        actions = menu.actions()
+        submenu = next(a.menu() for a in actions if a.text() == "导出素材")
+        items = submenu.actions()   # 别覆盖上面的 actions：它替子菜单保活
+        self.assertEqual(len(items), 1)
+        self.assertIn("没有图片或音效素材", items[0].text())
+        self.assertFalse(items[0].isEnabled())
 
     def test_export_raw_writes_original_format(self):
         widget = self._widget(sFileName="img\\btn.png")

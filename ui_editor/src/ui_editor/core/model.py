@@ -131,6 +131,13 @@ class LayoutDocument:
         # 来源：本地 .dlg 路径，或 (包路径, 资源路径) 二元组（二选一）
         self.source_path: str | None = None
         self.source_pack: tuple[str, str] | None = None
+        # 保存去向：编辑器自己写出来的那个包。Ctrl+S 记住它、之后静默写回；
+        # 与 ``source_pack``（从哪读）分开，否则每次保存都会在文件名后面
+        # 再叠一层 _patched（实测 interface_patched_patched.fls）。
+        self.output_pack: str | None = None
+        # 最初打开时那个只读原包。第一次写包后 ``source_pack`` 会指到新包
+        # （后续保存以新包为基底增量写），标题栏仍要能说清「从哪来的」。
+        self.origin_pack: str | None = None
         self.dirty = False
         self.pending_pack_import = False  # 未落到新包，即使撤销至导入状态仍待保存
         # 原地替换（散装文件）：重建文档（如切换文本编码）时要带回的基线

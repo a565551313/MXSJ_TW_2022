@@ -167,6 +167,40 @@ class SourceActionsMixin:
             raise
         return fresh, docs, book, layouts
 
+    def export_layout_assets(self) -> None:
+        """「导出副本 ▸ 控件素材图片…」：整篇布局引用到的素材各导一份。
+
+        与右键「导出素材」同一套语义（原格式、同名加序号、被拒的跳过），
+        只是范围是整篇布局；没挂资源包时先建目录再报错会很怪，所以先判空。
+        """
+        from ..core.asset_export import asset_paths_of
+
+        if self.doc is None:
+            return
+        widgets = self.doc.all_widgets()
+        names = [name for widget in widgets for _key, name in
+                 asset_paths_of(widget)]
+        if not names:
+            QMessageBox.information(
+                self, "导出素材图片",
+                "这篇布局里没有引用图片或音效素材。")
+            return
+        self.export_widget_assets(widgets)
+
+    def export_current_layout_source(self) -> None:
+        """「导出副本 ▸ 布局原文件」：当前这篇的来源原文（不含未保存编辑）。"""
+        if self.doc is None:
+            return
+        if self.doc.source_path:
+            self.export_layout(("file", self.doc.source_path))
+        elif self.doc.source_pack:
+            self.export_layout(("pack", *self.doc.source_pack))
+        else:
+            QMessageBox.information(
+                self, "导出布局原文件",
+                "当前布局还没有来源：新建的布局请先「保存」或「另存为」，"
+                "之后才有原文件可导。")
+
     def export_layout(self, source: tuple) -> None:
         """树节点的来源快照导出，不导出当前未保存编辑、不改变编码。"""
         try:

@@ -695,7 +695,7 @@ def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
                     out_path, extra_entries: dict | None = None,
                     protected_paths: Iterable[str | Path] = (),
                     allow_create: bool = False, progress=None,
-                    cancelled=None) -> dict:
+                    cancelled=None, allow_overwrite_self: bool = False) -> dict:
     """只生成新包：禁止源包/别名，临时副本验证后原子发布。
 
     构建、补丁或校验失败均不改变源包和已有输出。protected_paths
@@ -704,12 +704,21 @@ def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
     按原生路径密钥新增/替换，已有明文或错误密钥的目标布局会迁移；
     其它未改条目保持原字节。客户端实机仍需验收。
 
+    ``allow_overwrite_self``：只给「写回编辑器自己上次写出的那个包」用。
+    此时 ``out_path == archive_path`` 是允许的——源包正是上一次的输出，
+    整包先复制到临时文件、校验通过后才 ``os.replace``，中途失败原文件
+    不动。界面层保证只有自己写出来的包才传这个开关，游戏原包永远拒绝。
+
     ``progress(done, total, text)``：复制整包按字节报（614 MB 要写十几
     秒，不能只转圈）、写入新图按张报、校验按条目报；``cancelled()`` 在
     这些循环里轮询，取消抛 :class:`Cancelled`（临时文件由本函数删掉）。
     """
     src, out = Path(archive_path), Path(out_path)
     sources = [src, *protected_paths]
+    if allow_overwrite_self and out.resolve() == src.resolve():
+        # 自己上次的输出：它既是这次的源，也是这次的目标。原子替换，
+        # 不再当成「受保护的源包」拦下（否则第二次 Ctrl+S 就存不进去）。
+        sources = [path for path in sources if Path(path).resolve() != out.resolve()]
     extras = dict(extra_entries or {})
     tmp: Path | None = None
     try:

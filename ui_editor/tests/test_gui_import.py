@@ -195,7 +195,8 @@ class TestGuiImport(unittest.TestCase):
             menu.return_value.addAction.side_effect = [action, mock.Mock()]
             panel._show_context_menu(QPoint())
             self.assertEqual(
-                menu.return_value.addAction.call_args_list[0].args[0], "导入布局文件…"
+                menu.return_value.addAction.call_args_list[0].args[0],
+                "把本地 .dlg 放进这个包…",
             )
             action.triggered.connect.call_args.args[0]()
         self.assertEqual(seen, [str(self.src)])

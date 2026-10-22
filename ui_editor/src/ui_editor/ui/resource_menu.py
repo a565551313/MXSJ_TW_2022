@@ -15,7 +15,7 @@ __all__ = ["build_resource_menu", "REPLACE_TOOLTIP"]
 
 REPLACE_TOOLTIP = (
     "用选中的 .dlg 内容顶掉这个布局：名字与路径不变，控件内容全换成\n"
-    "所选文件的；包内布局按「存包」生成新包，散装文件按「保存」写回。")
+    "所选文件的；包内布局在「保存」时写进新包，散装文件直接写回。")
 
 
 def build_resource_menu(parent, data, *, missing: bool,
@@ -25,16 +25,18 @@ def build_resource_menu(parent, data, *, missing: bool,
     kind = data[0] if data else ""
     menu = QMenu(parent)
     if kind in ("file", "pack"):
-        export = menu.addAction("导出布局…")
-        export.setToolTip("导出来源原文，不含未保存编辑，不转换文本编码")
+        export = menu.addAction("导出布局原文件…")
+        export.setToolTip("导出来源原文（副本），不含未保存编辑，不转换文本编码")
         export.setEnabled(not missing)
         export.triggered.connect(lambda: on_export(tuple(data)))
-        replace = menu.addAction("替换布局…")
+        replace = menu.addAction("用本地 .dlg 顶掉这个布局…")
         replace.setToolTip(REPLACE_TOOLTIP)
         replace.setEnabled(not missing)
         replace.triggered.connect(lambda: on_replace(tuple(data)))
     elif kind == "packroot":
-        action = menu.addAction("导入布局文件…")
+        action = menu.addAction("把本地 .dlg 放进这个包…")
+        action.setToolTip(
+            "选一个本地 .dlg 并指定包内路径；保存时写进新包（原包不动）")
         action.triggered.connect(lambda: on_import(data[1]))
         open_action = menu.addAction("按包内路径打开布局…")
         open_action.triggered.connect(lambda: on_open_path(data[1]))

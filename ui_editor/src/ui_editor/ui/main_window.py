@@ -31,6 +31,7 @@ from ..core.model import LayoutDocument, Widget
 from ..core.painters import PaintContext, effective_size
 from ..core.script_index import ScriptIndex, get_default_index
 from ..core.styles import StyleBook
+from . import status_text
 from .busy import BusyHostMixin
 from .canvas import CanvasView, LayoutScene
 from .commands import EditingCommandsMixin
@@ -571,24 +572,16 @@ class MainWindow(
     def _update_title(self) -> None:
         self._sync_history_actions()
         self.diagnostics_panel.mark_stale()
-        name = self.doc.display_name if self.doc else "未打开布局"
-        pending = self.doc and (self.doc.dirty or self.doc.pending_pack_import)
-        star = "*" if pending else ""
-        self.setWindowTitle(f"{name}{star} — MXSJ UI 编辑器 {__version__}")
+        self.setWindowTitle(status_text.window_title(self.doc, __version__))
+        label = getattr(self, "_source_label", None)
+        if label is not None:
+            label.setText(status_text.place_hint(self.doc))
         if self._active is not None and self._active in self._sessions:
             self._tab_bar.setTabText(
                 self._sessions.index(self._active), self._active.label())
 
     def _update_status(self, text: str) -> None:
         self.statusBar().showMessage(text)
-
-    def _about(self) -> None:
-        QMessageBox.about(
-            self, "关于 MXSJ UI 编辑器",
-            f"MXSJ UI 编辑器 {__version__}\n\n"
-            "可视化编辑客户端 UI 布局（.dlg）：打开现有布局改、"
-            "或从空白新建。\n布局格式、路径哈希与解密均来自本仓库"
-            "逆向结案成果。")
 
     def closeEvent(self, event) -> None:  # noqa: N802
         for doc in self._dirty_docs():

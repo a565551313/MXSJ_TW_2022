@@ -85,6 +85,9 @@ def verify_structure(*, src_pack, out_path, res_path: str, extras: Mapping,
     """
     report: dict = {}
     try:
+        # 就地写回（src 与 out 是同一个文件）时，「写前」的句柄拿到的
+        # 已经是写后的内容，逐条比对只会得出 0 条，别当成真在报告。
+        same_file = Path(src_pack).resolve() == Path(out_path).resolve()
         with FlsPack(src_pack) as before, FlsPack(out_path) as after:
             expected = (before.count + len(info["images_added"])
                         + int(info.get("layout_added", False)))
@@ -125,7 +128,7 @@ def verify_structure(*, src_pack, out_path, res_path: str, extras: Mapping,
             if unexpected:
                 report["error"] = f"有 {unexpected} 条条目被意外改变"
                 return report
-            report["changed_entries"] = changed
+            report["changed_entries"] = None if same_file else changed
             report["entries_after"] = after.count
     except Cancelled:
         raise  # 用户取消原样上抛（结果作废），不当成校验失败

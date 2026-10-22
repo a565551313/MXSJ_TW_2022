@@ -23,6 +23,12 @@ from ..core import fidelity
 from ..core.model import Widget
 from . import icons
 from .canvas import FidelityView
+from .file_menu import (
+    add_action,
+    build_file_menu,
+    show_about,
+    split_button,
+)
 from .toolbar_controls import build_encoding_button, build_frame_button
 
 
@@ -58,36 +64,9 @@ class WindowSetupMixin:
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, diagnostics)
 
     def _build_menus(self) -> None:
+        """文件菜单的三段（打开 / 保存 / 导出副本）见 :mod:`.file_menu`。"""
         file_menu = self.menuBar().addMenu("文件")
-        self._act_open_file = self._add_action(
-            file_menu, "打开布局文件…", self.open_layout_file_dialog,
-            QKeySequence.StandardKey.Open)
-        self._add_action(file_menu, "打开布局目录…", self.open_layout_dir_dialog)
-        self._act_open_pack = self._add_action(
-            file_menu, "从资源包打开布局…", self.open_from_pack)
-        self._add_action(file_menu, "从资源目录打开布局…",
-                         self.open_resource_dir_dialog)
-        self._act_reload = self._add_action(
-            file_menu, "从来源刷新", self.refresh_sources, QKeySequence("F5"))
-        self._act_reload.setIcon(self.style().standardIcon(
-            self.style().StandardPixmap.SP_BrowserReload))
-        self._act_reload.setIconText("刷新")
-        self._act_reload.setToolTip("从磁盘重新加载布局、目录与资源（F5）")
-        file_menu.addSeparator()
-        self._add_action(file_menu, "新建布局", self.new_layout,
-                         QKeySequence.StandardKey.New)
-        self._act_save = self._add_action(
-            file_menu, "保存", self.save, QKeySequence.StandardKey.Save)
-        self._act_save.setToolTip("保存当前布局（Ctrl+S）")
-        self._add_action(file_menu, "另存为…", lambda: self.save_as())
-        self._act_save_pack = self._add_action(
-            file_menu, "保存回资源包（生成新包）…", self.save_to_pack_dialog)
-        self._act_save_pack.setToolTip("写回资源包生成新包（编辑包内布局时）")
-        self._act_export_png = self._add_action(
-            file_menu, "导出 PNG…", self.export_png)
-        file_menu.addSeparator()
-        self._add_action(file_menu, "退出", self.close,
-                         QKeySequence.StandardKey.Quit)
+        build_file_menu(self, file_menu)
 
         view_menu = self.menuBar().addMenu("视图")
         self._add_action(view_menu, "刷新布局诊断", self.run_diagnostics,
@@ -172,7 +151,7 @@ class WindowSetupMixin:
         edit_menu.addAction(self._act_lock)
 
         help_menu = self.menuBar().addMenu("帮助")
-        self._add_action(help_menu, "关于", self._about)
+        self._add_action(help_menu, "关于", lambda: show_about(self))
         self._build_toolbar()
 
     def _build_toolbar(self) -> None:
@@ -206,20 +185,37 @@ class WindowSetupMixin:
         bar.setToolButtonStyle(
             Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         self.addToolBar(Qt.ToolBarArea.TopToolBarArea, bar)
-        bar.addAction(self._act_open_file)
-        bar.addAction(self._act_open_pack)
+        # 三个动词各一个按钮：打开（从哪来）、保存（回哪去）、导出副本。
+        # 主按钮 = 最常用的那一种，小箭头里是同一件事的其它来源/去向。
+        self._open_btn = split_button(
+            bar, "打开", icons.icon_open_file(),
+            [self._act_open_file, self._act_open_dir, None,
+             self._act_open_pack, self._act_open_res_dir],
+            self.open_layout_file_dialog,
+            "打开（主按钮＝布局文件；点小箭头选其它来源）")
+        bar.addWidget(self._open_btn)
+        bar.addAction(self._act_save)
+        self._save_as_btn = split_button(
+            bar, "另存为", icons.icon_save_pack(),
+            [self._act_save_pack, self._act_save_as_dlg],
+            self.save_as_default,
+            "另存为（主按钮：包内布局＝新资源包，散装＝散装 .dlg）")
+        bar.addWidget(self._save_as_btn)
+        self._export_btn = split_button(
+            bar, "导出副本", icons.icon_export_image(),
+            [self._act_export_layout, self._act_export_png,
+             self._act_export_assets],
+            self.export_png,
+            "导出副本（另拿一份，不影响原文件；主按钮＝画布 PNG）")
+        bar.addWidget(self._export_btn)
+        bar.addSeparator()
+        bar.addAction(self._undo_action)
+        bar.addAction(self._redo_action)
         bar.addAction(self._act_reload)
         # 文本编码：与「对齐」「按钮态」同款下拉按钮，缩写「编码」
         self._encoding_btn, self._encoding_actions = build_encoding_button(
             self, self.change_text_encoding)
         bar.addWidget(self._encoding_btn)
-        bar.addSeparator()
-        bar.addAction(self._undo_action)
-        bar.addAction(self._redo_action)
-        bar.addSeparator()
-        bar.addAction(self._act_save)
-        bar.addAction(self._act_save_pack)
-        bar.addAction(self._act_export_png)
         bar.addSeparator()
         bar.addAction(self._act_fit)
         bar.addAction(self._act_actual)
@@ -292,6 +288,12 @@ class WindowSetupMixin:
         bar.addWidget(state_btn)
         self._button_state_btn = state_btn
         self._toolbar = bar
+        # 状态栏常驻：这篇布局从哪读、Ctrl+S 会写到哪（标题栏放不下时看这里）
+        self._source_label = QLabel("", self)
+        self._source_label.setToolTip(
+            "来源包只读；Ctrl+S 写回的是编辑器自己生成的新包，"
+            "游戏原包不会被改")
+        self.statusBar().addPermanentWidget(self._source_label)
         # 状态栏右端常驻缩放百分比
         self._zoom_label = QLabel("100%", self)
         self.statusBar().addPermanentWidget(self._zoom_label)
@@ -401,12 +403,7 @@ class WindowSetupMixin:
 
     @staticmethod
     def _add_action(menu, text, slot, shortcut=None) -> QAction:
-        action = QAction(text, menu)
-        if shortcut is not None:
-            action.setShortcut(shortcut)
-        action.triggered.connect(slot)
-        menu.addAction(action)
-        return action
+        return add_action(menu, text, slot, shortcut)
 
     def _connect_signals(self) -> None:
         self.resource_panel.export_layout_requested.connect(self.export_layout)

@@ -89,22 +89,23 @@ class TestResourceMenu(_NeedsGui):
 
     def test_loose_file_menu_has_replace(self):
         menu = self.menu(("file", str(self.target)))
-        self.assertEqual(self.texts(menu), ["导出布局…", "替换布局…"])
+        self.assertEqual(self.texts(menu),
+                         ["导出布局原文件…", "用本地 .dlg 顶掉这个布局…"])
 
     def test_pack_layout_menu_has_replace(self):
         menu = self.menu(("pack", str(self.pack), "dialog/a.dlg"))
-        self.assertIn("替换布局…", self.texts(menu))
+        self.assertIn("用本地 .dlg 顶掉这个布局…", self.texts(menu))
 
     def test_missing_layout_disables_replace(self):
         menu = self.menu(("pack", str(self.pack), "dialog/gone.dlg"),
                          missing=True)
         items = {a.text(): a for a in menu.actions() if a.text()}
-        self.assertFalse(items["替换布局…"].isEnabled())
-        self.assertFalse(items["导出布局…"].isEnabled())
+        self.assertFalse(items["用本地 .dlg 顶掉这个布局…"].isEnabled())
+        self.assertFalse(items["导出布局原文件…"].isEnabled())
 
     def test_packroot_menu_has_no_replace(self):
         menu = self.menu(("packroot", str(self.pack)))
-        self.assertNotIn("替换布局…", self.texts(menu))
+        self.assertNotIn("用本地 .dlg 顶掉这个布局…", self.texts(menu))
 
     def test_unknown_node_has_no_menu(self):
         self.assertIsNone(self.menu(("dirroot", str(self.root))))
@@ -113,7 +114,7 @@ class TestResourceMenu(_NeedsGui):
         calls = []
         menu = self.menu(("file", str(self.target)), on_replace=calls.append)
         items = {a.text(): a for a in menu.actions() if a.text()}
-        items["替换布局…"].trigger()
+        items["用本地 .dlg 顶掉这个布局…"].trigger()
         self.assertEqual(calls, [("file", str(self.target))])
 
     def test_pack_trigger_hands_over_pack_tuple(self):
@@ -121,7 +122,7 @@ class TestResourceMenu(_NeedsGui):
         data = ("pack", str(self.pack), "dialog/a.dlg")
         menu = self.menu(data, on_replace=calls.append)
         items = {a.text(): a for a in menu.actions() if a.text()}
-        items["替换布局…"].trigger()
+        items["用本地 .dlg 顶掉这个布局…"].trigger()
         self.assertEqual(calls, [data])
 
 

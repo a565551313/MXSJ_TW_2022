@@ -177,6 +177,16 @@ class AssetResolver:
         self._issues: list[ResourceIssue] = []
 
     # -- 挂载 -----------------------------------------------------
+    def _drop_caches(self) -> None:
+        """包内容变了：所有按名字缓存的字节/图片/族判定都作废。"""
+        self._bytes_cache.clear()
+        self._image_cache.clear()
+        self._animation_cache.clear()
+        self._slice_cache.clear()
+        self._media_cache = None
+        self._family_plans.clear()
+        self._family_pieces.clear()
+
     def mount_pack(self, path: str | Path, *, priority: bool = False) -> FlsPack:
         normalized = Path(path).resolve()
         for index, existing in enumerate(self._packs):
@@ -189,14 +199,27 @@ class AssetResolver:
             self._packs.insert(0, pack)
         else:
             self._packs.append(pack)
-        self._bytes_cache.clear()
-        self._image_cache.clear()
-        self._animation_cache.clear()
-        self._slice_cache.clear()
-        self._media_cache = None
-        self._family_plans.clear()
-        self._family_pieces.clear()
+        self._drop_caches()
         return pack
+
+    def reload_pack(self, path: str | Path) -> FlsPack:
+        """重开一个已挂载的包（同一个文件被原地覆盖后必须调用）。
+
+        包对象一直握着打开的文件句柄；``os.replace`` 换了文件之后，旧句柄
+        还指着替换前的那个 inode——读得到，但全是旧内容。保存到「上次那个
+        输出包」时要先关掉再按原位置挂回来，否则画布继续显示保存前的图。
+        """
+        target = Path(path).resolve()
+        fresh = FlsPack(target)
+        for index, existing in enumerate(self._packs):
+            if existing.path.resolve() == target:
+                existing.close()
+                self._packs[index] = fresh
+                break
+        else:
+            self._packs.append(fresh)
+        self._drop_caches()
+        return fresh
 
     def mount_dir(self, dirpath: str | Path, *,
                   progress: Callable[[int, int, str], None] | None = None
