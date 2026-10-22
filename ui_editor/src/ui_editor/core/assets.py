@@ -48,6 +48,14 @@ def _scan_media_in_text(text: str) -> set[str]:
 
 
 def _looks_media(text: str) -> bool:
+    """像媒体引用：带目录的文件名，或目录型基路径（结尾分隔符）。
+
+    目录型基路径（``…\\登录按钮\\``）没有扩展名，但确实是控件引用的
+    素材——客户端运行时在其下拼子图。少了这一支，拼名族永远进不了
+    「从资源包选择」的候选清单。
+    """
+    if dir_base.is_dir_base(text):
+        return True
     return (("\\" in text or "/" in text)
             and text.lower().endswith(_MEDIA_EXTS))
 
@@ -389,11 +397,7 @@ class AssetResolver:
             self._record_issue("RESOURCE_INVALID_PATH", str(res_path), str(exc))
             raise
         self._staged[res_path] = data
-        for key in (res_path, res_path.replace("/", "\\"),
-                    res_path.replace("\\", "/")):
-            cache_key = key.replace("/", "\\")
-            self._bytes_cache.pop(cache_key, None)
-            self._image_cache.pop(cache_key, None)
+        self._forget_piece_caches(res_path)
 
     def staged_images(self) -> dict[str, bytes]:
         """全部待入包图片 {资源路径: 原始字节}（拷贝）。"""
@@ -402,7 +406,35 @@ class AssetResolver:
     def discard_staged(self, res_paths) -> None:
         """写包成功后销账，避免下次保存重复写入。"""
         for path in res_paths:
+            # 挂账时路径已规范化成 "/"；调用方传 "\\" 写法也要能销账。
+            try:
+                normalized = self._resource_name(path)
+            except (TypeError, ValueError):
+                normalized = path
+            self._staged.pop(normalized, None)
             self._staged.pop(path, None)
+            self._forget_piece_caches(path)
+
+    def _forget_piece_caches(self, res_path: str) -> None:
+        """挂账/销账后清掉这块图**以及它所在各层目录**的缓存。
+
+        目录型基路径的合成图与切片是按**目录**缓存的。只清子图自己的键不够：
+        同一个族重新挂账（换图）后，画布还会拿回旧的那张；销账后也会继续
+        显示已经不存在的族。``_media_cache`` 不用清——挂账的图不在里面，
+        候选清单每次都会把 ``staged_families()`` 现算进去，清它反而要重扫
+        全部布局（几百个族约 0.5 s）。
+        """
+        key = str(res_path).replace("/", "\\")
+        parts = key.split("\\")[:-1]
+        parents = {"\\".join(parts[:depth]) + "\\"
+                   for depth in range(1, len(parts) + 1)}
+        self._bytes_cache.pop(key, None)
+        for cache in (self._image_cache, self._slice_cache):
+            for name in list(cache):
+                # 切片键是「目录路径#态号」，按 # 前面比较。
+                stem = name.split("#", 1)[0]
+                if name == key or stem in parents:
+                    cache.pop(name, None)
 
     def _staged_lookup(self, name: str) -> bytes | None:
         for key in (name, name.replace("/", "\\"),
@@ -443,15 +475,70 @@ class AssetResolver:
                 "gb18030", "surrogateescape")
             found.update(_scan_media_in_text(text))
         self._media_cache = sorted(
-            path for path in found if self._exists(path))
+            path for path in found if self._media_available(path))
         return self._media_cache
+
+    def _media_available(self, path: str) -> bool:
+        """候选能不能用：普通资源看条目在不在，目录型基路径看拼不拼得出整族。
+
+        目录型基路径在包里**没有**这个条目（客户端运行时才拼），拿
+        :meth:`_exists` 判会把它一律滤掉；这里改用与画布同一个
+        :func:`dir_base.plan` 判「整族齐装」。
+        """
+        if not dir_base.is_dir_base(path):
+            return self._exists(path)
+        try:
+            return dir_base.plan(path, self.resource_exists) is not None
+        except ValueError:
+            return False
+
+    def staged_families(self) -> dict[str, list[str]]:
+        """已挂账的图里能拼成**整族**的：``{目录型基路径: [子图路径…]}``。
+
+        新建族是一次挂账多张子图（``…\\登录按钮\\0l.png`` …），布局里只
+        引用目录路径；清单里列族本身而不是一堆子图，用户才看得懂。
+        只看已挂账的图，且要整族齐装——半套不算族。
+        """
+        # 每级祖先目录都算候选：九片的子图挂在 面板/top/ 下，族基路径却是 面板/。
+        candidates: set[str] = set()
+        for path in self._staged:
+            parts = path.replace("\\", "/").split("/")[:-1]
+            for depth in range(1, len(parts) + 1):
+                candidates.add("/".join(parts[:depth]))
+        families: dict[str, list[str]] = {}
+        claimed: set[str] = set()
+        # 先浅后深：九片的 top/ 目录自己也能拼成横三片，必须让外层先认领。
+        for parent in sorted(candidates, key=lambda item: item.count("/")):
+            base = parent.replace("/", "\\") + "\\"
+
+            def exists(name: str) -> bool:
+                # plan 传进来的是拼好的**完整**子图路径，直接查挂账表。
+                return self._staged_lookup(name) is not None
+
+            chosen = dir_base.plan(base, exists)
+            if chosen is None:
+                continue
+            members = {path for path in self._staged
+                      if path.replace("\\", "/").startswith(parent + "/")}
+            if members <= claimed:
+                continue          # 已经被外层的族认领（九片的每一行）
+            # 多出来的块（半套的第二态等）不算整族：折叠掉用户就看不到它们了。
+            pieces = {piece.replace("\\", "/") for piece in chosen.pieces}
+            if pieces != members:
+                continue
+            families[base] = sorted(members)
+            claimed |= members
+        return families
 
     def candidates_with_staged(
         self, progress: Callable[[int, int, str], None] | None = None
     ) -> list[str]:
-        """选图窗清单：包内候选 + 已挂账待入包的新图。"""
+        """选图窗清单：包内候选 + 已挂账的新图（新建的族只列目录路径）。"""
+        families = self.staged_families()
+        pieces = {piece for group in families.values() for piece in group}
         return sorted(
-            set(self.media_candidates(progress)) | set(self._staged))
+            set(self.media_candidates(progress)) | set(self._staged) - pieces
+            | set(families))
 
     @property
     def summary(self) -> str:

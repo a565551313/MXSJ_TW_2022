@@ -180,3 +180,159 @@ class TestDirBase(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestFamilyNaming(unittest.TestCase):
+    """新建族：按张数与控件类型给出族内拼名，并能按文件名认回族类型。"""
+
+    def test_piece_names_follow_measured_families(self):
+        self.assertEqual(dir_base.piece_names("h_state", 3),
+                         ("0l", "0c", "0r"))
+        self.assertEqual(dir_base.piece_names("h_state", 6),
+                         ("0l", "0c", "0r", "1l", "1c", "1r"))
+        self.assertEqual(dir_base.piece_names("h_slice", 3),
+                         ("left", "middle", "right"))
+        self.assertEqual(dir_base.piece_names("v_slice", 3),
+                         ("top", "middle", "bottom"))
+        self.assertEqual(dir_base.piece_names("frames", 3), ("0", "1", "2"))
+        self.assertEqual(dir_base.piece_names("single", 1), ("bg",))
+        nine = dir_base.piece_names("nine_slice", 9)
+        self.assertEqual(len(nine), 9)
+        self.assertEqual(nine[0], "top/left")
+        self.assertEqual(nine[-1], "bottom/right")
+
+    def test_piece_names_reject_wrong_counts(self):
+        # 拼名族要整族齐装：张数不对写进包也拼不出来
+        self.assertIsNone(dir_base.piece_names("h_state", 4))
+        self.assertIsNone(dir_base.piece_names("h_state", 2))
+        self.assertIsNone(dir_base.piece_names("nine_slice", 8))
+        self.assertIsNone(dir_base.piece_names("h_slice", 4))
+        self.assertIsNone(dir_base.piece_names("single", 2))
+        self.assertIsNone(dir_base.piece_names("frames", 0))
+        self.assertIsNone(dir_base.piece_names("frames", 99))
+        self.assertIsNone(dir_base.piece_names("unknown", 3))
+
+    def test_match_kind_from_exported_names(self):
+        """导出再导回来：文件名就是族内名（导出的 top-left 还原成 top/left）。"""
+        self.assertEqual(
+            dir_base.match_kind(["0l.png", "0c.png", "0r.png"]), "h_state")
+        self.assertEqual(
+            dir_base.match_kind(["left.png", "middle.png", "right.png"]),
+            "h_slice")
+        self.assertEqual(
+            dir_base.match_kind(["top.png", "middle.png", "bottom.png"]),
+            "v_slice")
+        self.assertEqual(
+            dir_base.match_kind(["0.png", "1.png", "2.png"]), "frames")
+        self.assertEqual(dir_base.match_kind(["bg.png"]), "single")
+        nine = [f"{row}-{column}.png"
+                for row in ("top", "middle", "bottom")
+                for column in ("left", "middle", "right")]
+        self.assertEqual(dir_base.match_kind(nine), "nine_slice")
+
+    def test_match_kind_is_order_insensitive(self):
+        self.assertEqual(
+            dir_base.match_kind(["0r.png", "0l.png", "0c.png"]), "h_state")
+
+    def test_match_kind_returns_none_for_unknown_names(self):
+        self.assertIsNone(dir_base.match_kind(["a.png", "b.png", "c.png"]))
+        self.assertIsNone(dir_base.match_kind([]))
+
+    def test_guess_kind_prefers_widget_type(self):
+        self.assertEqual(dir_base.guess_kind(3, "CTextButton"), "h_state")
+        self.assertEqual(dir_base.guess_kind(3, "CHPngFrame"), "h_slice")
+        self.assertEqual(dir_base.guess_kind(3, "CVFrame"), "v_slice")
+        self.assertEqual(dir_base.guess_kind(9, "CPngNineFrame"), "nine_slice")
+        # 9 张对按钮是合法的 3 态，控件预选优先
+        self.assertEqual(dir_base.guess_kind(9, "CTextButton"), "h_state")
+        # 控件预选与张数对不上时退回按张数判断
+        self.assertEqual(dir_base.guess_kind(9, "CHPngFrame"), "nine_slice")
+        self.assertEqual(dir_base.guess_kind(1, None), "single")
+        self.assertEqual(dir_base.guess_kind(2, None), "frames")
+        self.assertIsNone(dir_base.guess_kind(0, None))
+
+
+class TestNamingRecognition(unittest.TestCase):
+    """自己给图起名：左右/上下/中英缩写都认得出来。"""
+
+    def test_chinese_three_pieces(self):
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["左", "中", "右"], "h_state"), ["0l", "0c", "0r"])
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["右", "左", "中"], "h_state"), ["0r", "0l", "0c"])
+
+    def test_english_three_pieces(self):
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["left", "middle", "right"], "h_state"), ["0l", "0c", "0r"])
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["L", "C", "R"], "h_state"), ["0l", "0c", "0r"])
+
+    def test_state_index_prefix(self):
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["1r", "0l", "1c", "0c", "1l", "0r"], "h_state"),
+            ["1r", "0l", "1c", "0c", "1l", "0r"])
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["0左", "0中", "0右"], "h_state"), ["0l", "0c", "0r"])
+        # 只导出第 2 态的 3 张（1l/1c/1r）：单态族里状态号多余，当这一族
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["1l", "1c", "1r"], "h_state"), ["0l", "0c", "0r"])
+        # 多态时状态号必须对得上（6 张只有 0/1 两态），越界交回调用方
+        self.assertIsNone(dir_base.map_stems_to_pieces(
+            ["0l", "0c", "0r", "3l", "3c", "3r"], "h_state"))
+
+    def test_nine_slice_chinese_and_shortcuts(self):
+        nine = ["左上", "上中", "右上", "左中", "中中", "右中",
+                "左下", "中下", "右下"]
+        self.assertEqual(dir_base.map_stems_to_pieces(nine, "nine_slice"), [
+            "top/left", "top/middle", "top/right",
+            "middle/left", "middle/middle", "middle/right",
+            "bottom/left", "bottom/middle", "bottom/right"])
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["tl", "tm", "tr", "ml", "mm", "mr", "bl", "bm", "br"],
+            "nine_slice")[4], "middle/middle")
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["top_left", "top_middle", "top_right",
+             "middle_left", "middle_middle", "middle_right",
+             "bottom_left", "bottom_middle", "bottom_right"],
+            "nine_slice")[0], "top/left")
+
+    def test_vertical_aliases_do_not_crash_horizontal_families(self):
+        """上/中/下 选在按钮上：认不出横向的边，交回调用方，不能抛异常。
+
+        旧实现把 ``top`` 直接塞进 ``_H_SIDES.index()``，整个选图窗打不开。
+        """
+        self.assertIsNone(dir_base.map_stems_to_pieces(
+            ["上", "中", "下"], "h_state"))
+        self.assertIsNone(dir_base.map_stems_to_pieces(
+            ["top", "middle", "bottom"], "h_state"))
+
+    def test_non_ascii_digits_are_not_parsed(self):
+        """``①``/``²`` 的 str.isdigit() 为真但 int() 会抛；只认 ASCII 数字。"""
+        self.assertIsNone(dir_base.map_stems_to_pieces(["①"], "frames"))
+        self.assertIsNone(dir_base.map_stems_to_pieces(["²"], "frames"))
+        self.assertIsNone(dir_base.map_stems_to_pieces(["①l", "①c", "①r"],
+                                                       "h_state"))
+
+    def test_slices_and_frames(self):
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["L", "M", "R"], "h_slice"), ["left", "middle", "right"])
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["上", "中", "下"], "v_slice"), ["top", "middle", "bottom"])
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["frame0", "frame1", "frame2"], "frames"), ["0", "1", "2"])
+
+    def test_duplicates_and_unknown_fall_back(self):
+        # 两张都叫"左"：认不出唯一对应，交回调用方按顺序
+        self.assertIsNone(dir_base.map_stems_to_pieces(
+            ["左", "左", "右"], "h_state"))
+        self.assertIsNone(dir_base.map_stems_to_pieces(
+            ["a", "b", "c"], "h_slice"))
+        # 张数不合法也不认
+        self.assertIsNone(dir_base.map_stems_to_pieces(
+            ["左", "中"], "h_state"))
+
+    def test_naming_hint_mentions_the_expected_names(self):
+        self.assertIn("0l", dir_base.naming_hint("h_state", 3))
+        self.assertIn("左", dir_base.naming_hint("h_state", 3))
+        self.assertIn("top-left", dir_base.naming_hint("nine_slice", 9))
+        self.assertIn("frame0", dir_base.naming_hint("frames", 3))

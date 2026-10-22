@@ -110,6 +110,73 @@ class TestAssetResolver(unittest.TestCase):
             finally:
                 resolver.close()
 
+    def test_media_candidates_include_dir_base_family(self):
+        """目录型基路径（三态按钮）要进候选清单，否则选图窗根本选不到。"""
+        png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 8
+        dlg_plain = dlg_codec.dump_bytes(
+            [{"sWidgetType": "CMainFrame", "sName": "root",
+              "lChildren": [
+                  {"sWidgetType": "CTextButton",
+                   "sFileName": "test/btn\\"},
+                  # 只有 0l、缺 0c/0r：拼不出整族，不能进清单
+                  {"sWidgetType": "CImage", "sFileName": "test/broken\\"}]}],
+            md5="0" * 32)
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "fam.fls"
+            pack_path.write_bytes(build_pack([
+                ("test/btn/0l.png", png), ("test/btn/0c.png", png),
+                ("test/btn/0r.png", png), ("test/broken/0l.png", png),
+                ("booth.dlg", xor4(dlg_plain, b"\x5a\xa5\x11\x7e")),
+            ]))
+            resolver = AssetResolver()
+            resolver.mount_pack(pack_path)
+            try:
+                candidates = resolver.media_candidates()
+                self.assertIn("test/btn\\", candidates)
+                self.assertNotIn("test/broken\\", candidates)
+                self.assertNotIn("test/btn/0l.png", candidates)
+            finally:
+                resolver.close()
+
+    def test_staged_family_listed_as_one_directory(self):
+        """新建族挂账后：候选列族本身，不把每张子图单独列出来。"""
+        self.resolver.stage_image("fam/btn/0l.png", b"\x89PNGL")
+        self.resolver.stage_image("fam/btn/0c.png", b"\x89PNGC")
+        self.resolver.stage_image("fam/btn/0r.png", b"\x89PNGR")
+        self.resolver.stage_image("fam/solo.png", b"\x89PNGS")
+        families = self.resolver.staged_families()
+        self.assertEqual(list(families), ["fam\\btn\\"])
+        self.assertEqual(len(families["fam\\btn\\"]), 3)
+        candidates = self.resolver.candidates_with_staged()
+        self.assertIn("fam\\btn\\", candidates)
+        self.assertIn("fam/solo.png", candidates)
+        self.assertNotIn("fam/btn/0l.png", candidates)
+
+    def test_staged_nine_slice_folds_to_base_not_rows(self):
+        """九片的子图挂在 top/ 等子目录下，族仍是外层目录，不能拆成三个族。"""
+        self.resolver.stage_image("ui/panel/top/left.png", b"P")
+        self.resolver.stage_image("ui/panel/top/middle.png", b"P")
+        self.resolver.stage_image("ui/panel/top/right.png", b"P")
+        self.resolver.stage_image("ui/panel/middle/left.png", b"P")
+        self.resolver.stage_image("ui/panel/middle/middle.png", b"P")
+        self.resolver.stage_image("ui/panel/middle/right.png", b"P")
+        self.resolver.stage_image("ui/panel/bottom/left.png", b"P")
+        self.resolver.stage_image("ui/panel/bottom/middle.png", b"P")
+        self.resolver.stage_image("ui/panel/bottom/right.png", b"P")
+        families = self.resolver.staged_families()
+        self.assertEqual(list(families), ["ui\\panel\\"])
+        self.assertEqual(len(families["ui\\panel\\"]), 9)
+        candidates = self.resolver.candidates_with_staged()
+        self.assertEqual(candidates, ["ui\\panel\\"])
+
+    def test_staged_family_needs_the_whole_set(self):
+        # 半套（缺 0c/0r）不是族：不能折叠，否则用户看不到那几张
+        self.resolver.stage_image("fam/half/0l.png", b"\x89PNGL")
+        self.resolver.stage_image("fam/half/1l.png", b"\x89PNG1L")
+        self.assertEqual(self.resolver.staged_families(), {})
+        self.assertIn("fam/half/0l.png",
+                      self.resolver.candidates_with_staged())
+
     def test_media_candidates_progress_hook(self):
         # 忙碌遮罩：首次整理清单报真实进度（done 单调 → total）
         dlg_plain = dlg_codec.dump_bytes(
@@ -151,6 +218,49 @@ class TestAssetResolver(unittest.TestCase):
                       self.resolver.candidates_with_staged())
         self.resolver.discard_staged(["new/pic.png"])
         self.assertEqual(self.resolver.staged_images(), {})
+
+    def test_restaged_family_refreshes_preview_and_slice(self):
+        """同一族重新挂账/销账后，目录级的合成图与切片不能还是旧的。
+
+        缓存按目录键存（fetch_image/fetch_slice），只清子图自己的键不够：
+        换了图以后画布还会拿回旧像素；销账后还能显示已经不存在的族。
+        """
+        from PySide6.QtCore import QBuffer
+        from PySide6.QtGui import QColor, QImage
+
+        def piece(red):
+            image = QImage(4, 4, QImage.Format.Format_ARGB32)
+            image.fill(QColor(red, 0, 0))
+            buffer = QBuffer()
+            buffer.open(QBuffer.OpenModeFlag.WriteOnly)
+            self.assertTrue(image.save(buffer, "PNG"))
+            return bytes(buffer.data())
+
+        resolver = AssetResolver()
+        try:
+            base = "combdialog4\\面板\\我的按钮\\"
+            paths = [base + rel + ".png" for rel in ("0l", "0c", "0r")]
+            for path in paths:
+                resolver.stage_image(path, piece(10))
+            first = resolver.fetch_image(base)
+            recipe = resolver.fetch_slice(base)
+            self.assertIsNotNone(first)
+            self.assertIsNotNone(recipe)
+            self.assertEqual(first[0].pixelColor(0, 0).red(), 10)
+            self.assertEqual(recipe.images[0].pixelColor(0, 0).red(), 10)
+
+            for path in paths:               # 换一套图重新挂账同一个族
+                resolver.stage_image(path, piece(210))
+            again = resolver.fetch_image(base)
+            recipe = resolver.fetch_slice(base)
+            self.assertEqual(again[0].pixelColor(0, 0).red(), 210)
+            self.assertEqual(recipe.images[0].pixelColor(0, 0).red(), 210)
+
+            resolver.discard_staged(paths)   # 反斜杠写法也要能销账
+            self.assertEqual(resolver.staged_images(), {})
+            self.assertIsNone(resolver.fetch_image(base))
+        finally:
+            resolver.close()
 
     def test_fetch_styles(self):
         book = self.resolver.fetch_styles()

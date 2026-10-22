@@ -134,15 +134,8 @@ def _code_skin_available(widget: Widget, link: LayoutLink | None,
     return bool(refs) and resource_exists(refs[0].skin)
 
 
-#: 拼名族 → 诊断里给人看的名字
-_DIR_BASE_KIND_LABEL = {
-    "h_state": "三态横片",
-    "frames": "序号帧",
-    "nine_slice": "九片",
-    "h_slice": "横三片",
-    "v_slice": "竖三片",
-    "single": "单图",
-}
+#: 拼名族 → 诊断里给人看的名字（与选图窗同一份，见 dir_base.KIND_LABELS）
+_DIR_BASE_KIND_LABEL = dir_base.KIND_LABELS
 
 
 def _dir_base_message(

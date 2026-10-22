@@ -32,7 +32,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..core import colors
+from ..core import colors, dir_base
 from ..core.model import Widget
 
 _LONG_TEXT_KEYS = {"sText", "sTitles", "sTips", "sTitle"}
@@ -476,14 +476,22 @@ class PropertyPanel(QWidget):
         from .image_picker import ResourcePickerDialog
 
         exts = self._AUDIO_EXTS if key == "sSoundPath" else self._IMAGE_EXTS
+        allow_families = key != "sSoundPath"
 
         # 首次要解开全部已命名布局整理清单（完整客户端很慢）：
         # 放忙碌遮罩后跑，真实进度 `done/total`，不冻结界面。
         from .busy import run_busy_or_plain
 
+        def keep(path: str) -> bool:
+            # 目录型基路径没有扩展名，但按钮/边框/九宫格都靠它——
+            # 只按扩展名过滤会让这类素材永远选不到。
+            if allow_families and dir_base.is_dir_base(path):
+                return True
+            return path.lower().endswith(exts)
+
         def build_candidates(h):
             return [p for p in assets.candidates_with_staged(h.report)
-                    if p.lower().endswith(exts)]
+                    if keep(p)]
 
         candidates = run_busy_or_plain(
             self.window(), "整理包内资源清单（首次较慢）…", build_candidates)
@@ -492,13 +500,40 @@ class PropertyPanel(QWidget):
             frames = assets.fetch_image(path)
             return frames[0] if frames else None
 
+        def family_label(path: str) -> str | None:
+            return dir_base.describe(dir_base.plan(path, assets.resource_exists))
+
         def export_handler(paths: list[str], host=None) -> None:
             from pathlib import Path
 
+            from ..core.asset_export import (
+                dir_piece_name,
+                export_targets,
+                family_prefixes,
+                source_key,
+            )
             from .busy import run_busy_or_plain
             from .image_export import export_image_files
 
-            def one(path: str, dest_dir, dest_name=None, used_names=None):
+            # 一批里有多个拼名族时加族名前缀（登录按钮-0l.png）。不加的话
+            # 两族都写 0l.png，后一族被批量去重改成看不出出处的 0l-2.png
+            # （画布右键导出早已这么做，这里漏了）。
+            prefixes = family_prefixes(paths)
+
+            def one(path: str, dest_dir, dest_name=None, used_names=None,
+                    unavailable=None):
+                prefix = prefixes.get(source_key(path), "")
+                if dir_base.is_dir_base(path):
+                    # 拼名族按族内每块子图导出（与画布右键导出同一套命名）。
+                    written: list = []
+                    for _name, data, source in export_targets(
+                            assets, path, unavailable, prefix):
+                        written.extend(export_image_files(
+                            source, data, assets.fetch_image(source), dest_dir,
+                            dir_piece_name(source, path, prefix),
+                            protected_paths=assets.pack_paths,
+                            used_names=used_names))
+                    return written
                 return export_image_files(
                     path, assets.fetch_bytes(path),
                     assets.fetch_image(path), dest_dir, dest_name,
@@ -507,8 +542,9 @@ class PropertyPanel(QWidget):
 
             written: list = []
             rejected: list = []
+            partial: list = []      # 族里有子图读不出（其余照常导出）
             try:
-                if len(paths) == 1:
+                if len(paths) == 1 and not dir_base.is_dir_base(paths[0]):
                     base = paths[0].replace("\\", "/").split("/")[-1]
                     chosen, _ = QFileDialog.getSaveFileName(
                         self, "导出图片", base, "所有文件 (*)")
@@ -525,31 +561,46 @@ class PropertyPanel(QWidget):
                     def bulk(h):
                         out: list = []
                         bad: list = []
+                        short: list = []
                         used: set = set()   # 本批已占用文件名，同名加序号
                         total = len(paths)
                         for i, path in enumerate(paths, 1):
                             if h.cancelled:
-                                return out, bad  # 已导出的保留，未导出的停
+                                # 已导出的保留，未导出的停
+                                return out, bad, short
                             h.report(i - 1, total,
                                      f"导出 {path}（{i}/{total}）…")
+                            unreadable: list = []
                             try:
                                 out.extend(one(path, directory,
-                                               used_names=used))
+                                               used_names=used,
+                                               unavailable=unreadable))
                             except (OSError, ValueError) as exc:
                                 # 单个资源被拒绝只跳过它，其余照常导出。
                                 bad.append((path, str(exc)))
-                        return out, bad
+                            if unreadable:
+                                short.append(
+                                    (path, "子图读不出：" +
+                                     "、".join(unreadable[:3])))
+                        return out, bad, short
 
-                    written, rejected = run_busy_or_plain(
+                    written, rejected, partial = run_busy_or_plain(
                         host or self, "批量导出图片…", bulk,
                         maximum=len(paths), cancellable=True,
                         cancellable_text="取消（已导出的保留）")
             except (OSError, ValueError) as exc:
                 QMessageBox.warning(self, "导出失败", str(exc))
                 return
-            reject_note = (f"\n{len(rejected)} 个被拒绝，未写出：\n"
-                           + "\n".join(path for path, _why in rejected[:3])
-                           if rejected else "")
+            reject_note = ""
+            if rejected:
+                reject_note += (f"\n{len(rejected)} 个被拒绝，未写出：\n"
+                                + "\n".join(path for path, _why
+                                             in rejected[:3]))
+            if partial:
+                reject_note += (f"\n{len(partial)} 个族有子图读不出"
+                                "（其余已导出）：\n"
+                                + "\n".join(f"{path}（{why}）"
+                                             for path, why in partial[:3]))
             if written:
                 QMessageBox.information(
                     self, "导出完成",
@@ -560,16 +611,27 @@ class PropertyPanel(QWidget):
                     self, "导出失败",
                     f"{len(rejected)} 个资源被拒绝写入：\n"
                     f"{rejected[0][1]}")
+            elif partial:
+                QMessageBox.warning(
+                    self, "导出失败",
+                    f"{len(partial)} 个族的子图读不出：\n"
+                    f"{partial[0][0]}（{partial[0][1]}）")
             else:
                 QMessageBox.warning(
                     self, "导出失败", "这些资源在包里取不到内容。")
 
+        widget_type = None
+        if self._widget is not None:
+            widget_type = self._widget.props.get("sWidgetType")
         dialog = ResourcePickerDialog(
             self, "从资源包选择（选完保存回包不丢图）",
             candidates, edit.text(),
             thumb if key != "sSoundPath" else None,
             on_stage=assets.stage_image,
-            export_handler=export_handler)
+            export_handler=export_handler,
+            family_label=family_label,
+            widget_type=widget_type if isinstance(widget_type, str) else None,
+            exists=assets.resource_exists)
         if (dialog.exec() == QDialog.DialogCode.Accepted
                 and dialog.selected_path()):
             edit.setText(dialog.selected_path())

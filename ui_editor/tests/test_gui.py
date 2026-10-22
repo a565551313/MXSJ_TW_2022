@@ -74,6 +74,41 @@ class TestMainWindowFlow(unittest.TestCase):
         self.assertGreater(len(colors), 1)
 
 
+def _multi_pack_bytes(entries) -> bytes:
+    """自建微型 0SLF 包：``[(包内路径, 原始字节)]``，任意条数。"""
+    import struct
+
+    from ui_editor.core.mxhash import mx_hash
+
+    body = bytearray()
+    meta = []
+    offset = 12
+    for name, payload in entries:
+        meta.append((mx_hash(name.encode("gbk")), 12345, len(payload), offset))
+        body += payload
+        offset += len(payload)
+    head = b"0SLF" + struct.pack("<II", len(entries), offset)
+
+    def record(index, entry_id, r1, clen, doff):
+        r2 = (((r1 * entry_id + 0x0DF25E) & 0xFFFFFFFF) ^ clen) & 0xFFFFFFFF
+        r3 = (((r2 * index * 0x00F718FE + 0x0D59D16C) & 0xFFFFFFFF)
+              ^ doff) & 0xFFFFFFFF
+        return struct.pack("<IIII", entry_id, r1, r2, r3)
+
+    return head + bytes(body) + b"".join(
+        record(index, *item) for index, item in enumerate(meta))
+
+
+def _write_png(path, red: int = 40):
+    """写一张真 PNG（新建族要按内容/后缀处理，伪头不行）。"""
+    from PySide6.QtGui import QColor, QImage
+
+    image = QImage(9, 12, QImage.Format.Format_ARGB32)
+    image.fill(QColor(red, 70, 130))
+    assert image.save(str(path))
+    return str(path)
+
+
 def _mini_pack_bytes(res_name: str = "dialog/test.dlg") -> bytes:
     """自建微型 0SLF 包：一个 XOR 加密的 .dlg 条目。"""
     import struct
@@ -533,6 +568,149 @@ class TestSaveToPackWithStagedImage(unittest.TestCase):
             try:
                 self.assertEqual(fresh.fetch_bytes(staged_path),
                                  b"\x89PNGnewpic")
+            finally:
+                fresh.close()
+
+
+class TestSaveNewFamilyToPack(unittest.TestCase):
+    """新建的拼名族随布局写进新包：布局只引用目录，子图也要一起写。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+
+    def test_staged_family_written_with_pack(self):
+        import tempfile
+
+        from ui_editor.core import dlg_codec
+        from ui_editor.core.assets import AssetResolver
+
+        base = "combdialog4\\新登陆界面\\三态按钮\\登录按钮\\"
+        plain = dlg_codec.dump_bytes(
+            [{"sWidgetType": "CMainFrame", "sName": "root", "lChildren": [
+                {"sWidgetType": "CTextButton", "sName": "login",
+                 "sFileName": ""}]}],
+            md5="0" * 32)
+        key = b"\x5a\xa5\x11\x7e"
+        packed = bytes(b ^ key[i & 3] for i, b in enumerate(plain))
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "interface_mini.fls"
+            pack_path.write_bytes(_multi_pack_bytes([
+                ("dialog/fam.dlg", packed)]))
+            self.window.open_pack_file(str(pack_path))
+            self.window._open_pack_layout(str(pack_path), "dialog/fam.dlg")
+            doc = self.window.doc
+            widget = next(item for item in doc.all_widgets()
+                          if item.props.get("sName") == "login")
+            payloads = {}
+            src_dir = Path(tmp) / "src"
+            src_dir.mkdir()
+            for index, name in enumerate(("0l", "0c", "0r")):
+                path = _write_png(src_dir / f"{name}.png", 40 + index)
+                data = Path(path).read_bytes()
+                payloads[name] = data
+                self.window.resolver.stage_image(
+                    base + name + ".png", data)
+            widget.props["sFileName"] = base
+            doc.dirty = True
+            out = str(Path(tmp) / "interface_patched.fls")
+            report = self.window.write_pack_copy(out)
+            self.assertIsNotNone(report)
+            self.assertTrue(report.get("ok"), report)
+            # 布局只引用目录：子图若没被认成"被引用"，这里会是 0
+            self.assertEqual(report.get("images_added"), 3)
+            self.assertEqual(report.get("staged_unreferenced"), [])
+            self.assertEqual(self.window.resolver.staged_images(), {})
+            fresh = AssetResolver()
+            fresh.mount_pack(out)
+            try:
+                got = fresh.fetch_dlg("dialog/fam.dlg")
+                self.assertIsNotNone(got)
+                self.assertEqual(got[0][0]["lChildren"][0]["sFileName"], base)
+                for name, data in payloads.items():
+                    self.assertEqual(fresh.fetch_bytes(base + name + ".png"),
+                                     data)
+                # 包里齐了整族 → 解析器能拼出这张按钮
+                self.assertTrue(fresh.fetch_image(base))
+            finally:
+                fresh.close()
+
+
+class TestSaveFamilyOverExistingButton(unittest.TestCase):
+    """指向已有按钮的目录 = 替换它那几张图（不是新增），报告要如实计数。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+
+    def test_family_into_existing_directory_replaces_pieces(self):
+        import tempfile
+
+        from ui_editor.core import dlg_codec
+        from ui_editor.core.assets import AssetResolver
+
+        base = "test/btn\\"
+        old_data = {name: f"\x89PNGold{name}".encode()
+                    for name in ("0l", "0c", "0r")}
+        plain = dlg_codec.dump_bytes(
+            [{"sWidgetType": "CMainFrame", "sName": "root", "lChildren": [
+                {"sWidgetType": "CTextButton", "sName": "login",
+                 "sFileName": base}]}],
+            md5="0" * 32)
+        key = b"\x5a\xa5\x11\x7e"
+        packed = bytes(b ^ key[i & 3] for i, b in enumerate(plain))
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "interface_mini.fls"
+            pack_path.write_bytes(_multi_pack_bytes(
+                [("dialog/fam.dlg", packed)]
+                + [(f"test/btn/{name}.png", data)
+                   for name, data in old_data.items()]))
+            self.window.open_pack_file(str(pack_path))
+            self.window._open_pack_layout(str(pack_path), "dialog/fam.dlg")
+            src_dir = Path(tmp) / "src"
+            src_dir.mkdir()
+            new_data = {}
+            for index, name in enumerate(("0l", "0c", "0r")):
+                path = _write_png(src_dir / f"{name}.png", 90 + index)
+                new_data[name] = Path(path).read_bytes()
+                self.window.resolver.stage_image(
+                    "test/btn/" + name + ".png", new_data[name])
+            out = str(Path(tmp) / "interface_patched.fls")
+            report = self.window.write_pack_copy(out)
+            self.assertIsNotNone(report)
+            self.assertTrue(report.get("ok"), report)
+            self.assertEqual(report.get("images_added"), 0)
+            self.assertEqual(report.get("images_replaced"), 3)
+            fresh = AssetResolver()
+            fresh.mount_pack(out)
+            try:
+                for name, data in new_data.items():
+                    self.assertEqual(
+                        fresh.fetch_bytes("test/btn/" + name + ".png"), data)
             finally:
                 fresh.close()
 
@@ -1216,6 +1394,498 @@ class TestImagePicker(unittest.TestCase):
         dialog._search.setText("")
         self.assertEqual(dialog._list.count(), 3)
         dialog.close()
+
+    def test_dir_base_family_listed_and_selectable(self):
+        """目录型基路径（按钮三态）要能选：标签带族说明，选中回写目录路径。"""
+        from ui_editor.ui.image_picker import ResourcePickerDialog
+
+        base = "combdialog4\\新登陆界面\\三态按钮\\登录按钮\\"
+        paths = [base, "combdialog4\\新登陆界面\\底板.png"]
+        dialog = ResourcePickerDialog(
+            None, "t", paths, "", None,
+            family_label=lambda _p: "三态横片 · 2 态")
+        labels = [dialog._list.item(row).text()
+                  for row in range(dialog._list.count())]
+        self.assertIn("登录按钮（三态横片 · 2 态）", labels)
+        self.assertTrue(dialog._only_families.isVisibleTo(dialog))
+        dialog._list.setCurrentItem(dialog._list.item(0))
+        self.assertEqual(dialog.selected_path(), base)
+        self.assertIn("拼名族", dialog._list.item(0).toolTip())
+        # 「只看拼名族」把普通图片滤掉
+        dialog._only_families.setChecked(True)
+        self.assertEqual(dialog._list.count(), 1)
+        dialog.close()
+
+    def test_plain_files_hide_family_filter(self):
+        from ui_editor.ui.image_picker import ResourcePickerDialog
+
+        dialog = ResourcePickerDialog(None, "t", ["a\\b.png"], "")
+        self.assertFalse(dialog._only_families.isVisibleTo(dialog))
+        self.assertEqual(dialog._list.count(), 1)
+        dialog.close()
+
+    def test_family_labels_are_cached_between_filters(self):
+        """族标签要探文件系统：搜索框每敲一个字不能把几百个族重算一遍。"""
+        from ui_editor.ui.image_picker import ResourcePickerDialog
+
+        bases = ["combdialog4\\按钮\\登录按钮\\",
+                 "combdialog4\\按钮\\注册按钮\\",
+                 "combdialog4\\按钮\\退出按钮\\"]
+        calls: list = []
+
+        def label(path):
+            calls.append(path)
+            return "按钮横片 · 1 态"
+
+        dialog = ResourcePickerDialog(
+            None, "t", bases + ["a\\bg.png"], "", None, family_label=label)
+        self.assertEqual(sorted(calls), sorted(bases))   # 打开时算一次
+        calls.clear()
+        for text in ("按", "按钮", "登录", ""):
+            dialog._search.setText(text)
+            dialog._refilter()
+        self.assertEqual(calls, [])                      # 之后都走缓存
+        dialog.close()
+
+    def test_property_panel_lists_dir_base_family(self):
+        """属性面板「从资源包选择」要列出拼名族，选中即写进 sFileName。"""
+        from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit
+
+        from ui_editor.core.model import Widget
+        from ui_editor.ui.property_panel import PropertyPanel
+
+        base = "combdialog4\\新登陆界面\\三态按钮\\登录按钮\\"
+        other = "combdialog4\\新登陆界面\\三态按钮\\注册按钮\\"
+        assets = mock.Mock()
+        assets._packs = [object()]
+        assets.candidates_with_staged.return_value = [base, other, "a\\bg.png"]
+        pieces = {family + name + ".png"
+                  for family in (base, other)
+                  for name in ("0l", "0c", "0r", "1l", "1c", "1r")}
+        assets.resource_exists.side_effect = (
+            lambda name: name.replace("/", "\\") in pieces)
+        assets.fetch_image.return_value = None
+        assets.pack_paths = []
+        panel = PropertyPanel()
+        widget = Widget({"sWidgetType": "CTextButton", "sName": "b",
+                         "sFileName": ""})
+        panel._widget = widget
+        panel.assets = assets
+        edit = QLineEdit()
+        captured: dict = {}
+
+        def fake_dialog(_parent, _title, paths, current="", thumb=None,
+                        on_stage=None, export_handler=None,
+                        family_label=None, **_kwargs):
+            captured["paths"] = list(paths)
+            captured["family_label"] = family_label
+            captured["kwargs"] = _kwargs
+            handle = mock.Mock()
+            handle.exec.return_value = QDialog.DialogCode.Accepted
+            handle.selected_path.return_value = base
+            handle.external_requested = False
+            return handle
+
+        def fake_dialog2(_parent, _title, paths, current="", thumb=None,
+                         on_stage=None, export_handler=None,
+                         family_label=None, **kwargs):
+            captured["export_handler"] = export_handler
+            return fake_dialog(_parent, _title, paths, current, thumb,
+                               on_stage, export_handler, family_label, **kwargs)
+
+        with mock.patch("ui_editor.ui.image_picker.ResourcePickerDialog",
+                        side_effect=fake_dialog2):
+            self.assertTrue(panel._browse_from_pack("sFileName", edit))
+        self.assertIn(base, captured["paths"])
+        self.assertIn("按钮横片", captured["family_label"](base))
+        # 新建族要按控件类型预选族类型，并知道包里有没有同名条目
+        self.assertEqual(captured["kwargs"]["widget_type"], "CTextButton")
+        self.assertIs(captured["kwargs"]["exists"], assets.resource_exists)
+        self.assertEqual(widget.props["sFileName"], base)
+        self.assertEqual(edit.text(), base)
+
+        # 在选图窗里对拼名族点「导出图片…」：按族内每块子图导出
+        png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 8
+        assets.fetch_bytes.side_effect = lambda name: png
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(
+                    QFileDialog, "getExistingDirectory", return_value=tmp), \
+                    mock.patch.object(QFileDialog, "getSaveFileName") as save, \
+                    mock.patch("ui_editor.ui.property_panel.QMessageBox"):
+                captured["export_handler"]([base])
+            self.assertFalse(save.called)   # 族不该走「另存为单文件」
+            names = sorted(p.name for p in Path(tmp).iterdir())
+            self.assertEqual(names, ["0c.png", "0l.png", "0r.png",
+                                     "1c.png", "1l.png", "1r.png"])
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(
+                    QFileDialog, "getExistingDirectory", return_value=tmp), \
+                    mock.patch.object(QFileDialog, "getSaveFileName") as save, \
+                    mock.patch("ui_editor.ui.property_panel.QMessageBox"):
+                captured["export_handler"]([base, other])
+            self.assertFalse(save.called)
+            self.assertEqual(
+                sorted(p.name for p in Path(tmp).iterdir()),
+                ["注册按钮-0c.png", "注册按钮-0l.png", "注册按钮-0r.png",
+                 "注册按钮-1c.png", "注册按钮-1l.png", "注册按钮-1r.png",
+                 "登录按钮-0c.png", "登录按钮-0l.png", "登录按钮-0r.png",
+                 "登录按钮-1c.png", "登录按钮-1l.png", "登录按钮-1r.png"])
+
+        # 族里有子图读不出：要明说，不能悄悄少导一张
+        def picky(name):
+            if name.endswith("0c.png"):
+                raise ValueError("坏图")
+            return png
+
+        assets.fetch_bytes.side_effect = picky
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(
+                    QFileDialog, "getExistingDirectory", return_value=tmp), \
+                    mock.patch("ui_editor.ui.property_panel.QMessageBox") as box:
+                captured["export_handler"]([base])
+            self.assertEqual(len(list(Path(tmp).iterdir())), 5)  # 6 块少 1
+            message = box.information.call_args[0][2]
+        self.assertIn("子图读不出", message)
+        self.assertIn("0c.png", message)
+        panel.deleteLater()
+
+    def test_family_dialog_maps_by_name_not_order(self):
+        """文件名叫 0l/0c/0r 时按名字对应，选择顺序打乱也不会配错。"""
+        from PySide6.QtWidgets import QDialogButtonBox
+
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{name}.png", 40 + index)
+                     for index, name in enumerate(("0r", "0l", "0c"))]
+            dialog = FamilyImportDialog(None, files, "", "h_state", ".png")
+            dialog._base.setText("combdialog4\\新登陆界面\\登录按钮\\")
+            pairs, error = dialog._family_pairs()
+            self.assertIsNone(error)
+            self.assertEqual([rel for rel, _path in pairs],
+                             ["0l", "0c", "0r"])          # 族内顺序
+            self.assertEqual([Path(path).name for _rel, path in pairs],
+                             ["0l.png", "0c.png", "0r.png"])
+            self.assertIn("按名字对应", dialog._hint.text())
+            self.assertIn("0l.png", dialog._preview.toPlainText())
+            ok = dialog._buttons.button(
+                QDialogButtonBox.StandardButton.Ok)
+            self.assertTrue(ok.isEnabled())
+            dialog.close()
+
+    def test_family_dialog_explains_how_many_images_are_a_button(self):
+        """最容易犯迷糊的地方：3 张 = 1 个状态，不是"必须三态"。"""
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            three = [_write_png(Path(tmp) / f"{name}.png")
+                     for name in ("0l", "0c", "0r")]
+            dialog = FamilyImportDialog(None, three, "", "h_state", ".png")
+            self.assertIn("3 张 = 1 个状态", dialog.summary_text())
+            self.assertIn("拉伸", dialog.summary_text())
+            dialog.close()
+
+            six = [_write_png(Path(tmp) / f"{index}{side}.png", 20 + index)
+                   for index in (0, 1) for side in "lcr"]
+            dialog = FamilyImportDialog(None, six, "", "h_state", ".png")
+            self.assertIn("2 个状态", dialog.summary_text())
+            self.assertIn("常态", dialog.summary_text())
+            dialog.close()
+
+            nine = [_write_png(Path(tmp) / f"{row}-{column}.png",
+                               20 + index)
+                    for index, (row, column) in enumerate(
+                        (r, c) for r in ("top", "middle", "bottom")
+                        for c in ("left", "middle", "right"))]
+            dialog = FamilyImportDialog(None, nine, "", "nine_slice", ".png")
+            self.assertIn("四角不动", dialog.summary_text())
+            dialog.close()
+
+    def test_family_dialog_blocks_four_images_for_a_button(self):
+        from PySide6.QtWidgets import QDialogButtonBox
+
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{index}.png", 20 + index)
+                     for index in range(4)]
+            dialog = FamilyImportDialog(None, files, "", "h_state", ".png")
+            dialog._base.setText("a\\b\\")
+            self.assertIn("不是 3 的倍数", dialog.summary_text())
+            self.assertFalse(dialog._buttons.button(
+                QDialogButtonBox.StandardButton.Ok).isEnabled())
+            dialog.close()
+
+    def test_suggest_free_base_skips_taken_names(self):
+        from ui_editor.ui.image_picker import suggest_free_base
+
+        base = "combdialog4\\新登陆界面\\三态按钮\\登录按钮\\"
+        taken = {base + name + ".png" for name in ("0l", "0c", "0r")}
+        self.assertEqual(suggest_free_base(base, lambda _b: 0), base)
+        self.assertEqual(
+            suggest_free_base(base, lambda candidate: sum(
+                1 for name in ("0l", "0c", "0r")
+                if candidate + name + ".png" in taken)),
+            "combdialog4\\新登陆界面\\三态按钮\\登录按钮_2\\")
+
+    def test_family_dialog_warns_before_overwriting_a_button(self):
+        """目录已经是别的按钮的素材：必须红字说明会替换，并给出换目录的办法。"""
+        from PySide6.QtWidgets import QDialogButtonBox
+
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        base = "combdialog4\\新登陆界面\\三态按钮\\登录按钮\\"
+        taken = {base + name + ".png" for name in ("0l", "0c", "0r")}
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{name}.png", 30 + index)
+                     for index, name in enumerate(("0l", "0c", "0r"))]
+            dialog = FamilyImportDialog(
+                None, files, base, "h_state", ".png",
+                lambda name: name in taken)
+            self.assertIn("已经有 3 张同名图", dialog._warning.text())
+            self.assertIn("替换", dialog._warning.text())
+            self.assertIn("（替换）", dialog._preview.toPlainText())
+            ok = dialog._buttons.button(
+                QDialogButtonBox.StandardButton.Ok)
+            self.assertEqual(ok.text(), "替换 3 张")
+            self.assertTrue(dialog._free_btn.isVisibleTo(dialog))
+            dialog._use_free_base()
+            self.assertEqual(dialog._base.text(),
+                             "combdialog4\\新登陆界面\\三态按钮\\登录按钮_2\\")
+            self.assertEqual(dialog._warning.text(), "")
+            self.assertEqual(ok.text(), "写入新族")
+            dialog.close()
+
+    def test_family_dialog_counts_other_extension_as_conflict(self):
+        """目录里已有 .igs 一族、现在导入 PNG：也必须算冲突。
+
+        只看 self.ext 会漏掉它：保存后目录里 .png 与 .igs 并存，而
+        dir_base 先试 .png——原按钮的图就被顶掉了，「换新目录」还会把
+        这个并不空的目录当成空闲目录。
+        """
+        from PySide6.QtWidgets import QDialogButtonBox
+
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        base = "combdialog4\\新登陆界面\\三态按钮\\登录按钮\\"
+        taken = {base + name + ".igs" for name in ("0l", "0c", "0r")}
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{name}.png", 40 + index)
+                     for index, name in enumerate(("0l", "0c", "0r"))]
+            dialog = FamilyImportDialog(
+                None, files, base, "h_state", ".png",
+                lambda name: name in taken)
+            self.assertIn("已经有 3 张同名图", dialog._warning.text())
+            ok = dialog._buttons.button(
+                QDialogButtonBox.StandardButton.Ok)
+            self.assertEqual(ok.text(), "替换 3 张")
+            dialog._use_free_base()
+            self.assertEqual(dialog._base.text(),
+                             "combdialog4\\新登陆界面\\三态按钮\\登录按钮_2\\")
+            self.assertEqual(ok.text(), "写入新族")
+            dialog.close()
+
+    def test_family_dialog_no_warning_for_a_new_directory(self):
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{name}.png")
+                     for name in ("0l", "0c", "0r")]
+            dialog = FamilyImportDialog(
+                None, files, "新目录\\", "h_state", ".png",
+                lambda _name: False)
+            self.assertEqual(dialog._warning.text(), "")
+            self.assertFalse(dialog._free_btn.isVisibleTo(dialog))
+            dialog.close()
+
+    def test_family_dialog_orders_unknown_names_by_filename(self):
+        """文件名认不出左右/上下时：按文件名自然排序依次对应，并给出命名建议。"""
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / name, 60 + index)
+                     for index, name in enumerate(
+                         ("a.png", "b.png", "c.png"))]
+            dialog = FamilyImportDialog(None, files, "", "h_slice", ".png")
+            dialog._base.setText("a\\b\\")
+            pairs, _error = dialog._family_pairs()
+            self.assertEqual([rel for rel, _path in pairs],
+                             ["left", "middle", "right"])
+            self.assertEqual([Path(path).name for _rel, path in pairs],
+                             ["a.png", "b.png", "c.png"])
+            self.assertIn("已按文件名排序", dialog._hint.text())
+            self.assertIn("命名建议", dialog._hint.text())
+            dialog.close()
+
+    def test_family_dialog_recognises_chinese_piece_names(self):
+        """自己起名也能认：左/中/右、左上/右下 都按名字对应，与选择顺序无关。"""
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            names = ["右", "左", "中"]
+            files = [_write_png(Path(tmp) / f"{name}.png", 70 + index)
+                     for index, name in enumerate(names)]
+            dialog = FamilyImportDialog(None, files, "", "h_state", ".png")
+            pairs, _error = dialog._family_pairs()
+            self.assertEqual([rel for rel, _path in pairs],
+                             ["0l", "0c", "0r"])
+            self.assertEqual([Path(path).name for _rel, path in pairs],
+                             ["左.png", "中.png", "右.png"])
+            self.assertEqual(dialog.order_rule, "alias")
+            self.assertIn("按文件名认出", dialog._hint.text())
+            dialog.close()
+
+    def test_widget_type_wins_over_left_middle_right_names(self):
+        """按钮控件 + 文件叫 left/middle/right：要写 0l/0c/0r，不是横三片。
+
+        写成 left.png/middle.png/right.png，游戏找 0l/0c/0r 就什么也画不出来。
+        """
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{name}.png", 60 + index)
+                     for index, name in enumerate(("left", "middle", "right"))]
+            dialog = FamilyImportDialog(None, files, "", "h_state", ".png")
+            pairs, _error = dialog._family_pairs()
+            self.assertEqual([rel for rel, _p in pairs],
+                             ["0l", "0c", "0r"])
+            self.assertIn("文件名更像", dialog._hint.text())
+            dialog.close()
+
+    def test_nine_slice_names_override_button_default(self):
+        """9 张按 top-left… 命名时，即使控件是按钮也按九片处理。"""
+        from PySide6.QtWidgets import QDialog
+
+        from ui_editor.ui.image_picker import (
+            FamilyImportDialog,
+            ResourcePickerDialog,
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{row}-{column}.png", 20 + index)
+                     for index, (row, column) in enumerate(
+                         (r, c) for r in ("top", "middle", "bottom")
+                         for c in ("left", "middle", "right"))]
+            dialog = ResourcePickerDialog(
+                None, "t", [], "", None,
+                on_stage=lambda _p, _d: None,
+                widget_type="CTextButton",
+                exists=lambda _name: False)
+            seen = {}
+
+            def auto_accept(inner):
+                seen["kind"] = inner._kind.currentData()
+                inner.accept()
+                return QDialog.DialogCode.Accepted
+
+            with mock.patch(
+                    "ui_editor.ui.image_picker.QFileDialog.getOpenFileNames",
+                    return_value=(files, "")), \
+                    mock.patch.object(FamilyImportDialog, "exec", auto_accept):
+                dialog._choose_family()
+            self.assertEqual(seen["kind"], "nine_slice")
+            dialog.close()
+
+    def test_family_dialog_natural_sorts_numbered_names(self):
+        """10.png 不能被排到 2.png 前面。"""
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / name, 80 + index)
+                     for index, name in enumerate(
+                         ("10.png", "2.png", "1.png"))]
+            dialog = FamilyImportDialog(None, files, "", "frames", ".png")
+            pairs, _error = dialog._family_pairs()
+            self.assertEqual([Path(path).name for _rel, path in pairs],
+                             ["1.png", "2.png", "10.png"])
+            self.assertEqual([rel for rel, _path in pairs], ["0", "1", "2"])
+            dialog.close()
+
+    def test_family_dialog_rejects_file_name_as_directory(self):
+        from PySide6.QtWidgets import QDialogButtonBox
+
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{name}.png")
+                     for name in ("0l", "0c", "0r")]
+            dialog = FamilyImportDialog(None, files, "", "h_state", ".png")
+            dialog._base.setText("combdialog4\\新登陆界面\\登录按钮.png")
+            ok = dialog._buttons.button(
+                QDialogButtonBox.StandardButton.Ok)
+            self.assertFalse(ok.isEnabled())
+            self.assertIn("这是文件名", dialog._hint.text())
+            # 补成目录就放行
+            dialog._base.setText("combdialog4\\新登陆界面\\登录按钮")
+            self.assertTrue(ok.isEnabled())
+            self.assertEqual(dialog._normalised_base()[0],
+                             "combdialog4\\新登陆界面\\登录按钮\\")
+            dialog.close()
+
+    def test_new_family_stages_all_pieces_and_selects_directory(self):
+        """3 张图 → 一个按钮：整族挂账、选中目录、候选里只剩族。"""
+        from PySide6.QtWidgets import QDialog
+
+        from ui_editor.ui.image_picker import (
+            FamilyImportDialog,
+            ResourcePickerDialog,
+        )
+
+        base = "combdialog4\\新登陆界面\\三态按钮\\登录按钮\\"
+        staged: dict = {}
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{name}.png", 30 + index)
+                     for index, name in enumerate(("0l", "0c", "0r"))]
+            dialog = ResourcePickerDialog(
+                None, "t", [], "", None,
+                on_stage=lambda path, data: staged.update({path: data}),
+                widget_type="CTextButton",
+                exists=lambda name: False)
+
+            def auto_accept(inner):
+                inner._base.setText(base)
+                inner.accept()
+                return QDialog.DialogCode.Accepted
+
+            with mock.patch(
+                    "ui_editor.ui.image_picker.QFileDialog.getOpenFileNames",
+                    return_value=(files, "")), \
+                    mock.patch.object(FamilyImportDialog, "exec", auto_accept):
+                dialog._choose_family()
+            self.assertEqual(sorted(staged), [base + "0c.png", base + "0l.png",
+                                              base + "0r.png"])
+            self.assertEqual(dialog.selected_path(), base)
+            self.assertEqual(dialog._list.count(), 1)   # 只列族本身
+            self.assertIn("已挂账 3 张子图", dialog._count.text())
+            dialog.close()
+
+    def test_family_payloads_keep_caller_paths_as_keys(self):
+        """payloads 的键必须就是传进来的原串：_stage_family 拿它取图。
+
+        ``str(Path(name))`` 会规范化分隔符（Windows 上前斜杠→反斜杠），
+        两边的键对不上就是 KeyError，新建族整条流程挂掉。
+        """
+        from ui_editor.ui.image_picker import prepare_family_payloads
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{name}.png", 20 + index)
+                     for index, name in enumerate(("0l", "0c", "0r"))]
+            # 带 "./" 的写法：Path 会把它规范化掉，原串不会
+            odd = [f"{tmp}/./{Path(path).name}" for path in files]
+            payloads, ext = prepare_family_payloads(odd)
+            self.assertEqual(ext, ".png")
+            self.assertEqual(set(payloads), set(odd))
+
+    def test_new_family_mixes_igs_and_images_rejected(self):
+        from ui_editor.ui.image_picker import prepare_family_payloads
+
+        with tempfile.TemporaryDirectory() as tmp:
+            png = _write_png(Path(tmp) / "0l.png")
+            igs = Path(tmp) / "0c.igs"
+            igs.write_bytes(b"I0" + b"\x00" * 20)
+            with self.assertRaises(ValueError) as caught:
+                prepare_family_payloads([png, str(igs)])
+            self.assertIn("同一种扩展名", str(caught.exception))
 
     def test_export_writes_png_and_sprite_frames(self):
         import tempfile
