@@ -59,6 +59,25 @@ def _stem(path: str) -> str:
     return name[:name.rfind(".")] if "." in name[1:] else name
 
 
+def suggest_free_base(base: str, conflicts) -> str:
+    """给一个不与包里已有条目相撞的族目录（``…\\登录按钮\\`` → ``…\\登录按钮_2\\``）。
+
+    ``conflicts(candidate_base)`` 返回该目录下已存在的条目数；0 就算空闲。
+    用来给「不想覆盖原按钮」的用户一键换个新目录。
+    """
+    base = base.strip().replace("/", "\\")
+    if not base:
+        return ""
+    if not base.endswith("\\"):
+        base += "\\"
+    stem = base.rstrip("\\")
+    for index in range(0, 51):
+        candidate = base if index == 0 else f"{stem}_{index + 1}\\"
+        if not conflicts(candidate):
+            return candidate
+    return base
+
+
 def prepare_family_payloads(files: list[str]) -> tuple[dict[str, bytes], str]:
     """读取一族图片并统一扩展名：整组 ``.igs`` 原样，其余统一转 PNG。
 
@@ -135,12 +154,22 @@ class FamilyImportDialog(QDialog):
         self._preview.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self._note = QLabel(self)
         self._note.setWordWrap(True)
+        # 覆盖警示：目录已经是别的按钮的素材时，必须说清楚会替换什么。
+        self._warning = QLabel(self)
+        self._warning.setWordWrap(True)
+        self._warning.setStyleSheet("color: #b3261e;")
 
         self._buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok
             | QDialogButtonBox.StandardButton.Cancel, parent=self)
         self._buttons.accepted.connect(self.accept)
         self._buttons.rejected.connect(self.reject)
+        self._free_btn = QPushButton("换个新目录（不覆盖）", self)
+        self._free_btn.setToolTip(
+            "自动挑一个包里还没用过的目录名，例如 登录按钮_2")
+        self._free_btn.clicked.connect(self._use_free_base)
+        self._buttons.addButton(
+            self._free_btn, QDialogButtonBox.ButtonRole.ActionRole)
 
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel(f"选了 {len(self._files)} 张图：", self))
@@ -148,8 +177,11 @@ class FamilyImportDialog(QDialog):
         layout.addWidget(QLabel("族类型：", self))
         layout.addWidget(self._kind)
         layout.addWidget(self._summary)
-        layout.addWidget(QLabel("这一族的目录路径（包里没有它，运行时拼子图）：", self))
+        layout.addWidget(QLabel(
+            "这一族的目录路径：新按钮就写一个新目录名；"
+            "写已有目录 = 替换那个按钮的图。", self))
         layout.addWidget(self._base)
+        layout.addWidget(self._warning)
         layout.addWidget(QLabel("写进包的条目：", self))
         layout.addWidget(self._preview, 1)
         layout.addWidget(self._note)
@@ -221,8 +253,12 @@ class FamilyImportDialog(QDialog):
                         if self._exists(base + rel.replace("/", "\\")
                                         + self.ext)]
         self._summary.setText(self.summary_text())
-        lines = [f"{rel.replace('/', chr(92))}{self.ext}   ←   {Path(path).name}"
-                 for rel, path in pairs]
+        lines = []
+        for rel, path in pairs:
+            mark = "  （替换）" if rel in existing else ""
+            lines.append(
+                f"{rel.replace('/', chr(92))}{self.ext}   ←   "
+                f"{Path(path).name}{mark}")
         self._preview.setPlainText("\n".join(lines))
         notes = []
         if self._matched is not None:
@@ -230,15 +266,43 @@ class FamilyImportDialog(QDialog):
             notes.append(f"文件名对得上【{label}】，按名字对应（与选择顺序无关）。")
         elif error is None:
             notes.append("文件名认不出族内命名，按上图顺序分配。")
-        if existing:
-            notes.append(f"包里已有 {len(existing)} 个同名条目，保存回包时会替换。")
         problem = error or base_error
         if problem:
             notes.append(problem)
         self._hint.setText("\n".join(notes))
         self._note.setText(f"族目录：{base or '（未填）'}" if base else "")
-        self._buttons.button(
-            QDialogButtonBox.StandardButton.Ok).setEnabled(not problem)
+        if existing:
+            self._warning.setText(
+                f"⚠ 这个目录里已经有 {len(existing)} 张同名图（{base}）。\n"
+                "继续并保存回包会替换它们——原来那个按钮的图就变了。\n"
+                "要做「新」按钮：换个没用过的目录名（点下面「换个新目录」），"
+                "控件会自动指向新目录。")
+            self._warning.show()
+        else:
+            self._warning.clear()
+            self._warning.hide()
+        ok = self._buttons.button(QDialogButtonBox.StandardButton.Ok)
+        ok.setText(f"替换 {len(existing)} 张" if existing else "写入新族")
+        self._free_btn.setVisible(bool(existing) and self._exists is not None)
+        ok.setEnabled(not problem)
+
+    def _use_free_base(self) -> None:
+        pairs, _error = self._family_pairs()
+        base, _base_error = self._normalised_base()
+        if not base or self._exists is None:
+            return
+        suffix = self.ext
+
+        def conflicts(candidate: str) -> int:
+            return sum(1 for rel, _path in pairs
+                       if self._exists(candidate + rel.replace("/", "\\")
+                                       + suffix))
+
+        new_base = suggest_free_base(base, conflicts)
+        if new_base and new_base != base:
+            self._base.setText(new_base)
+        else:
+            self._base.setText(base)
 
     def accept(self) -> None:
         base, error = self._normalised_base()
