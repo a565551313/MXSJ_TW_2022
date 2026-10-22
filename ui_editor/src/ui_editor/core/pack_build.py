@@ -737,7 +737,8 @@ def patch_pack_copy_many(archive_path, layouts: dict[str, bytes],
                          protected_paths: Iterable[str | Path] = (),
                          allow_create: bool | Iterable[str] = False,
                          progress=None, cancelled=None,
-                         allow_overwrite_self: bool = False) -> dict:
+                         allow_overwrite_self: bool = False,
+                         verify=None) -> dict:
     """只生成新包（可一次写多个布局）：禁止源包/别名，临时副本验证后原子发布。
 
     构建、补丁或校验失败均不改变源包和已有输出。protected_paths
@@ -750,6 +751,10 @@ def patch_pack_copy_many(archive_path, layouts: dict[str, bytes],
 
     批量导入走这个入口：``layouts`` 里的条目一次复制包体、一次校验、
     一次原子替换，不会为每个布局各写一遍整包。
+
+    ``verify(tmp_path, info)``：**原子替换之前**在临时文件上做的最后一道
+    校验（GUI 用它跑回读）。抛异常即中止，``out_path`` 保持原样——尤其
+    重要的一点：``out_path`` 就是原包时，校验不通过不能已经把原包换掉。
 
     ``allow_overwrite_self``：只给「写回编辑器自己上次写出的那个包」用。
     此时 ``out_path == archive_path`` 是允许的——源包正是上一次的输出，
@@ -815,6 +820,10 @@ def patch_pack_copy_many(archive_path, layouts: dict[str, bytes],
         _verify_copy(src, tmp, layouts, extras,
                      progress=progress, cancelled=cancelled)
         guard_output(out, sources)
+        if verify is not None:
+            # 回读等「内容对不对」的检查也放在替换之前：失败时目标文件
+            # （可能是用户的原包）一个字节都不该动。
+            verify(tmp, info)
         os.replace(tmp, out)
         info["out"] = str(out)
         info["native_layout_storage"] = True

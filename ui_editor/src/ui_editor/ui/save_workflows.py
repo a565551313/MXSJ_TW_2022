@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 
 from ..core import dlg_codec, pack_build, publish
 from ..core.assets import AssetResolver
-from ..core.errors import Cancelled
+from ..core.errors import Cancelled, PackError
 from ..core.output_paths import guard_output
 from ..core.review import referenced_staged_images
 from .save_review import SaveReviewDialog
@@ -246,6 +246,30 @@ class SaveWorkflowsMixin:
         create_paths = set(layouts) - {res_path}
         if pending_import:
             create_paths.add(res_path)
+        read_back = (self._fresh_pack_readback
+                     if encoding == "big5" else
+                     lambda p, r, n: self._fresh_pack_readback(
+                         p, r, n, encoding))
+        verified: dict = {}
+
+        def check_staging(path, info):
+            """原子替换之前校验临时文件（结构 + 回读）。
+
+            以前这一步跑在 ``os.replace`` 之后：校验不过时目标文件已经被
+            换掉了——目标正是原包（宽松模式）时，那就是「校验失败但原包
+            已经毁了」。现在失败就抛，替换不会发生。
+            """
+            result = publish.verify_written_pack(
+                src_pack=src_pack, out_path=path, res_path=res_path,
+                extras=extras, expected_dicts=expected[res_path], info=info,
+                extra_layouts={p: d for p, d in expected.items()
+                               if p != res_path},
+                progress=progress, cancelled=cancelled,
+                read_back=read_back, trusted_copy=True)
+            verified.update(result)
+            if not result.get("ok"):
+                raise PackError(result.get("error") or "写回校验未通过")
+
         info = pack_build.patch_pack_copy_many(
             src_pack, layouts, tmp_out, extra_entries=extras,
             protected_paths=self._pack_sources(
@@ -253,7 +277,8 @@ class SaveWorkflowsMixin:
                 allow=tmp_out if overwrite_self else None),
             allow_create=create_paths or False,
             allow_overwrite_self=overwrite_self,
-            progress=progress, cancelled=cancelled)
+            progress=progress, cancelled=cancelled,
+            verify=check_staging)
         report: dict = {"out": tmp_out, "bytes": info["bytes"],
                         "mode": info["mode"],
                         "layout_added": bool(info.get("layout_added")),
@@ -270,16 +295,9 @@ class SaveWorkflowsMixin:
             src_pack, res_path, layouts[res_path])
         report["target_write"] = target_write.summary
         report["target_write_kind"] = target_write.storage
-        report.update(publish.verify_written_pack(
-            src_pack=src_pack, out_path=tmp_out, res_path=res_path,
-            extras=extras, expected_dicts=expected[res_path], info=info,
-            extra_layouts={path: dicts for path, dicts in expected.items()
-                           if path != res_path},
-            progress=progress, cancelled=cancelled,
-            read_back=(self._fresh_pack_readback
-                       if encoding == "big5" else
-                       lambda p, r, n: self._fresh_pack_readback(
-                           p, r, n, encoding))))
+        # 校验结果来自替换前那次（check_staging），这里只并入报告。
+        report.update(verified)
+        report["ok"] = "error" not in verified
         return report
 
     def _adopt_written_pack(self, report: dict) -> None:
@@ -373,6 +391,16 @@ class SaveWorkflowsMixin:
             self._update_status(
                 "写回已取消：没有写出新包，原包与目标文件都没动。")
             return False
+        except PackError as exc:
+            # 校验在原子替换之前跑：失败时目标文件（可能就是原包）没动过。
+            if released:
+                self.resolver.mount_pack(path, priority=True)
+            target = ("原包" if in_place else
+                      "目标包" if self._is_own_output(path) else "已有文件")
+            QMessageBox.warning(
+                self, "写回校验未通过",
+                f"{exc}\n{target}没有改动，可以继续编辑后重试。")
+            return False
         except Exception as exc:
             if released:
                 self.resolver.mount_pack(path, priority=True)
@@ -384,7 +412,7 @@ class SaveWorkflowsMixin:
             QMessageBox.warning(
                 self, "写回校验未通过",
                 (report or {}).get("error", "未知错误")
-                + "\n新包文件已生成但不可信，请勿替换进客户端。")
+                + "\n目标文件没有改动。")
             return False
         # 迁移在界面线程做（后台线程只写文件与校验）。
         # 先记下保存目标再迁移：adopt 里会刷新标题，晚一步标题就还写着
@@ -400,12 +428,16 @@ class SaveWorkflowsMixin:
             extra_note += (f"，并写入新图 {report.get('images_added', 0)} 张、"
                            f"替换 {report.get('images_replaced', 0)} 张")
         changed = report.get("changed_entries")
+        same_file = Path(path).resolve() == Path(src_pack).resolve()
+        # 同一文件原地写回（宽松模式写原包，或续写自己的输出包）：现在是
+        # 拿「写前的文件」和临时副本比，所以能给出真实条数，不再是「0 条」。
+        prefix = "就地写回，" if same_file else ""
         if changed is None:
-            changed_note = "就地写回，包内条目已更新"
+            changed_note = prefix + "包内条目已更新"
         elif changed:
-            changed_note = f"改变 {changed} 条"
+            changed_note = f"{prefix}改变 {changed} 条"
         else:
-            changed_note = "内容与包内一致"
+            changed_note = f"{prefix}内容与包内一致"
         # 保存成功不再弹模态框：这次设计的目标就是「之后 Ctrl+S 静默写回」。
         # 需要用户动手的（有新图没被引用、没写进包）才弹。
         where = f"原包：{path}" if in_place else f"新包：{path}"

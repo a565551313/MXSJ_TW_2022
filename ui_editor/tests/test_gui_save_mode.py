@@ -346,6 +346,103 @@ class SaveModeTests(unittest.TestCase):
             self.assertFalse(pack.contains("q/q.dlg"),
                              "之前的新包不该被写")
 
+
+    # -- 2026-10-22 PR #74 复核修 ---------------------------------------
+    def test_loose_then_strict_keeps_strict_output_pack(self):
+        """严格模式存过新包后只是切了一圈模式，不能把那个新包忘掉。"""
+        out = str(self.root / "interface_edited.fls")
+        self._save(output=out)
+        self.assertEqual(self.window.doc.output_pack, out)
+        self._switch("loose")
+        self._switch("strict")
+        self.assertEqual(self.window.doc.output_pack, out,
+                         "合法的新包不能被当成本地写回清掉")
+        self.window.doc.roots[0].props["sTitle"] = "again"
+        self._save(output=None)          # 弹路径就返回空，等于「不问就不会存」
+        self.assertEqual(self.asked, [],
+                         "记住了输出包，Ctrl+S 不该再问路径")
+        self.assertEqual(_title(Path(out)), "again")
+
+    def test_loose_confirm_names_origin_not_output(self):
+        """确认框要写「宽松模式真正会改写的那个包」。"""
+        out = str(self.root / "interface_edited.fls")
+        self._save(output=out)
+        box = mock.Mock()
+        box.exec.return_value = QMessageBox.StandardButton.No
+        patcher = mock.patch("ui_editor.ui.save_mode.QMessageBox",
+                             return_value=box)
+        question = patcher.start()
+        question.StandardButton = QMessageBox.StandardButton
+        question.Icon = QMessageBox.Icon
+        try:
+            self.window.choose_save_mode("loose")
+        finally:
+            patcher.stop()
+        text = question.call_args.args[2]
+        self.assertIn(str(self.src.resolve()), text,
+                      "要写原包路径")
+        self.assertNotIn(str(Path(out).resolve()), text,
+                         "不能写那个不会被改写的输出包")
+
+    def test_switch_to_strict_clears_queued_docs_too(self):
+        """队列里还没打开的布局也要跟着切回严格。"""
+        self._switch("loose")
+        self._save()                    # 宽松存一次：output == 原包
+        files = [self._local(f"ui/k{i}.dlg", f"K{i}") for i in range(2)]
+        self._import([(path, f"k/k{i}.dlg") for i, path in enumerate(files)])
+        queued = self.window._pending_imports[str(self.src)]
+        self.assertTrue(all(doc.output_pack for doc in queued.values()),
+                        "宽松模式下排队的布局记住的是原包")
+        self._switch("strict")
+        for res_path, doc in queued.items():
+            self.assertIsNone(doc.output_pack, res_path)
+
+    def test_queued_doc_after_strict_switch_asks_for_output(self):
+        """切回严格后打开队列里的布局再 Ctrl+S：要问输出包，不碰原包。"""
+        self._switch("loose")
+        self._save()
+        files = [self._local(f"ui/m{i}.dlg", f"M{i}") for i in range(2)]
+        self._import([(path, f"m/m{i}.dlg") for i, path in enumerate(files)])
+        self._switch("strict")
+        self.window._open_pending_layout(str(self.src), "m/m1.dlg")
+        before = self.src.read_bytes()
+        out = str(self.root / "interface_edited.fls")
+        self._save(output=out)
+        self.assertEqual(self.asked, ["asked"], "严格模式必须重新问输出包")
+        self.assertEqual(self.src.read_bytes(), before, "原包不能被动")
+        self.assertTrue(Path(out).is_file())
+
+    def test_failed_verification_leaves_origin_untouched(self):
+        """宽松模式下校验失败：原包一个字节都不能动，且提示说清楚。"""
+        self._switch("loose")
+        before = self.src.read_bytes()
+        def read_back(p, r, n, enc="big5"):
+            return ([{"sWidgetType": "WRONG"}], {})
+        with mock.patch.object(MainWindow, "_fresh_pack_readback",
+                               staticmethod(read_back), create=True):
+            self._save()
+        self.assertEqual(self.warnings[0][0], "写回校验未通过")
+        self.assertIn("原包没有改动", self.warnings[0][1])
+        self.assertEqual(self.src.read_bytes(), before)
+        self.assertIsNotNone(self.window.resolver.pack_for(str(self.src)),
+                             "失败后要把放掉的句柄挂回来")
+
+    def test_strict_save_verifies_before_replacing_target(self):
+        """严格模式续写自己的输出包：校验失败也不能把旧包换掉。"""
+        out = self.root / "interface_edited.fls"
+        self._save(output=str(out))
+        good = out.read_bytes()
+        self.window.doc.roots[0].props["sTitle"] = "broken"
+        def read_back(p, r, n, enc="big5"):
+            return ([{"sWidgetType": "WRONG"}], {})
+        with mock.patch.object(MainWindow, "_fresh_pack_readback",
+                               staticmethod(read_back), create=True):
+            self._save(output=str(out))
+        self.assertEqual(self.warnings[0][0], "写回校验未通过")
+        self.assertEqual(out.read_bytes(), good,
+                         "校验不过时目标包保持原样")
+        self.assertEqual(self.window.doc.output_pack, str(out))
+
     def test_front_source_hint_changes_with_mode(self):
         from ui_editor.ui.status_text import place_hint, place_text
 
