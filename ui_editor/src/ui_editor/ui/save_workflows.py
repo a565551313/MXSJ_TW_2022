@@ -119,8 +119,25 @@ class SaveWorkflowsMixin:
         现在能脱离窗口直接测（分析报告建议④）；任一不过填
         ``report["error"]`` 并返回（弹错在对话框层）。
 
-        ``progress``/``cancelled`` 透传给逐条保真校验；取消抛
+        ``progress``/``cancelled`` 透传给写包与逐条校验；取消抛
         :class:`core.errors.Cancelled`（状态不迁移，调用方删未验证产物）。
+
+        这个入口**写文件 + 迁移界面状态**（供测试/脚本用）。窗口里要
+        放在忙碌遮罩后台线程跑的只有 :meth:`_write_pack_copy_file`：
+        后台线程碰控件会卡死或崩，状态迁移由界面线程自己收尾。
+        """
+        report = self._write_pack_copy_file(
+            out_path, progress=progress, cancelled=cancelled)
+        if report is None or not report.get("ok"):
+            return report
+        self._adopt_written_pack(report)
+        return report
+
+    def _write_pack_copy_file(self, out_path: str, *, progress=None,
+                              cancelled=None) -> dict | None:
+        """只写文件 + 校验，**不碰界面状态**（可在后台线程跑）。
+
+        返回的 ``report["plain"]`` 供 :meth:`_adopt_written_pack` 迁移用。
         """
         if self.doc is None or not self.doc.source_pack:
             return None
@@ -130,10 +147,31 @@ class SaveWorkflowsMixin:
         plain = dlg_codec.dump_bytes(
             self.doc.to_dicts(), text_encoding=self.doc.text_encoding)
         tmp_out = str(out_path)
+        expected = self.doc.to_dicts()
+        # 后台线程里**不要**再读文档/控件状态：把这一步需要的两个事实
+        # 在界面线程先抓好，连同字节一起传下去。
+        self._writing_pending_import = bool(self.doc.pending_pack_import)
+        self._writing_encoding = self.doc.text_encoding
+        report = self._write_pack_file(
+            src_pack, res_path, plain, expected, extras, tmp_out,
+            progress=progress, cancelled=cancelled)
+        report["layout_path"] = res_path
+        report["plain"] = plain
+        report["extras"] = sorted(extras)
+        return report
+
+    def _write_pack_file(self, src_pack: str, res_path: str, plain: bytes,
+                         expected: list[dict], extras: dict[str, bytes],
+                         tmp_out: str, *, progress=None,
+                         cancelled=None) -> dict:
+        """落盘 + 校验（不碰界面状态、不读 self.doc）。"""
+        # 写包本身也要进度：复制 614 MB、逐条校验 5.3 万条，机械盘上
+        # 是十几秒到一分钟的活，只转圈会被当成卡死。
         info = pack_build.patch_pack_copy(
             src_pack, res_path, plain, tmp_out, extra_entries=extras,
             protected_paths=self._pack_sources(),
-            allow_create=self.doc.pending_pack_import)
+            allow_create=bool(self._writing_pending_import),
+            progress=progress, cancelled=cancelled)
         report: dict = {"out": tmp_out, "bytes": info["bytes"],
                         "mode": info["mode"],
                         "layout_added": bool(info.get("layout_added")),
@@ -148,15 +186,23 @@ class SaveWorkflowsMixin:
         report["target_write_kind"] = target_write.storage
         report.update(publish.verify_written_pack(
             src_pack=src_pack, out_path=tmp_out, res_path=res_path,
-            extras=extras, expected_dicts=self.doc.to_dicts(), info=info,
+            extras=extras, expected_dicts=expected, info=info,
             progress=progress, cancelled=cancelled,
             read_back=(self._fresh_pack_readback
-                       if self.doc.text_encoding == "big5" else
+                       if self._writing_encoding == "big5" else
                        lambda p, r, n: self._fresh_pack_readback(
-                           p, r, n, self.doc.text_encoding))))
+                           p, r, n, self._writing_encoding))))
+        return report
+
+    def _adopt_written_pack(self, report: dict) -> None:
+        """校验通过后迁移界面状态（**必须在界面线程**调用）。"""
         if not report.get("ok"):
-            return report
-        # 状态迁移：已验证落盘，标记干净并让后续保存续写新包
+            return
+        tmp_out = str(report.get("out"))
+        res_path = str(report.get("layout_path") or "")
+        plain = report.get("plain") or b""
+        extras = report.get("extras") or []
+        # 已验证落盘，标记干净并让后续保存续写新包
         self.resolver.mount_pack(tmp_out, priority=True)
         self._remember_layout(res_path)
         self._add_pack_to_tree(tmp_out, self.resolver.scan_layouts(tmp_out))
@@ -169,7 +215,6 @@ class SaveWorkflowsMixin:
         self.resource_panel.reveal_selection(("pack", tmp_out, res_path))
         self.resolver.discard_staged(list(extras))  # 已进新包，销账
         self._update_title()
-        return report
 
     def save_to_pack_dialog(self) -> None:
         if self.doc is None or not self.doc.source_pack:
@@ -191,7 +236,7 @@ class SaveWorkflowsMixin:
         try:
             report = self.run_busy(
                 "写回资源包并校验…",
-                lambda h: self.write_pack_copy(
+                lambda h: self._write_pack_copy_file(
                     path, progress=h.report, cancelled=lambda: h.cancelled),
                 cancellable=True, cancellable_text="取消（删除未验证的新包）")
         except Cancelled:
@@ -208,6 +253,8 @@ class SaveWorkflowsMixin:
                 (report or {}).get("error", "未知错误")
                 + "\n新包文件已生成但不可信，请勿替换进客户端。")
             return
+        # 迁移在界面线程做（后台线程只写文件与校验）
+        self._adopt_written_pack(report)
         fast = report.get("mode") in ("inplace", "relocated", "added")
         images_note = ""
         if report.get("images_added") or report.get("images_replaced"):

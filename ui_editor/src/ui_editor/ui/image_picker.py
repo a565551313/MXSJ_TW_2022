@@ -96,6 +96,16 @@ def choose_family_kind(names, widget_type: str | None = None) -> str | None:
     return dir_base.guess_kind(len(items), widget_type)
 
 
+def _ancestor_dirs(res_path: str) -> list[str]:
+    """资源路径的各级父目录（以分隔符结尾，``dir_base`` 的基路径写法）。
+
+    ``a/b/c/0.png`` → ``["a\\", "a\\b\\", "a\\b\\c\\"]``（按原串分隔符）。
+    """
+    sep = "\\" if "\\" in res_path else "/"
+    parts = res_path.replace("\\", "/").split("/")[:-1]
+    return [sep.join(parts[:depth]) + sep for depth in range(1, len(parts) + 1)]
+
+
 def _basename(path: str) -> str:
     return path.replace("\\", "/").rstrip("/").split("/")[-1]
 
@@ -570,7 +580,15 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._thumb_timer = QTimer(self)
         self._thumb_timer.setInterval(30)
         self._thumb_timer.timeout.connect(self._fill_thumbs)
-        self._thumb_queue: list[QListWidgetItem] = []
+        # 只给**当前看得到的那几行**解缩略图：真包 2,758 条全解一遍
+        # 要 14 秒，窗口看着就像死了。滚到哪补到哪。
+        self._thumb_done: set[str] = set()
+        self._blank_icon = QIcon(QPixmap(72, 72))
+        self._family_total = 0
+        self._list.verticalScrollBar().valueChanged.connect(
+            self._schedule_thumbs)
+        self._list.horizontalScrollBar().valueChanged.connect(
+            self._schedule_thumbs)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok
@@ -653,18 +671,64 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
             self._export_handler(paths, self)
 
     def add_staged_path(self, res_path: str) -> None:
-        """把一张刚加进来的新图并入列表并选中它。"""
+        """把一张刚加进来的新图并入列表并选中它。
+
+        不再整张列表重建：真包 2,758 行重建一次要 0.2 s 以上，新建一族
+        只多一行图，没必要把整张表推倒。只插这一行，顺手刷新它的各级
+        父目录行（新图可能把半套族补成整族，父行标签要跟着变）。
+        """
         self._family_notes.clear()   # 新图可能把半套族补成整族
         self._staged_paths.add(res_path)
         if res_path not in self._all_paths:
             self._all_paths.insert(0, res_path)
-        self._search.setText("")
-        self._refilter()
+        if self._search.text().strip():
+            self._search.setText("")   # 触发 _refilter（新行已在 _all_paths 里）
+        else:
+            if self._row_of(res_path) < 0:
+                item, _note = self._make_item(res_path)
+                self._list.insertItem(0, item)
+            else:
+                self._refresh_row(res_path)
+            for parent in _ancestor_dirs(res_path):
+                self._refresh_row(parent)
+            self._update_count()
+        self._select_path(res_path)
+        self._schedule_thumbs()
+
+    def _row_of(self, path: str) -> int:
         for row in range(self._list.count()):
             item = self._list.item(row)
-            if item.data(_ROLE_PATH) == res_path:
-                self._list.setCurrentItem(item)
-                break
+            if item is not None and item.data(_ROLE_PATH) == path:
+                return row
+        return -1
+
+    def _select_path(self, path: str) -> None:
+        row = self._row_of(path)
+        if row >= 0:
+            self._list.setCurrentItem(self._list.item(row))
+
+    def _refresh_row(self, path: str) -> None:
+        """就地刷新一行（标签/提示变了，不重建整张表）。"""
+        row = self._row_of(path)
+        if row < 0:
+            return
+        item = self._list.item(row)
+        fresh, _note = self._make_item(path)
+        if item is None:
+            return
+        item.setText(fresh.text())
+        item.setToolTip(fresh.toolTip())
+
+    def _update_count(self) -> None:
+        families = sum(1 for row in range(self._list.count())
+                       if self._list.item(row) is not None
+                       and self._family_note(
+                           str(self._list.item(row).data(_ROLE_PATH))))
+        self._family_total = families
+        note = f"，含 {families} 个拼名族" if families else ""
+        self._count.setText(
+            f"共 {self._list.count()} 个资源{note}"
+            "（包内已有，选完保存回包不丢图）")
 
     def _suggested_path(self, filename: str) -> str:
         """新名字的建议值：沿用当前选中项的目录 + 新文件名。"""
@@ -909,6 +973,36 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._family_notes[path] = note
         return note
 
+    def _make_item(self, path: str) -> tuple[QListWidgetItem, str | None]:
+        """按路径造一行（缩略图留白，稍后按可见范围补）。"""
+        text = _basename(path)
+        note = self._family_note(path)
+        if note:
+            text += f"（{note}）"
+        if path in self._staged_paths:
+            text += "（新）"
+        item = QListWidgetItem(text)
+        item.setData(_ROLE_PATH, path)
+        if dir_base.is_dir_base(path):
+            pieces = None
+            if self._family_pieces is not None:
+                try:
+                    pieces = self._family_pieces(path)
+                except Exception:
+                    pieces = None
+            inside = (f"\n里面有 {len(pieces)} 张："
+                      + "、".join(pieces[:12])
+                      + ("…" if len(pieces) > 12 else "")
+                      if pieces else "")
+            item.setToolTip(
+                f"{path}{inside}\n拼名族：包里没有这个目录条目，"
+                "游戏运行时在其下拼子图；选它=把这个目录路径写进属性，"
+                "导出时按族展开。")
+        else:
+            item.setToolTip(path)
+        item.setIcon(self._blank_icon)
+        return item, note
+
     def _refilter(self) -> None:
         query = self._search.text().strip().lower()
         only_families = self._only_families.isChecked()
@@ -916,51 +1010,90 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                    if (not query or query in p.lower())
                    and (not only_families or dir_base.is_dir_base(p))]
         self._thumb_timer.stop()
+        self._thumb_done.clear()
         self._list.clear()
-        blank = QIcon(QPixmap(72, 72))
         families = 0
         for path in visible:
-            text = _basename(path)
-            note = self._family_note(path)
+            item, note = self._make_item(path)
+            self._list.addItem(item)
             if note:
                 families += 1
-                text += f"（{note}）"
-            if path in self._staged_paths:
-                text += "（新）"
-            item = QListWidgetItem(text, self._list)
-            item.setData(_ROLE_PATH, path)
-            if dir_base.is_dir_base(path):
-                pieces = None
-                if self._family_pieces is not None:
-                    try:
-                        pieces = self._family_pieces(path)
-                    except Exception:
-                        pieces = None
-                inside = (f"\n里面有 {len(pieces)} 张："
-                          + "、".join(pieces[:12])
-                          + ("…" if len(pieces) > 12 else "")
-                          if pieces else "")
-                item.setToolTip(
-                    f"{path}{inside}\n拼名族：包里没有这个目录条目，"
-                    "游戏运行时在其下拼子图；选它=把这个目录路径写进属性，"
-                    "导出时按族展开。")
-            else:
-                item.setToolTip(path)
-            item.setIcon(blank)
+        self._family_total = families
         note = f"，含 {families} 个拼名族" if families else ""
         self._count.setText(
             f"共 {len(visible)} 个资源{note}（包内已有，选完保存回包不丢图）")
-        self._thumb_queue = [self._list.item(r)
-                             for r in range(self._list.count())]
-        if self._thumb_provider is not None and self._thumb_queue:
-            self._thumb_timer.start()
+        self._schedule_thumbs()
+
+    def _first_visible_row(self) -> int:
+        """视口里第一行的序号（二分，O(log n)）。
+
+        不用 ``indexAt``：offscreen/部分平台上它一律返回 −1，会把整个
+        列表当成「都看得见」，缩略图又退回全量解码。图标模式下行优先
+        排布，``visualItemRect`` 的纵坐标随行号单调，可以二分。
+        """
+        lo, hi = 0, self._list.count() - 1
+        while lo < hi:
+            mid = (lo + hi) // 2
+            rect = self._list.visualItemRect(self._list.item(mid))
+            if rect.bottom() < 0:
+                lo = mid + 1
+            else:
+                hi = mid
+        return lo
+
+    def _visible_items(self) -> list[QListWidgetItem]:
+        """当前视口里看得到的行（看不到的不用解图）。
+
+        列表还没排好版（行高为 0）时退回前 40 行，保证表头先出缩略图。
+        """
+        count = self._list.count()
+        if not count:
+            return []
+        if self._list.visualItemRect(self._list.item(0)).height() <= 0:
+            return [self._list.item(r) for r in range(min(count, 40))
+                    if self._list.item(r) is not None]
+        height = self._list.viewport().height()
+        visible: list[QListWidgetItem] = []
+        for row in range(self._first_visible_row(), count):
+            item = self._list.item(row)
+            if item is None:
+                continue
+            if self._list.visualItemRect(item).top() > height:
+                break
+            visible.append(item)
+        return visible
+
+    def resizeEvent(self, event) -> None:  # noqa: N802  列表变大要补图
+        super().resizeEvent(event)
+        self._schedule_thumbs()
+
+    def _schedule_thumbs(self, *_args) -> None:
+        """滚动/改窗口大小/重新过滤后：过 30 ms 给新露出来的行补缩略图。"""
+        if self._thumb_provider is None:
+            return
+        if self._thumb_timer.isActive():
+            return
+        self._thumb_timer.start()
 
     def _fill_thumbs(self) -> None:
-        """分批给当前列表补缩略图（精灵解码不便宜，避免一次卡死）。"""
-        batch, self._thumb_queue = (self._thumb_queue[:_THUMB_BATCH],
-                                    self._thumb_queue[_THUMB_BATCH:])
+        """给**当前可见**的行补缩略图，一批 24 张（精灵解码不便宜）。"""
+        if self._thumb_provider is None:
+            self._thumb_timer.stop()
+            return
+        batch: list[QListWidgetItem] = []
+        for item in self._visible_items():
+            path = str(item.data(_ROLE_PATH))
+            if path in self._thumb_done:
+                continue
+            batch.append(item)
+            if len(batch) >= _THUMB_BATCH:
+                break
+        if not batch:
+            self._thumb_timer.stop()
+            return
         for item in batch:
             path = str(item.data(_ROLE_PATH))
+            self._thumb_done.add(path)
             try:
                 image = self._thumb_provider(path)  # type: ignore[misc]
             except Exception:
@@ -971,5 +1104,9 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                     item.setIcon(QIcon(pixmap.scaled(
                         72, 72, Qt.AspectRatioMode.KeepAspectRatio,
                         Qt.TransformationMode.SmoothTransformation)))
-        if not self._thumb_queue:
+        if not self._visible_items_pending():
             self._thumb_timer.stop()
+
+    def _visible_items_pending(self) -> bool:
+        return any(str(item.data(_ROLE_PATH)) not in self._thumb_done
+                   for item in self._visible_items())

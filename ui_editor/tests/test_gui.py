@@ -521,6 +521,50 @@ class TestSaveToPack(unittest.TestCase):
             self.assertEqual(got[0][0]["sTitle"], "改過的新標題")
 
 
+class TestWritePackCopyThreadSafe(unittest.TestCase):
+    """写文件不碰界面：后台线程跑的部分与状态迁移分开。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def test_file_stage_does_not_touch_ui_state(self):
+        import tempfile
+
+        from ui_editor.ui.main_window import MainWindow
+
+        window = MainWindow()
+        self.addCleanup(window.deleteLater)
+        self.addCleanup(window.close)
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                pack_path = Path(tmp) / "interface_mini.fls"
+                pack_path.write_bytes(_mini_pack_bytes("dialog/cateroom.dlg"))
+                window.open_pack_file(str(pack_path))
+                window._open_pack_layout(
+                    str(pack_path), "dialog/cateroom.dlg")
+                doc = window.doc
+                doc.roots[0].props["sTitle"] = "後台寫檔"
+                doc.dirty = True
+                out = str(Path(tmp) / "patched.fls")
+
+                report = window._write_pack_copy_file(out)
+                self.assertTrue((report or {}).get("ok"), report)
+                # 只写文件：文档仍脏、来源仍是原包、没有挂载新包
+                self.assertTrue(doc.dirty)
+                self.assertEqual(doc.source_pack[0], str(pack_path))
+                self.assertNotIn(out, [str(p) for p in window.resolver.pack_paths])
+
+                window._adopt_written_pack(report)
+                self.assertFalse(doc.dirty)
+                self.assertEqual(doc.source_pack, (out, "dialog/cateroom.dlg"))
+                self.assertIn(out, [str(p) for p in window.resolver.pack_paths])
+        finally:
+            if window.doc is not None:
+                window.doc.dirty = False
+
+
 class TestSaveToPackWithStagedImage(unittest.TestCase):
     """选图窗新加的图被布局引用时，随布局一并写进新包并销账。"""
 
@@ -1447,10 +1491,78 @@ class TestImagePicker(unittest.TestCase):
         self.assertEqual(calls, [])                      # 之后都走缓存
         dialog.close()
 
+    def _many_paths(self, count: int) -> list[str]:
+        return [f"combdialog4\\杂图\\第{index:04d}.png" for index in range(count)]
+
+    def test_thumbnails_only_for_visible_rows(self):
+        """缩略图只解看得见的那几行：真包 2,758 条全解要 14 秒。"""
+        from PySide6.QtGui import QImage
+
+        from ui_editor.ui.image_picker import ResourcePickerDialog
+
+        paths = self._many_paths(300)
+        fetched: list[str] = []
+
+        def thumb(path: str):
+            fetched.append(path)
+            image = QImage(8, 8, QImage.Format.Format_ARGB32)
+            image.fill(0)
+            return image
+
+        dialog = ResourcePickerDialog(None, "t", paths, "", thumb)
+        dialog.resize(760, 540)
+        dialog.show()
+        self._app.processEvents()
+        for _ in range(6):
+            dialog._fill_thumbs()
+        first = len(fetched)
+        self.assertGreater(first, 0)
+        # 一屏多大取决于 offscreen 平台的布局，只要求「远少于总数」且
+        # 补满一屏后再调用也不再多解。
+        self.assertLess(first, len(paths) // 2,
+                        "只该解看得见的那几屏，不能把 300 张都解了")
+        for _ in range(3):
+            dialog._fill_thumbs()
+        self.assertEqual(len(fetched), first, "已补过的行不该重解")
+
+        # 滚到底：新露出来的行补图，但以前解过的不会重解
+        bar = dialog._list.verticalScrollBar()
+        bar.setValue(bar.maximum())
+        self._app.processEvents()
+        for _ in range(5):
+            dialog._fill_thumbs()
+        self.assertGreater(len(fetched), first)
+        self.assertLess(len(fetched), len(paths))
+        self.assertEqual(len(fetched), len(set(fetched)), "同一张图不该解两次")
+        dialog.close()
+
+    def test_add_staged_path_inserts_one_row(self):
+        """挂账一张新图只插一行并选中，不重建整张列表。"""
+        from ui_editor.ui.image_picker import ResourcePickerDialog
+
+        paths = self._many_paths(50)
+        dialog = ResourcePickerDialog(None, "t", paths, "")
+        rebuilt: list[int] = []
+        original = dialog._refilter
+
+        def counting_refilter():
+            rebuilt.append(1)
+            original()
+
+        dialog._refilter = counting_refilter  # type: ignore[method-assign]
+        new_path = "combdialog4\\新图\\刚加的.png"
+        dialog.add_staged_path(new_path)
+        self.assertEqual(rebuilt, [], "不该整表重建")
+        self.assertEqual(dialog._list.count(), 51)
+        self.assertEqual(dialog.selected_path(), new_path)
+        self.assertIn("（新）", dialog._list.item(0).text())
+        dialog.close()
+
     def test_property_panel_lists_dir_base_family(self):
         """属性面板「从资源包选择」要列出拼名族，选中即写进 sFileName。"""
         from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit
 
+        from ui_editor.core import dir_base
         from ui_editor.core.model import Widget
         from ui_editor.ui.property_panel import PropertyPanel
 
@@ -1464,6 +1576,13 @@ class TestImagePicker(unittest.TestCase):
                   for name in ("0l", "0c", "0r", "1l", "1c", "1r")}
         assets.resource_exists.side_effect = (
             lambda name: name.replace("/", "\\") in pieces)
+        # 三个族回调走 resolver 的按路径缓存（真实现会缓存 plan/pieces），
+        # 这里给 Mock 补上同样语义，测试才测的是真实调用链。
+        assets.family_plan.side_effect = (
+            lambda name: dir_base.plan(name, assets.resource_exists))
+        assets.family_pieces.side_effect = (
+            lambda name: dir_base.plan(name, assets.resource_exists).pieces
+            if dir_base.plan(name, assets.resource_exists) else ())
         assets.fetch_image.return_value = None
         assets.pack_paths = []
         panel = PropertyPanel()

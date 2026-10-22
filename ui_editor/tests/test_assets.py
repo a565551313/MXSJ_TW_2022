@@ -197,13 +197,131 @@ class TestAssetResolver(unittest.TestCase):
                 resolver.media_candidates(
                     progress=make_recorder(calls))
                 self.assertTrue(calls, "应有进度回调")
-                self.assertEqual({c[1] for c in calls}, {1})  # 1 条已知布局
-                self.assertEqual(calls[-1][0], 1)
+                # 两段合成一条 0→100 的进度（第一段 0–50、第二段 50–100）
+                self.assertEqual({c[1] for c in calls}, {100})
+                done = [c[0] for c in calls]
+                self.assertEqual(done, sorted(done), "进度不能倒退")
+                self.assertEqual(calls[-1][0], 100)
                 # 缓存命中后不再回调（一次性重活）
                 calls.clear()
                 self.assertEqual(resolver.media_candidates(
                     progress=make_recorder(calls)), ["test/pic.igs"])
                 self.assertEqual(calls, [])
+            finally:
+                resolver.close()
+
+    def test_family_plan_is_cached_per_path(self):
+        """族判定按路径缓存：选图窗每开一次/每敲一个字都问一遍，不能重算。"""
+        png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 8
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "cache.fls"
+            pack_path.write_bytes(build_pack([
+                ("test/btn/0l.png", png), ("test/btn/0c.png", png),
+                ("test/btn/0r.png", png),
+            ]))
+            resolver = AssetResolver()
+            resolver.mount_pack(pack_path)
+            try:
+                calls = []
+                original = resolver.resource_exists
+
+                def counting(name):
+                    calls.append(name)
+                    return original(name)
+
+                resolver.resource_exists = counting   # type: ignore[method-assign]
+                plan = resolver.family_plan("test/btn\\")
+                self.assertIsNotNone(plan)
+                self.assertEqual(plan.kind, "h_state")
+                first = len(calls)
+                self.assertGreater(first, 0)
+                # 第二次（以及 family_pieces）不再问包，直接命中缓存
+                self.assertIs(resolver.family_plan("test/btn\\"), plan)
+                self.assertEqual(resolver.family_plan("test/btn\\").kind,
+                                 "h_state")
+                self.assertEqual(len(calls), first)
+                pieces = resolver.family_pieces("test/btn\\")
+                self.assertEqual(len(pieces), 3)
+                self.assertEqual(len(calls), first)
+                # 非目录型基路径：不问包
+                self.assertIsNone(resolver.family_plan("test/pic.igs"))
+                self.assertEqual(len(calls), first)
+            finally:
+                resolver.close()
+
+    def test_family_plan_cache_invalidated_by_staging(self):
+        """挂账把半套族补成整族后，族判定要跟着变（不能吃旧缓存）。"""
+        png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 8
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "half.fls"
+            pack_path.write_bytes(build_pack([
+                ("test/half/0l.png", png), ("test/half/0c.png", png),
+            ]))
+            resolver = AssetResolver()
+            resolver.mount_pack(pack_path)
+            try:
+                self.assertIsNone(resolver.family_plan("test/half\\"))
+                resolver.stage_image("test/half/0r.png", png)
+                plan = resolver.family_plan("test/half\\")
+                self.assertIsNotNone(plan)
+                self.assertEqual(plan.kind, "h_state")
+                self.assertEqual(len(resolver.family_pieces("test/half\\")), 3)
+                # 销账后又拼不成整族
+                resolver.discard_staged(["test/half/0r.png"])
+                self.assertIsNone(resolver.family_plan("test/half\\"))
+            finally:
+                resolver.close()
+
+    def test_family_pieces_probes_unknown_naming(self):
+        """认不出的命名也要把真实存在的子图列出来（probe 兜底）。"""
+        png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 8
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "odd.fls"
+            pack_path.write_bytes(build_pack([
+                ("test/odd/left1.png", png), ("test/odd/right2.png", png),
+            ]))
+            resolver = AssetResolver()
+            resolver.mount_pack(pack_path)
+            try:
+                self.assertIsNone(resolver.family_plan("test/odd\\"))
+                pieces = resolver.family_pieces("test/odd\\")
+                self.assertEqual(
+                    sorted(name.replace("/", "\\").rsplit("\\", 1)[-1]
+                           for name in pieces),
+                    ["left1.png", "right2.png"])
+            finally:
+                resolver.close()
+
+    def test_media_candidates_reports_filter_phase(self):
+        """第二段（核对资源在不在包里）也要报进度——以前这里停在 100%。"""
+        dlg_plain = dlg_codec.dump_bytes(
+            [{"sWidgetType": "CMainFrame", "sName": "root",
+              "lChildren": [
+                  {"sWidgetType": "CImage", "sFileName": "test/pic.igs"},
+                  {"sWidgetType": "CImage", "sFileName": "test/gone1.png"},
+                  {"sWidgetType": "CImage", "sFileName": "test/gone2.png"}]}],
+            md5="0" * 32)
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "phase.fls"
+            pack_path.write_bytes(build_pack([
+                ("test/pic.igs", make_sprite()),
+                ("booth.dlg", xor4(dlg_plain, b"\x5a\xa5\x11\x7e")),
+            ]))
+            resolver = AssetResolver()
+            resolver.mount_pack(pack_path)
+            try:
+                calls = []
+                resolver.media_candidates(progress=make_recorder(calls))
+                texts = [c[2] for c in calls]
+                self.assertTrue(any("整理包内资源清单" in t for t in texts))
+                self.assertTrue(any("核对资源是否在包内" in t for t in texts))
+                # 扫描段占 0–50、核对段占 50–100，进度条不会卡在 100%
+                scan = [c for c in calls if "第 1 步" in c[2]]
+                check = [c for c in calls if "第 2 步" in c[2]]
+                self.assertTrue(all(c[0] <= 50 for c in scan), scan)
+                self.assertTrue(all(c[0] >= 50 for c in check), check)
+                self.assertEqual({c[1] for c in calls}, {100})
+                self.assertEqual(calls[-1][0], 100)
             finally:
                 resolver.close()
 

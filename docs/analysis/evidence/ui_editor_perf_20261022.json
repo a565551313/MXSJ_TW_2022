@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-22",
+  "purpose": "0.13.6 性能基线：真 interface.fls 上选图窗/清单整理/写包的耗时与进度回调",
+  "pack": {
+    "name": "interface.fls",
+    "bytes": 614482967,
+    "entries": 53556,
+    "layouts": 2708,
+    "media_candidates": 2758,
+    "families": 729
+  },
+  "environment": {
+    "sandbox": "offline Qt offscreen, SSD, 2 vCPU",
+    "python": "3.11",
+    "pyside": "6.7.3"
+  },
+  "before_0_13_5": {
+    "media_candidates_seconds": 2.29,
+    "media_candidates_second_phase_progress": false,
+    "picker_open_first": 1.17,
+    "picker_open_second": 0.88,
+    "thumbnails_all_rows_seconds": 14.6,
+    "add_staged_path": "重建整表 (>0.2 s, 未单独计时)",
+    "save_pack_progress": null
+  },
+  "after_0_13_6": {
+    "media_candidates_seconds": 1.42,
+    "media_candidates_progress": "0→100 两段：第1步读布局 0–50，第2步查包内 50–100",
+    "picker_open_first": 0.07,
+    "picker_open_second": 0.05,
+    "thumbnails_visible_screen_seconds": 0.03,
+    "thumbnails_visible_rows": 24,
+    "add_staged_path_seconds": 0.028,
+    "list_rows_after_stage": 2759,
+    "save_pack_progress_stages": [
+      "写入新包：复制 x/y MB",
+      "写入新图 i/n",
+      "校验新包：逐条比对 i/n",
+      "逐条保真校验 i/n"
+    ],
+    "save_pack_seconds": 3.74,
+    "save_pack_images_added": 3
+  },
+  "notes": [
+    "同一沙箱、同一真包；Windows 机械盘会更慢，所以要按字节/条目报进度。",
+    "缩略图只解当前视口，滚动补图；已解路径记在 _thumb_done。",
+    "save_to_pack_dialog 拆成“写文件（可后台）”与“界面状态迁移（主线程）”。"
+  ]
+}

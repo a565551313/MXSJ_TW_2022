@@ -500,24 +500,22 @@ class PropertyPanel(QWidget):
             frames = assets.fetch_image(path)
             return frames[0] if frames else None
 
+        # 三个回调都走 ``AssetResolver`` 的按路径缓存：729 个族一次 0.4 s，
+        # 以前每开一次选图窗、每敲一个字都重算，第二次打开也不快。
         def family_label(path: str) -> str | None:
-            return dir_base.describe(dir_base.plan(path, assets.resource_exists))
+            return dir_base.describe(assets.family_plan(path))
 
         def family_pieces(path: str) -> list[str] | None:
-            """这个基路径下**实际有哪些子图**。
-
-            先按族规则取整族；拼不成整族时按候选名逐个探测——这样即使
-            命名规则认不出，也能把目录里真实存在的文件列给用户看。
-            """
-            chosen = dir_base.plan(path, assets.resource_exists)
-            if chosen is not None:
-                return [piece.replace("\\", "/").split("/")[-1]
-                        for piece in chosen.pieces]
-            return list(dir_base.probe_pieces(path, assets.resource_exists)) or None
+            """这个基路径下**实际有哪些子图**（拼不成整族也逐个探出来）。"""
+            pieces = assets.family_pieces(path)
+            if not pieces:
+                return None
+            return [piece.replace("\\", "/").split("/")[-1]
+                    for piece in pieces]
 
         def family_kind(path: str) -> str | None:
             """这个基路径按哪种拼名族拼（按钮横片/序号帧…）。"""
-            chosen = dir_base.plan(path, assets.resource_exists)
+            chosen = assets.family_plan(path)
             return chosen.kind if chosen is not None else None
 
         def export_handler(paths: list[str], host=None) -> None:
