@@ -1217,6 +1217,101 @@ class TestImagePicker(unittest.TestCase):
         self.assertEqual(dialog._list.count(), 3)
         dialog.close()
 
+    def test_dir_base_family_listed_and_selectable(self):
+        """目录型基路径（按钮三态）要能选：标签带族说明，选中回写目录路径。"""
+        from ui_editor.ui.image_picker import ResourcePickerDialog
+
+        base = "combdialog4\\新登陆界面\\三态按钮\\登录按钮\\"
+        paths = [base, "combdialog4\\新登陆界面\\底板.png"]
+        dialog = ResourcePickerDialog(
+            None, "t", paths, "", None,
+            family_label=lambda _p: "三态横片 · 2 态")
+        labels = [dialog._list.item(row).text()
+                  for row in range(dialog._list.count())]
+        self.assertIn("登录按钮（三态横片 · 2 态）", labels)
+        self.assertTrue(dialog._only_families.isVisibleTo(dialog))
+        dialog._list.setCurrentItem(dialog._list.item(0))
+        self.assertEqual(dialog.selected_path(), base)
+        self.assertIn("拼名族", dialog._list.item(0).toolTip())
+        # 「只看拼名族」把普通图片滤掉
+        dialog._only_families.setChecked(True)
+        self.assertEqual(dialog._list.count(), 1)
+        dialog.close()
+
+    def test_plain_files_hide_family_filter(self):
+        from ui_editor.ui.image_picker import ResourcePickerDialog
+
+        dialog = ResourcePickerDialog(None, "t", ["a\\b.png"], "")
+        self.assertFalse(dialog._only_families.isVisibleTo(dialog))
+        self.assertEqual(dialog._list.count(), 1)
+        dialog.close()
+
+    def test_property_panel_lists_dir_base_family(self):
+        """属性面板「从资源包选择」要列出拼名族，选中即写进 sFileName。"""
+        from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit
+
+        from ui_editor.core.model import Widget
+        from ui_editor.ui.property_panel import PropertyPanel
+
+        base = "combdialog4\\新登陆界面\\三态按钮\\登录按钮\\"
+        assets = mock.Mock()
+        assets._packs = [object()]
+        assets.candidates_with_staged.return_value = [base, "a\\bg.png"]
+        pieces = {base + name + ".png"
+                  for name in ("0l", "0c", "0r", "1l", "1c", "1r")}
+        assets.resource_exists.side_effect = (
+            lambda name: name.replace("/", "\\") in pieces)
+        assets.fetch_image.return_value = None
+        assets.pack_paths = []
+        panel = PropertyPanel()
+        widget = Widget({"sWidgetType": "CTextButton", "sName": "b",
+                         "sFileName": ""})
+        panel._widget = widget
+        panel.assets = assets
+        edit = QLineEdit()
+        captured: dict = {}
+
+        def fake_dialog(_parent, _title, paths, current="", thumb=None,
+                        on_stage=None, export_handler=None,
+                        family_label=None):
+            captured["paths"] = list(paths)
+            captured["family_label"] = family_label
+            handle = mock.Mock()
+            handle.exec.return_value = QDialog.DialogCode.Accepted
+            handle.selected_path.return_value = base
+            handle.external_requested = False
+            return handle
+
+        def fake_dialog2(_parent, _title, paths, current="", thumb=None,
+                         on_stage=None, export_handler=None,
+                         family_label=None):
+            captured["export_handler"] = export_handler
+            return fake_dialog(_parent, _title, paths, current, thumb,
+                               on_stage, export_handler, family_label)
+
+        with mock.patch("ui_editor.ui.image_picker.ResourcePickerDialog",
+                        side_effect=fake_dialog2):
+            self.assertTrue(panel._browse_from_pack("sFileName", edit))
+        self.assertIn(base, captured["paths"])
+        self.assertIn("三态横片", captured["family_label"](base))
+        self.assertEqual(widget.props["sFileName"], base)
+        self.assertEqual(edit.text(), base)
+
+        # 在选图窗里对拼名族点「导出图片…」：按族内每块子图导出
+        png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 8
+        assets.fetch_bytes.side_effect = lambda name: png
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(
+                    QFileDialog, "getExistingDirectory", return_value=tmp), \
+                    mock.patch.object(QFileDialog, "getSaveFileName") as save, \
+                    mock.patch("ui_editor.ui.property_panel.QMessageBox"):
+                captured["export_handler"]([base])
+            self.assertFalse(save.called)   # 族不该走「另存为单文件」
+            names = sorted(p.name for p in Path(tmp).iterdir())
+            self.assertEqual(names, ["0c.png", "0l.png", "0r.png",
+                                     "1c.png", "1l.png", "1r.png"])
+        panel.deleteLater()
+
     def test_export_writes_png_and_sprite_frames(self):
         import tempfile
 

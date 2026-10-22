@@ -43,6 +43,16 @@ FRAME_MAX = 8
 #: 同族候选扩展名（按优先级；整族同扩展名）
 EXTS = (".png", ".igs")
 
+#: 拼名族 → 给人看的名字（诊断文案、选图窗共用）
+KIND_LABELS = {
+    "h_state": "三态横片",
+    "frames": "序号帧",
+    "nine_slice": "九片",
+    "h_slice": "横三片",
+    "v_slice": "竖三片",
+    "single": "单图",
+}
+
 #: 九片：行 × 列（顺序必须是 nine_slice 要的行优先九块）
 GRID_PIECES = tuple(
     f"{row}/{column}"
@@ -84,6 +94,23 @@ class DirBasePlan:
 def is_dir_base(name: str) -> bool:
     """资源值以斜杠结尾即目录型基路径。"""
     return bool(name) and name.endswith(("\\", "/"))
+
+
+def describe(chosen: DirBasePlan | None) -> str | None:
+    """族的一句话说明（``三态横片 · 2 态`` / ``九片 · 9 块``）。
+
+    给选图窗、状态栏这类只有一行位置的地方用；没有命中返回 None。
+    """
+    if chosen is None:
+        return None
+    label = KIND_LABELS.get(chosen.kind, chosen.kind)
+    if chosen.kind == "h_state":
+        return f"{label} · {chosen.states} 态"
+    if chosen.kind == "frames":
+        return f"{label} · {len(chosen.pieces)} 帧"
+    if chosen.kind == "single":
+        return f"{label} · {chosen.pieces[0].rsplit(chr(92), 1)[-1]}"
+    return f"{label} · {len(chosen.pieces)} 块"
 
 
 def _whole(names: tuple[str, ...], exists: Callable[[str], bool]) -> bool:

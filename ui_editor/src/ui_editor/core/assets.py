@@ -48,6 +48,14 @@ def _scan_media_in_text(text: str) -> set[str]:
 
 
 def _looks_media(text: str) -> bool:
+    """像媒体引用：带目录的文件名，或目录型基路径（结尾分隔符）。
+
+    目录型基路径（``…\\登录按钮\\``）没有扩展名，但确实是控件引用的
+    素材——客户端运行时在其下拼子图。少了这一支，拼名族永远进不了
+    「从资源包选择」的候选清单。
+    """
+    if dir_base.is_dir_base(text):
+        return True
     return (("\\" in text or "/" in text)
             and text.lower().endswith(_MEDIA_EXTS))
 
@@ -443,8 +451,22 @@ class AssetResolver:
                 "gb18030", "surrogateescape")
             found.update(_scan_media_in_text(text))
         self._media_cache = sorted(
-            path for path in found if self._exists(path))
+            path for path in found if self._media_available(path))
         return self._media_cache
+
+    def _media_available(self, path: str) -> bool:
+        """候选能不能用：普通资源看条目在不在，目录型基路径看拼不拼得出整族。
+
+        目录型基路径在包里**没有**这个条目（客户端运行时才拼），拿
+        :meth:`_exists` 判会把它一律滤掉；这里改用与画布同一个
+        :func:`dir_base.plan` 判「整族齐装」。
+        """
+        if not dir_base.is_dir_base(path):
+            return self._exists(path)
+        try:
+            return dir_base.plan(path, self.resource_exists) is not None
+        except ValueError:
+            return False
 
     def candidates_with_staged(
         self, progress: Callable[[int, int, str], None] | None = None

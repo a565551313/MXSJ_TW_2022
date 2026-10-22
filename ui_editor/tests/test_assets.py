@@ -110,6 +110,34 @@ class TestAssetResolver(unittest.TestCase):
             finally:
                 resolver.close()
 
+    def test_media_candidates_include_dir_base_family(self):
+        """目录型基路径（三态按钮）要进候选清单，否则选图窗根本选不到。"""
+        png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 8
+        dlg_plain = dlg_codec.dump_bytes(
+            [{"sWidgetType": "CMainFrame", "sName": "root",
+              "lChildren": [
+                  {"sWidgetType": "CTextButton",
+                   "sFileName": "test/btn\\"},
+                  # 只有 0l、缺 0c/0r：拼不出整族，不能进清单
+                  {"sWidgetType": "CImage", "sFileName": "test/broken\\"}]}],
+            md5="0" * 32)
+        with tempfile.TemporaryDirectory() as tmp:
+            pack_path = Path(tmp) / "fam.fls"
+            pack_path.write_bytes(build_pack([
+                ("test/btn/0l.png", png), ("test/btn/0c.png", png),
+                ("test/btn/0r.png", png), ("test/broken/0l.png", png),
+                ("booth.dlg", xor4(dlg_plain, b"\x5a\xa5\x11\x7e")),
+            ]))
+            resolver = AssetResolver()
+            resolver.mount_pack(pack_path)
+            try:
+                candidates = resolver.media_candidates()
+                self.assertIn("test/btn\\", candidates)
+                self.assertNotIn("test/broken\\", candidates)
+                self.assertNotIn("test/btn/0l.png", candidates)
+            finally:
+                resolver.close()
+
     def test_media_candidates_progress_hook(self):
         # 忙碌遮罩：首次整理清单报真实进度（done 单调 → total）
         dlg_plain = dlg_codec.dump_bytes(

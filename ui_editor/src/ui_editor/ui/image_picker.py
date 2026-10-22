@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from ..core import dir_base
 from ..core.errors import Cancelled
 from .busy import BusyHostMixin, run_busy_or_plain
 
@@ -48,7 +49,8 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                  current: str = "",
                  thumb_provider: Callable[[str], object] | None = None,
                  on_stage: Callable[[str, bytes], None] | None = None,
-                 export_handler: Callable[[list[str], object], None] | None = None):
+                 export_handler: Callable[[list[str], object], None] | None = None,
+                 family_label: Callable[[str], str | None] | None = None):
         super().__init__(parent)
         self.setWindowTitle(title)
         self.resize(760, 540)
@@ -56,6 +58,8 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._thumb_provider = thumb_provider
         self._on_stage = on_stage
         self._export_handler = export_handler
+        # 目录型基路径（拼名族）的一句话说明：回调返回 None 表示不是族。
+        self._family_label = family_label
         self._staged_paths: set[str] = set()
         all_paths = list(paths)
         if current and current not in all_paths:
@@ -66,6 +70,14 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._search.setPlaceholderText("输入关键字过滤，如 底板800")
         self._search.setClearButtonEnabled(True)
         self._search.textChanged.connect(self._refilter)
+        self._only_families = QCheckBox("只看拼名族", self)
+        self._only_families.setToolTip(
+            "目录型基路径（按钮三态 0l/0c/0r、边框 left/middle/right、"
+            "九宫格 top/left …）：包里没有这个条目，游戏运行时在其下拼子图。\n"
+            "选中它会把这个目录路径写进属性。")
+        self._only_families.toggled.connect(self._refilter)
+        self._only_families.setVisible(
+            any(dir_base.is_dir_base(path) for path in all_paths))
         self._count = QLabel(self)
 
         self._list = QListWidget(self)
@@ -115,6 +127,7 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
 
         layout = QVBoxLayout(self)
         layout.addWidget(self._search)
+        layout.addWidget(self._only_families)
         layout.addWidget(self._count)
         layout.addWidget(self._list, 1)
         layout.addLayout(bottom)
@@ -291,23 +304,45 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
             return
         self._stage_one(res_path, data)
 
+    def _family_note(self, path: str) -> str | None:
+        """路径是拼名族时返回一句话说明，否则 None。"""
+        if not dir_base.is_dir_base(path) or self._family_label is None:
+            return None
+        try:
+            return self._family_label(path)
+        except Exception:
+            return None
+
     def _refilter(self) -> None:
         query = self._search.text().strip().lower()
+        only_families = self._only_families.isChecked()
         visible = [p for p in self._all_paths
-                   if not query or query in p.lower()]
+                   if (not query or query in p.lower())
+                   and (not only_families or dir_base.is_dir_base(p))]
         self._thumb_timer.stop()
         self._list.clear()
         blank = QIcon(QPixmap(72, 72))
+        families = 0
         for path in visible:
             text = _basename(path)
+            note = self._family_note(path)
+            if note:
+                families += 1
+                text += f"（{note}）"
             if path in self._staged_paths:
                 text += "（新）"
             item = QListWidgetItem(text, self._list)
             item.setData(_ROLE_PATH, path)
-            item.setToolTip(path)
+            if dir_base.is_dir_base(path):
+                item.setToolTip(
+                    f"{path}\n拼名族：包里没有这个目录条目，游戏运行时在其下"
+                    "拼子图；选它=把这个目录路径写进属性，导出时按族展开。")
+            else:
+                item.setToolTip(path)
             item.setIcon(blank)
+        note = f"，含 {families} 个拼名族" if families else ""
         self._count.setText(
-            f"共 {len(visible)} 个资源（包内已有，选完保存回包不丢图）")
+            f"共 {len(visible)} 个资源{note}（包内已有，选完保存回包不丢图）")
         self._thumb_queue = [self._list.item(r)
                              for r in range(self._list.count())]
         if self._thumb_provider is not None and self._thumb_queue:
