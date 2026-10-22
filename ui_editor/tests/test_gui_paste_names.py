@@ -29,6 +29,10 @@ class TestPasteRenames(unittest.TestCase):
         if self.window.doc is not None:
             self.window.doc.dirty = False
         self.window.close()
+        # 控件复制会把自定义 mime 数据留在全局剪贴板上；沙箱 Qt 在解释器
+        # 退出时回收它可能段错误（base 提交同样复现）。测完就清掉，
+        # 免得下一个测试/退出阶段接手这块全局状态。
+        self._app.clipboard().clear()
         self.window.deleteLater()
         self._app.processEvents()
 

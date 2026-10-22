@@ -40,76 +40,21 @@ class SaveWorkflowsMixin:
         if self.doc is None:
             return
         if self.doc.source_path:
+            # 散装 .dlg 本来就是覆盖自己的文件，两种模式一致。
             self._write_to(self.doc.source_path)
         elif self.doc.source_pack:
-            target = self.doc.output_pack
-            if not target:
-                target = self._ask_output_pack()
+            if self._loose_mode():
+                # 宽松模式：所有改动写入原包，不再问输出包、也不生成新包。
+                target = self._save_target_pack() or self.doc.source_pack[0]
+            else:
+                target = self.doc.output_pack
                 if not target:
-                    return
+                    target = self._ask_output_pack()
+                    if not target:
+                        return
             self._save_to_pack(target)
         else:
             self.save_as()
-
-    # -- 包内布局：记住输出包 ------------------------------------------
-    def _own_output_pack(self) -> Path | None:
-        """当前文档自己写出来的推广包（不是源；允许被下次保存覆盖）。"""
-        if self.doc is None or not self.doc.output_pack:
-            return None
-        try:
-            return Path(self.doc.output_pack).resolve()
-        except OSError:
-            return None
-
-    def _is_own_output(self, path: str) -> bool:
-        """这次要写的是不是编辑器自己上次写出来的那个包。"""
-        if self.doc is None or not self.doc.output_pack:
-            return False
-        try:
-            return Path(path).resolve() == Path(self.doc.output_pack).resolve()
-        except OSError:
-            return False
-
-    def _default_output_pack(self) -> str:
-        """第一次保存的默认名字：``<原包名>_edited.fls``，不再叠 _patched。"""
-        source = ""
-        if self.doc is not None:
-            source = str(self.doc.origin_pack or
-                         (self.doc.source_pack[0]
-                          if self.doc.source_pack else ""))
-        if not source:
-            return ""
-        folder = Path(source).parent
-        stem = Path(source).stem
-        for suffix in ("_edited", "_patched"):
-            while stem.lower().endswith(suffix):
-                stem = stem[: -len(suffix)]
-        taken = {str(Path(source).resolve())}
-        own = self._own_output_pack()
-        if own is not None:
-            taken.add(str(own))
-        for index in range(1, 100):
-            name = (f"{stem}_edited.fls" if index == 1
-                    else f"{stem}_edited{index}.fls")
-            candidate = folder / name
-            if str(candidate.resolve()) in taken:
-                continue
-            if not candidate.exists():
-                return str(candidate)
-        return str(folder / f"{stem}_edited.fls")
-
-    def _ask_output_pack(self) -> str | None:
-        path, _ = QFileDialog.getSaveFileName(
-            self, "保存为新资源包（原包不动，下次 Ctrl+S 直接写这里）",
-            self._default_output_pack(),
-            "资源包 (*.fls);;所有文件 (*)")
-        return path or None
-
-    def _report_save_target(self, path: str) -> None:
-        if self.doc is None:
-            return
-        self.doc.output_pack = str(path)
-        self._update_title()
 
     # -- 写回资源包 ---------------------------------------------------
     def _referenced_staged_images(self) -> dict[str, bytes]:
@@ -119,14 +64,19 @@ class SaveWorkflowsMixin:
         return referenced_staged_images(self.doc.to_dicts(),
                                         self.resolver.staged_images())
 
-    def _confirm_save_review(self, target: str, *, to_pack: bool) -> bool:
+    def _confirm_save_review(self, target: str, *, to_pack: bool,
+                             in_place: bool = False) -> bool:
         """保存前清单：数据部分在 `core.publish.save_review_plan`，这里只弹窗。"""
         if self.doc is None:
             return False
         try:
-            guard_output(target, self._pack_sources(for_pack_write=to_pack))
-            pack_path, res_path = (self.doc.source_pack
-                                   if self.doc.source_pack else (None, None))
+            guard_output(target, self._pack_sources(
+                for_pack_write=to_pack,
+                allow=target if in_place else None))
+            pack_path, res_path = (
+                (self._save_target_pack() or self.doc.source_pack[0],
+                 self.doc.source_pack[1])
+                if self.doc.source_pack else (None, None))
             extra_layouts = (self._pending_layout_dicts(pack_path)
                              if pack_path else {})
             extra_layouts.pop(res_path, None)
@@ -155,7 +105,8 @@ class SaveWorkflowsMixin:
             dialog = SaveReviewDialog(target, self.doc.changes(), plan.issues,
                                       plan.images, to_pack=to_pack,
                                       parent=self, layout_notice=plan.notice,
-                                      layouts=plan.layouts)
+                                      layouts=plan.layouts,
+                                      in_place=in_place)
             return dialog.exec() == QDialog.Accepted
         except (OSError, ValueError) as exc:
             QMessageBox.warning(self, "保存前检查失败", str(exc))
@@ -206,7 +157,7 @@ class SaveWorkflowsMixin:
         extra_layouts = {}
         source_pack = None
         if self.doc is not None and self.doc.source_pack:
-            source_pack = self.doc.source_pack[0]
+            source_pack = self._save_target_pack() or self.doc.source_pack[0]
             extra_layouts = self._pending_layout_dicts(source_pack)
             extra_layouts.pop(self.doc.source_pack[1], None)
         report = self._write_pack_copy_file(
@@ -243,7 +194,8 @@ class SaveWorkflowsMixin:
             pending_import = bool(self.doc.pending_pack_import)
         if encoding is None:
             encoding = self.doc.text_encoding
-        src_pack, res_path = self.doc.source_pack
+        src_pack = self._save_target_pack() or self.doc.source_pack[0]
+        res_path = self.doc.source_pack[1]
         extras = self._referenced_staged_images()
         self._require_save_encoding(extras)
         plain = dlg_codec.dump_bytes(
@@ -260,7 +212,8 @@ class SaveWorkflowsMixin:
         report = self._write_pack_file(
             src_pack, res_path, layouts, expected, extras, tmp_out,
             pending_import=pending_import, encoding=encoding,
-            overwrite_self=self._is_own_output(tmp_out),
+            overwrite_self=(self._is_own_output(tmp_out)
+                            or self._is_source_pack_target(tmp_out)),
             progress=progress, cancelled=cancelled)
         report["layout_path"] = res_path
         report["layout_paths"] = list(layouts)
@@ -295,7 +248,9 @@ class SaveWorkflowsMixin:
             create_paths.add(res_path)
         info = pack_build.patch_pack_copy_many(
             src_pack, layouts, tmp_out, extra_entries=extras,
-            protected_paths=self._pack_sources(for_pack_write=True),
+            protected_paths=self._pack_sources(
+                for_pack_write=True,
+                allow=tmp_out if overwrite_self else None),
             allow_create=create_paths or False,
             allow_overwrite_self=overwrite_self,
             progress=progress, cancelled=cancelled)
@@ -384,8 +339,10 @@ class SaveWorkflowsMixin:
         """把当前布局写进 ``path`` 这个新包（原包只读）。"""
         if self.doc is None or not self.doc.source_pack:
             return False
-        src_pack, res_path = self.doc.source_pack
-        if not self._confirm_save_review(path, to_pack=True):
+        src_pack = self._save_target_pack() or self.doc.source_pack[0]
+        res_path = self.doc.source_pack[1]
+        in_place = self._is_source_pack_target(path)
+        if not self._confirm_save_review(path, to_pack=True, in_place=in_place):
             return False
         # 这两个事实在界面线程抓好再交给后台：后台只写文件、不回头读文档。
         pending_import = bool(self.doc.pending_pack_import)
@@ -396,7 +353,8 @@ class SaveWorkflowsMixin:
         # Windows 不能 os.replace 覆盖打开中的文件：写前放掉句柄，写后挂回。
         released = False
         if (Path(path).resolve() == Path(src_pack).resolve()
-                and self._is_own_output(path)):
+                and (self._is_own_output(path) or in_place)):
+            # 宽松模式改写原包同样要先放手：Windows 不允许覆盖打开中的文件。
             released = self.resolver.release_pack(path)
         self._update_status("正在写回资源包并校验…")
         try:
@@ -450,13 +408,14 @@ class SaveWorkflowsMixin:
             changed_note = "内容与包内一致"
         # 保存成功不再弹模态框：这次设计的目标就是「之后 Ctrl+S 静默写回」。
         # 需要用户动手的（有新图没被引用、没写进包）才弹。
+        where = f"原包：{path}" if in_place else f"新包：{path}"
         if unused:
             shown = "\n".join(f"· {name}" for name in unused[:6])
             if len(unused) > 6:
                 shown += f"\n· ……等共 {len(unused)} 张"
             QMessageBox.warning(
-                self, "已生成新包（有新图未写入）",
-                f"已写回：{res_path}\n新包：{path}\n\n"
+                self, "已写回（有新图未写入）",
+                f"已写回：{res_path}\n{where}\n\n"
                 f"⚠ 有 {len(unused)} 张「把图片放进包」的图片未被当前布局"
                 "引用，未写入新包：\n" + shown +
                 "\n\n要写入：先在本布局的控件上把图片改选为上面列出的"
@@ -467,6 +426,12 @@ class SaveWorkflowsMixin:
             return True
         batch = int(report.get("batch_size") or 0)
         batch_note = f"，连同 {batch} 个导入布局一起写入" if batch else ""
+        if in_place:
+            self._update_status(
+                f"已直接写回原包：{res_path} → {Path(path).name}"
+                f"（{changed_note}{extra_note}{batch_note}）。"
+                "宽松模式：没有留备份。")
+            return True
         if not had_output:
             self._update_status(
                 f"已写回：{res_path} → {Path(path).name}"
@@ -496,42 +461,6 @@ class SaveWorkflowsMixin:
         self.doc.origin_pack = None
         self._update_title()
         return True
-
-    def _pack_sources(self, *, for_pack_write: bool = False) -> list[Path]:
-        """受保护的源包：游戏原包、其它已挂载包、同目录里还没挂载的包。
-
-        只有**写回资源包**（``for_pack_write=True``）时，当前文档自己写出来
-        的输出包不算源——它是这次的保存目标；不排除的话，第二次 Ctrl+S 会被
-        `guard_output` 当成「覆盖源资源」拒掉（实测）。**另存为散装 .dlg**
-        时必须继续保护它：否则选中上次的输出包，`.fls` 会被整包写成 `.dlg`
-        明文，包里几十万条资源一次丢光。
-        """
-        sources = list(self.resolver.pack_paths)
-        if self.doc and self.doc.source_pack:
-            sources.append(Path(self.doc.source_pack[0]))
-        # 同一客户端资源目录中尚未挂载的包也不能被另存覆盖。
-        directories = {source.parent for source in sources}
-        for directory in directories:
-            try:
-                sources.extend(path for path in directory.iterdir()
-                               if path.suffix.lower() == ".fls")
-            except OSError:
-                continue
-        own = self._own_output_pack() if for_pack_write else None
-        kept: list[Path] = []
-        seen: set[str] = set()
-        for path in sources:
-            try:
-                resolved = str(path.resolve())
-            except OSError:
-                resolved = str(path)
-            if own is not None and resolved == str(own):
-                continue
-            if resolved in seen:
-                continue
-            seen.add(resolved)
-            kept.append(path)
-        return kept
 
     def _write_to(self, path: str) -> bool:
         if self.doc is None:

@@ -10,6 +10,8 @@ UI_DIR = Path(__file__).resolve().parents[1] / "src" / "ui_editor" / "ui"
 GROUPS = {
     "main_window.py": "MainWindow",
     "commands.py": "EditingCommandsMixin",
+    "save_mode.py": "SaveModeMixin",
+    "save_targets.py": "SaveTargetsMixin",
     "save_workflows.py": "SaveWorkflowsMixin",
     "tab_menu.py": "TabMenuMixin",
     "replace_layout.py": "ReplaceLayoutMixin",
@@ -48,9 +50,9 @@ class WindowStructureTests(unittest.TestCase):
         window = class_node("main_window.py")
         self.assertEqual([base.id for base in window.bases], [
             "BusyHostMixin", "EditingCommandsMixin", "FileWorkflowsMixin",
-            "ImportQueueMixin", "SaveWorkflowsMixin", "SourceActionsMixin",
-            "TabMenuMixin", "ReplaceLayoutMixin", "WindowSetupMixin",
-            "QMainWindow",
+            "ImportQueueMixin", "SaveModeMixin", "SaveTargetsMixin",
+            "SaveWorkflowsMixin", "SourceActionsMixin", "TabMenuMixin",
+            "ReplaceLayoutMixin", "WindowSetupMixin", "QMainWindow",
         ])
         for filename in GROUPS:
             if filename == "main_window.py":
