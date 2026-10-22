@@ -74,7 +74,11 @@ class SourceActionsMixin:
         if not self.resolver.has_sources and not self._layout_dirs:
             QMessageBox.information(self, "刷新", "请先打开布局文件、目录或资源包。")
             return
+        # 待入新包的布局不在源包里，重读只会读到旧内容或直接失败：
+        # 保留它们，也不因为它们拦刷新。
         for doc in self._dirty_docs():
+            if doc.pending_pack_import:
+                continue
             if not self._confirm_discard(doc):
                 return
         try:
@@ -96,6 +100,7 @@ class SourceActionsMixin:
             self._add_pack_to_tree(path, names)
         for root in self._layout_dirs:
             self.resource_panel.add_loose_dir(root)
+        self._restore_pending_items()
         self.resource_panel._apply_search(self.resource_panel._search.text())
         # 逐标签换上重读内容（清选择快照）；活动标签同步界面。
         pairs = ([(s, s.doc) for s in self._sessions]
@@ -141,6 +146,10 @@ class SourceActionsMixin:
             for i, (_session, was) in enumerate(pairs):
                 if was is None or not (was.source_path or was.source_pack):
                     docs.append(None)  # 无来源（如新建页）：跳过保留
+                    continue
+                if was.pending_pack_import:
+                    # 还没写进源包：保留内存里的内容，别去包里读旧的
+                    docs.append(None)
                     continue
                 handle.report(1, 3, f"重读布局 {i + 1}/{len(pairs)}…")
                 data = self._source_bytes(was, fresh)

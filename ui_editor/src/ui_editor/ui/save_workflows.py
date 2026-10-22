@@ -127,6 +127,9 @@ class SaveWorkflowsMixin:
             guard_output(target, self._pack_sources())
             pack_path, res_path = (self.doc.source_pack
                                    if self.doc.source_pack else (None, None))
+            extra_layouts = (self._pending_layout_dicts(pack_path)
+                             if pack_path else {})
+            extra_layouts.pop(res_path, None)
             plan = publish.save_review_plan(
                 target=target, to_pack=to_pack,
                 issues=self._layout_diagnostics(),
@@ -134,6 +137,10 @@ class SaveWorkflowsMixin:
                 extras=self._referenced_staged_images(),
                 pack_path=pack_path, res_path=res_path,
                 pending_pack_import=self.doc.pending_pack_import,
+                extra_layouts={
+                    path: dlg_codec.dump_bytes(
+                        dicts, text_encoding=self.doc.text_encoding)
+                    for path, dicts in extra_layouts.items()},
                 new_plain=dlg_codec.dump_bytes(
                     self.doc.to_dicts(), text_encoding=self.doc.text_encoding))
             # 「记住输出包」之后的日常保存不再每次拦一道清单：清单里的
@@ -141,13 +148,14 @@ class SaveWorkflowsMixin:
             # 能看，不该每次都拦一次保存。只有确实有新东西要用户确认
             # （待写入的新图、导入布局待入包）才弹。
             repeat = self.doc.output_pack == str(target)
-            quiet = (repeat and not plan.images
+            quiet = (repeat and not plan.images and not plan.layouts
                      and not self.doc.pending_pack_import)
             if quiet:
                 return True
             dialog = SaveReviewDialog(target, self.doc.changes(), plan.issues,
                                       plan.images, to_pack=to_pack,
-                                      parent=self, layout_notice=plan.notice)
+                                      parent=self, layout_notice=plan.notice,
+                                      layouts=plan.layouts)
             return dialog.exec() == QDialog.Accepted
         except (OSError, ValueError) as exc:
             QMessageBox.warning(self, "保存前检查失败", str(exc))
@@ -195,21 +203,35 @@ class SaveWorkflowsMixin:
         放在忙碌遮罩后台线程跑的只有 :meth:`_write_pack_copy_file`：
         后台线程碰控件会卡死或崩，状态迁移由界面线程自己收尾。
         """
+        extra_layouts = {}
+        source_pack = None
+        if self.doc is not None and self.doc.source_pack:
+            source_pack = self.doc.source_pack[0]
+            extra_layouts = self._pending_layout_dicts(source_pack)
+            extra_layouts.pop(self.doc.source_pack[1], None)
         report = self._write_pack_copy_file(
-            out_path, progress=progress, cancelled=cancelled)
+            out_path, extra_layouts=extra_layouts,
+            progress=progress, cancelled=cancelled)
         if report is None or not report.get("ok"):
             return report
+        report["source_pack"] = source_pack
+        report["batch_size"] = len(extra_layouts)
         self._adopt_written_pack(report)
         return report
 
     def _write_pack_copy_file(self, out_path: str, *,
                               pending_import: bool | None = None,
                               encoding: str | None = None,
+                              extra_layouts: dict[str, list[dict]] | None = None,
                               progress=None,
                               cancelled=None) -> dict | None:
         """只写文件 + 校验，**不碰界面状态/控件**（可在后台线程跑）。
 
         返回的 ``report["plain"]`` 供 :meth:`_adopt_written_pack` 迁移用。
+
+        ``extra_layouts``：批量导入待入新包的其它布局（``{包内路径: 字典}``），
+        和当前布局一次复制包体、一次校验、一次原子替换写进去——不是每个
+        布局各写一遍整包。
 
         ``pending_import`` / ``encoding`` 由调用方（界面线程）抓好再传进来：
         后台线程再回头读文档会有竞态，两次并发写也会互相覆盖。不传时在这里
@@ -227,23 +249,37 @@ class SaveWorkflowsMixin:
         plain = dlg_codec.dump_bytes(
             self.doc.to_dicts(), text_encoding=encoding)
         tmp_out = str(out_path)
-        expected = self.doc.to_dicts()
+        layouts = {res_path: plain}
+        expected = {res_path: self.doc.to_dicts()}
+        for path, dicts in (extra_layouts or {}).items():
+            if path == res_path:
+                continue
+            layouts[path] = dlg_codec.dump_bytes(
+                dicts, text_encoding=encoding)
+            expected[path] = dicts
         report = self._write_pack_file(
-            src_pack, res_path, plain, expected, extras, tmp_out,
+            src_pack, res_path, layouts, expected, extras, tmp_out,
             pending_import=pending_import, encoding=encoding,
             overwrite_self=self._is_own_output(tmp_out),
             progress=progress, cancelled=cancelled)
         report["layout_path"] = res_path
+        report["layout_paths"] = list(layouts)
         report["plain"] = plain
         report["extras"] = sorted(extras)
         return report
 
-    def _write_pack_file(self, src_pack: str, res_path: str, plain: bytes,
-                         expected: list[dict], extras: dict[str, bytes],
-                         tmp_out: str, *, pending_import: bool,
-                         encoding: str, overwrite_self: bool = False,
+    def _write_pack_file(self, src_pack: str, res_path: str,
+                         layouts: dict[str, bytes],
+                         expected: dict[str, list[dict]],
+                         extras: dict[str, bytes], tmp_out: str, *,
+                         pending_import: bool, encoding: str,
+                         overwrite_self: bool = False,
                          progress=None, cancelled=None) -> dict:
         """落盘 + 校验（不碰界面状态、不读 self.doc）。
+
+        ``layouts`` 是这次要写进新包的全部布局（``{包内路径: 明文}``）；
+        ``res_path`` 是当前文档自己的那条，报告的 ``target_write``
+        只描述它。
 
         ``pending_import`` / ``encoding`` / ``overwrite_self`` 是显式参数，
         不再挂在 ``self`` 上：每次写包各用各的值，互不串味。
@@ -251,8 +287,8 @@ class SaveWorkflowsMixin:
         """
         # 写包本身也要进度：复制 614 MB、逐条校验 5.3 万条，机械盘上
         # 是十几秒到一分钟的活，只转圈会被当成卡死。
-        info = pack_build.patch_pack_copy(
-            src_pack, res_path, plain, tmp_out, extra_entries=extras,
+        info = pack_build.patch_pack_copy_many(
+            src_pack, layouts, tmp_out, extra_entries=extras,
             protected_paths=self._pack_sources(),
             allow_create=pending_import,
             allow_overwrite_self=overwrite_self,
@@ -260,18 +296,24 @@ class SaveWorkflowsMixin:
         report: dict = {"out": tmp_out, "bytes": info["bytes"],
                         "mode": info["mode"],
                         "layout_added": bool(info.get("layout_added")),
+                        "layouts_added": list(info.get("layouts_added") or []),
+                        "layouts_replaced": list(
+                            info.get("layouts_replaced") or []),
                         "native_layout_storage": bool(
                             info.get("native_layout_storage")),
                         "images_added": len(info["images_added"]),
                         "images_replaced": len(info["images_replaced"])}
         staged_all = set(self.resolver.staged_images())
         report["staged_unreferenced"] = sorted(staged_all - set(extras))
-        target_write = publish.classify_target_path(src_pack, res_path, plain)
+        target_write = publish.classify_target_path(
+            src_pack, res_path, layouts[res_path])
         report["target_write"] = target_write.summary
         report["target_write_kind"] = target_write.storage
         report.update(publish.verify_written_pack(
             src_pack=src_pack, out_path=tmp_out, res_path=res_path,
-            extras=extras, expected_dicts=expected, info=info,
+            extras=extras, expected_dicts=expected[res_path], info=info,
+            extra_layouts={path: dicts for path, dicts in expected.items()
+                           if path != res_path},
             progress=progress, cancelled=cancelled,
             read_back=(self._fresh_pack_readback
                        if encoding == "big5" else
@@ -295,6 +337,8 @@ class SaveWorkflowsMixin:
         self.resolver.mount_pack(tmp_out, priority=True)
         self._remember_layout(res_path)
         self._add_pack_to_tree(tmp_out, self.resolver.scan_layouts(tmp_out))
+        source_pack = report.get("source_pack") or (
+            self.doc.source_pack[0] if self.doc.source_pack else None)
         self.doc.pending_pack_import = False
         self.resource_panel.clear_pending()
         if self.doc.origin_pack is None and self.doc.source_pack:
@@ -302,6 +346,10 @@ class SaveWorkflowsMixin:
         self.doc.mark_saved()
         self.doc.source_bytes = plain
         self.doc.source_pack = (tmp_out, res_path)
+        # 批量导入的布局也一起销账：它们已经在新包里，队列清空，
+        # 打开的标签改成「来自新包」。树上的叶子按写出的清单补齐。
+        self._adopt_pending_batch(source_pack, tmp_out,
+                                  report.get("layout_paths") or [res_path])
         self.resource_panel.expand_pack(tmp_out)
         self.resource_panel.reveal_selection(("pack", tmp_out, res_path))
         self.resolver.discard_staged(list(extras))  # 已进新包，销账
@@ -330,19 +378,23 @@ class SaveWorkflowsMixin:
         """把当前布局写进 ``path`` 这个新包（原包只读）。"""
         if self.doc is None or not self.doc.source_pack:
             return False
-        res_path = self.doc.source_pack[1]
+        src_pack, res_path = self.doc.source_pack
         if not self._confirm_save_review(path, to_pack=True):
             return False
         # 这两个事实在界面线程抓好再交给后台：后台只写文件，不再回头读
         # 文档状态；两次写包也不会互相覆盖（各用各的参数）。
         pending_import = bool(self.doc.pending_pack_import)
         encoding = self.doc.text_encoding
+        # 批量导入的布局和当前布局一起写：一次复制、一次校验、一次替换。
+        extra_layouts = self._pending_layout_dicts(src_pack)
+        extra_layouts.pop(res_path, None)
         self._update_status("正在写回资源包并校验…")
         try:
             report = self.run_busy(
                 "写回资源包并校验…",
                 lambda h: self._write_pack_copy_file(
                     path, pending_import=pending_import, encoding=encoding,
+                    extra_layouts=extra_layouts,
                     progress=h.report, cancelled=lambda: h.cancelled),
                 cancellable=True, cancellable_text="取消（不写新包）")
         except Cancelled:
@@ -364,6 +416,8 @@ class SaveWorkflowsMixin:
         # 先记下保存目标再迁移：adopt 里会刷新标题，晚一步标题就还写着
         # 「还没写回新包」。
         had_output = bool(self.doc.output_pack)
+        report["source_pack"] = src_pack
+        report["batch_size"] = len(extra_layouts)
         self.doc.output_pack = str(path)
         self._adopt_written_pack(report)
         unused = report.get("staged_unreferenced") or []
@@ -395,16 +449,18 @@ class SaveWorkflowsMixin:
                 f"已写回 {res_path} → {Path(path).name}，"
                 f"但有 {len(unused)} 张新图没被引用、未写进包。")
             return True
+        batch = int(report.get("batch_size") or 0)
+        batch_note = f"，连同 {batch} 个导入布局一起写入" if batch else ""
         if not had_output:
             self._update_status(
                 f"已写回：{res_path} → {Path(path).name}"
-                f"（{changed_note}{extra_note}）。"
+                f"（{changed_note}{extra_note}{batch_note}）。"
                 "安装时先备份原包、再把新包改名替换；以后 Ctrl+S 直接写回"
                 "这个包，不再询问。")
         else:
             self._update_status(
                 f"已写回：{res_path} → {Path(path).name}"
-                f"（{changed_note}{extra_note}）。")
+                f"（{changed_note}{extra_note}{batch_note}）。")
         return True
 
     def save_as(self, path: str | None = None) -> bool:

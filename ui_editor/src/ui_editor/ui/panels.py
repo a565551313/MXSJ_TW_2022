@@ -102,7 +102,7 @@ class ResourceTreePanel(QWidget):
         self._tree.itemDoubleClicked.connect(self._on_double_click)
         self._tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._tree.customContextMenuRequested.connect(self._show_context_menu)
-        self._pending_item: QTreeWidgetItem | None = None
+        self._pending_items: list[QTreeWidgetItem] = []
         layout.addWidget(self._tree, 1)
         self._roots: dict[tuple[str, str], QTreeWidgetItem] = {}
 
@@ -121,40 +121,69 @@ class ResourceTreePanel(QWidget):
             return
         menu.exec(self._tree.viewport().mapToGlobal(pos))
 
+    @property
+    def _pending_item(self):
+        """最后一个待入包叶子（旧测试/旧调用点只关心「有没有」）。"""
+        return self._pending_items[-1] if self._pending_items else None
+
     def reset_sources(self) -> None:
         """刷新专用：清除旧节点和搜索展开快照，然后由来源重新填充。"""
-        self._pending_item = None
+        self._pending_items = []
         self._saved_expansion = None
         self._tree.clear()
         self._roots.clear()
 
     def clear_pending(self) -> None:
-        if self._pending_item is not None:
-            root = self._pending_item.parent()
-            root.takeChild(root.indexOfChild(self._pending_item))
-            self._pending_item = None
-            if root.childCount() == 0:
-                data = root.data(0, Qt.ItemDataRole.UserRole)
-                self._roots.pop(("pack", data[1]), None)
-                self._tree.takeTopLevelItem(self._tree.indexOfTopLevelItem(root))
+        """删掉所有「待入新包」叶子（保存成功或切换文档时）。"""
+        for item in self._pending_items:
+            root = item.parent()
+            if root is not None:
+                root.takeChild(root.indexOfChild(item))
+        self._pending_items = []
+        # 删空的包根一并收走，不留下空壳
+        for key, root in list(self._roots.items()):
+            if key[0] == "pack" and root.childCount() == 0:
+                self._roots.pop(key, None)
+                index = self._tree.indexOfTopLevelItem(root)
+                if index >= 0:
+                    self._tree.takeTopLevelItem(index)
 
     def show_pending(self, pack_path: str, res_path: str) -> None:
-        """仅单文档待入包叶子；取消/切换时删除，不假装已在源包里。"""
-        self.clear_pending()
+        """单个待入包叶子（旧入口，保留给单文件导入/替换布局）。"""
+        self.show_pending_many(pack_path, [res_path], current=res_path)
+
+    def show_pending_many(self, pack_path: str, res_paths: list[str], *,
+                          current: str | None = None,
+                          clear: bool = True) -> None:
+        """批量导入：多个「待入新包」叶子挂在同一个包下。
+
+        ``current`` 是当前打开的那个（高亮并滚动到它）；其余只是排队，
+        双击能打开。都不假装已经在源包里——源包本身一个字节没动。
+        ``clear=False`` 用于刷新后逐个包恢复排队项（多个包各挂各的）。
+        """
+        if clear:
+            self.clear_pending()
+        if not res_paths:
+            return
         self.add_pack(pack_path, [])
         root = self._roots[("pack", pack_path)]
-        leaf = QTreeWidgetItem([res_path + "（待入新包）"])
-        leaf.setData(0, Qt.ItemDataRole.UserRole, ("pending", pack_path, res_path))
-        leaf.setToolTip(0, "当前编辑文档，尚未写入资源包；保存只生成新包。")
-        root.addChild(leaf)
-        if root.childCount() == 1:
-            root.setText(0, f"{Path(pack_path).name}（待入新包）")
-        self._pending_item = leaf
+        for res_path in res_paths:
+            leaf = QTreeWidgetItem([res_path + "（待入新包）"])
+            leaf.setData(0, Qt.ItemDataRole.UserRole,
+                         ("pending", pack_path, res_path))
+            leaf.setToolTip(
+                0, "尚未写入资源包；Ctrl+S 保存时一次写进新包（原包不动）。")
+            root.addChild(leaf)
+            self._pending_items.append(leaf)
+            if res_path == current:
+                self._tree.scrollToItem(leaf)
+        if root.childCount() == len(res_paths):
+            root.setText(0, f"{Path(pack_path).name}（{len(res_paths)} 个待入新包）")
         self._search.clear()
         root.setExpanded(True)
         root.setHidden(False)
-        self._tree.scrollToItem(leaf)
-        self.reveal_selection(("pending", pack_path, res_path))
+        if current is not None:
+            self.reveal_selection(("pending", pack_path, current))
 
     # -- 根节点管理 -------------------------------------------------
     def add_pack(self, pack_path: str | Path, layouts: list[str],

@@ -509,144 +509,166 @@ def _copy_with_progress(src: Path, out: Path, progress=None,
     return done
 
 
-def _create_layout_copy(src: Path, out: Path, path: str, plain: bytes,
-                        extras: dict[str, bytes], progress=None,
-                        cancelled=None) -> dict:
-    """缺失布局按原生路径密钥写密文；其它资源仍原样存储。"""
-    layout_id = mx_hash(path_bytes(path))
-    with FlsPack(src) as pack:
-        existing = set(pack.entry_ids)
-    writes = {layout_id: encode_layout(plain, layout_id)}
-    for name, data in extras.items():
-        entry_id = path_hash(name)
-        if entry_id in writes:
-            raise PackError("布局/附加资源路径哈希冲突")
-        writes[entry_id] = data
-    try:
-        _copy_with_progress(src, out, progress, cancelled)
-        _, _, _, _, _, records = _read_index(src)
-        if any(record[1] == 0 for record in records):
-            raise _RebuildNeeded("原目录种子需要规范化")
-        for index, (entry_id, data) in enumerate(writes.items(), 1):
-            _check_cancel(cancelled)
-            patch_raw_entry_in_file(out, entry_id, data)
-            if progress is not None:
-                progress(index, len(writes),
-                         f"写入新图 {index}/{len(writes)}")
-        mode = "added"
-    except _RebuildNeeded:
-        rows = parse_archive(src.read_bytes())
-        for row in rows:
-            if row.entry_id in writes:
-                row.stored = writes.pop(row.entry_id)
-        rows.extend(RawEntry(entry_id, fresh_r1(entry_id), data)
-                    for entry_id, data in writes.items())
-        out.write_bytes(build_archive(rows))
-        mode = "rebuild"
-    return {"mode": mode, "layout_added": True,
-            "images_added": [n for n in extras
-                             if path_hash(n) not in existing],
-            "images_replaced": [n for n in extras
-                                if path_hash(n) in existing],
-            "changed_ids": sorted({layout_id} | {
-                path_hash(n) for n in extras
-                if path_hash(n) in existing}),
-            "bytes": out.stat().st_size, "out": str(out)}
-
-
 def _patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
                     out_path, extra_entries: dict | None = None,
                     allow_create: bool = False, progress=None,
                     cancelled=None) -> dict:
-    """把 res_path 条目的新内容落到 out_path，返回补丁报告。
+    """单布局旧签名：转给 :func:`_patch_pack_copy_many`（批量导入也走它）。"""
+    return _patch_pack_copy_many(
+        archive_path, {res_path: new_plain}, out_path, extra_entries,
+        allow_create, progress=progress, cancelled=cancelled)
+
+
+def _layout_writes(pack_ids: Iterable[int], layouts: dict[str, bytes]) -> list:
+    """把 {包内路径: 明文} 变成写入计划（条目号、存储字节、是否已存在）。"""
+    existing = set(pack_ids)
+    writes = []
+    seen: dict[int, str] = {}
+    for path, plain in layouts.items():
+        entry_id = mx_hash(path_bytes(path))
+        if entry_id in seen:
+            raise PackError(
+                f"布局路径哈希冲突：{seen[entry_id]} 与 {path} 无法同时写入")
+        seen[entry_id] = path
+        writes.append((path, encode_layout(plain, entry_id), entry_id,
+                       entry_id in existing))
+    return writes
+
+
+def _patch_pack_copy_many(archive_path, layouts: dict[str, bytes], out_path,
+                          extra_entries: dict | None = None,
+                          allow_create: bool = False, progress=None,
+                          cancelled=None) -> dict:
+    """把多个布局条目一次写进 out_path，返回补丁报告。
 
     内部构建器：out 必须是调用方独占的临时副本；不对外调用。
     源包一字节不动，验证与发布由 patch_pack_copy 负责。
 
-    extra_entries 为 {资源路径: 存储字节}：随布局一并写入的
+    已有条目走 :func:`patch_dlg_entry_in_file`（原位/迁移），
+    新条目走 :func:`patch_raw_entry_in_file`（按条目号有序插入）。
+    任一步遇到病态布局（负载交叠、目录乱序、零种子）就整体
+    回退一次 :func:`build_archive` 重组，重组的条目集合才是权威。
+
+    ``extra_entries`` 为 {资源路径: 存储字节}：随布局一并写入的
     附加条目（如本次编辑新加的图片），路径已存在则替换其内容，
     不存在则按路径哈希新增（排序插入，维持目录升序不变量）。
-    源包目录若已乱序（旧版写坏的包）或负载交叠无法快速补丁，
-    回退整包重组（build_archive 排序写目录，顺带修复）。
 
-    报告以 images_added/images_replaced 汇报，并以 changed_ids
-    给出允许内容不同的条目号集合（布局条目与被替换的附加
-    条目；新增条目不在内，其下标会平移其后条目，故校验须按
-    条目号而非序号比对）。
+    报告以 images_added/images_replaced 汇报图片，以
+    layouts_added/layouts_replaced 汇报布局，并以 changed_ids
+    给出允许内容不同的条目号集合。
     """
     src, out = Path(archive_path), Path(out_path)
     extras = dict(extra_entries or {})
-    if allow_create:
-        with FlsPack(src) as pack:
-            if not pack.contains(res_path):
-                # 没有进度/取消需求时保持原来的 5 参数调用（旧补丁点只
-                # 接受 5 个位置参数，别为了新参数把它们拆掉）。
-                if progress is None and cancelled is None:
-                    return _create_layout_copy(src, out, res_path,
-                                               new_plain, extras)
-                return _create_layout_copy(src, out, res_path, new_plain,
-                                           extras, progress, cancelled)
-    plan = _plan_patch(src, res_path, new_plain)  # 先只读侦察，失败不落盘
-    src_ids = [_RECORD.unpack_from(plan.dir_data, i * DIR_RECORD_SIZE)[0]
-               for i in range(plan.count)]
+    with FlsPack(src) as pack:
+        writes = _layout_writes(pack.entry_ids, layouts)
+    # 旧版写坏的包（目录乱序 / 零校验种子）不能就地补丁：逐条改完目录
+    # 还是乱的，引擎照样查不到。这类包直接整包重组，顺带修好目录。
+    _, _, _, _, _, records = _read_index(src)
     need_rebuild = (
-        any(a > b for a, b in zip(src_ids, src_ids[1:], strict=False))
-        or any(_RECORD.unpack_from(plan.dir_data, i * DIR_RECORD_SIZE)[1] == 0
-               for i in range(plan.count))
+        any(record[1] == 0 for record in records)
+        or any(a[0] > b[0] for a, b in zip(records, records[1:],
+                                           strict=False))
     )
-    added: list[str] = []
-    replaced: list[str] = []
+    modes: list[str] = []
 
-    def apply_extras() -> None:
+    def apply_layouts(target: Path) -> None:
+        for index, (path, stored, entry_id, exists) in enumerate(writes, 1):
+            _check_cancel(cancelled)
+            if exists:
+                result = patch_dlg_entry_in_file(target, path, layouts[path])
+            else:
+                result = patch_raw_entry_in_file(target, entry_id, stored)
+            modes.append(str(result.get("mode")))
+            if progress is not None:
+                progress(index, len(writes),
+                         f"写入布局 {index}/{len(writes)}：{path}")
+
+    def apply_extras(target: Path) -> None:
         added.clear()
         replaced.clear()
         names = sorted(extras)
         for index, name in enumerate(names, 1):
             _check_cancel(cancelled)
             result = patch_raw_entry_in_file(
-                out, path_hash(name),
-                extras[name])
+                target, path_hash(name), extras[name])
             (added if result["mode"] == "added"
              else replaced).append(name)
-            if progress is not None and names:
+            if progress is not None:
                 progress(index, len(names),
                          f"写入新图 {index}/{len(names)}：{name}")
 
-    info: dict | None = None
-    if not need_rebuild:
-        try:
-            _copy_with_progress(src, out, progress, cancelled)
-            _check_cancel(cancelled)
-            info = patch_dlg_entry_in_file(out, res_path, new_plain)
-            apply_extras()
-        except _RebuildNeeded:  # 病态包回退整包重组（慢，但正确）
-            need_rebuild = True
+    added: list[str] = []
+    replaced: list[str] = []
+    if progress is not None:
+        progress(0, 1, "写入新包：复制源包…")
+    try:
+        _copy_with_progress(src, out, progress, cancelled)
+        _check_cancel(cancelled)
+        if not need_rebuild:
+            apply_layouts(out)
+            apply_extras(out)
+    except _RebuildNeeded:
+        need_rebuild = True
     if need_rebuild:
         if progress is not None:
             progress(0, 0, "整包重组（旧包目录需要修复，较慢）…")
         _check_cancel(cancelled)
-        out.write_bytes(replace_dlg_entry(src.read_bytes(),
-                                          res_path, new_plain))
-        apply_extras()
-        info = {"mode": "rebuild", "target_index": -1}
-    layout_id = mx_hash(path_bytes(res_path))
+        rows = parse_archive(src.read_bytes())
+        by_id = {row.entry_id: row for row in rows}
+        for _path, stored, entry_id, exists in writes:
+            if exists:
+                by_id[entry_id].stored = stored
+            else:
+                by_id[entry_id] = RawEntry(entry_id, fresh_r1(entry_id), stored)
+        rows = list(by_id.values())
+        for name, data in extras.items():
+            entry_id = path_hash(name)
+            if entry_id in by_id:
+                by_id[entry_id].stored = data
+                replaced.append(name)
+            else:
+                row = RawEntry(entry_id, fresh_r1(entry_id), data)
+                rows.append(row)
+                by_id[entry_id] = row
+                added.append(name)
+        out.write_bytes(build_archive(rows))
+    layouts_added = [path for path, _s, _i, exists in writes if not exists]
+    layouts_replaced = [path for path, _s, _i, exists in writes if exists]
+    if need_rebuild:
+        mode = "rebuild"
+    elif layouts_added:
+        mode = "added"
+    elif "relocated" in modes:
+        mode = "relocated"
+    else:
+        mode = "inplace"
+    info = {
+        "mode": mode,
+        "target_index": -1,
+        "layout_added": bool(layouts_added),
+        "layout_path": next(iter(layouts)),
+        "layouts_added": layouts_added,
+        "layouts_replaced": layouts_replaced,
+        "layout_ids": [entry_id for _p, _s, entry_id, _e in writes],
+    }
     info["images_added"] = added
     info["images_replaced"] = replaced
     info["changed_ids"] = sorted(
-        {layout_id} | {path_hash(n) for n in replaced})
+        {entry_id for _p, _s, entry_id, _e in writes}
+        | {path_hash(n) for n in replaced})
     info["bytes"] = out.stat().st_size
     info["out"] = str(out)
     return info
 
 
-def _verify_copy(src: Path, out: Path, res_path: str, new_plain: bytes,
+def _verify_copy(src: Path, out: Path, layouts: dict[str, bytes],
                  extras: dict[str, bytes], progress=None,
                  cancelled=None) -> None:
     """发布前独立回读；未改条目分块逐字节比较，不以 span 相同代替。"""
-    layout_id = mx_hash(path_bytes(res_path))
+    layout_ids = {mx_hash(path_bytes(path)): path for path in layouts}
     extra_ids = {mx_hash(name.encode("gbk", "strict")): data
                  for name, data in extras.items()}
-    if layout_id in extra_ids or len(extra_ids) != len(extras):
+    if set(layout_ids) & set(extra_ids) or len(extra_ids) != len(extras):
         raise PackError("附加资源路径哈希冲突，拒绝写回")
     _, _, _, _, _, records = _read_index(out)
     if any(record[1] == 0 for record in records):
@@ -655,7 +677,8 @@ def _verify_copy(src: Path, out: Path, res_path: str, new_plain: bytes,
         ids = after.entry_ids
         if len(set(ids)) != len(ids) or ids != sorted(ids):
             raise PackError("新包条目编号重复或目录未升序")
-        if set(ids) != set(before.entry_ids) | set(extra_ids) | {layout_id}:
+        if set(ids) != (set(before.entry_ids) | set(extra_ids)
+                        | set(layout_ids)):
             raise PackError("新包条目集合与预期不符")
         # 独立比对负载，即使偏移/长度没变化也不能跳过。
         ids_before = before.entry_ids
@@ -666,7 +689,7 @@ def _verify_copy(src: Path, out: Path, res_path: str, new_plain: bytes,
                     progress(done, total,
                              f"校验新包：逐条比对 {done}/{total}")
                 _check_cancel(cancelled)
-                if entry_id == layout_id or entry_id in extra_ids:
+                if entry_id in layout_ids or entry_id in extra_ids:
                     continue
                 old_offset, old_length = before.span_of(entry_id)
                 new_offset, new_length = after.span_of(entry_id)
@@ -680,12 +703,13 @@ def _verify_copy(src: Path, out: Path, res_path: str, new_plain: bytes,
                     if fin.read(size) != fout.read(size):
                         raise PackError(f"未改条目负载变化：{entry_id}")
                     left -= size
-        try:
-            native_plain = decode_native(after.read_id(layout_id), layout_id)
-        except ValueError as exc:
-            raise PackError("新布局未按原生路径密钥存储") from exc
-        if native_plain != new_plain:
-            raise PackError("新布局原生回读不一致")
+        for entry_id, path in layout_ids.items():
+            try:
+                native_plain = decode_native(after.read_id(entry_id), entry_id)
+            except ValueError as exc:
+                raise PackError(f"新布局未按原生路径密钥存储：{path}") from exc
+            if native_plain != layouts[path]:
+                raise PackError(f"布局原生回读不一致：{path}")
         for entry_id, data in extra_ids.items():
             if after.read_id(entry_id) != data:
                 raise PackError(f"附加资源回读不一致：{entry_id}")
@@ -696,7 +720,21 @@ def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
                     protected_paths: Iterable[str | Path] = (),
                     allow_create: bool = False, progress=None,
                     cancelled=None, allow_overwrite_self: bool = False) -> dict:
-    """只生成新包：禁止源包/别名，临时副本验证后原子发布。
+    """单布局入口：只生成新包（完整说明见 :func:`patch_pack_copy_many`）。"""
+    return patch_pack_copy_many(
+        archive_path, {res_path: new_plain}, out_path,
+        extra_entries=extra_entries, protected_paths=protected_paths,
+        allow_create=allow_create, progress=progress,
+        cancelled=cancelled, allow_overwrite_self=allow_overwrite_self)
+
+
+def patch_pack_copy_many(archive_path, layouts: dict[str, bytes],
+                         out_path, extra_entries: dict | None = None,
+                         protected_paths: Iterable[str | Path] = (),
+                         allow_create: bool = False, progress=None,
+                         cancelled=None,
+                         allow_overwrite_self: bool = False) -> dict:
+    """只生成新包（可一次写多个布局）：禁止源包/别名，临时副本验证后原子发布。
 
     构建、补丁或校验失败均不改变源包和已有输出。protected_paths
     由 GUI 传入其余已挂载资源，以防输出覆盖另一个源包。
@@ -704,15 +742,21 @@ def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
     按原生路径密钥新增/替换，已有明文或错误密钥的目标布局会迁移；
     其它未改条目保持原字节。客户端实机仍需验收。
 
+    批量导入走这个入口：``layouts`` 里的条目一次复制包体、一次校验、
+    一次原子替换，不会为每个布局各写一遍整包。
+
     ``allow_overwrite_self``：只给「写回编辑器自己上次写出的那个包」用。
     此时 ``out_path == archive_path`` 是允许的——源包正是上一次的输出，
     整包先复制到临时文件、校验通过后才 ``os.replace``，中途失败原文件
     不动。界面层保证只有自己写出来的包才传这个开关，游戏原包永远拒绝。
 
     ``progress(done, total, text)``：复制整包按字节报（614 MB 要写十几
-    秒，不能只转圈）、写入新图按张报、校验按条目报；``cancelled()`` 在
-    这些循环里轮询，取消抛 :class:`Cancelled`（临时文件由本函数删掉）。
+    秒，不能只转圈）、写入布局按个报、写入新图按张报、校验按条目报；
+    ``cancelled()`` 在这些循环里轮询，取消抛 :class:`Cancelled`
+    （临时文件由本函数删掉）。
     """
+    if not layouts:
+        raise PackError("没有要写入的布局")
     src, out = Path(archive_path), Path(out_path)
     sources = [src, *protected_paths]
     if allow_overwrite_self and out.resolve() == src.resolve():
@@ -723,31 +767,40 @@ def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
     tmp: Path | None = None
     try:
         guard_output(out, sources)
-        # Normalize input once, so already-native input is not double encrypted.
-        normalized = plain_if_layout(new_plain)
-        if normalized is None:
-            raise PackError("目标不是有效布局字面量")
-        new_plain = normalized
+        normalized: dict[str, bytes] = {}
+        for path, plain in layouts.items():
+            # Normalize inputs once, so already-native input is not double
+            # encrypted.
+            value = plain_if_layout(plain)
+            if value is None:
+                raise PackError(f"目标不是有效布局字面量：{path}")
+            normalized[str(path)] = value
+        layouts = normalized
         for name in extras:
             if name.lower().endswith(".dlg"):
                 raise PackError("附加图片入口不接受.dlg；请作为目标布局保存")
-        if allow_create:
-            from .layout_import import prepare_layout_import, validate_layout_path
+        with FlsPack(src) as pack:
+            if allow_create:
+                from .layout_import import (
+                    prepare_layout_import,
+                    validate_layout_path,
+                )
 
-            res_path = validate_layout_path(res_path)
-            with FlsPack(src) as pack:
-                prepare_layout_import(pack, res_path, new_plain)
-        else:
-            _plan_patch(src, res_path, new_plain)  # 输入无效时不创建输出
+                for path, plain in layouts.items():
+                    path = validate_layout_path(path)
+                    prepare_layout_import(pack, path, plain)
+            else:
+                for path, plain in layouts.items():
+                    _plan_patch(src, path, plain)  # 输入无效时不创建输出
         with tempfile.NamedTemporaryFile(
             prefix=f".{out.name}.", suffix=".tmp", dir=out.parent,
             delete=False,
         ) as fh:
             tmp = Path(fh.name)
-        info = _patch_pack_copy(src, res_path, new_plain, tmp, extras,
-                                allow_create, progress=progress,
-                                cancelled=cancelled)
-        _verify_copy(src, tmp, res_path, new_plain, extras,
+        info = _patch_pack_copy_many(src, layouts, tmp, extras,
+                                     allow_create, progress=progress,
+                                     cancelled=cancelled)
+        _verify_copy(src, tmp, layouts, extras,
                      progress=progress, cancelled=cancelled)
         guard_output(out, sources)
         os.replace(tmp, out)

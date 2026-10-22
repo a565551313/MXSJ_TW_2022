@@ -34,9 +34,10 @@ def build_resource_menu(parent, data, *, missing: bool,
         replace.setEnabled(not missing)
         replace.triggered.connect(lambda: on_replace(tuple(data)))
     elif kind == "packroot":
-        action = menu.addAction("把本地 .dlg 放进这个包…")
+        action = menu.addAction("把本地布局放进这个包…（可多选）")
         action.setToolTip(
-            "选一个本地 .dlg 并指定包内路径；保存时写进新包（原包不动）")
+            "选多个 .dlg 或整个文件夹，逐行核对包内路径；\n"
+            "保存时一次全部写进新包（原包不动），不用一个存一次")
         action.triggered.connect(lambda: on_import(data[1]))
         open_action = menu.addAction("按包内路径打开布局…")
         open_action.triggered.connect(lambda: on_open_path(data[1]))

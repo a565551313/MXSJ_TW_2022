@@ -36,6 +36,7 @@ from .busy import BusyHostMixin
 from .canvas import CanvasView, LayoutScene
 from .commands import EditingCommandsMixin
 from .diagnostics_panel import DiagnosticsPanel
+from .import_queue import ImportQueueMixin
 from .panels import PalettePanel, ResourceTreePanel, WidgetTreePanel
 from .property_panel import PropertyPanel
 from .replace_layout import ReplaceLayoutMixin
@@ -50,8 +51,8 @@ from .workflows import FileWorkflowsMixin
 
 class MainWindow(
     BusyHostMixin, EditingCommandsMixin, FileWorkflowsMixin,
-    SaveWorkflowsMixin, SourceActionsMixin, TabMenuMixin,
-    ReplaceLayoutMixin, WindowSetupMixin, QMainWindow
+    ImportQueueMixin, SaveWorkflowsMixin, SourceActionsMixin,
+    TabMenuMixin, ReplaceLayoutMixin, WindowSetupMixin, QMainWindow
 ):
     """UI 编辑器主窗口。"""
 
@@ -70,6 +71,9 @@ class MainWindow(
                     pass  # 损坏设置不阻塞启动，也不加入候选
         self._resource_dirs: list[str] = []
         self._layout_dirs: list[str] = []
+        # 批量导入待入新包的布局：{源包路径: {包内路径: 文档}}。
+        # 不在这些标签里打开的布局也排着队，Ctrl+S 一次全写进新包。
+        self._pending_imports: dict[str, dict[str, LayoutDocument]] = {}
         self.styles = StyleBook()
         self.ctx = PaintContext(assets=self.resolver, styles=self.styles)
         self.script_index: ScriptIndex = get_default_index()

@@ -112,15 +112,17 @@ class TestNativeLayoutCycle(unittest.TestCase):
         path = "future/validation.dlg"
         output = self.root / "out.fls"
         output.write_bytes(b"PREVIOUS OUTPUT")
-        original_create = pack_build._create_layout_copy
+        original_write = pack_build.patch_raw_entry_in_file
 
-        def broken_writer(src, candidate, path, plain, extras):
-            result = original_create(src, candidate, path, plain, extras)
-            # Simulate the old bug. Its own guessed-header reader can still parse this!
-            pack_build.patch_raw_entry_in_file(candidate, mx_hash(path.encode()), plain)
-            return result
+        def broken_writer(candidate, entry_id, new_stored, *args, **kwargs):
+            # Simulate the old bug: the layout goes in as plain bytes under
+            # the wrong key. Our own guess-the-key reader could still parse
+            # this, so only the native-key readback catches it.
+            return original_write(candidate, entry_id, layout(40),
+                                  *args, **kwargs)
 
-        with patch.object(pack_build, "_create_layout_copy", side_effect=broken_writer):
+        with patch.object(pack_build, "patch_raw_entry_in_file",
+                          side_effect=broken_writer):
             with self.assertRaises(PackError):
                 pack_build.patch_pack_copy(
                     self.source, path, layout(40), output, allow_create=True
