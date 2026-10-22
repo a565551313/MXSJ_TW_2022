@@ -383,7 +383,7 @@ _PROBE_STEMS: tuple[str, ...] = (
     *(f"{row}/{column}" for row in ("top", "middle", "bottom")
       for column in ("left", "middle", "right")),
     "tl", "tm", "tr", "ml", "mm", "mr", "bl", "bm", "br",
-    "bg", "middle/middle",
+    "bg",
     # 反编译字面量里的历史写法（真语料 0 命中，但用户手上可能有）
     "left1", "left2", "right1", "right2",
 )

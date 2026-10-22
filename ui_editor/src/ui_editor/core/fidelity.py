@@ -201,8 +201,18 @@ def markers(widget, view, button_state: str = "normal") -> list[Marker]:
         # ``painters.effective_size`` 的兜底），那也是 1:1——不能因为
         # 控件没写尺寸就说成「没有图片素材」。真包 2.7 万张图里 2.3 万张
         # 是这种自动尺寸（实测 2026-10-22）。
+        #
+        # 兜底是**逐轴**补的：只写了一个轴时，另一个轴按图自身尺寸画。
+        # 例如 iWidth=300、iHeight=0 + 120×44 的图，画布画的是 300×44
+        # （横向拉伸），不能因为「不是两轴都写了」就报 1:1。
         sized = width > 0 and height > 0
-        if image_size and (not sized or (width, height) == tuple(image_size)):
+        native = False
+        if image_size is not None:
+            image_width, image_height = image_size
+            drawn = (width if width > 0 else image_width,
+                     height if height > 0 else image_height)
+            native = drawn == (image_width, image_height)
+        if native:
             if frames == 1:
                 result.append(Marker(NATIVE, "native_1to1",
                                      "整图按原尺寸 1:1 绘制。"))
@@ -212,8 +222,8 @@ def markers(widget, view, button_state: str = "normal") -> list[Marker]:
                 result.append(Marker(
                     NATIVE, "native_first_frame",
                     f"多帧整图（{frames} 帧）：常态画 0 号帧、1:1 绘制；"
-                    "其余帧留给悬停/按下（序号语义未核实）。"))
-        elif sized:
+                    "其余帧用途与顺序未核实。"))
+        elif image_size is not None or sized:
             result.append(Marker(APPROX, "stretched_image",
                                  "整图拉伸到控件尺寸（客户端切法未核实）。"))
 

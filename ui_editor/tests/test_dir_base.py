@@ -386,3 +386,14 @@ class TestProbePieces(unittest.TestCase):
     def test_probe_empty_directory_is_empty(self):
         self.assertEqual(dir_base.probe_pieces("a/none/", lambda _n: False), ())
         self.assertEqual(dir_base.probe_pieces("a/none", lambda _n: True), ())
+
+    def test_probe_does_not_double_count_middle_middle(self):
+        """``middle/middle`` 只该出现一次。
+
+        九片的候选名生成里已经有它，候选表再写一遍就会让只有一张
+        ``middle/middle.png`` 的目录在选图窗里显示「里面有 2 张」。
+        """
+        known = {"a/one/middle/middle.png"}
+        found = dir_base.probe_pieces(
+            "a/one/", lambda name: name in known)
+        self.assertEqual(found, ("middle/middle.png",))

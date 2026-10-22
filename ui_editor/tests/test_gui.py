@@ -1558,6 +1558,37 @@ class TestImagePicker(unittest.TestCase):
         self.assertIn("（新）", dialog._list.item(0).text())
         dialog.close()
 
+    def test_refresh_row_drops_stale_thumbnail(self):
+        """重挂同名图/同一族后缩略图要重解，不能一直显示旧图。"""
+        from PySide6.QtGui import QColor, QImage
+
+        from ui_editor.ui.image_picker import ResourcePickerDialog
+
+        color = {"rgb": QColor(220, 40, 40)}
+
+        def thumb(_path: str):
+            image = QImage(8, 8, QImage.Format.Format_ARGB32)
+            image.fill(color["rgb"])
+            return image
+
+        path = "combdialog4\\杂图\\换图.png"
+        dialog = ResourcePickerDialog(None, "t", [path], "", thumb)
+        dialog.resize(760, 540)
+        dialog.show()
+        self._app.processEvents()
+        dialog._fill_thumbs()
+        item = dialog._list.item(0)
+        first = item.icon().pixmap(72, 72).toImage().pixelColor(36, 36)
+        self.assertEqual((first.red(), first.blue()), (220, 40))
+
+        color["rgb"] = QColor(40, 40, 220)
+        dialog._refresh_row(path)
+        self.assertNotIn(path, dialog._thumb_done)
+        dialog._fill_thumbs()
+        second = item.icon().pixmap(72, 72).toImage().pixelColor(36, 36)
+        self.assertEqual((second.red(), second.blue()), (40, 220))
+        dialog.close()
+
     def test_property_panel_lists_dir_base_family(self):
         """属性面板「从资源包选择」要列出拼名族，选中即写进 sFileName。"""
         from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit
@@ -1668,6 +1699,52 @@ class TestImagePicker(unittest.TestCase):
         self.assertIn("0c.png", message)
         panel.deleteLater()
 
+    def test_property_panel_pieces_keep_the_row_folder(self):
+        """九片子图的提示要保留 ``top/left`` 前缀，不能只剩 ``left.png``。
+
+        130 个九片目录每行都叫 left/middle/right；只留文件名时三行提示
+        一模一样，用户分不清哪张是哪块。
+        """
+        from PySide6.QtWidgets import QDialog, QLineEdit
+
+        from ui_editor.core.model import Widget
+        from ui_editor.ui.property_panel import PropertyPanel
+
+        base = "combdialog4\\边框\\九片\\"
+        rels = ("top/left", "top/middle", "top/right",
+                "middle/left", "middle/middle", "middle/right",
+                "bottom/left", "bottom/middle", "bottom/right")
+        assets = mock.Mock()
+        assets._packs = [object()]
+        assets.candidates_with_staged.return_value = [base]
+        assets.family_pieces.return_value = tuple(
+            base + rel + ".png" for rel in rels)
+        assets.family_plan.return_value = None
+        assets.fetch_image.return_value = None
+        assets.pack_paths = []
+        panel = PropertyPanel()
+        panel._widget = Widget({"sWidgetType": "CPngNineFrame",
+                                "sName": "f", "sFileName": ""})
+        panel.assets = assets
+        captured: dict = {}
+
+        def fake_dialog(_parent, _title, paths, current="", thumb=None,
+                        on_stage=None, export_handler=None,
+                        family_label=None, family_pieces=None, **kwargs):
+            captured["family_pieces"] = family_pieces
+            handle = mock.Mock()
+            handle.exec.return_value = QDialog.DialogCode.Accepted
+            handle.selected_path.return_value = base
+            handle.external_requested = False
+            return handle
+
+        with mock.patch("ui_editor.ui.image_picker.ResourcePickerDialog",
+                        side_effect=fake_dialog):
+            panel._browse_from_pack("sFileName", QLineEdit())
+        self.assertEqual(captured["family_pieces"](base),
+                         [rel + ".png" for rel in rels])
+        panel.deleteLater()
+
     def test_family_dialog_maps_by_name_not_order(self):
         """文件名叫 0l/0c/0r 时按名字对应，选择顺序打乱也不会配错。"""
         from PySide6.QtWidgets import QDialogButtonBox
@@ -1767,6 +1844,66 @@ class TestImagePicker(unittest.TestCase):
                 dialog.close()
         # 按钮横片 = 三片并排（宽约 3 倍）；序号帧 = 一张
         self.assertGreater(shots["h_state"][0], shots["frames"][0] * 2)
+
+    def test_family_preview_width_is_capped(self):
+        """三张 1000×40 的横片不能拼出 3000 像素宽的预览。"""
+        from PySide6.QtGui import QColor, QImage
+
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        images = []
+        for _ in range(3):
+            image = QImage(1000, 40, QImage.Format.Format_ARGB32)
+            image.fill(QColor(120, 160, 200))
+            images.append(image)
+        pixmap = FamilyImportDialog._montage(images, 3)
+        self.assertIsNotNone(pixmap)
+        self.assertLessEqual(pixmap.width(), 480)
+        self.assertGreater(pixmap.width(), 0)
+        self.assertLessEqual(pixmap.height(), 110)
+
+    def test_family_preview_refuses_partial_montage(self):
+        """族里有一张读不出来就不拼半张（九片少一块会整格错位）。"""
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            good = _write_png(Path(tmp) / "left.png")
+            bad = Path(tmp) / "right.png"
+            bad.write_bytes(b"not a png")
+            dialog = FamilyImportDialog(
+                None, [good, str(bad)], "", "h_slice", ".png")
+            dialog._update_picture(
+                [("left", good), ("right", str(bad))], "h_slice")
+            self.assertTrue(dialog._pic.pixmap().isNull())
+            self.assertIn("读不出来", dialog._pic.text())
+            self.assertNotIn("拼出来是这样", dialog._pic_caption.text())
+            # 数量与族类型对不上：清掉旧图与旧说明，不能沿用上一张
+            dialog._update_picture([], "h_state")
+            self.assertIn("对不上", dialog._pic.text())
+            dialog.close()
+
+    def test_family_preview_not_redecoded_for_base_edits(self):
+        """改目录路径不重新解码预览；换族类型才重拼。"""
+        from unittest import mock
+
+        from ui_editor.ui import image_picker as picker
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{name}.png")
+                     for name in ("0l", "0c", "0r")]
+            dialog = FamilyImportDialog(None, files, "", "h_state", ".png")
+            real_image = picker.QImage
+            with mock.patch.object(
+                    picker, "QImage", side_effect=real_image) as fake:
+                for base in ("a\\", "a\\b\\", "a\\b\\c\\"):
+                    dialog._base.setText(base)
+                self.assertEqual(fake.call_count, 0,
+                                 "目录路径变了、图没变，不该重新解码")
+                dialog._kind.setCurrentIndex(
+                    dialog._kind.findData("frames"))
+                self.assertGreater(fake.call_count, 0)
+            dialog.close()
 
     def test_picker_says_what_is_inside_a_directory(self):
         """选中一个目录型基路径时，要直接说明里面有哪些图、游戏怎么用。"""
@@ -1901,6 +2038,60 @@ class TestImagePicker(unittest.TestCase):
             self.assertEqual(dialog._base.text(),
                              "combdialog4\\新登陆界面\\三态按钮\\登录按钮_2\\")
             self.assertEqual(ok.text(), "写入新族")
+            dialog.close()
+
+    def test_family_dialog_blocks_a_shadowed_family(self):
+        """目录里已有 0l/0c/0r 时再写 0/1/2.png：写进去也不会生效，要拦住。
+
+        ``dir_base.plan`` 先取按钮横片；旧族名字与新的完全不同，
+        ``_existing_pieces`` 找不到同名图，旧实现会直接放行——保存后画布
+        和游戏都不变，用户只会觉得「导了没用」。
+        """
+        from PySide6.QtWidgets import QDialogButtonBox
+
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        base = "combdialog4\\新登陆界面\\三态按钮\\登录按钮\\"
+        taken = {base + name + ".png" for name in ("0l", "0c", "0r")}
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{index}.png", 50 + index)
+                     for index in range(3)]
+            dialog = FamilyImportDialog(
+                None, files, base, "frames", ".png",
+                lambda name: name in taken)
+            self.assertIn("不会生效", dialog._warning.text())
+            self.assertIn("按钮横片", dialog._warning.text())
+            ok = dialog._buttons.button(
+                QDialogButtonBox.StandardButton.Ok)
+            self.assertFalse(ok.isEnabled())
+            # 仍可直接换一个空闲目录
+            self.assertTrue(dialog._free_btn.isVisibleTo(dialog))
+            dialog._use_free_base()
+            self.assertEqual(dialog._base.text(),
+                             "combdialog4\\新登陆界面\\三态按钮\\登录按钮_2\\")
+            self.assertTrue(ok.isEnabled())
+            self.assertEqual(dialog._warning.text(), "")
+            dialog.close()
+
+    def test_family_dialog_notes_old_family_is_replaced(self):
+        """新族优先级更高时不用拦，但要说清旧族保存后不再被用到。"""
+        from PySide6.QtWidgets import QDialogButtonBox
+
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        base = "a\\b\\"
+        taken = {base + "bg.png"}
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{index}.png", 60 + index)
+                     for index in range(3)]
+            dialog = FamilyImportDialog(
+                None, files, base, "frames", ".png",
+                lambda name: name in taken)
+            self.assertIn("不会再被用到", dialog._warning.text())
+            self.assertIn("单图", dialog._warning.text())
+            ok = dialog._buttons.button(
+                QDialogButtonBox.StandardButton.Ok)
+            self.assertTrue(ok.isEnabled())
             dialog.close()
 
     def test_family_dialog_no_warning_for_a_new_directory(self):

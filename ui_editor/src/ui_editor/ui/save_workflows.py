@@ -120,7 +120,8 @@ class SaveWorkflowsMixin:
         ``report["error"]`` 并返回（弹错在对话框层）。
 
         ``progress``/``cancelled`` 透传给写包与逐条校验；取消抛
-        :class:`core.errors.Cancelled`（状态不迁移，调用方删未验证产物）。
+        :class:`core.errors.Cancelled`（状态不迁移；临时文件由
+        ``patch_pack_copy`` 自己删，用户选的目标路径保持原样）。
 
         这个入口**写文件 + 迁移界面状态**（供测试/脚本用）。窗口里要
         放在忙碌遮罩后台线程跑的只有 :meth:`_write_pack_copy_file`：
@@ -133,27 +134,35 @@ class SaveWorkflowsMixin:
         self._adopt_written_pack(report)
         return report
 
-    def _write_pack_copy_file(self, out_path: str, *, progress=None,
+    def _write_pack_copy_file(self, out_path: str, *,
+                              pending_import: bool | None = None,
+                              encoding: str | None = None,
+                              progress=None,
                               cancelled=None) -> dict | None:
-        """只写文件 + 校验，**不碰界面状态**（可在后台线程跑）。
+        """只写文件 + 校验，**不碰界面状态/控件**（可在后台线程跑）。
 
         返回的 ``report["plain"]`` 供 :meth:`_adopt_written_pack` 迁移用。
+
+        ``pending_import`` / ``encoding`` 由调用方（界面线程）抓好再传进来：
+        后台线程再回头读文档会有竞态，两次并发写也会互相覆盖。不传时在这里
+        按当前文档取一次（测试/脚本直接调用这个入口的情况）。
         """
         if self.doc is None or not self.doc.source_pack:
             return None
+        if pending_import is None:
+            pending_import = bool(self.doc.pending_pack_import)
+        if encoding is None:
+            encoding = self.doc.text_encoding
         src_pack, res_path = self.doc.source_pack
         extras = self._referenced_staged_images()
         self._require_save_encoding(extras)
         plain = dlg_codec.dump_bytes(
-            self.doc.to_dicts(), text_encoding=self.doc.text_encoding)
+            self.doc.to_dicts(), text_encoding=encoding)
         tmp_out = str(out_path)
         expected = self.doc.to_dicts()
-        # 后台线程里**不要**再读文档/控件状态：把这一步需要的两个事实
-        # 在界面线程先抓好，连同字节一起传下去。
-        self._writing_pending_import = bool(self.doc.pending_pack_import)
-        self._writing_encoding = self.doc.text_encoding
         report = self._write_pack_file(
             src_pack, res_path, plain, expected, extras, tmp_out,
+            pending_import=pending_import, encoding=encoding,
             progress=progress, cancelled=cancelled)
         report["layout_path"] = res_path
         report["plain"] = plain
@@ -162,15 +171,20 @@ class SaveWorkflowsMixin:
 
     def _write_pack_file(self, src_pack: str, res_path: str, plain: bytes,
                          expected: list[dict], extras: dict[str, bytes],
-                         tmp_out: str, *, progress=None,
+                         tmp_out: str, *, pending_import: bool,
+                         encoding: str, progress=None,
                          cancelled=None) -> dict:
-        """落盘 + 校验（不碰界面状态、不读 self.doc）。"""
+        """落盘 + 校验（不碰界面状态、不读 self.doc）。
+
+        ``pending_import`` / ``encoding`` 是显式参数，不再挂在 ``self`` 上：
+        每次写包各用各的值，互不串味。
+        """
         # 写包本身也要进度：复制 614 MB、逐条校验 5.3 万条，机械盘上
         # 是十几秒到一分钟的活，只转圈会被当成卡死。
         info = pack_build.patch_pack_copy(
             src_pack, res_path, plain, tmp_out, extra_entries=extras,
             protected_paths=self._pack_sources(),
-            allow_create=bool(self._writing_pending_import),
+            allow_create=pending_import,
             progress=progress, cancelled=cancelled)
         report: dict = {"out": tmp_out, "bytes": info["bytes"],
                         "mode": info["mode"],
@@ -189,9 +203,9 @@ class SaveWorkflowsMixin:
             extras=extras, expected_dicts=expected, info=info,
             progress=progress, cancelled=cancelled,
             read_back=(self._fresh_pack_readback
-                       if self._writing_encoding == "big5" else
+                       if encoding == "big5" else
                        lambda p, r, n: self._fresh_pack_readback(
-                           p, r, n, self._writing_encoding))))
+                           p, r, n, encoding))))
         return report
 
     def _adopt_written_pack(self, report: dict) -> None:
@@ -232,17 +246,23 @@ class SaveWorkflowsMixin:
             return
         if not self._confirm_save_review(path, to_pack=True):
             return
+        # 这两个事实在界面线程抓好再交给后台：后台只写文件，不再回头读
+        # 文档状态；两次写包也不会互相覆盖（各用各的参数）。
+        pending_import = bool(self.doc.pending_pack_import)
+        encoding = self.doc.text_encoding
         self._update_status("正在写回资源包并校验…")
         try:
             report = self.run_busy(
                 "写回资源包并校验…",
                 lambda h: self._write_pack_copy_file(
-                    path, progress=h.report, cancelled=lambda: h.cancelled),
-                cancellable=True, cancellable_text="取消（删除未验证的新包）")
+                    path, pending_import=pending_import, encoding=encoding,
+                    progress=h.report, cancelled=lambda: h.cancelled),
+                cancellable=True, cancellable_text="取消（不写新包）")
         except Cancelled:
-            with suppress(OSError):
-                Path(path).unlink(missing_ok=True)
-            self._update_status("写回已取消：未验证的新包已删除，原包未动。")
+            # patch_pack_copy 在 os.replace 之前取消，并自己删掉临时文件；
+            # path 可能是用户选来覆盖的旧包，这里不能删。
+            self._update_status(
+                "写回已取消：没有写出新包，原包与目标文件都没动。")
             return
         except Exception as exc:
             QMessageBox.warning(self, "写回失败", str(exc))

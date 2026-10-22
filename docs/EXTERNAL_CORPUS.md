@@ -164,7 +164,7 @@ export MXSJ_DLG_CORPUS="$OUT/mxsj/interface"   # 支持 ':' 分隔多目录；�
 | 仓库 catalog 已知布局路径 | 2,903 条，包内命中 **2,708** |
 | 解出 `.dlg` 明文 | **2,708** 篇（= 包内命中的全部；解析失败 **0**，往返失败 **0**） |
 | `tests.test_codec`（`MXSJ_DLG_CORPUS` 指向这 2,708 篇） | **Ran 10 → OK**（全量往返 0 失败） |
-| 目录型基路径 | **729 个唯一值 / 736 处引用**，全部探过子图名 |
+| 目录型基路径 | **729 个唯一值 / 9,310 处引用**（2026-10-22 复算：`sFileName` 9,133 + `sBgFileName` 105 + `sBarFileName` 72），全部探过子图名 |
 | 拼名族实测分布（`dir_base.plan` 判决，729 个基路径全有归属） | 序号帧 423 / 九片 130 / 横三片 109 / 三态横片 `{n}l`+`{n}c`+`{n}r` 36 / 竖三片 22 / 单图 9 |
 | 逐控件类型复核（2026-10-22，按**不同基路径**计） | `CButton` 序号帧 352；`CPngNineFrame` 九片 92；`CTextButton` **整图 53 / 横片 35**；`CHPngFrame` 横三片 60 / 单图 2；`CFrame` 九片 42 / 单图 1；`CHFrame` 横三片 28 / 单图 4；`CProgress` 横三片 27；`CHPagePngButton` 整图 16 / 横片 10；`CVPngFrame` 竖三片 15 / 单图 2；`CVPagePngButton` 整图 11 / 横片 0；`CVFrame` 竖三片 7 / 单图 4；`CBorder` 九片 2 |
 | `combdialog4\新登陆界面\三态按钮\登录按钮\` | **`0.png` / `1.png` / `2.png`**（7,322 / 7,403 / 7,257 B，各 120×44），三张整图；780 个候选名只命中这 3 个 |

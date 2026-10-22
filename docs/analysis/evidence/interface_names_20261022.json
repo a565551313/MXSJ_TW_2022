@@ -23,7 +23,7 @@
   "ui_editor.core.pack.FlsPack 读目录（entry_id 只存路径哈希）",
   "ui_editor/src/ui_editor/data/known_layouts.txt 的 2,903 条布局路径逐条 contains()",
   "命中的 2,708 篇 .dlg 用 native_layout.plain_if_layout / pack_build.unpack_packed_text 解密，dlg_codec.parse_bytes 解析",
-  "遍历控件取 sFileName 等图像字段，取以 \\\\ 或 / 结尾的目录型基路径（736 处引用 / 729 个唯一值）",
+  "遍历控件取 sFileName 等图像字段，取以 \\\\ 或 / 结尾的目录型基路径（9,310 处引用 / 729 个唯一值）",
   "每个基路径用 dir_base.plan 判族；另用 780 个候选名（0..15 带 l/c/r/m、left/middle/right、top-left 四种写法、tl/mm/br、bg/normal/hover 等 ×5 种扩展名）逐条 contains() 记录真实文件名"
  ],
  "totals": {
@@ -31,7 +31,12 @@
   "layouts_decoded": 2708,
   "dir_base_refs": 9310,
   "dir_base_unique": 729,
-  "unknown_bases": 0
+  "unknown_bases": 0,
+  "dir_base_refs_by_key": {
+   "sFileName": 9133,
+   "sBgFileName": 105,
+   "sBarFileName": 72
+  }
  },
  "kinds_by_base": {
   "h_slice": 109,

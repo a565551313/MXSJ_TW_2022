@@ -337,6 +337,60 @@ class TestGuiReview(unittest.TestCase):
         writer.assert_not_called()
         self.assertFalse(target.exists())
 
+    def test_pack_dialog_cancel_keeps_an_existing_target(self):
+        """写包取消时不能删用户选来覆盖的旧文件。
+
+        ``patch_pack_copy`` 只在 ``os.replace`` 之前取消，并自己删临时
+        文件；目标路径上原来的包根本没被碰过，删掉就是丢数据。
+        """
+        from ui_editor.core.errors import Cancelled
+
+        w = self.window
+        # 输出不能和源包同目录：_pack_sources() 会把同目录的 .fls 都当受保护源。
+        out_dir = self.root / "out"
+        out_dir.mkdir()
+        src, target = self.root / "source.fls", out_dir / "existing.fls"
+        plain = dlg_codec.dump_bytes(w.doc.to_dicts())
+        src.write_bytes(
+            pack_build.build_archive(
+                [pack_build.RawEntry(mx_hash(b"ui/test.dlg"), 7, plain)]
+            )
+        )
+        target.write_bytes(b"older pack, keep me")
+        w.doc.source_pack = (str(src), "ui/test.dlg")
+        statuses: list[str] = []
+
+        class Handle:
+            cancelled = False
+
+            @staticmethod
+            def report(done, total, text=""):
+                return
+
+        def run_now(_title, work, **_kwargs):
+            return work(Handle())
+
+        with (
+            mock.patch(
+                "ui_editor.ui.workflows.QFileDialog.getSaveFileName",
+                return_value=(str(target), ""),
+            ),
+            mock.patch(
+                "ui_editor.ui.save_workflows.SaveReviewDialog.exec",
+                return_value=1,
+            ),
+            mock.patch.object(w, "run_busy", side_effect=run_now),
+            mock.patch.object(
+                w, "_write_pack_copy_file",
+                side_effect=Cancelled("用户取消")),
+            mock.patch.object(w, "_update_status", statuses.append),
+        ):
+            w.save_to_pack_dialog()
+        self.assertTrue(target.exists(), "取消不能删掉已有目标文件")
+        self.assertEqual(target.read_bytes(), b"older pack, keep me")
+        self.assertTrue(any("没有写出新包" in text for text in statuses),
+                        statuses)
+
     def test_save_review_states_how_the_target_entry_is_written(self):
         """保存清单必须明说目标条目会被怎么写（P2-1：连没改也会重写）。"""
         w = self.window

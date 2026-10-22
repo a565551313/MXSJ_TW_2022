@@ -141,17 +141,33 @@ class TestFidelityMarkers(unittest.TestCase):
         self.assertNotIn("无图片素材", fidelity.summary(w, view))
 
     def test_multi_frame_normal_state_mentions_state_mapping(self):
-        """多帧整图：常态画 0 号帧，其余帧是状态；序号语义必须写明未核实。"""
+        """多帧整图：常态画 0 号帧；用途与序号都未经核实，措辞不能当真。"""
         view = FakeView(frames={"b.png": 4}, sizes={"b.png": (120, 44)})
         w = widget("CButton", sFileName="b.png", iWidth=120, iHeight=44)
         found = fidelity.markers(w, view)
         self.assertEqual([m.code for m in found], ["native_first_frame"])
-        self.assertIn("序号语义未核实", found[0].text)
+        self.assertIn("用途与顺序未核实", found[0].text)
+        self.assertNotIn("悬停", found[0].text)
         self.assertLessEqual(len(found[0].text), 60)
         # 尺寸对不上：整套拉伸，仍是「近似」
         bigger = widget("CButton", sFileName="b.png", iWidth=300, iHeight=30)
         stretched = fidelity.markers(bigger, view)
         self.assertEqual([m.code for m in stretched], ["stretched_image"])
+
+    def test_one_missing_axis_is_compared_per_axis(self):
+        """只写了一个轴时，另一个轴按图自身尺寸画——要按逐轴结果判 1:1。
+
+        ``painters.effective_size`` 是逐轴补的：300×0 的控件 + 120×44
+        的图，画布画的是 300×44（横向拉伸），不能报「原生 1:1」。
+        """
+        view = FakeView(frames={"b.png": 1}, sizes={"b.png": (120, 44)})
+        wide = widget("CButton", sFileName="b.png", iWidth=300, iHeight=0)
+        self.assertEqual(codes(wide, view), ["stretched_image"])
+        tall = widget("CButton", sFileName="b.png", iWidth=0, iHeight=30)
+        self.assertEqual(codes(tall, view), ["stretched_image"])
+        # 写了的那个轴与图相同、缺的轴由图补上：仍是 1:1
+        same = widget("CButton", sFileName="b.png", iWidth=120, iHeight=0)
+        self.assertEqual(codes(same, view), ["native_1to1"])
 
     def test_widget_without_image_has_no_markers(self):
         w = widget("CTextFrame", sText="hi")

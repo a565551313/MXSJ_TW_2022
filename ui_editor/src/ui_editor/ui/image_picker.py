@@ -193,6 +193,7 @@ class FamilyImportDialog(QDialog):
         self.base_path = ""
         self.pairs: list[tuple[str, str]] = []
         self.order_rule = "name"      # name / alias / natural
+        self._picture_key: tuple | None = None   # 预览缓存键
 
         self._base = QLineEdit(base, self)
         self._base.setPlaceholderText(
@@ -336,12 +337,22 @@ class FamilyImportDialog(QDialog):
 
     @staticmethod
     def _montage(images: list[QImage], columns: int,
-                 max_height: int = 110) -> QPixmap | None:
-        """把若干张图按 ``columns`` 列排成一张预览（等比缩放）。"""
+                 max_height: int = 110,
+                 max_width: int = 480) -> QPixmap | None:
+        """把若干张图按 ``columns`` 列排成一张预览（等比缩放，宽高都设上限）。
+
+        只限高是不够的：三张 1000×40 的横片并排后会得到 3000 像素宽的
+        pixmap，``QLabel`` 把它当最小宽度，对话框会被撑得比屏幕还宽。
+        """
         if not images:
             return None
         tallest = max(image.height() for image in images) or 1
-        scale = min(1.0, max_height / tallest)
+        widest = 0
+        for start in range(0, len(images), columns):
+            row = images[start:start + columns]
+            widest = max(widest, sum(image.width() for image in row))
+        scale = min(1.0, max_height / tallest,
+                    max_width / widest if widest else 1.0)
         scaled = [image.scaled(
             max(1, int(image.width() * scale)),
             max(1, int(image.height() * scale)),
@@ -374,14 +385,34 @@ class FamilyImportDialog(QDialog):
 
         这是"效果不对"最直接的补救：按钮横片的 3 张是拼成一条，
         序号帧只显示第 0 帧——两者一眼就能分辨，不用等保存回包。
+
+        结果按 ``(族类型, 文件清单)`` 缓存：改目录路径时 ``_refresh`` 每个
+        按键都会重来一次，但图片没变，不必重新解码（多张大图时肉眼可见
+        地卡）。缺图不能拼半张——九片少一块会让后面每格都错位。
         """
+        key = (kind, tuple(path for _rel, path in pairs))
+        if key == self._picture_key:
+            return
+        self._picture_key = key
+        if not pairs:
+            self._pic.clear()
+            self._pic_caption.setText("")
+            self._pic.setText("（图片数量与族类型对不上，无法预览）")
+            return
         images: list[QImage] = []
+        failed = 0
         for _rel, path in pairs:
             image = QImage(str(path))
-            if not image.isNull():
-                images.append(image)
-        if not images:
-            self._pic.setText("（.igs 精灵没法在这里预览，保存后看画布）")
+            if image.isNull():
+                failed += 1
+                continue
+            images.append(image)
+        if failed:
+            self._pic.clear()
+            self._pic_caption.setText("")
+            self._pic.setText(
+                "（.igs 精灵没法在这里预览，保存后看画布）" if not images else
+                "（这一族里有图片读不出来，没拼；保存后看画布）")
             return
         if kind == "frames":
             pixmap = self._montage(images[:1], 1)
@@ -403,6 +434,7 @@ class FamilyImportDialog(QDialog):
             note = "单图"
         if pixmap is None:
             self._pic.clear()
+            self._pic_caption.setText("")
             return
         self._pic.setPixmap(pixmap)
         self._pic_caption.setText(
@@ -425,10 +457,49 @@ class FamilyImportDialog(QDialog):
                 found.append(rel)
         return found
 
+    def _existing_family_plan(self, base: str):
+        """这个目录里已经拼得成的一族（``dir_base.plan`` 的判定）。"""
+        if self._exists is None or not base:
+            return None
+        try:
+            return dir_base.plan(base, self._exists)
+        except ValueError:
+            return None
+
+    def _shadowing_plan(self, base: str, pairs, ext: str):
+        """写完这一族后仍会优先命中的**别的**族；没有就返回 None。
+
+        ``dir_base.plan`` 按固定优先级取第一个齐装的族：往已有
+        ``0l/0c/0r`` 的目录里再写 ``0/1/2.png``，保存后游戏仍按按钮横片
+        拼——新图写进去了却没人用，画布和游戏都不会变。这里把「新写的
+        几张」并进存在性判断，模拟保存后的 ``plan``：命中的不是这一族，
+        就说明这次写入会被旧族盖住。
+        """
+        if self._exists is None or not base or not pairs:
+            return None
+        target = {base + rel.replace("/", "\\") + ext for rel, _path in pairs}
+
+        def exists(name: str) -> bool:
+            return name.replace("/", "\\") in target or bool(self._exists(name))
+
+        try:
+            chosen = dir_base.plan(base, exists)
+        except ValueError:
+            return None
+        if chosen is None:
+            return None
+        same = {piece.replace("/", "\\") for piece in chosen.pieces} == target
+        return None if same else chosen
+
     def _refresh(self) -> None:
         pairs, error = self._family_pairs()
         base, base_error = self._normalised_base()
-        existing = self._existing_pieces(base, pairs) if base and not error else []
+        valid_base = bool(base) and not error and not base_error
+        existing = (self._existing_pieces(base, pairs)
+                    if valid_base else [])
+        existing_plan = self._existing_family_plan(base) if valid_base else None
+        shadowed = (self._shadowing_plan(base, pairs, self.ext)
+                    if valid_base else None)
         self._summary.setText(self.summary_text())
         lines = []
         for rel, path in pairs:
@@ -463,20 +534,40 @@ class FamilyImportDialog(QDialog):
             notes.append(problem)
         self._hint.setText("\n".join(notes))
         self._note.setText(f"族目录：{base or '（未填）'}" if base else "")
+        warnings = []
         if existing:
-            self._warning.setText(
+            warnings.append(
                 f"⚠ 这个目录里已经有 {len(existing)} 张同名图（{base}）。\n"
                 "继续并保存回包会替换它们——原来那个按钮的图就变了。\n"
                 "要做「新」按钮：换个没用过的目录名（点下面「换个新目录」），"
                 "控件会自动指向新目录。")
+        if shadowed is not None:
+            warnings.append(
+                f"⚠ 这个目录里已经有一族【{dir_base.describe(shadowed)}】，"
+                "游戏的拼名规则会先按它来；\n"
+                f"这次写的 {len(pairs)} 张不会生效。请点「换个新目录」，"
+                "或先删掉旧那族多余的子图。")
+        elif existing_plan is not None and pairs:
+            target = {base + rel.replace("/", "\\") + self.ext
+                      for rel, _path in pairs}
+            same = ({piece.replace("/", "\\")
+                     for piece in existing_plan.pieces} == target)
+            if not same:
+                warnings.append(
+                    f"注意：这个目录里原有的【{dir_base.describe(existing_plan)}】"
+                    "保存后不会再被用到（新族排在它前面）。")
+        if warnings:
+            self._warning.setText("\n".join(warnings))
             self._warning.show()
         else:
             self._warning.clear()
             self._warning.hide()
         ok = self._buttons.button(QDialogButtonBox.StandardButton.Ok)
         ok.setText(f"替换 {len(existing)} 张" if existing else "写入新族")
-        self._free_btn.setVisible(bool(existing) and self._exists is not None)
-        ok.setEnabled(not problem)
+        self._free_btn.setVisible(
+            (bool(existing) or shadowed is not None)
+            and self._exists is not None)
+        ok.setEnabled(not problem and shadowed is None)
 
     def _use_free_base(self) -> None:
         pairs, _error = self._family_pairs()
@@ -485,7 +576,12 @@ class FamilyImportDialog(QDialog):
             return
 
         def conflicts(candidate: str) -> int:
-            return len(self._existing_pieces(candidate, pairs))
+            count = len(self._existing_pieces(candidate, pairs))
+            if count:
+                return count
+            # 目录里已有一族（名字完全不同）也不算空闲：再写进去可能
+            # 被旧族盖住，或把旧族顶掉。
+            return 1 if self._existing_family_plan(candidate) else 0
 
         new_base = suggest_free_base(base, conflicts)
         if new_base and new_base != base:
@@ -498,6 +594,11 @@ class FamilyImportDialog(QDialog):
         pairs, pair_error = self._family_pairs()
         if error or pair_error:
             self._refresh()
+            return
+        if self._shadowing_plan(base, pairs, self.ext) is not None:
+            # 旧族优先级更高，写进去也不会生效；红字已说明原因。
+            self._refresh()
+            self._base.setFocus()
             return
         self.base_path = base
         self.pairs = pairs
@@ -708,7 +809,12 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
             self._list.setCurrentItem(self._list.item(row))
 
     def _refresh_row(self, path: str) -> None:
-        """就地刷新一行（标签/提示变了，不重建整张表）。"""
+        """就地刷新一行（标签/提示变了，不重建整张表）。
+
+        路径本身可能换了内容（替换包里已有同名图、重挂同一族），所以缩略图
+        也要作废重解：``_thumb_done`` 里还留着它的话，``_fill_thumbs`` 会
+        跳过，列表一直显示旧图，直到下次过滤。
+        """
         row = self._row_of(path)
         if row < 0:
             return
@@ -718,6 +824,9 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
             return
         item.setText(fresh.text())
         item.setToolTip(fresh.toolTip())
+        self._thumb_done.discard(path)
+        item.setIcon(self._blank_icon)
+        self._schedule_thumbs()
 
     def _update_count(self) -> None:
         families = sum(1 for row in range(self._list.count())
