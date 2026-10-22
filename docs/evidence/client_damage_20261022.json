@@ -1,0 +1,1350 @@
+{
+  "schema_version": 1,
+  "research_dates": [
+    "2026-10-21",
+    "2026-10-22"
+  ],
+  "source_revision": "3264485af763c426259c7f937d8d978d3cb2ea67",
+  "status": "static_evidence_and_structural_candidates_not_native_verified",
+  "inputs": {
+    "data/script.fls": "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+    "tools/decompiler/script_fls_keys.json": "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+    "mxmain.dll": "637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d"
+  },
+  "parser_inputs": {
+    "server/tools/verify_client_data_boundaries.py": "8b1a117160e1354f1d66ff4f7976669550b43d0231ac520805ea7c6fbbc6eca1",
+    "server/tools/script_literal_reader.py": "cc676ff94432753cdaca80ab322c188871ca31493aa81702f2c1469f034232b3",
+    "tools/decompiler/batch_decompile.py": "a74742231e04c018c3f63452cfc859c20c6404fd73891eae9076bfcf8185b4e8",
+    "tools/fls_batch_decoder.py": "eaadba011aeb45bd976b25ddf2c234ca20e8ad8dc89c20144a53ef44e6df721f"
+  },
+  "saved_parameters": {
+    "3458": {
+      "keys": [
+        15,
+        254,
+        213,
+        134,
+        224
+      ],
+      "bounds": [
+        68605,
+        137213,
+        205806,
+        274351
+      ]
+    },
+    "4329": {
+      "keys": [
+        223,
+        91,
+        105,
+        140,
+        56
+      ],
+      "bounds": [
+        73780,
+        147538,
+        221279,
+        294973
+      ]
+    },
+    "3773": {
+      "keys": [
+        233,
+        141,
+        5,
+        14,
+        50
+      ],
+      "bounds": [
+        6306,
+        12598,
+        18939,
+        25271
+      ]
+    }
+  },
+  "candidate_4329_keys": [
+    223,
+    212,
+    230,
+    140,
+    56
+  ],
+  "candidate_audit": [
+    {
+      "bounds": [
+        73783,
+        147538,
+        221282,
+        294973
+      ],
+      "pass": false,
+      "error": "stack underflow at 221115: opcode 4 (DUP_TOP), expected one value to duplicate"
+    },
+    {
+      "bounds": [
+        73783,
+        147538,
+        221283,
+        294973
+      ],
+      "pass": true,
+      "metadata": {
+        "DATA": {
+          "store_offset": 230463,
+          "duplicates": []
+        },
+        "MAGIC_MAPPING": {
+          "store_offset": 234105,
+          "duplicates": []
+        },
+        "PHYSICS_LIST": {
+          "store_offset": 235347,
+          "duplicates": []
+        },
+        "ZSXIBIE_LIST": {
+          "store_offset": 236067,
+          "duplicates": []
+        },
+        "FSMAGIC_LIST": {
+          "store_offset": 236157,
+          "duplicates": []
+        },
+        "ZSKANGXING_LIST": {
+          "store_offset": 237558,
+          "duplicates": []
+        },
+        "FSKANGXING_LIST": {
+          "store_offset": 238407,
+          "duplicates": []
+        }
+      }
+    },
+    {
+      "bounds": [
+        73783,
+        147539,
+        221282,
+        294973
+      ],
+      "pass": false,
+      "error": "stack underflow at 221115: opcode 4 (DUP_TOP), expected one value to duplicate"
+    },
+    {
+      "bounds": [
+        73783,
+        147539,
+        221283,
+        294973
+      ],
+      "pass": true,
+      "metadata": {
+        "DATA": {
+          "store_offset": 230463,
+          "duplicates": []
+        },
+        "MAGIC_MAPPING": {
+          "store_offset": 234105,
+          "duplicates": []
+        },
+        "PHYSICS_LIST": {
+          "store_offset": 235347,
+          "duplicates": []
+        },
+        "ZSXIBIE_LIST": {
+          "store_offset": 236067,
+          "duplicates": []
+        },
+        "FSMAGIC_LIST": {
+          "store_offset": 236157,
+          "duplicates": []
+        },
+        "ZSKANGXING_LIST": {
+          "store_offset": 237558,
+          "duplicates": []
+        },
+        "FSKANGXING_LIST": {
+          "store_offset": 238407,
+          "duplicates": []
+        }
+      }
+    },
+    {
+      "bounds": [
+        73783,
+        147540,
+        221282,
+        294973
+      ],
+      "pass": false,
+      "error": "LOAD_CONST index 13010 out of range (co_consts has 3288 entries) at 147266: opcode 100 (LOAD_CONST)"
+    },
+    {
+      "bounds": [
+        73783,
+        147540,
+        221283,
+        294973
+      ],
+      "pass": false,
+      "error": "LOAD_CONST index 13010 out of range (co_consts has 3288 entries) at 147266: opcode 100 (LOAD_CONST)"
+    },
+    {
+      "bounds": [
+        73784,
+        147538,
+        221282,
+        294973
+      ],
+      "pass": false,
+      "error": "stack underflow at 221115: opcode 4 (DUP_TOP), expected one value to duplicate"
+    },
+    {
+      "bounds": [
+        73784,
+        147538,
+        221283,
+        294973
+      ],
+      "pass": true,
+      "metadata": {
+        "DATA": {
+          "store_offset": 230463,
+          "duplicates": []
+        },
+        "MAGIC_MAPPING": {
+          "store_offset": 234105,
+          "duplicates": []
+        },
+        "PHYSICS_LIST": {
+          "store_offset": 235347,
+          "duplicates": []
+        },
+        "ZSXIBIE_LIST": {
+          "store_offset": 236067,
+          "duplicates": []
+        },
+        "FSMAGIC_LIST": {
+          "store_offset": 236157,
+          "duplicates": []
+        },
+        "ZSKANGXING_LIST": {
+          "store_offset": 237558,
+          "duplicates": []
+        },
+        "FSKANGXING_LIST": {
+          "store_offset": 238407,
+          "duplicates": []
+        }
+      }
+    },
+    {
+      "bounds": [
+        73784,
+        147539,
+        221282,
+        294973
+      ],
+      "pass": false,
+      "error": "stack underflow at 221115: opcode 4 (DUP_TOP), expected one value to duplicate"
+    },
+    {
+      "bounds": [
+        73784,
+        147539,
+        221283,
+        294973
+      ],
+      "pass": true,
+      "metadata": {
+        "DATA": {
+          "store_offset": 230463,
+          "duplicates": []
+        },
+        "MAGIC_MAPPING": {
+          "store_offset": 234105,
+          "duplicates": []
+        },
+        "PHYSICS_LIST": {
+          "store_offset": 235347,
+          "duplicates": []
+        },
+        "ZSXIBIE_LIST": {
+          "store_offset": 236067,
+          "duplicates": []
+        },
+        "FSMAGIC_LIST": {
+          "store_offset": 236157,
+          "duplicates": []
+        },
+        "ZSKANGXING_LIST": {
+          "store_offset": 237558,
+          "duplicates": []
+        },
+        "FSKANGXING_LIST": {
+          "store_offset": 238407,
+          "duplicates": []
+        }
+      }
+    },
+    {
+      "bounds": [
+        73784,
+        147540,
+        221282,
+        294973
+      ],
+      "pass": false,
+      "error": "LOAD_CONST index 13010 out of range (co_consts has 3288 entries) at 147266: opcode 100 (LOAD_CONST)"
+    },
+    {
+      "bounds": [
+        73784,
+        147540,
+        221283,
+        294973
+      ],
+      "pass": false,
+      "error": "LOAD_CONST index 13010 out of range (co_consts has 3288 entries) at 147266: opcode 100 (LOAD_CONST)"
+    },
+    {
+      "bounds": [
+        73785,
+        147538,
+        221282,
+        294973
+      ],
+      "pass": false,
+      "error": "stack underflow at 221115: opcode 4 (DUP_TOP), expected one value to duplicate"
+    },
+    {
+      "bounds": [
+        73785,
+        147538,
+        221283,
+        294973
+      ],
+      "pass": true,
+      "metadata": {
+        "DATA": {
+          "store_offset": 230463,
+          "duplicates": []
+        },
+        "MAGIC_MAPPING": {
+          "store_offset": 234105,
+          "duplicates": []
+        },
+        "PHYSICS_LIST": {
+          "store_offset": 235347,
+          "duplicates": []
+        },
+        "ZSXIBIE_LIST": {
+          "store_offset": 236067,
+          "duplicates": []
+        },
+        "FSMAGIC_LIST": {
+          "store_offset": 236157,
+          "duplicates": []
+        },
+        "ZSKANGXING_LIST": {
+          "store_offset": 237558,
+          "duplicates": []
+        },
+        "FSKANGXING_LIST": {
+          "store_offset": 238407,
+          "duplicates": []
+        }
+      }
+    },
+    {
+      "bounds": [
+        73785,
+        147539,
+        221282,
+        294973
+      ],
+      "pass": false,
+      "error": "stack underflow at 221115: opcode 4 (DUP_TOP), expected one value to duplicate"
+    },
+    {
+      "bounds": [
+        73785,
+        147539,
+        221283,
+        294973
+      ],
+      "pass": true,
+      "metadata": {
+        "DATA": {
+          "store_offset": 230463,
+          "duplicates": []
+        },
+        "MAGIC_MAPPING": {
+          "store_offset": 234105,
+          "duplicates": []
+        },
+        "PHYSICS_LIST": {
+          "store_offset": 235347,
+          "duplicates": []
+        },
+        "ZSXIBIE_LIST": {
+          "store_offset": 236067,
+          "duplicates": []
+        },
+        "FSMAGIC_LIST": {
+          "store_offset": 236157,
+          "duplicates": []
+        },
+        "ZSKANGXING_LIST": {
+          "store_offset": 237558,
+          "duplicates": []
+        },
+        "FSKANGXING_LIST": {
+          "store_offset": 238407,
+          "duplicates": []
+        }
+      }
+    },
+    {
+      "bounds": [
+        73785,
+        147540,
+        221282,
+        294973
+      ],
+      "pass": false,
+      "error": "LOAD_CONST index 13010 out of range (co_consts has 3288 entries) at 147266: opcode 100 (LOAD_CONST)"
+    },
+    {
+      "bounds": [
+        73785,
+        147540,
+        221283,
+        294973
+      ],
+      "pass": false,
+      "error": "LOAD_CONST index 13010 out of range (co_consts has 3288 entries) at 147266: opcode 100 (LOAD_CONST)"
+    }
+  ],
+  "magic_consensus_count": 925,
+  "magic_ambiguous_ids": [
+    4791,
+    2429
+  ],
+  "table_observations": {
+    "3458": {
+      "table": "DATA",
+      "slice_start": 258,
+      "store_offset": 231408,
+      "count": 914,
+      "top_level_duplicate_keys": [],
+      "selected_rows": {
+        "1101": {
+          "name": {
+            "hex": "ac79a4f4a6e6b6b3",
+            "text_cp950": "流水行雲"
+          },
+          "pow": {
+            "hex": "35302b28736c762d31292a38",
+            "text_cp950": "50+(slv-1)*8"
+          },
+          "powrate": {
+            "hex": "39342b28736c762d31292a30",
+            "text_cp950": "94+(slv-1)*0"
+          },
+          "res_n": 20,
+          "res_p": 30,
+          "res_d": 0,
+          "res_m": -30,
+          "desc": {
+            "hex": "",
+            "text_cp950": ""
+          }
+        },
+        "1114": {
+          "name": {
+            "hex": "abe1b56fa8eea448",
+            "text_cp950": "後發制人"
+          },
+          "pow": {
+            "hex": "3135302b28736c762d31292a3132",
+            "text_cp950": "150+(slv-1)*12"
+          },
+          "powrate": {
+            "hex": "3232302b28736c762d31292a31",
+            "text_cp950": "220+(slv-1)*1"
+          },
+          "res_n": 0,
+          "res_p": -10,
+          "res_d": 30,
+          "res_m": 20,
+          "desc": {
+            "hex": "",
+            "text_cp950": ""
+          }
+        },
+        "1414": {
+          "name": {
+            "hex": "bbc8aa65b8a8a445a4d1",
+            "text_cp950": "銀河落九天"
+          },
+          "pow": {
+            "hex": "3137302b28736c762d31292a3133",
+            "text_cp950": "170+(slv-1)*13"
+          },
+          "powrate": {
+            "hex": "3131332b28736c762d31292a30",
+            "text_cp950": "113+(slv-1)*0"
+          },
+          "res_n": 30,
+          "res_p": -10,
+          "res_d": 0,
+          "res_m": 20,
+          "desc": {
+            "hex": "",
+            "text_cp950": ""
+          }
+        },
+        "1620": {
+          "name": {
+            "hex": "a6caa842acefb7a8",
+            "text_cp950": "百步穿楊"
+          },
+          "pow": {
+            "hex": "3138302b28736c762d31292a3130",
+            "text_cp950": "180+(slv-1)*10"
+          },
+          "powrate": {
+            "hex": "3131322b28736c762d31292a30",
+            "text_cp950": "112+(slv-1)*0"
+          },
+          "res_n": 10,
+          "res_p": 0,
+          "res_d": 40,
+          "res_m": 10,
+          "desc": {
+            "hex": "",
+            "text_cp950": ""
+          }
+        }
+      }
+    },
+    "4329": {
+      "table": "DATA",
+      "slice_start": 249,
+      "store_offset": 230463,
+      "count": 927,
+      "top_level_duplicate_keys": [],
+      "selected_rows": {
+        "1101": {
+          "name": {
+            "hex": "ac79a4f4a6e6b6b3",
+            "text_cp950": "流水行雲"
+          },
+          "pow": {
+            "hex": "35302b28736c762d31292a38",
+            "text_cp950": "50+(slv-1)*8"
+          },
+          "powrate": {
+            "hex": "39342b28736c762d31292a30",
+            "text_cp950": "94+(slv-1)*0"
+          },
+          "res_n": 20,
+          "res_p": 30,
+          "res_d": 0,
+          "res_m": -30,
+          "desc": {
+            "hex": "b3e6c5e9aaabb27aa7f0c0bba141b7eda65ea658b4a3b0aab07bc1d7b2762372b6cbae60b5b2aa47a147a5bfb160aaba393425",
+            "text_cp950": "單體物理攻擊，當回合提高閃避率#r傷害結果：正常的94%"
+          }
+        },
+        "1114": {
+          "name": {
+            "hex": "abe1b56fa8eea448",
+            "text_cp950": "後發制人"
+          },
+          "pow": {
+            "hex": "3135302b28736c762d31292a3132",
+            "text_cp950": "150+(slv-1)*12"
+          },
+          "powrate": {
+            "hex": "3231302b28736c762d31292a31",
+            "text_cp950": "210+(slv-1)*1"
+          },
+          "formula6": {
+            "hex": "3231302b28736c762d31292a31",
+            "text_cp950": "210+(slv-1)*1"
+          },
+          "formula7": {
+            "hex": "3231302b28736c762d31292a312b686c762a33",
+            "text_cp950": "210+(slv-1)*1+hlv*3"
+          },
+          "res_n": 0,
+          "res_p": -10,
+          "res_d": 30,
+          "res_m": 20,
+          "desc": {
+            "hex": "b3e6c5e9aaabb27aa7f0c0bba141a8cfa5ceabe1a5bba65ea658b0b1a4eea141a455a65ea658b669a6e6a7f0c0bba141b374b276c2bdadbf2372a6dba8ada952a4a4b276a1472b31302524666f726d756c6137",
+            "text_cp950": "單體物理攻擊，使用後本回合停止，下回合進行攻擊，速率翻倍#r自身命中率：+10%$formula7"
+          }
+        },
+        "1128": {
+          "name": {
+            "hex": "a448a4a3a5d1a952",
+            "text_cp950": "人不由命"
+          },
+          "pow": {
+            "hex": "3231302b28736c762d31292a3132",
+            "text_cp950": "210+(slv-1)*12"
+          },
+          "powrate": {
+            "hex": "3134302b28736c762d31292a30",
+            "text_cp950": "140+(slv-1)*0"
+          },
+          "res_n": -20,
+          "res_p": -20,
+          "res_d": -20,
+          "res_m": -20,
+          "desc": {
+            "hex": "b3e6c5e9aaabb27aa7f0c0bba141a670aa47a5d8bcd0c2beb77ea4a3ac4fbed4a468a141a8babbf2a8fca8ecaabab6cbae60b4eea5622372a6dba8ada952a4a4b276a1472b3130252372b6cbae60b5b2aa47a1472b343025",
+            "text_cp950": "單體物理攻擊，如果目標職業不是戰士，那麼受到的傷害減半#r自身命中率：+10%#r傷害結果：+40%"
+          }
+        },
+        "1414": {
+          "name": {
+            "hex": "bbc8aa65b8a8a445a4d1",
+            "text_cp950": "銀河落九天"
+          },
+          "pow": {
+            "hex": "3137302b28736c762d31292a3133",
+            "text_cp950": "170+(slv-1)*13"
+          },
+          "powrate": {
+            "hex": "3131332b28736c762d31292a30",
+            "text_cp950": "113+(slv-1)*0"
+          },
+          "formula7": {
+            "hex": "3131332b686c762a31",
+            "text_cp950": "113+hlv*1"
+          },
+          "res_n": 30,
+          "res_p": -10,
+          "res_d": 0,
+          "res_m": 20,
+          "desc": {
+            "hex": "b3e6c5e9aaabb27aa7f0c0bb24666f726d756c6137",
+            "text_cp950": "單體物理攻擊$formula7"
+          }
+        },
+        "1620": {
+          "name": {
+            "hex": "a6caa842acefb7a8",
+            "text_cp950": "百步穿楊"
+          },
+          "pow": {
+            "hex": "3138302b28736c762d31292a3130",
+            "text_cp950": "180+(slv-1)*10"
+          },
+          "powrate": {
+            "hex": "3131322b28736c762d31292a30",
+            "text_cp950": "112+(slv-1)*0"
+          },
+          "res_n": 10,
+          "res_p": 0,
+          "res_d": 40,
+          "res_m": 10,
+          "desc": {
+            "hex": "b3e6c5e9aaabb27aa7f0c0bba141a843b4a3a4c9a440afc5b5a5afc5a141bc57a55b3125a952a4a42372b6cbae60b5b2aa47a1472b313225",
+            "text_cp950": "單體物理攻擊，每提升一級等級，增加1%命中#r傷害結果：+12%"
+          }
+        },
+        "13370": {
+          "name": {
+            "hex": "b4a42020bbee",
+            "text_cp950": "握  魂"
+          },
+          "pow": {
+            "hex": "3235352b28736c762d31292a3139",
+            "text_cp950": "255+(slv-1)*19"
+          },
+          "powrate": {
+            "hex": "3130302b28736c762d31292a30",
+            "text_cp950": "100+(slv-1)*0"
+          },
+          "res_n": 30,
+          "res_p": 20,
+          "res_d": 0,
+          "res_m": 20,
+          "desc": {
+            "hex": "a8cfa5cea6b3383025b7a7b276b379a6a832303025b6cbae60a146a75fab68a6dba8ada6a9b0a3a5d8bcd0a9d2a8fcb6cbae60aaba31353025aabaaef0a6e5a1462352a6dba8adaef0a6e5a4a3a8ac333025aec9a4a3afe0a8cfa5ce236e",
+            "text_cp950": "使用有80%概率造成200%傷害；否則自身扣除目標所受傷害的150%的氣血；#R自身氣血不足30%時不能使用#n"
+          }
+        },
+        "24360": {
+          "name": {
+            "hex": "a8b8a4fda947",
+            "text_cp950": "邪王咒"
+          },
+          "pow": {
+            "hex": "3237352b28736c762d31292a3230",
+            "text_cp950": "275+(slv-1)*20"
+          },
+          "powrate": {
+            "hex": "3130302b28736c762d31292a30",
+            "text_cp950": "100+(slv-1)*0"
+          },
+          "res_n": 0,
+          "res_p": 20,
+          "res_d": 20,
+          "res_m": 30,
+          "desc": {
+            "hex": "a8cfa5cea6b3383025b7a7b276b379a6a832303025b6cbae60a146a75fab68a6dba8ada6a9b0a3a5d8bcd0a9d2a8fcb6cbae60aaba32303025aabaaef0a6e5a1462352b45faca1b7eda65ea658a4a3afe0a8cfa5cea146a6dba8adaef0a6e5a4a3a8ac333025aec9a4a3afe0a8cfa5ce236e",
+            "text_cp950": "使用有80%概率造成200%傷害；否則自身扣除目標所受傷害的200%的氣血；#R復活當回合不能使用；自身氣血不足30%時不能使用#n"
+          }
+        },
+        "4759": {
+          "name": {
+            "hex": "b5b4bc76",
+            "text_cp950": "絕影"
+          },
+          "pow": {
+            "hex": "3238302b28736c762d31292a37",
+            "text_cp950": "280+(slv-1)*7"
+          },
+          "powrate": {
+            "hex": "39302b28736c762d31292a30",
+            "text_cp950": "90+(slv-1)*0"
+          },
+          "res_n": 0,
+          "res_p": 0,
+          "res_d": 0,
+          "res_m": 0,
+          "desc": {
+            "hex": "ac49ae69a6b9a569bb73b379a440add3a4c0a8ada141a569a7f0c0bba4a3a650aababcc4a448a141a4c0a8adaabaa7f0c0bba44fa6b3a9d2adb0a743a141a6fdbcc9c0bbb458b276c17baec9b4a3b0aa363025",
+            "text_cp950": "施展此可製造一個分身，可攻擊不同的敵人，分身的攻擊力有所降低，但暴擊幾率臨時提高60%"
+          }
+        }
+      }
+    },
+    "1179": {
+      "table": "allskill",
+      "slice_start": 0,
+      "store_offset": 21900,
+      "count": 128,
+      "top_level_duplicate_keys": [],
+      "selected_rows": {
+        "1101": {
+          "name": {
+            "hex": "ac79a4f4a6e6b6b3",
+            "text_cp950": "流水行雲"
+          },
+          "power": 10.0,
+          "eff": 0.0,
+          "res_n": 0.0,
+          "res_p": 0.0,
+          "res_d": 0.0,
+          "res_m": 0.0,
+          "desc": {
+            "hex": "a843baebadd7b5a5afc5a8cfbc57a55bb07bc1d7aabaaec4aa47a662adec2372a6b3b0f2c2a6a457b06ca55b3525a146a843baebadd7b5a5afc5b4a3a4c931302372abc2a44fa1423225b374b276",
+            "text_cp950": "每精修等級使增加閃避的效果在原#r有基礎上追加5%；每精修等級提升10#r威力、2%速率"
+          }
+        },
+        "1114": {
+          "name": {
+            "hex": "abe1b56fa8eea448",
+            "text_cp950": "後發制人"
+          },
+          "power": 15.0,
+          "eff": 3.0,
+          "res_n": 0.0,
+          "res_p": 0.0,
+          "res_d": 0.0,
+          "res_m": 0.0,
+          "desc": {
+            "hex": "a843baebadd7b5a5afc5b4a3a4c93135abc2a44fa1423325aec4b276",
+            "text_cp950": "每精修等級提升15威力、3%效率"
+          }
+        },
+        "1209": {
+          "name": {
+            "hex": "a4d1e6a2c2e0b0ab",
+            "text_cp950": "天璇轉鬥"
+          },
+          "power": 10.0,
+          "eff": 0.0,
+          "res_n": 0.0,
+          "res_p": 0.0,
+          "res_d": 5.0,
+          "res_m": 0.0,
+          "desc": {
+            "hex": "a843baebadd7b5a5afc5a8cfadeca6b3aabaa8cfa5ceaef0a6e5adada8eeb4eea4d6313025a1462372a843baebadd7b5a5afc5b4a3a4c93130abc2a44fa141a548a4ce3525c646a5a9a7dca9ca",
+            "text_cp950": "每精修等級使原有的使用氣血限制減少10%；#r每精修等級提升10威力，以及5%靈巧抗性"
+          }
+        },
+        "1414": {
+          "name": {
+            "hex": "bbc8aa65b8a8a445a4d1",
+            "text_cp950": "銀河落九天"
+          },
+          "power": 15.0,
+          "eff": 1.0,
+          "res_n": 0.0,
+          "res_p": 2.0,
+          "res_d": 0.0,
+          "res_m": 0.0,
+          "desc": {
+            "hex": "a843baebadd7b5a5afc5b4a3a4c93135abc2a44fa1423125aec4b276a1412372a548a4ce3225a44fbcc4a7dca9ca",
+            "text_cp950": "每精修等級提升15威力、1%效率，#r以及2%力敵抗性"
+          }
+        },
+        "2202": {
+          "name": {
+            "hex": "b854b0ada84d",
+            "text_cp950": "禁鬼決"
+          },
+          "power": 8.0,
+          "eff": 0.0,
+          "res_n": 2.0,
+          "res_p": 0.0,
+          "res_d": 0.0,
+          "res_m": 0.0,
+          "desc": {
+            "hex": "a843baebadd7b5a5afc5b06ca55bb4b6b371a7dca9ca3225a146a843baebadd7b5a5afc5b4a3a4c923723225b374b276a142b4a3a4c938abc2a44f",
+            "text_cp950": "每精修等級追加普通抗性2%；每精修等級提升#r2%速率、提升8威力"
+          }
+        },
+        "2205": {
+          "name": {
+            "hex": "b940b0adb2c5",
+            "text_cp950": "辟鬼符"
+          },
+          "power": 12.0,
+          "eff": 0.0,
+          "res_n": 2.5,
+          "res_p": 0.0,
+          "res_d": 2.5,
+          "res_m": 0.0,
+          "desc": {
+            "hex": "a843baebadd7b5a5afc5b06ca55bc646a5a9a94db4b6b371a7dca9caa655322e35252372a843baebadd7b5a5afc5b4a3a4c93132abc2a44fa141b9efb0adbbeea5cdaaabb6cbae60b5b2aa47bc57a55b313025",
+            "text_cp950": "每精修等級追加靈巧和普通抗性各2.5%#r每精修等級提升12威力，對鬼魂生物傷害結果增加10%"
+          }
+        }
+      }
+    },
+    "3773": {
+      "table": "DATA",
+      "slice_start": 0,
+      "store_offset": 8013,
+      "count": 103,
+      "top_level_duplicate_keys": [],
+      "selected_rows": {
+        "1101": {}
+      }
+    }
+  },
+  "failed_baselines": {
+    "3458_solver_enabled": {
+      "slice_start": 258,
+      "first_violation": "opcode is not allowed in module-level literal code (this reader follows literal tables only; a module that computes its tables at import time is reported here) at 205526: opcode 20 (?)"
+    },
+    "4329_saved": {
+      "slice_start": 0,
+      "first_violation": "EXTENDED_ARG before argument-free instruction at 73769: opcode 0 (?)"
+    },
+    "3773_saved": {
+      "slice_start": 0,
+      "first_violation": "opcode is not allowed in module-level literal code (this reader follows literal tables only; a module that computes its tables at import time is reported here) at 6284: opcode 64 (?)"
+    }
+  },
+  "code_observations": [
+    {
+      "entry": 4760,
+      "path": [
+        "<module>",
+        "GetAttackPower"
+      ],
+      "firstlineno": 527,
+      "flags": 67,
+      "code_sha256": "0a7bbc4b92dd50b364bee653e380c6739ca4bdd10db56e1742548b01da0693fb",
+      "windows": [
+        {
+          "start": 198,
+          "end_exclusive": 283,
+          "hex": "7c07006908007407007c0300830100640d0015640e007c0900640f0014177c0c006410001417147c0d00177c0b0064110014177407007c0f0083010064120015177c0900640d001417641300178301007c0e00147d"
+        },
+        {
+          "start": 289,
+          "end_exclusive": 360,
+          "hex": "7c07006908007407007c0300830100640d0015640e007c0900640f0014177c0a006414001417147c0f00177c0a0064150014177c0900640d001417641300178301007c0e00147d"
+        },
+        {
+          "start": 362,
+          "end_exclusive": 461,
+          "hex": "68000004640b0002640e003c0464160002640d003c04641700026418003c04641900026412003c04641a0002641b003c04641c0002641d003c04641e0002641f003c7d10007c10006909007c0400640b00830200642000157d11007c11007c0500147d"
+        }
+      ]
+    },
+    {
+      "entry": 4760,
+      "path": [
+        "<module>",
+        "GetAttackNum"
+      ],
+      "firstlineno": 452,
+      "flags": 67,
+      "code_sha256": "e9ed663790c4e3ab74a4727332827a08e1b641e8a7ed48b1164520c1d9ad8315",
+      "windows": [
+        {
+          "start": 108,
+          "end_exclusive": 170,
+          "hex": "7c05006902006406008301007d07007c04006903007404007c02008301007405007c070064070019830100158301007405007c070064050019830100177d"
+        },
+        {
+          "start": 313,
+          "end_exclusive": 359,
+          "hex": "640a007408007c05007c0600830200167d08006402007d09006407007d0a007910007405007c08008301007d0a00"
+        },
+        {
+          "start": 475,
+          "end_exclusive": 497,
+          "hex": "7c08007c09007c0a007c0a007c06006a000066040053"
+        }
+      ]
+    },
+    {
+      "entry": 4760,
+      "path": [
+        "<module>",
+        "GetLinkHeroMagicDct"
+      ],
+      "firstlineno": 570,
+      "flags": 67,
+      "code_sha256": "3712e39cfa87ed5777c918e863520f0f8d106cd726135fe95bf140c00541a034",
+      "windows": [
+        {
+          "start": 315,
+          "end_exclusive": 350,
+          "hex": "7c03008302007c1200640c003c740d007c1d008301007c1200640d003c7c1200640e00"
+        }
+      ]
+    },
+    {
+      "entry": 1406,
+      "path": [
+        "<module>",
+        "S2CWarWState"
+      ],
+      "firstlineno": 506,
+      "flags": 67,
+      "code_sha256": "ba053f743bf1bfa04424aea592d221ab94ce36de5a73a5b3004bc5919b3dc15f",
+      "windows": [
+        {
+          "start": 0,
+          "end_exclusive": 181,
+          "hex": "7400006901007400006902008301007d01007c00006903006401008301007c01005f04007c00006905006402006403008302007c01005f06007c00006905006403006404008302007c01005f07007c00006905006405006404008302007c01005f08007c00006903006403008301007c01005f09007c0000690a006401008301007c01005f0b007c00006903006401008301007c01005f0c006406007c01006904007c01006906007c01006907007c01006908007c"
+        }
+      ]
+    },
+    {
+      "entry": 697,
+      "path": [
+        "<module>",
+        "GetStateInfo"
+      ],
+      "firstlineno": 407,
+      "flags": 67,
+      "code_sha256": "fa288714a737b284dfb8945db4a74fee9201f9b299e936c04880bd9105152316",
+      "windows": [
+        {
+          "start": 191,
+          "end_exclusive": 215,
+          "hex": "7c0200690f007c00005f10007c02006911007c00005f1200"
+        }
+      ]
+    },
+    {
+      "entry": 697,
+      "path": [
+        "<module>"
+      ],
+      "firstlineno": 4,
+      "flags": 64,
+      "code_sha256": "221dbc73792455787f48d1ffa8ef967083e4729aa275c4e1f063cd33a9019483",
+      "windows": [
+        {
+          "start": 528,
+          "end_exclusive": 540,
+          "hex": "6404005a4900640a005a4a00"
+        }
+      ]
+    },
+    {
+      "entry": 4279,
+      "path": [
+        "<module>",
+        "CWarrior",
+        "CreateModifyHP"
+      ],
+      "firstlineno": 889,
+      "flags": 67,
+      "code_sha256": "2967bad130762deb1ee08317a5c2d33095c3da6a649428719a4b26438e508cbc",
+      "windows": [
+        {
+          "start": 19,
+          "end_exclusive": 180,
+          "hex": "7c01006402006a05006f7400017c03006400006a08006f0d00017c00006903007d03006e0100017c03007404006905006a02006f2500017406006907006400006403007c01007c04007c00006901006602008304007d050071b600017406006908006400006404007c01007c04007c00006901006602008304007d05006e2300017406006907006400006405007c01000b7c04007c00006901006602008304007d"
+        }
+      ]
+    },
+    {
+      "entry": 4080,
+      "path": [
+        "<module>",
+        "CNumber",
+        "AddRestrainImg"
+      ],
+      "firstlineno": 62,
+      "flags": 67,
+      "code_sha256": "1a797d0dc9204d5ca1314886c381f39017dbaa35404b44a052063d0bf6c7b847",
+      "windows": [
+        {
+          "start": 21,
+          "end_exclusive": 158,
+          "hex": "7c01005c02007d02007d03007c03006f3300017c02006401006a04006f1c00017401006902007c00006402007403006904008303007d0400718a00016400007d04006e3000017c02006401006a00006f1c00017401006902007c00006403007403006904008303007d04006e0700016400007d04007c04006f1000017c00006905006906007c040083"
+        }
+      ]
+    },
+    {
+      "entry": 1693,
+      "path": [
+        "<module>",
+        "RandInt"
+      ],
+      "firstlineno": 318,
+      "flags": 67,
+      "code_sha256": "66fea3431cb94e480cface593284c202e1617bf2e35fb6d47391cf2832383610",
+      "windows": [
+        {
+          "start": 0,
+          "end_exclusive": 49,
+          "hex": "6401006400006b00007d02007c02006901007c00007c01008302007d03007402006903007c03008301007d03007c030053"
+        }
+      ]
+    }
+  ],
+  "native_address_check": {
+    "preferred_image_base": "0x400000",
+    "historical_va": "0x004e76dc",
+    "file_offset": 944860,
+    "bytes_hex": "75280fb659020fb64101c1e30803d883c103894dfc8b7efc81ffbc177f007565",
+    "interpretation": "Historical division-handler label not confirmed: begins jne; see note section 7."
+  },
+  "symbol_survey": {
+    "research_date": "2026-10-21",
+    "coverage": "script/core/ plus selected hero/prop/netwar/magicinfo/pet and related entries; symbol filter only, not all-archive semantic coverage",
+    "entry_count": 75,
+    "entries": [
+      {
+        "entry": 2,
+        "filename": "script/dialog/skillmagic/pagemagic.py"
+      },
+      {
+        "entry": 93,
+        "filename": "script/prop.py"
+      },
+      {
+        "entry": 129,
+        "filename": "script/core/perform.py"
+      },
+      {
+        "entry": 214,
+        "filename": "script/core/magic.py"
+      },
+      {
+        "entry": 231,
+        "filename": "script/core/magicperform/warcmd/warcmdplaysound.py"
+      },
+      {
+        "entry": 305,
+        "filename": "script/core/warturn.py"
+      },
+      {
+        "entry": 348,
+        "filename": "script/core/preload/preload_skill.py"
+      },
+      {
+        "entry": 412,
+        "filename": "script/core/new_maze.py"
+      },
+      {
+        "entry": 427,
+        "filename": "script/core/warmask.py"
+      },
+      {
+        "entry": 499,
+        "filename": "script/core/magicperform/warcmd/warcmddelay.py"
+      },
+      {
+        "entry": 697,
+        "filename": "script/core/war.py"
+      },
+      {
+        "entry": 746,
+        "filename": "script/core/warobserver.py"
+      },
+      {
+        "entry": 803,
+        "filename": "script/core/magicperform/warcmd/warcmdattackpre.py"
+      },
+      {
+        "entry": 826,
+        "filename": "script/nethero.py"
+      },
+      {
+        "entry": 881,
+        "filename": "script/core/maze.py"
+      },
+      {
+        "entry": 963,
+        "filename": "script/core/serversource.py"
+      },
+      {
+        "entry": 1067,
+        "filename": "script/core/wareffect.py"
+      },
+      {
+        "entry": 1081,
+        "filename": "script/core/preload/preload_pfm.py"
+      },
+      {
+        "entry": 1249,
+        "filename": "script/mxgame/pet/dlgpetbase.py"
+      },
+      {
+        "entry": 1307,
+        "filename": "script/mxgame/fakewar/fakewarwarrior.py"
+      },
+      {
+        "entry": 1397,
+        "filename": "script/core/magicmgr.py"
+      },
+      {
+        "entry": 1406,
+        "filename": "script/netwar.py"
+      },
+      {
+        "entry": 1480,
+        "filename": "script/core/magicperform/warcmd/warcmdrolepalette.py"
+      },
+      {
+        "entry": 1544,
+        "filename": "script/core/magicperform/wareff.py"
+      },
+      {
+        "entry": 1612,
+        "filename": "script/core/magicperform/warcmd.py"
+      },
+      {
+        "entry": 1621,
+        "filename": "script/core/magicperform/warcmd/warcmdplaymoveani.py"
+      },
+      {
+        "entry": 1834,
+        "filename": "script/core/magicperform/warcmd/warcmdmove.py"
+      },
+      {
+        "entry": 1847,
+        "filename": "script/core/magicperform/warcmd/warcmdbgrolecolor.py"
+      },
+      {
+        "entry": 1884,
+        "filename": "script/core/warrecord.py"
+      },
+      {
+        "entry": 1905,
+        "filename": "script/core/magicperform/warcmd/warcmdplayghostmoveani.py"
+      },
+      {
+        "entry": 2114,
+        "filename": "script/core/preload/magic_pfm.py"
+      },
+      {
+        "entry": 2296,
+        "filename": "script/core/mxgw.py"
+      },
+      {
+        "entry": 2302,
+        "filename": "script/core/warbackground.py"
+      },
+      {
+        "entry": 2370,
+        "filename": "script/core/magicperform/magicperform.py"
+      },
+      {
+        "entry": 2371,
+        "filename": "script/core/preload/preload_mov.py"
+      },
+      {
+        "entry": 2397,
+        "filename": "script/core/magicperform/warcmd/warcmdspare.py"
+      },
+      {
+        "entry": 2691,
+        "filename": "script/core/magicperform/warcmd/warcmdenermyhurt.py"
+      },
+      {
+        "entry": 2767,
+        "filename": "script/core/preload/preload_mgc.py"
+      },
+      {
+        "entry": 2784,
+        "filename": "script/core/magicperform/warcmd/warcmdplayani.py"
+      },
+      {
+        "entry": 2915,
+        "filename": "script/core/magicperform/warcmdsignaldefines.py"
+      },
+      {
+        "entry": 2997,
+        "filename": "script/core/wartargetline.py"
+      },
+      {
+        "entry": 3023,
+        "filename": "script/core/preload/preload_defines.py"
+      },
+      {
+        "entry": 3038,
+        "filename": "script/hero.py"
+      },
+      {
+        "entry": 3080,
+        "filename": "script/core/mxv.py"
+      },
+      {
+        "entry": 3098,
+        "filename": "script/core/warenteranimation.py"
+      },
+      {
+        "entry": 3153,
+        "filename": "script/core/timer.py"
+      },
+      {
+        "entry": 3261,
+        "filename": "script/core/switchback.py"
+      },
+      {
+        "entry": 3328,
+        "filename": "script/core/baidu.py"
+      },
+      {
+        "entry": 3367,
+        "filename": "script/core/magicperform/warcmd/warcmdremant.py"
+      },
+      {
+        "entry": 3402,
+        "filename": "script/core/magicperform/newmagiccontext.py"
+      },
+      {
+        "entry": 3443,
+        "filename": "script/core/warweather.py"
+      },
+      {
+        "entry": 3471,
+        "filename": "script/core/preload/preloadmgr.py"
+      },
+      {
+        "entry": 3542,
+        "filename": "script/core/magicperform/testdrawmagic.py"
+      },
+      {
+        "entry": 3595,
+        "filename": "script/core/magicperform/warcmd/warcmdbgcolor.py"
+      },
+      {
+        "entry": 3644,
+        "filename": "script/core/magicperform/warcmd/warcmdsetmulaction.py"
+      },
+      {
+        "entry": 3699,
+        "filename": "script/core/preload/myprofie.py"
+      },
+      {
+        "entry": 3722,
+        "filename": "script/core/magicperform/warcmd/warcmdaddbuff.py"
+      },
+      {
+        "entry": 3790,
+        "filename": "script/core/preload/magic_state.py"
+      },
+      {
+        "entry": 3815,
+        "filename": "script/core/garth.py"
+      },
+      {
+        "entry": 3835,
+        "filename": "script/core/packetchk.py"
+      },
+      {
+        "entry": 3933,
+        "filename": "script/core/preload/magic_turn.py"
+      },
+      {
+        "entry": 3950,
+        "filename": "script/core/magicperform/warutil.py"
+      },
+      {
+        "entry": 3972,
+        "filename": "script/core/magicperform/warcmd/warcmdsetaction.py"
+      },
+      {
+        "entry": 3991,
+        "filename": "script/core/magicperform/warcmd/warcmdplayghostani.py"
+      },
+      {
+        "entry": 4099,
+        "filename": "script/core/mapskillctrl.py"
+      },
+      {
+        "entry": 4114,
+        "filename": "script/core/resetcontrol.py"
+      },
+      {
+        "entry": 4126,
+        "filename": "script/core/magicperform/warcmd/warcmdenermyhit.py"
+      },
+      {
+        "entry": 4207,
+        "filename": "script/touchgame.py"
+      },
+      {
+        "entry": 4279,
+        "filename": "script/core/warrior.py"
+      },
+      {
+        "entry": 4418,
+        "filename": "script/core/magicperform/warriorinterface.py"
+      },
+      {
+        "entry": 4477,
+        "filename": "script/core/preload/preload_interface.py"
+      },
+      {
+        "entry": 4494,
+        "filename": "script/core/magicperform/warcmd/warcmdattackend.py"
+      },
+      {
+        "entry": 4694,
+        "filename": "script/core/magicperform/warcmdbase.py"
+      },
+      {
+        "entry": 4760,
+        "filename": "script/magicinfo.py"
+      },
+      {
+        "entry": 4959,
+        "filename": "script/core/magicperform/warcmd/warcmdghost.py"
+      }
+    ]
+  }
+}
