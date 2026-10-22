@@ -191,7 +191,7 @@ class TestDiagnostics(unittest.TestCase):
         issues = diagnose(doc, resource_exists=exists)
         self.assertIn("combdialog4/新登陆界面/上文字底/0l.png", probed)
         issue = next(i for i in issues if i.code == "RESOURCE_DIR_BASE")
-        self.assertIn("三态横片", issue.message)
+        self.assertIn("按钮横片", issue.message)
         self.assertNotIn("RESOURCE_MISSING", {i.code for i in issues})
         probed.clear()
 

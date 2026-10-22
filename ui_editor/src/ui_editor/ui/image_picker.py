@@ -331,8 +331,8 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
             bottom.addWidget(add_btn)
             family_btn = QPushButton("新建拼名族…", self)
             family_btn.setToolTip(
-                "把几张图合成一个按钮/边框：选 3 张 = 三态横片 0l/0c/0r，"
-                "9 张 = 九宫格，以此类推。\n"
+                "把几张图合成一个按钮/边框：3 张 = 一个按钮（0l/0c/0r），"
+                "6 张 = 两个状态，9 张 = 九宫格。\n"
                 "图片按族内命名写进包（保存回包时一并写入），"
                 "属性直接填成这一族的目录路径")
             family_btn.clicked.connect(self._choose_family)

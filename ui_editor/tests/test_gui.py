@@ -1405,7 +1405,7 @@ class TestImagePicker(unittest.TestCase):
                         side_effect=fake_dialog2):
             self.assertTrue(panel._browse_from_pack("sFileName", edit))
         self.assertIn(base, captured["paths"])
-        self.assertIn("三态横片", captured["family_label"](base))
+        self.assertIn("按钮横片", captured["family_label"](base))
         # 新建族要按控件类型预选族类型，并知道包里有没有同名条目
         self.assertEqual(captured["kwargs"]["widget_type"], "CTextButton")
         self.assertIs(captured["kwargs"]["exists"], assets.resource_exists)
