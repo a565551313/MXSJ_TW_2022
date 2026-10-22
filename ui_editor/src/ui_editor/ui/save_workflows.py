@@ -26,6 +26,14 @@ from ..core.review import referenced_staged_images
 from .save_review import SaveReviewDialog
 
 
+class _StagingVerifyFailed(PackError):
+    """替换前那道校验没通过（目标文件/原包一个字节都没动）。
+
+    只有它该被说成「校验未通过」；:class:`PackError` 还包含路径写错、
+    磁盘满、守卫拒绝等「压根没写」的失败，提示与建议都不一样。
+    """
+
+
 class SaveWorkflowsMixin:
     """主窗口保存职责分组，不独立创建窗口。
 
@@ -268,7 +276,8 @@ class SaveWorkflowsMixin:
                 read_back=read_back, trusted_copy=True)
             verified.update(result)
             if not result.get("ok"):
-                raise PackError(result.get("error") or "写回校验未通过")
+                raise _StagingVerifyFailed(
+                    result.get("error") or "写回校验未通过")
 
         info = pack_build.patch_pack_copy_many(
             src_pack, layouts, tmp_out, extra_entries=extras,
@@ -391,15 +400,26 @@ class SaveWorkflowsMixin:
             self._update_status(
                 "写回已取消：没有写出新包，原包与目标文件都没动。")
             return False
-        except PackError as exc:
+        except _StagingVerifyFailed as exc:
             # 校验在原子替换之前跑：失败时目标文件（可能就是原包）没动过。
             if released:
                 self.resolver.mount_pack(path, priority=True)
-            target = ("原包" if in_place else
-                      "目标包" if self._is_own_output(path) else "已有文件")
-            QMessageBox.warning(
-                self, "写回校验未通过",
-                f"{exc}\n{target}没有改动，可以继续编辑后重试。")
+            if in_place:
+                tail = "原包没有改动，可以继续编辑后重试。"
+            elif self._is_own_output(path):
+                tail = "目标包没有改动，可以继续编辑后重试。"
+            elif Path(path).exists():
+                tail = "已有文件没有改动，可以继续编辑后重试。"
+            else:
+                # 目标路径原本就没有文件，说「已有文件没改动」是胡话。
+                tail = "没有写出新包。"
+            QMessageBox.warning(self, "写回校验未通过", f"{exc}\n{tail}")
+            return False
+        except PackError as exc:
+            # 路径写错、磁盘满、守卫拒绝……压根没进入校验，按「写回失败」报。
+            if released:
+                self.resolver.mount_pack(path, priority=True)
+            QMessageBox.warning(self, "写回失败", str(exc))
             return False
         except Exception as exc:
             if released:

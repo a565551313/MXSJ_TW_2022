@@ -55,8 +55,8 @@
 
 | 项 | 结果 |
 | --- | --- |
-| 新增测试 `test_gui_save_mode.py` | 15 项通过 |
-| 全套回归（沙箱 offscreen） | **771 项**：770 通过、1 跳过、0 错误 |
+| 新增测试 `test_gui_save_mode.py` | 24 项通过（含审查复核追加的 9 项） |
+| 全套回归（沙箱 offscreen） | **782 项**：781 通过、1 跳过、0 错误 |
 | `ruff check` / `check_windows_compat` | 0 / 0/0/0 |
 | Windows 实机 | **未验** |
 | 截图 | `docs/analysis/ui_save_mode_0160/`（工具栏两种状态、菜单、确认框、保存清单） |

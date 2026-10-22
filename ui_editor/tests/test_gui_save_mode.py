@@ -412,6 +412,50 @@ class SaveModeTests(unittest.TestCase):
         self.assertEqual(self.src.read_bytes(), before, "原包不能被动")
         self.assertTrue(Path(out).is_file())
 
+
+    def test_plain_write_failure_is_not_reported_as_verification(self):
+        """路径写错/磁盘满这类失败不能说成「校验未通过、继续编辑再试」。"""
+        bad = str(self.root / "no_such_dir" / "interface_edited.fls")
+        self._save(output=bad)
+        self.assertEqual(self.warnings[0][0], "写回失败")
+        self.assertIn("写入新包失败", self.warnings[0][1])
+        self.assertNotIn("校验未通过", self.warnings[0][1])
+        self.assertNotIn("已有文件没有改动", self.warnings[0][1])
+
+    def test_verification_failure_to_new_path_says_nothing_written(self):
+        """目标是还不存在的新文件时，不能说「已有文件没有改动」。"""
+        out = str(self.root / "interface_edited.fls")
+        self.assertFalse(Path(out).exists())
+
+        def read_back(p, r, n, enc="big5"):
+            return ([{"sWidgetType": "WRONG"}], {})
+
+        with mock.patch.object(MainWindow, "_fresh_pack_readback",
+                               staticmethod(read_back), create=True):
+            self._save(output=out)
+        self.assertEqual(self.warnings[0][0], "写回校验未通过")
+        self.assertIn("没有写出新包", self.warnings[0][1])
+        self.assertNotIn("已有文件", self.warnings[0][1])
+        self.assertFalse(Path(out).exists())
+
+    def test_verification_failure_to_existing_foreign_file_keeps_it(self):
+        """目标是已有的别人的包：校验失败时保持原样并说清。"""
+        # 换个目录：源包同目录里的 .fls 一律当源包保护，会被保存前检查挡下
+        out = self.root / "sub" / "other.fls"
+        out.parent.mkdir()
+        out.write_bytes(_mini_pack_bytes(RES))   # 合法但与本布局无关的包
+        good = out.read_bytes()
+
+        def read_back(p, r, n, enc="big5"):
+            return ([{"sWidgetType": "WRONG"}], {})
+
+        with mock.patch.object(MainWindow, "_fresh_pack_readback",
+                               staticmethod(read_back), create=True):
+            self._save(output=str(out))
+        self.assertEqual(self.warnings[0][0], "写回校验未通过")
+        self.assertIn("已有文件没有改动", self.warnings[0][1])
+        self.assertEqual(out.read_bytes(), good)
+
     def test_failed_verification_leaves_origin_untouched(self):
         """宽松模式下校验失败：原包一个字节都不能动，且提示说清楚。"""
         self._switch("loose")
