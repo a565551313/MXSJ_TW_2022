@@ -194,16 +194,28 @@ def markers(widget, view, button_state: str = "normal") -> list[Marker]:
                              "切割线未与客户端核实。"))
         return result
 
-    if frames == 1:
+    if frames >= 1:
         width, height = _natural_size(widget)
-        if width > 0 and height > 0:
-            image_size = view.image_size(name) if view is not None else None
-            if image_size and (width, height) == tuple(image_size):
+        image_size = view.image_size(name) if view is not None else None
+        # ``iWidth``/``iHeight`` 为 0 时画布按图片自身尺寸画（见
+        # ``painters.effective_size`` 的兜底），那也是 1:1——不能因为
+        # 控件没写尺寸就说成「没有图片素材」。真包 2.7 万张图里 2.3 万张
+        # 是这种自动尺寸（实测 2026-10-22）。
+        sized = width > 0 and height > 0
+        if image_size and (not sized or (width, height) == tuple(image_size)):
+            if frames == 1:
                 result.append(Marker(NATIVE, "native_1to1",
                                      "整图按原尺寸 1:1 绘制。"))
             else:
-                result.append(Marker(APPROX, "stretched_image",
-                                     "整图拉伸到控件尺寸（客户端切法未核实）。"))
+                # 状态栏常驻标签只显示前 60 字（window_setup），
+                # 这句要短到整句进得去。
+                result.append(Marker(
+                    NATIVE, "native_first_frame",
+                    f"多帧整图（{frames} 帧）：常态画 0 号帧、1:1 绘制；"
+                    "其余帧留给悬停/按下（序号语义未核实）。"))
+        elif sized:
+            result.append(Marker(APPROX, "stretched_image",
+                                 "整图拉伸到控件尺寸（客户端切法未核实）。"))
 
     if button_state != "normal" and widget.wtype in _BUTTON_TYPES:
         index = BUTTON_STATE_INDEX.get(button_state)

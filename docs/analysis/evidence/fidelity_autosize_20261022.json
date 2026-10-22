@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-22",
+  "purpose": "核对 0.13.5：真包里有多少图片控件没写 iWidth/iHeight（画布按图片自身尺寸画，保真度标注却要求宽高相等 → 落到「无图片素材」）",
+  "pack": {
+    "name": "interface.fls",
+    "bytes": 614482967,
+    "entries": 53556,
+    "crc32": "0x4fa12d0b",
+    "sha256": "3fb516a9...1fb124"
+  },
+  "layouts_scanned": 2708,
+  "image_fields": 25708,
+  "with_size": 2317,
+  "without_size": 23391,
+  "without_size_ratio": 0.9099,
+  "without_size_by_widget": {
+    "CImagesFrame": 7988,
+    "CButton": 5309,
+    "CTextButton": 4636,
+    "CHFrame": 3134,
+    "CHPngFrame": 666,
+    "CHPageButton": 472,
+    "CHPagePngButton": 319,
+    "CVFrame": 310,
+    "CVPngFrame": 172,
+    "CVPageButton": 126,
+    "CBitmapHFrame": 110,
+    "CSpriteFrame": 98,
+    "CVPagePngButton": 48,
+    "CBitmapVFrame": 3
+  },
+  "with_size_by_widget": {
+    "CFrame": 1119,
+    "CPngNineFrame": 523,
+    "CBorder": 330,
+    "CBitmapFrame": 311,
+    "CCombCheckButton": 27,
+    "CTextButton": 7
+  },
+  "note": "只统计 sFileName 非空的控件；CProgress 用 sBgFileName，未纳入。"
+}

@@ -124,6 +124,35 @@ class TestFidelityMarkers(unittest.TestCase):
         self.assertEqual(found[0].code, "runtime_hidden")
         self.assertIn("进游戏不显示", found[0].text)
 
+    def test_auto_size_image_is_not_reported_as_missing(self):
+        """iWidth/iHeight=0 的控件按图片自身尺寸画，不能说成「无图片素材」。
+
+        真包 2,708 篇布局里 25,708 处图片字段有 23,391 处没写尺寸
+        （2026-10-22 实测），登录按钮就是这种：旧实现返回空标注，状态栏
+        显示「无图片素材：按控件类型/样式表绘制」——明明画的是真图。
+        """
+        view = FakeView(frames={"b\\": 3}, sizes={"b\\": (120, 44)})
+        w = widget("CButton", sFileName="b\\", iWidth=0, iHeight=0)
+        found = fidelity.markers(w, view)
+        self.assertEqual([m.code for m in found], ["native_first_frame"])
+        self.assertEqual(found[0].level, fidelity.NATIVE)
+        self.assertIn("3 帧", found[0].text)
+        self.assertTrue(fidelity.summary(w, view).startswith(fidelity.NATIVE))
+        self.assertNotIn("无图片素材", fidelity.summary(w, view))
+
+    def test_multi_frame_normal_state_mentions_state_mapping(self):
+        """多帧整图：常态画 0 号帧，其余帧是状态；序号语义必须写明未核实。"""
+        view = FakeView(frames={"b.png": 4}, sizes={"b.png": (120, 44)})
+        w = widget("CButton", sFileName="b.png", iWidth=120, iHeight=44)
+        found = fidelity.markers(w, view)
+        self.assertEqual([m.code for m in found], ["native_first_frame"])
+        self.assertIn("序号语义未核实", found[0].text)
+        self.assertLessEqual(len(found[0].text), 60)
+        # 尺寸对不上：整套拉伸，仍是「近似」
+        bigger = widget("CButton", sFileName="b.png", iWidth=300, iHeight=30)
+        stretched = fidelity.markers(bigger, view)
+        self.assertEqual([m.code for m in stretched], ["stretched_image"])
+
     def test_widget_without_image_has_no_markers(self):
         w = widget("CTextFrame", sText="hi")
         self.assertEqual(fidelity.markers(w, FakeView()), [])
