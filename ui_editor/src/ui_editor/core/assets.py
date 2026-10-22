@@ -168,6 +168,10 @@ class AssetResolver:
         self._animation_cache: dict[str, animation.AnimationAsset | None] = {}
         self._slice_cache: dict[str, SliceRecipe | None] = {}
         self._media_cache: list[str] | None = None
+        # 目录型基路径的拼名方案：选图窗一屏几百个族、每次刷新都要问
+        # 一遍「这族拼得出来吗」，729 个族一次 0.4 s；缓存后是查字典。
+        self._family_plans: dict[str, dir_base.DirBasePlan | None] = {}
+        self._family_pieces: dict[str, tuple[str, ...]] = {}
         self._session_layouts: dict[int, str] = {}  # 用户明确给出的路径；仅本会话
         self._staged: dict[str, bytes] = {}  # 选图窗新加、待随包写入
         self._issues: list[ResourceIssue] = []
@@ -190,6 +194,8 @@ class AssetResolver:
         self._animation_cache.clear()
         self._slice_cache.clear()
         self._media_cache = None
+        self._family_plans.clear()
+        self._family_pieces.clear()
         return pack
 
     def mount_dir(self, dirpath: str | Path, *,
@@ -222,6 +228,8 @@ class AssetResolver:
         if root not in self._loose_dirs:
             self._loose_dirs.append(root)
             self._media_cache = None
+            self._family_plans.clear()
+            self._family_pieces.clear()
             self._animation_cache.clear()
             self._slice_cache.clear()
 
@@ -262,6 +270,8 @@ class AssetResolver:
         name = validate_layout_path(name)
         self._session_layouts[mx_hash(name.encode("gbk"))] = name
         self._media_cache = None
+        self._family_plans.clear()
+        self._family_pieces.clear()
 
     def fetch_pack_dlg_bytes(self, pack_path: str | Path, name: str) -> bytes:
         """从指定包取得解密后的布局字节，不转码、不重排字段。"""
@@ -435,6 +445,12 @@ class AssetResolver:
                 stem = name.split("#", 1)[0]
                 if name == key or stem in parents:
                     cache.pop(name, None)
+        # 挂账可能把半套族补成整族（也可能换掉某一块），拼名方案与
+        # 子图清单都要按目录重算。
+        for cache in (self._family_plans, self._family_pieces):
+            for name in list(cache):
+                if name in parents or name == key:
+                    cache.pop(name, None)
 
     def _staged_lookup(self, name: str) -> bytes | None:
         for key in (name, name.replace("/", "\\"),
@@ -463,10 +479,15 @@ class AssetResolver:
                 known_layout_hashes() | self._session_layouts)
             todo.extend((pack, layout) for layout in layouts)
         total = len(todo)
+        # 两段合成一条 0→100 的进度。以前第一段报自己的 done/total，走完
+        # 是 100%，第二段（核对 2,783 个名字、729 个族要逐块探）没有进度，
+        # 进度条停在 100% 好一会儿——用户看到的就是「到 100% 卡住」。
         for done, (pack, layout) in enumerate(todo, 1):
             if progress is not None and (done == 1 or done == total
                                          or done % 16 == 0):
-                progress(done, total, f"整理包内资源清单 {done}/{total}")
+                share = int(done * 50 / total) if total else 0
+                progress(share, 100,
+                         f"整理包内资源清单 {done}/{total}（第 1 步：读布局）")
             data = pack.read_named(layout)
             if data is None:
                 continue
@@ -474,8 +495,22 @@ class AssetResolver:
             text = unpack_packed_text(data).decode(
                 "gb18030", "surrogateescape")
             found.update(_scan_media_in_text(text))
-        self._media_cache = sorted(
-            path for path in found if self._media_available(path))
+        # 第二段：核对这些名字在不在包里。目录型基路径要按拼名族逐块问
+        # （729 个族约 0.4 s，Windows 机械盘上更久）。
+        names = sorted(found)
+        total = len(names)
+        kept: list[str] = []
+        for done, path in enumerate(names, 1):
+            if progress is not None and total and (
+                    done == total or done % 32 == 0):
+                progress(50 + int(done * 50 / total), 100,
+                         f"核对资源是否在包内 {done}/{total}"
+                         "（第 2 步：查包内有没有）")
+            if self._media_available(path):
+                kept.append(path)
+        if progress is not None:
+            progress(100, 100, f"清单整理完成：{len(kept)} 个可用资源")
+        self._media_cache = kept
         return self._media_cache
 
     def _media_available(self, path: str) -> bool:
@@ -487,10 +522,51 @@ class AssetResolver:
         """
         if not dir_base.is_dir_base(path):
             return self._exists(path)
+        return self.family_plan(path) is not None
+
+    def family_plan(self, name: str) -> dir_base.DirBasePlan | None:
+        """目录型基路径的拼名方案（按路径缓存）。
+
+        选图窗每开一次、每敲一个字、每挂账一张图都要重算一遍「这族拼得
+        出来吗」。729 个族每次约 0.4 s；缓存后第二次打开是查字典。
+        挂载/散装目录/挂账变化时由 :meth:`_forget_piece_caches` 与挂载
+        路径一并清掉。
+        """
+        if not dir_base.is_dir_base(name):
+            return None
+        key = name.replace("/", "\\")
+        if key in self._family_plans:
+            return self._family_plans[key]
         try:
-            return dir_base.plan(path, self.resource_exists) is not None
+            plan = dir_base.plan(name, self.resource_exists)
         except ValueError:
-            return False
+            plan = None
+        self._family_plans[key] = plan
+        return plan
+
+    def family_pieces(self, name: str) -> tuple[str, ...]:
+        """这族里**实际有哪些子图**（完整路径；带缓存）。
+
+        拼得成整族就按族给；拼不成则拿候选名逐个探——即使命名规则认
+        不出来，也能把目录里真有的文件列给用户看。整族都没图返回空。
+        """
+        if not dir_base.is_dir_base(name):
+            return ()
+        key = name.replace("/", "\\")
+        if key in self._family_pieces:
+            return self._family_pieces[key]
+        plan = self.family_plan(name)
+        if plan is not None:
+            pieces = plan.pieces
+        else:
+            try:
+                pieces = tuple(name + rel
+                               for rel in dir_base.probe_pieces(
+                                   name, self.resource_exists))
+            except ValueError:
+                pieces = ()
+        self._family_pieces[key] = pieces
+        return pieces
 
     def staged_families(self) -> dict[str, list[str]]:
         """已挂账的图里能拼成**整族**的：``{目录型基路径: [子图路径…]}``。

@@ -43,14 +43,13 @@ from __future__ import annotations
 
 import bisect
 import os
-import shutil
 import struct
 import tempfile
 from collections.abc import Iterable
 from pathlib import Path
 
 from . import dlg_codec
-from .errors import PackError
+from .errors import Cancelled, PackError
 from .mxhash import mx_hash, path_hash
 from .native_layout import decode_native, encode_layout, path_bytes, plain_if_layout
 from .output_paths import guard_output
@@ -479,8 +478,40 @@ def patch_raw_entry_in_file(pack_path, entry_id: int,
     return {"mode": "added", "target_index": pos, "bytes": size}
 
 
+#: 边复制边报进度的块大小（真包 614 MB，8 MB 一块约 77 次回报）
+_COPY_CHUNK = 8 * 1024 * 1024
+
+
+def _mb(size: int) -> str:
+    return f"{size / (1024 * 1024):.0f} MB"
+
+
+def _check_cancel(cancelled) -> None:
+    if cancelled is not None and cancelled():
+        raise Cancelled("写包已取消")
+
+
+def _copy_with_progress(src: Path, out: Path, progress=None,
+                        cancelled=None) -> int:
+    """复制整包，按字节回报进度（写 614 MB 时窗口不能像死了）。"""
+    total = src.stat().st_size
+    done = 0
+    with open(src, "rb") as fin, open(out, "wb") as fout:
+        while True:
+            chunk = fin.read(_COPY_CHUNK)
+            if not chunk:
+                break
+            fout.write(chunk)
+            done += len(chunk)
+            if progress is not None:
+                progress(done, total, f"写入新包：复制 {_mb(done)} / {_mb(total)}")
+            _check_cancel(cancelled)
+    return done
+
+
 def _create_layout_copy(src: Path, out: Path, path: str, plain: bytes,
-                        extras: dict[str, bytes]) -> dict:
+                        extras: dict[str, bytes], progress=None,
+                        cancelled=None) -> dict:
     """缺失布局按原生路径密钥写密文；其它资源仍原样存储。"""
     layout_id = mx_hash(path_bytes(path))
     with FlsPack(src) as pack:
@@ -492,12 +523,16 @@ def _create_layout_copy(src: Path, out: Path, path: str, plain: bytes,
             raise PackError("布局/附加资源路径哈希冲突")
         writes[entry_id] = data
     try:
-        shutil.copyfile(src, out)
+        _copy_with_progress(src, out, progress, cancelled)
         _, _, _, _, _, records = _read_index(src)
         if any(record[1] == 0 for record in records):
             raise _RebuildNeeded("原目录种子需要规范化")
-        for entry_id, data in writes.items():
+        for index, (entry_id, data) in enumerate(writes.items(), 1):
+            _check_cancel(cancelled)
             patch_raw_entry_in_file(out, entry_id, data)
+            if progress is not None:
+                progress(index, len(writes),
+                         f"写入新图 {index}/{len(writes)}")
         mode = "added"
     except _RebuildNeeded:
         rows = parse_archive(src.read_bytes())
@@ -521,7 +556,8 @@ def _create_layout_copy(src: Path, out: Path, path: str, plain: bytes,
 
 def _patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
                     out_path, extra_entries: dict | None = None,
-                    allow_create: bool = False) -> dict:
+                    allow_create: bool = False, progress=None,
+                    cancelled=None) -> dict:
     """把 res_path 条目的新内容落到 out_path，返回补丁报告。
 
     内部构建器：out 必须是调用方独占的临时副本；不对外调用。
@@ -543,7 +579,13 @@ def _patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
     if allow_create:
         with FlsPack(src) as pack:
             if not pack.contains(res_path):
-                return _create_layout_copy(src, out, res_path, new_plain, extras)
+                # 没有进度/取消需求时保持原来的 5 参数调用（旧补丁点只
+                # 接受 5 个位置参数，别为了新参数把它们拆掉）。
+                if progress is None and cancelled is None:
+                    return _create_layout_copy(src, out, res_path,
+                                               new_plain, extras)
+                return _create_layout_copy(src, out, res_path, new_plain,
+                                           extras, progress, cancelled)
     plan = _plan_patch(src, res_path, new_plain)  # 先只读侦察，失败不落盘
     src_ids = [_RECORD.unpack_from(plan.dir_data, i * DIR_RECORD_SIZE)[0]
                for i in range(plan.count)]
@@ -558,23 +600,31 @@ def _patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
     def apply_extras() -> None:
         added.clear()
         replaced.clear()
-        for name in sorted(extras):
+        names = sorted(extras)
+        for index, name in enumerate(names, 1):
+            _check_cancel(cancelled)
             result = patch_raw_entry_in_file(
                 out, path_hash(name),
                 extras[name])
             (added if result["mode"] == "added"
              else replaced).append(name)
+            if progress is not None and names:
+                progress(index, len(names),
+                         f"写入新图 {index}/{len(names)}：{name}")
 
     info: dict | None = None
     if not need_rebuild:
         try:
-            with open(src, "rb") as fin, open(out, "wb") as fout:
-                shutil.copyfileobj(fin, fout, 8 * 1024 * 1024)
+            _copy_with_progress(src, out, progress, cancelled)
+            _check_cancel(cancelled)
             info = patch_dlg_entry_in_file(out, res_path, new_plain)
             apply_extras()
         except _RebuildNeeded:  # 病态包回退整包重组（慢，但正确）
             need_rebuild = True
     if need_rebuild:
+        if progress is not None:
+            progress(0, 0, "整包重组（旧包目录需要修复，较慢）…")
+        _check_cancel(cancelled)
         out.write_bytes(replace_dlg_entry(src.read_bytes(),
                                           res_path, new_plain))
         apply_extras()
@@ -590,7 +640,8 @@ def _patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
 
 
 def _verify_copy(src: Path, out: Path, res_path: str, new_plain: bytes,
-                 extras: dict[str, bytes]) -> None:
+                 extras: dict[str, bytes], progress=None,
+                 cancelled=None) -> None:
     """发布前独立回读；未改条目分块逐字节比较，不以 span 相同代替。"""
     layout_id = mx_hash(path_bytes(res_path))
     extra_ids = {mx_hash(name.encode("gbk", "strict")): data
@@ -607,8 +658,14 @@ def _verify_copy(src: Path, out: Path, res_path: str, new_plain: bytes,
         if set(ids) != set(before.entry_ids) | set(extra_ids) | {layout_id}:
             raise PackError("新包条目集合与预期不符")
         # 独立比对负载，即使偏移/长度没变化也不能跳过。
+        ids_before = before.entry_ids
+        total = len(ids_before)
         with open(src, "rb") as fin, open(out, "rb") as fout:
-            for entry_id in before.entry_ids:
+            for done, entry_id in enumerate(ids_before, 1):
+                if progress is not None and (done == total or done % 256 == 0):
+                    progress(done, total,
+                             f"校验新包：逐条比对 {done}/{total}")
+                _check_cancel(cancelled)
                 if entry_id == layout_id or entry_id in extra_ids:
                     continue
                 old_offset, old_length = before.span_of(entry_id)
@@ -637,7 +694,8 @@ def _verify_copy(src: Path, out: Path, res_path: str, new_plain: bytes,
 def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
                     out_path, extra_entries: dict | None = None,
                     protected_paths: Iterable[str | Path] = (),
-                    allow_create: bool = False) -> dict:
+                    allow_create: bool = False, progress=None,
+                    cancelled=None) -> dict:
     """只生成新包：禁止源包/别名，临时副本验证后原子发布。
 
     构建、补丁或校验失败均不改变源包和已有输出。protected_paths
@@ -645,6 +703,10 @@ def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
     allow_create 默认关闭；显式开启后仅接受预检合格的 .dlg，缺失时
     按原生路径密钥新增/替换，已有明文或错误密钥的目标布局会迁移；
     其它未改条目保持原字节。客户端实机仍需验收。
+
+    ``progress(done, total, text)``：复制整包按字节报（614 MB 要写十几
+    秒，不能只转圈）、写入新图按张报、校验按条目报；``cancelled()`` 在
+    这些循环里轮询，取消抛 :class:`Cancelled`（临时文件由本函数删掉）。
     """
     src, out = Path(archive_path), Path(out_path)
     sources = [src, *protected_paths]
@@ -673,8 +735,11 @@ def patch_pack_copy(archive_path, res_path: str, new_plain: bytes,
             delete=False,
         ) as fh:
             tmp = Path(fh.name)
-        info = _patch_pack_copy(src, res_path, new_plain, tmp, extras, allow_create)
-        _verify_copy(src, tmp, res_path, new_plain, extras)
+        info = _patch_pack_copy(src, res_path, new_plain, tmp, extras,
+                                allow_create, progress=progress,
+                                cancelled=cancelled)
+        _verify_copy(src, tmp, res_path, new_plain, extras,
+                     progress=progress, cancelled=cancelled)
         guard_output(out, sources)
         os.replace(tmp, out)
         info["out"] = str(out)

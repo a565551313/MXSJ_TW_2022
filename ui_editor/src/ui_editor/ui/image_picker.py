@@ -15,7 +15,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from PySide6.QtCore import QBuffer, QSize, Qt, QTimer
-from PySide6.QtGui import QIcon, QImage, QPixmap
+from PySide6.QtGui import QColor, QIcon, QImage, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -40,15 +40,70 @@ from .busy import BusyHostMixin, run_busy_or_plain
 _ROLE_PATH = Qt.ItemDataRole.UserRole
 _THUMB_BATCH = 24
 
-#: 新建族可选的拼名类型（顺序即下拉框顺序）
+#: 新建族可选的拼名类型（顺序即下拉框顺序）。
+#: 每种都写明"一张图是按钮的多少"——用户最容易在这里选错：
+#: 按钮横片的每张只是**三分之一**，整图多态要用序号帧。
 _FAMILY_KINDS = (
-    ("h_state", "按钮横片：左 + 中 + 右三片拼成一个状态（每 3 张一个状态）"),
+    ("h_state", "按钮横片：每张只是按钮的 1/3（0l 左片、0c 中片、0r 右片拼成"
+                "一个状态）"),
+    ("frames", "序号帧：每张都是完整的按钮图，0 / 1 / 2… 就是第 1/2/3 个状态"),
     ("nine_slice", "九宫格边框：9 张，上/中/下 × 左/中/右"),
     ("h_slice", "横向三片边框：左 + 中（拉伸）+ 右"),
     ("v_slice", "纵向三片边框：上 + 中（拉伸）+ 下"),
-    ("frames", "逐帧动画：每张一帧，按 0、1、2… 排"),
     ("single", "单张图：整个目录就一张"),
 )
+
+
+#: 只表示"位置"的类型：左/中/右 这类名字既能当横三片的块，也能当按钮横片
+#: 的左中右片——到底写哪个名字由控件决定。
+_POSITION_KINDS = frozenset({"h_slice", "v_slice"})
+
+
+def choose_family_kind(names, widget_type: str | None = None) -> str | None:
+    """新建族时预选类型：**文件名的结构 > 位置的别名 > 控件默认 > 张数**。
+
+    文件名已经说明结构时听文件名的——``0/1/2.png`` 是一张一整图（序号帧），
+    ``0l/0c/0r.png`` 才是按钮横片。旧实现无条件按控件来，把"导出 3 张
+    整图再导回来"变成了 0l/0c/0r，三张整图各取三分之一拼成一条——
+    这正是用户报的"三张图拼在一起"。
+
+    只有 ``left/middle/right`` 这种**位置词**才让控件作主：它们既能是
+    横三片的块，也能是按钮的左中右片，游戏要哪套名字由控件决定。
+    """
+    items = [str(name) for name in names]
+    if not items:
+        return None
+    stems = [Path(name).stem for name in items]
+    matched = dir_base.match_kind(items)
+    widget_kind = dir_base.WIDGET_KINDS.get(widget_type or "")
+    default_kind = dir_base.WIDGET_DEFAULT_KINDS.get(widget_type or "")
+
+    def usable(kind: str | None) -> bool:
+        return kind is not None and dir_base.piece_names(
+            kind, len(items)) is not None
+
+    if usable(matched):
+        if (matched in _POSITION_KINDS and usable(widget_kind)
+                and dir_base.map_stems_to_pieces(stems, widget_kind)
+                is not None):
+            return widget_kind
+        return matched
+    # 名字认不出：按真包多数派（按钮多是一整张一态），再退到位置词选择。
+    if usable(default_kind):
+        return default_kind
+    if usable(widget_kind):
+        return widget_kind
+    return dir_base.guess_kind(len(items), widget_type)
+
+
+def _ancestor_dirs(res_path: str) -> list[str]:
+    """资源路径的各级父目录（以分隔符结尾，``dir_base`` 的基路径写法）。
+
+    ``a/b/c/0.png`` → ``["a\\", "a\\b\\", "a\\b\\c\\"]``（按原串分隔符）。
+    """
+    sep = "\\" if "\\" in res_path else "/"
+    parts = res_path.replace("\\", "/").split("/")[:-1]
+    return [sep.join(parts[:depth]) + sep for depth in range(1, len(parts) + 1)]
 
 
 def _basename(path: str) -> str:
@@ -138,6 +193,7 @@ class FamilyImportDialog(QDialog):
         self.base_path = ""
         self.pairs: list[tuple[str, str]] = []
         self.order_rule = "name"      # name / alias / natural
+        self._picture_key: tuple | None = None   # 预览缓存键
 
         self._base = QLineEdit(base, self)
         self._base.setPlaceholderText(
@@ -158,6 +214,15 @@ class FamilyImportDialog(QDialog):
         self._hint.setWordWrap(True)
         self._summary = QLabel(self)
         self._summary.setWordWrap(True)
+        # 拼出来的样子：用户报"效果不对"就是因为只在保存后才能看见结果。
+        self._pic_caption = QLabel(
+            "按当前族类型拼出来是这样（左边那一小块就是预览）：", self)
+        self._pic_caption.setWordWrap(True)
+        self._pic = QLabel(self)
+        self._pic.setMinimumHeight(96)
+        self._pic.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._pic.setStyleSheet(
+            "background: #eceff3; border: 1px solid #c7ccd4; border-radius: 4px;")
         self._preview = QPlainTextEdit(self)
         self._preview.setReadOnly(True)
         self._preview.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
@@ -186,6 +251,8 @@ class FamilyImportDialog(QDialog):
         layout.addWidget(QLabel("族类型：", self))
         layout.addWidget(self._kind)
         layout.addWidget(self._summary)
+        layout.addWidget(self._pic_caption)
+        layout.addWidget(self._pic)
         layout.addWidget(QLabel(
             "这一族的目录路径：新按钮就写一个新目录名；"
             "写已有目录 = 替换那个按钮的图。", self))
@@ -204,14 +271,17 @@ class FamilyImportDialog(QDialog):
         count = len(self._files)
         if kind == "h_state":
             if count % 3:
-                return (f"{count} 张不是 3 的倍数：按钮每 3 张（左/中/右）"
-                        "算一个状态，要按 3、6、9… 张来选。")
+                return (f"{count} 张不是 3 的倍数：按钮横片是每 3 张拼成"
+                        "一个状态，要按 3、6、9… 张来选。")
             states = count // 3
             if states == 1:
-                return ("3 张 = 1 个状态（常态）：左边 0l、中间 0c、右边 0r；"
-                        "中间那片会被拉伸填满按钮。")
-            return (f"{count} 张 = {states} 个状态：0 号是常态，"
-                    "后面的序号是悬停/按下等（哪个序号对应哪种，未与客户端核实）。")
+                return ("3 张 = 按钮的 1 个状态：每张只是按钮的三分之一"
+                        "（0l 左片 + 0c 中片 + 0r 右片，中片会被拉伸）。\n"
+                        "如果这 3 张各自都是一整个按钮（三个状态），"
+                        "把族类型改成「序号帧」，不要用这个。")
+            return (f"{count} 张 = {states} 个状态 × 每态三片：0 号是常态，"
+                    "后面的序号是悬停/按下等（哪个序号对应哪种，未与客户端"
+                    "核实）。\n每张只是按钮的三分之一——不是一张一整图。")
         if kind == "nine_slice":
             return ("9 张 = 上/中/下 × 左/中/右：四角不动，四条边和中心会被拉伸。"
                     if count == 9 else f"{count} 张：九宫格必须正好 9 张。")
@@ -220,8 +290,10 @@ class FamilyImportDialog(QDialog):
             return (f"3 张 = {which}：两边固定、中间那片拉伸填满。"
                     if count == 3 else f"{count} 张：这种边框必须正好 3 张。")
         if kind == "frames":
-            return (f"{count} 张 = {count} 帧：每张是整个画面的一帧，"
-                    "按 0、1、2… 编号。")
+            return (f"{count} 张 = {count} 个状态（帧）：每张都是完整的按钮图，"
+                    "按 0、1、2… 编号——0 是常态，1/2 是悬停/按下等"
+                    "（哪个序号对应哪种，未与客户端核实）。\n"
+                    "导出回来的 0.png/1.png/2.png 就是这种。")
         if kind == "single":
             return "1 张 = 整个目录只有这一张图。" if count == 1 else "单图只能 1 张。"
         return ""
@@ -263,6 +335,111 @@ class FamilyImportDialog(QDialog):
             return "", "目录路径要相对包内，并用结尾斜杠表示这是一个目录。"
         return value, None
 
+    @staticmethod
+    def _montage(images: list[QImage], columns: int,
+                 max_height: int = 110,
+                 max_width: int = 480) -> QPixmap | None:
+        """把若干张图按 ``columns`` 列排成一张预览（等比缩放，宽高都设上限）。
+
+        只限高是不够的：三张 1000×40 的横片并排后会得到 3000 像素宽的
+        pixmap，``QLabel`` 把它当最小宽度，对话框会被撑得比屏幕还宽。
+        """
+        if not images:
+            return None
+        tallest = max(image.height() for image in images) or 1
+        widest = 0
+        for start in range(0, len(images), columns):
+            row = images[start:start + columns]
+            widest = max(widest, sum(image.width() for image in row))
+        scale = min(1.0, max_height / tallest,
+                    max_width / widest if widest else 1.0)
+        scaled = [image.scaled(
+            max(1, int(image.width() * scale)),
+            max(1, int(image.height() * scale)),
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation)
+            for image in images]
+        rows = (len(scaled) + columns - 1) // columns
+        width = max(sum(cell.width() for cell in scaled[row * columns:
+                                                       (row + 1) * columns])
+                    for row in range(rows))
+        height = sum(max(cell.height() for cell in scaled[row * columns:
+                                                          (row + 1) * columns])
+                     for row in range(rows))
+        canvas = QPixmap(max(1, width), max(1, height))
+        canvas.fill(QColor(236, 239, 243))
+        painter = QPainter(canvas)
+        y = 0
+        for row in range(rows):
+            cells = scaled[row * columns:(row + 1) * columns]
+            x = 0
+            for cell in cells:
+                painter.drawPixmap(x, y, QPixmap.fromImage(cell))
+                x += cell.width()
+            y += max(cell.height() for cell in cells)
+        painter.end()
+        return canvas
+
+    def _update_picture(self, pairs, kind: str) -> None:
+        """按当前族类型把选中的图拼一下，让用户**保存前**就看见结果。
+
+        这是"效果不对"最直接的补救：按钮横片的 3 张是拼成一条，
+        序号帧只显示第 0 帧——两者一眼就能分辨，不用等保存回包。
+
+        结果按 ``(族类型, 文件清单)`` 缓存：改目录路径时 ``_refresh`` 每个
+        按键都会重来一次，但图片没变，不必重新解码（多张大图时肉眼可见
+        地卡）。缺图不能拼半张——九片少一块会让后面每格都错位。
+        """
+        key = (kind, tuple(path for _rel, path in pairs))
+        if key == self._picture_key:
+            return
+        self._picture_key = key
+        if not pairs:
+            self._pic.clear()
+            self._pic_caption.setText("")
+            self._pic.setText("（图片数量与族类型对不上，无法预览）")
+            return
+        images: list[QImage] = []
+        failed = 0
+        for _rel, path in pairs:
+            image = QImage(str(path))
+            if image.isNull():
+                failed += 1
+                continue
+            images.append(image)
+        if failed:
+            self._pic.clear()
+            self._pic_caption.setText("")
+            self._pic.setText(
+                "（.igs 精灵没法在这里预览，保存后看画布）" if not images else
+                "（这一族里有图片读不出来，没拼；保存后看画布）")
+            return
+        if kind == "frames":
+            pixmap = self._montage(images[:1], 1)
+            note = "序号帧：画布上显示第 0 帧（完整一张图）"
+        elif kind == "h_state":
+            pixmap = self._montage(images[:3], 3)
+            note = "按钮横片：三片拼成一条（中间那片会被拉伸）"
+        elif kind == "h_slice":
+            pixmap = self._montage(images[:3], 3)
+            note = "横三片：左 + 中 + 右拼成一条"
+        elif kind == "v_slice":
+            pixmap = self._montage(images[:3], 1)
+            note = "竖三片：上 + 中 + 下竖着拼"
+        elif kind == "nine_slice":
+            pixmap = self._montage(images[:9], 3)
+            note = "九片：3 × 3 拼起来"
+        else:
+            pixmap = self._montage(images[:1], 1)
+            note = "单图"
+        if pixmap is None:
+            self._pic.clear()
+            self._pic_caption.setText("")
+            return
+        self._pic.setPixmap(pixmap)
+        self._pic_caption.setText(
+            f"按当前族类型拼出来是这样（{note}）。对不上就换族类型：")
+
     def _existing_pieces(self, base: str, pairs) -> list[str]:
         """这个目录里已经有的同名子图（**不管扩展名**）。
 
@@ -280,10 +457,49 @@ class FamilyImportDialog(QDialog):
                 found.append(rel)
         return found
 
+    def _existing_family_plan(self, base: str):
+        """这个目录里已经拼得成的一族（``dir_base.plan`` 的判定）。"""
+        if self._exists is None or not base:
+            return None
+        try:
+            return dir_base.plan(base, self._exists)
+        except ValueError:
+            return None
+
+    def _shadowing_plan(self, base: str, pairs, ext: str):
+        """写完这一族后仍会优先命中的**别的**族；没有就返回 None。
+
+        ``dir_base.plan`` 按固定优先级取第一个齐装的族：往已有
+        ``0l/0c/0r`` 的目录里再写 ``0/1/2.png``，保存后游戏仍按按钮横片
+        拼——新图写进去了却没人用，画布和游戏都不会变。这里把「新写的
+        几张」并进存在性判断，模拟保存后的 ``plan``：命中的不是这一族，
+        就说明这次写入会被旧族盖住。
+        """
+        if self._exists is None or not base or not pairs:
+            return None
+        target = {base + rel.replace("/", "\\") + ext for rel, _path in pairs}
+
+        def exists(name: str) -> bool:
+            return name.replace("/", "\\") in target or bool(self._exists(name))
+
+        try:
+            chosen = dir_base.plan(base, exists)
+        except ValueError:
+            return None
+        if chosen is None:
+            return None
+        same = {piece.replace("/", "\\") for piece in chosen.pieces} == target
+        return None if same else chosen
+
     def _refresh(self) -> None:
         pairs, error = self._family_pairs()
         base, base_error = self._normalised_base()
-        existing = self._existing_pieces(base, pairs) if base and not error else []
+        valid_base = bool(base) and not error and not base_error
+        existing = (self._existing_pieces(base, pairs)
+                    if valid_base else [])
+        existing_plan = self._existing_family_plan(base) if valid_base else None
+        shadowed = (self._shadowing_plan(base, pairs, self.ext)
+                    if valid_base else None)
         self._summary.setText(self.summary_text())
         lines = []
         for rel, path in pairs:
@@ -292,8 +508,9 @@ class FamilyImportDialog(QDialog):
                 f"{rel.replace('/', chr(92))}{self.ext}   ←   "
                 f"{Path(path).name}{mark}")
         self._preview.setPlainText("\n".join(lines))
-        notes = []
         kind = self._kind.currentData()
+        self._update_picture(pairs, kind)
+        notes = []
         if error is None:
             if self.order_rule == "name":
                 notes.append("文件名就是族内命名，按名字对应"
@@ -317,20 +534,40 @@ class FamilyImportDialog(QDialog):
             notes.append(problem)
         self._hint.setText("\n".join(notes))
         self._note.setText(f"族目录：{base or '（未填）'}" if base else "")
+        warnings = []
         if existing:
-            self._warning.setText(
+            warnings.append(
                 f"⚠ 这个目录里已经有 {len(existing)} 张同名图（{base}）。\n"
                 "继续并保存回包会替换它们——原来那个按钮的图就变了。\n"
                 "要做「新」按钮：换个没用过的目录名（点下面「换个新目录」），"
                 "控件会自动指向新目录。")
+        if shadowed is not None:
+            warnings.append(
+                f"⚠ 这个目录里已经有一族【{dir_base.describe(shadowed)}】，"
+                "游戏的拼名规则会先按它来；\n"
+                f"这次写的 {len(pairs)} 张不会生效。请点「换个新目录」，"
+                "或先删掉旧那族多余的子图。")
+        elif existing_plan is not None and pairs:
+            target = {base + rel.replace("/", "\\") + self.ext
+                      for rel, _path in pairs}
+            same = ({piece.replace("/", "\\")
+                     for piece in existing_plan.pieces} == target)
+            if not same:
+                warnings.append(
+                    f"注意：这个目录里原有的【{dir_base.describe(existing_plan)}】"
+                    "保存后不会再被用到（新族排在它前面）。")
+        if warnings:
+            self._warning.setText("\n".join(warnings))
             self._warning.show()
         else:
             self._warning.clear()
             self._warning.hide()
         ok = self._buttons.button(QDialogButtonBox.StandardButton.Ok)
         ok.setText(f"替换 {len(existing)} 张" if existing else "写入新族")
-        self._free_btn.setVisible(bool(existing) and self._exists is not None)
-        ok.setEnabled(not problem)
+        self._free_btn.setVisible(
+            (bool(existing) or shadowed is not None)
+            and self._exists is not None)
+        ok.setEnabled(not problem and shadowed is None)
 
     def _use_free_base(self) -> None:
         pairs, _error = self._family_pairs()
@@ -339,7 +576,12 @@ class FamilyImportDialog(QDialog):
             return
 
         def conflicts(candidate: str) -> int:
-            return len(self._existing_pieces(candidate, pairs))
+            count = len(self._existing_pieces(candidate, pairs))
+            if count:
+                return count
+            # 目录里已有一族（名字完全不同）也不算空闲：再写进去可能
+            # 被旧族盖住，或把旧族顶掉。
+            return 1 if self._existing_family_plan(candidate) else 0
 
         new_base = suggest_free_base(base, conflicts)
         if new_base and new_base != base:
@@ -352,6 +594,11 @@ class FamilyImportDialog(QDialog):
         pairs, pair_error = self._family_pairs()
         if error or pair_error:
             self._refresh()
+            return
+        if self._shadowing_plan(base, pairs, self.ext) is not None:
+            # 旧族优先级更高，写进去也不会生效；红字已说明原因。
+            self._refresh()
+            self._base.setFocus()
             return
         self.base_path = base
         self.pairs = pairs
@@ -368,7 +615,9 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                  export_handler: Callable[[list[str], object], None] | None = None,
                  family_label: Callable[[str], str | None] | None = None,
                  widget_type: str | None = None,
-                 exists: Callable[[str], bool] | None = None):
+                 exists: Callable[[str], bool] | None = None,
+                 family_pieces: Callable[[str], list[str] | None] | None = None,
+                 family_kind: Callable[[str], str | None] | None = None):
         super().__init__(parent)
         self.setWindowTitle(title)
         self.resize(760, 540)
@@ -378,6 +627,10 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._export_handler = export_handler
         # 目录型基路径（拼名族）的一句话说明：回调返回 None 表示不是族。
         self._family_label = family_label
+        # 这个目录里到底有哪些子图（悬停提示用）：回调返回 None 表示不是族。
+        self._family_pieces = family_pieces
+        # 这个目录按哪种方式拼（按钮横片/序号帧…），给选中后的说明用。
+        self._family_kind = family_kind
         self._widget_type = widget_type      # 新建族时按控件类型预选族类型
         self._exists = exists                # 判断包里是否已有同名条目
         self._staged_paths: set[str] = set()
@@ -396,13 +649,21 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._search.textChanged.connect(self._refilter)
         self._only_families = QCheckBox("只看拼名族", self)
         self._only_families.setToolTip(
-            "目录型基路径（按钮三态 0l/0c/0r、边框 left/middle/right、"
+            "目录型基路径（按钮 0/1/2 或 0l/0c/0r、边框 left/middle/right、"
             "九宫格 top/left …）：包里没有这个条目，游戏运行时在其下拼子图。\n"
             "选中它会把这个目录路径写进属性。")
         self._only_families.toggled.connect(self._refilter)
         self._only_families.setVisible(
             any(dir_base.is_dir_base(path) for path in all_paths))
         self._count = QLabel(self)
+        # 选中一个目录型基路径时，直接说清"里面是什么、游戏怎么用"。
+        self._detail = QLabel(self)
+        self._detail.setWordWrap(True)
+        self._detail.setTextFormat(Qt.TextFormat.PlainText)
+        self._detail.setStyleSheet(
+            "background: #f4f6f8; border: 1px solid #ccd2da; "
+            "border-radius: 4px; padding: 6px;")
+        self._detail.hide()
 
         self._list = QListWidget(self)
         self._list.setViewMode(QListWidget.ViewMode.IconMode)
@@ -413,11 +674,22 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._list.setSelectionMode(
             QListWidget.SelectionMode.ExtendedSelection)
         self._list.itemDoubleClicked.connect(lambda _i: self.accept())
+        self._list.currentItemChanged.connect(
+            lambda current, _prev: self._show_detail(
+                str(current.data(_ROLE_PATH)) if current is not None else ""))
 
         self._thumb_timer = QTimer(self)
         self._thumb_timer.setInterval(30)
         self._thumb_timer.timeout.connect(self._fill_thumbs)
-        self._thumb_queue: list[QListWidgetItem] = []
+        # 只给**当前看得到的那几行**解缩略图：真包 2,758 条全解一遍
+        # 要 14 秒，窗口看着就像死了。滚到哪补到哪。
+        self._thumb_done: set[str] = set()
+        self._blank_icon = QIcon(QPixmap(72, 72))
+        self._family_total = 0
+        self._list.verticalScrollBar().valueChanged.connect(
+            self._schedule_thumbs)
+        self._list.horizontalScrollBar().valueChanged.connect(
+            self._schedule_thumbs)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok
@@ -462,6 +734,7 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         layout.addWidget(self._only_families)
         layout.addWidget(self._count)
         layout.addWidget(self._list, 1)
+        layout.addWidget(self._detail)
         layout.addLayout(bottom)
 
         self._refilter()
@@ -499,18 +772,72 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
             self._export_handler(paths, self)
 
     def add_staged_path(self, res_path: str) -> None:
-        """把一张刚加进来的新图并入列表并选中它。"""
+        """把一张刚加进来的新图并入列表并选中它。
+
+        不再整张列表重建：真包 2,758 行重建一次要 0.2 s 以上，新建一族
+        只多一行图，没必要把整张表推倒。只插这一行，顺手刷新它的各级
+        父目录行（新图可能把半套族补成整族，父行标签要跟着变）。
+        """
         self._family_notes.clear()   # 新图可能把半套族补成整族
         self._staged_paths.add(res_path)
         if res_path not in self._all_paths:
             self._all_paths.insert(0, res_path)
-        self._search.setText("")
-        self._refilter()
+        if self._search.text().strip():
+            self._search.setText("")   # 触发 _refilter（新行已在 _all_paths 里）
+        else:
+            if self._row_of(res_path) < 0:
+                item, _note = self._make_item(res_path)
+                self._list.insertItem(0, item)
+            else:
+                self._refresh_row(res_path)
+            for parent in _ancestor_dirs(res_path):
+                self._refresh_row(parent)
+            self._update_count()
+        self._select_path(res_path)
+        self._schedule_thumbs()
+
+    def _row_of(self, path: str) -> int:
         for row in range(self._list.count()):
             item = self._list.item(row)
-            if item.data(_ROLE_PATH) == res_path:
-                self._list.setCurrentItem(item)
-                break
+            if item is not None and item.data(_ROLE_PATH) == path:
+                return row
+        return -1
+
+    def _select_path(self, path: str) -> None:
+        row = self._row_of(path)
+        if row >= 0:
+            self._list.setCurrentItem(self._list.item(row))
+
+    def _refresh_row(self, path: str) -> None:
+        """就地刷新一行（标签/提示变了，不重建整张表）。
+
+        路径本身可能换了内容（替换包里已有同名图、重挂同一族），所以缩略图
+        也要作废重解：``_thumb_done`` 里还留着它的话，``_fill_thumbs`` 会
+        跳过，列表一直显示旧图，直到下次过滤。
+        """
+        row = self._row_of(path)
+        if row < 0:
+            return
+        item = self._list.item(row)
+        fresh, _note = self._make_item(path)
+        if item is None:
+            return
+        item.setText(fresh.text())
+        item.setToolTip(fresh.toolTip())
+        self._thumb_done.discard(path)
+        item.setIcon(self._blank_icon)
+        self._schedule_thumbs()
+
+    def _update_count(self) -> None:
+        families = sum(1 for row in range(self._list.count())
+                       if self._list.item(row) is not None
+                       and self._family_note(
+                           str(self._list.item(row).data(_ROLE_PATH))))
+        self._family_total = families
+        note = f"，含 {families} 个拼名族" if families else ""
+        self._count.setText(
+            f"共 {self._list.count()} 个资源{note}"
+            "（包内已有，选完保存回包不丢图）")
 
     def _suggested_path(self, filename: str) -> str:
         """新名字的建议值：沿用当前选中项的目录 + 新文件名。"""
@@ -604,17 +931,9 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         except (OSError, ValueError) as exc:
             QMessageBox.warning(self, "读图失败", str(exc))
             return
-        # 控件类型优先：按钮就该写 0l/0c/0r。用户把文件叫成 left/middle/right
-        # 是"左中右"的意思，直接按名字写会得到一个游戏拼不出来的族。
-        preferred = dir_base.WIDGET_KINDS.get(self._widget_type or "")
-        matched = dir_base.match_kind([Path(f).name for f in files])
-        kind = None
-        if preferred and dir_base.piece_names(preferred, len(files)):
-            kind = preferred
-        if matched == "nine_slice" and kind != "nine_slice":
-            kind = matched      # 九宫格命名很明确，压过控件默认
-        if kind is None:
-            kind = matched or dir_base.guess_kind(len(files), self._widget_type)
+        # 先看文件名说明的结构（0/1/2 = 序号帧、0l/0c/0r = 按钮横片），
+        # 再看控件默认。详见 choose_family_kind。
+        kind = choose_family_kind(files, self._widget_type)
         dialog = FamilyImportDialog(
             self, files, self._suggested_family_path(), kind, ext, self._exists)
         if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -703,6 +1022,53 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
             return
         self._stage_one(res_path, data)
 
+    #: 各族"游戏怎么用这些图"的一句话（选中目录时显示）
+    _KIND_USAGE = {
+        "h_state": "这 3 张（或每 3 张）拼成按钮的一个状态：左片 0l + "
+                   "中片 0c + 右片 0r，中间那片会被拉伸填满按钮。",
+        "frames": "每张都是一整张按钮图：0 是常态、1/2 是悬停/按下等，"
+                  "画布只显示第 1 张。",
+        "nine_slice": "9 张按 3×3 拼：四角不动，四条边和中心被拉伸。",
+        "h_slice": "左 + 中 + 右 三片横向拼，中片拉伸。",
+        "v_slice": "上 + 中 + 下 三片纵向拼，中片拉伸。",
+        "single": "整个目录只有这一张图，直接用。",
+    }
+
+    def _show_detail(self, path: str) -> None:
+        """选中目录型基路径时，把"里面是什么"写清楚（用户最容易在这里犯迷糊）。"""
+        if not path or not dir_base.is_dir_base(path):
+            self._detail.hide()
+            return
+        pieces = None
+        if self._family_pieces is not None:
+            try:
+                pieces = self._family_pieces(path)
+            except Exception:
+                pieces = None
+        kind = None
+        if self._family_kind is not None:
+            try:
+                kind = self._family_kind(path)
+            except Exception:
+                kind = None
+        lines = [path.rstrip("\\/").replace("/", "\\").rsplit("\\", 1)[-1]
+                 + "\\ 这个目录"]
+        if pieces:
+            lines.append("里面查到 " + str(len(pieces)) + " 张：" +
+                         "、".join(pieces))
+            if kind is None:
+                lines.append("这几张按工具的命名规则拼不成一整族——可能是"
+                             "别的写法（缺块、或与实测没见过的新规则），"
+                             "画布会显示占位框。")
+        else:
+            lines.append("按常见写法没查到图：要么这个目录在包里是空的，"
+                         "要么子图名是工具没见过的写法。")
+        usage = self._KIND_USAGE.get(kind or "")
+        if usage:
+            lines.append("游戏怎么用：" + usage)
+        self._detail.setText("\n".join(lines))
+        self._detail.show()
+
     def _family_note(self, path: str) -> str | None:
         """路径是拼名族时返回一句话说明，否则 None（结果缓存）。"""
         if not dir_base.is_dir_base(path) or self._family_label is None:
@@ -716,6 +1082,36 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._family_notes[path] = note
         return note
 
+    def _make_item(self, path: str) -> tuple[QListWidgetItem, str | None]:
+        """按路径造一行（缩略图留白，稍后按可见范围补）。"""
+        text = _basename(path)
+        note = self._family_note(path)
+        if note:
+            text += f"（{note}）"
+        if path in self._staged_paths:
+            text += "（新）"
+        item = QListWidgetItem(text)
+        item.setData(_ROLE_PATH, path)
+        if dir_base.is_dir_base(path):
+            pieces = None
+            if self._family_pieces is not None:
+                try:
+                    pieces = self._family_pieces(path)
+                except Exception:
+                    pieces = None
+            inside = (f"\n里面有 {len(pieces)} 张："
+                      + "、".join(pieces[:12])
+                      + ("…" if len(pieces) > 12 else "")
+                      if pieces else "")
+            item.setToolTip(
+                f"{path}{inside}\n拼名族：包里没有这个目录条目，"
+                "游戏运行时在其下拼子图；选它=把这个目录路径写进属性，"
+                "导出时按族展开。")
+        else:
+            item.setToolTip(path)
+        item.setIcon(self._blank_icon)
+        return item, note
+
     def _refilter(self) -> None:
         query = self._search.text().strip().lower()
         only_families = self._only_families.isChecked()
@@ -723,40 +1119,90 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                    if (not query or query in p.lower())
                    and (not only_families or dir_base.is_dir_base(p))]
         self._thumb_timer.stop()
+        self._thumb_done.clear()
         self._list.clear()
-        blank = QIcon(QPixmap(72, 72))
         families = 0
         for path in visible:
-            text = _basename(path)
-            note = self._family_note(path)
+            item, note = self._make_item(path)
+            self._list.addItem(item)
             if note:
                 families += 1
-                text += f"（{note}）"
-            if path in self._staged_paths:
-                text += "（新）"
-            item = QListWidgetItem(text, self._list)
-            item.setData(_ROLE_PATH, path)
-            if dir_base.is_dir_base(path):
-                item.setToolTip(
-                    f"{path}\n拼名族：包里没有这个目录条目，游戏运行时在其下"
-                    "拼子图；选它=把这个目录路径写进属性，导出时按族展开。")
-            else:
-                item.setToolTip(path)
-            item.setIcon(blank)
+        self._family_total = families
         note = f"，含 {families} 个拼名族" if families else ""
         self._count.setText(
             f"共 {len(visible)} 个资源{note}（包内已有，选完保存回包不丢图）")
-        self._thumb_queue = [self._list.item(r)
-                             for r in range(self._list.count())]
-        if self._thumb_provider is not None and self._thumb_queue:
-            self._thumb_timer.start()
+        self._schedule_thumbs()
+
+    def _first_visible_row(self) -> int:
+        """视口里第一行的序号（二分，O(log n)）。
+
+        不用 ``indexAt``：offscreen/部分平台上它一律返回 −1，会把整个
+        列表当成「都看得见」，缩略图又退回全量解码。图标模式下行优先
+        排布，``visualItemRect`` 的纵坐标随行号单调，可以二分。
+        """
+        lo, hi = 0, self._list.count() - 1
+        while lo < hi:
+            mid = (lo + hi) // 2
+            rect = self._list.visualItemRect(self._list.item(mid))
+            if rect.bottom() < 0:
+                lo = mid + 1
+            else:
+                hi = mid
+        return lo
+
+    def _visible_items(self) -> list[QListWidgetItem]:
+        """当前视口里看得到的行（看不到的不用解图）。
+
+        列表还没排好版（行高为 0）时退回前 40 行，保证表头先出缩略图。
+        """
+        count = self._list.count()
+        if not count:
+            return []
+        if self._list.visualItemRect(self._list.item(0)).height() <= 0:
+            return [self._list.item(r) for r in range(min(count, 40))
+                    if self._list.item(r) is not None]
+        height = self._list.viewport().height()
+        visible: list[QListWidgetItem] = []
+        for row in range(self._first_visible_row(), count):
+            item = self._list.item(row)
+            if item is None:
+                continue
+            if self._list.visualItemRect(item).top() > height:
+                break
+            visible.append(item)
+        return visible
+
+    def resizeEvent(self, event) -> None:  # noqa: N802  列表变大要补图
+        super().resizeEvent(event)
+        self._schedule_thumbs()
+
+    def _schedule_thumbs(self, *_args) -> None:
+        """滚动/改窗口大小/重新过滤后：过 30 ms 给新露出来的行补缩略图。"""
+        if self._thumb_provider is None:
+            return
+        if self._thumb_timer.isActive():
+            return
+        self._thumb_timer.start()
 
     def _fill_thumbs(self) -> None:
-        """分批给当前列表补缩略图（精灵解码不便宜，避免一次卡死）。"""
-        batch, self._thumb_queue = (self._thumb_queue[:_THUMB_BATCH],
-                                    self._thumb_queue[_THUMB_BATCH:])
+        """给**当前可见**的行补缩略图，一批 24 张（精灵解码不便宜）。"""
+        if self._thumb_provider is None:
+            self._thumb_timer.stop()
+            return
+        batch: list[QListWidgetItem] = []
+        for item in self._visible_items():
+            path = str(item.data(_ROLE_PATH))
+            if path in self._thumb_done:
+                continue
+            batch.append(item)
+            if len(batch) >= _THUMB_BATCH:
+                break
+        if not batch:
+            self._thumb_timer.stop()
+            return
         for item in batch:
             path = str(item.data(_ROLE_PATH))
+            self._thumb_done.add(path)
             try:
                 image = self._thumb_provider(path)  # type: ignore[misc]
             except Exception:
@@ -767,5 +1213,9 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                     item.setIcon(QIcon(pixmap.scaled(
                         72, 72, Qt.AspectRatioMode.KeepAspectRatio,
                         Qt.TransformationMode.SmoothTransformation)))
-        if not self._thumb_queue:
+        if not self._visible_items_pending():
             self._thumb_timer.stop()
+
+    def _visible_items_pending(self) -> bool:
+        return any(str(item.data(_ROLE_PATH)) not in self._thumb_done
+                   for item in self._visible_items())

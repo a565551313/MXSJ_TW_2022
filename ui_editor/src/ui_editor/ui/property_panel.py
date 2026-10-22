@@ -500,8 +500,35 @@ class PropertyPanel(QWidget):
             frames = assets.fetch_image(path)
             return frames[0] if frames else None
 
+        # 三个回调都走 ``AssetResolver`` 的按路径缓存：729 个族一次 0.4 s，
+        # 以前每开一次选图窗、每敲一个字都重算，第二次打开也不快。
         def family_label(path: str) -> str | None:
-            return dir_base.describe(dir_base.plan(path, assets.resource_exists))
+            return dir_base.describe(assets.family_plan(path))
+
+        def family_pieces(path: str) -> list[str] | None:
+            """这个基路径下**实际有哪些子图**（拼不成整族也逐个探出来）。
+
+            返回**族目录内**的相对路径（``0l.png``、``top/left.png``）：
+            九片每行的 ``left/middle/right`` 同名，只留文件名会让 130 个
+            九片目录在提示里长得一模一样。
+            """
+            pieces = assets.family_pieces(path)
+            if not pieces:
+                return None
+            prefix = path.replace("\\", "/").rstrip("/") + "/"
+            relative: list[str] = []
+            for piece in pieces:
+                text = piece.replace("\\", "/")
+                if text.startswith(prefix):
+                    relative.append(text[len(prefix):])
+                else:   # 兜底：路径形态对不上时至少保留文件名
+                    relative.append(text.rsplit("/", 1)[-1])
+            return relative
+
+        def family_kind(path: str) -> str | None:
+            """这个基路径按哪种拼名族拼（按钮横片/序号帧…）。"""
+            chosen = assets.family_plan(path)
+            return chosen.kind if chosen is not None else None
 
         def export_handler(paths: list[str], host=None) -> None:
             from pathlib import Path
@@ -631,7 +658,9 @@ class PropertyPanel(QWidget):
             export_handler=export_handler,
             family_label=family_label,
             widget_type=widget_type if isinstance(widget_type, str) else None,
-            exists=assets.resource_exists)
+            exists=assets.resource_exists,
+            family_pieces=family_pieces,
+            family_kind=family_kind)
         if (dialog.exec() == QDialog.DialogCode.Accepted
                 and dialog.selected_path()):
             edit.setText(dialog.selected_path())

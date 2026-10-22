@@ -239,17 +239,38 @@ class TestFamilyNaming(unittest.TestCase):
         self.assertIsNone(dir_base.match_kind([]))
 
     def test_guess_kind_prefers_widget_type(self):
-        self.assertEqual(dir_base.guess_kind(3, "CTextButton"), "h_state")
+        # 名字认不出时按真包多数派：按钮多是一整张一态（CTextButton 53:35）
+        self.assertEqual(dir_base.guess_kind(3, "CTextButton"), "frames")
+        self.assertEqual(dir_base.guess_kind(3, "CHPagePngButton"), "frames")
         self.assertEqual(dir_base.guess_kind(3, "CHPngFrame"), "h_slice")
         self.assertEqual(dir_base.guess_kind(3, "CVFrame"), "v_slice")
         self.assertEqual(dir_base.guess_kind(9, "CPngNineFrame"), "nine_slice")
-        # 9 张对按钮是合法的 3 态，控件预选优先
+        # 9 张收不进序号帧（上限 8），退回按钮的位置词选择：3 态横片
         self.assertEqual(dir_base.guess_kind(9, "CTextButton"), "h_state")
         # 控件预选与张数对不上时退回按张数判断
         self.assertEqual(dir_base.guess_kind(9, "CHPngFrame"), "nine_slice")
         self.assertEqual(dir_base.guess_kind(1, None), "single")
         self.assertEqual(dir_base.guess_kind(2, None), "frames")
         self.assertIsNone(dir_base.guess_kind(0, None))
+
+    def test_widget_tables_follow_measured_pack(self):
+        """两张控件表各司其职：位置词歧义 vs 名字认不出。
+
+        真包（interface.fls，729 个目录型基路径）逐类型实测：按钮的基路径
+        多数是整图（CTextButton 53 / CHPagePngButton 16 / CVPagePngButton 11），
+        横片只是少数（35 / 10 / 0）。
+        """
+        for widget in ("CTextButton", "CHPagePngButton", "CVPagePngButton"):
+            self.assertEqual(dir_base.WIDGET_KINDS[widget], "h_state")
+            self.assertEqual(dir_base.WIDGET_DEFAULT_KINDS[widget], "frames")
+        for widget in ("CPngNineFrame", "CFrame", "CBorder"):
+            self.assertEqual(dir_base.WIDGET_DEFAULT_KINDS[widget], "nine_slice")
+        for widget in ("CHPngFrame", "CHFrame", "CProgress"):
+            self.assertEqual(dir_base.WIDGET_DEFAULT_KINDS[widget], "h_slice")
+        for widget in ("CVPngFrame", "CVFrame"):
+            self.assertEqual(dir_base.WIDGET_DEFAULT_KINDS[widget], "v_slice")
+        self.assertEqual(dir_base.WIDGET_DEFAULT_KINDS["CButton"], "frames")
+        self.assertIn("WIDGET_DEFAULT_KINDS", dir_base.__all__)
 
 
 class TestNamingRecognition(unittest.TestCase):
@@ -336,3 +357,43 @@ class TestNamingRecognition(unittest.TestCase):
         self.assertIn("左", dir_base.naming_hint("h_state", 3))
         self.assertIn("top-left", dir_base.naming_hint("nine_slice", 9))
         self.assertIn("frame0", dir_base.naming_hint("frames", 3))
+
+
+class TestProbePieces(unittest.TestCase):
+    """「这个目录里到底有什么」：包里只有哈希，只能按候选名逐个问。"""
+
+    def test_probe_lists_every_known_spelling(self):
+        known = {
+            "a/btn/0l.png", "a/btn/0c.png", "a/btn/0r.png",
+            "a/btn/left1.png", "a/btn/weird.png",
+        }
+        found = dir_base.probe_pieces(
+            "a/btn/", lambda name: name.replace("\\", "/") in known)
+        # 认得的三种列出来；认不出的 weird.png 不该冒充
+        self.assertEqual(set(found), {"0l.png", "0c.png", "0r.png",
+                                      "left1.png"})
+
+    def test_probe_covers_frames_and_nine_slice(self):
+        known = {"a/x/0.png", "a/x/1.png", "a/x/top-left.png",
+                 "a/x/middle/right.igs"}
+        found = dir_base.probe_pieces(
+            "a/x/", lambda name: name.replace("\\", "/") in known)
+        self.assertIn("0.png", found)
+        self.assertIn("1.png", found)
+        self.assertIn("top-left.png", found)
+        self.assertIn("middle/right.igs", found)
+
+    def test_probe_empty_directory_is_empty(self):
+        self.assertEqual(dir_base.probe_pieces("a/none/", lambda _n: False), ())
+        self.assertEqual(dir_base.probe_pieces("a/none", lambda _n: True), ())
+
+    def test_probe_does_not_double_count_middle_middle(self):
+        """``middle/middle`` 只该出现一次。
+
+        九片的候选名生成里已经有它，候选表再写一遍就会让只有一张
+        ``middle/middle.png`` 的目录在选图窗里显示「里面有 2 张」。
+        """
+        known = {"a/one/middle/middle.png"}
+        found = dir_base.probe_pieces(
+            "a/one/", lambda name: name in known)
+        self.assertEqual(found, ("middle/middle.png",))

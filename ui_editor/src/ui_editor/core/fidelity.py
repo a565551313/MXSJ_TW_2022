@@ -31,9 +31,13 @@ __all__ = ["APPROX", "BUTTON_STATE_INDEX", "MARKERS", "NATIVE", "SIMULATED",
 #: 禁用最后」的常见排法推断，画布据此取帧时必须标「近似」。
 #:
 #: 2026-10-20 实测（interface.fls，729 个目录型基路径）：按钮的态**就是文件名
-#: 前缀**——``CButton`` 是整图 ``0/1/2.png``（最多到 ``4.png``），
-#: ``CTextButton``/``*PagePngButton`` 是每态横三片 ``{n}l/{n}c/{n}r``；
-#: 实测态数 2～5。文件里没有任何字段说明「第几态是悬停」，故序号语义仍是推断。
+#: 前缀**——整图 ``0/1/2.png``（最多到 ``4.png``）与每态横三片
+#: ``{n}l/{n}c/{n}r`` 两种都有，态数 2～5。文件里没有任何字段说明「第几态是
+#: 悬停」，故序号语义仍是推断。
+#:
+#: 2026-10-22 逐控件类型复核（同一真包，按不同基路径计）：``CTextButton``
+#: 整图 53 / 横片 35，``CHPagePngButton`` 16 / 10，``CVPagePngButton`` 11 / 0——
+#: 「按钮 = 横三片」不成立，族类型以文件名为准，控件类型只在认不出时兜底。
 BUTTON_STATE_INDEX = {"pressed": 1, "hover": 2, "disabled": 3}
 
 NATIVE = "原生"
@@ -190,16 +194,38 @@ def markers(widget, view, button_state: str = "normal") -> list[Marker]:
                              "切割线未与客户端核实。"))
         return result
 
-    if frames == 1:
+    if frames >= 1:
         width, height = _natural_size(widget)
-        if width > 0 and height > 0:
-            image_size = view.image_size(name) if view is not None else None
-            if image_size and (width, height) == tuple(image_size):
+        image_size = view.image_size(name) if view is not None else None
+        # ``iWidth``/``iHeight`` 为 0 时画布按图片自身尺寸画（见
+        # ``painters.effective_size`` 的兜底），那也是 1:1——不能因为
+        # 控件没写尺寸就说成「没有图片素材」。真包 2.7 万张图里 2.3 万张
+        # 是这种自动尺寸（实测 2026-10-22）。
+        #
+        # 兜底是**逐轴**补的：只写了一个轴时，另一个轴按图自身尺寸画。
+        # 例如 iWidth=300、iHeight=0 + 120×44 的图，画布画的是 300×44
+        # （横向拉伸），不能因为「不是两轴都写了」就报 1:1。
+        sized = width > 0 and height > 0
+        native = False
+        if image_size is not None:
+            image_width, image_height = image_size
+            drawn = (width if width > 0 else image_width,
+                     height if height > 0 else image_height)
+            native = drawn == (image_width, image_height)
+        if native:
+            if frames == 1:
                 result.append(Marker(NATIVE, "native_1to1",
                                      "整图按原尺寸 1:1 绘制。"))
             else:
-                result.append(Marker(APPROX, "stretched_image",
-                                     "整图拉伸到控件尺寸（客户端切法未核实）。"))
+                # 状态栏常驻标签只显示前 60 字（window_setup），
+                # 这句要短到整句进得去。
+                result.append(Marker(
+                    NATIVE, "native_first_frame",
+                    f"多帧整图（{frames} 帧）：常态画 0 号帧、1:1 绘制；"
+                    "其余帧用途与顺序未核实。"))
+        elif image_size is not None or sized:
+            result.append(Marker(APPROX, "stretched_image",
+                                 "整图拉伸到控件尺寸（客户端切法未核实）。"))
 
     if button_state != "normal" and widget.wtype in _BUTTON_TYPES:
         index = BUTTON_STATE_INDEX.get(button_state)

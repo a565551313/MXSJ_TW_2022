@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from ui_editor.core import dlg_codec, pack_build
-from ui_editor.core.errors import PackError
+from ui_editor.core.errors import Cancelled, PackError
 from ui_editor.core.model import LayoutDocument
 from ui_editor.core.mxhash import mx_hash
 from ui_editor.core.pack import FlsPack
@@ -127,6 +127,39 @@ class TestNativeLayoutCycle(unittest.TestCase):
                 )
         self.assertEqual(output.read_bytes(), b"PREVIOUS OUTPUT")
         self.assertEqual(self.source.read_bytes(), self.base)
+
+    def test_patch_pack_copy_reports_write_progress_and_cancel(self):
+        """写包要报进度（复制/写图/校验），取消时不留下产物。"""
+        path = "future/progress.dlg"
+        output = self.root / "out.fls"
+        calls: list[tuple[int, int, str]] = []
+
+        def record(done, total, text):
+            calls.append((done, total, text))
+
+        pack_build.patch_pack_copy(
+            self.source, path, layout(200), output, allow_create=True,
+            extra_entries={"future/progress/tile.png": b"\x89PNGdata"},
+            progress=record)
+        texts = [c[2] for c in calls]
+        self.assertTrue(any("复制" in t for t in texts), texts)
+        self.assertTrue(any("校验新包" in t for t in texts), texts)
+        self.assertGreater(max(c[1] for c in calls), 0)
+
+        # 复制阶段第一块之后取消：抛 Cancelled，源包不动、不留新包
+        if output.exists():
+            output.unlink()
+        before = self.source.read_bytes()
+
+        def cancelled():
+            return True
+
+        with self.assertRaises(Cancelled):
+            pack_build.patch_pack_copy(
+                self.source, path, layout(200), output, allow_create=True,
+                progress=record, cancelled=cancelled)
+        self.assertFalse(output.exists())
+        self.assertEqual(self.source.read_bytes(), before)
 
     def test_native_input_is_not_double_encrypted(self):
         from ui_editor.core.native_layout import encode_layout
