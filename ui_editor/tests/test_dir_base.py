@@ -250,3 +250,72 @@ class TestFamilyNaming(unittest.TestCase):
         self.assertEqual(dir_base.guess_kind(1, None), "single")
         self.assertEqual(dir_base.guess_kind(2, None), "frames")
         self.assertIsNone(dir_base.guess_kind(0, None))
+
+
+class TestNamingRecognition(unittest.TestCase):
+    """自己给图起名：左右/上下/中英缩写都认得出来。"""
+
+    def test_chinese_three_pieces(self):
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["左", "中", "右"], "h_state"), ["0l", "0c", "0r"])
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["右", "左", "中"], "h_state"), ["0r", "0l", "0c"])
+
+    def test_english_three_pieces(self):
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["left", "middle", "right"], "h_state"), ["0l", "0c", "0r"])
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["L", "C", "R"], "h_state"), ["0l", "0c", "0r"])
+
+    def test_state_index_prefix(self):
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["1r", "0l", "1c", "0c", "1l", "0r"], "h_state"),
+            ["1r", "0l", "1c", "0c", "1l", "0r"])
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["0左", "0中", "0右"], "h_state"), ["0l", "0c", "0r"])
+        # 只导出第 2 态的 3 张（1l/1c/1r）：单态族里状态号多余，当这一族
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["1l", "1c", "1r"], "h_state"), ["0l", "0c", "0r"])
+        # 多态时状态号必须对得上（6 张只有 0/1 两态），越界交回调用方
+        self.assertIsNone(dir_base.map_stems_to_pieces(
+            ["0l", "0c", "0r", "3l", "3c", "3r"], "h_state"))
+
+    def test_nine_slice_chinese_and_shortcuts(self):
+        nine = ["左上", "上中", "右上", "左中", "中中", "右中",
+                "左下", "中下", "右下"]
+        self.assertEqual(dir_base.map_stems_to_pieces(nine, "nine_slice"), [
+            "top/left", "top/middle", "top/right",
+            "middle/left", "middle/middle", "middle/right",
+            "bottom/left", "bottom/middle", "bottom/right"])
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["tl", "tm", "tr", "ml", "mm", "mr", "bl", "bm", "br"],
+            "nine_slice")[4], "middle/middle")
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["top_left", "top_middle", "top_right",
+             "middle_left", "middle_middle", "middle_right",
+             "bottom_left", "bottom_middle", "bottom_right"],
+            "nine_slice")[0], "top/left")
+
+    def test_slices_and_frames(self):
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["L", "M", "R"], "h_slice"), ["left", "middle", "right"])
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["上", "中", "下"], "v_slice"), ["top", "middle", "bottom"])
+        self.assertEqual(dir_base.map_stems_to_pieces(
+            ["frame0", "frame1", "frame2"], "frames"), ["0", "1", "2"])
+
+    def test_duplicates_and_unknown_fall_back(self):
+        # 两张都叫"左"：认不出唯一对应，交回调用方按顺序
+        self.assertIsNone(dir_base.map_stems_to_pieces(
+            ["左", "左", "右"], "h_state"))
+        self.assertIsNone(dir_base.map_stems_to_pieces(
+            ["a", "b", "c"], "h_slice"))
+        # 张数不合法也不认
+        self.assertIsNone(dir_base.map_stems_to_pieces(
+            ["左", "中"], "h_state"))
+
+    def test_naming_hint_mentions_the_expected_names(self):
+        self.assertIn("0l", dir_base.naming_hint("h_state", 3))
+        self.assertIn("左", dir_base.naming_hint("h_state", 3))
+        self.assertIn("top-left", dir_base.naming_hint("nine_slice", 9))
+        self.assertIn("frame0", dir_base.naming_hint("frames", 3))

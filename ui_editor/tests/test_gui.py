@@ -1614,8 +1614,8 @@ class TestImagePicker(unittest.TestCase):
             self.assertFalse(dialog._free_btn.isVisibleTo(dialog))
             dialog.close()
 
-    def test_family_dialog_orders_unknown_names_by_selection(self):
-        """文件名认不出族内命名时按选择顺序分配，并提示可能错位。"""
+    def test_family_dialog_orders_unknown_names_by_filename(self):
+        """文件名认不出左右/上下时：按文件名自然排序依次对应，并给出命名建议。"""
         from ui_editor.ui.image_picker import FamilyImportDialog
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -1629,7 +1629,92 @@ class TestImagePicker(unittest.TestCase):
                              ["left", "middle", "right"])
             self.assertEqual([Path(path).name for _rel, path in pairs],
                              ["a.png", "b.png", "c.png"])
-            self.assertIn("按上图顺序分配", dialog._hint.text())
+            self.assertIn("已按文件名排序", dialog._hint.text())
+            self.assertIn("命名建议", dialog._hint.text())
+            dialog.close()
+
+    def test_family_dialog_recognises_chinese_piece_names(self):
+        """自己起名也能认：左/中/右、左上/右下 都按名字对应，与选择顺序无关。"""
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            names = ["右", "左", "中"]
+            files = [_write_png(Path(tmp) / f"{name}.png", 70 + index)
+                     for index, name in enumerate(names)]
+            dialog = FamilyImportDialog(None, files, "", "h_state", ".png")
+            pairs, _error = dialog._family_pairs()
+            self.assertEqual([rel for rel, _path in pairs],
+                             ["0l", "0c", "0r"])
+            self.assertEqual([Path(path).name for _rel, path in pairs],
+                             ["左.png", "中.png", "右.png"])
+            self.assertEqual(dialog.order_rule, "alias")
+            self.assertIn("按文件名认出", dialog._hint.text())
+            dialog.close()
+
+    def test_widget_type_wins_over_left_middle_right_names(self):
+        """按钮控件 + 文件叫 left/middle/right：要写 0l/0c/0r，不是横三片。
+
+        写成 left.png/middle.png/right.png，游戏找 0l/0c/0r 就什么也画不出来。
+        """
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{name}.png", 60 + index)
+                     for index, name in enumerate(("left", "middle", "right"))]
+            dialog = FamilyImportDialog(None, files, "", "h_state", ".png")
+            pairs, _error = dialog._family_pairs()
+            self.assertEqual([rel for rel, _p in pairs],
+                             ["0l", "0c", "0r"])
+            self.assertIn("文件名更像", dialog._hint.text())
+            dialog.close()
+
+    def test_nine_slice_names_override_button_default(self):
+        """9 张按 top-left… 命名时，即使控件是按钮也按九片处理。"""
+        from PySide6.QtWidgets import QDialog
+
+        from ui_editor.ui.image_picker import (
+            FamilyImportDialog,
+            ResourcePickerDialog,
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{row}-{column}.png", 20 + index)
+                     for index, (row, column) in enumerate(
+                         (r, c) for r in ("top", "middle", "bottom")
+                         for c in ("left", "middle", "right"))]
+            dialog = ResourcePickerDialog(
+                None, "t", [], "", None,
+                on_stage=lambda _p, _d: None,
+                widget_type="CTextButton",
+                exists=lambda _name: False)
+            seen = {}
+
+            def auto_accept(inner):
+                seen["kind"] = inner._kind.currentData()
+                inner.accept()
+                return QDialog.DialogCode.Accepted
+
+            with mock.patch(
+                    "ui_editor.ui.image_picker.QFileDialog.getOpenFileNames",
+                    return_value=(files, "")), \
+                    mock.patch.object(FamilyImportDialog, "exec", auto_accept):
+                dialog._choose_family()
+            self.assertEqual(seen["kind"], "nine_slice")
+            dialog.close()
+
+    def test_family_dialog_natural_sorts_numbered_names(self):
+        """10.png 不能被排到 2.png 前面。"""
+        from ui_editor.ui.image_picker import FamilyImportDialog
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / name, 80 + index)
+                     for index, name in enumerate(
+                         ("10.png", "2.png", "1.png"))]
+            dialog = FamilyImportDialog(None, files, "", "frames", ".png")
+            pairs, _error = dialog._family_pairs()
+            self.assertEqual([Path(path).name for _rel, path in pairs],
+                             ["1.png", "2.png", "10.png"])
+            self.assertEqual([rel for rel, _path in pairs], ["0", "1", "2"])
             dialog.close()
 
     def test_family_dialog_rejects_file_name_as_directory(self):

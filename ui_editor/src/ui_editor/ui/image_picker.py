@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from pathlib import Path
 
@@ -52,6 +53,13 @@ _FAMILY_KINDS = (
 
 def _basename(path: str) -> str:
     return path.replace("\\", "/").rstrip("/").split("/")[-1]
+
+
+def _natural_key(name: str):
+    """按文件名自然排序：``2.png`` 排在 ``10.png`` 前面。"""
+    parts = re.split(r"(\d+)", Path(name).name)
+    return [(0, int(part)) if part.isdigit() else (1, part.lower())
+            for part in parts]
 
 
 def _stem(path: str) -> str:
@@ -129,6 +137,7 @@ class FamilyImportDialog(QDialog):
         self._matched = dir_base.match_kind([Path(f).name for f in self._files])
         self.base_path = ""
         self.pairs: list[tuple[str, str]] = []
+        self.order_rule = "name"      # name / alias / natural
 
         self._base = QLineEdit(base, self)
         self._base.setPlaceholderText(
@@ -228,9 +237,19 @@ class FamilyImportDialog(QDialog):
             by_name = {_stem(path).replace("-", "/"): path
                        for path in self._files}
             if set(by_name) == set(names):
+                self.order_rule = "name"
                 return [(name, by_name[name]) for name in names], None
-        # names 与 files 都是 count 个（piece_names 已按张数校验）
-        return list(zip(names, self._files, strict=True)), None
+        # 自己起的名字（左/中/右、tl/左上、left/middle/right…）也认
+        pieces = dir_base.map_stems_to_pieces(
+            [_stem(path) for path in self._files], kind)
+        if pieces is not None and set(pieces) == set(names):
+            by_piece = dict(zip(pieces, self._files, strict=True))
+            self.order_rule = "alias"
+            return [(name, by_piece[name]) for name in names], None
+        # 认不出：按文件名自然排序后依次对应（至少比"选择的先后"可预期）
+        ordered = sorted(self._files, key=_natural_key)
+        self.order_rule = "natural"
+        return list(zip(names, ordered, strict=True)), None
 
     def _normalised_base(self) -> tuple[str, str | None]:
         value = self._base.text().strip().replace("/", "\\")
@@ -261,11 +280,25 @@ class FamilyImportDialog(QDialog):
                 f"{Path(path).name}{mark}")
         self._preview.setPlainText("\n".join(lines))
         notes = []
-        if self._matched is not None:
-            label = dir_base.KIND_LABELS.get(self._matched, self._matched)
-            notes.append(f"文件名对得上【{label}】，按名字对应（与选择顺序无关）。")
-        elif error is None:
-            notes.append("文件名认不出族内命名，按上图顺序分配。")
+        kind = self._kind.currentData()
+        if error is None:
+            if self.order_rule == "name":
+                notes.append("文件名就是族内命名，按名字对应"
+                             "（与选择顺序无关）。")
+            elif self.order_rule == "alias":
+                notes.append("按文件名认出左右/上下/中（中英都行），"
+                             "按名字对应（与选择顺序无关）。")
+            else:
+                notes.append("文件名认不出左右/上下，已按文件名排序依次对应"
+                             "（见下图；对不上就改个名或调顺序）。")
+            notes.append(dir_base.naming_hint(kind, len(self._files)))
+            if self._matched is not None and self._matched != kind:
+                matched_label = dir_base.KIND_LABELS.get(
+                    self._matched, self._matched)
+                kind_label = dir_base.KIND_LABELS.get(kind, kind)
+                notes.append(
+                    f"注：文件名更像【{matched_label}】，但控件是"
+                    f"【{kind_label}】，按后者写入；要改就在上面切换类型。")
         problem = error or base_error
         if problem:
             notes.append(problem)
@@ -556,9 +589,17 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         except (OSError, ValueError) as exc:
             QMessageBox.warning(self, "读图失败", str(exc))
             return
-        kind = dir_base.match_kind([Path(f).name for f in files])
+        # 控件类型优先：按钮就该写 0l/0c/0r。用户把文件叫成 left/middle/right
+        # 是"左中右"的意思，直接按名字写会得到一个游戏拼不出来的族。
+        preferred = dir_base.WIDGET_KINDS.get(self._widget_type or "")
+        matched = dir_base.match_kind([Path(f).name for f in files])
+        kind = None
+        if preferred and dir_base.piece_names(preferred, len(files)):
+            kind = preferred
+        if matched == "nine_slice" and kind != "nine_slice":
+            kind = matched      # 九宫格命名很明确，压过控件默认
         if kind is None:
-            kind = dir_base.guess_kind(len(files), self._widget_type)
+            kind = matched or dir_base.guess_kind(len(files), self._widget_type)
         dialog = FamilyImportDialog(
             self, files, self._suggested_family_path(), kind, ext, self._exists)
         if dialog.exec() != QDialog.DialogCode.Accepted:
