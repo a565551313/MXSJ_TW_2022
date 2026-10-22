@@ -506,19 +506,28 @@ class PropertyPanel(QWidget):
         def export_handler(paths: list[str], host=None) -> None:
             from pathlib import Path
 
-            from ..core.asset_export import family_prefixes, source_key
+            from ..core.asset_export import (
+                dir_piece_name,
+                export_targets,
+                family_prefixes,
+                source_key,
+            )
             from .busy import run_busy_or_plain
             from .image_export import export_image_files
 
+            # 一批里有多个拼名族时加族名前缀（登录按钮-0l.png）。不加的话
+            # 两族都写 0l.png，后一族被批量去重改成看不出出处的 0l-2.png
+            # （画布右键导出早已这么做，这里漏了）。
+            prefixes = family_prefixes(paths)
+
             def one(path: str, dest_dir, dest_name=None, used_names=None,
-                    prefix=""):
+                    unavailable=None):
+                prefix = prefixes.get(source_key(path), "")
                 if dir_base.is_dir_base(path):
                     # 拼名族按族内每块子图导出（与画布右键导出同一套命名）。
-                    from ..core.asset_export import dir_piece_name, export_targets
-
                     written: list = []
                     for _name, data, source in export_targets(
-                            assets, path, prefix=prefix):
+                            assets, path, unavailable, prefix):
                         written.extend(export_image_files(
                             source, data, assets.fetch_image(source), dest_dir,
                             dir_piece_name(source, path, prefix),
@@ -533,6 +542,7 @@ class PropertyPanel(QWidget):
 
             written: list = []
             rejected: list = []
+            partial: list = []      # 族里有子图读不出（其余照常导出）
             try:
                 if len(paths) == 1 and not dir_base.is_dir_base(paths[0]):
                     base = paths[0].replace("\\", "/").split("/")[-1]
@@ -551,34 +561,46 @@ class PropertyPanel(QWidget):
                     def bulk(h):
                         out: list = []
                         bad: list = []
+                        short: list = []
                         used: set = set()   # 本批已占用文件名，同名加序号
-                        prefixes = family_prefixes(paths)
                         total = len(paths)
                         for i, path in enumerate(paths, 1):
                             if h.cancelled:
-                                return out, bad  # 已导出的保留，未导出的停
+                                # 已导出的保留，未导出的停
+                                return out, bad, short
                             h.report(i - 1, total,
                                      f"导出 {path}（{i}/{total}）…")
+                            unreadable: list = []
                             try:
-                                prefix = prefixes.get(source_key(path), "")
                                 out.extend(one(path, directory,
                                                used_names=used,
-                                               prefix=prefix))
+                                               unavailable=unreadable))
                             except (OSError, ValueError) as exc:
                                 # 单个资源被拒绝只跳过它，其余照常导出。
                                 bad.append((path, str(exc)))
-                        return out, bad
+                            if unreadable:
+                                short.append(
+                                    (path, "子图读不出：" +
+                                     "、".join(unreadable[:3])))
+                        return out, bad, short
 
-                    written, rejected = run_busy_or_plain(
+                    written, rejected, partial = run_busy_or_plain(
                         host or self, "批量导出图片…", bulk,
                         maximum=len(paths), cancellable=True,
                         cancellable_text="取消（已导出的保留）")
             except (OSError, ValueError) as exc:
                 QMessageBox.warning(self, "导出失败", str(exc))
                 return
-            reject_note = (f"\n{len(rejected)} 个被拒绝，未写出：\n"
-                           + "\n".join(path for path, _why in rejected[:3])
-                           if rejected else "")
+            reject_note = ""
+            if rejected:
+                reject_note += (f"\n{len(rejected)} 个被拒绝，未写出：\n"
+                                + "\n".join(path for path, _why
+                                             in rejected[:3]))
+            if partial:
+                reject_note += (f"\n{len(partial)} 个族有子图读不出"
+                                "（其余已导出）：\n"
+                                + "\n".join(f"{path}（{why}）"
+                                             for path, why in partial[:3]))
             if written:
                 QMessageBox.information(
                     self, "导出完成",
@@ -589,6 +611,11 @@ class PropertyPanel(QWidget):
                     self, "导出失败",
                     f"{len(rejected)} 个资源被拒绝写入：\n"
                     f"{rejected[0][1]}")
+            elif partial:
+                QMessageBox.warning(
+                    self, "导出失败",
+                    f"{len(partial)} 个族的子图读不出：\n"
+                    f"{partial[0][0]}（{partial[0][1]}）")
             else:
                 QMessageBox.warning(
                     self, "导出失败", "这些资源在包里取不到内容。")

@@ -296,6 +296,23 @@ class TestNamingRecognition(unittest.TestCase):
              "bottom_left", "bottom_middle", "bottom_right"],
             "nine_slice")[0], "top/left")
 
+    def test_vertical_aliases_do_not_crash_horizontal_families(self):
+        """上/中/下 选在按钮上：认不出横向的边，交回调用方，不能抛异常。
+
+        旧实现把 ``top`` 直接塞进 ``_H_SIDES.index()``，整个选图窗打不开。
+        """
+        self.assertIsNone(dir_base.map_stems_to_pieces(
+            ["上", "中", "下"], "h_state"))
+        self.assertIsNone(dir_base.map_stems_to_pieces(
+            ["top", "middle", "bottom"], "h_state"))
+
+    def test_non_ascii_digits_are_not_parsed(self):
+        """``①``/``²`` 的 str.isdigit() 为真但 int() 会抛；只认 ASCII 数字。"""
+        self.assertIsNone(dir_base.map_stems_to_pieces(["①"], "frames"))
+        self.assertIsNone(dir_base.map_stems_to_pieces(["²"], "frames"))
+        self.assertIsNone(dir_base.map_stems_to_pieces(["①l", "①c", "①r"],
+                                                       "h_state"))
+
     def test_slices_and_frames(self):
         self.assertEqual(dir_base.map_stems_to_pieces(
             ["L", "M", "R"], "h_slice"), ["left", "middle", "right"])

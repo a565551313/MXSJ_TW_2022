@@ -219,6 +219,49 @@ class TestAssetResolver(unittest.TestCase):
         self.resolver.discard_staged(["new/pic.png"])
         self.assertEqual(self.resolver.staged_images(), {})
 
+    def test_restaged_family_refreshes_preview_and_slice(self):
+        """同一族重新挂账/销账后，目录级的合成图与切片不能还是旧的。
+
+        缓存按目录键存（fetch_image/fetch_slice），只清子图自己的键不够：
+        换了图以后画布还会拿回旧像素；销账后还能显示已经不存在的族。
+        """
+        from PySide6.QtCore import QBuffer
+        from PySide6.QtGui import QColor, QImage
+
+        def piece(red):
+            image = QImage(4, 4, QImage.Format.Format_ARGB32)
+            image.fill(QColor(red, 0, 0))
+            buffer = QBuffer()
+            buffer.open(QBuffer.OpenModeFlag.WriteOnly)
+            self.assertTrue(image.save(buffer, "PNG"))
+            return bytes(buffer.data())
+
+        resolver = AssetResolver()
+        try:
+            base = "combdialog4\\面板\\我的按钮\\"
+            paths = [base + rel + ".png" for rel in ("0l", "0c", "0r")]
+            for path in paths:
+                resolver.stage_image(path, piece(10))
+            first = resolver.fetch_image(base)
+            recipe = resolver.fetch_slice(base)
+            self.assertIsNotNone(first)
+            self.assertIsNotNone(recipe)
+            self.assertEqual(first[0].pixelColor(0, 0).red(), 10)
+            self.assertEqual(recipe.images[0].pixelColor(0, 0).red(), 10)
+
+            for path in paths:               # 换一套图重新挂账同一个族
+                resolver.stage_image(path, piece(210))
+            again = resolver.fetch_image(base)
+            recipe = resolver.fetch_slice(base)
+            self.assertEqual(again[0].pixelColor(0, 0).red(), 210)
+            self.assertEqual(recipe.images[0].pixelColor(0, 0).red(), 210)
+
+            resolver.discard_staged(paths)   # 反斜杠写法也要能销账
+            self.assertEqual(resolver.staged_images(), {})
+            self.assertIsNone(resolver.fetch_image(base))
+        finally:
+            resolver.close()
+
     def test_fetch_styles(self):
         book = self.resolver.fetch_styles()
         self.assertIsNotNone(book)

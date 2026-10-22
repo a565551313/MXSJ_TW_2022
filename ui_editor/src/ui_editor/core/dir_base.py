@@ -170,6 +170,19 @@ def _side(token: str) -> str | None:
     return _SIDE_WORDS.get(_normalise_stem(token))
 
 
+#: 只认 ASCII 数字：``str.isdigit()`` 对 ``①``/``²`` 也返回 True，但
+#: ``int()`` 会抛 ValueError——一个叫 ``①.png`` 的文件就能让对话框打不开。
+_DIGITS = "0123456789"
+
+
+def _leading_digits(text: str) -> tuple[str, str]:
+    """拆开头的 ASCII 数字：``"12l"`` → ``("12", "l")``。"""
+    index = 0
+    while index < len(text) and text[index] in _DIGITS:
+        index += 1
+    return text[:index], text[index:]
+
+
 _GRID_ROWS = ("top", "middle", "bottom")
 _GRID_COLUMNS = ("left", "middle", "right")
 
@@ -204,19 +217,18 @@ def _piece_of_stem(stem: str, kind: str, count: int) -> str | None:
         return names[0]
     if kind == "frames":
         index = text[5:] if text.startswith("frame") else text
-        if index.isdigit() and int(index) < len(names):
-            return index
+        if index and all(ch in _DIGITS for ch in index) \
+                and int(index) < len(names):
+            return names[int(index)]
         return None
     if kind == "h_state":
         states = count // 3
-        digits = ""
-        rest = text
-        while rest[:1].isdigit():
-            digits += rest[0]
-            rest = rest[1:]
+        digits, rest = _leading_digits(text)
         rest = rest.lstrip("-")
         side = _side(rest)
-        if side is None:
+        # 竖排别名（上/下、top/bottom）不是横向的边：认出来也不能进
+        # _H_SIDES 索引，否则 ValueError。返回 None 交给调用方按顺序分。
+        if side not in _H_SIDES:
             return None
         # 只有一个状态时状态号是多余的：只导出了第 2 态、文件叫 1l/1c/1r
         # 也应当成这一族；多态时状态号必须对得上。

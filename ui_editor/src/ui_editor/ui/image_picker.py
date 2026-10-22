@@ -98,14 +98,14 @@ def prepare_family_payloads(files: list[str]) -> tuple[dict[str, bytes], str]:
     if igs and len(igs) != len(paths):
         raise ValueError(
             "不能把 .igs 和普通图片混成一族：整族要用同一种扩展名。")
+    # 键用**调用方原样的字符串**：`_stage_family` 拿 QFileDialog 给的路径来取。
+    # 用 `str(Path(name))` 会在 Windows 上把 `C:/x/0l.png` 变成 `C:\x\0l.png`，
+    # 两边的键对不上就是 KeyError（新建族整条流程挂掉）。
     payloads: dict[str, bytes] = {}
-    for path in paths:
+    for name, path in zip(files, paths, strict=True):
         data = path.read_bytes()
-        if path.suffix.lower() == ".igs":
-            payloads[str(path)] = data
-            continue
-        if data[:4] == b"\x89PNG":
-            payloads[str(path)] = data
+        if path.suffix.lower() == ".igs" or data[:4] == b"\x89PNG":
+            payloads[name] = data
             continue
         image = QImage(str(path))
         if image.isNull():
@@ -114,7 +114,7 @@ def prepare_family_payloads(files: list[str]) -> tuple[dict[str, bytes], str]:
         buffer.open(QBuffer.OpenModeFlag.WriteOnly)
         if not image.save(buffer, "PNG"):
             raise ValueError(f"{path.name} 转成 PNG 失败。")
-        payloads[str(path)] = bytes(buffer.data())
+        payloads[name] = bytes(buffer.data())
     return payloads, (".igs" if igs else ".png")
 
 
@@ -263,14 +263,27 @@ class FamilyImportDialog(QDialog):
             return "", "目录路径要相对包内，并用结尾斜杠表示这是一个目录。"
         return value, None
 
+    def _existing_pieces(self, base: str, pairs) -> list[str]:
+        """这个目录里已经有的同名子图（**不管扩展名**）。
+
+        只看 ``self.ext`` 会漏掉另一种格式：目录里已经有一组 ``.igs`` 按钮、
+        用户导入的却是 PNG，看起来"没有冲突"，保存后目录里同时有 ``.png``
+        和 ``.igs``——而 ``dir_base`` 先试 ``.png``，原按钮的图就被顶掉了。
+        「换个新目录」也得把这些目录算成占用，否则会"换"到一个并不空的目录。
+        """
+        if self._exists is None:
+            return []
+        found: list[str] = []
+        for rel, _path in pairs:
+            stem = base + rel.replace("/", "\\")
+            if any(self._exists(stem + ext) for ext in dir_base.EXTS):
+                found.append(rel)
+        return found
+
     def _refresh(self) -> None:
         pairs, error = self._family_pairs()
         base, base_error = self._normalised_base()
-        existing = []
-        if base and self._exists is not None and not error:
-            existing = [rel for rel, _path in pairs
-                        if self._exists(base + rel.replace("/", "\\")
-                                        + self.ext)]
+        existing = self._existing_pieces(base, pairs) if base and not error else []
         self._summary.setText(self.summary_text())
         lines = []
         for rel, path in pairs:
@@ -324,12 +337,9 @@ class FamilyImportDialog(QDialog):
         base, _base_error = self._normalised_base()
         if not base or self._exists is None:
             return
-        suffix = self.ext
 
         def conflicts(candidate: str) -> int:
-            return sum(1 for rel, _path in pairs
-                       if self._exists(candidate + rel.replace("/", "\\")
-                                       + suffix))
+            return len(self._existing_pieces(candidate, pairs))
 
         new_base = suggest_free_base(base, conflicts)
         if new_base and new_base != base:
@@ -371,6 +381,10 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._widget_type = widget_type      # 新建族时按控件类型预选族类型
         self._exists = exists                # 判断包里是否已有同名条目
         self._staged_paths: set[str] = set()
+        # 族标签要探文件系统（plan 会逐个查子图在不在）。搜索框每敲一个字
+        # 都会走一遍 _refilter，几百个族时就是几百毫秒的卡顿；标签在对话框
+        # 生命周期内不会变，缓存起来，挂账新图（可能补全一个族）时清空。
+        self._family_notes: dict[str, str | None] = {}
         all_paths = list(paths)
         if current and current not in all_paths:
             all_paths.insert(0, current)  # 当前值不在清单也置顶可见
@@ -486,6 +500,7 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
 
     def add_staged_path(self, res_path: str) -> None:
         """把一张刚加进来的新图并入列表并选中它。"""
+        self._family_notes.clear()   # 新图可能把半套族补成整族
         self._staged_paths.add(res_path)
         if res_path not in self._all_paths:
             self._all_paths.insert(0, res_path)
@@ -689,13 +704,17 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._stage_one(res_path, data)
 
     def _family_note(self, path: str) -> str | None:
-        """路径是拼名族时返回一句话说明，否则 None。"""
+        """路径是拼名族时返回一句话说明，否则 None（结果缓存）。"""
         if not dir_base.is_dir_base(path) or self._family_label is None:
             return None
+        if path in self._family_notes:
+            return self._family_notes[path]
         try:
-            return self._family_label(path)
+            note = self._family_label(path)
         except Exception:
-            return None
+            note = None
+        self._family_notes[path] = note
+        return note
 
     def _refilter(self) -> None:
         query = self._search.text().strip().lower()

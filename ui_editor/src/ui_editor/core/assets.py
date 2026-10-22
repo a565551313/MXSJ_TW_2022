@@ -397,11 +397,7 @@ class AssetResolver:
             self._record_issue("RESOURCE_INVALID_PATH", str(res_path), str(exc))
             raise
         self._staged[res_path] = data
-        for key in (res_path, res_path.replace("/", "\\"),
-                    res_path.replace("\\", "/")):
-            cache_key = key.replace("/", "\\")
-            self._bytes_cache.pop(cache_key, None)
-            self._image_cache.pop(cache_key, None)
+        self._forget_piece_caches(res_path)
 
     def staged_images(self) -> dict[str, bytes]:
         """全部待入包图片 {资源路径: 原始字节}（拷贝）。"""
@@ -410,7 +406,35 @@ class AssetResolver:
     def discard_staged(self, res_paths) -> None:
         """写包成功后销账，避免下次保存重复写入。"""
         for path in res_paths:
+            # 挂账时路径已规范化成 "/"；调用方传 "\\" 写法也要能销账。
+            try:
+                normalized = self._resource_name(path)
+            except (TypeError, ValueError):
+                normalized = path
+            self._staged.pop(normalized, None)
             self._staged.pop(path, None)
+            self._forget_piece_caches(path)
+
+    def _forget_piece_caches(self, res_path: str) -> None:
+        """挂账/销账后清掉这块图**以及它所在各层目录**的缓存。
+
+        目录型基路径的合成图与切片是按**目录**缓存的。只清子图自己的键不够：
+        同一个族重新挂账（换图）后，画布还会拿回旧的那张；销账后也会继续
+        显示已经不存在的族。``_media_cache`` 不用清——挂账的图不在里面，
+        候选清单每次都会把 ``staged_families()`` 现算进去，清它反而要重扫
+        全部布局（几百个族约 0.5 s）。
+        """
+        key = str(res_path).replace("/", "\\")
+        parts = key.split("\\")[:-1]
+        parents = {"\\".join(parts[:depth]) + "\\"
+                   for depth in range(1, len(parts) + 1)}
+        self._bytes_cache.pop(key, None)
+        for cache in (self._image_cache, self._slice_cache):
+            for name in list(cache):
+                # 切片键是「目录路径#态号」，按 # 前面比较。
+                stem = name.split("#", 1)[0]
+                if name == key or stem in parents:
+                    cache.pop(name, None)
 
     def _staged_lookup(self, name: str) -> bytes | None:
         for key in (name, name.replace("/", "\\"),
