@@ -9,7 +9,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtWidgets import (
-    QDialog,
     QFileDialog,
     QInputDialog,
     QMessageBox,
@@ -17,15 +16,82 @@ from PySide6.QtWidgets import (
 
 from ..core import dlg_codec
 from ..core.catalog import known_layout_paths
-from ..core.layout_import import prepare_layout_import, validate_layout_path
+from ..core.layout_import import validate_layout_path
 from ..core.model import LayoutDocument
-from ..core.pack import FlsPack
 from ..core.styles import StyleBook
-from .layout_import_dialog import LayoutImportDialog
 
 
 class FileWorkflowsMixin:
     """主窗口界面层的职责分组，不独立创建窗口。"""
+
+    RECENT_LIMIT = 8
+
+    # -- 最近打开（跨会话，QSettings） --------------------------------
+    def _remember_recent(self, kind: str, path: str) -> None:
+        """记一条「最近打开」。``kind``：dlg / dlgdir / pack / resdir。"""
+        if not path:
+            return
+        entry = f"{kind}::{path}"
+        items = self._settings.value("recent_open", [])
+        if isinstance(items, str):
+            items = [items]
+        items = [str(item) for item in (items or []) if str(item) != entry]
+        items.insert(0, entry)
+        self._settings.setValue("recent_open", items[: self.RECENT_LIMIT])
+
+    def _recent_entries(self) -> list[tuple[str, str]]:
+        items = self._settings.value("recent_open", [])
+        if isinstance(items, str):
+            items = [items]
+        out: list[tuple[str, str]] = []
+        for item in items or []:
+            kind, _, path = str(item).partition("::")
+            if kind in ("dlg", "dlgdir", "pack", "resdir") and path:
+                out.append((kind, path))
+        return out
+
+    def open_recent(self, kind: str, path: str) -> None:
+        """从「最近打开」再开一次（文件没了就在状态栏说明，不弹栈）。"""
+        if kind == "dlg":
+            if not Path(path).is_file():
+                self._update_status(f"最近打开的布局不在了：{path}")
+                self._forget_recent("dlg", path)
+                return
+            self.open_layout_file(path)
+        elif kind == "dlgdir":
+            if not Path(path).is_dir():
+                self._update_status(f"最近打开的布局目录不在了：{path}")
+                self._forget_recent("dlgdir", path)
+                return
+            self.open_layout_dir(path)
+        elif kind == "pack":
+            if not Path(path).is_file():
+                self._update_status(f"最近打开的资源包不在了：{path}")
+                self._forget_recent("pack", path)
+                return
+            count = self.open_pack_file(path)
+            if count > 0:
+                self._update_status(
+                    f"已挂载 {Path(path).name}：识别到 {count} 个布局，"
+                    "在左侧资源树双击即可打开。")
+        elif kind == "resdir":
+            if not Path(path).is_dir():
+                self._update_status(f"最近的资源目录不在了：{path}")
+                self._forget_recent("resdir", path)
+                return
+            self.open_resource_dir(path)
+
+    def _forget_recent(self, kind: str, path: str) -> None:
+        entry = f"{kind}::{path}"
+        items = self._settings.value("recent_open", [])
+        if isinstance(items, str):
+            items = [items]
+        items = [str(item) for item in (items or []) if str(item) != entry]
+        self._settings.setValue("recent_open", items)
+
+    def clear_recent(self) -> None:
+        self._settings.setValue("recent_open", [])
+        self._update_status("已清空「最近打开」记录（只影响这份列表，不动文件）。")
 
     def open_layout_file(self, path: str) -> None:
         try:
@@ -42,18 +108,26 @@ class FileWorkflowsMixin:
         self._try_load_styles()
         self._open_in_tab(doc, ("file", str(path)))
         self.resource_panel.reveal_selection(("file", str(path)))
+        self._remember_recent("dlg", str(path))
 
     def open_layout_file_dialog(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(
-            self, "打开布局文件", self._settings.value("last_dir", ""),
+        """打开散装布局：可多选，每个开一个标签。"""
+        paths, _ = QFileDialog.getOpenFileNames(
+            self, "打开布局文件（可多选）",
+            self._settings.value("last_dir", ""),
             "布局文件 (*.dlg);;所有文件 (*)")
-        if path:
-            self._settings.setValue("last_dir", str(Path(path).parent))
+        if not paths:
+            return
+        self._settings.setValue("last_dir", str(Path(paths[0]).parent))
+        for path in paths:
             self.open_layout_file(path)
+        if len(paths) > 1:
+            self._update_status(f"已打开 {len(paths)} 个布局，各占一个标签。")
 
     def open_layout_dir(self, path: str) -> None:
         if path not in self._layout_dirs:
             self._layout_dirs.append(path)
+        self._remember_recent("dlgdir", str(path))
         self.resource_panel.add_loose_dir(path)
         self.resolver.add_loose_dir(path)
         local_lst = Path(path) / "ui.lst"
@@ -86,6 +160,7 @@ class FileWorkflowsMixin:
             QMessageBox.warning(self, "挂载资源包失败", str(exc))
             return -1
         self._add_pack_to_tree(pack_path, layouts)
+        self._remember_recent("pack", str(pack_path))
         self.resource_panel.expand_pack(pack_path)
         self._try_load_styles()
         self.scene.refresh_all()
@@ -160,47 +235,15 @@ class FileWorkflowsMixin:
         self.resource_panel.expand_pack(pack_path)
         self.resource_panel.reveal_selection(("pack", pack_path, path))
 
-    def import_pack_layout(self, pack_path: str) -> None:
-        """本地 .dlg 导入到单一编辑文档，实际写入只在生成新包时。"""
-        filename, _ = QFileDialog.getOpenFileName(
-            self, "选择本地布局文件", "", "布局文件 (*.dlg);;所有文件 (*)")
-        if not filename:
-            return
-        dialog = LayoutImportDialog(Path(filename).name,
-                                    self.resolver.scan_layouts(pack_path), self)
-        if dialog.exec() != QDialog.Accepted:
-            return
-        try:
-            with FlsPack(pack_path) as pack:
-                doc, replacing = prepare_layout_import(
-                    pack, dialog.path, Path(filename).read_bytes(),
-                    text_encoding=self.resolver.text_encoding)
-        except Exception as exc:
-            QMessageBox.warning(self, "导入布局失败", str(exc))
-            return
-        if replacing:
-            answer = QMessageBox.question(
-                self, "确认替换布局",
-                f"包内 {dialog.path} 已存在。保存新包时将替换该布局，继续吗？",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No)
-            if answer != QMessageBox.StandardButton.Yes:
-                return
-        if not self._confirm_discard():
-            return
-        doc.source_pack = (pack_path, dialog.path)
-        self._set_document(doc)
-        self.resource_panel.show_pending(pack_path, dialog.path)
-        self._update_status(
-            f"已导入 {dialog.path}（待入新包），可预览/编辑；"
-            "保存前查看改动清单。未带图片，未接脚本，原包未修改。")
-
     def _open_pack_layout(self, pack_path: str, res_path: str) -> None:
         """从包中打开一个布局（树双击与对话框共用）。
 
         同来源布局开过就切回它的标签（保留未保存编辑），否则开新标签；
-        包顺带入树。
+        包顺带入树。批量导入还没写进包的那几个，直接从导入队列里开
+        （源包里本来就没有，去包里找只会报「找不到」）。
         """
+        if self._open_pending_layout(pack_path, res_path):
+            return
         if (self.doc is not None and self.doc.pending_pack_import
                 and self.doc.source_pack == (pack_path, res_path)):
             self.resource_panel.reveal_selection(("pending", pack_path, res_path))
@@ -241,6 +284,7 @@ class FileWorkflowsMixin:
         """从资源目录打开：挂载目录内全部包并逐个入树（忙碌遮罩后跑）。"""
         if path not in self._resource_dirs:
             self._resource_dirs.append(path)
+        self._remember_recent("resdir", str(path))
         before = {str(p) for p in self.resolver.pack_paths}
         try:
             scanned = self.run_busy(

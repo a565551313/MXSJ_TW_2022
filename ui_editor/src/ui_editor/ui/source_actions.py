@@ -52,6 +52,10 @@ class SourceActionsMixin:
             doc.source_bytes = data
             doc.source_path = self.doc.source_path
             doc.source_pack = self.doc.source_pack
+            # 记住的保存目标与原始来源也要跟着走：丢一个，下次 Ctrl+S
+            # 就会重新问路径（默认名还是 _edited2），标题也丢了来源包名。
+            doc.output_pack = self.doc.output_pack
+            doc.origin_pack = self.doc.origin_pack
             if self.doc.pending_pack_import:
                 doc.begin_pack_import(self.doc._saved_state)
             elif (self.doc.inplace_replace
@@ -74,7 +78,11 @@ class SourceActionsMixin:
         if not self.resolver.has_sources and not self._layout_dirs:
             QMessageBox.information(self, "刷新", "请先打开布局文件、目录或资源包。")
             return
+        # 待入新包的布局不在源包里，重读只会读到旧内容或直接失败：
+        # 保留它们，也不因为它们拦刷新。
         for doc in self._dirty_docs():
+            if doc.pending_pack_import:
+                continue
             if not self._confirm_discard(doc):
                 return
         try:
@@ -96,7 +104,6 @@ class SourceActionsMixin:
             self._add_pack_to_tree(path, names)
         for root in self._layout_dirs:
             self.resource_panel.add_loose_dir(root)
-        self.resource_panel._apply_search(self.resource_panel._search.text())
         # 逐标签换上重读内容（清选择快照）；活动标签同步界面。
         pairs = ([(s, s.doc) for s in self._sessions]
                  or [(None, self._doc)])
@@ -116,6 +123,10 @@ class SourceActionsMixin:
             self._set_document(active_new)
         elif self._doc is None:
             self._set_document(None)
+        # `_set_document` 会 clear_pending()：待入叶子必须在这之后再挂回来，
+        # 否则刷新一次「（待入新包）」就全从树上消失了。
+        self._restore_pending_items()
+        self.resource_panel._apply_search(self.resource_panel._search.text())
         if self._doc is not None and (
                 self._doc.source_path or self._doc.source_pack):
             key = (("file", self._doc.source_path) if self._doc.source_path
@@ -142,6 +153,10 @@ class SourceActionsMixin:
                 if was is None or not (was.source_path or was.source_pack):
                     docs.append(None)  # 无来源（如新建页）：跳过保留
                     continue
+                if was.pending_pack_import:
+                    # 还没写进源包：保留内存里的内容，别去包里读旧的
+                    docs.append(None)
+                    continue
                 handle.report(1, 3, f"重读布局 {i + 1}/{len(pairs)}…")
                 data = self._source_bytes(was, fresh)
                 dicts, md5 = dlg_codec.parse_bytes(
@@ -150,6 +165,8 @@ class SourceActionsMixin:
                 nd.source_bytes = data
                 nd.source_path = was.source_path
                 nd.source_pack = was.source_pack
+                nd.output_pack = was.output_pack
+                nd.origin_pack = was.origin_pack
                 docs.append(nd)
             # 样式也从新来源读取，不能保留上次 ui.lst 的缓存。
             handle.report(2, 3, "扫描布局与样式…")
@@ -166,6 +183,40 @@ class SourceActionsMixin:
                 fresh.close()
             raise
         return fresh, docs, book, layouts
+
+    def export_layout_assets(self) -> None:
+        """「导出副本 ▸ 控件素材图片…」：整篇布局引用到的素材各导一份。
+
+        与右键「导出素材」同一套语义（原格式、同名加序号、被拒的跳过），
+        只是范围是整篇布局；没挂资源包时先建目录再报错会很怪，所以先判空。
+        """
+        from ..core.asset_export import asset_paths_of
+
+        if self.doc is None:
+            return
+        widgets = self.doc.all_widgets()
+        names = [name for widget in widgets for _key, name in
+                 asset_paths_of(widget)]
+        if not names:
+            QMessageBox.information(
+                self, "导出素材图片",
+                "这篇布局里没有引用图片或音效素材。")
+            return
+        self.export_widget_assets(widgets)
+
+    def export_current_layout_source(self) -> None:
+        """「导出副本 ▸ 布局原文件」：当前这篇的来源原文（不含未保存编辑）。"""
+        if self.doc is None:
+            return
+        if self.doc.source_path:
+            self.export_layout(("file", self.doc.source_path))
+        elif self.doc.source_pack:
+            self.export_layout(("pack", *self.doc.source_pack))
+        else:
+            QMessageBox.information(
+                self, "导出布局原文件",
+                "当前布局还没有来源：新建的布局请先「保存」或「另存为」，"
+                "之后才有原文件可导。")
 
     def export_layout(self, source: tuple) -> None:
         """树节点的来源快照导出，不导出当前未保存编辑、不改变编码。"""

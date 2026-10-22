@@ -2477,15 +2477,32 @@ class TestToolbar(unittest.TestCase):
         bars = w.findChildren(QToolBar)
         self.assertTrue(bars)
         actions = bars[0].actions()
-        for expected in (w._act_open_file, w._act_open_pack, w._act_save,
-                         w._act_save_pack, w._act_export_png,
-                         w._undo_action, w._redo_action):
+        # 直接挂在工具栏上的：保存、撤销、重做、重新读取
+        for expected in (w._act_save, w._undo_action, w._redo_action,
+                         w._act_reload):
             self.assertIn(expected, actions)
-            self.assertFalse(expected.icon().isNull())  # 带图标按钮
+        # 其余按「打开 / 另存为 / 导出副本」三个分体按钮分组：
+        # 主按钮管最常用那种，小箭头里是同一件事的其它来源或去向。
+        grouped = {
+            w._open_btn: (w._act_open_file, w._act_open_dir,
+                          w._act_open_pack, w._act_open_res_dir),
+            w._save_as_btn: (w._act_save_pack, w._act_save_as_dlg),
+            w._export_btn: (w._act_export_layout, w._act_export_png,
+                            w._act_export_assets),
+        }
+        for button, expected in grouped.items():
+            menu_actions = button.menu().actions()
+            for action in expected:
+                self.assertIn(action, menu_actions)
+                self.assertTrue(action.text())             # 有字（图标可选）
+            self.assertTrue(button.text())                 # 主按钮有短字
+            self.assertFalse(button.icon().isNull())
+            self.assertIsNotNone(button.menu())
         from PySide6.QtCore import Qt as _Qt
         self.assertEqual(
             bars[0].toolButtonStyle(),
             _Qt.ToolButtonStyle.ToolButtonTextUnderIcon)  # 图标下带短字
+        self.assertEqual(w._act_save.iconText(), "保存")
         self.assertEqual(w._act_open_file.iconText(), "打开")
         self.assertEqual(w._act_save_pack.iconText(), "存包")
         self.assertFalse(w._undo_action.isEnabled())  # 没文档时不可撤销

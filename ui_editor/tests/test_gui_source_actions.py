@@ -300,7 +300,7 @@ class SourceActionTests(unittest.TestCase):
             self.assertEqual(
                 [call.args[0]
                  for call in menu.return_value.addAction.call_args_list],
-                ["导出布局…", "替换布局…"])
+                ["导出布局原文件…", "用本地 .dlg 顶掉这个布局…"])
             export.triggered.connect.call_args.args[0]()
         self.assertEqual(seen, [("pack", str(self.pack), self.name)])
         font = leaf.font(0)

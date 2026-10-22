@@ -699,20 +699,20 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
 
         bottom = QHBoxLayout()
         if self._export_handler is not None:
-            export_btn = QPushButton("导出图片…", self)
+            export_btn = QPushButton("导出副本…", self)
             export_btn.setToolTip(
                 "把选中图片存到电脑上（可 Ctrl/Shift 多选批量导出；"
                 "精灵格式会转成能打开看的 PNG）")
             export_btn.clicked.connect(self._choose_export)
             bottom.addWidget(export_btn)
         if self._on_stage is not None:
-            add_btn = QPushButton("添加新图到包…", self)
+            add_btn = QPushButton("把图片放进包…", self)
             add_btn.setToolTip(
                 "从电脑选图片、给它写游戏里的名字；选完能直接用，"
                 "保存回资源包时连图一起写进包")
             add_btn.clicked.connect(self._choose_add)
             bottom.addWidget(add_btn)
-            family_btn = QPushButton("新建拼名族…", self)
+            family_btn = QPushButton("几张图组成按钮（拼名族）…", self)
             family_btn.setToolTip(
                 "把几张图合成一个按钮/边框：3 张 = 一个按钮（0l/0c/0r），"
                 "6 张 = 两个状态，9 张 = 九宫格。\n"
@@ -721,9 +721,10 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
             family_btn.clicked.connect(self._choose_family)
             bottom.addWidget(family_btn)
         else:
-            external_btn = QPushButton("从外部文件…", self)
+            external_btn = QPushButton("只填包外文件名…", self)
             external_btn.setToolTip(
-                "改走系统文件框（旧行为：只填文件名，图本身不进包）")
+                "不改包：只把文件名填进属性，图片本身不会写进资源包。\n"
+                "想连图一起写进包，请用「把图片放进包」")
             external_btn.clicked.connect(self._choose_external)
             bottom.addWidget(external_btn)
         bottom.addStretch(1)

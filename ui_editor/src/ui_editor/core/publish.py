@@ -75,9 +75,14 @@ def directory_is_sorted(entry_ids: Sequence[int]) -> bool:
 
 def verify_structure(*, src_pack, out_path, res_path: str, extras: Mapping,
                      info: Mapping,
+                     layout_paths: Sequence[str] | None = None,
                      progress: Callable[[int, int, str], None] | None = None,
                      cancelled: Callable[[], bool] | None = None) -> dict:
     """结构检查（条目数/升序/集合/二分命中/未改条目保真）。
+
+    ``layout_paths``：本次一共写了哪些布局条目（批量导入时不止一个）；
+    不传就只看 ``res_path``。新增布局按 ``info["layouts_added"]`` 计数，
+    旧调用方的 ``info["layout_added"]`` 仍然认。
 
     逐条保真是全包读取的重活：``progress(done, total, text)`` 回报进度；
     ``cancelled()`` 为真时抛 :class:`~ui_editor.core.errors.Cancelled`
@@ -85,22 +90,56 @@ def verify_structure(*, src_pack, out_path, res_path: str, extras: Mapping,
     """
     report: dict = {}
     try:
+        # 就地写回（src 与 out 是同一个文件）时，「写前」的句柄拿到的
+        # 已经是写后的内容：条目数与「新增布局」都已在写前由
+        # :func:`ui_editor.core.pack_build._verify_copy` 对照源包校验过，
+        # 这里再拿同一个文件自比自只会误报（第二次批量保存加一个布局，
+        # 就会被判成「条目数变化」）。所以同文件只做目录/寻址检查。
+        same_file = Path(src_pack).resolve() == Path(out_path).resolve()
+        paths = list(layout_paths) if layout_paths is not None else [res_path]
+        if same_file:
+            with FlsPack(out_path) as after:
+                ids_after = after.entry_ids
+                if not directory_is_sorted(ids_after):
+                    report["error"] = (
+                        "新包目录未按条目号升序，引擎可能查不到条目")
+                    return report
+                for name in [*paths, *extras]:
+                    if not engine_finds(ids_after, path_hash(name)):
+                        report["error"] = f"新包中二分查找不到：{name}"
+                        return report
+                report["changed_entries"] = None
+                report["entries_after"] = after.count
+            return report
         with FlsPack(src_pack) as before, FlsPack(out_path) as after:
+            before_ids = set(before.entry_ids)
+            new_layouts = [path for path in paths
+                           if path_hash(path) not in before_ids]
+            claimed = info.get("layouts_added")
+            if claimed is None:
+                claimed = [res_path] if info.get("layout_added") else []
             expected = (before.count + len(info["images_added"])
-                        + int(info.get("layout_added", False)))
+                        + len(claimed))
             if after.count != expected:
                 report["error"] = "条目数变化，写回结果不可信"
+                return report
+            # 写包方声明的「新增」还要和源包实际情况对得上：声称新增了
+            # 一个本来就在包里的布局，意味着它可能把别的东西写丢了。
+            if sorted(claimed) != sorted(new_layouts):
+                report["error"] = (
+                    "新增布局的声明与源包不符："
+                    f"声称 {sorted(claimed)}，实为 {sorted(new_layouts)}")
                 return report
             ids_after = after.entry_ids
             if not directory_is_sorted(ids_after):
                 report["error"] = "新包目录未按条目号升序，引擎可能查不到条目"
                 return report
             added_ids = {path_hash(name) for name in info["images_added"]}
-            if set(ids_after) != (set(before.entry_ids) | added_ids
-                                  | {path_hash(res_path)}):
+            if set(ids_after) != (before_ids | added_ids
+                                  | {path_hash(path) for path in paths}):
                 report["error"] = "新包条目集合与预期不符，写回结果不可信"
                 return report
-            for name in [res_path, *extras]:
+            for name in [*paths, *extras]:
                 if not engine_finds(ids_after, path_hash(name)):
                     report["error"] = f"新包中二分查找不到：{name}"
                     return report
@@ -164,21 +203,35 @@ def verify_written_pack(
     expected_dicts: list[dict],
     info: Mapping,
     read_back: ReadBack,
+    extra_layouts: Mapping[str, list[dict]] | None = None,
     progress: Callable[[int, int, str], None] | None = None,
     cancelled: Callable[[], bool] | None = None,
 ) -> dict:
     """结构 + 回读检查；返回报告片段（``ok`` 或 ``error``）。
 
+    ``extra_layouts``：批量导入一并写进新包的其它布局（``{路径: 字典列表}``），
+    每个都用同一套 ``read_back`` 独立回读比对。
+
     ``progress``/``cancelled`` 只作用于结构检查的逐条保真循环，
     取消时抛 :class:`~ui_editor.core.errors.Cancelled`。
     """
+    extra_layouts = dict(extra_layouts or {})
     report = verify_structure(src_pack=src_pack, out_path=out_path,
                               res_path=res_path, extras=extras, info=info,
+                              layout_paths=[res_path, *extra_layouts],
                               progress=progress, cancelled=cancelled)
     if "error" not in report:
         report.update(verify_readback(read_back=read_back, out_path=out_path,
                                       res_path=res_path, extras=extras,
                                       expected_dicts=expected_dicts))
+        for path, dicts in extra_layouts.items():
+            if "error" in report:
+                break
+            got, _extras = read_back(Path(out_path), path, [])
+            if got is None:
+                report["error"] = f"新包回读布局失败：{path}"
+            elif got != dicts:
+                report["error"] = f"新包回读内容与导入的布局不一致：{path}"
     report["ok"] = "error" not in report
     return report
 
@@ -224,6 +277,8 @@ class SavePlan:
     target: str
     to_pack: bool
     images: list[tuple[str, str, int]] = field(default_factory=list)
+    #: 批量导入时一并写进新包的其它布局：(新增/替换, 包内路径, 明文字节数)
+    layouts: list[tuple[str, str, int]] = field(default_factory=list)
     issues: list[Diagnostic] = field(default_factory=list)
     notice: str = ""
     target_write: TargetWrite | None = None
@@ -240,6 +295,7 @@ def save_review_plan(
     res_path: str | None = None,
     pending_pack_import: bool = False,
     new_plain: bytes | None = None,
+    extra_layouts: Mapping[str, bytes] | None = None,
 ) -> SavePlan:
     """保存前改动清单里除「布局改动」之外的那几行（图片/编码/待入包提示）。
 
@@ -252,10 +308,14 @@ def save_review_plan(
     if to_pack:
         issues.extend(_extra_encoding_issues(extras))
     images: list[tuple[str, str, int]] = []
+    layouts: list[tuple[str, str, int]] = []
     notice = ""
     target_write: TargetWrite | None = None
     if to_pack and pack_path is not None:
         with FlsPack(pack_path) as pack:
+            for name, data in (extra_layouts or {}).items():
+                kind = "替换布局" if pack.contains(name) else "新增布局"
+                layouts.append((kind, name, len(data)))
             if res_path and new_plain is not None:
                 target_write = classify_target_write(
                     pack.read_named(res_path), path_hash(res_path), new_plain)
@@ -276,7 +336,8 @@ def save_review_plan(
         notice = (target_write.summary
                   + (("\n" + notice) if notice else ""))
     return SavePlan(target=target, to_pack=to_pack, images=images,
-                    issues=issues, notice=notice, target_write=target_write)
+                    layouts=layouts, issues=issues, notice=notice,
+                    target_write=target_write)
 
 
 # -- 目标条目会被怎么写（分析报告 P2-1）---------------------------------

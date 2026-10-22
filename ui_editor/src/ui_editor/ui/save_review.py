@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
+    QHeaderView,
     QLabel,
     QTabWidget,
     QTreeWidget,
@@ -27,15 +28,19 @@ class SaveReviewDialog(QDialog):
         to_pack: bool,
         parent=None,
         layout_notice: str = "",
+        layouts: list[tuple[str, str, int]] | None = None,
     ):
         super().__init__(parent)
         self.setWindowTitle("保存前改动清单")
         self.resize(920, 540)
         layout = QVBoxLayout(self)
         operation = "生成新资源包（原包不动）" if to_pack else "写入散装 .dlg"
+        layouts = list(layouts or [])
         summary = QLabel(
             f"{operation}\n输出：{target}\n布局改动 {len(changes)} 项 · "
-            f"图片清单 {len(images)} 项。\n"
+            f"图片清单 {len(images)} 项"
+            + (f" · 一并写入布局 {len(layouts)} 个" if layouts else "")
+            + "。\n"
             "布局按树位置比较，重排/移动会表现为字段与增删差异；未知字段也列出。\n"
             "散装布局不会嵌入图片；静态未发现引用不等于无引用。取消不改变编辑状态。"
         )
@@ -76,6 +81,19 @@ class SaveReviewDialog(QDialog):
             row.setToolTip(1, name)
             self.images_table.addTopLevelItem(row)
         tabs.addTab(self.images_table, "图片写入/跳过")
+        if layouts:
+            self.layouts_table = QTreeWidget()
+            self.layouts_table.setHeaderLabels(
+                ["操作", "包内路径", "明文字节数"])
+            head = self.layouts_table.header()
+            head.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+            head.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+            head.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+            for kind, name, size in layouts:
+                row = QTreeWidgetItem([kind, name, str(size)])
+                row.setToolTip(1, name)
+                self.layouts_table.addTopLevelItem(row)
+            tabs.addTab(self.layouts_table, "一并写入的布局")
         self.issues_table = QTreeWidget()
         self.issues_table.setHeaderLabels(["级别", "规则", "说明"])
         for issue in issues:
@@ -95,6 +113,7 @@ class SaveReviewDialog(QDialog):
         )
         save = buttons.button(QDialogButtonBox.StandardButton.Save)
         save.setText("确认生成新包" if to_pack else "确认保存布局")
+        buttons.button(QDialogButtonBox.StandardButton.Cancel).setText("取消")
         if any(issue.code == "ENCODING" for issue in issues):
             save.setEnabled(False)
             summary.setText(

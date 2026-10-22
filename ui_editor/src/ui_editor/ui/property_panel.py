@@ -651,7 +651,7 @@ class PropertyPanel(QWidget):
         if self._widget is not None:
             widget_type = self._widget.props.get("sWidgetType")
         dialog = ResourcePickerDialog(
-            self, "从资源包选择（选完保存回包不丢图）",
+            self, "从包里选图片（选完保存会一起写进新包）",
             candidates, edit.text(),
             thumb if key != "sSoundPath" else None,
             on_stage=assets.stage_image,
@@ -676,8 +676,9 @@ class PropertyPanel(QWidget):
         browse = QToolButton()
         browse.setText("…")
         browse.setToolTip(
-            "从资源包选择（优先）；包内没有的也可改选外部文件"
-            "（只取文件名，图本身不进包）")
+            "从包里选图片（首选，保存时连图一起写进新包）；\n"
+            "包里没有的只能「只填包外文件名」——那种图不会写进包，"
+            "换台机器就画不出来")
 
         def _pick() -> None:
             if self._browse_from_pack(key, edit):
