@@ -3,25 +3,32 @@
 ``sFileName`` 等资源字段以 ``\\\\``/``/`` 结尾的是目录型基路径：引擎运行时
 在其下拼接子图，包内没有基路径本身这个条目。
 
-拼名族**按 interface.fls 全量实测定版**（2026-10-20，614,482,967 B、
-2,708 篇 ``.dlg``、729 个目录型基路径全部探测过，结果见
-``docs/EXTERNAL_CORPUS.md``）：
+拼名族**按 interface.fls 全量实测定版**（2026-10-22 复测同一真包：
+614,482,967 B / 53,556 条目，2,708 篇 ``.dlg`` 全解，729 个目录型基路径
+全部探到子图、0 个认不出）：
 
-1. **三态横片**（``CTextButton``/``CHPagePngButton``/``CVPagePngButton``）：
-   ``0l.png``+``0c.png``+``0r.png``、``1l``… 每个状态是横三片，状态数即
-   连号段长度（实测 2～5 态）。状态序号就是文件名前缀，**哪个序号是悬停/
-   按下仍未与客户端核实**；
-2. **序号帧**（``CButton`` 等）：``0.png`` 起连号，整张一行一态；``.igs``
+1. **按钮横片**（``h_state``，旧称“三态横片”）：``0l.png``+``0c.png``+
+   ``0r.png``、``1l``… 每个状态是横三片（左/中/右），状态数即连号段长度
+   （实测 36 个基路径：3 态 23、4 态 11、5 态 1、整图与横片混装 1）。
+   **``CTextButton`` 不一定是横片**——同一个真包里它的基路径 53 个是
+   整图、35 个是横片，所以族类型先看文件名结构，控件类型只在认不出时兜底；
+   状态序号就是文件名前缀，**哪个序号是悬停/按下仍未与客户端核实**；
+2. **序号帧**（``frames``）：``0.png`` 起连号，整张一行一态（按钮上就是
+   一格一态）；实测 423 个基路径：3 张 351、4 张 49、2 张 14、1 张 4、
+   5 张 2，另有 3 个混了 ``over.jpg``/``normal.bmp``/``0l.bmp`` 等杂项；``.igs``
    与 ``.png`` 同族不混用；
 3. **九片**（``CPngNineFrame``/``CFrame``/``CBorder``）：``top/left`` …
    ``bottom/right`` 共 9 块，中列是 ``top/middle``、``middle/middle``、
    ``bottom/middle``——**没有** 平铺的 ``top.png``/``middle.png``/``bottom.png``
-   （实测 130 个九片基路径，全部 9 块齐装）；
+   （实测 130 个基路径：``.png`` 83、``.igs`` 41，另 6 个多出整图/``bg``，
+   仍按九片切）；
 4. **横三片**（``CHPngFrame``/``CHFrame``/``CProgress``）：``left`` +
-   ``middle`` + ``right``（实测 105 个）；
+   ``middle`` + ``right``（实测 109 个：``.png`` 75、``.igs`` 29，另 5 个
+   同时带成品整图 ``0.png``/``bg.png``——按切片才对，整图是死尺寸）；
 5. **竖三片**（``CVPngFrame``/``CVFrame``）：``top`` + ``middle`` + ``bottom``
-   （实测 22 个）；
-6. **单图**：整目录只有一张 ``bg``/``middle``（实测 10 个）。
+   （实测 22 个：``.png`` 15、``.igs`` 6、多一张 ``normal.png`` 1）；
+6. **单图**：整目录只有一张 ``bg``/``middle``（实测 9 个：``middle.png`` 4、
+   ``middle.igs`` 4、``middle/middle.igs`` 1）。
 
 整族同扩展名（``.png`` 或 ``.igs``）：实测包里没有一族混扩展名的情况，
 故按扩展名整组尝试，缺一块即换下一族。
@@ -36,9 +43,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 __all__ = [
-    "DirBasePlan", "KIND_LABELS", "WIDGET_KINDS", "describe", "frame_series",
-    "guess_kind", "is_dir_base", "map_stems_to_pieces", "match_kind",
-    "naming_hint", "piece_names", "plan", "probe_pieces", "state_series",
+    "DirBasePlan", "KIND_LABELS", "WIDGET_DEFAULT_KINDS", "WIDGET_KINDS",
+    "describe", "frame_series", "guess_kind", "is_dir_base",
+    "map_stems_to_pieces", "match_kind", "naming_hint", "piece_names", "plan",
+    "probe_pieces", "state_series",
 ]
 
 #: 序号帧/状态最多收到第几号（实测按钮最多 5 态，留余量）
@@ -97,7 +105,9 @@ class DirBasePlan:
         return self.pieces[index * 3:index * 3 + 3]
 
 
-#: 控件类型 → 新建族时的推荐拼名类型（与上面实测定版的族一致）
+#: 控件类型 → **位置词歧义**时按控件定族（文件名叫 ``left/middle/right``
+#: 这种既可能是按钮的左/中/右片、也可能是普通横三片的时候用）。
+#: 名字能说明结构（``0/1/2``、``0l/0c/0r``、``top/left``）时一律听文件名的。
 WIDGET_KINDS = {
     "CTextButton": "h_state",
     "CHPagePngButton": "h_state",
@@ -111,6 +121,25 @@ WIDGET_KINDS = {
     "CVPngFrame": "v_slice",
     "CVFrame": "v_slice",
     "CButton": "frames",
+}
+
+#: 控件类型 → **文件名认不出**、只能按张数兜底时的默认族（真包多数派）。
+#:
+#: 2026-10-22 在同一份 ``interface.fls``（729 个目录型基路径）上逐控件类型
+#: 复核，按**不同基路径**计：
+#:
+#: - ``CTextButton``：整图 ``0/1/2.png`` **53** 个，横片 ``0l/0c/0r`` **35** 个；
+#: - ``CHPagePngButton``：整图 16，横片 10；
+#: - ``CVPagePngButton``：整图 11，横片 **0**。
+#:
+#: 所以"按钮控件就是横片"不成立（0.13.3 之前 `CTextButton`→``h_state`` 只是
+#: 推荐，不是实测）。名字认不出时整图才是多数派，位置词歧义仍按
+#: :data:`WIDGET_KINDS` 走横片。其余类型两张表一致。
+WIDGET_DEFAULT_KINDS = {
+    **WIDGET_KINDS,
+    "CTextButton": "frames",
+    "CHPagePngButton": "frames",
+    "CVPagePngButton": "frames",
 }
 
 
@@ -325,10 +354,16 @@ def match_kind(names) -> str | None:
 
 
 def guess_kind(count: int, widget_type: str | None = None) -> str | None:
-    """没认出文件名时的推荐类型：先看控件，再看张数。"""
-    preferred = WIDGET_KINDS.get(widget_type or "")
-    if preferred and piece_names(preferred, count) is not None:
-        return preferred
+    """没认出文件名时的推荐类型：先看控件的实测多数派，再看张数。
+
+    ``WIDGET_DEFAULT_KINDS`` 是真包多数派（按钮多为整图），``WIDGET_KINDS``
+    是位置词歧义时的选择（按钮写 ``0l/0c/0r``）：9 张对按钮正好是 3 态横片，
+    多数派的 ``frames`` 收不下（上限 :data:`FRAME_MAX`），于是退到后者。
+    """
+    for table in (WIDGET_DEFAULT_KINDS, WIDGET_KINDS):
+        preferred = table.get(widget_type or "")
+        if preferred and piece_names(preferred, count) is not None:
+            return preferred
     for kind in ("nine_slice", "h_state", "h_slice", "v_slice", "single",
                  "frames"):
         if piece_names(kind, count) is not None:

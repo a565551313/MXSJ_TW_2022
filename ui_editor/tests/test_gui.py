@@ -1593,6 +1593,29 @@ class TestImagePicker(unittest.TestCase):
             self.assertEqual(choose_family_kind(slices, "CTextButton"),
                              "h_state")
 
+    def test_unknown_names_follow_measured_majority(self):
+        """文件名认不出时按真包多数派：按钮多是一整张一态，不是三片。
+
+        真包实测（interface.fls，729 个目录型基路径）：``CTextButton`` 的基路径
+        整图 53 个、横片 35 个；``CHPagePngButton`` 16 / 10；``CVPagePngButton``
+        11 / 0。所以 a/b/c 这种名字 + 按钮控件默认是序号帧。
+        """
+        from ui_editor.ui.image_picker import choose_family_kind
+
+        with tempfile.TemporaryDirectory() as tmp:
+            files = [_write_png(Path(tmp) / f"{name}.png", 20 + index)
+                     for index, name in enumerate(("a", "b", "c"))]
+            self.assertEqual(choose_family_kind(files, "CTextButton"), "frames")
+            self.assertEqual(choose_family_kind(files, "CHPagePngButton"),
+                             "frames")
+            self.assertEqual(choose_family_kind(files, "CHPngFrame"),
+                             "h_slice")
+            # 9 张收不进序号帧，仍按按钮的位置词选择
+            nine = [_write_png(Path(tmp) / f"{name}.png", 20 + index)
+                    for index, name in enumerate("abcdefghi")]
+            self.assertEqual(choose_family_kind(nine, "CTextButton"),
+                             "h_state")
+
     def test_position_words_follow_the_widget(self):
         """left/middle/right 是"位置"：按钮上要 0l/0c/0r，边框上才是 h_slice。"""
         from ui_editor.ui.image_picker import choose_family_kind

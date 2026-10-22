@@ -239,17 +239,38 @@ class TestFamilyNaming(unittest.TestCase):
         self.assertIsNone(dir_base.match_kind([]))
 
     def test_guess_kind_prefers_widget_type(self):
-        self.assertEqual(dir_base.guess_kind(3, "CTextButton"), "h_state")
+        # 名字认不出时按真包多数派：按钮多是一整张一态（CTextButton 53:35）
+        self.assertEqual(dir_base.guess_kind(3, "CTextButton"), "frames")
+        self.assertEqual(dir_base.guess_kind(3, "CHPagePngButton"), "frames")
         self.assertEqual(dir_base.guess_kind(3, "CHPngFrame"), "h_slice")
         self.assertEqual(dir_base.guess_kind(3, "CVFrame"), "v_slice")
         self.assertEqual(dir_base.guess_kind(9, "CPngNineFrame"), "nine_slice")
-        # 9 张对按钮是合法的 3 态，控件预选优先
+        # 9 张收不进序号帧（上限 8），退回按钮的位置词选择：3 态横片
         self.assertEqual(dir_base.guess_kind(9, "CTextButton"), "h_state")
         # 控件预选与张数对不上时退回按张数判断
         self.assertEqual(dir_base.guess_kind(9, "CHPngFrame"), "nine_slice")
         self.assertEqual(dir_base.guess_kind(1, None), "single")
         self.assertEqual(dir_base.guess_kind(2, None), "frames")
         self.assertIsNone(dir_base.guess_kind(0, None))
+
+    def test_widget_tables_follow_measured_pack(self):
+        """两张控件表各司其职：位置词歧义 vs 名字认不出。
+
+        真包（interface.fls，729 个目录型基路径）逐类型实测：按钮的基路径
+        多数是整图（CTextButton 53 / CHPagePngButton 16 / CVPagePngButton 11），
+        横片只是少数（35 / 10 / 0）。
+        """
+        for widget in ("CTextButton", "CHPagePngButton", "CVPagePngButton"):
+            self.assertEqual(dir_base.WIDGET_KINDS[widget], "h_state")
+            self.assertEqual(dir_base.WIDGET_DEFAULT_KINDS[widget], "frames")
+        for widget in ("CPngNineFrame", "CFrame", "CBorder"):
+            self.assertEqual(dir_base.WIDGET_DEFAULT_KINDS[widget], "nine_slice")
+        for widget in ("CHPngFrame", "CHFrame", "CProgress"):
+            self.assertEqual(dir_base.WIDGET_DEFAULT_KINDS[widget], "h_slice")
+        for widget in ("CVPngFrame", "CVFrame"):
+            self.assertEqual(dir_base.WIDGET_DEFAULT_KINDS[widget], "v_slice")
+        self.assertEqual(dir_base.WIDGET_DEFAULT_KINDS["CButton"], "frames")
+        self.assertIn("WIDGET_DEFAULT_KINDS", dir_base.__all__)
 
 
 class TestNamingRecognition(unittest.TestCase):

@@ -76,6 +76,7 @@ def choose_family_kind(names, widget_type: str | None = None) -> str | None:
     stems = [Path(name).stem for name in items]
     matched = dir_base.match_kind(items)
     widget_kind = dir_base.WIDGET_KINDS.get(widget_type or "")
+    default_kind = dir_base.WIDGET_DEFAULT_KINDS.get(widget_type or "")
 
     def usable(kind: str | None) -> bool:
         return kind is not None and dir_base.piece_names(
@@ -87,6 +88,9 @@ def choose_family_kind(names, widget_type: str | None = None) -> str | None:
                 is not None):
             return widget_kind
         return matched
+    # 名字认不出：按真包多数派（按钮多是一整张一态），再退到位置词选择。
+    if usable(default_kind):
+        return default_kind
     if usable(widget_kind):
         return widget_kind
     return dir_base.guess_kind(len(items), widget_type)
@@ -534,7 +538,7 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._search.textChanged.connect(self._refilter)
         self._only_families = QCheckBox("只看拼名族", self)
         self._only_families.setToolTip(
-            "目录型基路径（按钮三态 0l/0c/0r、边框 left/middle/right、"
+            "目录型基路径（按钮 0/1/2 或 0l/0c/0r、边框 left/middle/right、"
             "九宫格 top/left …）：包里没有这个条目，游戏运行时在其下拼子图。\n"
             "选中它会把这个目录路径写进属性。")
         self._only_families.toggled.connect(self._refilter)

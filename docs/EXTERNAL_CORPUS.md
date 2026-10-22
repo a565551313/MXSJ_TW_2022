@@ -152,6 +152,7 @@ export MXSJ_DLG_CORPUS="$OUT/mxsj/interface"   # 支持 ':' 分隔多目录；�
 | 2026-10-20 | `interface1019` | 4 文件：`interface.z01/z02/z03` 各 94,371,840 B + `interface.zip` 77,782,093 B | 记为快照；未下载 |
 | 2026-10-20 | `MXSJ_CORPUS` | 10 卷独立 ZIP，合计 152,769,019 B，基线 `8212b26`/2026-10-15 | 记为快照；SHA 抄自同批清单；未下载 |
 | 2026-10-20 | `interface1019` | 4 卷已下载并按 §3 的办法解开：`interface.fls` **614,482,967 B**，SHA-256 `3fb516a9…1fb124`，CRC `0x4fa12d0b` 与包内记录一致 | 用作真语料基线（§5.1） |
+| 2026-10-22 | `interface1019` | 同一批 4 卷在本次会话重新下载并解开，SHA-256/CRC/条目数与 §5.1 完全一致；补做逐控件类型复核 | 证据见 `analysis/evidence/interface_names_20261022.json`；包只落 `/tmp`，不入库 |
 
 ### 5.1 真包实测（2026-10-20，`interface1019` 当批内容）
 
@@ -165,6 +166,8 @@ export MXSJ_DLG_CORPUS="$OUT/mxsj/interface"   # 支持 ':' 分隔多目录；�
 | `tests.test_codec`（`MXSJ_DLG_CORPUS` 指向这 2,708 篇） | **Ran 10 → OK**（全量往返 0 失败） |
 | 目录型基路径 | **729 个唯一值 / 736 处引用**，全部探过子图名 |
 | 拼名族实测分布（`dir_base.plan` 判决，729 个基路径全有归属） | 序号帧 423 / 九片 130 / 横三片 109 / 三态横片 `{n}l`+`{n}c`+`{n}r` 36 / 竖三片 22 / 单图 9 |
+| 逐控件类型复核（2026-10-22，按**不同基路径**计） | `CButton` 序号帧 352；`CPngNineFrame` 九片 92；`CTextButton` **整图 53 / 横片 35**；`CHPngFrame` 横三片 60 / 单图 2；`CFrame` 九片 42 / 单图 1；`CHFrame` 横三片 28 / 单图 4；`CProgress` 横三片 27；`CHPagePngButton` 整图 16 / 横片 10；`CVPngFrame` 竖三片 15 / 单图 2；`CVPagePngButton` 整图 11 / 横片 0；`CVFrame` 竖三片 7 / 单图 4；`CBorder` 九片 2 |
+| `combdialog4\新登陆界面\三态按钮\登录按钮\` | **`0.png` / `1.png` / `2.png`**（7,322 / 7,403 / 7,257 B，各 120×44），三张整图；780 个候选名只命中这 3 个 |
 | 渲染解析 | 用真 `AssetResolver` 逐个取图：**729/729 解出**（切片 297、整图 432），0 失败、0 资源问题 |
 | 图片格式 | 除了 PNG，还有 `I0`（4×4 角块等）与 **`I4`**（行内 2 字节 RGB565 真彩）；`I4` 已并入共享 `sprite_format` |
 
@@ -179,6 +182,10 @@ XOR，密钥如 `78 c7 ae 39`），旧实现「首字节是 `[` 就当明文」�
    `top.png`/`middle.png`/`bottom.png`；130 个九片基路径全部 9 块齐装。
 2. 按钮的态是**文件名前缀**：整图族 `0/1/2/3.png`、切片族 `0l/0c/0r … `；
    态数实测 2～5。哪个序号是悬停/按下仍无实据（族里没有字段说明）。
+3. **控件类型不能反推族**（2026-10-22 补）：`CTextButton` 的基路径整图 53、横片 35，
+   也不是"`*PagePngButton` 就横片"（`CVPagePngButton` 11 个全是整图）。族先看
+   文件名结构，控件类型只在名字认不出时按多数派兜底（编辑器
+   `WIDGET_DEFAULT_KINDS`）。
 
 下次真正取用时补：`interface.fls` 当时的 SHA/条目数、`MXSJ_DLG_CORPUS` 指向后
 `test_codec` 实际篇数——**按当时的目录内容测，不套用本文旧表**。

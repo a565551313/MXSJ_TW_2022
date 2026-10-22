@@ -143,14 +143,14 @@ def _dir_base_message(
 ) -> str:
     """目录型基路径（资源字段以斜杠结尾）的诊断文案。
 
-    控件运行时在其下拼接子图（按钮三态横片 ``0l/0c/0r``、边框
-    left/middle/right、九片 ``top/left`` …），按文件查表必然落空，
+    控件运行时在其下拼接子图（按钮 ``0/1/2`` 整图或 ``0l/0c/0r`` 横片、
+    边框 left/middle/right、九片 ``top/left`` …），按文件查表必然落空，
     不能报缺图。挂了资源来源就用 :func:`dir_base.plan` 报出**实际命中的
     拼名族**（与画布同一套规则，2026-10-20 按 interface.fls 全量实测校准）。
     """
     base = (
         "目录型基路径：运行时在其下拼子图"
-        "（如按钮三态 0l/0c/0r、边框 left/middle/right、九片 top/left），"
+        "（如按钮 0/1/2 或 0l/0c/0r、边框 left/middle/right、九片 top/left），"
         "本身不是文件，不按缺图处理"
     )
     if resource_exists is None:

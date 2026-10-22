@@ -31,9 +31,13 @@ __all__ = ["APPROX", "BUTTON_STATE_INDEX", "MARKERS", "NATIVE", "SIMULATED",
 #: 禁用最后」的常见排法推断，画布据此取帧时必须标「近似」。
 #:
 #: 2026-10-20 实测（interface.fls，729 个目录型基路径）：按钮的态**就是文件名
-#: 前缀**——``CButton`` 是整图 ``0/1/2.png``（最多到 ``4.png``），
-#: ``CTextButton``/``*PagePngButton`` 是每态横三片 ``{n}l/{n}c/{n}r``；
-#: 实测态数 2～5。文件里没有任何字段说明「第几态是悬停」，故序号语义仍是推断。
+#: 前缀**——整图 ``0/1/2.png``（最多到 ``4.png``）与每态横三片
+#: ``{n}l/{n}c/{n}r`` 两种都有，态数 2～5。文件里没有任何字段说明「第几态是
+#: 悬停」，故序号语义仍是推断。
+#:
+#: 2026-10-22 逐控件类型复核（同一真包，按不同基路径计）：``CTextButton``
+#: 整图 53 / 横片 35，``CHPagePngButton`` 16 / 10，``CVPagePngButton`` 11 / 0——
+#: 「按钮 = 横三片」不成立，族类型以文件名为准，控件类型只在认不出时兜底。
 BUTTON_STATE_INDEX = {"pressed": 1, "hover": 2, "disabled": 3}
 
 NATIVE = "原生"
