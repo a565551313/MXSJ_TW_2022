@@ -1,5 +1,13 @@
 # 《夢想世界》(MXSJ TW 2022) Python 字節碼定製混淆還原與批量反編譯技術報告
 
+> **2026-10-22 核驗更正**：本文 VM #1 的歷史 handler VA 尚不能全部套用於當前磁碟映像。
+> 對 SHA256 `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`
+> 的 `mxmain.dll`（首選基址 `0x00400000`）重查 `0x004E76DC`，實際以 `jne` 開始，
+> 未復現下表所稱的除法調用。保留歷史地址供追查，該項需重新定位；不能據此確認
+> 定製 VM 的整數除法語義，也不據單一地址不符否定整張轉譯標籤表。
+> 同次研究另發現自動 code-span 修復可能破壞字面量、保存 keys/bounds 並非全量原生真值。
+> 具體失敗基線、候選參數及復現見[傷害公式研究 §6–§8](client_damage_formula.md#6-更正解析失败密钥与自动修复)。
+
 ## 1. 核心架構發現：雙定製 Python 虛擬機體系
 
 通過對客戶端主程序 `mx.exe` / `mxmain.dll` 與 `exe/python27.dll` / `exe/python27_dy.dll` 的白盒反匯編分析，我們徹底釐清了《夢想世界》（台灣版 v2.27.2）的腳本執行架構：**客戶端同時包含兩套不同版本、不同字節碼結構、不同 Opcode 置換表的定製 Python 虛擬機**：
@@ -95,7 +103,7 @@
 | `0x38` | 56 | `0x004E8285` | `LOAD_LOCALS` | 82 | 加載 `f->f_locals` |
 | `0x3A` | 58 | `0x004E7CE2` | `INPLACE_DIVIDE` | 59 | `PyNumber_InPlaceDivide` |
 | `0x3B` | 59 | `0x004E799B` | `INPLACE_TRUE_DIVIDE` | 29 | `PyNumber_InPlaceTrueDivide` |
-| `0x3D` | 61 | `0x004E76DC` | `BINARY_DIVIDE` | 21 | `PyNumber_Divide` |
+| `0x3D` | 61 | 歷史 `0x004E76DC`，待重定位 | `BINARY_DIVIDE` | 21 | 轉譯標籤保留；當前磁碟映像未復現此處的 `PyNumber_Divide` 調用，見頂部更正 |
 | `0x3E` | 62 | `0x004E7AD0` | `BINARY_AND` | 64 | `PyNumber_And` |
 | `0x3F` | 63 | `0x004E776B` | `BINARY_ADD` | 23 | 整數快速路徑 `add` + 字符串拼接 + `PyNumber_Add` |
 | `0x40` | 64 | `0x004E8DFC` | `POP_BLOCK` | 87 | `PyFrame_BlockPop` |
@@ -311,15 +319,16 @@
 
 我們在 `tools/decompiler/` 下構建了完整的字節碼轉譯與並行反編譯工具鏈：
 - `tools/decompiler/batch_decompile.py`：支持一鍵處理 `data/data.fls`、解包後的 `.pyo` 目錄、以及 `data/script.fls`。
-- `tools/decompiler/script_fls_keys.json`：預計算並持久化的 `data/script.fls` 全部 5,002 個條目的 5 段式 XOR 密鑰與分段邊界數據庫。
+- `tools/decompiler/script_fls_keys.json`：保存 `data/script.fls` 5,002 個條目的歷史 5 段 XOR 研究參數；有此紀錄不等於每個 key/bound 已原生驗證。保持鎖定，候選修正僅在獨立呼叫中傳入，見[具體勘誤](client_damage_formula.md#6-更正解析失败密钥与自动修复)。
 
 ### 4.1 關鍵工程技術亮點
 
 1. **`data.fls` (Python 2.7) 雙流合並與 `TYPE_STRINGREF` 保序**：
    - 自動剝離 `PyCodeObject` 中 4 字節 `co_extra` 字段，將 `co_code[:co_extra]` 指令流與 `co_code[co_extra:]` 參數流重組為標準 Python 2.7 3 字節交錯指令流，並將 `co_lnotab` 從指令索引增量重映射為字節偏移增量。
    - 嚴格保留 `co_code` 與 `co_lnotab` 的原始 `'t'` (interned string) 標記，確保後續 `'R'` (`TYPE_STRINGREF`) 索引表 100% 對齊。
-2. **`script.fls` (Python 2.5) 跨段邊界精確求解器 (`solve_py25_co_span`)**：
-   - 當 5 段式 XOR 的分段邊界落在某個函數的 `co_code` 內部或 16 字節 `PyCodeObject` 頭部時，利用該函數自身的元組長度約束 `(len(co_consts), len(co_names), len(co_varnames), len(co_freevars) + len(co_cellvars), len(co_code))` 進行精確邊界搜索，消除跨段偽指令干擾。
+2. **`script.fls` (Python 2.5) 跨段邊界候選求解器 (`solve_py25_co_span`)**：
+   - 使用函數元組長度等約束搜尋 `co_code` 的候選分段；16 字節 header 另有修復邏輯。這些是啟發式修復，指令可對齊不代表字面量或語義正確。
+   - **2026-10-22 更正**：entry 3458 的同一保存參數在啟用求解器時字面量讀取失敗，停用後 DATA 片段可完整重建為 914 條。應比較修復前後並做嚴格棧／索引檢查，不能將「求解器返回」當成正確性保證；entry 4329/3773 仍只取得候選修正，沒有回寫 key DB。
 3. **Big5 (`cp950`) 繁體中文字面量無損解碼 (`decode_big5_literals`)**：
    - 將反編譯源碼中形如 `'\xa6b\xb3o\xbb\xda'` 的 Big5 轉義字節序列自動還原為可讀的 UTF-8 繁體中文字符串，同時保留語法合法性與混合轉義字符。
 

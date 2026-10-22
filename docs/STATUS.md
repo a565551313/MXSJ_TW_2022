@@ -1,5 +1,25 @@
 # 项目当前状态（STATUS）
 
+> **2026-10-22 客户端伤害研究归档**（分支 `coderabbit/project-analysis/6aa25aac`，
+> 起点 `3264485`；下文其他会话的组件快照不代表本轮测试）：新增
+> [研究总笔记](../notes/client_damage_formula.md)与
+> [小型证据摘要](evidence/client_damage_20261022.json)，记录 2026-10-21 四轮结果。
+> 已定位面板威力、精修、基础目标数折减及回包到飘字路径；3458 停用自动修复后 914 条结构通过，
+> 4329 的 18 组密钥/边界候选中 6 组通过、925 条记录一致，4791/2429 仍歧义；3773 候选 103 条。
+> 已更正解析失败归因、key DB 真值措辞及旧除法 VA 未复现的限制。
+> 本轮复核输入摘要、失败基线、候选/样本、指令窗口/flags、原生地址字节与文档引用；
+> 不改原包、key DB、转换器或业务代码，未重跑应用套件或 Windows 客户端。
+> **未完成**：最终目标防御/抗性/暴击/随机/取整组合，候选唯一性及定制 VM 原生数值验收。
+> 下一步重定位除法 handler、核对歧义记录，并取得固定条件的单变量伤害样本。
+
+> **2026-10-21 项目 skill**：会话分支 `coderabbit/project-analysis/6aa25aac` 已
+> fast-forward 同步 master `e65e386`。新增
+> [mxsj-project](../.agents/skills/mxsj-project/SKILL.md)，包含最新状态读取、
+> 原生 TCP/Mock/编辑器/服务端入口和证据分级流程；仓库源文件同时安装至当前
+> 环境的 Codex skills 目录。skill 结构校验、仓库路径检查及安装副本一致性检查
+> 通过。此项只改 skill 和状态说明，未重跑应用测试、未启动 Mock 或客户端，
+> 不变更此前应用验收结论。新会话可用 `$mxsj-project` 调用。
+
 > **2026-10-20 原生 TCP 专项（分支 `coderabbit/project-analysis/6aa25aac`）**：
 > 新增独立 [native_channel 0.1.0](../tools/native_channel/README.md) 与
 > [握手/派生/密码器/帧研究](../notes/native_tcp_channel.md)。目标 mxmain 派生、
