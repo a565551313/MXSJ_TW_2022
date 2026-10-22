@@ -186,6 +186,9 @@ class TestDirBaseExport(unittest.TestCase):
         self.assertEqual(prefixes[other], "注册按钮-")
         # 单族批次不加前缀，文件名保持 0l.png
         self.assertEqual(asset_export.family_prefixes([DIR_BASE, DIR_BASE]), {})
+        # 混在普通图片里的唯一族也不加前缀
+        self.assertEqual(
+            asset_export.family_prefixes([DIR_BASE, "img\\btn.png"]), {})
         # 两族末级同名时退到上一级
         deep_a = "combdialog4\\a\\登录按钮\\"
         deep_b = "combdialog5\\b\\登录按钮\\"

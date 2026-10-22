@@ -198,6 +198,9 @@ def family_prefixes(names) -> dict[str, str]:
     """
     bases: list[str] = []
     for name in names:
+        # 普通图片/音效不是拼名族：混在同一批里不该把唯一那个族也加前缀。
+        if not dir_base.is_dir_base(name):
+            continue
         key = source_key(name)
         if key not in bases:
             bases.append(key)
