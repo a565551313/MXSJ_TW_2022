@@ -57,7 +57,9 @@ py -3 repair_interface_layouts.py "D:\游戏测试副本\data\interface.fls"
 
 ## 保证范围 / 不保证范围
 
-- 仅处理 `login/regterms.dlg` / `login/regform.dlg` 两条。目录/所有其他字节
+- 仅处理 `login/regterms.dlg` / `login/regform.dlg` 两条。
+  （2026-10-22 起现行版式是 `login_new/agreement.dlg` / `login_new/register2027.dlg`，
+  工具按完整路径处理，换路径照填即可；见 [2027 版式测试说明](TESTING_2027.md)。）目录/所有其他字节
   逐字对源包核验，输出长度不变；目标按真实路径密钥解开必须等于你现有布局
   明文字节。保留 Big5 文案、GBK 资源路径、空白、MD5 注释和你已做的布局改动。
 - 只解析安全 UI_INFO 字面量，不 eval/exec 布局，也不运行原游戏代码；不猜

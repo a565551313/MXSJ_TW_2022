@@ -415,10 +415,14 @@ def main() -> int:
         for path, code in walk_codes(root_code)
         for c in code.consts
     ), "stub leaked as unicode"
-    for path in (b"login/regterms.dlg", b"login/regform.dlg"):
+    for path in (b"login_new/agreement.dlg", b"login_new/register2027.dlg"):
         assert path in raw_consts, f"layout path missing: {path!r}"
-    for name in (b"CIMGCHECKBOX", b"CImageCheckBox", b"SetCheck", b"IsSelected"):
+    # 2026-10-22 換版式：勾選框改成版式自帶的三態按鈕，走原生 .dlg 勾選接口
+    # （loginin.py 讀「我同意」用的就是 GetObject(...).IsSelected()）。
+    for name in (b"IsSelected", b"SetSelect", b"GetObject"):
         assert name in names_all, f"native checkbox API missing: {name!r}"
+    for name in (b"CIMGCHECKBOX", b"CImageCheckBox"):
+        assert name not in names_all, f"stale checkbox helper still used: {name!r}"
     with tempfile.TemporaryDirectory(prefix="mx-registration-smoke-") as cwd:
         subprocess.run(
             [

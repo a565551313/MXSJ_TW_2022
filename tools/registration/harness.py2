@@ -8,7 +8,10 @@ import types
 
 EVENTS = []
 MODE = os.environ.get('MXSJ_HARNESS_MODE', '')
-BROKEN_FORM = [False]  # 第 10 節拿來模擬「regform.dlg 沒導入」的世界
+BROKEN_FORM = [False]  # 第 10 節拿來模擬「版式沒導入」的世界
+# 點擊消息與引擎翻轉的先後順序有兩種可能（CImageCheckBox 是「先消息、再翻」）。
+# 腳本只能靠「提交時讀一次」保證正確，所以兩種順序都必須跑一遍。
+TOGGLE_AFTER = [False]
 
 
 def mod(name, **attrs):
@@ -49,6 +52,35 @@ class FakeObj(object):
         pass
 
 
+class FakeCheck(FakeObj):
+    """版式裡的勾選按鈕（三態按鈕 + iTeam）。
+
+    2026-10-22 實證：loginin.py（entry 4806）的 OnMessage 只讀
+    ``GetObject('chk_agree').IsSelected()``，從不自己翻——引擎負責翻轉。
+    這裡照這個契約造：Click() 模擬玩家點一下（引擎翻），消息由呼叫方按
+    TOGGLE_AFTER 決定排在翻轉前還是後。
+    """
+
+    def __init__(self, name, selected=False, msgid=50):
+        FakeObj.__init__(self, name, (24, 24), (305, 435))
+        self.selected = bool(selected)
+        self.msgid = msgid
+
+    def IsSelected(self):
+        return self.selected
+
+    def SetSelect(self, flag):
+        self.selected = bool(flag)
+        EVENTS.append(('SetSelect', self.name, self.selected))
+
+    def Enable(self, flag):
+        EVENTS.append(('Enable', self.name, flag))
+
+    def Click(self):
+        self.selected = not self.selected
+        EVENTS.append(('Click', self.name, self.selected))
+
+
 class FakeEdit(FakeObj):
     def __init__(self, name):
         FakeObj.__init__(self, name)
@@ -77,22 +109,37 @@ class FakeEdit(FakeObj):
             self.text += char
 
 
+FORM_ANCHORS = ('edt_account', 'edt_Pwd', 'edt_Pwd_1', 'edt_email',
+                'txt_Wrong', 'btn_fiveaccount', 'btn_isee',
+                'btn_register', 'btn_Back')
+
+
 class FakePanel(object):
     NAMES = {
-        'login/regterms.dlg': ('loc_msg',),
-        'login/regform.dlg': ('account', 'pwd', 'pwd2', 'email', 'txt', 'chk_five'),
+        'login_new/agreement.dlg': ('loc_msg',),
+        'login_new/register2027.dlg': FORM_ANCHORS,
         'login/confirm.dlg': ('output',),
     }
 
     def __init__(self, parent, dlgpath):
         self.dlgpath = dlgpath
-        self.objects = dict((name, FakeObj(name)) for name in self.NAMES[dlgpath])
-        if dlgpath == 'login/regform.dlg':
-            self.objects['chk_five'] = FakeObj('chk_five', (224, 24), (328, 410))
+        self.objects = {}
+        if dlgpath == 'login_new/register2027.dlg':
+            for name in ('edt_account', 'edt_Pwd', 'edt_Pwd_1', 'edt_email'):
+                self.objects[name] = FakeObj(name, (197, 17), (316, 283))
+            # 版式裡兩個勾選框原本都是 50（交付的 *_msg.dlg 把同意改成 51）。
+            self.objects['btn_fiveaccount'] = FakeCheck('btn_fiveaccount', False, 50)
+            self.objects['btn_isee'] = FakeCheck('btn_isee', False, 50)
+            self.objects['btn_register'] = FakeObj('btn_register')
+            self.objects['btn_Back'] = FakeObj('btn_Back')
+            self.objects['txt_Wrong'] = FakeObj('txt_Wrong', (90, 20), (310, 400))
+        else:
+            for name in self.NAMES.get(dlgpath, ()):
+                self.objects[name] = FakeObj(name)
         EVENTS.append(('Panel', dlgpath))
 
     def GetObject(self, name):
-        if self.dlgpath == "login/regform.dlg" and BROKEN_FORM[0]:
+        if self.dlgpath == 'login_new/register2027.dlg' and BROKEN_FORM[0]:
             return None  # 客戶端對查不到的控件返回 None，不是報錯
         return self.objects[name]  # unknown names fail rather than invent objects
 
@@ -111,40 +158,6 @@ def fake_richtext(cls, name, parent, text, font, color):
     obj = parent.GetObject(name)
     obj.SetText(text)
     EVENTS.append(('RichText', name, text))
-    return obj
-
-
-class FakeImageCheckBox(FakeObj):
-    # Signature and event ordering verified from interface.CImageCheckBox.
-    def __init__(self, parent, filename, x, y, manual, msgid, width=0, height=0):
-        FakeObj.__init__(self, 'five_checkbox', (width, height), (x, y))
-        self.parent = parent
-        self.filename = filename
-        self.manual = manual
-        self.msgid = msgid
-        self.selected = False
-        self.frame = 0
-
-    def IsSelected(self):
-        return self.selected
-
-    def SetCheck(self, checked):
-        self.selected = bool(checked)
-        self.frame = 1 if checked else 0
-
-    def LeftUp(self):
-        # Native LeftUp dispatches the message BEFORE its automatic toggle.
-        self.parent.OnMessage(self.msgid)
-        if not self.manual:
-            self.SetCheck(not self.selected)
-
-
-def fake_image_checkbox(cls, name, parent, filename, manual, msgid):
-    anchor = parent.GetObject(name)
-    x, y = anchor.GetPos()
-    obj = cls(parent, filename, x, y, manual, msgid)
-    anchor.m_Real = [obj]
-    EVENTS.append(('ImageCheckBox', name, filename, manual, msgid))
     return obj
 
 
@@ -168,11 +181,10 @@ class FakeOutput(object):
 
 mod('C_sys', InputSecrecy=lambda f: EVENTS.append(('InputSecrecy', f)))
 mod('combdialog', CCombPanel=FakePanel)
-mod('combmacro', CEDIT=fake_cedit, CRICHTEXT=fake_richtext,
-    CIMGCHECKBOX=fake_image_checkbox)
+mod('combmacro', CEDIT=fake_cedit, CRICHTEXT=fake_richtext)
 mod('C_object', CRichTextObject=object)
 IFACE = dict(DialogPanel=FakeObj('DialogPanel'), CEdit=FakeEdit,
-             CImageCheckBox=FakeImageCheckBox, CBaseObject=lambda p: None,
+             CBaseObject=lambda p: None,
              FONT_EDIT=1, FontLT14_3=3, COLOR_1=4, COLOR_EDIT=6)
 if MODE == 'no_font_edit':
     # 歸檔裡別的模組用了 FONT_EDIT/COLOR_EDIT，不等於本版客戶端一定有；
@@ -206,7 +218,7 @@ exec code in g
 g['Show'](True)
 panel = g['g_RegisterPanel']
 assert isinstance(panel, g['CRegTermsPanel'])
-assert panel.dlgpath == 'login/regterms.dlg'
+assert panel.dlgpath == 'login_new/agreement.dlg'
 assert ('InputSecrecy', 1) in EVENTS
 assert ('ScrollTo', 0) in EVENTS
 assert ('ChatCursor', 0) in EVENTS
@@ -216,16 +228,15 @@ assert cout[1] == g['TERMS_FALLBACK']
 assert all(isinstance(line, str) for line in cout[1])
 print 'terms fallback + native cursor protocol OK'
 
-# 2. Form: real subclass stubs, tab order, password masking, default unchecked.
+# 2. Form: new layout anchors, tab order, password masking, default unchecked.
 panel.OnMessage(1)
 form = g['g_RegisterPanel']
 assert isinstance(form, g['CRegFormPanel'])
-assert form.dlgpath == 'login/regform.dlg'
-assert not form.m_FiveCheck.IsSelected()
-assert form.m_FiveCheck.manual is True
-assert form.m_FiveCheck.msgid == 4
-assert form.m_FiveCheck.filename == g['IMG_FIVE_CHECK']
-assert form.m_FiveCheck.GetSize() == (224, 24)
+assert form.dlgpath == 'login_new/register2027.dlg'
+assert not form.IsRegisterFive()
+assert form.m_FiveCheck is not None and form.m_Consent is not None
+assert form.m_FiveCheck.name == 'btn_fiveaccount'
+assert form.m_Consent.name == 'btn_isee'
 assert form.m_AccountEdit.limit == 16
 assert form.m_EmailEdit.limit == 50
 assert form.m_PwdEdit.m_IsPassword and form.m_PwdEdit2.m_IsPassword
@@ -234,11 +245,13 @@ for edit, next_edit in ((form.m_AccountEdit, form.m_PwdEdit),
                         (form.m_PwdEdit2, form.m_EmailEdit),
                         (form.m_EmailEdit, form.m_AccountEdit)):
     assert edit.next_edit is next_edit
-assert form.m_Text.text == g['HINT_FORM']
+# 兩個勾選默認都不勾（用戶口徑），即使版式裡標成選中也一樣
+assert not form.m_FiveCheck.Get() and not form.m_Consent.Get()
+assert form.m_Hint is not None and form.m_Hint.text == ''
 for key, value in g.items():
-    if key.startswith(('MSG_', 'BTN_', 'PROMPT_', 'HINT_', 'IMG_')):
+    if key.startswith(('MSG_', 'BTN_', 'PROMPT_', 'LABEL_', 'DLG_')):
         assert isinstance(value, str), (key, type(value))
-print 'form + native checkbox binding + Big5 byte constants OK'
+print 'form anchors + native .dlg checkbox binding + Big5 byte constants OK'
 
 # 3. AddChar: base accounts/passwords ASCII alnum only, no manual underscore.
 for edit, prompt in ((form.m_AccountEdit, g['PROMPT_ACC_ALNUM']),
@@ -253,7 +266,24 @@ for edit, prompt in ((form.m_AccountEdit, g['PROMPT_ACC_ALNUM']),
 print 'ASCII input filtering OK'
 
 
+def click_check(name, msgid):
+    """模擬玩家點勾選框；引擎翻轉與消息的先後由 TOGGLE_AFTER 決定。"""
+    obj = form.GetObject(name)
+    if TOGGLE_AFTER[0]:
+        form.OnMessage(msgid)   # 消息先到（CImageCheckBox 的順序）
+        obj.Click()
+    else:
+        obj.Click()             # 引擎先翻，再發消息
+        form.OnMessage(msgid)
+
+
+def agree():
+    if not form.m_Consent.Get():
+        click_check('btn_isee', 51)
+
+
 def fill_valid(account='account'):
+    agree()
     form.m_AccountEdit.SetText(account)
     form.m_PwdEdit.SetText('Preview42')
     form.m_PwdEdit2.SetText('Preview42')
@@ -302,27 +332,77 @@ assert g['g_AccountInfo']['Email'] == 'preview@example.invalid'
 assert form.m_PendingAccounts is None
 print 'single registration validation + boundaries + stub OK'
 
-# 5. True native event ordering: no double-toggle; no truncation on mode change.
-fill_valid('a' * 16)
-form.m_FiveCheck.LeftUp()
-assert form.m_FiveCheck.IsSelected() and form.m_FiveCheck.frame == 1
-assert form.m_AccountEdit.limit == 14
-assert form.m_AccountEdit.GetText() == 'a' * 16
-assert form.m_Text.text == g['HINT_FORM_FIVE']
-assert submit() == g['MSG_ACC_BATCH_FORMAT']
-assert form.m_RegistrationRequests == []
-form.m_FiveCheck.LeftUp()
-assert not form.m_FiveCheck.IsSelected() and form.m_FiveCheck.frame == 0
-assert form.m_AccountEdit.limit == 16
-assert form.m_AccountEdit.GetText() == 'a' * 16
-assert submit() == g['MSG_STUB']
-form.m_FiveCheck.LeftUp()
-for account in ('abcde', 'a' * 15, 'a' * 16, 'account_1'):
-    fill_valid(account)
+# 4b. 未勾「同意用戶協議和註冊條款」一律不許註冊，且提示寫在版式的小字框裡。
+for ordering in (False, True):
+    TOGGLE_AFTER[0] = ordering
+    form.SetRegisterFive(False)
+    fill_valid()
+    assert form.m_Consent.Get()
+    form.m_Consent.Set(False)
+    msg = submit()
+    assert msg == g['MSG_CONSENT'], msg
+    assert form.m_RegistrationRequests == []
+    assert form.m_Hint.text == g['LABEL_CONSENT'], form.m_Hint.text
+    click_check('btn_isee', 51)
+    assert form.m_Consent.Get()
+    assert submit() == g['MSG_STUB']
+TOGGLE_AFTER[0] = False
+print 'consent gate (both click orderings) + hint label OK'
+
+# 5. 引擎負責翻轉、腳本只讀（照 loginin.py 的 chk_agree）——絕不會翻兩次。
+#    客戶端若把消息排在翻轉之前，OnMessage 讀到的還是上一次的值，所以
+#    位數上限與提示會晚一步；提交時會按當前狀態重新同步，校驗永遠是對的。
+for ordering in (False, True):
+    TOGGLE_AFTER[0] = ordering
+    if form.IsRegisterFive():
+        click_check('btn_fiveaccount', 50)
+    assert not form.IsRegisterFive()
+    fill_valid('a' * 16)
+    click_check('btn_fiveaccount', 50)
+    assert form.IsRegisterFive()
+    assert form.m_AccountEdit.GetText() == 'a' * 16  # 不截斷已有輸入
+    if not TOGGLE_AFTER[0]:
+        assert form.m_AccountEdit.limit == 14
+        assert form.m_Hint.text == g['LABEL_FIVE_MODE']
     assert submit() == g['MSG_ACC_BATCH_FORMAT']
-print 'checkbox single-toggle + 6..14 validation + no truncation OK'
+    assert form.m_RegistrationRequests == []
+    assert form.m_AccountEdit.limit == 14          # 提交時已按當前狀態同步
+    click_check('btn_fiveaccount', 50)
+    assert not form.IsRegisterFive()
+    assert form.m_AccountEdit.GetText() == 'a' * 16
+    if not TOGGLE_AFTER[0]:
+        assert form.m_AccountEdit.limit == 16
+        assert form.m_Hint.text == ''
+    assert submit() == g['MSG_STUB']
+    assert form.m_AccountEdit.limit == 16
+    click_check('btn_fiveaccount', 50)
+    assert form.IsRegisterFive()
+    for account in ('abcde', 'a' * 15, 'a' * 16, 'account_1'):
+        fill_valid(account)
+        assert submit() == g['MSG_ACC_BATCH_FORMAT']
+TOGGLE_AFTER[0] = False
+print 'engine-owned toggle (both orderings) + 6..14 validation + no truncation OK'
+
+# 5b. 兩個勾選框共用消息號 50 的舊版式也要能走通：點擊只刷新提示，
+#     狀態一律問引擎要，所以「分不出點的是哪個」不再是問題。
+assert form.IsRegisterFive()
+assert form.m_Consent.Get()           # 上一節最後已經勾了同意
+click_check('btn_isee', 50)           # 用 50 點「同意」→ 變成不勾
+assert not form.m_Consent.Get()
+assert form.IsRegisterFive()          # 五個賬號不受影響
+click_check('btn_isee', 50)
+assert form.m_Consent.Get()
+fill_valid('account')
+assert form.IsRegisterFive() and form.m_Consent.Get()
+assert submit() == g['MSG_STUB'] + g['MSG_BATCH_PLAN'] + '#r'.join(
+    g['BuildRegistrationAccounts']('account', True))
+click_check('btn_fiveaccount', 50)
+assert not form.IsRegisterFive() and form.m_Consent.Get()
+print 'shared msgid 50 (old layout) still works; consent persists OK'
 
 # 6. Five candidates, shared password/email; explicitly NOT registered.
+click_check('btn_fiveaccount', 50)
+assert form.IsRegisterFive()
 for base in ('account', 'A0bC12', 'a' * 14):
     fill_valid(base)
     expected = [base, base + '_1', base + '_2', base + '_3', base + '_4']
@@ -339,7 +419,7 @@ for base in ('account', 'A0bC12', 'a' * 14):
     assert len([e for e in EVENTS if e[0] == 'MsgBox']) == 1
 assert g['BuildRegistrationAccounts']('account') == ['account']
 for invalid, five in (('abcde', False), ('account_1', False), ('a' * 17, False),
-                       ('a' * 15, True), (u'\u4e2d' * 6, True)):
+                      ('a' * 15, True), (u'\u4e2d' * 6, True)):
     try:
         g['BuildRegistrationAccounts'](invalid, five)
     except ValueError:
@@ -372,6 +452,7 @@ print 'future full-success popup guard (simulated server reply only) OK'
 # 8. Exception fallback and diagnostic privacy.
 original_box = sys.modules['commondialog'].ShowNewMessageBox
 
+
 def failing_box(msg, button):
     raise ValueError('Preview42')  # deliberately put a fake password in exception
 
@@ -387,6 +468,7 @@ for secret in ('Preview42', 'preview@example.invalid', 'account_4'):
 print 'exception fallback + no credentials in diagnostic log OK'
 
 # 9. Navigation and original confirmation interface.
+#    新版式只有「上一步」(1) 與「確認註冊」(2)，沒有「返回首頁」按鈕。
 form.m_PendingAccounts = tuple(expected)
 form.OnMessage(1)
 assert form.m_PendingAccounts is None
@@ -395,10 +477,14 @@ form.m_PendingAccounts = tuple(expected)  # even accidentally retained old state
 assert not form.OnRegistrationComplete(expected)  # no callback to abandoned form
 g['g_RegisterPanel'].OnMessage(1)
 form2 = g['g_RegisterPanel']
-assert not form2.m_FiveCheck.IsSelected()
+assert not form2.IsRegisterFive() and not form2.m_Consent.Get()
+# 未知消息號不能把表單打死（新版式沒有 3=返回首頁，就按未知處理）。
 del EVENTS[:]
 form2.OnMessage(3)
-assert ('mainpage.Show', True) in EVENTS and g['g_RegisterPanel'] is None
+assert isinstance(g['g_RegisterPanel'], g['CRegFormPanel'])
+assert not any(e[0] == 'MsgBox' for e in EVENTS)
+assert 'form msgid unhandled' in open('photo\\register_diag.txt', 'rb').read()
+# 協議頁的「拒絕」(msg 2) 回主頁
 g['Show'](True)
 del EVENTS[:]
 g['g_RegisterPanel'].OnMessage(2)
@@ -442,14 +528,14 @@ assert g['g_ConfirmDlg'] is None
 print 'back/home + supplied terms + original confirm + reset OK'
 # 10. 「我同意」開表單頁這件事本身不能靜默失敗（2026-10-15 實機回歸：協議頁點
 #     同意後沒反應）。用兩種殘酷世界驗證：本版客戶端可能沒有 interface.FONT_EDIT；
-#     以及 regform.dlg 根本沒導入進 interface.fls（錨點查不到）。
+#     以及新版式根本沒導入進 interface.fls（錨點查不到）。
 g['ModuleReset']()
 BROKEN_FORM[0] = MODE == 'missing_layout'
 del EVENTS[:]
 g['Show'](True)
 terms10 = g['g_RegisterPanel']
 del EVENTS[:]
-terms10.OnMessage(1)  # 「我同意」
+terms10.OnMessage(1)  # 「同意」
 diag10 = open('photo\\register_diag.txt', 'rb').read()
 if MODE == 'missing_layout':
     assert g['g_RegisterPanel'] is None, 'broken layout must not leave a half panel'
@@ -457,19 +543,19 @@ if MODE == 'missing_layout':
     assert ('InputSecrecy', 0) in EVENTS, EVENTS
     boxes = [e for e in EVENTS if e[0] == 'MsgBox']
     assert boxes and boxes[0][1] == g['MSG_UNKNOWN_ERR'], EVENTS
-    assert 'form edit account anchor missing' in diag10, diag10[-400:]
+    assert 'form edit edt_account anchor missing' in diag10, diag10[-400:]
     assert 'step=1 failed type=ValueError' in diag10, diag10[-400:]
-    print 'missing regform layout: logged, popup shown, recovered home OK'
+    print 'missing register2027 layout: logged, popup shown, recovered home OK'
 elif MODE == 'no_font_edit':
     assert isinstance(g['g_RegisterPanel'], g['CRegFormPanel']), EVENTS
     assert 'font fallback FontLT14_3' in diag10, diag10[-400:]
     assert 'hint color fallback 0' in diag10, diag10[-400:]
-    assert 'form edit email ready' in diag10, diag10[-400:]
+    assert 'form edit edt_email ready' in diag10, diag10[-400:]
     print 'client without FONT_EDIT/COLOR_EDIT: falls back and still opens OK'
 else:
     assert isinstance(g['g_RegisterPanel'], g['CRegFormPanel']), EVENTS
     assert 'font FONT_EDIT' in diag10, diag10[-400:]
-    assert 'form edit email ready' in diag10, diag10[-400:]
+    assert 'form edit edt_email ready' in diag10, diag10[-400:]
     assert 'step=1 ready' in diag10, diag10[-400:]
     print 'terms agree opens form page with step diags OK'
 print 'ALL HARNESS CHECKS PASSED'

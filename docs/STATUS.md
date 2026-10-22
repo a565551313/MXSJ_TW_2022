@@ -590,6 +590,46 @@
   到My Drive根目录；返回大小/MD5与本地一致，未改权限/删除旧包，未再次下载核验。
   不能拿此字体修正冒充全部原生验收。
 
+### 3.15.1 2026-10-22 注册页 2027 版式接线（login_new/）
+
+- 用户重做两个布局并明确进包路径 **`login_new/agreement.dlg`**、
+  **`login_new/register2027.dlg`**（`templates/2027/` 下存原字节，只读不改坐标）。
+  新版式控件名与旧版完全不同，`register.py` 整类重写接线：
+  四框 `edt_account`/`edt_Pwd`/`edt_Pwd_1`/`edt_email`（limit 16/16/16/50，
+  五账号时账号 14，仍不去截断已有输入）；提示 `txt_Wrong`（90×20）只放短句，
+  完整原因照旧弹框；`btn_Back` msg1=回协议页，`btn_register` msg2=提交，
+  `btn_fiveaccount`/`btn_isee` 为版式自带三态按钮。
+- **勾选接法改过一次结论，原判据是错的**：先前据「控件类型表里没有勾选框」判定
+  `CButton` 无勾选态，用户指出两个勾选框是从登录页整块复制、登录页能用。随后在真实
+  脚本里取证：entry 4806 `CLoginIn/OnMessage` 只读 `GetObject('chk_agree').IsSelected()`
+  与 `GetObject('btn_Protect').IsSelected()`，`SetSelect` 只出现在 `__init__`/
+  `OneoffLogin`/`OneoffLogin2` 这类程序性设置里 ⇒ **引擎自己翻转，脚本只读**。
+  据此删掉「脚本手动翻」的 `_LayoutCheck.Click()`；点击消息只刷新五账号模式的
+  位数与提示，状态一律问引擎（提交前再同步一次，兼容「消息先于翻转」的客户端）。
+  两个勾选在原稿里同为 msgid 50 也不影响，因此 `register2027_msg.dlg`
+  （只把同意改成 51）降级为可选交付件，不导入也能跑。
+- 新增前置校验：未勾「同意用戶協議和註冊條款」直接拦下（`MSG_CONSENT`，措辞照
+  loginin.py 的 `chk_agree` 提示）；短句进 `txt_Wrong`，完整提示仍弹框。
+- 断言按新事实显式改写而非删除：`build_native_registration.py` 的路径断言换成
+  `login_new/...`，勾选 API 断言改为「`IsSelected`/`SetSelect`/`GetObject` 必须在、
+  `CIMGCHECKBOX`/`CImageCheckBox` 必须不在」，注释写明换版式理由；
+  `tests/test_layouts.py` 里原「`CIMGCHECKBOX` 恰一次且 msgid=4」换成
+  「无自建勾选工厂 + 原生 API 在 + `DoCheck` 读 `m_Consent`」，并新增 2027 两布局的
+  锚点/消息号/与原稿逐字节一致（除该一个消息号）回归。
+- 回归：`harness.py2` 按 CPython 2.5.6 整份重写，13 组全过（条款兜底、表单锚点/
+  掩码/tab、AddChar 过滤、单账号边界、未勾同意、两种点击顺序下的引擎翻转与 6~14 校验、
+  共用 msg50、五账号、完成回调守卫、异常兜底且日志无私密、缺布局回首页、缺
+  `FONT_EDIT` 回退）；`tools/registration` 43 项通过、ruff 0、wincompat 0/0/0。
+- 构建：只改 337/4007，337 差 9 字节，其余 5000 条压缩负载逐字节保留；
+  完整 marshal 往返 + 打包模块 2.5 冒烟通过，无网络调用名残留。
+  产物 24,267,378 B，SHA256 `04f49e668a41fc1aee74031d17688bd345d9c9e322899abb043baad1eded8c4b`。
+- 交付（**未开 PR**，等用户实测）：ZIP `registration_2027_layout.zip`
+  24,194,939 B，SHA256 `bf5d005e366e48134330ffd7b94f50a3254166bf955fa3d90b46781e213a71c4`，
+  My Drive 根目录 https://drive.google.com/file/d/1xBq6-aClhimv18JJs-C8fKjxIUTDWP8C/view
+  （含 `data/script.fls`、`interface_import/login_new/register2027.dlg`、README 与测试说明）。
+- **未验**：Windows 实机、真实客户端里的排版与点击手感、真实注册服务（仍是桩）；
+  `iTeam=1` 是否导致两个勾选互斥也待实机确认（若互斥，把 `btn_isee` 的 `iTeam` 改 0）。
+
 ### 3.16 独立脚本编辑器开工授权（2026-10-15）
 
 用户确认font1后“确实好了”，协议→表单这一步已实机通过，不外推全部控件/服务器验收。
@@ -1515,6 +1555,7 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-22 | 注册脚本 **2027 版式接线**：用户重做布局（`login_new/agreement.dlg`、`login_new/register2027.dlg`），`register.py` 按新版式重写接线——四框换 `edt_account`/`edt_Pwd`/`edt_Pwd_1`/`edt_email`，提示换 90×20 的 `txt_Wrong`，两个勾选（`btn_fiveaccount`/`btn_isee`）改走原生 `.dlg` 接口 `GetObject(...).IsSelected()/SetSelect()`，新增「未勾同意不得注册」前置校验。**不自校准翻转**：反汇编 entry 4806 `CLoginIn/OnMessage` 只读 `GetObject('chk_agree').IsSelected()`、`GetObject('btn_Protect').IsSelected()`，从不手动翻 ⇒ 引擎翻、脚本只读，共用消息号 50 也不再是问题（交付稿把同意改 51 消歧）。离线 CPython 2.5.6 桩件 13 组全过（两种点击顺序、共用 50、缺布局、缺 `FONT_EDIT`），`tools/registration` 43 项、ruff 0；构建器只改 337/4007，337 差 9 字节，marshal 往返一致、无网络调用名残留。**Windows 实机未验**，未开 PR。出货 ZIP `registration_2027_layout.zip` 24,194,939 B，SHA256 `bf5d005e366e48134330ffd7b94f50a3254166bf955fa3d90b46781e213a71c4` |
 | 2026-10-21 | 文档：记录 **`mock_server_v2` 的 Windows 实机全链路**——连接→登录→选角→进游戏→NPC 对话→对话中传送地图。来源是**用户口述**，我方未复现（沙箱无 Windows 客户端/`mx.exe`/原始包），无抓包与日志；只写「该版本+该测试副本走通这条路径」，不据此宣称认证（密码摘要/请求 key 未校验）、事务/并发、反作弊或完整玩法。写入 `docs/MOCK_SERVER.md`（含三种服务对照表新增 v2 行）、`MOCK_SERVER_V2_README.md`（兼容性小节 + 实机记录）、根 `README.md` 组件表、本文件 §1/§2。 |
 | 2026-10-22 | UI 编辑器 **0.14.0**：「打开 / 保存 / 导入 / 导出」重新规划。原则是一个动词只干一件事：打开只从某处拿进来、保存只回它来的地方、另存为换地方存新的、导出副本另拿一份不动原件。文件菜单合成 `打开 ▸`（布局文件 / 布局目录 / 资源包 / 资源目录 / 最近打开）、`另存为 ▸`（新资源包 .fls / 散装布局 .dlg）、`导出副本 ▸`（布局原文件 / PNG 预览 / 控件素材）；工具栏 `打开▾ / 保存 / 另存为▾ / 导出副本▾`；选图窗四动作改为「把图片放进包 / 几张图组成按钮（拼名族）/ 从包里选图片 / 只填包外文件名」。保存语义改为第一次问一次输出包（默认 `interface_edited.fls`），之后 Ctrl+S 静默写回同一个包。`LayoutDocument` 新增 `origin_pack`，标题与状态栏常驻「来源 → 去处」。修四个真问题：`_save_to_pack` 的 `res_path` 未定义（首次保存必崩）、保存后标题滞后、最近打开同名文件不可区分、同一文件原地写回时谎报「改变 0 条」。新增 22 项回归，全套 **724 项**（723 通过、1 跳过、0 错误），ruff 0、wincompat 0/0/0 |
 | 2026-10-22 | UI 编辑器 **0.13.7**：按 PR #72 的 AI 审查逐条复核（20 条行内 + 3 条范围外 + 1 条 nitpick），只修属实项。代码修 11 处：九片子图提示保留 `top/left` 前缀、重挂图后缩略图重解、`probe_pieces` 不再重复数 `middle/middle`、拼接预览同时限宽 480 px、缺图不拼半张、改目录路径不重解预览、只写一个轴时按逐轴结果判 1:1、多帧整图用途措辞改为未核实、旧族会盖住新族时红字拦住、写包取消不再删旧目标文件；第 11 处是写包的 `pending_import`/`encoding` 改成显式参数（线程隐患）。文档修测试分类、9,310 引用计数、完整 SHA-256、目录探测范围与族类型优先级。新增 10 项回归，全套 **708 项**（705 通过、1 跳过、2 项基线），ruff 0、wincompat 0/0/0。逐条判定见 `docs/analysis/ai_review_audit_pr72_20261022.md` |

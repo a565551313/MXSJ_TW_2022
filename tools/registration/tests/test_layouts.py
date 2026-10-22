@@ -120,21 +120,76 @@ class RegistrationLayoutsTest(unittest.TestCase):
         self.assertGreater(caption["iX"], check["iX"])
         self.assertLess(caption["iY"], check["iY"] + check["iHeight"])
 
-    def test_native_factory_manual_message_four(self):
+    def test_layout_checks_use_native_select_api(self):
+        """2026-10-22 换版式：勾选框改成版式自带的三态按钮，走原生 .dlg 接口。
+
+        loginin.py（entry 4806）在 OnMessage 里只读
+        ``GetObject('chk_agree').IsSelected()``，从不自己翻——引擎负责翻。
+        所以脚本里不能再出现脚本自建的 CIMGCHECKBOX（会和引擎各翻一次）。
+        """
         tree = ast.parse((HERE / "register.py").read_text(encoding="utf-8"))
-        calls = [
+        factory_calls = [
             node
             for node in ast.walk(tree)
             if isinstance(node, ast.Call)
             and isinstance(node.func, ast.Attribute)
             and node.func.attr == "CIMGCHECKBOX"
         ]
-        self.assertEqual(len(calls), 1)
-        call = calls[0]
-        self.assertEqual(call.args[0].attr, "CImageCheckBox")
-        self.assertEqual(ast.literal_eval(call.args[1]), "chk_five")
-        self.assertTrue(ast.literal_eval(call.args[4]))
-        self.assertEqual(ast.literal_eval(call.args[5]), 4)
+        self.assertEqual(factory_calls, [])
+        attrs = {
+            node.attr
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Attribute)
+        }
+        self.assertIn("IsSelected", attrs)
+        self.assertIn("SetSelect", attrs)
+        source = (HERE / "register.py").read_text(encoding="utf-8")
+        self.assertIn('_layout_check("btn_fiveaccount")', source)
+        self.assertIn('_layout_check("btn_isee")', source)
+        # 同意是注册前置条件，必须在 DoCheck 里读 m_Consent。
+        do_check = next(
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.FunctionDef) and node.name == "DoCheck"
+        )
+        used = {
+            node.attr
+            for node in ast.walk(do_check)
+            if isinstance(node, ast.Attribute)
+        }
+        self.assertIn("m_Consent", {n.value.attr for n in ast.walk(do_check)
+                                    if isinstance(n, ast.Attribute)
+                                    and isinstance(n.value, ast.Attribute)})
+        self.assertIn("Get", used)
+
+    def test_2027_layouts_anchors_and_message_ids(self):
+        """用户 2026-10-22 重新设计的两个布局：锚点与消息号钉住。"""
+        terms, _ = parse_bytes((HERE / "templates/2027/agreement.dlg").read_bytes())
+        self.assertIn("loc_msg", [w.get("sName") for w in terms])
+        self.assertEqual(
+            sorted(w["iMsgId"] for w in terms if "iMsgId" in w), [1, 2]
+        )
+        form, _ = parse_bytes((HERE / "templates/2027/register2027.dlg").read_bytes())
+        by_name = {w.get("sName"): w for w in form}
+        for name in ("edt_account", "edt_Pwd", "edt_Pwd_1", "edt_email",
+                     "txt_Wrong", "btn_fiveaccount", "btn_isee",
+                     "btn_register", "btn_Back"):
+            self.assertIn(name, by_name, name)
+        self.assertEqual(by_name["btn_Back"]["iMsgId"], 1)
+        self.assertEqual(by_name["btn_register"]["iMsgId"], 2)
+        # 两个勾选框在用户原稿里同号；脚本靠「只读引擎状态」容错，
+        # 交付稿把「同意」改成 51，把歧义彻底去掉。
+        self.assertEqual(by_name["btn_fiveaccount"]["iMsgId"], 50)
+        self.assertEqual(by_name["btn_isee"]["iMsgId"], 50)
+        fixed, _ = parse_bytes(
+            (HERE / "templates/2027/register2027_msg.dlg").read_bytes()
+        )
+        fixed_by_name = {w.get("sName"): w for w in fixed}
+        self.assertEqual(fixed_by_name["btn_fiveaccount"]["iMsgId"], 50)
+        self.assertEqual(fixed_by_name["btn_isee"]["iMsgId"], 51)
+        # 除了那一个消息号，交付稿与用户原稿必须完全一致（不偷偷改布局）。
+        self.assertEqual(fixed_by_name["edt_email"], by_name["edt_email"])
+        self.assertEqual(len(fixed), len(form))
 
     def test_no_old_reg2_controls_or_advertising(self):
         names = set(self.by_name)

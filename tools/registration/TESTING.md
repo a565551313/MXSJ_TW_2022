@@ -1,5 +1,14 @@
 # 注册第二期测试说明（现行风格 + 注册五个账号）
 
+> **2026-10-22 换版式（当前）**：用户重新设计了两个布局，进包路径改为
+> **`login_new/agreement.dlg`** 与 **`login_new/register2027.dlg`**，控件名也随之全换
+> （`edt_account`/`edt_Pwd`/`edt_Pwd_1`/`edt_email`、`txt_Wrong`、`btn_fiveaccount`、
+> `btn_isee`、`btn_Back`、`btn_register`）。勾选框改成版式自带三态按钮，走原生
+> `.dlg` 接口 `IsSelected()/SetSelect()`，**引擎自己翻转、脚本只读**。
+> 下文凡是 `login/regterms.dlg`、`login/regform.dlg`、`account/pwd/pwd2/email/txt/chk_five`
+> 的写法都是 2026-10-22 之前的版式，仅作历史保留；实机测试请按
+> [2027 版式测试说明](TESTING_2027.md)。
+
 > **状态更新**：原第二期包已被报告申请会员导致窗口无响应。若你已导入两张布局，
 > 不要再按下面步骤重导；当前 phase2-diag1 只换脚本，按
 > [入口卡屏诊断步骤](DIAGNOSTIC_TESTING.md) 取得最小阶段日志。
