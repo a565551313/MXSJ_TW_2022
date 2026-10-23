@@ -1914,6 +1914,7 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-23 | 脚本编辑器 **双内置编译器补丁包**：自检报「不可用：runtime目录缺失或为符号链接」是 Git 检出不含 `runtimes/**` 二进制（`.gitignore` 排除），非代码缺陷。按 `build_runtimes.py`从固定官方源码重建两套 x86 编译器（源码 SHA256 全符），`audit --static` 逐文件 SHA/PE32 通过；出货 `MXSJ_runtimes_py25_py27_20261023.zip` 6,971,362 B / `a056564c…`，同步提交配套 `runtimes/manifest.json`。Windows 实机与执行验收未做，详见 §3.78 |
 | 2026-10-23 | 脚本编辑器 **0.6.0.dev9：未登记包自动验证**。用户截图「不能恢复此条目：请先为此script包选择并确认XOR目录」——根因是 `BUNDLED_CATALOGS` 只按整包指纹登记，每出一次新包就得重新登记或手点目录。改为：指纹命中→直接套用；未命中→用唯一已授权参数表逐条严格解码，成功率≥99% 才采纳，个别坏条目点名列出（`PackageCheck`/`resolve_catalog`），手工选目录也改成先解码再询问、解不开直接拒绝。实测 r5 5001/5001 采纳、r4 5000/5001 采纳并点名 #4007、参数表 +1 后 0/5001 拒绝。新增 12 项 core 用例与 4 项 GUI 用例；全量 367 项（4F/2E 与 master 相同，缺 xdis/Qt）。GUI 与 Windows 未验 |
 | 2026-10-23 | 注册脚本 **编辑器打不开改过的包（r5）**：用户报「仓库里被修改过的 `script.fls` 用脚本编辑器一个都打不开了」，原版正常。① 编辑器只给已登记整包指纹自动套用 XOR 参数（`BUNDLED_CATALOGS` 仅 3 个包），r4 指纹不在表里 ⇒ 每个条目都报「请先为此script包选择并确认XOR目录」。② r4 的 entry 4007 填充区确实坏：打包照研究目录 bounds `35778`，原生算術是 `35757`（差 21 字节），模块本体 32,408 B 全在前四段所以游戏无感，但尾部填充被末段密钥错位覆盖，严格解码器报 `trailing/nonzero marshal data`。修法：打包改按原生边界（新增 `native_bounds()` 与「填充区必须全零」断言），337 保持原边界（逐字节保留原密文），r5 指纹 `a45e0e49…` 登记进编辑器内置表（r4 故意不登记），仓库 `data/script.fls` 换成 r5。验证：用编辑器链路逐条解出 **5001** 条（含 337/4007），同一扫描在 r4 上 4007 失败；`tools/registration` 60 项、编辑器目录用例 11 项全绿，ruff 0、wincompat 0/0/0。出货 `registration_2027_layout_r5.zip` 24,197,338 B / `58b10c5d…`。未验：Windows 实机；其他派生包仍需手动登记或「配置 XOR 目录」 |
 | 2026-10-23 | 仓库路径 **Windows 非法路径导致 `git pull` 中止**（`error: invalid_path 'tools/registration/photo\register_diag.txt'`）：master `8aa8777`（PR #76 合并提交）里有一条**文件名带反斜杠**的路径，全树仅此 1 条，PR #75 的三个提交都没有。成因是 `harness.py2` 在 POSIX 上就地跑 `register.py`，而 `_Diag()` 写的是 Windows 路径，反斜杠成了文件名字符，被 `git add -A` 扫进仓库。修法**不改写历史**：`git rm --cached` 掉该路径即可（下次 pull 落到不含它的树）；harness 改成先 `chdir` 到 `out/harness/` 再 exec（`MXSJ_HARNESS_WORKDIR` 可覆盖）、`.gitignore` 加 `photo*`、新增 `tests/test_repo_paths.py` 5 项（反斜杠/非法字符/结尾点空格/保留设备名/harness 先 chdir/**`register.py` 那行路径不许改**）。`register.py` 一字未动 ⇒ 重编产物仍 24,271,133 B / `9cf8c5cd…`，与 d 包逐字节一致。56 项 OK、ruff 0、wincompat 0/0/0、harness 三模式全过且零仓库污染。反向验证：坏路径加回索引 → 2 项失败；去掉 chdir → 原地重现该文件且测试报错 |
@@ -4058,3 +4059,39 @@ Ruff0、Windows静态检查（含未跟踪文件扫描）0/0/0、双环境pip ch
 `bootstrap.py --check-only`退出2：缺经清单校验的第二恢复引擎，完整发行闸门未放宽；
 Linux开发标准编译器不是Windows随包x86发行材料，Windows完整运行时/EXE/游戏加载
 仍未验。本轮不生成游戏交付包、不改真实客户端包、不合master。
+
+## 3.78 脚本编辑器：双内置编译器补丁包与清单同步（2026-10-23）
+
+用户报告编辑器「双VM内置编译器启动自检」两行均为
+`不可用：py25：runtime目录缺失或为符号链接`（py27 同）。只读定位：该 Git 检出中
+`script_editor/runtimes/` 仅有 `manifest.json` 与 `README.md`；`runtimes/**` 被
+`script_editor/.gitignore` 排除，两套各 9 文件二进制本就不随源码克隆分发 ⇒
+`load_bundle`→`BundlePin.verify()`→`_plain_directory()` 抛出该文案。
+**不是代码缺陷、不是包损坏、不是清单造假。**
+
+**重建**：沿用仓库既有 `build_runtimes.py`（Zig 0.13.0、`x86-windows-gnu`），
+两套官方 CPython tar.gz 的 SHA256 与 `SOURCES` 固定值逐一相符
+（2.5.6 `c68b9e84…`、2.7.13 `ae1dc735…`），未改动三处兼容补丁逻辑。
+产物 2.5.6 编 156 个官方核心 TU、2.7.13 编 178 个；每套 9 文件
+（`python.exe`、`python2x.dll`、`python2x.zip`、`BUILD.json`、5 份许可）。
+读头复核：两套 `python.exe`/`python2x.dll` 均为 PE32（`0x10b`）、machine `i386`，
+导入表字符串只见 UCRT `api-ms-win-crt-*` 与 `kernel32`/`advapi32` 等系统 DLL。
+
+**校验**：`runtime_cli audit --static` 对构建目录与 ZIP 解包副本均返回
+`static-only`，逐文件 SHA 与清单一致、两套 `manifest_sha256` 相同
+（`d20332c5…`）；ZIP CRC 自检通过。执行验收按设计在非 win32 直接拒绝
+（`Windows运行时执行验收只能在真实Windows进行`），未放宽。
+
+**交付**：`MXSJ_runtimes_py25_py27_20261023.zip`，6,971,362 B、21 文件，
+SHA256 `a056564c5e553012f77c0fea49a97ef2eee0fcfe5fa5f4186f78218cbe5824b3`、
+MD5 `2a1d77ae8d31edf40fd46581efc25034`，My Drive
+https://drive.google.com/file/d/1ingDNvUYoIzm3tTGQ-3LKaWC9JtcmxVR/view
+；包内为 `runtimes/`（含配套 `manifest.json`、`README.md`）与 `安装说明.txt`。
+同轮把本次构建的 `runtimes/manifest.json` 提交进仓库：4 个 EXE/DLL 摘要与旧清单不同
+是重建的正常结果，**清单必须与二进制成对替换**（只拷 `py25/py27` 而留旧清单会报
+`runtime文件SHA256不匹配`）。不附游戏包、不改客户端包。
+
+**未验**：Windows 实机运行 —— 本环境无 Windows，容器内只做静态/读头审计。
+完整验收须用户本机双击 `检查内置编译器.bat`（真实编译 + 回读 marshal，不执行目标
+代码），预期 `"status": "windows-runtime-smoke-passed"` 且两 VM 均为
+`compile-and-marshal-only-passed`；失败则以该窗口输出为准另行定位。
