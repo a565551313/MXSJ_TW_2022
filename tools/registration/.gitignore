@@ -1,2 +1,8 @@
 out/
 __pycache__/
+# register.py 的 _Diag() 写的是 Windows 路径 "photo\register_diag.txt"。
+# 在 Linux/POSIX 上反斜杠是普通字符，跑一次 harness 就会在当前目录生成一个
+# 文件名带反斜杠的 photo\register_diag.txt——这种路径在 Windows 上非法，
+# 一旦被提交，别人 git pull 会直接报 invalid_path 并中止检出（2026-10-23 踩过）。
+# harness 现在会 chdir 到 out/harness 再跑，这里再挡一层，防止手滑 add。
+photo*

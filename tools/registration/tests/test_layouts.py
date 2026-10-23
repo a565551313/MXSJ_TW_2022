@@ -462,7 +462,10 @@ class RegistrationLayoutsTest(unittest.TestCase):
         self.assertIn("m_BackMsgId", used)
         self.assertIn("_ReturnHome", used)
         # 撞号（btn_back=1 与「我同意」同号）必须在日志里留痕。
-        self.assertIn("conflicts with agree", (HERE / "register.py").read_text("utf-8"))
+        self.assertIn(
+            "conflicts with agree",
+            (HERE / "register.py").read_text(encoding="utf-8"),
+        )
 
     def test_check_msgids_match_delivered_layout(self):
         """交付版式：五个账号 50 / 同意 51（用户 2026-10-23 在 .dlg 里定的）。

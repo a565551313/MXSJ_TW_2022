@@ -256,11 +256,22 @@ COLOR_TEXT_WHITE = 16777215     # 0=黑，16711680=红，16776960=黄，65280=�
 ```sh
 # 编译（需 CPython 2.5.6）
 python tools/registration/compile_with_py25.py tools/registration/register.py /tmp/register.pyc
-# 桩件回归（13 组；另两种模式：MXSJ_HARNESS_MODE=missing_layout / no_font_edit）
+# 桩件回归（15 组；另两种模式：MXSJ_HARNESS_MODE=missing_layout / no_font_edit）
 python tools/registration/harness.py2 /tmp/register.pyc
-# 布局回归
+# 布局/路径回归
 python3 -m unittest discover -s tools/registration/tests
 # 全量构建（改 337/4007）
 python3 tools/registration/build_native_registration.py --python25 <py2.5.6> \
     --output /tmp/build/script.fls --report /tmp/build/build_report.json
 ```
+
+> **别在仓库目录里跑 harness 等它留下日志。** `register.py` 的 `_Diag()` 写的是
+> Windows 路径 `photo\register_diag.txt`；POSIX 上反斜杠是普通字符，就地跑会生成一个
+> **文件名带反斜杠**的文件。harness 现在会先 `chdir` 到 `out/harness/`
+> （可用 `MXSJ_HARNESS_WORKDIR` 改），所以日志落在
+> `tools/registration/out/harness/photo\register_diag.txt`，`out/` 已在 `.gitignore` 里。
+> 2026-10-23 就是这件事漏了一次：那个文件被提交进仓库，Windows 上 `git pull` 直接
+> 中止——`error: invalid_path 'tools/registration/photo\register_diag.txt'`。
+> `tests/test_repo_paths.py` 现在会拦住任何 Windows 非法路径。
+> **`register.py` 里那行路径不能改**：客户端是 Windows 程序，改了会让 `co_lnotab`
+> 变、出货包哈希变；治的是「怎么跑测试」，不是「代码里怎么写」。

@@ -813,6 +813,58 @@ harness 第 15 节（原生客户端 + 50/51：点 50 只动五账号、点 51 �
 产物变成 `8e4f8541…`），所以这次把说明压回原来的两行注释，产物才保持
 与出货包一致——**改 `register.py` 的行数等于改出货哈希**。
 
+### 3.15.7 2026-10-23 仓库里混进 Windows 非法路径，`git pull` 被中止
+
+用户点「继续更新」时弹框：
+
+```
+Error
+error: invalid_path 'tools/registration/photo\register_diag.txt'
+Updating 3adcb62..8aa8777
+```
+
+**判定（属实，且不是 PR #75 带进来的）**：`git ls-tree -r -z --name-only 8aa8777`
+（`-z` 关掉路径转义）里确实有一条**文件名本身带反斜杠**的
+`tools/registration/photo\register_diag.txt`，全树仅此 1 条；`3d1d684` /
+`3e375b2` / `493d346` 三个提交的树里都没有它，是 PR #76
+（`coderabbit/project-analysis/6aa25aac`）合并时进来的。它也不是代码，是
+`harness.py2` 在 POSIX 上就地跑出来的**诊断日志**：`register.py` 的 `_Diag()`
+写的是 Windows 路径 `photo\register_diag.txt`，POSIX 把反斜杠当普通字符，
+于是生成了一个名字含 `\` 的文件；某次 `git add -A` 把它扫进了仓库。
+（同时扫了全树：字符集/结尾点/保留设备名三类 Windows 非法名，除此之外 0 条；
+最长路径 126 字符，离 260 还远。）
+
+**修法（不改写历史）**：从索引里删掉这条路径即可——git 检出的是目标树，
+下一次 pull 落到「没有它」的新树就不会再报错，**不需要 rebase/filter-branch**。
+配套三处防复发：
+
+1. `tools/registration/harness.py2` 在 `exec` 之前 `chdir` 到 `out/harness/`
+   （`out/` 本来就在 `.gitignore` 里，可用 `MXSJ_HARNESS_WORKDIR` 覆盖）；
+   `code_path` 先解析成绝对路径再 chdir，相对 `argv` 也照旧能用；
+2. `tools/registration/.gitignore` 加 `photo*` 兜底（全库没有以 `photo` 开头的
+   受跟踪路径，不会误伤）；
+3. 新增 `tools/registration/tests/test_repo_paths.py`（5 项）：索引里不得有反斜杠、
+   不得有 Windows 非法字符/结尾点空格/保留设备名、harness 必须先 chdir 再 exec、
+   `.gitignore` 必须有 `photo*`、**`register.py` 里那行 Windows 路径不能被改**
+   （客户端是 Windows 程序，改了 `co_lnotab` 就变、出货哈希就变）。
+
+**没有改 `register.py`**：它是 py2.5 编译产物的一部分，改一个字符都会让
+`co_lnotab`/常量变，出货哈希随之改变。治的是「怎么跑测试」，不是「代码里怎么写」。
+
+**验证**：`git ls-files -z` 里 0 条含 `\`；harness 三模式（默认 / `missing_layout` /
+`no_font_edit`）全过，日志只落在 `tools/registration/out/harness/`，仓库目录零污染；
+`tools/registration` **56 项** OK；ruff 0；wincompat **0/0/0**（顺带把
+`test_layouts.py:465` 的位置参数 `read_text("utf-8")` 改成 `encoding="utf-8"`，
+消掉唯一那条 WIN302 告警）；重编产物仍 24,271,133 B / `9cf8c5cd…`，
+**与已出货的 d 包逐字节一致**（工具改动，不影响包）。
+反向验证两次：① 把坏路径 `git add -f` 回索引 → 2 项测试立刻失败；
+② 把 harness 的 `os.chdir` 去掉 → 又在 `tools/registration/` 原地生成
+`photo\register_diag.txt`、`test_harness_writes_outside_the_repo` 报错，两次都已还原。
+
+**未验**：Windows 上执行这次 pull 的实机结果（预期成功——目标树不含该路径）；
+沙箱环境本轮被重置，`py25build` 与 `venv-tools` 是按
+`tools/registration/build_python25.sh` 重建的（CPython 2.5.6，43 秒）。
+
 ### 3.16 独立脚本编辑器开工授权（2026-10-15）
 
 用户确认font1后“确实好了”，协议→表单这一步已实机通过，不外推全部控件/服务器验收。
@@ -1738,6 +1790,7 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-23 | 仓库路径 **Windows 非法路径导致 `git pull` 中止**（`error: invalid_path 'tools/registration/photo\register_diag.txt'`）：master `8aa8777`（PR #76 合并提交）里有一条**文件名带反斜杠**的路径，全树仅此 1 条，PR #75 的三个提交都没有。成因是 `harness.py2` 在 POSIX 上就地跑 `register.py`，而 `_Diag()` 写的是 Windows 路径，反斜杠成了文件名字符，被 `git add -A` 扫进仓库。修法**不改写历史**：`git rm --cached` 掉该路径即可（下次 pull 落到不含它的树）；harness 改成先 `chdir` 到 `out/harness/` 再 exec（`MXSJ_HARNESS_WORKDIR` 可覆盖）、`.gitignore` 加 `photo*`、新增 `tests/test_repo_paths.py` 5 项（反斜杠/非法字符/结尾点空格/保留设备名/harness 先 chdir/**`register.py` 那行路径不许改**）。`register.py` 一字未动 ⇒ 重编产物仍 24,271,133 B / `9cf8c5cd…`，与 d 包逐字节一致。56 项 OK、ruff 0、wincompat 0/0/0、harness 三模式全过且零仓库污染。反向验证：坏路径加回索引 → 2 项失败；去掉 chdir → 原地重现该文件且测试报错 |
 | 2026-10-23 | 注册脚本 **定稿版式确认（iMsgID 50/51、iTeam 1/2）**：用户在本机 `register2027.dlg` 里把 `btn_fiveaccount` 定为 `iMsgID=50`/`iTeam=1`、`btn_isee` 定为 `iMsgID=51`/`iTeam=2`。与交付版式的消息号一致 ⇒ **脚本零改动、build 仍 d、d 包不重打**（重编产物与出货包逐字节相同，24,271,133 B / `9cf8c5cd…`）。新增 harness 第 15 节（原生客户端 50/51：点 50 只动五账号、点 51 只动同意、提交走通、日志无 `fallback toggle`/`target unknown`、`form checks shared_msgid=0`）与 unittest `test_check_msgids_match_delivered_layout`；`tools/registration` **51 项**、ruff 0、三套 harness 全过。另记：给 `register.py` 加/删行会改 `co_lnotab` 从而改变产物哈希，注释已压回原行数 |
 | 2026-10-23 | 注册脚本 **d 包出货（build=2027-10-22d）**：把 §3.15.6 的审查复核修复打成只含脚本的 ZIP，替代 r3。`/home/user/reg2027-delivery.zip` 24,196,935 B，SHA256 `2b51dfddcf00f713d730a4a83c3c4b38b18837c5152c641f5c01c2579d7f8e87`（md5 `5fc71edbfb52b6f7a37ff8dee19d0e89`，`SHA256SUMS.txt` 3 条含 CRC 全过）；My Drive 根目录 `registration_2027_layout_r4.zip` https://drive.google.com/file/d/1jqaHsNveZZCLu1A_slX0FTL3fo_4dSoF/view 。包内仅 `data/script.fls` + `README.txt` + `测试说明-TESTING.md`，不含布局。真机未验 |
 | 2026-10-23 | 注册脚本 **PR #75 AI 审查复核（build=2027-10-22d）**：4 条行内评论去重后 3 条**全部属实**并已修。① 读不到勾选状态时 `state` 永远 False ⇒ 同意门永远打不开、五账号勾不上（旧 docstring 的「流程仍能走完」是假的）——改为 `_CHECK_READERS` 三种读法候选 + `Native()`/`Toggle()`，**只在读不到时**由脚本翻；共用消息号 50 用 `OnButtonEnter/OnButtonLeave` 认按钮。② 缺 `btn_isee` 时旧代码跳过同意校验 ⇒ 改为 **fail-closed**（`MSG_CONSENT` + `consent anchor missing: submit blocked`）。③ harness 第 11 节删 `GetColor` 未恢复，第 12 节的「覆盖 > 版式色」其实没测到 ⇒ 保存/恢复 + 新增 12b「去掉覆盖后用回版式色」。新增 harness 13/14 节与 3 个静态用例，`tools/registration` **50 项**、ruff 0、wincompat 0/0/0；三处新用例均验证过「改回旧代码会失败」。构建只改 337/4007、337 差 9 字节 |
