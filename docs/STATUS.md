@@ -661,7 +661,9 @@
 必须在、常量里必须有 `16777215`；只改 337/4007，337 差 9 字节，marshal 往返一致。
 - 产物 `data/script.fls` 24,268,322 B，SHA256 `fa3b7d751cdd749b29aac90dabf6405f41971e291b525bab5718ab57f10beb23`；
   出货 ZIP（**只含脚本，不含布局**）24,193,655 B，
-  SHA256 `0b6724b397cd35fb82ad3a87525e6f4289931f4a2a522d76dfa56f749517d055`。
+  SHA256 `0b6724b397cd35fb82ad3a87525e6f4289931f4a2a522d76dfa56f749517d055`，
+  My Drive 根目录 https://drive.google.com/file/d/17P2hPXflgVm09pfawfjHVuO1-s_wierH/view
+  （上一轮含布局的 `registration_2027_layout.zip` 已移入回收站，避免拿错）。
 - **未验**：Windows 实机、这版客户端是否有 `GetColor()`、`iTeam` 的分组语义
   （只按用户实测记「必须不同」，未逆出规则）。
 
