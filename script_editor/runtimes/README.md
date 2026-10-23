@@ -5,6 +5,10 @@
 克隆或拉取即得到完整编译器，无需另装Python2，也无需解压交付ZIP。
 重建（`../build_runtimes.py`）后必须把新二进制与`manifest.json`成对提交；Git历史会
 永久保留每一份旧构建（每轮约6.7MB），没有理由时不要反复重建。
+这些文件在仓库`.gitattributes`里声明为`-text`（binary）：Windows版Git的`core.autocrlf`
+只改文本文件的换行，被改过的`BUILD.json`/许可会让自检报「runtime文件SHA256不匹配」。
+真遇到了就双击`../修复编译器文件.bat`（等价于
+`git -c core.autocrlf=false checkout -- script_editor/runtimes`），再跑一次自检。
 
 ```text
 runtimes/

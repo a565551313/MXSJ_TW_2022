@@ -1914,6 +1914,7 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-23 | 脚本编辑器 **Windows 换行致 SHA256 不匹配**：用户实机报`runtime文件SHA256不匹配：BUILD.json`。根因是 Windows 版 Git `core.autocrlf=true` 把 734 B 的 `BUILD.json` 检出成 751 B（CRLF），清单钉的是 LF 版。沙箱用 `core.autocrlf=true` 克隆复现一字不差。修法：`.gitattributes` 加 `script_editor/runtimes/*/win-x86/** -text`；新增 `repair_runtimes.py` 与双击入口 `修复编译器文件.bat`（只重写 runtimes 并逐文件复核）；`检查内置编译器.bat` 失败时提示该入口。端到端：CRLF→报错→修复→通过，ruff 0、wincompat 0/0、新用例 5/5。Windows 实机未验，详见 §3.80 |
 | 2026-10-23 | 脚本编辑器 **双内置编译器入库**：用户问「不能放进仓库吗」并同意，删 `script_editor/.gitignore` 的 `runtimes/**` 等三行，提交 20 个文件（23.4 MB，`.git` 约 +6.7 MB）；随同一固定源码重编，4 个 EXE/DLL 摘要变化（Zig 不逐位可复现），清单 `26b2fd28…` 同步；`audit --static` 20/20 SHA 通过、33 passed/2 skipped、repo_paths 5 项、wincompat 对新增文件 0 命中。§3.78 旧补丁包作废。Windows 实机未验，详见 §3.79 |
 | 2026-10-23 | 脚本编辑器 **双内置编译器补丁包**：自检报「不可用：runtime目录缺失或为符号链接」是 Git 检出不含 `runtimes/**` 二进制（`.gitignore` 排除），非代码缺陷。按 `build_runtimes.py`从固定官方源码重建两套 x86 编译器（源码 SHA256 全符），`audit --static` 逐文件 SHA/PE32 通过；出货 `MXSJ_runtimes_py25_py27_20261023.zip` 6,971,362 B / `a056564c…`，同步提交配套 `runtimes/manifest.json`。Windows 实机与执行验收未做，详见 §3.78 |
 | 2026-10-23 | 脚本编辑器 **0.6.0.dev9：未登记包自动验证**。用户截图「不能恢复此条目：请先为此script包选择并确认XOR目录」——根因是 `BUNDLED_CATALOGS` 只按整包指纹登记，每出一次新包就得重新登记或手点目录。改为：指纹命中→直接套用；未命中→用唯一已授权参数表逐条严格解码，成功率≥99% 才采纳，个别坏条目点名列出（`PackageCheck`/`resolve_catalog`），手工选目录也改成先解码再询问、解不开直接拒绝。实测 r5 5001/5001 采纳、r4 5000/5001 采纳并点名 #4007、参数表 +1 后 0/5001 拒绝。新增 12 项 core 用例与 4 项 GUI 用例；全量 367 项（4F/2E 与 master 相同，缺 xdis/Qt）。GUI 与 Windows 未验 |
@@ -4137,4 +4138,36 @@ machine `i386`。`tests/test_runtime_bundles.py + tests/test_compiler.py`
 
 **未验**：Windows 实机执行验收仍未做（`audit_runtimes(execute=True)` 在非 win32
 直接拒绝）。首次真实验收仍是本机双击 `检查内置编译器.bat`，预期
+`"status": "windows-runtime-smoke-passed"` 且两 VM `compile-and-marshal-only-passed`。
+
+## 3.80 脚本编辑器：Windows 换行导致「runtime文件SHA256不匹配」（2026-10-23）
+
+用户实机双击 `检查内置编译器.bat` 回报：
+`{"status": "failed", "error": "runtime文件SHA256不匹配：BUILD.json"}`。
+
+**根因（已在沙箱复现）**：§3.79 把两套编译器入库后，Windows 版 Git（安装器默认
+`core.autocrlf=true`）在检出时把文本文件从 LF 改成 CRLF：`BUILD.json` 由 734 B 变 751 B。
+清单钉的是 LF 版本的 SHA256，于是校验的第一个文件就失败。EXE/DLL/标准库 ZIP 是二进制、
+不受影响，**编译器本身没有损坏**。用 `git -c core.autocrlf=true clone` 复现出一字不差的报错。
+
+**修法**：
+- 仓库根 `.gitattributes` 新增 `script_editor/runtimes/*/win-x86/** -text`，声明为 binary，
+  检出与提交都不做换行/编码转换。验证：`git check-attr text` 返回 `unset`；在
+  `core.autocrlf=true` 下删掉 `BUILD.json` 重新检出，仍是 734 B、无 CRLF。
+- 新增 `script_editor/repair_runtimes.py` 与双击入口 `script_editor/修复编译器文件.bat`
+  （CRLF、纯 ASCII，符合 PYTHON_TOOL_CONVENTIONS §3）：只对 `script_editor/runtimes`
+  执行一次 `git -c core.autocrlf=false checkout`，再用 `load_bundle(...).verify()`
+  逐文件复核；不改全局 Git 配置、不动其它文件、不下载任何东西。
+- `检查内置编译器.bat` 失败时多打一行提示，指向该修复入口。
+- `runtimes/README.md` 记录此坑；新增 `tests/test_runtime_checkout.py` 5 项守护
+  （`.gitattributes` 规则存在、两个入口存在、bat 为 CRLF/ASCII、索引里的
+  `BUILD.json` 为 LF）。
+
+**端到端验证**：人为把 `runtimes` 下文本文件改成 CRLF → 自检复现同一报错 → 运行修复
+脚本 → 自检恢复 `static-only` → `BUILD.json` 回到 734 B / 无 CRLF。
+ruff 0；`check_windows_compat.py` 对本次文件 0 ERROR/0 WARNING；新用例 5/5；
+`test_runtime_bundles.py` 24/24。
+
+**未验**：Windows 实机（本环境无 Windows）。用户侧仍需先双击 `修复编译器文件.bat`
+（或执行其等价命令），再重跑 `检查内置编译器.bat`，预期
 `"status": "windows-runtime-smoke-passed"` 且两 VM `compile-and-marshal-only-passed`。

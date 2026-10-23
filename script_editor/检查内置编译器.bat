@@ -17,5 +17,6 @@ if not defined PY (
 set "RESULT=%ERRORLEVEL%"
 echo.
 if not "%RESULT%"=="0" echo [FAILED] Keep this error text. Do not replace runtimes with game DLLs.
+if not "%RESULT%"=="0" echo [HINT] If it says runtime file SHA256 mismatch, double-click the repair bat in this folder.
 pause
 exit /b %RESULT%
