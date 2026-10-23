@@ -915,6 +915,11 @@ Updating 3adcb62..8aa8777
 - `tools/registration` **60 项**（新增 `test_native_bounds` 5 项）全绿；
   `script_editor` 的 `test_bundled_catalog` 11 项、`test_core`+`test_module_browser` 全绿；
   ruff 0；`check_windows_compat` ERROR 0 / WARNING 0。
+- 编辑器**全量** 352 项：4 失败 + 2 错误，**与 master 逐条相同**（master 350 项同 4F/2E）——
+  缺 `xdis`（`test_data_corpus` 2 条）与本机无 Qt（`test_bootstrap` 4 条 `main([])` 返回 2
+  而非 17），都是环境缺件，与本轮改动无关；新增的 2 条 `RegisteredDerivativeTests` 全过。
+- **可复现**：从 git 历史里取回 r4（`git show HEAD~1:data/script.fls`，`9cf8c5cd…`）重跑
+  打包器 → 24,271,134 B / `a45e0e49…`，与提交进仓库的 r5 逐字节一致（`changed=[4007]`）。
 - 出货 r5：`/home/user/reg2027-delivery.zip` 24,197,338 B，SHA256
   `58b10c5dcd00919db0c05d3eba017a4233929653844516a48f55a81243eb56b1`，
   `SHA256SUMS.txt` 3 条含 CRC 全过；My Drive
