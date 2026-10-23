@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 
 from PySide6.QtCore import Qt
@@ -9,10 +8,10 @@ from PySide6.QtWidgets import QDialog, QFileDialog, QMessageBox
 from ..core.archives.document import ArchiveDocument
 from ..core.compiler.profiles import PROFILES
 from ..core.compiler.runner import bundled_compiler, compile_standard, inspect_compiler
-from ..core.project.storage import CatalogRef, ProjectState
-from ..core.services.module_paths import index_script_paths, scan_script_paths
+from ..core.project.storage import ProjectState
+from ..core.services.module_paths import index_script_paths
+from ..core.services.package_selfcheck import verify_with_catalog
 from ..core.services.workflow import Snapshot, prepare_build, publish_build
-from ..core.vm.py25.keys import read_catalog
 from .preview import BuildPreview
 
 
@@ -72,30 +71,32 @@ class BuildActions:
         path = Path(name).resolve()
 
         def prepare():
-            ref = CatalogRef(
-                archive.path,
-                archive.fingerprint(),
-                path,
-                hashlib.sha256(read_catalog(path)).hexdigest(),
-            )
-            return ref, scan_script_paths(archive, ref)
+            # Decode before asking: the question used to be "do you trust this
+            # file", which nobody can answer. Now the file is applied to every
+            # allowed entry and the dialog reports what actually happened.
+            return verify_with_catalog(archive, path)
 
-        def complete(result):
-            ref, (paths, errors) = result
+        def complete(check):
+            if not check.accepted:
+                QMessageBox.warning(self, "这套参数解不开这个包", check.report())
+                return
+            ref = check.ref
             if (
                 QMessageBox.question(
                     self,
-                    "确认目录来源（不是自动证明解密正确）",
-                    f"包：{ref.archive}\n目录：{ref.path}\nSHA256：{ref.sha256}\n确认这是此包的可信研究目录？",
+                    "确认目录来源（自检结果见下，仍不等于源码可信）",
+                    f"{check.report()}\n\n包：{ref.archive}\n目录：{ref.path}"
+                    f"\nSHA256：{ref.sha256}\n确认以此参数继续？",
                     defaultButton=QMessageBox.StandardButton.No,
                 )
                 != QMessageBox.StandardButton.Yes
             ):
                 return
+            paths = check.paths
             self.catalogs = [c for c in self.catalogs if c.archive != ref.archive] + [
                 ref
             ]
-            archive.module_paths, archive.module_path_errors = paths, errors
+            check.apply(archive)
             self.module_names = {
                 key: name
                 for key, name in self.module_names.items()

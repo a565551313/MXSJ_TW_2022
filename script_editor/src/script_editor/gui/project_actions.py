@@ -11,7 +11,7 @@ from ..core.inspection.native import inspect_module
 from ..core.project.document import Binding, save_project
 from ..core.project.storage import load_state
 from ..core.project.workspace import EditorState
-from ..core.services.bundled_catalog import bundled_catalog
+from ..core.services.bundled_catalog import resolve_catalog
 from ..core.services.files import SourceRevision, read_source
 from ..core.services.module_paths import index_script_paths
 
@@ -179,20 +179,26 @@ class ProjectActions:
                 for catalog in state.catalogs:
                     if catalog.archive == path:
                         catalog.verify(archive)
+                adopted = False
                 if not any(c.archive == path for c in catalogs):
                     # Older projects can have entry-information tabs but no XOR
-                    # reference. Add only a valid exact-pin asset; never replace
-                    # an explicit project association or block draft restoration
-                    # because the optional bundled asset is unavailable.
-                    try:
-                        catalog = bundled_catalog(archive, self.runtime_root)
-                    except (OSError, ValueError):
-                        catalog = None
+                    # reference. Never replace an explicit project association
+                    # or block draft restoration because the optional bundled
+                    # asset is unavailable. Unlisted packages are decoded first
+                    # (same rule as opening one) instead of being refused.
+                    catalog, _warning, check = resolve_catalog(
+                        archive, self.runtime_root
+                    )
                     if catalog is not None:
                         catalogs.append(catalog)
-                index_script_paths(
-                    archive, next((c for c in catalogs if c.archive == path), None)
-                )
+                        # resolve_catalog already applied the verified names
+                        # when it adopted the package from decode evidence.
+                        adopted = check is not None
+                if not adopted:
+                    index_script_paths(
+                        archive,
+                        next((c for c in catalogs if c.archive == path), None),
+                    )
             return replace(state, catalogs=tuple(catalogs)), texts, documents
         except Exception:
             for archive in documents:

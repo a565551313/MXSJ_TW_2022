@@ -24,7 +24,10 @@ def inspect_module(archive, index, catalog=None):
     profile = None
     if archive.vm == "py25":
         if catalog is None:
-            raise ValueError("请先为此script包选择并确认XOR目录")
+            raise ValueError(
+                "此script包的解码参数未确认；请用「编译 → 选择当前包的 XOR 目录」"
+                "指定与包匹配的参数文件"
+            )
         catalog.verify(archive)
         profile = load_profile(
             archive,
