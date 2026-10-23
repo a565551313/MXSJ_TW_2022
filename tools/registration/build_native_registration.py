@@ -370,6 +370,7 @@ def main() -> int:
 
     root_code = parse_pyc(std_reg)
     names_all = set()
+    consts_all = set()
     funcs = set()
     texts = []
     for path, code in walk_codes(root_code):
@@ -378,6 +379,8 @@ def main() -> int:
             if isinstance(n, (bytes, bytearray)):
                 names_all.add(bytes(n))
         for c in code.consts:
+            if isinstance(c, int):
+                consts_all.add(c)
             if isinstance(c, str):
                 texts.append(c)
             elif isinstance(c, (bytes, bytearray)):
@@ -415,10 +418,23 @@ def main() -> int:
         for path, code in walk_codes(root_code)
         for c in code.consts
     ), "stub leaked as unicode"
-    for path in (b"login/regterms.dlg", b"login/regform.dlg"):
+    for path in (b"login_new/agreement.dlg", b"login_new/register2027.dlg"):
         assert path in raw_consts, f"layout path missing: {path!r}"
-    for name in (b"CIMGCHECKBOX", b"CImageCheckBox", b"SetCheck", b"IsSelected"):
+    # 2026-10-22 換版式：勾選框改成版式自帶的三態按鈕，走原生 .dlg 勾選接口
+    # （loginin.py 讀「我同意」用的就是 GetObject(...).IsSelected()）。
+    # 2026-10-23 PR #75 審查後：讀取方法名改成 `getattr(obj, reader)` 的候選表
+    # （IsSelected / GetSelect / IsCheck），所以 "IsSelected" 現在在**常量**裡
+    # 而不是屬性名表裡；SetSelect/GetObject 仍是直接屬性調用。
+    assert b"IsSelected" in raw_consts, "native checkbox reader name missing"
+    for name in (b"SetSelect", b"GetObject"):
         assert name in names_all, f"native checkbox API missing: {name!r}"
+    for name in (b"CIMGCHECKBOX", b"CImageCheckBox"):
+        assert name not in names_all, f"stale checkbox helper still used: {name!r}"
+    # 2026-10-22 第二輪（用戶實機）：字色要白、btn_back 的消息號要從版式讀。
+    for name in (b"GetColor", b"m_MsgID", b"m_BackMsgId"):
+        assert name in names_all, f"layout-read API missing: {name!r}"
+    assert b"btn_back" in raw_consts, "btn_back anchor name missing"
+    assert 16777215 in consts_all, "white text colour missing"
     with tempfile.TemporaryDirectory(prefix="mx-registration-smoke-") as cwd:
         subprocess.run(
             [

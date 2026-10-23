@@ -18,14 +18,24 @@
 #      SERVICE_MSG/SERVICE_MSG2 兩套按 main.g_LangVersion 切換），所以真機走的是
 #      正式條款；缺失兜底只在離線桩件環境生效。但歸檔裡的 servicedata **沒有**
 #      CONFIRM_MSG（其 pyc 名字表只有兩個 SERVICE_*，兩側歸檔亦無任何定義者），
+#      **每行末尾補 `#r`**：原版寫法是 `[s + '#r' for s in MSG.split('\n')]`，
+#      反編譯器把 py2 列表推導的隱藏累加器 `_[1]` 印成了下標，舊版照抄成
+#      `line[1:]`（吃掉每行首字符）——2026-10-23 用 marshal 反彙編核實後改正。
 #      舊客戶端 CConfirm 直接取該屬性屬構造即報錯的死路，故本文件為確認框另設
 #      CONFIRM_FALLBACK 明示兜底；包內一旦補上該常量，自動改用原文。
-#   4. 規格（用戶 2026-10-14 拍板）：先過協議頁（login/regterms.dlg，
-#      服務條款 dlg 的拷貝，寫法照 loginin.CServiceMessageDialog）->
-#      表單（login/regform.dlg，照改密頁現行風格新作：帳號/密碼/確認
-#      密碼/郵箱四框 + 上一步/確認註冊/返回首頁三按鈕）-> 樁提示。
+#   4. 規格（用戶 2026-10-14 拍板，2026-10-22 換版式）：先過協議頁
+#      （login_new/agreement.dlg，寫法照 loginin.CServiceMessageDialog）->
+#      表單（login_new/register2027.dlg：edt_account/edt_Pwd/edt_Pwd_1/
+#      edt_email 四框 + btn_fiveaccount/btn_isee 兩個勾選 +
+#      btn_Back/btn_register 兩按鈕）-> 樁提示。
+#      協議頁另有用戶後加的 btn_back（回登錄首頁），消息號按版式現讀。
 #      單帳號/密碼 6~16 位字母數字；勾選五帳號時基礎帳號 6~14 位，
 #      產生原帳號、_1、_2、_3、_4，共用密碼/郵箱。真註冊仍待服務端。
+#   5. 字色（2026-10-22 第二輪，用戶實機反饋）：四框與顯示行必須是白字。
+#      .dlg 裡的顏色屬性搬不過來——輸入框/顯示行是腳本用 CEDIT / CRICHTEXT
+#      在版式錨點上另建的控件，顏色只認構造參數；照 loginin.py 登錄頁
+#      （edt_Name / edt_Pwd 都傳 16777215）預設白字，並在版式錨點有 GetColor()
+#      且非 0 時改用版式值，方便日後在佈局裡直接改色。
 import C_sys
 import combdialog
 import combmacro
@@ -207,18 +217,6 @@ PROMPT_ACC_ALNUM = (
 )
 # 密碼只能為數字或字母
 PROMPT_PWD_ALNUM = "#Y\xb1K\xbdX\xa5u\xaf\xe0\xac\xb0\xbc\xc6\xa6r\xa9\xce\xa6r\xa5\xc0"
-# 單帳號模式提示
-HINT_FORM = (
-    "\xb3\xe6\xb1b\xb8\xb9\xbc\xd2\xa6\xa1\xa1G"
-    "#r\xb1b\xb8\xb9\xa9M\xb1K\xbdX"
-    "\xac\xb06~16\xa6\xec\xa6r\xa5\xc0"
-    "\xa9\xce\xbc\xc6\xa6r\xa1F\xbd\xd0\xb6\xf1"
-    "\xbcg\xb1`\xa5\xce\xb6l\xbdc\xa1C"
-    "#r\xa4\xc4\xbf\xef\xa4U\xa4\xe8\xa5i"
-    "\xa4@\xa6\xb8\xb5\xf9\xa5U\xa4\xad\xad\xd3"
-    "\xb1b\xb8\xb9\xa1C"
-)
-
 # 五帳號模式的基礎帳號須為6~14位字母或數字，請縮短帳號以預留_1至_4後綴。
 MSG_ACC_BATCH_FORMAT = (
     "\xa4\xad\xb1b\xb8\xb9\xbc\xd2\xa6\xa1\xaa\xba"
@@ -227,19 +225,6 @@ MSG_ACC_BATCH_FORMAT = (
     "\xbc\xc6\xa6r\xa1A\xbd\xd0\xc1Y\xb5u"
     "\xb1b\xb8\xb9\xa5H\xb9w\xafd_1"
     "\xa6\xdc_4\xab\xe1\xba\xf3\xa1C"
-)
-
-# 五帳號模式提示：6~14 位基礎帳號、原帳號及 _1~_4、共用密碼和郵箱。
-HINT_FORM_FIVE = (
-    "\xa4\xad\xb1b\xb8\xb9\xbc\xd2\xa6\xa1\xa1G"
-    "#r\xb0\xf2\xc2\xa6\xb1b\xb8\xb96~"
-    "14\xa6\xec\xa6r\xa5\xc0\xa9\xce\xbc\xc6"
-    "\xa6r\xa1A\xb1K\xbdX6~16"
-    "\xa6\xec\xa1C#r\xb2\xa3\xa5\xcd\xad\xec"
-    "\xb1b\xb8\xb9\xa4\xce_1\xa6\xdc_4"
-    "\xab\xe1\xba\xf3\xa1A\xa4\xad\xad\xd3\xb1b"
-    "\xb8\xb9\xa6@\xa5\xce\xb1K\xbdX\xa9M"
-    "\xb6l\xbdc\xa1C"
 )
 
 # #r#r以下為待註冊的五個帳號（尚未註冊）：#r
@@ -257,11 +242,47 @@ MSG_COMPLETE_HEADER = (
     "\xab\xd8\xa5\xdf\xa1G#r"
 )
 
-# 原生登入註冊勾選框皮膚（GBK 路徑，ui_res_style1 實證）
-IMG_FIVE_CHECK = (
-    "combdialog/\xb5"
-    "\xc7\xc2\xbc\xd7\xa2\xb2\xe1/\xb0\xb4\xc5\xa5"
-    "/\xb9\xb4\xd1\xa1\xbf\xf2.igs"
+# ---------------------------------------------------------------------------
+# 版式（2026-10-22 用戶重新設計）：兩頁都在 login_new/ 下。
+# 表單頁的勾選框用的是版式自帶的三態按鈕（用戶從登錄頁整塊複製），
+# 不再由腳本疊 CImageCheckBox——原生 .dlg 勾選走 GetObject(...).IsSelected()
+# / SetSelect(...)，這正是 loginin.py（entry 4806）在用的那兩個名字。
+# ---------------------------------------------------------------------------
+DLG_TERMS = "login_new/agreement.dlg"
+DLG_FORM = "login_new/register2027.dlg"
+
+# 勾選按鈕的消息號：版式原本兩個都是 50。2026-10-23 用戶定為五個賬號 50 / 同意 51
+# （iTeam 1/2 必須不同，腳本不讀 iTeam 只按 m_MsgID 分派）；50/50 的舊版式也認。
+ID_FIVE_CHECK = 50
+ID_CONSENT_CHECK = 51
+
+# 表單提示（版式 txt_Wrong，90x20 的小字框）只放短句，詳細原因仍走彈框。
+# 請先同意協議
+LABEL_CONSENT = "\xbd\xd0\xa5\xfd\xa6\x50\xb7\x4e\xa8\xf3\xc4\xb3"
+# 帳號6~16位
+LABEL_ACC = "\xb1\x62\xb8\xb9\x36\x7e\x31\x36\xa6\xec"
+# 帳號6~14位
+LABEL_ACC_FIVE = "\xb1\x62\xb8\xb9\x36\x7e\x31\x34\xa6\xec"
+# 密碼6~16位
+LABEL_PWD = "\xb1\x4b\xbd\x58\x36\x7e\x31\x36\xa6\xec"
+# 密碼只能字母數字
+LABEL_PWD_ALNUM = (
+    "\xb1\x4b\xbd\x58\xa5\x75\xaf\xe0\xa6\x72"
+    "\xa5\xc0\xbc\xc6\xa6\x72"
+)
+# 兩次密碼不同
+LABEL_PWD_DIFF = "\xa8\xe2\xa6\xb8\xb1\x4b\xbd\x58\xa4\xa3\xa6\x50"
+# 郵箱格式錯誤
+LABEL_EMAIL = "\xb6\x6c\xbd\x63\xae\xe6\xa6\xa1\xbf\xf9\xbb\x7e"
+# 基礎帳號6~14位（勾上「註冊五個賬號」後的常駐提示）
+LABEL_FIVE_MODE = "\xb0\xf2\xc2\xa6\xb1\x62\xb8\xb9\x36\x7e\x31\x34\xa6\xec"
+
+# 請勾選「同意用戶協議和註冊條款」（措辭照 loginin.py 的 chk_agree 提示）
+MSG_CONSENT = (
+    "\xbd\xd0\xa4\xc4\xbf\xef\xa1\x75"
+    "\xa6\x50\xb7\x4e\xa5\xce\xa4\xe1"
+    "\xa8\xf3\xc4\xb3\xa9\x4d\xb5\xf9"
+    "\xa5\x55\xb1\xf8\xb4\xda\xa1\x76"
 )
 
 # servicedata 缺失時的佔位條款（Big5 字節串，正式條款待補，見文件頭）。
@@ -367,19 +388,53 @@ def _EditFont():
     return font
 
 
-def _HintColor():
-    """提示文字顏色：同理，取不到 COLOR_EDIT 就用原版別的頁面用的 0。"""
-    color = getattr(interface, "COLOR_EDIT", None)
-    if color is None:
-        _Diag("hint color fallback 0")
-        return 0
-    return color
+# 白字 0xFFFFFF。實證：loginin.py 登錄頁的 edt_Name 用
+# CUserEdit(self, 16777215, ...)、edt_Pwd 用
+# combmacro.CEDIT(CPasswordEdit, 'edt_Pwd', self, 16777215, ...)，
+# 兩處都是白字；註冊頁四框與提示行照這個來。
+COLOR_TEXT_WHITE = 16777215
+
+# 只改某一個框的顏色：在這裡加一行，鍵是版式錨點名，值是 0xRRGGBB 十進位。
+# 例：COLOR_TEXT_BY_ANCHOR = {"edt_Pwd": 16711680}   # 只把密碼框變紅
+# 沒列進來的走 _LayoutColor()：先問版式 GetColor()，取不到就用白字。
+# 為什麼不靠版式屬性：真 .dlg 裡的字色屬性叫 lColor（CTextFrame/CTextFrameEx）
+# 或 lNormalColor（CButton），而本頁五個錨點都是 CBox——手頭的 .dlg 語料裡
+# 沒有任何 CBox 帶顏色屬性，所以加 ICOLOR 引擎也不會吐出來（2026-10-22 實測）。
+COLOR_TEXT_BY_ANCHOR = {}
+
+
+def _LayoutColor(parent, name):
+    """定字色，優先級：本文件的 COLOR_TEXT_BY_ANCHOR > 版式 GetColor() > 白字。
+
+    為什麼 CEDIT / CRICHTEXT 要自己取色：它們是腳本在版式錨點上另建的控件，
+    字色只認**構造參數**；.dlg 裡的屬性不會自動帶過來。原版也這麼做：
+    dlgitembill1.CreateBookAmountEdit 先 GetObject('txt_num').GetColor() 再傳給
+    CEDIT；dlgloginqueue 也是先 oText.GetColor() 再用在文字顏色參數上。
+    GetColor() 讀的是控件自己的字色屬性（文字控件 = lColor 的第一組），
+    錨點是 CBox 時通常拿不到（返回 0/報錯），這裡一律兜回白字。
+    舊版這條路是 return 0（黑），實機反饋要白的。
+    """
+    override = COLOR_TEXT_BY_ANCHOR.get(name)
+    if override is not None:
+        _Diag("color %s override=%s" % (name, override))
+        return override
+    try:
+        obj = parent.GetObject(name)
+        if obj is not None:
+            color = obj.GetColor()
+            if color:
+                _Diag("color %s layout=%s" % (name, color))
+                return color
+    except Exception:
+        _Diag("color %s api missing" % name)
+    _Diag("color %s fallback white" % name)
+    return COLOR_TEXT_WHITE
 
 
 def _CreateFormEdit(parent, edit_class, name, limit, font):
     """按 chgpwd.py 的 CEDIT 調用建編輯框，但先確認版式錨點在不在。
 
-    regform.dlg 沒導入/導入路徑填錯時，原生工厂只會讓界面「點了沒反應」；
+    register2027.dlg 沒導入/導入路徑填錯時，原生工厂只會讓界面「點了沒反應」；
     這裡先查 GetObject，缺就留一條明確的 anchor missing 記錄再拋。
     """
     _Diag("form edit %s anchor begin" % name)
@@ -387,7 +442,10 @@ def _CreateFormEdit(parent, edit_class, name, limit, font):
         _Diag("form edit %s anchor missing" % name)
         raise ValueError("missing form edit anchor")
     _Diag("form edit %s factory begin" % name)
-    edit = combmacro.CEDIT(edit_class, name, parent, 0, font, linecolor=0)
+    # 顏色優先取版式錨點，否則白字（照登錄頁）；linecolor 與登錄頁一致取 0。
+    edit = combmacro.CEDIT(
+        edit_class, name, parent, _LayoutColor(parent, name), font, linecolor=0
+    )
     _Diag("form edit %s factory ready" % name)
     edit.SetLimit(limit)
     _Diag("form edit %s ready" % name)
@@ -412,13 +470,27 @@ def _ReturnHome():
         main.doreturn(interface.CBaseObject(None))
 
 
+def _RichLines(lines):
+    """把純文本行變成 COutput 要的富文本行：每行末尾補 `#r`（換行標記）。
+
+    原版四處寫法一致（`CRegPanel1`/`CConfirm`/`CServiceMessageDialog`/
+    `mainpage._WriteTxtBox` 的資料來源）：
+        result = [s + '#r' for s in servicedata.SERVICE_MSG.split('\n')]
+    反編譯器把 py2 列表推導的隱藏累加器印成了 `_[1]`，2026-10-22 那版照抄成
+    `line[1:]`，結果是每行少一個字、還沒有換行標記。2026-10-23 反彙編
+    entry 4007/4806 的 `__init__` 核實：`LOAD_CONST '#r'` + `BINARY_ADD`，
+    就是 `s + '#r'`。這裡按原版重寫。
+    """
+    return [line + "#r" for line in lines]
+
+
 def _LoadTermsLines():
     try:
         import servicedata
 
-        return [line[1:] for line in servicedata.SERVICE_MSG.split("\n")]
+        return _RichLines(servicedata.SERVICE_MSG.split("\n"))
     except Exception:
-        return list(TERMS_FALLBACK)
+        return _RichLines(TERMS_FALLBACK)
 
 
 def _LoadConfirmLines():
@@ -430,20 +502,28 @@ def _LoadConfirmLines():
     try:
         import servicedata
 
-        return [line[1:] for line in servicedata.CONFIRM_MSG.split("\n")]
+        return _RichLines(servicedata.CONFIRM_MSG.split("\n"))
     except Exception:
-        return list(CONFIRM_FALLBACK)
+        return _RichLines(CONFIRM_FALLBACK)
 
 
 class CRegTermsPanel(combdialog.CCombPanel):
-    """協議頁：login/regterms.dlg（服務條款 dlg 的拷貝），寫法照
-    loginin.CServiceMessageDialog。msgid 1=我同意（進表單），其餘=回首頁。
+    """協議頁：login_new/agreement.dlg，寫法照 loginin.CServiceMessageDialog。
+    msgid 1=同意（進表單），其餘=回首頁（新版式裡 2 是「拒絕」）。
     """
 
     def __init__(self, parent):
-        _Diag("terms layout begin")
-        combdialog.CCombPanel.__init__(self, parent, "login/regterms.dlg")
+        # 換版式後日誌第一行帶版本標記：用戶只看這一行就能確認新腳本已生效。
+        # 尾碼 b = 第二輪（白字 + btn_back）。
+        _Diag("terms layout begin build=2027-10-22d")
+        combdialog.CCombPanel.__init__(self, parent, DLG_TERMS)
         _Diag("terms layout ready")
+        # btn_back 是用戶在 agreement.dlg 本機加的，消息號以版式為準；
+        # 沒這個按鈕就是 None（老版式照樣能跑）。
+        self.m_BackMsgId = _LayoutMsgId(self, "btn_back")
+        if self.m_BackMsgId == 1:
+            # 1 是「我同意」，撞號會讓同意永遠進不了表單，日誌裡必須看得見。
+            _Diag("terms WARN btn_back msgid=1 conflicts with agree")
         import chatoutput
 
         result = _LoadTermsLines()
@@ -476,9 +556,14 @@ class CRegTermsPanel(combdialog.CCombPanel):
 
     def OnMessage(self, msgid):
         _PlayBtnSound()
+        _Diag("terms msgid=%s" % (msgid,))
         if msgid == 1:
             Step(1)
+        elif self.m_BackMsgId is not None and msgid == self.m_BackMsgId:
+            _Diag("terms btn_back -> home")
+            _ReturnHome()
         else:
+            # 新版式 2=拒絕；其餘（含日後再加的按鈕）一律回登錄首頁。
             _ReturnHome()
         return True
 
@@ -530,61 +615,239 @@ class CRegPwdEdit(interface.CEdit):
             usermacro.PROMPT_MSG(PROMPT_PWD_ALNUM)
 
 
-class CRegFormPanel(combdialog.CCombPanel):
-    """表單頁（login/regform.dlg）：msgid 1=上一步（回協議），
-    2=確認註冊（校驗後留樁），3=返回首頁，4=切換註冊五個帳號。
-    四框：帳號/密碼/確認密碼/郵箱；勾選默認關閉。
+def _LayoutMsgId(parent, name):
+    """讀版式按鈕自己的消息號；取不到就返回 None。
 
+    btn_back 是用戶後加進 agreement.dlg 的，腳本寫死消息號就會和他在佈局裡
+    填的對不上。原生對象帶 ``m_MsgID``（loginin.py / mainpage.py 的
+    OnButtonEnter 就是拿 ```btn.m_MsgID`` 判斷），照讀即可。
+    """
+    try:
+        obj = parent.GetObject(name)
+        if obj is None:
+            _Diag("msgid anchor missing %s" % name)
+            return None
+        msgid = obj.m_MsgID
+        _Diag("msgid %s=%s" % (name, msgid))
+        return msgid
+    except Exception:
+        _Diag("msgid %s api missing" % name)
+        return None
+
+
+# 原生讀勾選狀態的方法名，按順序試。IsSelected 有實證（loginin.py 讀
+# chk_agree / btn_Protect）；另兩個只是「同一族控件可能叫別的名字」的兜底，
+# 存在就用、不存在也不報錯。
+_CHECK_READERS = ("IsSelected", "GetSelect", "IsCheck")
+
+
+class _LayoutCheck(object):
+    """版式裡的勾選按鈕（用戶從登錄頁整塊複製的三態按鈕）。
+
+    原生 .dlg 勾選是``GetObject(name).IsSelected() / SetSelect(bool)``，
+    而且**引擎自己負責翻轉**——實機走通的 loginin.py（entry 4806）在
+    OnMessage 裡只讀 ``GetObject('chk_agree').IsSelected()``，從不自己翻；
+    它還同時讀 ``btn_Protect``，說明多個勾選框互不排斥。所以正常情況下：
+    點擊消息只用來刷新提示，狀態一律問引擎要，腳本絕不手動翻（手動翻會和
+    引擎各翻一次＝看起來沒反應）。
+
+    讀不到狀態的客戶端（IsSelected/GetSelect/IsCheck 全都沒有，或調用即拋）：
+    引擎給不出狀態，腳本只能自己記——此時 `Native()` 為 False，點擊由
+    `Toggle()` 翻腳本自己的狀態，並寫 `fallback toggle` 日誌。**不這樣做的話
+    `state` 會永遠是 False**，同意門檻會把每一次提交都打回、五賬號也永遠勾不上
+    （2026-10-23 PR #75 審查指出：舊版 docstring 說「流程仍能走完」是假的）。
+    """
+
+    def __init__(self, obj, name):
+        self.obj = obj
+        self.name = name
+        self.native = False
+        self.state = False
+        self.reader = None
+        reader = self._ReadNative()
+        if reader is None:
+            _Diag("check %s read api missing" % name)
+        else:
+            self.native = True
+            self.reader = reader
+            _Diag("check %s ready=%d via=%s" % (name, int(self.state), reader))
+        self.msgid = self._ReadMsgId()
+
+    def _ReadNative(self):
+        """返回真正讀成功的方法名；一個都沒有就返回 None。"""
+        for reader in _CHECK_READERS:
+            try:
+                func = getattr(self.obj, reader)
+            except Exception:
+                continue
+            try:
+                self.state = bool(func())
+                return reader
+            except Exception:
+                _Diag("check %s reader failed=%s" % (self.name, reader))
+        return None
+
+    def _ReadMsgId(self):
+        """版式裡這個按鈕自己的消息號；兩個勾選共用同一號時要靠它判歧義。"""
+        try:
+            return self.obj.m_MsgID
+        except Exception:
+            return None
+
+    def Native(self):
+        return self.native
+
+    def Get(self):
+        if self.native:
+            try:
+                # 用初始化時真正讀成功的那個方法（IsSelected / GetSelect / IsCheck）。
+                self.state = bool(getattr(self.obj, self.reader)())
+                return self.state
+            except Exception:
+                # 這個方法中途不可用了：把三種讀法重新試一遍，都不行才退化。
+                reader = self._ReadNative()
+                if reader is not None:
+                    self.reader = reader
+                    return self.state
+                _Diag("check %s read failed" % self.name)
+                self.native = False
+        return self.state
+
+    def Set(self, flag):
+        """初始化/腳本主動改模式時用；正常情況下點擊一律交給引擎。"""
+        self.state = bool(flag)
+        if self.native:
+            try:
+                self.obj.SetSelect(self.state)
+            except Exception:
+                _Diag("check %s write api missing" % self.name)
+                self.native = False
+
+    def Toggle(self):
+        """**只在 Native() 為 False 時用**：引擎給不出狀態，腳本自己翻。
+
+        正常客戶端（能讀 IsSelected）絕不會走到這裡——那邊再翻一次就是
+        「點一下等於沒點」的老問題。
+        """
+        self.Set(not self.state)
+        _Diag("check %s fallback toggle=%d" % (self.name, int(self.state)))
+
+
+class CRegFormPanel(combdialog.CCombPanel):
+    """表單頁（login_new/register2027.dlg）。
+
+    消息號：1=上一步（回協議）、2=確認註冊、50=「註冊五個賬號」、
+    51=「同意用戶協議和註冊條款」。兩個勾選框在版式裡原本同為 50，
+    分不出點的是哪個；交付的 register2027_msg.dlg 已把同意改成 51，
+    腳本對「共用 50」的舊版式也做了狀態差容錯（見 _CheckClick）。
+    四個輸入框：edt_account / edt_Pwd / edt_Pwd_1（確認）/ edt_email。
     """
 
     def __init__(self, parent):
         _Diag("form layout begin")
-        combdialog.CCombPanel.__init__(self, parent, "login/regform.dlg")
+        combdialog.CCombPanel.__init__(self, parent, DLG_FORM)
         _Diag("form layout ready")
         import C_object
 
         font = _EditFont()
-        self.m_AccountEdit = _CreateFormEdit(self, CRegAccountEdit, "account", 16, font)
-        self.m_PwdEdit = _CreateFormEdit(self, CRegPwdEdit, "pwd", 16, font)
+        self.m_AccountEdit = _CreateFormEdit(
+            self, CRegAccountEdit, "edt_account", 16, font
+        )
+        self.m_PwdEdit = _CreateFormEdit(self, CRegPwdEdit, "edt_Pwd", 16, font)
         self.m_PwdEdit.m_IsPassword = True
-        self.m_PwdEdit2 = _CreateFormEdit(self, CRegPwdEdit, "pwd2", 16, font)
+        self.m_PwdEdit2 = _CreateFormEdit(
+            self, CRegPwdEdit, "edt_Pwd_1", 16, font
+        )
         self.m_PwdEdit2.m_IsPassword = True
-        self.m_EmailEdit = _CreateFormEdit(self, interface.CEdit, "email", 50, font)
+        self.m_EmailEdit = _CreateFormEdit(
+            self, interface.CEdit, "edt_email", 50, font
+        )
         _Diag("form tab begin")
         self.m_AccountEdit.SetNextEdit(self.m_PwdEdit)
         self.m_PwdEdit.SetNextEdit(self.m_PwdEdit2)
         self.m_PwdEdit2.SetNextEdit(self.m_EmailEdit)
         self.m_EmailEdit.SetNextEdit(self.m_AccountEdit)
         _Diag("form tab ready")
-        self.m_Text = combmacro.CRICHTEXT(
-            C_object.CRichTextObject,
-            "txt",
-            self,
-            HINT_FORM,
-            font,
-            _HintColor(),
+        # 勾選框直接來自版式。缺了也不能讓整頁開不起來：
+        # 五個賬號取不到就當「沒勾」；同意框取不到則**一律不讓提交**
+        # （用戶口徑：未勾同意不得註冊，見 DoCheck）。
+        self.m_FiveCheck = self._layout_check("btn_fiveaccount")
+        self.m_Consent = self._layout_check("btn_isee")
+        # 兩個勾選在原始版式裡共用同一個消息號 50，那時只能靠「滑鼠停在哪個
+        # 按鈕上」認出點的是哪個（引擎會調 OnButtonEnter/OnButtonLeave）。
+        self.m_HoveredCheck = None
+        self.m_SharedCheckMsg = (
+            self.m_FiveCheck is not None
+            and self.m_Consent is not None
+            and self.m_FiveCheck.msgid is not None
+            and self.m_FiveCheck.msgid == self.m_Consent.msgid
         )
-        self.m_FiveCheck = combmacro.CIMGCHECKBOX(
-            interface.CImageCheckBox, "chk_five", self, IMG_FIVE_CHECK, True, 4
-        )
-        # 原生工廠綁 .dlg 錨點，放大命中區使方框/文字都可點擊。
-        (w, h) = self.GetObject("chk_five").GetSize()
-        self.m_FiveCheck.SetSize(w, h)
+        _Diag("form checks shared_msgid=%d" % int(self.m_SharedCheckMsg))
+        self.m_Hint = self._create_hint(C_object)
         self.m_RegistrationRequests = []
         # 只有日後真實請求送出時才可設置 pending；留樁不設置，不能假報成功。
         self.m_PendingAccounts = None
         self.SetRegisterFive(False)
         self.m_AccountEdit.Active(True)
 
+    def _layout_check(self, name):
+        try:
+            obj = self.GetObject(name)
+        except Exception:
+            obj = None
+        if obj is None:
+            _Diag("check anchor missing %s" % name)
+            return None
+        check = _LayoutCheck(obj, name)
+        check.Set(False)  # 用戶口徑：兩個勾選默認都不勾
+        return check
+
+    def _create_hint(self, C_object):
+        """提示小字（版式 txt_Wrong）。取不到/建不起來都不影響表單：
+        詳細原因照樣會彈框，絕不會「點了什麼都沒發生」。"""
+        try:
+            if self.GetObject("txt_Wrong") is None:
+                _Diag("hint anchor missing txt_Wrong")
+                return None
+            hint = combmacro.CRICHTEXT(
+                C_object.CRichTextObject, "txt_Wrong", self, "", _EditFont(),
+                _LayoutColor(self, "txt_Wrong")
+            )
+            _Diag("hint ready")
+            return hint
+        except Exception:
+            _DiagFailure("hint")
+            return None
+
+    def _ShowHint(self, text):
+        if self.m_Hint is None:
+            return
+        try:
+            self.m_Hint.SetText(text)
+        except Exception:
+            _DiagFailure("hint settext")
+
+    def _Fail(self, label, msg):
+        """短句寫在版式的提示框裡，完整原因交給彈框。"""
+        self._ShowHint(label)
+        return msg
+
+    def IsRegisterFive(self):
+        return self.m_FiveCheck is not None and self.m_FiveCheck.Get()
+
     def SetRegisterFive(self, enabled):
-        self.m_FiveCheck.SetCheck(bool(enabled))
-        if enabled:
-            self.m_AccountEdit.SetLimit(14)
-            self.m_Text.SetText(HINT_FORM_FIVE)
-        else:
-            self.m_AccountEdit.SetLimit(16)
-            self.m_Text.SetText(HINT_FORM)
-        # 已核對原版 SetLimit 只改 m_Limit，絕不截掉已有的輸入。
+        if self.m_FiveCheck is not None:
+            self.m_FiveCheck.Set(bool(enabled))
+        self.SyncFiveMode()
+
+    def SyncFiveMode(self):
+        """按「五個賬號」當前狀態同步帳號位數上限與常駐提示。
+
+        已核對原版 SetLimit 只改 m_Limit，絕不截掉已有的輸入。
+        """
+        five = self.IsRegisterFive()
+        self.m_AccountEdit.SetLimit(14 if five else 16)
+        self._ShowHint(LABEL_FIVE_MODE if five else "")
 
     def CheckEmail(self, email):
         if len(email) < 5 or len(email) > 50:
@@ -596,28 +859,36 @@ class CRegFormPanel(combdialog.CCombPanel):
 
     def DoCheck(self):
         """校验通过返回 None，否则返回要提示的文案（口径同旧版 DoCheck）。"""
+        # 用戶口徑：未勾「同意用戶協議和註冊條款」不得註冊。
+        # 版式缺這個錨點時也一樣擋（fail-closed）：沒有控件＝沒有同意，
+        # 不能因為讀不到就當作已同意。日誌會留下 anchor missing，便於定位。
+        if self.m_Consent is None:
+            _Diag("consent anchor missing: submit blocked")
+            return self._Fail(LABEL_CONSENT, MSG_CONSENT)
+        if not self.m_Consent.Get():
+            return self._Fail(LABEL_CONSENT, MSG_CONSENT)
         account = self.m_AccountEdit.GetText()
-        register_five = self.m_FiveCheck.IsSelected()
+        register_five = self.IsRegisterFive()
         maximum = 14 if register_five else 16
         if len(account) < 6 or len(account) > maximum or not _IsAsciiAlnum(account):
             self.m_AccountEdit.Active(True)
             if register_five:
-                return MSG_ACC_BATCH_FORMAT
-            return MSG_ACC_FORMAT
+                return self._Fail(LABEL_ACC_FIVE, MSG_ACC_BATCH_FORMAT)
+            return self._Fail(LABEL_ACC, MSG_ACC_FORMAT)
         pwd = self.m_PwdEdit.GetText()
         if len(pwd) < 6 or len(pwd) > 16:
             self.m_PwdEdit.Active(True)
-            return MSG_PWD_FORMAT
+            return self._Fail(LABEL_PWD, MSG_PWD_FORMAT)
         if not _IsAsciiAlnum(pwd):
             self.m_PwdEdit.Active(True)
-            return MSG_PWD_ALNUM
+            return self._Fail(LABEL_PWD_ALNUM, MSG_PWD_ALNUM)
         if pwd != self.m_PwdEdit2.GetText():
             self.m_PwdEdit2.Active(True)
-            return MSG_PWD_MISMATCH
+            return self._Fail(LABEL_PWD_DIFF, MSG_PWD_MISMATCH)
         email = self.m_EmailEdit.GetText().strip()
         if not self.CheckEmail(email):
             self.m_EmailEdit.Active(True)
-            return MSG_EMAIL_FORMAT
+            return self._Fail(LABEL_EMAIL, MSG_EMAIL_FORMAT)
         return None
 
     def DoSubmit(self):
@@ -626,6 +897,9 @@ class CRegFormPanel(combdialog.CCombPanel):
         _Diag("submit start")
         self.m_RegistrationRequests = []
         self.m_PendingAccounts = None
+        # 提交前按勾選框的**當前**狀態再同步一次：客戶端若把點擊消息排在
+        # 引擎翻轉之前，OnMessage 裡讀到的會是上一次的值，這裡以提交時為準。
+        self.SyncFiveMode()
         try:
             msg = self.DoCheck()
             _Diag("check done fail=%s" % (msg is not None))
@@ -634,7 +908,7 @@ class CRegFormPanel(combdialog.CCombPanel):
                 _Diag("fail box shown")
                 return
             accounts = BuildRegistrationAccounts(
-                self.m_AccountEdit.GetText(), self.m_FiveCheck.IsSelected()
+                self.m_AccountEdit.GetText(), self.IsRegisterFive()
             )
             pwd = self.m_PwdEdit.GetText()
             email = self.m_EmailEdit.GetText().strip()
@@ -687,6 +961,55 @@ class CRegFormPanel(combdialog.CCombPanel):
         _Diag("registration complete count=%d" % len(expected))
         return True
 
+    def OnButtonEnter(self, btn):
+        """記住滑鼠停在哪个勾選按鈕上（引擎把按鈕對象傳進來）。
+
+        契約有實證：loginin.py / mainpage.py 的 `OnButtonEnter(self, btn)`
+        就是拿 `btn.m_MsgID`、`btn.m_tips` 用的。只有在「兩個勾選共用同一個
+        消息號 + 客戶端讀不到勾選狀態」這種退化組合下才會用到它。
+        """
+        self._TrackButton(btn)
+
+    def OnButtonLeave(self, btn):
+        self._TrackButton(btn, leaving=True)
+
+    def _TrackButton(self, btn, leaving=False):
+        try:
+            for check in (self.m_FiveCheck, self.m_Consent):
+                if check is not None and check.obj is btn:
+                    self.m_HoveredCheck = None if leaving else check
+                    return
+        except Exception:
+            _DiagFailure("track button")
+
+    def _PickClickedCheck(self, msgid):
+        """判斷點的是哪個勾選；認不出就返回 None（只會少翻，不會亂翻）。"""
+        if msgid == ID_CONSENT_CHECK and self.m_Consent is not None:
+            return self.m_Consent
+        if msgid == ID_FIVE_CHECK and self.m_FiveCheck is not None:
+            if self.m_SharedCheckMsg:
+                return self.m_HoveredCheck or self.m_FiveCheck
+            return self.m_FiveCheck
+        return self.m_HoveredCheck
+
+    def _CheckClick(self, msgid):
+        """勾選框被點了一下。
+
+        正常客戶端：引擎已經翻過了，我們只按新狀態刷新提示（絕不再翻一次）。
+        讀不到狀態的退化客戶端：引擎給不出狀態，由 `Toggle()` 翻腳本自己的
+        狀態，否則同意門檻與五賬號模式會永遠停在「沒勾」。
+        """
+        target = self._PickClickedCheck(msgid)
+        if target is not None and not target.Native():
+            target.Toggle()
+        elif target is None:
+            _Diag("check click msgid=%s target unknown" % (msgid,))
+        _Diag("check five=%d consent=%d" % (
+            int(self.IsRegisterFive()),
+            int(self.m_Consent is not None and self.m_Consent.Get()),
+        ))
+        self.SyncFiveMode()
+
     def OnMessage(self, msgid):
         _Diag("form msgid=%s" % (msgid,))
         _PlayBtnSound()
@@ -695,13 +1018,10 @@ class CRegFormPanel(combdialog.CCombPanel):
             Step(0)
         elif msgid == 2:
             self.DoSubmit()
-        elif msgid == 3:
-            self.m_PendingAccounts = None
-            _ReturnHome()
-        elif msgid == 4:
-            # CImageCheckBox.LeftUp 先發消息，再自動翻轉；manual=True 交給
-            # 本處翻轉一次，避免一次點擊勾上又自動取消。
-            self.SetRegisterFive(not self.m_FiveCheck.IsSelected())
+        elif msgid == ID_FIVE_CHECK or msgid == ID_CONSENT_CHECK:
+            self._CheckClick(msgid)
+        else:
+            _Diag("form msgid unhandled")
         return True
 
 

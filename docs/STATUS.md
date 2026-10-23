@@ -590,6 +590,229 @@
   到My Drive根目录；返回大小/MD5与本地一致，未改权限/删除旧包，未再次下载核验。
   不能拿此字体修正冒充全部原生验收。
 
+### 3.15.1 2026-10-22 注册页 2027 版式接线（login_new/）
+
+- 用户重做两个布局并明确进包路径 **`login_new/agreement.dlg`**、
+  **`login_new/register2027.dlg`**（`templates/2027/` 下存原字节，只读不改坐标）。
+  新版式控件名与旧版完全不同，`register.py` 整类重写接线：
+  四框 `edt_account`/`edt_Pwd`/`edt_Pwd_1`/`edt_email`（limit 16/16/16/50，
+  五账号时账号 14，仍不去截断已有输入）；提示 `txt_Wrong`（90×20）只放短句，
+  完整原因照旧弹框；`btn_Back` msg1=回协议页，`btn_register` msg2=提交，
+  `btn_fiveaccount`/`btn_isee` 为版式自带三态按钮。
+- **勾选接法改过一次结论，原判据是错的**：先前据「控件类型表里没有勾选框」判定
+  `CButton` 无勾选态，用户指出两个勾选框是从登录页整块复制、登录页能用。随后在真实
+  脚本里取证：entry 4806 `CLoginIn/OnMessage` 只读 `GetObject('chk_agree').IsSelected()`
+  与 `GetObject('btn_Protect').IsSelected()`，`SetSelect` 只出现在 `__init__`/
+  `OneoffLogin`/`OneoffLogin2` 这类程序性设置里 ⇒ **引擎自己翻转，脚本只读**。
+  据此删掉「脚本手动翻」的 `_LayoutCheck.Click()`；点击消息只刷新五账号模式的
+  位数与提示，状态一律问引擎（提交前再同步一次，兼容「消息先于翻转」的客户端）。
+  两个勾选在原稿里同为 msgid 50 也不影响，因此 `register2027_msg.dlg`
+  （只把同意改成 51）降级为可选交付件，不导入也能跑。
+- 新增前置校验：未勾「同意用戶協議和註冊條款」直接拦下（`MSG_CONSENT`，措辞照
+  loginin.py 的 `chk_agree` 提示）；短句进 `txt_Wrong`，完整提示仍弹框。
+- 断言按新事实显式改写而非删除：`build_native_registration.py` 的路径断言换成
+  `login_new/...`，勾选 API 断言改为「`IsSelected`/`SetSelect`/`GetObject` 必须在、
+  `CIMGCHECKBOX`/`CImageCheckBox` 必须不在」，注释写明换版式理由；
+  `tests/test_layouts.py` 里原「`CIMGCHECKBOX` 恰一次且 msgid=4」换成
+  「无自建勾选工厂 + 原生 API 在 + `DoCheck` 读 `m_Consent`」，并新增 2027 两布局的
+  锚点/消息号/与原稿逐字节一致（除该一个消息号）回归。
+- 回归：`harness.py2` 按 CPython 2.5.6 整份重写，13 组全过（条款兜底、表单锚点/
+  掩码/tab、AddChar 过滤、单账号边界、未勾同意、两种点击顺序下的引擎翻转与 6~14 校验、
+  共用 msg50、五账号、完成回调守卫、异常兜底且日志无私密、缺布局回首页、缺
+  `FONT_EDIT` 回退）；`tools/registration` 43 项通过、ruff 0、wincompat 0/0/0。
+- 构建：只改 337/4007，337 差 9 字节，其余 5000 条压缩负载逐字节保留；
+  完整 marshal 往返 + 打包模块 2.5 冒烟通过，无网络调用名残留。
+  产物 24,267,394 B，SHA256 `debbf702ebe6f1d48c90a9dda2e3f93311f5cc7a66968dd0362d44d6a26f7352`；
+  日誌第一行帶 `build=2027-10-22`，用戶看這一行就能確認新腳本已生效。
+- 交付（**未开 PR**，等用户实测）：ZIP `registration_2027_layout.zip`
+  24,195,048 B，SHA256 `1bb201ae1a6446f2836521e239374eacd95a1e75d26df3d09a76af06712a0a5c`，
+  My Drive 根目录 https://drive.google.com/file/d/1Rh-zuqnhUAJHbnMJRin7E3vD7asm0yX9/view
+  （含 `data/script.fls`、`interface_import/login_new/register2027.dlg`、README 与测试说明）。
+- **未验**：Windows 实机、真实客户端里的排版与点击手感、真实注册服务（仍是桩）；
+  `iTeam=1` 是否导致两个勾选互斥也待实机确认（若互斥，把 `btn_isee` 的 `iTeam` 改 0）。
+
+### 3.15.2 2026-10-22 注册页第二轮：白字、btn_back、iTeam（build=2027-10-22b）
+
+用户实机反馈三条，**全部只改脚本、不动布局**：
+
+1. **四框与 `txt_Wrong` 是黑的，要白的**。根因不是布局：`edt_account` 等只是 `.dlg`
+   占位锚点，真正显示的是脚本用 `combmacro.CEDIT` / `CRICHTEXT` 另建的控件，字色
+   只认构造参数；旧代码第 4 个参数写死 `0`（黑）。用户在布局里加 `ICOLOR` 不生效
+   也是同一原因（该值不会自动带进构造参数）。改法：新增 `COLOR_TEXT_WHITE =
+   16777215`（照 loginin.py 登录页 `edt_Name`/`edt_Pwd`），`_CreateFormEdit` 与
+   提示行的 `CRICHTEXT` 都走 `_LayoutColor(parent, name)`——先读锚点 `GetColor()`
+   （原版 `dlgitembill1.CreateBookAmountEdit` 同法），非 0 采用，取不到/为 0 退回
+   白字；删掉返回黑的 `_HintColor()`。`linecolor` 仍与登录页一致取 0。
+2. **`btn_back`（用户本机加进 agreement.dlg）**：脚本不写死消息号，新增
+   `_LayoutMsgId()` 读原生 `obj.m_MsgID`（loginin.py/mainpage.py 的
+   `btn.m_MsgID` 同源），点击回登录首頁并写 `terms btn_back -> home`；若被填成 1
+   （与「我同意」同号）写 `terms WARN btn_back msgid=1 conflicts with agree`，
+   且 1 仍走「同意」，避免同意永远进不了表单这种更坏的静默故障。
+3. **`iTeam` 必须不同**（用户 2026-10-22 实机定论；原稿两处都是 1 ⇒ 点不动）。
+   属布局侧，脚本不碰；`templates/2027/register2027_msg.dlg` 因此**不再随包发布**
+   （它的 `iTeam` 仍 1/1），保留仅为「除消息号外与原稿逐字节一致」的证据。
+
+回归（CPython 2.5.6 真编译）：新增白光断言（四框 4 个 CEDIT 颜色 + `RichText`
+颜色 + `linecolor=0`）、版式给色优先采用（`edt_email=0x123456`、`txt_Wrong=0x654321`
+被原样采用，日志 `color ... layout=N`）、缺 `GetColor()` 兜底白字（日志
+`api missing`）、`btn_back` 回主頁与撞号警告；三套模式（默认 / `missing_layout` /
+`no_font_edit`）全过；`tools/registration` **45 项**、ruff 0、wincompat 0/0/0。
+构建器新增断言：`GetColor`/`m_MsgID`/`m_BackMsgId` 名字必须在、`btn_back` 字面量
+必须在、常量里必须有 `16777215`；只改 337/4007，337 差 9 字节，marshal 往返一致。
+- 产物 `data/script.fls` 24,268,322 B，SHA256 `fa3b7d751cdd749b29aac90dabf6405f41971e291b525bab5718ab57f10beb23`；
+  出货 ZIP（**只含脚本，不含布局**）24,193,655 B，
+  SHA256 `0b6724b397cd35fb82ad3a87525e6f4289931f4a2a522d76dfa56f749517d055`，
+  My Drive 根目录 https://drive.google.com/file/d/17P2hPXflgVm09pfawfjHVuO1-s_wierH/view
+  （上一轮含布局的 `registration_2027_layout.zip` 已移入回收站，避免拿错）。
+- **未验**：Windows 实机、这版客户端是否有 `GetColor()`、`iTeam` 的分组语义
+  （只按用户实测记「必须不同」，未逆出规则）。
+
+### 3.15.3 2026-10-23 用户实机确认 btn_back 消息号 + 两处「改哪里」的定位
+
+- **实机结论（来源：用户口述）**：`btn_back` 的 `iMsgID` 改到 **3** 后能回登录首頁。
+  协议页的消息号至此齐了：1=同意（进表单）、2=拒絕（回首頁）、3=返回（回首頁）。
+  脚本不写死：`_LayoutMsgId()` 读版式 `m_MsgID`，且「其余消息号」本来就回首頁，
+  所以 3、4… 都能用；唯一要避开 1（撞「同意」），撞号时日誌写
+  `terms WARN btn_back msgid=1 conflicts with agree`。代码只加注释，行为不变。
+- **协议正文的位置（回答用户）**：不在布局、不在本脚本。`agreement.dlg` 的
+  `loc_msg` 只是显示区；正文是 `script.fls` 的 **entry 1931**
+  （`script\data\servicedata.py`）的 **`SERVICE_MSG`**（本轮实测解出：11,602 B，
+  Big5，常量首字节为换行，首行 `#cd95927夢想世界遊戲服務條款#n`；`SERVICE_MSG2`
+  是另一套定型化契約範本）。`register.py` 的 `TERMS_FALLBACK` 只在 import 不到
+  `servicedata` 时生效，真机看不到。**改写正文时每行首字符会被 `[line[1:]]` 吃掉**
+  （原版 `CRegPanel1`/`CServiceMessageDialog` 同写法），所以每行仍要以 `#` 开头。
+- **注册页颜色的位置（回答用户）**：`tools/registration/register.py` 的
+  `COLOR_TEXT_WHITE = 16777215`（第 392 行附近）一个常量管四框 + `txt_Wrong`；
+  单独改某框可在布局里给锚点设色（`_LayoutColor()` 先读 `GetColor()`，非 0 优先）。
+  `linecolor=0` 为输入框线色，与登录页一致。
+- 两条「换正文」的路子（**未实施**，待用户选）：① 构建器加 `--terms <文件>`，
+  构建时替换 entry 1931 的 `SERVICE_MSG`（Big5 + 行首 `#` 由工具处理）；
+  ② 脚本优先读客户端目录下的纯文本（如 `agreement.txt`），有就用、没有才用
+  `servicedata`，以后改条款只改 txt、不必重打包。文档已写入
+  `tools/registration/TESTING_2027.md`（新增「协议页的正文在哪里」「注册页的颜色在哪里」两节）。
+
+### 3.15.4 2026-10-23 条款排版真 bug：反编译 `_[1]` 是列表推导累加器，不是切片
+
+用户问「协议页的内容在哪里改」，顺手核对 `_LoadTermsLines()` 的写法，反汇编发现
+**它一直是错的**（0.15 之前的老版也错）：
+
+- 反编译产物：`result = [_[1] for s in servicedata.SERVICE_MSG.split('\n')]`
+  （`CRegPanel1`、`CConfirm`、`loginin.CServiceMessageDialog` 三处同形）。
+- 2026-10-22 那版把 `_[1]` 当成「取第一个字符之后」，写成 `line[1:]`。
+- 反汇编 entry 4007 / 4806 的 `__init__` 实锤：`LOAD_CONST '#r'` → `BINARY_ADD`
+  → `LIST_APPEND`，真正的源码是 **`result = [s + '#r' for s in MSG.split('\n')]`**；
+  `_[1]` 是 **CPython 2.x 列表推导的隐藏累加器**（`STORE_FAST _[1]`）。
+- 后果（用户在真机上看到的就是这个）：条款**每行少第一个字**、且**没有 `#r`
+  换行标记**（8,000+ 字的条款挤成一片）。
+- 修法：新增 `_RichLines(lines) = [line + "#r" for line in lines]`；
+  `_LoadTermsLines()` / `_LoadConfirmLines()` 的**成功路径与兜底路径**都走它，
+  与 `mainpage._WriteTxtBox` 的富文本约定一致（每行自带换行标记）。
+  版本标记升到 **`build=2027-10-22c`**。
+- 回归：`harness` 三处条款断言改成 `#r` 语义（兜底、真实 `SERVICE_MSG`、
+  9b 对照组、确认框兜底字节长度 `[10,2,24,2,86]`）；新增
+  `test_terms_lines_get_native_line_break_marker` 死锁旧写法（`[1:] for line in`
+  不得出现在代码里、`_RichLines` 必须是 `line + "#r"`、两个 loader 各调用两次）。
+  `tools/registration` **46 项**通过，ruff 0；三套 harness 模式全过。
+- 产物 24,268,877 B，SHA256
+  `4c4cf71d357f43aa9e722a692280efee93a50710caeee24b694c765e5524e5e3`；
+  出货 ZIP（只含脚本）24,194,273 B，SHA256
+  `61de6279d42077e70ed14f8267c79db635b9a59574cf230203118f3baf601910`，
+  My Drive 根目录 https://drive.google.com/file/d/1Dflmw54c14CKDLEhRsnbkGapiXWDrKWf/view
+  （上一轮的 `registration_2027_layout_r2.zip` 已被这一版取代）。
+  构建仍只改 337/4007，337 差 9 字节，marshal 往返一致。
+- **未验**：真机上条款的实际排版（换行是否正常、首发字符是否恢复），需用户实测。
+  条款正文的**位置**不变：仍是 entry 1931 的 `servicedata.SERVICE_MSG`。
+
+### 3.15.5 2026-10-23 「只改某一个框的颜色」落在哪：lColor/lNormalColor vs CBox
+
+用户问「在布局里给锚点设色，改哪个属性」。全量核对仓库 11 个 `.dlg`：
+
+- 字色属性只有两种：**`lColor`**（`CTextFrame`/`CTextFrameEx`，值是 1~3 组 RGB，
+  如 `[255,255,255]`、`[91,255,226,0,73,80,162,208,254]`）与
+  **`lNormalColor`**（`CButton`，如 `[255,255,255]`）。**没有 `ICOLOR`**。
+- 本页五个锚点 `edt_account`/`edt_Pwd`/`edt_Pwd_1`/`edt_email`/`txt_Wrong`
+  在布局里都是 **`CBox`**，而这 11 个 `.dlg` 里**没有任何 CBox 带颜色属性**。
+- 脚本取色用原生 `GetColor()`，两处脚本证据：`dlgitembill1.CreateBookAmountEdit`
+  （`GetObject('txt_num').GetColor()` → `CEDIT` 的 color）、
+  `dlgloginqueue.CheckServer`（`oText.GetColor()` → 文字颜色参数）。
+  它读控件自己的字色属性，CBox 上取不到 ⇒ **用户在布局里加 `ICOLOR` 无效是符合证据的**，
+  不是配置写错。
+- 因此新增 `COLOR_TEXT_BY_ANCHOR = {}`（`register.py` 第 398 行附近），
+  `_LayoutColor()` 的优先级改为 **覆盖表 > 版式 `GetColor()` > 白字**，
+  日志分别是 `override=` / `layout=` / `fallback white`。默认空表 ⇒ 行为与 r3 完全一致，
+  **本轮不出新包**（用户要哪个框什么颜色，改一行再出）。
+- 布局侧的长远办法（**未验，不建议**）：把锚点控件类型从 `CBox` 换成 `CTextFrame`
+  并设 `lColor`，理论上 `GetColor()` 就能读出版式值；换类型对 `CCombPanel` 锚点查找
+  与 `CEDIT` 挂载的影响未知。
+- 回归：`harness` 新增第 12 节（覆盖表优先于版式色、其他框不受影响、富文本提示行同样生效、
+  日志 `override=`）；默认断言 `COLOR_TEXT_BY_ANCHOR == {}`；
+  `test_per_anchor_colour_override_is_first` 钉住「表 > GetColor > 白字」的源码顺序；
+  `tools/registration` **47 项**、ruff 0、三套 harness 模式全过。
+  构建仍只改 337/4007、337 差 9 字节（产物 24,269,052 B，未被用户替代前不出货）。
+
+### 3.15.6 2026-10-23 PR #75 AI 审查复核：3 条属实、全部已修（build=2027-10-22d）
+
+PR #75 收到两家机器人共 4 条行内评论（去重后 **3 条独立意见**），逐条核对源码后
+**3 条全部属实**，均已修复：
+
+1. **（Bug，gitar + CodeRabbit）读不到勾选状态时同意永远 False ⇒ 死锁。**
+   复现：`_LayoutCheck.__init__` 里 `IsSelected()` 抛异常 ⇒ `native=False`、
+   `state=False`；`_layout_check` 再 `Set(False)`；`_CheckClick()` 只读不翻，
+   于是 `m_Consent.Get()` 永远是 False，每次提交都被 `MSG_CONSENT` 打回、
+   五賬號也永远勾不上。旧 docstring 写「流程仍能走完」是**假的**。
+   修法：`_LayoutCheck` 增加三种读法候选 `_CHECK_READERS = ("IsSelected",
+   "GetSelect", "IsCheck")`（`IsSelected` 有实证，另两个只是同族兜底），
+   `Native()` 暴露是否读得到；`Toggle()` **仅在 `not Native()` 时**由
+   `_CheckClick` 调用（正常客户端仍然只读，绝不重复翻）；日志
+   `check ... ready=N via=IsSelected` / `fallback toggle`。
+   共用消息号 50 的原始版式还要知道点的是哪个：新增
+   `OnButtonEnter/OnButtonLeave`（契约见 `loginin.py`/`mainpage.py` 同名方法，
+   用 `btn.m_MsgID`）记录 `m_HoveredCheck`；认不出时默认当「五個賬號」，
+   宁可不翻同意（日志 `check click msgid=50 target unknown` 之外的兜底）。
+2. **（Functional，CodeRabbit）缺 `btn_isee` 时同意校验被跳过。**
+   旧写法 `if self.m_Consent is not None and not self.m_Consent.Get()`：锚点缺失
+   ⇒ 直接放行，与「未勾同意不得注册」冲突。修法：**fail-closed**——`m_Consent is
+   None` 也 `return self._Fail(LABEL_CONSENT, MSG_CONSENT)`，并写
+   `consent anchor missing: submit blocked`。代价：版式缺这个锚点时表单不可提交
+   （这是有意的，且日志/弹框都指得出来）。
+3. **（Quality，gitar + CodeRabbit nitpick）harness 第 11 节删 `GetColor` 后没恢复。**
+   第 12 节声称「覆盖表胜过版式色」，但那时 `GetColor()` 已不存在，实际只比到
+   「覆盖 vs 白字」，把优先级写反也能过。修法：`SAVED_GET_COLOR =
+   FakeObj.__dict__['GetColor']` 保存、第 11 节末恢复；并新增 12b 段「去掉覆盖后
+   同一锚点必须用回版式色 0x00FF00」，实测：不恢复时该断言确实失败。
+
+**回归**：harness 新增第 13 节（无 select API 的客户端：13a 交付版式 51/50 各自翻、
+13b 共用 50 靠 hover 认按钮，两条都能勾上同意并提交）、第 14 节（缺 `btn_isee` ⇒
+`MSG_CONSENT` + 空请求 + 提示小字 + 两条日志）、12b（版式色回归）；
+`tools/registration` **50 项**、ruff 0、wincompat 0/0/0；三套 harness 模式全过。
+三个新用例都用「把修复临时改回去」验证过会失败（不是空断言）。
+构建：只改 337/4007，337 差 9 字节，marshal 往返一致；产物 24,271,133 B，
+SHA256 `9cf8c5cd9cef340db3e3f49405e385a3713ee0cb28c137e4d3acd7a5cddd6bf6`。
+**未验**：真机（`build=2027-10-22d` 的日志标记）、退化客户端是否存在、
+hover 回调在按下前是否一定触发。
+
+**出货（d 包，替代 r3）**：`/home/user/reg2027-delivery.zip` 24,196,935 B，
+SHA256 `2b51dfddcf00f713d730a4a83c3c4b38b18837c5152c641f5c01c2579d7f8e87`
+（md5 `5fc71edbfb52b6f7a37ff8dee19d0e89`，`SHA256SUMS.txt` 3 条含 CRC 全过），
+My Drive 根目录 `registration_2027_layout_r4.zip`
+https://drive.google.com/file/d/1jqaHsNveZZCLu1A_slX0FTL3fo_4dSoF/view
+（上一轮 r3 `1Dflmw54…` 只有 c 版脚本，已被这一版取代）。
+包内只有 `data/script.fls` + 两份说明，未含任何布局。
+
+**定稿版式（用户 2026-10-23 在 `register2027.dlg` 里改的）**：`btn_fiveaccount`
+`iMsgID=50` / `iTeam=1`，`btn_isee` `iMsgID=51` / `iTeam=2`。脚本不读 `iTeam`，
+只按 `m_MsgID` 分派，而 `ID_FIVE_CHECK=50` / `ID_CONSENT_CHECK=51` 本来就是交付
+版式的号，所以**代码无需改动、build 仍是 d、d 包不用重打**。为把这条契约钉住：
+新增 unittest `test_check_msgids_match_delivered_layout`（AST 取两个常量）、
+harness 第 15 节（原生客户端 + 50/51：点 50 只动五账号、点 51 只动同意、提交走通、
+日志不得出现 `fallback toggle` / `target unknown`、`form checks shared_msgid=0`）。
+`tools/registration` **51 项**、ruff 0、三套 harness 模式全过；重编产物与 d 包
+**逐字节一致**（24,271,133 B / `9cf8c5cd…`），`cmp` 无差异。
+反向验证：把 `m_SharedCheckMsg` 的比较恒真 → 第 15 节立刻在该断言上失败。
+注：给 `register.py` 加行会让 `co_lnotab` 变、产物随之变（曾试过 +1 行注释，
+产物变成 `8e4f8541…`），所以这次把说明压回原来的两行注释，产物才保持
+与出货包一致——**改 `register.py` 的行数等于改出货哈希**。
+
 ### 3.16 独立脚本编辑器开工授权（2026-10-15）
 
 用户确认font1后“确实好了”，协议→表单这一步已实机通过，不外推全部控件/服务器验收。
@@ -1515,6 +1738,14 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-23 | 注册脚本 **定稿版式确认（iMsgID 50/51、iTeam 1/2）**：用户在本机 `register2027.dlg` 里把 `btn_fiveaccount` 定为 `iMsgID=50`/`iTeam=1`、`btn_isee` 定为 `iMsgID=51`/`iTeam=2`。与交付版式的消息号一致 ⇒ **脚本零改动、build 仍 d、d 包不重打**（重编产物与出货包逐字节相同，24,271,133 B / `9cf8c5cd…`）。新增 harness 第 15 节（原生客户端 50/51：点 50 只动五账号、点 51 只动同意、提交走通、日志无 `fallback toggle`/`target unknown`、`form checks shared_msgid=0`）与 unittest `test_check_msgids_match_delivered_layout`；`tools/registration` **51 项**、ruff 0、三套 harness 全过。另记：给 `register.py` 加/删行会改 `co_lnotab` 从而改变产物哈希，注释已压回原行数 |
+| 2026-10-23 | 注册脚本 **d 包出货（build=2027-10-22d）**：把 §3.15.6 的审查复核修复打成只含脚本的 ZIP，替代 r3。`/home/user/reg2027-delivery.zip` 24,196,935 B，SHA256 `2b51dfddcf00f713d730a4a83c3c4b38b18837c5152c641f5c01c2579d7f8e87`（md5 `5fc71edbfb52b6f7a37ff8dee19d0e89`，`SHA256SUMS.txt` 3 条含 CRC 全过）；My Drive 根目录 `registration_2027_layout_r4.zip` https://drive.google.com/file/d/1jqaHsNveZZCLu1A_slX0FTL3fo_4dSoF/view 。包内仅 `data/script.fls` + `README.txt` + `测试说明-TESTING.md`，不含布局。真机未验 |
+| 2026-10-23 | 注册脚本 **PR #75 AI 审查复核（build=2027-10-22d）**：4 条行内评论去重后 3 条**全部属实**并已修。① 读不到勾选状态时 `state` 永远 False ⇒ 同意门永远打不开、五账号勾不上（旧 docstring 的「流程仍能走完」是假的）——改为 `_CHECK_READERS` 三种读法候选 + `Native()`/`Toggle()`，**只在读不到时**由脚本翻；共用消息号 50 用 `OnButtonEnter/OnButtonLeave` 认按钮。② 缺 `btn_isee` 时旧代码跳过同意校验 ⇒ 改为 **fail-closed**（`MSG_CONSENT` + `consent anchor missing: submit blocked`）。③ harness 第 11 节删 `GetColor` 未恢复，第 12 节的「覆盖 > 版式色」其实没测到 ⇒ 保存/恢复 + 新增 12b「去掉覆盖后用回版式色」。新增 harness 13/14 节与 3 个静态用例，`tools/registration` **50 项**、ruff 0、wincompat 0/0/0；三处新用例均验证过「改回旧代码会失败」。构建只改 337/4007、337 差 9 字节 |
+| 2026-10-23 | 注册脚本 **颜色定位补记 + 单框覆盖表**：回答「布局里改哪个属性」。全量 11 个 `.dlg` 统计：字色属性只有 `lColor`（CTextFrame/CTextFrameEx，1~3 组 RGB）与 `lNormalColor`（CButton）；**没有 `ICOLOR`**。本页五个锚点都是 `CBox`，语料里没有任何 CBox 带颜色属性，而脚本用原生 `GetColor()`（`dlgitembill1`、`dlgloginqueue` 两处实证）⇒ 布局加属性读不出来，用户实测无效与证据一致。新增 `COLOR_TEXT_BY_ANCHOR = {}`，优先级 **覆盖表 > GetColor() > 白字**，日志 `override=`/`layout=`/`fallback white`；默认空表行为不变，**本轮不出包**。回归 `tools/registration` 47 项、ruff 0、三套 harness 模式全过；构建只改 337/4007、337 差 9 字节 |
+| 2026-10-23 | 注册脚本 **第三轮（build=2027-10-22c）**：修条款排版真 bug。用户问「协议内容在哪改」，核对时反汇编发现 `_LoadTermsLines` 一直是错的——反编译里的 `_[1]` 是 py2 列表推导的隐藏累加器（`STORE_FAST _[1]`），不是切片；原版实为 `[s + '#r' for s in SERVICE_MSG.split('\n')]`（`LOAD_CONST '#r'`+`BINARY_ADD` 实锤）。旧写法 `line[1:]` 会让条款**每行少第一个字、且没有换行**。新增 `_RichLines()` 统一补 `#r`，条款/确认框的成功与兜底路径都走它；版本标记升 `c`。回归：harness 条款断言改 `#r` 语义（确认框兜底行长 `[10,2,24,2,86]`）、新增死锁旧写法的静态用例，`tools/registration` 46 项、ruff 0、三套模式全过；构建只改 337/4007、337 差 9 字节。真机排版待验 |
+| 2026-10-23 | 注册脚本 **2027 版式第三轮（文档/注释）**：用户实机确认 `btn_back` 的 `iMsgID=3` 可回登录首頁（协议页消息号齐了：1 同意 / 2 拒絕 / 3 返回）。脚本仍从版式 `m_MsgID` 现读、其余消息号回首頁，只加注释不改行为。同轮回答两处定位：协议正文在 `script.fls` **entry 1931** 的 `servicedata.SERVICE_MSG`（11,602 B Big5，首行 `#cd95927…`；`loc_msg` 只是显示区；`TERMS_FALLBACK` 仅在 import 失败时生效；`[line[1:]]` 会吃掉每行首字符）；注册页颜色在 `register.py` 的 `COLOR_TEXT_WHITE=16777215`（或布局给锚点设色后由 `GetColor()` 读取）。「换正文」的两条可选路子（构建器 `--terms` / 读外部 txt）**未实施**，待用户选。文档改 `TESTING_2027.md`，未重编包、未开 PR |
+| 2026-10-22 | 注册脚本 **2027 版式第二轮（build=2027-10-22b）**：用户实机反馈三条，只改脚本不动布局。① 四框与 `txt_Wrong` 改白字——`.dlg` 里只是占位锚点，显示控件由 `CEDIT`/`CRICHTEXT` 另建，字色只认构造参数（旧代码写死 `0`＝黑，这也是加 `ICOLOR` 不生效的原因）；新增 `COLOR_TEXT_WHITE=16777215`（照登录页）与 `_LayoutColor()`（先读锚点 `GetColor()`，非 0 采用、否则白），删掉返回黑的 `_HintColor()`。② 协议页 `btn_back`（用户本机加）：消息号从原生 `m_MsgID` 现读，点击回登录首頁，撞号 1 时写警告且 1 仍走「同意」。③ `iTeam` 必须不同（用户实测，原稿 1/1 点不动），属布局侧；`register2027_msg.dlg` 不再随包发布。回归：三套模式全过、`tools/registration` 45 项、ruff 0、wincompat 0/0/0；构建只改 337/4007、337 差 9 字节、marshal 往返一致。Windows 实机与 `GetColor()` 是否存在待验 |
+| 2026-10-22 | 注册脚本 **2027 版式接线**：用户重做布局（`login_new/agreement.dlg`、`login_new/register2027.dlg`），`register.py` 按新版式重写接线——四框换 `edt_account`/`edt_Pwd`/`edt_Pwd_1`/`edt_email`，提示换 90×20 的 `txt_Wrong`，两个勾选（`btn_fiveaccount`/`btn_isee`）改走原生 `.dlg` 接口 `GetObject(...).IsSelected()/SetSelect()`，新增「未勾同意不得注册」前置校验。**不自校准翻转**：反汇编 entry 4806 `CLoginIn/OnMessage` 只读 `GetObject('chk_agree').IsSelected()`、`GetObject('btn_Protect').IsSelected()`，从不手动翻 ⇒ 引擎翻、脚本只读，共用消息号 50 也不再是问题（交付稿把同意改 51 消歧）。离线 CPython 2.5.6 桩件 13 组全过（两种点击顺序、共用 50、缺布局、缺 `FONT_EDIT`），`tools/registration` 43 项、ruff 0；构建器只改 337/4007，337 差 9 字节，marshal 往返一致、无网络调用名残留。**Windows 实机未验**，未开 PR。出货 ZIP `registration_2027_layout.zip` 24,195,048 B，SHA256 `1bb201ae1a6446f2836521e239374eacd95a1e75d26df3d09a76af06712a0a5c` |
 | 2026-10-21 | 文档：记录 **`mock_server_v2` 的 Windows 实机全链路**——连接→登录→选角→进游戏→NPC 对话→对话中传送地图。来源是**用户口述**，我方未复现（沙箱无 Windows 客户端/`mx.exe`/原始包），无抓包与日志；只写「该版本+该测试副本走通这条路径」，不据此宣称认证（密码摘要/请求 key 未校验）、事务/并发、反作弊或完整玩法。写入 `docs/MOCK_SERVER.md`（含三种服务对照表新增 v2 行）、`MOCK_SERVER_V2_README.md`（兼容性小节 + 实机记录）、根 `README.md` 组件表、本文件 §1/§2。 |
 | 2026-10-22 | UI 编辑器 **0.14.0**：「打开 / 保存 / 导入 / 导出」重新规划。原则是一个动词只干一件事：打开只从某处拿进来、保存只回它来的地方、另存为换地方存新的、导出副本另拿一份不动原件。文件菜单合成 `打开 ▸`（布局文件 / 布局目录 / 资源包 / 资源目录 / 最近打开）、`另存为 ▸`（新资源包 .fls / 散装布局 .dlg）、`导出副本 ▸`（布局原文件 / PNG 预览 / 控件素材）；工具栏 `打开▾ / 保存 / 另存为▾ / 导出副本▾`；选图窗四动作改为「把图片放进包 / 几张图组成按钮（拼名族）/ 从包里选图片 / 只填包外文件名」。保存语义改为第一次问一次输出包（默认 `interface_edited.fls`），之后 Ctrl+S 静默写回同一个包。`LayoutDocument` 新增 `origin_pack`，标题与状态栏常驻「来源 → 去处」。修四个真问题：`_save_to_pack` 的 `res_path` 未定义（首次保存必崩）、保存后标题滞后、最近打开同名文件不可区分、同一文件原地写回时谎报「改变 0 条」。新增 22 项回归，全套 **724 项**（723 通过、1 跳过、0 错误），ruff 0、wincompat 0/0/0 |
 | 2026-10-22 | UI 编辑器 **0.13.7**：按 PR #72 的 AI 审查逐条复核（20 条行内 + 3 条范围外 + 1 条 nitpick），只修属实项。代码修 11 处：九片子图提示保留 `top/left` 前缀、重挂图后缩略图重解、`probe_pieces` 不再重复数 `middle/middle`、拼接预览同时限宽 480 px、缺图不拼半张、改目录路径不重解预览、只写一个轴时按逐轴结果判 1:1、多帧整图用途措辞改为未核实、旧族会盖住新族时红字拦住、写包取消不再删旧目标文件；第 11 处是写包的 `pending_import`/`encoding` 改成显式参数（线程隐患）。文档修测试分类、9,310 引用计数、完整 SHA-256、目录探测范围与族类型优先级。新增 10 项回归，全套 **708 项**（705 通过、1 跳过、2 项基线），ruff 0、wincompat 0/0/0。逐条判定见 `docs/analysis/ai_review_audit_pr72_20261022.md` |

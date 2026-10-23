@@ -1,0 +1,59 @@
+show begin
+step=0 begin
+terms layout begin build=2027-10-22d
+terms layout ready
+msgid btn_back=7
+terms anchor begin
+terms anchor ready
+terms ready
+step=0 ready
+show ready
+terms msgid=1
+step=1 begin
+form layout begin
+form layout ready
+font FONT_EDIT
+form edit edt_account anchor begin
+form edit edt_account factory begin
+color edt_account fallback white
+form edit edt_account factory ready
+form edit edt_account ready
+form edit edt_Pwd anchor begin
+form edit edt_Pwd factory begin
+color edt_Pwd fallback white
+form edit edt_Pwd factory ready
+form edit edt_Pwd ready
+form edit edt_Pwd_1 anchor begin
+form edit edt_Pwd_1 factory begin
+color edt_Pwd_1 fallback white
+form edit edt_Pwd_1 factory ready
+form edit edt_Pwd_1 ready
+form edit edt_email anchor begin
+form edit edt_email factory begin
+color edt_email fallback white
+form edit edt_email factory ready
+form edit edt_email ready
+form tab begin
+form tab ready
+check btn_fiveaccount ready=0 via=IsSelected
+check btn_isee ready=0 via=IsSelected
+form checks shared_msgid=0
+font FONT_EDIT
+color txt_Wrong fallback white
+hint ready
+step=1 ready
+form msgid=50
+check five=1 consent=0
+form msgid=51
+check five=1 consent=1
+form msgid=51
+check five=1 consent=0
+form msgid=51
+check five=1 consent=1
+form msgid=50
+check five=0 consent=1
+form msgid=2
+submit start
+check done fail=False
+prepared count=1
+stub box shown
