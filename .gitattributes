@@ -1,3 +1,9 @@
 # Windows 批处理必须是 CRLF，无论在哪个平台 checkout（docs/PYTHON_TOOL_CONVENTIONS.md §3）。
 *.bat text eol=crlf
 *.cmd text eol=crlf
+
+# 两套 Windows 编译器的每个文件都被 manifest.json 钉了 SHA256。BUILD.json 与许可
+# 是文本文件，Windows 版 Git 开 core.autocrlf 时会把 LF 改成 CRLF，自检随即报
+# 「runtime文件SHA256不匹配：BUILD.json」（docs/STATUS.md §3.80）。
+# 声明为 binary，检出与提交都按字节原样处理，不做任何换行/编码转换。
+script_editor/runtimes/*/win-x86/** -text
