@@ -1914,6 +1914,7 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-23 | 脚本编辑器 **Windows 实机通过 + 修复脚本去 git 依赖**：用户在真实 Windows 上`检查内置编译器.bat` 通过，编辑器显示 `2/2可用`——两套内置编译器首次实机跑通（只编译/回读，不执行目标源码；EXE 与客户端加载仍未验）。§3.80 的修复脚本依赖 `git`，而用户机器上 git 不在 PATH（GitHub Desktop 自带但不导出）导致 `WinError 2`；改为纯标准库按清单校字节，只有「去掉 CR 后哈希恰好等于清单值」才写回，其余原样保留并点名；`检查内置编译器.bat` 失败时自动修一次再复查（用 `goto` 避开延迟展开）。`.gitattributes` 扩到 `script_editor/runtimes/** -text`。用例 9 项、ruff 0、wincompat 0/0，端到端在无 git 环境验证 12 个文件全修复。详见 §3.81 |
 | 2026-10-23 | 脚本编辑器 **Windows 换行致 SHA256 不匹配**：用户实机报`runtime文件SHA256不匹配：BUILD.json`。根因是 Windows 版 Git `core.autocrlf=true` 把 734 B 的 `BUILD.json` 检出成 751 B（CRLF），清单钉的是 LF 版。沙箱用 `core.autocrlf=true` 克隆复现一字不差。修法：`.gitattributes` 加 `script_editor/runtimes/*/win-x86/** -text`；新增 `repair_runtimes.py` 与双击入口 `修复编译器文件.bat`（只重写 runtimes 并逐文件复核）；`检查内置编译器.bat` 失败时提示该入口。端到端：CRLF→报错→修复→通过，ruff 0、wincompat 0/0、新用例 5/5。Windows 实机未验，详见 §3.80 |
 | 2026-10-23 | 脚本编辑器 **双内置编译器入库**：用户问「不能放进仓库吗」并同意，删 `script_editor/.gitignore` 的 `runtimes/**` 等三行，提交 20 个文件（23.4 MB，`.git` 约 +6.7 MB）；随同一固定源码重编，4 个 EXE/DLL 摘要变化（Zig 不逐位可复现），清单 `26b2fd28…` 同步；`audit --static` 20/20 SHA 通过、33 passed/2 skipped、repo_paths 5 项、wincompat 对新增文件 0 命中。§3.78 旧补丁包作废。Windows 实机未验，详见 §3.79 |
 | 2026-10-23 | 脚本编辑器 **双内置编译器补丁包**：自检报「不可用：runtime目录缺失或为符号链接」是 Git 检出不含 `runtimes/**` 二进制（`.gitignore` 排除），非代码缺陷。按 `build_runtimes.py`从固定官方源码重建两套 x86 编译器（源码 SHA256 全符），`audit --static` 逐文件 SHA/PE32 通过；出货 `MXSJ_runtimes_py25_py27_20261023.zip` 6,971,362 B / `a056564c…`，同步提交配套 `runtimes/manifest.json`。Windows 实机与执行验收未做，详见 §3.78 |
@@ -4171,3 +4172,44 @@ ruff 0；`check_windows_compat.py` 对本次文件 0 ERROR/0 WARNING；新用例
 **未验**：Windows 实机（本环境无 Windows）。用户侧仍需先双击 `修复编译器文件.bat`
 （或执行其等价命令），再重跑 `检查内置编译器.bat`，预期
 `"status": "windows-runtime-smoke-passed"` 且两 VM `compile-and-marshal-only-passed`。
+
+## 3.81 脚本编辑器：Windows 实机通过验收 + 修复脚本去掉 git 依赖（2026-10-23）
+
+**用户实机结果**：真实 Windows 上双击 `检查内置编译器.bat` 通过（`windows-runtime-smoke-passed`，
+真实编译并回读 marshal、不执行目标源码），编辑器状态栏显示 **`2/2可用`**。这是两套内置
+编译器第一次在真实 Windows 上跑通；用户未保存完整窗口文本，故此处只记录结论。
+仍未做：EXE 打包、游戏客户端加载这些模块的验收。
+
+**尾巴 1：`repair_runtimes.py` 不再依赖 git**。§3.80 的版本对 `script_editor/runtimes`
+执行 `git -c core.autocrlf=false checkout`，但用户机器上 **git 不在 PATH**（靠 GitHub Desktop
+拉取，它自带 git 却不导出），于是脚本第 5 行就 `FileNotFoundError: [WinError 2]`。
+现在改为纯标准库：
+- 读 `manifest.json`，逐文件算 SHA256；
+- 与清单不符且「去掉 CR 后」恰好等于清单值 ⇒ 写回 LF（**哈希相等即证明恢复的是原字节**）；
+- 仍不符 ⇒ 原样保留、点名报错、退出 2，**绝不猜测覆盖**；
+- 最后用 `load_bundle(...).verify()` 复核（PE32/文件集合/许可一并检查）。
+不调用 git、不联网、只改 `runtimes/` 内的文件。核心函数 `repair_files()` 与 `main()` 分离，
+便于测试。
+
+**尾巴 2：`检查内置编译器.bat` 失败自动修一次再复查**。原逻辑一次失败即报错；现在
+审计非 0 时先跑 `repair_runtimes.py`，再重跑审计，以第二次结果为最终结论并作为退出码。
+用 `goto` 而不是括号块，避开 `%ERRORLEVEL%` 延迟展开的坑；仍为 CRLF+纯 ASCII。
+
+**同时**：`.gitattributes` 的规则从 `script_editor/runtimes/*/win-x86/** -text` 扩到
+`script_editor/runtimes/** -text`，把 `manifest.json`、`README.md` 也纳入（`check-attr`
+四个样本路径均返回 `unset`）。`runtimes/README.md`、`M4_RUNTIME_DISTRIBUTION.md` 更新为
+“实机已通过”。
+
+**验证**：
+- 单元用例 `tests/test_runtime_checkout.py` 由 5 项扩到 **9 项**：属性规则、两个入口、
+  脚本源码不得出现 `subprocess`/`_git(`、两个 bat 为 CRLF+ASCII、检查脚本含自动重试、
+  **CRLF 假包修复后逐字节等于清单值**、**本来就对的文件不被重写（mtime 不变）**、
+  **真损坏拒绝覆盖并点名**、仓库自身 20 个文件零改动。
+- 端到端（沙箱）：把 `/tmp` 下的副本改成用户那种状态（12 个文本文件 CRLF、
+  `BUILD.json` 751 B）→ 自检复现 `runtime文件SHA256不匹配：BUILD.json` →
+  在 **PATH 里没有 git** 的环境跑 `repair_runtimes.py` → 12 个文件全部修复 →
+  自检恢复 `static-only`、`BUILD.json` 回到 734 B/LF。
+- ruff 0；`check_windows_compat.py` 对本次文件 0 ERROR / 0 WARNING；`test_runtime_bundles` 24/24。
+
+**未验**：本次改动未在 Windows 上重跑（沙箱无 Windows）；用户下次双击
+`检查内置编译器.bat` 即会走到「通过则直接结束」的分支，可顺带确认 bat 改动无误。

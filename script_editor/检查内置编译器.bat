@@ -15,8 +15,17 @@ if not defined PY (
 )
 %PY% -m script_editor.runtime_cli audit --root .
 set "RESULT=%ERRORLEVEL%"
+if "%RESULT%"=="0" goto done
+echo.
+echo [INFO] Bytes may have been rewritten by Git; checking and repairing ...
+%PY% repair_runtimes.py
+echo.
+echo [INFO] Re-checking ...
+%PY% -m script_editor.runtime_cli audit --root .
+set "RESULT=%ERRORLEVEL%"
+:done
 echo.
 if not "%RESULT%"=="0" echo [FAILED] Keep this error text. Do not replace runtimes with game DLLs.
-if not "%RESULT%"=="0" echo [HINT] If it says runtime file SHA256 mismatch, double-click the repair bat in this folder.
+if not "%RESULT%"=="0" echo [HINT] Send the last 10 lines to the maintainer; do not delete files.
 pause
 exit /b %RESULT%

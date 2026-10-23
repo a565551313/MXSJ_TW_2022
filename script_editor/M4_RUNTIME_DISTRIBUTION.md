@@ -1,6 +1,8 @@
 # M4 · Windows双运行时整套审计与发行检查（0.3.2.dev1）
 
-**已补齐真实Windows x86双编译器并纳入源码交付ZIP；Windows执行、GUI/EXE及客户端验收仍未完成。**
+**已补齐真实Windows x86双编译器并入库；2026-10-23 用户真实Windows上通过
+`检查内置编译器.bat`双编译/marshal验收、GUI显示`2/2可用`；EXE打包与游戏客户端
+加载验收仍未做。**
 官方CPython源码经Zig0.13.0交叉构建，2.5.6为156个core编译单元、2.7.13为178个，均0失败。
 4个EXE/DLL均为真实PE32/i386，不是合成测试PE；完整标准库、许可和SHA已齐。
 仅MinGW平台适配，compiler/opcode/marshal实现未改，不使用游戏DLL。
