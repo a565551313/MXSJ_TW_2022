@@ -82,143 +82,162 @@ CELL_NAMES: dict[int, str] = {
 }
 
 TOOL_SPECS: list[tuple[str, str, str]] = [
-    ("pan", "1 漫游检视", "1"),
-    ("cell_brush", "2 行走画笔", "2"),
-    ("cell_rect", "3 矩形填充", "3"),
-    ("cell_line", "4 直线绘制", "4"),
+    ("pan", "1 浏览", "1"),
+    ("cell_brush", "2 通行", "2"),
+    ("cell_rect", "3 矩形", "3"),
+    ("cell_line", "4 直线", "4"),
     ("cell_fill", "5 油漆桶", "5"),
-    ("light_brush", "6 光照画笔", "6"),
+    ("light_brush", "6 光照", "6"),
     ("path_sim", "7 A*寻路", "7"),
-    ("mask_select", "8 遮罩拾取", "8"),
+    ("mask_select", "8 遮罩", "8"),
 ]
 
-DARK_QSS = """
+STUDIO_QSS = """
 QMainWindow, QDialog {
-    background-color: #161920;
-    color: #e6eaf2;
+    background: #f2f5f7;
+    color: #263542;
 }
 QMenuBar {
-    background-color: #1c2029;
-    color: #e6eaf2;
-    border-bottom: 1px solid #2b3140;
-    padding: 2px 6px;
+    background: #ffffff;
+    color: #344653;
+    border-bottom: 1px solid #dce5e9;
+    padding: 5px 8px;
 }
+QMenuBar::item { padding: 6px 10px; border-radius: 5px; }
 QMenuBar::item:selected, QMenu::item:selected {
-    background-color: #2d5be3;
-    color: #ffffff;
+    background: #e3f3ef;
+    color: #126b60;
 }
 QMenu {
-    background-color: #1f2430;
-    color: #e6eaf2;
-    border: 1px solid #32394a;
+    background: #ffffff;
+    color: #344653;
+    border: 1px solid #dce5e9;
+    padding: 5px;
 }
+QMenu::item { padding: 7px 28px 7px 12px; border-radius: 4px; }
 QToolBar {
-    background-color: #1b1f28;
-    border-bottom: 1px solid #2b3140;
-    spacing: 4px;
-    padding: 4px 6px;
+    background: #ffffff;
+    border: none;
+    border-bottom: 1px solid #dce5e9;
+    spacing: 5px;
+    padding: 8px 10px;
 }
 QToolButton {
-    background-color: #252b38;
-    color: #dce2ee;
-    border: 1px solid #323a4c;
-    border-radius: 4px;
-    padding: 4px 9px;
+    background: #f4f7f8;
+    color: #425663;
+    border: 1px solid #e0e8eb;
+    border-radius: 7px;
+    padding: 7px 10px;
+    min-height: 22px;
 }
-QToolButton:hover {
-    background-color: #30384a;
-    border-color: #4b6cb7;
-}
+QToolButton:hover { background: #eaf4f2; border-color: #a9d3ca; }
 QToolButton:checked {
-    background-color: #2d5be3;
+    background: #137c70;
     color: #ffffff;
-    border-color: #5b86ff;
-    font-weight: bold;
+    border-color: #137c70;
+    font-weight: 600;
 }
 QPushButton {
-    background-color: #272e3d;
-    color: #e6eaf2;
-    border: 1px solid #384156;
-    border-radius: 4px;
-    padding: 5px 10px;
+    background: #ffffff;
+    color: #344653;
+    border: 1px solid #d4e0e4;
+    border-radius: 7px;
+    padding: 8px 12px;
+    min-height: 18px;
 }
-QPushButton:hover {
-    background-color: #333d52;
-    border-color: #5b86ff;
-}
-QPushButton:pressed {
-    background-color: #2447b8;
-}
+QPushButton:hover { background: #eff8f6; border-color: #8fc8bc; }
+QPushButton:pressed { background: #d8eee9; }
+QPushButton:default { background: #137c70; color: white; border-color: #137c70; }
 QLineEdit, QComboBox, QSpinBox, QTextEdit {
-    background-color: #12151c;
-    color: #e6eaf2;
-    border: 1px solid #31384a;
-    border-radius: 4px;
-    padding: 4px 6px;
+    background: #ffffff;
+    color: #263542;
+    border: 1px solid #d6e1e5;
+    border-radius: 7px;
+    padding: 7px 9px;
+    selection-background-color: #137c70;
+}
+QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QTextEdit:focus {
+    border: 1px solid #4da99a;
 }
 QTableWidget {
-    background-color: #13161e;
-    alternate-background-color: #181c26;
-    color: #e6eaf2;
-    gridline-color: #252b39;
-    border: 1px solid #2b3140;
-    selection-background-color: #2d5be3;
-    selection-color: #ffffff;
+    background: #ffffff;
+    alternate-background-color: #f7f9fa;
+    color: #344653;
+    gridline-color: #edf1f3;
+    border: 1px solid #e0e8eb;
+    border-radius: 8px;
+    selection-background-color: #dff1ed;
+    selection-color: #145c53;
 }
 QHeaderView::section {
-    background-color: #1f2430;
-    color: #a9b4c9;
+    background: #f4f7f8;
+    color: #60727c;
     border: none;
-    border-right: 1px solid #2b3140;
-    border-bottom: 1px solid #2b3140;
-    padding: 5px 6px;
-    font-weight: bold;
+    border-bottom: 1px solid #e0e8eb;
+    padding: 8px 7px;
+    font-weight: 600;
 }
 QTabWidget::pane {
-    border: 1px solid #2b3140;
-    background-color: #191d26;
+    border: 1px solid #dce5e9;
+    border-radius: 8px;
+    background: #ffffff;
+    top: -1px;
 }
 QTabBar::tab {
-    background-color: #1f2430;
-    color: #9aa5ba;
-    border: 1px solid #2b3140;
-    padding: 6px 10px;
-    margin-right: 2px;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
+    background: transparent;
+    color: #6f8089;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 9px 11px;
+    margin-right: 3px;
 }
 QTabBar::tab:selected {
-    background-color: #2d5be3;
-    color: #ffffff;
-    font-weight: bold;
+    color: #137c70;
+    border-bottom-color: #26a18e;
+    font-weight: 600;
 }
+QTabBar::tab:hover:!selected { color: #2f665e; background: #f2f8f7; }
 QGroupBox {
-    border: 1px solid #2c3344;
-    border-radius: 5px;
-    margin-top: 9px;
-    padding-top: 8px;
-    font-weight: bold;
-    color: #9db8ff;
+    border: 1px solid #e0e8eb;
+    border-radius: 9px;
+    margin-top: 12px;
+    padding: 12px 9px 8px;
+    font-weight: 600;
+    color: #3d5963;
+    background: #ffffff;
 }
 QGroupBox::title {
     subcontrol-origin: margin;
-    left: 9px;
-    padding: 0 4px;
+    left: 11px;
+    padding: 0 5px;
+    background: #ffffff;
 }
 QStatusBar {
-    background-color: #191d26;
-    color: #b8c2d6;
-    border-top: 1px solid #2b3140;
+    background: #ffffff;
+    color: #657780;
+    border-top: 1px solid #dce5e9;
+    padding: 3px 8px;
 }
-QCheckBox {
-    spacing: 5px;
-    color: #e4eaf5;
+QCheckBox { spacing: 7px; color: #465a64; padding: 3px; }
+QCheckBox::indicator { width: 16px; height: 16px; }
+QLabel { color: #3c505a; }
+QTableWidget::item { padding: 4px 5px; }
+QSplitter::handle { background: #e1e9ec; width: 5px; }
+QScrollArea { border: none; background: #ffffff; }
+QLabel#sectionTitle {
+    color: #243b46;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 3px 2px;
 }
-QLabel {
-    color: #d8e0ef;
-}
-QTableWidget::item {
-    padding: 2px 4px;
+QLabel#welcomeTitle { color: #183c43; font-size: 19px; font-weight: 700; }
+QLabel#mutedText { color: #71838b; line-height: 150%; }
+QLabel#tipBanner {
+    color: #22685e;
+    background: #eaf6f2;
+    border: 1px solid #cde8df;
+    border-radius: 7px;
+    padding: 9px;
 }
 """
 
@@ -253,7 +272,7 @@ def _install_cjk_fonts(app: QApplication, extra_dir: Path | None = None) -> None
     available = set(QFontDatabase.families())
     chosen = next((f for f in preferred if f in available), "")
     if chosen:
-        font = QFont(chosen, 9)
+        font = QFont(chosen, 10)
         font.setFamilies([f for f in preferred if f in available])
         app.setFont(font)
 
@@ -284,6 +303,7 @@ class MapCanvas(QWidget):
         super().__init__(parent)
         self.vm = vm
         self.setMouseTracking(True)
+        self.setToolTip("滚轮缩放；1 浏览后左键拖动，或按住鼠标中键平移画布")
         self.setMinimumSize(560, 420)
         self.zoom = 1.0
         self.offset = QPointF(0.0, 0.0)
@@ -420,12 +440,41 @@ class MapCanvas(QWidget):
         painter.fillRect(self.rect(), QColor(17, 20, 27))
         doc = self.vm.document
         if doc is None:
-            painter.setPen(QColor(150, 162, 184))
+            painter.fillRect(self.rect(), QColor("#f2f5f7"))
+            card_w = min(620.0, max(360.0, self.width() - 72.0))
+            card_h = 248.0
+            card = QRectF(
+                (self.width() - card_w) / 2,
+                (self.height() - card_h) / 2,
+                card_w,
+                card_h,
+            )
+            painter.setPen(QPen(QColor("#dce6e9"), 1.0))
+            painter.setBrush(QColor("#ffffff"))
+            painter.drawRoundedRect(card, 16.0, 16.0)
+            painter.setPen(QColor("#173f46"))
+            title_font = QFont(self.font())
+            title_font.setPointSize(20)
+            title_font.setBold(True)
+            painter.setFont(title_font)
             painter.drawText(
-                self.rect(),
+                QRectF(card.x() + 28, card.y() + 30, card.width() - 56, 38),
                 Qt.AlignmentFlag.AlignCenter,
-                "《夢想世界》地图编辑器 Studio v1.0\n\n"
-                "左侧双击任意地图打开，或使用“文件 → 选择客户端目录 / 新建编译地图”",
+                "先打开一张地图，开始探索",
+            )
+            painter.setFont(self.font())
+            painter.setPen(QColor("#647780"))
+            painter.drawText(
+                QRectF(card.x() + 34, card.y() + 82, card.width() - 68, 64),
+                Qt.AlignmentFlag.AlignCenter,
+                "从左侧选择客户端目录，或直接打开 .map 文件。\n"
+                "滚轮缩放画布；工具说明和新手步骤在右侧「快速开始」。",
+            )
+            painter.setPen(QColor("#188575"))
+            painter.drawText(
+                QRectF(card.x() + 30, card.y() + 169, card.width() - 60, 32),
+                Qt.AlignmentFlag.AlignCenter,
+                "安全提示：默认不会覆盖客户端原始地图",
             )
             return
 
@@ -1035,7 +1084,8 @@ class EditorWindow(QMainWindow):
         win_dims = list(self.vm.config.window)
         w = win_dims[0] if len(win_dims) >= 2 else 1420
         h = win_dims[1] if len(win_dims) >= 2 else 880
-        self.resize(max(w, 1380), max(h, 860))
+        self.resize(max(w, 1280), max(h, 780))
+        self.setMinimumSize(1100, 700)
 
         self._filtered_rows: list[MapRow] = []
         self._tool_actions: dict[str, QAction] = {}
@@ -1065,8 +1115,26 @@ class EditorWindow(QMainWindow):
         left = QWidget()
         left_lay = QVBoxLayout(left)
         left_lay.setContentsMargins(6, 6, 4, 6)
+        browse_title = QLabel("地图资源")
+        browse_title.setObjectName("sectionTitle")
+        left_lay.addWidget(browse_title)
+        self.root_hint = QLabel("先选择客户端目录，或打开单个 .map 文件")
+        self.root_hint.setObjectName("mutedText")
+        self.root_hint.setWordWrap(True)
+        left_lay.addWidget(self.root_hint)
+        root_actions = QHBoxLayout()
+        root_btn = QPushButton("选择客户端目录…")
+        root_btn.setToolTip("扫描客户端目录中的地图、脚本与资源")
+        root_btn.clicked.connect(self._pick_root)
+        file_btn = QPushButton("打开 .map 文件…")
+        file_btn.setToolTip("直接打开单张地图文件")
+        file_btn.clicked.connect(self._open_single_map_dialog)
+        root_actions.addWidget(root_btn)
+        root_actions.addWidget(file_btn)
+        left_lay.addLayout(root_actions)
         self.search_edit = QLineEdit()
-        self.search_edit.setPlaceholderText("搜索编号 / 场景名 / 現行 / 遮罩…")
+        self.search_edit.setPlaceholderText("搜索地图编号或名称…")
+        self.search_edit.setClearButtonEnabled(True)
         self.search_edit.textChanged.connect(self._populate_map_table)
         left_lay.addWidget(self.search_edit)
 
@@ -1090,11 +1158,12 @@ class EditorWindow(QMainWindow):
 
         # 2. Right panel: Multi-tab Inspector / Palette / Masks / Entities / Audit
         right = QTabWidget()
-        right.setMinimumWidth(330)
-        right.addTab(self._build_layers_palette_tab(), "图层与画笔")
-        right.addTab(self._build_masks_tab(), "前景遮罩")
-        right.addTab(self._build_entities_tab(), "NPC与寻路")
-        right.addTab(self._build_audit_tab(), "审计与扇区")
+        right.setMinimumWidth(350)
+        right.addTab(self._build_quickstart_tab(), "入门")
+        right.addTab(self._build_layers_palette_tab(), "编辑")
+        right.addTab(self._build_masks_tab(), "遮罩")
+        right.addTab(self._build_entities_tab(), "NPC/寻路")
+        right.addTab(self._build_audit_tab(), "审计")
         self.right_tabs = right
 
         splitter.addWidget(left)
@@ -1105,6 +1174,62 @@ class EditorWindow(QMainWindow):
         splitter.setStretchFactor(2, 0)
         splitter.setSizes([415, 725, 360])
         self.setCentralWidget(splitter)
+
+    def _build_quickstart_tab(self) -> QWidget:
+        page = QWidget()
+        lay = QVBoxLayout(page)
+        lay.setContentsMargins(14, 14, 14, 14)
+        lay.setSpacing(10)
+
+        title = QLabel("第一次使用？从这里开始")
+        title.setObjectName("welcomeTitle")
+        lay.addWidget(title)
+        intro = QLabel(
+            "地图编辑器用于查看与编辑客户端地图。原始地图默认受保护；"
+            "建议先另存为副本，再开始练习。"
+        )
+        intro.setObjectName("mutedText")
+        intro.setWordWrap(True)
+        lay.addWidget(intro)
+
+        actions = QGroupBox("打开地图")
+        action_lay = QVBoxLayout(actions)
+        client_btn = QPushButton("① 扫描客户端地图目录")
+        client_btn.setDefault(True)
+        client_btn.setToolTip("选择包含 map 文件夹的客户端目录")
+        client_btn.clicked.connect(self._pick_root)
+        single_btn = QPushButton("② 打开一张 .map 文件")
+        single_btn.clicked.connect(self._open_single_map_dialog)
+        new_btn = QPushButton("③ 新建地图 / 导入整张底图")
+        new_btn.clicked.connect(self._new_map_dialog)
+        action_lay.addWidget(client_btn)
+        action_lay.addWidget(single_btn)
+        action_lay.addWidget(new_btn)
+        lay.addWidget(actions)
+
+        steps = QGroupBox("最常用的操作")
+        step_lay = QVBoxLayout(steps)
+        step_text = QLabel(
+            "<b>浏览地图</b>：左侧点选地图；滚轮缩放，选顶部「1 浏览」后左键拖动，"
+            "或用鼠标中键拖动。<br><br>"
+            "<b>修改通行格</b>：顶部点「2 通行」，右侧「编辑工具」选择格子类型，"
+            "在画布按住左键涂抹；右键擦除为可行走。<br><br>"
+            "<b>撤销 / 重做</b>：Ctrl+Z / Ctrl+Y。<br><br>"
+            "<b>保存副本</b>：按 Ctrl+Shift+S 选择新文件名。严格保护模式下，"
+            "不会覆盖客户端原图。<br><br>"
+            "<b>遮罩、NPC、寻路、光照</b>：分别到右侧对应页签；悬停按钮可看说明。"
+        )
+        step_text.setWordWrap(True)
+        step_text.setTextFormat(Qt.TextFormat.RichText)
+        step_lay.addWidget(step_text)
+        lay.addWidget(steps)
+
+        safety = QLabel("提示：先「另存为」练习副本 · 状态栏会显示当前工具与地图状态")
+        safety.setObjectName("tipBanner")
+        safety.setWordWrap(True)
+        lay.addWidget(safety)
+        lay.addStretch(1)
+        return page
 
     def _build_layers_palette_tab(self) -> QWidget:
         page = QWidget()
@@ -1198,7 +1323,7 @@ class EditorWindow(QMainWindow):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setStyleSheet("QScrollArea, QWidget { background-color: #191d26; }")
+        scroll.setStyleSheet("QScrollArea, QWidget { background-color: #ffffff; }")
         scroll.setWidget(page)
         return scroll
 
@@ -1341,9 +1466,11 @@ class EditorWindow(QMainWindow):
         self.save_act = QAction("保存地图 (.map)…", self)
         self.save_act.setShortcut(QKeySequence.StandardKey.Save)
         self.save_act.triggered.connect(self._save_map_smart)
+        self.save_act.setToolTip("保存当前编辑；默认保护客户端原图，建议另存为副本")
         file_menu.addAction(self.save_act)
 
-        save_as_act = QAction("另存为 (.map)…", self)
+        save_as_act = QAction("另存为…", self)
+        save_as_act.setToolTip("将当前地图另存为新的 .map 文件")
         save_as_act.setShortcut(QKeySequence("Ctrl+Shift+S"))
         save_as_act.triggered.connect(self._save_map_as_dialog)
         file_menu.addAction(save_as_act)
@@ -1398,13 +1525,18 @@ class EditorWindow(QMainWindow):
         one_act.triggered.connect(self._set_zoom_100)
         view_menu.addAction(one_act)
 
+        help_menu = self.menuBar().addMenu("帮助(&H)")
+        guide_act = QAction("打开快速开始指南", self)
+        guide_act.setShortcut(QKeySequence("F1"))
+        guide_act.triggered.connect(lambda: self.right_tabs.setCurrentIndex(0))
+        guide_act.setStatusTip("显示地图编辑的基本操作和安全提示")
+        help_menu.addAction(guide_act)
+
         # Main Studio Toolbar
         tb = QToolBar("主工具栏")
         tb.setMovable(False)
         self.addToolBar(tb)
-        tb.addAction(open_dir)
-        tb.addAction(new_map_act)
-        tb.addAction(save_as_act)
+        tb.addAction(self.save_act)
         tb.addSeparator()
         tb.addAction(self.undo_act)
         tb.addAction(self.redo_act)
@@ -1412,8 +1544,20 @@ class EditorWindow(QMainWindow):
 
         tool_group = QActionGroup(self)
         tool_group.setExclusive(True)
+        tool_help = {
+            "pan": "浏览与平移画布；左键拖动，滚轮缩放（快捷键 1）",
+            "cell_brush": "左键绘制选中的通行格，右键擦除为可行走（快捷键 2）",
+            "cell_rect": "拖拽框选区域并填入当前通行格类型（快捷键 3）",
+            "cell_line": "拖拽绘制一条通行格直线（快捷键 4）",
+            "cell_fill": "点击区域进行连续油漆桶填充（快捷键 5）",
+            "light_brush": "绘制动态光照；8 为标准亮度（快捷键 6）",
+            "path_sim": "在画布点击起点与终点，模拟角色寻路（快捷键 7）",
+            "mask_select": "选择或拖动前景遮罩；详情见右侧「前景遮罩」（快捷键 8）",
+        }
         for key, label, shortcut in TOOL_SPECS:
             act = QAction(label, self)
+            act.setToolTip(tool_help[key])
+            act.setStatusTip(tool_help[key])
             act.setCheckable(True)
             act.setShortcut(QKeySequence(shortcut))
             if key == self.vm.state.active_tool:
@@ -1503,6 +1647,9 @@ class EditorWindow(QMainWindow):
                 path, progress=lambda m: self.statusBar().showMessage(m)
             )
             self._populate_map_table()
+            self.root_hint.setText(
+                f"已扫描：{path} · {self.vm.state.map_count} 张地图"
+            )
         except DiscoveryError as exc:
             QMessageBox.warning(self, "未找到地图", str(exc))
             self._refresh_status()
@@ -2026,7 +2173,7 @@ class EditorWindow(QMainWindow):
 def run(vm: EditorViewModel) -> int:
     app = QApplication.instance() or QApplication([])
     assert isinstance(app, QApplication)
-    app.setStyleSheet(DARK_QSS)
+    app.setStyleSheet(STUDIO_QSS)
     _install_cjk_fonts(
         app, Path(vm.config.client_root) if vm.config.client_root else None
     )

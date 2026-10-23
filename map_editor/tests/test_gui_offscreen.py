@@ -35,11 +35,11 @@ class TestEditorGuiOffscreen(unittest.TestCase):
         global _APP_KEEPALIVE
         from map_editor.client.config import Config
         from map_editor.ui.viewmodel import EditorViewModel
-        from map_editor.ui.widgets import DARK_QSS, EditorWindow, _install_cjk_fonts
+        from map_editor.ui.widgets import STUDIO_QSS, EditorWindow, _install_cjk_fonts
 
         app = QApplication.instance() or QApplication([])
         _APP_KEEPALIVE = app
-        app.setStyleSheet(DARK_QSS)
+        app.setStyleSheet(STUDIO_QSS)
         _install_cjk_fonts(app)
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -85,7 +85,7 @@ class TestEditorGuiOffscreen(unittest.TestCase):
             self.assertEqual((shot1.width(), shot1.height()), (1540, 940))
 
             # Switch to mask preview tab and audit tab to exercise every tab render
-            win.right_tabs.setCurrentIndex(1)
+            win.right_tabs.setCurrentIndex(2)
             app.processEvents()
             shot2 = win.grab()
             self.assertEqual((shot2.width(), shot2.height()), (1540, 940))
@@ -95,7 +95,7 @@ class TestEditorGuiOffscreen(unittest.TestCase):
                 shot_dir.mkdir(parents=True, exist_ok=True)
                 shot1.save(str(shot_dir / "workbench_main.png"))
                 shot2.save(str(shot_dir / "workbench_masks.png"))
-                win.right_tabs.setCurrentIndex(2)
+                win.right_tabs.setCurrentIndex(3)
                 app.processEvents()
                 win.grab().save(str(shot_dir / "workbench_entities.png"))
 
