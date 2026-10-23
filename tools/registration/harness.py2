@@ -240,10 +240,22 @@ mod('netlogin', C2SConfirmRegInfo=lambda: EVENTS.append(('C2SConfirmRegInfo',)))
 mod('selectrole', g_SelectRoleDlg=None)
 mod('dc_error_code', ERROR_MSG={})
 
-if not os.path.isdir('photo'):
-    os.mkdir('photo')
+# register.py 里的 _Diag() 写的是 Windows 路径 "photo\\register_diag.txt"。
+# 在 Linux/POSIX 上反斜杠只是普通字符，于是会就地生成一个**文件名带反斜杠**
+# 的文件——2026-10-23 就是这样被 `git add -A` 扫进仓库，Windows 检出直接报
+# `error: invalid_path 'tools/registration/photo\register_diag.txt'`。
+# 所以这里先切到 out/harness（已在 .gitignore 里），日志只落在那里；
+# 相对路径 photo\register_diag.txt 全部照旧可读，不必改测试正文。
+_HARNESS_DIR = os.path.dirname(os.path.abspath(__file__))
+# 先把被执行的 .pyc 定位成绝对路径，再 chdir（相对的 argv 也照此解析）。
 code_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), 'out', 'register_compiled.pyc')
+    _HARNESS_DIR, 'out', 'register_compiled.pyc')
+code_path = os.path.abspath(code_path)
+_WORKDIR = os.environ.get('MXSJ_HARNESS_WORKDIR') or os.path.join(
+    _HARNESS_DIR, 'out', 'harness')
+if not os.path.isdir(_WORKDIR):
+    os.makedirs(_WORKDIR)
+os.chdir(_WORKDIR)
 source = open(code_path, 'rb')
 code = marshal.loads(source.read()[8:])
 source.close()
