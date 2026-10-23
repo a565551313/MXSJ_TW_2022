@@ -141,8 +141,21 @@ class RegistrationLayoutsTest(unittest.TestCase):
             for node in ast.walk(tree)
             if isinstance(node, ast.Attribute)
         }
-        self.assertIn("IsSelected", attrs)
         self.assertIn("SetSelect", attrs)
+        # 2026-10-23 审查后：读状态走 getattr(obj, reader) 候选表，
+        # 所以方法名在字符串常量里（_CHECK_READERS），不在属性节点上。
+        readers = next(
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Assign)
+            and any(
+                isinstance(target, ast.Name) and target.id == "_CHECK_READERS"
+                for target in node.targets
+            )
+        )
+        self.assertEqual(
+            ast.literal_eval(readers.value), ("IsSelected", "GetSelect", "IsCheck")
+        )
         source = (HERE / "register.py").read_text(encoding="utf-8")
         self.assertIn('_layout_check("btn_fiveaccount")', source)
         self.assertIn('_layout_check("btn_isee")', source)
@@ -283,6 +296,101 @@ class RegistrationLayoutsTest(unittest.TestCase):
             "def _CreateFormEdit", 1
         )[0]
         self.assertIn("return COLOR_TEXT_WHITE", after_fallback)
+
+    def test_consent_gate_fails_closed_without_anchor(self):
+        """版式缺 btn_isee 时必须挡住提交（用户口径：未勾同意不得注册）。
+
+        2026-10-23 PR #75 审查指出：旧写法 `m_Consent is not None and not Get()`
+        在锚点缺失时直接跳过同意校验，等于放行。
+        """
+        tree = ast.parse((HERE / "register.py").read_text(encoding="utf-8"))
+        func = next(
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.FunctionDef) and node.name == "DoCheck"
+        )
+        # DoCheck 里必须同时有 `is None` 分支与 `not ...Get()` 分支，且都返回提示。
+        compares = [
+            node
+            for node in ast.walk(func)
+            if isinstance(node, ast.Compare)
+            and any(isinstance(op, ast.Is) for op in node.ops)
+        ]
+        self.assertTrue(compares, "DoCheck must branch on m_Consent is None")
+        returns = [
+            node
+            for node in ast.walk(func)
+            if isinstance(node, ast.Return) and node.value is not None
+        ]
+        self.assertGreaterEqual(len(returns), 2)
+        # 缺锚点的分支必须先于「已勾则通过」的判断：源码里 is None 出现在 Get() 之前。
+        source = ast.get_source_segment(
+            (HERE / "register.py").read_text(encoding="utf-8"), func
+        )
+        self.assertLess(
+            source.index("m_Consent is None"),
+            source.index("m_Consent.Get()"),
+        )
+        self.assertIn(
+            "consent anchor missing",
+            (HERE / "register.py").read_text(encoding="utf-8"),
+        )
+
+    def test_fallback_toggle_only_when_native_read_missing(self):
+        """读不到勾选状态时脚本才自己翻；正常客户端绝不再翻一次。"""
+        tree = ast.parse((HERE / "register.py").read_text(encoding="utf-8"))
+        classes = {
+            node.name: node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ClassDef)
+        }
+        check_cls = classes["_LayoutCheck"]
+        methods = {
+            node.name: node
+            for node in check_cls.body
+            if isinstance(node, ast.FunctionDef)
+        }
+        self.assertIn("Toggle", methods)
+        self.assertIn("Native", methods)
+        # Toggle 只改脚本自己的状态，不得调用 SetSelect（那是引擎的活）。
+        toggle_src = ast.get_source_segment(
+            (HERE / "register.py").read_text(encoding="utf-8"), methods["Toggle"]
+        )
+        self.assertNotIn("SetSelect", toggle_src)
+        form_cls = classes["CRegFormPanel"]
+        form_methods = {
+            node.name: node
+            for node in form_cls.body
+            if isinstance(node, ast.FunctionDef)
+        }
+        click_src = ast.get_source_segment(
+            (HERE / "register.py").read_text(encoding="utf-8"),
+            form_methods["_CheckClick"],
+        )
+        # 翻转必须挂在 Native() 的否定分支下。
+        self.assertIn("not target.Native()", click_src)
+        self.assertIn("target.Toggle()", click_src)
+        # 共用消息号时靠 hover 认按钮：两个回调都要在。
+        self.assertIn("OnButtonEnter", form_methods)
+        self.assertIn("OnButtonLeave", form_methods)
+
+    def test_harness_restores_get_color_before_priority_section(self):
+        """harness 第 11 节删掉 GetColor 后必须还原，否则第 12 节测不到优先级。"""
+        source = (HERE / "harness.py2").read_text(encoding="utf-8")
+        self.assertIn("SAVED_GET_COLOR = FakeObj.__dict__['GetColor']", source)
+        self.assertLess(
+            source.index("SAVED_GET_COLOR = FakeObj.__dict__['GetColor']"),
+            source.index("del FakeObj.GetColor"),
+        )
+        self.assertGreater(
+            source.index("FakeObj.GetColor = SAVED_GET_COLOR"),
+            source.index("del FakeObj.GetColor"),
+        )
+        # 第 12 节之后还有一次「去掉覆盖后必须用回版式色」的断言。
+        self.assertGreater(
+            source.index("edits12b['edt_Pwd'] == 0x00FF00"),
+            source.index("FakeObj.GetColor = SAVED_GET_COLOR"),
+        )
 
     def test_per_anchor_colour_override_is_first(self):
         """「只改某一个框」的落点是 COLOR_TEXT_BY_ANCHOR；版式属性只是次选。

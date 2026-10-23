@@ -515,7 +515,7 @@ class CRegTermsPanel(combdialog.CCombPanel):
     def __init__(self, parent):
         # 換版式後日誌第一行帶版本標記：用戶只看這一行就能確認新腳本已生效。
         # 尾碼 b = 第二輪（白字 + btn_back）。
-        _Diag("terms layout begin build=2027-10-22c")
+        _Diag("terms layout begin build=2027-10-22d")
         combdialog.CCombPanel.__init__(self, parent, DLG_TERMS)
         _Diag("terms layout ready")
         # btn_back 是用戶在 agreement.dlg 本機加的，消息號以版式為準；
@@ -635,18 +635,27 @@ def _LayoutMsgId(parent, name):
         return None
 
 
+# 原生讀勾選狀態的方法名，按順序試。IsSelected 有實證（loginin.py 讀
+# chk_agree / btn_Protect）；另兩個只是「同一族控件可能叫別的名字」的兜底，
+# 存在就用、不存在也不報錯。
+_CHECK_READERS = ("IsSelected", "GetSelect", "IsCheck")
+
+
 class _LayoutCheck(object):
     """版式裡的勾選按鈕（用戶從登錄頁整塊複製的三態按鈕）。
 
     原生 .dlg 勾選是``GetObject(name).IsSelected() / SetSelect(bool)``，
     而且**引擎自己負責翻轉**——實機走通的 loginin.py（entry 4806）在
     OnMessage 裡只讀 ``GetObject('chk_agree').IsSelected()``，從不自己翻；
-    它還同時讀 ``btn_Protect``，說明多個勾選框互不排斥。所以這裡照抄：
+    它還同時讀 ``btn_Protect``，說明多個勾選框互不排斥。所以正常情況下：
     點擊消息只用來刷新提示，狀態一律問引擎要，腳本絕不手動翻（手動翻會和
     引擎各翻一次＝看起來沒反應）。
 
-    某版客戶端若沒有這兩個方法，就退回腳本自己記狀態（界面上不會變，
-    但流程仍能走完），並把退化寫進日誌，不讓整頁開不起來。
+    讀不到狀態的客戶端（IsSelected/GetSelect/IsCheck 全都沒有，或調用即拋）：
+    引擎給不出狀態，腳本只能自己記——此時 `Native()` 為 False，點擊由
+    `Toggle()` 翻腳本自己的狀態，並寫 `fallback toggle` 日誌。**不這樣做的話
+    `state` 會永遠是 False**，同意門檻會把每一次提交都打回、五賬號也永遠勾不上
+    （2026-10-23 PR #75 審查指出：舊版 docstring 說「流程仍能走完」是假的）。
     """
 
     def __init__(self, obj, name):
@@ -654,25 +663,58 @@ class _LayoutCheck(object):
         self.name = name
         self.native = False
         self.state = False
-        try:
-            self.state = bool(obj.IsSelected())
-            self.native = True
-            _Diag("check %s ready=%d" % (name, int(self.state)))
-        except Exception:
+        self.reader = None
+        reader = self._ReadNative()
+        if reader is None:
             _Diag("check %s read api missing" % name)
+        else:
+            self.native = True
+            self.reader = reader
+            _Diag("check %s ready=%d via=%s" % (name, int(self.state), reader))
+        self.msgid = self._ReadMsgId()
+
+    def _ReadNative(self):
+        """返回真正讀成功的方法名；一個都沒有就返回 None。"""
+        for reader in _CHECK_READERS:
+            try:
+                func = getattr(self.obj, reader)
+            except Exception:
+                continue
+            try:
+                self.state = bool(func())
+                return reader
+            except Exception:
+                _Diag("check %s reader failed=%s" % (self.name, reader))
+        return None
+
+    def _ReadMsgId(self):
+        """版式裡這個按鈕自己的消息號；兩個勾選共用同一號時要靠它判歧義。"""
+        try:
+            return self.obj.m_MsgID
+        except Exception:
+            return None
+
+    def Native(self):
+        return self.native
 
     def Get(self):
         if self.native:
             try:
-                self.state = bool(self.obj.IsSelected())
+                # 用初始化時真正讀成功的那個方法（IsSelected / GetSelect / IsCheck）。
+                self.state = bool(getattr(self.obj, self.reader)())
                 return self.state
             except Exception:
+                # 這個方法中途不可用了：把三種讀法重新試一遍，都不行才退化。
+                reader = self._ReadNative()
+                if reader is not None:
+                    self.reader = reader
+                    return self.state
                 _Diag("check %s read failed" % self.name)
                 self.native = False
         return self.state
 
     def Set(self, flag):
-        """只在初始化/腳本主動改模式時用；點擊一律交給引擎。"""
+        """初始化/腳本主動改模式時用；正常情況下點擊一律交給引擎。"""
         self.state = bool(flag)
         if self.native:
             try:
@@ -680,6 +722,15 @@ class _LayoutCheck(object):
             except Exception:
                 _Diag("check %s write api missing" % self.name)
                 self.native = False
+
+    def Toggle(self):
+        """**只在 Native() 為 False 時用**：引擎給不出狀態，腳本自己翻。
+
+        正常客戶端（能讀 IsSelected）絕不會走到這裡——那邊再翻一次就是
+        「點一下等於沒點」的老問題。
+        """
+        self.Set(not self.state)
+        _Diag("check %s fallback toggle=%d" % (self.name, int(self.state)))
 
 
 class CRegFormPanel(combdialog.CCombPanel):
@@ -718,9 +769,20 @@ class CRegFormPanel(combdialog.CCombPanel):
         self.m_EmailEdit.SetNextEdit(self.m_AccountEdit)
         _Diag("form tab ready")
         # 勾選框直接來自版式。缺了也不能讓整頁開不起來：
-        # 五個賬號取不到就當「沒勾」，同意框取不到就不拿它當前置條件。
+        # 五個賬號取不到就當「沒勾」；同意框取不到則**一律不讓提交**
+        # （用戶口徑：未勾同意不得註冊，見 DoCheck）。
         self.m_FiveCheck = self._layout_check("btn_fiveaccount")
         self.m_Consent = self._layout_check("btn_isee")
+        # 兩個勾選在原始版式裡共用同一個消息號 50，那時只能靠「滑鼠停在哪個
+        # 按鈕上」認出點的是哪個（引擎會調 OnButtonEnter/OnButtonLeave）。
+        self.m_HoveredCheck = None
+        self.m_SharedCheckMsg = (
+            self.m_FiveCheck is not None
+            and self.m_Consent is not None
+            and self.m_FiveCheck.msgid is not None
+            and self.m_FiveCheck.msgid == self.m_Consent.msgid
+        )
+        _Diag("form checks shared_msgid=%d" % int(self.m_SharedCheckMsg))
         self.m_Hint = self._create_hint(C_object)
         self.m_RegistrationRequests = []
         # 只有日後真實請求送出時才可設置 pending；留樁不設置，不能假報成功。
@@ -797,7 +859,13 @@ class CRegFormPanel(combdialog.CCombPanel):
 
     def DoCheck(self):
         """校验通过返回 None，否则返回要提示的文案（口径同旧版 DoCheck）。"""
-        if self.m_Consent is not None and not self.m_Consent.Get():
+        # 用戶口徑：未勾「同意用戶協議和註冊條款」不得註冊。
+        # 版式缺這個錨點時也一樣擋（fail-closed）：沒有控件＝沒有同意，
+        # 不能因為讀不到就當作已同意。日誌會留下 anchor missing，便於定位。
+        if self.m_Consent is None:
+            _Diag("consent anchor missing: submit blocked")
+            return self._Fail(LABEL_CONSENT, MSG_CONSENT)
+        if not self.m_Consent.Get():
             return self._Fail(LABEL_CONSENT, MSG_CONSENT)
         account = self.m_AccountEdit.GetText()
         register_five = self.IsRegisterFive()
@@ -893,12 +961,49 @@ class CRegFormPanel(combdialog.CCombPanel):
         _Diag("registration complete count=%d" % len(expected))
         return True
 
-    def _CheckClick(self):
-        """勾選框被點了一下：引擎已經翻過了，我們只按新狀態刷新提示。
+    def OnButtonEnter(self, btn):
+        """記住滑鼠停在哪个勾選按鈕上（引擎把按鈕對象傳進來）。
 
-        兩個勾選框共用同一個消息號（舊版式都是 50）也不影響——這裡不需要
-        知道點的是哪個，把五個賬號模式的提示與位數上限重算一遍就行。
+        契約有實證：loginin.py / mainpage.py 的 `OnButtonEnter(self, btn)`
+        就是拿 `btn.m_MsgID`、`btn.m_tips` 用的。只有在「兩個勾選共用同一個
+        消息號 + 客戶端讀不到勾選狀態」這種退化組合下才會用到它。
         """
+        self._TrackButton(btn)
+
+    def OnButtonLeave(self, btn):
+        self._TrackButton(btn, leaving=True)
+
+    def _TrackButton(self, btn, leaving=False):
+        try:
+            for check in (self.m_FiveCheck, self.m_Consent):
+                if check is not None and check.obj is btn:
+                    self.m_HoveredCheck = None if leaving else check
+                    return
+        except Exception:
+            _DiagFailure("track button")
+
+    def _PickClickedCheck(self, msgid):
+        """判斷點的是哪個勾選；認不出就返回 None（只會少翻，不會亂翻）。"""
+        if msgid == ID_CONSENT_CHECK and self.m_Consent is not None:
+            return self.m_Consent
+        if msgid == ID_FIVE_CHECK and self.m_FiveCheck is not None:
+            if self.m_SharedCheckMsg:
+                return self.m_HoveredCheck or self.m_FiveCheck
+            return self.m_FiveCheck
+        return self.m_HoveredCheck
+
+    def _CheckClick(self, msgid):
+        """勾選框被點了一下。
+
+        正常客戶端：引擎已經翻過了，我們只按新狀態刷新提示（絕不再翻一次）。
+        讀不到狀態的退化客戶端：引擎給不出狀態，由 `Toggle()` 翻腳本自己的
+        狀態，否則同意門檻與五賬號模式會永遠停在「沒勾」。
+        """
+        target = self._PickClickedCheck(msgid)
+        if target is not None and not target.Native():
+            target.Toggle()
+        elif target is None:
+            _Diag("check click msgid=%s target unknown" % (msgid,))
         _Diag("check five=%d consent=%d" % (
             int(self.IsRegisterFive()),
             int(self.m_Consent is not None and self.m_Consent.Get()),
@@ -914,7 +1019,7 @@ class CRegFormPanel(combdialog.CCombPanel):
         elif msgid == 2:
             self.DoSubmit()
         elif msgid == ID_FIVE_CHECK or msgid == ID_CONSENT_CHECK:
-            self._CheckClick()
+            self._CheckClick(msgid)
         else:
             _Diag("form msgid unhandled")
         return True

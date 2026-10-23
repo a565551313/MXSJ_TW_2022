@@ -14,6 +14,9 @@ BROKEN_FORM = [False]  # 第 10 節拿來模擬「版式沒導入」的世界
 TOGGLE_AFTER = [False]
 # 版式錨點的屬性（顏色 / 消息號）；每節測試前可改，建面板時讀。
 LAYOUT_PROPS = {'btn_back': {'msgid': 7}}
+# 第 13/14 節用：模擬「讀不到勾選狀態」的客戶端與「缺錨點」的版式。
+NO_SELECT_API = [False]
+MISSING_ANCHORS = set()
 
 
 def mod(name, **attrs):
@@ -75,9 +78,14 @@ class FakeCheck(FakeObj):
         self.selected = bool(selected)
 
     def IsSelected(self):
+        # NO_SELECT_API = 這版客戶端根本沒有原生勾選讀寫接口（第 13 節）。
+        if NO_SELECT_API[0]:
+            raise AttributeError('IsSelected')
         return self.selected
 
     def SetSelect(self, flag):
+        if NO_SELECT_API[0]:
+            raise AttributeError('SetSelect')
         self.selected = bool(flag)
         EVENTS.append(('SetSelect', self.name, self.selected))
 
@@ -139,12 +147,16 @@ class FakePanel(object):
                                              color=props.get('color', 0))
             # 版式裡兩個勾選框原本都是 50（交付的 *_msg.dlg 把同意改成 51）。
             self.objects['btn_fiveaccount'] = FakeCheck('btn_fiveaccount', False, 50)
-            self.objects['btn_isee'] = FakeCheck('btn_isee', False, 50)
+            self.objects['btn_isee'] = FakeCheck(
+                'btn_isee', False,
+                LAYOUT_PROPS.get('btn_isee', {}).get('msgid', 50))
             self.objects['btn_register'] = FakeObj('btn_register')
             self.objects['btn_Back'] = FakeObj('btn_Back')
             props = LAYOUT_PROPS.get('txt_Wrong', {})
             self.objects['txt_Wrong'] = FakeObj('txt_Wrong', (90, 20), (310, 400),
                                                 color=props.get('color', 0))
+            for name in MISSING_ANCHORS:
+                self.objects.pop(name, None)
         else:
             for name in self.NAMES.get(dlgpath, ()):
                 # msgid/color 可在本節測試裡先塞 LAYOUT_PROPS，模擬用戶在佈局裡改值。
@@ -159,6 +171,8 @@ class FakePanel(object):
     def GetObject(self, name):
         if self.dlgpath == 'login_new/register2027.dlg' and BROKEN_FORM[0]:
             return None  # 客戶端對查不到的控件返回 None，不是報錯
+        if name in MISSING_ANCHORS:
+            return None  # 第 14 節：版式少了某個錨點（客戶端返回 None）
         return self.objects[name]  # unknown names fail rather than invent objects
 
     def Topmost(self):
@@ -251,7 +265,7 @@ cout = [e for e in EVENTS if e[0] == 'COutput'][-1]
 assert cout[1] == [line + '#r' for line in g['TERMS_FALLBACK']], cout[1]
 assert all(isinstance(line, str) and line.endswith('#r') for line in cout[1])
 # 換版式後第一行日誌帶版本標記，用戶看這一行的 build= 就知道新腳本生效了。
-assert 'terms layout begin build=2027-10-22c' in open(
+assert 'terms layout begin build=2027-10-22d' in open(
     'photo\\register_diag.txt', 'rb').read()
 # 協議頁用戶後加的 btn_back：消息號從版式讀（原生 m_MsgID），不寫死。
 assert panel.m_BackMsgId == 7, panel.m_BackMsgId
@@ -647,6 +661,10 @@ assert edits11['edt_email'] != edits11['edt_account']  # 兩個錨點確實分�
 LAYOUT_PROPS.pop('edt_email')
 LAYOUT_PROPS.pop('txt_Wrong')
 # 沒有 GetColor() 的老客戶端：日誌寫 api missing，退回白字，頁面照開。
+# 記得把方法存起來——第 12 節要驗「覆蓋表勝過版式色」，那需要 GetColor 回來；
+# 不恢復的話第 12 節實際只比到「覆蓋 vs 白字」，等於沒測到優先級
+#（2026-10-23 PR #75 審查指出）。
+SAVED_GET_COLOR = FakeObj.__dict__['GetColor']
 try:
     del FakeObj.GetColor
 except AttributeError:
@@ -659,6 +677,7 @@ form11b = g['g_RegisterPanel']
 edits11b = dict((e[1], e[2]) for e in EVENTS if e[0] == 'CEDIT')
 assert edits11b['edt_account'] == 16777215, edits11b
 assert 'color edt_account api missing' in open('photo\\register_diag.txt', 'rb').read()
+FakeObj.GetColor = SAVED_GET_COLOR
 print 'layout color honoured, missing GetColor falls back to white OK'
 
 # 12. 只改某一個框：COLOR_TEXT_BY_ANCHOR 優先於版式色與白字。
@@ -683,7 +702,104 @@ g['Show'](True)
 del EVENTS[:]
 g['g_RegisterPanel'].OnMessage(1)
 assert ('RichText', 'txt_Wrong', '', 0xFFCC00) in EVENTS, EVENTS[-4:]
+# 12b. 去掉覆蓋後，同一個錨點必須真的用回版式色（證明第 12 節不是只比到白字）。
 g['COLOR_TEXT_BY_ANCHOR'].clear()
+g['ModuleReset']()
+g['Show'](True)
+del EVENTS[:]
+g['g_RegisterPanel'].OnMessage(1)
+edits12b = dict((e[1], e[2]) for e in EVENTS if e[0] == 'CEDIT')
+assert edits12b['edt_Pwd'] == 0x00FF00, edits12b   # 版式色回來
+assert 'color edt_Pwd layout=65280' in open(
+    'photo\\register_diag.txt', 'rb').read()
 LAYOUT_PROPS.pop('edt_Pwd')
 print 'per-anchor colour override wins over layout colour OK'
+
+# 13. 讀不到勾選狀態的客戶端（沒有 IsSelected/GetSelect/IsCheck）：
+#     引擎給不出狀態，腳本自己翻。否則 state 永遠是 False，同意門檻會把每次
+#     提交都打回、五賬號也永遠勾不上（PR #75 審查 BUG）。
+NO_SELECT_API[0] = True
+g['ModuleReset']()
+g['Show'](True)
+del EVENTS[:]
+g['g_RegisterPanel'].OnMessage(1)
+form13 = g['g_RegisterPanel']
+assert form13.m_Consent is not None and form13.m_Consent.Native() is False
+assert form13.m_FiveCheck is not None and form13.m_FiveCheck.Native() is False
+diag13 = open('photo\\register_diag.txt', 'rb').read()
+assert 'check btn_isee read api missing' in diag13
+assert 'check btn_fiveaccount read api missing' in diag13
+
+
+def submit13(panel, account='account'):
+    panel.m_AccountEdit.SetText(account)
+    panel.m_PwdEdit.SetText('Preview42')
+    panel.m_PwdEdit2.SetText('Preview42')
+    panel.m_EmailEdit.SetText('preview@example.invalid')
+    del EVENTS[:]
+    panel.OnMessage(2)
+    boxes = [e for e in EVENTS if e[0] == 'MsgBox']
+    assert len(boxes) == 1, boxes
+    return boxes[0][1]
+
+
+# 13a. 交付版式（同意=51）：點一下就把狀態翻過來，然後註冊走通。
+LAYOUT_PROPS['btn_isee'] = {'msgid': 51}
+g['ModuleReset']()
+g['Show'](True)
+del EVENTS[:]
+g['g_RegisterPanel'].OnMessage(1)
+form13a = g['g_RegisterPanel']
+assert form13a.m_Consent.msgid == 51 and form13a.m_Consent.Native() is False
+form13a.OnMessage(51)
+assert form13a.m_Consent.Get(), 'fallback client must be able to agree'
+form13a.OnMessage(50)
+assert form13a.IsRegisterFive(), 'fallback client must be able to enable five'
+form13a.OnMessage(50)
+assert not form13a.IsRegisterFive()
+assert submit13(form13a) == g['MSG_STUB']
+diag13a = open('photo\\register_diag.txt', 'rb').read()
+assert 'check btn_isee fallback toggle=1' in diag13a
+
+# 13b. 共用消息號 50 的原始版式：靠 OnButtonEnter/OnButtonLeave 認出點的是哪個。
+LAYOUT_PROPS['btn_isee'] = {'msgid': 50}
+g['ModuleReset']()
+g['Show'](True)
+del EVENTS[:]
+g['g_RegisterPanel'].OnMessage(1)
+form13b = g['g_RegisterPanel']
+assert form13b.m_SharedCheckMsg is True
+# 沒有 hover 資訊時：默認當成五賬號（至少不會亂翻同意）
+form13b.OnMessage(50)
+assert form13b.IsRegisterFive() and not form13b.m_Consent.Get()
+form13b.OnMessage(50)
+assert not form13b.IsRegisterFive()
+# 有 hover 時：認得出是同意
+form13b.OnButtonEnter(form13b.m_Consent.obj)
+form13b.OnMessage(50)
+form13b.OnButtonLeave(form13b.m_Consent.obj)
+assert form13b.m_Consent.Get(), 'hover must identify the consent button'
+assert not form13b.IsRegisterFive()
+assert submit13(form13b) == g['MSG_STUB']
+NO_SELECT_API[0] = False
+LAYOUT_PROPS.pop('btn_isee')
+print 'client without select API: script flips its own state, consent + five OK'
+
+# 14. 版式裡根本沒有 btn_isee：沒有控件＝沒有同意，必須擋住提交
+#    （用戶口徑「未勾同意不得註冊」；PR #75 審查指出舊版會直接放行）。
+MISSING_ANCHORS.add('btn_isee')
+g['ModuleReset']()
+g['Show'](True)
+del EVENTS[:]
+g['g_RegisterPanel'].OnMessage(1)
+form14 = g['g_RegisterPanel']
+assert form14.m_Consent is None
+assert submit13(form14) == g['MSG_CONSENT']
+assert form14.m_RegistrationRequests == []
+assert form14.m_Hint.text == g['LABEL_CONSENT']
+diag14 = open('photo\\register_diag.txt', 'rb').read()
+assert 'check anchor missing btn_isee' in diag14
+assert 'consent anchor missing: submit blocked' in diag14
+MISSING_ANCHORS.discard('btn_isee')
+print 'missing consent anchor: submission blocked (fail-closed) OK'
 print 'ALL HARNESS CHECKS PASSED'

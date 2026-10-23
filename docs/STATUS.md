@@ -750,6 +750,47 @@
   `tools/registration` **47 项**、ruff 0、三套 harness 模式全过。
   构建仍只改 337/4007、337 差 9 字节（产物 24,269,052 B，未被用户替代前不出货）。
 
+### 3.15.6 2026-10-23 PR #75 AI 审查复核：3 条属实、全部已修（build=2027-10-22d）
+
+PR #75 收到两家机器人共 4 条行内评论（去重后 **3 条独立意见**），逐条核对源码后
+**3 条全部属实**，均已修复：
+
+1. **（Bug，gitar + CodeRabbit）读不到勾选状态时同意永远 False ⇒ 死锁。**
+   复现：`_LayoutCheck.__init__` 里 `IsSelected()` 抛异常 ⇒ `native=False`、
+   `state=False`；`_layout_check` 再 `Set(False)`；`_CheckClick()` 只读不翻，
+   于是 `m_Consent.Get()` 永远是 False，每次提交都被 `MSG_CONSENT` 打回、
+   五賬號也永远勾不上。旧 docstring 写「流程仍能走完」是**假的**。
+   修法：`_LayoutCheck` 增加三种读法候选 `_CHECK_READERS = ("IsSelected",
+   "GetSelect", "IsCheck")`（`IsSelected` 有实证，另两个只是同族兜底），
+   `Native()` 暴露是否读得到；`Toggle()` **仅在 `not Native()` 时**由
+   `_CheckClick` 调用（正常客户端仍然只读，绝不重复翻）；日志
+   `check ... ready=N via=IsSelected` / `fallback toggle`。
+   共用消息号 50 的原始版式还要知道点的是哪个：新增
+   `OnButtonEnter/OnButtonLeave`（契约见 `loginin.py`/`mainpage.py` 同名方法，
+   用 `btn.m_MsgID`）记录 `m_HoveredCheck`；认不出时默认当「五個賬號」，
+   宁可不翻同意（日志 `check click msgid=50 target unknown` 之外的兜底）。
+2. **（Functional，CodeRabbit）缺 `btn_isee` 时同意校验被跳过。**
+   旧写法 `if self.m_Consent is not None and not self.m_Consent.Get()`：锚点缺失
+   ⇒ 直接放行，与「未勾同意不得注册」冲突。修法：**fail-closed**——`m_Consent is
+   None` 也 `return self._Fail(LABEL_CONSENT, MSG_CONSENT)`，并写
+   `consent anchor missing: submit blocked`。代价：版式缺这个锚点时表单不可提交
+   （这是有意的，且日志/弹框都指得出来）。
+3. **（Quality，gitar + CodeRabbit nitpick）harness 第 11 节删 `GetColor` 后没恢复。**
+   第 12 节声称「覆盖表胜过版式色」，但那时 `GetColor()` 已不存在，实际只比到
+   「覆盖 vs 白字」，把优先级写反也能过。修法：`SAVED_GET_COLOR =
+   FakeObj.__dict__['GetColor']` 保存、第 11 节末恢复；并新增 12b 段「去掉覆盖后
+   同一锚点必须用回版式色 0x00FF00」，实测：不恢复时该断言确实失败。
+
+**回归**：harness 新增第 13 节（无 select API 的客户端：13a 交付版式 51/50 各自翻、
+13b 共用 50 靠 hover 认按钮，两条都能勾上同意并提交）、第 14 节（缺 `btn_isee` ⇒
+`MSG_CONSENT` + 空请求 + 提示小字 + 两条日志）、12b（版式色回归）；
+`tools/registration` **50 项**、ruff 0、wincompat 0/0/0；三套 harness 模式全过。
+三个新用例都用「把修复临时改回去」验证过会失败（不是空断言）。
+构建：只改 337/4007，337 差 9 字节，marshal 往返一致；产物 24,271,133 B，
+SHA256 `9cf8c5cd9cef340db3e3f49405e385a3713ee0cb28c137e4d3acd7a5cddd6bf6`。
+**未验**：真机（`build=2027-10-22d` 的日志标记）、退化客户端是否存在、
+hover 回调在按下前是否一定触发。
+
 ### 3.16 独立脚本编辑器开工授权（2026-10-15）
 
 用户确认font1后“确实好了”，协议→表单这一步已实机通过，不外推全部控件/服务器验收。
@@ -1675,6 +1716,7 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-23 | 注册脚本 **PR #75 AI 审查复核（build=2027-10-22d）**：4 条行内评论去重后 3 条**全部属实**并已修。① 读不到勾选状态时 `state` 永远 False ⇒ 同意门永远打不开、五账号勾不上（旧 docstring 的「流程仍能走完」是假的）——改为 `_CHECK_READERS` 三种读法候选 + `Native()`/`Toggle()`，**只在读不到时**由脚本翻；共用消息号 50 用 `OnButtonEnter/OnButtonLeave` 认按钮。② 缺 `btn_isee` 时旧代码跳过同意校验 ⇒ 改为 **fail-closed**（`MSG_CONSENT` + `consent anchor missing: submit blocked`）。③ harness 第 11 节删 `GetColor` 未恢复，第 12 节的「覆盖 > 版式色」其实没测到 ⇒ 保存/恢复 + 新增 12b「去掉覆盖后用回版式色」。新增 harness 13/14 节与 3 个静态用例，`tools/registration` **50 项**、ruff 0、wincompat 0/0/0；三处新用例均验证过「改回旧代码会失败」。构建只改 337/4007、337 差 9 字节 |
 | 2026-10-23 | 注册脚本 **颜色定位补记 + 单框覆盖表**：回答「布局里改哪个属性」。全量 11 个 `.dlg` 统计：字色属性只有 `lColor`（CTextFrame/CTextFrameEx，1~3 组 RGB）与 `lNormalColor`（CButton）；**没有 `ICOLOR`**。本页五个锚点都是 `CBox`，语料里没有任何 CBox 带颜色属性，而脚本用原生 `GetColor()`（`dlgitembill1`、`dlgloginqueue` 两处实证）⇒ 布局加属性读不出来，用户实测无效与证据一致。新增 `COLOR_TEXT_BY_ANCHOR = {}`，优先级 **覆盖表 > GetColor() > 白字**，日志 `override=`/`layout=`/`fallback white`；默认空表行为不变，**本轮不出包**。回归 `tools/registration` 47 项、ruff 0、三套 harness 模式全过；构建只改 337/4007、337 差 9 字节 |
 | 2026-10-23 | 注册脚本 **第三轮（build=2027-10-22c）**：修条款排版真 bug。用户问「协议内容在哪改」，核对时反汇编发现 `_LoadTermsLines` 一直是错的——反编译里的 `_[1]` 是 py2 列表推导的隐藏累加器（`STORE_FAST _[1]`），不是切片；原版实为 `[s + '#r' for s in SERVICE_MSG.split('\n')]`（`LOAD_CONST '#r'`+`BINARY_ADD` 实锤）。旧写法 `line[1:]` 会让条款**每行少第一个字、且没有换行**。新增 `_RichLines()` 统一补 `#r`，条款/确认框的成功与兜底路径都走它；版本标记升 `c`。回归：harness 条款断言改 `#r` 语义（确认框兜底行长 `[10,2,24,2,86]`）、新增死锁旧写法的静态用例，`tools/registration` 46 项、ruff 0、三套模式全过；构建只改 337/4007、337 差 9 字节。真机排版待验 |
 | 2026-10-23 | 注册脚本 **2027 版式第三轮（文档/注释）**：用户实机确认 `btn_back` 的 `iMsgID=3` 可回登录首頁（协议页消息号齐了：1 同意 / 2 拒絕 / 3 返回）。脚本仍从版式 `m_MsgID` 现读、其余消息号回首頁，只加注释不改行为。同轮回答两处定位：协议正文在 `script.fls` **entry 1931** 的 `servicedata.SERVICE_MSG`（11,602 B Big5，首行 `#cd95927…`；`loc_msg` 只是显示区；`TERMS_FALLBACK` 仅在 import 失败时生效；`[line[1:]]` 会吃掉每行首字符）；注册页颜色在 `register.py` 的 `COLOR_TEXT_WHITE=16777215`（或布局给锚点设色后由 `GetColor()` 读取）。「换正文」的两条可选路子（构建器 `--terms` / 读外部 txt）**未实施**，待用户选。文档改 `TESTING_2027.md`，未重编包、未开 PR |

@@ -422,7 +422,11 @@ def main() -> int:
         assert path in raw_consts, f"layout path missing: {path!r}"
     # 2026-10-22 換版式：勾選框改成版式自帶的三態按鈕，走原生 .dlg 勾選接口
     # （loginin.py 讀「我同意」用的就是 GetObject(...).IsSelected()）。
-    for name in (b"IsSelected", b"SetSelect", b"GetObject"):
+    # 2026-10-23 PR #75 審查後：讀取方法名改成 `getattr(obj, reader)` 的候選表
+    # （IsSelected / GetSelect / IsCheck），所以 "IsSelected" 現在在**常量**裡
+    # 而不是屬性名表裡；SetSelect/GetObject 仍是直接屬性調用。
+    assert b"IsSelected" in raw_consts, "native checkbox reader name missing"
+    for name in (b"SetSelect", b"GetObject"):
         assert name in names_all, f"native checkbox API missing: {name!r}"
     for name in (b"CIMGCHECKBOX", b"CImageCheckBox"):
         assert name not in names_all, f"stale checkbox helper still used: {name!r}"
