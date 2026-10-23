@@ -865,6 +865,70 @@ Updating 3adcb62..8aa8777
 沙箱环境本轮被重置，`py25build` 与 `venv-tools` 是按
 `tools/registration/build_python25.sh` 重建的（CPython 2.5.6，43 秒）。
 
+### 3.15.8 2026-10-23 脚本编辑器打不开改过的 script.fls（r5）
+
+用户报：「仓库里那个被修改过的 `script.fls` 用脚本编辑器一个都打不开了，用原版的
+没问题。」仓库基线当时是 r4（`9cf8c5cd…`，24,271,133 B）。
+
+**两个原因叠加，都属实：**
+
+1. **编辑器只给已登记的整包指纹自动套用 XOR 参数。**
+   `script_editor/core/services/bundled_catalog.py` 的 `BUNDLED_CATALOGS` 只钉了
+   3 个包（原包 `8b6e9266…`、`4bf116d0…`、旧测试派生包 `c7276deb…`）。r4 的指纹
+   不在表里 ⇒ `bundled_catalog()` 返回 `None` ⇒ `inspect_module()` 直接抛
+   `请先为此script包选择并确认XOR目录`，**每一条**都打不开（不是只坏一条）。
+   这是设计如此（不按文件名/目录/部分条目猜 key），不是崩溃。
+2. **r4 的 entry 4007 填充区确实坏了。** 打包器当时照
+   `tools/decompiler/script_fls_keys.json` 的 `bounds` 加密。entry 4007 的目录值
+   `[8966,17948,26868,35778]`，而按 `mxmain.dll C_sys.PkgImport` 的原生算術应是
+   `[…,35757]`，**差 21 字节**。模块本体只有 32,408 B，全落在前四段，内容不受影响；
+   但尾部填充（32,408 → 44,362）被最后一段的密钥错位覆盖，解密后留下 21 个
+   `0x89`（= 两段密钥之差）。游戏端 `PyMarshal_ReadObjectFromString` 读完根对象就停，
+   尾部是垃圾也不管，所以「游戏能跑、编辑器打不开」同时成立；编辑器的
+   `parse(..., zero_padding=True)` 要求尾部全零，于是报
+   `trailing/nonzero marshal data`。
+
+**修法：**
+
+- `build_native_registration.py` 新增 `native_bounds()` / `_seed_from_keys()` /
+  `_next_seed()`（原生五段边界算术），打包 entry 4007 改用原生边界，目录值只做
+  交叉核对并打日志；推不出唯一种子的密钥（如 entry 0）才退回目录值并告警。
+  entry 337 **不动**：它是在原密文上做 9 字节定宽补丁，「解密→补丁→再加密」用
+  同一组边界才能保证未改动区的密文字节原样保留。
+- 打包后新增断言：4007 填充区在原生密钥下必须**全零**，否则直接失败
+  （`register padding is not all-zero under native bounds`）。
+- r5 指纹 `a45e0e49…` 登记进 `BUNDLED_CATALOGS`（同一份 `script-original.json`，
+  同一授权范围）；r4 的 `9cf8c5cd…` **故意不登记**，并在 `decoding/README.md` 写明原因。
+- 仓库基线 `data/script.fls` 换成 r5，用户提交进仓库的那份现在编辑器能直接打开。
+- 基线不再是原包 ⇒ 三个假定「仓库文件=原包」的用例改成：`test_build_base` 允许
+  已知派生包指纹（白名单，写死 r4/r5）并要求派生包必须显式 `--base-sha256`；
+  `test_native_edit_contract` 在派生包上跳过（它审计的是原包代码对象）。
+
+**验证：**
+
+- 用编辑器自己的链路（`ArchiveDocument` + `bundled_catalog` + `inspect_module`）
+  把 r5 的 **5001 条**逐条解出（1288 按策略跳过），含 337（`script\login\mainpage.py`）
+  与 4007（`script\login\register.py`，32,416 B py2.5 marshal）；
+  **同一个扫描在 r4 上失败**：4007 报 `trailing/nonzero marshal data`。
+- r5 产物 24,271,134 B，SHA256 `a45e0e49ed336367a1bf00b5377229c5c48de2c30ac2b61f9bf7d67549a445b9`；
+  构建 changed 只有 `[4007]`（337 保留基线已补形态）。
+- `tools/registration` **60 项**（新增 `test_native_bounds` 5 项）全绿；
+  `script_editor` 的 `test_bundled_catalog` 11 项、`test_core`+`test_module_browser` 全绿；
+  ruff 0；`check_windows_compat` ERROR 0 / WARNING 0。
+- 编辑器**全量** 352 项：4 失败 + 2 错误，**与 master 逐条相同**（master 350 项同 4F/2E）——
+  缺 `xdis`（`test_data_corpus` 2 条）与本机无 Qt（`test_bootstrap` 4 条 `main([])` 返回 2
+  而非 17），都是环境缺件，与本轮改动无关；新增的 2 条 `RegisteredDerivativeTests` 全过。
+- **可复现**：从 git 历史里取回 r4（`git show HEAD~1:data/script.fls`，`9cf8c5cd…`）重跑
+  打包器 → 24,271,134 B / `a45e0e49…`，与提交进仓库的 r5 逐字节一致（`changed=[4007]`）。
+- 出货 r5：`/home/user/reg2027-delivery.zip` 24,197,338 B，SHA256
+  `58b10c5dcd00919db0c05d3eba017a4233929653844516a48f55a81243eb56b1`，
+  `SHA256SUMS.txt` 3 条含 CRC 全过；My Drive
+  https://drive.google.com/file/d/1giyVnhL7aG4Ch-Vbk-RP6BqloO61DgWY/view
+
+**未验**：Windows 实机（游戏加载 r5、编辑器 GUI 里点开 4007）；**其他派生包仍不会
+被自动认出**——以后每次重建指纹都会变，要么重新登记，要么在编辑器里「配置 XOR
+目录」手动选一次 `decoding/script-original.json`（这条是编辑器既有设计，本轮没改）。
+
 ### 3.16 独立脚本编辑器开工授权（2026-10-15）
 
 用户确认font1后“确实好了”，协议→表单这一步已实机通过，不外推全部控件/服务器验收。
@@ -1790,6 +1854,7 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-23 | 注册脚本 **编辑器打不开改过的包（r5）**：用户报「仓库里被修改过的 `script.fls` 用脚本编辑器一个都打不开了」，原版正常。① 编辑器只给已登记整包指纹自动套用 XOR 参数（`BUNDLED_CATALOGS` 仅 3 个包），r4 指纹不在表里 ⇒ 每个条目都报「请先为此script包选择并确认XOR目录」。② r4 的 entry 4007 填充区确实坏：打包照研究目录 bounds `35778`，原生算術是 `35757`（差 21 字节），模块本体 32,408 B 全在前四段所以游戏无感，但尾部填充被末段密钥错位覆盖，严格解码器报 `trailing/nonzero marshal data`。修法：打包改按原生边界（新增 `native_bounds()` 与「填充区必须全零」断言），337 保持原边界（逐字节保留原密文），r5 指纹 `a45e0e49…` 登记进编辑器内置表（r4 故意不登记），仓库 `data/script.fls` 换成 r5。验证：用编辑器链路逐条解出 **5001** 条（含 337/4007），同一扫描在 r4 上 4007 失败；`tools/registration` 60 项、编辑器目录用例 11 项全绿，ruff 0、wincompat 0/0/0。出货 `registration_2027_layout_r5.zip` 24,197,338 B / `58b10c5d…`。未验：Windows 实机；其他派生包仍需手动登记或「配置 XOR 目录」 |
 | 2026-10-23 | 仓库路径 **Windows 非法路径导致 `git pull` 中止**（`error: invalid_path 'tools/registration/photo\register_diag.txt'`）：master `8aa8777`（PR #76 合并提交）里有一条**文件名带反斜杠**的路径，全树仅此 1 条，PR #75 的三个提交都没有。成因是 `harness.py2` 在 POSIX 上就地跑 `register.py`，而 `_Diag()` 写的是 Windows 路径，反斜杠成了文件名字符，被 `git add -A` 扫进仓库。修法**不改写历史**：`git rm --cached` 掉该路径即可（下次 pull 落到不含它的树）；harness 改成先 `chdir` 到 `out/harness/` 再 exec（`MXSJ_HARNESS_WORKDIR` 可覆盖）、`.gitignore` 加 `photo*`、新增 `tests/test_repo_paths.py` 5 项（反斜杠/非法字符/结尾点空格/保留设备名/harness 先 chdir/**`register.py` 那行路径不许改**）。`register.py` 一字未动 ⇒ 重编产物仍 24,271,133 B / `9cf8c5cd…`，与 d 包逐字节一致。56 项 OK、ruff 0、wincompat 0/0/0、harness 三模式全过且零仓库污染。反向验证：坏路径加回索引 → 2 项失败；去掉 chdir → 原地重现该文件且测试报错 |
 | 2026-10-23 | 注册脚本 **定稿版式确认（iMsgID 50/51、iTeam 1/2）**：用户在本机 `register2027.dlg` 里把 `btn_fiveaccount` 定为 `iMsgID=50`/`iTeam=1`、`btn_isee` 定为 `iMsgID=51`/`iTeam=2`。与交付版式的消息号一致 ⇒ **脚本零改动、build 仍 d、d 包不重打**（重编产物与出货包逐字节相同，24,271,133 B / `9cf8c5cd…`）。新增 harness 第 15 节（原生客户端 50/51：点 50 只动五账号、点 51 只动同意、提交走通、日志无 `fallback toggle`/`target unknown`、`form checks shared_msgid=0`）与 unittest `test_check_msgids_match_delivered_layout`；`tools/registration` **51 项**、ruff 0、三套 harness 全过。另记：给 `register.py` 加/删行会改 `co_lnotab` 从而改变产物哈希，注释已压回原行数 |
 | 2026-10-23 | 注册脚本 **d 包出货（build=2027-10-22d）**：把 §3.15.6 的审查复核修复打成只含脚本的 ZIP，替代 r3。`/home/user/reg2027-delivery.zip` 24,196,935 B，SHA256 `2b51dfddcf00f713d730a4a83c3c4b38b18837c5152c641f5c01c2579d7f8e87`（md5 `5fc71edbfb52b6f7a37ff8dee19d0e89`，`SHA256SUMS.txt` 3 条含 CRC 全过）；My Drive 根目录 `registration_2027_layout_r4.zip` https://drive.google.com/file/d/1jqaHsNveZZCLu1A_slX0FTL3fo_4dSoF/view 。包内仅 `data/script.fls` + `README.txt` + `测试说明-TESTING.md`，不含布局。真机未验 |
