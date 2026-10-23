@@ -165,7 +165,7 @@
 | 独立客户端 Web 服务 | [web_server](../web_server/README.md) **0.3.0**：PySide6 GUI、浏览器后台、独立监听启停／暂停、文本发布与回退、访问控制及诊断／审计候选实现 | 历史结果（2026-10-19）：**60 项通过、3 项 GUI 跳过**；Qt 原生 libGL 缺失，GUI／Windows／浏览器视觉交互未验。HTTP 管理与权限边界使用真实回环测试；未知原生更新格式仍未实现 |
 | 本地服诊断日志 | 位于本地服 core/observability；JSONL、轮替、脱敏与操作追踪 | 已包含在 2026-10-19 的 68 项回归中；非事务资产审计，Windows 锁／ACL 尚未实机验收；[说明](../local_server/README.md) |
 | 静态复核链 | Catalog → FastAPI → React，只读候选数据，不是游戏网关 | Catalog **34**、API **27** 通过；网页类型检查／构建通过，测试 **112 通过、9 跳过**；本轮未做实时后端／真实浏览器验收 |
-| 脚本编辑器 | **0.6.0.dev8**，工作区四项修复、Python 3.15 按宿主选择 Qt、双 VM 原生构建 | 2026-10-23：Python 3.14.4／3.15.0rc2 各 **350 项：322 通过、28 跳过、0 失败**，含离屏 GUI 与真实标准 2.5.6／2.7.13；跳过真实包、外部语料及第二引擎材料。完整发行自检因缺第二引擎未通过；Windows／游戏／3.15 正式版未验，见 §3.77 |
+| 脚本编辑器 | **0.6.0.dev9**，未登记包自动验证（逐条严格解码后采纳）、工作区四项修复、Python 3.15 按宿主选择 Qt、双 VM 原生构建 | 2026-10-23：本机 Linux 全量 **367 项：241 通过、120 跳过、4 失败、2 错误**；其中 4 失败/2 错误与 master 逐条相同（缺 `xdis`、无 Qt），非本轮引入。新增 12 项解码判定用例全过，含真实 r5/r4 包。GUI 新用例在本机无法执行（缺 Qt 运行库），Windows 未验，见 §3.15.9 |
 | 资源编辑器 | **0.4.3**，后台识别、撤销、原生布局导入／替换、新包保护 | 本轮未跑完整套件；共享核心检查通过。用户曾确认特定大包打开提速，不外推所有资源兼容 |
 | UI 编辑器 | **0.16.0**，保存模式（严格 / 宽松）；批量导入布局（可多选文件/整个文件夹，导入 N 个只保存一次）；文件菜单按「打开 / 保存 / 另存为 / 导出副本」重排（保存记输出包后静默写回）、标题栏与状态栏显示来源→去处；画布按真包拼名族绘制、按钮真态切片、单图九宫格真实三分、有效尺寸夹父、替换布局状态保留、批量导出不覆盖磁盘、GBK 明文判定、目录型基路径按拼名族导出素材、选图窗可选/新建拼名族、图片按文件名认位、控件类型→拼名族按真包多数派兜底；选图窗族标签/子图清单按路径缓存、缩略图只解可见行、写包按段报进度 | 沙箱 PySide6 6.7 offscreen **782 项**：781 通过、1 跳过、0 错误；ruff **0**、`check_windows_compat` **0/0/0**。新菜单观感（含图标、分体按钮箭头）只在 offscreen 截图核对，Windows 实机未验。真 `interface.fls` 的全量布局与 729 个基路径是 0.12.5–0.13.x 的历史结果，**本轮未执行**。Windows 全量检查上次为 0.11.0。**与真实客户端像素级一致仍未验** |
 | 地图编辑器 | 一期只读解析／预览／导出 | **87 通过、1 跳过**（88 项）；有未关闭文件 ResourceWarning；1034/1035 固定样本的 GIRB **300/429** 扇区仍未解，不是全游戏统计 |
@@ -928,6 +928,66 @@ Updating 3adcb62..8aa8777
 **未验**：Windows 实机（游戏加载 r5、编辑器 GUI 里点开 4007）；**其他派生包仍不会
 被自动认出**——以后每次重建指纹都会变，要么重新登记，要么在编辑器里「配置 XOR
 目录」手动选一次 `decoding/script-original.json`（这条是编辑器既有设计，本轮没改）。
+
+### 3.15.9 2026-10-23 编辑器不再要求「先登记包指纹」（0.6.0.dev9）
+
+用户截图：打开 `script.fls` 后，左边每个条目都是「[路径未读取] 条目 #N」，右侧报
+「不能恢复此条目：请先为此script包选择并确认XOR目录」。这是 r5 包（`a45e0e49…`）
+在**未 `git pull` 的旧版编辑器**里的表现 —— 判定不在包，在编辑器。
+
+**根因（产品缺陷，不是配置问题）**：`BUNDLED_CATALOGS` 是一张「整套包指纹 → 参数表」
+的登记表，命中才自动套用。任何一次重新打包都会改掉整包指纹，于是每次出新包都要
+登记一次、或让用户手点「选择当前包的 XOR 目录」；用户的原话是「我就想一劳永逸，
+不论之后怎么改都能打开」。
+
+**改法（把判定权从名单交给数据）**：
+
+- 新增 `core/services/package_selfcheck.py`：`verify_with_catalog()` 用一份参数表对
+  每条允许的条目做**与浏览器同一条严格链路**（严格解压 → `KeyProfile.calibrated`
+  原生边界校准 → `parse(zero_padding=True)`），返回
+  `PackageCheck(passed/excluded/failures/elapsed)`。
+  `accepted` 的判据是**成功率 ≥ 99 %**（`MIN_ACCEPTED_RATIO`），不是魔数条数：
+  5001 条里坏 1 条（r4 的 4007）仍然采纳并**点名**；坏 3/120 就整包拒绝。
+- 新增 `bundled_catalog.resolve_catalog()` 统一「打开包/打开项目」的判定：
+  1) 指纹在表里 → 直接套用（不扫描，零额外开销，老路径不变）；
+  2) 不在表里 → 用 `builtin_catalog(root)`（唯一已授权参数表，SHA 校验）逐条解码；
+  3) 成功率达标 → `check.apply()` 采纳并带上报告；否则不采纳、不改包内状态。
+- `gui/window.py open_archive` 与 `gui/project_actions.py prepare_project` 都改走
+  `resolve_catalog`，未登记包不再「一律拒绝」，旧项目同样自动补参数。
+- `gui/build_actions.py configure_catalog` 改为**先解码再询问**：解不开直接
+  `QMessageBox.warning` 拒绝（并列出条目与原因），解开了才问，问题文案里带上
+  「N 条逐条严格解码成功」；不再问「你确认这是可信目录吗」这种用户无法回答的话。
+- `core/policy.py` 增加 `module_allowed()`/`POLICY_EXCLUDED`，让「按策略跳过」
+  与「真的解不开」可区分（1288 不再被算作失败）。
+- 版本 0.6.0.dev8 → **0.6.0.dev9**；`README.md` 与 `decoding/README.md` 同步改写。
+
+**实测（真实包，不是模拟）**：
+
+| 包 | 指纹 | 结果 | 判定 |
+| --- | --- | --- | --- |
+| 仓库 r5 | `a45e0e49…` | 5001/5001 通过，1 条按策略跳过，6.6 s | 采纳 |
+| 旧 r4 | `9cf8c5cd…` | 5000/5001 通过，点名 `条目 #4007：trailing/nonzero marshal data`，6.9 s | 采纳（4007 不可用，其余照常） |
+| 参数表整体 +1 | — | 0/5001 通过 | 拒绝（9.5 s） |
+| 合成包坏 1/120 | — | 119/120 | 采纳并点名 #37 |
+| 合成包坏 3/120 | — | 117/120 | 拒绝 |
+
+r4 那一行说明：**用户手上旧包也能开**，只是 4007 那条点名报错——这正是他第一次
+反馈的现象，现在会被告知原因而不是「一条都打不开」。
+
+**测试**：新增 `tests/test_package_selfcheck.py` **12 项**（采纳/拒绝/阈值/策略跳过/
+data 包拒绝/真实 r5 包/`resolve_catalog` 四条路径）；`test_gui_module_paths.py` 改为
+4 条新用例（未登记自动采纳、坏条目拒绝、手工先验证后询问、解不开不询问）并删掉
+旧的「确认目录来源」用例；`release_checks.REQUIRED_RELEASE_TESTS` 同步 6 条，
+`RepositoryPackageTests` 进 `OPTIONAL_MATERIAL_TESTS`（发布树可以不含 `data/`）。
+本机 Linux 全量 **367 项：241 通过、120 跳过、4 失败、2 错误**（`testsRun` 367 =
+241+120+4+2，由 `TextTestRunner` 结果直接统计；`master` 为 350 项同 4F/2E，缺
+`xdis`、无 Qt 运行库）；ruff 0。**GUI 新用例在本机无法执行**
+（沙箱缺 `libGL/libxkbcommon/libdbus`，装 PySide6 也起不来 QApplication），只在
+Windows/CI 上跑，因此 GUI 流程**未验**。
+
+**未验**：Windows 实机（`git pull` 后打开旧项目/新包的实际 GUI 表现）；用户手上那份
+`script.fls` 的具体指纹（若仍是 r4，则 4007 仍不可用——数据本身坏了，任何参数都
+打不开它）。
 
 ### 3.16 独立脚本编辑器开工授权（2026-10-15）
 
@@ -1854,6 +1914,7 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-23 | 脚本编辑器 **0.6.0.dev9：未登记包自动验证**。用户截图「不能恢复此条目：请先为此script包选择并确认XOR目录」——根因是 `BUNDLED_CATALOGS` 只按整包指纹登记，每出一次新包就得重新登记或手点目录。改为：指纹命中→直接套用；未命中→用唯一已授权参数表逐条严格解码，成功率≥99% 才采纳，个别坏条目点名列出（`PackageCheck`/`resolve_catalog`），手工选目录也改成先解码再询问、解不开直接拒绝。实测 r5 5001/5001 采纳、r4 5000/5001 采纳并点名 #4007、参数表 +1 后 0/5001 拒绝。新增 12 项 core 用例与 4 项 GUI 用例；全量 367 项（4F/2E 与 master 相同，缺 xdis/Qt）。GUI 与 Windows 未验 |
 | 2026-10-23 | 注册脚本 **编辑器打不开改过的包（r5）**：用户报「仓库里被修改过的 `script.fls` 用脚本编辑器一个都打不开了」，原版正常。① 编辑器只给已登记整包指纹自动套用 XOR 参数（`BUNDLED_CATALOGS` 仅 3 个包），r4 指纹不在表里 ⇒ 每个条目都报「请先为此script包选择并确认XOR目录」。② r4 的 entry 4007 填充区确实坏：打包照研究目录 bounds `35778`，原生算術是 `35757`（差 21 字节），模块本体 32,408 B 全在前四段所以游戏无感，但尾部填充被末段密钥错位覆盖，严格解码器报 `trailing/nonzero marshal data`。修法：打包改按原生边界（新增 `native_bounds()` 与「填充区必须全零」断言），337 保持原边界（逐字节保留原密文），r5 指纹 `a45e0e49…` 登记进编辑器内置表（r4 故意不登记），仓库 `data/script.fls` 换成 r5。验证：用编辑器链路逐条解出 **5001** 条（含 337/4007），同一扫描在 r4 上 4007 失败；`tools/registration` 60 项、编辑器目录用例 11 项全绿，ruff 0、wincompat 0/0/0。出货 `registration_2027_layout_r5.zip` 24,197,338 B / `58b10c5d…`。未验：Windows 实机；其他派生包仍需手动登记或「配置 XOR 目录」 |
 | 2026-10-23 | 仓库路径 **Windows 非法路径导致 `git pull` 中止**（`error: invalid_path 'tools/registration/photo\register_diag.txt'`）：master `8aa8777`（PR #76 合并提交）里有一条**文件名带反斜杠**的路径，全树仅此 1 条，PR #75 的三个提交都没有。成因是 `harness.py2` 在 POSIX 上就地跑 `register.py`，而 `_Diag()` 写的是 Windows 路径，反斜杠成了文件名字符，被 `git add -A` 扫进仓库。修法**不改写历史**：`git rm --cached` 掉该路径即可（下次 pull 落到不含它的树）；harness 改成先 `chdir` 到 `out/harness/` 再 exec（`MXSJ_HARNESS_WORKDIR` 可覆盖）、`.gitignore` 加 `photo*`、新增 `tests/test_repo_paths.py` 5 项（反斜杠/非法字符/结尾点空格/保留设备名/harness 先 chdir/**`register.py` 那行路径不许改**）。`register.py` 一字未动 ⇒ 重编产物仍 24,271,133 B / `9cf8c5cd…`，与 d 包逐字节一致。56 项 OK、ruff 0、wincompat 0/0/0、harness 三模式全过且零仓库污染。反向验证：坏路径加回索引 → 2 项失败；去掉 chdir → 原地重现该文件且测试报错 |
 | 2026-10-23 | 注册脚本 **定稿版式确认（iMsgID 50/51、iTeam 1/2）**：用户在本机 `register2027.dlg` 里把 `btn_fiveaccount` 定为 `iMsgID=50`/`iTeam=1`、`btn_isee` 定为 `iMsgID=51`/`iTeam=2`。与交付版式的消息号一致 ⇒ **脚本零改动、build 仍 d、d 包不重打**（重编产物与出货包逐字节相同，24,271,133 B / `9cf8c5cd…`）。新增 harness 第 15 节（原生客户端 50/51：点 50 只动五账号、点 51 只动同意、提交走通、日志无 `fallback toggle`/`target unknown`、`form checks shared_msgid=0`）与 unittest `test_check_msgids_match_delivered_layout`；`tools/registration` **51 项**、ruff 0、三套 harness 全过。另记：给 `register.py` 加/删行会改 `co_lnotab` 从而改变产物哈希，注释已压回原行数 |

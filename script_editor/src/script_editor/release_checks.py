@@ -41,6 +41,8 @@ OPTIONAL_MATERIAL_TESTS = {
     "test_native_legacy.RealMaterialBuild.test_actual_data_offline_probe",
     "test_native_legacy.RealMaterialBuild.test_real_mainpage_337_native_boundaries_remove_false_opcode_error",
     "test_workflow.RealRegistrationWorkflowTests.test_registration_source_prepare_publish_reopen_continue",
+    # The committed package is external material; a release tree may omit data/.
+    "test_package_selfcheck.RepositoryPackageTests.test_committed_script_package_decodes_with_builtin_catalog",
     "test_workflow.RealRegistrationWorkflowTests.test_real_data_offline_prepare_publish_reopen_continue",
 }
 
@@ -56,8 +58,14 @@ REQUIRED_RELEASE_TESTS = {
     "test_module_paths.ModulePathTests.test_catalog_tamper_rejects_whole_index",
     "test_gui_module_paths.ModulePathGuiTests.test_open_shows_paths_before_any_double_click_no_binding_or_source",
     "test_gui_module_paths.ModulePathGuiTests.test_project_reopen_also_indexes_paths_without_touching_dirty_buffer",
-    "test_gui_module_paths.ModulePathGuiTests.test_manual_catalog_confirmation_reindexes_existing_unknown_package",
+    "test_gui_module_paths.ModulePathGuiTests.test_manual_catalog_verifies_first_then_asks_and_reindexes",
     "test_gui_module_paths.ModulePathGuiTests.test_declining_catalog_never_publishes_scanned_names",
+    "test_gui_module_paths.ModulePathGuiTests.test_unlisted_package_auto_adopts_after_full_decode",
+    "test_gui_module_paths.ModulePathGuiTests.test_unlisted_package_with_a_broken_entry_is_not_auto_adopted",
+    "test_gui_module_paths.ModulePathGuiTests.test_manual_catalog_that_cannot_decode_is_refused_without_asking",
+    "test_package_selfcheck.PackageSelfCheckTests.test_unlisted_package_is_adopted_from_its_own_decode_evidence",
+    "test_package_selfcheck.PackageSelfCheckTests.test_wrong_catalog_is_refused_for_the_same_package",
+    "test_package_selfcheck.PackageSelfCheckTests.test_one_damaged_entry_is_named_while_the_package_stays_usable",
     "test_gui_module.GuiModuleTests.test_old_missing_xor_project_gets_pin_and_retries_without_overwriting_edits",
     "test_bundled_catalog.RegisteredPackagePinTests.test_actual_production_map_registers_exact_user_digest_and_unknown_stays_off",
     "test_bundled_catalog.BundledCatalogTests.test_registered_test_digest_does_not_bypass_damaged_payload_validation",

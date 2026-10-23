@@ -37,39 +37,81 @@ def xor(payload, keys, bounds):
     )
 
 
-def script_fixture(expanded_size=512, two_modules=False, filename=b"authored.py"):
-    # Golden sequence for seed 19084, independent of the product cipher helper.
+def _xor_parameters(expanded_size):
+    """Golden sequence for seed 19084, independent of the product cipher helper."""
     keys = [140, 89, 30, 116, 106]
     high_bytes = [74, 38, 125, 86]
     cursor, bounds = 0, []
     for high in high_bytes:
         cursor += expanded_size // 5 + high
         bounds.append(min(cursor, expanded_size))
-    native = py25.encode(minimal_pyc("py25", filename=filename))
-    stored = zlib.compress(
-        xor(native + bytes(expanded_size - len(native)), keys, bounds)
-    )
-    payloads = [stored, stored if two_modules else b"unmodified-one", b"unmodified-two"]
-    data = bytearray(struct.pack("<4sIII", b"0SLF", 3, 0, 0xCAFEBABE))
+    return keys, bounds
+
+
+def _package(payloads, catalog):
+    """0SLF with a scrambled physical order and an XOR directory."""
+    count = len(payloads)
+    data = bytearray(struct.pack("<4sIII", b"0SLF", count, 0, 0xCAFEBABE))
     offsets = {}
     # Physical order intentionally differs from sorted IDs/directory order.
-    for i in (2, 0, 1):
+    for i in list(range(count))[2:] + list(range(count))[:2]:
         data.extend(b"GAP")
         offsets[i] = len(data)
         data.extend(payloads[i])
     data.extend(b"END-GAP")
     directory = len(data)
     struct.pack_into("<I", data, 8, directory)
-    for i in range(3):
+    for i in range(count):
         eid, r1 = 100 + i, 17 + i
         r2 = ((eid * r1 + 0xDF25E) & 0xFFFFFFFF) ^ len(payloads[i])
         r3 = ((r2 * i * 0xF718FE + 0xD59D16C) & 0xFFFFFFFF) ^ offsets[i]
         data.extend(struct.pack("<IIII", eid, r1, r2, r3))
     data.extend(b"TRAILER")
+    return bytes(data), catalog
+
+
+def _module_payload(expanded_size, filename):
+    keys, bounds = _xor_parameters(expanded_size)
+    native = py25.encode(minimal_pyc("py25", filename=filename))
+    return zlib.compress(xor(native + bytes(expanded_size - len(native)), keys, bounds))
+
+
+def script_fixture(expanded_size=512, two_modules=False, filename=b"authored.py"):
+    """One decodable entry plus two entries that are not valid modules.
+
+    Kept as-is for the existing tests: entry 2 is deliberately undecodable, so
+    whole-package verification must refuse this package.
+    """
+    keys, bounds = _xor_parameters(expanded_size)
+    stored = _module_payload(expanded_size, filename)
+    payloads = [stored, stored if two_modules else b"unmodified-one", b"unmodified-two"]
     catalog = {"0": {"keys": keys, "bounds": bounds}}
     if two_modules:
         catalog["1"] = {"keys": keys, "bounds": bounds}
-    return bytes(data), catalog
+    return _package(payloads, catalog)
+
+
+def many_module_fixture(count=120, expanded_size=256):
+    """``count`` decodable entries, for whole-package acceptance thresholds."""
+    keys, bounds = _xor_parameters(expanded_size)
+    payloads = [
+        _module_payload(expanded_size, f"script\\bulk\\m{i:04d}.py".encode())
+        for i in range(count)
+    ]
+    row = {"keys": keys, "bounds": bounds}
+    return _package(payloads, {str(i): dict(row) for i in range(count)})
+
+
+def complete_script_fixture(expanded_size=512):
+    """All three entries decode, so a whole-package check can pass."""
+    keys, bounds = _xor_parameters(expanded_size)
+    payloads = [
+        _module_payload(expanded_size, b"script\\login\\register.py"),
+        _module_payload(expanded_size, b"script\\login\\mainpage.py"),
+        _module_payload(expanded_size, b"script\\buildstyle.py"),
+    ]
+    row = {"keys": keys, "bounds": bounds}
+    return _package(payloads, {str(i): dict(row) for i in range(3)})
 
 
 def data_fixture(filename=b"authored.py"):

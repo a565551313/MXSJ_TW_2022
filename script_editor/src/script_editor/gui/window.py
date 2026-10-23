@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 from .. import __version__
 from ..core.archives.document import ArchiveDocument
 from ..core.inspection.encoding import byte_literal
-from ..core.services.bundled_catalog import bundled_catalog
+from ..core.services.bundled_catalog import resolve_catalog
 from ..core.services.files import SourceRevision, read_source_snapshot, save_source
 from ..core.services.module_paths import index_script_paths
 from .build_actions import BuildActions
@@ -175,23 +175,24 @@ class Window(
             def prepare():
                 document = ArchiveDocument(Path(name))
                 try:
-                    catalog = bundled_catalog(document, self.runtime_root)
-                except (OSError, ValueError) as exc:
-                    # A broken/missing optional asset must not hide the package.
-                    index_script_paths(document, None)
-                    return document, None, str(exc)
+                    # Pins first (cheap). Unlisted packages are decoded entry by
+                    # entry and adopted on that evidence; nothing is guessed.
+                    catalog, warning, check = resolve_catalog(
+                        document, self.runtime_root
+                    )
+                    if catalog is None:
+                        # A broken/missing optional asset must not hide the
+                        # package, and a refused catalog leaves names unknown.
+                        index_script_paths(document, None)
+                    elif check is None:
+                        index_script_paths(document, catalog)
                 except Exception:
                     document.close()
                     raise
-                try:
-                    index_script_paths(document, catalog)
-                except Exception:
-                    document.close()
-                    raise
-                return document, catalog, ""
+                return document, catalog, warning, check
 
             def complete(result):
-                document, catalog, warning = result
+                document, catalog, warning, check = result
                 if any(a.path == document.path for a in self.archives):
                     document.close()
                     return
@@ -203,12 +204,26 @@ class Window(
                 if catalog is not None:
                     self.catalogs.append(catalog)
                     self.project_dirty = True
-                    self.info.setPlainText(
-                        "已按完整包指纹自动匹配内置解码参数，并核对参数SHA256。"
-                        "\n原包/已登记测试派生包均逐条严格解码；双击条目尝试恢复编辑。\n匹配参数不等于源码可信或全部模块均已支持。"
-                    )
+                    if check is not None:
+                        self.info.setPlainText(
+                            "已自动套用内置解码参数（未登记的新包，逐条试解后采纳）。\n"
+                            + check.report()
+                            + "\n双击条目尝试恢复编辑；匹配参数不等于源码可信。"
+                        )
+                    else:
+                        self.info.setPlainText(
+                            "已按完整包指纹自动匹配内置解码参数，并核对参数SHA256。"
+                            "\n原包/已登记测试派生包均逐条严格解码；双击条目尝试恢复编辑。\n匹配参数不等于源码可信或全部模块均已支持。"
+                        )
                 elif warning:
                     self.info.setPlainText("内置参数不可用，原包仍可浏览：" + warning)
+                elif check is not None:
+                    self.info.setPlainText(
+                        "未能自动套用内置解码参数。\n"
+                        + check.report()
+                        + "\n包仍可浏览；可用「编译 → 选择当前包的 XOR 目录」"
+                        "指定匹配的参数文件。"
+                    )
                 elif document.vm == "py25":
                     self.info.setPlainText(
                         "此script包指纹不在内置参数授权匹配范围；未自动套用。"
