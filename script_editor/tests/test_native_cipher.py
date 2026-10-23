@@ -137,6 +137,7 @@ class NativeCipherTests(unittest.TestCase):
         stored = zlib.compress(b"cipher-input") + bytes(10)
         digest = "4bf116d0a6e62848bc1724ddfc67877c5a9db95a52768e8fa1d6f6d520318678"
         archive = SimpleNamespace(
+            vm="py25",
             fingerprint=lambda: digest, read_stored=lambda _: stored
         )
         self.assertEqual(inflate_script(archive, 918), b"cipher-input")

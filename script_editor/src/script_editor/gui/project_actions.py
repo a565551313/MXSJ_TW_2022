@@ -12,7 +12,7 @@ from ..core.project.document import Binding, save_project
 from ..core.project.storage import load_state
 from ..core.project.workspace import EditorState
 from ..core.services.bundled_catalog import bundled_catalog
-from ..core.services.files import read_source
+from ..core.services.files import SourceRevision, read_source
 from ..core.services.module_paths import index_script_paths
 
 
@@ -85,6 +85,7 @@ class ProjectActions:
                     tab.editor.document().isModified(),
                     tab.draft_saved,
                     tab.recovery,
+                    tab.source_revision.sha256,
                 )
                 for tab in (self.tabs.widget(i) for i in range(self.tabs.count()))
                 if not (
@@ -162,6 +163,11 @@ class ProjectActions:
                 {b.archive for b in state.bindings}
                 | {c.archive for c in state.catalogs}
                 | {e.report.archive for e in state.editors if e.report is not None}
+                | {
+                    e.report.target_archive
+                    for e in state.editors
+                    if e.report is not None and e.report.target_archive is not None
+                }
                 | {c.archive for c in state.corpora}
             )
             for path in paths:
@@ -261,6 +267,8 @@ class ProjectActions:
                     continue  # NEVER replace an open buffer or its undo/report state.
                 tab.editor.setPlainText(editor.text)
                 tab.draft_saved = editor.draft_saved and editor.path.is_file()
+                if editor.disk_sha256 != "":
+                    tab.source_revision = SourceRevision(editor.disk_sha256)
                 if editor.report is not None:
                     tab.attach_report(editor.report)
                     tab.candidate_requested.connect(self.open_recovery_candidate)

@@ -21,6 +21,8 @@ class EditorState:
     modified: bool
     draft_saved: bool
     report: ModuleReport | None = None
+    # Empty string denotes a legacy snapshot with no disk baseline.
+    disk_sha256: str | None = ""
 
 
 def pack_editor(editor, portable):
@@ -45,6 +47,8 @@ def pack_editor(editor, portable):
     row["path"] = portable(editor.path)
     if editor.report is not None:
         row["report"]["archive"] = portable(editor.report.archive)
+        if editor.report.target_archive is not None:
+            row["report"]["target_archive"] = portable(editor.report.target_archive)
         for candidate in row["report"]["candidates"]:
             for key in ("stdout", "stderr", "trace_stdout"):
                 candidate[key] = base64.b64encode(candidate[key]).decode("ascii")
@@ -70,6 +74,9 @@ def unpack_editor(row, parent, archive, check_digest):
             raise ValueError("项目编辑区类型/VM非法")
         if type(row["modified"]) is not bool or type(row["draft_saved"]) is not bool:
             raise ValueError("项目编辑区状态非法")
+        disk_sha = row.get("disk_sha256", "")
+        if disk_sha is not None and disk_sha != "":
+            check_digest(disk_sha)
         report = row.get("report")
         if report is not None:
             report = dict(report)
@@ -87,6 +94,22 @@ def unpack_editor(row, parent, archive, check_digest):
             if vm == "py25" and index == 1288:
                 raise ValueError("项目不能保存1288恢复内容")
             report["archive"] = a.path
+            target = report.get("target_archive")
+            target_sha = report.get("target_fingerprint", "")
+            if target is not None:
+                check_digest(target_sha)
+                check_digest(report["standard_sha256"])
+                target = archive(target)
+                if (
+                    target.fingerprint() != target_sha
+                    or target.vm != vm
+                    or index >= len(target.entries)
+                    or target.entries[index].identity != report["identity"]
+                ):
+                    raise ValueError("项目草稿的继续采用目标与包不符")
+                report["target_archive"] = target.path
+            elif target_sha:
+                raise ValueError("项目草稿继续采用目标缺少包路径")
             for key in (
                 "standard_sha256",
                 "corpus_manifest_sha256",
@@ -145,6 +168,7 @@ def unpack_editor(row, parent, archive, check_digest):
             row["modified"],
             row["draft_saved"],
             report,
+            disk_sha,
         )
     except (KeyError, TypeError, AttributeError, RecursionError) as exc:
         raise ValueError("项目编辑区数据非法") from exc

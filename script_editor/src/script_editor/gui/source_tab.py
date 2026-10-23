@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..core.compiler.profiles import PROFILES
+from ..core.services.files import SourceRevision
 from .code_editor import CodeEditor
 
 
@@ -22,10 +23,17 @@ class SourceTab(QWidget):
     candidate_requested = Signal(object)
 
     def __init__(
-        self, path: Path, text: str, vm="py25", reference=False, source_kind=None
+        self,
+        path: Path,
+        text: str,
+        vm="py25",
+        reference=False,
+        source_kind=None,
+        source_revision=None,
     ):
         super().__init__()
         self.path, self.reference, self.opened_text = path, reference, text
+        self.source_revision = source_revision or SourceRevision.capture(path)
         self.source_kind = source_kind or ("reference" if reference else "authored")
         self.recovery = None
         self.draft_saved = path.is_file()
@@ -64,6 +72,11 @@ class SourceTab(QWidget):
             warning.setTextFormat(Qt.TextFormat.PlainText)
             layout.addWidget(warning)
         layout.addWidget(path_label)
+        self.target_label = QLabel()
+        self.target_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.target_label.setWordWrap(True)
+        self.target_label.hide()
+        layout.addWidget(self.target_label)
         layout.addWidget(self.editor, 1)
 
     def update_mode(self):
@@ -81,7 +94,7 @@ class SourceTab(QWidget):
     def attach_report(self, report):
         import json
 
-        self.recovery = report
+        self.update_recovery_target(report)
         self.vm.setEnabled(False)
         self.path_label.setText(
             "恢复来源（原包）："
@@ -152,3 +165,12 @@ class SourceTab(QWidget):
             body.addTab(page, candidate.engine + " 候选")
         self.layout().addWidget(body, 1)
         self.module_pages = body
+
+    def update_recovery_target(self, report):
+        self.recovery = report
+        self.target_label.setText(f"继续采用目标：{report.current_archive}")
+        self.target_label.setVisible(report.target_archive is not None)
+        self.path_label.setToolTip(
+            f"源码：{self.path}\n恢复原包：{report.archive}\n"
+            f"继续采用目标：{report.current_archive}"
+        )

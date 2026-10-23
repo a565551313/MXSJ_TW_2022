@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..archives.document import ArchiveDocument
+from ..policy import require_module_allowed
 
 
 @dataclass(frozen=True)
@@ -23,6 +24,7 @@ class Binding:
 
     @classmethod
     def associate(cls, archive: ArchiveDocument, index: int, source: Path):
+        require_module_allowed(archive.vm, index)
         if not 0 <= index < len(archive.entries):
             raise IndexError(index)
         entry = archive.entries[index]
@@ -38,6 +40,7 @@ class Binding:
         )
 
     def verify(self, archive: ArchiveDocument):
+        require_module_allowed(archive.vm, self.index)
         if self.source_kind not in {"authored", "recovered-reviewed"}:
             raise ValueError("未核验恢复稿/参考稿不能作为可发布源码关联")
         if self.source_kind == "recovered-reviewed" and (

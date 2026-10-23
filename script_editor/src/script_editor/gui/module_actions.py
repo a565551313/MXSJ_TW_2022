@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import replace
 from pathlib import Path
 from threading import Event
@@ -9,7 +10,7 @@ from threading import Event
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from ..core.project.document import Binding
-from ..core.services.files import save_new_source
+from ..core.services.files import SourceRevision, save_new_source
 from ..core.services.module_browser import read_module
 from ..core.services.module_paths import display_module_path
 from ..core.services.workflow import Snapshot, prepare_build
@@ -28,7 +29,7 @@ class ModuleActions:
                 self.tabs.widget(i)
                 for i in range(self.tabs.count())
                 if getattr(self.tabs.widget(i), "recovery", None)
-                and self.tabs.widget(i).recovery.archive == archive.path
+                and self.tabs.widget(i).recovery.current_archive == archive.path
                 and self.tabs.widget(i).recovery.index == index
             ),
             None,
@@ -133,15 +134,15 @@ class ModuleActions:
             existing = self.tabs.widget(i)
             origin = existing.recovery
             same_origin = origin is not None and (
-                origin.archive,
-                origin.fingerprint,
+                origin.current_archive,
+                origin.current_fingerprint,
                 origin.index,
                 origin.selected_engine,
                 origin.corpus_manifest_sha256,
                 origin.candidate_pyc_sha256,
             ) == (
-                report.archive,
-                report.fingerprint,
+                report.current_archive,
+                report.current_fingerprint,
                 report.index,
                 report.selected_engine,
                 report.corpus_manifest_sha256,
@@ -178,6 +179,10 @@ class ModuleActions:
         self.assert_writable_target(path)
         save_new_source(path, tab.editor.toPlainText(), protected)
         tab.path, tab.draft_saved = path, True
+        tab.source_revision = SourceRevision(
+            hashlib.sha256(tab.editor.toPlainText().encode("utf-8")).hexdigest()
+        )
+        self.project_dirty = True
         tab.path_label.setToolTip(str(path))
         tab.editor.document().setModified(False)
         self.refresh_tab_title(tab)
@@ -196,9 +201,9 @@ class ModuleActions:
                 raise ValueError("草稿VM与选中包不一致，请显式核对后再选择")
             origin = tab.recovery
             if origin and (
-                origin.archive != archive.path
+                origin.current_archive != archive.path
                 or origin.index != index
-                or origin.fingerprint != archive.fingerprint()
+                or origin.current_fingerprint != archive.fingerprint()
             ):
                 raise ValueError("恢复稿来源与当前选中条目/包指纹不符")
             if (
@@ -218,11 +223,15 @@ class ModuleActions:
             catalog = self.catalog_for(archive)
 
             def prepare():
-                import hashlib
-
                 from ..core.inspection.native import inspect_module
 
                 standard, filename, _ = inspect_module(archive, index, catalog)
+                if origin and origin.target_archive is not None and (
+                    hashlib.sha256(standard).hexdigest() != origin.standard_sha256
+                ):
+                    raise ValueError(
+                        "继续采用目标的标准字节码已变化；保留原稿，禁止采用"
+                    )
                 if origin and (
                     (origin.corpus_manifest_sha256 and not origin.candidate_pyc_sha256)
                     or (

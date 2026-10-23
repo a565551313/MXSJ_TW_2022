@@ -14,6 +14,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 from ...archives.document import ArchiveDocument
+from ...policy import require_module_allowed
 from ..compression import inflate
 from .cipher import bounds_from_keys, resolve_parameters, xor_segments
 
@@ -28,6 +29,7 @@ def inflate_script(archive: ArchiveDocument, index: int) -> bytes:
     This is a whole-package SHA pin plus entry index, not a general permission
     for trailing data. Every other package/entry retains strict EOF checking.
     """
+    require_module_allowed(archive.vm, index)
     stored = archive.read_stored(index)
     if (
         archive.fingerprint()
@@ -70,6 +72,7 @@ class KeyProfile:
         return calibrated
 
     def _validate_catalog(self, archive: ArchiveDocument, index: int):
+        require_module_allowed(archive.vm, index)
         if (
             archive.kind != "0slf"
             or index != self.index
@@ -125,6 +128,7 @@ def load_profile(
     archive_sha256: str,
     catalog_sha256: str,
 ) -> KeyProfile:
+    require_module_allowed(archive.vm, index)
     if (
         archive.kind != "0slf"
         or type(index) is not int

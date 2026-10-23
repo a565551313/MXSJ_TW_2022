@@ -17,6 +17,7 @@ from ..archives.document import ArchiveDocument
 from ..archives.verify import envelope, equal_region
 from ..archives.writer import write_data, write_script
 from ..compiler.runner import Compiler, audit_standard
+from ..policy import require_module_allowed
 from ..vm.compression import inflate
 from ..vm.py25 import codec as py25
 from ..vm.py25.keys import KeyProfile, inflate_script
@@ -53,6 +54,7 @@ def guard_new_package(path: Path, protected: tuple[Path, ...]) -> Path:
 
 
 def _native(archive, replacement, profile):
+    require_module_allowed(archive.vm, replacement.index)
     expected = replacement.standard_pyc
     stored = archive.read_stored(replacement.index)
     if archive.vm == "py25":
@@ -138,6 +140,7 @@ def build_package(
             raise ValueError("source digest/VM mismatch")
         for replacement in replacements:
             i = replacement.index
+            require_module_allowed(source.vm, i)
             if (
                 type(i) is not int
                 or not 0 <= i < len(source.entries)

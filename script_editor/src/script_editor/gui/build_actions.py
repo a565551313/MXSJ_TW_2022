@@ -203,6 +203,11 @@ class BuildActions:
             )
             return
         old_path = plan.snapshot.binding.archive
+        for i in range(self.tabs.count()):
+            tab = self.tabs.widget(i)
+            origin = tab.recovery
+            if origin is not None and origin.current_archive == old_path:
+                tab.update_recovery_target(origin.continue_after_build(report, new))
         self.bindings, self.catalogs = list(state.bindings), list(state.catalogs)
         self.project_dirty = True
         self.built_texts = {
