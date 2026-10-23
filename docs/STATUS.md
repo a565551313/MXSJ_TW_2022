@@ -1914,6 +1914,7 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-23 | 脚本编辑器 **双内置编译器入库**：用户问「不能放进仓库吗」并同意，删 `script_editor/.gitignore` 的 `runtimes/**` 等三行，提交 20 个文件（23.4 MB，`.git` 约 +6.7 MB）；随同一固定源码重编，4 个 EXE/DLL 摘要变化（Zig 不逐位可复现），清单 `26b2fd28…` 同步；`audit --static` 20/20 SHA 通过、33 passed/2 skipped、repo_paths 5 项、wincompat 对新增文件 0 命中。§3.78 旧补丁包作废。Windows 实机未验，详见 §3.79 |
 | 2026-10-23 | 脚本编辑器 **双内置编译器补丁包**：自检报「不可用：runtime目录缺失或为符号链接」是 Git 检出不含 `runtimes/**` 二进制（`.gitignore` 排除），非代码缺陷。按 `build_runtimes.py`从固定官方源码重建两套 x86 编译器（源码 SHA256 全符），`audit --static` 逐文件 SHA/PE32 通过；出货 `MXSJ_runtimes_py25_py27_20261023.zip` 6,971,362 B / `a056564c…`，同步提交配套 `runtimes/manifest.json`。Windows 实机与执行验收未做，详见 §3.78 |
 | 2026-10-23 | 脚本编辑器 **0.6.0.dev9：未登记包自动验证**。用户截图「不能恢复此条目：请先为此script包选择并确认XOR目录」——根因是 `BUNDLED_CATALOGS` 只按整包指纹登记，每出一次新包就得重新登记或手点目录。改为：指纹命中→直接套用；未命中→用唯一已授权参数表逐条严格解码，成功率≥99% 才采纳，个别坏条目点名列出（`PackageCheck`/`resolve_catalog`），手工选目录也改成先解码再询问、解不开直接拒绝。实测 r5 5001/5001 采纳、r4 5000/5001 采纳并点名 #4007、参数表 +1 后 0/5001 拒绝。新增 12 项 core 用例与 4 项 GUI 用例；全量 367 项（4F/2E 与 master 相同，缺 xdis/Qt）。GUI 与 Windows 未验 |
 | 2026-10-23 | 注册脚本 **编辑器打不开改过的包（r5）**：用户报「仓库里被修改过的 `script.fls` 用脚本编辑器一个都打不开了」，原版正常。① 编辑器只给已登记整包指纹自动套用 XOR 参数（`BUNDLED_CATALOGS` 仅 3 个包），r4 指纹不在表里 ⇒ 每个条目都报「请先为此script包选择并确认XOR目录」。② r4 的 entry 4007 填充区确实坏：打包照研究目录 bounds `35778`，原生算術是 `35757`（差 21 字节），模块本体 32,408 B 全在前四段所以游戏无感，但尾部填充被末段密钥错位覆盖，严格解码器报 `trailing/nonzero marshal data`。修法：打包改按原生边界（新增 `native_bounds()` 与「填充区必须全零」断言），337 保持原边界（逐字节保留原密文），r5 指纹 `a45e0e49…` 登记进编辑器内置表（r4 故意不登记），仓库 `data/script.fls` 换成 r5。验证：用编辑器链路逐条解出 **5001** 条（含 337/4007），同一扫描在 r4 上 4007 失败；`tools/registration` 60 项、编辑器目录用例 11 项全绿，ruff 0、wincompat 0/0/0。出货 `registration_2027_layout_r5.zip` 24,197,338 B / `58b10c5d…`。未验：Windows 实机；其他派生包仍需手动登记或「配置 XOR 目录」 |
@@ -4095,3 +4096,45 @@ https://drive.google.com/file/d/1ingDNvUYoIzm3tTGQ-3LKaWC9JtcmxVR/view
 完整验收须用户本机双击 `检查内置编译器.bat`（真实编译 + 回读 marshal，不执行目标
 代码），预期 `"status": "windows-runtime-smoke-passed"` 且两 VM 均为
 `compile-and-marshal-only-passed`；失败则以该窗口输出为准另行定位。
+
+## 3.79 脚本编辑器：两套内置编译器入库（2026-10-23）
+
+用户问「这两套编译器不能放进仓库吗」并要求解决，随后明确同意按「删 `.gitignore` 三行 +
+提交二进制 + 改文档口径」执行。此前 `script_editor/runtimes/` 只有 `manifest.json` 与
+`README.md`，二进制被 `.gitignore` 的 `runtimes/**` 挡在仓库外，源码克隆永远拿不到，
+只能靠交付 ZIP 或维护者重建（§3.78）。
+
+**改动**：
+- `script_editor/.gitignore` 删除 `runtimes/**`、`!runtimes/manifest.json`、
+  `!runtimes/README.md` 三行，改为注明「已入库、重建须成对提交」的注释；
+  `recovery_engines/pycdc/` 仍忽略。
+- 提交两套编译器共 20 个文件（各 9 个：`python.exe`、`python2x.dll`、`python2x.zip`、
+  `BUILD.json`、5 份许可）。**23.4 MB 未压缩**，按 zlib 估算入库后 `.git` 约增
+  **6.7 MB**（仓库 `.git` 现约 340 MB）。单个最大文件 10,008,307 B，远低于 GitHub
+  100 MB 单文件上限，无需 LFS（本仓库无 `.gitattributes` LFS 规则）。
+- 本次按 §3.78 同一固定源码与 `build_runtimes.py`（Zig 0.13.0 / `x86-windows-gnu`）
+  重编：2.5.6 156 个 TU、2.7.13 178 个 TU，官方 tar.gz SHA256 与 `SOURCES` 相符。
+  **4 个 EXE/DLL 摘要与上一轮不同**（`python.exe` 2238badf…/04027804…、
+  `python25.dll` 981a7cff…、`python27.dll` 321a9a05…）——Zig 构建不逐位可复现，
+  与 §3.78 记录的现象一致；标准库 ZIP、许可、`BUILD.json` 逐字节相同。
+  清单随构建更新，`manifest.json` SHA256 `26b2fd2865a4d261922540a3dbe8f77ab56e158e4a859b7796c0e4aeab7b3c3e`。
+- 同步改口径：`runtimes/README.md`、`DESIGN.md`、`M4_RUNTIME_DISTRIBUTION.md`、
+  `licenses/README.md`、`AGENTS.md` 第 8 条（写明这是用户授权的一次例外，
+  重建后二进制与清单必须成对提交）。
+
+**校验**：`runtime_cli audit --root . --static` 返回 `static-only`，两 VM 各 9 文件、
+两侧 `manifest_sha256` 相同、20/20 逐文件 SHA 与清单一致；两套 PE 仍为 PE32（`0x10b`）
+machine `i386`。`tests/test_runtime_bundles.py + tests/test_compiler.py`
+33 passed / 2 skipped / 17 subtests；`tools/registration/tests/test_repo_paths.py`
+5 项通过（新路径在 Windows 上可检出）；`check_windows_compat.py` 全仓跑完后，
+涉及 `runtimes/` 的发现 **0 条**（存量 15 ERROR/120 WARNING 与本轮无关、未改动）。
+
+**代价与后续**：Git 历史永久保留每一份旧构建（每轮约 6.7 MB），没有实际理由不要重建；
+重建后必须**二进制 + 清单**一起提交，只提交其一会让自检报 SHA256 不匹配。
+**§3.78 那份 6,971,362 B 补丁包对应旧清单 `d20332c5…`，与本轮清单不再匹配，已作废**；
+仓库自身已带二进制，无需再解压任何补丁包。已经装过旧包的本地副本，拉取前需删除
+`script_editor/runtimes/py25`、`py27`，否则 Git 拒绝覆盖未跟踪文件。
+
+**未验**：Windows 实机执行验收仍未做（`audit_runtimes(execute=True)` 在非 win32
+直接拒绝）。首次真实验收仍是本机双击 `检查内置编译器.bat`，预期
+`"status": "windows-runtime-smoke-passed"` 且两 VM `compile-and-marshal-only-passed`。

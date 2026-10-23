@@ -1,0 +1,23 @@
+{
+  "toolchain": "Zig 0.13.0; x86-windows-gnu; compiler-only CPython",
+  "target_os": "Windows 10/11 (system UCRT)",
+  "source_patches": [
+    {
+      "path": "Modules/posixmodule.c",
+      "before_sha256": "33d6c4375bbbf00a92f1e5604260536812af52149fe4f0000cb2166df57601ba",
+      "after_sha256": "ad9bc1392037a3869b99a3afcb60e4b3dcd00cd5ac6d2bb24b5f04447badb952"
+    },
+    {
+      "path": "Python/dynload_win.c",
+      "before_sha256": "512e8f3a9655b062b0ae34d2c99113e3d6477547d2a44ffc948467727fed755c",
+      "after_sha256": "b1474aa97cbf09df16b625f997f6641247b966cb778dea04af3158800cfb722e"
+    },
+    {
+      "path": "Modules/signalmodule.c",
+      "before_sha256": "c5af99d17ef487b407aa9eb703580e1fc209c8f811e0502225051f353ee3949d",
+      "after_sha256": "bd74dd800d4b775093bc6b089a3a1fbaf8dd71a84d382e624b17034b4fcb112d"
+    }
+  ],
+  "compiler_marshal_opcode_source": "unmodified official CPython",
+  "native_windows_execution": "must be verified separately"
+}
