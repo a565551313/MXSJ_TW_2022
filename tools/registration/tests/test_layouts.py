@@ -284,6 +284,42 @@ class RegistrationLayoutsTest(unittest.TestCase):
         )[0]
         self.assertIn("return COLOR_TEXT_WHITE", after_fallback)
 
+    def test_per_anchor_colour_override_is_first(self):
+        """「只改某一个框」的落点是 COLOR_TEXT_BY_ANCHOR；版式属性只是次选。
+
+        真 .dlg 里字色属性是 lColor（CTextFrame/CTextFrameEx）与
+        lNormalColor（CButton）；本页五个锚点是 CBox，语料里没有任何 CBox
+        带颜色属性，所以布局里加属性读不出来，代码里的覆盖表才可靠。
+        """
+        tree = ast.parse((HERE / "register.py").read_text(encoding="utf-8"))
+        consts = {}
+        for node in tree.body:
+            if isinstance(node, ast.Assign) and len(node.targets) == 1:
+                if isinstance(node.targets[0], ast.Name):
+                    consts[node.targets[0].id] = node.value
+        self.assertEqual(ast.literal_eval(consts["COLOR_TEXT_BY_ANCHOR"]), {})
+        func = next(
+            node
+            for node in tree.body
+            if isinstance(node, ast.FunctionDef) and node.name == "_LayoutColor"
+        )
+        # 覆盖表必须排在 GetColor() 之前（源码顺序即执行顺序）。
+        source = ast.get_source_segment(
+            (HERE / "register.py").read_text(encoding="utf-8"), func
+        )
+        # 只看代码行（docstring 里也会提到 GetColor()，不能算数）。
+        quote = chr(34) * 3
+        parts = source.split(quote)
+        code = parts[2] if len(parts) >= 3 else source
+        self.assertLess(
+            code.index("COLOR_TEXT_BY_ANCHOR.get"),
+            code.index("GetColor()"),
+        )
+        self.assertLess(
+            code.index("GetColor()"),
+            code.index("return COLOR_TEXT_WHITE"),
+        )
+
     def test_terms_page_handles_user_added_back_button(self):
         """btn_back 是用户在 agreement.dlg 本机加的；消息号必须从版式读。"""
         tree = ast.parse((HERE / "register.py").read_text(encoding="utf-8"))

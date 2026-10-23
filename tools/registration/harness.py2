@@ -293,6 +293,8 @@ assert 'color txt_Wrong fallback white' in diag2
 for key, value in g.items():
     if key.startswith(('MSG_', 'BTN_', 'PROMPT_', 'LABEL_', 'DLG_')):
         assert isinstance(value, str), (key, type(value))
+# 默認沒有任何單框覆蓋（全走白字/版式色）
+assert g['COLOR_TEXT_BY_ANCHOR'] == {}
 print 'form anchors + native .dlg checkbox binding + Big5 byte constants OK'
 
 # 3. AddChar: base accounts/passwords ASCII alnum only, no manual underscore.
@@ -658,4 +660,30 @@ edits11b = dict((e[1], e[2]) for e in EVENTS if e[0] == 'CEDIT')
 assert edits11b['edt_account'] == 16777215, edits11b
 assert 'color edt_account api missing' in open('photo\\register_diag.txt', 'rb').read()
 print 'layout color honoured, missing GetColor falls back to white OK'
+
+# 12. 只改某一個框：COLOR_TEXT_BY_ANCHOR 優先於版式色與白字。
+#     這是回答「只改某一個要改哪」的落點——版式裡的顏色屬性叫 lColor/lNormalColor，
+#     而本頁五個錨點都是 CBox（語料裡沒有帶顏色屬性的 CBox），所以走代碼。
+g['COLOR_TEXT_BY_ANCHOR']['edt_Pwd'] = 0xFF0000
+LAYOUT_PROPS['edt_Pwd'] = {'color': 0x00FF00}
+g['ModuleReset']()
+g['Show'](True)
+del EVENTS[:]
+g['g_RegisterPanel'].OnMessage(1)
+form12 = g['g_RegisterPanel']
+edits12 = dict((e[1], e[2]) for e in EVENTS if e[0] == 'CEDIT')
+assert edits12['edt_Pwd'] == 0xFF0000, edits12   # 覆蓋勝過版式色
+assert edits12['edt_Pwd_1'] == 16777215, edits12  # 其他框不受影響
+diag12 = open('photo\\register_diag.txt', 'rb').read()
+assert 'color edt_Pwd override=16711680' in diag12
+# 覆蓋也適用於富文本提示行
+g['COLOR_TEXT_BY_ANCHOR']['txt_Wrong'] = 0xFFCC00
+g['ModuleReset']()
+g['Show'](True)
+del EVENTS[:]
+g['g_RegisterPanel'].OnMessage(1)
+assert ('RichText', 'txt_Wrong', '', 0xFFCC00) in EVENTS, EVENTS[-4:]
+g['COLOR_TEXT_BY_ANCHOR'].clear()
+LAYOUT_PROPS.pop('edt_Pwd')
+print 'per-anchor colour override wins over layout colour OK'
 print 'ALL HARNESS CHECKS PASSED'

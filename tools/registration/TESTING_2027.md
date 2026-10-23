@@ -122,20 +122,53 @@ result = [s + '#r' for s in servicedata.SERVICE_MSG.split('\n')]
 
 ## 注册页的颜色在哪里
 
-`tools/registration/register.py`：
+### 先回答「改哪个属性」
+
+真 `.dlg` 里**字色属性的名字不是 `ICOLOR`**。手头 11 个 `.dlg` 全量统计只有两种：
+
+| 控件类型 | 颜色属性 | 值的样子 |
+| --- | --- | --- |
+| `CTextFrame` / `CTextFrameEx`（文字） | **`lColor`** | `[255,255,255]` / `[255,255,255,0,0,0]`（1~3 组 RGB） |
+| `CButton`（按钮） | **`lNormalColor`** | `[255,255,255]` |
+
+`ICOLOR` 不在任何一份 `.dlg` 里；引擎按属性名逐项解析，没有这个名字就等于没写。
+
+**更关键的是**：本页的 `edt_account` / `edt_Pwd` / `edt_Pwd_1` / `edt_email` /
+`txt_Wrong` 在布局里都是 **`CBox`**——这 11 个 `.dlg` 里**没有任何 CBox 带颜色属性**。
+而脚本拿颜色用的是原生 `GetColor()`（证据：`dlgitembill1.CreateBookAmountEdit`
+先 `GetObject('txt_num').GetColor()` 再传给 `CEDIT`；`dlgloginqueue.CheckServer`
+先 `oText.GetColor()` 再当文字颜色参数）。它读的是控件自己的字色属性，CBox 上没有，
+所以给 CBox 加 `ICOLOR` 读不出来——你实测无效是符合证据的，不是哪里写错了。
+
+### 所以「只改某一个框」怎么改
+
+`tools/registration/register.py` 的 `COLOR_TEXT_BY_ANCHOR`（第 398 行附近）：
 
 ```python
-COLOR_TEXT_WHITE = 16777215      # 0xFFFFFF，白
-...
-edit = combmacro.CEDIT(edit_class, name, parent,
-                       _LayoutColor(parent, name), font, linecolor=0)
+COLOR_TEXT_BY_ANCHOR = {}          # 默认全白
+# 例：只把密码框变红
+# COLOR_TEXT_BY_ANCHOR = {"edt_Pwd": 16711680}
+# 想一起改：{"edt_Pwd": 16711680, "txt_Wrong": 16776960}
 ```
 
-- **四个输入框 + `txt_Wrong` 全部改色** → 改 `COLOR_TEXT_WHITE` 这一个常量
-  （`0` 黑、`16711680` 红 `0xFF0000`、`16776960` 黄 `0xFFFF00`）。
-- **只想改某一个框** → 在布局里给那个锚点（`edt_Pwd` 等）设颜色，`_LayoutColor()`
-  会先读 `GetColor()`，非 0 就用布局值；读不到/为 0 才退回常量。
-- `linecolor=0` 是输入框的线色，和登录页一致；要改也在同一行。
+优先级：**这个表 > 版式 `GetColor()` > 白字 `16777215`**。
+`txt_Wrong` 是富文本，也可以只在提示文字前加内联色码 `#cRRGGBB`（渲染时生效，
+不用改构造参数）。
+
+### 全部改
+
+```python
+COLOR_TEXT_WHITE = 16777215     # 0=黑，16711680=红，16776960=黄，65280=绿
+```
+
+`linecolor=0` 是输入框线色，与登录页一致；要改也在 `_CreateFormEdit` 同一行。
+
+### 如果非要在布局里改
+
+把那个锚点的控件类型从 `CBox` 换成 `CTextFrame` 并设 `lColor`，理论上
+`GetColor()` 就会吐出版式值——**但这条路我们没有验过**（换类型会不会影响
+`CCombPanel` 的锚点查找、`CEDIT` 还能不能在它上面建，都未知），不建议在正式
+测试副本上试。代码里的覆盖表是可靠路径。
 
 ## 装法
 

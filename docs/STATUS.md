@@ -723,6 +723,33 @@
 - **未验**：真机上条款的实际排版（换行是否正常、首发字符是否恢复），需用户实测。
   条款正文的**位置**不变：仍是 entry 1931 的 `servicedata.SERVICE_MSG`。
 
+### 3.15.5 2026-10-23 「只改某一个框的颜色」落在哪：lColor/lNormalColor vs CBox
+
+用户问「在布局里给锚点设色，改哪个属性」。全量核对仓库 11 个 `.dlg`：
+
+- 字色属性只有两种：**`lColor`**（`CTextFrame`/`CTextFrameEx`，值是 1~3 组 RGB，
+  如 `[255,255,255]`、`[91,255,226,0,73,80,162,208,254]`）与
+  **`lNormalColor`**（`CButton`，如 `[255,255,255]`）。**没有 `ICOLOR`**。
+- 本页五个锚点 `edt_account`/`edt_Pwd`/`edt_Pwd_1`/`edt_email`/`txt_Wrong`
+  在布局里都是 **`CBox`**，而这 11 个 `.dlg` 里**没有任何 CBox 带颜色属性**。
+- 脚本取色用原生 `GetColor()`，两处脚本证据：`dlgitembill1.CreateBookAmountEdit`
+  （`GetObject('txt_num').GetColor()` → `CEDIT` 的 color）、
+  `dlgloginqueue.CheckServer`（`oText.GetColor()` → 文字颜色参数）。
+  它读控件自己的字色属性，CBox 上取不到 ⇒ **用户在布局里加 `ICOLOR` 无效是符合证据的**，
+  不是配置写错。
+- 因此新增 `COLOR_TEXT_BY_ANCHOR = {}`（`register.py` 第 398 行附近），
+  `_LayoutColor()` 的优先级改为 **覆盖表 > 版式 `GetColor()` > 白字**，
+  日志分别是 `override=` / `layout=` / `fallback white`。默认空表 ⇒ 行为与 r3 完全一致，
+  **本轮不出新包**（用户要哪个框什么颜色，改一行再出）。
+- 布局侧的长远办法（**未验，不建议**）：把锚点控件类型从 `CBox` 换成 `CTextFrame`
+  并设 `lColor`，理论上 `GetColor()` 就能读出版式值；换类型对 `CCombPanel` 锚点查找
+  与 `CEDIT` 挂载的影响未知。
+- 回归：`harness` 新增第 12 节（覆盖表优先于版式色、其他框不受影响、富文本提示行同样生效、
+  日志 `override=`）；默认断言 `COLOR_TEXT_BY_ANCHOR == {}`；
+  `test_per_anchor_colour_override_is_first` 钉住「表 > GetColor > 白字」的源码顺序；
+  `tools/registration` **47 项**、ruff 0、三套 harness 模式全过。
+  构建仍只改 337/4007、337 差 9 字节（产物 24,269,052 B，未被用户替代前不出货）。
+
 ### 3.16 独立脚本编辑器开工授权（2026-10-15）
 
 用户确认font1后“确实好了”，协议→表单这一步已实机通过，不外推全部控件/服务器验收。
@@ -1648,6 +1675,7 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-23 | 注册脚本 **颜色定位补记 + 单框覆盖表**：回答「布局里改哪个属性」。全量 11 个 `.dlg` 统计：字色属性只有 `lColor`（CTextFrame/CTextFrameEx，1~3 组 RGB）与 `lNormalColor`（CButton）；**没有 `ICOLOR`**。本页五个锚点都是 `CBox`，语料里没有任何 CBox 带颜色属性，而脚本用原生 `GetColor()`（`dlgitembill1`、`dlgloginqueue` 两处实证）⇒ 布局加属性读不出来，用户实测无效与证据一致。新增 `COLOR_TEXT_BY_ANCHOR = {}`，优先级 **覆盖表 > GetColor() > 白字**，日志 `override=`/`layout=`/`fallback white`；默认空表行为不变，**本轮不出包**。回归 `tools/registration` 47 项、ruff 0、三套 harness 模式全过；构建只改 337/4007、337 差 9 字节 |
 | 2026-10-23 | 注册脚本 **第三轮（build=2027-10-22c）**：修条款排版真 bug。用户问「协议内容在哪改」，核对时反汇编发现 `_LoadTermsLines` 一直是错的——反编译里的 `_[1]` 是 py2 列表推导的隐藏累加器（`STORE_FAST _[1]`），不是切片；原版实为 `[s + '#r' for s in SERVICE_MSG.split('\n')]`（`LOAD_CONST '#r'`+`BINARY_ADD` 实锤）。旧写法 `line[1:]` 会让条款**每行少第一个字、且没有换行**。新增 `_RichLines()` 统一补 `#r`，条款/确认框的成功与兜底路径都走它；版本标记升 `c`。回归：harness 条款断言改 `#r` 语义（确认框兜底行长 `[10,2,24,2,86]`）、新增死锁旧写法的静态用例，`tools/registration` 46 项、ruff 0、三套模式全过；构建只改 337/4007、337 差 9 字节。真机排版待验 |
 | 2026-10-23 | 注册脚本 **2027 版式第三轮（文档/注释）**：用户实机确认 `btn_back` 的 `iMsgID=3` 可回登录首頁（协议页消息号齐了：1 同意 / 2 拒絕 / 3 返回）。脚本仍从版式 `m_MsgID` 现读、其余消息号回首頁，只加注释不改行为。同轮回答两处定位：协议正文在 `script.fls` **entry 1931** 的 `servicedata.SERVICE_MSG`（11,602 B Big5，首行 `#cd95927…`；`loc_msg` 只是显示区；`TERMS_FALLBACK` 仅在 import 失败时生效；`[line[1:]]` 会吃掉每行首字符）；注册页颜色在 `register.py` 的 `COLOR_TEXT_WHITE=16777215`（或布局给锚点设色后由 `GetColor()` 读取）。「换正文」的两条可选路子（构建器 `--terms` / 读外部 txt）**未实施**，待用户选。文档改 `TESTING_2027.md`，未重编包、未开 PR |
 | 2026-10-22 | 注册脚本 **2027 版式第二轮（build=2027-10-22b）**：用户实机反馈三条，只改脚本不动布局。① 四框与 `txt_Wrong` 改白字——`.dlg` 里只是占位锚点，显示控件由 `CEDIT`/`CRICHTEXT` 另建，字色只认构造参数（旧代码写死 `0`＝黑，这也是加 `ICOLOR` 不生效的原因）；新增 `COLOR_TEXT_WHITE=16777215`（照登录页）与 `_LayoutColor()`（先读锚点 `GetColor()`，非 0 采用、否则白），删掉返回黑的 `_HintColor()`。② 协议页 `btn_back`（用户本机加）：消息号从原生 `m_MsgID` 现读，点击回登录首頁，撞号 1 时写警告且 1 仍走「同意」。③ `iTeam` 必须不同（用户实测，原稿 1/1 点不动），属布局侧；`register2027_msg.dlg` 不再随包发布。回归：三套模式全过、`tools/registration` 45 项、ruff 0、wincompat 0/0/0；构建只改 337/4007、337 差 9 字节、marshal 往返一致。Windows 实机与 `GetColor()` 是否存在待验 |

@@ -394,16 +394,30 @@ def _EditFont():
 # 兩處都是白字；註冊頁四框與提示行照這個來。
 COLOR_TEXT_WHITE = 16777215
 
+# 只改某一個框的顏色：在這裡加一行，鍵是版式錨點名，值是 0xRRGGBB 十進位。
+# 例：COLOR_TEXT_BY_ANCHOR = {"edt_Pwd": 16711680}   # 只把密碼框變紅
+# 沒列進來的走 _LayoutColor()：先問版式 GetColor()，取不到就用白字。
+# 為什麼不靠版式屬性：真 .dlg 裡的字色屬性叫 lColor（CTextFrame/CTextFrameEx）
+# 或 lNormalColor（CButton），而本頁五個錨點都是 CBox——手頭的 .dlg 語料裡
+# 沒有任何 CBox 帶顏色屬性，所以加 ICOLOR 引擎也不會吐出來（2026-10-22 實測）。
+COLOR_TEXT_BY_ANCHOR = {}
+
 
 def _LayoutColor(parent, name):
-    """取版式錨點的字色；版式沒寫（0/取不到）就用白字。
+    """定字色，優先級：本文件的 COLOR_TEXT_BY_ANCHOR > 版式 GetColor() > 白字。
 
-    為什麼要在這裡讀：CEDIT / CRICHTEXT 建的是腳本自己的控件，字色只認
-    **構造參數**，.dlg 裡給 CBox 加的顏色屬性不會自動帶過來——2026-10-22
-    用戶在佈局裡加 ICOLOR 沒生效就是這個原因。原版也這麼做：dlgitembill1
-    的 CreateBookAmountEdit 先 GetObject('txt_num').GetColor() 再傳給 CEDIT。
-    取不到 API 不是錯，退回白字即可（舊版這裡退回黑色，實機反饋要白的）。
+    為什麼 CEDIT / CRICHTEXT 要自己取色：它們是腳本在版式錨點上另建的控件，
+    字色只認**構造參數**；.dlg 裡的屬性不會自動帶過來。原版也這麼做：
+    dlgitembill1.CreateBookAmountEdit 先 GetObject('txt_num').GetColor() 再傳給
+    CEDIT；dlgloginqueue 也是先 oText.GetColor() 再用在文字顏色參數上。
+    GetColor() 讀的是控件自己的字色屬性（文字控件 = lColor 的第一組），
+    錨點是 CBox 時通常拿不到（返回 0/報錯），這裡一律兜回白字。
+    舊版這條路是 return 0（黑），實機反饋要白的。
     """
+    override = COLOR_TEXT_BY_ANCHOR.get(name)
+    if override is not None:
+        _Diag("color %s override=%s" % (name, override))
+        return override
     try:
         obj = parent.GetObject(name)
         if obj is not None:
