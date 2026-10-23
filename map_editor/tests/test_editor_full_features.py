@@ -83,6 +83,13 @@ class TestLzo1xAndGirbRoundTrip(unittest.TestCase):
 
 
 class TestMaskBlkAndPathfinding(unittest.TestCase):
+    def test_oversized_mask_is_rejected_before_decompression(self) -> None:
+        from map_editor.core.mask import MaskError, decode_mask_record
+
+        record = PrefixRecord(0, 0, 0, 0, 100_000, 100_000, 1, b"x")
+        with self.assertRaises(MaskError):
+            decode_mask_record(record)
+
     def test_mask_2bit_roundtrip_and_cutout(self) -> None:
         from map_editor.core.mask import pack_alpha_to_2bit
 
@@ -135,6 +142,37 @@ class TestMaskBlkAndPathfinding(unittest.TestCase):
 
 
 class TestFullEditorWorkflowUndoAndGuards(unittest.TestCase):
+    def test_verified_save_failure_preserves_destination_and_reopens_document(
+        self,
+    ) -> None:
+        from unittest.mock import patch
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "source.map"
+            target = Path(tmp) / "existing.map"
+            create_map_file(source, 640, 480)
+            target.write_bytes(b"known-good-destination")
+            doc = open_map(source)
+            original_target = target.read_bytes()
+            with patch(
+                "map_editor.core.mapfile.open_map",
+                side_effect=ValueError("bad verify"),
+            ):
+                with self.assertRaisesRegex(ValueError, "bad verify"):
+                    doc.save(target, verify=True)
+            self.assertEqual(target.read_bytes(), original_target)
+            self.assertEqual(len(doc.read_cells(doc.sector(0))), 192)
+            original_source = source.read_bytes()
+            with patch(
+                "map_editor.core.mapfile.open_map",
+                side_effect=ValueError("bad in-place verify"),
+            ):
+                with self.assertRaisesRegex(ValueError, "bad in-place verify"):
+                    doc.save(source, verify=True)
+            self.assertEqual(source.read_bytes(), original_source)
+            self.assertEqual(len(doc.read_cells(doc.sector(0))), 192)
+            doc.close()
+
     def test_full_edit_undo_redo_save_and_trailing_bytes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tdir = Path(tmp)
@@ -149,6 +187,18 @@ class TestFullEditorWorkflowUndoAndGuards(unittest.TestCase):
             rc = main(["--build-map", f"{art_path}:{src_map}"])
             self.assertEqual(rc, 0)
             self.assertTrue(src_map.is_file())
+
+            original_before_rejected_build = src_map.read_bytes()
+            rejected = main(
+                [
+                    "--build-map",
+                    f"{art_path}:{src_map}",
+                    "--client-root",
+                    str(src_map.parent),
+                ]
+            )
+            self.assertEqual(rejected, 1)
+            self.assertEqual(src_map.read_bytes(), original_before_rejected_build)
 
             src_bytes_clean = src_map.read_bytes()
             src_map.write_bytes(src_bytes_clean + b"\xde\xad\xbe\xef" * 64)
@@ -190,6 +240,11 @@ class TestFullEditorWorkflowUndoAndGuards(unittest.TestCase):
 
             out_map = tdir / "out" / "9001_edited.map"
             vm.save_map(out_map)
+            self.assertFalse(vm.dirty)
+            vm.undo()
+            self.assertTrue(vm.dirty)
+            vm.redo()
+            self.assertFalse(vm.dirty)
             vm.export_blk(tdir / "out" / "9001.blk")
             vm.export_walkability_png(tdir / "out" / "9001_walk.png")
             vm.export_lightmap_png(tdir / "out" / "9001_light.png")
@@ -217,6 +272,17 @@ class TestFullEditorWorkflowUndoAndGuards(unittest.TestCase):
             vm.save_map(copy_src, allow_overwrite_source=True)
             vm.close_map()
 
+            audit_vm = EditorViewModel(config=Config.load(tdir / "audit.json"))
+            audit_vm.set_client_root(tdir / "out")
+            audit_vm.open_map("9001_edited")
+            report = audit_vm.audit_current_map()
+            self.assertGreater(report["walkability"]["walkable_cells"], 0)
+            self.assertEqual(
+                report["walkability"]["walkable_cells"]
+                + report["walkability"]["blocked_cells"],
+                report["walkability"]["total_cells"],
+            )
+            audit_vm.close_map()
             self.assertEqual(
                 main(["--scan", str(tdir / "out"), "--audit", "9001_edited"]), 0
             )

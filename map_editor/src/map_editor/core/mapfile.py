@@ -57,6 +57,7 @@ from .girb import (
     unpack_nibbles,
 )
 from .mask import (
+    MAX_MAP_MASK_PIXELS,
     DecodedMask,
     compute_sector_record_refs,
     decode_mask_record,
@@ -793,7 +794,16 @@ class MapDocument:
 
     def decode_record(self, index: int) -> DecodedMask:
         if index not in self._decoded_masks:
-            self._decoded_masks[index] = decode_mask_record(self._records[index])
+            record = self._records[index]
+            cached_pixels = sum(
+                mask.width * mask.height for mask in self._decoded_masks.values()
+            )
+            if cached_pixels + record.width * record.height > MAX_MAP_MASK_PIXELS:
+                raise MapFormatError(
+                    "decoded foreground masks exceed the "
+                    f"{MAX_MAP_MASK_PIXELS:,}-pixel per-map safety budget"
+                )
+            self._decoded_masks[index] = decode_mask_record(record)
         return self._decoded_masks[index]
 
     def rebuild_sector_refs(self) -> None:
@@ -947,6 +957,21 @@ class MapDocument:
             with os.fdopen(fd, "wb") as out_fh:
                 out_fh.write(raw_out)
                 out_fh.flush()
+                os.fsync(out_fh.fileno())
+            if verify:
+                with open_map(Path(tmp_name)) as check_doc:
+                    if (
+                        check_doc.header.width != self.header.width
+                        or check_doc.header.height != self.header.height
+                        or check_doc.header.sector_count != self.header.sector_count
+                        or len(check_doc.records) != len(self._records)
+                        or check_doc.trailing_bytes != 0
+                    ):
+                        raise MapFormatError(
+                            f"post-write verification failed for {target}"
+                        )
+                    for sector in check_doc.iter_sectors():
+                        _ = check_doc.read_cells(sector)
             os.replace(tmp_name, target)
         except BaseException:
             try:
@@ -956,21 +981,6 @@ class MapDocument:
             if in_place and self.path.exists():
                 self._fh = self.path.open("rb")
             raise
-
-        if verify:
-            with open_map(target) as check_doc:
-                if (
-                    check_doc.header.width != self.header.width
-                    or check_doc.header.height != self.header.height
-                    or check_doc.header.sector_count != self.header.sector_count
-                    or len(check_doc.records) != len(self._records)
-                    or check_doc.trailing_bytes != 0
-                ):
-                    raise MapFormatError(
-                        f"post-write verification failed on {target}"
-                    )
-                for s in check_doc.iter_sectors():
-                    _ = check_doc.read_cells(s)
 
         if in_place:
             self.path = target

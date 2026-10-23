@@ -182,7 +182,7 @@ def run_cli(
                 return rc
 
     if import_blk:
-        parts = import_blk.split(":", 2)
+        parts = _split_colon_spec(import_blk, 3)
         if len(parts) != 3 or not all(parts):
             print("[错误] --import-blk 需要 KEY:BLK_PATH:OUT_MAP 形式", file=sys.stderr)
             return 2
@@ -215,8 +215,12 @@ def run_cli(
             print("[错误] --find-path 需要 KEY:X0,Y0:X1,Y1 形式", file=sys.stderr)
             return 2
         key = parts[0]
-        x0, y0 = (int(v) for v in parts[1].split(",", 1))
-        x1, y1 = (int(v) for v in parts[2].split(",", 1))
+        try:
+            x0, y0 = (int(v) for v in parts[1].split(",", 1))
+            x1, y1 = (int(v) for v in parts[2].split(",", 1))
+        except ValueError:
+            print("[错误] --find-path 坐标必须是整数", file=sys.stderr)
+            return 2
         try:
             vm.open_map(key)
             res = vm.simulate_path((x0, y0), (x1, y1))
@@ -320,6 +324,27 @@ def _bare_double_click_launch(argv: list[str] | None) -> bool:
     return len(effective) == 0
 
 
+def _split_colon_spec(spec: str, fields: int) -> list[str]:
+    """Split colon-delimited CLI fields while preserving Windows drive colons."""
+    parts: list[str] = []
+    start = 0
+    for idx, char in enumerate(spec):
+        if char != ":":
+            continue
+        if (
+            idx == start + 1
+            and spec[start:idx].isalpha()
+            and spec[idx + 1 : idx + 2] in ("\\", "/")
+        ):
+            continue
+        parts.append(spec[start:idx])
+        start = idx + 1
+        if len(parts) == fields - 1:
+            break
+    parts.append(spec[start:])
+    return parts
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     config = Config.load()
@@ -329,10 +354,17 @@ def main(argv: list[str] | None = None) -> int:
     root = args.scan or args.client_root or config.client_root
 
     if args.build_map and not args.gui:
-        img_str, _, out_str = args.build_map.partition(":")
+        spec_parts = _split_colon_spec(args.build_map, 2)
+        img_str, out_str = spec_parts if len(spec_parts) == 2 else ("", "")
         if not img_str or not out_str:
             print("[错误] --build-map 需要 IMG_PATH:OUT_MAP 形式", file=sys.stderr)
             return 2
+        if root:
+            try:
+                vm.set_client_root(root)
+            except DiscoveryError as exc:
+                print(f"[错误] {exc}", file=sys.stderr)
+                return 2
         from PIL import Image
 
         img_path = Path(img_str)
@@ -341,7 +373,11 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         with Image.open(img_path) as im:
             w, h = im.size
-        vm.create_new_map(out_str, w, h, image=img_path)
+        try:
+            vm.create_new_map(out_str, w, h, image=img_path)
+        except Exception as exc:
+            print(f"[错误] 编译地图失败: {exc}", file=sys.stderr)
+            return 1
         vm.close_map()
         print(f"已编译生成地图 {out_str} ({w}x{h})")
         if not root:

@@ -25,6 +25,7 @@ import csv
 import json
 import sys
 from collections import defaultdict
+from functools import lru_cache
 from pathlib import Path
 
 
@@ -41,13 +42,20 @@ def _dec(blob: object) -> str:
     return str(blob)
 
 
+@lru_cache(maxsize=4)
+def _archive_for(repo: Path):
+    import map_npc_reproduction as mnr  # type: ignore[import-not-found]
+
+    return mnr.Archive(repo)
+
+
 def _extract_fls_tables(repo: Path, idx: int) -> dict[str, object]:
     tools_dir = repo / "server" / "tools"
     if str(tools_dir) not in sys.path:
         sys.path.insert(0, str(tools_dir))
     import map_npc_reproduction as mnr  # type: ignore[import-not-found]
 
-    arc = mnr.Archive(repo)
+    arc = _archive_for(repo.resolve())
     meta = arc.keydb[str(idx)]
     bounds = mnr.CANDIDATE_BOUNDS.get(idx) or meta["bounds"]
     decoded = mnr.xor_decode(arc.payload(idx), meta["keys"], bounds)
@@ -112,7 +120,13 @@ def main() -> int:
     arrival_by_key: dict[str, list[int]] = {}
     bgm_by_name: dict[str, str] = {}
 
-    if (repo / "data" / "script.fls").is_file():
+    if not (repo / "data" / "script.fls").is_file():
+        print(
+            "[警告] 找不到 data/script.fls：静态替换表、传送点、到达格与 BGM "
+            "不会从客户端脚本提取；生成的场景表可能不完整。",
+            file=sys.stderr,
+        )
+    else:
         t_map = _extract_fls_tables(repo, 4589)
         for src_id, dst_raw in dict(t_map.get("NEW_RPL_MAP", {})).items():  # type: ignore[arg-type]
             new_rpl_map[f"{int(src_id):04d}"] = _dec(dst_raw)

@@ -99,6 +99,8 @@ class UndoCommand:
     label: str
     undo: Callable[[], None]
     redo: Callable[[], None]
+    before_token: int = 0
+    after_token: int = 0
 
 
 @dataclass(slots=True)
@@ -171,6 +173,9 @@ class EditorViewModel:
         self._rows: list[MapRow] = []
         self._undo_stack: list[UndoCommand] = []
         self._redo_stack: list[UndoCommand] = []
+        self._state_token = 0
+        self._next_state_token = 1
+        self._saved_state_token = 0
 
     # -- client root discovery --------------------------------------------
     def set_client_root(
@@ -249,6 +254,9 @@ class EditorViewModel:
         self.state.last_path = None
         self._undo_stack.clear()
         self._redo_stack.clear()
+        self._state_token = 0
+        self._next_state_token = 1
+        self._saved_state_token = 0
         return doc
 
     def open_map(self, key: str | MapRow) -> MapDocument:
@@ -322,9 +330,16 @@ class EditorViewModel:
 
     @property
     def dirty(self) -> bool:
-        return bool(self._doc and (self._doc.dirty or self._undo_stack))
+        return bool(
+            self._doc
+            and (self._doc.dirty or self._state_token != self._saved_state_token)
+        )
 
     def _push_command(self, cmd: UndoCommand) -> None:
+        cmd.before_token = self._state_token
+        cmd.after_token = self._next_state_token
+        self._next_state_token += 1
+        self._state_token = cmd.after_token
         self._undo_stack.append(cmd)
         if len(self._undo_stack) > MAX_UNDO_STEPS:
             self._undo_stack.pop(0)
@@ -337,9 +352,10 @@ class EditorViewModel:
             return None
         cmd = self._undo_stack.pop()
         cmd.undo()
+        self._state_token = cmd.before_token
         self._redo_stack.append(cmd)
         if self._doc is not None:
-            self._doc.dirty = bool(self._undo_stack)
+            self._doc.dirty = self._state_token != self._saved_state_token
             self.state.current_records = len(self._doc.records)
         return cmd.label
 
@@ -348,9 +364,10 @@ class EditorViewModel:
             return None
         cmd = self._redo_stack.pop()
         cmd.redo()
+        self._state_token = cmd.after_token
         self._undo_stack.append(cmd)
         if self._doc is not None:
-            self._doc.dirty = True
+            self._doc.dirty = self._state_token != self._saved_state_token
             self.state.current_records = len(self._doc.records)
         return cmd.label
 
@@ -716,7 +733,9 @@ class EditorViewModel:
         walk = analyze_walkability(
             h.grid_columns,
             h.grid_rows,
-            lambda cx, cy: doc.cell_at_index(cx, cy) or 1,
+            lambda cx, cy: (
+                1 if (value := doc.cell_at_index(cx, cy)) is None else value
+            ),
         )
         canonical_refs = compute_sector_record_refs(h.width, h.height, doc.records)
         ref_mismatches = sum(
@@ -879,7 +898,9 @@ class EditorViewModel:
             dest, allow_loose_overwrite=allow_overwrite_source
         )
         doc = self._require_doc()
-        return doc.save(target, verify=True)
+        result = doc.save(target, verify=True)
+        self._saved_state_token = self._state_token
+        return result
 
     def export_blk(self, dest: str | Path) -> Path:
         target = self._guard_export_target(dest)

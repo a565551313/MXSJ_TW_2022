@@ -32,7 +32,11 @@ from _paths import PROJECT, SAMPLES  # noqa: E402
 if str(PROJECT) not in sys.path:
     sys.path.insert(0, str(PROJECT))
 
-from map_editor.cli import _bare_double_click_launch, main  # noqa: E402
+from map_editor.cli import (  # noqa: E402
+    _bare_double_click_launch,
+    _split_colon_spec,
+    main,
+)
 
 SRC = PROJECT / "src" / "map_editor"
 QT_ALLOWED = {Path("ui") / "widgets.py"}
@@ -102,7 +106,18 @@ class TestQtIsolation(unittest.TestCase):
         importlib.invalidate_caches()
 
 
-@needs_samples
+class TestCliSpecParsing(unittest.TestCase):
+    def test_windows_drive_colons_are_preserved(self) -> None:
+        self.assertEqual(
+            _split_colon_spec(r"D:\\art\\world.png:E:\\maps\\9001.map", 2),
+            [r"D:\\art\\world.png", r"E:\\maps\\9001.map"],
+        )
+        self.assertEqual(
+            _split_colon_spec(r"9001:D:\\maps\\9001.blk:E:\\out\\9001.map", 3),
+            ["9001", r"D:\\maps\\9001.blk", r"E:\\out\\9001.map"],
+        )
+
+
 class TestCliEndToEnd(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = Path(tempfile.mkdtemp(prefix="map_editor_cli_"))
@@ -156,6 +171,13 @@ class TestCliEndToEnd(unittest.TestCase):
         code, _out, err = self._main("--scan", str(SAMPLES), "--export-json", "2101")
         self.assertEqual(code, 2)
         self.assertIn("KEY:PATH", err)
+
+    def test_find_path_rejects_non_integer_coordinates_cleanly(self) -> None:
+        code, _out, err = self._main(
+            "--scan", str(SAMPLES), "--find-path", "2303:a,b:1,2"
+        )
+        self.assertEqual(code, 2)
+        self.assertIn("坐标必须是整数", err)
 
     def test_main_still_errors_in_dev_mode_with_no_arguments(self) -> None:
         """Unpackaged (``python run.py`` with no args) keeps the documented

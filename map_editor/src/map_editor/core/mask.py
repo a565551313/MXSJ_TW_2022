@@ -36,6 +36,16 @@ if TYPE_CHECKING:
 
 SECTOR_PX_W, SECTOR_PX_H = 320, 240
 ALPHA_LEVELS = (0, 85, 170, 255)
+MAX_MASK_PIXELS = 8_000_000
+MAX_MAP_MASK_PIXELS = 64_000_000
+
+
+def _validate_pixel_budget(width: int, height: int) -> None:
+    if width <= 0 or height <= 0 or width * height > MAX_MASK_PIXELS:
+        raise MaskError(
+            f"mask dimensions {width}x{height} exceed the "
+            f"{MAX_MASK_PIXELS:,}-pixel safety budget"
+        )
 
 
 class MaskError(ValueError):
@@ -76,6 +86,7 @@ class DecodedMask:
 
     def to_alpha_bytes(self) -> bytes:
         """Expand to ``width * height`` 8-bit ``L`` alpha bytes."""
+        _validate_pixel_budget(self.width, self.height)
         out = bytearray(self.width * self.height)
         for ly in range(self.height):
             row_in = ly * self.stride
@@ -94,6 +105,7 @@ class DecodedMask:
     ) -> Image.Image:
         """Render an ``RGBA`` Pillow image of the foreground sprite cut-out or
         tinted silhouette."""
+        _validate_pixel_budget(self.width, self.height)
         alpha = self.to_alpha_bytes()
         if backdrop is None:
             r, g, b = tint
@@ -124,6 +136,7 @@ class DecodedMask:
 
 def decode_mask_record(record: PrefixRecord) -> DecodedMask:
     """Decompress ``record.payload`` into a :class:`DecodedMask`."""
+    _validate_pixel_budget(record.width, record.height)
     stride = mask_stride(record.width)
     expected = stride * record.height
     try:
@@ -174,8 +187,7 @@ def mask_payload_from_image(image: Image.Image) -> tuple[int, int, bytes]:
     """Extract alpha (or luminance if opaque) from ``image`` and compress it into
     ``(width, height, compressed_payload)``."""
     w, h = image.size
-    if w <= 0 or h <= 0:
-        raise MaskError(f"invalid mask image dimensions {w}x{h}")
+    _validate_pixel_budget(w, h)
     if "A" in image.getbands():
         alpha = image.getchannel("A").tobytes()
     else:

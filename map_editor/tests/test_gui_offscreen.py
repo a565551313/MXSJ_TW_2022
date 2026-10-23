@@ -63,7 +63,7 @@ class TestEditorGuiOffscreen(unittest.TestCase):
             # Pick two walkable points near NPCs for live CAStar demonstration
             ents = vm.current_entities()
             walk_npcs = [n for n in ents["npcs"] if n["walkable"]]
-            if len(walk_npcs) >= 2:
+            if len(walk_npcs) >= 4:
                 p0 = (walk_npcs[0]["px"], walk_npcs[0]["py"])
                 p1 = (walk_npcs[3]["px"], walk_npcs[3]["py"])
                 vm.simulate_path(p0, p1)
