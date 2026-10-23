@@ -32,7 +32,12 @@ from _paths import PROJECT, SAMPLES  # noqa: E402
 if str(PROJECT) not in sys.path:
     sys.path.insert(0, str(PROJECT))
 
-from map_editor.cli import _bare_double_click_launch, main  # noqa: E402
+from map_editor.cli import (  # noqa: E402
+    _bare_double_click_launch,
+    _split_colon_spec,
+    main,
+)
+from map_editor.client.config import Config  # noqa: E402
 
 SRC = PROJECT / "src" / "map_editor"
 QT_ALLOWED = {Path("ui") / "widgets.py"}
@@ -102,6 +107,18 @@ class TestQtIsolation(unittest.TestCase):
         importlib.invalidate_caches()
 
 
+class TestCliSpecParsing(unittest.TestCase):
+    def test_windows_drive_colons_are_preserved(self) -> None:
+        self.assertEqual(
+            _split_colon_spec(r"D:\\art\\world.png:E:\\maps\\9001.map", 2),
+            [r"D:\\art\\world.png", r"E:\\maps\\9001.map"],
+        )
+        self.assertEqual(
+            _split_colon_spec(r"9001:D:\\maps\\9001.blk:E:\\out\\9001.map", 3),
+            ["9001", r"D:\\maps\\9001.blk", r"E:\\out\\9001.map"],
+        )
+
+
 @needs_samples
 class TestCliEndToEnd(unittest.TestCase):
     def setUp(self) -> None:
@@ -156,6 +173,27 @@ class TestCliEndToEnd(unittest.TestCase):
         code, _out, err = self._main("--scan", str(SAMPLES), "--export-json", "2101")
         self.assertEqual(code, 2)
         self.assertIn("KEY:PATH", err)
+
+    def test_build_map_warns_and_continues_for_stale_remembered_root(self) -> None:
+        from PIL import Image
+
+        home = Path(os.environ["MAP_EDITOR_HOME"])
+        home.mkdir(parents=True, exist_ok=True)
+        Config(client_root=str(self.tmp / "removed-client")).save()
+        art = self.tmp / "art.png"
+        Image.new("RGB", (64, 64), (20, 30, 40)).save(art)
+        output = self.tmp / "built.map"
+        code, _out, err = self._main("--build-map", f"{art}:{output}")
+        self.assertEqual(code, 0, err)
+        self.assertIn("记住的客户端目录不可用", err)
+        self.assertTrue(output.is_file())
+
+    def test_find_path_rejects_non_integer_coordinates_cleanly(self) -> None:
+        code, _out, err = self._main(
+            "--scan", str(SAMPLES), "--find-path", "2303:a,b:1,2"
+        )
+        self.assertEqual(code, 2)
+        self.assertIn("坐标必须是整数", err)
 
     def test_main_still_errors_in_dev_mode_with_no_arguments(self) -> None:
         """Unpackaged (``python run.py`` with no args) keeps the documented
@@ -281,29 +319,69 @@ if __name__ == "__main__":
     unittest.main(verbosity=2)
 
 
-@needs_samples
 class TestGirbDump(unittest.TestCase):
     """--girb-dump is the low-bandwidth channel: hex text instead of map files."""
 
     def test_dump_lists_hex_bodies_of_failing_sectors(self) -> None:
         import io
+        import tempfile
         from contextlib import redirect_stdout
-        out = io.StringIO()
-        with redirect_stdout(out):
-            code = main(["--scan", str(SAMPLES), "--girb-dump", "1034:2"])
+
+        from map_editor.core import create_map_file
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tdir = Path(tmp)
+            mp = create_map_file(tdir / "9999.map", 960, 240)
+            raw = bytearray(mp.read_bytes())
+            # Corrupt the first two GIRB blocks' compressed payloads with two
+            # distinct invalid LZO streams and repeat the first in sector 2.
+            pos = 0
+            bad_payloads = [
+                b"\xff\x01\x02\x03",
+                b"\xfe\x04\x05\x06",
+                b"\xff\x01\x02\x03",
+            ]
+            for bad in bad_payloads:
+                g = raw.index(b"GIRB", pos)
+                decl_len = int.from_bytes(raw[g + 4:g + 8], "little")
+                assert decl_len >= len(bad)
+                raw[g + 8:g + 8 + decl_len] = bad.ljust(decl_len, b"\xaa")
+                pos = g + 8 + decl_len
+            mp.write_bytes(bytes(raw))
+
+            out = io.StringIO()
+            with redirect_stdout(out):
+                code = main(["--scan", str(tdir), "--girb-dump", "9999:2"])
         self.assertEqual(code, 0)
         text = out.getvalue()
-        self.assertIn("### 1034", text)
-        lines = [ln for ln in text.splitlines()
-                 if ln.startswith("s") and " len=" in ln]
+        self.assertIn("### 9999", text)
+        lines = [
+            ln for ln in text.splitlines() if ln.startswith("s") and " len=" in ln
+        ]
         self.assertEqual(len(lines), 2)
-        hexes = [ln for ln in text.splitlines()
-                 if ln and all(c in "0123456789abcdef" for c in ln)]
+        hexes = [
+            ln
+            for ln in text.splitlines()
+            if ln and all(c in "0123456789abcdef" for c in ln)
+        ]
         self.assertEqual(len(hexes), 2)
         for hdr, body in zip(lines, hexes, strict=True):
             declared = int(hdr.split("len=")[1])
-            self.assertEqual(len(body), declared * 2)   # 2 hex chars per byte
+            self.assertEqual(len(body), declared * 2)
 
+    @needs_samples
+    def test_former_failing_1034_and_1035_now_decode_100_percent(self) -> None:
+        import io
+        from contextlib import redirect_stdout
+
+        for key in ("1034", "1035"):
+            out = io.StringIO()
+            with redirect_stdout(out):
+                code = main(["--scan", str(SAMPLES), "--girb-dump", key])
+            self.assertEqual(code, 0)
+            self.assertIn("没有需要排查的扇区", out.getvalue())
+
+    @needs_samples
     def test_dump_on_a_fully_decoded_map_says_so(self) -> None:
         import io
         from contextlib import redirect_stdout

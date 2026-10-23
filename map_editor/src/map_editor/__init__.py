@@ -1,2 +1,4 @@
-"""MXSJ map editor — client-path-driven, read-only map inspection and editing."""
-__version__ = "0.1.0"
+"""MXSJ map editor — full-featured client/server map inspection, editing, and I/O."""
+from __future__ import annotations
+
+__version__ = "1.0.0"
