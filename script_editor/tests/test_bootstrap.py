@@ -6,7 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from script_editor import GUI_VERSION
+from script_editor import GUI_VERSION, gui_version
 from script_editor.app import main
 
 SPEC = importlib.util.spec_from_file_location(
@@ -19,7 +19,7 @@ SPEC.loader.exec_module(bootstrap)
 class BootstrapVersionTests(unittest.TestCase):
     def test_incompatible_preinstalled_qt_must_be_repaired(self):
         with patch.dict(
-            "sys.modules", {"PySide6": SimpleNamespace(__version__="6.12.0")}
+            "sys.modules", {"PySide6": SimpleNamespace(__version__="0.0.0")}
         ):
             self.assertEqual(
                 bootstrap.find_missing(bootstrap.GUI_REQUIREMENTS),
@@ -39,7 +39,7 @@ class BootstrapVersionTests(unittest.TestCase):
 
     def test_direct_gui_entry_refuses_incompatible_qt_before_window_creation(self):
         with patch.dict(
-            "sys.modules", {"PySide6": SimpleNamespace(__version__="6.12.0")}
+            "sys.modules", {"PySide6": SimpleNamespace(__version__="0.0.0")}
         ):
             with self.assertRaisesRegex(SystemExit, "bootstrap.py"):
                 main([])
@@ -126,6 +126,32 @@ class RecoveryBootstrapTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(ValueError, "摘要"):
                 checked_recovery_source(root)
+
+    def test_supported_python_normal_start_reaches_app(self):
+        for version in ((3, 10, 0), (3, 14, 7), (3, 15, 0)):
+            with (
+                self.subTest(version=version),
+                patch.object(bootstrap.sys, "version_info", version),
+                patch.object(bootstrap, "ensure_dependencies", return_value=True),
+                patch.dict("sys.modules", {"PySide6.QtWidgets": SimpleNamespace()}),
+                patch("script_editor.app.main", return_value=17) as app,
+            ):
+                self.assertEqual(bootstrap.main([]), 17)
+                app.assert_called_once_with([])
+
+    def test_unsupported_python_rejected_before_dependency_install(self):
+        for version in ((3, 9, 9), (3, 16, 0), (4, 0, 0)):
+            with (
+                self.subTest(version=version),
+                patch.object(bootstrap.sys, "version_info", version),
+                patch.object(bootstrap, "ensure_dependencies") as install,
+            ):
+                self.assertEqual(bootstrap.main([]), 2)
+                install.assert_not_called()
+
+    def test_qt_pin_follows_host_version(self):
+        self.assertEqual(gui_version((3, 14, 7)), "6.10.3")
+        self.assertEqual(gui_version((3, 15, 0)), "6.12.0")
 
     def test_python314_normal_start_reaches_app_without_recovery_dependency(self):
         with (

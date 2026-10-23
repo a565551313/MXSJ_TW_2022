@@ -2,10 +2,36 @@
 
 from __future__ import annotations
 
+import hashlib
 import os
 import tempfile
 from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
+
+
+@dataclass(frozen=True)
+class SourceRevision:
+    """Raw disk digest, distinct from editor text and published module baselines."""
+
+    sha256: str | None
+
+    @classmethod
+    def capture(cls, path: Path):
+        digest = hashlib.sha256()
+        try:
+            with path.open("rb") as stream:
+                for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                    digest.update(chunk)
+        except FileNotFoundError:
+            return cls(None)
+        return cls(digest.hexdigest())
+
+    def verify(self, path: Path):
+        if self != self.capture(path):
+            raise ValueError(
+                "源码已被外部修改、删除或新建；编辑内容保留，请先对比或另存，未覆盖磁盘文件"
+            )
 
 
 def guard_output(path: Path, protected: Iterable[Path] = ()) -> Path:
@@ -23,9 +49,17 @@ def guard_output(path: Path, protected: Iterable[Path] = ()) -> Path:
     return path
 
 
-def atomic_write(path: Path, data: bytes, protected: Iterable[Path] = ()) -> None:
+def atomic_write(
+    path: Path,
+    data: bytes,
+    protected: Iterable[Path] = (),
+    *,
+    expected: SourceRevision | None = None,
+) -> None:
     protected = tuple(protected)
     path = guard_output(path, protected)
+    if expected is not None:
+        expected.verify(path)
     fd, temporary = tempfile.mkstemp(prefix=".mxscript-", dir=path.parent)
     try:
         with os.fdopen(fd, "wb") as stream:
@@ -33,6 +67,8 @@ def atomic_write(path: Path, data: bytes, protected: Iterable[Path] = ()) -> Non
             stream.flush()
             os.fsync(stream.fileno())
         guard_output(path, protected)
+        if expected is not None:
+            expected.verify(path)
         os.replace(temporary, path)
     finally:
         Path(temporary).unlink(missing_ok=True)
@@ -40,13 +76,25 @@ def atomic_write(path: Path, data: bytes, protected: Iterable[Path] = ()) -> Non
 
 def read_source(path: Path) -> str:
     # Strict UTF-8 only. Never silently decode Big5/GBK and rewrite the file.
-    return path.read_text(encoding="utf-8-sig")
+    return read_source_snapshot(path)[0]
 
 
-def save_source(path: Path, text: str, protected: Iterable[Path] = ()) -> None:
+def read_source_snapshot(path: Path) -> tuple[str, SourceRevision]:
+    raw = path.read_bytes()
+    text = raw.decode("utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
+    return text, SourceRevision(hashlib.sha256(raw).hexdigest())
+
+
+def save_source(
+    path: Path,
+    text: str,
+    protected: Iterable[Path] = (),
+    *,
+    expected: SourceRevision | None = None,
+) -> None:
     if path.suffix.lower() != ".py":
         raise ValueError("源码必须保存为.py；源码与包输出分离")
-    atomic_write(path, text.encode("utf-8"), protected)
+    atomic_write(path, text.encode("utf-8"), protected, expected=expected)
 
 
 def save_new_source(path: Path, text: str, protected: Iterable[Path] = ()) -> None:

@@ -44,6 +44,34 @@ class ModuleReport:
     corpus_manifest_sha256: str = ""
     candidate_pyc_sha256: str = ""
     origin_verified: bool = True
+    # Continuation target is separate from immutable recovery provenance.
+    target_archive: Path | None = None
+    target_fingerprint: str = ""
+
+    @property
+    def current_archive(self):
+        return self.target_archive or self.archive
+
+    @property
+    def current_fingerprint(self):
+        return self.target_fingerprint or self.fingerprint
+
+    def continue_after_build(self, build, archive):
+        """Continue only entries preserved by a verified build of our current pack."""
+        if (
+            self.current_fingerprint != build.source_sha256
+            or self.index in build.modified_indexes
+            or not self.standard_sha256
+            or not 0 <= self.index < len(archive.entries)
+            or archive.entries[self.index].identity != self.identity
+            or archive.vm != self.vm
+            or archive.path != build.output.resolve()
+            or archive.fingerprint() != build.output_sha256
+        ):
+            return self
+        return replace(
+            self, target_archive=archive.path, target_fingerprint=build.output_sha256
+        )
 
     def for_candidate(self, index):
         candidate = self.candidates[index]
@@ -75,6 +103,8 @@ class ModuleReport:
             "corpus_manifest_sha256": self.corpus_manifest_sha256,
             "candidate_pyc_sha256": self.candidate_pyc_sha256,
             "origin_verified": self.origin_verified,
+            "adoption_archive": str(self.current_archive),
+            "adoption_archive_sha256": self.current_fingerprint,
             "candidates": [c.metadata() for c in self.candidates],
         }
 

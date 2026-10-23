@@ -23,7 +23,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 LOG_PATH = HERE / "启动日志.txt"
 MIN_PYTHON = (3, 10)
-MAX_PYTHON = (3, 15)
+MAX_PYTHON = (3, 16)
 sys.path.insert(0, str(HERE / "src"))
 from script_editor import GUI_VERSION  # noqa: E402 - bootstrap local source path
 from script_editor.recovery_dependencies import (  # noqa: E402
@@ -170,10 +170,10 @@ def main(argv: list[str] | None = None) -> int:
     _say(f"Python {sys.version.split()[0]}：{sys.executable}")
     if not MIN_PYTHON <= sys.version_info < MAX_PYTHON:
         _say(
-            f"Python版本不在支持范围：需要3.10至3.14，当前是 {sys.version.split()[0]}。"
+            f"Python版本不在支持范围：需要3.10至3.15，当前是 {sys.version.split()[0]}。"
         )
         _say(
-            "请到 https://www.python.org/downloads/ 安装Python 3.10—3.14，"
+            "请到 https://www.python.org/downloads/ 安装Python 3.10—3.15，"
             "安装时勾选 “Add python.exe to PATH”。"
         )
         return 2

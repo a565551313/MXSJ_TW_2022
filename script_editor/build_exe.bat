@@ -14,9 +14,9 @@ if not defined PY (
     pause
     exit /b 1
 )
-%PY% -c "import sys; sys.exit(0 if (3, 10) <= sys.version_info < (3, 15) else 1)"
+%PY% -c "import sys; sys.exit(0 if (3, 10) <= sys.version_info < (3, 16) else 1)"
 if errorlevel 1 (
-    echo [ERROR] Python 3.10 through 3.14 is required.
+    echo [ERROR] Python 3.10 through 3.15 is required.
     pause
     exit /b 1
 )

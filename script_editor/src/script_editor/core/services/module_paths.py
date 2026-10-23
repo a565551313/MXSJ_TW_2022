@@ -11,6 +11,7 @@ import hashlib
 import json
 import zlib
 
+from ..policy import require_module_allowed
 from ..vm.marshal_tree import parse
 from ..vm.py25.keys import KeyProfile, inflate_script, read_catalog
 
@@ -54,6 +55,7 @@ def scan_script_paths(archive, catalog):
     paths, errors = {}, {}
     for entry in archive.entries:
         try:
+            require_module_allowed(archive.vm, entry.index)
             info = rows[str(entry.index)]
             stored = archive.read_stored(entry.index)
             expanded = inflate_script(archive, entry.index)

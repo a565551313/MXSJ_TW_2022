@@ -109,6 +109,11 @@ def save_state(path: Path, bindings, catalogs=(), *, editors=(), corpora=()):
         )
     protected += [e.path for e in editors]
     protected += [e.report.archive for e in editors if e.report is not None]
+    protected += [
+        e.report.target_archive
+        for e in editors
+        if e.report is not None and e.report.target_archive is not None
+    ]
     protected += [p for c in corpora for p in (c.archive, c.path)]
     if any(
         path.resolve().is_relative_to(c.path.parent.parent.resolve()) for c in corpora

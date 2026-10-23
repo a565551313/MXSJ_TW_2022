@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import zlib
 
+from ..policy import require_module_allowed
 from ..vm.compression import inflate
 from ..vm.marshal_tree import parse
 from ..vm.py25 import codec as py25
@@ -12,6 +13,7 @@ from ..vm.py27 import codec as py27
 
 
 def inspect_module(archive, index, catalog=None):
+    require_module_allowed(archive.vm, index)
     if (
         type(index) is not int
         or not 0 <= index < len(archive.entries)

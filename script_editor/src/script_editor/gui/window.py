@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -18,7 +19,7 @@ from .. import __version__
 from ..core.archives.document import ArchiveDocument
 from ..core.inspection.encoding import byte_literal
 from ..core.services.bundled_catalog import bundled_catalog
-from ..core.services.files import read_source, save_source
+from ..core.services.files import SourceRevision, read_source_snapshot, save_source
 from ..core.services.module_paths import index_script_paths
 from .build_actions import BuildActions
 from .corpus_actions import CorpusActions
@@ -279,7 +280,15 @@ class Window(
                 + "\n双击读取包内模块并尝试恢复；草稿可编辑另存，写包前须检查并采用。"
             )
 
-    def add_source(self, path, vm="py25", reference=False, text=None, source_kind=None):
+    def add_source(
+        self,
+        path,
+        vm="py25",
+        reference=False,
+        text=None,
+        source_kind=None,
+        source_revision=None,
+    ):
         path = path.resolve()
         for i in range(self.tabs.count()):
             if self.tabs.widget(i).path == path:
@@ -290,12 +299,15 @@ class Window(
                     raise ValueError("该文件已按另一来源类型打开，请先关闭原标签")
                 self.tabs.setCurrentIndex(i)
                 return self.tabs.widget(i)
+        if text is None:
+            text, source_revision = read_source_snapshot(path)
         tab = SourceTab(
             path,
-            read_source(path) if text is None else text,
+            text,
             vm,
             reference,
             source_kind,
+            source_revision,
         )
         label = ("[参考] " if reference else "") + path.name
         self.tabs.addTab(tab, label)
@@ -340,7 +352,7 @@ class Window(
         )
         if name:
             try:
-                text = read_source(Path(name))
+                text, revision = read_source_snapshot(Path(name))
                 if "MXSJ-RECOVERED-DRAFT" in "\n".join(text.splitlines()[:3]):
                     vm = (
                         "py27"
@@ -348,7 +360,11 @@ class Window(
                         else "py25"
                     )
                     self.add_source(
-                        Path(name), vm=vm, text=text, source_kind="recovered-draft"
+                        Path(name),
+                        vm=vm,
+                        text=text,
+                        source_kind="recovered-draft",
+                        source_revision=revision,
                     )
                     return
                 reply = QMessageBox.question(
@@ -363,7 +379,10 @@ class Window(
                 )
                 if reply != QMessageBox.StandardButton.Cancel:
                     self.add_source(
-                        Path(name), reference=reply == QMessageBox.StandardButton.No
+                        Path(name),
+                        reference=reply == QMessageBox.StandardButton.No,
+                        text=text,
+                        source_revision=revision,
                     )
             except Exception as exc:
                 self.fail(exc)
@@ -406,7 +425,12 @@ class Window(
             tab.path,
             tab.editor.toPlainText(),
             [a.path for a in self.archives] + [c.path for c in self.catalogs],
+            expected=tab.source_revision,
         )
+        tab.source_revision = SourceRevision(
+            hashlib.sha256(tab.editor.toPlainText().encode("utf-8")).hexdigest()
+        )
+        self.project_dirty = True
         tab.editor.document().setModified(False)
 
     def save_current(self):
