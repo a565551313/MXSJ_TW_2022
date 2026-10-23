@@ -246,10 +246,12 @@ assert ('ScrollTo', 0) in EVENTS
 assert ('ChatCursor', 0) in EVENTS
 assert ('ResetFromCursor',) in EVENTS
 cout = [e for e in EVENTS if e[0] == 'COutput'][-1]
-assert cout[1] == g['TERMS_FALLBACK']
-assert all(isinstance(line, str) for line in cout[1])
+# 原版 `[s + '#r' for s in MSG.split('\n')]`：每行末尾都有换行标记，
+# 不是「吃掉每行首字符」（那是对 py2 列表推导累加器 `_[1]` 的误读）。
+assert cout[1] == [line + '#r' for line in g['TERMS_FALLBACK']], cout[1]
+assert all(isinstance(line, str) and line.endswith('#r') for line in cout[1])
 # 換版式後第一行日誌帶版本標記，用戶看這一行的 build= 就知道新腳本生效了。
-assert 'terms layout begin build=2027-10-22b' in open(
+assert 'terms layout begin build=2027-10-22c' in open(
     'photo\\register_diag.txt', 'rb').read()
 # 協議頁用戶後加的 btn_back：消息號從版式讀（原生 m_MsgID），不寫死。
 assert panel.m_BackMsgId == 7, panel.m_BackMsgId
@@ -557,15 +559,16 @@ g['ModuleReset']()
 #     確認框必須落到明示兜底，且構造不得拋異常。
 mod('servicedata', SERVICE_MSG='areal1\nbterms2')
 g['Show'](True)
-assert g['g_RegisterPanel'].m_PublicTxtBox.lines == ['real1', 'terms2']
+assert g['g_RegisterPanel'].m_PublicTxtBox.lines == ['areal1#r', 'bterms2#r']
 g['ShowConfirmDlg'](0)
 confirm_a = g['g_ConfirmDlg']
 assert isinstance(confirm_a, g['CConfirm'])
-assert confirm_a.m_PublicTxtBox.lines == list(g['CONFIRM_FALLBACK'])
+assert confirm_a.m_PublicTxtBox.lines == [
+    line + '#r' for line in g['CONFIRM_FALLBACK']]
 # 不依赖 codec（本沙箱的 2.5 是最小构建、没编 big5）：直接按字节核对，
 # 首行必须正是「確認註冊」的 Big5 字节，行长度序列必须与常量一致。
-assert confirm_a.m_PublicTxtBox.lines[0] == '\xbdT\xbb{\xb5\xf9\xa5U'
-assert [len(x) for x in confirm_a.m_PublicTxtBox.lines] == [8, 0, 22, 0, 84]
+assert confirm_a.m_PublicTxtBox.lines[0] == '\xbdT\xbb{\xb5\xf9\xa5U#r'
+assert [len(x) for x in confirm_a.m_PublicTxtBox.lines] == [10, 2, 24, 2, 86]
 print 'faithful archive: real terms + confirm fallback (no AttributeError) OK'
 g['ShowConfirmDlg'](0)
 del confirm_a
@@ -575,11 +578,11 @@ del sys.modules['servicedata']
 # 9b. 對照組：包內補上 CONFIRM_MSG 後必須自動改用原文，不再走兜底。
 mod('servicedata', SERVICE_MSG='xterm1\nyterm2', CONFIRM_MSG='zconfirm1\nwconfirm2')
 g['Show'](True)
-assert g['g_RegisterPanel'].m_PublicTxtBox.lines == ['term1', 'term2']
+assert g['g_RegisterPanel'].m_PublicTxtBox.lines == ['xterm1#r', 'yterm2#r']
 g['ShowConfirmDlg'](0)
 confirm = g['g_ConfirmDlg']
 assert isinstance(confirm, g['CConfirm'])
-assert confirm.m_PublicTxtBox.lines == ['confirm1', 'confirm2']
+assert confirm.m_PublicTxtBox.lines == ['zconfirm1#r', 'wconfirm2#r']
 del EVENTS[:]
 confirm.OnMessage(1)
 assert ('C2SConfirmRegInfo',) in EVENTS and g['g_ConfirmDlg'] is None

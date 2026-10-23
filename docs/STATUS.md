@@ -667,6 +667,62 @@
 - **未验**：Windows 实机、这版客户端是否有 `GetColor()`、`iTeam` 的分组语义
   （只按用户实测记「必须不同」，未逆出规则）。
 
+### 3.15.3 2026-10-23 用户实机确认 btn_back 消息号 + 两处「改哪里」的定位
+
+- **实机结论（来源：用户口述）**：`btn_back` 的 `iMsgID` 改到 **3** 后能回登录首頁。
+  协议页的消息号至此齐了：1=同意（进表单）、2=拒絕（回首頁）、3=返回（回首頁）。
+  脚本不写死：`_LayoutMsgId()` 读版式 `m_MsgID`，且「其余消息号」本来就回首頁，
+  所以 3、4… 都能用；唯一要避开 1（撞「同意」），撞号时日誌写
+  `terms WARN btn_back msgid=1 conflicts with agree`。代码只加注释，行为不变。
+- **协议正文的位置（回答用户）**：不在布局、不在本脚本。`agreement.dlg` 的
+  `loc_msg` 只是显示区；正文是 `script.fls` 的 **entry 1931**
+  （`script\data\servicedata.py`）的 **`SERVICE_MSG`**（本轮实测解出：11,602 B，
+  Big5，常量首字节为换行，首行 `#cd95927夢想世界遊戲服務條款#n`；`SERVICE_MSG2`
+  是另一套定型化契約範本）。`register.py` 的 `TERMS_FALLBACK` 只在 import 不到
+  `servicedata` 时生效，真机看不到。**改写正文时每行首字符会被 `[line[1:]]` 吃掉**
+  （原版 `CRegPanel1`/`CServiceMessageDialog` 同写法），所以每行仍要以 `#` 开头。
+- **注册页颜色的位置（回答用户）**：`tools/registration/register.py` 的
+  `COLOR_TEXT_WHITE = 16777215`（第 392 行附近）一个常量管四框 + `txt_Wrong`；
+  单独改某框可在布局里给锚点设色（`_LayoutColor()` 先读 `GetColor()`，非 0 优先）。
+  `linecolor=0` 为输入框线色，与登录页一致。
+- 两条「换正文」的路子（**未实施**，待用户选）：① 构建器加 `--terms <文件>`，
+  构建时替换 entry 1931 的 `SERVICE_MSG`（Big5 + 行首 `#` 由工具处理）；
+  ② 脚本优先读客户端目录下的纯文本（如 `agreement.txt`），有就用、没有才用
+  `servicedata`，以后改条款只改 txt、不必重打包。文档已写入
+  `tools/registration/TESTING_2027.md`（新增「协议页的正文在哪里」「注册页的颜色在哪里」两节）。
+
+### 3.15.4 2026-10-23 条款排版真 bug：反编译 `_[1]` 是列表推导累加器，不是切片
+
+用户问「协议页的内容在哪里改」，顺手核对 `_LoadTermsLines()` 的写法，反汇编发现
+**它一直是错的**（0.15 之前的老版也错）：
+
+- 反编译产物：`result = [_[1] for s in servicedata.SERVICE_MSG.split('\n')]`
+  （`CRegPanel1`、`CConfirm`、`loginin.CServiceMessageDialog` 三处同形）。
+- 2026-10-22 那版把 `_[1]` 当成「取第一个字符之后」，写成 `line[1:]`。
+- 反汇编 entry 4007 / 4806 的 `__init__` 实锤：`LOAD_CONST '#r'` → `BINARY_ADD`
+  → `LIST_APPEND`，真正的源码是 **`result = [s + '#r' for s in MSG.split('\n')]`**；
+  `_[1]` 是 **CPython 2.x 列表推导的隐藏累加器**（`STORE_FAST _[1]`）。
+- 后果（用户在真机上看到的就是这个）：条款**每行少第一个字**、且**没有 `#r`
+  换行标记**（8,000+ 字的条款挤成一片）。
+- 修法：新增 `_RichLines(lines) = [line + "#r" for line in lines]`；
+  `_LoadTermsLines()` / `_LoadConfirmLines()` 的**成功路径与兜底路径**都走它，
+  与 `mainpage._WriteTxtBox` 的富文本约定一致（每行自带换行标记）。
+  版本标记升到 **`build=2027-10-22c`**。
+- 回归：`harness` 三处条款断言改成 `#r` 语义（兜底、真实 `SERVICE_MSG`、
+  9b 对照组、确认框兜底字节长度 `[10,2,24,2,86]`）；新增
+  `test_terms_lines_get_native_line_break_marker` 死锁旧写法（`[1:] for line in`
+  不得出现在代码里、`_RichLines` 必须是 `line + "#r"`、两个 loader 各调用两次）。
+  `tools/registration` **46 项**通过，ruff 0；三套 harness 模式全过。
+- 产物 24,268,877 B，SHA256
+  `4c4cf71d357f43aa9e722a692280efee93a50710caeee24b694c765e5524e5e3`；
+  出货 ZIP（只含脚本）24,194,273 B，SHA256
+  `61de6279d42077e70ed14f8267c79db635b9a59574cf230203118f3baf601910`，
+  My Drive 根目录 https://drive.google.com/file/d/1Dflmw54c14CKDLEhRsnbkGapiXWDrKWf/view
+  （上一轮的 `registration_2027_layout_r2.zip` 已被这一版取代）。
+  构建仍只改 337/4007，337 差 9 字节，marshal 往返一致。
+- **未验**：真机上条款的实际排版（换行是否正常、首发字符是否恢复），需用户实测。
+  条款正文的**位置**不变：仍是 entry 1931 的 `servicedata.SERVICE_MSG`。
+
 ### 3.16 独立脚本编辑器开工授权（2026-10-15）
 
 用户确认font1后“确实好了”，协议→表单这一步已实机通过，不外推全部控件/服务器验收。
@@ -1592,6 +1648,8 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-23 | 注册脚本 **第三轮（build=2027-10-22c）**：修条款排版真 bug。用户问「协议内容在哪改」，核对时反汇编发现 `_LoadTermsLines` 一直是错的——反编译里的 `_[1]` 是 py2 列表推导的隐藏累加器（`STORE_FAST _[1]`），不是切片；原版实为 `[s + '#r' for s in SERVICE_MSG.split('\n')]`（`LOAD_CONST '#r'`+`BINARY_ADD` 实锤）。旧写法 `line[1:]` 会让条款**每行少第一个字、且没有换行**。新增 `_RichLines()` 统一补 `#r`，条款/确认框的成功与兜底路径都走它；版本标记升 `c`。回归：harness 条款断言改 `#r` 语义（确认框兜底行长 `[10,2,24,2,86]`）、新增死锁旧写法的静态用例，`tools/registration` 46 项、ruff 0、三套模式全过；构建只改 337/4007、337 差 9 字节。真机排版待验 |
+| 2026-10-23 | 注册脚本 **2027 版式第三轮（文档/注释）**：用户实机确认 `btn_back` 的 `iMsgID=3` 可回登录首頁（协议页消息号齐了：1 同意 / 2 拒絕 / 3 返回）。脚本仍从版式 `m_MsgID` 现读、其余消息号回首頁，只加注释不改行为。同轮回答两处定位：协议正文在 `script.fls` **entry 1931** 的 `servicedata.SERVICE_MSG`（11,602 B Big5，首行 `#cd95927…`；`loc_msg` 只是显示区；`TERMS_FALLBACK` 仅在 import 失败时生效；`[line[1:]]` 会吃掉每行首字符）；注册页颜色在 `register.py` 的 `COLOR_TEXT_WHITE=16777215`（或布局给锚点设色后由 `GetColor()` 读取）。「换正文」的两条可选路子（构建器 `--terms` / 读外部 txt）**未实施**，待用户选。文档改 `TESTING_2027.md`，未重编包、未开 PR |
 | 2026-10-22 | 注册脚本 **2027 版式第二轮（build=2027-10-22b）**：用户实机反馈三条，只改脚本不动布局。① 四框与 `txt_Wrong` 改白字——`.dlg` 里只是占位锚点，显示控件由 `CEDIT`/`CRICHTEXT` 另建，字色只认构造参数（旧代码写死 `0`＝黑，这也是加 `ICOLOR` 不生效的原因）；新增 `COLOR_TEXT_WHITE=16777215`（照登录页）与 `_LayoutColor()`（先读锚点 `GetColor()`，非 0 采用、否则白），删掉返回黑的 `_HintColor()`。② 协议页 `btn_back`（用户本机加）：消息号从原生 `m_MsgID` 现读，点击回登录首頁，撞号 1 时写警告且 1 仍走「同意」。③ `iTeam` 必须不同（用户实测，原稿 1/1 点不动），属布局侧；`register2027_msg.dlg` 不再随包发布。回归：三套模式全过、`tools/registration` 45 项、ruff 0、wincompat 0/0/0；构建只改 337/4007、337 差 9 字节、marshal 往返一致。Windows 实机与 `GetColor()` 是否存在待验 |
 | 2026-10-22 | 注册脚本 **2027 版式接线**：用户重做布局（`login_new/agreement.dlg`、`login_new/register2027.dlg`），`register.py` 按新版式重写接线——四框换 `edt_account`/`edt_Pwd`/`edt_Pwd_1`/`edt_email`，提示换 90×20 的 `txt_Wrong`，两个勾选（`btn_fiveaccount`/`btn_isee`）改走原生 `.dlg` 接口 `GetObject(...).IsSelected()/SetSelect()`，新增「未勾同意不得注册」前置校验。**不自校准翻转**：反汇编 entry 4806 `CLoginIn/OnMessage` 只读 `GetObject('chk_agree').IsSelected()`、`GetObject('btn_Protect').IsSelected()`，从不手动翻 ⇒ 引擎翻、脚本只读，共用消息号 50 也不再是问题（交付稿把同意改 51 消歧）。离线 CPython 2.5.6 桩件 13 组全过（两种点击顺序、共用 50、缺布局、缺 `FONT_EDIT`），`tools/registration` 43 项、ruff 0；构建器只改 337/4007，337 差 9 字节，marshal 往返一致、无网络调用名残留。**Windows 实机未验**，未开 PR。出货 ZIP `registration_2027_layout.zip` 24,195,048 B，SHA256 `1bb201ae1a6446f2836521e239374eacd95a1e75d26df3d09a76af06712a0a5c` |
 | 2026-10-21 | 文档：记录 **`mock_server_v2` 的 Windows 实机全链路**——连接→登录→选角→进游戏→NPC 对话→对话中传送地图。来源是**用户口述**，我方未复现（沙箱无 Windows 客户端/`mx.exe`/原始包），无抓包与日志；只写「该版本+该测试副本走通这条路径」，不据此宣称认证（密码摘要/请求 key 未校验）、事务/并发、反作弊或完整玩法。写入 `docs/MOCK_SERVER.md`（含三种服务对照表新增 v2 行）、`MOCK_SERVER_V2_README.md`（兼容性小节 + 实机记录）、根 `README.md` 组件表、本文件 §1/§2。 |

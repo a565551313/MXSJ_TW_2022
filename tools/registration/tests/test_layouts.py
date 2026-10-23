@@ -198,6 +198,44 @@ class RegistrationLayoutsTest(unittest.TestCase):
         self.assertEqual(fixed_by_name["edt_email"], by_name["edt_email"])
         self.assertEqual(len(fixed), len(form))
 
+    def test_terms_lines_get_native_line_break_marker(self):
+        """条款/确认框的每一行都必须补 `#r`——原版是 `[s + '#r' for s in ...]`。
+
+        2026-10-22 那版把反编译输出里的 `_[1]`（py2 列表推导的隐藏累加器）
+        当成下标，写成 `line[1:]`，于是每行少一个首字符、也没有换行标记。
+        2026-10-23 反汇编 entry 4007/4806 核实：`LOAD_CONST '#r'` + `BINARY_ADD`。
+        """
+        source = (HERE / "register.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        # 注释里会引用旧写法作说明，所以只钉「代码里出现这个切法」。
+        self.assertNotIn("[1:] for line in", source)
+        self.assertIn("[line + \"#r\" for line in lines]", source)
+        rich = next(
+            node
+            for node in tree.body
+            if isinstance(node, ast.FunctionDef) and node.name == "_RichLines"
+        )
+        add = next(
+            node
+            for node in ast.walk(rich)
+            if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add)
+        )
+        self.assertEqual(ast.literal_eval(add.right), "#r")
+        self.assertIsInstance(add.left, ast.Name)
+        # 两个加载器都必须走 _RichLines（含兜底路径），不能有一条漏了。
+        for name in ("_LoadTermsLines", "_LoadConfirmLines"):
+            func = next(
+                node
+                for node in tree.body
+                if isinstance(node, ast.FunctionDef) and node.name == name
+            )
+            calls = [
+                node.func.id
+                for node in ast.walk(func)
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+            ]
+            self.assertEqual(calls.count("_RichLines"), 2, (name, calls))
+
     def test_text_color_is_white_and_read_from_layout(self):
         """2026-10-22 实机：四框/提示行要白字。字色只认构造参数，不是 .dlg 属性。"""
         source = (HERE / "register.py").read_text(encoding="utf-8")

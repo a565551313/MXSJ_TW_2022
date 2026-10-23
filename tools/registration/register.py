@@ -18,6 +18,9 @@
 #      SERVICE_MSG/SERVICE_MSG2 兩套按 main.g_LangVersion 切換），所以真機走的是
 #      正式條款；缺失兜底只在離線桩件環境生效。但歸檔裡的 servicedata **沒有**
 #      CONFIRM_MSG（其 pyc 名字表只有兩個 SERVICE_*，兩側歸檔亦無任何定義者），
+#      **每行末尾補 `#r`**：原版寫法是 `[s + '#r' for s in MSG.split('\n')]`，
+#      反編譯器把 py2 列表推導的隱藏累加器 `_[1]` 印成了下標，舊版照抄成
+#      `line[1:]`（吃掉每行首字符）——2026-10-23 用 marshal 反彙編核實後改正。
 #      舊客戶端 CConfirm 直接取該屬性屬構造即報錯的死路，故本文件為確認框另設
 #      CONFIRM_FALLBACK 明示兜底；包內一旦補上該常量，自動改用原文。
 #   4. 規格（用戶 2026-10-14 拍板，2026-10-22 換版式）：先過協議頁
@@ -453,13 +456,27 @@ def _ReturnHome():
         main.doreturn(interface.CBaseObject(None))
 
 
+def _RichLines(lines):
+    """把純文本行變成 COutput 要的富文本行：每行末尾補 `#r`（換行標記）。
+
+    原版四處寫法一致（`CRegPanel1`/`CConfirm`/`CServiceMessageDialog`/
+    `mainpage._WriteTxtBox` 的資料來源）：
+        result = [s + '#r' for s in servicedata.SERVICE_MSG.split('\n')]
+    反編譯器把 py2 列表推導的隱藏累加器印成了 `_[1]`，2026-10-22 那版照抄成
+    `line[1:]`，結果是每行少一個字、還沒有換行標記。2026-10-23 反彙編
+    entry 4007/4806 的 `__init__` 核實：`LOAD_CONST '#r'` + `BINARY_ADD`，
+    就是 `s + '#r'`。這裡按原版重寫。
+    """
+    return [line + "#r" for line in lines]
+
+
 def _LoadTermsLines():
     try:
         import servicedata
 
-        return [line[1:] for line in servicedata.SERVICE_MSG.split("\n")]
+        return _RichLines(servicedata.SERVICE_MSG.split("\n"))
     except Exception:
-        return list(TERMS_FALLBACK)
+        return _RichLines(TERMS_FALLBACK)
 
 
 def _LoadConfirmLines():
@@ -471,9 +488,9 @@ def _LoadConfirmLines():
     try:
         import servicedata
 
-        return [line[1:] for line in servicedata.CONFIRM_MSG.split("\n")]
+        return _RichLines(servicedata.CONFIRM_MSG.split("\n"))
     except Exception:
-        return list(CONFIRM_FALLBACK)
+        return _RichLines(CONFIRM_FALLBACK)
 
 
 class CRegTermsPanel(combdialog.CCombPanel):
@@ -484,7 +501,7 @@ class CRegTermsPanel(combdialog.CCombPanel):
     def __init__(self, parent):
         # 換版式後日誌第一行帶版本標記：用戶只看這一行就能確認新腳本已生效。
         # 尾碼 b = 第二輪（白字 + btn_back）。
-        _Diag("terms layout begin build=2027-10-22b")
+        _Diag("terms layout begin build=2027-10-22c")
         combdialog.CCombPanel.__init__(self, parent, DLG_TERMS)
         _Diag("terms layout ready")
         # btn_back 是用戶在 agreement.dlg 本機加的，消息號以版式為準；

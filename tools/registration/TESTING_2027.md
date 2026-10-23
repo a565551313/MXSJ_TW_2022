@@ -1,14 +1,14 @@
-# 2027 版式测试说明（2026-10-22，第二轮 2026-10-22 晚 / build=2027-10-22b）
+# 2027 版式测试说明（布局 2026-10-22，脚本 build=2027-10-22c）
 
 用户重做布局后，注册脚本按新版式重写接线。本页只讲这一版怎么装、怎么看日志、
 以及哪些结论已验／未验。
 
-> **第二轮（build=2027-10-22b）修三件事，全部只改脚本、不动布局**：
-> 1. 四框与 `txt_Wrong` 改**白字**（`16777215`，照登录页 `edt_Name`/`edt_Pwd`）；
->    原来传的是 `0`＝黑。详见下节「为什么布局里改颜色不管用」。
-> 2. 协议页新增**用户自加的 `btn_back`**：消息号从版式现读（`m_MsgID`），
->    点击回登录首頁；若被填成 1（与「我同意」同号）会在日志里留警告。
-> 3. `iTeam`：用户实机确认**两个勾选必须不同值**才能点动（原稿都是 1）。
+> **第二轮（b）**：四框与 `txt_Wrong` 改**白字**（`16777215`，照登录页）；
+> 协议页认用户自加的 `btn_back`（消息号从版式现读，撞号 1 会警告）；
+> 两个勾选的 `iTeam` 必须不同（用户实测，属布局侧）。
+> **第三轮（c，最新）**：修条款每行少一个字、没有换行的问题——反编译里的
+> `_[1]` 是 py2 列表推导的隐藏累加器，被误抄成了切片；原版是 `[s + '#r' ...]`。
+> 详见「协议页的正文在哪里」一节。
 
 ## 版式对照
 
@@ -41,6 +41,19 @@ GetObject('btn_Protect').IsSelected()
 - 状态一律在提交时重读，客户端「消息先到」或「翻完再发」都不影响校验；
 - 两个勾选在原稿里同为 msgid 50 也不影响（不需要知道点的是哪个）。
 
+### 协议页按钮的消息号（用户 2026-10-23 实机确认）
+
+| 控件 | iMsgID | 结果 |
+| --- | --- | --- |
+| `btn_dft_000`（同意） | 1 | 进注册表单 |
+| `btn_dft_002`（拒絕） | 2 | 回登录首頁 |
+| `btn_back`（返回） | **3** | 回登录首頁（用户实测可用） |
+
+脚本不写死这些号：`btn_back` 的消息号从版式 `m_MsgID` 现读，且协议页的
+「其余消息号」本来就回登录首頁，所以 3、4… 都能用。**唯一要避开的是 1**
+（与「同意」同号会让返回键变成同意），撞号时日誌会写
+`terms WARN btn_back msgid=1 conflicts with agree`。
+
 ### iTeam 必须不同（用户 2026-10-22 实机定论）
 
 原稿里 `btn_fiveaccount` 与 `btn_isee` 的 `iTeam` **都是 1**，点不动；用户改成
@@ -69,6 +82,61 @@ combmacro.CRICHTEXT(..., text, font, color)
 **非 0 就用版式值**；读不到或为 0 退回白字 `16777215`。也就是说今后在布局里给
 锚点设颜色是能生效的，但**前提是这版客户端支持 `GetColor()`**；不支持就固定白字。
 
+## 协议页的正文在哪里
+
+**不在布局里，也不在本脚本里。** `agreement.dlg` 的 `loc_msg` 只是个显示区，
+里面没有文字；正文来自 `script.fls` 的 **entry 1931**（自报路径
+`script\data\servicedata.py`）里的 **`SERVICE_MSG`**（11,602 B，Big5，
+开头是 `#cd95927夢想世界遊戲服務條款#n`；`SERVICE_MSG2` 是另一套
+「線上遊戲定型化契約範本」）。`loginin.py` 登录时的服务条款弹窗也读同一个常量。
+
+`register.py` 里的 `TERMS_FALLBACK` 只在这个模块 import 不到时才用（真机有，
+所以看不到它）。
+
+### 第三轮改掉一个真 bug：条款每行少一个字、还没有换行
+
+原版写法（`CRegPanel1` / `CConfirm` / `CServiceMessageDialog` 三处一致）是
+
+```python
+result = [s + '#r' for s in servicedata.SERVICE_MSG.split('\n')]
+```
+
+反编译输出把它印成了 `result = [_[1] for s in ...]`——那个 `_[1]` 是 **Python 2
+列表推导的隐藏累加器变量**，不是下标。2026-10-22 那版照抄成了
+`[line[1:] for line in ...]`，后果是**每行第一个字符被吃掉、也没有 `#r` 换行标记**。
+（0.15 之前的老版也是这么写的，你之前看到的条款就是被啃过的。）
+
+2026-10-23 直接反汇编 entry 4007 与 4806 的 `__init__` 确认：
+`LOAD_CONST '#r'` + `BINARY_ADD` + `LIST_APPEND`，就是 `s + '#r'`。
+现在 `_RichLines()` 统一补 `#r`，条款页和确认框都走它（兜底文本也同样处理）。
+日志第一行相应升到 **`build=2027-10-22c`**。
+
+所以**改写正文时不用管行首**，每行原样写中文即可；`#cRRGGBB` 这类行内颜色码
+仍然有效（原包首行就是 `#cd95927` 开头）。
+
+想换正文有两条路（都还没做，需要时再说）：
+1. 给构建器加 `--terms <文本文件>`，构建时替换 entry 1931 的 `SERVICE_MSG`
+   （Big5 编码由工具处理）。
+2. 让脚本优先读客户端目录下的一个纯文本（例如 `agreement.txt`），有就用它、
+   没有才用 `servicedata`——你之后改条款只要改那个 txt，不用重打包。
+
+## 注册页的颜色在哪里
+
+`tools/registration/register.py`：
+
+```python
+COLOR_TEXT_WHITE = 16777215      # 0xFFFFFF，白
+...
+edit = combmacro.CEDIT(edit_class, name, parent,
+                       _LayoutColor(parent, name), font, linecolor=0)
+```
+
+- **四个输入框 + `txt_Wrong` 全部改色** → 改 `COLOR_TEXT_WHITE` 这一个常量
+  （`0` 黑、`16711680` 红 `0xFF0000`、`16776960` 黄 `0xFFFF00`）。
+- **只想改某一个框** → 在布局里给那个锚点（`edt_Pwd` 等）设颜色，`_LayoutColor()`
+  会先读 `GetColor()`，非 0 就用布局值；读不到/为 0 才退回常量。
+- `linecolor=0` 是输入框的线色，和登录页一致；要改也在同一行。
+
 ## 装法
 
 1. 备份测试副本的 `data/script.fls`，用构建产物覆盖。
@@ -79,8 +147,8 @@ combmacro.CRICHTEXT(..., text, font, color)
 
 日志在 `photo\register_diag.txt`，关键行：
 
-- `terms layout begin build=2027-10-22b`：**第一行**，有它才说明本包的脚本已在跑
-  （尾碼 `b` = 白字 + `btn_back` 这一轮）。
+- `terms layout begin build=2027-10-22c`：**第一行**，有它才说明本包的脚本已在跑
+  （尾碼 `c` = 第三轮（条款换行 + `#r`），`b` 是白字 + `btn_back`）。
 - `terms layout ready` / `form layout ready`：两个布局都取到了。
 - `check btn_fiveaccount ready=0` / `check btn_isee ready=0`：勾选框读到原生状态
   （`ready` 后是初始值）。若变成 `check ... read api missing`，说明这版客户端没有
