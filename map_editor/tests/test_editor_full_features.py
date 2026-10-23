@@ -17,6 +17,7 @@ from map_editor.cli import main
 from map_editor.client.config import Config
 from map_editor.client.scene_table import SceneTable
 from map_editor.core import (
+    GepjError,
     PrefixRecord,
     apply_blk_to_map,
     client_px_to_server_cell,
@@ -172,6 +173,58 @@ class TestFullEditorWorkflowUndoAndGuards(unittest.TestCase):
             self.assertEqual(source.read_bytes(), original_source)
             self.assertEqual(len(doc.read_cells(doc.sector(0))), 192)
             doc.close()
+
+    def test_save_verifies_sector_jpeg_before_replacing_destination(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "source.map"
+            target = Path(tmp) / "existing.map"
+            create_map_file(source, 640, 480)
+            target.write_bytes(b"known-good")
+            doc = open_map(source)
+            sector = doc.sector(0)
+            doc.set_raw_sector_image(
+                0, sector.segment_lengths, bytes(sector.image_length)
+            )
+            with self.assertRaises(GepjError):
+                doc.save(target, verify=True)
+            self.assertEqual(target.read_bytes(), b"known-good")
+            doc.close()
+
+    def test_create_map_verification_failure_preserves_existing_destination(
+        self,
+    ) -> None:
+        from unittest.mock import patch
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "existing.map"
+            target.write_bytes(b"known-good")
+            with patch(
+                "map_editor.core.mapfile.open_map",
+                side_effect=ValueError("invalid generated map"),
+            ):
+                with self.assertRaisesRegex(ValueError, "invalid generated map"):
+                    create_map_file(target, 640, 480)
+            self.assertEqual(target.read_bytes(), b"known-good")
+            self.assertEqual(list(Path(tmp).glob("*.tmp")), [])
+
+    def test_failed_map_switch_keeps_current_unsaved_document(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            current = Path(tmp) / "current.map"
+            replacement = Path(tmp) / "replacement.map"
+            create_map_file(current, 640, 480)
+            create_map_file(replacement, 640, 480)
+            vm = EditorViewModel(config=Config.load(Path(tmp) / "cfg.json"))
+            doc = vm.open_map_file(current)
+            vm.paint_cell_brush(40, 40, value=1)
+            with self.assertRaises(FileNotFoundError):
+                vm.open_map_file(Path(tmp) / "missing.map", discard_changes=True)
+            self.assertIs(vm.document, doc)
+            self.assertTrue(vm.dirty)
+            with self.assertRaisesRegex(RuntimeError, "未保存修改"):
+                vm.open_map_file(replacement)
+            vm.open_map_file(replacement, discard_changes=True)
+            self.assertFalse(vm.dirty)
+            vm.close_map()
 
     def test_full_edit_undo_redo_save_and_trailing_bytes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

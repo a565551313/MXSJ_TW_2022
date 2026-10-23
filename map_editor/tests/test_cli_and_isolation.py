@@ -37,6 +37,7 @@ from map_editor.cli import (  # noqa: E402
     _split_colon_spec,
     main,
 )
+from map_editor.client.config import Config  # noqa: E402
 
 SRC = PROJECT / "src" / "map_editor"
 QT_ALLOWED = {Path("ui") / "widgets.py"}
@@ -118,6 +119,7 @@ class TestCliSpecParsing(unittest.TestCase):
         )
 
 
+@needs_samples
 class TestCliEndToEnd(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = Path(tempfile.mkdtemp(prefix="map_editor_cli_"))
@@ -171,6 +173,20 @@ class TestCliEndToEnd(unittest.TestCase):
         code, _out, err = self._main("--scan", str(SAMPLES), "--export-json", "2101")
         self.assertEqual(code, 2)
         self.assertIn("KEY:PATH", err)
+
+    def test_build_map_warns_and_continues_for_stale_remembered_root(self) -> None:
+        from PIL import Image
+
+        home = Path(os.environ["MAP_EDITOR_HOME"])
+        home.mkdir(parents=True, exist_ok=True)
+        Config(client_root=str(self.tmp / "removed-client")).save()
+        art = self.tmp / "art.png"
+        Image.new("RGB", (64, 64), (20, 30, 40)).save(art)
+        output = self.tmp / "built.map"
+        code, _out, err = self._main("--build-map", f"{art}:{output}")
+        self.assertEqual(code, 0, err)
+        self.assertIn("记住的客户端目录不可用", err)
+        self.assertTrue(output.is_file())
 
     def test_find_path_rejects_non_integer_coordinates_cleanly(self) -> None:
         code, _out, err = self._main(

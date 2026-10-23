@@ -38,6 +38,7 @@ from PIL import Image
 from .blk import BlkGrid
 from .gepj import (
     RgbImage,
+    decode_sector_image,
     encode_sector_image,
     pack_gepj_block_body,
     slice_image_to_sectors,
@@ -972,6 +973,10 @@ class MapDocument:
                         )
                     for sector in check_doc.iter_sectors():
                         _ = check_doc.read_cells(sector)
+                        decode_sector_image(
+                            check_doc.read_image_payload(sector),
+                            sector.segment_lengths,
+                        )
             os.replace(tmp_name, target)
         except BaseException:
             try:
@@ -1113,9 +1118,31 @@ def create_map_file(
             default_light=default_light,
             quality=quality,
         )
-    target.write_bytes(raw)
-    with open_map(target) as check_doc:
-        assert (check_doc.header.width, check_doc.header.height) == (width, height)
+    fd, tmp_name = tempfile.mkstemp(
+        dir=str(target.parent), prefix=f".{target.name}.", suffix=".tmp"
+    )
+    try:
+        with os.fdopen(fd, "wb") as out_fh:
+            out_fh.write(raw)
+            out_fh.flush()
+            os.fsync(out_fh.fileno())
+        with open_map(Path(tmp_name)) as check_doc:
+            if (check_doc.header.width, check_doc.header.height) != (width, height):
+                raise MapFormatError(
+                    f"new map verification failed for {target}: dimensions differ"
+                )
+            for sector in check_doc.iter_sectors():
+                _ = check_doc.read_cells(sector)
+                decode_sector_image(
+                    check_doc.read_image_payload(sector), sector.segment_lengths
+                )
+        os.replace(tmp_name, target)
+    except BaseException:
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+        raise
     return target
 
 

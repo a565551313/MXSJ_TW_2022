@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import traceback
 from pathlib import Path
 
 from .client.config import Config
@@ -351,7 +352,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.scene_table:
         config.scene_table = args.scene_table
     vm = EditorViewModel(config=config)
-    root = args.scan or args.client_root or config.client_root
+    explicit_root = args.scan or args.client_root
+    root = explicit_root or config.client_root
 
     if args.build_map and not args.gui:
         spec_parts = _split_colon_spec(args.build_map, 2)
@@ -363,8 +365,14 @@ def main(argv: list[str] | None = None) -> int:
             try:
                 vm.set_client_root(root)
             except DiscoveryError as exc:
-                print(f"[错误] {exc}", file=sys.stderr)
-                return 2
+                if explicit_root:
+                    print(f"[错误] {exc}", file=sys.stderr)
+                    return 2
+                print(
+                    f"[警告] 记住的客户端目录不可用，继续编译: {exc}",
+                    file=sys.stderr,
+                )
+                root = None
         from PIL import Image
 
         img_path = Path(img_str)
@@ -377,6 +385,7 @@ def main(argv: list[str] | None = None) -> int:
             vm.create_new_map(out_str, w, h, image=img_path)
         except Exception as exc:
             print(f"[错误] 编译地图失败: {exc}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
             return 1
         vm.close_map()
         print(f"已编译生成地图 {out_str} ({w}x{h})")

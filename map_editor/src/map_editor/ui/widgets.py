@@ -1551,6 +1551,18 @@ class EditorWindow(QMainWindow):
                 self.table.setItem(i, col, item)
         self.table.blockSignals(False)
 
+    def _confirm_discard_current_edits(self) -> bool:
+        if not self.vm.dirty:
+            return True
+        answer = QMessageBox.question(
+            self,
+            "放弃未保存修改？",
+            "切换地图将放弃当前地图的未保存修改。是否继续？",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        return answer == QMessageBox.StandardButton.Yes
+
     def _on_row_selected(self) -> None:
         sel = self.table.selectionModel().selectedRows()
         if not sel:
@@ -1562,8 +1574,10 @@ class EditorWindow(QMainWindow):
         if row.broken:
             QMessageBox.critical(self, "地图损坏", f"{row.path.name}\n\n{row.error}")
             return
+        if not self._confirm_discard_current_edits():
+            return
         try:
-            self.vm.open_map(row)
+            self.vm.open_map(row, discard_changes=True)
         except (MapFormatError, OSError) as exc:
             QMessageBox.critical(self, "打开失败", str(exc))
             return
@@ -1579,10 +1593,10 @@ class EditorWindow(QMainWindow):
         p, _ = QFileDialog.getOpenFileName(
             self, "打开 .map 地图文件", "", "MXSJ Map (*.map)"
         )
-        if not p:
+        if not p or not self._confirm_discard_current_edits():
             return
         try:
-            self.vm.open_map_file(p)
+            self.vm.open_map_file(p, discard_changes=True)
         except Exception as exc:
             QMessageBox.critical(self, "打开失败", str(exc))
             return
@@ -1596,10 +1610,16 @@ class EditorWindow(QMainWindow):
         if not dest:
             QMessageBox.warning(self, "缺少输出路径", "请指定新 .map 文件保存路径。")
             return
+        if not self._confirm_discard_current_edits():
+            return
         img_path = dlg.img_edit.text().strip() or None
         try:
             self.vm.create_new_map(
-                dest, dlg.w_spin.value(), dlg.h_spin.value(), image=img_path
+                dest,
+                dlg.w_spin.value(),
+                dlg.h_spin.value(),
+                image=img_path,
+                discard_changes=True,
             )
         except Exception as exc:
             QMessageBox.critical(self, "创建地图失败", str(exc))

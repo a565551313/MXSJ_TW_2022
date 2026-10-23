@@ -77,6 +77,10 @@ class ExportBlockedError(RuntimeError):
     source file under strict protection mode."""
 
 
+class UnsavedChangesError(RuntimeError):
+    """Raised when replacing a dirty document without explicit discard consent."""
+
+
 def _normalized_path(path: Path) -> str:
     try:
         resolved = path.resolve(strict=False)
@@ -240,6 +244,9 @@ class EditorViewModel:
         return self._doc
 
     def _activate_doc(self, doc: MapDocument, key: str, name: str) -> MapDocument:
+        previous = self._doc
+        if previous is not None and previous is not doc:
+            previous.close()
         self._doc = doc
         h = doc.header
         self.state.current_key = key
@@ -259,20 +266,30 @@ class EditorViewModel:
         self._saved_state_token = 0
         return doc
 
-    def open_map(self, key: str | MapRow) -> MapDocument:
+    def _check_document_replacement(self, discard_changes: bool) -> None:
+        if self.dirty and not discard_changes:
+            raise UnsavedChangesError(
+                "当前地图有未保存修改；请先保存，或明确确认放弃修改后再切换。"
+            )
+
+    def open_map(
+        self, key: str | MapRow, *, discard_changes: bool = False
+    ) -> MapDocument:
         row = key if isinstance(key, MapRow) else self.row(str(key))
         if row is None:
             raise KeyError(f"unknown map key: {key}")
         if row.broken:
             raise MapFormatError(f"{row.path.name}: {row.error}")
-        self.close_map()
+        self._check_document_replacement(discard_changes)
         doc = open_map(row.path)
         return self._activate_doc(doc, row.key, row.name)
 
-    def open_map_file(self, path: str | Path) -> MapDocument:
+    def open_map_file(
+        self, path: str | Path, *, discard_changes: bool = False
+    ) -> MapDocument:
         """Open any standalone ``.map`` file directly from disk."""
+        self._check_document_replacement(discard_changes)
         p = Path(path)
-        self.close_map()
         doc = open_map(p)
         meta = self.scenes.get(p.stem)
         return self._activate_doc(doc, p.stem, meta.name if meta else "")
@@ -288,7 +305,9 @@ class EditorViewModel:
         default_cell: int = 0,
         default_light: int = NEUTRAL_NIBBLE,
         quality: int = 92,
+        discard_changes: bool = False,
     ) -> MapDocument:
+        self._check_document_replacement(discard_changes)
         target = self._guard_export_target(dest)
         created = create_map_file(
             target,
@@ -300,7 +319,7 @@ class EditorViewModel:
             default_light=default_light,
             quality=quality,
         )
-        return self.open_map_file(created)
+        return self.open_map_file(created, discard_changes=discard_changes)
 
     def close_map(self) -> None:
         if self._doc is not None:
