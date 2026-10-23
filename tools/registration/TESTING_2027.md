@@ -10,6 +10,9 @@
 > `_[1]` 是 py2 列表推导的隐藏累加器，被误抄成了切片；原版是 `[s + '#r' ...]`。
 > **第四轮（d，最新）**：PR #75 审查修复——读不到勾选状态时脚本自己翻（不再死锁）、
 > 缺 `btn_isee` 时提交一律挡下（fail-closed）、harness 补回 `GetColor` 让颜色优先级真被测到。
+> **2026-10-23 补记**：用户在 `.dlg` 里把两个勾选定为 50/iTeam1 与 51/iTeam2（见下
+> 「定稿版式」）。脚本本来就按这两个消息号分派，**代码不变、build 仍是 d**，
+> 出货包不用重打。
 
 ## 版式对照
 
@@ -60,6 +63,28 @@ GetObject('btn_Protect').IsSelected()
 原稿里 `btn_fiveaccount` 与 `btn_isee` 的 `iTeam` **都是 1**，点不动；用户改成
 不同值后正常。**iTeam 相同的按钮会被当成同一组**，所以每个勾选给各自的值
 （例如 `btn_fiveaccount=1`、`btn_isee=2`；0 也是一个组号，不是「不分组」）。
+
+### 定稿版式（用户 2026-10-23 在 `register2027.dlg` 里改的）
+
+| 控件 | iMsgID | iTeam |
+| --- | --- | --- |
+| `btn_fiveaccount`（五個賬號） | **50** | **1** |
+| `btn_isee`（同意） | **51** | **2** |
+
+脚本**不读 `iTeam`**，只按 `m_MsgID` 分派（`ID_FIVE_CHECK=50` /
+`ID_CONSENT_CHECK=51`）；50/50 的旧版式也认（靠 `OnButtonEnter/OnButtonLeave`
+认按钮）。这组数字由 `test_check_msgids_match_delivered_layout` 钉住，
+harness 第 15 节按「原生客户端 + 50/51」整条跑通：点 50 只动五个账号、
+点 51 只动同意，提交走通，日志里**不应**出现 `fallback toggle` 或
+`target unknown`。
+
+对应日志（进表单页时）应为：
+
+```
+check btn_fiveaccount ready=0 via=IsSelected
+check btn_isee ready=0 via=IsSelected
+form checks shared_msgid=0
+```
 
 这一条是布局侧的事，脚本不碰。`templates/2027/register2027_msg.dlg` 是上一轮
 的历史交付件（`iTeam` 仍 1/1，只把「同意」的消息号改成 51），**不要导入**，

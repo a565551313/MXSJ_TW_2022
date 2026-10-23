@@ -464,6 +464,25 @@ class RegistrationLayoutsTest(unittest.TestCase):
         # 撞号（btn_back=1 与「我同意」同号）必须在日志里留痕。
         self.assertIn("conflicts with agree", (HERE / "register.py").read_text("utf-8"))
 
+    def test_check_msgids_match_delivered_layout(self):
+        """交付版式：五个账号 50 / 同意 51（用户 2026-10-23 在 .dlg 里定的）。
+
+        脚本不读 iTeam（它只决定引擎是否把两个勾选当同一组），只按 m_MsgID
+        分派；这两个常量就是和版式的契约，改动会让两个勾选互相认错，
+        或让同意永远点不到。
+        """
+        tree = ast.parse((HERE / "register.py").read_text(encoding="utf-8"))
+        values = {}
+        for node in tree.body:
+            if isinstance(node, ast.Assign) and len(node.targets) == 1:
+                target = node.targets[0]
+                if isinstance(target, ast.Name) and target.id in (
+                    "ID_FIVE_CHECK",
+                    "ID_CONSENT_CHECK",
+                ):
+                    values[target.id] = ast.literal_eval(node.value)
+        self.assertEqual(values, {"ID_FIVE_CHECK": 50, "ID_CONSENT_CHECK": 51})
+
     def test_no_old_reg2_controls_or_advertising(self):
         names = set(self.by_name)
         self.assertFalse(names.intersection({"email2", "edt_Code", "youxiang", "2980"}))

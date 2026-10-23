@@ -802,4 +802,48 @@ assert 'check anchor missing btn_isee' in diag14
 assert 'consent anchor missing: submit blocked' in diag14
 MISSING_ANCHORS.discard('btn_isee')
 print 'missing consent anchor: submission blocked (fail-closed) OK'
+
+# 15. 用戶 2026-10-23 在 register2027.dlg 裡定下的最終配置：
+#     五個賬號 iMsgID=50 / iTeam=1，同意 iMsgID=51 / iTeam=2。
+#     腳本不讀 iTeam（iTeam 只決定引擎把兩個勾選當同一組還是各自獨立，
+#     同組時點一個會取消另一個——這正是之前「勾不動」的原因），只按 m_MsgID
+#     分派。本節把「50 只動五賬號、51 只動同意」釘在原生客戶端上，順便確認
+#     這種版式不會啟用 hover 兜底、也不會出現腳本自己翻的 fallback。
+LAYOUT_PROPS['btn_isee'] = {'msgid': 51}
+TOGGLE_AFTER[0] = False
+# 日誌是累加的（append），先清空，否則會讀到第 13a 節留下的 fallback toggle。
+open('photo\\register_diag.txt', 'wb').close()
+g['ModuleReset']()
+g['Show'](True)
+del EVENTS[:]
+g['g_RegisterPanel'].OnMessage(1)
+form15 = g['g_RegisterPanel']
+form = form15
+assert form15.m_SharedCheckMsg is False, 'distinct msgids must not use hover logic'
+assert form15.m_FiveCheck.msgid == 50 and form15.m_Consent.msgid == 51
+assert form15.m_FiveCheck.Native() and form15.m_Consent.Native()
+diag15 = open('photo\\register_diag.txt', 'rb').read()
+assert 'form checks shared_msgid=0' in diag15
+assert 'check btn_fiveaccount ready=0 via=IsSelected' in diag15
+assert 'check btn_isee ready=0 via=IsSelected' in diag15
+assert not form15.IsRegisterFive() and not form15.m_Consent.Get()
+click_check('btn_fiveaccount', 50)
+assert form15.IsRegisterFive() and not form15.m_Consent.Get(), \
+    'msgid 50 must not touch consent'
+click_check('btn_isee', 51)
+assert form15.m_Consent.Get() and form15.IsRegisterFive(), \
+    'msgid 51 must not touch five mode'
+click_check('btn_isee', 51)
+assert not form15.m_Consent.Get()
+click_check('btn_isee', 51)
+assert form15.m_Consent.Get()
+click_check('btn_fiveaccount', 50)
+assert not form15.IsRegisterFive() and form15.m_Consent.Get()
+fill_valid('account')
+assert submit() == g['MSG_STUB']
+diag15 = open('photo\\register_diag.txt', 'rb').read()
+assert 'fallback toggle' not in diag15, 'native client must never be flipped by script'
+assert 'target unknown' not in diag15
+LAYOUT_PROPS.pop('btn_isee')
+print 'user layout (five=50, consent=51, distinct iTeam) end-to-end OK'
 print 'ALL HARNESS CHECKS PASSED'

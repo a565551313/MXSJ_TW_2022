@@ -251,8 +251,8 @@ MSG_COMPLETE_HEADER = (
 DLG_TERMS = "login_new/agreement.dlg"
 DLG_FORM = "login_new/register2027.dlg"
 
-# 勾選按鈕的消息號：版式裡原本兩個都是 50，分不出點的是哪個。
-# 交付的 register2027_msg.dlg 把「同意」改成 51；腳本兩種都認。
+# 勾選按鈕的消息號：版式原本兩個都是 50。2026-10-23 用戶定為五個賬號 50 / 同意 51
+# （iTeam 1/2 必須不同，腳本不讀 iTeam 只按 m_MsgID 分派）；50/50 的舊版式也認。
 ID_FIVE_CHECK = 50
 ID_CONSENT_CHECK = 51
 
