@@ -791,6 +791,14 @@ SHA256 `9cf8c5cd9cef340db3e3f49405e385a3713ee0cb28c137e4d3acd7a5cddd6bf6`。
 **未验**：真机（`build=2027-10-22d` 的日志标记）、退化客户端是否存在、
 hover 回调在按下前是否一定触发。
 
+**出货（d 包，替代 r3）**：`/home/user/reg2027-delivery.zip` 24,196,935 B，
+SHA256 `2b51dfddcf00f713d730a4a83c3c4b38b18837c5152c641f5c01c2579d7f8e87`
+（md5 `5fc71edbfb52b6f7a37ff8dee19d0e89`，`SHA256SUMS.txt` 3 条含 CRC 全过），
+My Drive 根目录 `registration_2027_layout_r4.zip`
+https://drive.google.com/file/d/1jqaHsNveZZCLu1A_slX0FTL3fo_4dSoF/view
+（上一轮 r3 `1Dflmw54…` 只有 c 版脚本，已被这一版取代）。
+包内只有 `data/script.fls` + 两份说明，未含任何布局。
+
 ### 3.16 独立脚本编辑器开工授权（2026-10-15）
 
 用户确认font1后“确实好了”，协议→表单这一步已实机通过，不外推全部控件/服务器验收。
@@ -1716,6 +1724,7 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-23 | 注册脚本 **d 包出货（build=2027-10-22d）**：把 §3.15.6 的审查复核修复打成只含脚本的 ZIP，替代 r3。`/home/user/reg2027-delivery.zip` 24,196,935 B，SHA256 `2b51dfddcf00f713d730a4a83c3c4b38b18837c5152c641f5c01c2579d7f8e87`（md5 `5fc71edbfb52b6f7a37ff8dee19d0e89`，`SHA256SUMS.txt` 3 条含 CRC 全过）；My Drive 根目录 `registration_2027_layout_r4.zip` https://drive.google.com/file/d/1jqaHsNveZZCLu1A_slX0FTL3fo_4dSoF/view 。包内仅 `data/script.fls` + `README.txt` + `测试说明-TESTING.md`，不含布局。真机未验 |
 | 2026-10-23 | 注册脚本 **PR #75 AI 审查复核（build=2027-10-22d）**：4 条行内评论去重后 3 条**全部属实**并已修。① 读不到勾选状态时 `state` 永远 False ⇒ 同意门永远打不开、五账号勾不上（旧 docstring 的「流程仍能走完」是假的）——改为 `_CHECK_READERS` 三种读法候选 + `Native()`/`Toggle()`，**只在读不到时**由脚本翻；共用消息号 50 用 `OnButtonEnter/OnButtonLeave` 认按钮。② 缺 `btn_isee` 时旧代码跳过同意校验 ⇒ 改为 **fail-closed**（`MSG_CONSENT` + `consent anchor missing: submit blocked`）。③ harness 第 11 节删 `GetColor` 未恢复，第 12 节的「覆盖 > 版式色」其实没测到 ⇒ 保存/恢复 + 新增 12b「去掉覆盖后用回版式色」。新增 harness 13/14 节与 3 个静态用例，`tools/registration` **50 项**、ruff 0、wincompat 0/0/0；三处新用例均验证过「改回旧代码会失败」。构建只改 337/4007、337 差 9 字节 |
 | 2026-10-23 | 注册脚本 **颜色定位补记 + 单框覆盖表**：回答「布局里改哪个属性」。全量 11 个 `.dlg` 统计：字色属性只有 `lColor`（CTextFrame/CTextFrameEx，1~3 组 RGB）与 `lNormalColor`（CButton）；**没有 `ICOLOR`**。本页五个锚点都是 `CBox`，语料里没有任何 CBox 带颜色属性，而脚本用原生 `GetColor()`（`dlgitembill1`、`dlgloginqueue` 两处实证）⇒ 布局加属性读不出来，用户实测无效与证据一致。新增 `COLOR_TEXT_BY_ANCHOR = {}`，优先级 **覆盖表 > GetColor() > 白字**，日志 `override=`/`layout=`/`fallback white`；默认空表行为不变，**本轮不出包**。回归 `tools/registration` 47 项、ruff 0、三套 harness 模式全过；构建只改 337/4007、337 差 9 字节 |
 | 2026-10-23 | 注册脚本 **第三轮（build=2027-10-22c）**：修条款排版真 bug。用户问「协议内容在哪改」，核对时反汇编发现 `_LoadTermsLines` 一直是错的——反编译里的 `_[1]` 是 py2 列表推导的隐藏累加器（`STORE_FAST _[1]`），不是切片；原版实为 `[s + '#r' for s in SERVICE_MSG.split('\n')]`（`LOAD_CONST '#r'`+`BINARY_ADD` 实锤）。旧写法 `line[1:]` 会让条款**每行少第一个字、且没有换行**。新增 `_RichLines()` 统一补 `#r`，条款/确认框的成功与兜底路径都走它；版本标记升 `c`。回归：harness 条款断言改 `#r` 语义（确认框兜底行长 `[10,2,24,2,86]`）、新增死锁旧写法的静态用例，`tools/registration` 46 项、ruff 0、三套模式全过；构建只改 337/4007、337 差 9 字节。真机排版待验 |
