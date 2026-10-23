@@ -177,19 +177,110 @@ class RegistrationLayoutsTest(unittest.TestCase):
             self.assertIn(name, by_name, name)
         self.assertEqual(by_name["btn_Back"]["iMsgId"], 1)
         self.assertEqual(by_name["btn_register"]["iMsgId"], 2)
-        # 两个勾选框在用户原稿里同号；脚本靠「只读引擎状态」容错，
-        # 交付稿把「同意」改成 51，把歧义彻底去掉。
+        # 两个勾选框在用户原稿里同号；脚本靠「只读引擎状态」容错。
         self.assertEqual(by_name["btn_fiveaccount"]["iMsgId"], 50)
         self.assertEqual(by_name["btn_isee"]["iMsgId"], 50)
+        # 2026-10-22 用户实机定论：两个勾选的 iTeam **必须不同**，否则点不动。
+        # 原稿和当年的交付稿都是 1/1（见下），所以那份 dlg 不再随包发布；
+        # 脚本对同号消息/异号 iTeam 都容错，布局以用户本地版为准。
+        self.assertEqual(by_name["btn_fiveaccount"]["iTeam"], 1)
+        self.assertEqual(by_name["btn_isee"]["iTeam"], 1)
         fixed, _ = parse_bytes(
             (HERE / "templates/2027/register2027_msg.dlg").read_bytes()
         )
         fixed_by_name = {w.get("sName"): w for w in fixed}
         self.assertEqual(fixed_by_name["btn_fiveaccount"]["iMsgId"], 50)
         self.assertEqual(fixed_by_name["btn_isee"]["iMsgId"], 51)
+        # 这份历史交付稿的 iTeam 仍是 1/1（正是用户实测点不动的原因），
+        # 留在这里只作「除消息号外与原稿逐字节一致」的证据，不得再导入。
+        self.assertEqual(fixed_by_name["btn_isee"]["iTeam"], 1)
         # 除了那一个消息号，交付稿与用户原稿必须完全一致（不偷偷改布局）。
         self.assertEqual(fixed_by_name["edt_email"], by_name["edt_email"])
         self.assertEqual(len(fixed), len(form))
+
+    def test_text_color_is_white_and_read_from_layout(self):
+        """2026-10-22 实机：四框/提示行要白字。字色只认构造参数，不是 .dlg 属性。"""
+        source = (HERE / "register.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        consts = {}
+        for node in tree.body:
+            if isinstance(node, ast.Assign) and len(node.targets) == 1:
+                target = node.targets[0]
+                if isinstance(target, ast.Name):
+                    consts[target.id] = node.value
+        white = ast.literal_eval(consts["COLOR_TEXT_WHITE"])
+        self.assertEqual(white, 16777215)  # 0xFFFFFF，与登录页 edt_Name/edt_Pwd 一致
+        # 黑色兜底必须消失：旧版 _HintColor() 缺常量时返回 0。
+        self.assertNotIn("_HintColor", source)
+        # CEDIT 的 4 号参数（颜色）必须是 _LayoutColor(...)，不能再写死 0。
+        calls = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "CEDIT"
+        ]
+        self.assertTrue(calls)
+        for call in calls:
+            self.assertEqual(len(call.args), 5, ast.dump(call))
+            color_arg = call.args[3]
+            self.assertIsInstance(color_arg, ast.Call)
+            self.assertEqual(color_arg.func.id, "_LayoutColor")
+        # CRICHTEXT（提示行）同理。
+        rich = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "CRICHTEXT"
+        ]
+        self.assertTrue(rich)
+        for call in rich:
+            self.assertEqual(len(call.args), 6, ast.dump(call))
+            color_arg = call.args[5]
+            self.assertIsInstance(color_arg, ast.Call)
+            self.assertEqual(color_arg.func.id, "_LayoutColor")
+        # 版式取不到颜色/没有 GetColor() 时必须退回白字，不能退回黑。
+        after_fallback = source.split("def _LayoutColor", 1)[1].split(
+            "def _CreateFormEdit", 1
+        )[0]
+        self.assertIn("return COLOR_TEXT_WHITE", after_fallback)
+
+    def test_terms_page_handles_user_added_back_button(self):
+        """btn_back 是用户在 agreement.dlg 本机加的；消息号必须从版式读。"""
+        tree = ast.parse((HERE / "register.py").read_text(encoding="utf-8"))
+        by_name = {
+            node.name: node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.FunctionDef)
+        }
+        self.assertIn("_LayoutMsgId", by_name)
+        read = [
+            node
+            for node in ast.walk(by_name["_LayoutMsgId"])
+            if isinstance(node, ast.Attribute) and node.attr == "m_MsgID"
+        ]
+        self.assertEqual(len(read), 1)  # 原生对象属性，不写死消息号
+        terms_class = next(
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ClassDef) and node.name == "CRegTermsPanel"
+        )
+        terms = next(
+            node
+            for node in terms_class.body
+            if isinstance(node, ast.FunctionDef) and node.name == "OnMessage"
+        )
+        used = set()
+        for node in ast.walk(terms):
+            if isinstance(node, ast.Attribute):
+                used.add(node.attr)
+            elif isinstance(node, ast.Name):
+                used.add(node.id)
+        self.assertIn("m_BackMsgId", used)
+        self.assertIn("_ReturnHome", used)
+        # 撞号（btn_back=1 与「我同意」同号）必须在日志里留痕。
+        self.assertIn("conflicts with agree", (HERE / "register.py").read_text("utf-8"))
 
     def test_no_old_reg2_controls_or_advertising(self):
         names = set(self.by_name)

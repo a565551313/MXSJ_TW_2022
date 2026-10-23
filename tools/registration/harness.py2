@@ -12,6 +12,8 @@ BROKEN_FORM = [False]  # 第 10 節拿來模擬「版式沒導入」的世界
 # 點擊消息與引擎翻轉的先後順序有兩種可能（CImageCheckBox 是「先消息、再翻」）。
 # 腳本只能靠「提交時讀一次」保證正確，所以兩種順序都必須跑一遍。
 TOGGLE_AFTER = [False]
+# 版式錨點的屬性（顏色 / 消息號）；每節測試前可改，建面板時讀。
+LAYOUT_PROPS = {'btn_back': {'msgid': 7}}
 
 
 def mod(name, **attrs):
@@ -23,17 +25,24 @@ def mod(name, **attrs):
 
 
 class FakeObj(object):
-    def __init__(self, name, size=(400, 300), pos=(10, 10)):
+    def __init__(self, name, size=(400, 300), pos=(10, 10), color=0, msgid=0):
         self.name = name
         self.size = size
         self.pos = pos
         self.text = ''
+        # 版式錨點上原生的字色與消息號：CEDIT/CRICHTEXT 的字色只認構造參數，
+        # 腳本得自己從錨點讀（dlgitembill1.CreateBookAmountEdit 同法）。
+        self.color = color
+        self.m_MsgID = msgid
 
     def GetSize(self):
         return self.size
 
     def GetPos(self):
         return self.pos
+
+    def GetColor(self):
+        return self.color
 
     def SetShow(self, flag):
         EVENTS.append(('SetShow', self.name, flag))
@@ -62,9 +71,8 @@ class FakeCheck(FakeObj):
     """
 
     def __init__(self, name, selected=False, msgid=50):
-        FakeObj.__init__(self, name, (24, 24), (305, 435))
+        FakeObj.__init__(self, name, (24, 24), (305, 435), msgid=msgid)
         self.selected = bool(selected)
-        self.msgid = msgid
 
     def IsSelected(self):
         return self.selected
@@ -116,7 +124,7 @@ FORM_ANCHORS = ('edt_account', 'edt_Pwd', 'edt_Pwd_1', 'edt_email',
 
 class FakePanel(object):
     NAMES = {
-        'login_new/agreement.dlg': ('loc_msg',),
+        'login_new/agreement.dlg': ('loc_msg', 'btn_back'),
         'login_new/register2027.dlg': FORM_ANCHORS,
         'login/confirm.dlg': ('output',),
     }
@@ -126,16 +134,26 @@ class FakePanel(object):
         self.objects = {}
         if dlgpath == 'login_new/register2027.dlg':
             for name in ('edt_account', 'edt_Pwd', 'edt_Pwd_1', 'edt_email'):
-                self.objects[name] = FakeObj(name, (197, 17), (316, 283))
+                props = LAYOUT_PROPS.get(name, {})
+                self.objects[name] = FakeObj(name, (197, 17), (316, 283),
+                                             color=props.get('color', 0))
             # 版式裡兩個勾選框原本都是 50（交付的 *_msg.dlg 把同意改成 51）。
             self.objects['btn_fiveaccount'] = FakeCheck('btn_fiveaccount', False, 50)
             self.objects['btn_isee'] = FakeCheck('btn_isee', False, 50)
             self.objects['btn_register'] = FakeObj('btn_register')
             self.objects['btn_Back'] = FakeObj('btn_Back')
-            self.objects['txt_Wrong'] = FakeObj('txt_Wrong', (90, 20), (310, 400))
+            props = LAYOUT_PROPS.get('txt_Wrong', {})
+            self.objects['txt_Wrong'] = FakeObj('txt_Wrong', (90, 20), (310, 400),
+                                                color=props.get('color', 0))
         else:
             for name in self.NAMES.get(dlgpath, ()):
-                self.objects[name] = FakeObj(name)
+                # msgid/color 可在本節測試裡先塞 LAYOUT_PROPS，模擬用戶在佈局裡改值。
+                props = LAYOUT_PROPS.get(name, {})
+                self.objects[name] = FakeObj(
+                    name,
+                    color=props.get('color', 0),
+                    msgid=props.get('msgid', 0),
+                )
         EVENTS.append(('Panel', dlgpath))
 
     def GetObject(self, name):
@@ -150,14 +168,18 @@ class FakePanel(object):
 def fake_cedit(cls, name, parent, color, font, linecolor=0):
     parent.GetObject(name)
     edit = cls(name)  # really exercise the authored AddChar subclass
+    edit.color = color
+    edit.linecolor = linecolor
     parent.objects[name] = edit
+    EVENTS.append(('CEDIT', name, color, linecolor))
     return edit
 
 
 def fake_richtext(cls, name, parent, text, font, color):
     obj = parent.GetObject(name)
     obj.SetText(text)
-    EVENTS.append(('RichText', name, text))
+    obj.color = color
+    EVENTS.append(('RichText', name, text, color))
     return obj
 
 
@@ -227,8 +249,11 @@ cout = [e for e in EVENTS if e[0] == 'COutput'][-1]
 assert cout[1] == g['TERMS_FALLBACK']
 assert all(isinstance(line, str) for line in cout[1])
 # 換版式後第一行日誌帶版本標記，用戶看這一行的 build= 就知道新腳本生效了。
-assert 'terms layout begin build=2027-10-22' in open(
+assert 'terms layout begin build=2027-10-22b' in open(
     'photo\\register_diag.txt', 'rb').read()
+# 協議頁用戶後加的 btn_back：消息號從版式讀（原生 m_MsgID），不寫死。
+assert panel.m_BackMsgId == 7, panel.m_BackMsgId
+assert 'msgid btn_back=7' in open('photo\\register_diag.txt', 'rb').read()
 print 'terms fallback + native cursor protocol OK'
 
 # 2. Form: new layout anchors, tab order, password masking, default unchecked.
@@ -251,6 +276,18 @@ for edit, next_edit in ((form.m_AccountEdit, form.m_PwdEdit),
 # 兩個勾選默認都不勾（用戶口徑），即使版式裡標成選中也一樣
 assert not form.m_FiveCheck.Get() and not form.m_Consent.Get()
 assert form.m_Hint is not None and form.m_Hint.text == ''
+# 2026-10-22 第二輪實機反饋：四框與提示行必須白字（照登錄頁 16777215）。
+# .dlg 裡加 ICOLOR 不管用——字色只認 CEDIT/CRICHTEXT 的構造參數。
+white = g['COLOR_TEXT_WHITE']
+assert white == 16777215
+edits_color = dict((e[1], e[2]) for e in EVENTS if e[0] == 'CEDIT')
+for name in ('edt_account', 'edt_Pwd', 'edt_Pwd_1', 'edt_email'):
+    assert edits_color.get(name) == white, (name, edits_color)
+assert all(e[3] == 0 for e in EVENTS if e[0] == 'CEDIT')   # linecolor 同登錄頁
+assert ('RichText', 'txt_Wrong', '', white) in EVENTS, EVENTS[-6:]
+diag2 = open('photo\\register_diag.txt', 'rb').read()
+assert 'color edt_account fallback white' in diag2
+assert 'color txt_Wrong fallback white' in diag2
 for key, value in g.items():
     if key.startswith(('MSG_', 'BTN_', 'PROMPT_', 'LABEL_', 'DLG_')):
         assert isinstance(value, str), (key, type(value))
@@ -493,6 +530,27 @@ del EVENTS[:]
 g['g_RegisterPanel'].OnMessage(2)
 assert ('mainpage.Show', True) in EVENTS
 assert ('InputSecrecy', 0) in EVENTS and g['g_RegisterPanel'] is None
+# 協議頁用戶後加的「返回」(btn_back，消息號從版式讀) 也回主頁，且日誌分得出來
+g['Show'](True)
+terms9 = g['g_RegisterPanel']
+assert terms9.m_BackMsgId == 7
+del EVENTS[:]
+terms9.OnMessage(7)
+assert ('mainpage.Show', True) in EVENTS, EVENTS
+assert g['g_RegisterPanel'] is None
+assert 'terms btn_back -> home' in open('photo\\register_diag.txt', 'rb').read()
+# 撞號保護：btn_back 若被填成 1（和「我同意」同號），日誌必須留警告，
+# 且 1 仍然走「同意」——否則同意永遠進不了表單，是更壞的靜默故障。
+LAYOUT_PROPS['btn_back'] = {'msgid': 1}
+g['Show'](True)
+terms9b = g['g_RegisterPanel']
+assert terms9b.m_BackMsgId == 1
+assert 'terms WARN btn_back msgid=1 conflicts with agree' in open(
+    'photo\\register_diag.txt', 'rb').read()
+terms9b.OnMessage(1)
+assert isinstance(g['g_RegisterPanel'], g['CRegFormPanel'])
+LAYOUT_PROPS['btn_back'] = {'msgid': 7}
+g['ModuleReset']()
 # 9a. 忠實於本版歸檔：servicedata 存在、但只有 SERVICE_MSG/SERVICE_MSG2，
 #     沒有 CONFIRM_MSG（2026-10-15 實測：entry 1931 的 pyc 名字表如此，
 #     script.fls 與 data.fls 兩側均無任何定義者）。此時條款必須用真文本，
@@ -552,7 +610,8 @@ if MODE == 'missing_layout':
 elif MODE == 'no_font_edit':
     assert isinstance(g['g_RegisterPanel'], g['CRegFormPanel']), EVENTS
     assert 'font fallback FontLT14_3' in diag10, diag10[-400:]
-    assert 'hint color fallback 0' in diag10, diag10[-400:]
+    # 2026-10-22 第二輪：提示行不再是黑色 0，缺 COLOR_EDIT 也照樣白字。
+    assert 'color txt_Wrong fallback white' in diag10, diag10[-400:]
     assert 'form edit edt_email ready' in diag10, diag10[-400:]
     print 'client without FONT_EDIT/COLOR_EDIT: falls back and still opens OK'
 else:
@@ -561,4 +620,39 @@ else:
     assert 'form edit edt_email ready' in diag10, diag10[-400:]
     assert 'step=1 ready' in diag10, diag10[-400:]
     print 'terms agree opens form page with step diags OK'
+# 11. 版式錨點自己帶字色時必須採用（用戶在佈局裡改 ICOLOR 的長遠解法）。
+#     前提：原生錨點有 GetColor()——原版 CreateBookAmountEdit 就是這麼讀的。
+#     取不到/為 0 才退回白字。
+BROKEN_FORM[0] = False
+LAYOUT_PROPS['edt_email'] = {'color': 0x123456}
+LAYOUT_PROPS['txt_Wrong'] = {'color': 0x654321}
+g['ModuleReset']()
+g['Show'](True)
+del EVENTS[:]
+g['g_RegisterPanel'].OnMessage(1)
+form11 = g['g_RegisterPanel']
+edits11 = dict((e[1], e[2]) for e in EVENTS if e[0] == 'CEDIT')
+assert edits11['edt_email'] == 0x123456, edits11
+assert edits11['edt_account'] == 16777215, edits11
+assert ('RichText', 'txt_Wrong', '', 0x654321) in EVENTS
+diag11 = open('photo\\register_diag.txt', 'rb').read()
+assert 'color edt_email layout=1193046' in diag11
+assert 'color txt_Wrong layout=6636321' in diag11
+assert edits11['edt_email'] != edits11['edt_account']  # 兩個錨點確實分開讀
+LAYOUT_PROPS.pop('edt_email')
+LAYOUT_PROPS.pop('txt_Wrong')
+# 沒有 GetColor() 的老客戶端：日誌寫 api missing，退回白字，頁面照開。
+try:
+    del FakeObj.GetColor
+except AttributeError:
+    pass
+g['ModuleReset']()
+g['Show'](True)
+del EVENTS[:]
+g['g_RegisterPanel'].OnMessage(1)
+form11b = g['g_RegisterPanel']
+edits11b = dict((e[1], e[2]) for e in EVENTS if e[0] == 'CEDIT')
+assert edits11b['edt_account'] == 16777215, edits11b
+assert 'color edt_account api missing' in open('photo\\register_diag.txt', 'rb').read()
+print 'layout color honoured, missing GetColor falls back to white OK'
 print 'ALL HARNESS CHECKS PASSED'

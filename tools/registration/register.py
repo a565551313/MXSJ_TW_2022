@@ -25,8 +25,14 @@
 #      表單（login_new/register2027.dlg：edt_account/edt_Pwd/edt_Pwd_1/
 #      edt_email 四框 + btn_fiveaccount/btn_isee 兩個勾選 +
 #      btn_Back/btn_register 兩按鈕）-> 樁提示。
+#      協議頁另有用戶後加的 btn_back（回登錄首頁），消息號按版式現讀。
 #      單帳號/密碼 6~16 位字母數字；勾選五帳號時基礎帳號 6~14 位，
 #      產生原帳號、_1、_2、_3、_4，共用密碼/郵箱。真註冊仍待服務端。
+#   5. 字色（2026-10-22 第二輪，用戶實機反饋）：四框與顯示行必須是白字。
+#      .dlg 裡的顏色屬性搬不過來——輸入框/顯示行是腳本用 CEDIT / CRICHTEXT
+#      在版式錨點上另建的控件，顏色只認構造參數；照 loginin.py 登錄頁
+#      （edt_Name / edt_Pwd 都傳 16777215）預設白字，並在版式錨點有 GetColor()
+#      且非 0 時改用版式值，方便日後在佈局裡直接改色。
 import C_sys
 import combdialog
 import combmacro
@@ -379,13 +385,33 @@ def _EditFont():
     return font
 
 
-def _HintColor():
-    """提示文字顏色：同理，取不到 COLOR_EDIT 就用原版別的頁面用的 0。"""
-    color = getattr(interface, "COLOR_EDIT", None)
-    if color is None:
-        _Diag("hint color fallback 0")
-        return 0
-    return color
+# 白字 0xFFFFFF。實證：loginin.py 登錄頁的 edt_Name 用
+# CUserEdit(self, 16777215, ...)、edt_Pwd 用
+# combmacro.CEDIT(CPasswordEdit, 'edt_Pwd', self, 16777215, ...)，
+# 兩處都是白字；註冊頁四框與提示行照這個來。
+COLOR_TEXT_WHITE = 16777215
+
+
+def _LayoutColor(parent, name):
+    """取版式錨點的字色；版式沒寫（0/取不到）就用白字。
+
+    為什麼要在這裡讀：CEDIT / CRICHTEXT 建的是腳本自己的控件，字色只認
+    **構造參數**，.dlg 裡給 CBox 加的顏色屬性不會自動帶過來——2026-10-22
+    用戶在佈局裡加 ICOLOR 沒生效就是這個原因。原版也這麼做：dlgitembill1
+    的 CreateBookAmountEdit 先 GetObject('txt_num').GetColor() 再傳給 CEDIT。
+    取不到 API 不是錯，退回白字即可（舊版這裡退回黑色，實機反饋要白的）。
+    """
+    try:
+        obj = parent.GetObject(name)
+        if obj is not None:
+            color = obj.GetColor()
+            if color:
+                _Diag("color %s layout=%s" % (name, color))
+                return color
+    except Exception:
+        _Diag("color %s api missing" % name)
+    _Diag("color %s fallback white" % name)
+    return COLOR_TEXT_WHITE
 
 
 def _CreateFormEdit(parent, edit_class, name, limit, font):
@@ -399,7 +425,10 @@ def _CreateFormEdit(parent, edit_class, name, limit, font):
         _Diag("form edit %s anchor missing" % name)
         raise ValueError("missing form edit anchor")
     _Diag("form edit %s factory begin" % name)
-    edit = combmacro.CEDIT(edit_class, name, parent, 0, font, linecolor=0)
+    # 顏色優先取版式錨點，否則白字（照登錄頁）；linecolor 與登錄頁一致取 0。
+    edit = combmacro.CEDIT(
+        edit_class, name, parent, _LayoutColor(parent, name), font, linecolor=0
+    )
     _Diag("form edit %s factory ready" % name)
     edit.SetLimit(limit)
     _Diag("form edit %s ready" % name)
@@ -454,9 +483,16 @@ class CRegTermsPanel(combdialog.CCombPanel):
 
     def __init__(self, parent):
         # 換版式後日誌第一行帶版本標記：用戶只看這一行就能確認新腳本已生效。
-        _Diag("terms layout begin build=2027-10-22")
+        # 尾碼 b = 第二輪（白字 + btn_back）。
+        _Diag("terms layout begin build=2027-10-22b")
         combdialog.CCombPanel.__init__(self, parent, DLG_TERMS)
         _Diag("terms layout ready")
+        # btn_back 是用戶在 agreement.dlg 本機加的，消息號以版式為準；
+        # 沒這個按鈕就是 None（老版式照樣能跑）。
+        self.m_BackMsgId = _LayoutMsgId(self, "btn_back")
+        if self.m_BackMsgId == 1:
+            # 1 是「我同意」，撞號會讓同意永遠進不了表單，日誌裡必須看得見。
+            _Diag("terms WARN btn_back msgid=1 conflicts with agree")
         import chatoutput
 
         result = _LoadTermsLines()
@@ -489,9 +525,14 @@ class CRegTermsPanel(combdialog.CCombPanel):
 
     def OnMessage(self, msgid):
         _PlayBtnSound()
+        _Diag("terms msgid=%s" % (msgid,))
         if msgid == 1:
             Step(1)
+        elif self.m_BackMsgId is not None and msgid == self.m_BackMsgId:
+            _Diag("terms btn_back -> home")
+            _ReturnHome()
         else:
+            # 新版式 2=拒絕；其餘（含日後再加的按鈕）一律回登錄首頁。
             _ReturnHome()
         return True
 
@@ -541,6 +582,26 @@ class CRegPwdEdit(interface.CEdit):
             import usermacro
 
             usermacro.PROMPT_MSG(PROMPT_PWD_ALNUM)
+
+
+def _LayoutMsgId(parent, name):
+    """讀版式按鈕自己的消息號；取不到就返回 None。
+
+    btn_back 是用戶後加進 agreement.dlg 的，腳本寫死消息號就會和他在佈局裡
+    填的對不上。原生對象帶 ``m_MsgID``（loginin.py / mainpage.py 的
+    OnButtonEnter 就是拿 ```btn.m_MsgID`` 判斷），照讀即可。
+    """
+    try:
+        obj = parent.GetObject(name)
+        if obj is None:
+            _Diag("msgid anchor missing %s" % name)
+            return None
+        msgid = obj.m_MsgID
+        _Diag("msgid %s=%s" % (name, msgid))
+        return msgid
+    except Exception:
+        _Diag("msgid %s api missing" % name)
+        return None
 
 
 class _LayoutCheck(object):
@@ -657,7 +718,7 @@ class CRegFormPanel(combdialog.CCombPanel):
                 return None
             hint = combmacro.CRICHTEXT(
                 C_object.CRichTextObject, "txt_Wrong", self, "", _EditFont(),
-                _HintColor()
+                _LayoutColor(self, "txt_Wrong")
             )
             _Diag("hint ready")
             return hint

@@ -370,6 +370,7 @@ def main() -> int:
 
     root_code = parse_pyc(std_reg)
     names_all = set()
+    consts_all = set()
     funcs = set()
     texts = []
     for path, code in walk_codes(root_code):
@@ -378,6 +379,8 @@ def main() -> int:
             if isinstance(n, (bytes, bytearray)):
                 names_all.add(bytes(n))
         for c in code.consts:
+            if isinstance(c, int):
+                consts_all.add(c)
             if isinstance(c, str):
                 texts.append(c)
             elif isinstance(c, (bytes, bytearray)):
@@ -423,6 +426,11 @@ def main() -> int:
         assert name in names_all, f"native checkbox API missing: {name!r}"
     for name in (b"CIMGCHECKBOX", b"CImageCheckBox"):
         assert name not in names_all, f"stale checkbox helper still used: {name!r}"
+    # 2026-10-22 第二輪（用戶實機）：字色要白、btn_back 的消息號要從版式讀。
+    for name in (b"GetColor", b"m_MsgID", b"m_BackMsgId"):
+        assert name in names_all, f"layout-read API missing: {name!r}"
+    assert b"btn_back" in raw_consts, "btn_back anchor name missing"
+    assert 16777215 in consts_all, "white text colour missing"
     with tempfile.TemporaryDirectory(prefix="mx-registration-smoke-") as cwd:
         subprocess.run(
             [

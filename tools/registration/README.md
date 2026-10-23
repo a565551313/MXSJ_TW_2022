@@ -8,6 +8,11 @@
 > 下文凡是 `login/regterms.dlg`、`login/regform.dlg`、`account/pwd/pwd2/email/txt/chk_five`
 > 的写法都是 2026-10-22 之前的版式，仅作历史保留；实机测试请按
 > [2027 版式测试说明](TESTING_2027.md)。
+>
+> **第二轮（build=2027-10-22b）**：四框与提示行改白字（`16777215`，照登录页）；
+> `.dlg` 里的颜色属性对脚本另建的 CEDIT/CRICHTEXT **不生效**，脚本先读锚点
+> `GetColor()`、取不到才用白字。协议页新增用户自加的 `btn_back`（消息号从
+> 版式 `m_MsgID` 现读）。两个勾选的 `iTeam` 必须不同（用户实测），属布局侧。
 
 > **现行入口（2026-10-18 文档核对）**：采用 PR #32 的原生实现；用户确认仅限该版当时测试范围，无真实注册服务。最近边界见 [STATUS](../../docs/STATUS.md)。
 > 下方第一期／第二期／font／diag 记录是版本演进，不能当作新的修复分派或覆盖当前脚本的指令。旧 `tools/client_patches/` overlay v3/v3.2/v3.3 已作废，禁止分发。编辑器现行版本按各自源码与 README，不沿用本页历史版本数字。

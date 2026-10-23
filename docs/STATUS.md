@@ -631,6 +631,40 @@
 - **未验**：Windows 实机、真实客户端里的排版与点击手感、真实注册服务（仍是桩）；
   `iTeam=1` 是否导致两个勾选互斥也待实机确认（若互斥，把 `btn_isee` 的 `iTeam` 改 0）。
 
+### 3.15.2 2026-10-22 注册页第二轮：白字、btn_back、iTeam（build=2027-10-22b）
+
+用户实机反馈三条，**全部只改脚本、不动布局**：
+
+1. **四框与 `txt_Wrong` 是黑的，要白的**。根因不是布局：`edt_account` 等只是 `.dlg`
+   占位锚点，真正显示的是脚本用 `combmacro.CEDIT` / `CRICHTEXT` 另建的控件，字色
+   只认构造参数；旧代码第 4 个参数写死 `0`（黑）。用户在布局里加 `ICOLOR` 不生效
+   也是同一原因（该值不会自动带进构造参数）。改法：新增 `COLOR_TEXT_WHITE =
+   16777215`（照 loginin.py 登录页 `edt_Name`/`edt_Pwd`），`_CreateFormEdit` 与
+   提示行的 `CRICHTEXT` 都走 `_LayoutColor(parent, name)`——先读锚点 `GetColor()`
+   （原版 `dlgitembill1.CreateBookAmountEdit` 同法），非 0 采用，取不到/为 0 退回
+   白字；删掉返回黑的 `_HintColor()`。`linecolor` 仍与登录页一致取 0。
+2. **`btn_back`（用户本机加进 agreement.dlg）**：脚本不写死消息号，新增
+   `_LayoutMsgId()` 读原生 `obj.m_MsgID`（loginin.py/mainpage.py 的
+   `btn.m_MsgID` 同源），点击回登录首頁并写 `terms btn_back -> home`；若被填成 1
+   （与「我同意」同号）写 `terms WARN btn_back msgid=1 conflicts with agree`，
+   且 1 仍走「同意」，避免同意永远进不了表单这种更坏的静默故障。
+3. **`iTeam` 必须不同**（用户 2026-10-22 实机定论；原稿两处都是 1 ⇒ 点不动）。
+   属布局侧，脚本不碰；`templates/2027/register2027_msg.dlg` 因此**不再随包发布**
+   （它的 `iTeam` 仍 1/1），保留仅为「除消息号外与原稿逐字节一致」的证据。
+
+回归（CPython 2.5.6 真编译）：新增白光断言（四框 4 个 CEDIT 颜色 + `RichText`
+颜色 + `linecolor=0`）、版式给色优先采用（`edt_email=0x123456`、`txt_Wrong=0x654321`
+被原样采用，日志 `color ... layout=N`）、缺 `GetColor()` 兜底白字（日志
+`api missing`）、`btn_back` 回主頁与撞号警告；三套模式（默认 / `missing_layout` /
+`no_font_edit`）全过；`tools/registration` **45 项**、ruff 0、wincompat 0/0/0。
+构建器新增断言：`GetColor`/`m_MsgID`/`m_BackMsgId` 名字必须在、`btn_back` 字面量
+必须在、常量里必须有 `16777215`；只改 337/4007，337 差 9 字节，marshal 往返一致。
+- 产物 `data/script.fls` 24,268,322 B，SHA256 `fa3b7d751cdd749b29aac90dabf6405f41971e291b525bab5718ab57f10beb23`；
+  出货 ZIP（**只含脚本，不含布局**）24,193,655 B，
+  SHA256 `0b6724b397cd35fb82ad3a87525e6f4289931f4a2a522d76dfa56f749517d055`。
+- **未验**：Windows 实机、这版客户端是否有 `GetColor()`、`iTeam` 的分组语义
+  （只按用户实测记「必须不同」，未逆出规则）。
+
 ### 3.16 独立脚本编辑器开工授权（2026-10-15）
 
 用户确认font1后“确实好了”，协议→表单这一步已实机通过，不外推全部控件/服务器验收。
@@ -1556,6 +1590,7 @@ PR #32 逆向补充：转译失败条目降至 4 条，救回条目需重建脚�
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-22 | 注册脚本 **2027 版式第二轮（build=2027-10-22b）**：用户实机反馈三条，只改脚本不动布局。① 四框与 `txt_Wrong` 改白字——`.dlg` 里只是占位锚点，显示控件由 `CEDIT`/`CRICHTEXT` 另建，字色只认构造参数（旧代码写死 `0`＝黑，这也是加 `ICOLOR` 不生效的原因）；新增 `COLOR_TEXT_WHITE=16777215`（照登录页）与 `_LayoutColor()`（先读锚点 `GetColor()`，非 0 采用、否则白），删掉返回黑的 `_HintColor()`。② 协议页 `btn_back`（用户本机加）：消息号从原生 `m_MsgID` 现读，点击回登录首頁，撞号 1 时写警告且 1 仍走「同意」。③ `iTeam` 必须不同（用户实测，原稿 1/1 点不动），属布局侧；`register2027_msg.dlg` 不再随包发布。回归：三套模式全过、`tools/registration` 45 项、ruff 0、wincompat 0/0/0；构建只改 337/4007、337 差 9 字节、marshal 往返一致。Windows 实机与 `GetColor()` 是否存在待验 |
 | 2026-10-22 | 注册脚本 **2027 版式接线**：用户重做布局（`login_new/agreement.dlg`、`login_new/register2027.dlg`），`register.py` 按新版式重写接线——四框换 `edt_account`/`edt_Pwd`/`edt_Pwd_1`/`edt_email`，提示换 90×20 的 `txt_Wrong`，两个勾选（`btn_fiveaccount`/`btn_isee`）改走原生 `.dlg` 接口 `GetObject(...).IsSelected()/SetSelect()`，新增「未勾同意不得注册」前置校验。**不自校准翻转**：反汇编 entry 4806 `CLoginIn/OnMessage` 只读 `GetObject('chk_agree').IsSelected()`、`GetObject('btn_Protect').IsSelected()`，从不手动翻 ⇒ 引擎翻、脚本只读，共用消息号 50 也不再是问题（交付稿把同意改 51 消歧）。离线 CPython 2.5.6 桩件 13 组全过（两种点击顺序、共用 50、缺布局、缺 `FONT_EDIT`），`tools/registration` 43 项、ruff 0；构建器只改 337/4007，337 差 9 字节，marshal 往返一致、无网络调用名残留。**Windows 实机未验**，未开 PR。出货 ZIP `registration_2027_layout.zip` 24,195,048 B，SHA256 `1bb201ae1a6446f2836521e239374eacd95a1e75d26df3d09a76af06712a0a5c` |
 | 2026-10-21 | 文档：记录 **`mock_server_v2` 的 Windows 实机全链路**——连接→登录→选角→进游戏→NPC 对话→对话中传送地图。来源是**用户口述**，我方未复现（沙箱无 Windows 客户端/`mx.exe`/原始包），无抓包与日志；只写「该版本+该测试副本走通这条路径」，不据此宣称认证（密码摘要/请求 key 未校验）、事务/并发、反作弊或完整玩法。写入 `docs/MOCK_SERVER.md`（含三种服务对照表新增 v2 行）、`MOCK_SERVER_V2_README.md`（兼容性小节 + 实机记录）、根 `README.md` 组件表、本文件 §1/§2。 |
 | 2026-10-22 | UI 编辑器 **0.14.0**：「打开 / 保存 / 导入 / 导出」重新规划。原则是一个动词只干一件事：打开只从某处拿进来、保存只回它来的地方、另存为换地方存新的、导出副本另拿一份不动原件。文件菜单合成 `打开 ▸`（布局文件 / 布局目录 / 资源包 / 资源目录 / 最近打开）、`另存为 ▸`（新资源包 .fls / 散装布局 .dlg）、`导出副本 ▸`（布局原文件 / PNG 预览 / 控件素材）；工具栏 `打开▾ / 保存 / 另存为▾ / 导出副本▾`；选图窗四动作改为「把图片放进包 / 几张图组成按钮（拼名族）/ 从包里选图片 / 只填包外文件名」。保存语义改为第一次问一次输出包（默认 `interface_edited.fls`），之后 Ctrl+S 静默写回同一个包。`LayoutDocument` 新增 `origin_pack`，标题与状态栏常驻「来源 → 去处」。修四个真问题：`_save_to_pack` 的 `res_path` 未定义（首次保存必崩）、保存后标题滞后、最近打开同名文件不可区分、同一文件原地写回时谎报「改变 0 条」。新增 22 项回归，全套 **724 项**（723 通过、1 跳过、0 错误），ruff 0、wincompat 0/0/0 |
