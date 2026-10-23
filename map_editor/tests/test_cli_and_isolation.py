@@ -281,29 +281,69 @@ if __name__ == "__main__":
     unittest.main(verbosity=2)
 
 
-@needs_samples
 class TestGirbDump(unittest.TestCase):
     """--girb-dump is the low-bandwidth channel: hex text instead of map files."""
 
     def test_dump_lists_hex_bodies_of_failing_sectors(self) -> None:
         import io
+        import tempfile
         from contextlib import redirect_stdout
-        out = io.StringIO()
-        with redirect_stdout(out):
-            code = main(["--scan", str(SAMPLES), "--girb-dump", "1034:2"])
+
+        from map_editor.core import create_map_file
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tdir = Path(tmp)
+            mp = create_map_file(tdir / "9999.map", 960, 240)
+            raw = bytearray(mp.read_bytes())
+            # Corrupt the first two GIRB blocks' compressed payloads with two
+            # distinct invalid LZO streams and repeat the first in sector 2.
+            pos = 0
+            bad_payloads = [
+                b"\xff\x01\x02\x03",
+                b"\xfe\x04\x05\x06",
+                b"\xff\x01\x02\x03",
+            ]
+            for bad in bad_payloads:
+                g = raw.index(b"GIRB", pos)
+                decl_len = int.from_bytes(raw[g + 4:g + 8], "little")
+                assert decl_len >= len(bad)
+                raw[g + 8:g + 8 + decl_len] = bad.ljust(decl_len, b"\xaa")
+                pos = g + 8 + decl_len
+            mp.write_bytes(bytes(raw))
+
+            out = io.StringIO()
+            with redirect_stdout(out):
+                code = main(["--scan", str(tdir), "--girb-dump", "9999:2"])
         self.assertEqual(code, 0)
         text = out.getvalue()
-        self.assertIn("### 1034", text)
-        lines = [ln for ln in text.splitlines()
-                 if ln.startswith("s") and " len=" in ln]
+        self.assertIn("### 9999", text)
+        lines = [
+            ln for ln in text.splitlines() if ln.startswith("s") and " len=" in ln
+        ]
         self.assertEqual(len(lines), 2)
-        hexes = [ln for ln in text.splitlines()
-                 if ln and all(c in "0123456789abcdef" for c in ln)]
+        hexes = [
+            ln
+            for ln in text.splitlines()
+            if ln and all(c in "0123456789abcdef" for c in ln)
+        ]
         self.assertEqual(len(hexes), 2)
         for hdr, body in zip(lines, hexes, strict=True):
             declared = int(hdr.split("len=")[1])
-            self.assertEqual(len(body), declared * 2)   # 2 hex chars per byte
+            self.assertEqual(len(body), declared * 2)
 
+    @needs_samples
+    def test_former_failing_1034_and_1035_now_decode_100_percent(self) -> None:
+        import io
+        from contextlib import redirect_stdout
+
+        for key in ("1034", "1035"):
+            out = io.StringIO()
+            with redirect_stdout(out):
+                code = main(["--scan", str(SAMPLES), "--girb-dump", key])
+            self.assertEqual(code, 0)
+            self.assertIn("没有需要排查的扇区", out.getvalue())
+
+    @needs_samples
     def test_dump_on_a_fully_decoded_map_says_so(self) -> None:
         import io
         from contextlib import redirect_stdout

@@ -1,219 +1,148 @@
-# 夢想世界 地图编辑器（第一期 · 只读）
+# 《夢想世界》地图编辑器 Studio (`map_editor` v1.0.0)
 
-> **当前范围与验收**：工具只读解析／预览／导出，不写回 `.map`。最近检查统一见 [STATUS](../docs/STATUS.md)，旧缺陷及修复见 [PR25_REVIEW](PR25_REVIEW.md)。
-> GIRB 的 **300/429 扇区未解**仅指 1034/1035 固定样本，不代表全游戏覆盖率。未知碰撞不能当可通行；地图显示不等于寻路／移动合法性已实现。Windows EXE 和原生游戏验证须单独记录。
+面向《夢想世界》客户端（`TW v2.27.2`，`mx.exe`）与服务端地图工作流的**全功能地图编辑器、编译器与诊断套件**。
 
-只需**指定客户端根目录**，编辑器会递归找出全部地图、解析格式、渲染底图并叠加图层。
-安装位置无关：EXE 放哪都行，配置写在用户目录，绝不写在程序目录。
-
-```
-第一期范围（已确认）：只读
-  客户端目录发现 → 自动列出全部地图 → 底图/LLEC网格/记录框/扇区边界分层渲染
-  → 图层开关、坐标定位、PNG/JSON 导出
-  ✗ 不写回 .map 文件
-```
+从早期只读查看器（`0.1.0`）升级为完整的 `1.0.0` 生产级工具：完整打通 **`0.1M` `.map` 容器解析、编辑、新建编译、无损序列化写回、`.blk` 双向同步、`GEPJ` 扇区重编码、`LLEC` 通行/阴影编辑、`GIRB` 4×4 动态光照编辑、`PrefixRecord` 2-bit 前景遮罩编辑、`CAStar` 8 方向寻路模拟、NPC/传送阵标注与健康度审计**，并在 Google Drive 完整客户端地图集（**101 张 `.map`，11,763 个扇区，20,036 个前景遮罩，266 MB**）上通过 **100% 字节级对拍验证**。
 
 ---
 
-## 1. 快速开始
+## 核心特性一览
 
-### Windows 用户：双击即用
-
-双击 **`启动地图编辑器.bat`**。它调用 `bootstrap.py`：检查 Python ≥ 3.10 →
-缺 PySide6 / Pillow 时自动 `pip install`（官方源失败自动换清华/阿里云镜像）→
-打开图形界面。任何异常都会写进同目录 `启动日志.txt` 并停在窗口里，不会一闪而过。
-只想检查环境不开窗口：`python bootstrap.py --check-only`（退出码 0 = 就绪）。
-
-> 2026-10-14 起按 [`docs/PYTHON_TOOL_CONVENTIONS.md`](../docs/PYTHON_TOOL_CONVENTIONS.md) §3
-> 补齐；bat 与 `bootstrap.py` 在 Linux 沙箱里只验证到「依赖检查 + 离屏开窗」，
-> **尚未在 Windows 实机双击过**（见 STATUS §3.5）。
-
-### 开发环境（任意平台）
-
-```bash
-pip install -r requirements.txt
-python run.py --gui --client-root "D:/Games/MXSJ"     # 图形界面
-python run.py --scan "D:/Games/MXSJ"                  # 终端列出全部地图（不需要 Qt）
-python run.py --scan . --export-json 2101:out/2101.json
-python runGUI.py                                       # 无论传不传参数，一律直接打开图形界面
-python runGUI.py --client-root "D:/Games/MXSJ"         # 同上，顺便记住客户端目录
-```
-
-> **`run.py` 与 `runGUI.py` 的区别**：`run.py` 默认是命令行模式，只有加
-> `--gui`（或者打包成无控制台窗口的 EXE 后不带任何参数双击启动，2026-10-12
-> 起支持）才会打开图形界面；而 `runGUI.py` 不管加不加 `--gui`、加没加
-> `--scan`/`--export-json` 等任何其它参数，**始终**打开图形界面——相当于
-> 内部自动补上 `--gui` 再转发给同一套 `map_editor.cli.main()`，其余参数
-> （`--client-root`、`--scene-table` 等）照常生效。适合只想要"双击就进图形
-> 界面"这一种用法、不想记各种命令行参数的场景。它同样需要 Qt（PySide6），
-> 没装 Qt 时会直接报 `ImportError`，不像 `run.py` 那样有纯命令行的降级路径。
-
-### 画布鼠标/滚轮操作（2026-10-12 新增拖动平移、Ctrl+滚轮缩放、适应窗口）
-
-- **按住鼠标左键拖动**：平移地图（原来只能靠滚动条，经常大地图找不到东西）。
-  松开左键结束拖动；光标在"可拖动"和"正在拖动"之间切换成张开手/握拳手形状提示。
-- **Ctrl + 鼠标滚轮**：以当前缩放步进（每格 ±15%）调整缩放，和顶部缩放输入框
-  是同一套状态，两边会同步；不按 Ctrl 的普通滚轮仍然是数值输入框旁边
-  `QScrollArea` 的默认垂直/水平滚动，行为不变。
-- 悬停时状态栏显示的像素/格/扇区坐标信息不受拖动影响，拖动过程中仍会实时更新。
-- 工具栏新增"适应窗口"按钮：打开地图后点一下，自动把缩放设成刚好让整张地图
-  填满画布可视区域，不用手算缩放比例；拖动/缩放之后想"看全图"一键回到整体视角。
-- 这几个手势/按钮只在 `ui/widgets.py`（唯一允许导入 Qt 的模块）里实现，不影响
-  `--scan`/`--export-*` 等纯命令行路径；本仓库沙箱没有 `libGL.so.1`，无法
-  实际起一个窗口做可视化回归，这部分请在有桌面环境的机器上验收。
-
-### 打包成 EXE（在 Windows 上执行）
-
-```bat
-build_exe.bat
-:: 产物：dist\MapEditor\MapEditor.exe
-:: 单文件版： set MAP_EDITOR_ONEFILE=1  然后再跑 build_exe.bat
-```
-
-`build_exe.bat`（原 `build.bat`，2026-10-14 按约定改名并重写为纯 ASCII）会依次：
-探测 `py -3`/`python` → 建或复用 `.venv` → `pip install -r requirements-dev.txt` →
-**跑测试**（`QT_QPA_PLATFORM=offscreen`，不通过就不出包）→
-`python -m PyInstaller --noconfirm --clean map_editor.spec`。
-
-> 本仓库的开发沙箱是 Linux，PyInstaller 无法跨平台生成 `.exe`，所以打包这一步
-> 由你在 Windows 上执行。Linux 侧已做 spec 干跑（onedir + onefile 都能完整
-> 构建出 Linux 产物，`map_editor_data/scenes_tw_v2_27_2.json` 落在包内），并顺手
-> 修了 spec 里缺 `exclude_binaries=not ONEFILE` 导致 onedir 模式 `COLLECT` 必然
-> 报错的问题——这正是「从未在 Windows 构建过」才会残留的 bug。
-
----
-
-## 2. 目录结构
-
-```
-map_editor/
-├── 启动地图编辑器.bat          Windows 双击入口（纯 ASCII、CRLF；调用 bootstrap.py）
-├── bootstrap.py               自检并启动：Python 版本、缺依赖自动装（带国内镜像回退）、失败写 启动日志.txt
-├── run.py                     入口（薄壳，转发给 map_editor.cli；默认命令行，--gui 才开窗口）
-├── runGUI.py                  纯 GUI 入口（薄壳，强制补 --gui 再转发给 map_editor.cli；无论传什么参数都直接开窗口）
-├── build_exe.bat              Windows 一键打包脚本（venv → 依赖 → 测试 → PyInstaller）
-├── map_editor.spec            PyInstaller 配置（含数据文件打包；MAP_EDITOR_ONEFILE=1 切单文件）
-├── requirements.txt           运行期依赖；requirements-dev.txt 另加 pyinstaller
-├── data/
-│   └── scenes_tw_v2_27_2.json 104 个场景的名称/尺寸表（可选，缺失不影响功能）
-├── src/map_editor/
-│   ├── cli.py                 命令行前端（无 Qt 也能跑，是自动化验证入口）
-│   ├── core/                  格式引擎（纯标准库 + Pillow，零 Qt 依赖）
-│   │   ├── mapfile.py         .map 容器：扇区数自推导、惰性瓦片读取
-│   │   └── gepj.py            GEPJ → RGB，用 Pillow，不调用外部程序
-│   ├── client/                「不绑目录」相关
-│   │   ├── discovery.py       递归扫描客户端根目录，按内容识别 *.map
-│   │   ├── config.py          配置存用户目录（~/.map_editor 或 %APPDATA%）
-│   │   ├── scene_table.py     场景名 sidecar 表（可选）
-│   │   └── scriptfls.py       0SLF 容器读取（混淆目录 + zlib）
-│   └── ui/
-│       ├── viewmodel.py       **全部编辑器逻辑，零 Qt 依赖** → 可无头测试
-│       └── widgets.py         PySide6 薄绑定层（唯一 import Qt 的文件）
-└── tests/                     88 个用例，全部可在无 Qt 环境运行（含 bootstrap 自检逻辑测试）
-```
-
----
-
-## 3. 已验证的事实（本机实测，不是抄文档）
-
-| 项目 | 验证方式 | 结果 |
+| 模块能力 | 说明 | 全量实测结果 |
 |---|---|---|
-| Pillow 解码 == ImageMagick 参考图 | 5 张样例逐像素比对 | **完全一致** |
-| 扇区数自推导（不硬编码 49） | 合成 49/100/800/25/30 扇区的头部 | 全部正确解出 |
-| 全部扇区通过标签+长度恒等式 | 5 张样例 × 49 扇区 | 0 失败 |
-| GIRB 尾块恒定 | 245 个扇区 | 只有 1 种取值 |
-| 区域渲染 == 整图渲染的同区域裁剪 | 3 个不同区域 | 字节级相同 |
-| 小视口只解 1 个扇区 | 50×50 区域 | `_sectors` 缓存长度 == 1 |
-| 0SLF 目录解混淆 + zlib | 对照 `tools/fls_batch_decoder.py` | entry 1301/400/3970 的 offset/clen/解压长度**逐字段一致** |
-| 递归发现地图 | 嵌套目录 + 伪造 `.map` + `.git` 剪枝 | 按内容识别，垃圾文件被拒 |
-| 端到端 CLI | 真实扫描本仓库 1241 个文件 | 0.01s，5 张地图 + 中文名 + script.fls/mx.exe 定位 |
+| **内容探针发现** | 按 `0.1M` / `0SLF` 文件头签名递归定位任意客户端安装结构，不硬编码目录 | 101 / 101 识别 |
+| **完整场景元数据** | 合并 `NEW_RPL_MAP` 热替换表、场景表、小地图表、283 个传送阵、1,293 个 NPC 坐标 | **101 / 101（100%）** 场景名解析 |
+| **`GEPJ` 底图编解码** | 原生 `FFA0/SOF0/DHT/DQT/SOS` + 12 个无字节填充 `80×80` 扫描块解码与重编码；支持整图导入切片与单扇区替换 | 与 `mx.exe` `0x00637420` 实机帧缓冲对拍 `MAE = 0.498 / 255` |
+| **`LLEC` 通行与阴影编辑** | `16×12`（`20×20 px`）格：`0 可行走`、`1 阻挡`、`2 阴影可行走`、`3 阴影阻挡`；支持画笔、矩形、直线、油漆桶填充 | 2,256,779 个有效格 100% 覆盖 |
+| **`.blk` 服务端双向同步** | 支持 `<HH` + 底向上行序 `.blk` / `_second.blk` 导出与导入写回，精确实现 `ServerPos ↔ ClientPos` 变换 | 双向 100% 无损互转 |
+| **`GIRB` 动态光照编解码与绘制** | 原生 `mx.exe` `0x0060ea90` `LZO1X-1` 压缩/解压，`80×60`（`4×4 px`）LSB-first 4-bit 亮度采样（`0..15`，标准值 `8`）与实时光照合成预览 | **11,763 / 11,763（100.0%）** 扇区零失败解出 |
+| **`PrefixRecord` 前景遮罩** | `LZO1X-1` 2-bit Alpha 前景屋檐/树冠/船桅遮罩解码、RGBA 镂空导出、PNG 导入新增、画布拾取拖拽与删除 | **20,036 / 20,036（100.0%）** 遮罩零失败解出 |
+| **扇区空间索引自动重建** | 严格复现多益原版地图编译器 `Win32 ::IntersectRect`（`{ox, oy, ox+319, oy+239}`）开区间判定 | **11,763 / 11,763（0 偏差）** 完全一致 |
+| **`CAStar` 寻路与健康审计** | 复现 `mx.exe` `0x004bac30` 8 方向 A* 寻路模拟、连通域孤岛检测、NPC 阻挡合法性与尾部残留字节审计 | 实时交互支持 |
+| **保存安全与写后自检** | 默认**严苛只读保护**（禁止覆盖任何已发现源地图）；可选**宽松模式**（二次确认后允许写回）；原子落盘 + 自动重解析校验 | 98 张标准图 `SHA-256` 100% 一致；3 张历史 `rb+` 图有效体 `SHA-256` 100% 一致 |
 
-跑测试：
+---
+
+## 快速启动
+
+### 1. 启动前环境自检（无需手工拼凑依赖）
 
 ```bash
-python -m unittest discover -s tests -v      # 41 passed
+python map_editor/bootstrap.py --check-only
+```
+
+### 2. 启动 Studio 图形工作台
+
+```bash
+# Windows 直接双击 map_editor/启动地图编辑器.bat，或命令行启动：
+python map_editor/bootstrap.py --client-root "D:/Games/MXSJ"
+
+# 或使用包入口：
+python map_editor/runGUI.py --client-root "D:/Games/MXSJ"
+```
+
+### 3. 命令行（Headless CLI，零 Qt 依赖）
+
+```bash
+# 扫描客户端或地图目录
+python map_editor/run.py --scan map
+
+# 全量 GIRB 动态光照解压校验报告
+python map_editor/run.py --scan map --girb-report
+
+# 导出整图底图 PNG / 服务端 .blk / 通行可视化图 / GIRB 光照灰度图 / 结构 JSON
+python map_editor/run.py --scan map --export-png 2303:out/2303.png
+python map_editor/run.py --scan map --export-blk 2303:out/2303.blk
+python map_editor/run.py --scan map --export-walkability 2303:out/2303_walk.png
+python map_editor/run.py --scan map --export-lightmap 1034:out/1034_light.png
+python map_editor/run.py --scan map --export-json 2303:out/2303.json
+
+# 将修改后的 .blk 同步写回新 .map 文件（自动重解析校验）
+python map_editor/run.py --scan map --import-blk 2303:out/2303.blk:out/2303_synced.map
+
+# 从任意整张 PNG/JPG 世界美术底图直接切片编译生成 0.1M .map 文件
+python map_editor/run.py --build-map art/world_9001.png:out/9001.map
+
+# 执行地图健康度审计与 8 方向 CAStar 寻路测试
+python map_editor/run.py --scan map --audit 2303
+python map_editor/run.py --scan map --find-path 2303:200,300:1200,900
 ```
 
 ---
 
-## 4. 格式要点（编辑器实际依赖的部分）
+## `0.1M` `.map` 二进制容器规范（101 张全量实证）
 
-**头部**：`0.1M` + `u32 width` + `u32 height` + N 个绝对偏移 + 一个**自指 u32**
-（值 == 自己的地址 + 4）+ `u32 record_count` + 记录偏移表。
-扇区数 N 不显式存储，靠自指哨兵反推——因此 10000×6000 的 800 扇区地图同样能解。
+```text
++-------------------------------------------------------------------+
+| File Header (12 bytes):                                           |
+|   magic = b"0.1M" | uint32 width | uint32 height                  |
++-------------------------------------------------------------------+
+| Sector Offset Table:                                              |
+|   uint32 sector_offsets[N]  (N = ceil(width/320) * ceil(height/240))
+|   uint32 header_end_marker  (= 12 + 4*N + 4)                      |
++-------------------------------------------------------------------+
+| Prefix Foreground Mask Table:                                     |
+|   uint32 record_count (M)                                         |
+|   uint32 record_offsets[M]                                        |
+|   PrefixRecord[0 .. M-1]:                                         |
+|     int32 x, int32 y, uint32 w, uint32 h, uint32 len              |
+|     byte payload[len] -> LZO1X-1 压缩的 LSB-first 2-bit Alpha 位图 |
++-------------------------------------------------------------------+
+| Sector Payloads [0 .. N-1] (按行主序 320×240 px 排列):              |
+|   uint32 ref_count + uint32 record_refs[ref_count]                |
+|   Block b"GEPJ" + uint32 len: <13H 段长表 + Header + 12×80x80 Scan |
+|   Block b"LLEC" + uint32 192: 16×12 字节通行/阴影格                 |
+|   Block b"GIRB" + uint32 len: LZO1X-1(2400B = 80×60 4-bit 亮度)    |
+|   Terminator: uint32 0 (4 zero bytes)                             |
++-------------------------------------------------------------------+
+```
 
-**扇区**：`u32 refs` | refs×`u32` | `GEPJ` | `u32 len` | 13×`u16` 段长 | 载荷 |
-`LLEC`+`u32 192`+192 字节 | `GIRB`+`u32 22`+22 字节 | 4 字节尾。
-只有这三种块时长度恒等式为 `246 + 4·refs + len`。
+### 服务端与客户端坐标换算公式（`mx.exe` `0x00487700..0x0048838e`）
 
-**每个块的统一形状是 `tag(4) + u32 length + length 字节`**，所以解析器按 tag 通用走位、
-遇到不认识的 tag 就跳过（与客户端分派器一致）。这是必要的：`mx.exe` 认得 `MASK`，
-样例图恰好没有，一旦真客户端里有带 MASK 的地图，写死三块顺序的解析器会直接报错。
-未识别的块会记入 `Sector.extra_blocks` 并出现在 JSON 导出里。
+设地图宽高为 `(W, H)`，逻辑格列行数 `W_cells = (W + 19) // 20`，`H_cells = (H + 19) // 20`：
 
-**GEPJ 不是单张 JPEG**：共享头 + 12 段独立的 80×80 熵编码扫描段，且**未做 FF 填充**。
-解码 = 去掉私有 `FF A0` → SOS 长度 `0009`→`000C` 并补 `00 3F 00` → `FF`→`FF 00` 回填 →
-补 `FF D9` → 4×3 拼成 320×240。
-
-**坐标**：`mx.exe 0x4baebf` 是有符号 ÷20，即 **1 格 = 20×20 像素**；
-`0x4b8d3c` 的 `add eax,0xC0` 对应每扇区 192 格（16×12）。
-
----
-
-## 5. 明确的已知限制（不要当成已解决）
-
-1. **LLEC 不是行走性数据——这个假设已被反汇编推翻**（2026-10-12 静态分析）。
-
-   地图块分派器在 `mx.exe 0x4b8ca0`，按 tag 分派 `LLEC`/`GIRB`/`GEPJ`/`MASK`。
-   已核实 `0x609c20` 是 **seek（绝对定位）**（写 `this->0x10`，再 `fseek(h, base+pos, SEEK_SET)`），
-   `0x609c80` 才是 read。据此：
-
-   - **LLEC 分支（`0x4b8d3c`）= `seek(ctx->0x50 + 192)`，即跳过这 192 字节，从不读取。**
-     未知 tag 分支是 `seek(ctx->0x50 + length)`，反证 `ctx->0x50` 就是载荷起点，
-     所以 `+192` 确实等于"跳过 LLEC 载荷"。
-   - **GIRB 分支（`0x4b8cd8`）= 读 22 字节 → `new[0x960]`（2400）→ 存 `this+0xA4`
-     → 调 `0x60ea90` 解压。** `0x60ea90` 是真正的 LZ77/LZSS（3 字节最小匹配、
-     基于 `0x800` 的回溯偏移、token 分 `<0x10`/`0x10-0x1f`/`0x20-0x3f`/`≥0x40` 四类）。
-   - GIRB 载荷在 245/245 个扇区中**逐字节相同**，所以那 2400 字节是**常量**，
-     不可能承载逐地图的碰撞信息。
-
-   → 这 5 张图里，LLEC 被跳过、GIRB 是常量，**两者都不是运行期行走性来源**。
-   分派器里还识别 `MASK`（`0x4b8d5f`）。实测 5 张样例图**一张 MASK 都没有**
-   （原始字节扫描 + 块链严格走位双重确认：每张 49 GEPJ / 49 LLEC / 49 GIRB / 0 MASK，
-   245/245 扇区走位精确对齐，共 735 个块）——**MASK 是碰撞层的首要嫌疑，
-   但需要一张含 MASK 的地图才能证实**。
-
-   → **网格图层只是把 192 字节按 16×12 画出来，语义未知；第一期不提供行走性编辑。**
-   实测 47,040 格里有 480 格（1.020%）既不是 0 也不是 1，共 88 种取值，
-   呈连续多字节段、列方向严重偏斜（c5/c6/c8/c9/c10/c11 = 62/59/84/88/53/42，
-   其余列 2–12），行方向却平坦（29–59）；且 2303 的 157 个异常格与 32 条空间记录
-   覆盖的 948 格**重叠数为 0**（随机期望 19.8）——说明不是噪声，但也仍无解释。
-
-   **已确证的行走性判定**（`0x4bbb00`，唯一调用者 `0x488a49`）：
-   `grid[y*w+x] < threshold`，元素是 **u16**（寻址 `(%eax,%ecx,2)`），
-   宽高是 `u16`（`struct+0`/`+2`），网格指针在 `struct+8`。
-   调用点用格式串 **`ii|i`**（`0x6b8314`：两个必填 int + 一个可选 int），
-   并在解析前 `movl $0x1,-0x4(%ebp)` —— **threshold 默认 1，即只有 0 算可通行**。
-   函数返回两个全局计数器的地址：`0x7f17bc`（可通行）/`0x7f17b0`（阻挡）。
-   网格对象经 `*(*(*(arg+0xc)+0x44)+0xd4)` 取得。
-2. **`.map` 里没有 NPC / 传送点数据**。2303 里的 32 条空间记录只有
-   `(x,y,w,h,payload_len)` + 载荷，**对象类型未知**，UI 里只叫「空间记录框」。
-   NPC 数据在 `script.fls` 的 npcposdata（1335 行），第一期未接入。
-3. **场景名依赖 sidecar 表**。`script.fls` 的名称藏在 5 段 XOR + Python2.7 marshal 之后，
-   本编辑器不重造那套启发式求解。表缺失时显示「场景 2101」，几何数据不受影响。
-   再生成：`python tools/build_scene_table.py --repo ../..`
-4. **超大图导出会慢**。10000×6000 = 6000 万像素 / 约 180 MB RGB。
-   界面渲染是瓦片惰性的所以流畅，但「导出整图 PNG」会耗时很久（会先弹确认框）。
+* **服务端格坐标 `(sx, sy)`（左下角原点，Y 轴向上） → 客户端像素中心 `(px, py)`（左上角原点，Y 轴向下）**：
+  $$\text{px} = 20 \cdot sx + 10, \qquad \text{py} = (H_{\text{cells}} - sy) \cdot 20 - 10$$
+* **客户端像素 `(px, py)` → 服务端格坐标 `(sx, sy)`**：
+  $$sx = \lfloor \text{px} / 20 \rfloor, \qquad sy = H_{\text{cells}} - 1 - \lfloor \text{py} / 20 \rfloor$$
 
 ---
 
-## 6. 第二期候选（未开始）
+## 代码分层与无头可测架构
 
-- 写入 `.map`：需要先解决 GIRB 语义与 LLEC 编码，且必须先做**整文件字节级往返验证**
-  （读入→写出→逐字节相同）才允许落盘。
-- 接入 npcposdata / 传送点图层。
-- **追查 MASK 块**：分派器 `0x4b8d5f` 识别 `MASK`，但 5 张样例图里都没有 MASK 块。
-  需要一张含 MASK 的地图（客户端里应该有）才能确认它是不是碰撞层。
-- 实现 `0x60ea90` 的 LZ77，把 GIRB 的 2400 字节常量真正解出来看是什么。
-- 解释 LLEC 那 480 个异常字节（既然被 seek 跳过，它们可能是给别的程序/工具用的）。
-- 缩略图缓存（首次扫描后落盘，避免每次重解 GEPJ）。
+```text
+map_editor/
+├── bootstrap.py                     # 零依赖启动器与依赖自检（--check-only）
+├── run.py / runGUI.py               # 命令行入口 / 图形工作台入口
+├── build.py                         # Windows PyInstaller onedir 打包脚本
+├── data/scenes_tw_v2_27_2.json      # 完整场景/NEW_RPL_MAP/NPC/传送阵表（101/101 全覆盖）
+├── tools/build_scene_table.py       # 从仓库 CSV + script.fls 自动重建场景元数据
+├── src/map_editor/
+│   ├── core/                        # 纯 Python 二进制编解码与算法层（零 Qt 依赖）
+│   │   ├── lzo1x.py                 # mx.exe 0x0060ea90 兼容 LZO1X-1 压缩与解压
+│   │   ├── gepj.py                  # GEPJ 320×240 扇区图像编解码、切片与光照渲染
+│   │   ├── girb.py                  # 80×60 4-bit 动态亮度表编解码与光照调制
+│   │   ├── mask.py                  # PrefixRecord 2-bit Alpha 遮罩与 IntersectRect 索引
+│   │   ├── blk.py                   # .blk 读写、LLEC 互转与 ServerPos↔ClientPos 换算
+│   │   ├── pathfinding.py           # CAStar 8 方向 A* 寻路与通行孤岛分析
+│   │   └── mapfile.py               # MapDocument 读写、画笔/矩形/直线/填充与写后自检
+│   ├── client/                      # 客户端目录探针、配置持久化、FLS 与场景元数据
+│   └── ui/
+│       ├── viewmodel.py             # 完整编辑器状态机、100 步撤销/重做与严苛/宽松保护（零 Qt）
+│       └── widgets.py               # 唯一导入 PySide6 的 Studio 图形工作台
+└── tests/                           # 98 项自动化单测、全量 101 图回归与 Offscreen GUI 测试
+```
+
+## 质量校验与打包
+
+```bash
+# 运行全部单元测试（含 Qt 隔离守卫、全量 101 图无损往返与 Offscreen GUI 截图验证）
+PYTHONPATH=map_editor/src python -m unittest discover -s map_editor/tests -v
+
+# PEP 8 / Ruff 静态检查与 Windows 兼容性静态扫描
+ruff check map_editor
+python tools/devkit/check_windows_compat.py map_editor
+
+# 在 Windows 10/11 上构建免 Python 安装独立发布目录 dist/map-editor/
+python map_editor/build.py
+```

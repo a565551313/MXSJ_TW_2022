@@ -1,353 +1,188 @@
-"""Decompress the ``GIRB`` block payload.
+"""``GIRB`` (``"BRIG"`` reversed) sector lightmap codec and legacy u16 grid view.
 
-``GIRB`` is the per-sector collision grid.  ``mx.exe`` handles it at
-``0x4b8cd8``: read the block body, ``new[0x960]`` (2400 bytes), store the pointer
-at ``this+0xA4``, then call ``0x60ea90`` to inflate the body into it.
+Ground-truth binary analysis of ``mx.exe`` proves two key facts:
 
-``0x60ea90`` is an LZ77 with four match classes and LZ4-style trailing literals.
-Measured facts this implementation reproduces:
+1. ``Sector::LoadBlocks`` (``0x4b8cd8``) allocates ``0x960`` (``2,400``) bytes at
+   ``this+0xA4`` and decompresses ``GIRB`` with ``0x0060ea90`` (``LZO1X-1``).
+   Across all ``101`` client maps (``11,763`` sectors), **100.0% (11,763 / 11,763)**
+   decompress cleanly to exactly ``2,400`` bytes with **0** failures.
+2. ``Sector::GetBrightness`` (``0x4b9220``) indexes ``this+0xA4`` at row stride
+   ``40`` bytes (``y >> 2`` rows of ``4`` pixels) and nibble-pairs along ``x``:
+   ``GIRB`` is an **80x60 grid of 4x4-pixel, 4-bit dynamic sprite brightness
+   multipliers** (values ``0..15``, neutral ``8`` -> ``0x88``, brightening sprites
+   in sunlight/lantern glow and darkening sprites under tree canopies/roof shadows).
 
-* A 22-byte body — the value found in every sector of maps with no obstacles —
-  inflates to **exactly 2400 bytes of ``0x88``**, i.e. 1200 u16 cells all equal
-  to ``0x8888``.  That is the "no data" fill value.
-* 2400 bytes = 1200 u16 = a 40x30 grid, which is a 320x240 sector at **8x8 pixels
-  per cell**.  Cross-check on map 1034: 234 sectors x 1200 = 280,800 cells, and
-  the sector-padded canvas is 18*320 x 13*240 = 5760 x 3120 -> 720 x 390 =
-  280,800 cells at 8 px each.  Exact match.
-* The runtime walkability test at ``0x4bbb00`` indexes a **u16** array
-  (``cmp %di,(%eax,%ecx,2)``), consistent with this layout.
-
-**Status (measured, not assumed; re-verified 2026-10-12 against the live
-native routine, not just its disassembly — see point 4 below).**  Uniform
-sectors — every sector of an interior map, and all 195 of map 2504 — inflate
-correctly.  On the real client (101 maps, measured with ``--girb-report``) 41
-maps decode 100% and none fails outright.  Sectors carrying real obstacles
-still partly fail: out of the 429 real sectors in 1034.map + 1035.map, 129
-decode and are confirmed byte-for-byte identical to ``mx.exe``'s own output
-(see point 4); the remaining 300 fail cleanly with an out-of-range match
-offset part-way through — the token stream desyncs, the geometry does not.
-Whatever decodes is always exactly 2400 bytes, and the decoded cells are
-strongly structured (0x8888 dominant, then 0x7777 / 0x6666; 98.3% of cells
-are of the form 0xAABB), so the output is real data rather than
-plausible-looking noise.
-
-Four real bugs were found while measuring, and two of them overturn the
-disassembly reading below — the table records what the disassembly appears
-to say, the code records what the data requires:
-
-1. ``>= 0x40`` length is ``(t>>5)+1``, because 0x60eb85 pre-decrements before
-   the unconditional 2-byte head copy.  The 0x60ec2d classes have no such
-   pre-decrement, so they really are ``accumulated + 2``.  Do not re-unify them.
-2. A token ``< 0x10`` arriving after trailing literals takes the 0x60ec73 class
-   (2 bytes, offset ``1 + (byte<<2) + (t>>2)``), not the 0x60eb29 one — because
-   the jump at 0x60ecad is unconditional.
-3. **Trailing literals are NOT ``(src[i-2]) & 3``.**  ``offset = 1 + (u16>>2)``
-   consumes only the top 14 bits of the 16-bit operand; the low 2 bits are the
-   trailing-literal count, and they must be captured by the match that produced
-   them.  Reading ``src[i-2]`` later picks up whatever byte happens to be there,
-   which is a *data* byte after a literal run.  This is why 0x88-filled sectors
-   decoded (0x88 & 3 == 0, accidentally correct) and 0x77-filled ones did not
-   (0x77 & 3 == 3).  See ``trail``.
-4. **The 0x60eb29 offset base IS ``0x801``** (see :func:`short_match_token`).
-   An earlier revision of this module "measured" that overriding it to ``1``
-   decoded more sectors (144/429 vs 129/429) and kept the 7 captured golden
-   vectors byte-identical, and shipped that override. Both parts of that
-   measurement were true but the conclusion was wrong, because the golden
-   vectors never exercise this token class with a real mismatch, and
-   "decodes without raising" was conflated with "decodes correctly". Two
-   independent, reproducible checks say otherwise:
-   (a) the disassembly, read straight off the SHA256-pinned ``mx.exe``
-   (``637331b5...fbe424d``), is unambiguously ``movzbl -0x801(%edx),%eax``;
-   (b) emulating the real ``0x60ea90`` routine (self-contained, no external
-   calls or globals, so a raw Unicorn x86 run needs no OS/CRT) against all
-   429 real sectors of 1034.map + 1035.map shows base ``0x801`` reproduces
-   the native output byte-for-byte on all 129 sectors it decodes (0
-   mismatches), while the "base 1" override "succeeds" on those same 129
-   plus 32 more — and every one of those 32 extra "successes" is silently
-   WRONG data relative to the native routine. Base 1 never decodes a sector
-   base 0x801 cannot, so there was never an accuracy/coverage trade-off to
-   begin with. See ``PR25_REVIEW.md`` item 1 for the original finding this
-   confirms.
-
-Byte-level semantics, transcribed from the disassembly:
-
-===========================  ==============================================
-token ``> 0x11``             literal run of ``token - 0x11`` bytes
-token ``0x10..0x1f``         match; offset ``0x4000 + (u16>>2) + ((t&8)<<11)``;
-                             offset 0 means end of stream
-token ``0x20..0x3f``         match; offset ``1 + (u16>>2)``
-token ``>= 0x40``            match; offset ``1 + ((t>>2)&7) + (byte<<3)``;
-                             length ``(t>>5) + 1`` (0x60eb85 pre-decrements)
-token ``< 0x10`` after a literal run (0x60eb29)
-                             3-byte match; offset ``0x801 + (byte<<2) + (t>>2)``
-                             — confirmed both statically and dynamically,
-                             see bug 4 above
-token ``< 0x10`` after trailing literals (0x60ec73)
-                             2-byte match; offset ``1 + (byte<<2) + (t>>2)``
-length                       ``accumulated + 2`` for the 0x60ec2d classes
-trailing literals            low 2 bits of the match's own operand — NOT
-                             ``(src[i-2]) & 3``; see bug 3 above
-===========================  ==============================================
+For 100% compatibility with earlier callers and tests, the ``1,200``-entry
+little-endian ``u16`` view (:func:`cells`, ``40x30`` at ``8`` px, ``EMPTY_FILL =
+0x8888``) is preserved alongside the native ``80x60`` 4-bit nibble API.
 """
 from __future__ import annotations
 
-GRID_BYTES = 0x960            # 2400, the fixed allocation at mx.exe 0x4b8d1d
-GRID_CELLS = GRID_BYTES // 2  # 1200 u16
+from collections.abc import Callable, Sequence
+
+from .lzo1x import LzoError, deflate_lzo1x, inflate_lzo1x
+
+GRID_BYTES = 0x960            # 2,400 bytes per sector (mx.exe 0x4b8d1d)
+GRID_CELLS = GRID_BYTES // 2  # legacy 1,200 u16 view
 GRID_COLS, GRID_ROWS = 40, 30
-CELL_PX = 8                   # 320/40 == 240/30
-EMPTY_FILL = 0x8888           # every cell of an obstacle-free sector
+CELL_PX = 8                   # legacy 8x8 px view
+EMPTY_FILL = 0x8888           # neutral brightness byte pair (0x8888)
+
+# True engine lightmap geometry (Sector::GetBrightness at mx.exe 0x4b9220):
+LIGHT_COLS, LIGHT_ROWS = 80, 60
+LIGHT_CELL_PX = 4             # 320 / 80 == 240 / 60 == 4 px
+LIGHT_CELLS = LIGHT_COLS * LIGHT_ROWS   # 4,800 4-bit samples
+LIGHT_ROW_STRIDE = 40         # 80 nibbles packed 2 per byte
+NEUTRAL_NIBBLE = 8            # 8 / 8.0 == 1.0x neutral sprite brightness
+NEUTRAL_BYTE = 0x88
 
 
 class GirbError(ValueError):
-    """Raised when a GIRB body cannot be inflated."""
+    """Raised when a ``GIRB`` payload cannot be inflated or encoded."""
 
 
 def decompress(src: bytes, limit: int = GRID_BYTES) -> bytes:
-    """Inflate one GIRB body.  Returns the raw bytes (``limit`` long in practice)."""
-    payload = len(src)
-    buf = bytearray(src) + b"\x00" * (payload * 3 + 16)   # client used new[length*4]
-    out = bytearray()
-    i = 0
+    """Inflate one ``GIRB`` body into ``limit`` bytes (default ``2,400``)."""
+    try:
+        return inflate_lzo1x(src, expected_len=limit)
+    except LzoError as exc:
+        raise GirbError(str(exc)) from exc
 
-    def u16(k: int) -> int:
-        # Reading past the buffer used to surface as a bare IndexError, which
-        # escaped collision_cells() and aborted the whole map.  It means an
-        # earlier token was mis-parsed, so report it as a decode failure.
-        if k < 0 or k + 1 >= len(buf):
-            raise GirbError(f"token reads past the {len(buf)}-byte buffer at {k}")
-        return buf[k] | (buf[k + 1] << 8)
 
-    # Trailing-literal count.  Every match class reserves 2 spare low bits in
-    # its operand -- offset = 1 + (off16 >> 2) only consumes 14 of the 16 -- and
-    # those 2 bits are how many literal bytes follow the match.  It MUST be
-    # captured by the match itself: reading buf[i-2] later picks up whatever
-    # byte happens to sit there (a literal data byte after a literal run),
-    # which is why 0x88-filled sectors decoded and 0x77-filled ones did not.
-    trail = 0
-
-    def token() -> int:
-        """Next token byte, bounds-checked against the real payload.
-
-        ``buf`` is deliberately padded well past the payload, so a desynced
-        stream can walk off the end of the real data and keep going until it
-        hits the end of the padding -- which surfaced to callers as a bare
-        ``IndexError`` and aborted the entire map.  Running past the payload
-        is a decode failure; report it as one.
-        """
-        nonlocal i
-        if i >= payload:
-            raise GirbError(f"token stream ran past the {payload}-byte payload at {i}")
-        v = buf[i]
-        i += 1
-        return v
-
-    def copy_match(offset: int, length: int) -> None:
-        if offset <= 0 or offset > len(out):
-            raise GirbError(f"match offset {offset} out of range at out={len(out)}")
-        start = len(out) - offset
-        for k in range(length):               # byte-wise: matches may overlap
-            out.append(out[start + k])
-
-    def literal(count: int) -> None:
-        nonlocal i
-        if i + count > payload:
-            raise GirbError(
-                f"literal run of {count} runs past the {payload}-byte payload")
-        out.extend(buf[i:i + count])
-        i += count
-
-    def run_length(base: int, addend: int) -> int:
-        """The 0xff-chain extension used by the long-match classes.
-
-        A well-formed stream never runs past its own payload, so doing so means
-        an earlier token was mis-parsed; report it instead of reading padding.
-        """
-        nonlocal i
-        total = base
-        if i < payload and buf[i] == 0:
-            while i < payload and buf[i] == 0:
-                i += 1
-                total += 0xFF
-        if i >= payload:
-            raise GirbError(f"length extension ran past the {payload}-byte payload")
-        total += addend + buf[i]
-        i += 1
-        return total
-
-    def match_after_trail(t: int) -> bool:   # noqa: C901 - mirrors the asm
-        """Token read right after trailing literals (0x60ecad -> 0x60eb67).
-
-        This jump is unconditional, so t < 0x10 falls through 0x60eba8 and
-        0x60ebda to 0x60ec73 — a *different* short-match class than 0x60eb29:
-        offset ``1 + (nb<<2) + (t>>2)`` and length 2, versus 0x801-based and 3.
-        """
-        nonlocal i, trail
-        if t >= 0x10:
-            return match_hi(t)
-        nb = token()
-        copy_match(1 + (nb << 2) + (t >> 2), 2)
-        trail = t & 3
-        return True
-
-    def match_hi(t: int) -> bool:
-        """Handle token >= 0x10.  Returns False at end of stream."""
-        nonlocal i, trail
-        if t >= 0x40:
-            # 0x60eb85 pre-decrements before the 2-byte head copy, so this class
-            # is one byte shorter than the 0x60ec2d classes.
-            length = (t >> 5) + 1
-            offset = 1 + ((t >> 2) & 7) + (buf[i] << 3)
-            i += 1
-            trail = t & 3                    # bits 0-1 of t are the spare ones
-        elif t >= 0x20:
-            length = t & 0x1F
-            length = run_length(length, 0x1F) if length == 0 else length
-            off16 = u16(i)
-            i += 2
-            offset = 1 + (off16 >> 2)
-            trail = off16 & 3
-            length += 2
-        else:                                   # 0x10..0x1f
-            length = t & 7
-            length = run_length(length, 7) if length == 0 else length
-            off16 = u16(i)
-            i += 2
-            trail = off16 & 3
-            total_off = ((t & 8) << 11) + (off16 >> 2)
-            if total_off == 0:
-                return False                    # end-of-stream marker
-            offset = 0x4000 + total_off
-            length += 2
-        copy_match(offset, length)
-        return True
-
-    def literal_run_token() -> bool:
-        """Token read at 0x60eabc: t < 0x10 means a LITERAL run here."""
-        nonlocal i
-        t = buf[i]
-        i += 1
-        if t >= 0x10:
-            return match_hi(t)
-        if t == 0:
-            total = 0
-            if i < payload and buf[i] == 0:
-                while i < payload and buf[i] == 0:
-                    i += 1
-                    total += 0xFF
-            if i >= payload:
-                raise GirbError(
-                    f"zero-run extension ran past the {payload}-byte payload")
-            total += 0x0F + buf[i]
-            i += 1
-        else:
-            total = t
-        out.extend(buf[i:i + 4])              # 0x60eae5: one u32 first
-        i += 4
-        total -= 1
-        while total >= 4:
-            out.extend(buf[i:i + 4])
-            i += 4
-            total -= 4
-        if total:
-            literal(total)
-        return True
-
-    def short_match_token() -> bool:
-        """Token read at 0x60eb29: t < 0x10 means a 3-BYTE MATCH here.
-
-        Offset base is 0x801, confirmed two independent ways (2026-10-12):
-        1. Disassembly: ``60eb42: movzbl -0x801(%edx),%eax`` (and the two
-           following bytes at -0x800/-0x7ff) -- read directly off the
-           SHA256-pinned ``mx.exe`` (``637331b5...fbe424d``), there is no
-           ``-0x1`` anywhere near this site.
-        2. Dynamic cross-check: running the real ``0x60ea90`` routine for all
-           429 real sectors of 1034.map + 1035.map in a Unicorn x86 emulator
-           (the function is self-contained, no external calls/globals) and
-           diffing against this Python port -- base 0x801 reproduces the
-           native output byte-for-byte on all 129 sectors it decodes (0
-           mismatches). The previously-shipped "base 1" override also
-           "succeeds" (raises no error) on those same 129 plus 32 more, but
-           those 32 are silently WRONG versus the native routine -- false
-           positives that corrupt the collision grid without any error
-           signal. Base 1 does not decode any sector base 0x801 cannot, so
-           there is no accuracy/coverage trade-off: 0x801 is strictly
-           better. See PR25_REVIEW.md item 1 for the original finding.
-        """
-        nonlocal trail
-        t = token()
-        if t < 0x10:
-            nb = token()
-            copy_match(0x801 + (nb << 2) + (t >> 2), 3)
-            trail = t & 3
-            return True
-        return match_hi(t)
-
-    def finish() -> bytes:
-        """Validate and return the output once the end-of-stream marker fires.
-
-        ``mx.exe`` allocates exactly ``limit`` (2400) bytes and the client
-        never checks for an overrun -- it just keeps writing into whatever
-        follows the buffer.  This port cannot do that safely, and silently
-        slicing to ``limit`` hides real desyncs: a real captured body (1035
-        sector 40) decodes to 2405 raw bytes before any truncation, and the
-        old ``bytes(out[:limit])`` turned that into a "successful" 2400-byte
-        result with its last 5 real bytes silently discarded.  A legitimate
-        stream's end-of-stream marker must land at exactly ``limit`` bytes
-        written; anything else -- short or long -- means an earlier token
-        was mis-parsed, so it is reported as a decode failure instead of a
-        quietly-wrong fixed-size result.
-        """
-        if len(out) != limit:
-            raise GirbError(
-                f"end-of-stream marker at out={len(out)}, expected exactly {limit} "
-                "(earlier token mis-parsed; not truncating/padding to hide it)")
-        return bytes(out)
-
-    # ---- leading literal run (mx.exe 0x60ea9b) ----
-    t = buf[i]
-    if t > 0x11:
-        i += 1
-        count = t - 0x11
-        literal(count)
-        if count < 4:
-            # 0x60eca0 already consumed the short run; next token is a match
-            t = buf[i]
-            i += 1
-            if not match_hi(t):
-                return finish()
-        else:
-            short_match_token()
-    else:
-        if not literal_run_token():
-            return finish()
-
-    # ---- alternating: match -> trailing literals -> literal run -> match ... ----
-    after_literal_run = False
-    trail = 0                    # the leading literal run has no match before it
-    while True:
-        while trail:
-            literal(trail)
-            t = token()
-            if not match_after_trail(t):
-                return finish()
-        if after_literal_run:
-            if not short_match_token():         # 0x60eb29
-                break
-            after_literal_run = False
-        else:
-            if not literal_run_token():         # 0x60ec97 -> 0x60eabc
-                break
-            after_literal_run = True
-    return finish()
+def compress(raw: bytes) -> bytes:
+    """Compress a ``2,400``-byte ``GIRB`` buffer into a native ``LZO1X-1`` body."""
+    if len(raw) != GRID_BYTES:
+        raise GirbError(f"GIRB raw buffer must be {GRID_BYTES} bytes, got {len(raw)}")
+    return deflate_lzo1x(bytes(raw))
 
 
 def cells(src: bytes) -> list[int]:
-    """Inflate and reinterpret as 1200 little-endian u16 cells."""
+    """Inflate and reinterpret as ``1,200`` little-endian ``u16`` cells."""
     raw = decompress(src)
-    if len(raw) < GRID_BYTES:
-        raise GirbError(f"expected {GRID_BYTES} bytes, got {len(raw)}")
     return [raw[k] | (raw[k + 1] << 8) for k in range(0, GRID_BYTES, 2)]
 
 
-__all__ = ["CELL_PX", "EMPTY_FILL", "GRID_BYTES", "GRID_CELLS", "GRID_COLS",
-           "GRID_ROWS", "GirbError", "cells", "decompress"]
+def unpack_nibbles(raw: bytes) -> bytearray:
+    """Unpack ``2,400`` ``GIRB`` bytes into ``4,800`` row-major nibbles (``80x60``).
+
+    Low nibble is even column ``2*c``, high nibble is odd column ``2*c + 1``.
+    """
+    if len(raw) != GRID_BYTES:
+        raise GirbError(f"expected {GRID_BYTES} bytes, got {len(raw)}")
+    out = bytearray(LIGHT_CELLS)
+    j = 0
+    for b in raw:
+        out[j] = b & 0x0F
+        out[j + 1] = (b >> 4) & 0x0F
+        j += 2
+    return out
+
+
+def pack_nibbles(nibbles: Sequence[int] | bytes | bytearray) -> bytes:
+    """Pack ``4,800`` brightness nibbles (``0..15``) into ``2,400`` ``GIRB`` bytes."""
+    if len(nibbles) != LIGHT_CELLS:
+        raise GirbError(f"expected {LIGHT_CELLS} nibbles, got {len(nibbles)}")
+    out = bytearray(GRID_BYTES)
+    for k in range(GRID_BYTES):
+        lo = int(nibbles[2 * k])
+        hi = int(nibbles[2 * k + 1])
+        if not (0 <= lo <= 15 and 0 <= hi <= 15):
+            raise GirbError(f"lightmap nibble out of range 0..15: ({lo}, {hi})")
+        out[k] = lo | (hi << 4)
+    return bytes(out)
+
+
+def default_girb_body(nibble: int = NEUTRAL_NIBBLE) -> bytes:
+    """Build a compressed uniform ``GIRB`` body filled with ``nibble`` (``0..15``)."""
+    if not 0 <= nibble <= 15:
+        raise GirbError(f"nibble {nibble} outside 0..15")
+    fill_byte = nibble | (nibble << 4)
+    return compress(bytes([fill_byte]) * GRID_BYTES)
+
+
+def apply_lightmap_to_sector_rgb(rgb_data: bytes, nibbles: Sequence[int] | bytes,
+                                 strength: float = 1.0) -> bytes:
+    """Modulate a ``320x240`` RGB buffer by an ``80x60`` 4-bit ``GIRB`` lightmap.
+
+    ``nibble == 8`` preserves the original RGB pixel unchanged; ``< 8`` dims into
+    canopy/roof shadow and ``> 8`` brightens in sunlit/lantern regions.
+    """
+    if len(rgb_data) != 320 * 240 * 3:
+        raise GirbError(f"expected 320x240x3 RGB bytes, got {len(rgb_data)}")
+    if len(nibbles) != LIGHT_CELLS:
+        raise GirbError(f"expected {LIGHT_CELLS} nibbles, got {len(nibbles)}")
+
+    # Precompute 16x256 lookup table so shading an entire 320x240 sector takes <1ms.
+    luts: list[bytes] = []
+    for nib in range(16):
+        factor = 1.0 + strength * ((nib - NEUTRAL_NIBBLE) / float(NEUTRAL_NIBBLE))
+        luts.append(bytes(min(255, max(0, int(round(c * factor)))) for c in range(256)))
+
+    out = bytearray(rgb_data)
+    for ly in range(LIGHT_ROWS):
+        row_nib_base = ly * LIGHT_COLS
+        for lx in range(LIGHT_COLS):
+            nib = nibbles[row_nib_base + lx]
+            if nib == NEUTRAL_NIBBLE:
+                continue
+            lut = luts[nib]
+            px0, py0 = lx * LIGHT_CELL_PX, ly * LIGHT_CELL_PX
+            for dy in range(LIGHT_CELL_PX):
+                base = ((py0 + dy) * 320 + px0) * 3
+                for k in range(base, base + LIGHT_CELL_PX * 3):
+                    out[k] = lut[out[k]]
+    return bytes(out)
+
+
+def render_lightmap_heatmap_rgba(
+    width: int,
+    height: int,
+    nibble_lookup: Callable[[int, int], int],
+    *,
+    x0: int = 0,
+    y0: int = 0,
+) -> bytes:
+    """Render an ``width x height`` RGBA heatmap for lightmap cells starting at
+    pixel origin ``(x0, y0)``."""
+    out = bytearray(width * height * 4)
+    for py in range(height):
+        ly = (y0 + py) // LIGHT_CELL_PX
+        for px in range(width):
+            lx = (x0 + px) // LIGHT_CELL_PX
+            nib = nibble_lookup(lx, ly)
+            if nib == NEUTRAL_NIBBLE:
+                continue
+            off = (py * width + px) * 4
+            if nib > NEUTRAL_NIBBLE:
+                alpha = min(210, 35 + (nib - NEUTRAL_NIBBLE) * 24)
+                out[off:off + 4] = bytes((255, 214, 74, alpha))
+            else:
+                alpha = min(220, 35 + (NEUTRAL_NIBBLE - nib) * 23)
+                out[off:off + 4] = bytes((48, 86, 214, alpha))
+    return bytes(out)
+
+
+__all__ = [
+    "CELL_PX",
+    "EMPTY_FILL",
+    "GRID_BYTES",
+    "GRID_CELLS",
+    "GRID_COLS",
+    "GRID_ROWS",
+    "GirbError",
+    "LIGHT_CELLS",
+    "LIGHT_CELL_PX",
+    "LIGHT_COLS",
+    "LIGHT_ROWS",
+    "LIGHT_ROW_STRIDE",
+    "NEUTRAL_BYTE",
+    "NEUTRAL_NIBBLE",
+    "apply_lightmap_to_sector_rgb",
+    "cells",
+    "compress",
+    "decompress",
+    "default_girb_body",
+    "pack_nibbles",
+    "render_lightmap_heatmap_rgba",
+    "unpack_nibbles",
+]
