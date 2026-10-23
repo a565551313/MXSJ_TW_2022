@@ -1,8 +1,10 @@
 # Windows x86双编译器（0.3.2.dev1源码交付ZIP内含）
 
 `manifest.json`为schema2非空实测文件清单，分别固定标准CPython 2.5.6和2.7.13。
-生成的EXE/DLL/标准库不入Git；完整源码ZIP随带两套，无需用户另装Python2。
-仅克隆Git仓库不会取得被忽略的二进制；维护者可用`../build_runtimes.py`从固定源码重建。
+两套EXE/DLL/标准库**已入库**（用户2026-10-23决定，见`../docs/STATUS.md` §3.79）：
+克隆或拉取即得到完整编译器，无需另装Python2，也无需解压交付ZIP。
+重建（`../build_runtimes.py`）后必须把新二进制与`manifest.json`成对提交；Git历史会
+永久保留每一份旧构建（每轮约6.7MB），没有理由时不要反复重建。
 
 ```text
 runtimes/

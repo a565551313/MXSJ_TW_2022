@@ -27,7 +27,8 @@ script.fls用CPython2.5.6，data.fls用CPython2.7.13，两编译器不混用。
 
 src/script_editor/core/{archives,compiler,project,inspection,services,vm/{py25,py27}}
 与gui分层；runtime_helpers只包含自写编译入口；runtimes/manifest.json描述实际经过验证的产物，
-无产物时显式空清单而非造路径。编译器、原FLS、生成的pyc/ZIP均不入Git。
+无产物时显式空清单而非造路径。原FLS、生成的pyc/ZIP不入Git；`runtimes/` 的两套编译器
+已按用户2026-10-23要求入库（与`manifest.json`成对提交）。
 本地安装/冻结发行版运行时路径各自明确；程序旁runtimes不依赖工作目录或系统PATH。
 
 用户项目为独立project.mxscript.json，源码与包路径分离，存包指纹/模块身份/源码关系，

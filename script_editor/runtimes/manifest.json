@@ -43,8 +43,8 @@
         "LICENSE-MinGW.txt": "99a69660981156c21336fdb5661f89341b013c94e4bf9e1c7467b4745718397f",
         "LICENSE-Zig.txt": "5c537d6853e005298a285d508cff9ac7192cea23576c840d485b2b586a7ff177",
         "LICENSE-zlib.txt": "365db9b693fda6c66ddd97d81ae3eb17be32c890909553973a77439d85900494",
-        "python.exe": "be30218716e4b0b940a57a9490c381e773c0175ec7996f5418ca3b5aa507d4ed",
-        "python25.dll": "b7bd1cef1da9b77468efeb616b4c18aebcebe56610e17730f137abcfaf15d7e4",
+        "python.exe": "2238badf05de3ff7548474973a0a5c38451a8c9aeefe538f623bfd9965a6e164",
+        "python25.dll": "981a7cff46b3b8bd0bea4c7d32e15921d1a68eb20135491f499a8c3ccd9a8f9e",
         "python25.zip": "d76ef15d923d1d51d5ba0f6fca5907b97059b7815a6670b05e1535bc7c80a3df"
       }
     },
@@ -90,8 +90,8 @@
         "LICENSE-MinGW.txt": "99a69660981156c21336fdb5661f89341b013c94e4bf9e1c7467b4745718397f",
         "LICENSE-Zig.txt": "5c537d6853e005298a285d508cff9ac7192cea23576c840d485b2b586a7ff177",
         "LICENSE-zlib.txt": "53a466b504371dcdda1504c90d8121d4823921f03554c3526995fb2bae7159f9",
-        "python.exe": "dc4fa0bf9eddc791e9d84e1da9fce8359aded1ec0907237f28e3676a66615147",
-        "python27.dll": "e79abdcc793904ba26ee0dc6d3a2b7988fcbc56c2ea13b65610ae9fb377bdc32",
+        "python.exe": "040278040534747c62082f868e9d7f7498b722a248f0b4830596158d5ec02991",
+        "python27.dll": "321a9a052bf6a4addfe1bc053f08249c93e36931ede2c4048c110a4b5d4b5e72",
         "python27.zip": "341973e08fd04a530d395225826513a073818bca6e6f19327dc41c42736ca265"
       }
     }

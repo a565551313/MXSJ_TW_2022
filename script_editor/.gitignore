@@ -5,7 +5,6 @@ __pycache__/
 dist/
 build/
 启动日志.txt
-runtimes/**
-!runtimes/manifest.json
-!runtimes/README.md
+# runtimes/ 的两套 Windows 编译器已入库（用户 2026-10-23 决定，docs/STATUS.md §3.79）；
+# 重建后必须把二进制与 manifest.json 成对提交，见 runtimes/README.md。
 recovery_engines/pycdc/
