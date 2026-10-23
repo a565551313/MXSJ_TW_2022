@@ -178,6 +178,9 @@ class RegisteredPackagePinTests(unittest.TestCase):
                     self.original,
                     self.registered,
                     "4bf116d0a6e62848bc1724ddfc67877c5a9db95a52768e8fa1d6f6d520318678",
+                    # 2026-10-23 注册脚本派生包（r5）；四个指纹共用同一份
+                    # script-original.json，所以只拷贝一次。
+                    "a45e0e49ed336367a1bf00b5377229c5c48de2c30ac2b61f9bf7d67549a445b9",
                 },
             )
             self.assertEqual(copy.call_count, 1)
@@ -202,3 +205,29 @@ class RegisteredPackagePinTests(unittest.TestCase):
             (root / "decoding/script-original.json").write_bytes(b"{}")
             with self.assertRaisesRegex(ValueError, "SHA256"):
                 bundled_catalog(archive, root)
+
+
+class RegisteredDerivativeTests(unittest.TestCase):
+    """已登記的派生包指紋必須指向同一份已授權參數表。"""
+
+    def test_registration_build_pin(self):
+        from script_editor.core.services.bundled_catalog import BUNDLED_CATALOGS
+
+        self.assertEqual(
+            BUNDLED_CATALOGS.get(
+                "a45e0e49ed336367a1bf00b5377229c5c48de2c30ac2b61f9bf7d67549a445b9"
+            ),
+            (
+                "script-original.json",
+                "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+            ),
+        )
+
+    def test_known_broken_r4_build_is_not_registered(self):
+        """r4 的填充区按研究目錄边界加密，4007 打不开，不能登记成可用。"""
+        from script_editor.core.services.bundled_catalog import BUNDLED_CATALOGS
+
+        self.assertNotIn(
+            "9cf8c5cd9cef340db3e3f49405e385a3713ee0cb28c137e4d3acd7a5cddd6bf6",
+            BUNDLED_CATALOGS,
+        )

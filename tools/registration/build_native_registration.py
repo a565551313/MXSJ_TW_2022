@@ -12,11 +12,17 @@
 337 只差那 9 字節且可轉譯、4007 轉譯回的代碼對象/常量符合源碼、
 無網絡調用名殘留、其餘條目負載全等。
 
-基線：默認釘住 `data/script.fls`（`BASE_SHA256`）。要拿客戶端現行檔
-（例如已經打過補丁的舊出貨包）重做時，傳 `--archive <檔>` +
-`--base-sha256 <該檔 SHA>`；此時若 337 已是補丁形態，工具會明確提示
-「原樣保留」而不是重複寫入。`--report <path>` 在驗證通過後落一份 JSON
-構建記錄（基線/源碼/產物三者 SHA + 實際改動的條目號）。
+基線：默認釘住原包 `BASE_SHA256`（`8b6e9266…`）。2026-10-23 起倉庫裡的
+`data/script.fls` 是派生包（r5 `a45e0e49…`），直接跑會被基線校驗擋下——這是有意的，
+照提示傳 `--archive data/script.fls --base-sha256 <實際 SHA>` 即可。此時若 337 已是
+補丁形態，工具會提示「原樣保留」而不是重複寫入。
+
+加密邊界一律用**原生算術**（`native_bounds()`，`mxmain.dll C_sys.PkgImport`），
+`script_fls_keys.json` 的 `bounds` 只作交叉核對：兩者可能差幾個字節，照目錄值加密
+會讓填充區落在錯誤的 XOR 段裡（遊戲端無感，嚴格解碼器如腳本編輯器會拒絕）。
+
+`--report <path>` 在驗證通過後落一份 JSON 構建記錄（基線/源碼/產物三者 SHA +
+實際改動的條目號）。
 """
 
 from __future__ import annotations
@@ -62,6 +68,77 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+# ---------------------------------------------------------------------------
+# 原生五段 XOR 邊界（mxmain.dll C_sys.PkgImport，見 script_editor 的
+# core/vm/py25/cipher.py）。研究目錄 script_fls_keys.json 的 bounds 是測量值，
+# 可能和原生算術差幾個字節。照目錄加密時，最後一段的密鑰會在填充區錯位：
+# 遊戲端 marshal 讀完根對象就停，看不出來；但嚴格解碼器（腳本編輯器對
+# zero_padding 的檢查）會報「trailing/nonzero marshal data」，條目直接打不開。
+# 所以打包一律以原生算術為準，目錄只作交叉核對。
+# ---------------------------------------------------------------------------
+def _next_seed(seed):
+    return seed ^ ((seed * 0x788B + 0x024543DF) % 0x7F63)
+
+
+def _key_sequence(seed):
+    keys = []
+    for _ in range(5):
+        keys.append(seed & 255)
+        seed = _next_seed(seed)
+    return tuple(keys)
+
+
+def _seed_from_keys(keys):
+    keys = tuple(int(k) for k in keys)
+    if len(keys) != 5 or any(not 0 <= k <= 255 for k in keys):
+        raise ValueError("五段密鑰格式不對")
+    candidates = [s for s in range(keys[0], 32768, 256) if _key_sequence(s) == keys]
+    if len(candidates) != 1:
+        raise ValueError("這五個密鑰不能唯一確定原生種子")
+    return candidates[0]
+
+
+def native_bounds(keys, size):
+    """由密鑰與展開長度算出原生的四段邊界（5 段）。"""
+    if not 0 < size <= 64 * 1024 * 1024:
+        raise ValueError("展開長度異常")
+    cursor, bounds, seed = 0, [], _seed_from_keys(keys)
+    for _ in range(5):
+        cursor += size // 5 + seed // 256
+        bounds.append(min(cursor, size))
+        seed = _next_seed(seed)
+    if cursor < size:
+        raise ValueError("五段不夠覆蓋整個載荷")
+    return tuple(bounds[:4])
+
+
+def _xor_segments(data, keys, bounds):
+    points = (0,) + tuple(bounds) + (len(data),)
+    out = bytearray()
+    for i in range(5):
+        table = bytes(n ^ keys[i] for n in range(256))
+        out.extend(data[points[i] : points[i + 1]].translate(table))
+    return bytes(out)
+
+
+def bounds_for_entry(info, expanded_len, entry):
+    """優先用原生算術；密鑰推不出種子時退回目錄值並明說。"""
+    try:
+        native = native_bounds(info["keys"], expanded_len)
+    except ValueError as exc:
+        print(
+            f"[warn] entry {entry}: 用目錄 bounds（原生算術不可用：{exc}）"
+        )
+        return tuple(info["bounds"]), None
+    catalog = tuple(info["bounds"])
+    if native != catalog:
+        print(
+            f"[i] entry {entry}: 目錄 bounds={list(catalog)} 與原生"
+            f"={list(native)} 不同，按原生加密"
+        )
+    return native, native
+
+
 def read_entries(arch: bytes):
     count = struct.unpack_from("<I", arch, 4)[0]
     idx_offset = struct.unpack_from("<I", arch, 8)[0]
@@ -74,10 +151,17 @@ def read_entries(arch: bytes):
     return rows
 
 
-def decrypt_entry(row, keys_db) -> bytes:
+def decrypt_entry(row, keys_db, bounds=None) -> bytes:
+    """按 keys_db 的五段密鑰解一條。bounds 不給就用目錄值。
+
+    目錄的 bounds 是測量值；打包時已改用原生算術（見 bounds_for_entry），
+    所以回讀校驗必須用同一組邊界，否則填充區會解出錯位的非零字節。
+    """
     exp = zlib.decompress(row["comp"])
     info = keys_db[str(row["idx"])]
-    keys, bounds = info["keys"], info["bounds"]
+    keys = info["keys"]
+    if bounds is None:
+        bounds = info["bounds"]
     pts = [0] + list(bounds) + [len(exp)]
     return b"".join(
         bytes(exp[pts[i] : pts[i + 1]]).translate(batch.XTABS[keys[i]])
@@ -287,21 +371,40 @@ def main() -> int:
     # 2) 兩條替換負載
     info_reg = keys_db[str(ENTRY_REGISTER)]
     orig_exp_reg = zlib.decompress(by_idx[ENTRY_REGISTER]["comp"])
+    content_reg = pack.obfuscate_py25_pyc_bytes(pyc_bytes)
+    bounds_reg, _ = bounds_for_entry(
+        info_reg, len(orig_exp_reg), ENTRY_REGISTER
+    )
     new_exp_reg = pack.encrypt_5seg_xor(
-        pack.obfuscate_py25_pyc_bytes(pyc_bytes),
+        content_reg,
         info_reg["keys"],
-        info_reg["bounds"],
+        list(bounds_reg),
         orig_len=len(orig_exp_reg),
+    )
+    # 填充區必須在原生密鑰下解回全零：嚴格解碼器要求「尾隨全零」，
+    # 否則腳本編輯器打開這個條目會直接報 trailing/nonzero marshal data。
+    decoded_reg = _xor_segments(new_exp_reg, info_reg["keys"], bounds_reg)
+    padded = decoded_reg[len(content_reg) :]
+    assert decoded_reg[: len(content_reg)] == content_reg, (
+        "register round-trip mismatch"
+    )
+    assert padded == bytes(len(padded)), (
+        "register padding is not all-zero under native bounds "
+        f"(nonzero={sum(1 for b in padded if b)})"
     )
 
     info_main = keys_db[str(ENTRY_MAINPAGE)]
     duoyi_main = decrypt_entry(by_idx[ENTRY_MAINPAGE], keys_db)
     patched_main, win_lo, win_hi, main_state = patch_mainpage(duoyi_main)
     orig_exp_main = zlib.decompress(by_idx[ENTRY_MAINPAGE]["comp"])
+    # 337 只用目錄 bounds：它是在原密文上做 9 字節定寬補丁，整段
+    # 「解密→補丁→再加密」用同一組邊界，未改動區的密文字節原樣保留。
+    # 換成原生 bounds 反而會讓那 1 字節窗口在不確定的一側重新編碼。
+    bounds_main = tuple(info_main["bounds"])
     new_exp_main = pack.encrypt_5seg_xor(
         patched_main,
         info_main["keys"],
-        info_main["bounds"],
+        list(bounds_main),
         orig_len=len(orig_exp_main),
     )
 
@@ -339,7 +442,9 @@ def main() -> int:
     ]
     assert changed == expected_changed, f"unexpected changed: {changed}"
 
-    dec_main_new = decrypt_entry(out_by_idx[ENTRY_MAINPAGE], keys_db)
+    dec_main_new = decrypt_entry(
+        out_by_idx[ENTRY_MAINPAGE], keys_db, bounds_main
+    )
     if main_state == "patched":
         diffs = [i for i in range(len(duoyi_main)) if duoyi_main[i] != dec_main_new[i]]
         assert diffs and all(win_lo <= i < win_hi for i in diffs), (
@@ -353,7 +458,9 @@ def main() -> int:
     )
     assert b"mainpage" in std_main
 
-    dec_reg_new = decrypt_entry(out_by_idx[ENTRY_REGISTER], keys_db)
+    dec_reg_new = decrypt_entry(
+        out_by_idx[ENTRY_REGISTER], keys_db, bounds_reg
+    )
     # Known authored bytes must not go through heuristic seam repair: that
     # solver may "repair" a valid LOAD_FAST into STORE_NAME near an old bound.
     from authored_marshal import restore_authored_pyc

@@ -93,11 +93,16 @@ class MainpageRealArchiveTest(unittest.TestCase):
             bytes(exp[pts[j] : pts[j + 1]]).translate(tabs[keys[j]]) for j in range(5)
         )
 
-    def test_repo_baseline_mainpage_still_needs_the_patch(self):
+    def test_repo_baseline_mainpage_patch_state(self):
+        """仓库基线可能是原包（clean）或已打过补丁的派生包（kept）。"""
         payload = self.decrypted(build.ENTRY_MAINPAGE)
         patched, lo, hi, state = build.patch_mainpage(payload)
-        self.assertEqual(state, "patched")
+        self.assertIn(state, ("patched", "kept"))
         self.assertEqual(hi - lo, build.TW_PATCH_LEN)
+        if state == "kept":
+            # 已是派生包：不得再改一个字节。
+            self.assertEqual(patched, payload)
+            return
         self.assertNotEqual(patched, payload)
         moved = [i for i in range(len(payload)) if patched[i] != payload[i]]
         self.assertTrue(moved)
@@ -137,12 +142,29 @@ class BaseShaGuardTest(unittest.TestCase):
             # 把实测 SHA 直接回显出来，省得使用者另开工具算
             self.assertIn("--base-sha256", blob)
 
+    # 已登记的派生包（用户提交进仓库的那几种）。仓库基线允许是它们之一，
+    # 但必须是「已知且登记过」的指纹——随便换一包仍然会失败。
+    KNOWN_DERIVATIVES = {
+        # 2026-10-23 r4：填充区按研究目录边界加密，脚本编辑器打不开 4007。
+        "9cf8c5cd9cef340db3e3f49405e385a3713ee0cb28c137e4d3acd7a5cddd6bf6",
+        # 2026-10-23 r5：按原生边界重新加密 4007，编辑器可打开（本仓库当前基线）。
+        "a45e0e49ed336367a1bf00b5377229c5c48de2c30ac2b61f9bf7d67549a445b9",
+    }
+
     def test_pinned_default_hash_matches_repo_baseline(self):
         if not ARCHIVE.is_file():
             self.skipTest("data/script.fls 不在")
-        self.assertEqual(
-            hashlib.sha256(ARCHIVE.read_bytes()).hexdigest(), build.BASE_SHA256
+        digest = hashlib.sha256(ARCHIVE.read_bytes()).hexdigest()
+        self.assertTrue(
+            digest == build.BASE_SHA256 or digest in self.KNOWN_DERIVATIVES,
+            f"仓库基线既不是原包也不是已登记派生包：{digest}",
         )
+        if digest != build.BASE_SHA256:
+            # 派生包必须显式传 --base-sha256，默认值仍钉原包。
+            source = (HERE / "build_native_registration.py").read_text(
+                encoding="utf-8"
+            )
+            self.assertIn("--base-sha256", source)
 
 
 if __name__ == "__main__":

@@ -26,6 +26,14 @@ BUNDLED_CATALOGS = {
         "script-original.json",
         "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
     ),
+    # 2026-10-23 註冊腳本改版（build=2027-10-22d）打包出的派生包：只換了
+    # 條目 4007（register）與 337（mainpage 的 9 字節定寬補丁），其餘 5000 條
+    # 負載與原包逐字節一致，因此同一份已授權參數表適用。派生包按完整包
+    # 指紋登記，仍然不按檔名/目錄/部分條目推定。
+    "a45e0e49ed336367a1bf00b5377229c5c48de2c30ac2b61f9bf7d67549a445b9": (
+        "script-original.json",
+        "43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb",
+    ),
 }
 
 
