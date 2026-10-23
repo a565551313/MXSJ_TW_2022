@@ -44,7 +44,7 @@ _PREFIX = "路径读取失败："
 class PackageCheck:
     """Result of decoding every allowed entry with one catalog."""
 
-    ref: CatalogRef
+    ref: CatalogRef | None
     paths: dict = field(default_factory=dict)
     errors: dict = field(default_factory=dict)
     passed: int = 0
