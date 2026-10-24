@@ -3,6 +3,7 @@
 All Qt imports live exclusively inside this module so ``core`` and
 ``ui.viewmodel`` stay 100% headlessly testable without ``PySide6``.
 """
+
 from __future__ import annotations
 
 import io
@@ -28,13 +29,13 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
+    QButtonGroup,
     QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
     QFormLayout,
-    QFrame,
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
@@ -49,6 +50,7 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QSplitter,
     QStatusBar,
+    QStyle,
     QTableWidget,
     QTableWidgetItem,
     QTabWidget,
@@ -68,8 +70,8 @@ TILE_CACHE_MAX = 128
 MASK_CACHE_MAX = 96
 
 CELL_RGBA: dict[int, tuple[int, int, int, int]] = {
-    0: (46, 204, 113, 66),   # walkable
-    1: (231, 76, 60, 145),   # blocked
+    0: (46, 204, 113, 66),  # walkable
+    1: (231, 76, 60, 145),  # blocked
     2: (52, 198, 226, 128),  # shaded walkable (roof/canopy shadow)
     3: (155, 89, 182, 165),  # shaded blocked
 }
@@ -297,12 +299,11 @@ class MapCanvas(QWidget):
     strokeCommitted = Signal(str)
     recordSelected = Signal(int)
 
-    def __init__(
-        self, vm: EditorViewModel, parent: QWidget | None = None
-    ) -> None:
+    def __init__(self, vm: EditorViewModel, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.vm = vm
         self.setMouseTracking(True)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setToolTip("滚轮缩放；1 浏览后左键拖动，或按住鼠标中键平移画布")
         self.setMinimumSize(560, 420)
         self.zoom = 1.0
@@ -322,6 +323,10 @@ class MapCanvas(QWidget):
         self._mask_drag_origin: tuple[int, int] = (0, 0)
         self._mask_drag_start_px: tuple[int, int] = (0, 0)
         self._path_toggle_goal = False
+        self.eraser_mode = False
+        self.pen_path_mode = False
+        self.pen_curve_mode = False
+        self._pen_nodes: list[tuple[int, int]] = []
 
     def reset_view(self, *, fit: bool = True) -> None:
         self.invalidate_caches()
@@ -467,8 +472,8 @@ class MapCanvas(QWidget):
             painter.drawText(
                 QRectF(card.x() + 34, card.y() + 82, card.width() - 68, 64),
                 Qt.AlignmentFlag.AlignCenter,
-                "从左侧选择客户端目录，或直接打开 .map 文件。\n"
-                "滚轮缩放画布；工具说明和新手步骤在右侧「快速开始」。",
+                "从「文件」菜单打开客户端目录，或直接打开 .map 文件。\n"
+                "滚轮缩放画布；按 F1 查看操作提示。",
             )
             painter.setPen(QColor("#188575"))
             painter.drawText(
@@ -524,7 +529,7 @@ class MapCanvas(QWidget):
                             v = doc.cell_at_index(gx, gy)
                             if v is not None:
                                 off = (ly * 16 + lx) * 4
-                                rgba_buf[off:off + 4] = bytes(
+                                rgba_buf[off : off + 4] = bytes(
                                     CELL_RGBA.get(v, (241, 196, 15, 160))
                                 )
                     overlay = _pil_rgba_to_qimage(
@@ -555,10 +560,10 @@ class MapCanvas(QWidget):
                     for i, nib in enumerate(nibs):
                         if nib < NEUTRAL_NIBBLE:
                             a = min(200, (NEUTRAL_NIBBLE - nib) * 20)
-                            rgba_buf[i * 4:i * 4 + 4] = bytes((15, 25, 65, a))
+                            rgba_buf[i * 4 : i * 4 + 4] = bytes((15, 25, 65, a))
                         elif nib > NEUTRAL_NIBBLE:
                             a = min(200, (nib - NEUTRAL_NIBBLE) * 22)
-                            rgba_buf[i * 4:i * 4 + 4] = bytes((255, 214, 102, a))
+                            rgba_buf[i * 4 : i * 4 + 4] = bytes((255, 214, 102, a))
                     overlay = _pil_rgba_to_qimage(
                         Image.frombytes("RGBA", (80, 60), bytes(rgba_buf))
                     )
@@ -669,6 +674,18 @@ class MapCanvas(QWidget):
             elif self.vm.state.active_tool == "cell_line":
                 painter.drawLine(x0, y0, x1, y1)
 
+        if self.pen_path_mode and self._pen_nodes:
+            preview = self._sample_pen_path(self._pen_nodes)
+            pen = QPen(QColor(255, 235, 99, 235))
+            pen.setWidthF(2.0 / self.zoom)
+            painter.setPen(pen)
+            painter.setBrush(QColor(255, 235, 99, 120))
+            for start, end in zip(preview, preview[1:], strict=False):
+                painter.drawLine(QPointF(*start), QPointF(*end))
+            marker_radius = 4.0 / self.zoom
+            for node in self._pen_nodes:
+                painter.drawEllipse(QPointF(*node), marker_radius, marker_radius)
+
         painter.restore()
 
         # Screen-space crisp labels for NPCs & Portals (always readable at any zoom!)
@@ -699,8 +716,7 @@ class MapCanvas(QWidget):
         # Portals (diamond cyan beacons)
         for p in ents["portals"]:
             in_view = (
-                vx0 - 60 <= p["px"] <= vx1 + 60
-                and vy0 - 60 <= p["py"] <= vy1 + 60
+                vx0 - 60 <= p["px"] <= vx1 + 60 and vy0 - 60 <= p["py"] <= vy1 + 60
             )
             if not in_view:
                 continue
@@ -730,8 +746,7 @@ class MapCanvas(QWidget):
         # NPCs (gold/emerald pins)
         for n in ents["npcs"]:
             in_view = (
-                vx0 - 60 <= n["px"] <= vx1 + 60
-                and vy0 - 60 <= n["py"] <= vy1 + 60
+                vx0 - 60 <= n["px"] <= vx1 + 60 and vy0 - 60 <= n["py"] <= vy1 + 60
             )
             if not in_view:
                 continue
@@ -767,9 +782,7 @@ class MapCanvas(QWidget):
         )
         if s.last_path is not None:
             p = s.last_path
-            path_msg = (
-                f"可达 ({len(p.cells)} 步)" if p.found else "不可达"
-            )
+            path_msg = f"可达 ({len(p.cells)} 步)" if p.found else "不可达"
             hud_text += f" | 寻路: {path_msg} "
         fm = painter.fontMetrics()
         box = QRectF(10, 10, fm.horizontalAdvance(hud_text) + 16, 26)
@@ -825,6 +838,14 @@ class MapCanvas(QWidget):
                 self.center_on_world(wx, wy)
                 return
 
+        if self.pen_path_mode and event.button() == Qt.MouseButton.RightButton:
+            self._finish_pen_path()
+            return
+        if self.pen_path_mode and event.button() == Qt.MouseButton.LeftButton:
+            self.setFocus(Qt.FocusReason.MouseFocusReason)
+            self._pen_nodes.append(tuple(map(int, self._to_world(pos))))
+            self.update()
+            return
         if event.button() == Qt.MouseButton.MiddleButton or (
             event.button() == Qt.MouseButton.LeftButton
             and self.vm.state.active_tool == "pan"
@@ -841,7 +862,7 @@ class MapCanvas(QWidget):
         ):
             val = (
                 0
-                if event.button() == Qt.MouseButton.RightButton
+                if event.button() == Qt.MouseButton.RightButton or self.eraser_mode
                 else self.vm.state.brush_cell_value
             )
             self._stroke_active = True
@@ -969,6 +990,57 @@ class MapCanvas(QWidget):
                     f"已移动前景遮罩 #{idx} 至 ({ox + dx}, {oy + dy})"
                 )
                 self.update()
+
+    def _sample_pen_path(self, nodes: list[tuple[int, int]]) -> list[tuple[int, int]]:
+        if not self.pen_curve_mode or len(nodes) < 3:
+            return nodes
+        sampled: list[tuple[int, int]] = [nodes[0]]
+        for index in range(len(nodes) - 1):
+            p0 = nodes[max(0, index - 1)]
+            p1 = nodes[index]
+            p2 = nodes[index + 1]
+            p3 = nodes[min(len(nodes) - 1, index + 2)]
+            for step in range(1, 7):
+                t = step / 6
+                t2 = t * t
+                t3 = t2 * t
+                point = []
+                for axis in range(2):
+                    a, b, c, d = p0[axis], p1[axis], p2[axis], p3[axis]
+                    value = 0.5 * (
+                        2 * b
+                        + (-a + c) * t
+                        + (2 * a - 5 * b + 4 * c - d) * t2
+                        + (-a + 3 * b - 3 * c + d) * t3
+                    )
+                    point.append(round(value))
+                sampled.append((point[0], point[1]))
+        return sampled
+
+    def cancel_pending_pen_path(self) -> None:
+        """Discard uncommitted nodes without changing the current map."""
+        if self._pen_nodes:
+            self._pen_nodes.clear()
+            self.update()
+
+    def _finish_pen_path(self) -> None:
+        nodes = self._pen_nodes
+        self._pen_nodes = []
+        if len(nodes) < 2:
+            self.update()
+            return
+        changed = self.vm.paint_cell_path(self._sample_pen_path(nodes))
+        if changed:
+            self._refresh_active_path()
+            self.strokeCommitted.emit(f"路径钢笔绘制 {changed} 格")
+        self.update()
+
+    def keyPressEvent(self, event) -> None:
+        if event.key() == Qt.Key.Key_Escape and self._pen_nodes:
+            self.cancel_pending_pen_path()
+            event.accept()
+            return
+        super().keyPressEvent(event)
 
     def _apply_live_cell_dab(self, wx: int, wy: int) -> None:
         doc = self.vm.document
@@ -1109,39 +1181,25 @@ class EditorWindow(QMainWindow):
 
     # -- UI layout --------------------------------------------------------
     def _build_ui(self) -> None:
-        splitter = QSplitter(Qt.Orientation.Horizontal)
+        workspace = QSplitter(Qt.Orientation.Horizontal)
+        workspace.setChildrenCollapsible(False)
 
-        # 1. Left panel: Map browser + search filter
+        # Map browser: intentionally limited to search and map selection.
         left = QWidget()
+        left.setMinimumWidth(245)
+        left.setMaximumWidth(390)
         left_lay = QVBoxLayout(left)
-        left_lay.setContentsMargins(6, 6, 4, 6)
-        browse_title = QLabel("地图资源")
-        browse_title.setObjectName("sectionTitle")
-        left_lay.addWidget(browse_title)
-        self.root_hint = QLabel("先选择客户端目录，或打开单个 .map 文件")
-        self.root_hint.setObjectName("mutedText")
-        self.root_hint.setWordWrap(True)
-        left_lay.addWidget(self.root_hint)
-        root_actions = QHBoxLayout()
-        root_btn = QPushButton("选择客户端目录…")
-        root_btn.setToolTip("扫描客户端目录中的地图、脚本与资源")
-        root_btn.clicked.connect(self._pick_root)
-        file_btn = QPushButton("打开 .map 文件…")
-        file_btn.setToolTip("直接打开单张地图文件")
-        file_btn.clicked.connect(self._open_single_map_dialog)
-        root_actions.addWidget(root_btn)
-        root_actions.addWidget(file_btn)
-        left_lay.addLayout(root_actions)
+        left_lay.setContentsMargins(10, 10, 8, 10)
+        title = QLabel("地图")
+        title.setObjectName("sectionTitle")
+        left_lay.addWidget(title)
         self.search_edit = QLineEdit()
         self.search_edit.setPlaceholderText("搜索地图编号或名称…")
         self.search_edit.setClearButtonEnabled(True)
         self.search_edit.textChanged.connect(self._populate_map_table)
         left_lay.addWidget(self.search_edit)
-
         self.table = QTableWidget(0, 5)
-        self.table.setHorizontalHeaderLabels(
-            ["编号", "场景名称", "尺寸", "扇区", "遮罩"]
-        )
+        self.table.setHorizontalHeaderLabels(["编号", "名称", "尺寸", "扇区", "遮罩"])
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -1150,190 +1208,133 @@ class EditorWindow(QMainWindow):
         hdr = self.table.horizontalHeader()
         hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         hdr.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        hdr.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        hdr.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
-        hdr.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
+        for column in (2, 3, 4):
+            hdr.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
         self.table.itemSelectionChanged.connect(self._on_row_selected)
         left_lay.addWidget(self.table, 1)
 
-        # 2. Right panel: Multi-tab Inspector / Palette / Masks / Entities / Audit
-        right = QTabWidget()
-        right.setMinimumWidth(350)
-        right.addTab(self._build_quickstart_tab(), "入门")
-        right.addTab(self._build_layers_palette_tab(), "编辑")
-        right.addTab(self._build_masks_tab(), "遮罩")
-        right.addTab(self._build_entities_tab(), "NPC/寻路")
-        right.addTab(self._build_audit_tab(), "审计")
-        self.right_tabs = right
-
-        splitter.addWidget(left)
-        splitter.addWidget(self.canvas)
-        splitter.addWidget(right)
-        splitter.setStretchFactor(0, 0)
-        splitter.setStretchFactor(1, 1)
-        splitter.setStretchFactor(2, 0)
-        splitter.setSizes([415, 725, 360])
-        self.setCentralWidget(splitter)
-
-    def _build_quickstart_tab(self) -> QWidget:
-        page = QWidget()
-        lay = QVBoxLayout(page)
-        lay.setContentsMargins(14, 14, 14, 14)
-        lay.setSpacing(10)
-
-        title = QLabel("第一次使用？从这里开始")
-        title.setObjectName("welcomeTitle")
-        lay.addWidget(title)
-        intro = QLabel(
-            "地图编辑器用于查看与编辑客户端地图。原始地图默认受保护；"
-            "建议先另存为副本，再开始练习。"
-        )
-        intro.setObjectName("mutedText")
-        intro.setWordWrap(True)
-        lay.addWidget(intro)
-
-        actions = QGroupBox("打开地图")
-        action_lay = QVBoxLayout(actions)
-        client_btn = QPushButton("① 扫描客户端地图目录")
-        client_btn.setDefault(True)
-        client_btn.setToolTip("选择包含 map 文件夹的客户端目录")
-        client_btn.clicked.connect(self._pick_root)
-        single_btn = QPushButton("② 打开一张 .map 文件")
-        single_btn.clicked.connect(self._open_single_map_dialog)
-        new_btn = QPushButton("③ 新建地图 / 导入整张底图")
-        new_btn.clicked.connect(self._new_map_dialog)
-        action_lay.addWidget(client_btn)
-        action_lay.addWidget(single_btn)
-        action_lay.addWidget(new_btn)
-        lay.addWidget(actions)
-
-        steps = QGroupBox("最常用的操作")
-        step_lay = QVBoxLayout(steps)
-        step_text = QLabel(
-            "<b>浏览地图</b>：左侧点选地图；滚轮缩放，选顶部「1 浏览」后左键拖动，"
-            "或用鼠标中键拖动。<br><br>"
-            "<b>修改通行格</b>：顶部点「2 通行」，右侧「编辑工具」选择格子类型，"
-            "在画布按住左键涂抹；右键擦除为可行走。<br><br>"
-            "<b>撤销 / 重做</b>：Ctrl+Z / Ctrl+Y。<br><br>"
-            "<b>保存副本</b>：按 Ctrl+Shift+S 选择新文件名。严格保护模式下，"
-            "不会覆盖客户端原图。<br><br>"
-            "<b>遮罩、NPC、寻路、光照</b>：分别到右侧对应页签；悬停按钮可看说明。"
-        )
-        step_text.setWordWrap(True)
-        step_text.setTextFormat(Qt.TextFormat.RichText)
-        step_lay.addWidget(step_text)
-        lay.addWidget(steps)
-
-        safety = QLabel("提示：先「另存为」练习副本 · 状态栏会显示当前工具与地图状态")
-        safety.setObjectName("tipBanner")
-        safety.setWordWrap(True)
-        lay.addWidget(safety)
-        lay.addStretch(1)
-        return page
-
-    def _build_layers_palette_tab(self) -> QWidget:
-        page = QWidget()
-        lay = QVBoxLayout(page)
-        lay.setContentsMargins(6, 5, 6, 6)
-        lay.setSpacing(5)
-
-        layer_box = QGroupBox("视图叠加层 (快捷键实时开关)")
-        lb_lay = QVBoxLayout(layer_box)
-        lb_lay.setContentsMargins(7, 6, 7, 5)
-        lb_lay.setSpacing(3)
-        layer_labels = [
-            ("texture", "底图纹理 (GEPJ 320×240)"),
-            ("lit_preview", "GIRB 动态光照实时合成"),
-            ("walkability", "LLEC 通行与阴影网格 (绿/红/青/紫)"),
-            ("mask_cutout", "前景遮罩 2-bit Alpha 剪影"),
-            ("records", "前景遮罩包围盒线框"),
-            ("entities", "场景 NPC / 传送阵 / 出生点标注"),
-            ("path", "CAStar 8方向寻路轨迹"),
-            ("grid", "20×20 px 逻辑格线"),
-            ("sector_bounds", "320×240 px 扇区分界线"),
-            ("collision", "GIRB 原始亮度偏差热力层"),
-        ]
-        for key, text in layer_labels:
-            chk = QCheckBox(text)
-            chk.setChecked(self.vm.layer(key))
-            chk.toggled.connect(lambda on, n=key: self._toggle_layer(n, on))
-            lb_lay.addWidget(chk)
-            self._layer_checks[key] = chk
-        lay.addWidget(layer_box)
-
-        cell_box = QGroupBox("LLEC 通行格编辑画笔 (右键擦除为可行走)")
-        cb_form = QFormLayout(cell_box)
-        self.cell_combo = QComboBox()
-        for val, label in CELL_NAMES.items():
-            self.cell_combo.addItem(label, val)
-        self.cell_combo.setCurrentIndex(1)
-        self.cell_combo.currentIndexChanged.connect(
-            lambda _: setattr(
-                self.vm.state, "brush_cell_value", int(self.cell_combo.currentData())
+        # Canvas and the frequently-used entity lists share an adjustable split.
+        center = QSplitter(Qt.Orientation.Vertical)
+        center.setChildrenCollapsible(False)
+        center.addWidget(self.canvas)
+        self.entity_tabs = QTabWidget()
+        self.entity_tabs.setMinimumHeight(135)
+        self.entity_tables: dict[str, QTableWidget] = {}
+        for tab_name, key in (("NPC", "npcs"), ("传送点 / 出生点", "portals")):
+            page = QWidget()
+            page_lay = QVBoxLayout(page)
+            page_lay.setContentsMargins(6, 6, 6, 6)
+            table = QTableWidget(0, 4)
+            table.setHorizontalHeaderLabels(["类型", "名称", "服务端坐标", "状态"])
+            table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+            table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+            table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+            table.verticalHeader().setVisible(False)
+            table.horizontalHeader().setSectionResizeMode(
+                0, QHeaderView.ResizeMode.ResizeToContents
             )
-        )
-        cb_form.addRow("格类型:", self.cell_combo)
+            table.horizontalHeader().setSectionResizeMode(
+                1, QHeaderView.ResizeMode.Stretch
+            )
+            table.horizontalHeader().setSectionResizeMode(
+                2, QHeaderView.ResizeMode.ResizeToContents
+            )
+            table.horizontalHeader().setSectionResizeMode(
+                3, QHeaderView.ResizeMode.ResizeToContents
+            )
+            table.cellDoubleClicked.connect(self._jump_to_entity_row)
+            table.itemSelectionChanged.connect(self._on_entity_selected)
+            page_lay.addWidget(table)
+            self.entity_tables[key] = table
+            self.entity_tabs.addTab(page, tab_name)
+        self.entity_table = self.entity_tables["npcs"]
+        self.entity_tabs.currentChanged.connect(self._on_entity_tab_changed)
+        center.addWidget(self.entity_tabs)
+        center.setStretchFactor(0, 1)
+        center.setStretchFactor(1, 0)
+        center.setSizes([650, 210])
 
-        self.cell_rad_slider = QSlider(Qt.Orientation.Horizontal)
-        self.cell_rad_slider.setRange(0, 6)
-        self.cell_rad_slider.setValue(self.vm.state.brush_radius)
-        self.cell_rad_lbl = QLabel("1×1 格")
-        self.cell_rad_slider.valueChanged.connect(self._on_cell_radius_changed)
-        rad_row = QHBoxLayout()
-        rad_row.addWidget(self.cell_rad_slider, 1)
-        rad_row.addWidget(self.cell_rad_lbl)
-        cb_form.addRow("画笔半径:", rad_row)
-        lay.addWidget(cell_box)
+        # Right-hand inspector: map/object context, display layers and safe save.
+        right_scroll = QScrollArea()
+        right_scroll.setWidgetResizable(True)
+        right_scroll.setMinimumWidth(270)
+        right_scroll.setMaximumWidth(390)
+        right_page = QWidget()
+        right_lay = QVBoxLayout(right_page)
+        right_lay.setContentsMargins(10, 10, 10, 10)
+        right_lay.setSpacing(10)
+        inspector_title = QLabel("检查器")
+        inspector_title.setObjectName("sectionTitle")
+        right_lay.addWidget(inspector_title)
 
-        light_box = QGroupBox("GIRB 动态角色/地面光照画笔 (0暗 ~ 8标准 ~ 15亮)")
-        lt_form = QFormLayout(light_box)
-        self.light_slider = QSlider(Qt.Orientation.Horizontal)
-        self.light_slider.setRange(0, 15)
-        self.light_slider.setValue(self.vm.state.light_value)
-        self.light_lbl = QLabel(f"亮度 {self.vm.state.light_value} / 15")
-        self.light_slider.valueChanged.connect(self._on_light_val_changed)
-        lv_row = QHBoxLayout()
-        lv_row.addWidget(self.light_slider, 1)
-        lv_row.addWidget(self.light_lbl)
-        lt_form.addRow("目标亮度:", lv_row)
+        map_box = QGroupBox("当前地图")
+        map_lay = QVBoxLayout(map_box)
+        self.map_info_lbl = QLabel("尚未打开地图")
+        self.map_info_lbl.setWordWrap(True)
+        map_lay.addWidget(self.map_info_lbl)
+        safe_save_btn = QPushButton("另存为副本…")
+        safe_save_btn.setToolTip("保留客户端原始地图，另存一份可编辑副本")
+        safe_save_btn.clicked.connect(self._save_map_as_dialog)
+        map_lay.addWidget(safe_save_btn)
+        right_lay.addWidget(map_box)
 
-        self.light_rad_slider = QSlider(Qt.Orientation.Horizontal)
-        self.light_rad_slider.setRange(1, 12)
-        self.light_rad_slider.setValue(self.vm.state.light_radius)
-        self.light_rad_slider.valueChanged.connect(
-            lambda v: setattr(self.vm.state, "light_radius", int(v))
-        )
-        lt_form.addRow("光斑半径:", self.light_rad_slider)
+        object_box = QGroupBox("选中对象")
+        object_lay = QVBoxLayout(object_box)
+        self.selected_object_lbl = QLabel("从下方 NPC 或传送点列表选择对象")
+        self.selected_object_lbl.setWordWrap(True)
+        object_lay.addWidget(self.selected_object_lbl)
+        path_btn = QPushButton("从出生点模拟寻路到所选对象")
+        path_btn.clicked.connect(self._path_to_selected_entity)
+        object_lay.addWidget(path_btn)
+        right_lay.addWidget(object_box)
 
-        reset_light_btn = QPushButton("重置光标所在扇区光照为标准值 (8)")
-        reset_light_btn.clicked.connect(self._reset_cursor_sector_light)
-        lt_form.addRow(reset_light_btn)
-        lay.addWidget(light_box)
+        layers_box = QGroupBox("常用图层")
+        layers_lay = QVBoxLayout(layers_box)
+        for key, label in (
+            ("texture", "底图纹理"),
+            ("walkability", "通行状态"),
+            ("lit_preview", "光照合成"),
+            ("mask_cutout", "前景遮罩"),
+            ("entities", "NPC / 传送点"),
+            ("path", "寻路轨迹"),
+        ):
+            check = QCheckBox(label)
+            check.setChecked(self.vm.layer(key))
+            check.toggled.connect(lambda on, name=key: self._toggle_layer(name, on))
+            self._layer_checks[key] = check
+            layers_lay.addWidget(check)
+        right_lay.addWidget(layers_box)
 
-        # Live cursor telemetry box
-        tele_box = QGroupBox("实时坐标与格属性检视")
-        t_lay = QVBoxLayout(tele_box)
-        self.telemetry_lbl = QLabel("移动鼠标至地图画布查看像素 / 服务端坐标 / 光照…")
-        self.telemetry_lbl.setMinimumHeight(105)
+        advanced_box = QGroupBox("高级图层与光标信息（展开）")
+        advanced_box.setCheckable(True)
+        advanced_box.setChecked(False)
+        advanced_lay = QVBoxLayout(advanced_box)
+        advanced_content = QWidget()
+        advanced_content_lay = QVBoxLayout(advanced_content)
+        advanced_content_lay.setContentsMargins(0, 0, 0, 0)
+        for key, label in (
+            ("records", "遮罩记录框"),
+            ("grid", "逻辑格线"),
+            ("sector_bounds", "扇区边界"),
+            ("collision", "碰撞热力"),
+        ):
+            check = QCheckBox(label)
+            check.setChecked(self.vm.layer(key))
+            check.toggled.connect(lambda on, name=key: self._toggle_layer(name, on))
+            self._layer_checks[key] = check
+            advanced_content_lay.addWidget(check)
+        self.telemetry_lbl = QLabel("移动鼠标到画布查看坐标与格属性。")
         self.telemetry_lbl.setWordWrap(True)
-        t_lay.addWidget(self.telemetry_lbl)
-        lay.addWidget(tele_box)
-        lay.addStretch(1)
+        advanced_content_lay.addWidget(self.telemetry_lbl)
+        advanced_lay.addWidget(advanced_content)
+        advanced_content.setVisible(False)
+        advanced_box.toggled.connect(advanced_content.setVisible)
+        right_lay.addWidget(advanced_box)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setStyleSheet("QScrollArea, QWidget { background-color: #ffffff; }")
-        scroll.setWidget(page)
-        return scroll
-
-    def _build_masks_tab(self) -> QWidget:
-        page = QWidget()
-        lay = QVBoxLayout(page)
-        lay.setContentsMargins(8, 8, 8, 8)
-
+        masks_box = QGroupBox("遮罩记录")
+        masks_lay = QVBoxLayout(masks_box)
         self.mask_table = QTableWidget(0, 4)
-        self.mask_table.setHorizontalHeaderLabels(["#", "位置 (X,Y)", "尺寸", "字节"])
+        self.mask_table.setHorizontalHeaderLabels(["#", "位置", "尺寸", "字节"])
         self.mask_table.setSelectionBehavior(
             QAbstractItemView.SelectionBehavior.SelectRows
         )
@@ -1342,106 +1343,76 @@ class EditorWindow(QMainWindow):
         )
         self.mask_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.mask_table.verticalHeader().setVisible(False)
-        mhdr = self.mask_table.horizontalHeader()
-        mhdr.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        mhdr.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        mhdr.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        mhdr.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        self.mask_table.setMaximumHeight(145)
         self.mask_table.itemSelectionChanged.connect(self._on_mask_row_chosen)
-        lay.addWidget(self.mask_table, 1)
-
-        preview_box = QGroupBox("选中遮罩 RGBA 镂空预览 (LZO1X 2-bit Alpha)")
-        p_lay = QVBoxLayout(preview_box)
+        masks_lay.addWidget(self.mask_table)
         self.mask_preview_lbl = QLabel("未选择遮罩记录")
-        self.mask_preview_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.mask_preview_lbl.setMinimumHeight(145)
-        self.mask_preview_lbl.setFrameStyle(QFrame.Shape.StyledPanel)
-        p_lay.addWidget(self.mask_preview_lbl)
-        lay.addWidget(preview_box)
+        self.mask_preview_lbl.setWordWrap(True)
+        masks_lay.addWidget(self.mask_preview_lbl)
+        mask_actions = QHBoxLayout()
+        for label, handler in (
+            ("导入 PNG", self._add_mask_dialog),
+            ("移动", self._move_mask_dialog),
+            ("删除", self._delete_selected_mask),
+        ):
+            button = QPushButton(label)
+            button.clicked.connect(handler)
+            mask_actions.addWidget(button)
+        masks_lay.addLayout(mask_actions)
+        right_lay.addWidget(masks_box)
 
-        btn_row1 = QHBoxLayout()
-        add_btn = QPushButton("导入 PNG 新增遮罩…")
-        add_btn.clicked.connect(self._add_mask_dialog)
-        move_btn = QPushButton("修改遮罩坐标…")
-        move_btn.clicked.connect(self._move_mask_dialog)
-        btn_row1.addWidget(add_btn)
-        btn_row1.addWidget(move_btn)
-        lay.addLayout(btn_row1)
-
-        btn_row2 = QHBoxLayout()
-        exp_btn = QPushButton("导出选中遮罩 PNG…")
-        exp_btn.clicked.connect(self._export_selected_mask)
-        del_btn = QPushButton("删除选中遮罩")
-        del_btn.clicked.connect(self._delete_selected_mask)
-        btn_row2.addWidget(exp_btn)
-        btn_row2.addWidget(del_btn)
-        lay.addLayout(btn_row2)
-        return page
-
-    def _build_entities_tab(self) -> QWidget:
-        page = QWidget()
-        lay = QVBoxLayout(page)
-        lay.setContentsMargins(8, 8, 8, 8)
-
-        info_lbl = QLabel("双击任意 NPC 或传送阵可立即平滑定位镜头，或一键测试寻路：")
-        info_lbl.setWordWrap(True)
-        lay.addWidget(info_lbl)
-
-        self.entity_table = QTableWidget(0, 4)
-        self.entity_table.setHorizontalHeaderLabels(
-            ["类型", "名称", "服务端坐标", "状态"]
-        )
-        self.entity_table.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectRows
-        )
-        self.entity_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.entity_table.verticalHeader().setVisible(False)
-        ehdr = self.entity_table.horizontalHeader()
-        ehdr.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        ehdr.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        ehdr.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        ehdr.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
-        self.entity_table.cellDoubleClicked.connect(self._jump_to_entity_row)
-        lay.addWidget(self.entity_table, 1)
-
-        path_btn = QPushButton("模拟从场景出生点 → 当前选中实体的 A* 寻路")
-        path_btn.clicked.connect(self._path_to_selected_entity)
-        lay.addWidget(path_btn)
-        return page
-
-    def _build_audit_tab(self) -> QWidget:
-        page = QWidget()
-        lay = QVBoxLayout(page)
-        lay.setContentsMargins(8, 8, 8, 8)
-
-        tile_box = QGroupBox("底图纹理与服务端 .blk 同步")
-        tb_lay = QVBoxLayout(tile_box)
-        imp_full_btn = QPushButton("导入整张 PNG/JPG 底图自动切分替换…")
-        imp_full_btn.clicked.connect(self._import_full_image_dialog)
-        rep_sec_btn = QPushButton("替换指定扇区底图 (320×240 GEPJ)…")
-        rep_sec_btn.clicked.connect(self._replace_sector_dialog)
-        blk_row = QHBoxLayout()
-        exp_blk_btn = QPushButton("导出 .blk…")
-        exp_blk_btn.clicked.connect(lambda: self._export("blk"))
-        imp_blk_btn = QPushButton("导入 .blk…")
-        imp_blk_btn.clicked.connect(self._import_blk_dialog)
-        blk_row.addWidget(exp_blk_btn)
-        blk_row.addWidget(imp_blk_btn)
-        tb_lay.addWidget(imp_full_btn)
-        tb_lay.addWidget(rep_sec_btn)
-        tb_lay.addLayout(blk_row)
-        lay.addWidget(tile_box)
-
-        audit_box = QGroupBox("地图健康度与二进制一致性审计")
-        ab_lay = QVBoxLayout(audit_box)
-        run_audit_btn = QPushButton("运行完整审计 (通行连通域 / 光照 / 遮罩索引 / NPC)")
-        run_audit_btn.clicked.connect(self._refresh_audit_panel)
+        audit_box = QGroupBox("数据审计")
+        audit_lay = QVBoxLayout(audit_box)
+        audit_button = QPushButton("运行地图审计")
+        audit_button.clicked.connect(self._refresh_audit_panel)
+        audit_lay.addWidget(audit_button)
         self.audit_text = QTextEdit()
         self.audit_text.setReadOnly(True)
-        ab_lay.addWidget(run_audit_btn)
-        ab_lay.addWidget(self.audit_text, 1)
-        lay.addWidget(audit_box, 1)
-        return page
+        self.audit_text.setMaximumHeight(130)
+        audit_lay.addWidget(self.audit_text)
+        right_lay.addWidget(audit_box)
+        right_lay.addStretch(1)
+        right_scroll.setWidget(right_page)
+
+        workspace.addWidget(left)
+        workspace.addWidget(center)
+        workspace.addWidget(right_scroll)
+        workspace.setStretchFactor(0, 0)
+        workspace.setStretchFactor(1, 1)
+        workspace.setStretchFactor(2, 0)
+        workspace.setSizes([290, 900, 315])
+        self.setCentralWidget(workspace)
+
+    def _on_entity_tab_changed(self, index: int) -> None:
+        key = "npcs" if index == 0 else "portals"
+        self.entity_table = self.entity_tables[key]
+        self._populate_entities_table()
+        self.entity_table.clearSelection()
+        self.selected_object_lbl.setText("从下方 NPC 或传送点列表选择对象")
+
+    def _on_entity_selected(self) -> None:
+        selected = self.entity_table.selectionModel().selectedRows()
+        if not selected:
+            return
+        row = selected[0].row()
+        item = self.entity_table.item(row, 1)
+        if item is not None:
+            kind = self.entity_table.item(row, 0).text()
+            coord = self.entity_table.item(row, 2).text()
+            state = self.entity_table.item(row, 3).text()
+            world = (
+                self._entity_jump_targets[row]
+                if row < len(self._entity_jump_targets)
+                else (0, 0)
+            )
+            self.selected_object_lbl.setText(
+                f"{kind} · {item.text()}\n"
+                f"服务端坐标：{coord}\n"
+                f"像素坐标：{world[0]}, {world[1]}\n"
+                f"状态：{state}"
+            )
+        if row < len(self._entity_jump_targets):
+            self._jump_to_entity_row(row, 0)
 
     def _build_menus_and_toolbar(self) -> None:
         file_menu = self.menuBar().addMenu("文件(&F)")
@@ -1514,6 +1485,16 @@ class EditorWindow(QMainWindow):
         self.loose_mode_act.toggled.connect(self._toggle_save_mode)
         edit_menu.addAction(self.loose_mode_act)
 
+        map_menu = self.menuBar().addMenu("地图(&M)")
+        for label, handler in (
+            ("导入整张底图并替换纹理…", self._import_full_image_dialog),
+            ("替换单个扇区底图…", self._replace_sector_dialog),
+            ("导入服务端 .blk 通行数据…", self._import_blk_dialog),
+        ):
+            action = QAction(label, self)
+            action.triggered.connect(handler)
+            map_menu.addAction(action)
+
         # View menu
         view_menu = self.menuBar().addMenu("视图(&V)")
         fit_act = QAction("适配窗口缩放 (Fit)", self)
@@ -1528,48 +1509,259 @@ class EditorWindow(QMainWindow):
         help_menu = self.menuBar().addMenu("帮助(&H)")
         guide_act = QAction("打开快速开始指南", self)
         guide_act.setShortcut(QKeySequence("F1"))
-        guide_act.triggered.connect(lambda: self.right_tabs.setCurrentIndex(0))
+        guide_act.triggered.connect(
+            lambda: QMessageBox.information(
+                self,
+                "快速开始",
+                "先从文件菜单打开客户端目录或单张地图。建议使用右侧「另存为副本」后再编辑。\n\n"
+                "画布下方可切换 NPC 与传送点；右侧检查器显示图层、遮罩记录与审计信息。",
+            )
+        )
         guide_act.setStatusTip("显示地图编辑的基本操作和安全提示")
         help_menu.addAction(guide_act)
 
-        # Main Studio Toolbar
-        tb = QToolBar("主工具栏")
-        tb.setMovable(False)
-        self.addToolBar(tb)
-        tb.addAction(self.save_act)
-        tb.addSeparator()
-        tb.addAction(self.undo_act)
-        tb.addAction(self.redo_act)
-        tb.addSeparator()
+        # Primary tool categories: icon + label, followed by contextual controls.
+        main_toolbar = QToolBar("主工具栏")
+        main_toolbar.setMovable(False)
+        main_toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        self.addToolBar(main_toolbar)
+        for action in (self.save_act, self.undo_act, self.redo_act):
+            main_toolbar.addAction(action)
+        main_toolbar.addSeparator()
+        category_group = QActionGroup(self)
+        category_group.setExclusive(True)
+        categories = (
+            ("browse", "浏览", QStyle.StandardPixmap.SP_DesktopIcon, "1"),
+            ("walk", "通行格", QStyle.StandardPixmap.SP_DialogApplyButton, "2"),
+            ("light", "光照", QStyle.StandardPixmap.SP_DialogYesButton, "6"),
+            ("entities", "实体", QStyle.StandardPixmap.SP_FileDialogInfoView, "7"),
+            ("path", "寻路", QStyle.StandardPixmap.SP_ArrowRight, "8"),
+            ("mask", "遮罩", QStyle.StandardPixmap.SP_FileDialogDetailedView, "9"),
+        )
+        self._category_actions: dict[str, QAction] = {}
+        for key, label, icon, shortcut in categories:
+            action = QAction(self.style().standardIcon(icon), label, self)
+            action.setCheckable(True)
+            action.setShortcut(QKeySequence(shortcut))
+            action.triggered.connect(
+                lambda _=False, name=key: self._select_main_category(name)
+            )
+            category_group.addAction(action)
+            main_toolbar.addAction(action)
+            self._category_actions[key] = action
+        self._category_actions["browse"].setChecked(True)
 
-        tool_group = QActionGroup(self)
-        tool_group.setExclusive(True)
-        tool_help = {
-            "pan": "浏览与平移画布；左键拖动，滚轮缩放（快捷键 1）",
-            "cell_brush": "左键绘制选中的通行格，右键擦除为可行走（快捷键 2）",
-            "cell_rect": "拖拽框选区域并填入当前通行格类型（快捷键 3）",
-            "cell_line": "拖拽绘制一条通行格直线（快捷键 4）",
-            "cell_fill": "点击区域进行连续油漆桶填充（快捷键 5）",
-            "light_brush": "绘制动态光照；8 为标准亮度（快捷键 6）",
-            "path_sim": "在画布点击起点与终点，模拟角色寻路（快捷键 7）",
-            "mask_select": "选择或拖动前景遮罩；详情见右侧「前景遮罩」（快捷键 8）",
+        self.context_toolbar = QToolBar("当前工具选项")
+        self.context_toolbar.setMovable(False)
+        self.context_toolbar.setWindowTitle("当前工具选项")
+        self.addToolBar(self.context_toolbar)
+        self._main_category = "browse"
+        self._walk_mode = "brush"
+        self._walk_brush_radius = self.vm.state.brush_radius
+        self._update_context_toolbar()
+
+    def _select_main_category(self, category: str) -> None:
+        self._main_category = category
+        if category in self._category_actions:
+            self._category_actions[category].setChecked(True)
+        tool_by_category = {
+            "browse": "pan",
+            "walk": "cell_brush",
+            "light": "light_brush",
+            "entities": "pan",
+            "path": "path_sim",
+            "mask": "mask_select",
         }
-        for key, label, shortcut in TOOL_SPECS:
-            act = QAction(label, self)
-            act.setToolTip(tool_help[key])
-            act.setStatusTip(tool_help[key])
-            act.setCheckable(True)
-            act.setShortcut(QKeySequence(shortcut))
-            if key == self.vm.state.active_tool:
-                act.setChecked(True)
-            act.triggered.connect(lambda _=False, k=key: self._select_tool(k))
-            tool_group.addAction(act)
-            tb.addAction(act)
-            self._tool_actions[key] = act
+        if category != "walk":
+            self.canvas.pen_path_mode = False
+            self.canvas.eraser_mode = False
+            self.canvas.cancel_pending_pen_path()
+        self._select_tool(tool_by_category[category])
+        if category == "walk":
+            self._select_walk_mode(self._walk_mode)
+        elif category == "entities":
+            self._ensure_layer_on("entities")
+        self._update_context_toolbar()
 
-        tb.addSeparator()
-        tb.addAction(fit_act)
-        tb.addAction(one_act)
+    def _update_context_toolbar(self) -> None:
+        self.context_toolbar.clear()
+        category = self._main_category
+        if category == "walk":
+            self.context_toolbar.addWidget(QLabel("状态"))
+            self.cell_combo = QComboBox()
+            for value, label in (
+                (0, "可通行"),
+                (1, "阻挡"),
+                (2, "阴影下可通行"),
+                (3, "阴影下阻挡"),
+            ):
+                self.cell_combo.addItem(label, value)
+            self.cell_combo.setCurrentIndex(self.vm.state.brush_cell_value)
+            self.cell_combo.currentIndexChanged.connect(
+                lambda _index: setattr(
+                    self.vm.state,
+                    "brush_cell_value",
+                    int(self.cell_combo.currentData()),
+                )
+            )
+            self.context_toolbar.addWidget(self.cell_combo)
+            for value, color in (
+                (0, "#2ecc71"),
+                (1, "#e74c3c"),
+                (2, "#34c6e2"),
+                (3, "#9b59b6"),
+            ):
+                chip = QLabel(f"  {value}  ")
+                chip.setStyleSheet(
+                    f"background:{color};color:white;border-radius:4px;padding:3px;"
+                )
+                chip.setToolTip(CELL_NAMES[value])
+                self.context_toolbar.addWidget(chip)
+            self.context_toolbar.addSeparator()
+            if hasattr(self, "walk_mode_group"):
+                self.walk_mode_group.deleteLater()
+            self.walk_mode_group = QButtonGroup(self)
+            self.walk_mode_group.setExclusive(True)
+            for mode, label in (
+                ("brush", "画笔"),
+                ("rect", "矩形"),
+                ("line", "直线"),
+                ("fill", "区域填充"),
+                ("eraser", "橡皮"),
+                ("pen_dot", "钢笔·单格"),
+                ("pen_path", "钢笔·路径"),
+            ):
+                button = QPushButton(label)
+                button.setCheckable(True)
+                button.setChecked(mode == self._walk_mode)
+                self.walk_mode_group.addButton(button)
+                button.clicked.connect(
+                    lambda _checked=False, value=mode: self._select_walk_mode(value)
+                )
+                self.context_toolbar.addWidget(button)
+            if self._walk_mode == "pen_path":
+                self.context_toolbar.addWidget(QLabel("路径"))
+                self.pen_style_combo = QComboBox()
+                self.pen_style_combo.addItems(["折线", "曲线"])
+                self.pen_style_combo.setCurrentIndex(
+                    1 if self.canvas.pen_curve_mode else 0
+                )
+                self.pen_style_combo.currentIndexChanged.connect(
+                    lambda index: setattr(self.canvas, "pen_curve_mode", index == 1)
+                )
+                self.context_toolbar.addWidget(self.pen_style_combo)
+                self.context_toolbar.addWidget(QLabel("点击添加节点，右键结束"))
+            if self._walk_mode in {"brush", "eraser", "line", "pen_path"}:
+                self.context_toolbar.addSeparator()
+                self.context_toolbar.addWidget(
+                    QLabel("尺寸" if self._walk_mode != "line" else "线宽")
+                )
+                self.brush_size_slider = QSlider(Qt.Orientation.Horizontal)
+                self.brush_size_slider.setRange(1, 13)
+                self.brush_size_slider.setSingleStep(2)
+                self.brush_size_slider.setPageStep(2)
+                self.brush_size_slider.setFixedWidth(110)
+                size = self.vm.state.brush_radius * 2 + 1
+                self.brush_size_slider.setValue(size)
+                self.brush_size_spin = QSpinBox()
+                self.brush_size_spin.setRange(1, 13)
+                self.brush_size_spin.setSingleStep(2)
+                self.brush_size_spin.setValue(size)
+                self.brush_size_slider.valueChanged.connect(self._set_brush_size)
+                self.brush_size_spin.valueChanged.connect(self._set_brush_size)
+                self.context_toolbar.addWidget(self.brush_size_slider)
+                self.context_toolbar.addWidget(self.brush_size_spin)
+            elif self._walk_mode == "fill":
+                self.context_toolbar.addWidget(
+                    QLabel("点击相邻同类区域填充；可用 Ctrl+Z 撤销")
+                )
+            elif self._walk_mode == "pen_dot":
+                self.context_toolbar.addWidget(QLabel("单格钢笔：点击画布绘制一个格子"))
+        elif category == "light":
+            self.context_toolbar.addWidget(QLabel("亮度"))
+            self.light_slider = QSlider(Qt.Orientation.Horizontal)
+            self.light_slider.setRange(0, 15)
+            self.light_slider.setValue(self.vm.state.light_value)
+            self.light_slider.setFixedWidth(150)
+            self.light_slider.valueChanged.connect(self._on_light_val_changed)
+            self.context_toolbar.addWidget(self.light_slider)
+            self.light_lbl = QLabel(f"{self.vm.state.light_value} / 15")
+            self.context_toolbar.addWidget(self.light_lbl)
+            self.context_toolbar.addWidget(QLabel("光斑半径"))
+            self.light_rad_slider = QSlider(Qt.Orientation.Horizontal)
+            self.light_rad_slider.setRange(1, 12)
+            self.light_rad_slider.setValue(self.vm.state.light_radius)
+            self.light_rad_slider.setFixedWidth(100)
+            self.light_rad_slider.valueChanged.connect(
+                lambda value: setattr(self.vm.state, "light_radius", int(value))
+            )
+            self.context_toolbar.addWidget(self.light_rad_slider)
+        elif category == "path":
+            self.context_toolbar.addWidget(
+                QLabel("依次点击地图上的起点与终点以模拟寻路。")
+            )
+        elif category == "entities":
+            self.context_toolbar.addWidget(
+                QLabel("在画布下方切换 NPC 与传送点；双击条目定位。")
+            )
+        elif category == "mask":
+            for label, handler in (
+                ("导入 PNG", self._add_mask_dialog),
+                ("导出 PNG", self._export_selected_mask),
+                ("移动遮罩", self._move_mask_dialog),
+                ("删除遮罩", self._delete_selected_mask),
+            ):
+                button = QPushButton(label)
+                button.clicked.connect(handler)
+                self.context_toolbar.addWidget(button)
+        else:
+            fit = QPushButton("适配窗口")
+            fit.clicked.connect(lambda: self.canvas.reset_view(fit=True))
+            one = QPushButton("100%")
+            one.clicked.connect(self._set_zoom_100)
+            self.context_toolbar.addWidget(QLabel("滚轮缩放 · 中键拖动画布"))
+            self.context_toolbar.addWidget(fit)
+            self.context_toolbar.addWidget(one)
+
+    def _select_walk_mode(self, mode: str) -> None:
+        previous_mode = self._walk_mode
+        if mode == "pen_dot" and previous_mode != "pen_dot":
+            self._walk_brush_radius = self.vm.state.brush_radius
+        elif mode != "pen_dot" and previous_mode == "pen_dot":
+            self.vm.state.brush_radius = self._walk_brush_radius
+        self._walk_mode = mode
+        tools = {
+            "brush": "cell_brush",
+            "eraser": "cell_brush",
+            "pen_dot": "cell_brush",
+            "rect": "cell_rect",
+            "line": "cell_line",
+            "fill": "cell_fill",
+            "pen_path": "cell_line",
+        }
+        self.vm.set_tool(tools[mode])
+        self.canvas.eraser_mode = mode == "eraser"
+        self.canvas.pen_path_mode = mode == "pen_path"
+        if mode != "pen_path":
+            self.canvas._pen_nodes.clear()
+        if mode == "pen_dot":
+            self.vm.state.brush_radius = 0
+        self._ensure_layer_on("walkability")
+        self._update_context_toolbar()
+        self.canvas.update()
+
+    def _set_brush_size(self, value: int) -> None:
+        size = max(1, min(13, int(value)))
+        size = size if size % 2 else size + 1
+        self.vm.state.brush_radius = (size - 1) // 2
+        if hasattr(self, "brush_size_slider"):
+            self.brush_size_slider.blockSignals(True)
+            self.brush_size_slider.setValue(size)
+            self.brush_size_slider.blockSignals(False)
+        if hasattr(self, "brush_size_spin"):
+            self.brush_size_spin.blockSignals(True)
+            self.brush_size_spin.setValue(size)
+            self.brush_size_spin.blockSignals(False)
 
     # -- handlers & workflows ---------------------------------------------
     def _select_tool(self, tool: str) -> None:
@@ -1647,8 +1839,8 @@ class EditorWindow(QMainWindow):
                 path, progress=lambda m: self.statusBar().showMessage(m)
             )
             self._populate_map_table()
-            self.root_hint.setText(
-                f"已扫描：{path} · {self.vm.state.map_count} 张地图"
+            self.map_info_lbl.setText(
+                f"目录：{path}\n已扫描 {self.vm.state.map_count} 张地图"
             )
         except DiscoveryError as exc:
             QMessageBox.warning(self, "未找到地图", str(exc))
@@ -1731,9 +1923,18 @@ class EditorWindow(QMainWindow):
         self._after_document_opened()
 
     def _after_document_opened(self) -> None:
+        self.canvas.cancel_pending_pen_path()
         self.canvas.reset_view(fit=True)
         self._refresh_masks_and_audit()
         self._populate_entities_table()
+        state = self.vm.state
+        self.map_info_lbl.setText(
+            f"{state.current_key} · {state.current_name}\n"
+            f"{state.current_size[0]} × {state.current_size[1]} px · "
+            f"{state.current_sectors} 扇区 · {state.current_records} 个遮罩记录\n"
+            f"保存模式：{'宽松' if self.vm.config.save_mode == 'loose' else '保护原图'}"
+        )
+        self.selected_object_lbl.setText("从下方 NPC 或传送点列表选择对象")
         self._refresh_status()
 
     def _open_single_map_dialog(self) -> None:
@@ -1864,9 +2065,7 @@ class EditorWindow(QMainWindow):
         bx1 = min(doc.header.width, dm.x + dm.width)
         by1 = min(doc.header.height, dm.y + dm.height)
         backdrop = (
-            self.vm.render(bx0, by0, bx1, by1)
-            if bx1 > bx0 and by1 > by0
-            else None
+            self.vm.render(bx0, by0, bx1, by1) if bx1 > bx0 and by1 > by0 else None
         )
         cutout = dm.to_rgba_cutout(backdrop, backdrop_origin=(bx0, by0))
         qimg = _pil_rgba_to_qimage(cutout)
@@ -1937,49 +2136,69 @@ class EditorWindow(QMainWindow):
         self._refresh_masks_and_audit()
 
     def _populate_entities_table(self) -> None:
-        ents = self.vm.current_entities() if self.vm.document else {
+        ents = (
+            self.vm.current_entities()
+            if self.vm.document
+            else {
+                "npcs": [],
+                "portals": [],
+                "arrival": None,
+            }
+        )
+        grouped: dict[str, list[tuple[str, str, str, str, int, int]]] = {
             "npcs": [],
             "portals": [],
-            "arrival": None,
         }
-        rows_data: list[tuple[str, str, str, str, int, int]] = []
         if ents["arrival"] is not None:
-            a = ents["arrival"]
-            rows_data.append(
-                ("出生点", "默认落点", f"{a['sx']},{a['sy']}", "标准", a["px"], a["py"])
+            arrival = ents["arrival"]
+            grouped["portals"].append(
+                (
+                    "出生点",
+                    "默认落点",
+                    f"{arrival['sx']},{arrival['sy']}",
+                    "标准",
+                    arrival["px"],
+                    arrival["py"],
+                )
             )
-        for p in ents["portals"]:
-            rows_data.append(
+        for portal in ents["portals"]:
+            grouped["portals"].append(
                 (
                     "传送点",
-                    p["name"],
-                    f"{p['sx']},{p['sy']}",
+                    portal["name"],
+                    f"{portal['sx']},{portal['sy']}",
                     "跳转阵",
-                    p["px"],
-                    p["py"],
+                    portal["px"],
+                    portal["py"],
                 )
             )
-        for n in ents["npcs"]:
-            rows_data.append(
+        for npc in ents["npcs"]:
+            grouped["npcs"].append(
                 (
                     "NPC",
-                    n["name"],
-                    f"{n['sx']},{n['sy']}",
-                    "可行走" if n["walkable"] else "阻挡格",
-                    n["px"],
-                    n["py"],
+                    npc["name"],
+                    f"{npc['sx']},{npc['sy']}",
+                    "可通行" if npc["walkable"] else "阻挡格",
+                    npc["px"],
+                    npc["py"],
                 )
             )
-        self._entity_jump_targets = [(r[4], r[5]) for r in rows_data]
-        self.entity_table.setRowCount(len(rows_data))
-        for i, (kind, name, coord, status, _, _) in enumerate(rows_data):
-            for c, val in enumerate((kind, name, coord, status)):
-                it = QTableWidgetItem(val)
-                if kind == "传送点":
-                    it.setForeground(QColor(110, 232, 255))
-                elif status == "阻挡格":
-                    it.setForeground(QColor(255, 165, 120))
-                self.entity_table.setItem(i, c, it)
+
+        for key, rows in grouped.items():
+            table = self.entity_tables[key]
+            table.setRowCount(len(rows))
+            for row_index, (kind, name, coord, state, _px, _py) in enumerate(rows):
+                for column, value in enumerate((kind, name, coord, state)):
+                    item = QTableWidgetItem(value)
+                    if kind == "传送点":
+                        item.setForeground(QColor(25, 126, 150))
+                    elif state == "阻挡格":
+                        item.setForeground(QColor(195, 82, 55))
+                    table.setItem(row_index, column, item)
+
+        active_key = "npcs" if self.entity_tabs.currentIndex() == 0 else "portals"
+        self.entity_table = self.entity_tables[active_key]
+        self._entity_jump_targets = [(row[4], row[5]) for row in grouped[active_key]]
 
     def _jump_to_entity_row(self, row: int, _col: int) -> None:
         if 0 <= row < len(self._entity_jump_targets):
@@ -1990,7 +2209,9 @@ class EditorWindow(QMainWindow):
         if self.vm.document is None or not self._entity_jump_targets:
             return
         sel = self.entity_table.selectionModel().selectedRows()
-        row = sel[0].row() if sel else len(self._entity_jump_targets) - 1
+        if not sel:
+            return
+        row = sel[0].row()
         gx, gy = self._entity_jump_targets[row]
         ents = self.vm.current_entities()
         if ents["arrival"] is not None:

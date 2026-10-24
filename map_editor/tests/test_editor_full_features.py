@@ -226,6 +226,27 @@ class TestFullEditorWorkflowUndoAndGuards(unittest.TestCase):
             self.assertFalse(vm.dirty)
             vm.close_map()
 
+    def test_path_pen_is_committed_and_undone_as_one_operation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            map_path = create_map_file(Path(tmp) / "path.map", 640, 480)
+            vm = EditorViewModel(config=Config.load(Path(tmp) / "cfg.json"))
+            doc = vm.open_map_file(map_path)
+            self.assertEqual(doc.cell_at(40, 40), 0)
+
+            changed = vm.paint_cell_path(
+                [(40, 40), (120, 40), (120, 120)], value=1, radius=0
+            )
+            self.assertGreater(changed, 0)
+            self.assertEqual(doc.cell_at(40, 40), 1)
+            self.assertTrue(vm.can_undo)
+            self.assertEqual(vm.undo(), f"路径钢笔绘制 ({changed} 格)")
+            self.assertEqual(doc.cell_at(40, 40), 0)
+            self.assertFalse(vm.can_undo)
+            self.assertTrue(vm.can_redo)
+            self.assertEqual(vm.redo(), f"路径钢笔绘制 ({changed} 格)")
+            self.assertEqual(doc.cell_at(40, 40), 1)
+            vm.close_map()
+
     def test_full_edit_undo_redo_save_and_trailing_bytes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tdir = Path(tmp)
