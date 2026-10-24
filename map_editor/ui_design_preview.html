@@ -96,7 +96,7 @@ function renderContext(tool = 'walk', mode = 'brush') {
     if (mode === 'brush' || mode === 'eraser') html += '<span class="divider"></span><span class="micro">大小</span><input class="range" id="sizeRange" type="range" min="1" max="25"><input class="num" id="sizeNum" type="number" min="1" max="25"><span class="micro">格</span>';
     if (mode === 'line') html += '<span class="divider"></span><span class="micro">线宽</span><input class="range" id="sizeRange" type="range" min="1" max="25"><input class="num" id="sizeNum" type="number" min="1" max="25"><span class="micro">格</span>';
     if (mode === 'pen') html += '<select class="pen-select"><option>单格钢笔</option><option>路径钢笔 · 折线</option><option>路径钢笔 · 曲线</option></select><span class="micro">右键结束 · Esc 取消</span>';
-    if (mode === 'fill') html += '<span class="divider"></span><span class="micro">填充相邻区域；影响格数将在应用前提示</span>';
+    if (mode === 'fill') html += '<span class="divider"></span><span class="micro">点击连续同类区域填充 · Ctrl+Z 撤销</span>';
     if (mode === 'rect') html += '<span class="divider"></span><span class="micro">拖拽绘制矩形区域</span>';
     if (mode === 'eraser') html += '<span class="micro">擦除为普通可通行</span>';
   } else if (tool === 'browse') html = '<span class="context-label">浏览</span><button class="tiny">适配窗口</button><button class="tiny">100%</button><span class="micro">滚轮缩放 · 中键平移</span>';
