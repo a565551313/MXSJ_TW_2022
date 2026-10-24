@@ -7,3 +7,26 @@
 # 「runtime文件SHA256不匹配：BUILD.json」（docs/STATUS.md §3.80）。
 # 声明为 binary，检出与提交都按字节原样处理，不做任何换行/编码转换。
 script_editor/runtimes/** -text
+
+# 同理：pycdc 的 GPL 许可证与 catalog 的 jsonl 都被 SHA-256 钉死字节——
+# EngineIntegrityTests 把 licenses/recovery/GPL-3.0.txt 复制成 LICENSE.txt 后按
+# pycdc_engine.py 的 LICENSE_SHA256 核对；script_manual 证据链
+# （annotations/** 的 sources[].sha256）钉住 server/docs/catalog/*.jsonl。
+# Windows 版 Git 开 core.autocrlf 时 LF→CRLF 让这些钉子全部失配
+# （docs/analysis/windows_acceptance_20261024.md §5.2）。
+script_editor/licenses/** -text
+server/docs/catalog/*.jsonl -text
+
+# 同理：反编译工具链的证据输入/产出也被 SHA-256 钉死字节——
+# map_npc_reproduction.py 把 tools/decompiler/batch_decompile.py 的哈希写进
+# agent_e_reproduction.json；script_manual 证据链另钉住 output/** 下 6 个反编译
+# 产物与 work/ 下的 protocol_opcodes.json。同上一批一并处理（§5.2）。
+tools/decompiler/batch_decompile.py -text
+tools/decompiler/output/** -text
+work/dream-world-connect-login-map/artifacts/protocol_table/protocol_opcodes.json -text
+
+# 同理：batch_001 的 manifest 把 10 个管线输入钉成精确字节
+# （export_review_csv.py 的 source_files，见 server/docs/csv_checks/.gitattributes）；
+# 这些工具源码与证据 JSON 一并声明 -text，保跨平台字节稳定（§5.2）。
+server/tools/*.py -text
+tools/*.py -text

@@ -46,7 +46,7 @@ python3 tools/devkit/vendor_core.py --write    # 按真源重写副本
 
 `mx_common/` 是路径哈希 / `.dlg` 原生存储 / 输出路径保护 / 精灵格式常量的
 **唯一真源**；编辑器要「一个目录双击就能用」，所以运行时是复制而不是依赖。
-副本 = 4 行生成横幅 + 真源全文，按字节比对（LF/CRLF 差异也会被抓）；
+副本 = 4 行生成横幅 + 真源全文，行尾归一化后比对（CRLF/CR 按 LF 语义，签出行尾不算漂移）；
 `tools/devkit/tests/test_vendor_core.py` 在单元测试里跑 `--check`。
 
 ## 测试

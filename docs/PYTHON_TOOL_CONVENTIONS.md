@@ -42,7 +42,7 @@ PEP 8 + 模块化；GUI 只用 PySide6；每个工具自带「自检并启动」
 4. **拆分原则**：一个模块一个职责；单文件超过约 600 行、单个函数超过约 80 行就拆；GUI 回调里不写解析 / IO 逻辑，交给 `core` 的服务函数；魔数（偏移、密钥、结构常量）集中到 `core/constants.py` 并注明来源（反汇编地址或 `notes/` 文件）。
 5. **可测试**：`core` 函数接受 `Path` / `bytes` 参数，不隐式读全局路径或环境变量；`main(argv)` 返回 `int`，模块 import 时不产生副作用；每个 bug 修复都带一个能复现旧 bug 的测试（见 AGENTS §6「工作方式」）。
 6. **路径一律 `pathlib.Path`**，不手拼 `/`；文本文件读写**必须**显式 `encoding="utf-8"`（读用户可能用记事本改过的文件用 `utf-8-sig`）；CSV 写入加 `newline=""`。
-7. **多个工具共用的核心代码放 `mx_common/`，用生成式副本分发**（2026-10-16 加，UI 编辑器分析 P1-2 的落地）：同一份格式代码在两个编辑器里各存一份、靠人记得同步，已经导致 `sprite.py` 与资源编辑器实现分叉。现在真源在仓库根 `mx_common/`，`tools/devkit/vendor_core.py` 把它复制到各工具的 `core/` 下（副本 = 生成横幅 + 真源全文，字节比对，**勿手改**）：
+7. **多个工具共用的核心代码放 `mx_common/`，用生成式副本分发**（2026-10-16 加，UI 编辑器分析 P1-2 的落地）：同一份格式代码在两个编辑器里各存一份、靠人记得同步，已经导致 `sprite.py` 与资源编辑器实现分叉。现在真源在仓库根 `mx_common/`，`tools/devkit/vendor_core.py` 把它复制到各工具的 `core/` 下（副本 = 生成横幅 + 真源全文，行尾归一化后比对，**勿手改**）：
 
    ```bash
    python3 tools/devkit/vendor_core.py --check   # 0 报告；tests/test_vendor_core.py 会跑

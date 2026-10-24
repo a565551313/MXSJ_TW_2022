@@ -4,7 +4,8 @@
 为什么是复制：编辑器要能在一个只有 Python + PySide6 的目录里双击运行
 （``bootstrap.py`` 不 ``pip install`` 本仓库的任何包），见 ``mx_common/README.md``。
 本脚本把「多处副本」这件事变成**可校验的机械操作**：副本 = 生成横幅 + 真源全文，
-字节级比对，漂移即失败。
+行尾归一化后比对（CRLF/CR 一律按 LF 语义比较，签出行尾不算漂移），写入恒为 LF，
+漂移即失败。
 
 用法（仓库根目录）：
 
@@ -56,8 +57,13 @@ DESTINATIONS: dict[str, tuple[str, ...]] = {
 
 
 def load_text(path: Path) -> str:
-    """按字节读文本：`newline=""` 关掉行尾翻译，CRLF 副本会被判为漂移。"""
-    with open(path, encoding="utf-8", newline="") as handle:
+    """按通用行尾读文本：CRLF/CR/LF 一律归一成 ``\\n`` 再参与比较。
+
+    行尾由签出策略决定（Windows ``core.autocrlf=true`` 会把检出的文本
+    统一改成 CRLF），不是内容变更；按字节读会把 CRLF 检出误判成副本
+    漂移（docs/analysis/windows_acceptance_20261024.md §5.1）。
+    """
+    with open(path, encoding="utf-8") as handle:
         return handle.read()
 
 

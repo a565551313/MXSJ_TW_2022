@@ -1338,9 +1338,12 @@ def write_staging_csvs(analyses, out_dir, archive=None):
         'rules': ['zero-npcid records kept', 'duplicate records kept',
                   'no table merging', 'no Simplified/Traditional conversion'],
     }
-    (out / 'provenance.json').write_text(
-        json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True) + '\n',
-        encoding='utf-8')
+    # 显式写 LF 字节：write_text 在 Windows 会把 \n 翻成 \r\n，与提交版
+    # （Linux 生成的 LF）对不上，E staging 字节比对随之失败
+    # （docs/analysis/windows_acceptance_20261024.md §5.2）。
+    (out / 'provenance.json').write_bytes(
+        (json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True)
+         + '\n').encode('utf-8'))
     written.append('provenance.json')
     return written
 

@@ -1,3 +1,10 @@
 # Batch manifests pin exact bytes, including source text and E's CRLF CSVs.
 batch_001/** -text
 batch_001/maps_npcs/*.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# staging/** 是 batch_001 的字节来源（maps_npcs/* 由导出器原样复制，
+# provenance.json 的哈希进 manifest）；Windows 版 Git 开 core.autocrlf 时
+# LF→CRLF 会让复制结果与提交版对不上。根目录的 json 同批处理
+# （docs/analysis/windows_acceptance_20261024.md §5.2）。
+staging/** -text
+*.json -text
