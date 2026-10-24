@@ -459,6 +459,8 @@ class EditorViewModel:
                     "py": py,
                     "cell_value": cv,
                     "walkable": is_walkable(cv),
+                    "direction": n.direction,
+                    "shape": n.shape,
                 }
             )
         portals = []
@@ -470,6 +472,8 @@ class EditorViewModel:
                     "desc": p.desc,
                     "sx": p.sx,
                     "sy": p.sy,
+                    "jump_sx": p.jump_sx,
+                    "jump_sy": p.jump_sy,
                     "px": px,
                     "py": py,
                     "npc_id": p.npc_id,

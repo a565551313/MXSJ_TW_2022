@@ -312,16 +312,6 @@ QTableWidget#entityList {
     selection-color: #196d60;
 }
 QTableWidget#entityList::item { border: none; padding: 2px; background: transparent; }
-QFrame#entityRowCard {
-    background: #ffffff;
-    border: 1px solid transparent;
-    border-radius: 7px;
-}
-QFrame#entityRowCard[selected="true"] {
-    background: #eaf5f1;
-    border-color: #cde7dd;
-}
-QFrame#entityRowCard:hover { background: #f5f9f8; border-color: #e7efec; }
 QSplitter::handle { background: #e1e9ec; width: 5px; }
 QScrollArea { border: none; background: #ffffff; }
 QLabel#sectionTitle {
@@ -1241,58 +1231,6 @@ class _MapListCard(QFrame):
         super().mousePressEvent(event)
 
 
-class _EntityListCard(QFrame):
-    """Compact entity row styled like a selectable card in the design preview."""
-
-    clicked = Signal()
-    doubleClicked = Signal()
-
-    def __init__(self, kind: str, name: str, coord: str, state: str) -> None:
-        super().__init__()
-        self.setObjectName("entityRowCard")
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(8, 4, 10, 4)
-        layout.setSpacing(8)
-        avatar = QLabel(kind[:1])
-        avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        avatar.setFixedSize(26, 26)
-        avatar.setStyleSheet(
-            "background:#f3e6c9;color:#8b6c3d;border-radius:13px;"
-            "font-size:11px;font-weight:700;"
-        )
-        text_column = QVBoxLayout()
-        text_column.setContentsMargins(0, 0, 0, 0)
-        text_column.setSpacing(1)
-        name_label = QLabel(name or "未命名实体")
-        name_label.setStyleSheet("font-size:11px;font-weight:650;color:#334b51;")
-        meta_label = QLabel(f"{kind} · {state}")
-        meta_label.setStyleSheet("font-size:9px;color:#819195;")
-        text_column.addWidget(name_label)
-        text_column.addWidget(meta_label)
-        coord_label = QLabel(coord)
-        coord_label.setStyleSheet("font-size:10px;color:#829397;")
-        layout.addWidget(avatar)
-        layout.addLayout(text_column, 1)
-        layout.addWidget(coord_label)
-        for label in (avatar, name_label, meta_label, coord_label):
-            label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-
-    def mousePressEvent(self, event) -> None:
-        if event.button() == Qt.MouseButton.LeftButton:
-            self.clicked.emit()
-            event.accept()
-            return
-        super().mousePressEvent(event)
-
-    def mouseDoubleClickEvent(self, event) -> None:
-        if event.button() == Qt.MouseButton.LeftButton:
-            self.doubleClicked.emit()
-            event.accept()
-            return
-        super().mouseDoubleClickEvent(event)
-
-
 class NewMapDialog(QDialog):
     """Dialog for creating a blank ``.map`` or compiling one from a PNG/JPEG image."""
 
@@ -1447,27 +1385,45 @@ class EditorWindow(QMainWindow):
         self.entity_tabs = QTabWidget()
         self.entity_tabs.setMinimumHeight(150)
         self.entity_tables: dict[str, QTableWidget] = {}
+        # 底部实体列表为固定表头的文字表格（表头常驻可见）：
+        # NPC 七列（编号/NPC/模型ID/朝向/服务端坐标/像素坐标/状态），
+        # 传送点五列（编号/传送点/服务端坐标/跳转坐标/描述）。
+        # 内容列定宽，末列（状态/描述）吸收剩余空间。
+        self._entity_headers: dict[str, list[str]] = {
+            "npcs": ["编号", "NPC", "模型ID", "朝向", "服务端坐标", "像素坐标", "状态"],
+            "portals": ["编号", "传送点", "服务端坐标", "跳转坐标", "描述"],
+        }
+        self._entity_column_widths: dict[str, list[int]] = {
+            "npcs": [64, 180, 110, 56, 104, 104, 90],
+            "portals": [64, 190, 104, 104, 120],
+        }
+        # 名称列（NPC/传送点）长短不一，由其吸收剩余宽度；
+        # 编号、坐标等定宽列保持稳定，避免拖动 splitter 时文字被截断。
+        self._entity_stretch_columns: dict[str, list[int]] = {
+            "npcs": [1],
+            "portals": [1, 4],
+        }
         for tab_name, key in (("NPC", "npcs"), ("传送点", "portals")):
             page = QWidget()
             page_lay = QVBoxLayout(page)
             page_lay.setContentsMargins(5, 4, 5, 4)
-            table = QTableWidget(0, 4)
+            table = QTableWidget(0, len(self._entity_headers[key]))
             table.setObjectName("entityList")
-            table.setHorizontalHeaderLabels(["类型", "名称", "坐标", "状态"])
-            table.horizontalHeader().hide()
+            table.setHorizontalHeaderLabels(self._entity_headers[key])
             table.verticalHeader().hide()
             table.setShowGrid(False)
             table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
             table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
             table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
             table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-            table.horizontalHeader().setSectionResizeMode(
-                0, QHeaderView.ResizeMode.Stretch
-            )
-            for column in (1, 2, 3):
-                table.setColumnHidden(column, True)
             table.cellDoubleClicked.connect(self._jump_to_entity_row)
             table.itemSelectionChanged.connect(self._on_entity_selected)
+            for column, width in enumerate(self._entity_column_widths[key]):
+                table.setColumnWidth(column, width)
+            for column in self._entity_stretch_columns[key]:
+                table.horizontalHeader().setSectionResizeMode(
+                    column, QHeaderView.ResizeMode.Stretch
+                )
             page_lay.addWidget(table)
             self.entity_tables[key] = table
             self.entity_tabs.addTab(page, tab_name)
@@ -1489,6 +1445,7 @@ class EditorWindow(QMainWindow):
             entity_tools, Qt.Corner.TopRightCorner
         )
         self.entity_table = self.entity_tables["npcs"]
+        self._entity_active_key = "npcs"
         self.entity_tabs.currentChanged.connect(self._on_entity_tab_changed)
         center.addWidget(self.entity_tabs)
         self._center_splitter = center
@@ -1636,6 +1593,7 @@ class EditorWindow(QMainWindow):
     def _on_entity_tab_changed(self, index: int) -> None:
         key = "npcs" if index == 0 else "portals"
         self.entity_table = self.entity_tables[key]
+        self._entity_active_key = key
         self.entity_search.clear()
         self._populate_entities_table()
         self.entity_table.clearSelection()
@@ -1669,33 +1627,23 @@ class EditorWindow(QMainWindow):
     def _on_entity_selected(self) -> None:
         selected = self.entity_table.selectionModel().selectedRows()
         selected_row = selected[0].row() if selected else None
-        for row_index in range(self.entity_table.rowCount()):
-            card = self.entity_table.cellWidget(row_index, 0)
-            if isinstance(card, _EntityListCard):
-                card.setProperty("selected", row_index == selected_row)
-                card.style().unpolish(card)
-                card.style().polish(card)
         if selected_row is None:
+            self.selected_object_lbl.setText("从下方 NPC 或传送点列表选择对象")
             return
-        row = selected_row
-        item = self.entity_table.item(row, 1)
-        if item is not None:
-            kind = self.entity_table.item(row, 0).text()
-            coord = self.entity_table.item(row, 2).text()
-            state = self.entity_table.item(row, 3).text()
-            world = (
-                self._entity_jump_targets[row]
-                if row < len(self._entity_jump_targets)
-                else (0, 0)
+        headers = self._entity_headers[self._entity_active_key]
+        pairs = []
+        for column, header in enumerate(headers):
+            item = self.entity_table.item(selected_row, column)
+            pairs.append(f"{header} {item.text() if item is not None else '—'}")
+        # 每行三组「表头 值」换行，检查器标签完整镜像当前选中行
+        self.selected_object_lbl.setText(
+            "\n".join(
+                " · ".join(pairs[index : index + 3])
+                for index in range(0, len(pairs), 3)
             )
-            self.selected_object_lbl.setText(
-                f"{kind} · {item.text()}\n"
-                f"服务端坐标：{coord}\n"
-                f"像素坐标：{world[0]}, {world[1]}\n"
-                f"状态：{state}"
-            )
-        if row < len(self._entity_jump_targets):
-            self._jump_to_entity_row(row, 0)
+        )
+        if selected_row < len(self._entity_jump_targets):
+            self._jump_to_entity_row(selected_row, 0)
 
     def _build_menus_and_toolbar(self) -> None:
         file_menu = self.menuBar().addMenu("文件(&F)")
@@ -2480,7 +2428,8 @@ class EditorWindow(QMainWindow):
                 "arrival": None,
             }
         )
-        grouped: dict[str, list[tuple[str, str, str, str, int, int]]] = {
+        # 每行 = 各列显示值（数量随标签页而定）+ 末尾两元素（跳转目标 px, py）
+        grouped: dict[str, list[tuple[str, ...]]] = {
             "npcs": [],
             "portals": [],
         }
@@ -2488,10 +2437,11 @@ class EditorWindow(QMainWindow):
             arrival = ents["arrival"]
             grouped["portals"].append(
                 (
-                    "出生点",
+                    "—",
                     "默认落点",
                     f"{arrival['sx']},{arrival['sy']}",
-                    "标准",
+                    "—",
+                    "出生点",
                     arrival["px"],
                     arrival["py"],
                 )
@@ -2499,10 +2449,11 @@ class EditorWindow(QMainWindow):
         for portal in ents["portals"]:
             grouped["portals"].append(
                 (
-                    "传送点",
+                    str(portal["npc_id"]) if portal["npc_id"] is not None else "—",
                     portal["name"],
                     f"{portal['sx']},{portal['sy']}",
-                    "跳转阵",
+                    f"{portal['jump_sx']},{portal['jump_sy']}",
+                    portal["desc"] or "—",
                     portal["px"],
                     portal["py"],
                 )
@@ -2510,43 +2461,43 @@ class EditorWindow(QMainWindow):
         for npc in ents["npcs"]:
             grouped["npcs"].append(
                 (
-                    "NPC",
+                    str(npc["npc_id"]),
                     npc["name"],
+                    npc["shape"] or "—",
+                    str(npc["direction"]),
                     f"{npc['sx']},{npc['sy']}",
+                    f"{npc['px']},{npc['py']}",
                     "可通行" if npc["walkable"] else "阻挡格",
                     npc["px"],
                     npc["py"],
                 )
             )
 
+        # 行元组 = 各列显示值 + 末尾两元素（跳转目标 px, py，仅内部使用）
         for key, rows in grouped.items():
             table = self.entity_tables[key]
+            headers = self._entity_headers[key]
             table.setRowCount(len(rows))
-            for row_index, (kind, name, coord, state, _px, _py) in enumerate(rows):
-                for column, value in enumerate((kind, name, coord, state)):
+            for row_index, row in enumerate(rows):
+                for column, value in enumerate(row[:-2]):
                     item = QTableWidgetItem(value)
-                    if kind == "传送点":
+                    if key == "portals" and row[1] != "默认落点":
                         item.setForeground(QColor(25, 126, 150))
-                    elif state == "阻挡格":
+                    elif (
+                        key == "npcs"
+                        and headers[column] == "状态"
+                        and value == "阻挡格"
+                    ):
                         item.setForeground(QColor(195, 82, 55))
                     table.setItem(row_index, column, item)
-                card = _EntityListCard(kind, name, coord, state)
-                card.clicked.connect(
-                    lambda target=row_index, current=table: current.selectRow(target)
-                )
-                card.doubleClicked.connect(
-                    lambda target=row_index: self._jump_to_entity_row(target, 0)
-                )
-                table.setCellWidget(row_index, 0, card)
-                table.setRowHeight(row_index, 42)
+                table.setRowHeight(row_index, 28)
 
         self.entity_tabs.setTabText(0, f"NPC  {len(grouped['npcs']):,}")
         self.entity_tabs.setTabText(1, f"传送点  {len(grouped['portals']):,}")
         active_key = "npcs" if self.entity_tabs.currentIndex() == 0 else "portals"
         self.entity_table = self.entity_tables[active_key]
-        self._entity_jump_targets = [(row[4], row[5]) for row in grouped[active_key]]
-        for row_index in range(self.entity_table.rowCount()):
-            self.entity_table.setRowHeight(row_index, 42)
+        self._entity_active_key = active_key
+        self._entity_jump_targets = [(row[-2], row[-1]) for row in grouped[active_key]]
         self._filter_entities_table(self.entity_search.text())
 
     def _jump_to_entity_row(self, row: int, _col: int) -> None:

@@ -169,6 +169,92 @@ class TestEditorGuiOffscreen(unittest.TestCase):
             win.deleteLater()
             app.processEvents()
 
+    def test_entity_tables_use_fixed_headers(self) -> None:
+        """底部 NPC/传送点列表为固定表头文字表格。
+
+        NPC 七列：编号/NPC/模型ID/朝向/服务端坐标/像素坐标/状态；
+        传送点五列：编号/传送点/服务端坐标/跳转坐标/描述。
+        行内为纯文字单元格（不再使用卡片 cellWidget）。
+        """
+        global _APP_KEEPALIVE
+        from map_editor.client.config import Config
+        from map_editor.ui.viewmodel import EditorViewModel
+        from map_editor.ui.widgets import EditorWindow
+
+        app = QApplication.instance() or QApplication([])
+        _APP_KEEPALIVE = app
+
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = Config.load(Path(tmp) / "gui_cfg.json")
+            cfg.remember_root(SAMPLES)
+            vm = EditorViewModel(config=cfg)
+            win = EditorWindow(vm)
+            win.resize(1540, 940)
+            win.show()
+            win._open_root(str(SAMPLES))
+            app.processEvents()
+
+            npc_table = win.entity_tables["npcs"]
+            portal_table = win.entity_tables["portals"]
+            self.assertEqual(npc_table.columnCount(), 7)
+            self.assertEqual(
+                [npc_table.horizontalHeaderItem(c).text() for c in range(7)],
+                ["编号", "NPC", "模型ID", "朝向", "服务端坐标", "像素坐标", "状态"],
+            )
+            self.assertEqual(portal_table.columnCount(), 5)
+            self.assertEqual(
+                [portal_table.horizontalHeaderItem(c).text() for c in range(5)],
+                ["编号", "传送点", "服务端坐标", "跳转坐标", "描述"],
+            )
+            # 表头常驻可见（回归：旧实现把表头隐藏、后 3 列 setColumnHidden）
+            self.assertFalse(npc_table.horizontalHeader().isHidden())
+            self.assertFalse(portal_table.horizontalHeader().isHidden())
+            self.assertFalse(npc_table.isColumnHidden(2))  # 模型ID
+            self.assertFalse(npc_table.isColumnHidden(6))  # 状态
+
+            # 选中含 NPC 的样例地图 1034，校验行数据形态
+            target = next(
+                (r for r in win._filtered_rows if r.key == "1034"), None
+            )
+            if target is None:
+                self.skipTest("样例目录中无地图 1034")
+            win.table.selectRow(win._filtered_rows.index(target))
+            app.processEvents()
+
+            self.assertEqual(npc_table.rowCount(), 1)
+            # 传送点 = 2 个传送点 + 1 行出生点（默认落点，置顶）
+            self.assertEqual(portal_table.rowCount(), 3)
+            self.assertEqual(portal_table.item(0, 1).text(), "默认落点")
+            self.assertEqual(portal_table.item(0, 4).text(), "出生点")
+            self.assertEqual(npc_table.item(0, 0).text(), "4427")  # npc_id
+            self.assertEqual(npc_table.item(0, 1).text(), "組隊集結人")
+            self.assertEqual(npc_table.item(0, 2).text(), "zdjjr")  # 模型ID=shape
+            self.assertEqual(npc_table.item(0, 3).text(), "0")  # 朝向 dir
+            self.assertRegex(
+                npc_table.item(0, 4).text(), r"^\d+,\d+$"
+            )  # 服务端坐标
+            self.assertRegex(
+                npc_table.item(0, 5).text(), r"^\d+,\d+$"
+            )  # 像素坐标
+            self.assertIn(npc_table.item(0, 6).text(), ("可通行", "阻挡格"))
+            # 纯文字行：首列不再是卡片 cellWidget
+            self.assertIsNone(npc_table.cellWidget(0, 0))
+
+            # 传送点行：编号/名称/服务端/跳转/描述 五列均有值（无 npc_id 显示 —）
+            for row in range(portal_table.rowCount()):
+                for column in range(5):
+                    self.assertTrue(portal_table.item(row, column).text())
+
+            # 选中行后检查器标签镜像整行（含表头）
+            npc_table.selectRow(0)
+            app.processEvents()
+            self.assertIn("编号 4427", win.selected_object_lbl.text())
+            self.assertIn("模型ID zdjjr", win.selected_object_lbl.text())
+
+            win.close()
+            win.deleteLater()
+            app.processEvents()
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
