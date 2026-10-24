@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFileDialog,
     QFormLayout,
+    QFrame,
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
@@ -46,6 +47,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QSlider,
     QSpinBox,
     QSplitter,
@@ -122,7 +124,14 @@ QToolBar {
     border: none;
     border-bottom: 1px solid #dce5e9;
     spacing: 5px;
-    padding: 8px 10px;
+    padding: 5px 12px;
+}
+QToolBar#mainToolbar { min-height: 52px; }
+QToolBar#contextToolbar {
+    min-height: 42px;
+    background: #f8faf9;
+    padding: 4px 14px;
+    spacing: 7px;
 }
 QToolButton {
     background: #f4f7f8;
@@ -134,10 +143,16 @@ QToolButton {
 }
 QToolButton:hover { background: #eaf4f2; border-color: #a9d3ca; }
 QToolButton:checked {
-    background: #137c70;
-    color: #ffffff;
-    border-color: #137c70;
-    font-weight: 600;
+    background: #e5f3ef;
+    color: #126b60;
+    border-color: #cce7df;
+    font-weight: 700;
+}
+QPushButton:checked {
+    background: #e5f3ef;
+    color: #126b60;
+    border-color: #a9d3ca;
+    font-weight: 650;
 }
 QPushButton {
     background: #ffffff;
@@ -224,6 +239,89 @@ QCheckBox { spacing: 7px; color: #465a64; padding: 3px; }
 QCheckBox::indicator { width: 16px; height: 16px; }
 QLabel { color: #3c505a; }
 QTableWidget::item { padding: 4px 5px; }
+QWidget#mapBrowserPanel, QScrollArea#inspectorScroll {
+    background: #ffffff;
+    border: 1px solid #dce6e5;
+    border-radius: 11px;
+}
+QWidget#inspectorPage { background: #ffffff; }
+QTableWidget#mapList {
+    background: transparent;
+    border: none;
+    outline: none;
+}
+QTableWidget#mapList::item { border: none; padding: 3px 2px; background: transparent; }
+QFrame#mapRowCard {
+    background: #ffffff;
+    border: 1px solid transparent;
+    border-radius: 9px;
+}
+QFrame#mapRowCard[selected="true"] {
+    background: #e9f5f1;
+    border-color: #cce7de;
+}
+QFrame#mapRowCard:hover { background: #f5f9f8; border-color: #e7efec; }
+QGroupBox#inspectorCard {
+    background: #ffffff;
+    border: none;
+    border-top: 1px solid #edf1f0;
+    border-radius: 0;
+    margin-top: 8px;
+    padding: 13px 3px 5px;
+    font-size: 11px;
+    color: #869598;
+}
+QGroupBox#inspectorCard::title {
+    left: 2px;
+    padding: 0 4px;
+    background: #ffffff;
+}
+QLabel#inspectorObject {
+    background: #f5f8f7;
+    border: 1px solid #e7eeec;
+    border-radius: 9px;
+    padding: 10px;
+    color: #334b51;
+}
+QLabel#inspectorMap { color: #71858a; font-size: 11px; }
+QPushButton#quietButton { padding: 4px 8px; min-height: 16px; color: #5d7377; }
+QPushButton#safeSaveButton {
+    background: #167c70;
+    color: #ffffff;
+    border-color: #167c70;
+    font-weight: 700;
+}
+QPushButton#safeSaveButton:hover { background: #126b60; }
+QLabel#mapThumbnail {
+    border-radius: 7px;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+}
+QLabel#mapCount {
+    color: #7e9093;
+    background: #f2f6f5;
+    border-radius: 9px;
+    padding: 3px 7px;
+}
+QTableWidget#entityList {
+    background: #ffffff;
+    border: none;
+    gridline-color: transparent;
+    selection-background-color: #e9f5f1;
+    selection-color: #196d60;
+}
+QTableWidget#entityList::item { border: none; padding: 2px; background: transparent; }
+QFrame#entityRowCard {
+    background: #ffffff;
+    border: 1px solid transparent;
+    border-radius: 7px;
+}
+QFrame#entityRowCard[selected="true"] {
+    background: #eaf5f1;
+    border-color: #cde7dd;
+}
+QFrame#entityRowCard:hover { background: #f5f9f8; border-color: #e7efec; }
 QSplitter::handle { background: #e1e9ec; width: 5px; }
 QScrollArea { border: none; background: #ffffff; }
 QLabel#sectionTitle {
@@ -1080,6 +1178,121 @@ class MapCanvas(QWidget):
             self.vm.simulate_path(self.vm.state.path_start, self.vm.state.path_goal)
 
 
+class _MapListCard(QFrame):
+    """Compact selectable map card matching the browser preview layout."""
+
+    clicked = Signal()
+
+    def __init__(self, row: MapRow, accent: tuple[str, str]) -> None:
+        super().__init__()
+        self.setObjectName("mapRowCard")
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(8, 7, 9, 7)
+        layout.setSpacing(9)
+
+        thumbnail = QLabel("地")
+        thumbnail.setObjectName("mapThumbnail")
+        thumbnail.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        thumbnail.setFixedSize(42, 42)
+        thumbnail.setStyleSheet(
+            "background: qlineargradient(x1:0,y1:0,x2:1,y2:1,"
+            f"stop:0 {accent[0]}, stop:1 {accent[1]});"
+        )
+        layout.addWidget(thumbnail)
+
+        text_column = QVBoxLayout()
+        text_column.setContentsMargins(0, 1, 0, 1)
+        text_column.setSpacing(3)
+        name = QLabel(row.name or "未命名地图")
+        name.setStyleSheet("font-weight:650;color:#334b51;")
+        name.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
+        meta = QLabel(
+            f"{row.key}  ·  "
+            + (
+                "文件损坏"
+                if row.broken
+                else f"{row.width} × {row.height} px  ·  {row.sectors} 区"
+            )
+        )
+        meta.setStyleSheet("font-size:10px;color:#829397;")
+        text_column.addWidget(name)
+        text_column.addWidget(meta)
+        layout.addLayout(text_column, 1)
+
+        badge = QLabel("损坏" if row.broken else f"{row.records} 遮罩")
+        badge_style = (
+            "font-size:9px;color:#b45c51;background:#fbefec;"
+            if row.broken
+            else "font-size:9px;color:#27826e;background:#e1f1e9;"
+        )
+        badge.setStyleSheet(badge_style + "border-radius:5px;padding:3px 5px;")
+        layout.addWidget(badge, 0, Qt.AlignmentFlag.AlignVCenter)
+        for label in (thumbnail, name, meta, badge):
+            label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        if row.broken:
+            self.setToolTip(row.error)
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+
+class _EntityListCard(QFrame):
+    """Compact entity row styled like a selectable card in the design preview."""
+
+    clicked = Signal()
+    doubleClicked = Signal()
+
+    def __init__(self, kind: str, name: str, coord: str, state: str) -> None:
+        super().__init__()
+        self.setObjectName("entityRowCard")
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(8, 4, 10, 4)
+        layout.setSpacing(8)
+        avatar = QLabel(kind[:1])
+        avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        avatar.setFixedSize(26, 26)
+        avatar.setStyleSheet(
+            "background:#f3e6c9;color:#8b6c3d;border-radius:13px;"
+            "font-size:11px;font-weight:700;"
+        )
+        text_column = QVBoxLayout()
+        text_column.setContentsMargins(0, 0, 0, 0)
+        text_column.setSpacing(1)
+        name_label = QLabel(name or "未命名实体")
+        name_label.setStyleSheet("font-size:11px;font-weight:650;color:#334b51;")
+        meta_label = QLabel(f"{kind} · {state}")
+        meta_label.setStyleSheet("font-size:9px;color:#819195;")
+        text_column.addWidget(name_label)
+        text_column.addWidget(meta_label)
+        coord_label = QLabel(coord)
+        coord_label.setStyleSheet("font-size:10px;color:#829397;")
+        layout.addWidget(avatar)
+        layout.addLayout(text_column, 1)
+        layout.addWidget(coord_label)
+        for label in (avatar, name_label, meta_label, coord_label):
+            label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseDoubleClickEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.doubleClicked.emit()
+            event.accept()
+            return
+        super().mouseDoubleClickEvent(event)
+
+
 class NewMapDialog(QDialog):
     """Dialog for creating a blank ``.map`` or compiling one from a PNG/JPEG image."""
 
@@ -1183,83 +1396,109 @@ class EditorWindow(QMainWindow):
     def _build_ui(self) -> None:
         workspace = QSplitter(Qt.Orientation.Horizontal)
         workspace.setChildrenCollapsible(False)
+        workspace.setHandleWidth(8)
 
         # Map browser: intentionally limited to search and map selection.
         left = QWidget()
-        left.setMinimumWidth(245)
-        left.setMaximumWidth(390)
+        left.setObjectName("mapBrowserPanel")
+        left.setMinimumWidth(225)
+        left.setMaximumWidth(330)
         left_lay = QVBoxLayout(left)
-        left_lay.setContentsMargins(10, 10, 8, 10)
+        left_lay.setContentsMargins(10, 9, 8, 9)
+        title_row = QHBoxLayout()
         title = QLabel("地图")
         title.setObjectName("sectionTitle")
-        left_lay.addWidget(title)
+        self.map_count_lbl = QLabel("0")
+        self.map_count_lbl.setObjectName("mapCount")
+        title_row.addWidget(title)
+        title_row.addStretch(1)
+        title_row.addWidget(self.map_count_lbl)
+        left_lay.addLayout(title_row)
         self.search_edit = QLineEdit()
         self.search_edit.setPlaceholderText("搜索地图编号或名称…")
         self.search_edit.setClearButtonEnabled(True)
         self.search_edit.textChanged.connect(self._populate_map_table)
         left_lay.addWidget(self.search_edit)
-        self.table = QTableWidget(0, 5)
-        self.table.setHorizontalHeaderLabels(["编号", "名称", "尺寸", "扇区", "遮罩"])
+        self.table = QTableWidget(0, 1)
+        self.table.setObjectName("mapList")
+        self.table.horizontalHeader().hide()
+        self.table.verticalHeader().hide()
+        self.table.setShowGrid(False)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.table.setAlternatingRowColors(True)
-        self.table.verticalHeader().setVisible(False)
-        hdr = self.table.horizontalHeader()
-        hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        hdr.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        for column in (2, 3, 4):
-            hdr.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
-        self.table.itemSelectionChanged.connect(self._on_row_selected)
+        self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.table.itemSelectionChanged.connect(self._on_map_table_selection_changed)
         left_lay.addWidget(self.table, 1)
 
         # Canvas and the frequently-used entity lists share an adjustable split.
         center = QSplitter(Qt.Orientation.Vertical)
         center.setChildrenCollapsible(False)
+        center.setHandleWidth(7)
         center.addWidget(self.canvas)
         self.entity_tabs = QTabWidget()
-        self.entity_tabs.setMinimumHeight(135)
+        self.entity_tabs.setMinimumHeight(150)
         self.entity_tables: dict[str, QTableWidget] = {}
-        for tab_name, key in (("NPC", "npcs"), ("传送点 / 出生点", "portals")):
+        for tab_name, key in (("NPC", "npcs"), ("传送点", "portals")):
             page = QWidget()
             page_lay = QVBoxLayout(page)
-            page_lay.setContentsMargins(6, 6, 6, 6)
+            page_lay.setContentsMargins(5, 4, 5, 4)
             table = QTableWidget(0, 4)
-            table.setHorizontalHeaderLabels(["类型", "名称", "服务端坐标", "状态"])
+            table.setObjectName("entityList")
+            table.setHorizontalHeaderLabels(["类型", "名称", "坐标", "状态"])
+            table.horizontalHeader().hide()
+            table.verticalHeader().hide()
+            table.setShowGrid(False)
             table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
             table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
             table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-            table.verticalHeader().setVisible(False)
+            table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
             table.horizontalHeader().setSectionResizeMode(
-                0, QHeaderView.ResizeMode.ResizeToContents
+                0, QHeaderView.ResizeMode.Stretch
             )
-            table.horizontalHeader().setSectionResizeMode(
-                1, QHeaderView.ResizeMode.Stretch
-            )
-            table.horizontalHeader().setSectionResizeMode(
-                2, QHeaderView.ResizeMode.ResizeToContents
-            )
-            table.horizontalHeader().setSectionResizeMode(
-                3, QHeaderView.ResizeMode.ResizeToContents
-            )
+            for column in (1, 2, 3):
+                table.setColumnHidden(column, True)
             table.cellDoubleClicked.connect(self._jump_to_entity_row)
             table.itemSelectionChanged.connect(self._on_entity_selected)
             page_lay.addWidget(table)
             self.entity_tables[key] = table
             self.entity_tabs.addTab(page, tab_name)
+        entity_tools = QWidget()
+        entity_tools_lay = QHBoxLayout(entity_tools)
+        entity_tools_lay.setContentsMargins(4, 2, 6, 2)
+        entity_tools_lay.setSpacing(6)
+        self.entity_search = QLineEdit()
+        self.entity_search.setPlaceholderText("搜索名称…")
+        self.entity_search.setClearButtonEnabled(True)
+        self.entity_search.setFixedWidth(160)
+        self.entity_search.textChanged.connect(self._filter_entities_table)
+        entity_tools_lay.addWidget(self.entity_search)
+        self.entity_collapse_btn = QPushButton("收起")
+        self.entity_collapse_btn.setObjectName("quietButton")
+        self.entity_collapse_btn.clicked.connect(self._toggle_entity_panel)
+        entity_tools_lay.addWidget(self.entity_collapse_btn)
+        self.entity_tabs.setCornerWidget(
+            entity_tools, Qt.Corner.TopRightCorner
+        )
         self.entity_table = self.entity_tables["npcs"]
         self.entity_tabs.currentChanged.connect(self._on_entity_tab_changed)
         center.addWidget(self.entity_tabs)
+        self._center_splitter = center
+        self._entity_panel_collapsed = False
         center.setStretchFactor(0, 1)
         center.setStretchFactor(1, 0)
         center.setSizes([650, 210])
 
         # Right-hand inspector: map/object context, display layers and safe save.
         right_scroll = QScrollArea()
+        right_scroll.setObjectName("inspectorScroll")
         right_scroll.setWidgetResizable(True)
-        right_scroll.setMinimumWidth(270)
-        right_scroll.setMaximumWidth(390)
+        right_scroll.setMinimumWidth(255)
+        right_scroll.setMaximumWidth(340)
         right_page = QWidget()
+        right_page.setObjectName("inspectorPage")
         right_lay = QVBoxLayout(right_page)
         right_lay.setContentsMargins(10, 10, 10, 10)
         right_lay.setSpacing(10)
@@ -1267,26 +1506,31 @@ class EditorWindow(QMainWindow):
         inspector_title.setObjectName("sectionTitle")
         right_lay.addWidget(inspector_title)
 
-        map_box = QGroupBox("当前地图")
-        map_lay = QVBoxLayout(map_box)
-        self.map_info_lbl = QLabel("尚未打开地图")
-        self.map_info_lbl.setWordWrap(True)
-        map_lay.addWidget(self.map_info_lbl)
-        safe_save_btn = QPushButton("另存为副本…")
-        safe_save_btn.setToolTip("保留客户端原始地图，另存一份可编辑副本")
-        safe_save_btn.clicked.connect(self._save_map_as_dialog)
-        map_lay.addWidget(safe_save_btn)
-        right_lay.addWidget(map_box)
-
         object_box = QGroupBox("选中对象")
+        object_box.setObjectName("inspectorCard")
         object_lay = QVBoxLayout(object_box)
         self.selected_object_lbl = QLabel("从下方 NPC 或传送点列表选择对象")
+        self.selected_object_lbl.setObjectName("inspectorObject")
         self.selected_object_lbl.setWordWrap(True)
         object_lay.addWidget(self.selected_object_lbl)
         path_btn = QPushButton("从出生点模拟寻路到所选对象")
         path_btn.clicked.connect(self._path_to_selected_entity)
         object_lay.addWidget(path_btn)
         right_lay.addWidget(object_box)
+
+        map_box = QGroupBox("地图信息")
+        map_box.setObjectName("inspectorCard")
+        map_lay = QVBoxLayout(map_box)
+        self.map_info_lbl = QLabel("尚未打开地图")
+        self.map_info_lbl.setObjectName("inspectorMap")
+        self.map_info_lbl.setWordWrap(True)
+        map_lay.addWidget(self.map_info_lbl)
+        safe_save_btn = QPushButton("另存为副本…")
+        safe_save_btn.setObjectName("safeSaveButton")
+        safe_save_btn.setToolTip("保留客户端原始地图，另存一份可编辑副本")
+        safe_save_btn.clicked.connect(self._save_map_as_dialog)
+        map_lay.addWidget(safe_save_btn)
+        right_lay.addWidget(map_box)
 
         layers_box = QGroupBox("常用图层")
         layers_lay = QVBoxLayout(layers_box)
@@ -1305,7 +1549,7 @@ class EditorWindow(QMainWindow):
             layers_lay.addWidget(check)
         right_lay.addWidget(layers_box)
 
-        advanced_box = QGroupBox("高级图层与光标信息（展开）")
+        advanced_box = QGroupBox("高级显示与工具（展开）")
         advanced_box.setCheckable(True)
         advanced_box.setChecked(False)
         advanced_lay = QVBoxLayout(advanced_box)
@@ -1359,7 +1603,7 @@ class EditorWindow(QMainWindow):
             button.clicked.connect(handler)
             mask_actions.addWidget(button)
         masks_lay.addLayout(mask_actions)
-        right_lay.addWidget(masks_box)
+        advanced_content_lay.addWidget(masks_box)
 
         audit_box = QGroupBox("数据审计")
         audit_lay = QVBoxLayout(audit_box)
@@ -1370,7 +1614,7 @@ class EditorWindow(QMainWindow):
         self.audit_text.setReadOnly(True)
         self.audit_text.setMaximumHeight(130)
         audit_lay.addWidget(self.audit_text)
-        right_lay.addWidget(audit_box)
+        advanced_content_lay.addWidget(audit_box)
         right_lay.addStretch(1)
         right_scroll.setWidget(right_page)
 
@@ -1380,21 +1624,54 @@ class EditorWindow(QMainWindow):
         workspace.setStretchFactor(0, 0)
         workspace.setStretchFactor(1, 1)
         workspace.setStretchFactor(2, 0)
-        workspace.setSizes([290, 900, 315])
+        workspace.setSizes([252, 930, 286])
         self.setCentralWidget(workspace)
 
     def _on_entity_tab_changed(self, index: int) -> None:
         key = "npcs" if index == 0 else "portals"
         self.entity_table = self.entity_tables[key]
+        self.entity_search.clear()
         self._populate_entities_table()
         self.entity_table.clearSelection()
         self.selected_object_lbl.setText("从下方 NPC 或传送点列表选择对象")
 
+    def _filter_entities_table(self, text: str) -> None:
+        needle = text.strip().casefold()
+        for row in range(self.entity_table.rowCount()):
+            item = self.entity_table.item(row, 1)
+            self.entity_table.setRowHidden(
+                row, bool(needle and item and needle not in item.text().casefold())
+            )
+
+    def _toggle_entity_panel(self) -> None:
+        self._entity_panel_collapsed = not self._entity_panel_collapsed
+        if self._entity_panel_collapsed:
+            self.entity_tabs.setMinimumHeight(42)
+            self.entity_tabs.setMaximumHeight(48)
+            self._center_splitter.setSizes(
+                [max(1, self._center_splitter.height() - 48), 48]
+            )
+            self.entity_collapse_btn.setText("展开")
+        else:
+            self.entity_tabs.setMaximumHeight(16777215)
+            self.entity_tabs.setMinimumHeight(150)
+            self._center_splitter.setSizes(
+                [max(1, self._center_splitter.height() - 210), 210]
+            )
+            self.entity_collapse_btn.setText("收起")
+
     def _on_entity_selected(self) -> None:
         selected = self.entity_table.selectionModel().selectedRows()
-        if not selected:
+        selected_row = selected[0].row() if selected else None
+        for row_index in range(self.entity_table.rowCount()):
+            card = self.entity_table.cellWidget(row_index, 0)
+            if isinstance(card, _EntityListCard):
+                card.setProperty("selected", row_index == selected_row)
+                card.style().unpolish(card)
+                card.style().polish(card)
+        if selected_row is None:
             return
-        row = selected[0].row()
+        row = selected_row
         item = self.entity_table.item(row, 1)
         if item is not None:
             kind = self.entity_table.item(row, 0).text()
@@ -1435,6 +1712,9 @@ class EditorWindow(QMainWindow):
         file_menu.addSeparator()
 
         self.save_act = QAction("保存地图 (.map)…", self)
+        self.save_act.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton)
+        )
         self.save_act.setShortcut(QKeySequence.StandardKey.Save)
         self.save_act.triggered.connect(self._save_map_smart)
         self.save_act.setToolTip("保存当前编辑；默认保护客户端原图，建议另存为副本")
@@ -1469,11 +1749,17 @@ class EditorWindow(QMainWindow):
         # Edit menu
         edit_menu = self.menuBar().addMenu("编辑(&E)")
         self.undo_act = QAction("撤销", self)
+        self.undo_act.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowBack)
+        )
         self.undo_act.setShortcut(QKeySequence.StandardKey.Undo)
         self.undo_act.triggered.connect(self._do_undo)
         edit_menu.addAction(self.undo_act)
 
         self.redo_act = QAction("重做", self)
+        self.redo_act.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowForward)
+        )
         self.redo_act.setShortcut(QKeySequence.StandardKey.Redo)
         self.redo_act.triggered.connect(self._do_redo)
         edit_menu.addAction(self.redo_act)
@@ -1522,8 +1808,9 @@ class EditorWindow(QMainWindow):
 
         # Primary tool categories: icon + label, followed by contextual controls.
         main_toolbar = QToolBar("主工具栏")
+        main_toolbar.setObjectName("mainToolbar")
         main_toolbar.setMovable(False)
-        main_toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        main_toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         self.addToolBar(main_toolbar)
         for action in (self.save_act, self.undo_act, self.redo_act):
             main_toolbar.addAction(action)
@@ -1532,11 +1819,11 @@ class EditorWindow(QMainWindow):
         category_group.setExclusive(True)
         categories = (
             ("browse", "浏览", QStyle.StandardPixmap.SP_DesktopIcon, "1"),
-            ("walk", "通行格", QStyle.StandardPixmap.SP_DialogApplyButton, "2"),
+            ("walk", "通行", QStyle.StandardPixmap.SP_DialogApplyButton, "2"),
+            ("mask", "遮罩", QStyle.StandardPixmap.SP_FileDialogDetailedView, "9"),
             ("light", "光照", QStyle.StandardPixmap.SP_DialogYesButton, "6"),
             ("entities", "实体", QStyle.StandardPixmap.SP_FileDialogInfoView, "7"),
             ("path", "寻路", QStyle.StandardPixmap.SP_ArrowRight, "8"),
-            ("mask", "遮罩", QStyle.StandardPixmap.SP_FileDialogDetailedView, "9"),
         )
         self._category_actions: dict[str, QAction] = {}
         for key, label, icon, shortcut in categories:
@@ -1550,13 +1837,24 @@ class EditorWindow(QMainWindow):
             main_toolbar.addAction(action)
             self._category_actions[key] = action
         self._category_actions["browse"].setChecked(True)
+        spacer = QWidget()
+        spacer.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred
+        )
+        main_toolbar.addWidget(spacer)
+        toolbar_save_copy = QPushButton("另存为副本")
+        toolbar_save_copy.setObjectName("safeSaveButton")
+        toolbar_save_copy.clicked.connect(self._save_map_as_dialog)
+        main_toolbar.addWidget(toolbar_save_copy)
 
         self.context_toolbar = QToolBar("当前工具选项")
+        self.context_toolbar.setObjectName("contextToolbar")
         self.context_toolbar.setMovable(False)
         self.context_toolbar.setWindowTitle("当前工具选项")
         self.addToolBar(self.context_toolbar)
         self._main_category = "browse"
         self._walk_mode = "brush"
+        self._pen_style_index = 0
         self._walk_brush_radius = self.vm.state.brush_radius
         self._update_context_toolbar()
 
@@ -1605,17 +1903,14 @@ class EditorWindow(QMainWindow):
                 )
             )
             self.context_toolbar.addWidget(self.cell_combo)
-            for value, color in (
-                (0, "#2ecc71"),
-                (1, "#e74c3c"),
-                (2, "#34c6e2"),
-                (3, "#9b59b6"),
+            for label, color in (
+                ("可通行", "#55b98b"),
+                ("阻挡", "#dd726a"),
+                ("阴影通行", "#56abc3"),
+                ("阴影阻挡", "#a07ac3"),
             ):
-                chip = QLabel(f"  {value}  ")
-                chip.setStyleSheet(
-                    f"background:{color};color:white;border-radius:4px;padding:3px;"
-                )
-                chip.setToolTip(CELL_NAMES[value])
+                chip = QLabel(f"● {label}")
+                chip.setStyleSheet(f"color:{color};font-size:10px;")
                 self.context_toolbar.addWidget(chip)
             self.context_toolbar.addSeparator()
             if hasattr(self, "walk_mode_group"):
@@ -1628,29 +1923,34 @@ class EditorWindow(QMainWindow):
                 ("line", "直线"),
                 ("fill", "区域填充"),
                 ("eraser", "橡皮"),
-                ("pen_dot", "钢笔·单格"),
-                ("pen_path", "钢笔·路径"),
+                ("pen", "钢笔⌄"),
             ):
                 button = QPushButton(label)
                 button.setCheckable(True)
-                button.setChecked(mode == self._walk_mode)
+                button.setChecked(
+                    self._walk_mode == mode
+                    or (mode == "pen" and self._walk_mode in {"pen_dot", "pen_path"})
+                )
                 self.walk_mode_group.addButton(button)
                 button.clicked.connect(
-                    lambda _checked=False, value=mode: self._select_walk_mode(value)
+                    lambda _checked=False, value=mode: self._activate_walk_mode(value)
                 )
                 self.context_toolbar.addWidget(button)
-            if self._walk_mode == "pen_path":
-                self.context_toolbar.addWidget(QLabel("路径"))
+            if self._walk_mode in {"pen_dot", "pen_path"}:
+                self.context_toolbar.addWidget(QLabel("钢笔"))
                 self.pen_style_combo = QComboBox()
-                self.pen_style_combo.addItems(["折线", "曲线"])
-                self.pen_style_combo.setCurrentIndex(
-                    1 if self.canvas.pen_curve_mode else 0
+                self.pen_style_combo.addItems(
+                    ["单格钢笔", "路径钢笔 · 折线", "路径钢笔 · 曲线"]
                 )
+                self.pen_style_combo.setCurrentIndex(self._pen_style_index)
                 self.pen_style_combo.currentIndexChanged.connect(
-                    lambda index: setattr(self.canvas, "pen_curve_mode", index == 1)
+                    self._select_pen_variant
                 )
                 self.context_toolbar.addWidget(self.pen_style_combo)
-                self.context_toolbar.addWidget(QLabel("点击添加节点，右键结束"))
+                if self._walk_mode == "pen_path":
+                    self.context_toolbar.addWidget(
+                        QLabel("点击添加节点，右键结束；Esc 取消")
+                    )
             if self._walk_mode in {"brush", "eraser", "line", "pen_path"}:
                 self.context_toolbar.addSeparator()
                 self.context_toolbar.addWidget(
@@ -1722,6 +2022,18 @@ class EditorWindow(QMainWindow):
             self.context_toolbar.addWidget(QLabel("滚轮缩放 · 中键拖动画布"))
             self.context_toolbar.addWidget(fit)
             self.context_toolbar.addWidget(one)
+
+    def _activate_walk_mode(self, mode: str) -> None:
+        if mode == "pen":
+            if self._walk_mode not in {"pen_dot", "pen_path"}:
+                self._select_pen_variant(self._pen_style_index)
+            return
+        self._select_walk_mode(mode)
+
+    def _select_pen_variant(self, index: int) -> None:
+        self._pen_style_index = int(index)
+        self.canvas.pen_curve_mode = index == 2
+        self._select_walk_mode("pen_dot" if index == 0 else "pen_path")
 
     def _select_walk_mode(self, mode: str) -> None:
         previous_mode = self._walk_mode
@@ -1856,39 +2168,54 @@ class EditorWindow(QMainWindow):
         if self._filtered_rows:
             self.table.selectRow(0)
 
+    def _on_map_table_selection_changed(self) -> None:
+        selected = {
+            index.row() for index in self.table.selectionModel().selectedRows()
+        }
+        for row in range(self.table.rowCount()):
+            card = self.table.cellWidget(row, 0)
+            if isinstance(card, _MapListCard):
+                card.setProperty("selected", row in selected)
+                card.style().unpolish(card)
+                card.style().polish(card)
+        self._on_row_selected()
+
+    def _make_map_row_card(self, row: MapRow, index: int) -> _MapListCard:
+        palettes = (
+            ("#83b4a0", "#668e7e"),
+            ("#9bb5a2", "#718b75"),
+            ("#c2b08a", "#8c9b75"),
+            ("#81a9ae", "#637f83"),
+        )
+        accent = palettes[index % len(palettes)]
+        card = _MapListCard(row, accent)
+        card.clicked.connect(lambda target=index: self.table.selectRow(target))
+        return card
+
     def _populate_map_table(self) -> None:
         needle = self.search_edit.text().strip().lower()
         all_rows = self.vm.rows
         self._filtered_rows = [
-            r
-            for r in all_rows
+            row
+            for row in all_rows
             if not needle
-            or needle in r.key.lower()
-            or needle in r.name.lower()
-            or (needle == "遮罩" and r.records > 0)
+            or needle in row.key.lower()
+            or needle in row.name.lower()
+            or (needle == "遮罩" and row.records > 0)
         ]
         self.table.blockSignals(True)
+        self.table.clearSelection()
+        self.table.clearContents()
         self.table.setRowCount(len(self._filtered_rows))
-        for i, r in enumerate(self._filtered_rows):
-            items = [
-                QTableWidgetItem(r.key),
-                QTableWidgetItem(r.name or "—"),
-                QTableWidgetItem("损坏" if r.broken else f"{r.width}×{r.height}"),
-                QTableWidgetItem("" if r.broken else str(r.sectors)),
-                QTableWidgetItem("" if r.broken else str(r.records)),
-            ]
-            for col, item in enumerate(items):
-                if col >= 3:
-                    item.setTextAlignment(
-                        Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-                    )
-                if r.broken:
-                    item.setForeground(QColor(235, 95, 95))
-                    item.setToolTip(r.error)
-                elif "現行" in r.name:
-                    item.setForeground(QColor(138, 226, 168))
-                self.table.setItem(i, col, item)
+        for index, row in enumerate(self._filtered_rows):
+            item = QTableWidgetItem()
+            item.setData(Qt.ItemDataRole.UserRole, row.key)
+            self.table.setItem(index, 0, item)
+            self.table.setCellWidget(index, 0, self._make_map_row_card(row, index))
+            self.table.setRowHeight(index, 70)
         self.table.blockSignals(False)
+        self.map_count_lbl.setText(str(len(self._filtered_rows)))
+        self._on_map_table_selection_changed()
 
     def _confirm_discard_current_edits(self) -> bool:
         if not self.vm.dirty:
@@ -1927,6 +2254,8 @@ class EditorWindow(QMainWindow):
         self.canvas.reset_view(fit=True)
         self._refresh_masks_and_audit()
         self._populate_entities_table()
+        for table in self.entity_tables.values():
+            table.clearSelection()
         state = self.vm.state
         self.map_info_lbl.setText(
             f"{state.current_key} · {state.current_name}\n"
@@ -2195,10 +2524,24 @@ class EditorWindow(QMainWindow):
                     elif state == "阻挡格":
                         item.setForeground(QColor(195, 82, 55))
                     table.setItem(row_index, column, item)
+                card = _EntityListCard(kind, name, coord, state)
+                card.clicked.connect(
+                    lambda target=row_index, current=table: current.selectRow(target)
+                )
+                card.doubleClicked.connect(
+                    lambda target=row_index: self._jump_to_entity_row(target, 0)
+                )
+                table.setCellWidget(row_index, 0, card)
+                table.setRowHeight(row_index, 42)
 
+        self.entity_tabs.setTabText(0, f"NPC  {len(grouped['npcs']):,}")
+        self.entity_tabs.setTabText(1, f"传送点  {len(grouped['portals']):,}")
         active_key = "npcs" if self.entity_tabs.currentIndex() == 0 else "portals"
         self.entity_table = self.entity_tables[active_key]
         self._entity_jump_targets = [(row[4], row[5]) for row in grouped[active_key]]
+        for row_index in range(self.entity_table.rowCount()):
+            self.entity_table.setRowHeight(row_index, 42)
+        self._filter_entities_table(self.entity_search.text())
 
     def _jump_to_entity_row(self, row: int, _col: int) -> None:
         if 0 <= row < len(self._entity_jump_targets):
