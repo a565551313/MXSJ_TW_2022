@@ -1245,6 +1245,7 @@ class _EntityListCard(QFrame):
     """Compact entity row styled like a selectable card in the design preview."""
 
     clicked = Signal()
+    doubleClicked = Signal()
 
     def __init__(self, kind: str, name: str, coord: str, state: str) -> None:
         super().__init__()
@@ -1283,6 +1284,13 @@ class _EntityListCard(QFrame):
             event.accept()
             return
         super().mousePressEvent(event)
+
+    def mouseDoubleClickEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.doubleClicked.emit()
+            event.accept()
+            return
+        super().mouseDoubleClickEvent(event)
 
 
 class NewMapDialog(QDialog):
@@ -2519,6 +2527,9 @@ class EditorWindow(QMainWindow):
                 card = _EntityListCard(kind, name, coord, state)
                 card.clicked.connect(
                     lambda target=row_index, current=table: current.selectRow(target)
+                )
+                card.doubleClicked.connect(
+                    lambda target=row_index: self._jump_to_entity_row(target, 0)
                 )
                 table.setCellWidget(row_index, 0, card)
                 table.setRowHeight(row_index, 42)
