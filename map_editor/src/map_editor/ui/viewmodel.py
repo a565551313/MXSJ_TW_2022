@@ -550,6 +550,34 @@ class EditorViewModel:
         )
         return self.record_cell_changes(changed, val, f"直线绘制 ({len(changed)} 格)")
 
+    def paint_cell_path(
+        self,
+        points: list[tuple[int, int]],
+        value: int | None = None,
+        radius: int | None = None,
+    ) -> int:
+        """Paint a polyline in pixel coordinates as one undoable operation."""
+        if len(points) < 2:
+            return 0
+        doc = self._require_doc()
+        val = self.state.brush_cell_value if value is None else value
+        rad = self.state.brush_radius if radius is None else radius
+        changed: dict[tuple[int, int], int] = {}
+        for start, end in zip(points, points[1:], strict=False):
+            segment = doc.paint_cells_line(
+                start[0] // CELL_PX,
+                start[1] // CELL_PX,
+                end[0] // CELL_PX,
+                end[1] // CELL_PX,
+                val,
+                rad,
+            )
+            for cell, old_value in segment.items():
+                changed.setdefault(cell, old_value)
+        return self.record_cell_changes(
+            changed, val, f"路径钢笔绘制 ({len(changed)} 格)"
+        )
+
     def flood_fill_cells_at(
         self, px: int, py: int, value: int | None = None
     ) -> int:

@@ -6,7 +6,7 @@
 <title>MXSJ 地图编辑器 · 工作台设计预览</title>
 <style>
 :root{--ink:#20333b;--muted:#71838a;--line:#dce6e5;--paper:#fff;--bg:#edf2f1;--teal:#167c70;--teal2:#e5f3ef;--gold:#c68b34;--shadow:0 6px 22px #213a3b12}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 "Segoe UI","Microsoft YaHei UI","Noto Sans CJK SC",sans-serif;overflow:hidden}
+*{box-sizing:border-box}[hidden]{display:none !important}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 "Segoe UI","Microsoft YaHei UI","Noto Sans CJK SC",sans-serif;overflow:hidden}
 button,input,select{font:inherit;color:inherit}button{cursor:pointer}.app{height:100vh;min-height:700px;display:grid;grid-template-rows:40px 58px 54px 1fr 28px;background:#f4f7f6}
 .menubar{display:flex;align-items:center;gap:5px;padding:0 15px;background:#fff;border-bottom:1px solid var(--line)}.brand{font-weight:750;letter-spacing:.2px;margin-right:18px;color:#183c43}.brand small{font-size:10px;color:#7b8e93;font-weight:600;margin-left:7px}.menu{border:0;background:transparent;padding:6px 12px;border-radius:6px;color:#50636b}.menu:hover{background:#f0f6f4}.menu.right{margin-left:auto}.safe{color:#24796d;font-size:12px;padding:5px 9px;background:#edf7f3;border:1px solid #d8ebe4;border-radius:20px}
 .mainbar{display:flex;align-items:center;gap:7px;padding:6px 14px;background:white;border-bottom:1px solid var(--line);box-shadow:0 2px 7px #20333b08}.tool{height:44px;min-width:76px;border:1px solid transparent;background:transparent;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;color:#4a6068}.tool svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8}.tool:hover{background:#f3f8f7}.tool.active{background:var(--teal2);border-color:#cce7df;color:#126b60;font-weight:700}.divider{height:29px;border-left:1px solid var(--line);margin:0 4px}.bar-spacer{flex:1}.primary{background:var(--teal);color:white;border:1px solid var(--teal);border-radius:8px;padding:8px 16px;font-weight:650;box-shadow:0 2px 5px #167c7025}.iconbtn{width:38px;height:38px;border:1px solid var(--line);background:white;border-radius:8px;color:#536b72}
@@ -79,36 +79,140 @@ button,input,select{font:inherit;color:inherit}button{cursor:pointer}.app{height
   <footer class="status"><span class="ok">● 就绪</span><span>明月城 · 1054</span><span>坐标 486, 299</span><span class="spacer"></span><span>缩放 72%</span><span>通行状态：可通行</span></footer>
 </div>
 <script>
-const context=document.getElementById('context');
-const commonState='<span class="context-label">通行状态</span><select class="ctxselect" id="walkState"><option>可通行</option><option>阻挡</option><option>阴影下可通行</option><option>阴影下阻挡</option></select><div class="legend"><span class="leg"><i class="dot walk"></i>可通行</span><span class="leg"><i class="dot block"></i>阻挡</span><span class="leg"><i class="dot shade"></i>阴影通行</span><span class="leg"><i class="dot shadeblock"></i>阴影阻挡</span></div>';
-function renderContext(tool='walk',mode='brush'){
- let html='';
- if(tool==='walk'){
-  html=commonState+'<span class="divider"></span><span class="context-label">绘制</span><div class="modegroup"><button class="mode '+(mode==='brush'?'active':'')+'" data-mode="brush">画笔</button><button class="mode '+(mode==='rect'?'active':'')+'" data-mode="rect">矩形</button><button class="mode '+(mode==='line'?'active':'')+'" data-mode="line">直线</button><button class="mode '+(mode==='fill'?'active':'')+'" data-mode="fill">区域填充</button><button class="mode" data-mode="eraser">橡皮</button><button class="mode" data-mode="pen">钢笔⌄</button></div>';
-  if(mode==='brush'||mode==='eraser') html+='<span class="divider"></span><span class="micro">大小</span><input class="range" id="sizeRange" type="range" min="1" max="25" value="3"><input class="num" id="sizeNum" type="number" min="1" max="25" value="3"><span class="micro">格</span>';
-  if(mode==='line') html+='<span class="divider"></span><span class="micro">线宽</span><input class="range" type="range" min="1" max="25" value="3"><input class="num" type="number" min="1" max="25" value="3"><span class="micro">格</span>';
-  if(mode==='pen') html+='<select class="pen-select"><option>单格钢笔</option><option>路径钢笔 · 折线</option><option>路径钢笔 · 曲线</option></select><span class="micro">双击结束 · Esc 取消</span>';
-  if(mode==='fill') html+='<span class="divider"></span><span class="micro">填充相邻区域；影响格数将在应用前提示</span>';
-  if(mode==='rect') html+='<span class="divider"></span><span class="micro">拖拽绘制矩形区域</span>';
-  if(mode==='eraser') html=html.replace('>橡皮</button>','>橡皮</button>')+'<span class="micro">擦除为普通可通行</span>';
- }else if(tool==='browse') html='<span class="context-label">浏览</span><button class="tiny">适配窗口</button><button class="tiny">100%</button><span class="micro">滚轮缩放 · 中键平移</span>';
- else if(tool==='mask') html='<span class="context-label">遮挡区域</span><button class="tiny">选择</button><button class="tiny">导入 PNG</button><button class="tiny">导出</button><button class="tiny">删除</button>';
- else if(tool==='light') html='<span class="context-label">光照</span><span class="micro">亮度</span><input class="range" type="range" min="0" max="15" value="8"><input class="num" type="number" min="0" max="15" value="8"><span class="divider"></span><span class="micro">画笔大小</span><input class="range" type="range" min="1" max="20" value="5"><button class="tiny">重置为标准光照</button>';
- else if(tool==='entity') html='<span class="context-label">实体</span><span class="micro">在画布下方的 NPC / 传送点列表中选择对象</span>';
- else html='<span class="context-label">寻路</span><button class="tiny">设置起点</button><button class="tiny">设置终点</button><button class="tiny">开始寻路</button><button class="tiny">清除路径</button>';
- context.innerHTML=html;
- context.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{context.querySelectorAll('[data-mode]').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderContext('walk',b.dataset.mode)});
- const range=document.getElementById('sizeRange'),num=document.getElementById('sizeNum');if(range&&num){range.oninput=()=>num.value=range.value;num.oninput=()=>range.value=num.value}
+const context = document.getElementById('context');
+const commonState = '<span class="context-label">通行状态</span><select class="ctxselect" id="walkState"><option>可通行</option><option>阻挡</option><option>阴影下可通行</option><option>阴影下阻挡</option></select><div class="legend"><span class="leg"><i class="dot walk"></i>可通行</span><span class="leg"><i class="dot block"></i>阻挡</span><span class="leg"><i class="dot shade"></i>阴影通行</span><span class="leg"><i class="dot shadeblock"></i>阴影阻挡</span></div>';
+let walkStateValue = '可通行';
+let brushSizeValue = 3;
+
+function renderContext(tool = 'walk', mode = 'brush') {
+  const currentState = document.getElementById('walkState');
+  const currentSize = document.getElementById('sizeRange');
+  if (currentState) walkStateValue = currentState.value;
+  if (currentSize) brushSizeValue = Number(currentSize.value);
+
+  let html = '';
+  if (tool === 'walk') {
+    html = commonState + '<span class="divider"></span><span class="context-label">绘制</span><div class="modegroup"><button class="mode ' + (mode === 'brush' ? 'active' : '') + '" data-mode="brush">画笔</button><button class="mode ' + (mode === 'rect' ? 'active' : '') + '" data-mode="rect">矩形</button><button class="mode ' + (mode === 'line' ? 'active' : '') + '" data-mode="line">直线</button><button class="mode ' + (mode === 'fill' ? 'active' : '') + '" data-mode="fill">区域填充</button><button class="mode ' + (mode === 'eraser' ? 'active' : '') + '" data-mode="eraser">橡皮</button><button class="mode ' + (mode === 'pen' ? 'active' : '') + '" data-mode="pen">钢笔⌄</button></div>';
+    if (mode === 'brush' || mode === 'eraser') html += '<span class="divider"></span><span class="micro">大小</span><input class="range" id="sizeRange" type="range" min="1" max="25"><input class="num" id="sizeNum" type="number" min="1" max="25"><span class="micro">格</span>';
+    if (mode === 'line') html += '<span class="divider"></span><span class="micro">线宽</span><input class="range" id="sizeRange" type="range" min="1" max="25"><input class="num" id="sizeNum" type="number" min="1" max="25"><span class="micro">格</span>';
+    if (mode === 'pen') html += '<select class="pen-select"><option>单格钢笔</option><option>路径钢笔 · 折线</option><option>路径钢笔 · 曲线</option></select><span class="micro">右键结束 · Esc 取消</span>';
+    if (mode === 'fill') html += '<span class="divider"></span><span class="micro">填充相邻区域；影响格数将在应用前提示</span>';
+    if (mode === 'rect') html += '<span class="divider"></span><span class="micro">拖拽绘制矩形区域</span>';
+    if (mode === 'eraser') html += '<span class="micro">擦除为普通可通行</span>';
+  } else if (tool === 'browse') html = '<span class="context-label">浏览</span><button class="tiny">适配窗口</button><button class="tiny">100%</button><span class="micro">滚轮缩放 · 中键平移</span>';
+  else if (tool === 'mask') html = '<span class="context-label">遮挡区域</span><button class="tiny">选择</button><button class="tiny">导入 PNG</button><button class="tiny">导出</button><button class="tiny">删除</button>';
+  else if (tool === 'light') html = '<span class="context-label">光照</span><span class="micro">亮度</span><input class="range" type="range" min="0" max="15" value="8"><input class="num" type="number" min="0" max="15" value="8"><span class="divider"></span><span class="micro">画笔大小</span><input class="range" type="range" min="1" max="20" value="5"><button class="tiny">重置为标准光照</button>';
+  else if (tool === 'entity') html = '<span class="context-label">实体</span><span class="micro">在画布下方的 NPC / 传送点列表中选择对象</span>';
+  else html = '<span class="context-label">寻路</span><button class="tiny">设置起点</button><button class="tiny">设置终点</button><button class="tiny">开始寻路</button><button class="tiny">清除路径</button>';
+
+  context.innerHTML = html;
+  const stateSelect = document.getElementById('walkState');
+  if (stateSelect) {
+    stateSelect.value = walkStateValue;
+    stateSelect.onchange = () => { walkStateValue = stateSelect.value; };
+  }
+  const range = document.getElementById('sizeRange');
+  const number = document.getElementById('sizeNum');
+  if (range && number) {
+    range.value = String(brushSizeValue);
+    number.value = String(brushSizeValue);
+    range.oninput = () => { number.value = range.value; brushSizeValue = Number(range.value); };
+    number.oninput = () => {
+      brushSizeValue = Math.max(1, Math.min(25, Number(number.value) || 1));
+      range.value = String(brushSizeValue);
+    };
+  }
+  context.querySelectorAll('[data-mode]').forEach(button => {
+    button.onclick = () => renderContext('walk', button.dataset.mode);
+  });
 }
+
 renderContext();
-document.querySelectorAll('.tool').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tool').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderContext(b.dataset.tool)});
-document.querySelectorAll('.etab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.etab').forEach(x=>x.classList.remove('active'));t.classList.add('active');const npc=t.dataset.tab==='npc';document.getElementById('npcList').hidden=!npc;document.getElementById('portalList').hidden=npc;document.getElementById('entitySearch').value='';});
-function bindEntities(){document.querySelectorAll('.entity').forEach(e=>e.onclick=()=>{document.querySelectorAll('.entity').forEach(x=>x.classList.remove('active'));e.classList.add('active');document.getElementById('inspectorName').innerHTML=e.dataset.name+' <span class="badge">'+(e.closest('#portalList')?'传送点':'NPC')+'</span>';document.getElementById('inspectorMeta').innerHTML='场景坐标　'+e.dataset.coord+'<br>选中对象 · 点击「定位」跳转画布'});}bindEntities();
-document.getElementById('entitySearch').oninput=e=>{const q=e.target.value.trim();document.querySelectorAll(e.target.closest('.entity-panel').querySelector('.entity-list:not([hidden])').id+' .entity').forEach(row=>row.hidden=!row.dataset.name.includes(q))};
-document.getElementById('mapSearch').oninput=e=>{const q=e.target.value.trim();document.querySelectorAll('.maprow').forEach(r=>r.hidden=!r.innerText.toLowerCase().includes(q.toLowerCase()))};document.querySelectorAll('.maprow').forEach(r=>r.onclick=()=>{document.querySelectorAll('.maprow').forEach(x=>x.classList.remove('selected'));r.classList.add('selected')});
-const zoomSlider=document.getElementById('zoomSlider');function setZoom(value){value=Math.max(25,Math.min(180,Number(value)));zoomSlider.value=value;document.getElementById('zoomValue').textContent=value+'%';document.querySelector('.mapart').style.transform=`scale(${value/72})`}zoomSlider.oninput=()=>setZoom(zoomSlider.value);document.getElementById('zoomIn').onclick=()=>setZoom(Number(zoomSlider.value)+10);document.getElementById('zoomOut').onclick=()=>setZoom(Number(zoomSlider.value)-10);document.getElementById('zoomFit').onclick=()=>setZoom(72);
-document.getElementById('miniToggle').onclick=()=>{const mini=document.getElementById('miniMap');mini.classList.toggle('collapsed');document.getElementById('miniToggle').textContent=mini.classList.contains('collapsed')?'+':'−'};document.querySelector('.mini-art').onclick=e=>{const r=e.currentTarget.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*180,y=(e.clientY-r.top)/r.height*88,v=document.getElementById('miniView');v.setAttribute('x',Math.max(0,Math.min(141,x-19)));v.setAttribute('y',Math.max(0,Math.min(62,y-13)))};
-document.getElementById('collapseEntities').onclick=()=>{const panel=document.querySelector('.center');const collapsed=panel.classList.toggle('collapsed');panel.style.gridTemplateRows=collapsed?'minmax(260px,1fr) 43px':'minmax(260px,1fr) 195px';document.getElementById('collapseEntities').textContent=collapsed?'展开 +':'收起 −'};
+document.querySelectorAll('.tool').forEach(button => button.onclick = () => {
+  document.querySelectorAll('.tool').forEach(item => item.classList.remove('active'));
+  button.classList.add('active');
+  renderContext(button.dataset.tool);
+});
+document.querySelectorAll('.etab').forEach(tab => tab.onclick = () => {
+  document.querySelectorAll('.etab').forEach(item => item.classList.remove('active'));
+  tab.classList.add('active');
+  const showNpcs = tab.dataset.tab === 'npc';
+  document.getElementById('npcList').hidden = !showNpcs;
+  document.getElementById('portalList').hidden = showNpcs;
+  document.getElementById('entitySearch').value = '';
+});
+function bindEntities() {
+  document.querySelectorAll('.entity').forEach(entity => entity.onclick = () => {
+    document.querySelectorAll('.entity').forEach(item => item.classList.remove('active'));
+    entity.classList.add('active');
+    document.getElementById('inspectorName').innerHTML = entity.dataset.name + ' <span class="badge">' + (entity.closest('#portalList') ? '传送点' : 'NPC') + '</span>';
+    document.getElementById('inspectorMeta').innerHTML = '场景坐标　' + entity.dataset.coord + '<br>选中对象 · 点击「定位」跳转画布';
+  });
+}
+bindEntities();
+document.getElementById('entitySearch').oninput = event => {
+  const query = event.target.value.trim();
+  const activeList = event.target.closest('.entity-panel').querySelector('.entity-list:not([hidden])');
+  activeList.querySelectorAll('.entity').forEach(row => {
+    row.hidden = !row.dataset.name.includes(query);
+  });
+};
+document.getElementById('mapSearch').oninput = event => {
+  const query = event.target.value.trim().toLowerCase();
+  document.querySelectorAll('.maprow').forEach(row => {
+    row.hidden = !row.innerText.toLowerCase().includes(query);
+  });
+};
+document.querySelectorAll('.maprow').forEach(row => row.onclick = () => {
+  document.querySelectorAll('.maprow').forEach(item => item.classList.remove('selected'));
+  row.classList.add('selected');
+});
+
+const zoomSlider = document.getElementById('zoomSlider');
+const mapCanvas = document.querySelector('.canvas-shell');
+const mapArt = document.querySelector('.mapart');
+let viewCenterX = 0.5;
+let viewCenterY = 0.5;
+function applyMapView() {
+  const scale = Number(zoomSlider.value) / 72;
+  const translateX = (0.5 - viewCenterX) * mapCanvas.clientWidth * scale;
+  const translateY = (0.5 - viewCenterY) * mapCanvas.clientHeight * scale;
+  mapArt.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+}
+function setZoom(value, resetCenter = false) {
+  value = Math.max(25, Math.min(180, Number(value)));
+  zoomSlider.value = value;
+  document.getElementById('zoomValue').textContent = value + '%';
+  if (resetCenter) { viewCenterX = 0.5; viewCenterY = 0.5; }
+  applyMapView();
+}
+zoomSlider.oninput = () => setZoom(zoomSlider.value);
+document.getElementById('zoomIn').onclick = () => setZoom(Number(zoomSlider.value) + 10);
+document.getElementById('zoomOut').onclick = () => setZoom(Number(zoomSlider.value) - 10);
+document.getElementById('zoomFit').onclick = () => setZoom(72, true);
+window.addEventListener('resize', applyMapView);
+document.getElementById('miniToggle').onclick = () => {
+  const mini = document.getElementById('miniMap');
+  mini.classList.toggle('collapsed');
+  document.getElementById('miniToggle').textContent = mini.classList.contains('collapsed') ? '+' : '−';
+};
+document.querySelector('.mini-art').onclick = event => {
+  const rect = event.currentTarget.getBoundingClientRect();
+  const x = (event.clientX - rect.left) / rect.width;
+  const y = (event.clientY - rect.top) / rect.height;
+  viewCenterX = Math.max(0, Math.min(1, x));
+  viewCenterY = Math.max(0, Math.min(1, y));
+  const view = document.getElementById('miniView');
+  view.setAttribute('x', Math.max(0, Math.min(141, x * 180 - 19)));
+  view.setAttribute('y', Math.max(0, Math.min(62, y * 88 - 13)));
+  applyMapView();
+};
+document.getElementById('collapseEntities').onclick = () => {
+  const panel = document.querySelector('.center');
+  const collapsed = panel.classList.toggle('collapsed');
+  panel.style.gridTemplateRows = collapsed ? 'minmax(260px,1fr) 43px' : 'minmax(260px,1fr) 195px';
+  document.getElementById('collapseEntities').textContent = collapsed ? '展开 +' : '收起 −';
+};
 </script>
 </body>
 </html>

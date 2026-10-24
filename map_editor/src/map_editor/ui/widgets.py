@@ -303,6 +303,7 @@ class MapCanvas(QWidget):
         super().__init__(parent)
         self.vm = vm
         self.setMouseTracking(True)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setToolTip("滚轮缩放；1 浏览后左键拖动，或按住鼠标中键平移画布")
         self.setMinimumSize(560, 420)
         self.zoom = 1.0
@@ -471,8 +472,8 @@ class MapCanvas(QWidget):
             painter.drawText(
                 QRectF(card.x() + 34, card.y() + 82, card.width() - 68, 64),
                 Qt.AlignmentFlag.AlignCenter,
-                "从左侧选择客户端目录，或直接打开 .map 文件。\n"
-                "滚轮缩放画布；工具说明和新手步骤在右侧「快速开始」。",
+                "从「文件」菜单打开客户端目录，或直接打开 .map 文件。\n"
+                "滚轮缩放画布；按 F1 查看操作提示。",
             )
             painter.setPen(QColor("#188575"))
             painter.drawText(
@@ -673,6 +674,18 @@ class MapCanvas(QWidget):
             elif self.vm.state.active_tool == "cell_line":
                 painter.drawLine(x0, y0, x1, y1)
 
+        if self.pen_path_mode and self._pen_nodes:
+            preview = self._sample_pen_path(self._pen_nodes)
+            pen = QPen(QColor(255, 235, 99, 235))
+            pen.setWidthF(2.0 / self.zoom)
+            painter.setPen(pen)
+            painter.setBrush(QColor(255, 235, 99, 120))
+            for start, end in zip(preview, preview[1:], strict=False):
+                painter.drawLine(QPointF(*start), QPointF(*end))
+            marker_radius = 4.0 / self.zoom
+            for node in self._pen_nodes:
+                painter.drawEllipse(QPointF(*node), marker_radius, marker_radius)
+
         painter.restore()
 
         # Screen-space crisp labels for NPCs & Portals (always readable at any zoom!)
@@ -829,6 +842,7 @@ class MapCanvas(QWidget):
             self._finish_pen_path()
             return
         if self.pen_path_mode and event.button() == Qt.MouseButton.LeftButton:
+            self.setFocus(Qt.FocusReason.MouseFocusReason)
             self._pen_nodes.append(tuple(map(int, self._to_world(pos))))
             self.update()
             return
@@ -977,42 +991,56 @@ class MapCanvas(QWidget):
                 )
                 self.update()
 
+    def _sample_pen_path(self, nodes: list[tuple[int, int]]) -> list[tuple[int, int]]:
+        if not self.pen_curve_mode or len(nodes) < 3:
+            return nodes
+        sampled: list[tuple[int, int]] = [nodes[0]]
+        for index in range(len(nodes) - 1):
+            p0 = nodes[max(0, index - 1)]
+            p1 = nodes[index]
+            p2 = nodes[index + 1]
+            p3 = nodes[min(len(nodes) - 1, index + 2)]
+            for step in range(1, 7):
+                t = step / 6
+                t2 = t * t
+                t3 = t2 * t
+                point = []
+                for axis in range(2):
+                    a, b, c, d = p0[axis], p1[axis], p2[axis], p3[axis]
+                    value = 0.5 * (
+                        2 * b
+                        + (-a + c) * t
+                        + (2 * a - 5 * b + 4 * c - d) * t2
+                        + (-a + 3 * b - 3 * c + d) * t3
+                    )
+                    point.append(round(value))
+                sampled.append((point[0], point[1]))
+        return sampled
+
+    def cancel_pending_pen_path(self) -> None:
+        """Discard uncommitted nodes without changing the current map."""
+        if self._pen_nodes:
+            self._pen_nodes.clear()
+            self.update()
+
     def _finish_pen_path(self) -> None:
         nodes = self._pen_nodes
         self._pen_nodes = []
         if len(nodes) < 2:
             self.update()
             return
-        path = nodes
-        if self.pen_curve_mode and len(nodes) >= 3:
-            sampled: list[tuple[int, int]] = [nodes[0]]
-            for index in range(len(nodes) - 1):
-                p0 = nodes[max(0, index - 1)]
-                p1 = nodes[index]
-                p2 = nodes[index + 1]
-                p3 = nodes[min(len(nodes) - 1, index + 2)]
-                for step in range(1, 7):
-                    t = step / 6
-                    t2 = t * t
-                    t3 = t2 * t
-                    point = []
-                    for axis in range(2):
-                        a, b, c, d = p0[axis], p1[axis], p2[axis], p3[axis]
-                        value = 0.5 * (
-                            2 * b
-                            + (-a + c) * t
-                            + (2 * a - 5 * b + 4 * c - d) * t2
-                            + (-a + 3 * b - 3 * c + d) * t3
-                        )
-                        point.append(round(value))
-                    sampled.append((point[0], point[1]))
-            path = sampled
-        changed = 0
-        for start, end in zip(path, path[1:], strict=False):
-            changed += self.vm.paint_cell_line(*start, *end)
+        changed = self.vm.paint_cell_path(self._sample_pen_path(nodes))
         if changed:
+            self._refresh_active_path()
             self.strokeCommitted.emit(f"路径钢笔绘制 {changed} 格")
         self.update()
+
+    def keyPressEvent(self, event) -> None:
+        if event.key() == Qt.Key.Key_Escape and self._pen_nodes:
+            self.cancel_pending_pen_path()
+            event.accept()
+            return
+        super().keyPressEvent(event)
 
     def _apply_live_cell_dab(self, wx: int, wy: int) -> None:
         doc = self.vm.document
@@ -1359,6 +1387,8 @@ class EditorWindow(QMainWindow):
         key = "npcs" if index == 0 else "portals"
         self.entity_table = self.entity_tables[key]
         self._populate_entities_table()
+        self.entity_table.clearSelection()
+        self.selected_object_lbl.setText("从下方 NPC 或传送点列表选择对象")
 
     def _on_entity_selected(self) -> None:
         selected = self.entity_table.selectionModel().selectedRows()
@@ -1483,7 +1513,7 @@ class EditorWindow(QMainWindow):
             lambda: QMessageBox.information(
                 self,
                 "快速开始",
-                "先从文件菜单打开客户端目录或单张地图。建议使用顶部「另存为副本」后再编辑。\n\n"
+                "先从文件菜单打开客户端目录或单张地图。建议使用右侧「另存为副本」后再编辑。\n\n"
                 "画布下方可切换 NPC 与传送点；右侧检查器显示图层、遮罩记录与审计信息。",
             )
         )
@@ -1527,6 +1557,7 @@ class EditorWindow(QMainWindow):
         self.addToolBar(self.context_toolbar)
         self._main_category = "browse"
         self._walk_mode = "brush"
+        self._walk_brush_radius = self.vm.state.brush_radius
         self._update_context_toolbar()
 
     def _select_main_category(self, category: str) -> None:
@@ -1541,6 +1572,10 @@ class EditorWindow(QMainWindow):
             "path": "path_sim",
             "mask": "mask_select",
         }
+        if category != "walk":
+            self.canvas.pen_path_mode = False
+            self.canvas.eraser_mode = False
+            self.canvas.cancel_pending_pen_path()
         self._select_tool(tool_by_category[category])
         if category == "walk":
             self._select_walk_mode(self._walk_mode)
@@ -1689,6 +1724,11 @@ class EditorWindow(QMainWindow):
             self.context_toolbar.addWidget(one)
 
     def _select_walk_mode(self, mode: str) -> None:
+        previous_mode = self._walk_mode
+        if mode == "pen_dot" and previous_mode != "pen_dot":
+            self._walk_brush_radius = self.vm.state.brush_radius
+        elif mode != "pen_dot" and previous_mode == "pen_dot":
+            self.vm.state.brush_radius = self._walk_brush_radius
         self._walk_mode = mode
         tools = {
             "brush": "cell_brush",
@@ -1883,6 +1923,7 @@ class EditorWindow(QMainWindow):
         self._after_document_opened()
 
     def _after_document_opened(self) -> None:
+        self.canvas.cancel_pending_pen_path()
         self.canvas.reset_view(fit=True)
         self._refresh_masks_and_audit()
         self._populate_entities_table()
@@ -2168,7 +2209,9 @@ class EditorWindow(QMainWindow):
         if self.vm.document is None or not self._entity_jump_targets:
             return
         sel = self.entity_table.selectionModel().selectedRows()
-        row = sel[0].row() if sel else len(self._entity_jump_targets) - 1
+        if not sel:
+            return
+        row = sel[0].row()
         gx, gy = self._entity_jump_targets[row]
         ents = self.vm.current_entities()
         if ents["arrival"] is not None:

@@ -61,6 +61,29 @@ class TestEditorGuiOffscreen(unittest.TestCase):
                     break
             win.canvas.center_on_world(1600, 1220, zoom=0.72)
 
+            # Walk-only interaction state must not leak into other categories or maps.
+            vm.state.brush_radius = 2
+            win._select_main_category("walk")
+            win._select_walk_mode("pen_dot")
+            self.assertEqual(vm.state.brush_radius, 0)
+            win._select_walk_mode("brush")
+            self.assertEqual(vm.state.brush_radius, 2)
+            win._select_walk_mode("pen_path")
+            win.canvas._pen_nodes = [(100, 100), (160, 120)]
+            win._after_document_opened()
+            self.assertEqual(win.canvas._pen_nodes, [])
+            self.assertTrue(win.canvas.pen_path_mode)
+            win._select_main_category("browse")
+            self.assertFalse(win.canvas.pen_path_mode)
+            self.assertFalse(win.canvas.eraser_mode)
+            self.assertEqual(win.canvas._pen_nodes, [])
+            win.selected_object_lbl.setText("stale object")
+            win.entity_tabs.setCurrentIndex(1)
+            self.assertEqual(
+                win.selected_object_lbl.text(), "从下方 NPC 或传送点列表选择对象"
+            )
+            win.entity_tabs.setCurrentIndex(0)
+
             # Pick two walkable points near NPCs for live CAStar demonstration
             ents = vm.current_entities()
             walk_npcs = [n for n in ents["npcs"] if n["walkable"]]
