@@ -132,6 +132,43 @@ class TestEditorGuiOffscreen(unittest.TestCase):
             win.deleteLater()
             app.processEvents()
 
+    def test_map_list_column_stretches_to_viewport(self) -> None:
+        """左侧地图列表隐藏表头后，唯一列必须显式 Stretch。
+
+        回归防护：缺 setSectionResizeMode(0, Stretch) 时列宽锁死默认
+        100px，行卡片被挤在窄条、面板右侧大片空白（「宽但挤」）。
+        """
+        global _APP_KEEPALIVE
+        from map_editor.client.config import Config
+        from map_editor.ui.viewmodel import EditorViewModel
+        from map_editor.ui.widgets import EditorWindow
+
+        app = QApplication.instance() or QApplication([])
+        _APP_KEEPALIVE = app
+
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = Config.load(Path(tmp) / "gui_cfg.json")
+            cfg.remember_root(SAMPLES)
+            vm = EditorViewModel(config=cfg)
+            win = EditorWindow(vm)
+            win.resize(1540, 940)
+            win.show()
+            win._open_root(str(SAMPLES))
+            app.processEvents()
+
+            self.assertGreater(win.table.rowCount(), 0)
+            viewport_w = win.table.viewport().width()
+            # 布局确已生效（left 面板最小 225px，减布局边距后视口应 >150px）
+            self.assertGreater(viewport_w, 150)
+            # Stretch 后列宽与视口一致，行卡片随之铺满
+            self.assertEqual(win.table.columnWidth(0), viewport_w)
+            card = win.table.cellWidget(0, 0)
+            self.assertEqual(card.width(), viewport_w)
+
+            win.close()
+            win.deleteLater()
+            app.processEvents()
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

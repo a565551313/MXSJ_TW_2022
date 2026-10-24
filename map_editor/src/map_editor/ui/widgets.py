@@ -1430,6 +1430,12 @@ class EditorWindow(QMainWindow):
         self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # 表头已隐藏，Qt 不会自动撑开列宽，列宽会锁死默认 100px，
+        # 导致行卡片被挤在 100px 窄条里、面板右侧大片空白（「宽但挤」）。
+        # 与下方实体列表表格保持一致：显式让唯一列随视口拉伸。
+        self.table.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.ResizeMode.Stretch
+        )
         self.table.itemSelectionChanged.connect(self._on_map_table_selection_changed)
         left_lay.addWidget(self.table, 1)
 
