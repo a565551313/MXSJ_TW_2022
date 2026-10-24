@@ -1388,20 +1388,16 @@ class EditorWindow(QMainWindow):
         # 底部实体列表为固定表头的文字表格（表头常驻可见）：
         # NPC 七列（编号/NPC/模型ID/朝向/服务端坐标/像素坐标/状态），
         # 传送点五列（编号/传送点/服务端坐标/跳转坐标/描述）。
-        # 内容列定宽，末列（状态/描述）吸收剩余空间。
+        # 列宽按全表内容极值定（名称≤7 字、造型≤7 字符、坐标≤9 字符），
+        # 文字一律居中；不做 Stretch——剩余空间摊给任何一列都会过宽，
+        # 不如留白（面板与表格同为白底，无视觉断裂）。
         self._entity_headers: dict[str, list[str]] = {
             "npcs": ["编号", "NPC", "模型ID", "朝向", "服务端坐标", "像素坐标", "状态"],
             "portals": ["编号", "传送点", "服务端坐标", "跳转坐标", "描述"],
         }
         self._entity_column_widths: dict[str, list[int]] = {
-            "npcs": [64, 180, 110, 56, 104, 104, 90],
-            "portals": [64, 190, 104, 104, 120],
-        }
-        # 名称列（NPC/传送点）长短不一，由其吸收剩余宽度；
-        # 编号、坐标等定宽列保持稳定，避免拖动 splitter 时文字被截断。
-        self._entity_stretch_columns: dict[str, list[int]] = {
-            "npcs": [1],
-            "portals": [1, 4],
+            "npcs": [64, 170, 100, 56, 105, 115, 85],
+            "portals": [64, 170, 105, 105, 130],
         }
         for tab_name, key in (("NPC", "npcs"), ("传送点", "portals")):
             page = QWidget()
@@ -1410,20 +1406,22 @@ class EditorWindow(QMainWindow):
             table = QTableWidget(0, len(self._entity_headers[key]))
             table.setObjectName("entityList")
             table.setHorizontalHeaderLabels(self._entity_headers[key])
+            table.horizontalHeader().setDefaultAlignment(
+                Qt.AlignmentFlag.AlignCenter
+            )
             table.verticalHeader().hide()
             table.setShowGrid(False)
             table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
             table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
             table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-            table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            # 列宽定内容不拉伸：窗口过窄时允许横向滚动条，避免静默截断
+            table.setHorizontalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAsNeeded
+            )
             table.cellDoubleClicked.connect(self._jump_to_entity_row)
             table.itemSelectionChanged.connect(self._on_entity_selected)
             for column, width in enumerate(self._entity_column_widths[key]):
                 table.setColumnWidth(column, width)
-            for column in self._entity_stretch_columns[key]:
-                table.horizontalHeader().setSectionResizeMode(
-                    column, QHeaderView.ResizeMode.Stretch
-                )
             page_lay.addWidget(table)
             self.entity_tables[key] = table
             self.entity_tabs.addTab(page, tab_name)
@@ -2481,6 +2479,7 @@ class EditorWindow(QMainWindow):
             for row_index, row in enumerate(rows):
                 for column, value in enumerate(row[:-2]):
                     item = QTableWidgetItem(value)
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     if key == "portals" and row[1] != "默认落点":
                         item.setForeground(QColor(25, 126, 150))
                     elif (

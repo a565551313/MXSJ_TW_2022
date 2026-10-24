@@ -177,6 +177,7 @@ class TestEditorGuiOffscreen(unittest.TestCase):
         行内为纯文字单元格（不再使用卡片 cellWidget）。
         """
         global _APP_KEEPALIVE
+        from PySide6.QtCore import Qt
         from map_editor.client.config import Config
         from map_editor.ui.viewmodel import EditorViewModel
         from map_editor.ui.widgets import EditorWindow
@@ -211,6 +212,16 @@ class TestEditorGuiOffscreen(unittest.TestCase):
             self.assertFalse(portal_table.horizontalHeader().isHidden())
             self.assertFalse(npc_table.isColumnHidden(2))  # 模型ID
             self.assertFalse(npc_table.isColumnHidden(6))  # 状态
+            # 列宽按内容定、文字居中（回归：名称列曾 Stretch 到 442px 难扫读）
+            self.assertEqual(npc_table.columnWidth(1), 170)
+            self.assertLessEqual(
+                sum(npc_table.columnWidth(c) for c in range(7)),
+                npc_table.viewport().width() + 1,
+            )
+            self.assertEqual(
+                npc_table.horizontalHeader().defaultAlignment(),
+                Qt.AlignmentFlag.AlignCenter,
+            )
 
             # 选中含 NPC 的样例地图 1034，校验行数据形态
             target = next(
@@ -239,6 +250,12 @@ class TestEditorGuiOffscreen(unittest.TestCase):
             self.assertIn(npc_table.item(0, 6).text(), ("可通行", "阻挡格"))
             # 纯文字行：首列不再是卡片 cellWidget
             self.assertIsNone(npc_table.cellWidget(0, 0))
+            # 单元格文字居中
+            for column in range(7):
+                self.assertEqual(
+                    npc_table.item(0, column).textAlignment(),
+                    Qt.AlignmentFlag.AlignCenter,
+                )
 
             # 传送点行：编号/名称/服务端/跳转/描述 五列均有值（无 npc_id 显示 —）
             for row in range(portal_table.rowCount()):
