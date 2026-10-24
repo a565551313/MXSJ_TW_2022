@@ -60,7 +60,7 @@
 | 组件 | 依赖 | 测试 / 运行 |
 |---|---|---|
 | 客户端补丁 | Python 3.11+ 标准库 | `python3 -m unittest discover -s tools/client_patches` |
-| SQLite 本地基础 | Python 3.11+ 标准库，SQLite >=3.24 | `python3 local_server/bootstrap.py --check-only`；`python3 -m unittest discover -s server/tests/local_runtime`；显式初始化／建号见 local_server README |
+| SQLite 本地基础 | Python 3.11+ 标准库，SQLite >=3.24 | `python3 local_server/bootstrap.py --check-only`；`(cd local_server && python3 -m unittest discover -s tests -t .)`；显式初始化／建号见 local_server README |
 | 服务端骨架 / 来源映射 / 批次核验 | 标准库 | `python3 -m unittest discover -s server/tests/architecture`；`python3 server/tools/verify_source_map.py`；`python3 server/tools/export_review_csv.py --check` |
 | 复核目录 / API | `pip install -r server/apps/review_api/requirements.txt` | `python3 -m unittest discover -s server/tests/catalog`；`… -s server/tests/review_api`；运行 `python3 server/apps/review_api/main.py --host 0.0.0.0 --port 8000` |
 | 复核验收套件 | 同上，且 `uvicorn` 必须在 `python3` 的 PATH 环境里（测试会**原样执行文档里的启动命令**） | `python3 -m unittest discover -s server/tests/review_browser_acceptance` |
@@ -68,7 +68,7 @@
 | 地图编辑器 | `Pillow>=10`；GUI 另需 PySide6 + 桌面 | `(cd map_editor && python3 -m unittest discover -s tests)`；`python3 map_editor/run.py --scan .` |
 | 资源编辑器 | PySide6 + Pillow | `(cd resource_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`；运行 `PYTHONPATH=resource_editor/src python3 -m resource_editor data`（或 `python3 resource_editor/bootstrap.py`） |
 | UI 编辑器 | PySide6（+Pillow 转精灵）；`.dlg` 语料库在 `MXSJ_DLG_CORPUS`（Drive 取用见 [`docs/EXTERNAL_CORPUS.md`](docs/EXTERNAL_CORPUS.md)） | `(cd ui_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`；运行 `python3 ui_editor/bootstrap.py` |
-| 脚本编辑器 | 本目录 requirements；旧 VM 编译器／恢复引擎材料另见运行时文档 | `PYTHONPATH=script_editor/src python3 -m unittest discover -s script_editor/tests`；`python3 script_editor/bootstrap.py --check-only` |
+| 脚本编辑器 | 本目录 requirements；旧 VM 编译器／恢复引擎材料另见运行时文档 | `(cd script_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`（须在组件目录跑：`repair_runtimes.py` 在组件根，仓库根口径会少收集 9 项）；`python3 script_editor/bootstrap.py --check-only` |
 | 脚本手册 | 本目录 requirements；核心校验需 jsonschema，GUI 需 PySide6 | `PYTHONPATH=script_manual/src python3 -m mxsj_manual validate --verify-evidence --repository . --require-full-inventory`；`python3 script_manual/check_manual.py`（统一闸门还需开发依赖） |
 | 开发工具箱 / 风格检查 | 检查脚本为标准库；完整测试还需 Pillow；ruff 另装（`pip install ruff`，根 `ruff.toml` 为默认配置） | `python3 -m unittest discover -s tools/devkit/tests`；`python3 tools/devkit/check_windows_compat.py <dir>`；`ruff check <dir>` |
 

@@ -1,5 +1,7 @@
 # 项目当前状态（STATUS）
 
+> **2026-10-24：Windows 原生验收 + P0 两项根因修复（分支 `master`，工作树未提交）**：在本机 Windows 宿主完成 ROADMAP 阶段 B 工程层验收（报告 [`analysis/windows_acceptance_20261024.md`](analysis/windows_acceptance_20261024.md)，项目总览 [`analysis/project_analysis_20261024.md`](analysis/project_analysis_20261024.md)），并当场修复两类**只影响 Windows 开发者**的问题（Linux 检出即 LF，无此问题）：① **`vendor_core` 行尾敏感比对在 autocrlf 检出下自毁**——`load_text` 改 universal newlines、`test_write_is_idempotent` 改临时树夹具（不再写脏真实仓库）、新增 CRLF 检出回归测试；② **CRLF 字节钉伪影族**——`.gitattributes` 为 licenses / catalog jsonl / decompiler 产出与 `batch_decompile.py` / 管线工具源码 / csv_checks staging 与 `*.json` 等 8 处补 `-text`，686 个受影响文件重新签出（进程内复算 blob、逐文件验证归一化后与索引一致，`i/lf w/crlf` 残留 0）。附带修复 `map_npc_reproduction.py` 写 `provenance.json` 的平台依赖（Windows 文本模式 `\n`→`\r\n`）与 `bootstrap.py` E501。**复跑**：架构套件 **161/161 OK**（修复前 1 失败 + 1 错误）、`script_manual validate --verify-evidence --require-full-inventory` 通过（5135/5135）、catalog 34 / review_api 27 / `export_review_csv.py --check` 全过、devkit 45 测仅剩 WIN102 夹具 1 项既有 P2、script_editor 376 测 4 失败均为既有（3×TransportTests P2 + 1×包哈希钉 P1）且原 3 个 GPL 许可错误消除。**§6 人工复核项**：batch_001 manifest 因生成器修改重生，`map_npc_reproduction.py` 哈希行 `cc5e9349`→`7fe0d302`（单行 diff，全新导出与提交版 `diff -r` 亦仅此一行），提交信息须说明。**红灯（不在本轮范围）**：WinError 32 ×23、map_editor 路径分隔符、TransportTests ×3、WIN102 夹具、review_browser_acceptance 的 `python3`/`killpg`、mock_server_v2 `/tmp`、script_editor 包哈希钉 `a45e0e49` vs `8b6e9266`。**下一步**：用户复核 10 个真实修改与 manifest 单行后提交；P1/P2 按验收报告 §8 推进。详见 §3.82。
+
 > **2026-10-23：地图编辑器 `map_editor` 升级至 v1.0.0（全量 101 图逆向实证 + 完整读写编译工作台）**（分支 `arena/651a26cf-mxsj-tw-2022`）：从 Google Drive `MAP/{map.zip,map.z01,map.z02}`（`267,799,770 B`）拉取并在仓外解压校验全部 **101** 张客户端 `.map` 地图（`11,763` 扇区、`20,036` 前景遮罩），结合 `mx.exe`（`0x0060ea90` `LZO1X-1`、`0x00637420` `GEPJ`、`0x004bac30` `CAStar`）与 `data/script.fls` 交叉验证，彻底修复 `v0.1.0` 的 `GIRB` 解压失败（`60/101` 张图报错 → **11,763/11,763 扇区 100% 解出**）、`rb+` 尾部残留字节报错（`test_new2_1054` 等 3 张现行地图 → **101/101 正常打开**）、`LLEC`/`GIRB`/`PrefixRecord` 语义倒置及 57 张变体图缺名问题（重建 `scenes_tw_v2_27_2.json`，**101/101 地图命名与 283 传送点 / 1,293 NPC 全覆盖**）。完整实现 `GEPJ` 编解码与整图切片编译、`.blk` 双向同步、`LLEC` 画笔/矩形/直线/油漆桶、`GIRB` 4×4 动态光照画笔、`PrefixRecord` 2-bit Alpha 前景遮罩增删移与 `IntersectRect` 空间索引重建（`11,763/11,763` 零偏差）、8 方向 `CAStar` 寻路模拟、100 步撤销重做、严苛/宽松保存保护及写后自动重解析校验（98 张标准图 `SHA-256` 100% 一致，3 张 `rb+` 图有效体 `SHA-256` 100% 一致）。**Linux 已验证**：本次修复后 `unittest` **106 项**（103 通过、3 跳过、0 错误；本次沙箱无外部 101 图语料，语料测试跳过；此前已在外部语料完成全量 101 图往返与 `QT_QPA_PLATFORM=offscreen` Studio GUI 核验）、`ruff check map_editor` 零问题、`bootstrap.py --check-only` 零退出、`check_windows_compat.py map_editor` **0 ERROR / 0 WARNING / 0 INFO**；原始客户端资产 `SHA-256` 未变。**Windows 待实测**：真实 Windows 10/11 桌面窗口观感、`build.py` PyInstaller `dist/map-editor/` 真机打包与游戏客户端加载编辑后新地图联调。详见 [`MAP_EDITOR_ANALYSIS.md`](MAP_EDITOR_ANALYSIS.md) 与 [`../map_editor/README.md`](../map_editor/README.md)。
 
 > **2026-10-22：UI 编辑器选图窗批量导出复核修复**（分支 `arena/28ca29c4-mxsj-tw-2022`）：多拼名族一起导出时，按基路径传递已计算的区分前缀，避免文件名退化为 `0l-2.png`；新增选图窗多族导出回归断言。Ruff、`py_compile` 与 `test_asset_export.py` 的 29 项通过；选图窗 GUI 定向测试因系统缺少 `libGL.so.1` 无法启动，未验。
@@ -4215,3 +4217,60 @@ ruff 0；`check_windows_compat.py` 对本次文件 0 ERROR/0 WARNING；新用例
 
 **未验**：本次改动未在 Windows 上重跑（沙箱无 Windows）；用户下次双击
 `检查内置编译器.bat` 即会走到「通过则直接结束」的分支，可顺带确认 bat 改动无误。
+
+## 3.82 Windows 原生验收 + P0 两项根因修复：vendor_core 行尾自毁与 CRLF 字节钉伪影族（2026-10-24，分支 `master`）
+
+**背景**：ROADMAP 阶段 B「原生交付验证」工程层在本机 Windows 宿主执行，完整数据见
+[`analysis/windows_acceptance_20261024.md`](analysis/windows_acceptance_20261024.md)。验收发现两类
+**只影响 Windows 开发者**的问题（Linux 检出即 LF，无此问题），本轮当场修掉并复验。
+
+**问题 1：`vendor_core` 行尾敏感比对自毁**（`tools/devkit/vendor_core.py`）。`load_text()` 用
+`newline=""` 按字节读、`store_text()` 恒写 LF；autocrlf 检出后真源与 9 份副本都是纯 CRLF，
+`rendered()` 成为「LF 横幅 + CRLF 正文」混合行尾，`--check` 必报 9 份副本漂移；
+`test_write_is_idempotent` 对**真实仓库文件**调 `write()`，首跑 devkit 套件必红 12 项并把工作树
+写脏（12:25:55 事件真凶，已用 mtime 实验与逐字节比对证实）。
+**修复**：`load_text` 改 universal newlines（比对行尾不敏感，写入仍恒 LF）；该测试改临时目录 +
+mock `REPO_ROOT`，不再碰真实仓库；新增 `test_crlf_checkout_is_not_drift` 回归（分发后把副本转
+CRLF，断言 `check()/write()/diff()` 全部无感）。`--check` 成功消息刻意保持原文——其 stdout 被
+`documentation_refresh_20261018.json` 钉住。文档口径同步（devkit README、PYTHON_TOOL_CONVENTIONS
+§5.7「字节比对」→「行尾归一化后比对」）。
+
+**问题 2：CRLF 字节钉伪影族**。项目此前已为 `script_editor/runtimes/**` 修过同一根因一轮
+（§3.80），本轮是漏网实例的全谱系：licenses GPL-3.0、catalog jsonl、decompiler 产出（6 个）与
+`batch_decompile.py`、work `protocol_opcodes.json`、manifest 的 9 个 `source_files`、
+staging `provenance.json`——全部是 autocrlf 把库存 LF 改成 CRLF 打破 SHA-256 钉，**零真实内容
+漂移**（LF 归一化后与钉值逐位一致）。`.gitattributes` 补 8 处 `-text`（licenses、catalog jsonl、
+batch_decompile.py、output/**、protocol_opcodes.json、server/tools/*.py、tools/*.py、csv_checks
+的 staging/** 与 *.json）；686 个受影响文件重新签出：单遍脚本读全索引 + 进程内 hashlib 复算
+blob，CRLF→LF 且逐文件验证归一化后 sha1 == 索引哈希才落盘（385 转换 / 301 已是 LF；8 个
+`i/crlf` staging CSV 是 E staging 有意 CRLF，经安全校验正确跳过）。
+
+**附带修复**：`map_npc_reproduction.py` 的 `write_staging_csvs` 用 `write_text` 写
+`provenance.json`——Windows 文本模式把 `\n`→`\r\n`（759 B/LF 变 810 B/CRLF），与提交版对不上；
+改 `write_bytes` 显式 LF。`tools/native_channel/bootstrap.py:21` E501 拆行。
+**初判修正**：验收报告 §5.3-1 曾把 architecture 证据钉判为「`26b7a08` 改工具未重生证据的平台
+无关真实漂移」，逐字节复测**推翻**——`batch_decompile.py` 归一化后 `a7474223` 与钉值一致、
+重生输出与提交版逐字节一致；连同 manifest 9 个 source_files 与 staging provenance.json 全部是
+CRLF 伪影。教训已写进报告：字节钉报差先做行尾归一化复算再下结论。
+
+**§6 人工复核项**：生成器修改后 batch_001 manifest 按 §6 重生，逐字段 diff 仅一行——
+`map_npc_reproduction.py` 的 `tool_and_evidence_sha256` `cc5e9349…`→`7fe0d302…`；全新导出
+（22 文件）与提交版 `diff -r` 亦仅此一行，其余字节级一致。提交信息须说明该行变化。
+
+**复跑（Windows 原生 Python）**：架构套件 **161/161 OK**（修复前 1 失败 + 1 错误，且
+RealBatchTests 整类曾因 E evidence setUpClass 错误未能运行）；script_manual validate
+`--verify-evidence --require-full-inventory` 通过（5135/5135）；catalog 34、review_api 27、
+`export_review_csv.py --check` 全过；devkit 45 测仅剩 WIN102 夹具 1 项（既有 P2，§6.3）；
+script_editor 376 测 4 失败均为既有（3×TransportTests §6.4 + 1×包哈希钉），原 3 个 GPL 许可
+**错误**消除；`git ls-files --eol` 的 `i/lf w/crlf` 残留 0。
+
+**工作树口径**：`git status` 706 个 ` M` 中 `git diff` 实测仅 10 个文件有真实内容差异
+（两处 .gitattributes、AGENTS.md、PYTHON_TOOL_CONVENTIONS.md、manifest.json、
+map_npc_reproduction.py、vendor_core.py、test_vendor_core.py、devkit README、
+bootstrap.py）；其余为 stat 缓存伪影——抽验 raw 哈希与索引 blob 逐位相同，本沙箱文件系统
+stat 不稳定（§5.1 同类现象），提交以 `git diff` 为准。3 个 untracked：`.workbuddy/`、
+两份 analysis 文档。
+
+**未做（等用户）**：提交与否、`.workbuddy/` 是否入库、P1/P2 各项（WinError 32 ×23、
+map_editor 路径分隔符、TransportTests、WIN102 夹具、review_browser_acceptance、
+mock_server_v2 `/tmp`、script_editor 包哈希钉 `a45e0e49` vs `8b6e9266`）。

@@ -18,7 +18,9 @@ def main() -> int:
 
     # Use explicit check instead of assert so it runs under python -O
     if derive(0).rx_key != 1442715248:
-        raise RuntimeError("derivation fixture mismatch: derive(0).rx_key != 1442715248")
+        raise RuntimeError(
+            "derivation fixture mismatch: derive(0).rx_key != 1442715248"
+        )
     if "--check-only" in sys.argv[1:]:
         print("PASS: standard-library runtime and derivation fixture")
         return 0
