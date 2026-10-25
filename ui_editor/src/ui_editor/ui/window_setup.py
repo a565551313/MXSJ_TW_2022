@@ -125,6 +125,11 @@ class WindowSetupMixin:
         self._redo_action.setEnabled(False)
         edit_menu.addAction(self._redo_action)
         edit_menu.addSeparator()
+        self._act_cut = QAction("剪切控件", self)
+        self._act_cut.setShortcut(QKeySequence.StandardKey.Cut)
+        self._act_cut.triggered.connect(self._edit_cut)
+        self._act_cut.setEnabled(False)
+        edit_menu.addAction(self._act_cut)
         self._act_copy = QAction("复制控件", self)
         self._act_copy.setShortcut(QKeySequence.StandardKey.Copy)
         self._act_copy.triggered.connect(self._edit_copy)
@@ -174,7 +179,12 @@ class WindowSetupMixin:
 
     def _build_toolbar(self) -> None:
         """顶部图标工具栏：与菜单共用同一 QAction（状态同步）。"""
+        self._act_assets = QAction("浏览资源", self)
+        self._act_assets.triggered.connect(self.browse_resources)
         for action, icon, tip, short in (
+                (self._act_assets, icons.icon_assets(),
+                 "浏览资源（看 / 导出副本 / 放进包 / 拼名族；"
+                 "不写控件属性）", "资源"),
                 (self._act_open_file, icons.icon_open_file(),
                  "打开布局文件", "打开"),
                 (self._act_open_pack, icons.icon_open_pack(),
@@ -230,6 +240,7 @@ class WindowSetupMixin:
         bar.addAction(self._undo_action)
         bar.addAction(self._redo_action)
         bar.addAction(self._act_reload)
+        bar.addAction(self._act_assets)
         # 文本编码：与「对齐」「按钮态」同款下拉按钮，缩写「编码」
         self._encoding_btn, self._encoding_actions = build_encoding_button(
             self, self.change_text_encoding)

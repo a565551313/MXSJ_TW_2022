@@ -2,20 +2,16 @@
 
 由 MainWindow 组装，复用窗口的文档、选择、画布与动作对象；不独立创建
 窗口、不保存文件。方法保持原有名称，菜单/信号和调用方无需更换入口。
-添加/提升、复制粘贴、删除引用护栏、锁定与右键菜单集中在这里。
+添加/提升、删除引用护栏、锁定与右键菜单集中在这里；复制/剪切/
+粘贴在 ``clipboard.py`` 的 ClipboardMixin。
 """
 
 from __future__ import annotations
 
-from PySide6.QtCore import QMimeData
-from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import (
-    QApplication,
     QLineEdit,
     QMenu,
     QMessageBox,
-    QPlainTextEdit,
-    QTextEdit,
 )
 
 from ..core import painters
@@ -160,8 +156,7 @@ class EditingCommandsMixin:
         self._update_title()
         self._update_status("已升一级（与父控件同级）。")
 
-    # -- 画布右键菜单与复制/粘贴/删除 --------------------------------
-    _MIME_WIDGETS = "application/x-mxsj-widget+json"
+    # -- 画布右键菜单与删除/锁定 ------------------------------------
 
     def _selected_widgets(self) -> list[Widget]:
         """当前生效的多选控件（按文档顺序，祖先已选则不带其子孙）。"""
@@ -188,27 +183,6 @@ class EditingCommandsMixin:
         return sorted((w for w in picked if not has_chosen_ancestor(w)),
                       key=lambda w: order.get(id(w), 0))
 
-    def _focused_text_editor(self):
-        """焦点在文本输入里时，复制/粘贴/删除应作用于文本而非控件。"""
-        fw = QApplication.focusWidget()
-        if isinstance(fw, (QLineEdit, QTextEdit, QPlainTextEdit)):
-            return fw
-        return None
-
-    def _edit_copy(self) -> None:
-        fw = self._focused_text_editor()
-        if fw is not None:
-            fw.copy()
-            return
-        self.copy_selected_widgets()
-
-    def _edit_paste(self) -> None:
-        fw = self._focused_text_editor()
-        if fw is not None:
-            fw.paste()
-            return
-        self.paste_widgets()
-
     def _edit_delete(self) -> None:
         fw = self._focused_text_editor()
         if fw is not None:
@@ -219,101 +193,25 @@ class EditingCommandsMixin:
             return
         self.delete_selected()
 
-    def copy_selected_widgets(self) -> None:
-        """把选中的控件（含子树）序列化进系统剪贴板。"""
-        import json
-
-        widgets = self._selected_widgets()
-        if not widgets:
-            return
-        payload = json.dumps([w.to_dict() for w in widgets],
-                             ensure_ascii=False).encode("utf-8")
-        mime = QMimeData()
-        mime.setData(self._MIME_WIDGETS, payload)
-        mime.setText(payload.decode("utf-8"))
-        QGuiApplication.clipboard().setMimeData(mime)
-        self._sync_edit_actions()
-        self._update_status(f"已复制 {len(widgets)} 个控件")
-
-    def _clipboard_payload(self) -> list[dict] | None:
-        """读剪贴板中的控件负载（本工具复制的），无效返回 None。"""
-        import json
-
-        clipboard = QGuiApplication.clipboard()
-        mime = clipboard.mimeData()
-        raw = None
-        if mime is not None and mime.hasFormat(self._MIME_WIDGETS):
-            raw = bytes(mime.data(self._MIME_WIDGETS))
-        elif mime is not None and mime.hasText():
-            raw = mime.text().encode("utf-8")
-        if not raw:
-            return None
-        try:
-            data = json.loads(raw.decode("utf-8"))
-        except (ValueError, UnicodeDecodeError):
-            return None
-        if (not isinstance(data, list) or not data
-                or not all(isinstance(d, dict) for d in data)):
-            return None
-        return data
-
-    def paste_widgets(self) -> None:
-        """把剪贴板控件粘进文档：作为当前选中控件的同级（无选择挂顶层）。
-
-        位置统一偏移 (16,16) 免与原件重叠；整组粘贴算一步撤销。
-        名字：与文档里已有控件重名时自动加后缀（``BTN`` → ``BTN_1``、
-        再粘 → ``BTN_2``；``BTN_1`` 复制后粘贴 → ``BTN_1_1``），子树里的
-        重名子控件同样处理；不重名则保持原名。这样副本不会顶掉脚本对
-        原控件的 sName 认领，也不会在诊断里变成重复名。
-        """
+    def delete_selected(self, verb: str = "删除") -> int:
+        """删除选中控件（带锁定/引用护栏），返回实际删除的顶级个数。"""
         if self.doc is None:
-            return
-        payload = self._clipboard_payload()
-        if not payload:
-            return
-        clones = [Widget.from_dict(d) for d in payload]
-        selection = self._selected_widgets()
-        anchor = selection[0] if selection else None
-        parent = anchor.parent if anchor is not None else None
-        siblings = (parent.children if parent is not None
-                    else self.doc.roots)
-        index = (siblings.index(anchor) + 1 if anchor is not None
-                 else None)
-        used = {w.name for w in self.doc.all_widgets()}
-        renamed = self.doc.rename_copies(clones, used)
-        for clone in clones:
-            clone.set_geometry(x=clone.x + 16, y=clone.y + 16)
-            self.doc.insert_widget(clone, parent,
-                                   None if index is None else index)
-            if index is not None:
-                index += 1
-        self.doc.checkpoint()
-        self._refresh_structure()
-        self._select_widget(clones[0])
-        self._update_title()
-        note = (f"（{renamed} 个重名的已自动改名）" if renamed else "")
-        self._update_status(
-            f"已粘贴 {len(clones)} 个控件{note}："
-            f"首个为「{clones[0].name or '(未命名)'}」")
-
-    def delete_selected(self) -> None:
-        if self.doc is None:
-            return
+            return 0
         targets = self._selected_widgets()
         if not targets:
             current = self.tree_panel.current_widget()
             targets = [current] if current is not None else []
         if not targets:
-            return
+            return 0
         blocked = [w for w in targets
                    if any(node.locked for node in w.walk())]
         if blocked:
             targets = [w for w in targets if w not in blocked]
             names = "、".join(w.name or "(无名)" for w in blocked[:3])
             self._update_status(
-                f"「{names}」已锁定（或其内有锁定控件），先解锁再删除。")
+                f"「{names}」已锁定（或其内有锁定控件），先解锁再{verb}。")
             if not targets:
-                return
+                return 0
         descendants = sum(len(list(w.walk())) - 1 for w in targets)
         impacts = reference_impacts(
             (node.name for root in targets for node in root.walk()),
@@ -325,13 +223,15 @@ class EditingCommandsMixin:
                       "静态索引可能漏动态引用或版本变化。"
                     if impacts else "")
             answer = QMessageBox.question(
-                self, "删除控件" if not impacts else "删除可能影响脚本引用（静态）",
-                f"将删除 {len(targets)} 个控件及其 {descendants} 个"
+                self,
+                f"{verb}控件" if not impacts
+                else f"{verb}可能影响脚本引用（静态）",
+                f"将{verb} {len(targets)} 个控件及其 {descendants} 个"
                 "子控件，确定吗？" + note,
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No)
             if answer != QMessageBox.StandardButton.Yes:
-                return
+                return 0
         parent = targets[0].parent
         for widget in targets:
             self.doc.remove_widget(widget)
@@ -339,11 +239,13 @@ class EditingCommandsMixin:
         self._refresh_structure()
         self._select_widget(parent)
         self._update_title()
+        return len(targets)
 
     def _sync_edit_actions(self) -> None:
         """按选择与剪贴板状态置灰复制/粘贴/删除（菜单与右键菜单共用）。"""
         has_widgets = self.doc is not None and bool(self._selected_widgets())
         self._act_copy.setEnabled(has_widgets)
+        self._act_cut.setEnabled(has_widgets)
         self._act_delete.setEnabled(has_widgets)
         self._act_paste.setEnabled(
             self.doc is not None and self._clipboard_payload() is not None)
@@ -560,6 +462,7 @@ class EditingCommandsMixin:
             self._select_widget(widget)
         self._sync_edit_actions()
         menu = QMenu(self)
+        menu.addAction(self._act_cut)
         menu.addAction(self._act_copy)
         menu.addAction(self._act_paste)
         menu.addAction(self._act_delete)

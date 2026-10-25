@@ -617,8 +617,12 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                  widget_type: str | None = None,
                  exists: Callable[[str], bool] | None = None,
                  family_pieces: Callable[[str], list[str] | None] | None = None,
-                 family_kind: Callable[[str], str | None] | None = None):
+                 family_kind: Callable[[str], str | None] | None = None,
+                 browse_only: bool = False):
         super().__init__(parent)
+        # 浏览模式（工具栏「资源」按钮）：没有目标属性，确定＝关闭，
+        # 双击条目也只关闭，不写任何东西；导出/放进包/拼名族照旧。
+        self._browse_only = browse_only
         self.setWindowTitle(title)
         self.resize(760, 540)
         self.external_requested = False
@@ -691,11 +695,16 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._list.horizontalScrollBar().valueChanged.connect(
             self._schedule_thumbs)
 
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok
-            | QDialogButtonBox.StandardButton.Cancel, parent=self)
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
+        if browse_only:
+            buttons = QDialogButtonBox(
+                QDialogButtonBox.StandardButton.Close, parent=self)
+            buttons.clicked.connect(self.accept)
+        else:
+            buttons = QDialogButtonBox(
+                QDialogButtonBox.StandardButton.Ok
+                | QDialogButtonBox.StandardButton.Cancel, parent=self)
+            buttons.accepted.connect(self.accept)
+            buttons.rejected.connect(self.reject)
 
         bottom = QHBoxLayout()
         if self._export_handler is not None:
@@ -720,7 +729,9 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                 "属性直接填成这一族的目录路径")
             family_btn.clicked.connect(self._choose_family)
             bottom.addWidget(family_btn)
-        else:
+        elif not self._browse_only:
+            # 浏览模式没有目标属性，「只填包外文件名」是写属性路径的
+            # 入口，不露面。
             external_btn = QPushButton("只填包外文件名…", self)
             external_btn.setToolTip(
                 "不改包：只把文件名填进属性，图片本身不会写进资源包。\n"

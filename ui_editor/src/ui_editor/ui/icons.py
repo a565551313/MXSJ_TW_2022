@@ -71,6 +71,31 @@ def icon_open_pack() -> QIcon:
     return _end(pixmap, p)
 
 
+def icon_assets() -> QIcon:
+    """浏览资源：青色图片框 + 放大镜。"""
+    pixmap, p = _begin()
+    p.setPen(_pen("#175d63"))
+    p.setBrush(QColor("#2fa3ad"))
+    p.drawRoundedRect(QRectF(3.5, 5.5, 18, 14), 2, 2)   # 图片框
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor("#eafafa"))
+    p.drawEllipse(QPointF(9, 10.5), 2.2, 2.2)           # 框里的小太阳
+    p.setBrush(QColor("#d8f4f6"))
+    hill = QPainterPath()
+    hill.moveTo(5, 18)
+    hill.lineTo(10, 12.5)
+    hill.lineTo(14, 17)
+    hill.lineTo(17, 13.5)
+    hill.lineTo(20, 18)
+    hill.closeSubpath()
+    p.drawPath(hill)
+    p.setPen(_pen("#20323f", 2.0))
+    p.setBrush(QColor(255, 255, 255, 60))
+    p.drawEllipse(QPointF(17.5, 16.5), 5.2, 5.2)        # 放大镜
+    p.drawLine(QPointF(21.4, 20.4), QPointF(25.2, 24.2))  # 镜柄
+    return _end(pixmap, p)
+
+
 def icon_save() -> QIcon:
     """保存：蓝色软盘。"""
     pixmap, p = _begin()

@@ -2,6 +2,28 @@
 
 > **阅读约定（2026-10-18）**：本文同时保留不同版本的设计和演进记录，不是完成清单。当前版本／已实现功能以本目录 [README](README.md) 与源码为准，测试及原生验收范围见 [STATUS](../docs/STATUS.md)；未落实的设计不能据此标为已交付。
 
+## 0.17.0 工具栏资源 / 添加属性下拉 / 属性中文名 / 剪切 / iAlign
+
+- 资源浏览器**复用** `ResourcePickerDialog`（`browse_only` 旗标）：不新建第二套
+  浏览 UI；浏览模式只移除「写回目标属性」这一语义（确定＝关闭、隐藏
+  「只填包外文件名」），资源级操作（导出/放进包/拼名族）原样保留。
+- 添加属性候选集定为**普查模板键并集**（用户确认，不并原生表）：来源单一、
+  已在包内；可编辑保留手输任意键，未选中禁用。
+- 中文释义独立零 Qt 核心 `core/prop_glossary.py`：原生繁体名只收录证据表
+  （native_tables.json 39 键），简体释义覆盖普查 57 键＋tTextOffset；
+  **无依据返回 None、界面不显示 tooltip**——与「不编造」纪律一致。
+- 剪切＝`_copy_to_clipboard` ＋ `delete_selected(verb="剪切")`：护栏与撤销
+  语义完全复用删除路径（整组一步撤销）；确认取消剪贴板留副本是明示取舍。
+- iAlign 语义以 `native_widgetconfig_comparison_20261017.md` §1 为准：
+  旧 `CTextFrame` 三值（0 右 1 中 2 左）、新式与按钮九宫 0–8；**字段缺失返回
+  历史画法**（按钮顶+水平居中、其余顶+左），不为「修映射」偷改既有布局观感；
+  越界回退居中。`painters.text_align_flags/align_scheme` 为唯一解释点，
+  属性面板具名下拉与绘制共用同一套方案表。
+- 结构护栏：commands.py 超 600 行上限 → 剪贴板集群拆 `ui/clipboard.py`
+  （ClipboardMixin，进 GROUPS 与基类断言）；导出处理函数提为
+  `property_panel.make_export_handler` 模块级（QMessageBox/QFileDialog 用模块
+  全局名，保住既有测试的补丁命名空间；局部 import 曾让补丁落空、离屏弹真模态）。
+
 ## 0.8.4 来源操作与字段编码
 
 `ui/source_actions.py` 独立承接编码切换、刷新、来源布局导出，不继续扩充主窗口。

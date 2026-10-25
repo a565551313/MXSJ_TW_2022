@@ -15,6 +15,7 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QCheckBox,
     QColorDialog,
+    QComboBox,
     QDialog,
     QDoubleSpinBox,
     QFileDialog,
@@ -32,8 +33,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..core import colors, dir_base
+from ..core import colors, dir_base, prop_glossary
+from ..core.defaults_data import DEFAULT_PROPS
 from ..core.model import Widget
+from ..core.painters import align_scheme
 
 _LONG_TEXT_KEYS = {"sText", "sTitles", "sTips", "sTitle"}
 _FILE_KEYS = {"sFileName", "sBarFileName", "sBgFileName", "sSoundPath"}
@@ -43,6 +46,21 @@ _DISPLAY_ORDER = (
 )
 _CORE_KEYS = {"sWidgetType", "sName", "iX", "iY", "iWidth", "iHeight",
               "lChildren"}
+
+# 普查模板（47,139 个真实控件）里真实出现过的属性键全集：添加属性
+# 下拉的候选来源（用户确认 2026-10-26：普查并集）。
+_CENSUS_KEYS = tuple(sorted({k for d in DEFAULT_PROPS.values() for k in d}))
+
+# iAlign 取值下拉的文案（语义见 core/painters.text_align_flags 的证据注释）
+_ALIGN_OLD_LABELS = ((0, "0 右对齐"), (1, "1 居中"), (2, "2 左对齐"))
+_ALIGN_NINE_LABELS = (
+    (0, "0 左上"), (1, "1 中上"), (2, "2 右上"),
+    (3, "3 左中"), (4, "4 居中"), (5, "5 右中"),
+    (6, "6 左下"), (7, "7 中下"), (8, "8 右下"),
+)
+_NEW_KEY_TIP_FALLBACK = (
+    "下拉里是真实存在、但当前控件还没有的属性（普查模板并集）；"
+    "可直接选，也可手输任意新名字。值填在右边「值」框。")
 
 
 class _TextEdit(QPlainTextEdit):
@@ -68,6 +86,132 @@ def _guess_scalar(text: str):
         return float(text)
     except ValueError:
         return text
+
+
+def make_export_handler(assets, fallback_parent):
+    """导出副本处理函数（属性面板选图窗与资源浏览器共用，0.17.0 抽出）。
+
+    ``QMessageBox`` / ``QFileDialog`` 用模块全局名：既有测试按本模块
+    命名空间打补丁，局部 import 会让补丁落空、离屏弹真模态框。
+    """
+    def export_handler(paths: list[str], host=None) -> None:
+        from pathlib import Path
+
+        from ..core import dir_base
+        from ..core.asset_export import (
+            dir_piece_name,
+            export_targets,
+            family_prefixes,
+            source_key,
+        )
+        from .busy import run_busy_or_plain
+        from .image_export import export_image_files
+
+        # 一批里有多个拼名族时加族名前缀（登录按钮-0l.png）。不加的话
+        # 两族都写 0l.png，后一族会被批量去重改成看不出出处的 0l-2.png。
+        prefixes = family_prefixes(paths)
+
+        def one(path: str, dest_dir, dest_name=None, used_names=None,
+                unavailable=None):
+            prefix = prefixes.get(source_key(path), "")
+            if dir_base.is_dir_base(path):
+                # 拼名族按族内每块子图导出（与画布右键导出同一套命名）。
+                written: list = []
+                for _name, data, source in export_targets(
+                        assets, path, unavailable, prefix):
+                    written.extend(export_image_files(
+                        source, data, assets.fetch_image(source), dest_dir,
+                        dir_piece_name(source, path, prefix),
+                        protected_paths=assets.pack_paths,
+                        used_names=used_names))
+                return written
+            return export_image_files(
+                path, assets.fetch_bytes(path),
+                assets.fetch_image(path), dest_dir, dest_name,
+                protected_paths=assets.pack_paths,
+                used_names=used_names)
+
+        parent = host or fallback_parent
+        written: list = []
+        rejected: list = []
+        partial: list = []      # 族里有子图读不出（其余照常导出）
+        try:
+            if len(paths) == 1 and not dir_base.is_dir_base(paths[0]):
+                base = paths[0].replace("\\", "/").split("/")[-1]
+                chosen, _ = QFileDialog.getSaveFileName(
+                    parent, "导出图片", base, "所有文件 (*)")
+                if not chosen:
+                    return
+                target = Path(chosen)
+                written = one(paths[0], target.parent, target.name)
+            else:
+                directory = QFileDialog.getExistingDirectory(
+                    parent, "选择导出到的文件夹")
+                if not directory:
+                    return
+
+                def bulk(h):
+                    out: list = []
+                    bad: list = []
+                    short: list = []
+                    used: set = set()   # 本批已占用文件名，同名加序号
+                    total = len(paths)
+                    for i, path in enumerate(paths, 1):
+                        if h.cancelled:
+                            # 已导出的保留，未导出的停
+                            return out, bad, short
+                        h.report(i - 1, total,
+                                 f"导出 {path}（{i}/{total}）…")
+                        unreadable: list = []
+                        try:
+                            out.extend(one(path, directory,
+                                           used_names=used,
+                                           unavailable=unreadable))
+                        except (OSError, ValueError) as exc:
+                            # 单个资源被拒绝只跳过它，其余照常导出。
+                            bad.append((path, str(exc)))
+                        if unreadable:
+                            short.append(
+                                f"{path}（子图读不出："
+                                + "、".join(unreadable[:3]) + "）")
+                    return out, bad, short
+
+                written, rejected, partial = run_busy_or_plain(
+                    host or parent, "批量导出图片…", bulk,
+                    maximum=len(paths), cancellable=True,
+                    cancellable_text="取消（已导出的保留）")
+        except (OSError, ValueError) as exc:
+            QMessageBox.warning(parent, "导出失败", str(exc))
+            return
+        reject_note = ""
+        if rejected:
+            reject_note += (f"\n{len(rejected)} 个被拒绝，未写出：\n"
+                            + "\n".join(path for path, _why
+                                        in rejected[:3]))
+        if partial:
+            reject_note += (f"\n{len(partial)} 个族有子图读不出"
+                            "（其余已导出）：\n"
+                            + "\n".join(partial[:3]))
+        if written:
+            QMessageBox.information(
+                parent, "导出完成",
+                f"已导出 {len(written)} 个文件，第一个在：\n"
+                f"{written[0]}{reject_note}")
+        elif rejected:
+            QMessageBox.warning(
+                parent, "导出失败",
+                f"{len(rejected)} 个资源被拒绝写入：\n"
+                f"{rejected[0][1]}")
+        elif partial:
+            QMessageBox.warning(
+                parent, "导出失败",
+                f"{len(partial)} 个族的子图读不出：\n"
+                f"{partial[0]}")
+        else:
+            QMessageBox.warning(
+                parent, "导出失败", "这些资源在包里取不到内容。")
+
+    return export_handler
 
 
 class PropertyPanel(QWidget):
@@ -99,8 +243,14 @@ class PropertyPanel(QWidget):
         root.addWidget(scroll, 1)
 
         add_row = QHBoxLayout()
-        self._new_key = QLineEdit()
-        self._new_key.setPlaceholderText("新属性名（如 iFoo）")
+        self._new_key = QComboBox()
+        self._new_key.setEditable(True)
+        self._new_key.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self._new_key.lineEdit().setPlaceholderText(
+            "新属性名（下拉可选，也可手输）")
+        self._new_key.setEnabled(False)
+        self._new_key.currentTextChanged.connect(self._refresh_new_key_tip)
+        self._refresh_new_key_tip("")
         self._new_value = QLineEdit()
         self._new_value.setPlaceholderText("值")
         add_button = QPushButton("添加属性")
@@ -147,6 +297,7 @@ class PropertyPanel(QWidget):
         widget = self._widget
         if widget is None:
             self._header.setText("未选中控件")
+            self._refresh_key_candidates()
             self._building = False
             return
         self.refresh_label(widget)
@@ -160,8 +311,34 @@ class PropertyPanel(QWidget):
                 self._form.addRow("子控件",
                                   QLabel(f"{len(widget.children)} 个"
                                          "（在控件树中管理）"))
+            self._refresh_key_candidates()
         finally:
             self._building = False
+
+    def _refresh_key_candidates(self) -> None:
+        """添加属性下拉候选 = 普查存在但当前控件没有的键（可编辑保留手输）。"""
+        widget = self._widget
+        if widget is None:
+            self._new_key.clear()
+            self._new_key.setEnabled(False)
+            return
+        current = self._new_key.currentText().strip()
+        self._new_key.clear()
+        self._new_key.addItems(
+            [k for k in _CENSUS_KEYS
+             if k not in widget.props and k != "lChildren"])
+        self._new_key.setEnabled(True)
+        if current:
+            self._new_key.setCurrentText(current)
+
+    def _refresh_new_key_tip(self, text: str) -> None:
+        tip = prop_glossary.tooltip(text.strip())
+        try:
+            self._new_key.setToolTip(
+                f"{tip}\n{_NEW_KEY_TIP_FALLBACK}" if tip
+                else _NEW_KEY_TIP_FALLBACK)
+        except RuntimeError:      # 控件正在销毁：尾随信号，忽略
+            pass
 
     @staticmethod
     def _ordered_keys(widget: Widget) -> list[str]:
@@ -169,12 +346,21 @@ class PropertyPanel(QWidget):
         tail = sorted(k for k in widget.props if k not in _DISPLAY_ORDER)
         return head + tail
 
+    @staticmethod
+    def _key_label(key: str) -> QLabel:
+        """属性名标签：悬停显示中文释义（有依据才给，不编造）。"""
+        label = QLabel(key)
+        tip = prop_glossary.tooltip(key)
+        if tip:
+            label.setToolTip(tip)
+        return label
+
     def _add_row(self, key: str, value: object) -> None:
         editor = self._make_editor(key, value)
         if editor is None:
             editor = QLabel(f"({type(value).__name__}，只读)")
         if key in _CORE_KEYS:
-            self._form.addRow(key, editor)
+            self._form.addRow(self._key_label(key), editor)
             return
         row = QWidget()
         layout = QHBoxLayout(row)
@@ -185,7 +371,7 @@ class PropertyPanel(QWidget):
         delete.setToolTip("删除此属性")
         delete.clicked.connect(lambda _=False, k=key: self._remove_property(k))
         layout.addWidget(delete)
-        self._form.addRow(key, row)
+        self._form.addRow(self._key_label(key), row)
 
     def _allowed(self, key: str, value: object) -> bool:
         if self._widget is None:
@@ -217,7 +403,7 @@ class PropertyPanel(QWidget):
     def _add_property(self) -> None:
         if self._widget is None or self._building:
             return
-        key = self._new_key.text().strip()
+        key = self._new_key.currentText().strip()
         if not key:
             return
         if key == "lChildren":
@@ -226,11 +412,36 @@ class PropertyPanel(QWidget):
             return
         if not self._commit(key, _guess_scalar(self._new_value.text())):
             return
-        self._new_key.clear()
+        self._new_key.setCurrentText("")
         self._new_value.clear()
         self._rebuild()
 
     # -- 各类型编辑器 -------------------------------------------------
+    def _align_editor(self, key: str, value: int) -> QWidget | None:
+        """iAlign 的具名下拉（旧三值 / 新九宫）；原生没覆盖的类型返回 None。"""
+        scheme = align_scheme(self._widget.wtype
+                              if self._widget is not None else "")
+        if scheme is None:
+            return None
+        labels = _ALIGN_OLD_LABELS if scheme == "old" else _ALIGN_NINE_LABELS
+        combo = QComboBox()
+        for item, text in labels:
+            combo.addItem(text, item)
+        if value not in [item for item, _ in labels]:
+            combo.addItem(f"{value}（原生取值外）", value)
+        combo.setCurrentIndex(combo.findData(value))
+        combo.setToolTip(
+            "文本对齐方式；改完画布立即按新对齐重画。"
+            "语义与原生一致（旧文本框三值 / 新文本框与按钮九宫）。")
+        # 槽只捕值表不捕控件：面板重建销毁 combo 时若信号尾随触发，
+        # 再碰 combo 就是 use-after-free（沙箱实测崩过堆）。
+        values = [item for item, _ in labels] + (
+            [] if value in [item for item, _ in labels] else [value])
+        combo.currentIndexChanged.connect(
+            lambda idx, k=key, vals=values:
+            self._commit(k, vals[idx]) if 0 <= idx < len(vals) else None)
+        return combo
+
     def _make_editor(self, key: str, value: object) -> QWidget | None:
         if colors.is_color_key(key):
             if (not isinstance(value, bool) and isinstance(value, (int, str))
@@ -244,6 +455,11 @@ class PropertyPanel(QWidget):
             box.toggled.connect(lambda on, k=key: self._commit(k, bool(on)))
             self._getters[key] = lambda v: box.setChecked(bool(v))
             return box
+        if (key == "iAlign" and isinstance(value, int)
+                and not isinstance(value, bool)):
+            editor = self._align_editor(key, value)
+            if editor is not None:
+                return editor
         if isinstance(value, int):
             spin = QSpinBox()
             spin.setRange(-2_000_000_000, 2_000_000_000)
@@ -530,122 +746,7 @@ class PropertyPanel(QWidget):
             chosen = assets.family_plan(path)
             return chosen.kind if chosen is not None else None
 
-        def export_handler(paths: list[str], host=None) -> None:
-            from pathlib import Path
-
-            from ..core.asset_export import (
-                dir_piece_name,
-                export_targets,
-                family_prefixes,
-                source_key,
-            )
-            from .busy import run_busy_or_plain
-            from .image_export import export_image_files
-
-            # 一批里有多个拼名族时加族名前缀（登录按钮-0l.png）。不加的话
-            # 两族都写 0l.png，后一族被批量去重改成看不出出处的 0l-2.png
-            # （画布右键导出早已这么做，这里漏了）。
-            prefixes = family_prefixes(paths)
-
-            def one(path: str, dest_dir, dest_name=None, used_names=None,
-                    unavailable=None):
-                prefix = prefixes.get(source_key(path), "")
-                if dir_base.is_dir_base(path):
-                    # 拼名族按族内每块子图导出（与画布右键导出同一套命名）。
-                    written: list = []
-                    for _name, data, source in export_targets(
-                            assets, path, unavailable, prefix):
-                        written.extend(export_image_files(
-                            source, data, assets.fetch_image(source), dest_dir,
-                            dir_piece_name(source, path, prefix),
-                            protected_paths=assets.pack_paths,
-                            used_names=used_names))
-                    return written
-                return export_image_files(
-                    path, assets.fetch_bytes(path),
-                    assets.fetch_image(path), dest_dir, dest_name,
-                    protected_paths=assets.pack_paths,
-                    used_names=used_names)
-
-            written: list = []
-            rejected: list = []
-            partial: list = []      # 族里有子图读不出（其余照常导出）
-            try:
-                if len(paths) == 1 and not dir_base.is_dir_base(paths[0]):
-                    base = paths[0].replace("\\", "/").split("/")[-1]
-                    chosen, _ = QFileDialog.getSaveFileName(
-                        self, "导出图片", base, "所有文件 (*)")
-                    if not chosen:
-                        return
-                    target = Path(chosen)
-                    written = one(paths[0], target.parent, target.name)
-                else:
-                    directory = QFileDialog.getExistingDirectory(
-                        self, "选择导出到的文件夹")
-                    if not directory:
-                        return
-
-                    def bulk(h):
-                        out: list = []
-                        bad: list = []
-                        short: list = []
-                        used: set = set()   # 本批已占用文件名，同名加序号
-                        total = len(paths)
-                        for i, path in enumerate(paths, 1):
-                            if h.cancelled:
-                                # 已导出的保留，未导出的停
-                                return out, bad, short
-                            h.report(i - 1, total,
-                                     f"导出 {path}（{i}/{total}）…")
-                            unreadable: list = []
-                            try:
-                                out.extend(one(path, directory,
-                                               used_names=used,
-                                               unavailable=unreadable))
-                            except (OSError, ValueError) as exc:
-                                # 单个资源被拒绝只跳过它，其余照常导出。
-                                bad.append((path, str(exc)))
-                            if unreadable:
-                                short.append(
-                                    (path, "子图读不出：" +
-                                     "、".join(unreadable[:3])))
-                        return out, bad, short
-
-                    written, rejected, partial = run_busy_or_plain(
-                        host or self, "批量导出图片…", bulk,
-                        maximum=len(paths), cancellable=True,
-                        cancellable_text="取消（已导出的保留）")
-            except (OSError, ValueError) as exc:
-                QMessageBox.warning(self, "导出失败", str(exc))
-                return
-            reject_note = ""
-            if rejected:
-                reject_note += (f"\n{len(rejected)} 个被拒绝，未写出：\n"
-                                + "\n".join(path for path, _why
-                                             in rejected[:3]))
-            if partial:
-                reject_note += (f"\n{len(partial)} 个族有子图读不出"
-                                "（其余已导出）：\n"
-                                + "\n".join(f"{path}（{why}）"
-                                             for path, why in partial[:3]))
-            if written:
-                QMessageBox.information(
-                    self, "导出完成",
-                    f"已导出 {len(written)} 个文件，第一个在：\n"
-                    f"{written[0]}{reject_note}")
-            elif rejected:
-                QMessageBox.warning(
-                    self, "导出失败",
-                    f"{len(rejected)} 个资源被拒绝写入：\n"
-                    f"{rejected[0][1]}")
-            elif partial:
-                QMessageBox.warning(
-                    self, "导出失败",
-                    f"{len(partial)} 个族的子图读不出：\n"
-                    f"{partial[0][0]}（{partial[0][1]}）")
-            else:
-                QMessageBox.warning(
-                    self, "导出失败", "这些资源在包里取不到内容。")
+        export_handler = make_export_handler(assets, self)
 
         widget_type = None
         if self._widget is not None:

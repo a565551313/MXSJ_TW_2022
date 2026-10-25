@@ -119,7 +119,7 @@ class TestGuiReview(unittest.TestCase):
         w = self.window
         w._select_widget(self.kid())
         panel = w.props_panel
-        panel._new_key.setText("sName")
+        panel._new_key.setCurrentText("sName")
         panel._new_value.setText("renamed")
         with mock.patch(
             "ui_editor.ui.main_window.QMessageBox.question", return_value=QMessageBox.No
