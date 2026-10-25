@@ -261,29 +261,6 @@ QFrame#mapRowCard[selected="true"] {
     border-color: #cce7de;
 }
 QFrame#mapRowCard:hover { background: #f5f9f8; border-color: #e7efec; }
-QGroupBox#inspectorCard {
-    background: #ffffff;
-    border: none;
-    border-top: 1px solid #edf1f0;
-    border-radius: 0;
-    margin-top: 8px;
-    padding: 13px 3px 5px;
-    font-size: 11px;
-    color: #869598;
-}
-QGroupBox#inspectorCard::title {
-    left: 2px;
-    padding: 0 4px;
-    background: #ffffff;
-}
-QLabel#inspectorObject {
-    background: #f5f8f7;
-    border: 1px solid #e7eeec;
-    border-radius: 9px;
-    padding: 10px;
-    color: #334b51;
-}
-QLabel#inspectorMap { color: #71858a; font-size: 11px; }
 QPushButton#quietButton { padding: 4px 8px; min-height: 16px; color: #5d7377; }
 QPushButton#safeSaveButton {
     background: #167c70;
@@ -1435,6 +1412,12 @@ class EditorWindow(QMainWindow):
         self.entity_search.setFixedWidth(160)
         self.entity_search.textChanged.connect(self._filter_entities_table)
         entity_tools_lay.addWidget(self.entity_search)
+        # 寻路快捷方式（原右侧「选中对象」区块按钮，2026-10-25 移至此处）
+        self.entity_path_btn = QPushButton("寻路到所选")
+        self.entity_path_btn.setObjectName("quietButton")
+        self.entity_path_btn.setToolTip("从出生点模拟 A* 寻路到当前选中的 NPC/传送点")
+        self.entity_path_btn.clicked.connect(self._path_to_selected_entity)
+        entity_tools_lay.addWidget(self.entity_path_btn)
         self.entity_collapse_btn = QPushButton("收起")
         self.entity_collapse_btn.setObjectName("quietButton")
         self.entity_collapse_btn.clicked.connect(self._toggle_entity_panel)
@@ -1452,7 +1435,10 @@ class EditorWindow(QMainWindow):
         center.setStretchFactor(1, 0)
         center.setSizes([650, 210])
 
-        # Right-hand inspector: map/object context, display layers and safe save.
+        # Right-hand inspector: display layers, mask records and audit.
+        # （选中对象/地图信息区块已于 2026-10-25 移除：信息在左侧地图卡片
+        #   与状态栏均有出处，另存为副本在工具栏与文件菜单，寻路快捷方式
+        #   移至实体列表面板工具栏。）
         right_scroll = QScrollArea()
         right_scroll.setObjectName("inspectorScroll")
         right_scroll.setWidgetResizable(True)
@@ -1466,32 +1452,6 @@ class EditorWindow(QMainWindow):
         inspector_title = QLabel("检查器")
         inspector_title.setObjectName("sectionTitle")
         right_lay.addWidget(inspector_title)
-
-        object_box = QGroupBox("选中对象")
-        object_box.setObjectName("inspectorCard")
-        object_lay = QVBoxLayout(object_box)
-        self.selected_object_lbl = QLabel("从下方 NPC 或传送点列表选择对象")
-        self.selected_object_lbl.setObjectName("inspectorObject")
-        self.selected_object_lbl.setWordWrap(True)
-        object_lay.addWidget(self.selected_object_lbl)
-        path_btn = QPushButton("从出生点模拟寻路到所选对象")
-        path_btn.clicked.connect(self._path_to_selected_entity)
-        object_lay.addWidget(path_btn)
-        right_lay.addWidget(object_box)
-
-        map_box = QGroupBox("地图信息")
-        map_box.setObjectName("inspectorCard")
-        map_lay = QVBoxLayout(map_box)
-        self.map_info_lbl = QLabel("尚未打开地图")
-        self.map_info_lbl.setObjectName("inspectorMap")
-        self.map_info_lbl.setWordWrap(True)
-        map_lay.addWidget(self.map_info_lbl)
-        safe_save_btn = QPushButton("另存为副本…")
-        safe_save_btn.setObjectName("safeSaveButton")
-        safe_save_btn.setToolTip("保留客户端原始地图，另存一份可编辑副本")
-        safe_save_btn.clicked.connect(self._save_map_as_dialog)
-        map_lay.addWidget(safe_save_btn)
-        right_lay.addWidget(map_box)
 
         layers_box = QGroupBox("常用图层")
         layers_lay = QVBoxLayout(layers_box)
@@ -1595,7 +1555,6 @@ class EditorWindow(QMainWindow):
         self.entity_search.clear()
         self._populate_entities_table()
         self.entity_table.clearSelection()
-        self.selected_object_lbl.setText("从下方 NPC 或传送点列表选择对象")
 
     def _filter_entities_table(self, text: str) -> None:
         needle = text.strip().casefold()
@@ -1623,25 +1582,13 @@ class EditorWindow(QMainWindow):
             self.entity_collapse_btn.setText("收起")
 
     def _on_entity_selected(self) -> None:
+        # 选中行即把画布中心移到该实体（原检查器标签已随右侧区块移除）
         selected = self.entity_table.selectionModel().selectedRows()
-        selected_row = selected[0].row() if selected else None
-        if selected_row is None:
-            self.selected_object_lbl.setText("从下方 NPC 或传送点列表选择对象")
+        if not selected:
             return
-        headers = self._entity_headers[self._entity_active_key]
-        pairs = []
-        for column, header in enumerate(headers):
-            item = self.entity_table.item(selected_row, column)
-            pairs.append(f"{header} {item.text() if item is not None else '—'}")
-        # 每行三组「表头 值」换行，检查器标签完整镜像当前选中行
-        self.selected_object_lbl.setText(
-            "\n".join(
-                " · ".join(pairs[index : index + 3])
-                for index in range(0, len(pairs), 3)
-            )
-        )
-        if selected_row < len(self._entity_jump_targets):
-            self._jump_to_entity_row(selected_row, 0)
+        row = selected[0].row()
+        if row < len(self._entity_jump_targets):
+            self._jump_to_entity_row(row, 0)
 
     def _build_menus_and_toolbar(self) -> None:
         file_menu = self.menuBar().addMenu("文件(&F)")
@@ -1751,7 +1698,7 @@ class EditorWindow(QMainWindow):
             lambda: QMessageBox.information(
                 self,
                 "快速开始",
-                "先从文件菜单打开客户端目录或单张地图。建议使用右侧「另存为副本」后再编辑。\n\n"
+                "先从文件菜单打开客户端目录或单张地图。建议使用主工具栏「另存为副本」后再编辑。\n\n"
                 "画布下方可切换 NPC 与传送点；右侧检查器显示图层、遮罩记录与审计信息。",
             )
         )
@@ -2103,9 +2050,6 @@ class EditorWindow(QMainWindow):
                 path, progress=lambda m: self.statusBar().showMessage(m)
             )
             self._populate_map_table()
-            self.map_info_lbl.setText(
-                f"目录：{path}\n已扫描 {self.vm.state.map_count} 张地图"
-            )
         except DiscoveryError as exc:
             QMessageBox.warning(self, "未找到地图", str(exc))
             self._refresh_status()
@@ -2208,14 +2152,6 @@ class EditorWindow(QMainWindow):
         self._populate_entities_table()
         for table in self.entity_tables.values():
             table.clearSelection()
-        state = self.vm.state
-        self.map_info_lbl.setText(
-            f"{state.current_key} · {state.current_name}\n"
-            f"{state.current_size[0]} × {state.current_size[1]} px · "
-            f"{state.current_sectors} 扇区 · {state.current_records} 个遮罩记录\n"
-            f"保存模式：{'宽松' if self.vm.config.save_mode == 'loose' else '保护原图'}"
-        )
-        self.selected_object_lbl.setText("从下方 NPC 或传送点列表选择对象")
         self._refresh_status()
 
     def _open_single_map_dialog(self) -> None:

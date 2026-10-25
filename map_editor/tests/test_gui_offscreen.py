@@ -77,11 +77,10 @@ class TestEditorGuiOffscreen(unittest.TestCase):
             self.assertFalse(win.canvas.pen_path_mode)
             self.assertFalse(win.canvas.eraser_mode)
             self.assertEqual(win.canvas._pen_nodes, [])
-            win.selected_object_lbl.setText("stale object")
+            # 切换实体标签页必须清空选中状态（原检查器标签已移除，改验选中）
+            win.entity_tables["npcs"].selectRow(0)
             win.entity_tabs.setCurrentIndex(1)
-            self.assertEqual(
-                win.selected_object_lbl.text(), "从下方 NPC 或传送点列表选择对象"
-            )
+            self.assertEqual(win.entity_table.selectionModel().selectedRows(), [])
             win.entity_tabs.setCurrentIndex(0)
 
             # Pick two walkable points near NPCs for live CAStar demonstration
@@ -262,11 +261,11 @@ class TestEditorGuiOffscreen(unittest.TestCase):
                 for column in range(5):
                     self.assertTrue(portal_table.item(row, column).text())
 
-            # 选中行后检查器标签镜像整行（含表头）
+            # 选中行生效，且寻路快捷按钮已随区块移除搬到实体工具栏
             npc_table.selectRow(0)
             app.processEvents()
-            self.assertIn("编号 4427", win.selected_object_lbl.text())
-            self.assertIn("模型ID zdjjr", win.selected_object_lbl.text())
+            self.assertTrue(npc_table.selectionModel().selectedRows())
+            self.assertTrue(hasattr(win, "entity_path_btn"))
 
             win.close()
             win.deleteLater()
