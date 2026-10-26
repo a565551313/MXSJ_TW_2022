@@ -12,6 +12,11 @@
   范围外后缀（.spr）拒收并给一句话原因；端到端（补丁参数窗）挂账
   成功且计数文案落地；_stage_one(confirm_same_name=False) 不再逐张问
   同名替换（批处理窗已一次性确认）。
+
+0.21.0 增独立入口（工具栏「批图」）测试：磁盘进磁盘出、不挂包也能用；
+参数窗恒 can_stage=False（磁盘文件没有包内路径，无从挂账）；文件夹
+模式只扫顶层不递归；范围外后缀/读不到的文件拒收给一句话原因、不中断
+整批；原文件一律不动，输出经真 run_batch 落盘。
 """
 import io
 import os
@@ -326,6 +331,165 @@ class PickerBatchEntryTests(unittest.TestCase):
         self.assertTrue(self.dialog._stage_one(
             "dir\\a.png", b"X", confirm_same_name=False))
         self.assertEqual(self.staged["dir\\a.png"], b"X")
+
+
+@unittest.skipUnless(HAS_QT, "PySide6 / system graphics libraries unavailable")
+class StandaloneDiskBatchTests(unittest.TestCase):
+    """0.21.0 工具栏「批图」独立入口：磁盘进磁盘出，不用挂包。
+
+    钉死：不挂包、不打开任何布局也能批处理；参数窗恒 can_stage=False
+    （磁盘文件没有包内路径，无从挂账）；文件夹模式只扫顶层（不递归，
+    防误吞整棵大树）；范围外后缀 / 读不到的文件拒收并各给一句话原因、
+    不中断整批；原文件一律不动，输出经真 run_batch 落盘（端到端验证）。
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.main_window import MainWindow
+        self.window = MainWindow()
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+        self.out_dir = self.root / "out"
+        self.captured: dict = {}
+
+    def tearDown(self):
+        for session in self.window._sessions:
+            if session.doc is not None:
+                session.doc.dirty = False
+                session.doc.pending_pack_import = False
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+            self.window.doc.pending_pack_import = False
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+
+    # -- 补丁目标与替身 -----------------------------------------------------
+    _PICK = "ui_editor.ui.asset_browser.QFileDialog.getOpenFileNames"
+    _PICK_DIR = ("ui_editor.ui.asset_browser."
+                 "QFileDialog.getExistingDirectory")
+    _DLG = "ui_editor.ui.image_batch.ImageBatchDialog"
+    _WARN = "ui_editor.ui.asset_browser.QMessageBox.warning"
+
+    def _fake_dialog(self, parent, items, suggested_dir="", can_stage=True):
+        """参数窗替身：记下构造参数，plan 直接给磁盘计划（真执行）。"""
+        self.captured.update(items=items, suggested_dir=suggested_dir,
+                             can_stage=can_stage)
+        dlg = mock.Mock()
+        dlg.exec.return_value = QDialog.DialogCode.Accepted
+        dlg.plan = BatchPlan(
+            AdjustParams(scale_mode="percent", percent=200),
+            "disk", str(self.out_dir))
+        return dlg
+
+    def _write_sources(self):
+        a = self.root / "a.png"
+        a.write_bytes(png_bytes())
+        b = self.root / "b.igs"
+        b.write_bytes(igs_bytes())
+        return a, b
+
+    # -- 工具栏接线 ---------------------------------------------------------
+    def test_toolbar_split_button_and_menu(self):
+        btn = self.window._batch_btn
+        self.assertEqual(btn.text(), "批图")
+        self.assertFalse(btn.icon().isNull())
+        self.assertEqual([a.text() for a in btn.menu().actions()],
+                         ["选图片文件批处理…", "选文件夹批处理…"])
+        self.assertIn(btn, self.window._toolbar.findChildren(type(btn)))
+
+    # -- 文件模式 -----------------------------------------------------------
+    def test_files_flow_end_to_end_disk_only(self):
+        a, b = self._write_sources()
+        assets = getattr(self.window, "resolver", None)
+        self.assertTrue(assets is None or not assets._packs)  # 没挂包
+        status = mock.Mock()
+        with mock.patch.object(self.window, "_update_status", status), \
+                mock.patch(self._PICK, return_value=([str(a), str(b)], "")), \
+                mock.patch(self._DLG, self._fake_dialog):
+            self.window.batch_images_from_disk()
+        self.assertFalse(self.captured["can_stage"])
+        self.assertEqual([p for p, _k, _d in self.captured["items"]],
+                         [str(a), str(b)])
+        self.assertEqual([k for _p, k, _d in self.captured["items"]],
+                         ["image", "igs"])
+        self.assertEqual(self.captured["suggested_dir"], str(self.root))
+        # 真 run_batch 落盘：200% → 16×12；原文件一个字节不动
+        with Image.open(self.out_dir / "a.png") as out_img:
+            self.assertEqual(out_img.size, (16, 12))
+        frame = sprite.decode_sprite(
+            (self.out_dir / "b.igs").read_bytes()).frames[0]
+        self.assertEqual((frame.width, frame.height), (16, 12))
+        self.assertEqual(a.read_bytes(), png_bytes())
+        self.assertEqual(b.read_bytes(), igs_bytes())
+        status.assert_called_once()
+        self.assertIn("图像批处理完成 2 张", status.call_args[0][0])
+        self.assertIn(str(self.out_dir), status.call_args[0][0])
+
+    def test_rejected_listed_but_batch_continues(self):
+        good = self.root / "a.png"
+        good.write_bytes(png_bytes())
+        bad = self.root / "x.txt"
+        bad.write_text("x", encoding="utf-8")
+        gone = str(self.root / "missing.png")
+        with mock.patch(self._PICK,
+                        return_value=([str(good), str(bad), gone], "")), \
+                mock.patch(self._DLG, self._fake_dialog), \
+                mock.patch(self._WARN) as warn:
+            self.window.batch_images_from_disk()
+        self.assertTrue((self.out_dir / "a.png").is_file())  # 能处理的照做
+        warn.assert_called_once()
+        text = warn.call_args[0][2]
+        self.assertIn("x.txt：.txt 不在批处理范围", text)
+        self.assertIn("missing.png：读不到文件", text)
+
+    def test_all_rejected_dialog_never_opens(self):
+        bad = self.root / "x.txt"
+        bad.write_text("x", encoding="utf-8")
+        with mock.patch(self._PICK, return_value=([str(bad)], "")), \
+                mock.patch(self._DLG) as dlg, \
+                mock.patch(self._WARN) as warn:
+            self.window.batch_images_from_disk()
+        dlg.assert_not_called()
+        self.assertIn("选中的都不能批处理", warn.call_args[0][1])
+
+    def test_cancel_is_silent(self):
+        with mock.patch(self._PICK, return_value=([], "")), \
+                mock.patch(self._DLG) as dlg, \
+                mock.patch(self._WARN) as warn:
+            self.window.batch_images_from_disk()
+        dlg.assert_not_called()
+        warn.assert_not_called()
+
+    # -- 文件夹模式 ---------------------------------------------------------
+    def test_folder_flow_scans_top_level_only(self):
+        (self.root / "a.png").write_bytes(png_bytes())
+        (self.root / "notes.txt").write_text("x", encoding="utf-8")
+        sub = self.root / "sub"
+        sub.mkdir()
+        (sub / "c.png").write_bytes(png_bytes())
+        with mock.patch(self._PICK_DIR, return_value=str(self.root)), \
+                mock.patch(self._DLG, self._fake_dialog):
+            self.window.batch_folder_from_disk()
+        self.assertEqual(
+            [Path(p).name for p, _k, _d in self.captured["items"]],
+            ["a.png"])          # 不钻子文件夹、不捞 .txt
+        self.assertEqual(self.captured["suggested_dir"], str(self.root))
+        self.assertTrue((self.out_dir / "a.png").is_file())
+
+    def test_folder_without_images_reports_status(self):
+        (self.root / "notes.txt").write_text("x", encoding="utf-8")
+        status = mock.Mock()
+        with mock.patch.object(self.window, "_update_status", status), \
+                mock.patch(self._PICK_DIR, return_value=str(self.root)), \
+                mock.patch(self._DLG) as dlg:
+            self.window.batch_folder_from_disk()
+        dlg.assert_not_called()
+        self.assertIn("没找到可批处理的图片", status.call_args[0][0])
 
 
 if __name__ == "__main__":

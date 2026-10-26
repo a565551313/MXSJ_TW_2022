@@ -397,3 +397,32 @@ def icon_mode(loose: bool = False) -> QIcon:
     p.setBrush(QColor(color))
     p.drawEllipse(QPointF(14, 13.5), 1.9, 1.9)
     return _end(pixmap, p)
+
+
+def icon_batch_images() -> QIcon:
+    """图像批处理：两张叠着的照片 + 底部调参滑杆。"""
+    pixmap, p = _begin()
+    p.setPen(_pen("#5b6b7a"))                      # 后面那张（错开）
+    p.setBrush(QColor("#dfe7ee"))
+    p.drawRoundedRect(QRectF(2.5, 3.5, 16, 13), 2, 2)
+    p.setPen(_pen("#7a4fa3"))                      # 前面那张
+    p.setBrush(QColor("#f6ecfa"))
+    p.drawRoundedRect(QRectF(6.5, 6.5, 18, 14), 2, 2)
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor("#f2b04a"))
+    p.drawEllipse(QRectF(9.5, 9, 4, 4))            # 太阳
+    p.setBrush(QColor("#9c63c2"))
+    hill = QPainterPath()
+    hill.moveTo(7.5, 19.5)
+    hill.lineTo(12.5, 13.5)
+    hill.lineTo(16, 17.5)
+    hill.lineTo(19, 14.5)
+    hill.lineTo(23.5, 19.5)
+    hill.closeSubpath()
+    p.drawPath(hill)
+    p.setPen(_pen("#2f7d5e", 2.0))                 # 滑杆＝批量调参的意味
+    p.drawLine(QPointF(4, 24), QPointF(24, 24))
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor("#2f7d5e"))
+    p.drawEllipse(QPointF(11, 24), 2.2, 2.2)
+    return _end(pixmap, p)

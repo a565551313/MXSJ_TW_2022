@@ -241,6 +241,20 @@ class WindowSetupMixin:
         bar.addAction(self._redo_action)
         bar.addAction(self._act_reload)
         bar.addAction(self._act_assets)
+        # 图像批处理（0.21.0）：磁盘进磁盘出、不用挂包。主按钮＝选图片
+        # 文件（可多选），小箭头＝选整个文件夹（只扫顶层）。
+        self._act_batch_files = QAction("选图片文件批处理…", self)
+        self._act_batch_files.triggered.connect(self.batch_images_from_disk)
+        self._act_batch_folder = QAction("选文件夹批处理…", self)
+        self._act_batch_folder.triggered.connect(self.batch_folder_from_disk)
+        self._batch_btn = split_button(
+            bar, "批图", icons.icon_batch_images(),
+            [self._act_batch_files, self._act_batch_folder],
+            self.batch_images_from_disk,
+            "图像批处理（缩放 / 亮度 / 饱和度；磁盘进磁盘出，不用挂包，\n"
+            "原文件一律不动）：主按钮＝选图片文件；小箭头＝选整个文件夹\n"
+            "（只扫顶层，PNG/JPG/BMP/TGA/.igs）")
+        bar.addWidget(self._batch_btn)
         # 文本编码：与「对齐」「按钮态」同款下拉按钮，缩写「编码」
         self._encoding_btn, self._encoding_actions = build_encoding_button(
             self, self.change_text_encoding)
