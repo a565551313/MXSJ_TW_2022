@@ -29,6 +29,7 @@ from ..core.painters import PaintContext
 _HANDLE = 7.0  # 选中把手边长（图元本地坐标）
 _HANDLES = ("nw", "n", "ne", "e", "se", "s", "sw", "w")
 _MIN_SIZE = 8.0  # 控件缩放下限（与自由缩放一致）
+_GRIP = 16.0  # 移动手柄边长（场景单位，0.18.0）
 
 
 def aspect_resize(handle: str, x0: float, y0: float, w0: float, h0: float,
@@ -119,6 +120,8 @@ class WidgetItem(QGraphicsItem):
         self._resize_handle: str | None = None
         self._resize_start: tuple[float, float, float, float, QPointF] \
             | None = None
+        # 手柄拖动（0.18.0）：绕过父矩形夹取与「祖先已选中」冻结
+        self._force_move = False
         self.setPos(widget.x, widget.y)
         self.apply_lock()
         self.fidelity: list = []
@@ -156,6 +159,9 @@ class WidgetItem(QGraphicsItem):
                 QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges,
                 True)
         self.update()
+        scene = self.scene()
+        if scene is not None and hasattr(scene, "_sync_grips"):
+            scene._sync_grips()   # 锁定/解锁后，移动手柄随之增减
 
     # -- 几何同步 ---------------------------------------------------
     def boundingRect(self) -> QRectF:
@@ -177,16 +183,22 @@ class WidgetItem(QGraphicsItem):
                 and not self._syncing):
             # 父子同时被选中拖动时，子控件靠父图元带着走；否则 Qt 会把
             # 父子各搬一次，子控件实际位移翻倍、局部坐标也被改错。
-            if self._has_selected_ancestor():
+            # 手柄拖动（_force_move）是「强制移动」：不拒绝、不夹取；
+            # 普通拖动维持原规则（吸附照旧，Alt 临时禁用）。
+            if self._has_selected_ancestor() and not self._force_move:
                 return self.pos()
             value = self._snapped_position(value)
-            value = self._clamped_position(value)
+            if not self._force_move:
+                value = self._clamped_position(value)
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged \
                 and not self._syncing:
             pos = self.pos()
             self.widget.set_geometry(x=int(round(pos.x())),
                                      y=int(round(pos.y())))
             self.on_geometry(self.widget)
+            scene = self.scene()
+            if scene is not None and hasattr(scene, "_grip_follow"):
+                scene._grip_follow(self)   # 移动手柄跟着控件走
         return super().itemChange(change, value)
 
     # -- 拖动吸附 -----------------------------------------------------
@@ -421,6 +433,11 @@ class WidgetItem(QGraphicsItem):
         self._syncing = False
         self.update()
         self.on_geometry(self.widget)
+        scene = self.scene()
+        if scene is not None and hasattr(scene, "_grip_follow"):
+            # 缩放走 _syncing、不经 itemChange：角落已经变了，
+            # 手柄（含被带着走的子孙的）要显式跟上（PR #89 审查复核）。
+            scene._grip_follow(self)
         event.accept()
 
     def _commit_if_changed(self) -> None:
@@ -446,6 +463,115 @@ class WidgetItem(QGraphicsItem):
             scene.set_guides([], [])
 
 
+class MoveGripItem(QGraphicsItem):
+    """选中控件右上角外侧的移动手柄（0.18.0）。
+
+    场景级顶层图元（不是控件图元的子级，zValue 置顶），控件互相
+    重叠也压不住它；按住拖动 = **强制移动**：绕过「夹在父矩形内」
+    （子控件大于等于父控件时原本被冻死）与「祖先已选中」冻结——
+    只要控件没锁定，就一定能被这个手柄搬走。吸附仍然生效
+    （Alt 临时禁用），松手记一步撤销。锁定控件不出现手柄。
+    """
+
+    def __init__(self, target: WidgetItem) -> None:
+        super().__init__()
+        self.target = target
+        self._drag_start_scene: QPointF | None = None
+        self._target_start: QPointF | None = None
+        self.setZValue(1e6)
+        self.setCursor(Qt.CursorShape.SizeAllCursor)
+        self.setAcceptedMouseButtons(Qt.MouseButton.LeftButton)
+        self.setToolTip("拖动移动控件（不受父级边界限制）")
+        self.sync()
+
+    # -- 跟随与绘制 ---------------------------------------------------
+    def sync(self) -> None:
+        """跟到目标控件右上角**外侧**（固定外移，不盖住控件本体）。"""
+        corner = self.target.mapToScene(QPointF(self.target._width, 0.0))
+        self.setPos(corner.x() + 5.0, corner.y() - _GRIP - 5.0)
+
+    def boundingRect(self) -> QRectF:  # noqa: N802 (Qt 命名)
+        return QRectF(0, 0, _GRIP, _GRIP)
+
+    def paint(self, painter: QPainter, option, widget=None) -> None:
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        rect = self.boundingRect().adjusted(1.0, 1.0, -1.0, -1.0)
+        accent = QColor(53, 196, 240)
+        painter.setPen(QPen(accent, 1.6))
+        painter.setBrush(QColor(24, 40, 52, 235))
+        painter.drawRoundedRect(rect, 3.0, 3.0)
+        center = rect.center()
+        cx, cy = center.x(), center.y()
+        arrow = _GRIP * 0.26
+        painter.setPen(QPen(accent, 1.4))
+        painter.drawLine(QPointF(cx - arrow, cy), QPointF(cx + arrow, cy))
+        painter.drawLine(QPointF(cx, cy - arrow), QPointF(cx, cy + arrow))
+        barb = arrow * 0.55
+        for sx, sy in ((-1.0, 0.0), (1.0, 0.0), (0.0, -1.0), (0.0, 1.0)):
+            tip_x, tip_y = cx + sx * arrow, cy + sy * arrow
+            if sx:
+                painter.drawLine(QPointF(tip_x, tip_y),
+                                 QPointF(tip_x - sx * barb, tip_y - barb))
+                painter.drawLine(QPointF(tip_x, tip_y),
+                                 QPointF(tip_x - sx * barb, tip_y + barb))
+            else:
+                painter.drawLine(QPointF(tip_x, tip_y),
+                                 QPointF(tip_x - barb, tip_y - sy * barb))
+                painter.drawLine(QPointF(tip_x, tip_y),
+                                 QPointF(tip_x + barb, tip_y - sy * barb))
+
+    # -- 拖动：强制移动（绕过父矩形夹取与祖先冻结） -------------------
+    def begin_drag(self, scene_pos: QPointF) -> None:
+        """记下拖动起点；到 :meth:`finish_drag` 之前目标控件自由移动。"""
+        self._drag_start_scene = QPointF(scene_pos)
+        self._target_start = QPointF(self.target.pos())
+        widget = self.target.widget
+        self.target._press_geom = (widget.x, widget.y,
+                                  widget.width, widget.height)
+        self.target._force_move = True
+
+    def drag_to(self, scene_pos: QPointF) -> None:
+        """按场景坐标位移搬目标控件（换算回父坐标）。"""
+        if self._drag_start_scene is None or self._target_start is None:
+            return
+        parent = self.target.parentItem()
+        if parent is not None:
+            delta = (parent.mapFromScene(QPointF(scene_pos))
+                     - parent.mapFromScene(self._drag_start_scene))
+        else:
+            delta = QPointF(scene_pos) - self._drag_start_scene
+        self.target.setPos(self._target_start.x() + delta.x(),
+                           self._target_start.y() + delta.y())
+        self.sync()
+
+    def finish_drag(self) -> None:
+        """松手：恢复正常移动规则；真搬动过才记一步撤销。"""
+        if self._drag_start_scene is None:
+            return
+        self.target._force_move = False
+        self.target._commit_if_changed()
+        scene = self.target.scene()
+        if scene is not None:
+            scene.set_guides([], [])
+        self._drag_start_scene = None
+        self._target_start = None
+
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:  # noqa: N802
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.begin_drag(event.scenePos())
+            event.accept()
+        else:
+            event.ignore()
+
+    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:  # noqa: N802
+        self.drag_to(event.scenePos())
+        event.accept()
+
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:  # noqa: N802
+        self.finish_drag()
+        event.accept()
+
+
 class LayoutScene(QGraphicsScene):
     """承载一个布局文档全部图元的场景。"""
 
@@ -463,6 +589,9 @@ class LayoutScene(QGraphicsScene):
         self.keep_aspect = False  # 等比缩放（视图菜单/工具栏开关）
         self._guides_x: list[float] = []  # 场景坐标参考线（拖动吸附）
         self._guides_y: list[float] = []
+        # 移动手柄（0.18.0）：每个「选中且未锁定」的控件图元一枚
+        self._grips: dict[int, MoveGripItem] = {}
+        self.selectionChanged.connect(self._sync_grips)
 
     # -- 拖动参考线 ---------------------------------------------------
     def set_guides(self, xs, ys) -> None:
@@ -471,6 +600,40 @@ class LayoutScene(QGraphicsScene):
         self._guides_x = list(xs)
         self._guides_y = list(ys)
         self.update()
+
+    # -- 移动手柄（0.18.0） ---------------------------------------------
+    def _sync_grips(self) -> None:
+        """按选中集增删/对齐手柄：选中且未锁定的控件图元各一枚。"""
+        wanted: dict[int, WidgetItem] = {}
+        for item in self.selectedItems():
+            if isinstance(item, WidgetItem) and not item.widget.locked:
+                wanted[id(item)] = item
+        for key in list(self._grips):
+            if key not in wanted:
+                grip = self._grips.pop(key)
+                # QGraphicsItem 不是 QObject，没有 deleteLater：
+                # 从场景摘掉、账本放手，Python 引用计数自然回收。
+                self.removeItem(grip)
+        for key, item in wanted.items():
+            grip = self._grips.get(key)
+            if grip is None:
+                grip = MoveGripItem(item)
+                self.addItem(grip)
+                self._grips[key] = grip
+            grip.sync()
+
+    def _grip_follow(self, item: WidgetItem) -> None:
+        """控件被搬动后（普通拖动/缩放/属性面板改坐标），手柄跟到新角落。
+
+        父控件被搬动时子控件跟着走场景，但子图元自己的 itemChange
+        不会触发；所以子孙的手柄也要一并同步，否则会留在旧位置
+        （PR #89 AI 审查复核属实项）。
+        """
+        grip = self._grips.get(id(item))
+        if grip is not None:
+            grip.sync()
+        for child in item.child_items:
+            self._grip_follow(child)
 
     # -- 网格/标尺/参考线绘制 ------------------------------------------
     def drawBackground(self, painter: QPainter, rect: QRectF) -> None:  # noqa: N802
@@ -522,6 +685,7 @@ class LayoutScene(QGraphicsScene):
             painter.restore()
 
     def set_document(self, doc: LayoutDocument | None) -> None:
+        self._grips = {}   # clear() 会连手柄一起删；先清账本防悬空
         self.clear()
         self._items = {}
         self.document = doc
@@ -550,6 +714,7 @@ class LayoutScene(QGraphicsScene):
             item.refresh_geometry()
             item.refresh_fidelity()   # 换图/改 bShow 后角标跟着变
             item.update()
+        self._sync_grips()   # 尺寸/位置变了，手柄要跟上
 
     def refresh_all(self) -> None:
         for item in self._items.values():
@@ -558,6 +723,7 @@ class LayoutScene(QGraphicsScene):
         if self.items():
             rect = self.itemsBoundingRect()
             self.setSceneRect(rect.adjusted(-40, -40, 40, 40))
+        self._sync_grips()
 
 
 class CanvasView(QGraphicsView):
@@ -626,6 +792,8 @@ class CanvasView(QGraphicsView):
     def _locked_top(self, pos: QPoint) -> bool:
         """该点最上面的图元是否锁定（锁定 = 当它不存在）。"""
         for item in self.items(pos):
+            if isinstance(item, MoveGripItem):
+                return False   # 手柄在最上面：事件放行给它，不拉起框选
             widget = getattr(item, "widget", None)
             if widget is not None:
                 return bool(widget.locked)

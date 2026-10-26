@@ -30,8 +30,10 @@ from ..core.model import LayoutDocument, Widget
 from ..core.painters import PaintContext, effective_size
 from ..core.script_index import ScriptIndex, get_default_index
 from ..core.styles import StyleBook
+from .asset_browser import AssetBrowserMixin
 from .busy import BusyHostMixin
 from .canvas import CanvasView, LayoutScene
+from .clipboard import ClipboardMixin
 from .commands import EditingCommandsMixin
 from .diagnostics_panel import DiagnosticsPanel
 from .import_queue import ImportQueueMixin
@@ -43,6 +45,7 @@ from .save_targets import SaveTargetsMixin
 from .save_workflows import SaveWorkflowsMixin
 from .script_panel import ScriptPanel
 from .source_actions import SourceActionsMixin
+from .staged_save import StagedSaveMixin
 from .tab_menu import TabMenuMixin
 from .tabs import EditorSession
 from .window_setup import WindowSetupMixin
@@ -50,10 +53,11 @@ from .workflows import FileWorkflowsMixin
 
 
 class MainWindow(
-    BusyHostMixin, EditingCommandsMixin, FileWorkflowsMixin,
+    AssetBrowserMixin, BusyHostMixin, ClipboardMixin,
+    EditingCommandsMixin, FileWorkflowsMixin,
     ImportQueueMixin, SaveModeMixin, SaveTargetsMixin, SaveWorkflowsMixin,
-    SourceActionsMixin, TabMenuMixin, ReplaceLayoutMixin, WindowSetupMixin,
-    QMainWindow
+    StagedSaveMixin, SourceActionsMixin, TabMenuMixin, ReplaceLayoutMixin,
+    WindowSetupMixin, QMainWindow
 ):
     """UI 编辑器主窗口。"""
 

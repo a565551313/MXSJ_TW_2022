@@ -9,10 +9,12 @@ from pathlib import Path
 UI_DIR = Path(__file__).resolve().parents[1] / "src" / "ui_editor" / "ui"
 GROUPS = {
     "main_window.py": "MainWindow",
+    "clipboard.py": "ClipboardMixin",
     "commands.py": "EditingCommandsMixin",
     "save_mode.py": "SaveModeMixin",
     "save_targets.py": "SaveTargetsMixin",
     "save_workflows.py": "SaveWorkflowsMixin",
+    "staged_save.py": "StagedSaveMixin",
     "tab_menu.py": "TabMenuMixin",
     "replace_layout.py": "ReplaceLayoutMixin",
     "import_queue.py": "ImportQueueMixin",
@@ -49,9 +51,11 @@ class WindowStructureTests(unittest.TestCase):
     def test_mixins_do_not_take_over_qobject_initialization(self):
         window = class_node("main_window.py")
         self.assertEqual([base.id for base in window.bases], [
-            "BusyHostMixin", "EditingCommandsMixin", "FileWorkflowsMixin",
+            "AssetBrowserMixin", "BusyHostMixin", "ClipboardMixin",
+            "EditingCommandsMixin", "FileWorkflowsMixin",
             "ImportQueueMixin", "SaveModeMixin", "SaveTargetsMixin",
-            "SaveWorkflowsMixin", "SourceActionsMixin", "TabMenuMixin",
+            "SaveWorkflowsMixin", "StagedSaveMixin",
+            "SourceActionsMixin", "TabMenuMixin",
             "ReplaceLayoutMixin", "WindowSetupMixin", "QMainWindow",
         ])
         for filename in GROUPS:

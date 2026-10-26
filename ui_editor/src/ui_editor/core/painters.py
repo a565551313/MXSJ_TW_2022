@@ -26,7 +26,8 @@ from .assets import AssetResolver
 from .model import Widget
 from .styles import StyleBook
 
-__all__ = ["PaintContext", "effective_size", "paint_widget"]
+__all__ = ["PaintContext", "align_scheme", "effective_size", "paint_widget",
+           "state_slice", "text_align_flags"]
 
 
 @dataclass
@@ -199,19 +200,83 @@ def _plain_text(widget: Widget) -> str:
     return str(text)
 
 
+# -- 文本对齐语义 -----------------------------------------------------
+# 原生证据：docs/analysis/native_widgetconfig_comparison_20261017.md §1
+# （3853 的 GetOldFontAlight / GetFontAlight 与各类型 iAlign 配置）：
+#   旧 CTextFrame：0=右、1=中、2=左（其余值取右）；
+#   新 CTextFrameEx / CRichTextFrame：0=左上 … 4=中中 … 8=右下（九宫）；
+#   按钮类：原生表未直接覆盖，按用户确认（2026-10-26）沿用新式九宫，
+#   字段缺失时保持历史画法（顶+水平居中），不偷偷改既有布局观感。
+_OLD_ALIGN_TYPES = frozenset({"CTextFrame"})
+_NEW_ALIGN_TYPES = frozenset({"CTextFrameEx", "CRichTextFrame"})
+_BUTTON_ALIGN_TYPES = frozenset({
+    "CButton", "CHPageButton", "CVPageButton",
+    "CHPagePngButton", "CVPagePngButton", "CTextButton",
+})
+_ALIGN9_H = (Qt.AlignmentFlag.AlignLeft, Qt.AlignmentFlag.AlignHCenter,
+             Qt.AlignmentFlag.AlignRight)
+_ALIGN9_V = (Qt.AlignmentFlag.AlignTop, Qt.AlignmentFlag.AlignVCenter,
+             Qt.AlignmentFlag.AlignBottom)
+_TOP_LEFT = Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
+_TOP_CENTER = Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter
+_CENTER = Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
+_OLD_ALIGN_H = {0: Qt.AlignmentFlag.AlignRight,
+                1: Qt.AlignmentFlag.AlignHCenter,
+                2: Qt.AlignmentFlag.AlignLeft}
+_LEGACY_ALIGN_H = {1: Qt.AlignmentFlag.AlignHCenter,
+                   2: Qt.AlignmentFlag.AlignRight}
+
+
+def text_align_flags(wtype: str, align: int | None) -> Qt.AlignmentFlag:
+    """把 ``iAlign`` 翻译成绘制对齐旗标（见上方证据注释）。
+
+    ``align=None``（控件没写这个字段）返回历史画法：按钮顶+水平居中，
+    其余顶+左。九宫取值越界（原生列表只有 0–8）回退居中。
+    """
+    if align is None:
+        return (_TOP_CENTER if wtype in _BUTTON_ALIGN_TYPES
+                else _TOP_LEFT)
+    if wtype in _OLD_ALIGN_TYPES:
+        return (_OLD_ALIGN_H.get(align, Qt.AlignmentFlag.AlignRight)
+                | Qt.AlignmentFlag.AlignTop)
+    if wtype in _NEW_ALIGN_TYPES or wtype in _BUTTON_ALIGN_TYPES:
+        if 0 <= align <= 8:
+            return _ALIGN9_H[align % 3] | _ALIGN9_V[align // 3]
+        return _CENTER
+    return (_LEGACY_ALIGN_H.get(align, Qt.AlignmentFlag.AlignLeft)
+            | Qt.AlignmentFlag.AlignTop)
+
+
+def align_scheme(wtype: str) -> str | None:
+    """该控件类型的 iAlign 取值方案：``"old"``（三值）/``"nine"``（九宫）。
+
+    返回 ``None`` 表示原生证据没覆盖该类型（属性面板就按普通整数
+    编辑，绘制走历史映射）。
+    """
+    if wtype in _OLD_ALIGN_TYPES:
+        return "old"
+    if wtype in _NEW_ALIGN_TYPES or wtype in _BUTTON_ALIGN_TYPES:
+        return "nine"
+    return None
+
+
+def _int_align(w: Widget) -> int | None:
+    """控件上真实写着的 iAlign（没写/类型不对返回 None）。"""
+    value = w.props.get("iAlign")
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    return None
+
+
 def _draw_text(p: QPainter, rect: QRectF, text: str, font: QFont,
-               color: QColor, align: int = 0, rich: bool = False) -> None:
+               color: QColor,
+               align_flags: Qt.AlignmentFlag = _TOP_LEFT,
+               rich: bool = False) -> None:
     if not text:
         return
     if rich:
         text = _RICH_CODE_RE.sub("", text)
-    flags = Qt.TextFlag.TextWordWrap | Qt.AlignmentFlag.AlignTop
-    if align == 1:
-        flags |= Qt.AlignmentFlag.AlignHCenter
-    elif align == 2:
-        flags |= Qt.AlignmentFlag.AlignRight
-    else:
-        flags |= Qt.AlignmentFlag.AlignLeft
+    flags = Qt.TextFlag.TextWordWrap | align_flags
     p.setFont(font)
     p.setPen(color)
     p.drawText(rect.adjusted(3, 2, -3, -2), flags, text)
@@ -563,7 +628,8 @@ def _paint_code_skin(p: QPainter, w: Widget, ctx: PaintContext) -> bool:
     _simulate_state_overlay(p, rect, ctx)
     if binding.text:
         _draw_text(p, rect, binding.text, _font(w, ctx, 13),
-                   QColor(245, 247, 252), 1)
+                   QColor(245, 247, 252),
+                   text_align_flags(w.wtype, _int_align(w)))
     return True
 
 
@@ -599,7 +665,8 @@ def _paint_button(p: QPainter, w: Widget, ctx: PaintContext) -> None:
     p.setPen(QPen(base.lighter(150), 1))
     p.drawRoundedRect(rect.adjusted(0.5, 0.5, -0.5, -0.5), 3, 3)
     if ctx.show_names:
-        _draw_text(p, rect, w.name, _small_font(), QColor(230, 236, 248), 1)
+        _draw_text(p, rect, w.name, _small_font(), QColor(230, 236, 248),
+                   _TOP_CENTER)
 
 
 def _paint_text_button(p: QPainter, w: Widget, ctx: PaintContext) -> None:
@@ -649,14 +716,16 @@ def _paint_text_overlay(p: QPainter, w: Widget, ctx: PaintContext,
         dx, dy = float(offset[0]), float(offset[1])
     text_rect = rect.translated(dx, dy)
     _draw_text(p, text_rect, _plain_text(w), _font(w, ctx),
-               QColor(245, 247, 252), 1)
+               QColor(245, 247, 252),
+               text_align_flags(w.wtype, _int_align(w)))
 
 
 def _paint_text(p: QPainter, w: Widget, ctx: PaintContext) -> None:
     rect = _rect(w, ctx)
     color = _color_from_value(w.props.get("lColor"), QColor(225, 232, 244))
     _draw_text(p, rect, _plain_text(w), _font(w, ctx), color,
-               _int(w, "iAlign"), rich=w.wtype == "CRichTextFrame")
+               text_align_flags(w.wtype, _int_align(w)),
+               rich=w.wtype == "CRichTextFrame")
 
 
 def _paint_hotbox(p: QPainter, w: Widget, ctx: PaintContext) -> None:
@@ -689,7 +758,7 @@ def _paint_table(p: QPainter, w: Widget, ctx: PaintContext) -> None:
             p.drawLine(int(x), 0, int(x), int(rect.height()))
         if col < len(titles) and titles[col]:
             _draw_text(p, QRectF(x, 0, col_w, header_h), titles[col],
-                       font, QColor(232, 238, 250), 1)
+                       font, QColor(232, 238, 250), _TOP_CENTER)
         x += col_w
     rows = max(1, _int(w, "iRow", 6))
     body_h = rect.height() - header_h
@@ -725,7 +794,7 @@ def _paint_edit(p: QPainter, w: Widget, ctx: PaintContext) -> None:
     p.setPen(QPen(QColor(110, 120, 140), 1))
     p.drawRect(rect.adjusted(0.5, 0.5, -0.5, -0.5))
     _draw_text(p, rect, _plain_text(w) or w.name, _font(w, ctx),
-               QColor(90, 96, 110), 0)
+               QColor(90, 96, 110), _TOP_LEFT)
 
 
 def _paint_progress(p: QPainter, w: Widget, ctx: PaintContext) -> None:

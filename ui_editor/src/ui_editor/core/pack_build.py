@@ -650,7 +650,7 @@ def _patch_pack_copy_many(archive_path, layouts: dict[str, bytes], out_path,
         "mode": mode,
         "target_index": -1,
         "layout_added": bool(layouts_added),
-        "layout_path": next(iter(layouts)),
+        "layout_path": next(iter(layouts), None),
         "layouts_added": layouts_added,
         "layouts_replaced": layouts_replaced,
         "layout_ids": [entry_id for _p, _s, entry_id, _e in writes],
@@ -752,6 +752,10 @@ def patch_pack_copy_many(archive_path, layouts: dict[str, bytes],
     批量导入走这个入口：``layouts`` 里的条目一次复制包体、一次校验、
     一次原子替换，不会为每个布局各写一遍整包。
 
+    ``layouts`` 也可以为空（0.18.0「只存新资源」）：只把 ``extra_entries``
+    写进包副本，任何布局条目都不读不写；守卫、临时副本、替换前校验与
+    原子替换全部同款。
+
     ``verify(tmp_path, info)``：**原子替换之前**在临时文件上做的最后一道
     校验（GUI 用它跑回读）。抛异常即中止，``out_path`` 保持原样——尤其
     重要的一点：``out_path`` 就是原包时，校验不通过不能已经把原包换掉。
@@ -766,8 +770,10 @@ def patch_pack_copy_many(archive_path, layouts: dict[str, bytes],
     ``cancelled()`` 在这些循环里轮询，取消抛 :class:`Cancelled`
     （临时文件由本函数删掉）。
     """
-    if not layouts:
-        raise PackError("没有要写入的布局")
+    if not layouts and not extra_entries:
+        # 只写新资源（0.18.0 浏览窗「保存新资源」）允许 layouts 为空；
+        # 两者都空才是真的没事可做。
+        raise PackError("没有要写入的布局或新资源")
     src, out = Path(archive_path), Path(out_path)
     sources = [src, *protected_paths]
     if allow_overwrite_self and out.resolve() == src.resolve():
