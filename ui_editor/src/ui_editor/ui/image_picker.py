@@ -620,7 +620,8 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                  family_kind: Callable[[str], str | None] | None = None,
                  browse_only: bool = False,
                  save_staged: Callable[[], bool] | None = None,
-                 staged_count: Callable[[], int] | None = None):
+                 staged_count: Callable[[], int] | None = None,
+                 fetch_bytes: Callable[[str], bytes | None] | None = None):
         super().__init__(parent)
         # 浏览模式（工具栏「资源」按钮）：没有目标属性，确定＝关闭，
         # 双击条目也只关闭，不写任何东西；导出/放进包/拼名族照旧。
@@ -644,6 +645,8 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._family_kind = family_kind
         self._widget_type = widget_type      # 新建族时按控件类型预选族类型
         self._exists = exists                # 判断包里是否已有同名条目
+        # 浏览窗「批量处理…」取包内字节用（0.20.0）；没给回调不出按钮。
+        self._fetch_bytes = fetch_bytes
         self._staged_paths: set[str] = set()
         # 族标签要探文件系统（plan 会逐个查子图在不在）。搜索框每敲一个字
         # 都会走一遍 _refilter，几百个族时就是几百毫秒的卡顿；标签在对话框
@@ -756,6 +759,15 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                 "想连图一起写进包，请用「把图片放进包」")
             external_btn.clicked.connect(self._choose_external)
             bottom.addWidget(external_btn)
+        if self._browse_only and self._fetch_bytes is not None:
+            batch_btn = QPushButton("批量处理…", self)
+            batch_btn.setToolTip(
+                "把选中的图片整批调整：缩放、亮度、饱和度（Pillow）。\n"
+                "结果写到磁盘目录（永不覆盖现有文件），或挂账成资源\n"
+                "（同名＝保存时替换包内原资源）。.igs 自动逐帧解码调整\n"
+                "再重编码；处理前有首图前后对比预览和输出清单确认。")
+            batch_btn.clicked.connect(self._batch_process)
+            bottom.addWidget(batch_btn)
         bottom.addStretch(1)
         bottom.addWidget(buttons)
 
@@ -942,16 +954,19 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
             return None
         return res_path, convert_box.isChecked()
 
-    def _stage_one(self, res_path: str, data: bytes) -> bool:
+    def _stage_one(self, res_path: str, data: bytes, *,
+                   confirm_same_name: bool = True) -> bool:
         """登记一张新图（包里已有同名时先确认会在保存时替换）。
 
         返回是否**真的挂上了**：无回调、用户取消同名替换、名字被资源层
         拒绝都返回 False——多张 .igs 的「已挂账 N 个」要按真值计数
-        （PR #89 审查复核属实项）。
+        （PR #89 审查复核属实项）。批量处理（0.20.0）传
+        ``confirm_same_name=False``：同名替换已在批处理窗的输出清单里
+        一次性确认过，执行时不再逐张打断。
         """
         if self._on_stage is None:
             return False
-        if (res_path in self._all_paths
+        if (confirm_same_name and res_path in self._all_paths
                 and res_path not in self._staged_paths):
             answer = QMessageBox.question(
                 self, "这个名字已在包里",
@@ -1029,6 +1044,70 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self.add_staged_path(base)
         self._count.setText(
             f"已挂账 {len(staged)} 张子图，组成族：{base}（保存回包时写入）")
+
+    def _batch_process(self) -> None:
+        """浏览窗「批量处理…」：选中项 → 参数窗 → 按计划执行（0.20.0）。
+
+        选中项先过分筛（拼名族目录 / 范围外后缀 / 包内读不到字节的
+        拒收并给一句话原因），能处理的一起进参数窗；参数窗确认后才
+        执行（run_batch），失败逐项进清单、不中断整批。
+        """
+        if self._fetch_bytes is None:
+            return
+        selected = [str(item.data(_ROLE_PATH))
+                    for item in self._list.selectedItems()]
+        if not selected:
+            QMessageBox.information(
+                self, "还没选图片",
+                "先在列表里选中要处理的图片（Ctrl/Shift 可多选），\n"
+                "再点「批量处理…」。")
+            return
+        items: list[tuple[str, str, bytes]] = []
+        rejected: list[str] = []
+        for path in selected:
+            if dir_base.is_dir_base(path):
+                rejected.append(f"{path}：拼名族目录——请改选族里的单张子图")
+                continue
+            suffix = Path(path).suffix.lower()
+            if suffix == ".igs":
+                kind = "igs"
+            elif suffix in (".png", ".jpg", ".jpeg", ".bmp", ".tga"):
+                kind = "image"
+            else:
+                rejected.append(
+                    f"{path}：{suffix or '无后缀'} 不在批处理范围"
+                    "（PNG/JPG/BMP/TGA/.igs）")
+                continue
+            data = self._fetch_bytes(path)
+            if data is None:
+                rejected.append(f"{path}：包内读不到字节")
+                continue
+            items.append((path, kind, data))
+        if not items:
+            QMessageBox.warning(
+                self, "选中的都不能批处理", "\n".join(rejected[:8]))
+            return
+        from .image_batch import ImageBatchDialog, run_batch
+        dialog = ImageBatchDialog(
+            self, items, suggested_dir=self._suggested_path(""),
+            can_stage=self._on_stage is not None)
+        if dialog.exec() != QDialog.DialogCode.Accepted or \
+                dialog.plan is None:
+            return
+        plan = dialog.plan
+        stage = (None if plan.mode != "stage"
+                 else lambda name, data: self._stage_one(
+                     name, data, confirm_same_name=False))
+        ok, failed = run_batch(items, plan, stage=stage)
+        failed.extend(rejected)
+        if failed:
+            QMessageBox.warning(
+                self, "有些没能处理",
+                "下面这些没有批处理成功：\n\n" + "\n".join(failed[:8]))
+        if ok:
+            where = (f"写入 {plan.out_dir}" if plan.mode == "disk"
+                     else "已挂账（保存进包时写入）")
+            self._count.setText(f"批量处理完成 {len(ok)} 张：{where}")
 
     def _pair_spr(self, src_file: str, res_path: str,
                   spr_data: bytes) -> None:

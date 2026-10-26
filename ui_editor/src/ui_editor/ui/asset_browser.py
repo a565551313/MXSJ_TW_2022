@@ -73,7 +73,8 @@ def build_browser_dialog(host, assets, candidates: list[str],
         browse_only=True,
         save_staged=save_staged,
         staged_count=(lambda: len(assets.staged_images())
-                      if save_staged is not None else None))
+                      if save_staged is not None else None),
+        fetch_bytes=assets.fetch_bytes)
 
 
 def open_asset_browser(host, assets, widget_type: str | None = None,
