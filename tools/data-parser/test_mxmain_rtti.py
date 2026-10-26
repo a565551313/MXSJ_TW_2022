@@ -252,8 +252,9 @@ class RealClientTests(unittest.TestCase):
         # + 24 條次要 locator（多重繼承的 vfptr，CEF 與 4 個 std 流類）
         self.assertEqual(summary["with_object_locator"], 309)
         self.assertEqual(summary["with_vftable"], 305)
-        self.assertEqual(summary["with_secondary_vftable"], 14)
-        self.assertEqual(summary["secondary_vftables"], 20)
+        # 24 條次要 locator → 18 個類、24 張次要虛表（4 個 std 流類只有次要表）
+        self.assertEqual(summary["with_secondary_vftable"], 18)
+        self.assertEqual(summary["secondary_vftables"], 24)
         self.assertEqual(summary["hierarchy_errors"], [])
 
     def test_secondary_vftables_are_kept(self):
@@ -265,13 +266,23 @@ class RealClientTests(unittest.TestCase):
         )
         self.assertTrue(cef["secondary_vftables"][0]["virtual_slots"])
 
-    def test_vfptr_write_count(self):
-        # 完整解 ModRM/SIB/disp 後：303 個類、1,312 處（含次要虛表）。
-        # 舊版只認 c7 06 這種無位移形式，得到 292 類 / 919 處，漏掉 28%。
-        summary = self.report["summary"]
-        self.assertEqual(summary["with_vfptr_writes"], 303)
+    def test_secondary_only_class_keeps_table_and_writes(self):
+        # 只有次要 locator 的類（虛擬基底 → vfptr 帶位移）不能連虛表與錨點一起消失
+        stream = self.classes[".?AV?$basic_istream@DU?$char_traits@D@std@@@std@@"]
+        self.assertIsNone(stream["vftable_va"])
         self.assertEqual(
-            sum(len(c["vfptr_writes"]) for c in self.report["classes"]), 1312
+            [item["vftable_va"] for item in stream["secondary_vftables"]],
+            ["0x797c7c"],
+        )
+        self.assertTrue(stream["vfptr_writes"])
+
+    def test_vfptr_write_count(self):
+        # 完整解 ModRM/SIB/disp 後：307 個類、1,346 處（含次要虛表）。
+        # 舊版只認 c7 06 這種無位移形式，得到 292 類 / 919 處，漏掉 400+ 處。
+        summary = self.report["summary"]
+        self.assertEqual(summary["with_vfptr_writes"], 307)
+        self.assertEqual(
+            sum(len(c["vfptr_writes"]) for c in self.report["classes"]), 1346
         )
 
     def test_std_exception_chain_order(self):

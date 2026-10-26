@@ -3,7 +3,7 @@
 > 结论先行：
 > 1. **明文 RTTI 是一份完整的类清单**：`mxmain.dll` 里 352 个 TypeDescriptor、309 个类带
 >    CompleteObjectLocator（329 条，其中 305 条是主 locator）、305 张主虚表、
->    **1,769 个主虚函数槽**（另有 20 张次要虚表 / 145 槽）、309 条继承链，全部可用
+>    **1,769 个主虚函数槽**（另有 24 张次要虚表 / 149 槽）、309 条继承链，全部可用
 >    `tools/data-parser/mxmain_rtti.py` 一次性解出；`_dyprot0/1` 那 54% 高熵段不参与，
 >    所以这份清单是**只靠明文就能站住**的。
 > 2. **它给的是"类 → 基类链 → 虚函数地址"，不是"方法名"**。要问"某个原生类有没有某个
@@ -12,7 +12,7 @@
 > 3. 边界没变：仍然**反不出源码**。本清单是"锚点集"，用来让后续反汇编从"猜"变成"查表"。
 
 配套工具：`tools/data-parser/mxmain_rtti.py`（只读解析，标准库）+ 回归
-`tools/data-parser/test_mxmain_rtti.py`（21 项）。锁定输入：
+`tools/data-parser/test_mxmain_rtti.py`（22 项）。锁定输入：
 `mxmain.dll` = `mx.exe`，9,698,712 B，SHA-256
 `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`。
 
@@ -56,7 +56,7 @@
 4. **BaseClassArray[0] 是类自己**，之后才是祖先，深度优先；把 [0] 当基底会多算一层。
 5. **虚表只有 `[COL][槽0]…` 这一种形态，槽 0 是 scalar deleting destructor**；
    同一个类可以有多个"写 vfptr"的位置（构造、工厂、异常对象创建等），
-   本次共 303 个类找到写入点、合计 1,312 处。**不能把写入点数量当方法数**，
+   本次共 307 个类找到写入点、合计 1,346 处。**不能把写入点数量当方法数**，
    例如 `ZXQRCodeECB` 有 106 处——那是一张静态 QR 码版本表的逐项构造，不是 106 个虚函数。
    这条计数有个坑：`movl $vftable,(%reg)` 的立即数**不总是紧跟 `C7 modrm` 两字节**，
    带位移的 `c7 46 08 <imm32>`、`c7 81 10 01 00 00 <imm32>` 同样常见。
@@ -81,10 +81,10 @@
 | RTTI 名字（`.data` 内） | 352 个 TypeDescriptor / 355 条不同名字串 |
 | 有 COL（即有多态） | 309 个类 / 329 条 locator |
 | 有**主**虚表 | 305，**合计 1,769 个槽** |
-| 只有次要虚表（多重继承） | 14 个类 / 20 张次要虚表 / 145 个槽 |
+| 另有次要虚表（多重继承） | 18 个类 / 24 张次要虚表 / 149 个槽（其中 4 个 std 流类**只有**次要表） |
 | 无虚表（纯数据/接口/λ） | 47，例如 `CGameWnd`、`CPaletteOp`、`_cef_*_t`、全部 `<lambda_*>` |
 | 继承链解析失败 | 0 |
-| 找到写 vfptr 的位置 | 303 个类 / 1,312 处（含次要虚表的 31 处） |
+| 找到写 vfptr 的位置 | 307 个类 / 1,346 处（主虚表 1,281 + 次要虚表 65） |
 | 槽数分布 | 1 槽 63、2 槽 65、3 槽 26、4 槽 33、5 槽 9、6 槽 12、7 槽 37、8–19 槽 32、21–24 槽 28 |
 
 命名空间分布（`@ns@@` 里的 ns）：全局 115、`Concurrency::details` 42、`Graphics` 34、
@@ -95,10 +95,14 @@
 locator，其中 `offset`/`cd` 非零的是**次要 vfptr**（this 指针调整量、构造中 vftable）。
 只收 `offset==0 and cd==0` 会整批丢掉它们——旧版因此看不到 4 个 std 流类
 （`basic_istream`/`basic_ostream`/`basic_iostream`/`basic_stringstream`，虚拟基底导致它们
-只有带位移的 locator）和 CEF 那批 `CefApp`/`CefClient`/`CefLoadHandler` 等 14 个类的次要虚表。
+只有带位移的 locator）和 CEF 那批 `CefApp`/`CefClient`/`CefLoadHandler` 等 14 个类的次要虚表
+（`CGameCefHandler` 一个类就有 7 张：`offset` 8/16/24/32/40/48/72）。
 工具现在把次要虚表放进每条类记录的 `secondary_vftables`（带 `offset`/`cd`/槽位），
 主虚表仍只认 `offset==cd==0` 那条；`with_object_locator=309`、`with_vftable=305`
-两个数因此不再相等。
+两个数因此不再相等。**次要虚表与写入点的收集不能挂在「有主虚表」这个分支上**：
+只有次要 locator 的 4 个 std 流类否则会连虚表带锚点一起消失（`basic_istream` 的
+`0x797c7c` 就是这样差点漏掉）；补上后次要虚表 20→24 张、写 vfptr 303→307 类、
+1,312→1,346 处。
 
 **两个可以直接拿去做设计判断的结构事实**：
 
@@ -430,7 +434,7 @@ python3 tools/data-parser/mxmain_rtti.py mxmain.dll --md /tmp/rtti.md
 python3 tools/data-parser/mxmain_rtti.py mxmain.dll --limit 20
 python3 tools/data-parser/mxmain_rtti.py mxmain.dll --json /tmp/rtti.json --md /tmp/rtti.md
 
-# 回归（21 项：11 项自建 PE + 10 项真档断言）
+# 回归（22 项：11 项自建 PE + 11 项真档断言）
 python3 -m unittest tools/data-parser/test_mxmain_rtti.py
 ```
 

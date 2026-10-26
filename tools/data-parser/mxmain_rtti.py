@@ -41,7 +41,9 @@ ClassHierarchyDescriptor、BaseClassArray 與虛表。本工具只做**只讀解
 7. **一個類可以有多張虛表**：多重繼承的次要 vfptr 對應的 COL 帶非零 `offset`
    （或者非零 `cd`），例如 CEF 那批 `CefApp`/`CefClient` 介面。只收
    `offset==0 and cd==0` 會把 24 張次要虛表整批丟掉；本工具把它們放進
-   `secondary_vftables`，主虛表仍取 offset/cd 皆為 0 的那張。
+   `secondary_vftables`，主虛表仍取 offset/cd 皆為 0 的那張；**次要虛表與寫入點
+   的收集不能掛在「有主虛表」的分支上**——只有次要 locator 的 4 個 std 流類
+   （虛擬基底）否則會連自己的虛表帶錨點一起從報告裡消失。
 """
 
 from __future__ import annotations
@@ -566,20 +568,22 @@ def build_report(path: Path) -> dict:
             record.bases, record.hierarchy_error = parse_hierarchy(
                 image, type_descriptors, chd_va
             )
+        # 次要虛表和寫入點**不能**只在有主虛表時才算：只有次要 locator 的類
+        # （虛擬基底那一批 std 流類）否則會連自己的虛表和錨點一起消失。
+        record.secondary_vftables = secondary.get(td_va, [])
+        tables: list[int] = []
         if td_va in vftables:
             record.vftable_va = vftables[td_va]
             record.virtual_slots = slots[td_va]
-            record.secondary_vftables = secondary.get(td_va, [])
-            tables = [vftables[td_va]] + [
-                int(item["vftable_va"], 16) for item in record.secondary_vftables
-            ]
-            seen: set[str] = set()
-            for table in tables:
-                for site in find_vfptr_writes(image, table):
-                    if site["site_va"] in seen:
-                        continue
-                    seen.add(site["site_va"])
-                    record.vfptr_writes.append(site)
+            tables.append(vftables[td_va])
+        tables += [int(item["vftable_va"], 16) for item in record.secondary_vftables]
+        seen: set[str] = set()
+        for table in tables:
+            for site in find_vfptr_writes(image, table):
+                if site["site_va"] in seen:
+                    continue
+                seen.add(site["site_va"])
+                record.vfptr_writes.append(site)
         records.append(record)
 
     namespaces: dict[str, int] = {}
