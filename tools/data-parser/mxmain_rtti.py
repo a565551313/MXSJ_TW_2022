@@ -27,13 +27,21 @@ ClassHierarchyDescriptor、BaseClassArray 與虛表。本工具只做**只讀解
    std 的 `failure@ios_base` → `system_error` → `_System_error` → `runtime_error`
    → `exception` 五層鏈完全解對（見測試 `test_std_exception_chain_order`）。
 4. **BCA[0] 是類自己**，之後才是基底，順序是深度優先。把 BCA[0] 當基底會多算一層。
-5. **明文虛表只有一個槽**：槽位 0 是 scalar deleting destructor，槽位 -1 是 COL。
-   也就是這批類別除了虛析構之外沒有別的虛函式。**不能把槽數當方法數**，
-   真正的業務方法要靠構造/析構函式的成員偏移或腳本綁定表另找。
-6. `movl $vftable,(%reg)`（`C7 /0 imm32`）是寫 vfptr 的指令，構造函式與
+5. **虛表形態是 `[COL][槽0][槽1]…`**：槽 0 是 scalar deleting destructor，槽 -1 是 COL；
+   槽數 1–24 不等（本版實測合計 1,769 槽，`CSpriteObject` 23、`CMapHeroObject` 23、
+   `CCommonWnd` 1）。**能解的只有槽地址，槽名不能從虛表讀出來**，方法名要靠
+   構造/析構函式的成員偏移或腳本綁定表另找。
+6. `movl $vftable,(%reg)`（`C7 /0` 的 memory 形式）是寫 vfptr 的指令，構造函式與
    析構函式都會有；它只能給「類 → 指令位址」的錨點，不等於函式邊界。
-   本工具用「往前找最近一段 0xCC 填充的結尾」估函式起點，並額外回報
-   `frame_pointer` 表示起點是否真的是 `55 8B EC`，估不出來就留 None，不猜。
+   **必須完整解 ModRM/SIB/displacement 才能找到 imm32**：`c7 06 <imm32>`（無位移）
+   只是其中最簡單的一種，`c7 46 08 <imm32>` / `c7 81 10 01 00 00 <imm32>` 同樣常見，
+   只檢查 `imm32` 前兩個位元組是不是 `C7` 會漏掉它們（本版實測漏 362 處，佔 28%）。
+   同時要要求目的運算元是**記憶體**，`C7 C0`（寫進 eax）不是寫 vfptr。
+   本工具回報的 `site_va` 是**指令起始位址**，`imm_va` 才是立即數位置。
+7. **一個類可以有多張虛表**：多重繼承的次要 vfptr 對應的 COL 帶非零 `offset`
+   （或者非零 `cd`），例如 CEF 那批 `CefApp`/`CefClient` 介面。只收
+   `offset==0 and cd==0` 會把 24 張次要虛表整批丟掉；本工具把它們放進
+   `secondary_vftables`，主虛表仍取 offset/cd 皆為 0 的那張。
 """
 
 from __future__ import annotations
@@ -111,6 +119,7 @@ class ClassRecord:
     class_hierarchy_va: int | None = None
     vftable_va: int | None = None
     virtual_slots: list[int] = field(default_factory=list)
+    secondary_vftables: list[dict] = field(default_factory=list)
     vfptr_writes: list[dict] = field(default_factory=list)
     bases: list[BaseClass] = field(default_factory=list)
     hierarchy_error: str | None = None
@@ -135,6 +144,7 @@ class ClassRecord:
             "class_hierarchy_va": opt_hex(self.class_hierarchy_va),
             "vftable_va": opt_hex(self.vftable_va),
             "virtual_slots": [hex(v) for v in self.virtual_slots],
+            "secondary_vftables": self.secondary_vftables,
             "vfptr_writes": self.vfptr_writes,
             "bases": [b.as_dict() for b in self.bases],
             "hierarchy_error": self.hierarchy_error,
@@ -275,9 +285,15 @@ def parse_type_descriptors(image: PeImage) -> dict[int, str]:
 
 def parse_object_locators(
     image: PeImage, type_descriptors: dict[int, str]
-) -> dict[int, tuple[int, int]]:
-    """在 `.rdata` 找 `[0][0][0][pTD][pCHD]` 形狀的 CompleteObjectLocator。"""
-    locators: dict[int, tuple[int, int]] = {}
+) -> dict[int, list[tuple[int, int, int, int]]]:
+    """在 `.rdata` 找 `[sig][offset][cd][pTD][pCHD]` 形狀的 CompleteObjectLocator。
+
+    回傳 `{pTD: [(col_va, pCHD, offset, cd), ...]}`——**一個類可以有多個 locator**：
+    多重繼承的次要 vfptr 會用非零 `offset`（this 指標調整量）或非零 `cd`
+    （建構中 vftable 的標記）。主虛表是 `offset == 0 and cd == 0` 那一條，
+    呼叫方自己挑；本函式不丟棄任何一條。
+    """
+    locators: dict[int, list[tuple[int, int, int, int]]] = {}
     for section in image.sections:
         if section.role != "rtti":
             continue
@@ -287,12 +303,11 @@ def parse_object_locators(
             sig, offset, cd, p_td, p_chd = struct.unpack_from("<IIIII", image.data, at)
             if (
                 sig == 0
-                and offset == 0
-                and cd == 0
                 and p_td in type_descriptors
                 and image.section_role(p_chd) == "rtti"
             ):
-                locators[p_td] = (image.offset_to_va(at), p_chd)
+                entry = (image.offset_to_va(at), p_chd, offset, cd)
+                locators.setdefault(p_td, []).append(entry)
             at += 4
     return locators
 
@@ -353,30 +368,88 @@ def _looks_like_code_entry(image: PeImage, va: int) -> bool:
     return image.data[offset] not in IMPOSSIBLE_ENTRY_BYTES
 
 
+def _primary_locator(
+    entries: list[tuple[int, int, int, int]],
+) -> tuple[int, int] | None:
+    """從同一個類的多條 locator 裡挑出**主**虛表那條，回傳 `(col_va, pCHD)`。
+
+    只認 `offset == 0 and cd == 0` 的 locator。全是次要 locator 的類
+    （本版有 4 個 std 流類，因為虛擬基底而只有帶位移的 vfptr）回 None：
+    它們的虛表照樣進 `secondary_vftables`，但不會被當成主虛表。
+    """
+    for col_va, chd_va, offset, cd in entries:
+        if offset == 0 and cd == 0:
+            return col_va, chd_va
+    return None
+
+
+def _read_vftable(image: PeImage, col_va: int) -> tuple[int, list[int]] | None:
+    """把一張虛表讀成 `(虛表位址, 槽位串)`；`col_va` 是虛表**前一格**的 COL。
+
+    虛表位址 = 存放 COL 指標那一格的**下一個** dword，也就是 `ref_va + 4`
+    （不是 `col_va + 4`——COL 和虛表分屬兩個不同的節）。
+    同一個 COL 可能被多處引用（建構中的暫存、同型別多個物件共用），
+    取第一個落在 `.rdata` 且讀得出槽位的引用即可。
+    """
+    for ref_va in image.find_u32(col_va):
+        if image.section_role(ref_va) != "rtti":
+            continue
+        slots: list[int] = []
+        slot_va = ref_va + 4
+        while True:
+            target = image.u32(slot_va)
+            if target is None or not _looks_like_code_entry(image, target):
+                break
+            slots.append(target)
+            slot_va += 4
+            if len(slots) > 256:
+                break
+        if slots:
+            return ref_va + 4, slots
+    return None
+
+
 def parse_vftables(
-    image: PeImage, locators: dict[int, tuple[int, int]]
-) -> tuple[dict[int, int], dict[int, list[int]]]:
-    """虛表 = 存放 COL 指標的位置 +4；槽位一直讀到「不像函式入口」的 dword 為止。"""
+    image: PeImage, locators: dict[int, list[tuple[int, int, int, int]]]
+) -> tuple[dict[int, int], dict[int, list[int]], dict[int, list[dict]]]:
+    """挑出每個類的**主**虛表，並把次要虛表（多重繼承）一併收好。
+
+    主虛表 = `offset == 0 and cd == 0` 的那條 locator。沒有這種 locator 的類
+    （本版 4 個 std 流類）不給主虛表，但它的次要虛表照樣收進 `secondary`，
+    不會整類消失。
+    """
     vftable_of: dict[int, int] = {}
     slots_of: dict[int, list[int]] = {}
-    for td_va, (col_va, _chd) in locators.items():
-        for ref_va in image.find_u32(col_va):
-            if image.section_role(ref_va) != "rtti":
+    secondary: dict[int, list[dict]] = {}
+    for td_va, entries in locators.items():
+        primary_col = _primary_locator(entries)
+        primary: tuple[int, int, int, int] | None = None
+        if primary_col is not None:
+            for entry in entries:
+                if entry[0] == primary_col[0]:
+                    primary = entry
+                    break
+        for entry in entries:
+            col_va, chd_va, offset, cd = entry
+            table = _read_vftable(image, col_va)
+            if table is None:
                 continue
-            slots: list[int] = []
-            slot_va = ref_va + 4
-            while True:
-                target = image.u32(slot_va)
-                if target is None or not _looks_like_code_entry(image, target):
-                    break
-                slots.append(target)
-                slot_va += 4
-                if len(slots) > 256:
-                    break
-            if slots and td_va not in vftable_of:
-                vftable_of[td_va] = ref_va + 4
+            vftable_va, slots = table
+            if entry is primary:
+                vftable_of[td_va] = vftable_va
                 slots_of[td_va] = slots
-    return vftable_of, slots_of
+            else:
+                secondary.setdefault(td_va, []).append(
+                    {
+                        "object_locator_va": hex(col_va),
+                        "class_hierarchy_va": hex(chd_va),
+                        "offset": offset,
+                        "cd": cd,
+                        "vftable_va": hex(vftable_va),
+                        "virtual_slots": [hex(v) for v in slots],
+                    }
+                )
+    return vftable_of, slots_of, secondary
 
 
 def _function_start(image: PeImage, site_va: int) -> dict:
@@ -401,8 +474,54 @@ def _function_start(image: PeImage, site_va: int) -> dict:
     return {"function_start_va": hex(start_va), "frame_pointer_prologue": prologue}
 
 
+C7_MAX_OPERAND = 10  # ModRM + SIB + disp32 的最長組合
+
+
+def _decode_c7_mem_write(data: bytes, imm_off: int) -> int | None:
+    """給定 imm32 的位置，回推「這是不是 `C7 /0 <mem>, imm32`」，回傳指令起始位移。
+
+    `C7 /0` 的運算元長度取決於 ModRM（和可能的 SIB、位移）：
+
+    - `mod=11`：目的運算元是**暫存器**（`C7 C0 imm32`），這不是寫 vfptr，回 None；
+    - `mod=00/01/10` + `r/m=100`：多一個 SIB，`mod=00` 且 SIB.base=101 時還有 disp32；
+    - `mod=00` + `r/m=101`：disp32；`mod=01`：disp8；`mod=10`：disp32。
+
+    只檢查「imm32 前兩個位元組是 C7 xx」會漏掉所有帶位移的形式
+    （`c7 46 08 …`、`c7 81 10 01 00 00 …`），也會誤收 `C7 C0`。
+    """
+    for start in range(imm_off - C7_MAX_OPERAND, imm_off - 1):
+        if start < 0 or data[start] != 0xC7:
+            continue
+        modrm = data[start + 1]
+        mod = modrm >> 6
+        if (modrm >> 3) & 0x7:  # reg 欄位不是 /0
+            continue
+        if mod == 3:  # 目的運算元是暫存器，不是寫 vfptr
+            continue
+        rm = modrm & 0x7
+        length = 2
+        if rm == 4:
+            sib = data[start + length]
+            length += 1
+            if mod == 0 and (sib & 0x7) == 5:
+                length += 4
+        elif mod == 0 and rm == 5:
+            length += 4
+        if mod == 1:
+            length += 1
+        elif mod == 2:
+            length += 4
+        if start + length == imm_off:
+            return start
+    return None
+
+
 def find_vfptr_writes(image: PeImage, vftable_va: int) -> list[dict]:
-    """找 `.text` 裡 `mov r/m32, imm32`（C7 /0）把這個虛表寫進物件的位置。"""
+    """找 `.text` 裡 `mov r/m32, imm32`（`C7 /0` 記憶體形式）把虛表寫進物件的位置。
+
+    `site_va` 是**指令起始位址**（可以直接餵給 `objdump --start-address`），
+    `imm_va` 是立即數本身的位址，兩者相差 `2 + ModRM/SIB/disp`。
+    """
     sites: list[dict] = []
     needle = struct.pack("<I", vftable_va)
     start = 0
@@ -411,15 +530,17 @@ def find_vfptr_writes(image: PeImage, vftable_va: int) -> list[dict]:
         if at < 0:
             return sites
         start = at + 1
-        if at < 2 or image.data[at - 2] != 0xC7:
+        insn_off = _decode_c7_mem_write(image.data, at)
+        if insn_off is None:
             continue
-        modrm = image.data[at - 1]
-        if (modrm >> 3) & 0x7:  # reg 欄位不是 /0 → 不是 mov imm32
-            continue
-        site_va = image.offset_to_va(at)
+        site_va = image.offset_to_va(insn_off)
         if site_va is None or image.section_role(site_va) != "code":
             continue
-        site = {"site_va": hex(site_va), "modrm": f"0x{modrm:02x}"}
+        site = {
+            "site_va": hex(site_va),
+            "imm_va": hex(image.offset_to_va(at)),
+            "modrm": f"0x{image.data[insn_off + 1]:02x}",
+        }
         site.update(_function_start(image, site_va))
         sites.append(site)
 
@@ -429,13 +550,17 @@ def build_report(path: Path) -> dict:
     image = PeImage(data, path)
     type_descriptors = parse_type_descriptors(image)
     locators = parse_object_locators(image, type_descriptors)
-    vftables, slots = parse_vftables(image, locators)
+    vftables, slots, secondary = parse_vftables(image, locators)
 
     records: list[ClassRecord] = []
     for td_va, name in sorted(type_descriptors.items(), key=lambda kv: kv[1]):
         record = ClassRecord(name=name, type_descriptor_va=td_va)
         if td_va in locators:
-            col_va, chd_va = locators[td_va]
+            primary = _primary_locator(locators[td_va])
+            if primary is None:
+                # 只有次要 vfptr 的類：基底鏈仍可由第一條 locator 的 pCHD 解出
+                primary = (locators[td_va][0][0], locators[td_va][0][1])
+            col_va, chd_va = primary
             record.object_locator_va = col_va
             record.class_hierarchy_va = chd_va
             record.bases, record.hierarchy_error = parse_hierarchy(
@@ -444,7 +569,17 @@ def build_report(path: Path) -> dict:
         if td_va in vftables:
             record.vftable_va = vftables[td_va]
             record.virtual_slots = slots[td_va]
-            record.vfptr_writes = find_vfptr_writes(image, vftables[td_va])
+            record.secondary_vftables = secondary.get(td_va, [])
+            tables = [vftables[td_va]] + [
+                int(item["vftable_va"], 16) for item in record.secondary_vftables
+            ]
+            seen: set[str] = set()
+            for table in tables:
+                for site in find_vfptr_writes(image, table):
+                    if site["site_va"] in seen:
+                        continue
+                    seen.add(site["site_va"])
+                    record.vfptr_writes.append(site)
         records.append(record)
 
     namespaces: dict[str, int] = {}
@@ -469,6 +604,8 @@ def build_report(path: Path) -> dict:
         "type_descriptors": len(type_descriptors),
         "with_object_locator": len(locators),
         "with_vftable": len(vftables),
+        "with_secondary_vftable": sum(1 for r in records if r.secondary_vftables),
+        "secondary_vftables": sum(len(r.secondary_vftables) for r in records),
         "vftable_slot_counts": _count(slots.values()),
         "with_base_chain": sum(1 for r in records if r.bases),
         "with_vfptr_writes": sum(1 for r in records if r.vfptr_writes),
@@ -527,6 +664,21 @@ def render_markdown(report: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _aliases_image(output: Path, image: Path) -> bool:
+    """輸出路徑是否其實就是輸入映像（同一路徑、symlink 或硬連結）。
+
+    工具承諾「輸入檔全程唯讀」，而 `write_text()` 會直接截斷同名檔；
+    同一個 inode 的兩種寫法（`out.json` ↔ `mxmain.dll`、symlink、硬連結）
+    都要在 `build_report()` 之前擋掉，否則解析成功後才把映像寫壞。
+    """
+    try:
+        if output.resolve() == image.resolve():
+            return True
+        return output.exists() and image.exists() and output.samefile(image)
+    except OSError:  # pragma: no cover - 路徑不存在時 resolve() 也可能拋
+        return False
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="解析 mxmain.dll 的明文 MSVC RTTI（只讀）"
@@ -542,6 +694,10 @@ def main(argv: list[str] | None = None) -> int:
         help="摘要裡最多列幾個類別（0 = 不列）",
     )
     args = parser.parse_args(argv)
+
+    for target in (args.json, args.md):
+        if target is not None and _aliases_image(target, args.image):
+            parser.error(f"輸出路徑不能指向輸入映像：{target}")
 
     report = build_report(args.image)
     summary = report["summary"]

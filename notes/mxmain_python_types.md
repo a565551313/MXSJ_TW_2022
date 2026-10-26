@@ -134,10 +134,13 @@ CNetClient::ProcessServerCmd        (0x467070，脚本每帧调)
 ## 5. 322 个原生方法，脚本到底用了多少
 
 统计口径：`tools/decompiler/output/` 下 **681 个已反编译 `.py`**（13.6 MB 文本），
-按 `C_<模块>.<方法名>` 的**限定名**匹配。语料只是 5,135 个脚本条目的一部分，
+按 `C_<模块>.<方法名>` 的**限定名做文本匹配**。所以下表数的是**限定名出现的次数**，
+不是「实际调用语句数」——赋值 `f = C_sys.GetTime`、把方法当参数传、以及注释里提到
+都算一次。要精确到调用表达式得另外解析 AST，本表没做（有意保守：
+任何一次出现都说明脚本在用这个名字）。语料只是 5,135 个脚本条目的一部分，
 所以「零引用」只代表**这批语料里没出现**，不等于游戏里没调用。
 
-| 模块 | 方法数 | 被引用 | 调用次数 | 高频项 |
+| 模块 | 方法数 | 被引用的方法数 | 限定名出现次数 | 高频项 |
 |---|---|---|---|---|
 | `C_sys` | 130 | 41 | 200 | `GetTime`×53、`GetObjects`×21、`IsKeyDown`×21、`LoadFile`×19 |
 | `C_cert` | 6 | 6 | 26 | `DYCERT_Init`×5、`DYCERT_GetPCInfo`×5 |
@@ -151,12 +154,12 @@ CNetClient::ProcessServerCmd        (0x467070，脚本每帧调)
 | `C_misc` | 14 | 2 | 2 | `CreateShareMemory`、`DestoryShareMemory` |
 | `C_net` | 3 | 1 | 1 | `DownloadFile` |
 | `C_object` / `C_imnet` / `C_cef` / `C_graphic` / `C_asyncloader` / `C_scan` / `C_maze` / `C_imshare` | 62 | 0 | 0 | — |
-| **合计** | **322** | **81** | **283** | **241 个零引用** |
+| **合计** | **322**（下界） | **81** | **283** | **241 个零引用** |
 
 两个读法：
 
-- `C_sys` 是真正的主 API（占全部调用次数的 71%），`C_imshare`（27 个方法）/`C_asyncloader`（9 个）
-  虽然方法多，但语料里一次都没按限定名调过 —— 大概率是**引擎内部**或**运行期按名导入**（见 §1 第 4 条）。
+- `C_sys` 是真正的主 API（占全部限定名出现次数的 71%），`C_imshare`（27 个方法）/`C_asyncloader`（9 个）
+  虽然方法多，但语料里一次都没按限定名出现过 —— 大概率是**引擎内部**或**运行期按名导入**（见 §1 第 4 条）。
 - 但 `C_object` 完全是另一种情况：脚本里 **163 处**用到它，却**没有一处**是 `C_object.<方法>`，
   因为它的属性是**类型**——`C_object.CTextObject`、`CBaseObject`、`CRichTextObject`、
   `CImagesObject`、`CDisplayLinkDirector`、`CSpriteFrameCache`、`CBoxObject`……
@@ -165,9 +168,13 @@ CNetClient::ProcessServerCmd        (0x467070，脚本每帧调)
 
 ## 6. 静/动态的边界（本篇最重要的结论）
 
-> **能在静态确定的**：模块名、方法名、方法地址、类型名、类型方法表、谁调谁、什么时候调（9 个类型 + 21 个模块）。
-> **静态确定不了的**：27 个 `interface` 类型对象的名字与方法、`C_slot`/`C_sharemem`/`C_math` 三个模块的内容、
-> 以及 `C_object` 暴露的那批类。它们共享同一个机制：**名字在 `.data` 尾部、启动时写入**。
+> **能在静态确定的**：21 个 `C_*` 函数模块的模块名/方法名/方法地址；9 个引擎原生类型里
+> 6 个的类型名与全部方法表（`CNetClient` 36、`CIMShare` 19、`CServerCommand` 9、
+> `CShadowObject` 1、`CObjectCommand` 1）；以及这些方法谁调谁、什么时候调。
+> **静态确定不了 / 只是下界**：`CWwiseEngine` 的方法表指针落在 `.data` 运行期区；
+> 27 个 `interface` 类型对象的名字与方法、`C_slot`/`C_sharemem`/`C_math` 三个模块的内容、
+> 以及 `C_object` 暴露的那批类；`C_http`/`C_RenderAgent` 的方法表没定位。
+> 它们共享同一个机制：**名字在 `.data` 尾部、启动时写入**。
 
 这条边界比「再多挖几个地址」有用：它告诉后来者**该在哪里停手**——想拿这部分，
 只能改成「运行期在客户端进程里 dump `interface.__dict__` / 各模块 `dir()`」，
@@ -213,4 +220,7 @@ grep -rhoE '\bC_sys\.[A-Za-z_]+' tools/decompiler/output --include=*.py | sort |
 - 27 个 `interface` 类型与 3 个模块的名字是**推断为运行期构造**，没有直接证据看到写入代码（写入方应在
   `_dyprot*` 保护区内），所以「源自 RTTI 名」只是最省事的解释，**不是结论**。
 - 未做：`tp_getset` / `tp_members`（属性访问器）没解——那是下一个可能的增量点。
-- 全程静态、只读；输入哈希未变，未启动客户端、未监听端口。
+- 全程静态、只读；未启动客户端、未监听端口。锁定输入按 `sha256sum` 核对过：
+  `mxmain.dll` = `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`，
+  `data/script.fls` = `8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72`，
+  `tools/decompiler/script_fls_keys.json` = `43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb`。

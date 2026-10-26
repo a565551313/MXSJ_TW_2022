@@ -1,8 +1,9 @@
 # mxmain.dll 的 RTTI 类图、虚表与虚析构清单（2026-10-26）
 
 > 结论先行：
-> 1. **明文 RTTI 是一份完整的类清单**：`mxmain.dll` 里 352 个 TypeDescriptor、305 个
->    CompleteObjectLocator、305 张虚表、**1,769 个虚函数槽**、305 条继承链，全部可用
+> 1. **明文 RTTI 是一份完整的类清单**：`mxmain.dll` 里 352 个 TypeDescriptor、309 个类带
+>    CompleteObjectLocator（329 条，其中 305 条是主 locator）、305 张主虚表、
+>    **1,769 个主虚函数槽**（另有 20 张次要虚表 / 145 槽）、309 条继承链，全部可用
 >    `tools/data-parser/mxmain_rtti.py` 一次性解出；`_dyprot0/1` 那 54% 高熵段不参与，
 >    所以这份清单是**只靠明文就能站住**的。
 > 2. **它给的是"类 → 基类链 → 虚函数地址"，不是"方法名"**。要问"某个原生类有没有某个
@@ -11,7 +12,7 @@
 > 3. 边界没变：仍然**反不出源码**。本清单是"锚点集"，用来让后续反汇编从"猜"变成"查表"。
 
 配套工具：`tools/data-parser/mxmain_rtti.py`（只读解析，标准库）+ 回归
-`tools/data-parser/test_mxmain_rtti.py`（14 项）。锁定输入：
+`tools/data-parser/test_mxmain_rtti.py`（21 项）。锁定输入：
 `mxmain.dll` = `mx.exe`，9,698,712 B，SHA-256
 `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`。
 
@@ -19,7 +20,7 @@
 
 | 问题 | 现在能不能答 | 依据 |
 |---|---|---|
-| 客户端有哪些原生类？分布在哪些子系统？ | **能**，305 个有虚表的 + 47 个无虚表的全部列出 | 本文 §4、§3 |
+| 客户端有哪些原生类？分布在哪些子系统？ | **能**，305 个有主虚表的 + 47 个无虚表的全部列出 | 本文 §4、§3 |
 | `CMainWnd` 继承谁？`CMapHeroObject` 呢？ | **能**，深度优先链完整 | §4 的"继承自上"列 |
 | 某个类的虚函数在哪个地址？ | **能**，按槽序号给全 | 生成 `--json` / `--md` |
 | 某个类有哪些虚函数？ | **只能给地址**，名字要靠脚本绑定表或反汇编 | §2 第 5 条 |
@@ -55,8 +56,12 @@
 4. **BaseClassArray[0] 是类自己**，之后才是祖先，深度优先；把 [0] 当基底会多算一层。
 5. **虚表只有 `[COL][槽0]…` 这一种形态，槽 0 是 scalar deleting destructor**；
    同一个类可以有多个"写 vfptr"的位置（构造、工厂、异常对象创建等），
-   本次共 292 个类找到写入点、合计 919 处。**不能把写入点数量当方法数**，
+   本次共 303 个类找到写入点、合计 1,312 处。**不能把写入点数量当方法数**，
    例如 `ZXQRCodeECB` 有 106 处——那是一张静态 QR 码版本表的逐项构造，不是 106 个虚函数。
+   这条计数有个坑：`movl $vftable,(%reg)` 的立即数**不总是紧跟 `C7 modrm` 两字节**，
+   带位移的 `c7 46 08 <imm32>`、`c7 81 10 01 00 00 <imm32>` 同样常见。
+   只比对"立即数前两格是不是 `C7 xx`"会漏掉 362 处（旧版 919 = 292 类，漏 28%），
+   工具现在完整解 ModRM/SIB/displacement，并回报 `site_va`（指令起始）与 `imm_va` 两个地址。
 6. **扫槽位时有两个必须挡掉的假阳性**：① `CMapHeroObject` 虚表后面紧跟一段方法名
    字串（`GetHeight` / `GetSize` / `ClickID` / `SetText` …）字串 `"ii"` 会被读成指针 `0x00696969`，
    它恰好落在 `.text` 里，看起来完全合法；② `std` 系列的 deleting destructor 入口是
@@ -64,7 +69,7 @@
    工具用"目标必须落在 `.text` 且不以 `0x00`/`0x0F` 开头"来收尾，两条都有回归测试。
 
 **自证**：`type_info@@` 的虚表地址 `0x77cb64` 与 352 条 TypeDescriptor 里的 `vfptr` 字段
-完全一致；`CMapHeroObject` 的虚表里第 2 槽 `0x4c5e40` 正好等于
+完全一致；`CLZWDecompress` 的虚表（`0x6bb184`）里第 2 槽 `0x4c5e40` 正好等于
 `notes/native_tcp_channel.md` 里用另一条路（原生指令模拟）定出的 LZW 解压函数；
 `0x4c5d50`（同一笔记里的"LZW 初始化"）正好落在 `CLZWDecompress` 写 vfptr 的位置上。
 三条独立路径对上同一批地址，说明这张表可以当锚点用。
@@ -74,16 +79,26 @@
 | 指标 | 值 |
 |---|---|
 | RTTI 名字（`.data` 内） | 352 个 TypeDescriptor / 355 条不同名字串 |
-| 有 COL（即有多态） | 305 |
-| 有虚表 | 305，**合计 1,769 个槽** |
+| 有 COL（即有多态） | 309 个类 / 329 条 locator |
+| 有**主**虚表 | 305，**合计 1,769 个槽** |
+| 只有次要虚表（多重继承） | 14 个类 / 20 张次要虚表 / 145 个槽 |
 | 无虚表（纯数据/接口/λ） | 47，例如 `CGameWnd`、`CPaletteOp`、`_cef_*_t`、全部 `<lambda_*>` |
 | 继承链解析失败 | 0 |
-| 找到写 vfptr 的位置 | 292 个类 / 919 处 |
+| 找到写 vfptr 的位置 | 303 个类 / 1,312 处（含次要虚表的 31 处） |
 | 槽数分布 | 1 槽 63、2 槽 65、3 槽 26、4 槽 33、5 槽 9、6 槽 12、7 槽 37、8–19 槽 32、21–24 槽 28 |
 
 命名空间分布（`@ns@@` 里的 ns）：全局 115、`Concurrency::details` 42、`Graphics` 34、
 `Concurrency` 29、`std` 24、`Switch` 9、`Common` 6、`duoyi_gif` 6、`Network` 3、`fmt` 3、
 `TimeLog`/`GlobalCore`/`GlobalNode`/`Sound`/`Dmp`/`Debug` 各 1，其余为模板/λ 的残片。
+
+**为什么是 309 个类 / 329 条 locator，而虚表只有 305 张**：多重继承的类每个 vfptr 各有一条
+locator，其中 `offset`/`cd` 非零的是**次要 vfptr**（this 指针调整量、构造中 vftable）。
+只收 `offset==0 and cd==0` 会整批丢掉它们——旧版因此看不到 4 个 std 流类
+（`basic_istream`/`basic_ostream`/`basic_iostream`/`basic_stringstream`，虚拟基底导致它们
+只有带位移的 locator）和 CEF 那批 `CefApp`/`CefClient`/`CefLoadHandler` 等 14 个类的次要虚表。
+工具现在把次要虚表放进每条类记录的 `secondary_vftables`（带 `offset`/`cd`/槽位），
+主虚表仍只认 `offset==cd==0` 那条；`with_object_locator=309`、`with_vftable=305`
+两个数因此不再相等。
 
 **两个可以直接拿去做设计判断的结构事实**：
 
@@ -103,7 +118,7 @@
 **全部地址都在首选基址 `0x400000` 下，实际加载若发生重定位不能直接当进程地址**
 （与 `notes/native_tcp_channel.md` 的口径一致）。
 
-表里是 172 个引擎/第三方类；另外 180 个是静态链接运行库与模板残片（`std` 24、`Concurrency` 29、`Concurrency::details` 42，其余是 `?$_Func_impl`/`<lambda_*>`/`_cef_*_t` 一类），不逐条列；完整 352 行表格用
+表里是 183 个引擎/第三方类；另外 169 个是静态链接运行库与模板残片（`std` 24、`Concurrency` 29、`Concurrency::details` 42，其余是 `?$_Func_impl`/`<lambda_*>`/`_cef_*_t` 一类），不逐条列；完整 352 行表格用
 
 ```bash
 python3 tools/data-parser/mxmain_rtti.py mxmain.dll --md /tmp/rtti.md
@@ -169,7 +184,7 @@ python3 tools/data-parser/mxmain_rtti.py mxmain.dll --md /tmp/rtti.md
 | `CStretchImagesObject@@` | `0x6b952c` | 21 | `0x4953d0` | CImagesObject@@ → CBaseObject@@ | 1 |
 | `CStretchSpriteObject@@` | `0x6b7fd0` | 23 | `0x484110` | CSpriteObject@@ → CBaseObject@@ | 1 |
 
-### 4.3 地图、行走与精灵资源（18）
+### 4.3 地图、行走与精灵资源（19）
 
 | 类 | 虚表 | 槽 | 虚析构 | 继承自上 | vfptr 写入点 |
 |---|---|---:|---|---|---:|
@@ -229,7 +244,7 @@ python3 tools/data-parser/mxmain_rtti.py mxmain.dll --md /tmp/rtti.md
 | `Configuration@Graphics@@` | `0x798390` | 1 | `0x6234e0` | — | 3 |
 | `GLView@Graphics@@` | `0x798544` | 1 | `0x623c10` | — | 3 |
 
-### 4.5 公共资源 / 计时 / 日志（Common，7）
+### 4.5 公共资源 / 计时 / 日志（Common，9）
 
 | 类 | 虚表 | 槽 | 虚析构 | 继承自上 | vfptr 写入点 |
 |---|---|---:|---|---|---:|
@@ -322,7 +337,7 @@ python3 tools/data-parser/mxmain_rtti.py mxmain.dll --md /tmp/rtti.md
 | `GifStreamInput@duoyi_gif@@` | `—` | 0 | `—` | — | 0 |
 | `GifStreamOutput@duoyi_gif@@` | `—` | 0 | `—` | — | 0 |
 
-### 4.11 fmt / 运行时（11）
+### 4.11 fmt / 运行时（22）
 
 | 类 | 虚表 | 槽 | 虚析构 | 继承自上 | vfptr 写入点 |
 |---|---|---:|---|---|---:|
@@ -347,8 +362,8 @@ python3 tools/data-parser/mxmain_rtti.py mxmain.dll --md /tmp/rtti.md
 | 现有笔记里的地址 | 本表给出的归属 | 关系 |
 |---|---|---|
 | `0x4c5e40`（`native_tcp_channel.md`：LZW 解压） | `CLZWDecompress` 槽 1 | 互证：两条独立路径（原生指令模拟 / RTTI）指向同一函数 |
-| `0x4c5d50`（同一笔记：LZW 初始化） | `CLZWDecompress` 写 vfptr 的位置（`0x4c5d57` 处 `c7 06`） | 说明它就是构造函数邻域 |
-| `0x4aadb0`（同一笔记：上行构造/终结） | `CClientCommand` 写 vfptr 的位置 | 同上 |
+| `0x4c5d50`（同一笔记：LZW 初始化） | `CLZWDecompress` 写 vfptr 的指令 `0x4c5d55`（`c7 06`，立即数在 `0x4c5d57`） | 说明它就是构造函数邻域 |
+| `0x4aadb0`（同一笔记：上行构造/终结） | `CClientCommand` 写 vfptr 的函数入口（`0x4aadbd` 起的第一条 `c7 06`） | 同上 |
 
 `CNet`（虚表 `0x6bb330`，1 槽）、`CEncryptor`（`0x6bbfec`，1 槽）、`CDecryptor`
 （`0x6bbff4`，1 槽）都只有虚析构，所以笔记里那些密码器地址不会出现在虚表里；反过来说，
@@ -415,11 +430,12 @@ python3 tools/data-parser/mxmain_rtti.py mxmain.dll --md /tmp/rtti.md
 python3 tools/data-parser/mxmain_rtti.py mxmain.dll --limit 20
 python3 tools/data-parser/mxmain_rtti.py mxmain.dll --json /tmp/rtti.json --md /tmp/rtti.md
 
-# 回归（14 项：7 项自建 PE + 7 项真档断言）
+# 回归（21 项：11 项自建 PE + 10 项真档断言）
 python3 -m unittest tools/data-parser/test_mxmain_rtti.py
 ```
 
-回归里钉住的真档期望值：SHA-256 与锁定摘要一致、352/305/305、继承链 0 失败、
+回归里钉住的真档期望值：SHA-256 与锁定摘要一致、352 TypeDescriptor / 309 带 locator /
+305 主虚表 / 14 个类有次要虚表、继承链 0 失败、
 `failure@ios_base` 五层链、`CMainWnd` 三层链、`CCommonWnd` 单槽 `0x44b2a0`、
 `CLZWDecompress` 含 `0x4c5e40`、`invalid_argument@std` 的槽 0 是奇数地址 `0x5c6085`。
 自建 PE 那 7 项锁的是结构假设：TD/COL/虚表定位、槽尾字串 0x696969 必须被挡、

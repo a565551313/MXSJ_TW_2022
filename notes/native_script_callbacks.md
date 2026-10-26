@@ -18,12 +18,16 @@
    全部实名，分属 **12 处宿主位置 / 2 个簇**（其中 8 处入口能由 `0xCC` 填充确认，4 处在无填充的热/冷块里）。
 3. 16 个调用点只对应 **8 个脚本方法名**：`CSetDirection`、`Stop`、`IsWalk`、
    `OnServerCmd`、`OnSpecialServerCmd`、`OnError`、`OnConnectFail`、`OnConnected`。
-4. 宿主一半是渲染对象（`CWalkerObject` 家族，`CSetDirection` 就是它的**虚表槽 22**），
-   另一半是网络层（`CNet` 事件分发，事件码 **10001–10004**，`0x2714` 正是 `OnServerCmd` 那一路）。
+4. 宿主一半是渲染对象（`CWalkerObject` 家族——`CWalkerObject`/`CMapWalkerObject`/`CMapHeroObject`
+   三张**不同**的虚表，第 22 槽指向同一个 `0x49a000`），另一半是网络层
+   （`CNet` 事件分发，事件码 **10001–10004**，`0x2714` 正是 `OnServerCmd` 那一路）。
 5. 反方向：镜像里 **82 处 `Py_InitModule4`（`0x4e4850`）**，其中 **21 个是引擎自有模块** `C_*`，
-   共 **322 个脚本可调原生方法**；其余 61 处是内嵌 CPython 2.5 标准库模块。
+   共 **至少 322 个脚本可调原生方法**（下界：`C_http`/`C_RenderAgent` 的方法表没定位，
+   另有 `C_slot`/`C_sharemem`/`C_math` 等运行期构造的模块，见
+   [mxmain_python_types.md](mxmain_python_types.md) §1）；其余 61 处是内嵌 CPython 2.5 标准库模块。
 6. 两个方向**在代码上是分离的**：没有任何一个 `PyMethodDef` 实现函数在 1 跳内直连桥；
-   只有 `C_net` 一侧的 `Process` / `ProcessServerCmd` / `Replay` 在 1–2 跳内会走进回调。
+   只有原生类型 **`CNetClient`** 的 `Process` / `ProcessServerCmd` / `Replay` 在 1–2 跳内会走进回调
+   （它们不是 `C_net` 模块函数，见 §7）。
 
 ## 2. 桥函数 `0x4576b0` 的契约（字节级）
 
@@ -123,9 +127,10 @@
 
 ### 4.1 walker 簇（`0x49a000`–`0x49d9xx`）
 
-`0x49a000` 是 `0x6ba3e0` 虚表的第 22 槽，而 `0x6ba3e0` 被
-`CWalkerObject` / `CMapWalkerObject` / `CMapHeroObject` 三个类共用（RTTI 侧已核，
-见 RTTI 笔记 §4）。这一簇的回调语义：
+`0x49a000` 是 `CWalkerObject`（虚表 `0x6ba380`）、`CMapWalkerObject`（`0x6ba3e0`）、
+`CMapHeroObject`（`0x6ba538`）三张**不同**虚表第 22 槽的共同目标（RTTI 侧已核，
+见 RTTI 笔记 §4）——共用的是这个槽位指向的函数，不是同一张虚表。
+这一簇的回调语义：
 
 - **`CSetDirection(dir)`** —— `this` 的朝向被原生改掉时调用；`dir` 就是新朝向。
 - **`IsWalk()`** —— 原生问脚本「现在还该继续走吗」；返回真就继续，假就 `Stop`。
@@ -174,10 +179,10 @@
 
 | 回调小函数 | 直接 `call` 点 → 所在函数 | 说明 |
 |---|---|---|
-| `0x4ab790`（`OnServerCmd` 单条） | `0x467432` → `0x467270` | `C_net.Replay`：回放录制的服务器命令也走脚本回调 |
+| `0x4ab790`（`OnServerCmd` 单条） | `0x467432` → `0x467270` | `CNetClient.Replay`：回放录制的服务器命令也走脚本回调 |
 | `0x4ab7d0`（`OnSpecialServerCmd`） | `0x4ab985` → `0x4ab870` | 队列消费主循环 |
-| `0x4ab870`（含 2 个 `OnServerCmd`） | `0x467079` → `0x467070` | `C_net.ProcessServerCmd` |
-| `0x4ab9a0`（`OnError` / `OnConnectFail`） | `0x4674bf` → `0x467490`；`0x4ab873` → `0x4ab870` | `C_net.Process` + 队列循环 |
+| `0x4ab870`（含 2 个 `OnServerCmd`） | `0x467079` → `0x467070` | `CNetClient.ProcessServerCmd` |
+| `0x4ab9a0`（`OnError` / `OnConnectFail`） | `0x4674bf` → `0x467490`；`0x4ab873` → `0x4ab870` | `CNetClient.Process` + 队列循环 |
 | `0x4abef0`（`OnError("新CNet实例…")`） | `0x4693f8` → `0x4693f0`；`0x469426` → `0x469420` | `C_imnet` 一侧的连接重置 |
 | `0x4abb00`（`OnError` 薄包装） | **无直接 `E8` 调用者** | 只可能经函数指针/内联残块，静态未见入口 |
 | `0x4ac030`（`OnServerCmd(int)`） | `0x4ac611` → `0x4ac590` | 事件码 `0x2714` 分支 |
@@ -241,8 +246,10 @@
   尤其 `0x49bxxx` 那批 `SetAlpha`/`NextFrame`/`GetDirection` 名字，来自 §5 末尾说的
   「第二类方法表」被误当 `PyMethodDef` 的情形，已排除。
 
-⇒ 结论：**脚本调原生（322 个方法）与原生回调脚本（8 个名字）是两条独立通道**。
-想在脚本里挂引擎事件，只能盯这 8 个名字；想调引擎能力，看 §5 的模块表。
+⇒ 结论：**脚本调原生（至少 322 个方法）与原生回调脚本（这台客户端明文 `.text` 里
+直接 `E8` 到桥的 8 个名字）是两条独立通道**。
+这 8 个名字是「明文里所有直接调用点」的全集，**不是整客户端回调清单的全集**——
+`_dyprot0/1` 那 54% 壳区若也有调用点，静态看不到（§8）。想调引擎能力，看 §5 的模块表。
 两者不重叠——没有「调用某个原生方法会同步回调同名脚本方法」的隐藏耦合。
 
 ## 7. 与既有材料的对照与更正
