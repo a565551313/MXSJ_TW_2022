@@ -130,6 +130,14 @@ class RealClientTests(unittest.TestCase):
             self.rt.uc.emu_start(self.rt.stub_for(unknown), we.SENTINEL)
         self.assertEqual(caught.exception.name, unknown)
 
+    def test_exports_without_semantics_declare_their_arity(self):
+        """在 `EXTRA_EXPORTS` 裡有名字、卻沒有語意實作的，參數個數要查得到。"""
+        expected = {"HeapFree": 3, "CreateFileA": 7, "ReadFile": 5, "LoadLibraryExA": 3}
+        self.assertEqual({k: we.ARG_COUNTS.get(k) for k in expected}, expected)
+        for name in expected:
+            self.assertIn(name, we.EXTRA_EXPORTS)
+            self.assertNotIn(name, self.rt.procs)
+
     def test_stub_arity_matches_the_python_signature(self):
         """`@stdcall(n)` 的 n 就是清棧要彈幾個——不能跟函式簽名對不上。"""
         mismatched = {

@@ -3,8 +3,10 @@
 
 **狀態：實驗性，尚未解出載荷。** 這個工具目前能穩定做到：
 
-1. 按 `ImageBase` 映射整個 `SizeOfImage`，把 TEB/PEB 放在位址 0
-   （unicorn 的 32 位模式忽略 `FS` 段基址，`fs:[x]` 實際讀 `[x]`）；
+1. 按 `ImageBase` 映射整個 `SizeOfImage`，把 TEB/PEB 放在位址 0（unicorn 2.1.4
+   的 32 位模式不實作 `UC_X86_REG_FS_BASE` 寫入，本探針因此不設 FS 段，
+   `fs:[x]` 讀到的就是 `[x]`——這是**本探針配置**下的結果，不是說 FS 在
+   Unicorn 裡永遠沒有作用）；
 2. 給 859 個導入槽接上 Python 樁，並合成 kernel32 / ntdll / user32 /
    advapi32 的**假 PE 映像**（含可解析的匯出表）——殼是走「解析匯出表」
    這條路拿 API 的，不給它表它不往下走；

@@ -52,8 +52,9 @@ IAT 重綁： {'iat_va': '0xe1b000', 'iat_size': 3584, ...}
 
 ## 為什麼還沒成功（兩個已排除的方向）
 
-- **不是缺 API 數量**：導入名單 691 個名字全部進了假匯出表，未實作的樁按
-  `ARG_COUNTS` 正確清棧並回 0；殼照樣在某個計算跳轉後失控。
+- **不是缺 API 數量**：導入名單 691 個名字全部進了假匯出表；有語意實作的樁正常
+  執行，沒實作、但參數個數在 `ARG_COUNTS` 裡的按表清棧回 0，兩張表都沒有的名字
+  會直接停下來報錯（不會清錯棧）。殼照樣在某個計算跳轉後失控。
 - **不是異常沒派發**：`fs:[0]` 確實指向棧上的 `EXCEPTION_REGISTRATION_RECORD`
   （殼裝了 SEH），手動造 `EXCEPTION_RECORD` + `CONTEXT` 跳進 handler 之後
   行為沒有改變。
@@ -63,9 +64,10 @@ IAT 重綁： {'iat_va': '0xe1b000', 'iat_size': 3584, ...}
 
 ## 環境限制（照抄，別踩第二次）
 
-- **unicorn 的 32 位模式忽略 `FS` 段基址**（寫 `UC_X86_REG_FS_BASE` 是 no-op 並告警），
-  所以 `fs:[0x30]` 讀的其實是 `[0x30]`：TEB/PEB 只能擺在位址 0，這也讓「空指針」
-  和「fs:0」在模擬器裡變成同一件事。
+- **unicorn 2.1.4 的 32 位模式不實作 `UC_X86_REG_FS_BASE` 寫入**（no-op 並告警）：
+  本探針不設 FS 段，`fs:[0x30]` 讀到的就是 `[0x30]`，TEB/PEB 因此擺在位址 0。
+  這是**這個探針配置**的性質，不是「Unicorn 裡 FS 永遠失效」的斷言；真要換配置，
+  得先把段基址寫得進去。附帶效果是「空指針」和「fs:0」在模擬器裡變成同一件事。
 - `pefile.get_memory_mapped_image()` 不會幫你套用重定位，也不含 `.data` 的
   未初始化尾部——殼在那塊跑起來看到的是全 0。
 - 殼的入口跳板鏈很短（`0xcba0ae → 0xcba0b8 → 0xe0aa77`），真正的邏輯在
@@ -83,7 +85,7 @@ IAT 重綁： {'iat_va': '0xe1b000', 'iat_size': 3584, ...}
 python -m unittest tools.dyprot_unpack.test_dyprot_emulate -v
 ```
 
-11 項。缺 `pefile` / `unicorn` 時整檔跳過。釘住的是：假 DLL 映像的結構（`pefile`
+12 項。缺 `pefile` / `unicorn` 時整檔跳過。釘住的是：假 DLL 映像的結構（`pefile`
 真的能解析出匯出名與位址——這一條壞了會表現成「殼突然停在入口」而不是明顯錯誤）、
 映像按匯出量放大、輸出不覆蓋輸入的兩條護欄、參數個數未知時必須報錯、每個樁的
 `@stdcall(n)` 要和 Python 簽名一致、`UC_HOOK_CODE` 只掛在樁區。

@@ -6,7 +6,9 @@
 
 殼是拿名字去假 DLL 的匯出表裡查 API 的，所以「匯出名字清單」和「真的會執行
 的 Python 實作」必須對得上：`EXTRA_EXPORTS` 決定匯出表裡有哪些名字，
-`install_api()` 決定其中哪些有語意、其餘按 `ARG_COUNTS` 正確清棧後回 0。
+`install_api()` 決定其中哪些有語意；有名字但沒語意的，參數個數記在 `ARG_COUNTS`，
+按它清棧後回 0。兩張表都沒有的名字不會被猜成 0 參數——`_on_code` 直接拋
+`UnknownArity`，停因裡寫出名字（猜錯只會讓後面每一條指令都建在歪掉的棧上）。
 
 限度：只做記憶體、模組、時間、TLS、臨界區這些殼會碰到的東西；沒有檔案系統、
 沒有視窗訊息循環、沒有執行緒排程。行為對不上時寧可回 0 並記錄，也不要假裝。
@@ -88,6 +90,11 @@ FindResourceA LoadResource LockResource SizeofResource FindResourceW
 
 # 未實作函式也必須知道參數個數（stdcall 由被調方清棧），否則棧會歪。
 ARG_COUNTS = {
+    # 這幾個在 `EXTRA_EXPORTS` 裡有名字但沒有語意實作，參數個數照 Win32 標準寫。
+    "HeapFree": 3,
+    "CreateFileA": 7,
+    "ReadFile": 5,
+    "LoadLibraryExA": 3,
     "FreeLibrary": 1,
     "GetProcAddress": 2,
     "VirtualFree": 3,
