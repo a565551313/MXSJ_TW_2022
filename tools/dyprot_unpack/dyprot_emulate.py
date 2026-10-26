@@ -233,13 +233,22 @@ class Runtime:
 
     # ------------------------------------------------------------------ 鉤子
     def _install_hooks(self) -> None:
-        self.uc.hook_add(
-            UC_HOOK_CODE, self._on_code, begin=STUB, end=STUB + STUB_SIZE
-        )
-        self.uc.hook_add(UC_HOOK_MEM_WRITE, self._on_write)
+        for htype, callback, kwargs in self._hook_specs():
+            self.uc.hook_add(htype, callback, **kwargs)
+
+    def _hook_specs(self) -> list[tuple[int, object, dict]]:
+        """要掛的鉤子：`(型別, 回呼, 額外參數)`。
+
+        `UC_HOOK_CODE` 一定要帶範圍（樁區），否則每條指令都回 Python，
+        實測慢一個數量級；`--trace-tail` 是除錯用的例外，刻意不限範圍。
+        """
+        specs = [
+            (UC_HOOK_CODE, self._on_code, {"begin": STUB, "end": STUB + STUB_SIZE}),
+            (UC_HOOK_MEM_WRITE, self._on_write, {}),
+        ]
         if self.trace_tail:
-            # 除錯用：要「每一條」指令，所以刻意不限範圍（會慢一個數量級）。
-            self.uc.hook_add(UC_HOOK_CODE, self._on_trace)
+            specs.append((UC_HOOK_CODE, self._on_trace, {}))
+        return specs
 
     def _on_trace(self, uc, address, size, user) -> None:
         self.tail.append(address)

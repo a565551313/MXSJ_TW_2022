@@ -151,26 +151,14 @@ class RealClientTests(unittest.TestCase):
     def test_code_hook_is_registered_with_a_range(self):
         """`UC_HOOK_CODE` 若不限範圍，每條指令都回 Python，慢一個數量級。
 
-        這裡直接截 `Uc.hook_add` 的實參，而不是只比對常數——否則 `_install_hooks`
-        退回無範圍註冊時測試照樣綠。
+        比對的是實際要掛上去的參數（`_hook_specs`），不是常數——否則
+        `_install_hooks` 退回無範圍註冊時測試照樣綠。
         """
-        from unicorn import Uc
-
-        recorded = []
-        original = Uc.hook_add
-
-        def spy(self, htype, callback, *args, **kwargs):
-            recorded.append((htype, kwargs))
-            return original(self, htype, callback, *args, **kwargs)
-
-        Uc.hook_add = spy
-        try:
-            de.Runtime(CLIENT)  # 只需要 __init__ 裡的 _install_hooks
-        finally:
-            Uc.hook_add = original
-        code_hooks = [kw for htype, kw in recorded if htype == de.UC_HOOK_CODE]
-        expected = [{"begin": de.STUB, "end": de.STUB + de.STUB_SIZE}]
-        self.assertEqual(code_hooks, expected)
+        specs = de.Runtime(CLIENT)._hook_specs()
+        code_hooks = [kw for htype, _, kw in specs if htype == de.UC_HOOK_CODE]
+        self.assertEqual(
+            code_hooks, [{"begin": de.STUB, "end": de.STUB + de.STUB_SIZE}]
+        )
 
     def test_run_reaches_the_shells_own_error_dialog(self):
         """匯出表寫成 RVA 之後，殼才解析得到樁、並彈出自己的錯誤文案。
