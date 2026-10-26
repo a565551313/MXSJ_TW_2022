@@ -510,7 +510,9 @@ class EditingCommandsMixin:
         （忠实往返），但引擎与通用脚本不认——画布生效、游戏不生效。
         """
         fields = defaults_data.native_field_set(widget.wtype)
-        if fields is None or key in fields:
+        # 删键不警示：_remove_property 也发 changed，此时键已不在控件上，
+        # 再说「会随 .dlg 保存」就是误报（PR #90 审查复核属实）。
+        if fields is None or key in fields or key not in widget.props:
             return
         self._update_status(
             f"键「{key}」不在游戏 {widget.wtype} 的原生字段集里："

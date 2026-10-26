@@ -100,6 +100,14 @@ class SprAddTests(unittest.TestCase):
         self.assertIn("已挂账 dir\\a.spr", text)
         self.assertIn("连带挂账像素搭档 dir\\a.igs", text)
 
+    def test_single_spr_selection_stays_on_spr(self):
+        """搭档挂账后选中留在 .spr——属性模式 OK 回填 selected_path()，
+        挪到搭档＝属性拿到像素文件而不是帧时表（PR #90 审查复核属实）。"""
+        spr = self._write("a.spr", b"SPR")
+        self._write("a.igs", b"PIX")
+        self._add_single(spr, "dir\\a.spr")
+        self.assertEqual(self.dialog.selected_path(), "dir\\a.spr")
+
     def test_single_spr_pairs_png_fallback(self):
         spr = self._write("a.spr", b"SPR")
         self._write("a.png", b"PIX")

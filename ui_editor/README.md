@@ -75,6 +75,28 @@
 急切绑定所需），仅在沙箱、不入库。**未验**：Windows 实机、图标
 与按钮真实观感（图标是运行时 QPainter 手绘，无像素级断言）。
 
+**AI 审查复核（PR #90，同日）**：gitar-bot、CodeRabbit、kody 的
+12 条行级评论（10 个独立问题）逐条对照代码复核——**7 条属实已修**：
+移除自定义键误报警告（`_warn_nonnative_key` 加「键已不在 props」
+守卫）；批处理预览改 ≤360px 有界工作副本＋缓存 before 图、输出
+>1280px 从略预览标真实尺寸、`MemoryError` 兜底；输出清单按
+`unique_target` 规则预演重名 -2（含批内占用，执行仍以落盘瞬间为
+准）；`.spr` 连带挂账后选中重选回本体；`_batch_process` 取包内
+字节逐张设防（`except Exception` 进拒收清单，`PackError` 不在
+`(OSError, ValueError)` 里）；取证 README 闸门命令改仓库相对路径；
+`sigprobe_version_gate.py` 判定加强为**双窗口负 delta**（任一窗
+true_delta<0 / 第 2 窗 none_delta<0 / 第 1 窗 ≤−10 →
+`PROBE-REFCOUNT-DRAIN` 退出码 1，6.11.2 复跑判定不变）。**2 条属实
+但存档不改**：refwatch 驱动 `/tmp` 路径与 `TestCase.run` 补丁均为
+冻结取证工件、按运行原样存档（进程退出补丁即灭失），README 已注
+存档口径。**1 条前提不成立**：spr_add 成功测试补「未弹框」断言——
+现有测试已精确断言挂账字典与文案逐字、offscreen 下未打补丁的
+`QMessageBox` 会阻塞而响亮失败。＋7 项回归测试，全套复跑
+**939 项：938 通过 / 1 跳过 / 0 错误**（连续两轮）、ruff 0、
+wincompat 0/0/0。审查轮沙箱再重置，符号桩按存档设计重建生成器
+重生成（62 库 / 6529 哑符号，提供者过滤更严），以导入链与全套
+两轮全绿为验收。
+
 ## 0.20.0：图片批处理（缩放 / 亮度 / 饱和度）
 
 0.19.0 的结论直接后果——CButton 等控件在游戏内的尺寸与观感由图片素材

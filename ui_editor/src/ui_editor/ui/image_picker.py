@@ -1078,7 +1078,13 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                     f"{path}：{suffix or '无后缀'} 不在批处理范围"
                     "（PNG/JPG/BMP/TGA/.igs）")
                 continue
-            data = self._fetch_bytes(path)
+            try:
+                data = self._fetch_bytes(path)
+            except Exception as exc:  # 单项读取炸了也不中断整批（PR #90 审查
+                # 复核属实：fetch_bytes 对坏包条目/非法路径是 re-raise，
+                # 与 run_batch「意外错误也进清单」同一姿势）
+                rejected.append(f"{path}：包内读不到字节（{exc}）")
+                continue
             if data is None:
                 rejected.append(f"{path}：包内读不到字节")
                 continue
@@ -1139,9 +1145,15 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                 except OSError:
                     pdata = None
                 if pdata is not None:
-                    note = (f"连带挂账像素搭档 {target}。"
-                            if self._stage_one(target, pdata)
-                            else f"像素搭档 {target} 未挂上。")
+                    if self._stage_one(target, pdata):
+                        note = f"连带挂账像素搭档 {target}。"
+                        # 搭档挂账会把列表选中挪到搭档上（add_staged_path
+                        # 末尾 _select_path）；选中要留在用户导入的 .spr——
+                        # 属性模式下 OK 回填 selected_path()，挪走＝属性
+                        # 拿到像素文件而不是帧时表（PR #90 审查复核属实）。
+                        self._select_path(res_path)
+                    else:
+                        note = f"像素搭档 {target} 未挂上。"
         try:
             from ..core import spr_desc
             info = spr_desc.parse_images(

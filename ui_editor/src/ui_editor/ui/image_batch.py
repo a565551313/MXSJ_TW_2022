@@ -50,6 +50,10 @@ from .status_text import pack_name
 __all__ = ["BatchPlan", "ImageBatchDialog", "run_batch"]
 
 _PREVIEW_BOX = 180
+#: 预览实际调整所用的有界工作副本边长上限，与预览输出边长上限
+#: （PR #90 审查复核属实：磁盘任意图全分辨率逐步重算会卡死对话框）。
+_PREVIEW_WORK_BOX = 360
+_PREVIEW_OUT_CAP = 1280
 
 
 @dataclass(frozen=True)
@@ -72,6 +76,13 @@ def _to_pixmap(img: Image.Image) -> QPixmap:
                        Qt.AspectRatioMode.KeepAspectRatio,
                        Qt.TransformationMode.SmoothTransformation)
     return pm
+
+
+def _target_exists(target: Path) -> bool:
+    try:
+        return target.exists()
+    except OSError:   # 目录读不了：预演按不存在处理，落盘以 unique_target 为准
+        return False
 
 
 def _first_image(item) -> Image.Image:
@@ -111,6 +122,20 @@ class ImageBatchDialog(QDialog):
             self._preview_src = _first_image(self._items[0])
         except Exception as exc:  # 预览失败不拦批处理（清单照常确认）
             self._preview_error = f"预览失败：{exc}"
+        # 预览调整在有界工作副本上跑（PR #90 审查复核属实）：独立入口
+        # 可从磁盘选任意图，全分辨率 LANCZOS＋全幅 RGBA 拷贝逐步重算
+        # 会卡死对话框；before 缩略图与参数无关，一次缓存。仅供显示
+        # 对比——实际批处理永远在原像素上执行。
+        self._preview_work = self._preview_src
+        if self._preview_src is not None and \
+                max(self._preview_src.size) > _PREVIEW_WORK_BOX:
+            work = self._preview_src.copy()
+            work.thumbnail((_PREVIEW_WORK_BOX, _PREVIEW_WORK_BOX),
+                           Image.Resampling.LANCZOS)
+            self._preview_work = work
+        self._preview_before_pm = (_to_pixmap(self._preview_work)
+                                   if self._preview_work is not None
+                                   else QPixmap())
 
         layout = QVBoxLayout(self)
         layout.addWidget(self._info)
@@ -288,26 +313,62 @@ class ImageBatchDialog(QDialog):
             self._before_label.setText(text)
             self._after_label.setText(text)
             return
-        self._before_label.setPixmap(_to_pixmap(self._preview_src))
+        self._before_label.setPixmap(self._preview_before_pm)
+        params = self._params()
+        work = self._preview_work
+        out_w, out_h = image_adjust.adjusted_size(work.width, work.height,
+                                                  params)
+        if max(out_w, out_h) > _PREVIEW_OUT_CAP:
+            # 巨大输出（如大图×500%）：预览没有意义（显示框只有
+            # 180px），直说真实输出尺寸、略过预览；实际批处理不受影响。
+            real_w, real_h = image_adjust.adjusted_size(
+                self._preview_src.width, self._preview_src.height, params)
+            self._after_label.setPixmap(QPixmap())
+            self._after_label.setText(
+                f"目标输出 {real_w}×{real_h} 过大，\n预览从略（批处理照常执行）。")
+            return
         try:
-            out = image_adjust.adjust_image(self._preview_src, self._params())
+            out = image_adjust.adjust_image(work, params)
             self._after_label.setPixmap(_to_pixmap(out))
         except image_adjust.AdjustError as exc:
             self._after_label.setPixmap(QPixmap())
             self._after_label.setText(str(exc))
+        except MemoryError:  # 有界副本下通常到不了这里；极端环境兜底
+            self._after_label.setPixmap(QPixmap())
+            self._after_label.setText("预览内存不足（批处理照常执行）。")
 
     def _refresh_listing(self) -> None:
         stage = self._radio_stage.isChecked()
         out_dir = self._dir_edit.text().strip().rstrip("/\\")
         self._listing.clear()
+        reserved: set[str] = set()
         for path, _kind, _data in self._items:
             if stage:
                 self._listing.addItem(f"{path}（同名替换包内原资源）")
             elif out_dir:
-                self._listing.addItem(f"{out_dir}\\{pack_name(path)}")
+                # 清单显示真正会落盘的文件名（PR #90 审查复核属实）：
+                # run_batch 永不覆盖，重名走 unique_target 变 -2/-3——
+                # 这里按同一规则预演（含本批在前项已占用的名字）。执行
+                # 时仍以 unique_target 落盘瞬间为准：期间目录内容若变化，
+                # 不覆盖优先于预演一致。
+                self._listing.addItem(
+                    f"{out_dir}\\{self._predicted_name(out_dir, path, reserved)}")
             else:
                 self._listing.addItem(
                     f"{pack_name(path)}（选好输出目录后显示完整路径）")
+
+    @staticmethod
+    def _predicted_name(out_dir: str, path: str, reserved: set[str]) -> str:
+        """按 unique_target 的规则预演确认时的落盘名（含批内占用）。"""
+        name = pack_name(path)
+        stem, suffix = Path(name).stem, Path(name).suffix
+        dest = Path(out_dir)
+        candidate, index = name, 2
+        while candidate in reserved or _target_exists(dest / candidate):
+            candidate = f"{stem}-{index}{suffix}"
+            index += 1
+        reserved.add(candidate)
+        return candidate
 
     def _on_accept(self) -> None:
         mode = "stage" if self._radio_stage.isChecked() else "disk"

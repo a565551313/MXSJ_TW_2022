@@ -42,19 +42,36 @@ GL 符号桩库均无关（最小复现现场一个桩库都没加载）。旧�
 信号 ×2000 delta 全 0，`QSpinBox.valueChanged`×500 delta +2（常量级、良性），
 `PROBE-SURVIVED`。随后全套 932 项：931 通过 / 1 跳过 / 0 错误。
 
-版本闸门用法（判定任意 PySide6 版本是否干净）：
+版本闸门用法（判定任意 PySide6 版本是否干净；**从仓库根目录运行**）：
 
 ```bash
 python3 -m venv /tmp/probe && /tmp/probe/bin/pip install PySide6-Essentials==<版本>
-QT_QPA_PLATFORM=offscreen /tmp/probe/bin/python -X faulthandler sigprobe_version_gate.py
-# QtWidgets 段需符号桩：LD_LIBRARY_PATH=<glstub 目录>；末行输出 PROBE-SURVIVED 为干净
+QT_QPA_PLATFORM=offscreen LD_LIBRARY_PATH=<glstub 目录> \
+    /tmp/probe/bin/python -X faulthandler \
+    docs/analysis/evidence/pyside6_6120_refcount_bug_20261026/sigprobe_version_gate.py
 ```
+
+判定（PR #90 审查轮收紧，回应「不能只看没崩」）：每个操作跑**两个窗口**，
+第 1 窗吸收一次性常量噪声（干净版实测可现 ±1、+2）；任何窗口 true_delta<0、
+第 2 窗 none_delta<0、或第 1 窗 none_delta≤−10 → 末行 `PROBE-REFCOUNT-DRAIN`、
+退出码 1；崩溃版本（如 6.12.0）在信号段即 abort，到不了判定行（退出码 134）；
+干净 → 末行 `PROBE-SURVIVED`、退出码 0。加强版对 6.11.2 复跑实测：
+int/str/obj 两窗 (0,0)/(0,0)、spinbox w1 (+2,0) w2 (0,0) → `PROBE-SURVIVED`
+退出码 0——原判定结论不变。
 
 ## 文件清单
 
+> **存档口径（PR #90 审查轮注记）**：除 `sigprobe_version_gate.py` 是面向
+> 复用的版本闸门（审查轮把判定从「只看没崩」加强为双窗口负 delta 检查，
+> 上文已注明加强前后结论一致）外，其余脚本是**冻结取证工件**——按 Linux
+> 沙箱当时的运行原样保留（含 `/tmp` 硬编码日志路径、一次性驱动对
+> `unittest.TestCase.run` 的进程内补丁：驱动跑完即进程退出，补丁无从影响
+> 任何后续执行），不作可复用工具维护、不保证 Windows 等平台可运行。
+> 改写它们会让存档脚本与 `reflog_854tests.txt` 的产出过程对不上号。
+
 | 文件 | 说明 |
 | --- | --- |
-| `minsig2_unconnected_int_emit.py` | 最小复现：未连接 `Signal(int).emit(3)`×2000 → `bool_dealloc` abort（6.12.0 必崩） |
-| `sigprobe_version_gate.py` | 版本闸门探针：int/str/object 信号 ×2000 + `QSpinBox.valueChanged`×500，输出各 delta 与 `PROBE-SURVIVED` |
-| `refwatch_per_test_driver.py` | 逐测试 `sys.getrefcount(None)` 记录驱动（unittest discover 包装） |
+| `minsig2_unconnected_int_emit.py` | 最小复现（冻结工件）：未连接 `Signal(int).emit(3)`×2000 → `bool_dealloc` abort（6.12.0 必崩） |
+| `sigprobe_version_gate.py` | 版本闸门探针（可复用；PR #90 审查轮加强判定）：int/str/object 信号 ×2000 双窗口 + `QSpinBox.valueChanged`×500 双窗口，输出各窗 delta 与判定行（`PROBE-SURVIVED`＝干净 / `PROBE-REFCOUNT-DRAIN`＝单例被过度 DECREF） |
+| `refwatch_per_test_driver.py` | 逐测试 `sys.getrefcount(None)` 记录驱动（冻结工件；unittest discover 包装，日志写 `/tmp/reflog.txt`） |
 | `reflog_854tests.txt` | 上述驱动的原始输出：854 行 `test-id \t rc_before \t rc_after`（6.12.0，崩前） |

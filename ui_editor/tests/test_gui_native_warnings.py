@@ -110,6 +110,17 @@ class NativeWarningTests(unittest.TestCase):
         self.assertTrue(self.window.props_panel._commit("sTips", "hi"))
         self.assertEqual(self._key_warnings(), [])
 
+    def test_custom_key_removal_is_silent(self):
+        """删键不警示——键已不在控件上，「会随 .dlg 保存」是误报（PR #90）。"""
+        button = self._add("CButton")
+        self.window._select_widget(button)
+        self.assertTrue(self.window.props_panel._commit("sMyKey", 1))
+        self.assertEqual(len(self._key_warnings()), 1)   # 写入时照常警示
+        self.msgs.clear()
+        self.window.props_panel._remove_property("sMyKey")
+        self.assertNotIn("sMyKey", button.props)
+        self.assertEqual(self._key_warnings(), [])
+
     def test_external_template_commit_is_silent(self):
         """CEdit 无原生模板（field set 为 None）→ 任何键都不妄下断语。"""
         edit = self._add("CEdit")

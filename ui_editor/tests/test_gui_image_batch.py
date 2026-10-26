@@ -39,7 +39,7 @@ try:
         QPushButton,
     )
 
-    from ui_editor.core import sprite, sprite_encode
+    from ui_editor.core import image_adjust, sprite, sprite_encode
     from ui_editor.core.image_adjust import AdjustParams
     from ui_editor.ui.image_batch import (
         BatchPlan,
@@ -127,6 +127,31 @@ class ImageBatchDialogTests(unittest.TestCase):
         self.assertFalse(dialog._after_label.pixmap().isNull())
         self.assertIn("a.png", dialog._info.text())
 
+    def test_preview_works_on_bounded_copy(self):
+        """大图预览只动有界工作副本（PR #90：全分辨率逐步重算会卡死）。"""
+        big = png_bytes(size=(2000, 1500))
+        dialog = ImageBatchDialog(None, [("d\\big.png", "image", big)])
+        self.addCleanup(dialog.deleteLater)
+        self.assertEqual(dialog._preview_src.size, (2000, 1500))
+        self.assertEqual(dialog._preview_work.size, (360, 270))
+        self.assertFalse(dialog._preview_before_pm.isNull())
+        self.assertEqual((dialog._tw_spin.value(), dialog._th_spin.value()),
+                         (2000, 1500))          # 参数预填仍按真实尺寸
+        dialog._mode_combo.setCurrentIndex(1)
+        dialog._percent_spin.setValue(200)       # 720×540 ≤ 上限 → 照常出图
+        self.assertFalse(dialog._after_label.pixmap().isNull())
+        dialog._percent_spin.setValue(500)       # 真实输出巨幅 → 直说并略过
+        self.assertIn("预览从略", dialog._after_label.text())
+        self.assertIn("10000×7500", dialog._after_label.text())
+
+    def test_preview_memory_error_shows_note(self):
+        dialog = self._dialog()
+        with mock.patch.object(image_adjust, "adjust_image",
+                               side_effect=MemoryError):
+            dialog._refresh_preview()
+        self.assertIn("预览内存不足", dialog._after_label.text())
+        self.assertTrue(dialog._after_label.pixmap().isNull())
+
     # -- accept → plan ---------------------------------------------------
     def test_accept_requires_dir_in_disk_mode(self):
         dialog = self._dialog()
@@ -167,6 +192,29 @@ class ImageBatchDialogTests(unittest.TestCase):
         texts = [dialog._listing.item(i).text()
                  for i in range(dialog._listing.count())]
         self.assertEqual(texts, ["out\\dir\\a.png", "out\\dir\\b.igs"])
+
+    def test_listing_predicts_collision_suffix(self):
+        """输出目录已有同名 → 清单显示真正会落盘的 -2 名（PR #90）。"""
+        self.out.mkdir(parents=True)
+        (self.out / "a.png").write_bytes(b"old")
+        dialog = self._dialog()
+        dialog._dir_edit.setText(str(self.out))
+        texts = [dialog._listing.item(i).text()
+                 for i in range(dialog._listing.count())]
+        self.assertEqual(texts, [f"{self.out}\\a-2.png",
+                                 f"{self.out}\\b.igs"])
+
+    def test_listing_reserves_names_within_batch(self):
+        """同批两项同名：第二项预演成 -2（与逐张落盘的 unique_target 一致）。"""
+        items = [("d1\\x.png", "image", png_bytes()),
+                 ("d2\\x.png", "image", png_bytes())]
+        dialog = ImageBatchDialog(None, items)
+        self.addCleanup(dialog.deleteLater)
+        dialog._dir_edit.setText(str(self.out))
+        texts = [dialog._listing.item(i).text()
+                 for i in range(dialog._listing.count())]
+        self.assertEqual(texts, [f"{self.out}\\x.png",
+                                 f"{self.out}\\x-2.png"])
 
     def test_listing_stage_marks_replacement(self):
         dialog = self._dialog()
@@ -294,6 +342,37 @@ class PickerBatchEntryTests(unittest.TestCase):
         self.assertIn("选中的都不能批处理", warn.call_args[0][1])
         self.assertIn(".spr 不在批处理范围", warn.call_args[0][2])
         self.assertEqual(self.staged, {})
+
+    def test_fetch_error_rejected_but_batch_continues(self):
+        """fetch_bytes 抛异常（坏包条目/非法路径）→ 单项拒收、整批照跑（PR #90）。"""
+        self.dialog.close()
+        self.dialog.deleteLater()
+
+        def fetch(name):
+            if name == "dir\\b.igs":
+                raise ValueError("条目损坏")
+            return self.store.get(name)
+
+        self.dialog = ResourcePickerDialog(
+            None, "测试浏览窗", list(self.store) + ["dir\\c.spr"], "",
+            lambda path: None,
+            on_stage=lambda name, data: self.staged.__setitem__(name, data),
+            exists=lambda name: name in self.store,
+            fetch_bytes=fetch,
+            browse_only=True)
+        self._select("dir\\a.png", "dir\\b.igs")
+        plan = BatchPlan(AdjustParams(), "stage")
+        with mock.patch("ui_editor.ui.image_batch.ImageBatchDialog") as cls, \
+                mock.patch.object(QMessageBox, "warning") as warn:
+            cls.return_value.exec.return_value = QDialog.DialogCode.Accepted
+            cls.return_value.plan = plan
+            self.dialog._batch_process()
+        self.assertEqual(set(self.staged), {"dir\\a.png"})
+        warn.assert_called_once()
+        self.assertIn("有些没能处理", warn.call_args[0][1])
+        self.assertIn("dir\\b.igs：包内读不到字节（条目损坏）",
+                      warn.call_args[0][2])
+        self.assertIn("批量处理完成 1 张", self.dialog._count.text())
 
     # -- 端到端（补丁参数窗） ----------------------------------------------
     def test_batch_stage_flow_end_to_end(self):
