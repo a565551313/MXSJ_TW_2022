@@ -449,6 +449,20 @@ def install_api(rt) -> None:
             rt.uc.mem_write(needed, struct.pack("<I", 8))
         return 1
 
+    @stdcall(9)
+    def WTSSendMessageW(server, session, title, title_len, message, message_len,
+                        style, response, wait):
+        """殼用它彈「初始化失敗」之類的訊息——把字串留下來，比自己猜有用。"""
+        rt.messages.append(
+            {
+                "title": rt.read_str(title, wide=True) if title else "",
+                "message": rt.read_str(message, wide=True) if message else "",
+            }
+        )
+        if response:
+            rt.uc.mem_write(response, struct.pack("<I", 1))  # IDOK
+        return 1
+
     @stdcall(1)
     def ExitProcess(code):
         raise ProcessExit(code)
@@ -526,6 +540,6 @@ def install_api(rt) -> None:
         GetUserDefaultLCID, GetSystemDefaultLCID,
         GetLocaleInfoA, GetTimeZoneInformation, GetSystemDirectoryA,
         GetWindowsDirectoryA,
-        GetTempPathA,
+        GetTempPathA, WTSSendMessageW,
     ):
         rt.procs[fn.__name__] = fn

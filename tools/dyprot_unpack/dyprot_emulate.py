@@ -15,9 +15,15 @@
    位元組，用來回答「它是從哪跳過去的」）。
 
 實測（`mxmain.dll`，`637331b5…`）：殼會把 **859/896 個 IAT 槽重綁**到假匯出表
-的位址（整張 IAT 有 3,430 個位元組被改寫，其餘映像零改動），之後**沒有解密任何載荷**
-（`.data` 運行期尾部 `0x93C180` 仍是 0），最終跳進未映射位址。所以本工具
-現在的價值是**證偽與定位**（殼要什麼環境、卡在哪一步），不是脫殼成品。
+的位址（整張 IAT 有 3,430 個位元組被改寫，其餘映像零改動），然後載入
+`wtsapi32.dll`、用 `WTSSendMessageW` 彈出「Initialization error 3」，
+最後跳進未映射位址；全程**沒有解密任何載荷**（`.data` 運行期尾部 `0x93C180`
+仍是 0）。所以本工具的價值是**證偽與定位**（殼要什麼環境、卡在哪一步），
+不是脫殼成品。
+
+一個踩過的坑寫在 `fake_modules.build_module`：匯出表的 `AddressOfFunctions`
+必須存 RVA。存絕對位址時殼算 `ImageBase + RVA`，會跳到 `0xb40a2330` 這種
+位址，看起來像「殼跳飛了」，其實是假映像寫錯。
 
 邊界：只讀 `mxmain.dll`、不載入 Windows DLL、不調用系統、不連網、不寫原檔；
 `--json` / `--snapshot` 的目標路徑不許指向輸入映像。
@@ -77,6 +83,7 @@ class Result:
     stopped: str = ""
     eip: int = 0
     seconds: float = 0.0
+    messages: list = field(default_factory=list)
     changed_regions: list = field(default_factory=list)
     rebinding: dict = field(default_factory=dict)
 
@@ -94,6 +101,7 @@ class Runtime:
         self.unimplemented: collections.Counter = collections.Counter()
         self.writes: collections.Counter = collections.Counter()
         self.writes_total = 0
+        self.messages: list[dict] = []
         self._heap_ptr = HEAP
         self._next_stub = STUB + 0x20000
         self.slot_of: dict[int, str] = {}
@@ -180,7 +188,7 @@ class Runtime:
             self._write_module(base, dll)
 
     def _write_module(self, base: int, dll: str) -> None:
-        image = build_module(dll, self.exports, self.generic)
+        image = build_module(dll, self.exports, self.generic, image_base=base)
         try:
             self.uc.mem_map(base, (len(image) + 0xFFF) & ~0xFFF, UC_PROT_ALL)
         except UcError:
@@ -290,7 +298,9 @@ class Runtime:
         uc = self.uc
         esp = STACK + STACK_SIZE - 0x100
         uc.reg_write(UC_X86_REG_ESP, esp)
-        uc.mem_write(esp, struct.pack("<I", SENTINEL))
+        # 照載入器的樣子呼叫 DllMain(hinst, DLL_PROCESS_ATTACH, 0)：棧上依次是
+        # 返回位址、hinst、1、0。只放返回位址的話 fdwReason 會讀到 0（DETACH）。
+        uc.mem_write(esp, struct.pack("<IIII", SENTINEL, BASE, 1, 0))
         entry = BASE + self.pe.OPTIONAL_HEADER.AddressOfEntryPoint
         started = time.time()
         stopped = ""
@@ -316,6 +326,7 @@ class Runtime:
             eip=uc.reg_read(UC_X86_REG_EIP),
             seconds=round(time.time() - started, 2),
         )
+        result.messages = list(self.messages)
         result.changed_regions = self._changed_regions()
         result.rebinding = self._rebinding(result.changed_regions)
         return result
@@ -438,6 +449,8 @@ def main(argv: list[str] | None = None) -> int:
     print("被調用的 API：", result.calls)
     if result.unimplemented:
         print("未實作（回 0）：", result.unimplemented)
+    if rt.messages:
+        print("殼彈出的訊息：", rt.messages)
     print("映像被改寫的區間：", result.changed_regions or "無")
     if result.rebinding.get("regions_touching_iat"):
         print("IAT 重綁：", result.rebinding)

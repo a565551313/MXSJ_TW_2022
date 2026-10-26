@@ -16,17 +16,19 @@ python tools/dyprot_unpack/dyprot_emulate.py            # 預設 30 秒
 python tools/dyprot_unpack/dyprot_emulate.py --seconds 60 --json /tmp/dyprot.json
 ```
 
-實測輸出（`mxmain.dll` `637331b5…be424d`；這一輪 0.8 s 就撞到同一個 fault——把
-`UC_HOOK_CODE` 限定在樁區之前，每條指令都回 Python，要 12.0 s，兩者的停因、寫入
-次數、API 集合逐項相同）：
+實測輸出（`mxmain.dll` `637331b5…be424d`）：
 
 ```
-導入 859 槽 / 假匯出 691 名 / 0.8 s / 停因：fault: Invalid memory fetch（eip=0xb40a2330）
+導入 859 槽 / 假匯出 691 名 / 0.8 s / 停因：fault: Invalid memory fetch（eip=0x9f594fe0）
 被調用的 API： {'GetModuleHandleA': 2, 'GetModuleFileNameW': 2, 'LocalAlloc': 1,
-               'GetProcessWindowStation': 1, 'GetUserObjectInformationW': 1, 'LoadLibraryA': 1}
+               'GetProcessWindowStation': 1, 'GetUserObjectInformationW': 1,
+               'LoadLibraryA': 1, 'WTSSendMessageW': 1}
+殼彈出的訊息： [{'title': 'mxmain.dll', 'message': 'Initialization error 3'}]
 映像被改寫的區間： [{'va': '0xe1b000', 'size': 3580}]
 IAT 重綁： {'iat_va': '0xe1b000', 'iat_size': 3584, ...}
 ```
+
+（`UC_HOOK_CODE` 沒限範圍時同一個流程要 12 s；限定在樁區後 0.8 s，結果逐項相同。）
 
 ### 想看得更細：`--trace-tail`
 
@@ -45,7 +47,10 @@ python tools/dyprot_unpack/dyprot_emulate.py --seconds 25 --trace-tail 12
 
 1. **殼走的是「解析 PE 匯出表」拿 API**，不是直接讀 IAT。所以要讓它往下走，
    必須給它結構合法的假 kernel32 / ntdll / user32 / advapi32 映像
-   （`fake_modules.py`：DOS+PE 頭、`.edata`、匯出目錄，RVA == 偏移）。
+   （`fake_modules.py`：DOS+PE 頭、`.edata`、匯出目錄，映像內 RVA == 偏移）。
+   **`AddressOfFunctions` 必須寫 RVA**（`位址 - ImageBase`）：寫絕對位址的話，
+   殼算 `ImageBase + RVA` 會跳到 `0xb40a2330`——這正是本工具早期報告的「停因」，
+   其實是工具的 bug，不是殼的行為。修掉之後殼才會真正解析到樁上。
    給對了以後，它會把 **859/896 個 IAT 槽**重寫成這些假匯出表的位址——
    IAT 有 3,430 位元組被改寫，映像其他部分零改動。
 2. **它沒有解密任何載荷**：`.data` 運行期尾部（`0x93C180`，27 個 `interface`
@@ -72,15 +77,26 @@ python tools/dyprot_unpack/dyprot_emulate.py --seconds 25 --trace-tail 12
   （殼裝了 SEH），手動造 `EXCEPTION_RECORD` + `CONTEXT` 跳進 handler 之後
   行為沒有改變。
 
-還有一條路徑統計支持「它是 VM 型混淆，不是在等解密」：跑的那 12 秒裡，`_dyprot1`
-裡有 **1,450 個不同的 EIP** 往同一段 256 位元組的棧窗口（`0x203fef00`–`0x203ff000`）
-寫了 **22,987 次**——這是解釋器/虛擬機的分發器特徵，而不是「解密迴圈」。加上
-「沒有任何節區被改寫」，比較合理的解釋是：這兩節本來就是可直接執行的混淆代碼，
-殼最後用從位元組流裡取出的指標 `call [ebp]`（`[ebp]=0xb40a2330`）去呼叫一個
-只有真實宿主才有的東西。
+修掉匯出表那個 bug 之後，殼的動作順序變得很清楚（把 `WTSSendMessageW` 之前
+的 API 呼叫記下來）：
 
-剩下兩種可能：殼在檢查「這是不是它自己的宿主環境」（模組位址/節佈局/父進程/CPUID），
-或者那個被呼叫的位址依賴我們沒提供的輸入。
+```
+LocalAlloc(0, 0xa8)
+GetModuleHandleA("ntdll.dll")
+GetModuleFileNameW(0x400000, ...)
+GetProcessWindowStation() → 0x700
+GetUserObjectInformationW(0x700, UOI_NAME, ...)
+LoadLibraryA("wtsapi32.dll")
+WTSSendMessageW(0, -1, "mxmain.dll", .., "Initialization error 3", ..)
+```
+
+也就是說：**殼自己判定初始化失敗、彈了一個訊息框，然後才跳進未映射位址**。
+那個訊息是運行期才出現在棧上的（靜態映像裡找不到這段字串），所以它是殼自己
+準備的錯誤文案，不是我們餵進去的。`3` 是它內部的失敗代碼——目前還沒定位到
+是哪一項檢查，只知道不是 ntdll 解析失敗（那一步走過去了）。
+
+剩下三種可能：殼在檢查「這是不是它自己的宿主環境」（模組位址/節佈局/父進程/CPUID），
+它需要的某個輸入我們沒提供，或者它的錯誤分支本身就是設計成「跳去別處」的。
 
 ## 環境限制（照抄，別踩第二次）
 
@@ -105,10 +121,11 @@ python tools/dyprot_unpack/dyprot_emulate.py --seconds 25 --trace-tail 12
 python -m unittest tools.dyprot_unpack.test_dyprot_emulate -v
 ```
 
-13 項。缺 `pefile` / `unicorn` 時整檔跳過。釘住的是：假 DLL 映像的結構（`pefile`
+14 項。缺 `pefile` / `unicorn` 時整檔跳過。釘住的是：假 DLL 映像的結構（`pefile`
 真的能解析出匯出名與位址——這一條壞了會表現成「殼突然停在入口」而不是明顯錯誤）、
 映像按匯出量放大、輸出不覆蓋輸入的兩條護欄、參數個數未知時必須報錯、每個樁的
-`@stdcall(n)` 要和 Python 簽名一致、`UC_HOOK_CODE` 只掛在樁區。
+`@stdcall(n)` 要和 Python 簽名一致、`UC_HOOK_CODE` 只掛在樁區；還有一條行為測試：短跑之後必須看到殼自己彈出的
+`Initialization error 3`、且非零 IAT 槽全落在樁區（匯出表退回絕對位址就會紅）。
 
 ## 下一步（按性價比）
 

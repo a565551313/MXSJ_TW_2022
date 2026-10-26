@@ -16,12 +16,19 @@ import struct
 SIZE = 0x4000  # 最小映像大小；實際大小依匯出名字數量自動放大
 
 
-def build_module(dll_name: str, exports: dict[str, int], default: int) -> bytes:
-    """回傳 `SIZE` 位元組的假 DLL 映像。
+def build_module(
+    dll_name: str,
+    exports: dict[str, int],
+    default: int,
+    image_base: int = 0x50000000,
+) -> bytes:
+    """回傳至少 `SIZE` 位元組的假 DLL 映像（大小隨匯出名字數量自動放大）。
 
-    `exports`：匯出名字 → 絕對位址（會寫進 AddressOfFunctions）。
-    `default`：留給呼叫端的「未列出名字」位址，本函式不使用，只寫進
-    `NumberOfFunctions` 之後的空位，方便呼叫端自己決定要不要放。
+    `exports`：匯出名字 → **絕對位址**。PE 的 `AddressOfFunctions` 存的是 RVA，
+    所以這裡會減掉 `image_base` 再寫進去——殼解析時算 `image_base + RVA`，
+    存絕對位址會讓它跳到 `base + 0x600xxxxx`（實測就是這樣炸在 `0xb40a2330`）。
+    `default`：留給呼叫端的「未列出名字」位址（同樣會被轉成 RVA），只在
+    `exports` 為空時寫進第一個槽。
     """
     names = sorted(exports)
     count = len(names)
@@ -61,7 +68,7 @@ def build_module(dll_name: str, exports: dict[str, int], default: int) -> bytes:
     struct.pack_into("<I", buf, opt + 0x10, edata)  # AddressOfEntryPoint
     struct.pack_into("<I", buf, opt + 0x14, edata)  # BaseOfCode
     struct.pack_into("<I", buf, opt + 0x18, edata)  # BaseOfData
-    struct.pack_into("<I", buf, opt + 0x1C, 0x50000000)  # ImageBase（佔位）
+    struct.pack_into("<I", buf, opt + 0x1C, image_base)  # ImageBase
     struct.pack_into("<I", buf, opt + 0x20, 0x1000)  # SectionAlignment
     struct.pack_into("<I", buf, opt + 0x24, 0x200)  # FileAlignment
     struct.pack_into("<H", buf, opt + 0x30, 6)  # MajorSubsystemVersion
@@ -107,9 +114,9 @@ def build_module(dll_name: str, exports: dict[str, int], default: int) -> bytes:
         ordinals,
     )
     if not count:
-        struct.pack_into("<I", buf, funcs, default)
+        struct.pack_into("<I", buf, funcs, default - image_base)
     for index, name in enumerate(names):
-        struct.pack_into("<I", buf, funcs + 4 * index, exports[name])
+        struct.pack_into("<I", buf, funcs + 4 * index, exports[name] - image_base)
         struct.pack_into("<I", buf, name_ptr + 4 * index, strings + offsets[name])
         struct.pack_into("<H", buf, ordinals + 2 * index, index)
     buf[strings:strings + len(blob)] = blob

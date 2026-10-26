@@ -53,8 +53,9 @@ class FakeModuleTests(unittest.TestCase):
         self.assertIsNotNone(parsed.DOS_HEADER)
         self.assertEqual(parsed.FILE_HEADER.Machine, 0x14C)
         self.assertEqual(parsed.OPTIONAL_HEADER.ImageBase, 0x50000000)
-        self.assertEqual(names.get("VirtualAlloc"), 0x60000100)
-        self.assertEqual(names.get("GetProcAddress"), 0x60000110)
+        # AddressOfFunctions 存 RVA；殼算 base + RVA 才會落在樁上。
+        self.assertEqual(names.get("VirtualAlloc"), 0x60000100 - 0x50000000)
+        self.assertEqual(names.get("GetProcAddress"), 0x60000110 - 0x50000000)
 
     def test_module_grows_for_a_full_import_list(self):
         exports = {f"Api{index}": 0x60000000 + index * 0x10 for index in range(900)}
@@ -151,6 +152,24 @@ class RealClientTests(unittest.TestCase):
         """`UC_HOOK_CODE` 若不限範圍，每條指令都回 Python，慢一個數量級。"""
         self.assertEqual(de.STUB_SIZE, 0x40000)
         self.assertGreaterEqual(de.SENTINEL, de.STUB + de.STUB_SIZE)
+
+    def test_run_reaches_the_shells_own_error_dialog(self):
+        """匯出表寫成 RVA 之後，殼才解析得到樁、並彈出自己的錯誤文案。
+
+        這條同時釘住 `fake_modules` 的 RVA 編碼：寫絕對位址時殼在彈框之前就跳飛，
+        `messages` 會是空的。
+        """
+        rt = de.Runtime(CLIENT).prepare()
+        result = rt.run(seconds=5.0)
+        self.assertEqual(
+            [(m["title"], m["message"]) for m in result.messages],
+            [("mxmain.dll", "Initialization error 3")],
+        )
+        for entry in rt.pe.DIRECTORY_ENTRY_IMPORT:
+            for imp in entry.imports:
+                value = struct.unpack("<I", rt.uc.mem_read(imp.address, 4))[0]
+                if value:
+                    self.assertIn(value, range(de.STUB, de.STUB + de.STUB_SIZE))
 
     def test_trace_tail_records_the_last_instructions(self):
         """`--trace-tail` 是追停因時唯一的「從哪跳過來」證據，不能啞掉。"""
