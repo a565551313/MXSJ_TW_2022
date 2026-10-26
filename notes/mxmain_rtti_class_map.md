@@ -355,7 +355,7 @@ python3 tools/data-parser/mxmain_rtti.py mxmain.dll --md /tmp/rtti.md
 **这三个类的位置现在有了确切的类名归属**，后续再看到 `0x4ac7xx`/`0x4c3axx` 一带的代码，
 可以直接按"`CNet` 的成员函数"来读，而不是"某个网络函数"。
 
-## 6. 延伸发现：原生→脚本的回调名表就在明文 `.rdata` 里（未结案）
+## 6. 延伸发现：原生→脚本的回调名表就在明文 `.rdata` 里（已结案 → [native_script_callbacks.md](native_script_callbacks.md)）
 
 `notes/client_binary_reversibility.md` §2 有一条关键负面结论：
 "`CCombPanel`、`FONT_EDIT`、`PyArg_ParseTuple` 明文命中都是 0，所以别拿 strings 的 0 命中
@@ -394,6 +394,11 @@ python3 tools/data-parser/mxmain_rtti.py mxmain.dll --md /tmp/rtti.md
 这和 2026-10-09 的旧交接（`docs/archive/work-20261010/HANDOVER-20261010.md`
 「`0x2714` → `OnServerCmd(int)` 桥接」）方向一致，但现在多了两样东西：
 **桥的实现地址（`0x4576b0`）**和**名字/签名串的物理位置**。
+
+> **2026-10-26 更新**：这一步已经做完，16 个 `call 0x4576b0` 调用点穷举、8 个方法名、宿主归属与
+> 事件码 `10001–10004` 全部核实，另有本文 3 处勘误（`0x6b2434`/`0x6b2448` 是两个槽、`OnConnected`
+> 是 `()`、下表「代码引用点」其实是压栈位置），详见 [native_script_callbacks.md](native_script_callbacks.md) §2/§7。
+> 下表保留原样作为当时的探查记录。
 
 想扩成一张完整的"原生→脚本回调清单"还差一步：把全 `.rdata` 里"名字 + 相邻签名串"
 的候选（本次粗筛 260 条）逐条和代码引用点核对。粗筛会混进嵌入式 CPython 自己的
