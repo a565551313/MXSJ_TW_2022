@@ -94,6 +94,7 @@ class MainWindow(
 
         self.scene = LayoutScene(self.ctx, self._on_geometry_changed,
                                  self._on_geometry_committed)
+        self.scene.on_resize_commit = self._warn_ignored_size_dims
         self.view = CanvasView(self.scene)
         self.view.context_menu_handler = self._show_canvas_context_menu
         # 多标签：标签栏 + 共享画布；切标签换文档，各标签自存选择/缩放
@@ -385,6 +386,7 @@ class MainWindow(
             self.props_panel.refresh_label(widget)
             self.script_panel.set_widget(widget)
         self._update_title()
+        self._warn_nonnative_key(widget, key)
 
     # -- 撤销/重做 ----------------------------------------------------
     def _sync_history_actions(self) -> None:

@@ -1030,27 +1030,97 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._count.setText(
             f"已挂账 {len(staged)} 张子图，组成族：{base}（保存回包时写入）")
 
-    def _stage_many_igs(self, files: list[str]) -> None:
-        """多张 .igs 一次选、逐张挂账：目录前缀 + 原文件名（0.18.0）。"""
+    def _pair_spr(self, src_file: str, res_path: str,
+                  spr_data: bytes) -> None:
+        """``.spr`` 的像素搭档：磁盘同目录同名 ``.igs``/``.png`` 连带挂账。
+
+        ``.spr`` 只是 XOR4 加密的 INI 帧时表，游戏内像素来自同目录同名
+        ``.igs``（官服 56 例中 53 例走同名搭档；另 2 例 ``[images]``
+        变体把像素指到外部 .fls 包，本次导入带不上，只在标签里点明）。
+        找不到搭档只挂 ``.spr``，把后果写清楚（0.19.0，用户拍板自动连带）。
+        """
+        src = Path(src_file)
+        base = (res_path[:-4] if res_path.lower().endswith(".spr")
+                else res_path)
+        pair_src = next((cand for cand in (src.with_suffix(".igs"),
+                                           src.with_suffix(".png"))
+                         if cand.is_file()), None)
+        if pair_src is None:
+            note = "磁盘上未找到同名 .igs/.png：游戏里将有帧表而无像素。"
+        else:
+            target = f"{base}{pair_src.suffix}"
+            if target in self._staged_paths:
+                note = f"像素搭档 {target} 已挂账。"
+            elif target in self._all_paths:
+                note = f"包内已有 {target}，像素现成。"
+            else:
+                note = f"像素搭档 {pair_src.name} 读取失败，未挂上。"
+                try:
+                    pdata = pair_src.read_bytes()
+                except OSError:
+                    pdata = None
+                if pdata is not None:
+                    note = (f"连带挂账像素搭档 {target}。"
+                            if self._stage_one(target, pdata)
+                            else f"像素搭档 {target} 未挂上。")
+        try:
+            from ..core import spr_desc
+            info = spr_desc.parse_images(
+                spr_desc.decode_spr_text(spr_data) or "")
+            if info.get("files"):
+                pkg = str(info.get("package") or "")
+                note += ("注意：这份 .spr 的像素指向外部包"
+                         f"{'『' + pkg + '』' if pkg else ''}，不随本次导入。")
+        except Exception:  # noqa: BLE001 解码失败不拦挂账主流程
+            pass
+        self._count.setText(f"已挂账 {res_path}。{note}")
+
+    def _stage_many_raws(self, files: list[str]) -> None:
+        """多个 .igs/.spr 一次选、逐张挂账：目录前缀 + 原文件名（0.18.0）。
+
+        ``.spr`` 连带磁盘上的同名 ``.igs``/``.png`` 像素搭档；搭档已在
+        本批选择里、已挂过账或包里已有同名条目时不连带（0.19.0）。
+        """
         dialog = QDialog(self)
-        dialog.setWindowTitle("把这几个 .igs 放进包")
+        dialog.setWindowTitle("把这些 .igs/.spr 放进包")
         # 默认前缀 = 当前选中项所在目录（没有选中就是空 = 包根目录）；
         # 清单逐张列出最终包内路径，确认后才挂账。
         prefix = QLineEdit(self._suggested_path(""), dialog)
         note = QLabel(
-            ".igs 按原字节挂账（不转换）。每张的包内路径 =\n"
-            "下面前缀 + 原文件名；同名已有条目会在保存时替换。", dialog)
+            ".igs/.spr 按原字节挂账（不转换）。每项的包内路径 =\n"
+            "下面前缀 + 原文件名；.spr 连带磁盘上的同名 .igs/.png\n"
+            "（像素搭档；已在本批选择里或包里已有时不连带）；\n"
+            "同名已有条目会在保存时替换。", dialog)
         note.setWordWrap(True)
         listing = QListWidget(dialog)
         listing.setMaximumHeight(160)
+
+        def pair_of(f: str):
+            """.spr → 磁盘上的像素搭档源文件（.igs 优先，其次 .png）。"""
+            if not f.lower().endswith(".spr"):
+                return None
+            src = Path(f)
+            return next((c for c in (src.with_suffix(".igs"),
+                                     src.with_suffix(".png"))
+                         if c.is_file()), None)
+
+        chosen = {str(Path(f)) for f in files}
+        entries = []
+        for f in files:
+            p = pair_of(f)
+            if p is not None and str(p) in chosen:
+                p = None      # 搭档就在本批选择里，不重复挂
+            entries.append((f, p))
 
         def refresh() -> None:
             head = prefix.text().strip().replace("/", "\\")
             if head and not head.endswith("\\"):
                 head += "\\"
             listing.clear()
-            for f in files:
+            for f, p in entries:
                 listing.addItem(f"{head}{Path(f).name}")
+                if p is not None:
+                    listing.addItem(f"{head}{p.name}（连带像素搭档）")
         prefix.textChanged.connect(lambda _t: refresh())
         refresh()
         buttons = QDialogButtonBox(
@@ -1071,7 +1141,7 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         if head and not head.endswith("\\"):
             head += "\\"
         done = 0
-        for f in files:
+        for f, p in entries:
             try:
                 data = Path(f).read_bytes()
             except OSError as exc:
@@ -1079,9 +1149,20 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                 continue
             if self._stage_one(f"{head}{Path(f).name}", data):
                 done += 1
+            if p is None:
+                continue
+            target = f"{head}{p.name}"
+            if target in self._staged_paths or target in self._all_paths:
+                continue          # 已挂过 / 包里像素现成，不连带
+            try:
+                pdata = p.read_bytes()
+            except OSError:
+                continue
+            if self._stage_one(target, pdata):
+                done += 1
         if done:
             self._count.setText(
-                f"已挂账 {done} 个 .igs 资源（保存进包时写入）")
+                f"已挂账 {done} 个 .igs/.spr 资源（保存进包时写入）")
 
     def _choose_add(self) -> None:
         """添加新图：选文件 → 问名字/是否转精灵 → 挂账待写入。
@@ -1089,26 +1170,29 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         选多张图 = 一个多帧精灵（一份资源）；选一张则可选转成
         单帧精灵或按原文件存。``.igs`` 是游戏精灵容器：单张按原字节
         挂账（绝不二次转换）；多张 ``.igs`` 一次选、逐张挂账
-        （0.18.0）。
+        （0.18.0）。``.spr``（界面特效帧时表，XOR4 加密 INI、不是图）
+        同按原字节规矩，挂账时自动连带磁盘上的同名 ``.igs``/``.png``
+        像素搭档；多选/混选规则与 .igs 一致（0.19.0，用户拍板）。
         """
         if self._on_stage is None:
             return
         files, _ = QFileDialog.getOpenFileNames(
             self, "选择要加进包的图片（多选 = 多帧精灵）", "",
-            "图片 (*.png *.jpg *.jpeg *.bmp *.tga *.gif *.igs);;"
+            "图片 (*.png *.jpg *.jpeg *.bmp *.tga *.gif *.igs *.spr);;"
             "所有文件 (*)")
         if not files:
             return
         image_exts = (".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif")
-        igs = [f for f in files if Path(f).suffix.lower() == ".igs"]
-        if igs and len(igs) != len(files):
+        raws = [f for f in files
+                if Path(f).suffix.lower() in (".igs", ".spr")]
+        if raws and len(raws) != len(files):
             QMessageBox.warning(
                 self, "不能混选",
-                ".igs 是游戏精灵容器、普通图片是待转换的素材，\n"
-                "一次只能选其中一种。")
+                ".igs/.spr 是游戏自有格式（按原字节挂账）、普通图片是\n"
+                "待转换的素材，一次只能选其中一种。")
             return
-        if len(igs) > 1:
-            self._stage_many_igs(igs)
+        if len(raws) > 1:
+            self._stage_many_raws(raws)
             return
         can_convert = all(
             Path(f).suffix.lower() in image_exts for f in files)
@@ -1151,7 +1235,9 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         except OSError as exc:
             QMessageBox.warning(self, "读取失败", str(exc))
             return
-        self._stage_one(res_path, data)
+        if self._stage_one(res_path, data) \
+                and Path(files[0]).suffix.lower() == ".spr":
+            self._pair_spr(files[0], res_path, data)
 
     #: 各族"游戏怎么用这些图"的一句话（选中目录时显示）
     _KIND_USAGE = {

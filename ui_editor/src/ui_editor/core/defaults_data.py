@@ -48,3 +48,49 @@ DEFAULT_PROPS: dict[str, dict] = {
     'CVPngScrollBar': {'bLoad': True, 'bShow': True, 'iHeight': 234, 'iParentHeight': 0, 'iVersion': 7, 'iX': 0, 'iY': 0, 'lChildren': [], 'sName': '', 'sWidgetType': 'CVPngScrollBar'},
     'CVScrollBar': {'bLoad': True, 'bShow': True, 'iHeight': 354, 'iParentHeight': 0, 'iVersion': 7, 'iX': 0, 'iY': 0, 'lChildren': [], 'sName': '', 'sWidgetType': 'CVScrollBar'},
 }
+
+
+#: 游戏自带 UI 编辑器（data/script.fls entry 3853
+#: script/uieditor/widgetconfig.py 的 DEFAULT_VALUE）有默认模板的类型，
+#: 共 31 种。2026-10-17 静态对照：这 31 种的字段集与 DEFAULT_PROPS
+#: 逐项相同（docs/analysis/native_widgetconfig_comparison_20261017.md、
+#: evidence/widgetconfig_20261017/default_comparison.json 的
+#: all_shared_field_sets_equal=true）。对这些类型，「游戏会读的键」＝
+#: 模板字段集；另外 7 种外部模板（CAutoDlgBase、CBitmap*Frame、
+#: CDataWidget、CEdit、CTitleTableView）没有原生模板，不下断言。
+NATIVE_TYPES: frozenset = frozenset({
+    "CBorder", "CBox", "CBoxWithTips", "CButton", "CCombCheckButton",
+    "CFrame", "CHFrame", "CHPageButton", "CHPagePngButton", "CHPngFrame",
+    "CHotBox", "CImagesFrame", "CList", "CMainFrame", "CPngList",
+    "CPngNineFrame", "CPngTable", "CProgress", "CRichTextFrame",
+    "CSpriteFrame", "CTable", "CTableView", "CTextButton", "CTextFrame",
+    "CTextFrameEx", "CVFrame", "CVPageButton", "CVPagePngButton",
+    "CVPngFrame", "CVPngScrollBar", "CVScrollBar",
+})
+
+
+def native_field_set(wtype: str) -> frozenset | None:
+    """类型的原生模板字段集；无原生模板的类型返回 None（没证据不下结论）。"""
+    if wtype not in NATIVE_TYPES:
+        return None
+    return frozenset(DEFAULT_PROPS.get(wtype, ()))
+
+
+def _size_ignored() -> dict:
+    out = {}
+    for t in NATIVE_TYPES:
+        fields = DEFAULT_PROPS.get(t, {})
+        dims = tuple(name for name, key in (("width", "iWidth"),
+                                            ("height", "iHeight"))
+                     if key not in fields)
+        if dims:
+            out[t] = dims
+    return out
+
+
+#: 原生类型里「游戏不读的维度」：CButton/CSpriteFrame/CTextFrame 宽高
+#: 都不读，横排类（CHFrame 等 9 种）只读 iWidth、高由图定，竖排类
+#: （CVFrame 等 4 种）只读 iHeight、宽由图定。真包 5309 个带图 CButton
+#: 无一写宽高（docs/analysis/evidence/fidelity_autosize_20261022.json）。
+#: 编辑这些维度只影响画布显示，游戏内尺寸由图片素材自身决定。
+SIZE_IGNORED_NATIVE: dict = _size_ignored()
