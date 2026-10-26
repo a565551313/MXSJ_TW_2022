@@ -11,7 +11,8 @@
    advapi32 的**假 PE 映像**（含可解析的匯出表）——殼是走「解析匯出表」
    這條路拿 API 的，不給它表它不往下走；
 3. 從 PE 入口跑到指令／時間預算用完，記錄呼叫了哪些 API、有沒有回頭改寫
-   映像、以及失控時停在哪。
+   映像、以及失控時停在哪（`--trace-tail N` 會留下最後 N 條指令的位址與原始
+   位元組，用來回答「它是從哪跳過去的」）。
 
 實測（`mxmain.dll`，`637331b5…`）：殼會把 **859/896 個 IAT 槽重綁**到假匯出表
 的位址（整張 IAT 有 3,430 個位元組被改寫，其餘映像零改動），之後**沒有解密任何載荷**
@@ -83,8 +84,10 @@ class Result:
 class Runtime:
     """一個夠殼跑起來的 i386 Windows-lite 執行環境（只做記憶體與 API 語意）。"""
 
-    def __init__(self, image: Path):
+    def __init__(self, image: Path, trace_tail: int = 0):
         self.path = Path(image)
+        self.trace_tail = max(int(trace_tail), 0)
+        self.tail: collections.deque = collections.deque(maxlen=self.trace_tail or 1)
         self.pe = pefile.PE(str(self.path), fast_load=False)
         self.uc = Uc(UC_ARCH_X86, UC_MODE_32)
         self.calls: collections.Counter = collections.Counter()
@@ -226,6 +229,23 @@ class Runtime:
             UC_HOOK_CODE, self._on_code, begin=STUB, end=STUB + STUB_SIZE
         )
         self.uc.hook_add(UC_HOOK_MEM_WRITE, self._on_write)
+        if self.trace_tail:
+            # 除錯用：要「每一條」指令，所以刻意不限範圍（會慢一個數量級）。
+            self.uc.hook_add(UC_HOOK_CODE, self._on_trace)
+
+    def _on_trace(self, uc, address, size, user) -> None:
+        self.tail.append(address)
+
+    def tail_trace(self) -> list[dict]:
+        """最後幾條被執行的指令（含原始位元組）——失控時用來看「從哪跳過來」。"""
+        out = []
+        for address in self.tail:
+            try:
+                raw = bytes(self.uc.mem_read(address, 8))
+            except UcError:  # pragma: no cover - 位址已不可讀
+                raw = b""
+            out.append({"va": hex(address), "bytes": raw.hex()})
+        return out
 
     def _on_write(self, uc, access, address, size, value, user) -> None:
         self.writes_total += 1
@@ -391,6 +411,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seconds", type=float, default=30.0, help="時間預算（秒）")
     parser.add_argument("--max-insn", type=int, default=200_000_000)
     parser.add_argument("--json", type=Path, help="把結果寫成 JSON（不含映像內容）")
+    parser.add_argument(
+        "--trace-tail",
+        type=int,
+        default=0,
+        metavar="N",
+        help="保留最後 N 條指令位址並印出來（除錯用，會明顯變慢）",
+    )
     parser.add_argument("--snapshot", type=Path, help="把跑完的映像快照寫到這裡")
     args = parser.parse_args(argv)
 
@@ -400,7 +427,7 @@ def main(argv: list[str] | None = None) -> int:
         if target is not None and _aliases_input(target, args.image):
             parser.error(f"輸出路徑不能指向輸入映像：{target}")
 
-    rt = Runtime(args.image).prepare()
+    rt = Runtime(args.image, trace_tail=args.trace_tail).prepare()
     result = rt.run(seconds=args.seconds, max_insn=args.max_insn)
 
     print(f"輸入：{result.image}  {result.sha256}")
@@ -418,6 +445,10 @@ def main(argv: list[str] | None = None) -> int:
         print("IAT 重綁：未觀察到")
     hottest = [(hex(addr), count) for addr, count in rt.writes.most_common(3)]
     print(f"寫入次數：{rt.writes_total}，最熱目標：{hottest}")
+    if args.trace_tail:
+        print(f"最後 {len(rt.tail)} 條指令：")
+        for step in rt.tail_trace():
+            print(f"  {step['va']}  {step['bytes']}")
 
     if args.snapshot:
         args.snapshot.write_bytes(rt.snapshot())

@@ -152,6 +152,16 @@ class RealClientTests(unittest.TestCase):
         self.assertEqual(de.STUB_SIZE, 0x40000)
         self.assertGreaterEqual(de.SENTINEL, de.STUB + de.STUB_SIZE)
 
+    def test_trace_tail_records_the_last_instructions(self):
+        """`--trace-tail` 是追停因時唯一的「從哪跳過來」證據，不能啞掉。"""
+        traced = de.Runtime(CLIENT, trace_tail=4).prepare()
+        traced.run(seconds=0.5, max_insn=20_000)
+        steps = traced.tail_trace()
+        self.assertEqual(len(steps), 4)
+        for step in steps:
+            self.assertTrue(step["va"].startswith("0x"))
+            self.assertTrue(step["bytes"])
+
     def test_short_run_reports_a_stop_reason(self):
         result = self.rt.run(seconds=2.0, max_insn=2_000_000)
         self.assertTrue(result.stopped)

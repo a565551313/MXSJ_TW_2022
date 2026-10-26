@@ -28,6 +28,19 @@ python tools/dyprot_unpack/dyprot_emulate.py --seconds 60 --json /tmp/dyprot.jso
 IAT 重綁： {'iat_va': '0xe1b000', 'iat_size': 3584, ...}
 ```
 
+### 想看得更細：`--trace-tail`
+
+```bash
+python tools/dyprot_unpack/dyprot_emulate.py --seconds 25 --trace-tail 12
+```
+
+它會留下最後 N 條被執行的指令（位址 + 當時的原始位元組）。注意這個鉤子**不限範圍**，
+每條指令都回 Python，實測慢 15 倍左右；只在追停因時開。
+
+實測尾巴（`637331b5…`）是：`0xd9f590: 8b 44 25 00`（`mov eax,[ebp]`，`ebp=0x203fef80`）
+→ `0xd9f594: ff d0`（`call eax`）→ `eax=0xb40a2330`，於是 fetch 失敗。那個 dword
+不是映射內的位址，是從 VM 棧上取出來的。
+
 ## 已經確認的兩件事
 
 1. **殼走的是「解析 PE 匯出表」拿 API**，不是直接讀 IAT。所以要讓它往下走，
@@ -59,8 +72,15 @@ IAT 重綁： {'iat_va': '0xe1b000', 'iat_size': 3584, ...}
   （殼裝了 SEH），手動造 `EXCEPTION_RECORD` + `CONTEXT` 跳進 handler 之後
   行為沒有改變。
 
-剩下兩種可能：殼在檢查「這是不是它自己的宿主環境」（模組位址/節佈局/父進程），
-或者它執行的本來就是它以為已解密的位元組（解密依賴我們沒提供的輸入）。
+還有一條路徑統計支持「它是 VM 型混淆，不是在等解密」：跑的那 12 秒裡，`_dyprot1`
+裡有 **1,450 個不同的 EIP** 往同一段 256 位元組的棧窗口（`0x203fef00`–`0x203ff000`）
+寫了 **22,987 次**——這是解釋器/虛擬機的分發器特徵，而不是「解密迴圈」。加上
+「沒有任何節區被改寫」，比較合理的解釋是：這兩節本來就是可直接執行的混淆代碼，
+殼最後用從位元組流裡取出的指標 `call [ebp]`（`[ebp]=0xb40a2330`）去呼叫一個
+只有真實宿主才有的東西。
+
+剩下兩種可能：殼在檢查「這是不是它自己的宿主環境」（模組位址/節佈局/父進程/CPUID），
+或者那個被呼叫的位址依賴我們沒提供的輸入。
 
 ## 環境限制（照抄，別踩第二次）
 
@@ -85,7 +105,7 @@ IAT 重綁： {'iat_va': '0xe1b000', 'iat_size': 3584, ...}
 python -m unittest tools.dyprot_unpack.test_dyprot_emulate -v
 ```
 
-12 項。缺 `pefile` / `unicorn` 時整檔跳過。釘住的是：假 DLL 映像的結構（`pefile`
+13 項。缺 `pefile` / `unicorn` 時整檔跳過。釘住的是：假 DLL 映像的結構（`pefile`
 真的能解析出匯出名與位址——這一條壞了會表現成「殼突然停在入口」而不是明顯錯誤）、
 映像按匯出量放大、輸出不覆蓋輸入的兩條護欄、參數個數未知時必須報錯、每個樁的
 `@stdcall(n)` 要和 Python 簽名一致、`UC_HOOK_CODE` 只掛在樁區。
