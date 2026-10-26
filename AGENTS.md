@@ -32,7 +32,7 @@
 | `notes/client_binary_reversibility.md` | 客户端 exe/dll 的可逆性边界（逐节熵、RTTI、导出）与三条路的成本；§6–§7 是启动器 `.rsrc` 抽取结果与「资源包主体在 `data/*.fls` / `update.ini`」的分界；**原生符号"搜不到"不等于"不存在"** | `notes/opcode_mapping_and_decompilation.md` |
 | `docs/DECOMPILE_CORPUS.md` | 全量反编译语料（79 MB / 5,517 份 `.py`）**要不要建、怎么建**：30 秒决策表、实测过的重建配方、4 个已复现的坑 | [`notes/opcode_mapping_and_decompilation.md`](notes/opcode_mapping_and_decompilation.md) §4.5–§4.6 |
 | `docs/PYTHON_TOOL_CONVENTIONS.md` | Python 工具 / 编辑器开发约定（PEP 8、PySide6、自检启动脚本、一键 EXE、Windows 交付检查） | 本文 §5 |
-| `notes/` | 逆向**结案**笔记：双 VM opcode 表、0SLF 路径哈希与 `.dlg`、游戏数据 | 各文件自述 |
+| `notes/` | 逆向**结案**笔记：双 VM opcode 表、0SLF 路径哈希与 `.dlg`、游戏数据、[mxmain RTTI 类图与虚表清单](notes/mxmain_rtti_class_map.md)（352 个类／305 张虚表／继承链，工具 `tools/data-parser/mxmain_rtti.py`） | 各文件自述 |
 | `work/dream-world-connect-login-map/` | 早期研究区（297 份笔记、证据、报告、专项工具）；2026-10-12 客户端研究快照 = `report/client-status-20261012.md`，不替代当前 STATUS | [`INDEX.md`](work/dream-world-connect-login-map/INDEX.md) |
 | `tools/README.md` / `tools/DEPENDENCIES.md` | 工具生命周期、推荐入口与运行／证据／说明三类依赖；移动或淘汰前必读 | [工具索引](tools/README.md)、[依赖清单](tools/DEPENDENCIES.md) |
 | `tools/decompiler/` | 双 VM 字节码反编译、5 段 XOR 重打包；`output/` 是反编译文本（**不准确、不可执行，只作线索**） | `notes/opcode_mapping_and_decompilation.md` |

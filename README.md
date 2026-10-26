@@ -569,6 +569,7 @@ REVIEW_API_BASE=http://127.0.0.1:8000 npx vitest run src/api/liveBackend.test.ts
 | 看懂字节码 / 反编译 | [opcode 映射与反编译报告](notes/opcode_mapping_and_decompilation.md) |
 | 要重建/使用全量反编译语料 | [反编译语料重建配方](docs/DECOMPILE_CORPUS.md)（要不要建、怎么建、4 个坑） |
 | 想知道客户端 `mx.exe` / `mxmain.dll` / `mxLauncher.exe` 能逆向到什么程度 | [客户端二进制可逆性实测](notes/client_binary_reversibility.md)（出不了源码；54% 镜像是加密壳；原生类名不在明文里） |
+| 想查客户端有哪些原生类、谁继承谁、虚函数在哪个地址 | [mxmain 的 RTTI 类图与虚表清单](notes/mxmain_rtti_class_map.md)；`python3 tools/data-parser/mxmain_rtti.py mxmain.dll --md out.md`（352 个类 / 305 张虚表，原生→脚本回调名表见该文 §6） |
 | 要抽客户端/启动器的图与版式（皮肤、光标、对话框、字串） | `python3 tools/data-parser/pe_resource_dump.py mxLauncher.exe --dump out/rsrc`；资源包主体在 `data/*.fls` 与 `update.ini`，见[可逆性实测 §6–§7](notes/client_binary_reversibility.md) |
 | 要改启动器皮肤上的文字（繁→简）并写回 exe | `skin_label_patch.py` 改图 + `--pad-to` 凑长度，再用 `pe_resource_patch.py` 原位写回 `.rsrc`；步骤与边界见[可逆性实测 §9](notes/client_binary_reversibility.md) |
 | 修改注册预览 | [原生注册](tools/registration/README.md)、[编辑器流程](tools/registration/EDITORS_NATIVE_LAYOUT_WORKFLOW.md)；旧 overlay 禁止分发 |
