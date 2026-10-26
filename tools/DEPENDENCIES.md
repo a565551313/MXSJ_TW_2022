@@ -60,6 +60,14 @@ git grep -n -E 'shared_decoder|tool_and_evidence_sha256' -- server/docs/csv_chec
 4. 再改调用、测试和必要证据；旧证据保留历史，不用改期望值掩盖行为变化。
 5. 完成消费者迁移及外部工作流核查后才决定归档。停用候选也先检查辅助函数依赖。
 
+## 保护壳模拟（2026-10-26）
+
+- R：`dyprot_unpack/dyprot_emulate.py` 需要 pefile 2024.8.26 + Unicorn 2.1.4 与仓库根
+  `mxmain.dll`（摘要锁定；缺任一依赖时工具给提示并退出 2）。
+- R：`fake_modules.py` 只依赖标准库；`test_dyprot_emulate.py` 在缺依赖时整档跳过。
+- E：假 DLL 映像只用于让壳能解析导出表，**不是** Windows 系统 DLL 的真实行为；
+  模拟结果不能替代 Windows 实机或 `ReadProcessMemory` 转储。
+
 ## 原生 TCP 候选模块（2026-10-20）
 
 - R：`native_channel/src` 与普通单元测试只依赖 Python ≥3.10 标准库。
