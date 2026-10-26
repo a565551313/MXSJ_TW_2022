@@ -45,6 +45,7 @@ from .save_targets import SaveTargetsMixin
 from .save_workflows import SaveWorkflowsMixin
 from .script_panel import ScriptPanel
 from .source_actions import SourceActionsMixin
+from .staged_save import StagedSaveMixin
 from .tab_menu import TabMenuMixin
 from .tabs import EditorSession
 from .window_setup import WindowSetupMixin
@@ -55,8 +56,8 @@ class MainWindow(
     AssetBrowserMixin, BusyHostMixin, ClipboardMixin,
     EditingCommandsMixin, FileWorkflowsMixin,
     ImportQueueMixin, SaveModeMixin, SaveTargetsMixin, SaveWorkflowsMixin,
-    SourceActionsMixin, TabMenuMixin, ReplaceLayoutMixin, WindowSetupMixin,
-    QMainWindow
+    StagedSaveMixin, SourceActionsMixin, TabMenuMixin, ReplaceLayoutMixin,
+    WindowSetupMixin, QMainWindow
 ):
     """UI 编辑器主窗口。"""
 

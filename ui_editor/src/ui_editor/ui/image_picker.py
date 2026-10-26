@@ -618,11 +618,18 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                  exists: Callable[[str], bool] | None = None,
                  family_pieces: Callable[[str], list[str] | None] | None = None,
                  family_kind: Callable[[str], str | None] | None = None,
-                 browse_only: bool = False):
+                 browse_only: bool = False,
+                 save_staged: Callable[[], bool] | None = None,
+                 staged_count: Callable[[], int] | None = None):
         super().__init__(parent)
         # 浏览模式（工具栏「资源」按钮）：没有目标属性，确定＝关闭，
         # 双击条目也只关闭，不写任何东西；导出/放进包/拼名族照旧。
         self._browse_only = browse_only
+        # 浏览窗「保存新资源（N）」按钮（0.18.0）：宿主写包回调 +
+        # 挂账计数回调（写的是**全部**挂账，不只本窗挂的）。
+        self._save_staged_handler = save_staged
+        self._staged_count_provider = staged_count
+        self._save_staged_btn: QPushButton | None = None
         self.setWindowTitle(title)
         self.resize(760, 540)
         self.external_requested = False
@@ -729,6 +736,17 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                 "属性直接填成这一族的目录路径")
             family_btn.clicked.connect(self._choose_family)
             bottom.addWidget(family_btn)
+            if self._browse_only and self._save_staged_handler is not None:
+                self._save_staged_btn = QPushButton("", self)
+                self._save_staged_btn.setToolTip(
+                    "把全部挂账新资源写进资源包（目标跟随保存模式："
+                    "严格=编辑器输出包，宽松=原包），\n"
+                    "不改动任何布局条目；校验通过后才原子替换并清挂账，"
+                    "失败时目标包一个字节不动。")
+                self._save_staged_btn.clicked.connect(
+                    self._save_staged_clicked)
+                bottom.addWidget(self._save_staged_btn)
+                self._refresh_save_staged_btn()
         elif not self._browse_only:
             # 浏览模式没有目标属性，「只填包外文件名」是写属性路径的
             # 入口，不露面。
@@ -807,6 +825,7 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
             self._update_count()
         self._select_path(res_path)
         self._schedule_thumbs()
+        self._refresh_save_staged_btn()
 
     def _row_of(self, path: str) -> int:
         for row in range(self._list.count()):
@@ -850,6 +869,28 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._count.setText(
             f"共 {self._list.count()} 个资源{note}"
             "（包内已有，选完保存回包不丢图）")
+
+    def _refresh_save_staged_btn(self) -> None:
+        """「保存新资源（N）」：N = 全部挂账数；没有挂账就禁用（0.18.0）。"""
+        if self._save_staged_btn is None:
+            return
+        count = (self._staged_count_provider()
+                 if self._staged_count_provider is not None
+                 else len(self._staged_paths))
+        self._save_staged_btn.setText(f"保存新资源（{count}）")
+        self._save_staged_btn.setEnabled(count > 0)
+
+    def _save_staged_clicked(self) -> None:
+        """宿主负责写包；成功后清掉挂账标记并刷新列表与按钮。"""
+        if self._save_staged_handler is None:
+            return
+        ok = bool(self._save_staged_handler())
+        if ok:
+            # 挂账已进包：列表里的「待入包」标记该摘了，整表重过滤一遍。
+            self._staged_paths.clear()
+            self._refilter()
+            self._schedule_thumbs()
+        self._refresh_save_staged_btn()
 
     def _suggested_path(self, filename: str) -> str:
         """新名字的建议值：沿用当前选中项的目录 + 新文件名。"""
@@ -976,21 +1017,86 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         self._count.setText(
             f"已挂账 {len(staged)} 张子图，组成族：{base}（保存回包时写入）")
 
+    def _stage_many_igs(self, files: list[str]) -> None:
+        """多张 .igs 一次选、逐张挂账：目录前缀 + 原文件名（0.18.0）。"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("把这几个 .igs 放进包")
+        # 默认前缀 = 当前选中项所在目录（没有选中就是空 = 包根目录）；
+        # 清单逐张列出最终包内路径，确认后才挂账。
+        prefix = QLineEdit(self._suggested_path(""), dialog)
+        note = QLabel(
+            ".igs 按原字节挂账（不转换）。每张的包内路径 =\n"
+            "下面前缀 + 原文件名；同名已有条目会在保存时替换。", dialog)
+        note.setWordWrap(True)
+        listing = QListWidget(dialog)
+        listing.setMaximumHeight(160)
+
+        def refresh() -> None:
+            head = prefix.text().strip().replace("/", "\\")
+            if head and not head.endswith("\\"):
+                head += "\\"
+            listing.clear()
+            for f in files:
+                listing.addItem(f"{head}{Path(f).name}")
+        prefix.textChanged.connect(lambda _t: refresh())
+        refresh()
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok
+            | QDialogButtonBox.StandardButton.Cancel, parent=dialog)
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        box = QVBoxLayout(dialog)
+        box.addWidget(note)
+        box.addWidget(QLabel("目录前缀：", dialog))
+        box.addWidget(prefix)
+        box.addWidget(QLabel("将挂账为：", dialog))
+        box.addWidget(listing)
+        box.addWidget(buttons)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        head = prefix.text().strip().replace("/", "\\")
+        if head and not head.endswith("\\"):
+            head += "\\"
+        done = 0
+        for f in files:
+            try:
+                data = Path(f).read_bytes()
+            except OSError as exc:
+                QMessageBox.warning(self, "读取失败", f"{f}\n{exc}")
+                continue
+            self._stage_one(f"{head}{Path(f).name}", data)
+            done += 1
+        if done:
+            self._count.setText(
+                f"已挂账 {done} 个 .igs 资源（保存进包时写入）")
+
     def _choose_add(self) -> None:
         """添加新图：选文件 → 问名字/是否转精灵 → 挂账待写入。
 
         选多张图 = 一个多帧精灵（一份资源）；选一张则可选转成
-        单帧精灵或按原文件存。
+        单帧精灵或按原文件存。``.igs`` 是游戏精灵容器：单张按原字节
+        挂账（绝不二次转换）；多张 ``.igs`` 一次选、逐张挂账
+        （0.18.0）。
         """
         if self._on_stage is None:
             return
         files, _ = QFileDialog.getOpenFileNames(
             self, "选择要加进包的图片（多选 = 多帧精灵）", "",
-            "图片 (*.png *.jpg *.jpeg *.bmp *.tga *.gif);;"
+            "图片 (*.png *.jpg *.jpeg *.bmp *.tga *.gif *.igs);;"
             "所有文件 (*)")
         if not files:
             return
         image_exts = (".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif")
+        igs = [f for f in files if Path(f).suffix.lower() == ".igs"]
+        if igs and len(igs) != len(files):
+            QMessageBox.warning(
+                self, "不能混选",
+                ".igs 是游戏精灵容器、普通图片是待转换的素材，\n"
+                "一次只能选其中一种。")
+            return
+        if len(igs) > 1:
+            self._stage_many_igs(igs)
+            return
         can_convert = all(
             Path(f).suffix.lower() in image_exts for f in files)
         multi = len(files) > 1

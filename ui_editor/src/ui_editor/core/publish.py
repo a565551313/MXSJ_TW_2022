@@ -188,10 +188,14 @@ def verify_structure(*, src_pack, out_path, res_path: str, extras: Mapping,
     return report
 
 
-def verify_readback(*, read_back: ReadBack, out_path, res_path: str,
+def verify_readback(*, read_back: ReadBack, out_path, res_path: str | None,
                     extras: Mapping[str, bytes],
-                    expected_dicts: list[dict]) -> dict:
-    """回读检查：目标布局逐字段一致、新图逐字节一致（用全新解析器）。"""
+                    expected_dicts: list[dict] | None) -> dict:
+    """回读检查：目标布局逐字段一致、新图逐字节一致（用全新解析器）。
+
+    ``res_path=None``（0.18.0「只写资源」）：没有布局要回读，
+    新图字节比完即通过。
+    """
     report: dict = {}
     try:
         got, read_extras = read_back(Path(out_path), res_path, extras)
@@ -199,6 +203,8 @@ def verify_readback(*, read_back: ReadBack, out_path, res_path: str,
             if read_extras.get(name) != data:
                 report["error"] = f"新图 {name} 回读不一致"
                 return report
+        if res_path is None or expected_dicts is None:
+            return report
         if got is None:
             report["error"] = "新包回读目标布局失败"
             return report
@@ -213,9 +219,9 @@ def verify_written_pack(
     *,
     src_pack,
     out_path,
-    res_path: str,
+    res_path: str | None,
     extras: Mapping[str, bytes],
-    expected_dicts: list[dict],
+    expected_dicts: list[dict] | None,
     info: Mapping,
     read_back: ReadBack,
     extra_layouts: Mapping[str, list[dict]] | None = None,
@@ -230,11 +236,16 @@ def verify_written_pack(
 
     ``progress``/``cancelled`` 只作用于结构检查的逐条保真循环，
     取消时抛 :class:`~ui_editor.core.errors.Cancelled`。
+
+    ``res_path=None``/``expected_dicts=None``（0.18.0）＝「只写资源」
+    形态：本次没有布局写入，跳过布局回读，只比新图字节与未改条目保真。
     """
     extra_layouts = dict(extra_layouts or {})
+    layout_paths = ([res_path] if res_path is not None else [])
+    layout_paths.extend(extra_layouts)
     report = verify_structure(src_pack=src_pack, out_path=out_path,
                               res_path=res_path, extras=extras, info=info,
-                              layout_paths=[res_path, *extra_layouts],
+                              layout_paths=layout_paths,
                               progress=progress, cancelled=cancelled,
                               trusted_copy=trusted_copy)
     if "error" not in report:

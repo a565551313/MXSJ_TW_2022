@@ -126,7 +126,7 @@ class SaveWorkflowsMixin:
         publish.require_save_encoding(self.doc, extras)
 
     @staticmethod
-    def _fresh_pack_readback(pack_path, res_path: str, names,
+    def _fresh_pack_readback(pack_path, res_path: str | None, names,
                              text_encoding: str = "big5"):
         """回读钩子：用**全新**解析器读目标布局与各新图（`core.publish` 注入用）。
 
@@ -137,7 +137,8 @@ class SaveWorkflowsMixin:
         fresh.text_encoding = text_encoding
         fresh.mount_pack(str(pack_path))
         try:
-            got = fresh.fetch_dlg(res_path)
+            # res_path=None（0.18.0「只写资源」）：没有布局要回读。
+            got = None if res_path is None else fresh.fetch_dlg(res_path)
             dicts = None if got is None else got[0]
             return dicts, {name: fresh.fetch_bytes(name) for name in names}
         finally:

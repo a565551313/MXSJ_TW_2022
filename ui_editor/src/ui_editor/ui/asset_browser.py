@@ -16,6 +16,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from .image_picker import ResourcePickerDialog
 
 # 导出处理函数的真源在 property_panel（既有测试按该模块命名空间打补丁），
@@ -27,7 +29,8 @@ __all__ = ["AssetBrowserMixin", "build_browser_dialog",
 
 
 def build_browser_dialog(host, assets, candidates: list[str],
-                         widget_type: str | None = None
+                         widget_type: str | None = None,
+                         save_staged: Callable[[], bool] | None = None
                          ) -> ResourcePickerDialog:
     """组装浏览模式的选图窗（不 exec，便于测试）。"""
     def thumb(path: str):
@@ -67,10 +70,14 @@ def build_browser_dialog(host, assets, candidates: list[str],
         exists=assets.resource_exists,
         family_pieces=family_pieces,
         family_kind=family_kind,
-        browse_only=True)
+        browse_only=True,
+        save_staged=save_staged,
+        staged_count=(lambda: len(assets.staged_images())
+                      if save_staged is not None else None))
 
 
-def open_asset_browser(host, assets, widget_type: str | None = None) -> None:
+def open_asset_browser(host, assets, widget_type: str | None = None,
+                       save_staged: Callable[[], bool] | None = None) -> None:
     """整理包内资源清单后打开浏览窗；关闭即结束，不写任何属性。"""
     from .busy import run_busy_or_plain
 
@@ -81,7 +88,7 @@ def open_asset_browser(host, assets, widget_type: str | None = None) -> None:
         host.window() if hasattr(host, "window") else host,
         "整理包内资源清单（首次较慢）…", build_candidates)
     build_browser_dialog(host, assets, candidates,
-                         widget_type).exec()
+                         widget_type, save_staged=save_staged).exec()
 
 
 class AssetBrowserMixin:
@@ -94,4 +101,13 @@ class AssetBrowserMixin:
                 "还没挂载资源包：先「打开 ▸ 资源包（.fls…）」"
                 "或「打开 ▸ 资源目录…」，再点「资源」浏览。")
             return
-        open_asset_browser(self, assets)
+        open_asset_browser(self, assets,
+                           save_staged=self._browser_save_staged)
+
+    def _browser_save_staged(self) -> bool:
+        """浏览窗「保存新资源」按钮的宿主端：写包并回报成败（0.18.0）。"""
+        handler = getattr(self, "save_staged_resources", None)
+        if handler is None:
+            return False
+        report = handler()
+        return bool(report and report.get("ok"))
