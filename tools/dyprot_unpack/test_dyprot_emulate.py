@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import io
+import struct
 import sys
 import tempfile
 import unittest
@@ -32,6 +33,7 @@ if HAVE_DEPS:
     sys.path.insert(0, str(HERE))
     import dyprot_emulate as de  # noqa: E402
     import pefile  # noqa: E402
+    import win32_env as we  # noqa: E402
     from fake_modules import build_module  # noqa: E402
 
 
@@ -107,6 +109,40 @@ class RealClientTests(unittest.TestCase):
 
     def test_stub_or_generic_handles_unknown_export(self):
         self.assertNotIn("definitely_not_exported", self.rt.exports)
+
+    def test_unknown_arity_raises_instead_of_corrupting_the_stack(self):
+        """既沒實作、也不在 `ARG_COUNTS` 裡的導入名要當場報錯。
+
+        以前 `argc` 缺省當 0，`ESP` 只加 4，stdcall 的參數留在棧上，之後整條
+        執行流都被歪掉且沒有任何提示——比停下來難查得多。
+        """
+        from unicorn.x86_const import UC_X86_REG_ESP
+
+        unknown = next(
+            name
+            for name in self.rt._imported_names()
+            if name not in self.rt.procs and name not in we.ARG_COUNTS
+        )
+        esp = we.STACK + 0x1000
+        self.rt.uc.reg_write(UC_X86_REG_ESP, esp)
+        self.rt.uc.mem_write(esp, struct.pack("<I", we.SENTINEL))
+        with self.assertRaises(de.UnknownArity) as caught:
+            self.rt.uc.emu_start(self.rt.stub_for(unknown), we.SENTINEL)
+        self.assertEqual(caught.exception.name, unknown)
+
+    def test_stub_arity_matches_the_python_signature(self):
+        """`@stdcall(n)` 的 n 就是清棧要彈幾個——不能跟函式簽名對不上。"""
+        mismatched = {
+            name: (getattr(fn, "argc", None), fn.__code__.co_argcount)
+            for name, fn in self.rt.procs.items()
+            if getattr(fn, "argc", None) != fn.__code__.co_argcount
+        }
+        self.assertEqual(mismatched, {})
+
+    def test_code_hook_only_fires_inside_the_stub_pages(self):
+        """`UC_HOOK_CODE` 若不限範圍，每條指令都回 Python，慢一個數量級。"""
+        self.assertEqual(de.STUB_SIZE, 0x40000)
+        self.assertGreaterEqual(de.SENTINEL, de.STUB + de.STUB_SIZE)
 
     def test_short_run_reports_a_stop_reason(self):
         result = self.rt.run(seconds=2.0, max_insn=2_000_000)

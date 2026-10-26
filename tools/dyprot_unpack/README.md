@@ -16,10 +16,12 @@ python tools/dyprot_unpack/dyprot_emulate.py            # 預設 30 秒
 python tools/dyprot_unpack/dyprot_emulate.py --seconds 60 --json /tmp/dyprot.json
 ```
 
-實測輸出（`mxmain.dll` `637331b5…be424d`，30 秒預算）：
+實測輸出（`mxmain.dll` `637331b5…be424d`；這一輪 0.8 s 就撞到同一個 fault——把
+`UC_HOOK_CODE` 限定在樁區之前，每條指令都回 Python，要 12.0 s，兩者的停因、寫入
+次數、API 集合逐項相同）：
 
 ```
-導入 859 槽 / 假匯出 691 名 / 12.0 s / 停因：fault: Invalid memory fetch（eip=0xb40a2330）
+導入 859 槽 / 假匯出 691 名 / 0.8 s / 停因：fault: Invalid memory fetch（eip=0xb40a2330）
 被調用的 API： {'GetModuleHandleA': 2, 'GetModuleFileNameW': 2, 'LocalAlloc': 1,
                'GetProcessWindowStation': 1, 'GetUserObjectInformationW': 1, 'LoadLibraryA': 1}
 映像被改寫的區間： [{'va': '0xe1b000', 'size': 3580}]
@@ -36,6 +38,17 @@ IAT 重綁： {'iat_va': '0xe1b000', 'iat_size': 3584, ...}
 2. **它沒有解密任何載荷**：`.data` 運行期尾部（`0x93C180`，27 個 `interface`
    型別的 `tp_name` 就是從那裡被 `strcpy` 出去的）在整段執行裡始終是 0，
    `_dyprot0/1` 一個位元組都沒被改寫。
+
+## 參數個數：不知道就停下來，不猜
+
+`stdcall` 的返回地址在 `[esp]`、參數從 `esp+4` 起，返回時 `esp += 4 + 4*argc`——
+所以「這個名字有幾個參數」是必須知道的，猜 0 會讓返回值寫錯位置、`esp` 一路歪掉。
+樁自己用 `@stdcall(n)` 宣告，其餘靠 `win32_env.ARG_COUNTS`。兩邊都沒有時直接拋
+`UnknownArity` 並在停因裡寫出名字（把它加進 `ARG_COUNTS` 再跑），**不會**默默當 0 清棧。
+
+目前 613 個非修飾導入名裡，66 個有語義實作、其餘大多不在殼的呼叫面上；殼實測只碰到
+6 個，所以「缺哪個補哪個」是安全的迭代方式。順帶一提，`?…@…@@…` 那些是 C++ 修飾名
+（Wwise / 自繪引擎匯出），不屬於 Win32 stdcall，殼不會透過它們拿 API。
 
 ## 為什麼還沒成功（兩個已排除的方向）
 
@@ -70,9 +83,10 @@ IAT 重綁： {'iat_va': '0xe1b000', 'iat_size': 3584, ...}
 python -m unittest tools.dyprot_unpack.test_dyprot_emulate -v
 ```
 
-缺 `pefile` / `unicorn` 時整檔跳過。測試釘住的是假 DLL 映像的結構（`pefile`
-真的能解析出匯出名與位址——這一條壞了會表現成「殼突然停在入口」而不是明顯錯誤）
-和輸出不覆蓋輸入的護欄。
+11 項。缺 `pefile` / `unicorn` 時整檔跳過。釘住的是：假 DLL 映像的結構（`pefile`
+真的能解析出匯出名與位址——這一條壞了會表現成「殼突然停在入口」而不是明顯錯誤）、
+映像按匯出量放大、輸出不覆蓋輸入的兩條護欄、參數個數未知時必須報錯、每個樁的
+`@stdcall(n)` 要和 Python 簽名一致、`UC_HOOK_CODE` 只掛在樁區。
 
 ## 下一步（按性價比）
 

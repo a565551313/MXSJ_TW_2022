@@ -55,6 +55,14 @@ except ImportError as exc:  # pragma: no cover - 取決於環境
     )
     raise SystemExit(2) from exc
 
+class UnknownArity(Exception):
+    """碰到既沒實作、也不在 `ARG_COUNTS` 裡的導入名——補表再跑。"""
+
+    def __init__(self, name: str):
+        super().__init__(name)
+        self.name = name
+
+
 @dataclass
 class Result:
     image: str = ""
@@ -212,7 +220,9 @@ class Runtime:
 
     # ------------------------------------------------------------------ 鉤子
     def _install_hooks(self) -> None:
-        self.uc.hook_add(UC_HOOK_CODE, self._on_code)
+        self.uc.hook_add(
+            UC_HOOK_CODE, self._on_code, begin=STUB, end=STUB + STUB_SIZE
+        )
         self.uc.hook_add(UC_HOOK_MEM_WRITE, self._on_write)
 
     def _on_write(self, uc, access, address, size, value, user) -> None:
@@ -230,10 +240,13 @@ class Runtime:
         ret = struct.unpack("<I", uc.mem_read(esp, 4))[0]
         fn = self.procs.get(name)
         argc = getattr(fn, "argc", None) if fn else ARG_COUNTS.get(name)
-        if fn is None or argc is None:
+        if argc is None:
+            # 不知道參數個數就清不了棧；靠猜只會讓後面全部歪掉，寧可停下來報名字。
+            raise UnknownArity(name)
+        if fn is None:
             self.unimplemented[name] += 1
             uc.reg_write(UC_X86_REG_EAX, 0)
-            uc.reg_write(UC_X86_REG_ESP, esp + 4 + 4 * (argc or 0))
+            uc.reg_write(UC_X86_REG_ESP, esp + 4 + 4 * argc)
             uc.reg_write(UC_X86_REG_EIP, ret)
             return
         args = struct.unpack("<" + "I" * argc, uc.mem_read(esp + 4, 4 * argc))
@@ -266,6 +279,8 @@ class Runtime:
             stopped = "budget"
         except ProcessExit as exc:
             stopped = str(exc)
+        except UnknownArity as exc:
+            stopped = f"unknown argc: {exc.name}（把它加進 win32_env.ARG_COUNTS 再跑）"
         except UcError as exc:
             stopped = f"fault: {exc}"
         result = Result(

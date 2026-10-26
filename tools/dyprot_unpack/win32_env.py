@@ -406,7 +406,7 @@ def install_api(rt) -> None:
         rt.uc.mem_write(addr, struct.pack("<I", value))
         return old
 
-    @stdcall(2)
+    @stdcall(1)
     def GetSystemTimeAsFileTime(out):
         rt.uc.mem_write(out, struct.pack("<Q", 0x01D6A00000000000))
         return 0
