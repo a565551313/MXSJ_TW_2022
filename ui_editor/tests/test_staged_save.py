@@ -179,9 +179,11 @@ class StagedSaveWindowTests(unittest.TestCase):
         dirty_before = self.window.doc.dirty
         out = self.root / "out.fls"
         titles: list[str] = []
+        captured: list[tuple] = []
 
         def yes(*args):
             titles.append(str(args[1]))
+            captured.append(args)
             return QMessageBox.StandardButton.Yes
 
         with mock.patch.object(QMessageBox, "question", side_effect=yes), \
@@ -192,6 +194,11 @@ class StagedSaveWindowTests(unittest.TestCase):
         self.assertIsNotNone(report)
         self.assertTrue(report.get("ok"), report)
         self.assertIn("只保存新资源", titles)
+        # PR #89 审查修复：确认框默认按钮必须是「否」（回车不确认改包）
+        self.assertEqual(
+            captured[0][3],
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        self.assertEqual(captured[0][4], QMessageBox.StandardButton.No)
         self.assertTrue(out.exists())
         self.assertEqual(_entry_bytes(out, "image/new1.png"), b"PNG1")
         self.assertEqual(_entry_bytes(out, "image/new2.igs"), b"IGS2")
@@ -277,16 +284,22 @@ class StagedSaveWindowTests(unittest.TestCase):
     def test_browser_button_reflects_count_and_invokes_host(self):
         self.window.resolver.stage_image("image/n.png", b"N")
         calls: list[bool] = []
+        enabled_during: list[bool] = []
+        holder: list = []
 
         def handler() -> bool:
-            # 模拟真实宿主：写包成功后销账
+            # 模拟真实宿主：写包成功后销账；同时记录写包期间本窗是否已禁用
+            # （PR #89 审查修复：宿主 run_busy 转嵌套事件循环，输入屏障
+            # 只罩主窗口，本窗必须自己禁用防重入）。
             calls.append(True)
+            enabled_during.append(holder[0].isEnabled())
             self.window.resolver.discard_staged(["image/n.png"])
             return True
 
         dialog = build_browser_dialog(
             self.window, self.window.resolver, ["image/n.png"],
             save_staged=handler)
+        holder.append(dialog)
         try:
             btn = dialog._save_staged_btn
             self.assertIsNotNone(btn)
@@ -294,6 +307,8 @@ class StagedSaveWindowTests(unittest.TestCase):
             self.assertTrue(btn.isEnabled())
             btn.click()
             self.assertEqual(calls, [True])
+            self.assertEqual(enabled_during, [False])   # 写包期间禁用
+            self.assertTrue(dialog.isEnabled())         # 写完恢复
             # 成功销账后：计数归零、按钮禁用
             self.assertIn("（0）", btn.text())
             self.assertFalse(btn.isEnabled())

@@ -884,7 +884,14 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
         """宿主负责写包；成功后清掉挂账标记并刷新列表与按钮。"""
         if self._save_staged_handler is None:
             return
-        ok = bool(self._save_staged_handler())
+        # 宿主 run_busy 会转嵌套事件循环，其输入屏障只罩主窗口：本窗
+        # 必须自己禁用，否则第二次点击会让两次写包赛跑同一个目标包，
+        # 写途中改挂账也会被旧快照销账（PR #89 审查复核属实项）。
+        self.setEnabled(False)
+        try:
+            ok = bool(self._save_staged_handler())
+        finally:
+            self.setEnabled(True)
         if ok:
             # 挂账已进包：列表里的「待入包」标记该摘了，整表重过滤一遍。
             self._staged_paths.clear()
@@ -935,10 +942,15 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
             return None
         return res_path, convert_box.isChecked()
 
-    def _stage_one(self, res_path: str, data: bytes) -> None:
-        """登记一张新图（包里已有同名时先确认会在保存时替换）。"""
+    def _stage_one(self, res_path: str, data: bytes) -> bool:
+        """登记一张新图（包里已有同名时先确认会在保存时替换）。
+
+        返回是否**真的挂上了**：无回调、用户取消同名替换、名字被资源层
+        拒绝都返回 False——多张 .igs 的「已挂账 N 个」要按真值计数
+        （PR #89 审查复核属实项）。
+        """
         if self._on_stage is None:
-            return
+            return False
         if (res_path in self._all_paths
                 and res_path not in self._staged_paths):
             answer = QMessageBox.question(
@@ -946,7 +958,7 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                 f"{res_path} 包里已经有了。\n"
                 "继续的话，保存回资源包时会用新图替换它，确定吗？")
             if answer != QMessageBox.StandardButton.Yes:
-                return
+                return False
         try:
             self._on_stage(res_path, data)
         except ValueError as exc:
@@ -956,8 +968,9 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
                 self, "这个名字不能用",
                 f"{res_path}\n\n{exc}\n\n"
                 "请换一个只用中文、英文、数字、下划线的包内相对路径。")
-            return
+            return False
         self.add_staged_path(res_path)
+        return True
 
     def _suggested_family_path(self) -> str:
         """族目录的建议值：已选中族就沿用，否则用当前条目所在目录。"""
@@ -1064,8 +1077,8 @@ class ResourcePickerDialog(BusyHostMixin, QDialog):
             except OSError as exc:
                 QMessageBox.warning(self, "读取失败", f"{f}\n{exc}")
                 continue
-            self._stage_one(f"{head}{Path(f).name}", data)
-            done += 1
+            if self._stage_one(f"{head}{Path(f).name}", data):
+                done += 1
         if done:
             self._count.setText(
                 f"已挂账 {done} 个 .igs 资源（保存进包时写入）")

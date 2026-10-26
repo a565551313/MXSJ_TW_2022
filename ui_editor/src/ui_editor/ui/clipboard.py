@@ -104,8 +104,20 @@ class ClipboardMixin:
             data = json.loads(raw.decode("utf-8"))
         except (ValueError, UnicodeDecodeError):
             return None
+        def valid_widget(d: object) -> bool:
+            # 系统剪贴板是共享的：别的应用的文本也进得来。缺 sWidgetType
+            # 或 lChildren 坏掉的控件树必须挡在门外——否则粘贴半途抛
+            # ValueError 中止，或把垃圾条目原样序列化进 .dlg（PR #89 审查）。
+            if (not isinstance(d, dict)
+                    or not isinstance(d.get("sWidgetType"), str)
+                    or not d["sWidgetType"]):
+                return False
+            children = d.get("lChildren", [])
+            return (isinstance(children, list)
+                    and all(valid_widget(child) for child in children))
+
         if (not isinstance(data, list) or not data
-                or not all(isinstance(d, dict) for d in data)):
+                or not all(valid_widget(d) for d in data)):
             return None
         return data
 
@@ -123,7 +135,12 @@ class ClipboardMixin:
         payload = self._clipboard_payload()
         if not payload:
             return
-        clones = [Widget.from_dict(d) for d in payload]
+        try:
+            clones = [Widget.from_dict(d) for d in payload]
+        except ValueError as exc:
+            # 兜底：负载校验漏掉的坏数据也不把 Traceback 甩给用户
+            self._update_status(f"剪贴板内容不是有效的控件数据：{exc}")
+            return
         selection = self._selected_widgets()
         anchor = selection[0] if selection else None
         parent = anchor.parent if anchor is not None else None

@@ -327,6 +327,9 @@ class PropertyPanel(QWidget):
         self._new_key.addItems(
             [k for k in _CENSUS_KEYS
              if k not in widget.props and k != "lChildren"])
+        # addItems 会把第 0 项设为当前项（可编辑下拉随即显示首个候选、
+        # 占位符永远不露面）：清掉当前项，空输入显示占位符，敲过的才恢复。
+        self._new_key.setCurrentIndex(-1)
         self._new_key.setEnabled(True)
         if current:
             self._new_key.setCurrentText(current)

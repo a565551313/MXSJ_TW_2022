@@ -1,8 +1,9 @@
-"""GUI：复制粘贴自动重命名（BTN → BTN_1 → BTN_2 → …）。"""
+"""GUI：复制粘贴自动重命名（BTN → BTN_1 → BTN_2 → …）＋剪贴板负载校验。"""
 import os
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -107,6 +108,66 @@ class TestPasteRenames(unittest.TestCase):
         self.window._refresh_structure()
         self.window.paste_widgets()
         self.assertEqual(self.window.current_selection().name, "BTN")
+
+
+class TestPastePayloadValidation(unittest.TestCase):
+    """PR #89 审查修复：系统剪贴板共享，坏负载必须挡在门外。"""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui_editor.ui.main_window import MainWindow
+
+        self.window = MainWindow()
+        self.window.new_layout()
+        self.doc = self.window.doc
+
+    def tearDown(self):
+        if self.window.doc is not None:
+            self.window.doc.dirty = False
+        self._app.clipboard().clear()
+        self.window.close()
+        self.window.deleteLater()
+        self._app.processEvents()
+
+    def _paste_text(self, text: str) -> int:
+        """把文本塞进系统剪贴板再粘贴；返回文档控件总数（前后对比用）。"""
+        self._app.clipboard().setText(text)
+        self.window.paste_widgets()
+        return len(self.doc.all_widgets())
+
+    def test_payload_without_swidgettype_rejected(self):
+        before = len(self.doc.all_widgets())
+        after = self._paste_text('[{"sName": "x", "iX": 1}]')
+        self.assertEqual(after, before)
+
+    def test_payload_bad_lchildren_rejected(self):
+        before = len(self.doc.all_widgets())
+        after = self._paste_text(
+            '[{"sWidgetType": "CButton", "lChildren": {"a": 1}}]')
+        self.assertEqual(after, before)
+
+    def test_nested_child_missing_type_rejected(self):
+        before = len(self.doc.all_widgets())
+        after = self._paste_text(
+            '[{"sWidgetType": "CFrame", "lChildren": [{"sName": "c"}]}]')
+        self.assertEqual(after, before)
+
+    def test_from_dict_valueerror_reports_status(self):
+        """兜底分支：from_dict 抛 ValueError 时给用户状态栏提示，不甩 Traceback。"""
+        before = len(self.doc.all_widgets())
+        statuses: list[str] = []
+        with mock.patch.object(self.window, "_update_status",
+                               side_effect=statuses.append), \
+                mock.patch("ui_editor.ui.clipboard.Widget.from_dict",
+                           side_effect=ValueError("坏数据")):
+            after = self._paste_text('[{"sWidgetType": "CButton"}]')
+        self.assertEqual(after, before)
+        self.assertTrue(any("不是有效的控件数据" in s for s in statuses),
+                        statuses)
 
 
 if __name__ == "__main__":

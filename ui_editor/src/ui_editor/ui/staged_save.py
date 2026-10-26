@@ -123,7 +123,13 @@ class StagedSaveMixin:
             f"将把 {len(names)} 个挂账新资源{where}：\n{target}\n\n"
             f"{shown}\n\n"
             "不会改动任何布局条目（校验通过后才原子替换）。继续吗？")
-        return (QMessageBox.question(self, "只保存新资源", question)
+        # 回车 = 否：宽松模式这一步接着就是**就地改写原包（无备份）**。
+        # 切宽松模式的确认框同样默认「取消」（_confirm_loose_mode），
+        # 同一套安全默认（PR #89 审查复核属实项）。
+        return (QMessageBox.question(
+            self, "只保存新资源", question,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No)
                 == QMessageBox.StandardButton.Yes)
 
     # -- 写文件（可在后台线程跑，不碰界面状态） -------------------------

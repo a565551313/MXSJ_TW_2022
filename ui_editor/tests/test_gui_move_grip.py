@@ -22,8 +22,8 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 try:
-    from PySide6.QtCore import QPointF
-    from PySide6.QtWidgets import QApplication
+    from PySide6.QtCore import QPointF, Qt
+    from PySide6.QtWidgets import QApplication, QGraphicsSceneMouseEvent
 
     from ui_editor.core.assets import AssetResolver
     from ui_editor.core.model import LayoutDocument, Widget
@@ -155,6 +155,45 @@ class MoveGripTests(unittest.TestCase):
         grip.finish_drag()   # 重复松手不重复记步
         self.assertEqual(self.commits, [])
         self.assertEqual((self.child.x, self.child.y), (0, 0))
+
+    def test_child_grip_follows_selected_parent_move(self):
+        """PR #89 审查修复：父被搬动时，选中的子控件手柄也要跟上（原先留在旧位置）。"""
+        self.parent_item.setSelected(True)
+        self.child_item.setSelected(True)
+        child_grip = self._grip_of(self.child_item)
+        # 普通拖动父控件：子图元自己的 itemChange 不触发，手柄靠级联同步
+        self.parent_item.setPos(30, 20)
+        self.assertAlmostEqual(child_grip.pos().x(), 30 + 200 + 5)
+        self.assertAlmostEqual(child_grip.pos().y(), 20 - _GRIP - 5)
+        # 父控件的手柄强制移动同样级联
+        parent_grip = self._grip_of(self.parent_item)
+        start = QPointF(parent_grip.pos())
+        parent_grip.begin_drag(start)
+        parent_grip.drag_to(QPointF(start.x() + 10, start.y() + 10))
+        parent_grip.finish_drag()
+        self.assertAlmostEqual(child_grip.pos().x(), 40 + 200 + 5)
+        self.assertAlmostEqual(child_grip.pos().y(), 30 - _GRIP - 5)
+        self.assertEqual(self.commits, [self.parent])   # 只记被握的那个
+
+    def test_resize_moves_own_grip(self):
+        """PR #89 审查修复：缩放走 _syncing 不经 itemChange，手柄要显式跟到新角落。"""
+        self.parent_item.setSelected(True)
+        grip = self._grip_of(self.parent_item)
+        self.parent_item._press_geom = (0, 0, 100, 80)   # 相当于按压把手
+        self.parent_item._resize_handle = "se"
+        self.parent_item._resize_start = (
+            0.0, 0.0, 100.0, 80.0, QPointF(100, 80))
+        ev = QGraphicsSceneMouseEvent()
+        ev.setButton(Qt.MouseButton.LeftButton)
+        ev.setScenePos(QPointF(130, 100))   # 右下角拖到 130x100
+        self.parent_item.mouseMoveEvent(ev)
+        self.assertEqual((self.parent.width, self.parent.height), (130, 100))
+        self.assertAlmostEqual(grip.pos().x(), 130 + 5)
+        self.assertAlmostEqual(grip.pos().y(), -_GRIP - 5)
+        rel = QGraphicsSceneMouseEvent()
+        rel.setButton(Qt.MouseButton.LeftButton)
+        self.parent_item.mouseReleaseEvent(rel)
+        self.assertEqual(self.commits, [self.parent])   # 缩放松手记一步
 
     def test_grip_follows_normal_drag_and_panel_refresh(self):
         self.parent_item.setSelected(True)

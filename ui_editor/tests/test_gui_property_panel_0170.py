@@ -52,6 +52,18 @@ class TestPropertyPanel0170(unittest.TestCase):
         self.assertIsInstance(combo, QComboBox)
         self.assertTrue(combo.isEditable())
 
+    def test_new_key_starts_empty_no_prefill(self):
+        """PR #89 审查修复：addItems 会预选第 0 项——必须清掉，不预填首个候选键。"""
+        self._select(self.frame)
+        combo = self.panel._new_key
+        self.assertGreater(combo.count(), 0)
+        self.assertEqual(combo.currentIndex(), -1)
+        self.assertEqual(combo.currentText(), "")
+        # 此时点「添加属性」：不得把首个候选键悄悄加进控件
+        before = dict(self.frame.props)
+        self.panel._add_property()
+        self.assertEqual(self.frame.props, before)
+
     def test_candidates_exclude_existing_include_census(self):
         button = self.doc.new_widget("CButton", parent=self.frame)
         self._select(button)

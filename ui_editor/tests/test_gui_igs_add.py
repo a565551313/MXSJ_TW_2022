@@ -147,6 +147,31 @@ class IgsAddTests(unittest.TestCase):
             self.dialog._choose_add()
         self.assertEqual(self.staged, {})
 
+    # -- 计数只算真挂上的（PR #89 审查修复） -----------------------------
+    def test_multi_igs_count_only_actually_staged(self):
+        """取消同名替换的那张不计入「已挂账 N 个」，按钮计数也不虚高。"""
+        self.dialog.close()
+        self.dialog.deleteLater()
+        self.dialog = ResourcePickerDialog(
+            None, "测试选图窗", ["a.igs", "dir\\exists.png"], "",
+            lambda path: None,
+            on_stage=lambda name, data: self.staged.__setitem__(name, data),
+            exists=lambda name: name in ("a.igs", "dir\\exists.png"),
+            browse_only=True)
+        a = self._write("a.igs", b"A")
+        b = self._write("b.igs", b"B")
+        with mock.patch(_PICK, return_value=([a, b], "")), \
+                mock.patch.object(
+                    QDialog, "exec",
+                    new=lambda dialog_self: QDialog.DialogCode.Accepted), \
+                mock.patch.object(
+                    QMessageBox, "question",
+                    return_value=QMessageBox.StandardButton.No):
+            self.dialog._choose_add()
+        # a.igs 与包内同名、替换确认点了「否」→ 只挂上 b.igs
+        self.assertEqual(self.staged, {"b.igs": b"B"})
+        self.assertIn("已挂账 1 个 .igs", self.dialog._count.text())
+
     # -- 旧规则不动：多张普通图片必须转精灵 ------------------------------
     def test_multi_images_still_need_convert(self):
         p1 = self._write("p1.png", b"1")

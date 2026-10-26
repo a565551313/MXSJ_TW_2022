@@ -433,6 +433,11 @@ class WidgetItem(QGraphicsItem):
         self._syncing = False
         self.update()
         self.on_geometry(self.widget)
+        scene = self.scene()
+        if scene is not None and hasattr(scene, "_grip_follow"):
+            # 缩放走 _syncing、不经 itemChange：角落已经变了，
+            # 手柄（含被带着走的子孙的）要显式跟上（PR #89 审查复核）。
+            scene._grip_follow(self)
         event.accept()
 
     def _commit_if_changed(self) -> None:
@@ -618,10 +623,17 @@ class LayoutScene(QGraphicsScene):
             grip.sync()
 
     def _grip_follow(self, item: WidgetItem) -> None:
-        """控件被搬动后（普通拖动/属性面板改坐标），手柄跟到新角落。"""
+        """控件被搬动后（普通拖动/缩放/属性面板改坐标），手柄跟到新角落。
+
+        父控件被搬动时子控件跟着走场景，但子图元自己的 itemChange
+        不会触发；所以子孙的手柄也要一并同步，否则会留在旧位置
+        （PR #89 AI 审查复核属实项）。
+        """
         grip = self._grips.get(id(item))
         if grip is not None:
             grip.sync()
+        for child in item.child_items:
+            self._grip_follow(child)
 
     # -- 网格/标尺/参考线绘制 ------------------------------------------
     def drawBackground(self, painter: QPainter, rect: QRectF) -> None:  # noqa: N802
