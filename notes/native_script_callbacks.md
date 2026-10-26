@@ -230,9 +230,13 @@
 
 - **1 跳：0 条**。没有任何 `PyMethodDef` 实现直接调桥。
 - **2 跳：3 条**（逐个反汇编核过）：
-  - `C_net.ProcessServerCmd`（`0x467070`）→ `0x4ab870` → `OnServerCmd(int)` × 2
-  - `C_net.Process`（`0x467490`）→ `0x4ab9a0` → `OnError()` / `OnConnectFail()`
-  - `C_net.Replay`（`0x467270`）→ `0x4ab790` → `OnServerCmd(int)`
+  - `CNetClient.ProcessServerCmd`（`0x467070`）→ `0x4ab870` → `OnServerCmd(int)` × 2
+  - `CNetClient.Process`（`0x467490`）→ `0x4ab9a0` → `OnError()` / `OnConnectFail()`
+  - `CNetClient.Replay`（`0x467270`）→ `0x4ab790` → `OnServerCmd(int)`
+
+  （这三个不是 `C_net` 模块的函数，而是原生类型 `CNetClient` 的方法表条目——
+  见 [mxmain_python_types.md](mxmain_python_types.md) §3.1。另：该类型 36 个方法里**没有**
+  `OnServerCmd`，所以「脚本 `OnServerCmd` 调回原生同名方法」不存在，无重入。）
 - 更深跳数会出现大量假阳性（函数边界一放大就把邻居的 call 算进来），**不采信**。
   尤其 `0x49bxxx` 那批 `SetAlpha`/`NextFrame`/`GetDirection` 名字，来自 §5 末尾说的
   「第二类方法表」被误当 `PyMethodDef` 的情形，已排除。
@@ -250,6 +254,7 @@
 | RTTI 笔记 §6 | 「代码引用点 `0x4ab7ac` 等」 | 那是**压栈**位置；`call` 在 `0x4ab7b2`，本文统一用 call 点 |
 | RTTI 笔记 §6 | 已核 8 条名字 | 现在是 16 个调用点 / 8 个名字，且**穷举**（`E8` 全扫） |
 | 2026-10-09 交接 | `0x2714` → `OnServerCmd(int)` | 证实；`0x2714` 是事件码，处理体 `0x4ac030`，跳表在 `0x4ac61c` |
+| §6 旧标注 | 「`C_net.Process` / `ProcessServerCmd` / `Replay`」 | 是原生类型 **`CNetClient` 的方法**，不是 `C_net` 模块函数；且 `CNetClient` 无 `OnServerCmd` |
 | 上一轮 STATUS | 「`KeepAlive`/`ShowWindow` 等同族可 xref」 | `KeepAlive(sI) 0x6bba00` 等的「名字+签名」相邻串里**没有** `call 0x4576b0`，不属于本桥；它们只是 `.rdata` 里的普通字符串/描述 |
 
 ## 8. 未解 / 边界
