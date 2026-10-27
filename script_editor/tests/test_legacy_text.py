@@ -14,6 +14,7 @@ from script_editor.core.inspection.legacy_text import (
     CODECS,
     DISPLAY_ONLY,
     MAX_RECORDS,
+    RESTORED_NOTE,
     ScanResult,
     clamp,
     decode_bytes,
@@ -24,6 +25,7 @@ from script_editor.core.inspection.legacy_text import (
     previews,
     readable_literal,
     readings,
+    rendered_bytes,
     report_text,
     scan,
     split_literal,
@@ -216,11 +218,36 @@ class SourceScanTests(unittest.TestCase):
 
     def test_hint_marks_restored_readings_and_explains_why(self):
         plain = SimpleNamespace(readings=readings(r"'\xa5u\xaf\xe0'"))
-        self.assertNotIn("还原", format_hint(plain))
+        self.assertNotIn("反推候选", format_hint(plain))
         restored = SimpleNamespace(readings=readings(r"r'\xa5u\xaf\xe0'"))
         hint = format_hint(restored)
-        self.assertIn("（还原）", hint)
+        self.assertIn("（反推候选）", hint)
         self.assertIn("反编译器", hint)
+        self.assertIn("候选而不是逐字节证明", RESTORED_NOTE)
+
+    def test_big5_trail_byte_0x5c_is_one_byte_not_an_escape(self):
+        """Corpus shape from ``script/login/dgw.py:118``.
+
+        ``成功連線`` is ``A6 A8 A5 5C B3 73``. uncompyle6 copies the payload's
+        0x5C through as a *single* backslash, so the rendering reads
+        ``\\xa5`` + one ``\\`` + ``\\xb3``. Treating the adjacent pair as an escaped
+        backslash swallowed the ``\xb3`` and produced ``成功xb3s`` — a wrong
+        reading presented as if it were proven.
+        """
+        payload = "成功連上遊戲服務器".encode("cp950")
+        body = "".join(
+            "\\" if byte == 0x5C else f"\\x{byte:02x}" for byte in payload
+        )
+        found = readings('r"""' + body + '"""')
+        self.assertEqual(len(found), 1)
+        self.assertTrue(found[0].restored)
+        self.assertIn("成功連上遊戲服務器", found[0].text)
+        self.assertEqual(rendered_bytes(body), payload)
+
+    def test_backslash_runs_survive_verbatim(self):
+        # 0x5C 0x5C in the payload renders as ``\\``: two bytes, not one.
+        self.assertEqual(rendered_bytes("\\\\"), bytes.fromhex("5c5c"))
+        self.assertEqual(len(rendered_bytes("\\\\")), 2)
 
     def test_plain_literals_are_not_marked_restored(self):
         self.assertFalse(any(r.restored for r in readings(r"'\xa5u\xaf\xe0'")))

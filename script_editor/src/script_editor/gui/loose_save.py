@@ -189,6 +189,23 @@ class LooseSaveMixin:
             )
             if not plan.entries:
                 return plan, None, None
+            root = client_root_for(archive.path)
+            resized = [
+                entry.snapshot.binding.index
+                for entry in plan.entries
+                if entry.resized
+            ]
+            if root is not None and resized:
+                # The experimental switch has no client-side acceptance at all;
+                # overwriting the installed copy in place is the one place where
+                # being wrong cannot be undone from the editor.
+                raise ValueError(
+                    "这个包在游戏客户端目录里，本次有 "
+                    f"{len(resized)} 条要扩长定长槽位（条目 {sorted(resized)}）。"
+                    "扩容没有任何客户端验收，工具拒绝直接改写客户端原包。\n"
+                    f"客户端目录：{root}\n"
+                    "请改用 F6 生成新包，或把包复制到客户端目录之外再试。"
+                )
             report, new_state = publish_package(
                 plan,
                 state,

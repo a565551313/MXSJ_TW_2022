@@ -181,13 +181,19 @@ def rendered_bytes(body: str):
     therefore comes back as ``r\"\"\"\\xb9C\\xc0\\xb8\\xb1Ұʮɽե…\"\"\"`` — a raw
     string whose escape text is *not* its own value.
 
-    The original bytes are still fully determined: an ``\\xNN`` escape is that
-    byte, and a non-ASCII character contributes its own UTF-8 encoding (which is
-    exactly how those bytes reached the rendering). Anything else — ``\\u``,
-    octal, an unknown escape — returns ``None`` instead of guessing.
+    In that rendering **only ``\\xNN`` is an escape**. A backslash that came from
+    the payload is copied through as a single ``\\`` character instead of being
+    doubled, which Big5 makes common: ``功`` is ``A5 5C``, so ``成功連線`` is
+    rendered ``\\xa5\\xb3s…`` and the ``\\xb3`` belongs to the next character.
+    Reading the pair as an escaped backslash swallowed it and turned that corpus
+    line (``script/login/dgw.py:118``) into ``成功xb3s…``. Every other backslash
+    is therefore the byte 0x5C itself.
 
-    This is used for display only, and any reading built from it is marked
-    :attr:`Reading.restored`, because the literal's runtime value differs.
+    The mapping is still not proof: a payload that literally spells ``\\xA5``
+    renders exactly like the byte 0xA5, so callers label these readings as
+    *candidates* (:attr:`Reading.restored` says the runtime value differs).
+
+    This is used for display only.
     """
     if not body:
         return None
@@ -200,25 +206,25 @@ def rendered_bytes(body: str):
             out.extend(char.encode("utf-8"))
             index += 1
             continue
-        following = body[index + 1 : index + 2]
-        if following == "x":
-            pair = body[index + 2 : index + 4]
-            if len(pair) != 2 or not set(pair) <= _HEX:
-                return None
+        pair = body[index + 2 : index + 4]
+        if (
+            body[index + 1 : index + 2] == "x"
+            and len(pair) == 2
+            and set(pair) <= _HEX
+        ):
             out.append(int(pair, 16))
             index += 4
             continue
-        if following in _SIMPLE_ESCAPES and following:
-            if following == "0" and body[index + 2 : index + 3] in _OCTAL:
-                return None
-            out.append(_SIMPLE_ESCAPES[following])
-            index += 2
-            continue
-        if following == "\n":
-            index += 2
-            continue
-        return None
+        # A single backslash is the payload byte itself, not an escape start:
+        # uncompyle6 does not double it (see the Big5 case above).
+        out.append(0x5C)
+        index += 1
     return bytes(out)
+
+
+def _renderer_shaped(body: str) -> bool:
+    """Whether ``body`` can be a decompiler rendering rather than source syntax."""
+    return "\\" not in ESCAPE_RUN.sub("", body)
 
 
 def decode_bytes(data: bytes, codecs=CODECS):
@@ -274,8 +280,9 @@ def readings(literal: str, codecs=CODECS):
     * the literal's **own bytes** (a normal ``str`` literal) — a plain reading;
     * the bytes a **decompiler rendering** stands for (``r\"\"\"\\xNN…\"\"\"``, or a
       literal mixing ``\\xNN`` escapes with raw non-ASCII characters) — a
-      :attr:`Reading.restored` reading. Its runtime value differs, so the hint
-      and the report say so instead of pretending it is the same thing.
+      :attr:`Reading.restored` *candidate*. Its runtime value differs and the
+      rendering is lossy, so the hint and the report say "反推候选" instead of
+      pretending those bytes were proven.
 
     ``u'...'`` is refused either way: it holds code points, not client bytes.
     """
@@ -288,10 +295,18 @@ def readings(literal: str, codecs=CODECS):
     if "\\x" not in body:
         return ()
     restored = "r" in prefix.lower()
-    data = None if restored else literal_bytes(body)
-    if not data:
-        restored = True
+    if restored:
+        # A raw prefix is the renderer's own marker: the escape text is not the
+        # literal's value, so the payload bytes have to be reconstructed.
         data = rendered_bytes(body)
+    else:
+        data = literal_bytes(body)
+        if not data and _renderer_shaped(body):
+            # An authored literal keeps its C escapes (\033, \n, octal), which
+            # the decompiler never renders — only pure \xNN runs can be its
+            # output.
+            restored = True
+            data = rendered_bytes(body)
     if not data:
         return ()
     return tuple(
@@ -398,9 +413,10 @@ DISPLAY_ONLY = "只读预览 · 源码字节未改 · 不可用于替换或编�
 #: Shown when a reading came from :func:`rendered_bytes` rather than from the
 #: literal's own value, so nobody mistakes it for the runtime string.
 RESTORED_NOTE = (
-    "还原读法：这里按反编译器的渲染反推原常量字节"
-    "（每个 \\xNN 当一个字节，非 ASCII 字符按其 UTF-8 字节）；"
-    "这个原始串本身的值不是这些字节"
+    "候选读法（反推）：这里按反编译器的渲染反推原常量字节"
+    "（每个 \\xNN 当一个字节，单个反斜杠当 0x5C，非 ASCII 字符按其 UTF-8 字节）；"
+    "渲染是有损的，原常量若真的写着反斜杠加 xNN，读出来会一模一样，"
+    "所以这是候选而不是逐字节证明；这个原始串本身的值也不是这些字节"
 )
 
 RAW_LIMIT = 400
@@ -411,7 +427,7 @@ def format_hint(record) -> str:
     """Hover text for one literal: every exact reading, primary first."""
     lines = [DISPLAY_ONLY]
     for reading in record.readings:
-        mark = "（还原）" if reading.restored else ""
+        mark = "（反推候选）" if reading.restored else ""
         lines.append(f"{reading.codec}{mark}: {clamp(reading.text, 200)}")
     if any(reading.restored for reading in record.readings):
         lines.append(RESTORED_NOTE)
@@ -440,7 +456,7 @@ def report_text(records, title: str = "", limit: int = REPORT_LIMIT):
         "# 本文件不再被任何流程读取：不写回源码、不参与编译、不打包。",
     ]
     if any(reading.restored for record in records for reading in record.readings):
-        lines.append("# 标「反编译器还原」的条目：" + RESTORED_NOTE)
+        lines.append("# 标「反推候选」的条目：" + RESTORED_NOTE)
     lines.append("-" * 60)
     body = []
     used = sum(len(line) + 1 for line in lines)
@@ -448,7 +464,7 @@ def report_text(records, title: str = "", limit: int = REPORT_LIMIT):
     for record in records:
         block = [f"第 {record.line} 行", f"  原文: {clamp(record.raw, RAW_LIMIT)}"]
         for reading in record.readings:
-            mark = "  （反编译器还原）" if reading.restored else ""
+            mark = "  （反推候选）" if reading.restored else ""
             block.append(
                 f"  {reading.codec:<5}: {clamp(reading.text, RAW_LIMIT)}{mark}"
             )

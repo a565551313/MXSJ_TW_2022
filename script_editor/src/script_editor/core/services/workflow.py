@@ -83,8 +83,10 @@ def prepare_build(
         if binding.vm == "py25":
             from ..vm.compression import inflate
 
+            # Same readback rule as verify_output(): at the original length this
+            # equals crypt(), and it is the only correct read after a resize.
             restored = py25.decode(
-                profile.crypt(inflate(native)), header=pyc[:8], padding=True
+                profile.crypt_variable(inflate(native)), header=pyc[:8], padding=True
             )
             stored = native
         else:
