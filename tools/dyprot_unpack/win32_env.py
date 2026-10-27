@@ -449,10 +449,16 @@ def install_api(rt) -> None:
             rt.uc.mem_write(needed, struct.pack("<I", 8))
         return 1
 
-    @stdcall(9)
+    @stdcall(10)
     def WTSSendMessageW(server, session, title, title_len, message, message_len,
-                        style, response, wait):
-        """殼用它彈「初始化失敗」之類的訊息——把字串留下來，比自己猜有用。"""
+                        style, timeout, response, wait):
+        """殼用它彈「初始化失敗」之類的訊息——把字串留下來，比自己猜有用。
+
+        Win32 原型十個參數：`(hServer, SessionId, pTitle, TitleLength,
+        pMessage, MessageLength, Style, Timeout, pResponse, bWait)`。少一個
+        `Timeout` 就會少彈 4 位元組的棧，`pResponse` 也會指到 `Timeout` 那格
+        （實測那格是 0，於是 `if response` 直接把回寫跳過）。
+        """
         rt.messages.append(
             {
                 "title": rt.read_str(title, wide=True) if title else "",

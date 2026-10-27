@@ -19,10 +19,11 @@ python tools/dyprot_unpack/dyprot_emulate.py --seconds 60 --json /tmp/dyprot.jso
 實測輸出（`mxmain.dll` `637331b5…be424d`）：
 
 ```
-導入 859 槽 / 假匯出 691 名 / 0.8 s / 停因：fault: Invalid memory fetch（eip=0x9f594fe0）
+導入 859 槽 / 假匯出 691 名 / 1.2 s / 停因：ExitProcess(3735929054)（eip=0x60020850）
 被調用的 API： {'GetModuleHandleA': 2, 'GetModuleFileNameW': 2, 'LocalAlloc': 1,
                'GetProcessWindowStation': 1, 'GetUserObjectInformationW': 1,
-               'LoadLibraryA': 1, 'WTSSendMessageW': 1}
+               'LoadLibraryA': 1, 'WTSSendMessageW': 1, 'FreeLibrary': 1,
+               'ExitProcess': 1}
 殼彈出的訊息： [{'title': 'mxmain.dll', 'message': 'Initialization error 3'}]
 映像被改寫的區間： [{'va': '0xe1b000', 'size': 3580}]
 IAT 重綁： {'iat_va': '0xe1b000', 'iat_size': 3584, ...}
@@ -90,10 +91,15 @@ LoadLibraryA("wtsapi32.dll")
 WTSSendMessageW(0, -1, "mxmain.dll", .., "Initialization error 3", ..)
 ```
 
-也就是說：**殼自己判定初始化失敗、彈了一個訊息框，然後才跳進未映射位址**。
+訊息框關掉之後它 `FreeLibrary("wtsapi32.dll")`、然後 `ExitProcess(0xDEADBEEF)`
+——**殼自己判定初始化失敗、彈框、乾淨退出**，不是失控跳飛。
 那個訊息是運行期才出現在棧上的（靜態映像裡找不到這段字串），所以它是殼自己
 準備的錯誤文案，不是我們餵進去的。`3` 是它內部的失敗代碼——目前還沒定位到
 是哪一項檢查，只知道不是 ntdll 解析失敗（那一步走過去了）。
+
+（早一版把 `WTSSendMessageW` 的參數個數寫成 9，實際是 10——少一個 `Timeout`
+就少彈 4 位元組的棧、`pResponse` 也指錯位置，殼的收尾於是表現成「跳進未映射位址」。
+參數個數這種東西寫錯，症狀永遠離原因很遠。）
 
 剩下三種可能：殼在檢查「這是不是它自己的宿主環境」（模組位址/節佈局/父進程/CPUID），
 它需要的某個輸入我們沒提供，或者它的錯誤分支本身就是設計成「跳去別處」的。

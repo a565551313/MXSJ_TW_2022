@@ -16,10 +16,10 @@
 
 實測（`mxmain.dll`，`637331b5…`）：殼會把 **859/896 個 IAT 槽重綁**到假匯出表
 的位址（整張 IAT 有 3,430 個位元組被改寫，其餘映像零改動），然後載入
-`wtsapi32.dll`、用 `WTSSendMessageW` 彈出「Initialization error 3」，
-最後跳進未映射位址；全程**沒有解密任何載荷**（`.data` 運行期尾部 `0x93C180`
-仍是 0）。所以本工具的價值是**證偽與定位**（殼要什麼環境、卡在哪一步），
-不是脫殼成品。
+`wtsapi32.dll`、用 `WTSSendMessageW` 彈出「Initialization error 3」，關掉後
+`FreeLibrary` + `ExitProcess(0xDEADBEEF)` 收場；全程**沒有解密任何載荷**
+（`.data` 運行期尾部 `0x93C180` 仍是 0）。所以本工具的價值是**證偽與定位**
+（殼要什麼環境、卡在哪一步），不是脫殼成品。
 
 一個踩過的坑寫在 `fake_modules.build_module`：匯出表的 `AddressOfFunctions`
 必須存 RVA。存絕對位址時殼算 `ImageBase + RVA`，會跳到 `0xb40a2330` 這種

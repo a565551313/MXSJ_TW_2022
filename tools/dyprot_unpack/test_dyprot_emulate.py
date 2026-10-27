@@ -172,6 +172,7 @@ class RealClientTests(unittest.TestCase):
             [(m["title"], m["message"]) for m in result.messages],
             [("mxmain.dll", "Initialization error 3")],
         )
+        self.assertEqual(result.stopped, "ExitProcess(3735929054)")
         for entry in rt.pe.DIRECTORY_ENTRY_IMPORT:
             for imp in entry.imports:
                 value = struct.unpack("<I", rt.uc.mem_read(imp.address, 4))[0]
