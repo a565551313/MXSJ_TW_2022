@@ -96,9 +96,23 @@ class LooseSaveMixin:
                 "宽松模式仍然需要真实编译器，请先「编译 → 检查编译器」"
             )
         candidates, problems = self.loose_candidates(archive)
-        message = rejection(candidates, problems)
-        if message:
-            raise ValueError(message)
+        if not candidates:
+            # Nothing to write is not an error: Ctrl+S still means "save my
+            # work", so the .py is written and the package is left alone.
+            tab = self.tabs.currentWidget()
+            dirty = bool(
+                tab is not None
+                and not tab.reference
+                and tab.editor.document().isModified()
+            )
+            if dirty:
+                self.save_tab(tab)
+            if problems:
+                raise ValueError(rejection(candidates, problems))
+            self.statusBar().showMessage(
+                "宽松模式：这个包没有内容变动，未写回原包（.py 已保存）", 8000
+            )
+            return
         if not self.confirm_loose_write(archive, candidates, problems):
             self.statusBar().showMessage("已取消写回原包；编辑内容保留", 6000)
             return

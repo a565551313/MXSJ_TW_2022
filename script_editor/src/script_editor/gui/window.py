@@ -518,9 +518,18 @@ class Window(
     def save_current(self):
         try:
             # Loose mode makes Ctrl+S one step: save the .py, compile, write back
-            # into the package. Unbound tabs keep the plain behaviour.
-            if self.save_mode() == LOOSE and self.can_loose_save():
-                self.loose_save()
+            # into the package. A tab that belongs to no bound module keeps the
+            # plain behaviour, but says so instead of looking like a no-op.
+            if self.save_mode() == LOOSE:
+                if self.can_loose_save():
+                    self.loose_save()
+                    return
+                self.save_tab(self.current())
+                self.statusBar().showMessage(
+                    "宽松模式：这条源码尚未关联包内条目，只保存了 .py；"
+                    "要写回原包请先「关联源码到选中条目」",
+                    10000,
+                )
                 return
             self.save_tab(self.current())
         except Exception as exc:
