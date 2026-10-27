@@ -451,22 +451,20 @@ class CorpusExportBoundaryTests(unittest.TestCase):
         self.package = Package(self.root)
 
     def test_one_unreadable_entry_is_recorded_and_the_rest_is_written(self):
-        from unittest.mock import MagicMock
-
         with ArchiveDocument(self.package.path) as archive:
             real = archive.read_stored
-            calls = {"n": 0}
 
             def read_stored(index):
-                calls["n"] += 1
                 if index == 1:
                     raise OSError("bad sector")
                 return real(index)
 
-            archive.read_stored = MagicMock(side_effect=read_stored)
-            manifest = export_corpus(
-                archive, self.root / "dec", catalog=self.package.catalog
-            )
+            # patch.object restores the attribute itself: the archive is not
+            # left monkeypatched once this test ends.
+            with patch.object(archive, "read_stored", side_effect=read_stored):
+                manifest = export_corpus(
+                    archive, self.root / "dec", catalog=self.package.catalog
+                )
         # Entry 1 is unreadable; entry 2 is the fixture's undecodable one.
         self.assertEqual([f["index"] for f in manifest["failures"]], [1, 2])
         self.assertIn("bad sector", manifest["failures"][0]["error"])
@@ -563,15 +561,21 @@ class ReviewFixTests(unittest.TestCase):
         second = self.window.add_source(self.root / "b.py", text="x = 2\n")
         self.window.find.setText("x")
         self.window.replacement.setText("value")
-        with patch(
-            "script_editor.gui.workspace_actions.QMessageBox.question",
-            return_value=(
-                __import__(
-                    "PySide6.QtWidgets", fromlist=["QMessageBox"]
-                ).QMessageBox.StandardButton.Yes
+        with (
+            patch(
+                "script_editor.gui.workspace_actions.QMessageBox.question",
+                return_value=(
+                    __import__(
+                        "PySide6.QtWidgets", fromlist=["QMessageBox"]
+                    ).QMessageBox.StandardButton.Yes
+                ),
             ),
+            patch(
+                "script_editor.gui.workspace_actions.QMessageBox.warning"
+            ) as warning,
         ):
             self.window.replace_in_files()
+        self.assertEqual(warning.call_count, 0)
         self.assertEqual(first.editor.toPlainText(), "value = 1\nprint(value)\n")
         self.assertEqual(second.editor.toPlainText(), "value = 2\n")
         self.assertIn("3 处", self.window.statusBar().currentMessage())
@@ -727,3 +731,199 @@ class ReviewFixTests(unittest.TestCase):
         self.assertIn(str(destination), info)
         self.assertIn("4 / 10", info)
         self.assertIn("新的导出目录", info)
+
+
+class CorpusExportPolicyTests(unittest.TestCase):
+    """Policy exclusion and write failures, at the export boundary."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="mxscript-policy-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+
+    def fake_archive(self, identities, vm="py25"):
+        reads = []
+
+        def read_stored(index):
+            reads.append(index)
+            return b"stored-bytes"
+
+        archive = SimpleNamespace(
+            vm=vm,
+            path=self.root / "script.fls",
+            entries=[
+                SimpleNamespace(directory=False, identity=identity)
+                for identity in identities
+            ],
+            fingerprint=lambda: "f" * 64,
+            read_stored=read_stored,
+            index=SimpleNamespace(
+                metas=[SimpleNamespace(w1=8) for _ in identities],
+                spans=[SimpleNamespace(usize=0, crc=0) for _ in identities],
+            ),
+        )
+        return archive, reads
+
+    def test_policy_excluded_entry_is_recorded_and_never_read(self):
+        # 1288 is excluded by decision: its payload must not even be read.
+        archive, reads = self.fake_archive([str(i) for i in range(1289)])
+        manifest = export_corpus(archive, self.root / "pol", mode="encrypted")
+        self.assertNotIn(1288, reads)
+        self.assertEqual(reads, list(range(1288)))
+        self.assertEqual([f["index"] for f in manifest["failures"]], [1288])
+        self.assertIn("excluded_by_policy", manifest["failures"][0]["error"])
+        self.assertEqual(manifest["entries_written"], 1288)
+
+    def test_a_failed_write_leaves_no_partial_file(self):
+        archive, _reads = self.fake_archive(["a", "b"], vm="py27")
+        with patch(
+            "script_editor.core.services.corpus_export.os.replace",
+            side_effect=OSError(5, "I/O error"),
+        ):
+            manifest = export_corpus(archive, self.root / "half", mode="encrypted")
+        self.assertEqual(manifest["entries_written"], 0)
+        self.assertEqual(len(manifest["failures"]), 2)
+        leftovers = [
+            p.name for p in (self.root / "half").iterdir()
+            if p.name != "manifest.json"
+        ]
+        self.assertEqual(leftovers, [])
+
+
+@unittest.skipIf(bool(QT_ERROR), "GUI未执行：" + QT_ERROR)
+class SecondReviewRoundTests(unittest.TestCase):
+    """The findings the second review round produced on the new code."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="mxscript-round2-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.home = self.root / "home"
+        self.home.mkdir()
+        patcher = patch.dict(os.environ, {"MXSCRIPT_HOME": str(self.home)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.package = Package(self.root)
+        self.window = Window(self.root)
+        self.addCleanup(self._close)
+        self.window.compilers["py25"] = Compiler(
+            Path(sys.executable), "py25", "unit-test", 64, "t"
+        )
+        self.window.add_archive(ArchiveDocument(self.package.path))
+        self.window.catalogs = [self.package.catalog]
+
+    def _close(self):
+        for i in range(self.window.tabs.count()):
+            self.window.tabs.widget(i).editor.document().setModified(False)
+        self.window.project_dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self.app.processEvents()
+
+    def draft(self, text, complete=True):
+        tab = self.window.add_source(
+            self.root / f".script.fls.0.{self.window.tabs.count()}draft.py",
+            text=text,
+            source_kind="recovered-draft",
+            vm="py25",
+        )
+        tab.draft_saved = False
+        report = SimpleNamespace(
+            source=text,
+            complete=complete,
+            archive=self.package.path,
+            current_archive=self.package.path,
+            target_archive=None,
+            index=0,
+            filename_hex=b"authored.py".hex(),
+            corpus_manifest_sha256="",
+            candidate_pyc_sha256="",
+            continue_after_build=lambda _report, _document: report,
+        )
+        tab.update_recovery_target(report)
+        return tab, report
+
+    def test_an_incomplete_draft_binds_once_the_user_finished_it(self):
+        partial = "# coding: utf-8\n# 恢复不完整：缺主体\n"
+        tab, report = self.draft(partial, complete=False)
+        with (
+            patch(COMPILE, fake_compile()),
+            patch("script_editor.core.services.workflow.audit_standard"),
+            patch.object(self.window, "task", side_effect=sync_task),
+        ):
+            with ArchiveDocument(self.package.path) as archive:
+                self.assertFalse(
+                    self.window.auto_adopt(tab, archive, 0, report)
+                )
+        self.assertEqual(self.window.bindings, [])
+        self.assertEqual(tab.binding_state, "unverified")
+        self.assertIn("恢复不完整", tab.mode_label.toolTip())
+
+        # The user completes the body; F5 must verify and then write.
+        tab.editor.setPlainText("# coding: utf-8\nVALUE = 7\n")
+        self.window.tabs.setCurrentWidget(tab)
+        errors = []
+        with (
+            patch(COMPILE, fake_compile()),
+            patch("script_editor.core.services.workflow.audit_standard"),
+            patch("script_editor.core.services.native_build.audit_standard"),
+            patch.object(self.window, "task", side_effect=sync_task),
+            patch.object(self.window, "fail", side_effect=errors.append),
+        ):
+            self.window.write_in_place()
+        self.assertEqual(errors, [])
+        self.assertEqual(len(self.window.bindings), 1)
+        self.assertNotEqual(self.package.path.read_bytes(), self.package.before)
+
+    def test_the_bound_source_is_the_canonical_path(self):
+        tab, report = self.draft("# coding: utf-8\nVALUE = 1\n")
+        with (
+            patch(COMPILE, fake_compile()),
+            patch("script_editor.core.services.workflow.audit_standard"),
+            patch.object(self.window, "task", side_effect=sync_task),
+        ):
+            with ArchiveDocument(self.package.path) as archive:
+                self.window.auto_adopt(tab, archive, 0, report)
+        binding = self.window.bindings[0]
+        self.assertEqual(tab.path, binding.source)
+        self.assertTrue(tab.path.is_absolute())
+        self.assertEqual(tab.path, tab.path.resolve())
+
+    def test_replace_in_files_follows_whole_words_and_case(self):
+        tab = self.window.add_source(
+            self.root / "words.py", text="x = 1\nmax = 2\nX = 3\n"
+        )
+        self.window.find.setText("x")
+        self.window.replacement.setText("value")
+        self.window.whole_words.setChecked(True)
+        with (
+            patch(
+                "script_editor.gui.workspace_actions.QMessageBox.question",
+                return_value=(
+                    __import__(
+                        "PySide6.QtWidgets", fromlist=["QMessageBox"]
+                    ).QMessageBox.StandardButton.Yes
+                ),
+            ),
+        ):
+            self.window.replace_in_files()
+        self.assertEqual(tab.editor.toPlainText(), "value = 1\nmax = 2\nX = 3\n")
+
+        # Case-sensitive pass: X is a different word now.
+        self.window.match_case.setChecked(True)
+        with patch(
+            "script_editor.gui.workspace_actions.QMessageBox.question",
+            return_value=(
+                __import__(
+                    "PySide6.QtWidgets", fromlist=["QMessageBox"]
+                ).QMessageBox.StandardButton.Yes
+            ),
+        ):
+            self.window.find.setText("X")
+            self.window.replacement.setText("big")
+            self.window.replace_in_files()
+        self.assertEqual(tab.editor.toPlainText(), "value = 1\nmax = 2\nbig = 3\n")

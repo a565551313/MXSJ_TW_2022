@@ -15,14 +15,18 @@ manifest records the package digest so a corpus can be traced to its source.
 
 from __future__ import annotations
 
+import errno
 import hashlib
 import json
+import os
 import re
+import tempfile
 import zlib
 from dataclasses import dataclass
 from pathlib import Path
 
 from ..inspection.native import inspect_module
+from ..policy import require_module_allowed
 from ..vm.compression import inflate
 from ..vm.py25.keys import inflate_script
 
@@ -56,7 +60,17 @@ def _write(destination: Path, name: str, data: bytes) -> ExportedEntry:
     # whatever an archive says its entries are called.
     if destination.resolve() not in path.parents:
         raise ValueError(f"导出文件名越界：{name}")
-    path.write_bytes(data)
+    # Write beside the target and rename: a half-written entry (full disk, a
+    # kill) must never be left looking like a complete corpus file.
+    descriptor, temporary = tempfile.mkstemp(prefix=".mxcorpus-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
     return ExportedEntry(0, name, "", len(data), hashlib.sha256(data).hexdigest())
 
 
@@ -98,6 +112,9 @@ def export_corpus(
         try:
             # Reading and writing belong inside the boundary too: one unreadable
             # entry or one full disk must not cost the rest of the corpus.
+            # Policy first: an excluded entry must not have its payload read or
+            # written at all (1288 is excluded by decision, not by accident).
+            require_module_allowed(archive.vm, index)
             stored = archive.read_stored(index)
             if mode == ENCRYPTED:
                 name = f"{index:05d}.bin"
@@ -109,6 +126,10 @@ def export_corpus(
         except Exception as exc:  # noqa: BLE001 - recorded per entry
             failures.append({"index": index, "identity": entry.identity,
                              "error": str(exc)})
+            if isinstance(exc, OSError) and exc.errno == errno.ENOSPC:
+                # A full disk fails every further write too: stop, and let the
+                # manifest say how far we got instead of leaving a hung loop.
+                break
             continue
         entries.append(
             ExportedEntry(
@@ -137,9 +158,17 @@ def export_corpus(
             for item in entries
         ],
     }
-    (destination / "manifest.json").write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    try:
+        (destination / "manifest.json").write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+    except OSError as exc:
+        # The files are already on disk; say where they are instead of letting
+        # the caller report a bare "export failed".
+        raise ValueError(
+            f"语料已写出 {len(entries)} / {total} 条，但清单 manifest.json 写不进去"
+            f"（{exc}）；文件仍在 {destination}，可先移走再重试"
+        ) from exc
     if progress is not None:
         progress(total, total, "导出语料")
     return manifest

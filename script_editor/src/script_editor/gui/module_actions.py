@@ -240,7 +240,11 @@ class ModuleActions:
         this package) leaves no orphan files behind. ``then`` runs after a
         successful bind — that is how ``F5`` retries a corrected draft.
         """
-        if not report.source or not report.complete:
+        # ``report.complete`` describes the engine output and never changes, so
+        # an incomplete draft may only be retried once the user has edited the
+        # text: the real compile + native round-trip is what decides then.
+        edited = tab.editor.toPlainText() != report.source
+        if not report.source or (not report.complete and not edited):
             tab.set_binding_state(
                 "unverified", "恢复不完整；补齐后按 F5 会重新校验"
             )
@@ -277,7 +281,10 @@ class ModuleActions:
             # so the copy is published here and removed again if the build that
             # is supposed to justify it does not survive.
             fresh = not same_text()
-            path = save_working_source(target, text, protected)
+            # Canonical path: Binding.associate stores resolve(strict=True), and
+            # a relative/symlinked MXSCRIPT_HOME would otherwise leave tab.path
+            # and binding.source describing the same file in two ways.
+            path = save_working_source(target, text, protected).resolve()
             try:
                 binding = replace(
                     Binding.associate(archive, index, path),

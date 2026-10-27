@@ -542,6 +542,9 @@ class Window(
         try:
             if path.exists():
                 raise ValueError(f"{path.name} 已存在；新建不会覆盖文件")
+            # Same guard as 另存为/另存草稿/导出：a file dialog may point at a
+            # read-only corpus directory, and新建 must not write into it.
+            self.assert_writable_target(path)
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(
                 "# coding: utf-8\n# 本机源码：UTF-8；保存用 Ctrl+S，写包用 F5\n",

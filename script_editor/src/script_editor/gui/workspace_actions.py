@@ -356,24 +356,49 @@ class WorkspaceActions:
         self.output_dock.show()
         self.statusBar().showMessage(f"在文件中查找：{len(hits)} 处", 6000)
 
+    def text_matches(self, document, needle):
+        """Match ranges in ``document`` under the search bar's own options.
+
+        ``str.replace`` would ignore 「区分大小写」/「全字匹配」, so replacing
+        ``x``→``value`` with whole words on would also rewrite ``max`` — and the
+        count would disagree with what 单文件替换 would do.
+        """
+        cursor = QTextCursor(document)
+        ranges = []
+        while True:
+            cursor = document.find(needle, cursor, self.search_flags())
+            if cursor.isNull():
+                return ranges
+            ranges.append((cursor.selectionStart(), cursor.selectionEnd()))
+            if len(ranges) > 10000:  # a pathological file must not hang the UI
+                return ranges
+
     def replace_in_files(self):
         """Replace across open editable sources, one undo step per file."""
         needle, replacement = self.find.text(), self.replacement.text()
         if not needle:
             self.statusBar().showMessage("先在上方输入要替换的文本", 6000)
             return
-        targets = [
-            tab for tab in self.source_tabs() if needle in tab.editor.toPlainText()
-        ]
+        targets = []
+        for tab in self.source_tabs():  # 参考稿只读，本就不在其中
+            ranges = self.text_matches(tab.editor.document(), needle)
+            if ranges:
+                targets.append((tab, ranges))
         if not targets:
             self.statusBar().showMessage("已打开的源码里没有这个文本", 6000)
             return
+        rules = []
+        if self.match_case.isChecked():
+            rules.append("区分大小写")
+        if self.whole_words.isChecked():
+            rules.append("全字匹配")
+        rule_note = ("（按上方勾选：" + "、".join(rules) + "）") if rules else ""
         if (
             QMessageBox.question(
                 self,
                 "在文件中替换",
                 f"将在 {len(targets)} 个已打开的源码里替换「{needle}」"
-                f"→「{replacement}」。\n每个文件可用一次 Ctrl+Z 撤销；"
+                f"→「{replacement}」{rule_note}。\n每个文件可用一次 Ctrl+Z 撤销；"
                 "不会保存，也不会写包。继续？",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
@@ -382,19 +407,16 @@ class WorkspaceActions:
         ):
             return
         total = 0
-        for tab in targets:
-            text = tab.editor.toPlainText()
-            new_text = text.replace(needle, replacement)
+        for tab, ranges in targets:
             cursor = QTextCursor(tab.editor.document())
             cursor.beginEditBlock()
-            # Select the whole document first: inserting at Start with an empty
-            # selection only prepends the new text and leaves the old text in
-            # place, which duplicated every line of the file.
-            cursor.select(QTextCursor.SelectionType.Document)
-            cursor.insertText(new_text)
+            # Back to front: earlier offsets stay valid while later ones change.
+            for start, end in reversed(ranges):
+                cursor.setPosition(start)
+                cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
+                cursor.insertText(replacement)
             cursor.endEditBlock()
-            if tab.editor.toPlainText() == new_text:
-                total += text.count(needle)
+            total += len(ranges)
         self.statusBar().showMessage(
             f"已在 {len(targets)} 个文件里替换 {total} 处 · 未保存", 8000
         )
