@@ -6,6 +6,7 @@ absent), and nothing may produce source text that a caller could save.
 
 from __future__ import annotations
 
+import time
 import unittest
 
 from script_editor.core.inspection.legacy_text import (
@@ -166,6 +167,20 @@ class SourceScanTests(unittest.TestCase):
         # reading that never ships in the package.
         self.assertEqual(readings(r"""u'\xa5u\xaf\xe0'"""), ())
         self.assertEqual(previews(r"""u'\xa5u\xaf\xe0'"""), ())
+
+    def test_pathological_line_stays_linear(self):
+        """A long line of escaped quotes used to be quadratic (0.8 s / 16 KB).
+
+        Hovering one physical line must never freeze the editor, so this pins
+        the scanner's cost rather than its output. The bound is deliberately
+        loose (200 KB in well under a second); the quadratic version needed
+        minutes at this size.
+        """
+        line = "x = '" + ("aaa\\'") * 50_000
+        self.assertGreater(len(line), 200_000)
+        started = time.perf_counter()
+        self.assertEqual(line_previews(line), ())
+        self.assertLess(time.perf_counter() - started, 1.0)
 
     def test_raw_prefixed_literal_gets_no_reading(self):
         self.assertEqual(readings(r"""r'\xa5u\xaf'"""), ())

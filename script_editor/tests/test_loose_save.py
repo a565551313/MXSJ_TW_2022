@@ -255,6 +255,39 @@ class LooseSaveTests(Fixture, unittest.TestCase):
             self.publish(plan, state=state, in_place=True)
         self.assertEqual(self.archive.read_bytes(), seeded)
 
+    def test_mixed_save_refreshes_the_baseline_of_unchanged_modules_too(self):
+        """Otherwise the "unchanged" module stays a candidate on every save."""
+        texts = {0: "VALUE = 100\n", 1: "VALUE = 200\n"}
+        report, _ = self.publish(self.prepare(texts), in_place=True)
+        digest = report.output_sha256
+        state = ProjectState(
+            tuple(
+                binding_for(self.archive, digest, b.index, b.identity, b.source)
+                for b in self.bindings
+            ),
+            (CatalogRef(self.archive, digest, self.catalog_file, self.catalog.sha256),),
+        )
+        changed = {0: "VALUE = 999\n", 1: "VALUE = 200\n"}
+        plan = self.prepare(
+            changed,
+            bindings=state.bindings,
+            catalog=state.catalogs[0],
+            seeds={changed[0]: 9, changed[1]: 2},
+        )
+        _, new_state = self.publish(plan, state=state, in_place=True)
+        baselines = {b.index: b.built_source_sha256 for b in new_state.bindings}
+        self.assertEqual(baselines[0], text_sha(changed[0]))
+        # Entry 1 was not written, but its text is what the package holds now.
+        self.assertEqual(baselines[1], text_sha(changed[1]))
+        # A second save with the same texts therefore has nothing left to do.
+        again = self.prepare(
+            changed,
+            bindings=new_state.bindings,
+            catalog=new_state.catalogs[0],
+            seeds={changed[0]: 9, changed[1]: 2},
+        )
+        self.assertEqual(again.entries, ())
+
     def test_mixed_packages_are_rejected(self):
         other = self.root / "other.fls"
         other.write_bytes(script_fixture()[0])

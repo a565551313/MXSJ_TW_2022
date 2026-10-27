@@ -254,6 +254,14 @@ def publish_package(
         in_place=in_place,
         backup=backup,
     )
+    # Index -> source digest whose bytes the package now holds. Written entries
+    # come from the plan; ``unchanged`` ones compiled to the bytes that were
+    # already stored, so their new text is the baseline too. Leaving those stale
+    # would make every later save recompile the same modules and keep counting
+    # them as candidates. Bindings are unique per (archive, index) — enforced
+    # above — so an index identifies exactly one binding.
+    written = {entry.snapshot.binding.index: entry for entry in plan.entries}
+    same_bytes = dict(plan.unchanged)
     bindings, catalogs = [], []
     for item in state.bindings:
         if item.archive == plan.archive:
@@ -262,14 +270,19 @@ def publish_package(
                 archive=report.output.resolve(),
                 fingerprint=report.output_sha256,
             )
-            for entry in plan.entries:
-                binding = entry.snapshot.binding
-                if binding.index == item.index and binding.source == item.source:
-                    item = replace(
-                        item,
-                        filename_hex=entry.filename.hex(),
-                        built_source_sha256=entry.source_sha256,
-                    )
+            entry = written.get(item.index)
+            if entry is not None and entry.snapshot.binding.source != item.source:
+                entry = None  # Another source file now owns this entry.
+            if entry is not None:
+                item = replace(
+                    item,
+                    filename_hex=entry.filename.hex(),
+                    built_source_sha256=entry.source_sha256,
+                )
+            elif item.index in same_bytes:
+                item = replace(
+                    item, built_source_sha256=same_bytes[item.index]
+                )
         bindings.append(item)
     for ref in state.catalogs:
         if ref.archive == plan.archive:
