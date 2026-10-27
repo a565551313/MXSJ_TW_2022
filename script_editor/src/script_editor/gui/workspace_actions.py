@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QLineEdit,
     QMenu,
+    QMessageBox,
     QStyle,
     QTreeWidgetItem,
 )
@@ -22,19 +23,24 @@ class WorkspaceActions:
         tab = self.tabs.currentWidget()
         self.pages.setCurrentWidget(self.tabs if tab else self.welcome)
         editable = bool(tab and not tab.reference and not self.jobs)
-        for key in ("save", "associate", "big5", "gbk"):
-            self.ui_actions[key].setEnabled(editable)
-        self.ui_actions["standard"].setEnabled(
-            bool(editable and tab.vm.currentData() in self.compilers)
-        )
+        for key in ("save", "save_as", "big5", "gbk", "cut", "copy", "paste"):
+            action = self.ui_actions.get(key)
+            if action is not None:
+                action.setEnabled(editable)
         self.ui_actions["undo"].setEnabled(
             bool(editable and tab.editor.document().isUndoAvailable())
         )
         self.ui_actions["redo"].setEnabled(
             bool(editable and tab.editor.document().isRedoAvailable())
         )
-        for key in ("find", "goto", "developer"):
-            self.ui_actions[key].setEnabled(bool(tab and not self.jobs))
+        for key in ("find", "replace", "find_in_files", "replace_in_files"):
+            action = self.ui_actions.get(key)
+            if action is not None:
+                action.setEnabled(bool(tab and not self.jobs))
+        for key in ("export_decrypted", "export_encrypted"):
+            action = self.ui_actions.get(key)
+            if action is not None:
+                action.setEnabled(bool(self.archives and not self.jobs))
         self.compiler_status.setText(f"编译器 {len(self.compilers)}/2 已探测")
         self.file_status.setText(
             "恢复草稿（可编辑，待核验）"
@@ -47,10 +53,8 @@ class WorkspaceActions:
             if tab
             else "未打开源码"
         )
-        loose = getattr(self, "loose_mode", lambda: False)()
         self.package_count.setText(
-            f"{len(self.archives)} 个包 · "
-            + ("宽松：Ctrl+S 写回原包" if loose else "原包只读")
+            f"{len(self.archives)} 个包 · F5 写回 / F6 另存"
         )
         self.refresh_package_labels()
         self.update_cursor()
@@ -210,7 +214,9 @@ class WorkspaceActions:
                 ("行数", str(tab.editor.blockCount())),
             ]
             binding = self.active_binding()
-            rows.append(("关联", "与所选条目匹配" if binding else "未与所选条目关联"))
+            rows.append(
+                ("写入目标", "可写回所选条目" if binding else "未绑定条目（不可写包）")
+            )
             if len(text) + len(tab.opened_text) > 500_000:
                 self.diff.setPlainText(
                     "大型源码暂停自动差异/大纲/引用扫描；编辑、保存和严格构建不受影响。"
@@ -301,6 +307,91 @@ class WorkspaceActions:
         self.find.setFocus()
         self.find.selectAll()
 
+    def show_replace(self):
+        """Ctrl+H: same bar as find, with the replacement row already visible."""
+        self.show_search()
+        self.replacement.setFocus()
+        self.replacement.selectAll()
+
+    def source_tabs(self):
+        """Editable, non-reference tabs in opening order."""
+        tabs = []
+        for index in range(self.tabs.count()):
+            tab = self.tabs.widget(index)
+            if not tab.reference:
+                tabs.append(tab)
+        return tabs
+
+    def find_in_files(self):
+        """List every match in the open sources; nothing is modified."""
+        needle = self.find.text().strip()
+        if not needle:
+            self.show_search()
+            self.statusBar().showMessage("先在上方输入要查找的文本", 6000)
+            return
+        hits, wrapped = [], 0
+        for tab in self.source_tabs():
+            text = tab.editor.toPlainText()
+            start = 0
+            while True:
+                found = text.find(needle, start)
+                if found < 0:
+                    break
+                line = text.count("\n", 0, found) + 1
+                hits.append(f"{tab.path.name}:{line}: {needle}")
+                start = found + len(needle)
+                wrapped += 1
+                if wrapped > 5000:
+                    break
+            if wrapped > 5000:
+                break
+        self.info.setPlainText(
+            (f"在已打开的源码中找到 {len(hits)} 处：\n\n" if hits
+             else "已打开的源码里没有这个文本：")
+            + "\n".join(hits)
+        )
+        self.output_tabs.setCurrentWidget(self.info)
+        self.output_dock.show()
+        self.statusBar().showMessage(f"在文件中查找：{len(hits)} 处", 6000)
+
+    def replace_in_files(self):
+        """Replace across open editable sources, one undo step per file."""
+        needle, replacement = self.find.text(), self.replacement.text()
+        if not needle:
+            self.statusBar().showMessage("先在上方输入要替换的文本", 6000)
+            return
+        targets = [
+            tab for tab in self.source_tabs() if needle in tab.editor.toPlainText()
+        ]
+        if not targets:
+            self.statusBar().showMessage("已打开的源码里没有这个文本", 6000)
+            return
+        if (
+            QMessageBox.question(
+                self,
+                "在文件中替换",
+                f"将在 {len(targets)} 个已打开的源码里替换「{needle}」"
+                f"→「{replacement}」。\n每个文件可用一次 Ctrl+Z 撤销；"
+                "不会保存，也不会写包。继续？",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            != QMessageBox.StandardButton.Yes
+        ):
+            return
+        total = 0
+        for tab in targets:
+            text = tab.editor.toPlainText()
+            total += text.count(needle)
+            cursor = QTextCursor(tab.editor.document())
+            cursor.beginEditBlock()
+            cursor.movePosition(QTextCursor.MoveOperation.Start)
+            cursor.insertText(text.replace(needle, replacement))
+            cursor.endEditBlock()
+        self.statusBar().showMessage(
+            f"已在 {len(targets)} 个文件里替换 {total} 处 · 未保存", 8000
+        )
+
     def search_flags(self, backwards=False):
         flags = QTextDocument.FindFlag(0)
         if self.match_case.isChecked():
@@ -364,15 +455,5 @@ class WorkspaceActions:
         menu.addAction("打开条目 / 恢复源码", self.open_associated)
         menu.addAction(
             "重新读取未恢复条目", lambda: self.open_package_module(reload=True)
-        )
-        menu.addAction("另开语料候选（保留当前稿）", self.open_corpus_module)
-        associate = menu.addAction("关联当前源码到此条目…", self.associate)
-        associate.setEnabled(
-            bool(
-                self.selected()
-                and self.tabs.currentWidget()
-                and not self.tabs.currentWidget().reference
-                and not self.jobs
-            )
         )
         menu.exec(self.tree.viewport().mapToGlobal(point))

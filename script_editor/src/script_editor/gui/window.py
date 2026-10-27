@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import replace
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QThreadPool, QTimer
@@ -30,12 +31,11 @@ from .build_actions import BuildActions
 from .corpus_actions import CorpusActions
 from .jobs import Job, Progress
 from .literal_preview import LiteralReportDialog
-from .loose_save import LooseSaveMixin
 from .module_actions import ModuleActions
 from .project_actions import ProjectActions
-from .save_mode import LOOSE, SaveModeMixin
 from .source_tab import SourceTab
 from .workspace import HEAVY_ENTRY_BYTES, Workspace
+from .write_package import WritePackageMixin
 
 
 class Window(
@@ -44,15 +44,13 @@ class Window(
     ProjectActions,
     BuildActions,
     CorpusActions,
-    SaveModeMixin,
-    LooseSaveMixin,
+    WritePackageMixin,
     QMainWindow,
 ):
     def __init__(self, runtime_root: Path, settings=None):
         super().__init__()
         self.runtime_root = runtime_root
         self.settings = settings
-        self._init_save_mode()
         self.archives: list[ArchiveDocument] = []
         self.bindings = []
         self.catalogs = []
@@ -85,9 +83,7 @@ class Window(
         self.tabs.currentChanged.connect(self.refresh_native_action)
         self.refresh_native_action()
         self.statusBar().showMessage(
-            "就绪 · 严格模式：F6 生成新包，原包只读"
-            if self.save_mode() != LOOSE
-            else "就绪 · 宽松模式：Ctrl+S 直接写回原包（覆盖前留 .fls.bak）"
+            "就绪 · 双击包内条目开始编辑；F5 写入原包 / F6 生成新包"
         )
         if settings is not None:
             try:
@@ -373,6 +369,73 @@ class Window(
                 + "\n双击读取包内模块并尝试恢复；草稿可编辑另存，写包前须检查并采用。"
             )
 
+    def open_archive_dir(self):
+        """打开脚本目录：把该目录（含一层子目录）里的 .fls 全部打开。"""
+        directory = QFileDialog.getExistingDirectory(self, "打开脚本目录")
+        if not directory:
+            return
+        root = Path(directory)
+        files = sorted(
+            {*root.glob("*.fls"), *root.glob("*/*.fls")},
+            key=lambda path: str(path).lower(),
+        )
+        if not files:
+            self.statusBar().showMessage("该目录下没有 .fls", 6000)
+            return
+        known = {a.path.resolve() for a in self.archives}
+        todo = [path for path in files if path.resolve() not in known]
+        if not todo:
+            self.statusBar().showMessage("该目录里的包都已经打开", 6000)
+            return
+
+        def prepare():
+            documents = []
+            for path in todo:
+                document = ArchiveDocument(path)
+                try:
+                    catalog, warning, check = resolve_catalog(
+                        document,
+                        self.runtime_root,
+                        self.verdict_cache,
+                        progress=self.progress.update,
+                    )
+                    if catalog is None:
+                        index_script_paths(document, None)
+                    elif not document.module_paths:
+                        index_with_cache(
+                            document,
+                            catalog,
+                            self.verdict_cache,
+                            tool_version=__version__,
+                            progress=self.progress.update,
+                        )
+                except Exception:  # noqa: BLE001 - keep the other packages
+                    document.close()
+                    continue
+                documents.append((document, catalog))
+            self.progress.finish()
+            return documents
+
+        def complete(documents):
+            opened = 0
+            for document, catalog in documents:
+                try:
+                    self.add_archive(document)
+                except Exception:  # noqa: BLE001
+                    document.close()
+                    continue
+                if catalog is not None and not any(
+                    c.archive == document.path for c in self.catalogs
+                ):
+                    self.catalogs.append(catalog)
+                opened += 1
+            self.project_dirty = True
+            self.statusBar().showMessage(
+                f"已打开 {opened} 个包（共 {len(self.archives)} 个）", 10000
+            )
+
+        self.task(prepare, complete)
+
     def add_source(
         self,
         path,
@@ -419,7 +482,6 @@ class Window(
         tab.editor.cursorPositionChanged.connect(self.update_cursor)
         tab.vm.currentIndexChanged.connect(self.refresh_native_action)
         tab.vm.currentIndexChanged.connect(lambda: setattr(self, "project_dirty", True))
-        tab.adopt_button.clicked.connect(self.adopt_recovery)
         self.refresh_tab_title(tab)
         self.refresh_native_action()
         return tab
@@ -438,6 +500,91 @@ class Window(
         )
         self.tabs.setTabText(self.tabs.indexOf(tab), label)
         self.tabs.setTabToolTip(self.tabs.indexOf(tab), str(tab.path))
+
+    # -- local .py files ------------------------------------------------
+    def new_source_file(self):
+        """新建 .py：先问文件名，再打开一个空标签。"""
+        name, _ = QFileDialog.getSaveFileName(
+            self, "新建 .py（不得覆盖已有文件）", "untitled.py", "Python (*.py)"
+        )
+        if not name:
+            return
+        path = Path(name if name.lower().endswith(".py") else name + ".py")
+        try:
+            if path.exists():
+                raise ValueError(f"{path.name} 已存在；新建不会覆盖文件")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                "# coding: utf-8\n# 本机源码：UTF-8；保存用 Ctrl+S，写包用 F5\n",
+                encoding="utf-8",
+            )
+            self.add_source(path)
+            self.statusBar().showMessage(f"已新建 {path.name}", 6000)
+        except Exception as exc:
+            self.fail(exc)
+
+    def open_source_dir(self):
+        """打开 .py 目录：把该目录下所有 .py 依次打开（只读的不会混进来）。"""
+        directory = QFileDialog.getExistingDirectory(self, "打开 .py 目录")
+        if not directory:
+            return
+        files = sorted(Path(directory).glob("*.py"))
+        if not files:
+            self.statusBar().showMessage("该目录下没有 .py 文件", 6000)
+            return
+        opened, failed = 0, []
+        for path in files:
+            try:
+                self.add_source(path, source_kind=self._source_kind_for(path))
+                opened += 1
+            except Exception as exc:  # noqa: BLE001 - one bad file, keep going
+                failed.append(f"{path.name}: {exc}")
+        message = f"已打开 {opened} 个 .py"
+        if failed:
+            message += "；" + "；".join(failed[:5])
+        self.statusBar().showMessage(message, 12000)
+
+    def save_source_as(self):
+        """另存为：写到新路径，并把标签指向新文件。"""
+        try:
+            tab = self.editable()
+            name, _ = QFileDialog.getSaveFileName(
+                self, "另存为（不得覆盖已有文件）", tab.path.name, "Python (*.py)"
+            )
+            if not name:
+                return
+            target = Path(name if name.lower().endswith(".py") else name + ".py")
+            if target.exists() and target.resolve() != tab.path.resolve():
+                raise ValueError(f"{target.name} 已存在；另存为不会覆盖文件")
+            self.assert_writable_target(target)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(tab.editor.toPlainText(), encoding="utf-8")
+            old = tab.path
+            tab.path = target.resolve()
+            tab.source_revision = SourceRevision.capture(tab.path)
+            tab.draft_saved = True
+            tab.editor.document().setModified(False)
+            # A bound module keeps its binding, pointed at the new file.
+            self.bindings = [
+                replace(binding, source=tab.path) if binding.source == old else binding
+                for binding in self.bindings
+            ]
+            self.refresh_tab_title(tab)
+            self.project_dirty = True
+            self.statusBar().showMessage(f"已另存为 {tab.path.name}", 8000)
+        except Exception as exc:
+            self.fail(exc)
+
+    @staticmethod
+    def _source_kind_for(path):
+        """Decompiler output is a draft, not an authored source, from the start."""
+        try:
+            head = path.read_text(encoding="utf-8").splitlines()[:3]
+        except (OSError, UnicodeError):
+            return None
+        if any("MXSJ-RECOVERED-DRAFT" in line for line in head):
+            return "recovered-draft"
+        return None
 
     def open_source(self):
         name, _ = QFileDialog.getOpenFileName(
@@ -527,22 +674,10 @@ class Window(
         tab.editor.document().setModified(False)
 
     def save_current(self):
+        """Ctrl+S saves the .py. Writing the package is F5, a separate verb."""
         try:
-            # Loose mode makes Ctrl+S one step: save the .py, compile, write back
-            # into the package. A tab that belongs to no bound module keeps the
-            # plain behaviour, but says so instead of looking like a no-op.
-            if self.save_mode() == LOOSE:
-                if self.can_loose_save():
-                    self.loose_save_checked()
-                    return
-                self.save_tab(self.current())
-                self.statusBar().showMessage(
-                    "宽松模式：这条源码尚未关联包内条目，只保存了 .py；"
-                    "要写回原包请先「关联源码到选中条目」",
-                    10000,
-                )
-                return
             self.save_tab(self.current())
+            self.statusBar().showMessage(f"已保存 {self.current().path.name}", 5000)
         except Exception as exc:
             self.fail(exc)
 
@@ -667,9 +802,6 @@ class Window(
         if self.jobs or not all(
             self.confirm_tab(self.tabs.widget(i)) for i in range(self.tabs.count())
         ):
-            event.ignore()
-            return
-        if not self.confirm_project():
             event.ignore()
             return
         self.analysis_timer.stop()

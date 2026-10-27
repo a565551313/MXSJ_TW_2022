@@ -104,6 +104,41 @@ def save_new_source(path: Path, text: str, protected: Iterable[Path] = ()) -> No
     publish_new(path, text.encode("utf-8"), protected)
 
 
+def default_source_root() -> Path:
+    """Where auto-bound working copies live (never inside a client install)."""
+    base = os.environ.get("MXSCRIPT_HOME")
+    root = Path(base) if base else Path.home() / ".mxscript"
+    return root / "sources"
+
+
+def save_working_source(
+    path: Path, text: str, protected: Iterable[Path] = ()
+) -> Path:
+    """Write a working copy, never overwriting a file with different content.
+
+    Re-opening the same module must reuse its working copy; a genuinely
+    different text keeps both by taking the next free ``-2``, ``-3`` name.
+    """
+    path = Path(path)
+    if path.is_file():
+        try:
+            if path.read_text(encoding="utf-8") == text:
+                return path
+        except (OSError, UnicodeError):
+            pass
+        for number in range(2, 100):
+            candidate = path.with_name(f"{path.stem}-{number}{path.suffix}")
+            if not candidate.exists():
+                path = candidate
+                break
+        else:
+            raise ValueError("自动工作副本重名过多；请先整理该目录")
+    else:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    save_new_source(path, text, protected)
+    return path
+
+
 def publish_new(path: Path, data: bytes, protected: Iterable[Path] = ()) -> None:
     """Atomic no-clobber publication of a new document; never an input alias."""
     protected = tuple(protected)

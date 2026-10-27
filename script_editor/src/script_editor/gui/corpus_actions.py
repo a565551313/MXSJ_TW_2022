@@ -1,4 +1,12 @@
-"""Explicit corpus import. Nothing downloaded/executed; new verified catalogs only."""
+"""语料导出：把一个包的全部条目倒成一个目录。
+
+Nothing is executed and nothing is written back into a package; the two menu
+entries differ only in whether the stored bytes are decrypted first.
+
+The older import/verify entry points are kept as internal APIs (the corpus
+import path is still used by recovery), but they are no longer exposed in the
+menu — the visible 语料 menu is two exports.
+"""
 
 from __future__ import annotations
 
@@ -22,6 +30,60 @@ class CorpusActions:
             for r in self.corpus_refs
         ):
             raise ValueError("语料目录只读；请另存到工作目录")
+
+    def export_corpus(self, *, encrypted):
+        """导出全量（加密/解密）语料——整个包，逐条写文件 + manifest。"""
+        if self.jobs:
+            return
+        archive = self.selected_archive()
+        if archive is None:
+            self.fail("先在左侧选一个包，再导出语料")
+            return
+        label = "加密" if encrypted else "解密"
+        name = QFileDialog.getExistingDirectory(
+            self, f"选择导出位置（会在其中新建 corpus-{label} 目录）"
+        )
+        if not name:
+            return
+        destination = Path(name) / f"corpus-{'encrypted' if encrypted else 'decrypted'}"
+        try:
+            self.assert_writable_target(destination)
+            if destination.exists():
+                raise ValueError(f"{destination.name} 已存在；请换个目录或先移走它")
+        except (OSError, ValueError) as exc:
+            self.fail(exc)
+            return
+        catalog = self.catalog_for(archive)
+        cancel = Event()
+
+        def work():
+            from ..core.services.corpus_export import export_corpus
+
+            return export_corpus(
+                archive,
+                destination,
+                mode="encrypted" if encrypted else "decrypted",
+                catalog=catalog,
+                progress=self.progress.update,
+                cancel=cancel,
+            )
+
+        def complete(manifest):
+            failed = len(manifest["failures"])
+            self.info.setPlainText(
+                f"已导出{label}语料：{destination}\n"
+                f"条目 {manifest['entries_written']} / {manifest['entries_total']} 条；"
+                f"失败 {failed} 条\n"
+                f"清单：{destination / 'manifest.json'}\n"
+                f"原包 SHA256：{manifest['archive_sha256']}\n"
+                "只读取原包；未执行任何模块，未改动包内字节。"
+            )
+            self.output_tabs.setCurrentWidget(self.info)
+            self.statusBar().showMessage(
+                f"{label}语料导出完成：{manifest['entries_written']} 条", 9000
+            )
+
+        self.task(work, complete, cancel=cancel)
 
     def import_corpus(self):
         archive = self.selected_archive()

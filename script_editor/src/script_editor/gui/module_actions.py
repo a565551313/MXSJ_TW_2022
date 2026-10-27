@@ -9,8 +9,14 @@ from threading import Event
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
+from ..core.inspection.native import inspect_module
 from ..core.project.document import Binding
-from ..core.services.files import SourceRevision, save_new_source
+from ..core.services.files import (
+    SourceRevision,
+    default_source_root,
+    save_new_source,
+    save_working_source,
+)
 from ..core.services.module_browser import read_module
 from ..core.services.module_paths import display_module_path
 from ..core.services.workflow import Snapshot, prepare_build
@@ -83,6 +89,7 @@ class ModuleActions:
                     pass  # An invalid name must not discard a recovered draft.
             if report.source:
                 tab.editor.document().setModified(True)
+                self.auto_adopt(tab, archive, index, report)
             self.info.setPlainText(
                 (
                     "恢复引擎已返回文本（非原始源码，尚未编译核验）"
@@ -170,6 +177,9 @@ class ModuleActions:
         tab.attach_report(report)
         tab.candidate_requested.connect(self.open_recovery_candidate)
         tab.editor.document().setModified(True)
+        archive = next((a for a in self.archives if a.path == report.archive), None)
+        if archive is not None:
+            self.auto_adopt(tab, archive, report.index, report)
         return tab
 
     def save_draft(self, tab):
@@ -199,6 +209,97 @@ class ModuleActions:
         tab.editor.document().setModified(False)
         self.refresh_tab_title(tab)
         return True
+
+    # -- automatic verification + binding ------------------------------
+    def auto_source_path(self, archive, index, report):
+        """Where the auto-bound working copy lives (outside any client dir)."""
+        stem = f"{index:05d}"
+        if report.filename_hex:
+            try:
+                from ..core.services.module_paths import display_module_path
+
+                name = display_module_path(bytes.fromhex(report.filename_hex))
+                stem += "_" + Path(name).stem
+            except ValueError:
+                pass
+        return default_source_root() / Path(archive.path).stem / (stem + ".py")
+
+    def auto_adopt(self, tab, archive, index, report):
+        """Compile-verify a fresh draft and bind it; no dialog, no button.
+
+        The verification is the same one "检查并采用" used to run (real compile,
+        strict native round-trip, full read-back). What is gone is the step
+        where the user had to know that such a step existed.
+        """
+        if not report.source or not report.complete:
+            tab.set_binding_state(
+                "unverified", "恢复不完整；编辑后仍可点「写入原包」，会重新校验"
+            )
+            return
+        compiler = self.compilers.get(archive.vm)
+        if compiler is None:
+            tab.set_binding_state(
+                "no-compiler", "工具栏「检查编译器」通过后，下次打开会自动校验并绑定"
+            )
+            return
+        catalog = self.catalog_for(archive)
+        text = tab.editor.toPlainText()
+        target = self.auto_source_path(archive, index, report)
+        protected = (
+            tuple(a.path for a in self.archives)
+            + tuple(c.path for c in self.catalogs)
+            + tuple(b.source for b in self.bindings)
+        )
+        tab.set_binding_state("verifying")
+
+        def work():
+            path = save_working_source(target, text, protected)
+            binding = Binding.associate(archive, index, path)
+            standard, filename, _ = inspect_module(archive, index, catalog)
+            binding = replace(
+                binding,
+                filename_hex=filename.hex(),
+                source_kind="recovered-reviewed",
+                recovery_sha256=hashlib.sha256(standard).hexdigest(),
+            )
+            plan = prepare_build(
+                Snapshot(binding, text, archive.vm),
+                compiler,
+                catalog,
+                allow_resize=True,
+            )
+            return path, plan
+
+        def complete(result):
+            path, plan = result
+            tab.path = path
+            tab.draft_saved = True
+            tab.source_revision = SourceRevision.capture(path)
+            tab.source_kind = "recovered-reviewed"
+            tab.set_binding_state(
+                "verified",
+                "已用真实编译器编译、严格原生往返并整包回读；"
+                "这只证明字节可写回，不证明反编译逻辑正确",
+            )
+            self.bindings = [
+                b
+                for b in self.bindings
+                if (b.archive, b.index) != (archive.path, index)
+            ] + [plan.snapshot.binding]
+            self.project_dirty = True
+            self.refresh_tab_title(tab)
+            self.refresh_native_action()
+            self.statusBar().showMessage(
+                f"已自动校验并绑定：{path.name}（可直接「写入原包」）", 12000
+            )
+
+        def failed(error):
+            tab.set_binding_state("failed", str(error))
+            self.statusBar().showMessage(
+                f"自动校验未通过（仍可编辑）：{error}", 12000
+            )
+
+        self.task(work, complete, on_error=failed)
 
     def adopt_recovery(self):
         try:

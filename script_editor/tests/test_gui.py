@@ -133,7 +133,8 @@ class GuiTests(unittest.TestCase):
         self.window.add_source(self.source, reference=True)
         editor = self.window.current().editor
         original = editor.toPlainText()
-        for key in ("save", "associate", "standard", "big5", "gbk", "undo", "redo"):
+        for key in ("save", "save_as", "write", "generate", "big5", "gbk",
+                    "undo", "redo", "cut", "copy", "paste"):
             self.assertFalse(self.window.ui_actions[key].isEnabled(), key)
         editor.indent_selection()
         self.window.edit_command("undo")
@@ -235,7 +236,7 @@ class GuiTests(unittest.TestCase):
             a for menu in self.window.menuBar().actions() for a in menu.menu().actions()
         ]
         self.assertFalse(
-            next(a for a in actions if "生成原生新包" in a.text()).isEnabled()
+            next(a for a in actions if a.text() == "写入原包").isEnabled()
         )
 
     def test_dirty_source_close_cancel_and_save(self):
