@@ -42,6 +42,16 @@ _LOOSE_TEXT = (
 
 _STRICT_TEXT = "已切回严格模式：F6 生成新包，原包不会被改写。"
 
+_RESIZE_TEXT = (
+    "扩充定长条目（实验）\n\n"
+    "脚本条目原来是定长槽位，比槽位大的模块会被拒绝。打开这个开关后，\n"
+    "工具改为按新长度重新取 XOR 分段，并把新的长度写进包目录。\n\n"
+    "本机能自证的部分：加密/解密、写包、整包回读、目录偏移都会重新校验，\n"
+    "文件结构自洽。本机不能自证的部分：客户端是否按新长度重算分段、\n"
+    "游戏里是否真的能加载。这一步没有实机验收，可能直接让游戏崩溃或报错。\n\n"
+    "只建议在游戏副本上试用，并保留 .fls.bak。确定打开吗？"
+)
+
 
 class SaveModeMixin:
     """Mode state and its toolbar control; the write itself is LooseSaveMixin."""
@@ -63,6 +73,45 @@ class SaveModeMixin:
         if getattr(self, "settings", None) is not None:
             self.settings.setValue("save_mode", mode)
 
+    # -- experimental: entries may grow past their original slot ---------
+    def resize_entries(self) -> bool:
+        """Opt-in flag; off unless the user turned it on explicitly."""
+        settings = getattr(self, "settings", None)
+        if settings is None:
+            return False
+        return str(settings.value("allow_resize_entries", "0")) == "1"
+
+    def _set_resize_entries(self, enabled: bool) -> None:
+        settings = getattr(self, "settings", None)
+        if settings is not None:
+            settings.setValue("allow_resize_entries", "1" if enabled else "0")
+        for action in getattr(self, "resize_actions", ()):
+            action.setChecked(enabled)
+        self.statusBar().showMessage(
+            "已允许扩充定长条目：超长模块会按新长度重算分段（实验，未实机验收）"
+            if enabled
+            else "已恢复：超长模块仍会被拒绝",
+            10000,
+        )
+
+    def toggle_resize_entries(self, checked=False) -> None:
+        if not checked:
+            self._set_resize_entries(False)
+            return
+        box = QMessageBox(
+            QMessageBox.Icon.Warning,
+            "扩充定长条目（实验）",
+            _RESIZE_TEXT,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            self,
+        )
+        box.button(QMessageBox.StandardButton.Yes).setText("我明白风险，打开")
+        box.button(QMessageBox.StandardButton.No).setText("取消")
+        box.setDefaultButton(QMessageBox.StandardButton.No)
+        self._set_resize_entries(
+            box.exec() == QMessageBox.StandardButton.Yes
+        )
+
     # -- toolbar -------------------------------------------------------
     def _build_mode_control(self, toolbar) -> None:
         button = QToolButton(self)
@@ -78,6 +127,19 @@ class SaveModeMixin:
             )
             menu.addAction(action)
             self.mode_actions[mode] = action
+        self.resize_actions = []
+        if getattr(self, "settings", None) is not None:
+            menu.addSeparator()
+            resize = QAction("扩充定长条目（实验）", self)
+            resize.setCheckable(True)
+            resize.setChecked(self.resize_entries())
+            resize.setToolTip(
+                "允许超过原槽位长度的模块：按新长度重算 XOR 分段并改写目录。"
+                "本机自校验会通过，但客户端加载行为未实机验收"
+            )
+            resize.toggled.connect(self.toggle_resize_entries)
+            menu.addAction(resize)
+            self.resize_actions = [resize]
         button.setMenu(menu)
         button.clicked.connect(self.choose_save_mode)
         self.mode_button = button

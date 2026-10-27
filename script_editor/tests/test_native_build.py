@@ -211,6 +211,63 @@ class BuildTests(unittest.TestCase):
         self.assertIn("余量", message)
         self.assert_clean()
 
+    def test_opt_in_resize_writes_a_longer_module_and_verifies_it(self):
+        """Resizing is opt-in and self-verifying, but not client-accepted yet.
+
+        The client recomputes the four XOR boundaries from the five keys and
+        the inflated length, so a longer payload stays self-consistent. The
+        test proves the *tool* round-trips it; it says nothing about the retail
+        client, which is why the default stays refusing.
+        """
+        from script_editor.core.vm.compression import inflate
+        from script_editor.core.vm.py25 import codec as py25
+
+        self.prepare()
+        bigger = minimal_pyc("py25", 7, code=b"d\x01\x00S" + b"\x09" * 700)
+        with ArchiveDocument(self.source) as source:
+            before_size = source.index.spans[0].length
+        report = self.build(
+            replacements=(Replacement(0, self.identity, bigger),),
+            allow_resize=True,
+        )
+        self.assertEqual(report.modified_indexes, (0,))
+        with ArchiveDocument(self.output) as out:
+            self.assertNotEqual(out.index.spans[0].length, before_size)
+            data = self.profiles[0].crypt_variable(inflate(out.read_stored(0)))
+            self.assertEqual(
+                py25.decode(data, header=bigger[:8], padding=True), bigger
+            )
+            # The five-segment split is derived from the new length, not stored.
+            self.assertEqual(len(data), len(py25.encode(bigger)))
+        self.assert_clean()
+
+    def test_resize_refuses_a_length_without_a_valid_five_segment_split(self):
+        self.prepare()
+        bigger = minimal_pyc("py25", 7, code=b"d\x01\x00S" + b"\x09" * 700)
+        from script_editor.core.vm.py25 import cipher
+
+        real = cipher.bounds_from_seed
+        fixed = self.profiles[0].expanded_size
+
+        def only_original_size(seed, size):
+            # Break the split for the *new* length only: the original entry
+            # still has to load, or the refusal would come from the wrong gate.
+            if size != fixed:
+                raise ValueError("native cipher needs more than five segments")
+            return real(seed, size)
+
+        with patch(
+            "script_editor.core.vm.py25.cipher.bounds_from_seed",
+            side_effect=only_original_size,
+        ):
+            with self.assertRaisesRegex(ValueError, "无法按客户端取参公式分成五段"):
+                self.build(
+                    replacements=(Replacement(0, self.identity, bigger),),
+                    allow_resize=True,
+                )
+        self.assertFalse(self.output.exists())
+        self.assert_clean()
+
     def test_unchanged_entry_and_header_corruption_abort_before_publish(self):
         self.prepare()
         for position in (12, 19):

@@ -175,12 +175,27 @@ class LooseSaveMixin:
         # make every loose save fail even with no game running.
         self.detach_archive(archive)
 
+        allow_resize = self.resize_entries()
+        if allow_resize:
+            # Never silent: a resize changes the stored length of an entry the
+            # client may assume is fixed.
+            self.statusBar().showMessage(
+                "已允许扩充定长条目：超长模块不再被拒绝，将按新长度重算分段", 10000
+            )
+
         def work():
-            plan = prepare_package(snapshots, compiler, catalog, baselines)
+            plan = prepare_package(
+                snapshots, compiler, catalog, baselines, allow_resize=allow_resize
+            )
             if not plan.entries:
                 return plan, None, None
             report, new_state = publish_package(
-                plan, state, in_place=True, backup=True, protected=protected
+                plan,
+                state,
+                in_place=True,
+                backup=True,
+                allow_resize=allow_resize,
+                protected=protected,
             )
             return plan, report, new_state
 
@@ -328,6 +343,12 @@ class LooseSaveMixin:
             + (
                 "以下草稿只用了编辑区内容，未写入 .py：" + "、".join(unsaved) + "\n"
                 if unsaved
+                else ""
+            )
+            + (
+                "注意：本次有条目长度发生变化（扩充定长槽位，实验功能）；"
+                "本机自校验通过，客户端加载行为未验收。\n"
+                if any(entry.resized for entry in plan.entries)
                 else ""
             )
             + "写前编译/审计、写后回读校验均已通过；游戏内表现仍未验收。"

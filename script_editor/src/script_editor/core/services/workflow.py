@@ -17,7 +17,11 @@ from ..project.document import Binding
 from ..project.storage import CatalogRef, ProjectState
 from ..vm.py25 import codec as py25
 from ..vm.py27 import codec as py27
-from .native_build import Replacement, build_package, encode_replacement
+from .native_build import (
+    Replacement,
+    build_package,
+    encode_replacement_detailed,
+)
 
 
 def text_sha(text):
@@ -47,10 +51,16 @@ class PreparedBuild:
     payload_changed: bool
     diff: str
     hints: tuple = ()
+    resized: bool = False
 
 
 def prepare_build(
-    snapshot: Snapshot, compiler: Compiler, catalog=None, baseline_text=None
+    snapshot: Snapshot,
+    compiler: Compiler,
+    catalog=None,
+    baseline_text=None,
+    *,
+    allow_resize=False,
 ):
     binding = snapshot.binding
     if snapshot.reference or snapshot.vm != binding.vm or compiler.vm != binding.vm:
@@ -66,7 +76,10 @@ def prepare_build(
             pyc = path.read_bytes()
         audit_standard(compiler, pyc)
         replacement = Replacement(binding.index, binding.identity, pyc)
-        native = encode_replacement(archive, replacement, profile)
+        encoded = encode_replacement_detailed(
+            archive, replacement, profile, allow_resize=allow_resize
+        )
+        native, resized = encoded.stored, encoded.resized
         if binding.vm == "py25":
             from ..vm.compression import inflate
 
@@ -109,6 +122,7 @@ def prepare_build(
         old != stored,
         diff,
         inspect_references(snapshot.text),
+        resized,
     )
 
 
@@ -146,7 +160,9 @@ class PackagePlan:
         return self.entries[0].snapshot.binding.fingerprint
 
 
-def prepare_package(snapshots, compiler, catalog=None, baselines=None):
+def prepare_package(
+    snapshots, compiler, catalog=None, baselines=None, *, allow_resize=False
+):
     """Prepare every binding of one package that would change stored bytes."""
     snapshots = tuple(snapshots)
     if not snapshots:
@@ -167,7 +183,9 @@ def prepare_package(snapshots, compiler, catalog=None, baselines=None):
     entries, unchanged = [], []
     for snapshot in snapshots:
         key = (snapshot.binding.archive, snapshot.binding.index)
-        plan = prepare_build(snapshot, compiler, catalog, baselines.get(key))
+        plan = prepare_build(
+            snapshot, compiler, catalog, baselines.get(key), allow_resize=allow_resize
+        )
         if plan.payload_changed:
             entries.append(plan)
         else:
@@ -214,6 +232,7 @@ def publish_package(
     *,
     in_place: bool = False,
     backup: bool = True,
+    allow_resize: bool = False,
     protected=(),
 ):
     """Write every prepared module of ``plan`` into one package.
@@ -253,6 +272,7 @@ def publish_package(
         protected=protected,
         in_place=in_place,
         backup=backup,
+        allow_resize=allow_resize,
     )
     # Index -> source digest whose bytes the package now holds. Written entries
     # come from the plan; ``unchanged`` ones compiled to the bytes that were
@@ -339,6 +359,9 @@ def publish_build(
         compiler=plan.compiler,
         profiles={} if profile is None else {binding.index: profile},
         protected=protected,
+        # The plan carries the consent: ``resized`` is only ever True when it was
+        # prepared with the experimental flag, so publishing must match.
+        allow_resize=plan.resized,
     )
     # Pure metadata transition; source files and dirty editor buffers are NOT saved.
     bindings, catalogs = [], []

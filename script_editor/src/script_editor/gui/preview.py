@@ -24,7 +24,14 @@ class BuildPreview(QDialog):
             f"源码：{binding.source}\n来源类型：{binding.source_kind}\n编辑区未保存：{unsaved}\n"
             f"存储负载：{plan.old_stored_size} → {plan.new_stored_size} B · "
             f"实际变化：{plan.payload_changed}\n"
-            "仅替换上述一个条目，其余逐条校验。尚未验证业务语义/游戏运行，不会新增模块。"
+            + (
+                "\n本次条目长度会变化：已按新长度重算 XOR 分段（扩充定长槽位，实验）；"
+                "本机自校验通过，但客户端加载行为未实机验收。"
+                if plan.resized
+                else ""
+            )
+            + "\n仅替换上述一个条目，其余逐条校验。"
+            "尚未验证业务语义/游戏运行，不会新增模块。"
         )
         summary.setWordWrap(True)
         box.addWidget(summary)

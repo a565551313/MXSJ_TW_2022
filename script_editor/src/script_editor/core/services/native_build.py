@@ -198,12 +198,29 @@ def _capacity_message(archive, index, profile, new_size):
         "authored marshal exceeds fixed XOR length; no shrink/rescale"
         f"（这次编译出的原生负载 {new_size} 字节，超过该条目固定长度 "
         f"{profile.expanded_size} 字节，超出 {over} 字节{detail}。"
-        "固定长度由客户端取参公式决定，本工具不缩放参数；"
-        "只能把模块改小或保持原样后再写回）"
+        "固定长度由客户端取参公式决定，默认不缩放参数；"
+        "可以把模块改小后写回，或在「保存模式」菜单里显式打开"
+        "「扩充定长条目（实验）」，让工具按新长度重算分段"
+        "（本机可自校验，客户端加载行为未实机验收））"
     )
 
 
-def encode_replacement(archive, replacement, profile):
+@dataclass(frozen=True)
+class EncodedReplacement:
+    """Stored bytes plus the native (pre-XOR) facts the preview needs."""
+
+    stored: bytes
+    native_size: int
+    resized: bool
+
+
+def encode_replacement(archive, replacement, profile, *, allow_resize=False):
+    return encode_replacement_detailed(
+        archive, replacement, profile, allow_resize=allow_resize
+    ).stored
+
+
+def encode_replacement_detailed(archive, replacement, profile, *, allow_resize=False):
     require_module_allowed(archive.vm, replacement.index)
     expected = replacement.standard_pyc
     stored = archive.read_stored(replacement.index)
@@ -217,11 +234,29 @@ def encode_replacement(archive, replacement, profile):
         )
         native = py25.encode(expected)
         if len(native) > profile.expanded_size:
-            raise ValueError(
-                _capacity_message(archive, replacement.index, profile, len(native))
-            )
+            if not allow_resize:
+                raise ValueError(
+                    _capacity_message(
+                        archive, replacement.index, profile, len(native)
+                    )
+                )
+            # Opt-in: the client derives the four boundaries from the five keys
+            # and the inflated length, so encrypting at the new length stays
+            # self-consistent. Refuse early if this length admits no valid
+            # five-segment split instead of writing something unreadable.
+            try:
+                return EncodedReplacement(
+                    zlib.compress(profile.crypt_variable(native), 9), len(native), True
+                )
+            except ValueError as exc:
+                raise ValueError(
+                    "这个长度无法按客户端取参公式分成五段"
+                    f"（{len(native)} 字节）：{exc}；把模块再改小/改大一些后重试"
+                ) from exc
         padded = native + bytes(profile.expanded_size - len(native))
-        return zlib.compress(profile.crypt(padded), 9)
+        return EncodedReplacement(
+            zlib.compress(profile.crypt(padded), 9), len(native), False
+        )
     span = archive.index.spans[replacement.index]
     if archive.index.metas[replacement.index].w1 != 8:
         raise ValueError("unknown data compression method")
@@ -229,7 +264,10 @@ def encode_replacement(archive, replacement, profile):
     if len(original) != span.usize or zlib.crc32(original) & 0xFFFFFFFF != span.crc:
         raise ValueError("original data payload CRC/size mismatch")
     py27.decode(original)  # Non-scripts/unknown formats stay read-only.
-    return py27.encode(expected)
+    encoded = py27.encode(expected)
+    # Data records carry their own size, so a different length is not a resize
+    # of a fixed slot; the flag stays False for py27.
+    return EncodedReplacement(encoded, len(encoded), False)
 
 
 #: Historical private name; kept so existing callers and evidence tests that
@@ -258,8 +296,12 @@ def verify_output(source, result, replacements, profiles, compiler):
         expected = replacements[i].standard_pyc
         stored = result.read_stored(i)
         if source.vm == "py25":
+            # ``crypt_variable`` equals ``crypt`` for the original length and is
+            # the only correct readback when the entry was resized.
             restored = py25.decode(
-                profiles[i].crypt(inflate(stored)), header=expected[:8], padding=True
+                profiles[i].crypt_variable(inflate(stored)),
+                header=expected[:8],
+                padding=True,
             )
         else:
             native = inflate(stored, raw=True)
@@ -285,6 +327,7 @@ def build_package(
     protected: tuple[Path, ...] = (),
     in_place: bool = False,
     backup: bool = True,
+    allow_resize: bool = False,
 ) -> BuildReport:
     """Write one new package, or (``in_place``) overwrite the source archive.
 
@@ -319,7 +362,9 @@ def build_package(
                 raise ValueError("duplicate/invalid replacement identity")
             selected[i] = replacement
             audit_standard(compiler, replacement.standard_pyc)
-            changed[i] = encode_replacement(source, replacement, profiles.get(i))
+            changed[i] = encode_replacement(
+                source, replacement, profiles.get(i), allow_resize=allow_resize
+            )
         fd, temporary = tempfile.mkstemp(
             prefix=".mxscript-build-", dir=destination.parent
         )
