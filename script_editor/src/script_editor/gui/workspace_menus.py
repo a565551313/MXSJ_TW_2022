@@ -1,3 +1,20 @@
+"""Menus and toolbar: three ideas, no jargon.
+
+The editor is a place to open a package, edit a module and put the bytes back.
+Everything else is either an export or a diagnostic. The menu tree is therefore
+deliberately small:
+
+* 文件 — local ``.py`` files and ``.fls`` packages, save, exit;
+* 语料 — dump a package's entries (decrypted or as stored);
+* 编辑 — the usual editor commands plus find/replace;
+* 编码 — MBCS byte literals (unchanged);
+* 编译 — **写入原包** (F5) and **生成新包** (F6), one click each;
+* 视图 — dock visibility.
+
+There is no mode switch and no "association" step: a recovery draft is verified
+and bound automatically (see :mod:`script_editor.gui.module_actions`).
+"""
+
 from __future__ import annotations
 
 from PySide6.QtCore import QSize, Qt
@@ -21,128 +38,110 @@ class WorkspaceMenus:
         sp = QStyle.StandardPixmap
         file_menu = self.menuBar().addMenu("文件")
         self.action(
-            file_menu,
-            "open_pack",
-            "打开脚本包…",
-            self.open_archive,
-            "Ctrl+O",
-            sp.SP_DirOpenIcon,
+            file_menu, "new_file", "新建 .py 文件…", self.new_source_file,
+            "Ctrl+N", sp.SP_FileIcon,
         )
         self.action(
-            file_menu,
-            "open_source",
-            "打开可信源码…",
-            self.open_source,
-            "Ctrl+Shift+O",
-            sp.SP_FileIcon,
+            file_menu, "open_source", "打开 .py 文件…", self.open_source,
+            "Ctrl+Shift+O", sp.SP_FileIcon,
         )
-        self.action(file_menu, "reference", "打开只读参考…", self.open_reference)
+        self.action(
+            file_menu, "open_source_dir", "打开 .py 目录…", self.open_source_dir,
+        )
         file_menu.addSeparator()
         self.action(
-            file_menu,
-            "save",
-            "保存当前源码",
-            self.save_current,
-            "Ctrl+S",
-            sp.SP_DialogSaveButton,
+            file_menu, "save", "保存", self.save_current,
+            "Ctrl+S", sp.SP_DialogSaveButton,
         )
         self.action(
-            file_menu,
-            "save_project",
-            "保存项目…",
-            self.save_project,
-            "Ctrl+Shift+S",
-            sp.SP_DialogSaveButton,
+            file_menu, "save_as", "另存为…", self.save_source_as,
+            "Ctrl+Shift+S", sp.SP_DialogSaveButton,
+        )
+        file_menu.addSeparator()
+        self.action(
+            file_menu, "open_pack", "打开脚本文件…", self.open_archive,
+            "Ctrl+O", sp.SP_DirOpenIcon,
         )
         self.action(
-            file_menu, "project", "打开项目…", self.open_project, None, sp.SP_DirIcon
+            file_menu, "open_pack_dir", "打开脚本目录…", self.open_archive_dir,
+            None, sp.SP_DirIcon,
         )
-        corpus = self.menuBar().addMenu("恢复语料")
-        self.action(corpus, "import_corpus", "导入全量候选清单…", self.import_corpus)
+        file_menu.addSeparator()
+        self.action(file_menu, "quit", "退出", self.close, "Ctrl+Q")
+
+        corpus = self.menuBar().addMenu("语料")
         self.action(
-            corpus, "data_corpus", "生成data全量候选清单…", self.generate_data_corpus
+            corpus, "export_decrypted", "导出全量解密语料…",
+            lambda: self.export_corpus(encrypted=False),
         )
         self.action(
-            corpus, "corpus_entry", "另开当前条目的语料候选", self.open_corpus_module
+            corpus, "export_encrypted", "导出全量加密语料…",
+            lambda: self.export_corpus(encrypted=True),
         )
-        self.action(
-            corpus,
-            "verified_keys",
-            "核验修复参数并另存新目录…",
-            self.export_verified_catalog,
-        )
+
         edit = self.menuBar().addMenu("编辑")
         self.action(
-            edit,
-            "undo",
-            "撤销",
-            lambda: self.edit_command("undo"),
-            "Ctrl+Z",
-            sp.SP_ArrowBack,
+            edit, "undo", "撤销", lambda: self.edit_command("undo"),
+            "Ctrl+Z", sp.SP_ArrowBack,
         )
         self.action(
-            edit,
-            "redo",
-            "重做",
-            lambda: self.edit_command("redo"),
-            "Ctrl+Y",
-            sp.SP_ArrowForward,
+            edit, "redo", "恢复", lambda: self.edit_command("redo"),
+            "Ctrl+Y", sp.SP_ArrowForward,
         )
         edit.addSeparator()
         self.action(
-            edit,
-            "find",
-            "查找 / 替换",
-            self.show_search,
-            "Ctrl+F",
+            edit, "cut", "剪切", lambda: self.edit_command("cut"), "Ctrl+X"
+        )
+        self.action(
+            edit, "copy", "复制", lambda: self.edit_command("copy"), "Ctrl+C"
+        )
+        self.action(
+            edit, "paste", "粘贴", lambda: self.edit_command("paste"), "Ctrl+V"
+        )
+        edit.addSeparator()
+        self.action(
+            edit, "find", "查找…", self.show_search, "Ctrl+F",
             sp.SP_FileDialogContentsView,
         )
-        self.action(edit, "goto", "转到行…", self.goto_line, "Ctrl+G")
+        self.action(
+            edit, "replace", "替换…", self.show_replace, "Ctrl+H",
+            sp.SP_FileDialogContentsView,
+        )
+        edit.addSeparator()
+        self.action(
+            edit, "find_in_files", "在文件中查找…", self.find_in_files,
+            "Ctrl+Shift+F",
+        )
+        self.action(
+            edit, "replace_in_files", "在文件中替换…", self.replace_in_files,
+            "Ctrl+Shift+H",
+        )
+
         encoding = self.menuBar().addMenu("编码")
         self.action(
             encoding, "big5", "选中文案 → Big5 字节…", lambda: self.encode("big5")
         )
-        self.action(encoding, "gbk", "选中路径 → GBK 字节…", lambda: self.encode("gbk"))
+        self.action(
+            encoding, "gbk", "选中路径 → GBK 字节…", lambda: self.encode("gbk")
+        )
         encoding.addSeparator()
         self.action(
-            encoding,
-            "literals",
-            "字节字面量 → 可读对照（只读）…",
-            self.preview_byte_literals,
-            None,
-            sp.SP_FileDialogDetailedView,
+            encoding, "literals", "字节字面量 → 可读对照（只读）…",
+            self.preview_byte_literals, None, sp.SP_FileDialogDetailedView,
         )
+
         build = self.menuBar().addMenu("编译")
-        self.action(
-            build,
-            "associate",
-            "关联源码到选中条目…",
-            self.associate,
-            None,
-            sp.SP_FileLinkIcon,
+        self.write_action = self.action(
+            build, "write", "写入原包", self.write_in_place,
+            "F5", sp.SP_DialogSaveButton,
         )
-        self.action(build, "catalog", "选择当前包的 XOR 目录…", self.configure_catalog)
-        self.native_action = self.action(
-            build,
-            "native",
-            "生成原生新包：预编译与清单…",
-            self.preview_native,
-            "F6",
-            sp.SP_ArrowRight,
+        self.generate_action = self.action(
+            build, "generate", "生成新包", self.generate_new_package,
+            "F6", sp.SP_ArrowRight,
         )
-        build.addSeparator()
-        self.action(build, "standard", "仅导出标准 .pyc…", self.compile)
-        self.action(
-            build,
-            "check",
-            "重新检查两套内置编译器",
-            self.initialize_compilers,
-            None,
-            sp.SP_BrowserReload,
-        )
-        self.action(
-            build, "developer", "选择当前 VM 的开发编译器…", self.select_compiler
-        )
+        # Historical name used by the window's refresh plumbing.
+        self.native_action = self.generate_action
+
         view = self.menuBar().addMenu("视图")
         self.dock_actions = []
         for dock in (
@@ -156,42 +155,38 @@ class WorkspaceMenus:
             view.addAction(toggle)
         view.addSeparator()
         self.action(view, "reset", "恢复默认工作区", self.reset_workspace)
-        build.addSeparator()
-        self.action(
-            build,
-            "loose_save",
-            "写回原包（宽松模式，留 .bak）…",
-            # Checked wrapper: Qt drops exceptions raised inside a slot.
-            self.loose_save_checked,
-            "Ctrl+Alt+S",
-            sp.SP_DialogSaveButton,
-        )
-        self.menu_handles = [file_menu, edit, encoding, build, view]
+
+        self.menu_handles = [file_menu, corpus, edit, encoding, build, view]
         # Keep menuAction wrappers alive during action enumeration (Qt ownership).
         self.menu_actions = [menu.menuAction() for menu in self.menu_handles]
+
+        # Compiler self-check is a diagnostic, not a build step: it lives on
+        # the toolbar only, so the 编译 menu stays two plain verbs.
+        check = QAction("检查编译器", self)
+        check.setIcon(self.style().standardIcon(sp.SP_BrowserReload))
+        check.setToolTip("重新核验两套内置 CPython 编译器（版本 / 魔数 / 整套 SHA）")
+        check.triggered.connect(self.initialize_compilers)
+        self.ui_actions["check"] = check
+
         toolbar = QToolBar("常用操作", self)
         toolbar.setObjectName("mainToolbar")
         toolbar.setIconSize(QSize(23, 23))
         toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         self.addToolBar(toolbar)
         short = {
-            "open_pack": "打开包",
-            "open_source": "打开源码",
-            "save": "保存源码",
-            "project": "打开项目",
-            "save_project": "保存项目",
+            "open_pack": "打开",
+            "open_pack_dir": "目录",
+            "save": "保存",
             "undo": "撤销",
-            "redo": "重做",
+            "redo": "恢复",
             "find": "查找",
-            "associate": "关联条目",
-            "native": "生成新包",
+            "write": "写入原包",
+            "generate": "生成新包",
             "check": "检查编译器",
         }
         for key in short:
             action = self.ui_actions[key]
             action.setIconText(short[key])
-            toolbar.addAction(action)
-            if key in {"save_project", "find"}:
+            if key in {"save", "find"}:
                 toolbar.addSeparator()
-        toolbar.addSeparator()
-        self._build_mode_control(toolbar)
+            toolbar.addAction(action)

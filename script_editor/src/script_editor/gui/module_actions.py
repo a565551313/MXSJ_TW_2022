@@ -9,10 +9,17 @@ from threading import Event
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
+from ..core.inspection.native import inspect_module
 from ..core.project.document import Binding
-from ..core.services.files import SourceRevision, save_new_source
+from ..core.services.files import (
+    SourceRevision,
+    default_source_root,
+    save_new_source,
+    save_working_source,
+)
 from ..core.services.module_browser import read_module
 from ..core.services.module_paths import display_module_path
+from ..core.services.recovery_origin import origin_conflict
 from ..core.services.workflow import Snapshot, prepare_build
 
 
@@ -83,6 +90,7 @@ class ModuleActions:
                     pass  # An invalid name must not discard a recovered draft.
             if report.source:
                 tab.editor.document().setModified(True)
+                self.auto_adopt(tab, archive, index, report)
             self.info.setPlainText(
                 (
                     "恢复引擎已返回文本（非原始源码，尚未编译核验）"
@@ -91,7 +99,7 @@ class ModuleActions:
                 )
                 + "\n"
                 + "\n".join(report.diagnostics)
-                + "\n可编辑恢复草稿；写包前须检查并人工核对采用。"
+                + "\n可编辑恢复草稿；自动校验通过即绑定，未通过按 F5 重试。"
             )
             self.output_dock.show()
             self.refresh_native_action()
@@ -170,6 +178,9 @@ class ModuleActions:
         tab.attach_report(report)
         tab.candidate_requested.connect(self.open_recovery_candidate)
         tab.editor.document().setModified(True)
+        archive = next((a for a in self.archives if a.path == report.archive), None)
+        if archive is not None:
+            self.auto_adopt(tab, archive, report.index, report)
         return tab
 
     def save_draft(self, tab):
@@ -199,6 +210,160 @@ class ModuleActions:
         tab.editor.document().setModified(False)
         self.refresh_tab_title(tab)
         return True
+
+    # -- automatic verification + binding ------------------------------
+    def auto_source_path(self, archive, index, report):
+        """Where the auto-bound working copy lives (outside any client dir).
+
+        The directory carries a digest of the *full* package path: two clients
+        can both ship a ``script.fls``, and one working copy shared by two
+        packages would silently write the same text into both.
+        """
+        stem = f"{index:05d}"
+        if report.filename_hex:
+            try:
+                from ..core.services.module_paths import display_module_path
+
+                name = display_module_path(bytes.fromhex(report.filename_hex))
+                stem += "_" + Path(name).stem
+            except ValueError:
+                pass
+        digest = hashlib.sha256(str(Path(archive.path).resolve()).encode()).hexdigest()
+        folder = f"{Path(archive.path).stem}-{digest[:10]}"
+        return default_source_root() / folder / (stem + ".py")
+
+    def auto_adopt(self, tab, archive, index, report, then=None):
+        """Compile-verify a fresh draft and bind it; no dialog, no button.
+
+        Verification runs **before** the working copy is published, so a draft
+        that fails (bad syntax, oversized, external corpus that does not match
+        this package) leaves no orphan files behind. ``then`` runs after a
+        successful bind — that is how ``F5`` retries a corrected draft.
+        """
+        # ``report.complete`` describes the engine output and never changes, so
+        # an incomplete draft may only be retried once the user has edited the
+        # text: the real compile + native round-trip is what decides then.
+        edited = tab.editor.toPlainText() != report.source
+        if not report.source or (not report.complete and not edited):
+            tab.set_binding_state(
+                "unverified", "恢复不完整；补齐后按 F5 会重新校验"
+            )
+            return False
+        compiler = self.compilers.get(archive.vm)
+        if compiler is None:
+            tab.set_binding_state(
+                "no-compiler",
+                "工具栏「检查编译器」通过后，按 F5 会自动校验并绑定",
+            )
+            return False
+        catalog = self.catalog_for(archive)
+        text = tab.editor.toPlainText()
+        target = self.auto_source_path(archive, index, report)
+        protected = (
+            tuple(a.path for a in self.archives)
+            + tuple(c.path for c in self.catalogs)
+            + tuple(b.source for b in self.bindings)
+        )
+        tab.set_binding_state("verifying")
+
+        def same_text():
+            try:
+                return target.read_text(encoding="utf-8") == text
+            except (OSError, UnicodeError):
+                return False
+
+        def work():
+            standard, filename, _ = inspect_module(archive, index, catalog)
+            conflict = origin_conflict(report, standard)
+            if conflict is not None:
+                raise ValueError(conflict)
+            # A binding needs a real file (Binding.associate resolves strictly),
+            # so the copy is published here and removed again if the build that
+            # is supposed to justify it does not survive.
+            fresh = not same_text()
+            # Canonical path: Binding.associate stores resolve(strict=True), and
+            # a relative/symlinked MXSCRIPT_HOME would otherwise leave tab.path
+            # and binding.source describing the same file in two ways.
+            path = save_working_source(target, text, protected).resolve()
+            try:
+                binding = replace(
+                    Binding.associate(archive, index, path),
+                    filename_hex=filename.hex(),
+                    source_kind="recovered-reviewed",
+                    recovery_sha256=hashlib.sha256(standard).hexdigest(),
+                )
+                plan = prepare_build(
+                    Snapshot(binding, text, archive.vm),
+                    compiler,
+                    catalog,
+                    allow_resize=True,
+                )
+            except Exception:
+                if fresh:
+                    path.unlink(missing_ok=True)
+                    try:
+                        path.parent.rmdir()  # only if we left it empty
+                    except OSError:
+                        pass
+                raise
+            return path, plan
+
+        def complete(result):
+            path, plan = result
+            tab.path = path
+            tab.draft_saved = True
+            tab.source_revision = SourceRevision.capture(path)
+            tab.source_kind = "recovered-reviewed"
+            tab.set_binding_state(
+                "verified",
+                "已用真实编译器编译、严格原生往返并整包回读；"
+                "这只证明字节可写回，不证明反编译逻辑正确",
+            )
+            self.bindings = [
+                b
+                for b in self.bindings
+                if (b.archive, b.index) != (archive.path, index)
+            ] + [plan.snapshot.binding]
+            self.clear_other_bindings(archive, index, keep=tab)
+            self.project_dirty = True
+            self.refresh_tab_title(tab)
+            self.refresh_native_action()
+            self.statusBar().showMessage(
+                f"已自动校验并绑定：{path.name}（可直接「写入原包」）", 12000
+            )
+            if then is not None:
+                then()
+
+        def failed(error):
+            # Expected for a draft that does not compile yet: mark the tab and
+            # keep it editable. A modal on every double-click would be noise.
+            tab.set_binding_state("failed", str(error))
+            self.statusBar().showMessage(
+                f"自动校验未通过（仍可编辑，F5 可重试）：{error}", 14000
+            )
+
+        self.task(work, complete, on_error=failed, quiet=True)
+        return True
+
+    def clear_other_bindings(self, archive, index, keep):
+        """One binding per entry: the previous tab loses its green label."""
+        for i in range(self.tabs.count()):
+            other = self.tabs.widget(i)
+            if other is keep or other.path == keep.path:
+                continue
+            origin = getattr(other, "recovery", None)
+            if origin is None:
+                continue
+            if (
+                origin.current_archive == archive.path
+                and origin.index == index
+            ):
+                other.source_kind = "recovered-draft"
+                other.set_binding_state(
+                    "unbound",
+                    "同一条目已由另一个草稿绑定；此稿仍可编辑，"
+                    "按 F5 可改为由本稿写入",
+                )
 
     def adopt_recovery(self):
         try:
@@ -238,23 +403,9 @@ class ModuleActions:
                 from ..core.inspection.native import inspect_module
 
                 standard, filename, _ = inspect_module(archive, index, catalog)
-                if origin and origin.target_archive is not None and (
-                    hashlib.sha256(standard).hexdigest() != origin.standard_sha256
-                ):
-                    raise ValueError(
-                        "继续采用目标的标准字节码已变化；保留原稿，禁止采用"
-                    )
-                if origin and (
-                    (origin.corpus_manifest_sha256 and not origin.candidate_pyc_sha256)
-                    or (
-                        origin.candidate_pyc_sha256
-                        and hashlib.sha256(standard).hexdigest()
-                        != origin.candidate_pyc_sha256
-                    )
-                ):
-                    raise ValueError(
-                        "外部语料pyc与原包严格来源不同；可编辑草稿，但不能据此采用发布"
-                    )
+                conflict = origin_conflict(origin, standard)
+                if conflict is not None:
+                    raise ValueError(conflict + "（没有采用）")
                 binding = replace(
                     Binding.associate(archive, index, tab.path),
                     filename_hex=filename.hex(),

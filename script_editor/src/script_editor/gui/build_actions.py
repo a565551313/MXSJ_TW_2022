@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QFileDialog, QMessageBox
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from ..core.archives.document import ArchiveDocument
 from ..core.compiler.profiles import PROFILES
@@ -11,8 +11,7 @@ from ..core.compiler.runner import bundled_compiler, compile_standard, inspect_c
 from ..core.project.storage import ProjectState
 from ..core.services.module_paths import index_script_paths
 from ..core.services.package_selfcheck import verify_with_catalog
-from ..core.services.workflow import Snapshot, prepare_build, publish_build
-from .preview import BuildPreview
+from ..core.services.workflow import publish_build
 
 
 class BuildActions:
@@ -49,12 +48,12 @@ class BuildActions:
         )
 
     def refresh_native_action(self, *_):
-        if hasattr(self, "native_action"):
-            binding = self.active_binding()
-            self.native_action.setEnabled(
-                bool(binding and binding.vm in self.compilers and not self.jobs)
-            )
-
+        """F5/F6 are enabled exactly when a package can actually be written."""
+        ready = bool(getattr(self, "package_is_writable", lambda: False)())
+        for name in ("write_action", "generate_action", "native_action"):
+            action = getattr(self, name, None)
+            if action is not None:
+                action.setEnabled(ready)
         if hasattr(self, "workspace_refresh"):
             self.workspace_refresh()
 
@@ -113,49 +112,6 @@ class BuildActions:
                 self.open_package_module(reload=True)
 
         self.task(prepare, complete)
-
-    def preview_native(self):
-        try:
-            tab = self.editable()
-            binding = self.active_binding()
-            if not binding:
-                raise ValueError("选中条目必须与当前源码及VM明确关联")
-            compiler = self.compilers.get(binding.vm)
-            if not compiler:
-                raise ValueError("请先检查/选择此VM的精确标准编译器")
-            snapshot = Snapshot(
-                binding,
-                tab.editor.toPlainText(),
-                tab.vm.currentData(),
-                tab.reference,
-                tab.editor.document().isModified(),
-            )
-            baseline = self.built_texts.get((binding.archive, binding.index))
-            catalog = self.catalog_for(self.selected()[0])
-            allow_resize = self.resize_entries()
-            self.task(
-                lambda: prepare_build(
-                    snapshot,
-                    compiler,
-                    catalog,
-                    baseline,
-                    allow_resize=allow_resize,
-                ),
-                self.show_build_plan,
-            )
-        except Exception as exc:
-            self.fail(exc)
-
-    def show_build_plan(self, plan):
-        if BuildPreview(plan, self).exec() != QDialog.DialogCode.Accepted:
-            return
-        name, _ = QFileDialog.getSaveFileName(
-            self, "生成新包（必须是尚不存在的新名字）", "", "FLS (*.fls)"
-        )
-        if name:
-            self.publish_plan(
-                plan, Path(name if name.lower().endswith(".fls") else name + ".fls")
-            )
 
     def publish_plan(self, plan, destination):
         try:

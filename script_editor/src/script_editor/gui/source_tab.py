@@ -55,10 +55,7 @@ class SourceTab(QWidget):
         self.update_mode()
         mode.setObjectName("sourceMode")
         header = QHBoxLayout()
-        self.adopt_button = QPushButton("检查并采用为源码…")
-        self.adopt_button.setVisible(self.source_kind == "recovered-draft")
         header.addWidget(mode)
-        header.addWidget(self.adopt_button)
         header.addStretch()
         header.addWidget(self.vm)
         layout = QVBoxLayout(self)
@@ -79,17 +76,45 @@ class SourceTab(QWidget):
         layout.addWidget(self.target_label)
         layout.addWidget(self.editor, 1)
 
+    #: Verification states a fresh recovery draft can be in. "verified" means
+    #: the module compiled and round-tripped byte for byte; it does not mean the
+    #: decompiled logic is correct.
+    BINDING_TEXT = {
+        "verifying": "恢复稿 · 正在自动校验…",
+        "verified": "可写包 · 已自动校验并绑定",
+        "no-compiler": "恢复稿 · 未校验（先点工具栏「检查编译器」）",
+        "unverified": "恢复稿 · 未校验",
+        "failed": "恢复稿 · 自动校验未通过",
+        "unbound": "恢复稿 · 已被同条目其它草稿取代绑定",
+    }
+
+    def set_binding_state(self, state, detail=""):
+        self.binding_state = state
+        self.binding_detail = detail
+        self.update_mode()
+
     def update_mode(self):
         names = {
-            "authored": "用户确认源码 · UTF-8",
+            "authored": "本机源码 · UTF-8",
             "reference": "只读参考 · 禁止编译",
-            "recovered-draft": "恢复草稿 · 可编辑 · 未核验，不能直接写包",
-            "recovered-reviewed": "人工核对的恢复源码 · 客户端语义未验收",
+            "recovered-draft": "恢复稿 · 可编辑",
+            "recovered-reviewed": "可写包 · 已自动校验并绑定",
             "module-unavailable": "包内条目 · 尚不能恢复源码，详见模块信息",
         }
-        self.mode_label.setText(names[self.source_kind])
-        if hasattr(self, "adopt_button"):
-            self.adopt_button.setVisible(self.source_kind == "recovered-draft")
+        state = getattr(self, "binding_state", "")
+        text = self.BINDING_TEXT.get(state) if state else None
+        if self.source_kind == "recovered-draft" and text is None:
+            text = "恢复稿 · 可编辑（自动校验中…）"
+        self.mode_label.setText(text or names[self.source_kind])
+        detail = getattr(self, "binding_detail", "")
+        if detail:
+            self.mode_label.setToolTip(detail)
+        color = {
+            "verified": "#1e7d32",
+            "failed": "#b3261e",
+            "no-compiler": "#b35900",
+        }.get(state, "")
+        self.mode_label.setStyleSheet(f"color:{color};" if color else "")
 
     def attach_report(self, report):
         import json

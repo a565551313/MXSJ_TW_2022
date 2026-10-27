@@ -131,10 +131,13 @@ class CorpusWorkspaceGuiTests(unittest.TestCase):
         self.assertEqual(native.editor.toPlainText(), before)
         self.assertEqual(self.window.tabs.count(), 2)
 
-    def test_corpus_actions_are_real_menu_entries(self):
-        for key in ("import_corpus", "corpus_entry", "verified_keys"):
+    def test_corpus_menu_exports_decrypted_and_encrypted(self):
+        for key in ("export_decrypted", "export_encrypted"):
             self.assertIn(key, self.window.ui_actions)
-            self.assertTrue(self.window.ui_actions[key].isEnabled())
+        self.assertTrue(self.window.ui_actions["export_decrypted"].isEnabled())
+        # The old import/verify entries are gone from the menu on purpose.
+        for retired in ("import_corpus", "corpus_entry", "verified_keys"):
+            self.assertNotIn(retired, self.window.ui_actions)
 
     def test_candidate_reopen_after_save_as_preserves_renamed_dirty_buffer(self):
         renamed = self.root / "my-draft.py"

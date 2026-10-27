@@ -52,6 +52,8 @@ class PreparedBuild:
     diff: str
     hints: tuple = ()
     resized: bool = False
+    native_size: int = 0
+    slot_size: int = 0
 
 
 def prepare_build(
@@ -125,6 +127,8 @@ def prepare_build(
         diff,
         inspect_references(snapshot.text),
         resized,
+        encoded.native_size,
+        0 if profile is None else profile.expanded_size,
     )
 
 

@@ -177,6 +177,25 @@ def _original_native_size(archive, index, profile):
         return None
 
 
+class CapacityError(ValueError):
+    """The build is bigger than this entry's fixed XOR slot.
+
+    Carries the numbers so a caller can offer a way out (see the experimental
+    resize switch) instead of only printing prose.
+    """
+
+    def __init__(self, message, *, native_size, slot_size, original_size=None):
+        super().__init__(message)
+        self.native_size = native_size
+        self.slot_size = slot_size
+        self.original_size = original_size
+
+    @property
+    def shortfall(self):
+        """How many bytes the build is over the slot."""
+        return self.native_size - self.slot_size
+
+
 def _capacity_message(archive, index, profile, new_size):
     """Explain a fixed-length refusal with the numbers the user needs.
 
@@ -199,9 +218,9 @@ def _capacity_message(archive, index, profile, new_size):
         f"（这次编译出的原生负载 {new_size} 字节，超过该条目固定长度 "
         f"{profile.expanded_size} 字节，超出 {over} 字节{detail}。"
         "固定长度由客户端取参公式决定，默认不缩放参数；"
-        "可以把模块改小后写回，或在「保存模式」菜单里显式打开"
-        "「扩充定长条目（实验）」，让工具按新长度重算分段"
-        "（本机可自校验，客户端加载行为未实机验收））"
+        "可以把模块改小后写回。自动校验与写包这条路径会直接按新长度"
+        "重算分段（实验：本机可自校验，客户端加载行为未实机验收），"
+        "只有显式不扩容的调用才会因长度不足被拒绝）"
     )
 
 
@@ -235,10 +254,15 @@ def encode_replacement_detailed(archive, replacement, profile, *, allow_resize=F
         native = py25.encode(expected)
         if len(native) > profile.expanded_size:
             if not allow_resize:
-                raise ValueError(
+                raise CapacityError(
                     _capacity_message(
                         archive, replacement.index, profile, len(native)
-                    )
+                    ),
+                    native_size=len(native),
+                    slot_size=profile.expanded_size,
+                    original_size=_original_native_size(
+                        archive, replacement.index, profile
+                    ),
                 )
             # Opt-in: the client derives the four boundaries from the five keys
             # and the inflated length, so encrypting at the new length stays

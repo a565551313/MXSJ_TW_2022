@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import replace
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QThreadPool, QTimer
@@ -30,12 +31,11 @@ from .build_actions import BuildActions
 from .corpus_actions import CorpusActions
 from .jobs import Job, Progress
 from .literal_preview import LiteralReportDialog
-from .loose_save import LooseSaveMixin
 from .module_actions import ModuleActions
 from .project_actions import ProjectActions
-from .save_mode import LOOSE, SaveModeMixin
 from .source_tab import SourceTab
 from .workspace import HEAVY_ENTRY_BYTES, Workspace
+from .write_package import WritePackageMixin
 
 
 class Window(
@@ -44,15 +44,13 @@ class Window(
     ProjectActions,
     BuildActions,
     CorpusActions,
-    SaveModeMixin,
-    LooseSaveMixin,
+    WritePackageMixin,
     QMainWindow,
 ):
     def __init__(self, runtime_root: Path, settings=None):
         super().__init__()
         self.runtime_root = runtime_root
         self.settings = settings
-        self._init_save_mode()
         self.archives: list[ArchiveDocument] = []
         self.bindings = []
         self.catalogs = []
@@ -85,9 +83,7 @@ class Window(
         self.tabs.currentChanged.connect(self.refresh_native_action)
         self.refresh_native_action()
         self.statusBar().showMessage(
-            "就绪 · 严格模式：F6 生成新包，原包只读"
-            if self.save_mode() != LOOSE
-            else "就绪 · 宽松模式：Ctrl+S 直接写回原包（覆盖前留 .fls.bak）"
+            "就绪 · 双击包内条目开始编辑；F5 写入原包 / F6 生成新包"
         )
         if settings is not None:
             try:
@@ -119,12 +115,24 @@ class Window(
         self.output_dock.show()
         QMessageBox.warning(self, "操作未完成", str(message))
 
-    def task(self, function, complete, *, cancel=None, on_error=None):
+    def task(
+        self, function, complete, *, cancel=None, on_error=None, quiet=False,
+        on_cancel=None,
+    ):
         """Run ``function`` off-thread, then ``complete`` (or ``on_error``) here.
 
         ``on_error`` gets the exception before :meth:`fail` shows it; callers
         that dropped in-memory state for the duration of the job use it to
         put that state back.
+
+        ``quiet=True`` means "this failure is an expected outcome, not an
+        error dialog": ``on_error`` (if any) runs and nothing else. Automatic
+        verification uses it, so a draft that does not compile only turns its
+        tab red instead of interrupting the user with a modal.
+
+        ``on_cancel`` gets the worker's return value when the user cancelled:
+        work that already reached disk (a partial corpus export, say) still
+        has to be reported. Without it a cancel just says so in the status bar.
         """
         if self.jobs:
             return
@@ -167,9 +175,14 @@ class Window(
             for action, enabled in actions:
                 action.setEnabled(enabled)
             self.refresh_native_action()
-            self.statusBar().showMessage("就绪 · 原生写包需关联源码并通过清单确认")
+            self.statusBar().showMessage("就绪")
             if cancel is not None and cancel.is_set():
                 self.statusBar().showMessage("恢复已取消；原包及已有编辑未修改")
+                if on_cancel is not None and not error:
+                    try:
+                        on_cancel(result)
+                    except Exception as exc:  # noqa: BLE001 - report the like
+                        self.fail(exc)
                 return
             if error:
                 if on_error is not None:
@@ -177,7 +190,8 @@ class Window(
                         on_error(result)
                     except Exception as exc:  # noqa: BLE001 - report the like
                         result = f"{result}（并且：恢复界面状态失败：{exc}）"
-                self.fail(result)
+                if not quiet:
+                    self.fail(result)
             else:
                 try:
                     complete(result)
@@ -370,8 +384,86 @@ class Window(
                 str(archive.path)
                 + "\n"
                 + json.dumps(metadata, ensure_ascii=False, indent=2)
-                + "\n双击读取包内模块并尝试恢复；草稿可编辑另存，写包前须检查并采用。"
+                + "\n双击包内模块可恢复；草稿可编辑，自动校验通过后按 F5 写入原包。"
             )
+
+    def open_archive_dir(self):
+        """打开脚本目录：把该目录（含一层子目录）里的 .fls 全部打开。"""
+        directory = QFileDialog.getExistingDirectory(self, "打开脚本目录")
+        if not directory:
+            return
+        root = Path(directory)
+        files = sorted(
+            {*root.glob("*.fls"), *root.glob("*/*.fls")},
+            key=lambda path: str(path).lower(),
+        )
+        if not files:
+            self.statusBar().showMessage("该目录下没有 .fls", 6000)
+            return
+        known = {a.path.resolve() for a in self.archives}
+        todo = [path for path in files if path.resolve() not in known]
+        if not todo:
+            self.statusBar().showMessage("该目录里的包都已经打开", 6000)
+            return
+
+        # Readers opened by the worker, so a failure can still release them.
+        documents = []
+
+        def prepare():
+            for path in todo:
+                document = None
+                try:
+                    document = ArchiveDocument(path)
+                    catalog, warning, check = resolve_catalog(
+                        document,
+                        self.runtime_root,
+                        self.verdict_cache,
+                        progress=self.progress.update,
+                    )
+                    if catalog is None:
+                        index_script_paths(document, None)
+                    elif not document.module_paths:
+                        index_with_cache(
+                            document,
+                            catalog,
+                            self.verdict_cache,
+                            tool_version=__version__,
+                            progress=self.progress.update,
+                        )
+                except Exception:  # noqa: BLE001 - keep the other packages
+                    if document is not None:
+                        document.close()
+                    continue
+                documents.append((document, catalog))
+            self.progress.finish()
+            return list(documents)
+
+        def complete(opened_documents):
+            opened = 0
+            for document, catalog in opened_documents:
+                try:
+                    self.add_archive(document)
+                except Exception:  # noqa: BLE001
+                    document.close()
+                    continue
+                if catalog is not None and not any(
+                    c.archive == document.path for c in self.catalogs
+                ):
+                    self.catalogs.append(catalog)
+                opened += 1
+            self.project_dirty = True
+            self.statusBar().showMessage(
+                f"已打开 {opened} 个包（共 {len(self.archives)} 个）", 10000
+            )
+
+        def failed(_error):
+            # The batch aborted: release every reader the worker had opened so
+            # a later write cannot be blocked by our own handle.
+            for document, _catalog in documents:
+                document.close()
+            documents.clear()
+
+        self.task(prepare, complete, on_error=failed)
 
     def add_source(
         self,
@@ -419,7 +511,6 @@ class Window(
         tab.editor.cursorPositionChanged.connect(self.update_cursor)
         tab.vm.currentIndexChanged.connect(self.refresh_native_action)
         tab.vm.currentIndexChanged.connect(lambda: setattr(self, "project_dirty", True))
-        tab.adopt_button.clicked.connect(self.adopt_recovery)
         self.refresh_tab_title(tab)
         self.refresh_native_action()
         return tab
@@ -438,6 +529,94 @@ class Window(
         )
         self.tabs.setTabText(self.tabs.indexOf(tab), label)
         self.tabs.setTabToolTip(self.tabs.indexOf(tab), str(tab.path))
+
+    # -- local .py files ------------------------------------------------
+    def new_source_file(self):
+        """新建 .py：先问文件名，再打开一个空标签。"""
+        name, _ = QFileDialog.getSaveFileName(
+            self, "新建 .py（不得覆盖已有文件）", "untitled.py", "Python (*.py)"
+        )
+        if not name:
+            return
+        path = Path(name if name.lower().endswith(".py") else name + ".py")
+        try:
+            if path.exists():
+                raise ValueError(f"{path.name} 已存在；新建不会覆盖文件")
+            # Same guard as 另存为/另存草稿/导出：a file dialog may point at a
+            # read-only corpus directory, and新建 must not write into it.
+            self.assert_writable_target(path)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                "# coding: utf-8\n# 本机源码：UTF-8；保存用 Ctrl+S，写包用 F5\n",
+                encoding="utf-8",
+            )
+            self.add_source(path)
+            self.statusBar().showMessage(f"已新建 {path.name}", 6000)
+        except Exception as exc:
+            self.fail(exc)
+
+    def open_source_dir(self):
+        """打开 .py 目录：把该目录下所有 .py 依次打开（只读的不会混进来）。"""
+        directory = QFileDialog.getExistingDirectory(self, "打开 .py 目录")
+        if not directory:
+            return
+        files = sorted(Path(directory).glob("*.py"))
+        if not files:
+            self.statusBar().showMessage("该目录下没有 .py 文件", 6000)
+            return
+        opened, failed = 0, []
+        for path in files:
+            try:
+                self.add_source(path, source_kind=self._source_kind_for(path))
+                opened += 1
+            except Exception as exc:  # noqa: BLE001 - one bad file, keep going
+                failed.append(f"{path.name}: {exc}")
+        message = f"已打开 {opened} 个 .py"
+        if failed:
+            message += "；" + "；".join(failed[:5])
+        self.statusBar().showMessage(message, 12000)
+
+    def save_source_as(self):
+        """另存为：写到新路径，并把标签指向新文件。"""
+        try:
+            tab = self.editable()
+            name, _ = QFileDialog.getSaveFileName(
+                self, "另存为（不得覆盖已有文件）", tab.path.name, "Python (*.py)"
+            )
+            if not name:
+                return
+            target = Path(name if name.lower().endswith(".py") else name + ".py")
+            if target.exists() and target.resolve() != tab.path.resolve():
+                raise ValueError(f"{target.name} 已存在；另存为不会覆盖文件")
+            self.assert_writable_target(target)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(tab.editor.toPlainText(), encoding="utf-8")
+            old = tab.path
+            tab.path = target.resolve()
+            tab.source_revision = SourceRevision.capture(tab.path)
+            tab.draft_saved = True
+            tab.editor.document().setModified(False)
+            # A bound module keeps its binding, pointed at the new file.
+            self.bindings = [
+                replace(binding, source=tab.path) if binding.source == old else binding
+                for binding in self.bindings
+            ]
+            self.refresh_tab_title(tab)
+            self.project_dirty = True
+            self.statusBar().showMessage(f"已另存为 {tab.path.name}", 8000)
+        except Exception as exc:
+            self.fail(exc)
+
+    @staticmethod
+    def _source_kind_for(path):
+        """Decompiler output is a draft, not an authored source, from the start."""
+        try:
+            head = path.read_text(encoding="utf-8").splitlines()[:3]
+        except (OSError, UnicodeError):
+            return None
+        if any("MXSJ-RECOVERED-DRAFT" in line for line in head):
+            return "recovered-draft"
+        return None
 
     def open_source(self):
         name, _ = QFileDialog.getOpenFileName(
@@ -527,22 +706,10 @@ class Window(
         tab.editor.document().setModified(False)
 
     def save_current(self):
+        """Ctrl+S saves the .py. Writing the package is F5, a separate verb."""
         try:
-            # Loose mode makes Ctrl+S one step: save the .py, compile, write back
-            # into the package. A tab that belongs to no bound module keeps the
-            # plain behaviour, but says so instead of looking like a no-op.
-            if self.save_mode() == LOOSE:
-                if self.can_loose_save():
-                    self.loose_save_checked()
-                    return
-                self.save_tab(self.current())
-                self.statusBar().showMessage(
-                    "宽松模式：这条源码尚未关联包内条目，只保存了 .py；"
-                    "要写回原包请先「关联源码到选中条目」",
-                    10000,
-                )
-                return
             self.save_tab(self.current())
+            self.statusBar().showMessage(f"已保存 {self.current().path.name}", 5000)
         except Exception as exc:
             self.fail(exc)
 
@@ -667,9 +834,6 @@ class Window(
         if self.jobs or not all(
             self.confirm_tab(self.tabs.widget(i)) for i in range(self.tabs.count())
         ):
-            event.ignore()
-            return
-        if not self.confirm_project():
             event.ignore()
             return
         self.analysis_timer.stop()

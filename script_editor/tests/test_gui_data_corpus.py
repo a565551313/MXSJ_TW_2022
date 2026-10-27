@@ -57,7 +57,9 @@ class DataCorpusGuiTests(unittest.TestCase):
             return build_data_corpus(self.archive, self.output)[0]
 
     def test_data_generation_action_builds_and_associates_vm27_corpus(self):
-        self.assertIn("data_corpus", self.window.ui_actions)
+        # The 语料 menu exposes only the two exports now; the VM2.7 generator
+        # stays available as an internal entry point.
+        self.assertNotIn("data_corpus", self.window.ui_actions)
         with (
             patch.object(
                 QFileDialog, "getSaveFileName", return_value=(str(self.output), "")

@@ -198,10 +198,9 @@ class Workspace(WorkspaceActions, WorkspaceMenus):
         layout.addWidget(subtitle)
         layout.addSpacing(24)
         for text, detail, callback in [
-            ("打开脚本包", "双击条目读取 / 恢复草稿 / 编辑", self.open_archive),
-            ("打开可信源码", "编辑自己的 UTF-8 .py，不执行模块", self.open_source),
-            ("继续已有项目", "恢复包与源码关联，继续生成新包", self.open_project),
-            ("打开只读参考", "参考稿不参与保存、关联或编译", self.open_reference),
+            ("打开脚本文件", "整个 .fls 一次打开，双击条目即编辑", self.open_archive),
+            ("打开脚本目录", "把目录里的包全部列出来", self.open_archive_dir),
+            ("打开 .py 文件", "编辑本机 UTF-8 源码，不执行模块", self.open_source),
         ]:
             row = QHBoxLayout()
             button = QPushButton(text)
@@ -212,10 +211,10 @@ class Workspace(WorkspaceActions, WorkspaceMenus):
             layout.addLayout(row)
         layout.addSpacing(28)
         note = QLabel(
-            "工作流\n打开包 → 双击条目 → 恢复草稿直接编辑 → 检查并采用\n"
-            "→ 生成新名字的包\n\n"
-            "保存 .py、保存项目、生成游戏包彼此独立。\n"
-            "原包只读；恢复失败显示具体原因，不生成占位源码。"
+            "三步\n① 打开脚本文件 → ② 双击条目，恢复稿自动校验并绑定（绿色＝可写）\n"
+            "③ 改完按 F5 写入原包（留 .bak）或 F6 生成新包\n\n"
+            "Ctrl+S 只保存 .py；写包是 F5/F6，点一下就走，没有模式、没有清单确认。\n"
+            "恢复失败会写明原因，不生成占位源码。"
         )
         note.setWordWrap(True)
         layout.addWidget(note)

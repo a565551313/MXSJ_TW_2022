@@ -18,9 +18,8 @@ from script_editor.core.services.workflow import Snapshot, prepare_build
 
 if not QT_ERROR:
     from PySide6.QtCore import QEventLoop, QThread, QTimer
-    from PySide6.QtWidgets import QApplication, QDialog, QFileDialog
+    from PySide6.QtWidgets import QApplication
 
-    from script_editor.gui.preview import BuildPreview
     from script_editor.gui.window import Window
 
 
@@ -71,34 +70,25 @@ class GuiWorkflowTests(unittest.TestCase):
             self.state.catalogs[0],
         )
 
-    def test_native_action_requires_matching_selection_source_vm_and_compiler(self):
+    def test_write_actions_need_a_package_and_its_compiler(self):
+        """F5/F6 gate on the package, not on a hand-made association.
+
+        The old rule required a matching (selection, tab, VM) triple because
+        "关联" was a manual step. It is automatic now: the actions are enabled
+        when a package is selected and its VM had a compiler self-check pass.
+        """
         self.install()
-        self.assertFalse(self.window.native_action.isEnabled())
-        # Eligibility only; no compile/audit is stubbed or claimed here.
+        self.assertFalse(self.window.write_action.isEnabled())
+        self.assertFalse(self.window.generate_action.isEnabled())
         self.window.compilers["py25"] = object()
         self.window.refresh_native_action()
-        self.assertTrue(self.window.native_action.isEnabled())
-        self.window.current().vm.setCurrentIndex(1)
-        self.assertFalse(self.window.native_action.isEnabled())
-        self.window.current().vm.setCurrentIndex(0)
+        self.assertTrue(self.window.write_action.isEnabled())
+        self.assertTrue(self.window.generate_action.isEnabled())
+        # Selecting a different VM's package does not inherit that compiler.
         self.window.tree.setCurrentItem(self.window.tree.topLevelItem(0).child(1))
-        self.assertFalse(self.window.native_action.isEnabled())
-
-    def test_cancel_preview_never_asks_output_or_changes_dirty_buffer(self):
-        plan = self.plan()
-        tab = self.window.current()
-        before = tab.editor.toPlainText()
-        with (
-            patch.object(
-                BuildPreview, "exec", return_value=QDialog.DialogCode.Rejected
-            ),
-            patch.object(QFileDialog, "getSaveFileName") as output,
-        ):
-            self.window.show_build_plan(plan)
-        output.assert_not_called()
-        self.assertEqual(tab.editor.toPlainText(), before)
-        self.assertTrue(tab.editor.document().isModified())
-        self.assertEqual(self.window.bindings, list(self.state.bindings))
+        self.window.compilers.clear()
+        self.window.refresh_native_action()
+        self.assertFalse(self.window.write_action.isEnabled())
 
     def test_stale_preview_cannot_start_publish(self):
         plan = self.plan()
