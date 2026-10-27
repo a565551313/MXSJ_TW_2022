@@ -3,6 +3,7 @@
 > **文档导航（2026-10-18 核对）**：
 > - [`AGENTS.md`](AGENTS.md) — 给 Agent / 新成员的接手指南：目录地图、命令、红线、工作方式（长期有效）。
 > - [`docs/STATUS.md`](docs/STATUS.md) — **当前状态**：分支、各组件实测、红灯、等待事项、下一步（每轮更新）。
+> - [`docs/archive/STATUS_HISTORY.md`](docs/archive/STATUS_HISTORY.md) — **历史归档**：STATUS 拆分前的 §3（红灯 3.1–3.82）与 §4–§7 历史轮次记录（原编号未改）。
 > - 本文 — 项目总览：目标、能力边界、各子系统说明、原则与常见问题。
 > - [`docs/PYTHON_TOOL_CONVENTIONS.md`](docs/PYTHON_TOOL_CONVENTIONS.md) — Python 工具 / 编辑器开发约定（PEP 8、PySide6、自检启动脚本、一键 EXE、Linux→Windows 交付检查）。
 > - [`docs/ROADMAP.md`](docs/ROADMAP.md) — 建议阶段、前置条件与验收门槛，不是自动开发授权。
@@ -92,7 +93,7 @@ MXSJ_TW_2022/
 ├── docs/
 │   ├── STATUS.md                 当前状态快照（每轮更新）
 │   ├── PYTHON_TOOL_CONVENTIONS.md 工具 / 编辑器开发约定
-│   └── archive/                  已被取代的历史快照（含原 AGENT_HANDOFF.md）
+│   └── archive/                  已被取代的历史快照（含原 AGENT_HANDOFF.md 与 STATUS_HISTORY.md）
 ├── ruff.toml / .editorconfig / .gitattributes  统一风格（88 列、py310）、编辑器设置、*.bat 强制 CRLF
 ├── notes/                        逆向结案笔记：双 VM opcode 表、0SLF 路径哈希与 .dlg、游戏数据、UI 编辑器二期设计
 ├── mx.exe / mxmain.dll / *.dll   客户端程序（根目录即游戏安装目录；mx.exe/mxmain.dll/exe/python27*.dll 是逆向对象）
@@ -583,7 +584,7 @@ REVIEW_API_BASE=http://127.0.0.1:8000 npx vitest run src/api/liveBackend.test.ts
 |---|---|
 | 接手整个项目 | [AGENTS.md](AGENTS.md) → [docs/STATUS.md](docs/STATUS.md) → 要碰的子目录 README |
 | 看历史交接快照 | [docs/archive/](docs/archive/README.md)（含原 `AGENT_HANDOFF.md`） |
-| 新写 / 改造 Python 工具或编辑器 | [docs/PYTHON_TOOL_CONVENTIONS.md](docs/PYTHON_TOOL_CONVENTIONS.md) → [tools/devkit/README.md](tools/devkit/README.md)；现状差距 [STATUS §3.5](docs/STATUS.md) |
+| 新写 / 改造 Python 工具或编辑器 | [docs/PYTHON_TOOL_CONVENTIONS.md](docs/PYTHON_TOOL_CONVENTIONS.md) → [tools/devkit/README.md](tools/devkit/README.md)；现状差距 [STATUS_HISTORY §3.5](docs/archive/STATUS_HISTORY.md#s3-3-5) |
 | 了解服务端范围 | [server/README.md](server/README.md) |
 | 找模块/玩法材料 | [MODULES.md](server/docs/MODULES.md)、[SUBSYSTEMS.md](server/docs/SUBSYSTEMS.md)、[材料目录](server/docs/catalog/DIRECTORIES.md) |
 | 审核数据来源 | [CSV_READINESS.md](server/docs/CSV_READINESS.md)、[SOURCE_EVIDENCE.md](server/docs/SOURCE_EVIDENCE.md) |

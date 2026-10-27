@@ -218,7 +218,7 @@ $PY tools/decompiler/batch_decompile.py data/script.fls /tmp/probe --limit 2 --w
    `script/mangled/`；原始值在文件头与 `manifest.json`。**不要按路径反推原文**，也不要按
    `script_entries.jsonl` 的 `current_filename` 匹配（AGENTS §6：清点必须扫目录）。
 3. **`\xNN` 转义不可逐字节还原**：141 份含被转义的非 UTF-8 字节，只作阅读参考；哪几档被转义，
-   `manifest.json` 的逐档 `escaped_bytes` 标了。要回编译（STATUS §5.2 ④）必须：剥掉模块顶层那个
+   `manifest.json` 的逐档 `escaped_bytes` 标了。要回编译（[PYTHON_TOOL_CONVENTIONS §5.2](PYTHON_TOOL_CONVENTIONS.md#52-人工清单静态检查覆盖不到的) ④）必须：剥掉模块顶层那个
    `return` + **两引擎都过 `compile()`** + 输入不得取自 `script_fls_pycdc/`。
 
 ## 6. 产物放哪、能活多久，以及怎么跟用户要授权
@@ -256,5 +256,5 @@ $PY tools/decompiler/batch_decompile.py data/script.fls /tmp/probe --limit 2 --w
   必须同时把 §4 改回「坑」并说明为什么可以静默。**P4 仍是待办**。
 - 改这三个工具的 CLI 或默认路径属于**行为变更**：`batch_decompile.py` 的 SHA 被
   `server/docs/csv_checks/agent_e_reproduction.json` 与 `batch_001/manifest.json` 双重钉住，
-  必须按 `docs/STATUS.md` §3.1 的两步刷新（重生成证据 → 干跑对比只拷 `manifest.json`），
+  必须按 [`docs/archive/STATUS_HISTORY.md`](archive/STATUS_HISTORY.md) §3.1 的两步刷新（重生成证据 → 干跑对比只拷 `manifest.json`），
   并逐字段确认只有哈希在动。

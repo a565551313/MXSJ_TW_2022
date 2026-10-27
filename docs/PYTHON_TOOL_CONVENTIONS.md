@@ -1,7 +1,7 @@
 # Python 工具与编辑器开发约定
 
 > **2026-10-14 与用户约定。** 适用于仓库内所有**新写或大改**的 Python 工具、编辑器、脚本（`tools/`、`*_editor/`、`server/tools/`、`work/**/tools/` 等）。
-> 摘要在 [`AGENTS.md`](../AGENTS.md) §5；现有工具与本约定的差距、补齐顺序记录在 [`STATUS.md`](STATUS.md) §3.5。
+> 摘要在 [`AGENTS.md`](../AGENTS.md) §5；现有工具与本约定的差距、补齐顺序记录在 [`STATUS_HISTORY §3.5`](archive/STATUS_HISTORY.md#s3-3-5)。
 > 约定只有一个目的：**用户在 Windows 上双击就能用，不来回折腾。**
 
 ## 0. 一句话版本
@@ -83,7 +83,7 @@ PEP 8 + 模块化；GUI 只用 PySide6；每个工具自带「自检并启动」
 - spec 要求：入口是**不做 pip 安装**的轻量脚本（`run.py` 或 `src/<package>/__main__.py`，不是 `bootstrap.py`）；GUI 程序 `console=False`，但无参数双击必须直接开窗（map_editor PR #25 的教训）；`datas` 带上程序需要的数据文件；`hiddenimports` 用 `collect_submodules("<package>")`；`excludes` 去掉 tkinter / matplotlib / numpy / pytest 等没用到的大包；用了 `multiprocessing` 必须 `freeze_support()`；onedir 模式 `EXE(...)` 必须 `exclude_binaries=True`（写成 `exclude_binaries=not ONEFILE` 让一份 spec 两用），否则 `COLLECT` 必报 `Resource ... is not a valid file`——map_editor 的旧 spec 就漏了这一项，直到 10-14 干跑才暴露。
 - 冻结态资源定位：`Path(getattr(sys, "_MEIPASS", Path(__file__).parent))`；用户配置写到 `%APPDATA%\<Tool>\`（`Path(os.environ.get("APPDATA", Path.home()))`），不写进安装目录或源码目录。
 - 版本：「关于」对话框或 `--version` 显示 `__version__`，与 `pyproject.toml` 一致；`dist/`、`build/`、`.venv/` 不入库。
-- **参考实现**：[`map_editor/build_exe.bat`](../map_editor/build_exe.bat) + [`map_editor/map_editor.spec`](../map_editor/map_editor.spec)；`resource_editor/`、`ui_editor/` 的同名文件由同一模板生成，只差工具名 / spec 名 / `<TOOL>_ONEFILE` 变量名。注意三者至今**没有在 Windows 上实机构建过**（STATUS §3.5），谁先在 Windows 上跑通谁把结果写回去。
+- **参考实现**：[`map_editor/build_exe.bat`](../map_editor/build_exe.bat) + [`map_editor/map_editor.spec`](../map_editor/map_editor.spec)；`resource_editor/`、`ui_editor/` 的同名文件由同一模板生成，只差工具名 / spec 名 / `<TOOL>_ONEFILE` 变量名。注意三者至今**没有在 Windows 上实机构建过**（[STATUS_HISTORY §3.5](archive/STATUS_HISTORY.md#s3-3-5)），谁先在 Windows 上跑通谁把结果写回去。
 
 ## 5. Linux 开发 → Windows 交付检查
 
@@ -95,7 +95,7 @@ PEP 8 + 模块化；GUI 只用 PySide6；每个工具自带「自检并启动」
 | 单元测试 | `(cd <tool> && PYTHONPATH=src QT_QPA_PLATFORM=offscreen python3 -m unittest discover -s tests)` | 全过；缺 libGL 时 GUI 测试记「未执行」 |
 | 自检脚本 | `python3 <tool>/bootstrap.py --check-only` | 退出码 0 |
 | Windows 兼容静态检查 | `python3 tools/devkit/check_windows_compat.py <tool>`（新工具或大改时加 `--strict`） | 无 ERROR；每条 WARNING 要么修掉，要么在 PR 里逐条说明为什么可以留 |
-| spec 干跑（可选，需能 import PySide6） | `(cd <tool> && pyinstaller --noconfirm --clean --distpath /tmp/wc-dist --workpath /tmp/wc-build <tool>.spec)`，再带 `<TOOL>_ONEFILE=1` 跑一次 | 两种模式都构建成功，且数据文件出现在 `dist/<Name>/_internal/<package>/data/`；沙箱缺 libGL / libpython 时的桩库办法见 STATUS §3.3 |
+| spec 干跑（可选，需能 import PySide6） | `(cd <tool> && pyinstaller --noconfirm --clean --distpath /tmp/wc-dist --workpath /tmp/wc-build <tool>.spec)`，再带 `<TOOL>_ONEFILE=1` 跑一次 | 两种模式都构建成功，且数据文件出现在 `dist/<Name>/_internal/<package>/data/`；沙箱缺 libGL / libpython 时的桩库办法见 [STATUS_HISTORY §3.3](archive/STATUS_HISTORY.md#s3-3-3) |
 
 [`tools/devkit/check_windows_compat.py`](../tools/devkit/README.md) 检查：文件名（非法字符、保留名、大小写冲突、长度、符号链接）、`.bat`（CRLF、BOM、`chcp 65001`）、Python 源码（`open`/`read_text` 缺 `encoding`、POSIX 专用 API、硬编码 `/tmp`、字面量 `python3` 启动子进程、非 PySide6 GUI）。规则表：`--list-rules`；行内豁免：行尾加 `# win-ok: 原因`。
 
@@ -138,7 +138,7 @@ PR 描述与 STATUS 里分三栏写：**Linux 已做 / Windows 待验 / 已知�
 
 ## 7. 现有工具怎么办
 
-不要求一次性把老工具全部改造；差距清单与补齐顺序维护在 [`STATUS.md`](STATUS.md) §3.5。原则：
+不要求一次性把老工具全部改造；差距清单与补齐顺序维护在 [`STATUS_HISTORY §3.5`](archive/STATUS_HISTORY.md#s3-3-5)。原则：
 
 - **碰到就补齐**：改某个工具时，顺手让它满足本约定（至少：ruff 0 报告 + `bootstrap.py` + Windows 静态检查无 ERROR）。
 - **新代码零例外**：新工具、新模块一律按本约定；在老文件里加新函数也按 PEP 8。

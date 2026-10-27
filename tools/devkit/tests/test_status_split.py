@@ -1,0 +1,258 @@
+"""STATUS 拆分（当前状态 / 历史归档）的结构回归测试。
+
+**为什么要有这个测试**：2026-10-27 把 `docs/STATUS.md` 的历史部分（§3 红灯
+3.1–3.82、§4–§7 与历史轮次条目）拆到 `docs/archive/STATUS_HISTORY.md`。
+拆分本身容易引入三类静默损坏：
+
+1. **内容丢失**——搬运时少复制了段落；
+2. **链接断裂**——正文相对链接随层级变化而失效；
+3. **锚点失效**——外部引用 `§3.x` 找不到对应小节。
+
+这个测试把这三条钉住。纯标准库，不依赖 PySide6 / Pillow。
+"""
+
+from __future__ import annotations
+
+import re
+import subprocess
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[3]
+STATUS = ROOT / "docs" / "STATUS.md"
+HISTORY = ROOT / "docs" / "archive" / "STATUS_HISTORY.md"
+ARCHIVE_README = ROOT / "docs" / "archive" / "README.md"
+
+LINK = re.compile(r"\[[^\]\n]*\]\(([^)\n]+)\)")
+HEADING = re.compile(r"^#{2,6}\s+(3\.\d+(?:\.\d+)?)\s", re.M)
+ANCHOR = re.compile(r'<a id="(s3-[0-9\-]+)"></a>')
+
+# 拆分时**有意**做过措辞微调的原文行。新增例外必须写明理由。
+ALLOWED_REWORDED = (
+    # 原句在 STATUS.md §2 末尾；拆到归档后该行不再位于「以下」的历史段之前，
+    # 故去掉「以下」二字，语义不变。
+    "- 以下旧 §4–§7 也是历史管理记录；当前等待项／下一步以本节为准。",
+)
+
+
+class SplitStructureTests(unittest.TestCase):
+    """两份文件都存在，职责分明。"""
+
+    def test_both_files_exist(self):
+        self.assertTrue(STATUS.is_file(), "docs/STATUS.md 应存在")
+        self.assertTrue(HISTORY.is_file(), "docs/archive/STATUS_HISTORY.md 应存在")
+
+    def test_status_is_a_current_state_snapshot(self):
+        """STATUS.md 应回到「当前状态快照」的体量，不该再是几千行。"""
+        lines = STATUS.read_text(encoding="utf-8").splitlines()
+        self.assertLess(
+            len(lines),
+            800,
+            f"docs/STATUS.md 仍有 {len(lines)} 行，拆分目标没达到（应 <800 行）",
+        )
+
+    def test_history_holds_the_numbered_sections(self):
+        """历史小节应搬到归档文件，且 §编号保持。"""
+        text = HISTORY.read_text(encoding="utf-8")
+        nums = set(HEADING.findall(text))
+        self.assertGreater(len(nums), 80, "归档文件应含 80+ 个 §3.x 小节")
+        for must in ("3.1", "3.2", "3.49", "3.51", "3.79", "3.81", "3.82"):
+            self.assertIn(must, nums, f"归档文件应保留 §{must}")
+
+    def test_status_links_to_history(self):
+        """STATUS.md 必须指向归档文件，否则读者找不到历史。"""
+        text = STATUS.read_text(encoding="utf-8")
+        self.assertIn("STATUS_HISTORY.md", text)
+
+
+class NoContentLostTests(unittest.TestCase):
+    """拆分不能丢内容。"""
+
+    def _original_status(self) -> str:
+        proc = subprocess.run(
+            ["git", "show", "HEAD:docs/STATUS.md"],
+            capture_output=True,
+            text=True,
+            cwd=ROOT,
+        )
+        if proc.returncode != 0:
+            self.skipTest("取不到拆分前的 docs/STATUS.md（git 历史不可用）")
+        return proc.stdout
+
+    @staticmethod
+    def _normalize(text: str) -> str:
+        """去 markdown 链接语法与标点，只留正文语义。"""
+        text = re.sub(r"\[([^\]\n]*)\]\([^)\n]*\)", r"\1", text)
+        text = re.sub(r"[`*_#>|<>（）()\[\]　\s]", "", text)
+        return text
+
+    def test_every_original_line_survives(self):
+        """拆分前的每一行正文，都还能在两份新文件里找到。
+
+        **允许的例外**：拆分时有 1 行做了措辞微调（把「以下旧 §4–§7 也是历史
+        管理记录」改成「旧 §4–§7 也是历史管理记录」，因为新位置已不再是
+        「以下」）。这类有意改动列在 `ALLOWED_REWORDED` 里显式登记，
+        **新增例外必须写明理由**，不能默默放宽判定。
+        """
+        original = self._original_status()
+        combined = self._normalize(
+            STATUS.read_text(encoding="utf-8")
+        ) + self._normalize(HISTORY.read_text(encoding="utf-8"))
+        missing = []
+        for index, line in enumerate(original.splitlines(), 1):
+            stripped = line.strip()
+            if not stripped:
+                continue
+            normalized = self._normalize(stripped)
+            if not normalized:
+                continue
+            if normalized in combined:
+                continue
+            if any(self._normalize(old) == normalized for old in ALLOWED_REWORDED):
+                continue
+            missing.append((index, stripped[:120]))
+        self.assertEqual(
+            missing,
+            [],
+            "以下原文行在拆分后找不到对应内容：\n"
+            + "\n".join(f"  {i}: {t}" for i, t in missing),
+        )
+
+
+class AnchorTests(unittest.TestCase):
+    """§3.x 小节要有稳定锚点，供外部链接。"""
+
+    def test_every_numbered_section_has_anchor(self):
+        text = HISTORY.read_text(encoding="utf-8")
+        anchors = set(ANCHOR.findall(text))
+        for num in HEADING.findall(text):
+            expected = "s3-" + num.replace(".", "-")
+            self.assertIn(
+                expected,
+                anchors,
+                f"§{num} 缺显式锚点 {expected}（外部链接会断）",
+            )
+
+    def test_all_external_anchors_resolve(self):
+        """仓库里所有指向归档文件的锚点链接都必须能落地。"""
+        broken = []
+        for path in ROOT.rglob("*.md"):
+            sp = path.as_posix()
+            if ".git/" in sp:
+                continue
+            text = path.read_text(encoding="utf-8", errors="replace")
+            for match in re.finditer(
+                r"\]\(([^)\n]*STATUS_HISTORY\.md)#([A-Za-z0-9\-_]+)\)", text
+            ):
+                rel, anchor = match.group(1), match.group(2)
+                target = (path.resolve().parent / rel).resolve()
+                if not target.exists():
+                    broken.append(f"{sp}: 文件不存在 {rel}")
+                    continue
+                if f'id="{anchor}"' not in target.read_text(encoding="utf-8"):
+                    broken.append(f"{sp}: 锚点不存在 #{anchor}")
+        self.assertEqual(broken, [], "锚点链接失效：\n" + "\n".join(broken))
+
+
+class LinkTests(unittest.TestCase):
+    """拆分后正文相对链接不能断。"""
+
+    def test_archive_internal_links_resolve(self):
+        """归档文件里的相对链接要按新层级修正。"""
+        broken = []
+        for match in LINK.finditer(HISTORY.read_text(encoding="utf-8")):
+            target = match.group(1).strip()
+            if target.startswith(("http://", "https://", "mailto:")):
+                continue
+            base = target.split("#")[0]
+            if not base:
+                continue
+            if not (HISTORY.resolve().parent / base).exists():
+                broken.append(target)
+        self.assertEqual(
+            broken, [], "归档文件里失效的相对链接：\n" + "\n".join(sorted(set(broken)))
+        )
+
+    def test_status_internal_links_resolve(self):
+        broken = []
+        for match in LINK.finditer(STATUS.read_text(encoding="utf-8")):
+            target = match.group(1).strip()
+            if target.startswith(("http://", "https://", "mailto:")):
+                continue
+            base = target.split("#")[0]
+            if not base:
+                continue
+            if not (STATUS.resolve().parent / base).exists():
+                broken.append(target)
+        self.assertEqual(
+            broken,
+            [],
+            "STATUS.md 里失效的相对链接：\n" + "\n".join(sorted(set(broken))),
+        )
+
+
+class NoDanglingStatusRefsTests(unittest.TestCase):
+    """不该再有指向「已搬走的 STATUS §3.x」的裸引用。
+
+    **判定范围**：只抓**指向 STATUS 的路径或链接**形式——
+    ``STATUS.md` §3.1``、``[STATUS §3.5](docs/STATUS.md)``、``STATUS§3.51``。
+    纯叙述里提到「STATUS 没有 §5.2」这类**说明性文字**不算悬挂引用，
+    否则本文档自己在解释拆分规则时就会被自己的测试判为失败。
+    """
+
+    # 形如 `` `docs/STATUS.md` §3.1 `` —— 反引号里必须包着**路径**
+    PATH_LIKE = re.compile(r"`[^`\n]*STATUS\.md`[^§\n]{0,12}§\s*(3\.\d+|[4-7])\b")
+    # 形如 STATUS§3.51 —— 无空格粘连写法
+    GLUED = re.compile(r"(?<![A-Z_])STATUS§\s*(3\.\d+|[4-7])\b")
+    # Markdown 链接，标签里点名 STATUS
+    MD_LINK = re.compile(
+        r"\[(?P<label>[^\]\n]*STATUS[^\]\n]*)\]\((?P<target>[^)\n]*)\)"
+    )
+
+    def _offenders(self) -> list[str]:
+        out: list[str] = []
+        for path in ROOT.rglob("*.md"):
+            sp = path.as_posix()
+            if ".git/" in sp or sp.endswith("docs/archive/STATUS_HISTORY.md"):
+                continue
+            text = path.read_text(encoding="utf-8", errors="replace")
+            for index, line in enumerate(text.splitlines(), 1):
+                if "STATUS_HISTORY" in line:
+                    continue
+                hit = self.PATH_LIKE.search(line) or self.GLUED.search(line)
+                if hit:
+                    out.append(f"{sp}:{index} {line.strip()[:110]}")
+                    continue
+                for match in self.MD_LINK.finditer(line):
+                    label = match.group("label")
+                    target = match.group("target")
+                    if "STATUS" not in label:
+                        continue
+                    if re.search(r"§\s*(3\.\d+|[4-7])\b", label) and (
+                        "STATUS_HISTORY" not in label
+                        and not target.rstrip("/").endswith("STATUS_HISTORY.md")
+                    ):
+                        out.append(f"{sp}:{index} {line.strip()[:110]}")
+        return out
+
+    def test_no_bare_refs_to_moved_sections(self):
+        offenders = self._offenders()
+        self.assertEqual(
+            offenders,
+            [],
+            "以下引用仍指向已归档的 STATUS 小节，应改指 STATUS_HISTORY：\n"
+            + "\n".join(offenders),
+        )
+
+
+class ArchiveIndexTests(unittest.TestCase):
+    """归档文件要在归档索引里登记（项目归档约定第 2 条）。"""
+
+    def test_registered_in_archive_readme(self):
+        text = ARCHIVE_README.read_text(encoding="utf-8")
+        self.assertIn("STATUS_HISTORY.md", text)
+        self.assertIn("[STATUS_HISTORY.md](STATUS_HISTORY.md)", text)
+
+
+if __name__ == "__main__":
+    unittest.main()

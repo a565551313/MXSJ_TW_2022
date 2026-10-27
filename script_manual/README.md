@@ -9,7 +9,7 @@
 
 独立、只读的脚本字典工具。**JSON 是唯一底稿**，PySide6 查看器和离线单 HTML 共用校验/索引层，不导入或执行游戏脚本，不修改游戏包、脚本编辑器或启动器。
 
-**历史集成状态（2026-10-16，STATUS§3.51；当前见上方入口）**：七个新PR39–45已全部合入A分支，未合master。5135条目录登记 / 20份说明 / **16份有限审核通过（12 H、4 A_delegate）** / 4份战斗说明待独立复核 / 1排除；无过期审核。合并不是全模块或实机验收，42条战斗函数仍是名称底稿，其余5000模块没有假讲解。
+**历史集成状态（2026-10-16，[STATUS_HISTORY §3.51](../docs/archive/STATUS_HISTORY.md#s3-3-51)；当前见上方入口）**：七个新PR39–45已全部合入A分支，未合master。5135条目录登记 / 20份说明 / **16份有限审核通过（12 H、4 A_delegate）** / 4份战斗说明待独立复核 / 1排除；无过期审核。合并不是全模块或实机验收，42条战斗函数仍是名称底稿，其余5000模块没有假讲解。
 
 - 已精确核SHA激活九份N7模板；登录四篇由A按用户授权作有限代审，不冒称N7新结论。
 - A接手补完战斗四篇的指南/事实定位，因此四篇author均记A共同作者，**A不自批**；剩余工作仅为非A对新字节独立末审，不再让用户转述返修或重开七人。
@@ -47,7 +47,7 @@ PYTHONPATH=script_manual/src python -m mxsj_manual build --verify-evidence --rep
 
 ## 给并行 Agent 的入口
 
-**N1–N7卡已执行并交PR，勿重复启动七人**；[任务卡入口](coordination/NEW_AGENTS_START_20261016.md)保留范围约束，当时已合入A，历史进展见STATUS§3.51/收尾报告，当前以STATUS§1–§2为准。下列契约/逻辑owner映射继续生效，但旧B–H分支与“更新原PR”不再是新人操作指令。
+**N1–N7卡已执行并交PR，勿重复启动七人**；[任务卡入口](coordination/NEW_AGENTS_START_20261016.md)保留范围约束，当时已合入A，历史进展见[STATUS_HISTORY §3.51](../docs/archive/STATUS_HISTORY.md#s3-3-51)/收尾报告，当前以STATUS§1–§2为准。下列契约/逻辑owner映射继续生效，但旧B–H分支与“更新原PR”不再是新人操作指令。
 
 1. 先读 [`docs/CONTRACT.md`](docs/CONTRACT.md) — 字段、证据与版本规则。
 2. 读 [`docs/AGENT_TASKS.md`](docs/AGENT_TASKS.md) — 权限边界和各任务卡。

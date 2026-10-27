@@ -28,6 +28,7 @@
 | 路径 | 是什么 | 入口文档 |
 |---|---|---|
 | `AGENTS.md` / `README.md` / `docs/STATUS.md` | 规则 / 项目总览 / 当前状态 | 本文 |
+| `docs/archive/STATUS_HISTORY.md` | 原 `docs/STATUS.md` 的历史部分（§3 红灯 3.1–3.82、§4–§7 与历史轮次条目），2026-10-27 拆出；**原 §编号未改**，每个 §3.x 有显式锚点 `s3-3-x` | [归档索引](docs/archive/README.md) |
 | `docs/archive/` | 已被取代的历史快照（只读，有横幅） | [`docs/archive/README.md`](docs/archive/README.md) |
 | `notes/client_binary_reversibility.md` | 客户端 exe/dll 的可逆性边界（逐节熵、RTTI、导出）与三条路的成本；§6–§7 是启动器 `.rsrc` 抽取结果与「资源包主体在 `data/*.fls` / `update.ini`」的分界；**原生符号"搜不到"不等于"不存在"** | `notes/opcode_mapping_and_decompilation.md` |
 | `docs/DECOMPILE_CORPUS.md` | 全量反编译语料（79 MB / 5,517 份 `.py`）**要不要建、怎么建**：30 秒决策表、实测过的重建配方、4 个已复现的坑 | [`notes/opcode_mapping_and_decompilation.md`](notes/opcode_mapping_and_decompilation.md) §4.5–§4.6 |
@@ -101,7 +102,7 @@
 
 ## 5. Python 工具 / 编辑器开发约定
 
-> 2026-10-14 与用户约定；全文、目录模板与清单见 [`docs/PYTHON_TOOL_CONVENTIONS.md`](docs/PYTHON_TOOL_CONVENTIONS.md)。新写或大改的 Python 工具、编辑器、脚本一律遵守；老工具碰到就补齐，差距清单在 STATUS §3.5。
+> 2026-10-14 与用户约定；全文、目录模板与清单见 [`docs/PYTHON_TOOL_CONVENTIONS.md`](docs/PYTHON_TOOL_CONVENTIONS.md)。新写或大改的 Python 工具、编辑器、脚本一律遵守；老工具碰到就补齐，差距清单在 [STATUS_HISTORY §3.5](docs/archive/STATUS_HISTORY.md#s3-3-5)。
 
 1. **PEP 8 + 模块化**：`ruff check <tool>` 0 报告（规则 `E,W,F,I,UP,B`、88 列、py310；根 `ruff.toml` 是默认值，工具自己的 `pyproject.toml` 照抄一份）。`src/<package>/{core,gui}` 分层，`core` 不 import Qt、可在无显示器环境测试；路径用 `pathlib`，文本 IO 必须显式 `encoding="utf-8"`。
 2. **GUI 一律 PySide6**（≥ 6.4）。不新增 tkinter / PyQt / wx 代码；现有 tkinter 工具只保留，不修补。
@@ -114,7 +115,7 @@
 - **事实 / 推断 / 设计三分开**：原字节、反汇编地址、测试输出是事实；“应该是”“推测为”要写明；设计文档不是实现。
 - **先复现，再修复，再补能复现旧 bug 的测试。** 不要只改测试期望让它变绿；记住本项目最贵的教训：*测试替身可能与实现共享同一个错误假设*（CClickBox 签名事故）——接口以原 code object / 反汇编核对。
 - **证据钉死输入**：许多测试把工具源码的 SHA-256 钉进证据 JSON（例如 `server/docs/csv_checks/agent_e_reproduction.json` 钉了 `tools/decompiler/batch_decompile.py`）。改这些工具后必须重新生成证据、逐字段 diff 并在提交信息里说明，否则架构测试会红。
-- **文档去处**：长期规则 → 本文；当前状态 → `docs/STATUS.md`；逆向结案 → `notes/`；子项目细节 → 子项目 README/DESIGN；被取代的快照 → `docs/archive/`（`git mv` + 横幅 + 修链接 + 登记索引，见 `docs/archive/README.md`）。不要再在根目录新建 `*_HANDOFF.md`。
+- **文档去处**：长期规则 → 本文；当前状态 → `docs/STATUS.md`；**历史轮次 → `docs/archive/STATUS_HISTORY.md`**（2026-10-27 起，STATUS 的 §3／§4–§7 历史部分已拆出，§编号未改）；逆向结案 → `notes/`；子项目细节 → 子项目 README/DESIGN；被取代的快照 → `docs/archive/`（`git mv` + 横幅 + 修链接 + 登记索引，见 `docs/archive/README.md`）。不要再在根目录新建 `*_HANDOFF.md`。
 - **结束一轮工作时**：更新 `docs/STATUS.md`（日期、分支、测试实测、红灯、下一步），提交并推送到当前会话分支。
 - 多 Agent 并行时按 `server/docs/OWNERSHIP.md` 的目录所有权划分；跨模块只走 `contracts`。
 
