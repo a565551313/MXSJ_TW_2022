@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import time
 import unittest
+from types import SimpleNamespace
 
 from script_editor.core.inspection.legacy_text import (
     CODECS,
@@ -84,9 +85,21 @@ class ReadingTests(unittest.TestCase):
         self.assertEqual(readings(r"'\x80\x80'"), ())
         self.assertEqual(readings(r"'\xff\xff'"), ())
 
-    def test_raw_and_unicode_literals_are_not_claimed(self):
-        self.assertEqual(readings(r"r'\xa5u\xaf\xe0'"), ())
+    def test_unicode_literals_are_not_claimed(self):
+        # u'...' holds code points, not the MBCS bytes the client compares.
         self.assertEqual(readings(r"u'\u4e2d\xa5u'"), ())
+        self.assertEqual(readings(r"u'\xa5u\xaf\xe0'"), ())
+
+    def test_raw_literal_gets_a_marked_restored_reading(self):
+        """``r'\xa5u'`` has no MBCS bytes — but the decompiler's intent can be read.
+
+        The value of a raw string is the backslash text itself, so this reading
+        is explicitly marked ``restored`` and the hint says so.
+        """
+        found = readings(r"r'\xa5u\xaf\xe0'")
+        self.assertEqual([r.codec for r in found], ["cp950"])
+        self.assertTrue(all(r.restored for r in found))
+        self.assertEqual(found[0].text, "r'只能'")
 
     def test_escaped_quote_survives_requoting(self):
         found = readings(r"'\xa5u\''")
@@ -182,8 +195,35 @@ class SourceScanTests(unittest.TestCase):
         self.assertEqual(line_previews(line), ())
         self.assertLess(time.perf_counter() - started, 1.0)
 
-    def test_raw_prefixed_literal_gets_no_reading(self):
-        self.assertEqual(readings(r"""r'\xa5u\xaf'"""), ())
+    def test_raw_literal_with_ascii_result_is_still_not_claimed(self):
+        # ESC + "[0m" carries no non-ASCII text, so there is nothing to show.
+        self.assertEqual(readings(r"r'\x1b[0m'"), ())
+
+    def test_decompiler_docstring_rendering_reads_as_the_original_text(self):
+        # Real shape from the recovered corpus (script/login/dgw.py): uncompyle6
+        # decodes a py2 str as UTF-8 with backslash escapes, so a Big5 docstring
+        # comes back as r-triple-quoted text mixing \xNN escapes with the byte
+        # pairs that happened to be valid UTF-8 (here "Ϊ", "Ⱦ", "榡", "и").
+        literal = (
+            r'r"""\xc0\xf2\xa8\xfa\xa5i\xa5ΪA\xb0Ⱦ\xb9\xa6C\xaa\xed\xa1A'
+            r'\xae榡\xac\xb0[(\xa9и\xb9, \xb7~\xb0ȪA\xa6a\xa7}, udpPort"""'
+        )
+        found = readings(literal)
+        self.assertEqual(len(found), 1)
+        self.assertTrue(found[0].restored)
+        self.assertIn("獲取可用服務器列表", found[0].text)
+        self.assertIn("房號", found[0].text)
+
+    def test_hint_marks_restored_readings_and_explains_why(self):
+        plain = SimpleNamespace(readings=readings(r"'\xa5u\xaf\xe0'"))
+        self.assertNotIn("还原", format_hint(plain))
+        restored = SimpleNamespace(readings=readings(r"r'\xa5u\xaf\xe0'"))
+        hint = format_hint(restored)
+        self.assertIn("（还原）", hint)
+        self.assertIn("反编译器", hint)
+
+    def test_plain_literals_are_not_marked_restored(self):
+        self.assertFalse(any(r.restored for r in readings(r"'\xa5u\xaf\xe0'")))
 
     def test_ansi_escape_is_never_decoded_as_text(self):
         # \033 is octal ESC; it used to be read as NUL + "33[0m" and turn into

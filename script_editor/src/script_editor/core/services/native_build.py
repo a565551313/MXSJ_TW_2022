@@ -162,6 +162,47 @@ def _replace_in_place(
     return backup_path
 
 
+def _original_native_size(archive, index, profile):
+    """Marshaled length the entry shipped with, or ``None`` if unreadable.
+
+    Only used to explain a refusal, so any failure here must not replace the
+    real error: the caller falls back to the plain message.
+    """
+    try:
+        standard = py25.decode(
+            profile.crypt(inflate_script(archive, index)), padding=True
+        )
+        return len(py25.encode(standard))
+    except (OSError, ValueError, zlib.error):
+        return None
+
+
+def _capacity_message(archive, index, profile, new_size):
+    """Explain a fixed-length refusal with the numbers the user needs.
+
+    The capacity is not a policy knob: the client derives the four XOR segment
+    boundaries from the five keys *and the payload length*, so changing the
+    length would change the cipher arithmetic. Growing a module can therefore
+    only be refused, while shrinking is fine (zero-padded back to the same
+    length).
+    """
+    over = new_size - profile.expanded_size
+    original = _original_native_size(archive, index, profile)
+    detail = (
+        ""
+        if original is None
+        else f"；原模块是 {original} 字节，本来还有 "
+        f"{profile.expanded_size - original} 字节余量"
+    )
+    return (
+        "authored marshal exceeds fixed XOR length; no shrink/rescale"
+        f"（这次编译出的原生负载 {new_size} 字节，超过该条目固定长度 "
+        f"{profile.expanded_size} 字节，超出 {over} 字节{detail}。"
+        "固定长度由客户端取参公式决定，本工具不缩放参数；"
+        "只能把模块改小或保持原样后再写回）"
+    )
+
+
 def encode_replacement(archive, replacement, profile):
     require_module_allowed(archive.vm, replacement.index)
     expected = replacement.standard_pyc
@@ -177,7 +218,7 @@ def encode_replacement(archive, replacement, profile):
         native = py25.encode(expected)
         if len(native) > profile.expanded_size:
             raise ValueError(
-                "authored marshal exceeds fixed XOR length; no shrink/rescale"
+                _capacity_message(archive, replacement.index, profile, len(native))
             )
         padded = native + bytes(profile.expanded_size - len(native))
         return zlib.compress(profile.crypt(padded), 9)

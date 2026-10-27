@@ -102,10 +102,15 @@ def _literals(line: str):
 
 @dataclass(frozen=True)
 class Reading:
-    """One codec's reading of a legacy byte literal (display text only)."""
+    """One codec's reading of a legacy byte literal (display text only).
+
+    ``restored`` marks a reading whose bytes are **not** the literal's own value
+    but what the decompiler's rendering stands for (see :func:`rendered_bytes`).
+    """
 
     codec: str
     text: str
+    restored: bool = False
 
 
 @dataclass(frozen=True)
@@ -167,6 +172,55 @@ def literal_bytes(body: str):
     return bytes(out)
 
 
+def rendered_bytes(body: str):
+    """Bytes a *decompiler rendering* stands for, or ``None`` when unsure.
+
+    ``uncompyle6`` renders a Python 2 ``str`` constant by decoding its bytes as
+    UTF-8 with backslash escapes: byte pairs that happen to be valid UTF-8
+    survive as characters, everything else becomes ``\\xNN``. A module docstring
+    therefore comes back as ``r\"\"\"\\xb9C\\xc0\\xb8\\xb1Ұʮɽե…\"\"\"`` — a raw
+    string whose escape text is *not* its own value.
+
+    The original bytes are still fully determined: an ``\\xNN`` escape is that
+    byte, and a non-ASCII character contributes its own UTF-8 encoding (which is
+    exactly how those bytes reached the rendering). Anything else — ``\\u``,
+    octal, an unknown escape — returns ``None`` instead of guessing.
+
+    This is used for display only, and any reading built from it is marked
+    :attr:`Reading.restored`, because the literal's runtime value differs.
+    """
+    if not body:
+        return None
+    out = bytearray()
+    index = 0
+    size = len(body)
+    while index < size:
+        char = body[index]
+        if char != "\\":
+            out.extend(char.encode("utf-8"))
+            index += 1
+            continue
+        following = body[index + 1 : index + 2]
+        if following == "x":
+            pair = body[index + 2 : index + 4]
+            if len(pair) != 2 or not set(pair) <= _HEX:
+                return None
+            out.append(int(pair, 16))
+            index += 4
+            continue
+        if following in _SIMPLE_ESCAPES and following:
+            if following == "0" and body[index + 2 : index + 3] in _OCTAL:
+                return None
+            out.append(_SIMPLE_ESCAPES[following])
+            index += 2
+            continue
+        if following == "\n":
+            index += 2
+            continue
+        return None
+    return bytes(out)
+
+
 def decode_bytes(data: bytes, codecs=CODECS):
     """Every exact reading of ``data``, primary first, deduplicated by text."""
     readings = []
@@ -213,22 +267,35 @@ def split_literal(literal: str):
 
 
 def readings(literal: str, codecs=CODECS):
-    """All display readings of one literal, primary first (may be empty)."""
+    """All display readings of one literal, primary first (may be empty).
+
+    Two provenances are distinguished, never mixed:
+
+    * the literal's **own bytes** (a normal ``str`` literal) — a plain reading;
+    * the bytes a **decompiler rendering** stands for (``r\"\"\"\\xNN…\"\"\"``, or a
+      literal mixing ``\\xNN`` escapes with raw non-ASCII characters) — a
+      :attr:`Reading.restored` reading. Its runtime value differs, so the hint
+      and the report say so instead of pretending it is the same thing.
+
+    ``u'...'`` is refused either way: it holds code points, not client bytes.
+    """
     parts = split_literal(literal)
     if parts is None:
         return ()
     prefix, quote, body = parts
-    if {"r", "u"} & set(prefix.lower()):
-        # Raw strings hold backslashes as data; ``u'...'`` holds code points,
-        # not the MBCS bytes the client compares.
+    if "u" in prefix.lower():
         return ()
     if "\\x" not in body:
         return ()
-    data = literal_bytes(body)
+    restored = "r" in prefix.lower()
+    data = None if restored else literal_bytes(body)
+    if not data:
+        restored = True
+        data = rendered_bytes(body)
     if not data:
         return ()
     return tuple(
-        Reading(reading.codec, _render(prefix, quote, reading.text))
+        Reading(reading.codec, _render(prefix, quote, reading.text), restored)
         for reading in decode_bytes(data, codecs)
     )
 
@@ -328,6 +395,14 @@ def summary(records) -> dict:
 #: Shown above every hint and report: the reader must know this is not source.
 DISPLAY_ONLY = "只读预览 · 源码字节未改 · 不可用于替换或编译"
 
+#: Shown when a reading came from :func:`rendered_bytes` rather than from the
+#: literal's own value, so nobody mistakes it for the runtime string.
+RESTORED_NOTE = (
+    "还原读法：这里按反编译器的渲染反推原常量字节"
+    "（每个 \\xNN 当一个字节，非 ASCII 字符按其 UTF-8 字节）；"
+    "这个原始串本身的值不是这些字节"
+)
+
 RAW_LIMIT = 400
 REPORT_LIMIT = 400_000
 
@@ -336,7 +411,10 @@ def format_hint(record) -> str:
     """Hover text for one literal: every exact reading, primary first."""
     lines = [DISPLAY_ONLY]
     for reading in record.readings:
-        lines.append(f"{reading.codec}: {clamp(reading.text, 200)}")
+        mark = "（还原）" if reading.restored else ""
+        lines.append(f"{reading.codec}{mark}: {clamp(reading.text, 200)}")
+    if any(reading.restored for reading in record.readings):
+        lines.append(RESTORED_NOTE)
     return "\n".join(lines)
 
 
@@ -360,15 +438,20 @@ def report_text(records, title: str = "", limit: int = REPORT_LIMIT):
         "# 这些字面量是 MBCS 字节串（Python2 str），游戏按原始字节比较。",
         "# 同一串字节可能同时是合法 Big5 与合法 GBK：多种读法全部列出，不做取舍。",
         "# 本文件不再被任何流程读取：不写回源码、不参与编译、不打包。",
-        "-" * 60,
     ]
+    if any(reading.restored for record in records for reading in record.readings):
+        lines.append("# 标「反编译器还原」的条目：" + RESTORED_NOTE)
+    lines.append("-" * 60)
     body = []
     used = sum(len(line) + 1 for line in lines)
     truncated = False
     for record in records:
         block = [f"第 {record.line} 行", f"  原文: {clamp(record.raw, RAW_LIMIT)}"]
         for reading in record.readings:
-            block.append(f"  {reading.codec:<5}: {clamp(reading.text, RAW_LIMIT)}")
+            mark = "  （反编译器还原）" if reading.restored else ""
+            block.append(
+                f"  {reading.codec:<5}: {clamp(reading.text, RAW_LIMIT)}{mark}"
+            )
         block.append("")
         size = sum(len(line) + 1 for line in block)
         if used + size > limit:

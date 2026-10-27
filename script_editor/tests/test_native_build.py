@@ -201,8 +201,14 @@ class BuildTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.build(profiles={0: profile})
         oversized = minimal_pyc("py25", code=b"\x09" * 600)
-        with self.assertRaisesRegex(ValueError, "no shrink/rescale"):
+        with self.assertRaisesRegex(ValueError, "no shrink/rescale") as caught:
             self.build(replacements=(Replacement(0, self.identity, oversized),))
+        # The refusal has to be actionable: how big it is, what the fixed
+        # capacity is, and how much the module grew.
+        message = str(caught.exception)
+        self.assertIn("超过该条目固定长度", message)
+        self.assertIn("超出", message)
+        self.assertIn("余量", message)
         self.assert_clean()
 
     def test_unchanged_entry_and_header_corruption_abort_before_publish(self):
