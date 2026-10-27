@@ -12,6 +12,7 @@ from PySide6.QtGui import (
     QSyntaxHighlighter,
     QTextCharFormat,
     QTextCursor,
+    QTextDocument,
     QTextFormat,
 )
 from PySide6.QtWidgets import QPlainTextEdit, QTextEdit, QToolTip, QWidget
@@ -124,6 +125,8 @@ class CodeEditor(QPlainTextEdit):
         self.setFont(font)
         self.setTabStopDistance(self.fontMetrics().horizontalAdvance(" ") * 4)
         self.setCenterOnScroll(True)
+        self._match_block = None
+        self._match_range = None
         self.cursorPositionChanged.connect(self.highlight_line)
         self.highlight_line()
         self.gutter = Gutter(self)
@@ -158,15 +161,82 @@ class CodeEditor(QPlainTextEdit):
             return True
         return super().event(event)
 
+    def set_match_line(self, block=None):
+        """Mark the line of a search hit; ``None`` clears the mark.
+
+        The caret line alone (alpha 24) is too faint to spot after the view
+        jumps, so a hit gets a warm full-width band *and* its exact text
+        swiped in a stronger tone of the same hue.
+        """
+        self._match_block = block
+        self.highlight_line()
+
+    def match_line(self):
+        return getattr(self, "_match_block", None)
+
+    def mark_selection(self, start, end):
+        """Stronger band for the exact matched characters (or clear it)."""
+        self._match_range = None if start is None else (start, end)
+        self.highlight_line()
+
     def highlight_line(self):
-        selection = QTextEdit.ExtraSelection()
+        selections = []
         color = self.palette().highlight().color()
         color.setAlpha(24)
-        selection.format.setBackground(color)
-        selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
-        selection.cursor = self.textCursor()
-        selection.cursor.clearSelection()
-        self.setExtraSelections([selection])
+        current = QTextEdit.ExtraSelection()
+        current.format.setBackground(color)
+        current.format.setProperty(
+            QTextFormat.Property.FullWidthSelection, True
+        )
+        current.cursor = self.textCursor()
+        current.cursor.clearSelection()
+        selections.append(current)
+
+        block = self.match_line()
+        document = self.document()
+        if block is not None and block.isValid() and block.document() is document:
+            band = QColor("#ffe9a8")  # 命中整行：不透明淡黄，压在深色主题文字上也清楚
+            line = QTextEdit.ExtraSelection()
+            line.format.setBackground(band)
+            line.format.setProperty(
+                QTextFormat.Property.FullWidthSelection, True
+            )
+            line.cursor = QTextCursor(block)
+            line.cursor.clearSelection()
+            selections.append(line)
+            if self._match_range:
+                start, end = self._match_range
+                hit = QTextEdit.ExtraSelection()
+                hit.format.setBackground(QColor("#ffb347"))  # 命中文字本身更深一段
+                hit.cursor = QTextCursor(document)
+                hit.cursor.setPosition(max(start, block.position()))
+                hit.cursor.setPosition(
+                    min(end, block.position() + block.length() - 1),
+                    QTextCursor.MoveMode.KeepAnchor,
+                )
+                selections.append(hit)
+        self.setExtraSelections(selections)
+
+    def mark_find(self, needle, flags=None):
+        """Mark the first match of ``needle`` at/after the caret, if any.
+
+        Used by the find bar so the whole hit line is obvious, not just the
+        selected characters.
+        """
+        self._match_range = None
+        if not needle:
+            self.set_match_line(None)
+            return False
+        cursor = self.textCursor()
+        found = self.document().find(
+            needle, cursor, flags if flags is not None else QTextDocument.FindFlag(0)
+        )
+        if found.isNull():
+            self.set_match_line(None)
+            return False
+        self._match_range = (found.selectionStart(), found.selectionEnd())
+        self.set_match_line(found.block())
+        return True
 
     def indent_selection(self, outdent=False):
         if self.isReadOnly():

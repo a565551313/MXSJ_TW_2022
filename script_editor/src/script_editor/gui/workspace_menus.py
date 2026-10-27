@@ -66,6 +66,10 @@ class WorkspaceMenus:
             file_menu, "open_pack_dir", "打开脚本目录…", self.open_archive_dir,
             None, sp.SP_DirIcon,
         )
+        self.action(
+            file_menu, "reload_packs", "重新读取已打开的包（改名/替换后用）",
+            self.reload_archives, None, sp.SP_BrowserReload,
+        )
         file_menu.addSeparator()
         self.action(file_menu, "quit", "退出", self.close, "Ctrl+Q")
 

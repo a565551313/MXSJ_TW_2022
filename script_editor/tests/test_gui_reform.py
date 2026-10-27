@@ -202,6 +202,7 @@ class MenuShapeTests(unittest.TestCase):
                 "另存为…",
                 "打开脚本文件…",
                 "打开脚本目录…",
+                "重新读取已打开的包（改名/替换后用）",
                 "退出",
             ],
         )

@@ -330,6 +330,12 @@ class WritePackageMixin:
             lines.append("以下草稿只用了编辑区内容，未写入 .py：" + "、".join(unsaved))
         if listed:
             lines.append("本次范围：\n" + listed)
+        if moved:
+            lines.append(
+                "要换包：编辑器读完就会放开句柄，现在可以直接在资源管理器里"
+                "把原包改名、再把新包改成它的名字；换完点「文件 → 重新读取"
+                "已打开的包」即可，不必关掉编辑器。"
+            )
         self.info.setPlainText("\n".join(lines))
         self.statusBar().showMessage(
             f"{where}：{len(report.modified_indexes)} 条改动"
