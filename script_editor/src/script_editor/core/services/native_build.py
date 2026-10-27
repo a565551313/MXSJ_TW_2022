@@ -137,6 +137,15 @@ def _replace_in_place(
     if _sha256_file(path) != expected_sha256:
         raise ValueError("原包在保存期间被改动，已放弃覆盖；请重新打开后再保存")
     backup_path = _write_backup(path) if backup else None
+    if backup_path is not None and _sha256_file(backup_path) != expected_sha256:
+        # A writer slipped in between the hash above and the copy, so the copy
+        # holds bytes we never verified. Keeping it as ``.bak`` would tell the
+        # user "this is what was there" about content we did not check.
+        try:
+            backup_path.unlink()
+        except OSError:
+            pass
+        raise ValueError("原包在备份期间被改动，已放弃覆盖；请重新打开后再保存")
     try:
         os.replace(temporary, path)
     except OSError as exc:

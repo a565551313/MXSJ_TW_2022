@@ -37,6 +37,7 @@ ESCAPE_RUN = re.compile(r"(?:\\x[0-9a-fA-F]{2})+")
 MAX_RECORDS = 4096
 
 _HEX = frozenset("0123456789abcdefABCDEF")
+_OCTAL = frozenset("01234567")
 _SIMPLE_ESCAPES = {
     "n": 0x0A,
     "t": 0x09,
@@ -51,10 +52,14 @@ _SIMPLE_ESCAPES = {
     '"': 0x22,
 }
 
+#: The body consumes escapes as pairs, so an escaped quote (``'\\xa5u\\''``)
+#: never closes the literal. With a lazy ``[\\s\\S]*?`` body, ``finditer`` stopped
+#: at the escaped quote and the hover hint disagreed with the highlighter, which
+#: reads the whole token.
 _LITERAL = re.compile(
     r"""(?P<prefix>[uUbB]{0,2}[rR]?|[rR][uUbB]{0,2})"""
     r"""(?P<quote>\"\"\"|'''|\"|')"""
-    r"""(?P<body>[\s\S]*?)"""
+    r"""(?P<body>(?:\\[\s\S]|(?!(?P=quote))[^\\])*)"""
     r"""(?P=quote)"""
 )
 
@@ -114,6 +119,8 @@ def literal_bytes(body: str):
             index += 4
             continue
         if following in _SIMPLE_ESCAPES and following:
+            if following == "0" and body[index + 2 : index + 3] in _OCTAL:
+                return None  # "\0" + octal digit is one octal escape, not NUL.
             out.append(_SIMPLE_ESCAPES[following])
             index += 2
             continue
@@ -173,8 +180,10 @@ def readings(literal: str, codecs=CODECS):
     if parts is None:
         return ()
     prefix, quote, body = parts
-    if "r" in prefix.lower():
-        return ()  # Raw strings hold backslashes as data, not byte escapes.
+    if {"r", "u"} & set(prefix.lower()):
+        # Raw strings hold backslashes as data; ``u'...'`` holds code points,
+        # not the MBCS bytes the client compares.
+        return ()
     if "\\x" not in body:
         return ()
     data = literal_bytes(body)
@@ -192,29 +201,57 @@ def readable_literal(literal: str, codecs=CODECS):
     return found[0] if found else None
 
 
-def _tokens(source: str):
-    try:
-        for token in tokenize.generate_tokens(io.StringIO(source).readline):
-            if token.type == tokenize.STRING:
-                yield token
-    except (tokenize.TokenError, IndentationError, SyntaxError):
-        return  # Hints only; the real compiler is still the only syntax judge.
+@dataclass(frozen=True)
+class ScanResult:
+    """Preview records plus whether scanning reached the end of the source.
 
-def previews(source: str, codecs=CODECS, limit: int = MAX_RECORDS):
+    Recovered files are Python 2, and Python 3's tokenizer is explicitly not
+    meant for invalid input: ``10L``, ``0777`` or an unclosed bracket can make
+    it stop early. Hints after that point would then be missing without anyone
+    noticing, so the caller is told instead of being handed a short list.
+    """
+
+    records: tuple
+    complete: bool = True
+    reason: str = ""
+
+    def __len__(self):
+        return len(self.records)
+
+    def __iter__(self):
+        return iter(self.records)
+
+
+def scan(source: str, codecs=CODECS, limit: int = MAX_RECORDS) -> ScanResult:
     """Collect readable renderings for one source text, in source order."""
     records = []
-    for token in _tokens(source):
-        if "\\x" not in token.string:
-            continue
-        found = readings(token.string, codecs)
-        if not found:
-            continue
-        records.append(
-            LiteralPreview(token.start[0], token.start[1], token.string, found)
-        )
-        if len(records) >= max(1, int(limit)):
-            break
-    return tuple(records)
+    stopped = ""
+    held = max(1, int(limit))
+    try:
+        for token in tokenize.generate_tokens(io.StringIO(source).readline):
+            if token.type != tokenize.STRING or "\\x" not in token.string:
+                continue
+            found = readings(token.string, codecs)
+            if not found:
+                continue
+            records.append(
+                LiteralPreview(token.start[0], token.start[1], token.string, found)
+            )
+            if len(records) >= held:
+                return ScanResult(
+                    tuple(records),
+                    False,
+                    f"已达 {held} 条预览上限，其余未收集",
+                )
+    except (tokenize.TokenError, IndentationError, SyntaxError) as exc:
+        where = exc.args[0] if exc.args else type(exc).__name__
+        stopped = f"分词在「{where}」处停止，其后的字面量未收集"
+    return ScanResult(tuple(records), not stopped, stopped)
+
+
+def previews(source: str, codecs=CODECS, limit: int = MAX_RECORDS):
+    """Readable renderings only; use :func:`scan` when completeness matters."""
+    return scan(source, codecs, limit).records
 
 
 def line_previews(line: str, codecs=CODECS):

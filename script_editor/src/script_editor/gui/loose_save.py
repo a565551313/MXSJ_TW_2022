@@ -16,6 +16,8 @@ not match the source that produced the bytes already in the package.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
 
@@ -84,6 +86,13 @@ class LooseSaveMixin:
         )
 
     # -- the action ----------------------------------------------------
+    def loose_save_checked(self):
+        """Qt-slot wrapper: user-facing failures belong in the dialog, not a trace."""
+        try:
+            self.loose_save()
+        except Exception as exc:
+            self.fail(exc)
+
     def loose_save(self):
         if self.jobs:
             raise ValueError("后台任务进行中；请等它结束后再写回原包")
@@ -113,7 +122,16 @@ class LooseSaveMixin:
                 "宽松模式：这个包没有内容变动，未写回原包（.py 已保存）", 8000
             )
             return
-        if not self.confirm_loose_write(archive, candidates, problems):
+        # Enforced here, not only inside the confirmation text: a working copy
+        # outside a client install skips the dialog and would skip the limit.
+        listed = batch_summary(
+            candidates,
+            problems,
+            lambda binding: self.module_names.get(
+                (archive.path, binding.index), binding.source.name
+            ),
+        )
+        if not self.confirm_loose_write(archive, listed, len(candidates)):
             self.statusBar().showMessage("已取消写回原包；编辑内容保留", 6000)
             return
 
@@ -152,19 +170,61 @@ class LooseSaveMixin:
             + tuple(b.source for b in self.bindings)
         )
 
+        # Release our own read handle before the worker replaces the file:
+        # Windows refuses MoveFileEx while any handle is open, and that would
+        # make every loose save fail even with no game running.
+        self.detach_archive(archive)
+
         def work():
             plan = prepare_package(snapshots, compiler, catalog, baselines)
+            if not plan.entries:
+                return plan, None, None
             report, new_state = publish_package(
                 plan, state, in_place=True, backup=True, protected=protected
             )
             return plan, report, new_state
 
-        self.task(
-            work, lambda result: self.adopt_loose_write(archive, *result, unsaved)
+        def complete(result):
+            plan, report, new_state = result
+            if report is None:
+                self.finish_no_changes(archive, plan)
+                return
+            self.adopt_loose_write(archive, plan, report, new_state, unsaved)
+
+        def failed(_error):
+            # The package on disk is untouched when the job raises, so put the
+            # reader back; otherwise every later Ctrl+S hits a closed handle.
+            self.restore_archive(archive)
+
+        self.task(work, complete, on_error=failed)
+
+    def finish_no_changes(self, old_archive, plan):
+        """Every candidate compiled to the bytes already stored: say so, once."""
+        self.restore_archive(old_archive)
+        refreshed = {
+            (binding.archive, binding.index): binding
+            for binding in self.bindings
+            if binding.archive == old_archive.path
+        }
+        for index, source_sha256 in plan.unchanged:
+            binding = refreshed.get((old_archive.path, index))
+            if binding is None:
+                continue
+            self.bindings = [
+                replace(item, built_source_sha256=source_sha256)
+                if item is binding
+                else item
+                for item in self.bindings
+            ]
+        self.project_dirty = True
+        self.statusBar().showMessage(
+            "宽松模式：源码与包内字节完全等价（例如只改了注释），未写回原包；"
+            ".py 已保存",
+            10000,
         )
 
     # -- confirmation --------------------------------------------------
-    def confirm_loose_write(self, archive, candidates, problems):
+    def confirm_loose_write(self, archive, listed, count):
         """Ask once per save where the risk is real.
 
         No dialog is needed when the user is already in loose mode and the
@@ -175,13 +235,6 @@ class LooseSaveMixin:
         root = client_root_for(archive.path)
         if root is None and self.loose_mode():
             return True
-        listed = batch_summary(
-            candidates,
-            problems,
-            lambda binding: self.module_names.get(
-                (archive.path, binding.index), binding.source.name
-            ),
-        )
         where = (
             f"这个包在游戏客户端目录里：\n{root}\n"
             "客户端的这一份副本无法从别处恢复。\n\n"
@@ -191,7 +244,7 @@ class LooseSaveMixin:
         text = (
             where
             + f"将直接改写：{archive.path}\n\n"
-            f"要写回的条目（{len(candidates)} 条）：\n{listed}"
+            + f"要写回的条目（{count} 条）：\n{listed}"
             f"\n\n覆盖前会把原包复制成 {archive.path.name}{BACKUP_SUFFIX}。\n"
             "继续写入吗？"
         )
@@ -206,6 +259,36 @@ class LooseSaveMixin:
         box.button(QMessageBox.StandardButton.No).setText("取消")
         box.setDefaultButton(QMessageBox.StandardButton.No)
         return box.exec() == QMessageBox.StandardButton.Yes
+
+    # -- handle lifetime -----------------------------------------------
+    def detach_archive(self, archive):
+        """Close our own reader for the file that is about to be replaced.
+
+        Windows refuses ``MoveFileEx`` while any handle holds the file open,
+        including this process's read handle, so the swap would fail with a
+        sharing violation even when no game is running. The GUI re-opens the
+        package after the write (or after a failure).
+        """
+        try:
+            archive.close()
+        except (OSError, ValueError):
+            pass  # Already closed or never opened; nothing to release.
+
+    def restore_archive(self, closed):
+        """Re-open a package we detached but did not manage to replace."""
+        if not closed.path.is_file():
+            return
+        try:
+            reopened = ArchiveDocument(closed.path)
+        except Exception as exc:  # noqa: BLE001 - never mask the original error
+            self.statusBar().showMessage(
+                f"原包未能重新打开（{exc}）；原文件未被本次操作修改", 12000
+            )
+            return
+        reopened.module_paths = dict(closed.module_paths)
+        reopened.module_path_errors = dict(closed.module_path_errors)
+        self.repoint_archive(closed, reopened)
+        self.workspace_refresh()
 
     # -- adoption ------------------------------------------------------
     def adopt_loose_write(self, old_archive, plan, report, state, unsaved=()):

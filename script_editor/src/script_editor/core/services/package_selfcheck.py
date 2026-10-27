@@ -18,6 +18,7 @@ authorized catalog file, and only the verdict is derived from the data.
 
 from __future__ import annotations
 
+import math
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -40,8 +41,29 @@ MAX_REPORTED_FAILURES = 8
 #: A mismatched catalog fails almost everywhere, so a bounded probe can refuse
 #: it in well under a second instead of decoding every entry first. The probe
 #: may only ever *refuse*: accepting parameters still needs the complete pass.
+#: It must therefore never refuse something the full pass would accept, which
+#: caps the probe failures at ``allowed_failures`` (see ``_probe_refusal``).
 PROBE_ENTRIES = 96
 PROBE_FAILURE_RATIO = 0.5
+
+
+def _allowed_failures(allowed_total: int) -> int:
+    """Failures the full pass still tolerates under ``MIN_ACCEPTED_RATIO``."""
+    return allowed_total - math.ceil(allowed_total * MIN_ACCEPTED_RATIO)
+
+
+def _probe_refuses(allowed_total: int, broken: int) -> bool:
+    """Refuse early only when acceptance is already out of reach.
+
+    The fixed ratio catches "wrong catalog" fast; the tolerance bound keeps the
+    probe from being stricter than :func:`verify_with_catalog`, which used to
+    happen when ~50 damaged entries were clustered in the first 96.
+    """
+    tolerance = max(
+        PROBE_ENTRIES * PROBE_FAILURE_RATIO, _allowed_failures(allowed_total)
+    )
+    return broken > tolerance
+
 
 _PREFIX = "路径读取失败："
 
@@ -162,7 +184,10 @@ def _check_from_verdict(
         paths=dict(verdict.paths),
         errors=dict(verdict.errors),
         passed=verdict.passed,
-        excluded=len(archive.entries) - len(verdict.paths) - len(verdict.errors),
+        # ``errors`` also holds policy-excluded entries, so it cannot be used
+        # here: a cached hit would report 0 exclusions where a fresh scan
+        # reports the real count. Subtract only allowed-entry failures.
+        excluded=len(archive.entries) - len(verdict.paths) - len(verdict.failures),
         failures=tuple(verdict.failures),
         elapsed=verdict.elapsed,
         cached=True,
@@ -200,7 +225,7 @@ def verify_with_catalog(
         broken = sum(
             1 for index in errors if module_allowed(archive.vm, index)
         )
-        if broken > PROBE_ENTRIES * PROBE_FAILURE_RATIO:
+        if _probe_refuses(allowed_total, broken):
             failures = tuple(
                 (index, _reason(reason)) for index, reason in sorted(errors.items())
             )

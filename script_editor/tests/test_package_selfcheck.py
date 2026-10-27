@@ -21,9 +21,14 @@ from script_editor.core.archives.document import ArchiveDocument
 from script_editor.core.services.bundled_catalog import resolve_catalog
 from script_editor.core.services.package_selfcheck import (
     MIN_ACCEPTED_RATIO,
+    PROBE_ENTRIES,
     PackageCheck,
+    _allowed_failures,
+    _probe_refuses,
+    verified_with_cache,
     verify_with_catalog,
 )
+from script_editor.core.services.verdict_cache import VerdictCache
 
 
 class PackageSelfCheckTests(unittest.TestCase):
@@ -128,6 +133,68 @@ class PackageSelfCheckTests(unittest.TestCase):
         self.assertTrue(check(5000, 1).accepted)
         self.assertFalse(check(4000, 1001).accepted)
         self.assertFalse(check(0, 0).accepted)
+
+
+class ProbeBoundaryTests(unittest.TestCase):
+    """The bounded probe may only refuse; it must never be stricter than a scan."""
+
+    def test_probe_tolerance_tracks_the_acceptance_ratio(self):
+        # Large packages: the full pass tolerates more than the 96-entry window,
+        # so the probe keeps that (larger) tolerance.
+        for total in (5001, 20000):
+            tolerance = _allowed_failures(total)
+            self.assertGreater(tolerance, PROBE_ENTRIES * 0.5)
+            self.assertFalse(_probe_refuses(total, tolerance))
+            self.assertTrue(_probe_refuses(total, tolerance + 1))
+        # Small packages: tolerance is 0, so the sample window is the floor.
+        self.assertEqual(_allowed_failures(97), 0)
+        self.assertFalse(_probe_refuses(97, 48))
+        self.assertTrue(_probe_refuses(97, 49))
+
+    def test_probe_is_never_stricter_than_a_full_pass(self):
+        for total in (97, 500, 5001, 20000):
+            allowed = _allowed_failures(total)
+            # A full pass still accepts exactly ``allowed`` failures.
+            self.assertFalse(_probe_refuses(total, allowed))
+
+    def test_clustered_damage_within_tolerance_does_not_refuse(self):
+        # 96 sampled entries, 30 broken: the full pass would accept 5001-entry
+        # packages with that many failures, so the probe must not end the run.
+        self.assertFalse(_probe_refuses(5001, 30))
+        # Wrong catalog: nearly everything in the window fails.
+        self.assertTrue(_probe_refuses(5001, 90))
+
+
+class VerdictExclusionTests(unittest.TestCase):
+    """A cache hit must report the same exclusions a fresh scan reports."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        self.addCleanup(self.temp.cleanup)
+
+    def test_cached_verdict_keeps_the_policy_exclusion_count(self):
+        payload, rows = complete_script_fixture()
+        package = self.root / "script.fls"
+        package.write_bytes(payload)
+        params = self.root / "params.json"
+        params.write_text(json.dumps(rows), encoding="utf-8")
+        cache = VerdictCache(self.root / "verdicts", "test-tool")
+        with patch("script_editor.core.policy.POLICY_EXCLUDED", {("py25", 2)}):
+            with ArchiveDocument(package) as archive:
+                fresh = verified_with_cache(
+                    archive, params, cache, tool_version="test-tool", probe=False
+                )
+            with ArchiveDocument(package) as archive:
+                cached = verified_with_cache(
+                    archive, params, cache, tool_version="test-tool", probe=False
+                )
+        self.assertTrue(fresh.accepted)
+        self.assertEqual(fresh.excluded, 1)
+        self.assertTrue(cached.cached)
+        self.assertEqual(cached.excluded, fresh.excluded)
+        self.assertEqual(cached.passed, fresh.passed)
+        self.assertEqual(cached.failures, fresh.failures)
 
 
 class ResolveCatalogTests(unittest.TestCase):

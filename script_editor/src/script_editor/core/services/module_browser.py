@@ -33,6 +33,10 @@ MAX_DISASSEMBLY_CHARS = 8 * 1024 * 1024
 MAX_TRACE_CHARS = 4 * 1024 * 1024
 ENGINE_PROTOCOLS = ("mxsj-recovery/2", "mxsj-recovery/3")
 
+#: Statuses that describe this run, not this module: a timeout on a loaded
+#: machine must not turn "retry" into a permanent failure for the session.
+TRANSIENT_STATUSES = frozenset({"timeout", "output_limit", "cancelled"})
+
 #: Bound for one session's recovery results. 64 modules is far more than a
 #: working set and keeps the biggest plausible results bounded in memory.
 SESSION_CACHE_LIMIT = 64
@@ -181,7 +185,15 @@ def validate_result(result) -> dict:
         or len(result["disassembly"]) > MAX_DISASSEMBLY_CHARS
     ):
         raise ValueError("recovery text exceeds limit")
-    for key in ("raw_source", "worker_stdout", "worker_stderr"):
+    # ``raw_source`` is the same text the worker streams as source, so it needs
+    # the source budget: 4 MiB here rejected a 4.2 MB module the engine had just
+    # decompiled successfully.
+    if "raw_source" in result and (
+        not isinstance(result["raw_source"], str)
+        or len(result["raw_source"]) > MAX_SOURCE_CHARS
+    ):
+        raise ValueError("invalid bounded recovery diagnostic")
+    for key in ("worker_stdout", "worker_stderr"):
         if key in result and (
             not isinstance(result[key], str) or len(result[key]) > MAX_TRACE_CHARS
         ):
@@ -345,7 +357,10 @@ def recover_standard(
         "candidates": tuple(candidates),
         "selected_engine": selected.engine,
     }
-    if cache is not None:
+    transient = any(candidate.status in TRANSIENT_STATUSES for candidate in candidates)
+    if cache is not None and not transient:
+        # Only deterministic outcomes are cached; a retry after a timeout or an
+        # oversized trace must actually re-run the engine.
         cache.put(cache_key, outcome)
     return dict(outcome)
 

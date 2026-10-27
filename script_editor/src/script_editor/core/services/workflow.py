@@ -126,14 +126,23 @@ class PackagePlan:
     compiler: Compiler
     catalog: CatalogRef | None
     entries: tuple[PreparedBuild, ...]
-    unchanged: tuple[int, ...] = ()
+    #: ``(index, source_sha256)`` for modules that compiled to the bytes the
+    #: package already holds. Their new text *is* what is stored now, so a
+    #: caller may refresh ``built_source_sha256`` and stop re-compiling them.
+    unchanged: tuple[tuple[int, str], ...] = ()
 
     @property
     def indexes(self):
         return tuple(entry.snapshot.binding.index for entry in self.entries)
 
     @property
+    def unchanged_indexes(self):
+        return tuple(index for index, _ in self.unchanged)
+
+    @property
     def source_sha256(self):
+        if not self.entries:
+            raise ValueError("清单里没有需要写回的改动")
         return self.entries[0].snapshot.binding.fingerprint
 
 
@@ -162,9 +171,10 @@ def prepare_package(snapshots, compiler, catalog=None, baselines=None):
         if plan.payload_changed:
             entries.append(plan)
         else:
-            unchanged.append(snapshot.binding.index)
-    if not entries:
-        raise ValueError("没有需要写回的改动：当前源码与包内字节完全等价")
+            unchanged.append((snapshot.binding.index, plan.source_sha256))
+    # An empty plan is a normal outcome (e.g. a comment-only edit compiles to
+    # the same pyc), not an error: the caller reports "nothing to write" and
+    # refreshes the baselines so the next save is quiet too.
     return PackagePlan(
         archive, vm, compiler, catalog, tuple(entries), tuple(unchanged)
     )

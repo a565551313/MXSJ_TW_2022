@@ -119,7 +119,13 @@ class Window(
         self.output_dock.show()
         QMessageBox.warning(self, "操作未完成", str(message))
 
-    def task(self, function, complete, *, cancel=None):
+    def task(self, function, complete, *, cancel=None, on_error=None):
+        """Run ``function`` off-thread, then ``complete`` (or ``on_error``) here.
+
+        ``on_error`` gets the exception before :meth:`fail` shows it; callers
+        that dropped in-memory state for the duration of the job use it to
+        put that state back.
+        """
         if self.jobs:
             return
         job = Job(function)
@@ -166,6 +172,11 @@ class Window(
                 self.statusBar().showMessage("恢复已取消；原包及已有编辑未修改")
                 return
             if error:
+                if on_error is not None:
+                    try:
+                        on_error(result)
+                    except Exception as exc:  # noqa: BLE001 - report the like
+                        result = f"{result}（并且：恢复界面状态失败：{exc}）"
                 self.fail(result)
             else:
                 try:
@@ -522,7 +533,7 @@ class Window(
             # plain behaviour, but says so instead of looking like a no-op.
             if self.save_mode() == LOOSE:
                 if self.can_loose_save():
-                    self.loose_save()
+                    self.loose_save_checked()
                     return
                 self.save_tab(self.current())
                 self.statusBar().showMessage(

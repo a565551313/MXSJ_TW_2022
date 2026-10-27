@@ -161,7 +161,8 @@ class WorkspaceMenus:
             build,
             "loose_save",
             "写回原包（宽松模式，留 .bak）…",
-            self.loose_save,
+            # Checked wrapper: Qt drops exceptions raised inside a slot.
+            self.loose_save_checked,
             "Ctrl+Alt+S",
             sp.SP_DialogSaveButton,
         )

@@ -40,6 +40,7 @@ from script_editor.core.services.workflow import (
     Snapshot,
     prepare_package,
     publish_package,
+    text_sha,
 )
 
 
@@ -215,12 +216,13 @@ class LooseSaveTests(Fixture, unittest.TestCase):
             seeds={changed[0]: 9, changed[1]: 2},
         )
         self.assertEqual(plan.indexes, (0,))
-        self.assertEqual(plan.unchanged, (1,))
+        self.assertEqual(plan.unchanged_indexes, (1,))
         self.publish(plan, state=state, in_place=True)
         with ArchiveDocument(self.archive) as doc:
             self.assertEqual(doc.read_stored(1), untouched)
 
-    def test_identical_payload_is_refused_instead_of_rewriting(self):
+    def test_identical_payload_yields_an_empty_plan_not_an_error(self):
+        """A comment-only edit compiles to the same pyc; that is not a failure."""
         texts = {0: "VALUE = 100\n", 1: "VALUE = 200\n"}
         report, _ = self.publish(self.prepare(texts), in_place=True)
         digest = report.output_sha256
@@ -231,9 +233,27 @@ class LooseSaveTests(Fixture, unittest.TestCase):
             ),
             (CatalogRef(self.archive, digest, self.catalog_file, self.catalog.sha256),),
         )
-        with self.assertRaises(ValueError) as caught:
-            self.prepare(texts, bindings=state.bindings, catalog=state.catalogs[0])
-        self.assertIn("没有需要写回的改动", str(caught.exception))
+        commented = {0: "# note only\nVALUE = 100\n", 1: "VALUE = 200\n"}
+        plan = self.prepare(
+            commented,
+            bindings=state.bindings,
+            catalog=state.catalogs[0],
+            # Same text -> same pyc, exactly what the package already holds.
+            seeds={commented[0]: 1, commented[1]: 2},
+        )
+        self.assertEqual(plan.entries, ())
+        self.assertEqual(plan.unchanged_indexes, (0, 1))
+        # The new text is the text behind the stored bytes, so the caller can
+        # refresh the baseline and stop recompiling it.
+        self.assertEqual(
+            dict(plan.unchanged),
+            {0: text_sha(commented[0]), 1: text_sha(commented[1])},
+        )
+        # Publishing an empty plan must still refuse rather than write.
+        seeded = self.archive.read_bytes()
+        with self.assertRaises(ValueError):
+            self.publish(plan, state=state, in_place=True)
+        self.assertEqual(self.archive.read_bytes(), seeded)
 
     def test_mixed_packages_are_rejected(self):
         other = self.root / "other.fls"

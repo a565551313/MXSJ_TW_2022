@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import sys
 import tempfile
 import unittest
@@ -147,6 +148,31 @@ class InPlaceBuildTests(unittest.TestCase):
         self.assertFalse(
             self.source.with_name(self.source.name + BACKUP_SUFFIX).exists()
         )
+
+    def test_backup_that_captured_other_bytes_aborts_the_swap(self):
+        """A writer between the hash check and the copy must not lose data."""
+        self.prepare()
+        real_copy = shutil.copy2
+
+        def racing_copy(src, dst, **options):
+            # Another process rewrote the package after we hashed it.
+            Path(src).write_bytes(self.before + b"drift")
+            return real_copy(src, dst, **options)
+
+        with (
+            patch(
+                "script_editor.core.services.native_build.shutil.copy2",
+                side_effect=racing_copy,
+            ),
+            self.assertRaises(ValueError) as caught,
+        ):
+            self.build()
+        self.assertIn("备份期间被改动", str(caught.exception))
+        self.assertEqual(self.source.read_bytes(), self.before + b"drift")
+        self.assertFalse(
+            self.source.with_name(self.source.name + BACKUP_SUFFIX).exists()
+        )
+        self.assertFalse(list(self.root.glob(".mxscript-bak-*")))
 
     def test_destination_must_be_the_same_package(self):
         self.prepare()

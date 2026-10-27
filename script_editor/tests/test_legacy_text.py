@@ -12,6 +12,7 @@ from script_editor.core.inspection.legacy_text import (
     CODECS,
     DISPLAY_ONLY,
     MAX_RECORDS,
+    ScanResult,
     clamp,
     decode_bytes,
     format_hint,
@@ -22,6 +23,7 @@ from script_editor.core.inspection.legacy_text import (
     readable_literal,
     readings,
     report_text,
+    scan,
     split_literal,
     summary,
 )
@@ -149,9 +151,78 @@ class SourceScanTests(unittest.TestCase):
         self.assertEqual(found[0].column, line.index("'"))
         self.assertEqual([item.codec for item in found[0].readings], ["cp950", "gbk"])
 
+    def test_escaped_quote_does_not_end_the_literal_early(self):
+        """Hover and highlight must agree on where the literal stops."""
+        source = r"""x = '\xa5u\''"""
+        found = line_previews(source)
+        self.assertEqual(len(found), 1)
+        # Same column either way; the old pattern closed the string at the
+        # escaped quote and hover found nothing at the highlight position.
+        records = previews(source)
+        self.assertEqual([record.column for record in records], [found[0].column])
+
+    def test_unicode_prefixed_literal_gets_no_reading(self):
+        # u'...' is already text; decoding its body as cp950 would invent a
+        # reading that never ships in the package.
+        self.assertEqual(readings(r"""u'\xa5u\xaf\xe0'"""), ())
+        self.assertEqual(previews(r"""u'\xa5u\xaf\xe0'"""), ())
+
+    def test_raw_prefixed_literal_gets_no_reading(self):
+        self.assertEqual(readings(r"""r'\xa5u\xaf'"""), ())
+
+    def test_ansi_escape_is_never_decoded_as_text(self):
+        # \033 is octal ESC; it used to be read as NUL + "33[0m" and turn into
+        # a fake reading containing terminal junk.
+        self.assertEqual(readings(r"'\xa5\xaf\033[0m'"), ())
+        self.assertIsNone(literal_bytes(r"'\xa5\xaf\033[0m'"))
+
+    def test_control_bytes_are_shown_escaped_not_raw(self):
+        # A lone \t is a real byte in the packet, so the reading is legitimate,
+        # but the hint must never carry a raw control character into a tooltip.
+        found = readings(r"'\xa5\xaf\t'")
+        self.assertTrue(found)
+        for reading in found:
+            self.assertNotIn("\t", reading.text)
+
+    def test_nul_escape_with_octal_digits_is_refused_not_guessed(self):
+        # \012 is an octal newline, not NUL followed by the text "12".
+        self.assertIsNone(literal_bytes(r"\012"))
+        self.assertEqual(readings(r"'\012'"), ())
+
+    def test_bare_nul_escape_still_works(self):
+        self.assertEqual(literal_bytes(r"'a\0b'"), b"'a\x00b'")
+
     def test_clamp_keeps_hints_short_and_single_line(self):
         self.assertEqual(clamp("a\nb", 10), "a b")
         self.assertEqual(len(clamp("x" * 50, 10)), 10)
+
+
+class ScanResultTests(unittest.TestCase):
+    def test_complete_scan_reports_no_reason(self):
+        result = scan(SAMPLE_SOURCE)
+        self.assertIsInstance(result, ScanResult)
+        self.assertTrue(result.complete)
+        self.assertEqual(result.reason, "")
+        self.assertEqual(len(result.records), 2)
+
+    def test_unparsable_source_is_incomplete_but_keeps_earlier_records(self):
+        result = scan("s = " + BIG5_MESSAGE + "\nif True:\n    s = (\n")
+        self.assertFalse(result.complete)
+        self.assertTrue(result.reason)
+        self.assertEqual([record.line for record in result.records], [1])
+
+    def test_limit_is_reported_as_incomplete(self):
+        source = "\n".join(f"x{i} = {BIG5_MESSAGE}" for i in range(MAX_RECORDS + 5))
+        result = scan(source)
+        self.assertFalse(result.complete)
+        self.assertIn(str(MAX_RECORDS), result.reason)
+        self.assertEqual(len(result.records), MAX_RECORDS)
+
+    def test_previews_forwards_the_records_only(self):
+        self.assertEqual(
+            [r.line for r in previews(SAMPLE_SOURCE)],
+            [r.line for r in scan(SAMPLE_SOURCE).records],
+        )
 
 
 class ReportTests(unittest.TestCase):
