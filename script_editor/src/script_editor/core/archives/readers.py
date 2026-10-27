@@ -78,6 +78,7 @@ class FileReader:
     def __init__(self, path: str | Path):
         self._path = Path(path)
         self._fd = None
+        self._borrowers = 0
         self._closed = False
         self._lock = threading.Lock()
         try:
@@ -125,17 +126,26 @@ class FileReader:
 
     @contextlib.contextmanager
     def open_handle(self):
-        """Borrow one descriptor for a bulk operation, then release it."""
+        """Borrow one descriptor for a bulk operation, then release it.
+
+        Borrowers are reference counted: a nested (or concurrent) borrow reuses
+        the same descriptor, and only the last one to leave closes it. Closing
+        it on an inner exit would let an outer bulk read silently continue on a
+        *re-opened* descriptor — i.e. read bytes from a different file than the
+        one it validated.
+        """
         with self._lock:
             if self._closed:
                 raise ValueError("资源包读取句柄已关闭")
-            if self._fd is None:
+            if self._borrowers == 0:
                 self._fd = os.open(self._path, _OPEN_FLAGS)
+            self._borrowers += 1
         try:
             yield self
         finally:
             with self._lock:
-                if self._fd is not None:
+                self._borrowers -= 1
+                if self._borrowers == 0 and self._fd is not None:
                     os.close(self._fd)
                     self._fd = None
 
@@ -160,7 +170,10 @@ class FileReader:
             if self._closed:
                 raise ValueError("资源包读取句柄已关闭")
             borrowed = self._fd is not None
-            fd = self._fd or os.open(self._path, _OPEN_FLAGS)
+            # Not ``self._fd or ...``: descriptor 0 is a valid descriptor and
+            # falsy, so a borrowed stdin-slot descriptor would be dropped, a
+            # second one opened and (``borrowed`` being true) leaked.
+            fd = self._fd if borrowed else os.open(self._path, _OPEN_FLAGS)
             try:
                 if _PREAD is not None:
                     return _PREAD(fd, size, offset)
@@ -197,6 +210,7 @@ class FileReader:
         with self._lock:
             if not self._closed:
                 self._closed = True
+                self._borrowers = 0
                 if self._fd is not None:
                     os.close(self._fd)
                     self._fd = None

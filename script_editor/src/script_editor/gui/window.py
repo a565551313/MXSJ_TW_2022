@@ -87,7 +87,10 @@ class Window(
         )
         if settings is not None:
             try:
-                self.find.set_history(settings.value("find/history") or [])
+                history = settings.value("find/history") or []
+                if isinstance(history, str):
+                    history = [history]  # one-entry lists come back as str
+                self.find.set_history(history)
             except (TypeError, ValueError, AttributeError):
                 pass  # Damaged history is not a reason to fail startup.
             try:
@@ -411,10 +414,19 @@ class Window(
             except Exception:  # noqa: BLE001 - reported, one bad file only
                 gone.append(str(old.path))
                 continue
-            new.module_paths = dict(old.module_paths)
-            new.module_path_errors = dict(old.module_path_errors)
+            same_entries = [e.identity for e in new.entries] == [
+                e.identity for e in old.entries
+            ]
+            if same_entries:
+                # Same directory: the cached names still describe these entries.
+                new.module_paths = dict(old.module_paths)
+                new.module_path_errors = dict(old.module_path_errors)
+            # otherwise leave them empty: "[路径未读取]" beats the old names.
             try:
-                self.repoint_archive(old, new)
+                if same_entries:
+                    self.repoint_archive(old, new)
+                else:
+                    self.replace_archive(old, new)
             except Exception:  # noqa: BLE001
                 new.close()
                 gone.append(str(old.path))
@@ -437,6 +449,24 @@ class Window(
         self.statusBar().showMessage(
             f"重新读取：{len(reopened)} 个成功、{len(gone)} 个路径已不存在", 9000
         )
+
+    def replace_archive(self, old, new):
+        """Swap a package whose directory changed: rebuild the tree subtree.
+
+        ``repoint_archive`` assumes the entry list is identical (it only
+        re-points the children that exist and updates their sizes). That holds
+        for our own rewrites, not for a file the user dropped in at the same
+        path: extra children would keep pointing at the closed document and new
+        entries would never appear.
+        """
+        for i in range(self.tree.topLevelItemCount()):
+            item = self.tree.topLevelItem(i)
+            if item.data(0, Qt.ItemDataRole.UserRole + 1) is old:
+                self.tree.takeTopLevelItem(i)
+                break
+        old.close()
+        self.archives = [a for a in self.archives if a is not old]
+        self.add_archive(new)
 
     def open_archive_dir(self):
         """打开脚本目录：把该目录（含一层子目录）里的 .fls 全部打开。"""

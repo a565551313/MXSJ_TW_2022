@@ -62,8 +62,13 @@ class SearchField(QComboBox):
 
     # -- history -------------------------------------------------------
     def remember(self, value):
-        """Put ``value`` at the top of the drop-down, de-duplicated."""
-        value = (value or "").strip()
+        """Put ``value`` at the top of the drop-down, de-duplicated.
+
+        The exact query is kept: stripping it would silently change what the
+        next search (and 替换) uses — ``" foo "`` is a different query from
+        ``"foo"``, and a whitespace-only search must stay searchable.
+        """
+        value = value or ""
         if not value:
             return
         self.blockSignals(True)
@@ -73,13 +78,18 @@ class SearchField(QComboBox):
         self.insertItem(0, value)
         while self.count() > self._limit:
             self.removeItem(self.count() - 1)
-        self.setEditText(value)
+        if self.currentText() != value:
+            self.setEditText(value)
         self.blockSignals(False)
 
     def history(self):
         return [self.itemText(index) for index in range(self.count())]
 
     def set_history(self, values):
+        # QSettings hands back a bare string when the list had one element
+        # (INI backend); iterating that would turn "needle" into n,e,e,d,l,e.
+        if isinstance(values, str):
+            values = [values]
         self.clear()
         for value in values or ():
             if value and self.findText(value) < 0:

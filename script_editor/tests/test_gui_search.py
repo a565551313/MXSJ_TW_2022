@@ -16,7 +16,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from native_fixtures import script_fixture
+from native_fixtures import many_module_fixture
 from test_gui import QT_ERROR
 
 from script_editor.core.archives.document import ArchiveDocument
@@ -31,8 +31,8 @@ if not QT_ERROR:
 
 
 class Package:
-    def __init__(self, root: Path):
-        raw, catalog = script_fixture(two_modules=False)
+    def __init__(self, root: Path, count=3):
+        raw, catalog = many_module_fixture(count=count)
         self.path = root / "script.fls"
         self.path.write_bytes(raw)
         catalog_file = root / "catalog.json"
@@ -272,3 +272,275 @@ class ReloadAfterSwapTests(unittest.TestCase):
         self.assertIn("已重新读取 1 个包", info)
         self.assertIn("gone.fls", info)
         self.assertIn("重新打开", info)
+
+
+class BorrowedHandleTests(unittest.TestCase):
+    """Nested/concurrent borrows must not close each other's descriptor."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="mx-borrow-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.package = Package(self.root)
+
+    def open_descriptor_count(self):
+        base = Path(os.sep, "proc", "self", "fd")
+        if not base.is_dir():
+            self.skipTest("需要 procfs 的 self/fd")
+        return len(list(base.iterdir()))
+
+    def test_a_nested_borrow_keeps_the_outer_descriptor(self):
+        from script_editor.core.archives.readers import FileReader
+
+        reader = FileReader(self.package.path)
+        self.addCleanup(reader.close)
+        with reader.open_handle():
+            first = reader.read_at(0, 4)
+            with reader.open_handle():
+                self.assertTrue(reader.holding_handle)
+            # The inner exit must not have closed the outer borrow.
+            self.assertTrue(reader.holding_handle)
+            self.assertEqual(reader.read_at(0, 4), first)
+        self.assertFalse(reader.holding_handle)
+
+    def test_repeated_reads_do_not_leak_descriptors(self):
+        from script_editor.core.archives.readers import FileReader
+
+        reader = FileReader(self.package.path)
+        self.addCleanup(reader.close)
+        before = self.open_descriptor_count()
+        for _ in range(50):
+            reader.read_at(0, 64)
+        self.assertEqual(self.open_descriptor_count(), before)
+
+
+@unittest.skipIf(bool(QT_ERROR), "GUI未执行：" + QT_ERROR)
+class ReopenSearchTests(unittest.TestCase):
+    """Ctrl+F must not paint a line the query does not actually match."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="mx-reopen-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.home = self.root / "home"
+        self.home.mkdir()
+        patcher = patch.dict(os.environ, {"MXSCRIPT_HOME": str(self.home)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.window = Window(self.root)
+        self.addCleanup(self._close)
+
+    def _close(self):
+        for i in range(self.window.tabs.count()):
+            self.window.tabs.widget(i).editor.document().setModified(False)
+        self.window.project_dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self.app.processEvents()
+
+    def test_reopening_search_does_not_mark_an_unrelated_line(self):
+        tab = self.window.add_source(
+            self.root / "r.py", text="alpha\nneedle here\nomega\n"
+        )
+        self.window.find.setText("needle")  # leftover query, caret on line 1
+        self.window.search_bar.hide()
+        self.window.show_search()
+        self.assertIsNone(tab.editor.match_line())
+
+    def test_reopening_search_marks_the_selected_match(self):
+        from PySide6.QtGui import QTextCursor
+
+        tab = self.window.add_source(
+            self.root / "r2.py", text="alpha\nneedle here\nomega\n"
+        )
+        cursor = tab.editor.textCursor()
+        cursor.setPosition(6)  # "needle" on line 1
+        cursor.setPosition(12, QTextCursor.MoveMode.KeepAnchor)
+        tab.editor.setTextCursor(cursor)
+        self.window.find.setText("needle")
+        self.window.show_search()
+        block = tab.editor.match_line()
+        self.assertIsNotNone(block)
+        self.assertEqual(block.blockNumber(), 1)
+
+    def test_history_keeps_the_exact_query_text(self):
+        window = self.window
+        window.find.remember("  foo ")
+        self.assertEqual(window.find.text(), "  foo ")
+        self.assertEqual(window.find.history()[0], "  foo ")
+        window.find.setText("  foo ")
+        window.find.remember("  foo ")
+        self.assertEqual(window.find.text(), "  foo ")
+
+
+@unittest.skipIf(bool(QT_ERROR), "GUI未执行：" + QT_ERROR)
+class SettingsHistoryTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def test_a_one_entry_history_comes_back_as_one_entry(self):
+        class FakeSettings:
+            def __init__(self, values):
+                self.values = dict(values)
+
+            def value(self, key, default=None):
+                return self.values.get(key, default)
+
+            def setValue(self, key, value):  # noqa: N802 - Qt spelling
+                self.values[key] = value
+
+        temporary = tempfile.TemporaryDirectory(prefix="mx-qs-")
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name)
+        # QSettings' INI backend hands a one-element list back as a str.
+        window = Window(root, settings=FakeSettings({"find/history": "needle"}))
+        self.addCleanup(self._close, window)
+        self.assertEqual(window.find.history(), ["needle"])
+
+    def _close(self, window):
+        for i in range(window.tabs.count()):
+            window.tabs.widget(i).editor.document().setModified(False)
+        window.project_dirty = False
+        window.close()
+        window.deleteLater()
+        self.app.processEvents()
+
+
+@unittest.skipIf(bool(QT_ERROR), "GUI未执行：" + QT_ERROR)
+class EditInvalidatesHitTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="mx-edit-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.home = self.root / "home"
+        self.home.mkdir()
+        patcher = patch.dict(os.environ, {"MXSCRIPT_HOME": str(self.home)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.window = Window(self.root)
+        self.addCleanup(self._close)
+
+    def _close(self):
+        for i in range(self.window.tabs.count()):
+            self.window.tabs.widget(i).editor.document().setModified(False)
+        self.window.project_dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self.app.processEvents()
+
+    def test_editing_drops_the_stale_match_band(self):
+        tab = self.window.add_source(
+            self.root / "e.py", text="alpha\nneedle here\n"
+        )
+        self.window.find.setText("needle")
+        self.window.find_next()
+        self.assertIsNotNone(tab.editor.match_line())
+        tab.editor.textCursor().insertText("x")  # any edit at the hit
+        self.assertIsNone(tab.editor.match_line())
+        bands = [
+            selection.format.background().color().name()
+            for selection in tab.editor.extraSelections()
+        ]
+        self.assertNotIn("#ffb347", bands)
+        self.assertNotIn("#ffe9a8", bands)
+
+
+@unittest.skipIf(bool(QT_ERROR), "GUI未执行：" + QT_ERROR)
+class ReloadRebuildTests(unittest.TestCase):
+    """A swapped file may have a different directory; rebuild, don't patch."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="mx-rebuild-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.home = self.root / "home"
+        self.home.mkdir()
+        patcher = patch.dict(os.environ, {"MXSCRIPT_HOME": str(self.home)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.small = Package(self.root, count=3)
+        self.window = Window(self.root)
+        self.addCleanup(self._close)
+        self.window.add_archive(ArchiveDocument(self.small.path))
+        self.assertEqual(len(self.window.archives[0].entries), 3)
+
+    def _close(self):
+        for i in range(self.window.tabs.count()):
+            self.window.tabs.widget(i).editor.document().setModified(False)
+        self.window.project_dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self.app.processEvents()
+
+    @staticmethod
+    def user_role():
+        from PySide6.QtCore import Qt
+
+        return Qt.ItemDataRole.UserRole
+
+    def swap_in(self, count):
+        raw, catalog = many_module_fixture(count=count)
+        staging = self.root / "staging.fls"
+        staging.write_bytes(raw)
+        self.small.path.unlink()
+        staging.rename(self.small.path)
+
+    def test_a_bigger_package_rebuilds_the_tree(self):
+        self.swap_in(count=5)
+        self.window.reload_archives()
+        archive = self.window.archives[0]
+        self.assertEqual(len(archive.entries), 5)
+        root = self.window.tree.topLevelItem(0)
+        self.assertEqual(root.childCount(), 5)
+        role = self.user_role()
+        for i in range(5):
+            archive_handle, index = root.child(i).data(0, role)
+            self.assertIs(archive_handle, archive)
+            self.assertEqual(index, i)
+            self.assertEqual(
+                root.child(i).text(0), archive.entries[i].identity
+            )
+        # The rebuilt children read from the new document, not a closed one.
+        self.assertEqual(
+            archive.read_stored(0), ArchiveDocument(self.small.path).read_stored(0)
+        )
+
+    def test_a_smaller_package_leaves_no_stale_children(self):
+        self.swap_in(count=2)
+        # Replace with a package that has fewer entries than what is open.
+        self.window.reload_archives()
+        archive = self.window.archives[0]
+        root = self.window.tree.topLevelItem(0)
+        self.assertEqual(root.childCount(), len(archive.entries))
+        role = self.user_role()
+        for i in range(root.childCount()):
+            handle, index = root.child(i).data(0, role)
+            self.assertIs(handle, archive)
+            self.assertEqual(index, i)
+
+    def test_module_names_survive_a_reload_of_the_same_directory(self):
+        archive = self.window.archives[0]
+        archive.module_paths = {0: "script/login/dgw.py", 1: "script/b.py"}
+        self.window.reload_archives()
+        self.assertEqual(
+            self.window.archives[0].module_paths[0], "script/login/dgw.py"
+        )
+
+    def test_module_names_are_dropped_when_the_directory_changed(self):
+        self.window.archives[0].module_paths = {0: "script/login/dgw.py"}
+        self.swap_in(count=5)
+        self.window.reload_archives()
+        self.assertEqual(self.window.archives[0].module_paths, {})

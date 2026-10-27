@@ -128,6 +128,9 @@ class CodeEditor(QPlainTextEdit):
         self._match_block = None
         self._match_range = None
         self.cursorPositionChanged.connect(self.highlight_line)
+        # Offsets go stale the moment the text changes; a highlight on the
+        # wrong characters is worse than no highlight.
+        self.document().contentsChanged.connect(self._drop_match)
         self.highlight_line()
         self.gutter = Gutter(self)
         self.highlight = Highlight(self.document())
@@ -160,6 +163,12 @@ class CodeEditor(QPlainTextEdit):
         if event.type() == QEvent.Type.ToolTip and self._show_hint(event):
             return True
         return super().event(event)
+
+    def _drop_match(self):
+        if self._match_block is not None or self._match_range is not None:
+            self._match_block = None
+            self._match_range = None
+            self.highlight_line()
 
     def set_match_line(self, block=None):
         """Mark the line of a search hit; ``None`` clears the mark.
@@ -206,15 +215,19 @@ class CodeEditor(QPlainTextEdit):
             selections.append(line)
             if self._match_range:
                 start, end = self._match_range
-                hit = QTextEdit.ExtraSelection()
-                hit.format.setBackground(QColor("#ffb347"))  # 命中文字本身更深一段
-                hit.cursor = QTextCursor(document)
-                hit.cursor.setPosition(max(start, block.position()))
-                hit.cursor.setPosition(
-                    min(end, block.position() + block.length() - 1),
-                    QTextCursor.MoveMode.KeepAnchor,
-                )
-                selections.append(hit)
+                start = max(start, block.position())
+                end = min(end, block.position() + block.length() - 1)
+                if start < end:
+                    hit = QTextEdit.ExtraSelection()
+                    hit.format.setBackground(
+                        QColor("#ffb347")  # 命中文字本身更深一段
+                    )
+                    hit.cursor = QTextCursor(document)
+                    hit.cursor.setPosition(start)
+                    hit.cursor.setPosition(
+                        end, QTextCursor.MoveMode.KeepAnchor
+                    )
+                    selections.append(hit)
         self.setExtraSelections(selections)
 
     def mark_find(self, needle, flags=None):

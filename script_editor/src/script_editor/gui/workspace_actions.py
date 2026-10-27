@@ -311,8 +311,19 @@ class WorkspaceActions:
                 self.find.setText(text)
         self.find.setFocus()
         self.find.selectAll()
-        if tab and self.find.text():
-            self.mark_hit(tab.editor, self.find.text())
+        # Only a real match may be painted as a hit: the query may be left over
+        # from an earlier search while the caret sits on an unrelated line.
+        if tab is not None:
+            needle = self.find.text()
+            cursor = tab.editor.textCursor()
+            selected = cursor.selectedText().replace("\u2029", "\n")
+            if needle and selected == needle:
+                tab.editor.mark_selection(
+                    cursor.selectionStart(), cursor.selectionEnd()
+                )
+                tab.editor.set_match_line(cursor.block())
+            else:
+                tab.editor.set_match_line(None)
 
     def close_search(self):
         """Hide the bar and drop the hit band it put on the editor."""
