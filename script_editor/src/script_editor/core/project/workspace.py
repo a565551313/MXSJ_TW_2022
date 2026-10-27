@@ -155,6 +155,16 @@ def unpack_editor(row, parent, archive, check_digest):
                 candidates.append(RecoveryCandidate(**candidate))
             report["candidates"] = tuple(candidates)
             report["diagnostics"] = tuple(text(v) for v in report["diagnostics"])
+            # JSON widens the (source, disassembly) truncation pair to a list;
+            # normalize so a reopened project compares equal to a live report.
+            truncated = report.get("truncated", (False, False))
+            if (
+                not isinstance(truncated, (list, tuple))
+                or len(truncated) != 2
+                or not all(type(v) is bool for v in truncated)
+            ):
+                raise ValueError("项目截断标记非法")
+            report["truncated"] = tuple(truncated)
             report = ModuleReport(**report)
         if kind == "module-unavailable" and report is None:
             raise ValueError("条目信息缺来源")

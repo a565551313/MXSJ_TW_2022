@@ -18,7 +18,6 @@ authorized catalog file, and only the verdict is derived from the data.
 
 from __future__ import annotations
 
-import hashlib
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -149,9 +148,14 @@ def _reason(text: str) -> str:
     return text[len(_PREFIX) :] if text.startswith(_PREFIX) else text
 
 
-def _check_from_verdict(verdict: PackageVerdict, archive, catalog: Path) -> PackageCheck:
+def _check_from_verdict(
+    verdict: PackageVerdict, archive, catalog: Path
+) -> PackageCheck:
     ref = CatalogRef(
-        archive.path, verdict.archive_sha256, Path(catalog).resolve(), verdict.catalog_sha256
+        archive.path,
+        verdict.archive_sha256,
+        Path(catalog).resolve(),
+        verdict.catalog_sha256,
     )
     return PackageCheck(
         ref=ref,
@@ -185,10 +189,12 @@ def verify_with_catalog(
     path = Path(catalog).resolve(strict=True)
     _, digest = catalog_snapshot(path)
     ref = CatalogRef(archive.path, archive.fingerprint(), path, digest)
-    allowed_total = sum(1 for e in archive.entries if module_allowed(archive.vm, e.index))
+    allowed_total = sum(
+        1 for e in archive.entries if module_allowed(archive.vm, e.index)
+    )
     excluded = len(archive.entries) - allowed_total
 
-    should_probe = allowed_total > PROBE_ENTRIES * 2 if probe is None else probe
+    should_probe = allowed_total > PROBE_ENTRIES if probe is None else probe
     if should_probe and allowed_total > PROBE_ENTRIES:
         paths, errors = scan_script_paths(archive, ref, limit=PROBE_ENTRIES)
         broken = sum(

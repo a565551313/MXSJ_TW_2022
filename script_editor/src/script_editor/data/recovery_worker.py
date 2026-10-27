@@ -15,10 +15,16 @@ import tokenize
 import traceback
 from pathlib import Path
 
-LIMIT = 2 * 1024 * 1024
+#: Per-product text budgets. The offline corpus path already accepted 8 MiB
+#: artifacts; two real modules (entries 1945 and 1182) decompile into 4.0-4.2 MB
+#: of source, which used to blow the old 2 MiB ceiling and turn a *successful*
+#: engine run into a 310-character "failed" draft. Truncation is now explicit
+#: instead of fatal, and the two products are budgeted separately.
+LIMIT = 8 * 1024 * 1024
+SOURCE_LIMIT = LIMIT
+DISASSEMBLY_LIMIT = LIMIT
 
-
-ENGINE_PROTOCOL = "mxsj-recovery/2"
+ENGINE_PROTOCOL = "mxsj-recovery/3"
 SOURCE_SHA256 = "9e60958d4b0386e3976331ba6236ef2a1a986b2a162f3ddb9a8db424ae2e4d87"
 
 
@@ -42,9 +48,28 @@ def validate_engine():
 
 
 class BoundedText(io.StringIO):
+    """Text sink with a hard budget that records truncation instead of raising.
+
+    Raising used to destroy the whole recovery result: the engine had already
+    produced megabytes of usable source, but the caller only saw an exception
+    comment. Here the tail is dropped, ``truncated`` is set, and the caller can
+    still show and edit what was produced.
+    """
+
+    def __init__(self, limit: int = LIMIT):
+        super().__init__()
+        self.limit = limit
+        self.truncated = False
+
     def write(self, value):
-        if self.tell() + len(value) > LIMIT:
-            raise ValueError("recovery text exceeds 2MiB limit")
+        remaining = self.limit - self.tell()
+        if remaining <= 0:
+            if value:
+                self.truncated = True
+            return 0
+        if len(value) > remaining:
+            self.truncated = True
+            value = value[:remaining]
         return super().write(value)
 
 
@@ -141,7 +166,7 @@ def install_legacy_long_reader():
     xdis.unmarshal.VersionIndependentUnmarshaller = SignedLongUnmarshaller
 
 
-def recover(path, vm):
+def recover(path, vm, *, disassembly=True):
     validate_engine()
     import xdis.unmarshal as legacy_unmarshal
     from uncompyle6.main import decompile_file
@@ -189,7 +214,8 @@ def recover(path, vm):
     version, _, _, code, implementation, *_ = load_module(str(path))
     if tuple(version[:2]) != {"py25": (2, 5), "py27": (2, 7)}[vm]:
         raise ValueError("standard pyc VM mismatch")
-    listing, diagnostics = BoundedText(), []
+    listing = BoundedText(DISASSEMBLY_LIMIT)
+    diagnostics = []
 
     def walk(co, depth=0):
         if depth > 100:
@@ -208,12 +234,15 @@ def recover(path, vm):
             if hasattr(child, "co_code"):
                 walk(child, depth + 1)
 
-    try:
-        walk(code)
-    except Exception as exc:
-        traceback.print_exc(file=sys.stderr)
-        diagnostics.append(f"反汇编未完整生成：{type(exc).__name__}: {str(exc)[:300]}")
-    source, complete = BoundedText(), True
+    if disassembly:
+        try:
+            walk(code)
+        except Exception as exc:
+            traceback.print_exc(file=sys.stderr)
+            diagnostics.append(
+                f"反汇编未完整生成：{type(exc).__name__}: {str(exc)[:300]}"
+            )
+    source, complete = BoundedText(SOURCE_LIMIT), True
     try:
         decompile_file(str(path), outstream=source)
     except Exception as exc:
@@ -221,6 +250,15 @@ def recover(path, vm):
         traceback.print_exc(file=sys.stderr)
         diagnostics.append(f"源码恢复未完成：{type(exc).__name__}: {str(exc)[:300]}")
     raw_source = source.getvalue()
+    if source.truncated:
+        complete = False
+        limit_mib = SOURCE_LIMIT // (1024 * 1024)
+        diagnostics.append(
+            f"源码超过 {limit_mib} MiB 上限，已截断；完整文本请用离线语料路径核对。"
+        )
+    if listing.truncated:
+        listing_mib = DISASSEMBLY_LIMIT // (1024 * 1024)
+        diagnostics.append(f"反汇编超过 {listing_mib} MiB 上限，已截断。")
     text = raw_source
     if text.strip():
         try:
@@ -236,6 +274,11 @@ def recover(path, vm):
         "complete": complete,
         "disassembly": listing.getvalue(),
         "diagnostics": diagnostics,
+        "truncated": {
+            "source": source.truncated,
+            "disassembly": listing.truncated,
+        },
+        "limits": {"source": SOURCE_LIMIT, "disassembly": DISASSEMBLY_LIMIT},
     }
 
 
@@ -244,15 +287,23 @@ def main(argv=None):
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--vm", required=True, choices=("py25", "py27"))
+    parser.add_argument(
+        "--no-disassembly",
+        action="store_true",
+        help="只产出源码；反汇编可按需另起一次运行（大模块首字节时间更短）",
+    )
     args = parser.parse_args(argv)
-    captured_out, captured_err = BoundedText(), BoundedText()
+    captured_out = BoundedText(4 * 1024 * 1024)
+    captured_err = BoundedText(4 * 1024 * 1024)
     try:
         # Parser debug prints stay inside this process, never global GUI stdout.
         with (
             contextlib.redirect_stdout(captured_out),
             contextlib.redirect_stderr(captured_err),
         ):
-            result = recover(args.input, args.vm)
+            result = recover(
+                args.input, args.vm, disassembly=not args.no_disassembly
+            )
     except Exception as exc:
         with contextlib.redirect_stderr(captured_err):
             traceback.print_exc()
@@ -261,6 +312,7 @@ def main(argv=None):
             "complete": False,
             "disassembly": "",
             "diagnostics": [f"恢复引擎失败：{type(exc).__name__}: {str(exc)[:300]}"],
+            "truncated": {"source": False, "disassembly": False},
         }
     result["worker_stdout"] = captured_out.getvalue()
     result["worker_stderr"] = captured_err.getvalue()

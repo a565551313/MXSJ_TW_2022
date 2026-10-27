@@ -24,6 +24,52 @@ from .recovery_candidates import (
 )
 from .recovery_process import RecoveryCancelled, RecoveryProcessError, run_bounded
 
+#: Result-file and per-product limits. The worker streams source and
+#: disassembly separately now (8 MiB each); two real modules decompile into
+#: 4.0-4.2 MB of source, so the old 2/3 MiB bounds silently discarded them.
+MAX_RESULT_BYTES = 48 * 1024 * 1024
+MAX_SOURCE_CHARS = 8 * 1024 * 1024
+MAX_DISASSEMBLY_CHARS = 8 * 1024 * 1024
+MAX_TRACE_CHARS = 4 * 1024 * 1024
+ENGINE_PROTOCOLS = ("mxsj-recovery/2", "mxsj-recovery/3")
+
+#: Bound for one session's recovery results. 64 modules is far more than a
+#: working set and keeps the biggest plausible results bounded in memory.
+SESSION_CACHE_LIMIT = 64
+
+
+class RecoverySessionCache:
+    """Content-addressed recovery results owned by one caller (never persisted).
+
+    Keys are ``(vm, sha256(authored standard pyc), disassembly, has_pycdc)``:
+    the same bytes through the same engines give the same output, so re-opening
+    a module (or its candidate list) costs nothing after the first pass.
+
+    Deliberately **opt-in**: core recovery stays a pure function unless a caller
+    hands over a cache, so callers that patch engines, replay evidence or test
+    alternative pipelines are never served another run's result. A cache hit is
+    never a source-trust signal; it only repeats an unverified draft.
+    """
+
+    def __init__(self, limit: int = SESSION_CACHE_LIMIT):
+        self.limit = max(1, int(limit))
+        self._items: dict[tuple, dict] = {}
+
+    def get(self, key: tuple) -> dict | None:
+        cached = self._items.get(key)
+        return dict(cached) if cached is not None else None
+
+    def put(self, key: tuple, value: dict) -> None:
+        if len(self._items) >= self.limit and key not in self._items:
+            self._items.clear()
+        self._items[key] = dict(value)
+
+    def clear(self) -> None:
+        self._items.clear()
+
+    def __len__(self) -> int:
+        return len(self._items)
+
 
 @dataclass(frozen=True)
 class ModuleReport:
@@ -47,6 +93,8 @@ class ModuleReport:
     # Continuation target is separate from immutable recovery provenance.
     target_archive: Path | None = None
     target_fingerprint: str = ""
+    #: ``(source_truncated, disassembly_truncated)`` from the engine worker.
+    truncated: tuple = (False, False)
 
     @property
     def current_archive(self):
@@ -103,13 +151,53 @@ class ModuleReport:
             "corpus_manifest_sha256": self.corpus_manifest_sha256,
             "candidate_pyc_sha256": self.candidate_pyc_sha256,
             "origin_verified": self.origin_verified,
+            "truncated": {
+                "source": bool(self.truncated[0]),
+                "disassembly": bool(self.truncated[1]),
+            },
             "adoption_archive": str(self.current_archive),
             "adoption_archive_sha256": self.current_fingerprint,
             "candidates": [c.metadata() for c in self.candidates],
         }
 
 
-def _recover_primary(pyc: bytes, vm: str, *, timeout=30, cancel=None):
+def validate_result(result) -> dict:
+    """Bounded protocol check shared by callers and tests (no I/O here)."""
+    if (
+        not isinstance(result, dict)
+        or result.get("engine_protocol") not in ENGINE_PROTOCOLS
+        or not isinstance(result.get("source"), str)
+        or not isinstance(result.get("disassembly"), str)
+        or type(result.get("complete")) is not bool
+        or not isinstance(result.get("diagnostics"), list)
+        or not all(isinstance(d, str) for d in result["diagnostics"])
+    ):
+        raise ValueError(
+            "invalid recovery result：恢复引擎版本或输出协议不符，"
+            "请完整解压/重新构建新版"
+        )
+    if (
+        len(result["source"]) > MAX_SOURCE_CHARS
+        or len(result["disassembly"]) > MAX_DISASSEMBLY_CHARS
+    ):
+        raise ValueError("recovery text exceeds limit")
+    for key in ("raw_source", "worker_stdout", "worker_stderr"):
+        if key in result and (
+            not isinstance(result[key], str) or len(result[key]) > MAX_TRACE_CHARS
+        ):
+            raise ValueError("invalid bounded recovery diagnostic")
+    truncated = result.get("truncated")
+    if truncated is not None and (
+        not isinstance(truncated, dict)
+        or not all(
+            type(truncated.get(k, False)) is bool for k in ("source", "disassembly")
+        )
+    ):
+        raise ValueError("invalid truncation report")
+    return result
+
+
+def _recover_primary(pyc: bytes, vm: str, *, timeout=30, cancel=None, disassembly=True):
     if vm not in {"py25", "py27"}:
         raise ValueError("unknown recovery VM")
     if (
@@ -145,6 +233,8 @@ def _recover_primary(pyc: bytes, vm: str, *, timeout=30, cancel=None):
                 "--vm",
                 vm,
             ]
+            if not disassembly:
+                arguments.append("--no-disassembly")
             if cancel is not None:
                 bounded = run_bounded(
                     arguments, timeout=timeout, cancel=cancel, cwd=root
@@ -170,37 +260,23 @@ def _recover_primary(pyc: bytes, vm: str, *, timeout=30, cancel=None):
         if completed.returncode or not output.is_file():
             raise ValueError(f"恢复引擎失败，退出码{completed.returncode}")
         with output.open("rb") as stream:
-            raw = stream.read(16 * 1024 * 1024 + 1)
-        if len(raw) > 16 * 1024 * 1024:
+            raw = stream.read(MAX_RESULT_BYTES + 1)
+        if len(raw) > MAX_RESULT_BYTES:
             raise ValueError("recovery result exceeds limit")
         result = json.loads(raw)
-        if (
-            not isinstance(result, dict)
-            or result.get("engine_protocol") != "mxsj-recovery/2"
-            or not isinstance(result.get("source"), str)
-            or not isinstance(result.get("disassembly"), str)
-            or type(result.get("complete")) is not bool
-            or not isinstance(result.get("diagnostics"), list)
-            or not all(isinstance(d, str) for d in result["diagnostics"])
-        ):
-            raise ValueError(
-                "invalid recovery result：恢复引擎版本或输出协议不符，"
-                "请完整解压/重新构建新版"
-            )
-        if (
-            len(result["source"]) > 3 * 1024 * 1024
-            or len(result["disassembly"]) > 3 * 1024 * 1024
-        ):
-            raise ValueError("recovery text exceeds limit")
-        for key in ("raw_source", "worker_stdout", "worker_stderr"):
-            if key in result and (
-                not isinstance(result[key], str) or len(result[key]) > 2 * 1024 * 1024
-            ):
-                raise ValueError("invalid bounded recovery diagnostic")
-        return result
+        return validate_result(result)
 
 
-def recover_standard(pyc: bytes, vm: str, *, timeout=30, pycdc=None, cancel=None):
+def recover_standard(
+    pyc: bytes,
+    vm: str,
+    *,
+    timeout=30,
+    pycdc=None,
+    cancel=None,
+    disassembly=True,
+    cache: RecoverySessionCache | None = None,
+):
     # Validate before discovery/copying/executing either parser.
     if vm not in {"py25", "py27"} or pyc[:4] != {
         "py25": bytes.fromhex("b3f20d0a"),
@@ -210,6 +286,16 @@ def recover_standard(pyc: bytes, vm: str, *, timeout=30, pycdc=None, cancel=None
     parse(pyc[8:])
     if cancel is not None and cancel.is_set():
         raise RecoveryCancelled("恢复已取消")
+    cache_key = (
+        vm,
+        hashlib.sha256(pyc).hexdigest(),
+        bool(disassembly),
+        pycdc is not None,
+    )
+    if cache is not None:
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
     notes = []
     if pycdc is None:
         try:
@@ -217,7 +303,9 @@ def recover_standard(pyc: bytes, vm: str, *, timeout=30, pycdc=None, cancel=None
         except (OSError, ValueError, TypeError) as exc:
             notes.append("第二引擎未启用：" + str(exc))
     try:
-        result = _recover_primary(pyc, vm, timeout=timeout, cancel=cancel)
+        result = _recover_primary(
+            pyc, vm, timeout=timeout, cancel=cancel, disassembly=disassembly
+        )
         primary = primary_candidate(result)
     except RecoveryCancelled:
         raise
@@ -249,7 +337,7 @@ def recover_standard(pyc: bytes, vm: str, *, timeout=30, pycdc=None, cancel=None
     else:
         notes.append("未安装通过清单校验的第二引擎；当前仅使用uncompyle6。")
     selected = best_candidate(candidates)
-    return {
+    outcome = {
         **result,
         "source": selected.source,
         "complete": selected.complete,
@@ -257,9 +345,22 @@ def recover_standard(pyc: bytes, vm: str, *, timeout=30, pycdc=None, cancel=None
         "candidates": tuple(candidates),
         "selected_engine": selected.engine,
     }
+    if cache is not None:
+        cache.put(cache_key, outcome)
+    return dict(outcome)
 
 
-def read_module(archive, index, catalog=None, *, pycdc=None, cancel=None, timeout=30):
+def read_module(
+    archive,
+    index,
+    catalog=None,
+    *,
+    pycdc=None,
+    cancel=None,
+    timeout=30,
+    disassembly=True,
+    cache: RecoverySessionCache | None = None,
+):
     if archive.vm == "py25" and index == 1288:
         # Policy exclusion precedes payload, source name, preview and recovery.
         archive._assert_unchanged()
@@ -299,7 +400,13 @@ def read_module(archive, index, catalog=None, *, pycdc=None, cancel=None, timeou
         filename = name.hex()
         standard_sha = hashlib.sha256(standard).hexdigest()
         result = recover_standard(
-            standard, archive.vm, pycdc=pycdc, cancel=cancel, timeout=timeout
+            standard,
+            archive.vm,
+            pycdc=pycdc,
+            cancel=cancel,
+            timeout=timeout,
+            disassembly=disassembly,
+            cache=cache,
         )
     except (OSError, ValueError, KeyError) as exc:
         result["diagnostics"] = [f"不能恢复此条目：{exc}"]
@@ -319,4 +426,8 @@ def read_module(archive, index, catalog=None, *, pycdc=None, cancel=None, timeou
         stored[:256].hex(" "),
         result.get("candidates", ()),
         result.get("selected_engine", ""),
+        truncated=(
+            bool(result.get("truncated", {}).get("source", False)),
+            bool(result.get("truncated", {}).get("disassembly", False)),
+        ),
     )

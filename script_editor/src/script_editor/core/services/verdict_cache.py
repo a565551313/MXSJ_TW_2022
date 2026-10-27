@@ -141,7 +141,11 @@ def _parse_row(row, tool_version: str) -> PackageVerdict:
                 index = int(key)
             except (TypeError, ValueError):
                 raise ValueError("缓存索引非法") from None
-            if not 0 <= index < entries or not isinstance(text, str) or len(text) > 8192:
+            if (
+                not 0 <= index < entries
+                or not isinstance(text, str)
+                or len(text) > 8192
+            ):
                 raise ValueError("缓存索引/文本非法")
             result[index] = text
         return result
