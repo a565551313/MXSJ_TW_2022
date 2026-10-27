@@ -49,7 +49,7 @@
 | 门禁 | 结果 | 对照基线 | 判定 |
 |---|---|---|---|
 | wincompat（map_editor/resource_editor/ui_editor/script_editor/local_server/web_server/tools/devkit/mx_common） | ERROR 0 / WARNING 0 / INFO 0（文件名 685 项、源码 571 个） | 0/0/0 | ✅ |
-| wincompat（server/script_manual/tools/native_channel） | ERROR 10 / WARNING 93 / INFO 0（910 项文件名 + 254 个源码） | STATUS §3.5 记录「10 E（验收脚本 os.killpg/SIGKILL，Linux 侧按设计）+ 93 W」逐项一致 | ✅ 复现基线 |
+| wincompat（server/script_manual/tools/native_channel） | ERROR 10 / WARNING 93 / INFO 0（910 项文件名 + 254 个源码） | [STATUS_HISTORY §3.5](../archive/STATUS_HISTORY.md#s3-3-5) 记录「10 E（验收脚本 os.killpg/SIGKILL，Linux 侧按设计）+ 93 W」逐项一致 | ✅ 复现基线 |
 | ruff（11 个目录） | **1 error**：`tools/native_channel/bootstrap.py:21` E501（89>88） | STATUS 记录为 0 | ❌ 新发现 |
 | py_compile（全仓 893 个 .py） | 1 失败：`tools/decompiler/output` 历史伪代码（CPython 2 语料，按设计不编译） | 已知边界 | ✅ |
 

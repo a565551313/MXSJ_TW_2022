@@ -28,6 +28,7 @@
 | 路径 | 是什么 | 入口文档 |
 |---|---|---|
 | `AGENTS.md` / `README.md` / `docs/STATUS.md` | 规则 / 项目总览 / 当前状态 | 本文 |
+| `docs/archive/STATUS_HISTORY.md` | 原 `docs/STATUS.md` 的历史部分（§3 红灯 3.1–3.82、§4–§7 与历史轮次条目），2026-10-27 拆出；**原 §编号未改**，每个 §3.x 有显式锚点 `s3-3-x` | [归档索引](docs/archive/README.md) |
 | `docs/archive/` | 已被取代的历史快照（只读，有横幅） | [`docs/archive/README.md`](docs/archive/README.md) |
 | `notes/client_binary_reversibility.md` | 客户端 exe/dll 的可逆性边界（逐节熵、RTTI、导出）与三条路的成本；§6–§7 是启动器 `.rsrc` 抽取结果与「资源包主体在 `data/*.fls` / `update.ini`」的分界；**原生符号"搜不到"不等于"不存在"** | `notes/opcode_mapping_and_decompilation.md` |
 | `docs/DECOMPILE_CORPUS.md` | 全量反编译语料（79 MB / 5,517 份 `.py`）**要不要建、怎么建**：30 秒决策表、实测过的重建配方、4 个已复现的坑 | [`notes/opcode_mapping_and_decompilation.md`](notes/opcode_mapping_and_decompilation.md) §4.5–§4.6 |
@@ -38,7 +39,7 @@
 | `tools/decompiler/` | 双 VM 字节码反编译、5 段 XOR 重打包；`output/` 是反编译文本（**不准确、不可执行，只作线索**） | `notes/opcode_mapping_and_decompilation.md` |
 | `tools/data-parser/` | `universal_fls_tool.py`、`mx_path_hash.py`、`extract_dlg.py`、`i0_sprite.py`、`pe_resource_dump.py`（从 exe/dll 的 `.rsrc` 抽皮肤/光标/版式/字串）、`skin_label_patch.py` + `pe_resource_patch.py`（皮肤改字并原位写回）、精灵格式说明 | `I0_SPRITE_FORMAT.md` |
 | `tools/client_patches/` | 混合专题：注册 overlay v3/v3.2/v3.3 已停用；内置 UI 列表旧 v1/v2 暂停，v3 为未原生验收源码参考；不可整体判废 | [`分专题状态`](tools/client_patches/README.md) |
-| `tools/devkit/` | 开发自检工具箱：`check_windows_compat.py`（Windows 兼容静态检查，交付前必跑）、`vendor_core.py`（`mx_common/` → 编辑器 `core/` 的共享核心分发器） | [`README.md`](tools/devkit/README.md) |
+| `tools/devkit/` | 开发自检工具箱：`check_windows_compat.py`（Windows 兼容静态检查，交付前必跑）、`check_doc_versions.py`（顶层文档的版本号 vs 各组件 `pyproject.toml`，防版本漂移）、`vendor_core.py`（`mx_common/` → 编辑器 `core/` 的共享核心分发器） | [`README.md`](tools/devkit/README.md) |
 | `tools/data-export/`、`tools/data_browser/`、`tools/dis_v43/`、`tools/*.py` | 历史数据导出/浏览/反汇编工具，仍可用但不是现行复核入口 | — |
 | `script_editor/` | 双 VM 脚本恢复候选、编辑／编译／新包验证；Git 不含完整运行时发行材料 | [`README.md`](script_editor/README.md) |
 | `script_manual/` | 只读脚本目录、有限说明、专题和摘要绑定审核 | [`README.md`](script_manual/README.md) |
@@ -70,7 +71,7 @@
 | UI 编辑器 | PySide6（+Pillow 转精灵）；`.dlg` 语料库在 `MXSJ_DLG_CORPUS`（Drive 取用见 [`docs/EXTERNAL_CORPUS.md`](docs/EXTERNAL_CORPUS.md)） | `(cd ui_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`；运行 `python3 ui_editor/bootstrap.py` |
 | 脚本编辑器 | 本目录 requirements；旧 VM 编译器／恢复引擎材料另见运行时文档 | `(cd script_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`（须在组件目录跑：`repair_runtimes.py` 在组件根，仓库根口径会少收集 9 项）；`python3 script_editor/bootstrap.py --check-only` |
 | 脚本手册 | 本目录 requirements；核心校验需 jsonschema，GUI 需 PySide6 | `PYTHONPATH=script_manual/src python3 -m mxsj_manual validate --verify-evidence --repository . --require-full-inventory`；`python3 script_manual/check_manual.py`（统一闸门还需开发依赖） |
-| 开发工具箱 / 风格检查 | 检查脚本为标准库；完整测试还需 Pillow；ruff 另装（`pip install ruff`，根 `ruff.toml` 为默认配置） | `python3 -m unittest discover -s tools/devkit/tests`；`python3 tools/devkit/check_windows_compat.py <dir>`；`ruff check <dir>` |
+| 开发工具箱 / 风格检查 | 检查脚本为标准库；完整测试还需 Pillow；ruff 另装（`pip install ruff`，根 `ruff.toml` 为默认配置） | `python3 -m unittest discover -s tools/devkit/tests`；`python3 tools/devkit/check_windows_compat.py <dir>`；`python3 tools/devkit/check_doc_versions.py`；`ruff check <dir>` |
 
 - 用仓库**外**的 venv（`python3 -m venv ../mxsj-venv`）；系统 pip 受 PEP 668 保护。
 - 每轮重新探测 Python、Qt 与系统库；缺依赖可能导致导入失败或跳过。**跳过／未执行不算通过**，历史沙箱库与离屏结果不证明当前环境或 Windows 可用。
@@ -101,7 +102,7 @@
 
 ## 5. Python 工具 / 编辑器开发约定
 
-> 2026-10-14 与用户约定；全文、目录模板与清单见 [`docs/PYTHON_TOOL_CONVENTIONS.md`](docs/PYTHON_TOOL_CONVENTIONS.md)。新写或大改的 Python 工具、编辑器、脚本一律遵守；老工具碰到就补齐，差距清单在 STATUS §3.5。
+> 2026-10-14 与用户约定；全文、目录模板与清单见 [`docs/PYTHON_TOOL_CONVENTIONS.md`](docs/PYTHON_TOOL_CONVENTIONS.md)。新写或大改的 Python 工具、编辑器、脚本一律遵守；老工具碰到就补齐，差距清单在 [STATUS_HISTORY §3.5](docs/archive/STATUS_HISTORY.md#s3-3-5)。
 
 1. **PEP 8 + 模块化**：`ruff check <tool>` 0 报告（规则 `E,W,F,I,UP,B`、88 列、py310；根 `ruff.toml` 是默认值，工具自己的 `pyproject.toml` 照抄一份）。`src/<package>/{core,gui}` 分层，`core` 不 import Qt、可在无显示器环境测试；路径用 `pathlib`，文本 IO 必须显式 `encoding="utf-8"`。
 2. **GUI 一律 PySide6**（≥ 6.4）。不新增 tkinter / PyQt / wx 代码；现有 tkinter 工具只保留，不修补。
@@ -114,13 +115,17 @@
 - **事实 / 推断 / 设计三分开**：原字节、反汇编地址、测试输出是事实；“应该是”“推测为”要写明；设计文档不是实现。
 - **先复现，再修复，再补能复现旧 bug 的测试。** 不要只改测试期望让它变绿；记住本项目最贵的教训：*测试替身可能与实现共享同一个错误假设*（CClickBox 签名事故）——接口以原 code object / 反汇编核对。
 - **证据钉死输入**：许多测试把工具源码的 SHA-256 钉进证据 JSON（例如 `server/docs/csv_checks/agent_e_reproduction.json` 钉了 `tools/decompiler/batch_decompile.py`）。改这些工具后必须重新生成证据、逐字段 diff 并在提交信息里说明，否则架构测试会红。
-- **文档去处**：长期规则 → 本文；当前状态 → `docs/STATUS.md`；逆向结案 → `notes/`；子项目细节 → 子项目 README/DESIGN；被取代的快照 → `docs/archive/`（`git mv` + 横幅 + 修链接 + 登记索引，见 `docs/archive/README.md`）。不要再在根目录新建 `*_HANDOFF.md`。
+- **文档去处**：长期规则 → 本文；当前状态 → `docs/STATUS.md`；**历史轮次 → `docs/archive/STATUS_HISTORY.md`**（2026-10-27 起，STATUS 的 §3／§4–§7 历史部分已拆出，§编号未改）；逆向结案 → `notes/`；子项目细节 → 子项目 README/DESIGN；被取代的快照 → `docs/archive/`（`git mv` + 横幅 + 修链接 + 登记索引，见 `docs/archive/README.md`）。不要再在根目录新建 `*_HANDOFF.md`。
 - **结束一轮工作时**：更新 `docs/STATUS.md`（日期、分支、测试实测、红灯、下一步），提交并推送到当前会话分支。
 - 多 Agent 并行时按 `server/docs/OWNERSHIP.md` 的目录所有权划分；跨模块只走 `contracts`。
 
 ## 7. 已知坑（详见 STATUS 与各子项目文档）
 
-- GIRB 在 1034/1035 固定样本中仍有 300/429 扇区解不出（不是全地图统计）；现在明确失败而非假成功。不要拿旧的成功率反驳字节级差异。
+- GIRB 动态光照编解码**已全量解决（2026-10-23，map_editor v1.0.0）**：在仓外取得的 101 份客户端
+  `.map` 语料（11,763 扇区）上，GIRB **11,763/11,763 零失败解出**；旧「1034/1035 固定样本中
+  300/429 扇区解不出」是 0.1.0 时代的**历史缺口**，已不再成立，不要再据此下结论。
+  但该 101 图语料**不随仓库分发**，复核需另行取得语料并重跑测试；「全量」只指该次语料，
+  不是对任意地图的普遍保证。旧结论见 `docs/archive/` 与 `map_editor/README.md` 的版本历史。
 - 0SLF 目录寻址**已判定（2026-10-16，反汇编）**：`.dlg` 走的 LoadFile 链在 `0x60DD00`
   用 **二分**（`0x60DD35` → `0x60E690` = `lower_bound`，16 字节记录、比 entry_id；返回后
   `0x60DD3D`/`0x60DD41` 判未命中）。所以**目录必须按 entry_id 升序**，新增/插入条目后
@@ -143,6 +148,12 @@
 - **别默认全量反编译语料存在**：生成物写在仓库外，环境变化后需重新确认。全档符号检索前先读 [`docs/DECOMPILE_CORPUS.md`](docs/DECOMPILE_CORPUS.md)，优先定点恢复；只有确需语义级全档检索才重建全量。
 - `tools/decompiler/batch_decompile.py` 整池并行可能被超大常量模块堵住（历史 entry 2371 `preload_mov`、2679 `wingtypeposdata`）；补跑采用逐条子进程与超时，生成物不入库。
 - `tools/decompiler/output/` 下的 `.py` 是反编译输出，有缺失和错误，不是源码。
+- **顶层文档的版本号不许手工维护**：README / AGENTS / STATUS 里各组件的版本号必须与
+  对应 `pyproject.toml` 的 `[project].version` 一致。改动组件版本后**同一轮**同步文档，
+  并跑 `python3 tools/devkit/check_doc_versions.py`（退出码 1 = 漂移，要改文档而不是放宽检查）。
+  这不是形式主义——`ui_editor` 从 0.8.4 涨到 0.21.0 期间 README 一次没跟上，读者据此
+  长期以为 UI 编辑器只支持「字段编码和布局导出」，能力边界完全描述错了。
+  该工具**只比对字符串**，不判断某段版本叙述是否过时；过时仍要人工看。
 
 ## 8. 术语
 

@@ -199,10 +199,19 @@ with ArchiveDocument(Path('../data/script.fls')) as a:
 # 恢复长尾（需 xdis/uncompyle6；validate_engine 需真安装固定源码）
 PYTHONPATH=src python3 - <<'PY'
 from script_editor.data import recovery_worker as W
+# 跳过引擎自检只是为了在本机计时，绝不能把桩留在模块上：同一会话里后面的
+# 计时/测试会因此失去意义，§1.3/§7.2 的数字也就不再可复现。
+original = W.validate_engine
 W.validate_engine = lambda: None
-# 用标准 pyc 文件调 W.recover(path, 'py25')，逐条计时
+try:
+    pass  # 这里用标准 pyc 文件调 W.recover(path, 'py25')，逐条计时
+finally:
+    W.validate_engine = original
 PY
 ```
+
+> 本轮所有长尾计时都按这个写法跑：桩只活在 `try` 之内，退出即还原。
+> 手敲 REPL 时请先确认 `W.validate_engine is original` 为真，再采信数字。
 
 ## 6. 相关入口
 

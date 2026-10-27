@@ -5,7 +5,7 @@
 这些文件随独立工具一同保存，不在运行时导入兄弟目录；保留原格式注释。
 仓库未提供总LICENSE；工具沿用既有编辑器Proprietary标识，不假定拥有游戏资源再分发权。
 
-`runtimes/` 的双Windows标准CPython编译器已入库（用户2026-10-23决定，见`../docs/STATUS.md` §3.79），其余二进制不入Git；
+`runtimes/` 的双Windows标准CPython编译器已入库（用户2026-10-23决定，见`../../docs/archive/STATUS_HISTORY.md` §3.79），其余二进制不入Git；
 runtimes/manifest.json记录版本/来源/逐文件SHA与许可证；交付还附官方对应源码归档。
 第二引擎pycdc附GPL完整源码与BUILD-NOTICES.txt（静态运行时许可、完整构建配方）。
 主引擎固定源码及四项Python依赖源码也随包；这些不是GUI的Proprietary许可。

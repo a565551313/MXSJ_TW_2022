@@ -495,7 +495,7 @@ python3 tools/decompiler/crosscheck_pycdc.py --out <語料目錄> \
 | uncompyle6 全語料 4,998 檔 | 550（11.0%） | **3,770（75.4%）** | 1,228 |
 | pycdc 交叉覆核 512 檔 | 248（48.4%） | 248（沒有這個偽影） | 264 |
 
-1. **系統性偽影**：這些 `.pyo` 的模組碼物件以 `RETURN_VALUE` 收尾，uncompyle6 如實還原成模組頂層一句 `return`，而模組級 `return` 不是合法 Python——3,220 個檔案**只因為這一行**編譯不過。走「編輯後回編譯」管線（STATUS §5.2 ④）時必須先剝掉它，否則第一步就 `SyntaxError: 'return' outside function`。
+1. **系統性偽影**：這些 `.pyo` 的模組碼物件以 `RETURN_VALUE` 收尾，uncompyle6 如實還原成模組頂層一句 `return`，而模組級 `return` 不是合法 Python——3,220 個檔案**只因為這一行**編譯不過。走「編輯後回編譯」管線（[PYTHON_TOOL_CONVENTIONS §5.2](../docs/PYTHON_TOOL_CONVENTIONS.md#52-人工清单静态检查覆盖不到的) ④）時必須先剝掉它，否則第一步就 `SyntaxError: 'return' outside function`。
 2. 仍失敗的 1,228 檔分類：真語法錯 1,159、含 NUL 位元組 35（§4.5 那類 `\x00` 汙染已經滲進源碼常量）、編碼宣告與實際位元組不符 27、縮進 6。
 3. pycdc 那 264 檔失敗**不是**本工具把非 UTF-8 位元組轉義成 `\xNN` 造成的：拿未轉義原文重測，0 檔被修好，仍是 pycdc 自己寫錯（例：`script/usermacro.py:147` invalid syntax）。
 
