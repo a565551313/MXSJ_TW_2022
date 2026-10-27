@@ -16,6 +16,7 @@
 | 脚本说明与来源 | [脚本手册](../script_manual/README.md) | 完整登记不等于完整讲解 |
 | 原生游戏 TCP 算法／离线复现 | [native_channel](native_channel/README.md) | 候选兼容层；目标保护包装器与真实客户端联网待验 |
 | Windows 检查／共享核心同步 | [devkit](devkit/README.md) | 静态检查不替代实机 |
+| 看保护壳要什么／卡在哪 | [dyprot_unpack](dyprot_unpack/README.md) | 实验性；**尚未解出载荷**，跑不通不等于壳不可解 |
 | PE 资源／专项逆向／历史复现 | 下表对应工具 | 先确认样本、输出和副作用 |
 
 ## 状态含义
@@ -37,6 +38,7 @@
 | [decompiler/](decompiler/README.md) | 研究专用＋历史复现；双 VM／固定包参数 | 恢复文本、pyc、报告、新包；不执行候选源码 | 日常编辑走脚本编辑器；来源核验／构建仍有依赖 |
 | [decompiler/output/](decompiler/output/) | 历史复现数据 | 非准确源码，禁止导入／执行；部分文件被探针读取 | 不是可随手清理的缓存；不是生产配置 |
 | [data-parser/](data-parser/README.md) | 混合；逐文件见子表 | 解包、提取、改图、PE/FLS 输出各不相同 | 常规编辑走编辑器；PE 等专项未证明被替代 |
+| [dyprot_unpack/](dyprot_unpack/README.md) | **研究专用**；`_dyprot0/1` 保护壳入口的 Unicorn 执行 | 只读 `mxmain.dll`；可选写 JSON／快照，拒绝覆盖输入 | 尚未产出脱壳结果；替代路线是 Windows 上的只读内存转储 |
 | [data_browser/](data_browser/README.md) | 历史复现；旧 SQLite 浏览器 | Web 入口启动监听，桌面入口创建 GUI/TUI | 新复核系统优先，但不承诺覆盖全部旧表 |
 | [data-export/](data-export/README.md) | 历史导出材料 | CSV／JSON／SQLite；被旧浏览器读取 | 不是正式 game_data，不可无核对迁入 |
 | [dis_v43/](dis_v43/README.md) | 历史复现；v4.3 映射及对应 marshal 样本 | 打印反汇编／候选对齐结果 | 当前双 VM 核心不等于此 CLI 的完全等价替代 |

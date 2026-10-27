@@ -17,6 +17,8 @@
 | `skin_labels.launcher.json` | 固定启动器皮肤标签配置 | 不能跨任意皮肤尺寸／版本直接套用 |
 | `pe_resource_patch.py` | 研究专用；指定 PE 资源及替换负载 | 写 PE 和报告；原位是资源布局概念，不代表允许覆盖原始输入，先核查源／目标和备份 |
 | `test_pe_resource_dump.py`、`test_skin_and_resource_patch.py` | 专项回归 | 测试范围不能外推 EXE 启动、签名／保护系统或 Windows 验收 |
+| `mxmain_rtti.py` | 研究专用；`mxmain.dll` 的明文 MSVC RTTI | 输出类名／基类链／虚表（含多重继承的次要虚表）／虚析构／写 vfptr 位置的 JSON 与 Markdown；只读、不反编译、不执行镜像。`--json` / `--md` 的目标路径**不许指向输入文件本身**（同一文件或硬链接会被拒绝、退出 2），见 [类图清单](../../notes/mxmain_rtti_class_map.md) |
+| `test_mxmain_rtti.py` | 专项回归（自建 PE + 真档断言） | 钉住 TD/COL 定位、BCD 28 位元组步长、槽尾字串假阳性、多条 locator 的取舍、`C7 /0` 带位移的写 vfptr（`site_va` 是指令起始、`imm_va` 才是立即数）、寄存器形态不误收、输出路径不覆盖输入；不代表 Windows 运行期一致 |
 
 ## 写入规则
 
