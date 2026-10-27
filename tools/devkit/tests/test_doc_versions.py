@@ -342,8 +342,43 @@ class RegistryTests(unittest.TestCase):
                 self.assertIn(key, COMPONENTS)
 
     def test_alias_keys_have_no_underscore_collision(self):
-        """别名不能与登记表的键重名（否则会重复扫描同一组件）。"""
-        self.assertFalse(set(ALIASES.values()) & set(COMPONENTS.keys()) & set())
+        """别名**字符串**不能与组件键重名，否则会重复扫描同一组件。
+
+        ⚠️ 旧版这条断言写的是
+        ``set(ALIASES.values()) & set(COMPONENTS.keys()) & set()``——
+        末尾的 ``& set()`` 让它**恒等于空集**，永远通过，是条同义反复。
+        （CodeRabbit 在 PR #92 上指出。）
+
+        真正要查的是：**别名键**（``ALIASES`` 的 key，即文档里可能出现的写法，
+        如「UI 编辑器」）不能和**组件键**（``ui_editor``）撞名——
+        一旦撞上，同一段文字会被两个扫描器各匹配一次，产生重复/矛盾的 findings。
+        """
+        collisions = set(ALIASES.keys()) & set(COMPONENTS.keys())
+        self.assertEqual(
+            collisions,
+            set(),
+            f"别名键与组件键重名，会导致重复扫描：{sorted(collisions)}",
+        )
+
+    def test_alias_keys_contain_no_underscore(self):
+        """别名键里不应出现下划线。
+
+        下划线是组件键的分隔符（``ui_editor``）；别名里带下划线会让
+        「短名」匹配与「全名」匹配的边界变得含糊。
+        """
+        bad = sorted(k for k in ALIASES if "_" in k)
+        self.assertEqual(bad, [], f"别名键不应含下划线：{bad}")
+
+    def test_no_alias_maps_to_two_components(self):
+        """同一个别名不能指向两个不同组件（否则扫描结果会互相覆盖）。"""
+        seen: dict[str, str] = {}
+        for alias, key in ALIASES.items():
+            self.assertNotIn(
+                key,
+                seen,
+                f"别名 {alias!r} 与 {seen.get(key)!r} 指向同一组件 {key!r}",
+            )
+            seen[key] = alias
 
 
 if __name__ == "__main__":

@@ -164,6 +164,30 @@ class AnchorTests(unittest.TestCase):
                 f"§{num} 缺显式锚点 {expected}（外部链接会断）",
             )
 
+    def test_anchors_are_unique(self):
+        """锚点必须**唯一**。
+
+        重名锚点会让后一个同名小节的链接**指不到**（浏览器只认第一个），
+        而「锚点存在」的检查是过的——所以必须单独查重复。
+        （拆分轮遗留：master 并行工作记录里的 `### 3.30` 与主线 `### 3.30`
+        共用了 `s3-3-30`，已改为 `s3-master-3-30`。）
+        """
+        text = HISTORY.read_text(encoding="utf-8")
+        seen: dict[str, int] = {}
+        dupes: dict[str, list[int]] = {}
+        for match in ANCHOR.finditer(text):
+            line = text[: match.start()].count("\n") + 1
+            anchor = match.group(1)
+            seen[anchor] = seen.get(anchor, 0) + 1
+            dupes.setdefault(anchor, []).append(line)
+        repeated = {k: v for k, v in dupes.items() if len(v) > 1}
+        self.assertEqual(
+            repeated,
+            {},
+            "锚点重名会让后一个小节的链接指不到："
+            + repr({k: v for k, v in sorted(repeated.items())}),
+        )
+
     def test_all_external_anchors_resolve(self):
         """仓库里所有指向归档文件的锚点链接都必须能落地。"""
         broken = []

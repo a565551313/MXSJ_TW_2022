@@ -1637,7 +1637,7 @@ python314-pip-install.log/bootstrap-py314-auto-install.log/recovery-core-py314.l
 
 <!-- 以下保留master并行工作记录；章节编号为各工作线原有历史编号。 -->
 
-<a id="s3-3-30"></a>
+<a id="s3-master-3-30"></a>
 ### 3.30 固定版本全量语料重建与网盘归档（2026-10-15）
 
 本轮仅语料和证据；分支 `arena/4803041b-mxsj-tw-2022`，输入基线固定
