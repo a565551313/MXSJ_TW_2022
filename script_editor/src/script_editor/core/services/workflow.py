@@ -112,6 +112,166 @@ def prepare_build(
     )
 
 
+@dataclass(frozen=True)
+class PackagePlan:
+    """Several changed modules of ONE package, prepared in a single pass.
+
+    Loose mode writes a whole package's pending edits at once; using one plan
+    keeps the "preview first, then commit" property instead of fanning out into
+    independent publishes that could half-succeed.
+    """
+
+    archive: Path
+    vm: str
+    compiler: Compiler
+    catalog: CatalogRef | None
+    entries: tuple[PreparedBuild, ...]
+    unchanged: tuple[int, ...] = ()
+
+    @property
+    def indexes(self):
+        return tuple(entry.snapshot.binding.index for entry in self.entries)
+
+    @property
+    def source_sha256(self):
+        return self.entries[0].snapshot.binding.fingerprint
+
+
+def prepare_package(snapshots, compiler, catalog=None, baselines=None):
+    """Prepare every binding of one package that would change stored bytes."""
+    snapshots = tuple(snapshots)
+    if not snapshots:
+        raise ValueError("没有可写回的源码：请先为条目关联源码")
+    archive, vm = snapshots[0].binding.archive, snapshots[0].binding.vm
+    seen = set()
+    for snapshot in snapshots:
+        if snapshot.binding.archive != archive or snapshot.binding.vm != vm:
+            raise ValueError("一次写回只能针对同一个包与同一个VM")
+        if snapshot.vm != vm or compiler.vm != vm:
+            raise ValueError("源码VM与包VM不一致，禁止写回")
+        if snapshot.binding.index in seen:
+            raise ValueError("同一条目在一次写回里出现了两次")
+        seen.add(snapshot.binding.index)
+        if snapshot.binding.fingerprint != snapshots[0].binding.fingerprint:
+            raise ValueError("关联指向了不同版本的原包，请重新关联")
+    baselines = baselines or {}
+    entries, unchanged = [], []
+    for snapshot in snapshots:
+        key = (snapshot.binding.archive, snapshot.binding.index)
+        plan = prepare_build(snapshot, compiler, catalog, baselines.get(key))
+        if plan.payload_changed:
+            entries.append(plan)
+        else:
+            unchanged.append(snapshot.binding.index)
+    if not entries:
+        raise ValueError("没有需要写回的改动：当前源码与包内字节完全等价")
+    return PackagePlan(
+        archive, vm, compiler, catalog, tuple(entries), tuple(unchanged)
+    )
+
+
+def _validate_package_plan(plan: PackagePlan, state: ProjectState):
+    if not plan.entries:
+        raise ValueError("清单为空")
+    keys = [(b.archive, b.index) for b in state.bindings]
+    if len(keys) != len(set(keys)) or len({c.archive for c in state.catalogs}) != len(
+        state.catalogs
+    ):
+        raise ValueError("项目存在重复关联")
+    if plan.catalog is not None and plan.catalog not in state.catalogs:
+        raise ValueError("XOR目录关联已过期")
+    for entry in plan.entries:
+        binding = entry.snapshot.binding
+        if (
+            entry.snapshot.reference
+            or entry.snapshot.vm != binding.vm
+            or entry.compiler.vm != binding.vm
+            or entry.snapshot.binding.archive != plan.archive
+            or text_sha(entry.snapshot.text) != entry.source_sha256
+            or hashlib.sha256(entry.replacement.standard_pyc).hexdigest()
+            != entry.standard_sha256
+            or (entry.replacement.index, entry.replacement.identity)
+            != (binding.index, binding.identity)
+            or binding not in state.bindings
+        ):
+            raise ValueError("预编译清单快照不一致")
+
+
+def publish_package(
+    plan: PackagePlan,
+    state: ProjectState,
+    destination: Path | None = None,
+    *,
+    in_place: bool = False,
+    backup: bool = True,
+    protected=(),
+):
+    """Write every prepared module of ``plan`` into one package.
+
+    ``in_place`` overwrites ``plan.archive`` itself (loose mode) after an
+    independent readback of the temporary package; otherwise ``destination``
+    must be a brand-new file. Either way the original is never half-written.
+    """
+    _validate_package_plan(plan, state)
+    target = Path(plan.archive) if in_place else destination
+    if target is None:
+        raise ValueError("严格模式必须指定新的输出包名")
+    with ArchiveDocument(plan.archive) as archive:
+        for item in state.bindings:
+            if item.archive == plan.archive:
+                item.verify(archive)
+        profiles = {}
+        for entry in plan.entries:
+            index = entry.snapshot.binding.index
+            _, filename, profile = inspect_module(archive, index, plan.catalog)
+            if filename != entry.filename:
+                raise ValueError("原模块嵌入文件名已变化")
+            if profile is not None:
+                # Key profiles are entry-bound; one package can need several.
+                profiles[index] = profile
+    protected = tuple(protected) + tuple(
+        p for b in state.bindings for p in (b.archive, b.source)
+    )
+    protected += tuple(c.path for c in state.catalogs)
+    report = build_package(
+        plan.archive,
+        target,
+        source_sha256=plan.source_sha256,
+        replacements=tuple(entry.replacement for entry in plan.entries),
+        compiler=plan.compiler,
+        profiles=profiles,
+        protected=protected,
+        in_place=in_place,
+        backup=backup,
+    )
+    bindings, catalogs = [], []
+    for item in state.bindings:
+        if item.archive == plan.archive:
+            item = replace(
+                item,
+                archive=report.output.resolve(),
+                fingerprint=report.output_sha256,
+            )
+            for entry in plan.entries:
+                binding = entry.snapshot.binding
+                if binding.index == item.index and binding.source == item.source:
+                    item = replace(
+                        item,
+                        filename_hex=entry.filename.hex(),
+                        built_source_sha256=entry.source_sha256,
+                    )
+        bindings.append(item)
+    for ref in state.catalogs:
+        if ref.archive == plan.archive:
+            ref = replace(
+                ref,
+                archive=report.output.resolve(),
+                fingerprint=report.output_sha256,
+            )
+        catalogs.append(ref)
+    return report, ProjectState(tuple(bindings), tuple(catalogs))
+
+
 def publish_build(
     plan: PreparedBuild, destination: Path, state: ProjectState, *, protected=()
 ):

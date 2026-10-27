@@ -30,19 +30,29 @@ from .build_actions import BuildActions
 from .corpus_actions import CorpusActions
 from .jobs import Job, Progress
 from .literal_preview import LiteralReportDialog
+from .loose_save import LooseSaveMixin
 from .module_actions import ModuleActions
 from .project_actions import ProjectActions
+from .save_mode import LOOSE, SaveModeMixin
 from .source_tab import SourceTab
 from .workspace import HEAVY_ENTRY_BYTES, Workspace
 
 
 class Window(
-    Workspace, ModuleActions, ProjectActions, BuildActions, CorpusActions, QMainWindow
+    Workspace,
+    ModuleActions,
+    ProjectActions,
+    BuildActions,
+    CorpusActions,
+    SaveModeMixin,
+    LooseSaveMixin,
+    QMainWindow,
 ):
     def __init__(self, runtime_root: Path, settings=None):
         super().__init__()
         self.runtime_root = runtime_root
         self.settings = settings
+        self._init_save_mode()
         self.archives: list[ArchiveDocument] = []
         self.bindings = []
         self.catalogs = []
@@ -74,7 +84,11 @@ class Window(
         self.tree.itemSelectionChanged.connect(self.show_entry)
         self.tabs.currentChanged.connect(self.refresh_native_action)
         self.refresh_native_action()
-        self.statusBar().showMessage("就绪 · 原包只读，所有写包生成新文件")
+        self.statusBar().showMessage(
+            "就绪 · 严格模式：F6 生成新包，原包只读"
+            if self.save_mode() != LOOSE
+            else "就绪 · 宽松模式：Ctrl+S 直接写回原包（覆盖前留 .fls.bak）"
+        )
         if settings is not None:
             try:
                 geometry, state = (
@@ -503,6 +517,11 @@ class Window(
 
     def save_current(self):
         try:
+            # Loose mode makes Ctrl+S one step: save the .py, compile, write back
+            # into the package. Unbound tabs keep the plain behaviour.
+            if self.save_mode() == LOOSE and self.can_loose_save():
+                self.loose_save()
+                return
             self.save_tab(self.current())
         except Exception as exc:
             self.fail(exc)

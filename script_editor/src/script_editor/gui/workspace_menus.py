@@ -156,6 +156,15 @@ class WorkspaceMenus:
             view.addAction(toggle)
         view.addSeparator()
         self.action(view, "reset", "恢复默认工作区", self.reset_workspace)
+        build.addSeparator()
+        self.action(
+            build,
+            "loose_save",
+            "写回原包（宽松模式，留 .bak）…",
+            self.loose_save,
+            "Ctrl+Alt+S",
+            sp.SP_DialogSaveButton,
+        )
         self.menu_handles = [file_menu, edit, encoding, build, view]
         # Keep menuAction wrappers alive during action enumeration (Qt ownership).
         self.menu_actions = [menu.menuAction() for menu in self.menu_handles]
@@ -183,3 +192,5 @@ class WorkspaceMenus:
             toolbar.addAction(action)
             if key in {"save_project", "find"}:
                 toolbar.addSeparator()
+        toolbar.addSeparator()
+        self._build_mode_control(toolbar)

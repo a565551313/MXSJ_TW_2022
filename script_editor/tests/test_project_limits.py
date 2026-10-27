@@ -25,8 +25,9 @@ MIB = 1024 * 1024
 
 
 def editor(name: str, size: int) -> EditorState:
+    # Relative on purpose: the snapshot only stores a portable path.
     return EditorState(
-        path=Path(f"/tmp/{name}.py"),
+        path=Path(name + ".py"),
         vm="py25",
         source_kind="recovered-draft",
         text="#" * size,
