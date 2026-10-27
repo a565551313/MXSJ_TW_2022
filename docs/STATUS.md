@@ -1,5 +1,40 @@
 # 项目当前状态（STATUS）
 
+> **2026-10-27：脚本编辑器「扩充定长条目」实验开关（分支 `arena/89785502-mxsj-tw-2022`，起点 `bb20d1b`）**：
+> 用户问「`authored marshal exceeds fixed XOR length; no shrink/rescale` 怎么彻底解决」。先分清两层事实：
+> ① **工具层**：`KeyProfile.crypt` 用目录里的固定长度校验，`encode_replacement()` 在 `len(native) > expanded_size`
+> 时硬拒绝，这是**保守策略**，不是能力缺失；② **客户端层**：`mxmain` 的 `0x45D48B..0x45D529` 每次**按 seed 和它拿到的 size 现算**
+> 4 个边界、到实际负载末端截停**（`cursor += size // 5 + seed // 256`，循环 5 次、取前 4 个），`seed` 只由模块名决定
+> ——所以变长条目在算术上是自描述的，客户端不需要另存一份参数表。据此落地一个**默认关闭的实验开关**：
+> 新增 `KeyProfile.crypt_variable()`（`bounds_from_keys(keys, len(data))`，原长度下与 `crypt` 等价）、
+> `encode_replacement_detailed()`（返回 stored/`native_size`/`resized`，超长且未授权时仍报原文案，超长且授权时按新长度加密，
+> 长度无法分成五段就提前拒绝而不是写出不可读的包）、`PreparedBuild.resized`；`allow_resize` 从
+> `prepare_build`/`prepare_package`/`publish_package` 一路传到 `build_package`，`verify_output()` 改用
+> `crypt_variable` 回读（对原长度等价，对变长条目是唯一正确读法）。GUI 挂在「保存模式」菜单里：
+> **扩充定长条目（实验）**，勾选先弹一次风险确认，状态栏/清单预览/宽松写回结果都明写「长度会变、客户端未验收」。
+> 写包仍走既有 `write_script()`（它本来就会重排 span 偏移、重算目录 `r2/r3`、回写目录指针），因此**不需要新增条目能力**
+> ——`write_script()` 的「不能插入条目」限制与本次开关无关。**实测**：新增 2 项回归（授权后写入变长条目并整包回读逐字节相等、
+> 长度无法分成五段时提前拒绝且不留输出文件），`tests/test_native_build.py` 15 项、全套 **490 项 OK（121 跳过）**，
+> `ruff` 0，`check_doc_versions.py` OK。**未验**：客户端/游戏是否真按新长度取参、是否有别的定长假设（预分配缓冲区、总量校验、
+> 内存段表）——一次实机都没有，所以默认关闭，且**开关打开 ≠ 客户端验收**；Windows 实机写回与 `.fls.bak` 复核仍未做。
+> 锁定输入 `data/script.fls`（`8b6e9266…c0d72`）与 `tools/decompiler/script_fls_keys.json`（`43bb090d…daceb`）本轮未改动。
+>
+> **PR #94 审查复核（同日）**：5 条行级评论（gitar-bot 2 + CodeRabbit 2 + kody 1）逐条对照代码与语料复核——
+> **4 条属实已修，1 条驳回**。
+> ① **（属实，最严重）** `prepare_build()` 的原生往返回读还在用定长 `crypt()`，所以打开实验开关后 **F6 预览与宽松 Ctrl+S 都会在编译后立刻报
+> `boundary rescaling forbidden`**，功能在 GUI 里完全不可用；新加的测试直接调 `build_package` 绕过了这一段，没抓到。已改用 `crypt_variable()`，
+> 并补 3 项回归（预览往返、未授权仍拒绝、`prepare_package` 的清单带 `resized`）；**反证过**：把改动退回 `crypt()`，3 项里 2 项立刻红。
+> ② **（属实）** 反编译器渲染里**只有 `\xNN` 是转义**，负载里的 0x5C 是**单个**反斜杠而不是 `\\`。旧实现把这对反斜杠当转义，Big5 尾字节
+> （`功` = `A5 5C`）被吃掉：语料 `script/login/dgw.py:118` 读成 `成功xb3s…`，正确是 `成功連上遊戲服務器後，用此接口告知DGW服務器`。
+> 改成「非 `\xNN` 的反斜杠就是 0x5C」，并给非 raw 字面量加 `_renderer_shaped()` 闸门（只含 `\xNN` 才按渲染读，`\033` 这类手写转义继续拒绝）。
+> **全语料对比**（61 个 `.py`、69 处字面量）：1 处读法改变（就是这条），0 处新增噪声，0 处丢失。
+> ③ **（属实）** 渲染是**有损**的：原常量若真写着反斜杠加 `xNN`，渲染与单字节 `0xNN` 完全同形，不可区分。所以标注从「（还原）」改成
+> **「（反推候选）」**，`RESTORED_NOTE` 明写「候选而不是逐字节证明」。
+> ④ **（采纳）** 扩容条目**拒绝**在原地写回游戏客户端目录（`client_root_for()`，在出包前判定）：只放开到副本／F6 新包，非扩容的宽松写回不受影响。
+> ⑤ **（驳回）** kody 要求 README 不要写「改模块会连带改 docstring 字节／可写回原包」——宽松模式是用户显式拍板的交付范围，且写前写后校验一个没省；
+> 已按 ④ 把「无客户端验收的扩容」从客户端目录里挡掉。
+> 复核后全套 **495 项 OK（121 跳过）**、`ruff` 0、`docver` OK、`wincompat` 0/0/0。
+>
 > **2026-10-27：脚本编辑器 0.6.0.dev12 + PR #93 审查复核（分支 `arena/0186dc92-mxsj-tw-2022`）**：
 > 用户要求「写包像 UI 编辑器那样有严格／宽松两种模式」，经 ask_user 确认四点后落地 **宽松模式**
 > （`Ctrl+S` 一步到位；覆盖前留固定名 `<包名>.fls.bak` 只保最近一份；范围＝任何已打开的包，

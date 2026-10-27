@@ -5,6 +5,7 @@ import json
 import os
 import shutil
 import struct
+import sys
 import tempfile
 import unittest
 from dataclasses import replace
@@ -14,7 +15,7 @@ from unittest.mock import patch
 from native_fixtures import data_fixture, minimal_pyc, raw_string, script_fixture
 
 from script_editor.core.archives.document import ArchiveDocument
-from script_editor.core.compiler.runner import inspect_compiler
+from script_editor.core.compiler.runner import Compiler, inspect_compiler
 from script_editor.core.inspection.native import inspect_module
 from script_editor.core.inspection.references import inspect_references
 from script_editor.core.project.document import Binding
@@ -27,6 +28,7 @@ from script_editor.core.project.storage import (
 from script_editor.core.services.workflow import (
     Snapshot,
     prepare_build,
+    prepare_package,
     publish_build,
     text_sha,
 )
@@ -34,14 +36,16 @@ from script_editor.core.vm.marshal_tree import parse
 from script_editor.core.vm.py25.keys import read_catalog
 
 
-def make_state(root, vm="py25", *, two_modules=False, filename=b"authored.py"):
+def make_state(
+    root, vm="py25", *, two_modules=False, filename=b"authored.py", expanded_size=65536
+):
     source = root / (vm + ".py")
     source.write_text("# coding: utf-8\nx=0\n", encoding="utf-8")
     package = root / (vm + ".fls")
     catalogs = ()
     if vm == "py25":
         raw, keys = script_fixture(
-            expanded_size=65536, two_modules=two_modules, filename=filename
+            expanded_size=expanded_size, two_modules=two_modules, filename=filename
         )
         package.write_bytes(raw)
         path = root / "keys.json"
@@ -208,6 +212,75 @@ class InspectionTests(unittest.TestCase):
         self.assertEqual(hints[1].text, r"\xff\xfe/form.dlg")
         self.assertEqual(hints[2].text, "account")
         self.assertEqual(hints[3].line, 6)
+
+
+class ResizePreviewTests(unittest.TestCase):
+    """A resized module must survive ``prepare_build``'s own round-trip.
+
+    The GUI reaches the package through ``prepare_build`` (F6 preview) and
+    ``prepare_package`` (loose Ctrl+S), long before ``build_package`` runs. The
+    round-trip there used to read back with the fixed-length ``crypt()``, so
+    every resized save failed with "boundary rescaling forbidden" even after the
+    experimental switch was turned on.
+    """
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="mxscript-resize-")
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        # 512-byte slot: a 794-byte native payload needs a real resize.
+        self.state = make_state(self.root, expanded_size=512)
+        self.binding = self.state.bindings[0]
+        self.catalog = self.state.catalogs[0]
+        self.oversized = minimal_pyc("py25", 7, code=b"d\x01\x00S" + b"\x09" * 700)
+        self.compiler = Compiler(
+            Path(sys.executable), "py25", "unit-test-only", 64, "test"
+        )
+
+    def prepare(self, allow_resize):
+        snapshot = Snapshot(self.binding, "# coding: utf-8\nx=0\n", "py25")
+
+        def fake_compile(_compiler, _text, _filename, path):
+            path.write_bytes(self.oversized)
+
+        with (
+            patch(
+                "script_editor.core.services.workflow.compile_standard",
+                side_effect=fake_compile,
+            ),
+            patch("script_editor.core.services.workflow.audit_standard"),
+        ):
+            return prepare_build(
+                snapshot, self.compiler, self.catalog, allow_resize=allow_resize
+            )
+
+    def test_preview_round_trips_a_resized_module(self):
+        plan = self.prepare(True)
+        self.assertTrue(plan.resized)
+        self.assertEqual(plan.replacement.standard_pyc, self.oversized)
+
+    def test_preview_still_refuses_without_the_switch(self):
+        with self.assertRaisesRegex(ValueError, "no shrink/rescale"):
+            self.prepare(False)
+
+    def test_package_plan_for_loose_save_carries_the_consent(self):
+        snapshot = Snapshot(self.binding, "# coding: utf-8\nx=0\n", "py25")
+
+        def fake_compile(_compiler, _text, _filename, path):
+            path.write_bytes(self.oversized)
+
+        with (
+            patch(
+                "script_editor.core.services.workflow.compile_standard",
+                side_effect=fake_compile,
+            ),
+            patch("script_editor.core.services.workflow.audit_standard"),
+        ):
+            plan = prepare_package(
+                (snapshot,), self.compiler, self.catalog, allow_resize=True
+            )
+        self.assertEqual(len(plan.entries), 1)
+        self.assertTrue(plan.entries[0].resized)
 
 
 class ActualWorkflowTests(unittest.TestCase):

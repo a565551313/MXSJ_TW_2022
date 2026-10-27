@@ -8,11 +8,13 @@ from __future__ import annotations
 
 import time
 import unittest
+from types import SimpleNamespace
 
 from script_editor.core.inspection.legacy_text import (
     CODECS,
     DISPLAY_ONLY,
     MAX_RECORDS,
+    RESTORED_NOTE,
     ScanResult,
     clamp,
     decode_bytes,
@@ -23,6 +25,7 @@ from script_editor.core.inspection.legacy_text import (
     previews,
     readable_literal,
     readings,
+    rendered_bytes,
     report_text,
     scan,
     split_literal,
@@ -84,9 +87,21 @@ class ReadingTests(unittest.TestCase):
         self.assertEqual(readings(r"'\x80\x80'"), ())
         self.assertEqual(readings(r"'\xff\xff'"), ())
 
-    def test_raw_and_unicode_literals_are_not_claimed(self):
-        self.assertEqual(readings(r"r'\xa5u\xaf\xe0'"), ())
+    def test_unicode_literals_are_not_claimed(self):
+        # u'...' holds code points, not the MBCS bytes the client compares.
         self.assertEqual(readings(r"u'\u4e2d\xa5u'"), ())
+        self.assertEqual(readings(r"u'\xa5u\xaf\xe0'"), ())
+
+    def test_raw_literal_gets_a_marked_restored_reading(self):
+        """``r'\xa5u'`` has no MBCS bytes — but the decompiler's intent can be read.
+
+        The value of a raw string is the backslash text itself, so this reading
+        is explicitly marked ``restored`` and the hint says so.
+        """
+        found = readings(r"r'\xa5u\xaf\xe0'")
+        self.assertEqual([r.codec for r in found], ["cp950"])
+        self.assertTrue(all(r.restored for r in found))
+        self.assertEqual(found[0].text, "r'只能'")
 
     def test_escaped_quote_survives_requoting(self):
         found = readings(r"'\xa5u\''")
@@ -182,8 +197,60 @@ class SourceScanTests(unittest.TestCase):
         self.assertEqual(line_previews(line), ())
         self.assertLess(time.perf_counter() - started, 1.0)
 
-    def test_raw_prefixed_literal_gets_no_reading(self):
-        self.assertEqual(readings(r"""r'\xa5u\xaf'"""), ())
+    def test_raw_literal_with_ascii_result_is_still_not_claimed(self):
+        # ESC + "[0m" carries no non-ASCII text, so there is nothing to show.
+        self.assertEqual(readings(r"r'\x1b[0m'"), ())
+
+    def test_decompiler_docstring_rendering_reads_as_the_original_text(self):
+        # Real shape from the recovered corpus (script/login/dgw.py): uncompyle6
+        # decodes a py2 str as UTF-8 with backslash escapes, so a Big5 docstring
+        # comes back as r-triple-quoted text mixing \xNN escapes with the byte
+        # pairs that happened to be valid UTF-8 (here "Ϊ", "Ⱦ", "榡", "и").
+        literal = (
+            r'r"""\xc0\xf2\xa8\xfa\xa5i\xa5ΪA\xb0Ⱦ\xb9\xa6C\xaa\xed\xa1A'
+            r'\xae榡\xac\xb0[(\xa9и\xb9, \xb7~\xb0ȪA\xa6a\xa7}, udpPort"""'
+        )
+        found = readings(literal)
+        self.assertEqual(len(found), 1)
+        self.assertTrue(found[0].restored)
+        self.assertIn("獲取可用服務器列表", found[0].text)
+        self.assertIn("房號", found[0].text)
+
+    def test_hint_marks_restored_readings_and_explains_why(self):
+        plain = SimpleNamespace(readings=readings(r"'\xa5u\xaf\xe0'"))
+        self.assertNotIn("反推候选", format_hint(plain))
+        restored = SimpleNamespace(readings=readings(r"r'\xa5u\xaf\xe0'"))
+        hint = format_hint(restored)
+        self.assertIn("（反推候选）", hint)
+        self.assertIn("反编译器", hint)
+        self.assertIn("候选而不是逐字节证明", RESTORED_NOTE)
+
+    def test_big5_trail_byte_0x5c_is_one_byte_not_an_escape(self):
+        """Corpus shape from ``script/login/dgw.py:118``.
+
+        ``成功連線`` is ``A6 A8 A5 5C B3 73``. uncompyle6 copies the payload's
+        0x5C through as a *single* backslash, so the rendering reads
+        ``\\xa5`` + one ``\\`` + ``\\xb3``. Treating the adjacent pair as an escaped
+        backslash swallowed the ``\xb3`` and produced ``成功xb3s`` — a wrong
+        reading presented as if it were proven.
+        """
+        payload = "成功連上遊戲服務器".encode("cp950")
+        body = "".join(
+            "\\" if byte == 0x5C else f"\\x{byte:02x}" for byte in payload
+        )
+        found = readings('r"""' + body + '"""')
+        self.assertEqual(len(found), 1)
+        self.assertTrue(found[0].restored)
+        self.assertIn("成功連上遊戲服務器", found[0].text)
+        self.assertEqual(rendered_bytes(body), payload)
+
+    def test_backslash_runs_survive_verbatim(self):
+        # 0x5C 0x5C in the payload renders as ``\\``: two bytes, not one.
+        self.assertEqual(rendered_bytes("\\\\"), bytes.fromhex("5c5c"))
+        self.assertEqual(len(rendered_bytes("\\\\")), 2)
+
+    def test_plain_literals_are_not_marked_restored(self):
+        self.assertFalse(any(r.restored for r in readings(r"'\xa5u\xaf\xe0'")))
 
     def test_ansi_escape_is_never_decoded_as_text(self):
         # \033 is octal ESC; it used to be read as NUL + "33[0m" and turn into

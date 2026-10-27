@@ -111,6 +111,22 @@ class KeyProfile:
             raise ValueError("XOR payload length changed; boundary rescaling forbidden")
         return xor_segments(data, self.keys, self.bounds)
 
+    def crypt_variable(self, data: bytes) -> bytes:
+        """Encrypt/decrypt a payload whose length may differ from the original.
+
+        The four boundaries are not stored anywhere: ``mxmain``
+        ``0x45D48B..0x45D529`` derives each segment length from ``seed`` **and the
+        ``size`` it is handed**, stopping at the actual end of the payload. A
+        payload of a different length is therefore still self-describing, and
+        this is the arithmetic a resized entry needs.
+
+        It is *only* arithmetic evidence: nobody has watched the retail client
+        accept an entry whose length changed, so callers keep this behind an
+        explicit opt-in. Uses the same keys, so the name-derived seed is
+        unchanged — only the boundaries move with the length.
+        """
+        return xor_segments(data, self.keys, bounds_from_keys(self.keys, len(data)))
+
 
 def read_catalog(path: Path) -> bytes:
     # Bounded even if the file grows; do not allocate a whole untrusted catalog.

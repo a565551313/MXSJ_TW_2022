@@ -175,12 +175,44 @@ class LooseSaveMixin:
         # make every loose save fail even with no game running.
         self.detach_archive(archive)
 
+        allow_resize = self.resize_entries()
+        if allow_resize:
+            # Never silent: a resize changes the stored length of an entry the
+            # client may assume is fixed.
+            self.statusBar().showMessage(
+                "已允许扩充定长条目：超长模块不再被拒绝，将按新长度重算分段", 10000
+            )
+
         def work():
-            plan = prepare_package(snapshots, compiler, catalog, baselines)
+            plan = prepare_package(
+                snapshots, compiler, catalog, baselines, allow_resize=allow_resize
+            )
             if not plan.entries:
                 return plan, None, None
+            root = client_root_for(archive.path)
+            resized = [
+                entry.snapshot.binding.index
+                for entry in plan.entries
+                if entry.resized
+            ]
+            if root is not None and resized:
+                # The experimental switch has no client-side acceptance at all;
+                # overwriting the installed copy in place is the one place where
+                # being wrong cannot be undone from the editor.
+                raise ValueError(
+                    "这个包在游戏客户端目录里，本次有 "
+                    f"{len(resized)} 条要扩长定长槽位（条目 {sorted(resized)}）。"
+                    "扩容没有任何客户端验收，工具拒绝直接改写客户端原包。\n"
+                    f"客户端目录：{root}\n"
+                    "请改用 F6 生成新包，或把包复制到客户端目录之外再试。"
+                )
             report, new_state = publish_package(
-                plan, state, in_place=True, backup=True, protected=protected
+                plan,
+                state,
+                in_place=True,
+                backup=True,
+                allow_resize=allow_resize,
+                protected=protected,
             )
             return plan, report, new_state
 
@@ -328,6 +360,12 @@ class LooseSaveMixin:
             + (
                 "以下草稿只用了编辑区内容，未写入 .py：" + "、".join(unsaved) + "\n"
                 if unsaved
+                else ""
+            )
+            + (
+                "注意：本次有条目长度发生变化（扩充定长槽位，实验功能）；"
+                "本机自校验通过，客户端加载行为未验收。\n"
+                if any(entry.resized for entry in plan.entries)
                 else ""
             )
             + "写前编译/审计、写后回读校验均已通过；游戏内表现仍未验收。"

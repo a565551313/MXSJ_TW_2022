@@ -132,8 +132,15 @@ class BuildActions:
             )
             baseline = self.built_texts.get((binding.archive, binding.index))
             catalog = self.catalog_for(self.selected()[0])
+            allow_resize = self.resize_entries()
             self.task(
-                lambda: prepare_build(snapshot, compiler, catalog, baseline),
+                lambda: prepare_build(
+                    snapshot,
+                    compiler,
+                    catalog,
+                    baseline,
+                    allow_resize=allow_resize,
+                ),
                 self.show_build_plan,
             )
         except Exception as exc:
