@@ -704,9 +704,11 @@ class ReviewFixTests(unittest.TestCase):
             patch("script_editor.core.services.native_build.audit_standard"),
             patch.object(self.window, "task", side_effect=sync_task),
             patch.object(self.window, "fail", side_effect=errors.append),
+            patch("script_editor.gui.window.QMessageBox.warning") as warning,
         ):
             self.window.write_in_place()
         self.assertEqual(errors, [])
+        self.assertEqual(warning.call_count, 0)  # no dialog on a successful write
         self.assertEqual(len(self.window.bindings), 1)
         self.assertNotEqual(self.package.path.read_bytes(), self.package.before)
         self.assertIn("已写入原包", self.window.info.toPlainText())
@@ -775,19 +777,61 @@ class CorpusExportPolicyTests(unittest.TestCase):
         self.assertEqual(manifest["entries_written"], 1288)
 
     def test_a_failed_write_leaves_no_partial_file(self):
+        import script_editor.core.services.corpus_export as module
+
+        real_replace = module.os.replace
         archive, _reads = self.fake_archive(["a", "b"], vm="py27")
-        with patch(
-            "script_editor.core.services.corpus_export.os.replace",
-            side_effect=OSError(5, "I/O error"),
-        ):
+
+        def replace_except_manifest(source, target):
+            if Path(target).name == "manifest.json":
+                return real_replace(source, target)
+            raise OSError(5, "I/O error")
+
+        with patch.object(module.os, "replace", side_effect=replace_except_manifest):
             manifest = export_corpus(archive, self.root / "half", mode="encrypted")
         self.assertEqual(manifest["entries_written"], 0)
-        self.assertEqual(len(manifest["failures"]), 2)
+        # Every entry is accounted for: never a silent gap between the counts.
+        self.assertEqual([f["index"] for f in manifest["failures"]], [0, 1])
         leftovers = [
             p.name for p in (self.root / "half").iterdir()
             if p.name != "manifest.json"
         ]
         self.assertEqual(leftovers, [])
+        written = json.loads(
+            (self.root / "half" / "manifest.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(written["entries_written"], 0)
+
+    def test_a_manifest_that_cannot_be_written_reports_the_partial_export(self):
+        archive, _reads = self.fake_archive(["a"], vm="py27")
+        with patch(
+            "script_editor.core.services.corpus_export.os.replace",
+            side_effect=OSError(5, "I/O error"),
+        ):
+            with self.assertRaisesRegex(ValueError, "已写出 0 / 1 条"):
+                export_corpus(archive, self.root / "nomanifest", mode="encrypted")
+        # No half-written manifest is left behind for a later reader.
+        self.assertFalse((self.root / "nomanifest" / "manifest.json").exists())
+
+    def test_a_full_disk_does_not_abandon_the_remaining_entries(self):
+        archive, _reads = self.fake_archive(["a", "b", "c"], vm="py27")
+        calls = {"n": 0}
+
+        def replace_full_disk(source, target):
+            if Path(target).name == "manifest.json":
+                return real_replace(source, target)
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise OSError(28, "No space left on device")
+            return real_replace(source, target)
+
+        import script_editor.core.services.corpus_export as module
+
+        real_replace = module.os.replace
+        with patch.object(module.os, "replace", side_effect=replace_full_disk):
+            manifest = export_corpus(archive, self.root / "enospc", mode="encrypted")
+        self.assertEqual([f["index"] for f in manifest["failures"]], [0])
+        self.assertEqual(manifest["entries_written"], 2)  # the later, smaller ones
 
 
 @unittest.skipIf(bool(QT_ERROR), "GUI未执行：" + QT_ERROR)
@@ -873,9 +917,11 @@ class SecondReviewRoundTests(unittest.TestCase):
             patch("script_editor.core.services.native_build.audit_standard"),
             patch.object(self.window, "task", side_effect=sync_task),
             patch.object(self.window, "fail", side_effect=errors.append),
+            patch("script_editor.gui.window.QMessageBox.warning") as warning,
         ):
             self.window.write_in_place()
         self.assertEqual(errors, [])
+        self.assertEqual(warning.call_count, 0)  # no dialog on a successful write
         self.assertEqual(len(self.window.bindings), 1)
         self.assertNotEqual(self.package.path.read_bytes(), self.package.before)
 
@@ -894,36 +940,58 @@ class SecondReviewRoundTests(unittest.TestCase):
         self.assertEqual(tab.path, tab.path.resolve())
 
     def test_replace_in_files_follows_whole_words_and_case(self):
-        tab = self.window.add_source(
-            self.root / "words.py", text="x = 1\nmax = 2\nX = 3\n"
+        text = "x = 1\nmax = 2\nX = 3\n"
+        tab = self.window.add_source(self.root / "words.py", text=text)
+        yes = (
+            __import__("PySide6.QtWidgets", fromlist=["QMessageBox"])
+            .QMessageBox.StandardButton.Yes
         )
         self.window.find.setText("x")
         self.window.replacement.setText("value")
         self.window.whole_words.setChecked(True)
-        with (
-            patch(
-                "script_editor.gui.workspace_actions.QMessageBox.question",
-                return_value=(
-                    __import__(
-                        "PySide6.QtWidgets", fromlist=["QMessageBox"]
-                    ).QMessageBox.StandardButton.Yes
-                ),
-            ),
+
+        # 全字匹配 + 不区分大小写（默认是勾选，这里显式关掉）：x 与 X 都算，max 不算。
+        self.window.match_case.setChecked(False)
+        with patch(
+            "script_editor.gui.workspace_actions.QMessageBox.question",
+            return_value=yes,
+        ):
+            self.window.replace_in_files()
+        self.assertEqual(tab.editor.toPlainText(), "value = 1\nmax = 2\nvalue = 3\n")
+
+        # 同样的查找文本，改成区分大小写：只有小写那处被替换。
+        tab.editor.setPlainText(text)
+        self.window.match_case.setChecked(True)
+        with patch(
+            "script_editor.gui.workspace_actions.QMessageBox.question",
+            return_value=yes,
         ):
             self.window.replace_in_files()
         self.assertEqual(tab.editor.toPlainText(), "value = 1\nmax = 2\nX = 3\n")
 
-        # Case-sensitive pass: X is a different word now.
-        self.window.match_case.setChecked(True)
+    def test_an_oversized_match_set_is_refused_before_any_edit(self):
+        yes = (
+            __import__("PySide6.QtWidgets", fromlist=["QMessageBox"])
+            .QMessageBox.StandardButton.Yes
+        )
+        tab = self.window.add_source(self.root / "big.py", text="x" * 12000)
+        self.window.find.setText("x")
+        self.window.replacement.setText("y")
+        self.window.match_case.setChecked(False)
         with patch(
             "script_editor.gui.workspace_actions.QMessageBox.question",
-            return_value=(
-                __import__(
-                    "PySide6.QtWidgets", fromlist=["QMessageBox"]
-                ).QMessageBox.StandardButton.Yes
-            ),
+            return_value=yes,
         ):
-            self.window.find.setText("X")
-            self.window.replacement.setText("big")
             self.window.replace_in_files()
-        self.assertEqual(tab.editor.toPlainText(), "value = 1\nmax = 2\nbig = 3\n")
+        # Nothing was replaced: a half-renamed file is worse than a refusal.
+        self.assertEqual(tab.editor.toPlainText(), "x" * 12000)
+        self.assertIn("超过 10000 处", self.window.statusBar().currentMessage())
+
+    def test_find_in_files_reports_a_truncated_scan(self):
+        tab = self.window.add_source(self.root / "many.py", text="x" * 6000)
+        self.window.find.setText("x")
+        self.window.find_in_files()
+        info = self.window.info.toPlainText()
+        self.assertIn("不完整", info)
+        self.assertEqual(len(info.splitlines()) < 5100, True)
+        self.assertEqual(tab.editor.toPlainText(), "x" * 6000)

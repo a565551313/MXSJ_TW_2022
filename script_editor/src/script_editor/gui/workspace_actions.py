@@ -331,47 +331,49 @@ class WorkspaceActions:
             self.show_search()
             self.statusBar().showMessage("先在上方输入要查找的文本", 6000)
             return
-        hits, wrapped = [], 0
+        hits, truncated = [], False
         for tab in self.source_tabs():
-            text = tab.editor.toPlainText()
-            start = 0
-            while True:
-                found = text.find(needle, start)
-                if found < 0:
-                    break
-                line = text.count("\n", 0, found) + 1
+            document = tab.editor.document()
+            ranges, complete = self.text_matches(document, needle, limit=5000)
+            truncated = truncated or not complete
+            for start, _end in ranges:
+                line = document.findBlock(start).blockNumber() + 1
                 hits.append(f"{tab.path.name}:{line}: {needle}")
-                start = found + len(needle)
-                wrapped += 1
-                if wrapped > 5000:
-                    break
-            if wrapped > 5000:
-                break
+        note = (
+            f"（已到 {len(hits)} 处上限，结果不完整，请缩小查找范围）"
+            if truncated
+            else ""
+        )
         self.info.setPlainText(
-            (f"在已打开的源码中找到 {len(hits)} 处：\n\n" if hits
+            (f"在已打开的源码中找到 {len(hits)} 处{note}：\n\n" if hits
              else "已打开的源码里没有这个文本：")
             + "\n".join(hits)
         )
         self.output_tabs.setCurrentWidget(self.info)
         self.output_dock.show()
-        self.statusBar().showMessage(f"在文件中查找：{len(hits)} 处", 6000)
+        self.statusBar().showMessage(
+            f"在文件中查找：{len(hits)} 处{note}", 6000
+        )
 
-    def text_matches(self, document, needle):
-        """Match ranges in ``document`` under the search bar's own options.
+    def text_matches(self, document, needle, limit=10000):
+        """``(ranges, complete)`` for ``needle`` under the search bar's options.
 
         ``str.replace`` would ignore 「区分大小写」/「全字匹配」, so replacing
         ``x``→``value`` with whole words on would also rewrite ``max`` — and the
         count would disagree with what 单文件替换 would do.
+
+        The scan is bounded, so it says whether it stopped early: a caller must
+        never replace "the matches I found" as if that were every match.
         """
         cursor = QTextCursor(document)
         ranges = []
         while True:
             cursor = document.find(needle, cursor, self.search_flags())
             if cursor.isNull():
-                return ranges
+                return ranges, True
             ranges.append((cursor.selectionStart(), cursor.selectionEnd()))
-            if len(ranges) > 10000:  # a pathological file must not hang the UI
-                return ranges
+            if len(ranges) > limit:  # a pathological file must not hang the UI
+                return ranges, False
 
     def replace_in_files(self):
         """Replace across open editable sources, one undo step per file."""
@@ -379,11 +381,21 @@ class WorkspaceActions:
         if not needle:
             self.statusBar().showMessage("先在上方输入要替换的文本", 6000)
             return
-        targets = []
+        targets, too_many = [], []
         for tab in self.source_tabs():  # 参考稿只读，本就不在其中
-            ranges = self.text_matches(tab.editor.document(), needle)
+            ranges, complete = self.text_matches(tab.editor.document(), needle)
+            if not complete:
+                too_many.append(tab.path.name)
             if ranges:
                 targets.append((tab, ranges))
+        if too_many:
+            # Never replace "the first 10001" and call it done.
+            self.statusBar().showMessage(
+                f"「{needle}」在 {'、'.join(too_many)} 里超过 10000 处，"
+                "为免只改一半，未做任何替换；请用更长的查找文本缩小范围",
+                12000,
+            )
+            return
         if not targets:
             self.statusBar().showMessage("已打开的源码里没有这个文本", 6000)
             return

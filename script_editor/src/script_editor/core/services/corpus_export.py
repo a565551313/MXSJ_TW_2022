@@ -15,7 +15,6 @@ manifest records the package digest so a corpus can be traced to its source.
 
 from __future__ import annotations
 
-import errno
 import hashlib
 import json
 import os
@@ -54,13 +53,14 @@ def _safe_stem(filename: bytes, index: int, identity: str) -> str:
     return f"{index:05d}_{stem[:80]}"
 
 
-def _write(destination: Path, name: str, data: bytes) -> ExportedEntry:
+def _write_bytes(destination: Path, name: str, data: bytes) -> Path:
+    """Publish ``data`` as ``destination/name`` atomically, never outside it."""
     path = (destination / name).resolve()
     # Defence in depth: a name must never resolve outside the chosen directory,
     # whatever an archive says its entries are called.
     if destination.resolve() not in path.parents:
         raise ValueError(f"导出文件名越界：{name}")
-    # Write beside the target and rename: a half-written entry (full disk, a
+    # Write beside the target and rename: a half-written file (full disk, a
     # kill) must never be left looking like a complete corpus file.
     descriptor, temporary = tempfile.mkstemp(prefix=".mxcorpus-", dir=path.parent)
     try:
@@ -71,6 +71,11 @@ def _write(destination: Path, name: str, data: bytes) -> ExportedEntry:
         os.replace(temporary, path)
     finally:
         Path(temporary).unlink(missing_ok=True)
+    return path
+
+
+def _write(destination: Path, name: str, data: bytes) -> ExportedEntry:
+    _write_bytes(destination, name, data)
     return ExportedEntry(0, name, "", len(data), hashlib.sha256(data).hexdigest())
 
 
@@ -126,10 +131,10 @@ def export_corpus(
         except Exception as exc:  # noqa: BLE001 - recorded per entry
             failures.append({"index": index, "identity": entry.identity,
                              "error": str(exc)})
-            if isinstance(exc, OSError) and exc.errno == errno.ENOSPC:
-                # A full disk fails every further write too: stop, and let the
-                # manifest say how far we got instead of leaving a hung loop.
-                break
+            # Keep going, including after a full disk: the failed temporary
+            # file is gone again, so a smaller entry may still fit, and every
+            # entry that does not fit is recorded — never a silent gap between
+            # entries_written and entries_total.
             continue
         entries.append(
             ExportedEntry(
@@ -159,8 +164,12 @@ def export_corpus(
         ],
     }
     try:
-        (destination / "manifest.json").write_text(
-            json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+        # Same temp-and-rename as the entries: a truncated manifest.json beside
+        # a complete corpus would be read back as a real manifest.
+        _write_bytes(
+            destination,
+            "manifest.json",
+            json.dumps(manifest, ensure_ascii=False, indent=2).encode("utf-8"),
         )
     except OSError as exc:
         # The files are already on disk; say where they are instead of letting
