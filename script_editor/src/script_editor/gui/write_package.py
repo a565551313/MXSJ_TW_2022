@@ -62,6 +62,29 @@ class WritePackageMixin:
                 return tab
         return None
 
+    def retry_unverified_draft(self, archive, *, in_place):
+        """``F5`` on a draft whose automatic verification failed: try again.
+
+        A failed verification leaves the tab editable but unbound, so there is
+        nothing to write. Pressing ``F5`` therefore means "I fixed it — check
+        again", and a passing check goes straight on to the write. Returns
+        ``False`` when the current tab is not such a draft.
+        """
+        tab = self.tabs.currentWidget()
+        origin = getattr(tab, "recovery", None) if tab is not None else None
+        if origin is None or getattr(tab, "reference", False):
+            return False
+        if origin.current_archive != archive.path:
+            return False
+        bound = {b.source for b in self.bindings if b.archive == archive.path}
+        if tab.path in bound:
+            return False
+        action = self.write_in_place if in_place else self.generate_new_package
+        started = self.auto_adopt(tab, archive, origin.index, origin, then=action)
+        if started:
+            self.statusBar().showMessage("正在重新校验草稿；通过后立即写包…")
+        return started
+
     def package_candidates(self, archive):
         """Bindings of ``archive`` whose text no longer matches the package."""
 
@@ -110,6 +133,8 @@ class WritePackageMixin:
                 f"还没检查过 {archive.vm} 的编译器：点工具栏「检查编译器」，"
                 "自检通过后才能写包"
             )
+        if self.retry_unverified_draft(archive, in_place=in_place):
+            return
         bound = [b for b in self.bindings if b.archive == archive.path]
         if not bound:
             raise ValueError(

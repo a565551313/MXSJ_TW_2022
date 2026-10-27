@@ -69,21 +69,42 @@ class CorpusActions:
             )
 
         def complete(manifest):
-            failed = len(manifest["failures"])
-            self.info.setPlainText(
-                f"已导出{label}语料：{destination}\n"
-                f"条目 {manifest['entries_written']} / {manifest['entries_total']} 条；"
-                f"失败 {failed} 条\n"
-                f"清单：{destination / 'manifest.json'}\n"
-                f"原包 SHA256：{manifest['archive_sha256']}\n"
-                "只读取原包；未执行任何模块，未改动包内字节。"
-            )
-            self.output_tabs.setCurrentWidget(self.info)
-            self.statusBar().showMessage(
-                f"{label}语料导出完成：{manifest['entries_written']} 条", 9000
-            )
+            self.report_export(manifest, destination, label)
 
-        self.task(work, complete, cancel=cancel)
+        def cancelled(manifest):
+            self.report_export(manifest, destination, label, cancelled=True)
+
+        self.task(work, complete, cancel=cancel, on_cancel=cancelled)
+
+    def report_export(self, manifest, destination, label, *, cancelled=False):
+        """Say what landed on disk — including after a cancel."""
+        failed = len(manifest["failures"])
+        head = (
+            f"已取消导出{label}语料，下面是已经写下的部分：{destination}"
+            if cancelled
+            else f"已导出{label}语料：{destination}"
+        )
+        lines = [
+            head,
+            f"条目 {manifest['entries_written']} / {manifest['entries_total']} 条；"
+            f"失败 {failed} 条",
+            f"清单：{destination / 'manifest.json'}（cancelled="
+            f"{str(bool(manifest['cancelled'])).lower()}）",
+            f"原包 SHA256：{manifest['archive_sha256']}",
+            "只读取原包；未执行任何模块，未改动包内字节。",
+        ]
+        if cancelled:
+            lines.append(
+                "重试请换一个新的导出目录：同名目录已存在，不会被复用或覆盖。"
+            )
+        self.info.setPlainText("\n".join(lines))
+        self.output_tabs.setCurrentWidget(self.info)
+        self.output_dock.show()
+        self.statusBar().showMessage(
+            f"{label}语料{'已取消' if cancelled else '导出完成'}："
+            f"{manifest['entries_written']} 条",
+            9000,
+        )
 
     def import_corpus(self):
         archive = self.selected_archive()

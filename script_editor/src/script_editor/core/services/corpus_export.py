@@ -18,6 +18,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import zlib
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -50,7 +51,11 @@ def _safe_stem(filename: bytes, index: int, identity: str) -> str:
 
 
 def _write(destination: Path, name: str, data: bytes) -> ExportedEntry:
-    path = destination / name
+    path = (destination / name).resolve()
+    # Defence in depth: a name must never resolve outside the chosen directory,
+    # whatever an archive says its entries are called.
+    if destination.resolve() not in path.parents:
+        raise ValueError(f"导出文件名越界：{name}")
     path.write_bytes(data)
     return ExportedEntry(0, name, "", len(data), hashlib.sha256(data).hexdigest())
 
@@ -90,19 +95,21 @@ def export_corpus(
         entry = archive.entries[index]
         if entry.directory:
             continue
-        stored = archive.read_stored(index)
         try:
+            # Reading and writing belong inside the boundary too: one unreadable
+            # entry or one full disk must not cost the rest of the corpus.
+            stored = archive.read_stored(index)
             if mode == ENCRYPTED:
                 name = f"{index:05d}.bin"
                 data = stored
                 status = "stored"
             else:
                 data, name, status = _decrypted(archive, index, catalog, stored)
+            written = _write(destination, name, data)
         except Exception as exc:  # noqa: BLE001 - recorded per entry
             failures.append({"index": index, "identity": entry.identity,
                              "error": str(exc)})
             continue
-        written = _write(destination, name, data)
         entries.append(
             ExportedEntry(
                 index, written.name, status, written.size, written.sha256
@@ -153,7 +160,9 @@ def _decrypted(archive, index, catalog, stored):
         # is still complete, and label it plainly.
         native = _native_payload(archive, index, catalog, stored)
         identity = archive.entries[index].identity
-        return native, f"{index:05d}_{identity}.native", "native-payload"
+        # The identity is archive-controlled: sanitise it like any other name.
+        safe = _safe_stem(identity.encode("latin-1", "replace"), index, str(index))
+        return native, safe + ".native", "native-payload"
 
 
 def _native_payload(archive, index, catalog, stored):
@@ -171,4 +180,12 @@ def _native_payload(archive, index, catalog, stored):
             catalog_sha256=catalog.sha256,
         )
         return profile.crypt(inflate_script(archive, index))
-    return inflate(stored, raw=True)
+    # Same contract as inspect_module: the inflated bytes must match the entry's
+    # recorded length and CRC, or this is not the payload the client would load.
+    if archive.index.metas[index].w1 != 8:
+        raise ValueError("不支持的data压缩方法")
+    native = inflate(stored, raw=True)
+    span = archive.index.spans[index]
+    if len(native) != span.usize or zlib.crc32(native) & 0xFFFFFFFF != span.crc:
+        raise ValueError("原条目CRC/长度不符")
+    return native

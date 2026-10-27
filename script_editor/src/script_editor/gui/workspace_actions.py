@@ -213,9 +213,11 @@ class WorkspaceActions:
                 ("编码", "UTF-8"),
                 ("行数", str(tab.editor.blockCount())),
             ]
-            binding = self.active_binding()
+            # Keyed on the tab's own source: F5/F6 resolve their target exactly
+            # this way, so this row must not depend on a tree selection.
+            binding = self.binding_for_source(tab.path)
             rows.append(
-                ("写入目标", "可写回所选条目" if binding else "未绑定条目（不可写包）")
+                ("写入目标", "可写回所属条目" if binding else "未绑定条目（不可写包）")
             )
             if len(text) + len(tab.opened_text) > 500_000:
                 self.diff.setPlainText(
@@ -382,12 +384,17 @@ class WorkspaceActions:
         total = 0
         for tab in targets:
             text = tab.editor.toPlainText()
-            total += text.count(needle)
+            new_text = text.replace(needle, replacement)
             cursor = QTextCursor(tab.editor.document())
             cursor.beginEditBlock()
-            cursor.movePosition(QTextCursor.MoveOperation.Start)
-            cursor.insertText(text.replace(needle, replacement))
+            # Select the whole document first: inserting at Start with an empty
+            # selection only prepends the new text and leaves the old text in
+            # place, which duplicated every line of the file.
+            cursor.select(QTextCursor.SelectionType.Document)
+            cursor.insertText(new_text)
             cursor.endEditBlock()
+            if tab.editor.toPlainText() == new_text:
+                total += text.count(needle)
         self.statusBar().showMessage(
             f"已在 {len(targets)} 个文件里替换 {total} 处 · 未保存", 8000
         )

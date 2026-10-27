@@ -115,12 +115,24 @@ class Window(
         self.output_dock.show()
         QMessageBox.warning(self, "操作未完成", str(message))
 
-    def task(self, function, complete, *, cancel=None, on_error=None):
+    def task(
+        self, function, complete, *, cancel=None, on_error=None, quiet=False,
+        on_cancel=None,
+    ):
         """Run ``function`` off-thread, then ``complete`` (or ``on_error``) here.
 
         ``on_error`` gets the exception before :meth:`fail` shows it; callers
         that dropped in-memory state for the duration of the job use it to
         put that state back.
+
+        ``quiet=True`` means "this failure is an expected outcome, not an
+        error dialog": ``on_error`` (if any) runs and nothing else. Automatic
+        verification uses it, so a draft that does not compile only turns its
+        tab red instead of interrupting the user with a modal.
+
+        ``on_cancel`` gets the worker's return value when the user cancelled:
+        work that already reached disk (a partial corpus export, say) still
+        has to be reported. Without it a cancel just says so in the status bar.
         """
         if self.jobs:
             return
@@ -163,9 +175,14 @@ class Window(
             for action, enabled in actions:
                 action.setEnabled(enabled)
             self.refresh_native_action()
-            self.statusBar().showMessage("就绪 · 原生写包需关联源码并通过清单确认")
+            self.statusBar().showMessage("就绪")
             if cancel is not None and cancel.is_set():
                 self.statusBar().showMessage("恢复已取消；原包及已有编辑未修改")
+                if on_cancel is not None and not error:
+                    try:
+                        on_cancel(result)
+                    except Exception as exc:  # noqa: BLE001 - report the like
+                        self.fail(exc)
                 return
             if error:
                 if on_error is not None:
@@ -173,7 +190,8 @@ class Window(
                         on_error(result)
                     except Exception as exc:  # noqa: BLE001 - report the like
                         result = f"{result}（并且：恢复界面状态失败：{exc}）"
-                self.fail(result)
+                if not quiet:
+                    self.fail(result)
             else:
                 try:
                     complete(result)
@@ -366,7 +384,7 @@ class Window(
                 str(archive.path)
                 + "\n"
                 + json.dumps(metadata, ensure_ascii=False, indent=2)
-                + "\n双击读取包内模块并尝试恢复；草稿可编辑另存，写包前须检查并采用。"
+                + "\n双击包内模块可恢复；草稿可编辑，自动校验通过后按 F5 写入原包。"
             )
 
     def open_archive_dir(self):
@@ -388,11 +406,14 @@ class Window(
             self.statusBar().showMessage("该目录里的包都已经打开", 6000)
             return
 
+        # Readers opened by the worker, so a failure can still release them.
+        documents = []
+
         def prepare():
-            documents = []
             for path in todo:
-                document = ArchiveDocument(path)
+                document = None
                 try:
+                    document = ArchiveDocument(path)
                     catalog, warning, check = resolve_catalog(
                         document,
                         self.runtime_root,
@@ -410,15 +431,16 @@ class Window(
                             progress=self.progress.update,
                         )
                 except Exception:  # noqa: BLE001 - keep the other packages
-                    document.close()
+                    if document is not None:
+                        document.close()
                     continue
                 documents.append((document, catalog))
             self.progress.finish()
-            return documents
+            return list(documents)
 
-        def complete(documents):
+        def complete(opened_documents):
             opened = 0
-            for document, catalog in documents:
+            for document, catalog in opened_documents:
                 try:
                     self.add_archive(document)
                 except Exception:  # noqa: BLE001
@@ -434,7 +456,14 @@ class Window(
                 f"已打开 {opened} 个包（共 {len(self.archives)} 个）", 10000
             )
 
-        self.task(prepare, complete)
+        def failed(_error):
+            # The batch aborted: release every reader the worker had opened so
+            # a later write cannot be blocked by our own handle.
+            for document, _catalog in documents:
+                document.close()
+            documents.clear()
+
+        self.task(prepare, complete, on_error=failed)
 
     def add_source(
         self,

@@ -85,6 +85,7 @@ class SourceTab(QWidget):
         "no-compiler": "恢复稿 · 未校验（先点工具栏「检查编译器」）",
         "unverified": "恢复稿 · 未校验",
         "failed": "恢复稿 · 自动校验未通过",
+        "unbound": "恢复稿 · 已被同条目其它草稿取代绑定",
     }
 
     def set_binding_state(self, state, detail=""):

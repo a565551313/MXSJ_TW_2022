@@ -19,6 +19,7 @@ from ..core.services.files import (
 )
 from ..core.services.module_browser import read_module
 from ..core.services.module_paths import display_module_path
+from ..core.services.recovery_origin import origin_conflict
 from ..core.services.workflow import Snapshot, prepare_build
 
 
@@ -98,7 +99,7 @@ class ModuleActions:
                 )
                 + "\n"
                 + "\n".join(report.diagnostics)
-                + "\n可编辑恢复草稿；写包前须检查并人工核对采用。"
+                + "\n可编辑恢复草稿；自动校验通过即绑定，未通过按 F5 重试。"
             )
             self.output_dock.show()
             self.refresh_native_action()
@@ -212,7 +213,12 @@ class ModuleActions:
 
     # -- automatic verification + binding ------------------------------
     def auto_source_path(self, archive, index, report):
-        """Where the auto-bound working copy lives (outside any client dir)."""
+        """Where the auto-bound working copy lives (outside any client dir).
+
+        The directory carries a digest of the *full* package path: two clients
+        can both ship a ``script.fls``, and one working copy shared by two
+        packages would silently write the same text into both.
+        """
         stem = f"{index:05d}"
         if report.filename_hex:
             try:
@@ -222,26 +228,30 @@ class ModuleActions:
                 stem += "_" + Path(name).stem
             except ValueError:
                 pass
-        return default_source_root() / Path(archive.path).stem / (stem + ".py")
+        digest = hashlib.sha256(str(Path(archive.path).resolve()).encode()).hexdigest()
+        folder = f"{Path(archive.path).stem}-{digest[:10]}"
+        return default_source_root() / folder / (stem + ".py")
 
-    def auto_adopt(self, tab, archive, index, report):
+    def auto_adopt(self, tab, archive, index, report, then=None):
         """Compile-verify a fresh draft and bind it; no dialog, no button.
 
-        The verification is the same one "检查并采用" used to run (real compile,
-        strict native round-trip, full read-back). What is gone is the step
-        where the user had to know that such a step existed.
+        Verification runs **before** the working copy is published, so a draft
+        that fails (bad syntax, oversized, external corpus that does not match
+        this package) leaves no orphan files behind. ``then`` runs after a
+        successful bind — that is how ``F5`` retries a corrected draft.
         """
         if not report.source or not report.complete:
             tab.set_binding_state(
-                "unverified", "恢复不完整；编辑后仍可点「写入原包」，会重新校验"
+                "unverified", "恢复不完整；补齐后按 F5 会重新校验"
             )
-            return
+            return False
         compiler = self.compilers.get(archive.vm)
         if compiler is None:
             tab.set_binding_state(
-                "no-compiler", "工具栏「检查编译器」通过后，下次打开会自动校验并绑定"
+                "no-compiler",
+                "工具栏「检查编译器」通过后，按 F5 会自动校验并绑定",
             )
-            return
+            return False
         catalog = self.catalog_for(archive)
         text = tab.editor.toPlainText()
         target = self.auto_source_path(archive, index, report)
@@ -252,22 +262,43 @@ class ModuleActions:
         )
         tab.set_binding_state("verifying")
 
+        def same_text():
+            try:
+                return target.read_text(encoding="utf-8") == text
+            except (OSError, UnicodeError):
+                return False
+
         def work():
-            path = save_working_source(target, text, protected)
-            binding = Binding.associate(archive, index, path)
             standard, filename, _ = inspect_module(archive, index, catalog)
-            binding = replace(
-                binding,
-                filename_hex=filename.hex(),
-                source_kind="recovered-reviewed",
-                recovery_sha256=hashlib.sha256(standard).hexdigest(),
-            )
-            plan = prepare_build(
-                Snapshot(binding, text, archive.vm),
-                compiler,
-                catalog,
-                allow_resize=True,
-            )
+            conflict = origin_conflict(report, standard)
+            if conflict is not None:
+                raise ValueError(conflict)
+            # A binding needs a real file (Binding.associate resolves strictly),
+            # so the copy is published here and removed again if the build that
+            # is supposed to justify it does not survive.
+            fresh = not same_text()
+            path = save_working_source(target, text, protected)
+            try:
+                binding = replace(
+                    Binding.associate(archive, index, path),
+                    filename_hex=filename.hex(),
+                    source_kind="recovered-reviewed",
+                    recovery_sha256=hashlib.sha256(standard).hexdigest(),
+                )
+                plan = prepare_build(
+                    Snapshot(binding, text, archive.vm),
+                    compiler,
+                    catalog,
+                    allow_resize=True,
+                )
+            except Exception:
+                if fresh:
+                    path.unlink(missing_ok=True)
+                    try:
+                        path.parent.rmdir()  # only if we left it empty
+                    except OSError:
+                        pass
+                raise
             return path, plan
 
         def complete(result):
@@ -286,20 +317,46 @@ class ModuleActions:
                 for b in self.bindings
                 if (b.archive, b.index) != (archive.path, index)
             ] + [plan.snapshot.binding]
+            self.clear_other_bindings(archive, index, keep=tab)
             self.project_dirty = True
             self.refresh_tab_title(tab)
             self.refresh_native_action()
             self.statusBar().showMessage(
                 f"已自动校验并绑定：{path.name}（可直接「写入原包」）", 12000
             )
+            if then is not None:
+                then()
 
         def failed(error):
+            # Expected for a draft that does not compile yet: mark the tab and
+            # keep it editable. A modal on every double-click would be noise.
             tab.set_binding_state("failed", str(error))
             self.statusBar().showMessage(
-                f"自动校验未通过（仍可编辑）：{error}", 12000
+                f"自动校验未通过（仍可编辑，F5 可重试）：{error}", 14000
             )
 
-        self.task(work, complete, on_error=failed)
+        self.task(work, complete, on_error=failed, quiet=True)
+        return True
+
+    def clear_other_bindings(self, archive, index, keep):
+        """One binding per entry: the previous tab loses its green label."""
+        for i in range(self.tabs.count()):
+            other = self.tabs.widget(i)
+            if other is keep or other.path == keep.path:
+                continue
+            origin = getattr(other, "recovery", None)
+            if origin is None:
+                continue
+            if (
+                origin.current_archive == archive.path
+                and origin.index == index
+            ):
+                other.source_kind = "recovered-draft"
+                other.set_binding_state(
+                    "unbound",
+                    "同一条目已由另一个草稿绑定；此稿仍可编辑，"
+                    "按 F5 可改为由本稿写入",
+                )
 
     def adopt_recovery(self):
         try:
@@ -339,23 +396,9 @@ class ModuleActions:
                 from ..core.inspection.native import inspect_module
 
                 standard, filename, _ = inspect_module(archive, index, catalog)
-                if origin and origin.target_archive is not None and (
-                    hashlib.sha256(standard).hexdigest() != origin.standard_sha256
-                ):
-                    raise ValueError(
-                        "继续采用目标的标准字节码已变化；保留原稿，禁止采用"
-                    )
-                if origin and (
-                    (origin.corpus_manifest_sha256 and not origin.candidate_pyc_sha256)
-                    or (
-                        origin.candidate_pyc_sha256
-                        and hashlib.sha256(standard).hexdigest()
-                        != origin.candidate_pyc_sha256
-                    )
-                ):
-                    raise ValueError(
-                        "外部语料pyc与原包严格来源不同；可编辑草稿，但不能据此采用发布"
-                    )
+                conflict = origin_conflict(origin, standard)
+                if conflict is not None:
+                    raise ValueError(conflict + "（没有采用）")
                 binding = replace(
                     Binding.associate(archive, index, tab.path),
                     filename_hex=filename.hex(),

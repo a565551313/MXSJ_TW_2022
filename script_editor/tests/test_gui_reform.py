@@ -439,3 +439,291 @@ class AutoAdoptTests(unittest.TestCase):
             self.window.auto_adopt(tab, archive, 0, report)
         self.assertEqual(self.window.bindings, [])
         self.assertIn("检查编译器", tab.mode_label.text())
+
+
+class CorpusExportBoundaryTests(unittest.TestCase):
+    """Review regressions: one bad entry must not cost the whole export."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="mxscript-corpus2-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.package = Package(self.root)
+
+    def test_one_unreadable_entry_is_recorded_and_the_rest_is_written(self):
+        from unittest.mock import MagicMock
+
+        with ArchiveDocument(self.package.path) as archive:
+            real = archive.read_stored
+            calls = {"n": 0}
+
+            def read_stored(index):
+                calls["n"] += 1
+                if index == 1:
+                    raise OSError("bad sector")
+                return real(index)
+
+            archive.read_stored = MagicMock(side_effect=read_stored)
+            manifest = export_corpus(
+                archive, self.root / "dec", catalog=self.package.catalog
+            )
+        # Entry 1 is unreadable; entry 2 is the fixture's undecodable one.
+        self.assertEqual([f["index"] for f in manifest["failures"]], [1, 2])
+        self.assertIn("bad sector", manifest["failures"][0]["error"])
+        self.assertEqual(manifest["entries_written"], 1)
+        self.assertTrue((self.root / "dec" / "manifest.json").is_file())
+
+    def test_a_name_that_escapes_the_directory_is_refused(self):
+        from script_editor.core.services.corpus_export import _write
+
+        destination = self.root / "dec"
+        destination.mkdir()
+        with self.assertRaisesRegex(ValueError, "越界"):
+            _write(destination, "../escaped.bin", b"x")
+        self.assertFalse((self.root / "escaped.bin").exists())
+
+    def test_entry_identity_is_sanitised_not_used_as_a_path(self):
+        from script_editor.core.services.corpus_export import _safe_stem
+
+        stem = _safe_stem(b"../../evil", 7, "7")
+        self.assertNotIn("/", stem)
+        self.assertNotIn("..", stem)
+        self.assertTrue(stem.startswith("00007_"))
+
+    def test_py27_native_payload_with_a_bad_crc_is_a_failure(self):
+        import zlib
+
+        from script_editor.core.services.corpus_export import _native_payload
+
+        native = b"not-really-marshal"
+        stream = zlib.compressobj(9, zlib.DEFLATED, -15)
+        stored = stream.compress(native) + stream.flush()
+
+        def fake(usize, crc):
+            return SimpleNamespace(
+                vm="py27",
+                index=SimpleNamespace(
+                    metas=[SimpleNamespace(w1=8)],
+                    spans=[SimpleNamespace(usize=usize, crc=crc)],
+                ),
+            )
+
+        good = fake(len(native), zlib.crc32(native) & 0xFFFFFFFF)
+        self.assertEqual(_native_payload(good, 0, None, stored), native)
+        bad = fake(len(native), (zlib.crc32(native) + 1) & 0xFFFFFFFF)
+        with self.assertRaisesRegex(ValueError, "CRC"):
+            _native_payload(bad, 0, None, stored)
+        wrong_size = fake(len(native) + 1, zlib.crc32(native) & 0xFFFFFFFF)
+        with self.assertRaisesRegex(ValueError, "CRC"):
+            _native_payload(wrong_size, 0, None, stored)
+
+
+@unittest.skipIf(bool(QT_ERROR), "GUI未执行：" + QT_ERROR)
+class ReviewFixTests(unittest.TestCase):
+    """Each test pins one review finding that was real."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="mxscript-review-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.home = self.root / "home"
+        self.home.mkdir()
+        patcher = patch.dict(os.environ, {"MXSCRIPT_HOME": str(self.home)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.package = Package(self.root)
+        self.window = Window(self.root)
+        self.addCleanup(self._close)
+        self.window.compilers["py25"] = Compiler(
+            Path(sys.executable), "py25", "unit-test", 64, "t"
+        )
+
+    def _close(self):
+        for i in range(self.window.tabs.count()):
+            self.window.tabs.widget(i).editor.document().setModified(False)
+        self.window.project_dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self.app.processEvents()
+
+    def pump(self, job_count=500):
+        for _ in range(job_count):
+            if not self.window.jobs:
+                return
+            self.app.processEvents()
+        self.fail("后台任务没有结束")
+
+    # -- replace_in_files ---------------------------------------------
+    def test_replace_in_files_replaces_text_instead_of_duplicating_it(self):
+        first = self.window.add_source(self.root / "a.py", text="x = 1\nprint(x)\n")
+        second = self.window.add_source(self.root / "b.py", text="x = 2\n")
+        self.window.find.setText("x")
+        self.window.replacement.setText("value")
+        with patch(
+            "script_editor.gui.workspace_actions.QMessageBox.question",
+            return_value=(
+                __import__(
+                    "PySide6.QtWidgets", fromlist=["QMessageBox"]
+                ).QMessageBox.StandardButton.Yes
+            ),
+        ):
+            self.window.replace_in_files()
+        self.assertEqual(first.editor.toPlainText(), "value = 1\nprint(value)\n")
+        self.assertEqual(second.editor.toPlainText(), "value = 2\n")
+        self.assertIn("3 处", self.window.statusBar().currentMessage())
+
+    # -- quiet jobs ----------------------------------------------------
+    def test_quiet_task_failure_shows_no_modal(self):
+        with patch("script_editor.gui.window.QMessageBox.warning") as warning:
+            errored = []
+            self.window.task(
+                lambda: (_ for _ in ()).throw(ValueError("boom")),
+                lambda _result: None,
+                on_error=errored.append,
+                quiet=True,
+            )
+            self.pump()
+            self.assertEqual(len(errored), 1)
+            self.assertEqual(warning.call_count, 0)
+
+    def test_a_loud_task_failure_still_warns(self):
+        with patch("script_editor.gui.window.QMessageBox.warning") as warning:
+            self.window.task(
+                lambda: (_ for _ in ()).throw(ValueError("boom")),
+                lambda _result: None,
+            )
+            self.pump()
+            self.assertEqual(warning.call_count, 1)
+
+    def test_cancelling_a_job_can_still_report_what_it_wrote(self):
+        from threading import Event
+
+        cancel = Event()
+        cancel.set()
+        seen = []
+        self.window.task(
+            lambda: {"cancelled": True},
+            lambda _result: seen.append("complete"),
+            cancel=cancel,
+            on_cancel=lambda manifest: seen.append(manifest["cancelled"]),
+        )
+        self.pump()
+        self.assertEqual(seen, [True])
+
+    # -- binding hygiene ----------------------------------------------
+    def draft(self, text, index=0, report=None):
+        tab = self.window.add_source(
+            self.root / f".script.fls.{index}.{len(self.window.bindings)}draft.py",
+            text=text,
+            source_kind="recovered-draft",
+            vm="py25",
+        )
+        tab.draft_saved = False
+        if report is None:
+            report = SimpleNamespace(
+                source=text,
+                complete=True,
+                archive=self.package.path,
+                current_archive=self.package.path,
+                target_archive=None,
+                index=index,
+                filename_hex=b"authored.py".hex(),
+                corpus_manifest_sha256="",
+                candidate_pyc_sha256="",
+            )
+            # The window asks a bound draft to follow a rewritten package.
+            report.continue_after_build = lambda _report, _document: report
+        tab.update_recovery_target(report)
+        return tab, report
+
+    def adopt(self, tab, report, index=0):
+        with (
+            patch(COMPILE, fake_compile()),
+            patch("script_editor.core.services.workflow.audit_standard"),
+            patch("script_editor.core.services.native_build.audit_standard"),
+            patch.object(self.window, "task", side_effect=sync_task),
+        ):
+            with ArchiveDocument(self.package.path) as archive:
+                return self.window.auto_adopt(tab, archive, index, report)
+
+    def test_a_second_draft_for_one_entry_retires_the_first_binding_label(self):
+        self.window.add_archive(ArchiveDocument(self.package.path))
+        self.window.catalogs = [self.package.catalog]
+        first, first_report = self.draft("# coding: utf-8\nVALUE = 1\n")
+        self.adopt(first, first_report)
+        second, second_report = self.draft("# coding: utf-8\nVALUE = 2\n")
+        self.adopt(second, second_report)
+        self.assertEqual(len(self.window.bindings), 1)
+        self.assertEqual(self.window.bindings[0].source, second.path)
+        self.assertIn("已自动校验并绑定", second.mode_label.text())
+        self.assertIn("取代", first.mode_label.text())
+        self.assertNotIn("可写包", first.mode_label.text())
+
+    def test_a_candidate_with_a_different_pyc_is_not_bound(self):
+        self.window.add_archive(ArchiveDocument(self.package.path))
+        self.window.catalogs = [self.package.catalog]
+        tab, report = self.draft("# coding: utf-8\nVALUE = 1\n")
+        report.corpus_manifest_sha256 = "f" * 64
+        report.candidate_pyc_sha256 = "0" * 64
+        self.adopt(tab, report)
+        self.assertEqual(self.window.bindings, [])
+        self.assertIn("未通过", tab.mode_label.text())
+        self.assertIn("严格来源不同", self.window.statusBar().currentMessage())
+        self.assertFalse(any(self.home.rglob("*.py")))
+
+    def test_f5_retries_a_corrected_draft_and_writes_the_package(self):
+        self.window.add_archive(ArchiveDocument(self.package.path))
+        self.window.catalogs = [self.package.catalog]
+        tab, report = self.draft("# coding: utf-8\nVALUE = 1\n")
+        with (
+            patch(
+                "script_editor.core.services.workflow.compile_standard",
+                side_effect=ValueError("compiler exploded"),
+            ),
+            patch.object(self.window, "task", side_effect=sync_task),
+        ):
+            with ArchiveDocument(self.package.path) as archive:
+                self.window.auto_adopt(tab, archive, 0, report)
+        self.assertEqual(self.window.bindings, [])
+        self.assertIn("未通过", tab.mode_label.text())
+
+        # The user fixes the draft and presses F5: verify again, then write.
+        self.window.tabs.setCurrentWidget(tab)
+        errors = []
+        with (
+            patch(COMPILE, fake_compile()),
+            patch("script_editor.core.services.workflow.audit_standard"),
+            patch("script_editor.core.services.native_build.audit_standard"),
+            patch.object(self.window, "task", side_effect=sync_task),
+            patch.object(self.window, "fail", side_effect=errors.append),
+        ):
+            self.window.write_in_place()
+        self.assertEqual(errors, [])
+        self.assertEqual(len(self.window.bindings), 1)
+        self.assertNotEqual(self.package.path.read_bytes(), self.package.before)
+        self.assertIn("已写入原包", self.window.info.toPlainText())
+
+    # -- export reporting ---------------------------------------------
+    def test_a_cancelled_export_still_names_the_directory(self):
+        destination = self.root / "corpus-decrypted"
+        self.window.report_export(
+            {
+                "cancelled": True,
+                "entries_total": 10,
+                "entries_written": 4,
+                "failures": [],
+                "archive_sha256": "a" * 64,
+            },
+            destination,
+            "解密",
+            cancelled=True,
+        )
+        info = self.window.info.toPlainText()
+        self.assertIn("已取消", info)
+        self.assertIn(str(destination), info)
+        self.assertIn("4 / 10", info)
+        self.assertIn("新的导出目录", info)
