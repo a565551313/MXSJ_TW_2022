@@ -110,6 +110,9 @@ class TestAssetBrowser(unittest.TestCase):
             def stage_image(self, path, data):
                 pass
 
+            def fetch_bytes(self, name):
+                return None
+
         dialog = build_browser_dialog(self.window, StubAssets(),
                                       ["gameui/a.png"])
         self.addCleanup(dialog.deleteLater)

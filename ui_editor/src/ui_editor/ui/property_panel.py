@@ -255,6 +255,13 @@ class PropertyPanel(QWidget):
         self._new_value.setPlaceholderText("值")
         add_button = QPushButton("添加属性")
         add_button.clicked.connect(self._add_property)
+        # 用户反馈（0.19.0）：下拉太窄、值框太宽——两者默认宽度对调。
+        # sizeHint 互换：下拉最小宽＝值框原宽、值框最大宽＝下拉原宽；
+        # 面板拉宽时的富余空间归下拉（候选键长、值通常短）。
+        key_hint = self._new_key.sizeHint().width()
+        val_hint = self._new_value.sizeHint().width()
+        self._new_key.setMinimumWidth(val_hint)
+        self._new_value.setMaximumWidth(key_hint)
         add_row.addWidget(self._new_key)
         add_row.addWidget(self._new_value)
         add_row.addWidget(add_button)

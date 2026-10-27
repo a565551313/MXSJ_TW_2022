@@ -8,7 +8,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QComboBox, QLabel
+from PySide6.QtWidgets import QApplication, QComboBox, QLabel, QLineEdit
 
 from ui_editor.core.defaults_data import DEFAULT_PROPS
 
@@ -100,6 +100,21 @@ class TestPropertyPanel0170(unittest.TestCase):
         self.panel._new_value.setText("7")
         self.panel._add_property()
         self.assertEqual(button.props.get("iMyOwn"), 7)
+
+    def test_add_row_width_swap(self):
+        """0.19.0：添加属性行两个输入框宽度互换。
+
+        用户反馈：键下拉太窄、值输入框太宽。构造时实测两控件自然
+        宽度后互换约束：下拉最小宽 = 值框自然宽，值框最大宽 =
+        下拉自然宽（空组合状态下度量，与构造时一致）。
+        """
+        combo = self.panel._new_key
+        value = self.panel._new_value
+        self.assertIsInstance(value, QLineEdit)
+        key_hint = combo.sizeHint().width()
+        val_hint = value.sizeHint().width()
+        self.assertEqual(combo.minimumWidth(), val_hint)
+        self.assertEqual(value.maximumWidth(), key_hint)
 
     def test_label_tooltips(self):
         button = self.doc.new_widget("CButton", parent=self.frame)

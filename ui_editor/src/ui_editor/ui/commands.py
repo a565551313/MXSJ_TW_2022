@@ -3,7 +3,9 @@
 由 MainWindow 组装，复用窗口的文档、选择、画布与动作对象；不独立创建
 窗口、不保存文件。方法保持原有名称，菜单/信号和调用方无需更换入口。
 添加/提升、删除引用护栏、锁定与右键菜单集中在这里；复制/剪切/
-粘贴在 ``clipboard.py`` 的 ClipboardMixin。
+粘贴在 ``clipboard.py`` 的 ClipboardMixin。原生 schema
+警示（键不在游戏字段集、缩放的维度游戏不读，0.19.0）
+也在这里。
 """
 
 from __future__ import annotations
@@ -14,7 +16,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 
-from ..core import painters
+from ..core import defaults_data, painters
 from ..core.diagnostics import reference_impacts
 from ..core.model import Widget
 
@@ -500,3 +502,38 @@ class EditingCommandsMixin:
         self._select_widget(widget)
         self._update_title()
 
+    def _warn_nonnative_key(self, widget: Widget, key: str) -> None:
+        """写了原生字段集之外的键 → 直说游戏会忽略（0.19.0）。
+
+        游戏端控件类只读原生模板字段集（script.fls entry 3853
+        widgetconfig，31 种类型静态对照）；其余键会原样留在 .dlg 里
+        （忠实往返），但引擎与通用脚本不认——画布生效、游戏不生效。
+        """
+        fields = defaults_data.native_field_set(widget.wtype)
+        # 删键不警示：_remove_property 也发 changed，此时键已不在控件上，
+        # 再说「会随 .dlg 保存」就是误报（PR #90 审查复核属实）。
+        if fields is None or key in fields or key not in widget.props:
+            return
+        self._update_status(
+            f"键「{key}」不在游戏 {widget.wtype} 的原生字段集里："
+            "会随 .dlg 保存，但游戏会忽略它（只影响画布显示）。")
+
+    def _warn_ignored_size_dims(self, widget: Widget,
+                                changed: tuple) -> None:
+        """画布缩放松手后，对「游戏不读的维度」直说后果（0.19.0）。
+
+        CButton/CSpriteFrame/CTextFrame 宽高都不读、横排类不读高、
+        竖排类不读宽——对应维度游戏内由图片素材自身决定（真包
+        5309 个 CButton 无一写宽高）。用户实测：画布生效、游戏无效。
+        """
+        ignored = defaults_data.SIZE_IGNORED_NATIVE.get(widget.wtype)
+        if not ignored:
+            return
+        names = {"width": "宽", "height": "高"}
+        hit = [names[d] for d in changed if d in ignored]
+        if not hit:
+            return
+        self._update_status(
+            f"游戏端 {widget.wtype} 不读{'、'.join(hit)}：该维度游戏内"
+            "由图片素材自身决定，刚调的只影响画布显示（要改游戏内"
+            "观感请改图）。")
