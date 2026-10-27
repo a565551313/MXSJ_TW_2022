@@ -17,10 +17,11 @@ import hashlib
 import shutil
 from pathlib import Path
 
+from ... import __version__
 from ..errors import ResourceEditorError
 from ..project.storage import CatalogRef
 from ..vm.py25.keys import read_catalog
-from .package_selfcheck import verify_with_catalog
+from .package_selfcheck import verified_with_cache
 
 # The one authorized parameter asset. Keys and boundaries come from here; no
 # API in this tool derives them from the package under inspection.
@@ -70,7 +71,7 @@ def bundled_catalog(archive, root: Path):
     return CatalogRef(archive.path, fingerprint, path, spec[1])
 
 
-def resolve_catalog(archive, root: Path):
+def resolve_catalog(archive, root: Path, cache=None, progress=None):
     """Decide the decode parameters for a package that is being opened.
 
     Returns ``(ref, warning, check)``:
@@ -82,6 +83,11 @@ def resolve_catalog(archive, root: Path):
     A pinned package keeps the old fast path (no scan here; the caller indexes
     names). An unlisted package is decoded entry by entry and adopted on that
     evidence, which is what makes future rebuilds open without re-registering.
+
+    ``cache`` is an optional :class:`VerdictCache`. A hit skips recomputation
+    only: the verdict is keyed on package digest, parameter-table digest, tool
+    version and exclusion policy, so a hit states exactly what a fresh scan of
+    the same inputs would have concluded.
     """
     try:
         ref = bundled_catalog(archive, root)
@@ -90,7 +96,13 @@ def resolve_catalog(archive, root: Path):
     if ref is not None or archive.vm != "py25":
         return ref, "", None
     try:
-        check = verify_with_catalog(archive, builtin_catalog(root))
+        check = verified_with_cache(
+            archive,
+            builtin_catalog(root),
+            cache,
+            tool_version=__version__,
+            progress=progress,
+        )
     except (OSError, ValueError, ResourceEditorError) as exc:
         return None, str(exc), None
     if check.accepted:

@@ -231,6 +231,46 @@ def verify_with_catalog(
     )
 
 
+def index_with_cache(
+    archive, catalog, cache=None, *, tool_version: str, progress=None
+) -> PackageCheck:
+    """Attach module paths, reusing an identical earlier result when allowed.
+
+    For a package whose parameters are already trust-by-pin (the shipped
+    original or a registered derivative) the whole cost of opening is this
+    name index, so it gets the same content-addressed reuse as a full verdict.
+    Names remain navigation metadata: nothing here grants source trust.
+    """
+    path = Path(catalog.path).resolve(strict=True)
+    if cache is not None:
+        verdict = cache.load(archive, catalog.sha256)
+        if verdict is not None:
+            check = _check_from_verdict(verdict, archive, path)
+            check.apply(archive)
+            return check
+    started = time.monotonic()
+    ref = CatalogRef(archive.path, archive.fingerprint(), path, catalog.sha256)
+    paths, errors = scan_script_paths(archive, ref, progress=progress)
+    failures = tuple(
+        (index, _reason(reason))
+        for index, reason in sorted(errors.items())
+        if module_allowed(archive.vm, index)
+    )
+    check = PackageCheck(
+        ref=ref,
+        paths=paths,
+        errors=errors,
+        passed=len(paths),
+        excluded=len(archive.entries) - len(paths) - len(failures),
+        failures=failures,
+        elapsed=time.monotonic() - started,
+    )
+    check.apply(archive)
+    if cache is not None:
+        cache.store(archive, check.verdict(archive, tool_version))
+    return check
+
+
 def verified_with_cache(
     archive,
     catalog: Path,

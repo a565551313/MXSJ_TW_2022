@@ -18,6 +18,7 @@ from unittest.mock import patch
 from native_fixtures import complete_script_fixture, many_module_fixture, script_fixture
 
 from script_editor.core.archives.document import ArchiveDocument
+from script_editor.core.project.storage import CatalogRef
 from script_editor.core.services import module_paths, package_selfcheck
 from script_editor.core.services.module_browser import (
     MAX_DISASSEMBLY_CHARS,
@@ -27,6 +28,7 @@ from script_editor.core.services.module_browser import (
 )
 from script_editor.core.services.package_selfcheck import (
     PROBE_ENTRIES,
+    index_with_cache,
     verified_with_cache,
     verify_with_catalog,
 )
@@ -224,6 +226,44 @@ class VerdictCacheTests(_ArchiveCase):
             self.assertFalse(cache.path_for(archive.fingerprint()).exists())
         self.assertEqual(default_cache_root().name, "verdicts")
         self.assertEqual(len(policy_fingerprint()), 64)
+
+
+class NameIndexCacheTests(_ArchiveCase):
+    def test_second_open_of_the_same_package_skips_the_scan(self):
+        archive, catalog = self.archive(complete_script_fixture())
+        ref = CatalogRef(
+            archive.path,
+            archive.fingerprint(),
+            catalog,
+            hashlib.sha256(catalog.read_bytes()).hexdigest(),
+        )
+        cache = VerdictCache(self.root / "cache", "test-version")
+        first = index_with_cache(
+            archive, ref, cache, tool_version="test-version"
+        )
+        self.assertFalse(first.cached)
+        self.assertTrue(archive.module_paths)
+
+        with ArchiveDocument(archive.path) as reopened:
+            with patch.object(
+                package_selfcheck,
+                "scan_script_paths",
+                side_effect=AssertionError("a cache hit must not rescan"),
+            ):
+                second = index_with_cache(
+                    reopened,
+                    CatalogRef(
+                        reopened.path,
+                        reopened.fingerprint(),
+                        catalog,
+                        ref.sha256,
+                    ),
+                    cache,
+                    tool_version="test-version",
+                )
+        self.assertTrue(second.cached)
+        self.assertEqual(second.paths, first.paths)
+        self.assertEqual(reopened.module_paths, first.paths)
 
 
 class ProbeTests(_ArchiveCase):

@@ -109,11 +109,11 @@ def scan_script_paths(archive, catalog, *, limit=None, progress=None):
     return paths, errors
 
 
-def index_script_paths(archive, catalog):
+def index_script_paths(archive, catalog, progress=None):
     """Attach optional navigation metadata, keeping unavailable packages usable."""
     try:
         archive.module_paths, archive.module_path_errors = scan_script_paths(
-            archive, catalog
+            archive, catalog, progress=progress
         )
     except (OSError, ValueError) as exc:
         archive.module_paths = {}
