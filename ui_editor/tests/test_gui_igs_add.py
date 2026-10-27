@@ -117,7 +117,7 @@ class IgsAddTests(unittest.TestCase):
             self.dialog._choose_add()
         self.assertEqual(self.staged,
                          {"pre\\a.igs": b"A", "pre\\b.igs": b"B"})
-        self.assertIn("已挂账 2 个 .igs", self.dialog._count.text())
+        self.assertIn("已挂账 2 个 .igs/.spr", self.dialog._count.text())
 
     def test_multi_igs_default_prefix_from_selection(self):
         a = self._write("a.igs", b"A")
@@ -170,7 +170,7 @@ class IgsAddTests(unittest.TestCase):
             self.dialog._choose_add()
         # a.igs 与包内同名、替换确认点了「否」→ 只挂上 b.igs
         self.assertEqual(self.staged, {"b.igs": b"B"})
-        self.assertIn("已挂账 1 个 .igs", self.dialog._count.text())
+        self.assertIn("已挂账 1 个 .igs/.spr", self.dialog._count.text())
 
     # -- 旧规则不动：多张普通图片必须转精灵 ------------------------------
     def test_multi_images_still_need_convert(self):

@@ -451,9 +451,19 @@ class WidgetItem(QGraphicsItem):
 
     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:  # noqa: N802
         if self._resize_handle is not None:
+            start = self._resize_start
             self._resize_handle = None
             self._resize_start = None
             self._commit_if_changed()
+            if start is not None:
+                changed = tuple(
+                    name for name, old, cur in (
+                        ("width", start[2], self.widget.width),
+                        ("height", start[3], self.widget.height))
+                    if old != cur)
+                cb = getattr(self.scene(), "on_resize_commit", None)
+                if changed and cb is not None:
+                    cb(self.widget, changed)
             event.accept()
             return
         super().mouseReleaseEvent(event)
@@ -585,6 +595,9 @@ class LayoutScene(QGraphicsScene):
         self.on_commit = on_commit
         self.document: LayoutDocument | None = None
         self._items: dict[int, WidgetItem] = {}
+        #: 缩放松手且宽/高真变了才回调 (widget, changed_dims)；主窗口
+        #: 在这里挂「游戏不读这个维度」的直说警示（0.19.0）。
+        self.on_resize_commit = None
         self.show_grid = False  # 网格+标尺（视图菜单/工具栏开关）
         self.keep_aspect = False  # 等比缩放（视图菜单/工具栏开关）
         self._guides_x: list[float] = []  # 场景坐标参考线（拖动吸附）

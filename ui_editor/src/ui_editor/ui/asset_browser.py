@@ -12,11 +12,19 @@
 
 导出副本的处理函数从属性面板原封不动搬来（``make_export_handler``），
 两条路径共用一份实现，避免复制粘贴漂移。
+
+0.21.0 加第二个独立入口——工具栏「批图」按钮：直接从磁盘选图片
+文件 / 选文件夹批处理（缩放 / 亮度 / 饱和度），磁盘进磁盘出、
+不用挂包也不用打开任何布局；参数窗与执行链和浏览窗「批量处理…」
+共用同一套（:mod:`.image_batch`），见 :meth:`AssetBrowserMixin._run_disk_batch`。
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from pathlib import Path
+
+from PySide6.QtWidgets import QDialog, QFileDialog, QMessageBox
 
 from .image_picker import ResourcePickerDialog
 
@@ -26,6 +34,10 @@ from .property_panel import make_export_handler
 
 __all__ = ["AssetBrowserMixin", "build_browser_dialog",
            "make_export_handler", "open_asset_browser"]
+
+# 批处理范围＝与浏览窗分筛同一组（PNG/JPG/BMP/TGA ＋ .igs）。
+_PLAIN_SUFFIXES = (".png", ".jpg", ".jpeg", ".bmp", ".tga")
+_BATCH_SUFFIXES = _PLAIN_SUFFIXES + (".igs",)
 
 
 def build_browser_dialog(host, assets, candidates: list[str],
@@ -73,7 +85,8 @@ def build_browser_dialog(host, assets, candidates: list[str],
         browse_only=True,
         save_staged=save_staged,
         staged_count=(lambda: len(assets.staged_images())
-                      if save_staged is not None else None))
+                      if save_staged is not None else None),
+        fetch_bytes=assets.fetch_bytes)
 
 
 def open_asset_browser(host, assets, widget_type: str | None = None,
@@ -111,3 +124,87 @@ class AssetBrowserMixin:
             return False
         report = handler()
         return bool(report and report.get("ok"))
+
+    # -- 0.21.0：图像批处理独立入口（磁盘进磁盘出，不用挂包） ------------
+    def batch_images_from_disk(self) -> None:
+        """工具栏「批图」主按钮：从磁盘选图片文件（可多选）批处理。"""
+        files, _filter = QFileDialog.getOpenFileNames(
+            self, "选择要批处理的图片（可多选）",
+            self._settings.value("batch_dir", ""),
+            "图片 (*.png *.jpg *.jpeg *.bmp *.tga *.igs);;所有文件 (*)")
+        if not files:
+            return
+        self._settings.setValue("batch_dir", str(Path(files[0]).parent))
+        self._run_disk_batch([str(f) for f in files])
+
+    def batch_folder_from_disk(self) -> None:
+        """小箭头「选文件夹批处理…」：只扫文件夹顶层的支持格式。
+
+        不递归钻子文件夹——范围可预期，也免得误吞整棵大树；要处理
+        子文件夹就再点一次选它。
+        """
+        folder = QFileDialog.getExistingDirectory(
+            self, "选择要批处理的图片文件夹",
+            self._settings.value("batch_dir", ""))
+        if not folder:
+            return
+        self._settings.setValue("batch_dir", folder)
+        paths = sorted(
+            str(p) for p in Path(folder).iterdir()
+            if p.is_file() and p.suffix.lower() in _BATCH_SUFFIXES)
+        if not paths:
+            self._update_status(
+                f"{folder}：没找到可批处理的图片"
+                "（PNG/JPG/BMP/TGA/.igs，只扫了这一层）")
+            return
+        self._run_disk_batch(paths)
+
+    def _run_disk_batch(self, paths: Sequence[str]) -> None:
+        """磁盘批处理共用执行链：读字节 → 参数窗 → 执行 → 回报。
+
+        与浏览窗「批量处理…」同一套规矩（:mod:`.image_batch`）：
+        范围外后缀 / 读不到的文件拒收并各给一句话原因，能处理的照常
+        进参数窗；原文件一律不动；输出永不覆盖；单项失败不中断整批。
+        差别只在字节来自磁盘、且**只能写磁盘**——磁盘文件没有包内
+        路径，「挂账进包」无从谈起（参数窗 ``can_stage=False``）。
+        """
+        items: list[tuple[str, str, bytes]] = []
+        rejected: list[str] = []
+        for path in paths:
+            suffix = Path(path).suffix.lower()
+            if suffix == ".igs":
+                kind = "igs"
+            elif suffix in _PLAIN_SUFFIXES:
+                kind = "image"
+            else:
+                rejected.append(
+                    f"{path}：{suffix or '无后缀'} 不在批处理范围"
+                    "（PNG/JPG/BMP/TGA/.igs）")
+                continue
+            try:
+                data = Path(path).read_bytes()
+            except OSError as exc:
+                rejected.append(f"{path}：读不到文件（{exc}）")
+                continue
+            items.append((path, kind, data))
+        if not items:
+            QMessageBox.warning(
+                self, "选中的都不能批处理", "\n".join(rejected[:8]))
+            return
+        from .image_batch import ImageBatchDialog, run_batch
+        dialog = ImageBatchDialog(
+            self, items, suggested_dir=str(Path(paths[0]).parent),
+            can_stage=False)
+        if dialog.exec() != QDialog.DialogCode.Accepted or \
+                dialog.plan is None:
+            return
+        plan = dialog.plan
+        ok, failed = run_batch(items, plan, stage=None)
+        failed.extend(rejected)
+        if failed:
+            QMessageBox.warning(
+                self, "有些没能处理",
+                "下面这些没有批处理成功：\n\n" + "\n".join(failed[:8]))
+        if ok:
+            self._update_status(
+                f"图像批处理完成 {len(ok)} 张 → 写入 {plan.out_dir}")
