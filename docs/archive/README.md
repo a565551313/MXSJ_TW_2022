@@ -7,8 +7,9 @@
 
 | 归档文件 | 原路径 | 时期 | 被什么取代 |
 |---|---|---|---|
+| [STATUS_HISTORY.md](STATUS_HISTORY.md) | `docs/STATUS.md` 的 §3（红灯与已知问题 3.1–3.82）、§4–§7 及历史轮次条目 | 2026-10-27 拆分；内容自 2026-10-15 起 | [当前状态](../STATUS.md) 的 §1–§2 与顶部轮次条目。**原 §编号未改**，每个 §3.x 有显式锚点 `s3-3-x` |
 | [2026-10-18-readme-registration.md](2026-10-18-readme-registration.md) | `README.md` §9 | 作废的 v3.3 安装说明 | [原生注册](../../tools/registration/README.md)，禁止按旧指令分发 |
-| [2026-10-18-status-prefix.md](2026-10-18-status-prefix.md) | `docs/STATUS.md` 顶部及 §1–§2 | 10-18 整理前的多会话快照 | [当前状态](../STATUS.md)；其余编号历史章节原位保留 |
+| [2026-10-18-status-prefix.md](2026-10-18-status-prefix.md) | `docs/STATUS.md` 顶部及 §1–§2 | 10-18 整理前的多会话快照 | [当前状态](../STATUS.md)；其余编号历史章节原位保留（2026-10-27 已随 `STATUS_HISTORY.md` 一并归档） |
 | [2026-10-12-AGENT_HANDOFF-registration-v3_3.md](2026-10-12-AGENT_HANDOFF-registration-v3_3.md) | `AGENT_HANDOFF.md` | 2026-10-12，注册 UI v3.3 交付 | `AGENTS.md`、`docs/STATUS.md`、[`tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md`](../../tools/client_patches/V3_3_DELIVERY_AND_ACCEPTANCE.md) |
 | [2026-10-12-map-editor-handover.md](2026-10-12-map-editor-handover.md) | `work/dream-world-connect-login-map/report/map-editor-handover-20261012.md` | 2026-10-12，地图编辑器 PR #25 | [`map_editor/PR25_REVIEW.md`](../../map_editor/PR25_REVIEW.md)、[`map_editor/README.md`](../../map_editor/README.md) |
 | [2026-10-11-CLIENT_DATA_AGENT_HANDOFF.md](2026-10-11-CLIENT_DATA_AGENT_HANDOFF.md) | `server/docs/CLIENT_DATA_AGENT_HANDOFF.md` | 2026-10-11，静态数据提取分工 | [`server/docs/csv_checks/BATCH_001.md`](../../server/docs/csv_checks/BATCH_001.md)、[`server/docs/CSV_READINESS.md`](../../server/docs/CSV_READINESS.md) |

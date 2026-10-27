@@ -1,12 +1,12 @@
 # Agent任务卡（协议v1）
 
-> **本轮入口已更换**：2026-10-16用户要求合并现有成果后重新交给全新agent。[N1–N7新任务卡](../coordination/NEW_AGENTS_START_20261016.md)已执行并提交PR39–45，勿重复启动七人；任务卡保留各自边界，七PR现已全部合A、A接手收尾，当前16有限通过/4battle待非A独审，见STATUS§3.51，不是恢复原B–H会话。本文的B–H仅保留逻辑owner/目录映射和历史范围；新PR都从新人固定分支提交到A，不再更新已合PR35–38。
+> **本轮入口已更换**：2026-10-16用户要求合并现有成果后重新交给全新agent。[N1–N7新任务卡](../coordination/NEW_AGENTS_START_20261016.md)已执行并提交PR39–45，勿重复启动七人；任务卡保留各自边界，七PR现已全部合A、A接手收尾，当前16有限通过/4battle待非A独审，见[STATUS_HISTORY §3.51](../../docs/archive/STATUS_HISTORY.md#s3-3-51)，不是恢复原B–H会话。本文的B–H仅保留逻辑owner/目录映射和历史范围；新PR都从新人固定分支提交到A，不再更新已合PR35–38。
 
 所有Agent先读 `CONTRACT.md`、根 `AGENTS.md` 和根 `docs/STATUS.md`。输入/归属只认 `coordination/baseline.json` 与 `tasks.json`，不追浮动master。先提交推送自己现有工作再开工；不切换各自Arena固定分支，不擅自合master或上传游戏包/改权限。
 
 这是任务分配，不表示这些Agent已经开工或完成；A不能从本会话启动/验证其他独立会话。
 
-> **2026-10-16 授权变更**：用户“H宕机了你审吧”，A以 `A_delegate` 代审已交D/E，不再等20篇齐备。实际身份/授权/字节绑定、有限范围和激活规则见CONTRACT§4.1及根STATUS§3.46；不是启动独立H会话或领域合并授权。旧H后置安排只作历史。
+> **2026-10-16 授权变更**：用户“H宕机了你审吧”，A以 `A_delegate` 代审已交D/E，不再等20篇齐备。实际身份/授权/字节绑定、有限范围和激活规则见CONTRACT§4.1及根[STATUS_HISTORY §3.46](../../docs/archive/STATUS_HISTORY.md#s3-3-46)；不是启动独立H会话或领域合并授权。旧H后置安排只作历史。
 
 ## A — 总控与工具
 

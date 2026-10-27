@@ -97,7 +97,7 @@ off = ((r2*index*0x00F718FE + 0x0D59D16C) ^ r3)
 
 ## 3. 关键判定：引擎到底是"线性扫描"还是"有序 + 二分"？
 
-这是项目长期挂着的红灯（`docs/STATUS.md §3.2`），而 UI 编辑器的**全部写包正确性**都押在"有序 + 二分"上。我自己反汇编 `mxmain.dll` 判定：
+这是项目长期挂着的红灯（[`STATUS_HISTORY §3.2`](../archive/STATUS_HISTORY.md#s3-3-2)），而 UI 编辑器的**全部写包正确性**都押在"有序 + 二分"上。我自己反汇编 `mxmain.dll` 判定：
 
 **先确认解码器**（`0x48F170`）：逐条读 16 字节，用 `index` 参与三条闭式变换，输出内存结构 `[entry_id, f1, len, off]`。常量 `0x0E7C83D2` / `0x0DF25E` / `0x00F718FE` 在整份 `.text` 里**各只出现 1 次** → 目录解码只有这一处实现。
 
@@ -221,7 +221,7 @@ off = ((r2*index*0x00F718FE + 0x0D59D16C) ^ r3)
 
 | # | 动作 | 成本 | 收益 |
 |---|---|---|---|
-| 1 | 给 `notes/fls_path_hash_and_dlg.md §2` 加更正横幅：`.dlg` 走 `0x45D580→0x60DD00→0x60E690`（**二分/lower_bound**），`0x48ECF0` 是 `ReadFls`；把 `0x60DD00`/`0x60E690` 写进 `notes/native_dlg_path_cipher.md` | 0.5 h | 关掉 STATUS §3.2 这条长期红灯，避免后来者按"线性扫描"改坏目录 |
+| 1 | 给 `notes/fls_path_hash_and_dlg.md §2` 加更正横幅：`.dlg` 走 `0x45D580→0x60DD00→0x60E690`（**二分/lower_bound**），`0x48ECF0` 是 `ReadFls`；把 `0x60DD00`/`0x60E690` 写进 `notes/native_dlg_path_cipher.md` | 0.5 h | 关掉 [STATUS_HISTORY §3.2](../archive/STATUS_HISTORY.md#s3-3-2) 这条长期红灯，避免后来者按"线性扫描"改坏目录 |
 | 2 | 修文档漂移：九宫格三处改口径（说明是固定三分近似）；`pyproject.toml` 版本对齐 `__init__` 并加一条一致性测试 | 1 h | 消除"低报/错报"，让 README 可信 |
 | 3 | 把 `mxhash.py` / `native_layout.py` / `sprite*.py` 收进一个共享包（`<pkg>_core` 或顶层 `mx_common/`），三编辑器改为依赖它；加"多实现同源"回归 | 0.5–1 天 | 一处修全处对；本次 §3 的结论只需落一处 |
 | 4 | 拆 `main_window.py`：把写包校验（`write_pack_copy` 里的 verifier）、资源树、脚本面板、诊断分别成类/模块；先给 `write_pack_copy` 抽 `core/publish.py` | 1–2 天 | 让最危险的路径可独立测试（现在它只被 GUI 测试间接覆盖） |

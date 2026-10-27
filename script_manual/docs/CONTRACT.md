@@ -28,7 +28,7 @@ B把完整目录替换这个单文件，保留20个初始身份（路径若确�
 
 权威格式是 `schema/contract.schema.json` 的 `$defs.annotation`，未知字段拒绝，不接受散落Markdown作为第二套底稿。示例 `examples/annotation.json`；文件名任意但必须唯一主键且放在正确领域目录。
 
-2026-10-16 G停工后，其固定四篇由A代写：任务包owner仍G，author明确实际作者A，不伪称G提交。随后新N6提交接管修订PR42，新N7在PR45提供四份精确SHA绑定的有限accepted模板，现已随七PR合A并核SHA激活；A未用自己的代审身份自批这四篇。随后用户“你帮他们收尾吧”另授权A接手尾项：登录新稿由A_delegate有限代审；battle四篇指南/事实定位由A参与修正，author明示共同作者，必须由非A独立复核，不得以A_delegate自批凑20通过。实际进度见STATUS§3.51。
+2026-10-16 G停工后，其固定四篇由A代写：任务包owner仍G，author明确实际作者A，不伪称G提交。随后新N6提交接管修订PR42，新N7在PR45提供四份精确SHA绑定的有限accepted模板，现已随七PR合A并核SHA激活；A未用自己的代审身份自批这四篇。随后用户“你帮他们收尾吧”另授权A接手尾项：登录新稿由A_delegate有限代审；battle四篇指南/事实定位由A参与修正，author明示共同作者，必须由非A独立复核，不得以A_delegate自批凑20通过。实际进度见[STATUS_HISTORY §3.51](../../docs/archive/STATUS_HISTORY.md#s3-3-51)。
 
 必填：schema_version=1、身份、与目录完全一致的path、owner、domain、author、source_status、purpose、keywords、functions、resources、relationships、related_modules、modification_guides、limitations、sources、evidence。没有资料的列表可为空，**不要编造**。
 

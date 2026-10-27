@@ -1,7 +1,7 @@
 # Windows x86双编译器（0.3.2.dev1源码交付ZIP内含）
 
 `manifest.json`为schema2非空实测文件清单，分别固定标准CPython 2.5.6和2.7.13。
-两套EXE/DLL/标准库**已入库**（用户2026-10-23决定，见`../docs/STATUS.md` §3.79）：
+两套EXE/DLL/标准库**已入库**（用户2026-10-23决定，见`../../docs/archive/STATUS_HISTORY.md` §3.79）：
 克隆或拉取即得到完整编译器，无需另装Python2，也无需解压交付ZIP。
 重建（`../build_runtimes.py`）后必须把新二进制与`manifest.json`成对提交；Git历史会
 永久保留每一份旧构建（每轮约6.7MB），没有理由时不要反复重建。
@@ -30,7 +30,7 @@ runtimes/
 `build_exe.bat`须全部审计及严格GUI/原生包回归通过才生成EXE；不能把skip当通过。
 
 **2026-10-23 已在用户真实 Windows 上通过 `检查内置编译器.bat` 的双编译/marshal
-验收，GUI 状态栏显示 `2/2可用`**（见`../docs/STATUS.md` §3.81）。该验收只编译并
+验收，GUI 状态栏显示 `2/2可用`**（见`../../docs/archive/STATUS_HISTORY.md` §3.81）。该验收只编译并
 回读 marshal，不执行目标源码，也不等于游戏客户端加载验收。
 哈希证明与清单一致，非签名、法律审核或逐位可重现构建证明。
 来源、重建命令及剩余实机检查见[运行时记录](../M4_RUNTIME_DISTRIBUTION.md)。

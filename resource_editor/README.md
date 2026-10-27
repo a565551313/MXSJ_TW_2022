@@ -175,7 +175,7 @@ build_exe.bat
 > 流程与 [`docs/PYTHON_TOOL_CONVENTIONS.md`](../docs/PYTHON_TOOL_CONVENTIONS.md) §4
 > 一致。PyInstaller 不能跨平台：Linux 沙箱只做了 spec 干跑（onedir / onefile 都能
 > 完整构建出 Linux 产物，数据文件落位正确），**`.exe` 尚未在 Windows 上实际构建和
-> 双击验收**（STATUS §3.5）。
+> 双击验收**（[STATUS_HISTORY §3.5](../docs/archive/STATUS_HISTORY.md#s3-3-5)）。
 
 ## 测试
 

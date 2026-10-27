@@ -1,6 +1,6 @@
 # 给全新agent的第二轮分工（2026-10-16）
 
-> **当前状态（A收尾补记，非原始任务卡）**：PR39–45已全部合入A，未合master；正式5135登记/20说明/16有限通过/4battle待独立复核/1排除。A已接手修正尾项，不需用户转交返修，也不要重启七人。四battle有A共同改写，不能A自批。原始任务卡及下文基线数均为历史；当前以STATUS§3.51与[收尾报告](../../docs/evidence/script_manual_A_finalize_20261016.md)为准。
+> **当前状态（A收尾补记，非原始任务卡）**：PR39–45已全部合入A，未合master；正式5135登记/20说明/16有限通过/4battle待独立复核/1排除。A已接手修正尾项，不需用户转交返修，也不要重启七人。四battle有A共同改写，不能A自批。原始任务卡及下文基线数均为历史；当前以[STATUS_HISTORY §3.51](../../docs/archive/STATUS_HISTORY.md#s3-3-51)与[收尾报告](../../docs/evidence/script_manual_A_finalize_20261016.md)为准。
 
 **以下为已经执行过的历史任务卡，不再要求用户复制给七个新会话。**
 
@@ -52,4 +52,4 @@ N6 gameplay ──────────────┘
 
 ## 历史文档的适用方式
 
-旧AGENT_TASKS、旧审查报告/PR评论用于解释问题和固定输入，不再是“继续找原agent”的操作指令。过去的“无PR”“G未交”“等20篇”“正式20种子”等是当时快照；本轮现状以本入口、machine assignment和STATUS最新§3.48为准。
+旧AGENT_TASKS、旧审查报告/PR评论用于解释问题和固定输入，不再是“继续找原agent”的操作指令。过去的“无PR”“G未交”“等20篇”“正式20种子”等是当时快照；本轮现状以本入口、machine assignment和 [`STATUS_HISTORY §3.48`](../../docs/archive/STATUS_HISTORY.md#s3-3-48)为准。

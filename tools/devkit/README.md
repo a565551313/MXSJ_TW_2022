@@ -35,6 +35,35 @@ python3 tools/devkit/check_windows_compat.py --list-rules
 
 启发式说明：`read_text`/`write_text` 只按方法名匹配，同名的自定义方法会误报，用 `# win-ok` 豁免；POSIX API 的检测只认 `import os` / `import signal` 及其别名。
 
+## check_doc_versions.py — 文档版本号一致性检查
+
+```bash
+python3 tools/devkit/check_doc_versions.py                    # 检查 README / AGENTS / STATUS
+python3 tools/devkit/check_doc_versions.py --doc docs/ROADMAP.md
+python3 tools/devkit/check_doc_versions.py --json /tmp/docver.json
+python3 tools/devkit/check_doc_versions.py --no-exclude-history   # 连历史叙述一起严格比对
+```
+
+**为什么有这个工具**：顶层文档（README / AGENTS / STATUS）历史上长期**手工维护**各组件的
+版本号，导致 `ui_editor` 从 0.8.4 涨到 0.21.0 而 README 一次都没跟上，读者据此会得出
+错误结论（「UI 编辑器只支持字段编码和布局导出」）。本工具把「文档里写的版本」与
+「源码里真实的版本」机械比对，让漂移在提交前就红。
+
+- 真实版本从各组件 `pyproject.toml` 的 `[project].version` 读取。
+- 只在**版本上下文**里比对——组件名紧邻版本号才算声明；单纯提到组件名的叙述不受影响。
+- **历史叙述默认跳过**：`docs/STATUS.md` 按设计保留大量历史轮次记录，那里的
+  「UI 编辑器 0.19.0」是当时那一版的标题，属于正确事实。工具按行内标记
+  （日期前缀、`### 3.xx` 编号章节、「以下保留历史内容」横幅段、版本迁移箭头）识别并跳过。
+  加 `--no-exclude-history` 可连历史叙述一起严格比对（届时大量 ERROR 属预期）。
+- **组件缺失会打印警告**：组件目录或 `pyproject.toml` 缺失时，该组件会退出检查范围；
+  工具会把跳过项**打印出来**（并写进 `--json` 的 `skipped_components`），
+  免得组件被改名／删除后**静默**退出闸门、文档里的旧版本号再没人查。
+- 退出码：0 一致；1 有 ERROR（版本声明不一致）；2 参数错误。
+
+**边界**：这是**静态字符串比对**，只验证「文档写的版本 == 源码声明的版本」，
+不验证功能、测试数或 Windows 实机行为，也不判断某段版本叙述是否**过时**——
+过时与否仍要人工判断。
+
 ## vendor_core.py — 共享核心分发器
 
 ```bash
@@ -52,7 +81,7 @@ python3 tools/devkit/vendor_core.py --write    # 按真源重写副本
 ## 测试
 
 ```bash
-python3 -m unittest discover -s tools/devkit/tests -v     # 44 个用例：wincompat 自检 + 分发一致性 + 精灵多实现同源
+python3 -m unittest discover -s tools/devkit/tests -v     # wincompat 自检 + 分发一致性 + 精灵多实现同源 + 文档版本一致性
 ruff check tools/devkit                                   # 使用仓库根 ruff.toml
 ```
 
@@ -61,6 +90,7 @@ ruff check tools/devkit                                   # 使用仓库根 ruff
 ```
 tools/devkit/
   check_windows_compat.py   # CLI 入口
+  check_doc_versions.py     # CLI 入口：文档版本号 vs pyproject.toml
   wincompat/
     model.py                # Severity / RULES / Finding
     filenames.py            # WIN1xx
@@ -68,4 +98,7 @@ tools/devkit/
     pysource.py             # WIN3xx + CONV001（ast）
     runner.py               # 文件收集（git / walk）、调度、汇总
   tests/test_wincompat.py
+  tests/test_vendor_core.py
+  tests/test_sprite_parity.py
+  tests/test_doc_versions.py
 ```
