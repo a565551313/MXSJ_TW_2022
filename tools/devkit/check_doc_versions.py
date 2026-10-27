@@ -93,14 +93,40 @@ _SEP = r"[\s/／,，、:：）)】\]]*"
 # 允许出现在「组件名」与「版本号」之间的有限连接词/标点。
 # 注意：反引号、斜杠、全角逗号、冒号、连字符、括号都要能跨过去，
 # 因为实际文档里写法很杂：`` `ui_editor/`，0.21.0 ``、`` `ui_editor`，**0.21.0** ``。
-_CONNECT = (
-    r"(?:\s*[\*/／`~（）()\[\]【】]?\s*)"
-    r"(?:[/／,，、:：—\-]?\s*)*"
-    r"(?:\**\s*)?"
-)
+# 「组件名」与「版本号」之间的连接部分。
+#
+# ⚠️ 这里**不能**写成「分隔符可选 + \s*」的形式，例如
+#    ``(?:[/／,，、:：—\-]?\s*)*``
+# 那样的模式里，一段 n 个连续空白有指数多种等价切分（空白既可能归给前一次
+# 重复的 ``\s*``、也可能归给后一次），匹配失败时正则引擎会把这些切分
+# **全部回溯一遍**——实测 n=10 约 3 ms、n=20 约 3 s，**每多 2 个空格耗时 ×4**，
+# 是教科书级的指数回溯（ReDoS）。gitar-bot 与 CodeRabbit 在 PR #92 上都指出了
+# 这一点，**他们的结论是对的**。
+#
+# 现在的写法把「可省略的标点」和「空白」**合并进同一个字符类**：
+# 每次重复至少消耗 1 个字符，空白**只能**被唯一的那一处吃掉，
+# 不存在二义切分 ⇒ 回溯次数是线性的。
+_CONNECT = r"[\s*/／`~（）()\[\]【】,，、:：—\-]*"
 
 # 版本号前置词：直接、当前、版本、v
 _PREFIX = r"(?:当前\s*)?(?:直接\s*)?(?:版本\s*)?(?:v|V)?"
+
+# 表格单元格里的版本号：``**0.21.0**``、``v1.0.0``、``0.4.3``
+_CELL_VERSION_RE = re.compile(
+    r"(?<![A-Za-z0-9_.])"
+    + _PREFIX
+    + r"\*{0,2}\s*"
+    + r"(?P<version>\d+\.\d+(?:\.\d+)?(?:\.dev\d+)?)"
+)
+
+# 表格里**不是**组件版本声明的版本号——依赖／解释器要求：
+#   ``Python 3.10+``、``SQLite >=3.24``、``CPython 2.5.6``、``PySide6 + Pillow``
+# 这些是环境要求，不是组件版本，不能拿来判漂移。
+_DEP_VERSION_RE = re.compile(
+    r"(?:Python|SQLite|CPython|Cython|PySide\d*|PyQt\d*|Pillow|Numpy|"
+    r"numpy|Qt\s*\d|Node|Node\.js)\s*[>=~^]*\s*\d"
+    r"|[>=~^]\s*\d+\.\d+"
+)
 
 # 统一��「组件名 + 连接 + 版本号」模式
 _DECL_RE_CACHE: dict[str, re.Pattern[str]] = {}
@@ -286,12 +312,16 @@ def _short_decl_re(short: str) -> re.Pattern[str]:
     守卫只用 ASCII 词字符——**不能**把中文字符排除在外：
     ``当前资源 0.4.3`` 里的「资源」前面就是中文字符「前」，
     用中文字符做负向守卫会误杀合法写法。
+
+    短名与版本号之间允许夹 **markdown 粗体标记**：仓库里实际写法是
+    ``当前资源 **0.4.3** / UI **0.21.0**``（`README.md` 365 行），
+    不认粗体就等于这一行**完全没人管**（kody-ai 在 PR #92 上指出）。
     """
     if short not in _SHORT_DECL_RE_CACHE:
         _SHORT_DECL_RE_CACHE[short] = re.compile(
             r"(?<![A-Za-z0-9_])"
             + re.escape(short)
-            + r"\s*(?:[/／]?\s*)?"
+            + r"[\s/／]*\*{0,2}\s*"
             + r"(?P<version>\d+\.\d+(?:\.\d+)?(?:\.dev\d+)?)"
         )
     return _SHORT_DECL_RE_CACHE[short]
@@ -401,6 +431,65 @@ def find_skipped_components(root: Path) -> list[str]:
     return skipped
 
 
+def _table_row_scan(
+    line: str,
+    key: str,
+    real_version: str,
+) -> list[dict[str, object]]:
+    """扫描**表格行**里的版本声明。
+
+    表格是本仓库声明组件版本的主要位置之一（``README.md`` / ``AGENTS.md``
+    的组件能力表），但组件名和版本号通常**不在同一个单元格**——
+    例如::
+
+        | UI 编辑器 | `.dlg` 布局编解码…… | **0.21.0**；批量导入布局…… |
+
+    名字在 cell[1]、版本在 cell[3]，中间隔着描述文字。正则 ``_CONNECT``
+    只允许紧邻的连接符，跨不过单元格分隔（kody-ai 在 PR #92 上指出：
+    这样一来「表格里写错版本号」完全能溜过闸门）。
+
+    所以这里**按单元格**处理：把一行拆成单元格，组件名出现在某个单元格、
+    版本号出现在**同一行**的后续单元格，即视为一次声明。
+    限定在**同一行**内，就不会把下一行的版本号算到这一行头上。
+    """
+    if "|" not in line:
+        return []
+    cells = line.split("|")
+    names = [key, key.replace("_", " ")]
+    for alias, alias_key in ALIASES.items():
+        if alias_key == key:
+            names.append(alias)
+    hits: list[dict[str, object]] = []
+    for name in names:
+        for i, cell in enumerate(cells):
+            if name not in cell:
+                continue
+            # 版本号只能出现在**同一行**的后续单元格里
+            for later in cells[i + 1 :]:
+                for m in _CELL_VERSION_RE.finditer(later):
+                    found = m.group("version")
+                    if found == real_version:
+                        continue
+                    # 依赖／解释器版本要求（``Python 3.10+``）不是组件版本声明
+                    ctx = later[max(0, m.start() - 24) : m.end() + 4]
+                    if _DEP_VERSION_RE.search(ctx):
+                        continue
+                    # 章节号引用（``§3.15.9``）不是版本声明
+                    if re.search(r"§\s*$", later[: m.start()]):
+                        continue
+                    hits.append(
+                        {
+                            "component": key,
+                            "found_version": found,
+                            "real_version": real_version,
+                            "line": 0,  # 由调用方补上
+                            "context": line.strip()[:200],
+                        }
+                    )
+            break
+    return hits
+
+
 def scan_doc(
     text: str,
     key: str,
@@ -448,6 +537,27 @@ def scan_doc(
                     "context": line_text.strip()[:200],
                 }
             )
+
+    # 表格行：组件名与版本号**不在同一个单元格**的情况（README/AGENTS 组件能力表）。
+    # 正文路径的 ``_CONNECT`` 跨不过单元格分隔，那些行等于完全没人管。
+    seen_rows: set[tuple[int, str]] = set()
+    for line_idx, line in enumerate(lines):
+        if "|" not in line:
+            continue
+        line_no = line_idx + 1
+        for hit in _table_row_scan(line, key, real_version):
+            marker = (line_no, str(hit["found_version"]))
+            if marker in seen_rows:
+                continue
+            seen_rows.add(marker)
+            if exclude_history and (
+                _is_history_line(line) or _in_ranges(line_no, history_ranges)
+            ):
+                continue
+            if exclude_history and _version_in_arrow(line, str(hit["found_version"])):
+                continue
+            hit["line"] = line_no
+            hits.append(hit)
     return hits
 
 

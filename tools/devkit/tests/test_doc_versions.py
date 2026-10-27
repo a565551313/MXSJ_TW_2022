@@ -19,9 +19,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from check_doc_versions import (  # noqa: E402
     ALIASES,
     COMPONENTS,
+    _decl_re,
     _history_sections,
     _in_ranges,
     _is_history_line,
+    _short_decl_re,
     collect_real_versions,
     find_skipped_components,
     read_version,
@@ -201,6 +203,87 @@ class DetectionTests(unittest.TestCase):
         hits = scan_short_alias(sample, "ui_editor", "0.21.0", exclude_history=False)
         self.assertEqual(len(hits), 1, sample)
         self.assertEqual(hits[0]["found_version"], "0.8.4")
+
+    def test_detects_bold_short_alias_form(self):
+        """**粗体**的缩写形式也要能抓到。
+
+        仓库里的实际写法是 ``当前资源 **0.4.3** / UI **0.21.0**``
+        （`README.md` 365 行）。旧版模式不认 ``**``，这一行等于**完全没人管**
+        （kody-ai 在 PR #92 上指出）。
+        """
+        sample = "当前资源 **0.8.4** / UI **0.21.0**：按原生路径密钥写入。"
+        hits = scan_short_alias(
+            sample, "resource_editor", "0.4.3", exclude_history=False
+        )
+        self.assertEqual(len(hits), 1, sample)
+        self.assertEqual(hits[0]["found_version"], "0.8.4")
+
+    def test_detects_version_in_table_cell(self):
+        """组件名和版本号**不在同一个单元格**时也要能抓到。
+
+        README/AGENTS 的组件能力表长这样：名字在 cell[1]、版本在 cell[3]，
+        中间隔着描述文字。正则 ``_CONNECT`` 跨不过单元格分隔，
+        这类行旧版**完全没人管**（kody-ai 在 PR #92 上指出）。
+        """
+        sample = (
+            "| UI 编辑器 | `.dlg` 布局编解码、画布编辑 | "
+            "**0.8.4**；批量导入布局、保存模式 |"
+        )
+        hits = scan_doc(sample, "ui_editor", "0.21.0", exclude_history=False)
+        self.assertEqual(len(hits), 1, sample)
+        self.assertEqual(hits[0]["found_version"], "0.8.4")
+
+    def test_table_scan_ignores_dependency_versions(self):
+        """表格里的**依赖/解释器版本要求**不是组件版本声明。"""
+        sample = "| 资源编辑器 / UI 编辑器 | Python 3.10+，PySide6 + Pillow |"
+        real = {"ui_editor": "0.21.0", "resource_editor": "0.4.3"}
+        for key in ("ui_editor", "resource_editor"):
+            hits = scan_doc(sample, key, real[key], exclude_history=False)
+            self.assertEqual(
+                hits, [], f"{key} 不该把 Python 3.10 当成版本声明"
+            )
+
+    def test_table_scan_ignores_section_references(self):
+        """``§3.15.9`` 这类章节号引用不是版本声明。"""
+        sample = "| 脚本编辑器 | **0.6.0.dev9** | Windows 未验，见 §3.15.9 |"
+        hits = scan_doc(sample, "script_editor", "0.6.0.dev9", exclude_history=False)
+        self.assertEqual(hits, [], "章节号引用不该被判成漂移")
+
+    def test_table_scan_does_not_cross_rows(self):
+        """版本号必须和组件名在**同一行**——不能把下一行的版本算过来。"""
+        sample = "| UI 编辑器 | 画布编辑 |\n| 其他组件 | 0.8.4 |\n"
+        hits = scan_doc(sample, "ui_editor", "0.21.0", exclude_history=False)
+        self.assertEqual(hits, [], "不该跨行匹配")
+
+    def test_no_exponential_backtracking(self):
+        """连接模式**不能**出现指数回溯（ReDoS）。
+
+        「分隔符可选 + \\s*」的写法会让一段 n 个连续空白有指数多种等价切分，
+        匹配失败时引擎把切分全部回溯一遍：实测 n=20 约 **3 秒**，
+        每多 2 个空格耗时 ×4。
+
+        ⚠️ 测这个**必须真的消费迭代器**（``sum(1 for _ in pat.finditer(s))``）。
+        只调 ``pat.finditer(s)`` 而不遍历它，引擎根本不会执行匹配，
+        测出来永远是「0.000 ms」——那正是当初误判「不存在 ReDoS」的原因。
+        """
+        import time
+
+        for label, pat in (
+            ("_decl_re", _decl_re("ui_editor")),
+            ("_short_decl_re", _short_decl_re("资源")),
+        ):
+            for n in (40, 400):
+                sample = ("ui_editor" if label == "_decl_re" else "资源") + " " * n
+                start = time.perf_counter()
+                count = sum(1 for _ in pat.finditer(sample))
+                elapsed = time.perf_counter() - start
+                self.assertEqual(count, 0, "样例里没有版本号，不该有匹配")
+                self.assertLess(
+                    elapsed,
+                    0.5,
+                    f"{label} 在 n={n} 上耗时 {elapsed * 1000:.1f} ms，"
+                    "疑似指数回溯",
+                )
 
     def test_ignores_lone_short_alias(self):
         """孤立的 ``UI 0.8.4`` 不采信——避免普通叙述被误判。"""
