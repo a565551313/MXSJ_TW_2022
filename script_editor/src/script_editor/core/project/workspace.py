@@ -56,8 +56,20 @@ def pack_editor(editor, portable):
 
 
 def text(value):
-    if not isinstance(value, str) or len(value.encode("utf8")) > MAX_TEXT:
-        raise ValueError("项目文字超过8MiB或类型错误")
+    """Reject anything that would not survive the project snapshot unchanged.
+
+    The bound is UTF-8 **bytes**, so a draft carrying Chinese comments reaches
+    it sooner than an ASCII recovered draft of the same character count; say so
+    instead of only naming 8MiB.
+    """
+    if not isinstance(value, str):
+        raise ValueError("项目文字必须是文本")
+    size = len(value.encode("utf8"))
+    if size > MAX_TEXT:
+        raise ValueError(
+            f"项目文字超过8MiB（UTF-8 {size} 字节 > 上限 {MAX_TEXT}）；"
+            "每个字段单独计算，中文按 3 字节/字"
+        )
     return value
 
 
