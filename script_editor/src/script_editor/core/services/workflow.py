@@ -17,7 +17,7 @@ from ..project.document import Binding
 from ..project.storage import CatalogRef, ProjectState
 from ..vm.py25 import codec as py25
 from ..vm.py27 import codec as py27
-from .native_build import Replacement, _native, build_package
+from .native_build import Replacement, build_package, encode_replacement
 
 
 def text_sha(text):
@@ -66,7 +66,7 @@ def prepare_build(
             pyc = path.read_bytes()
         audit_standard(compiler, pyc)
         replacement = Replacement(binding.index, binding.identity, pyc)
-        native = _native(archive, replacement, profile)
+        native = encode_replacement(archive, replacement, profile)
         if binding.vm == "py25":
             from ..vm.compression import inflate
 

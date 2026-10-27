@@ -210,6 +210,12 @@ class ResolveCatalogTests(unittest.TestCase):
 class RepositoryPackageTests(unittest.TestCase):
     """The package committed in this repository must pass its own self-check."""
 
+    #: The original TW v2.27.2 package is the locked input; the 2026-10-23
+    #: registration build (`a45e0e49…`) is a *derived* test package and is not
+    #: committed here. Both decode with the same authorized catalog.
+    ORIGINAL = "8b6e9266bbe9"
+    DERIVED_REGISTRATION = "a45e0e49ed33"
+
     def test_committed_script_package_decodes_with_builtin_catalog(self):
         root = Path(__file__).resolve().parents[1]
         package = root.parent / "data" / "script.fls"
@@ -223,8 +229,18 @@ class RepositoryPackageTests(unittest.TestCase):
         self.assertIn(4007, check.paths)
         self.assertEqual(check.paths[4007], "script/login/register.py")
         self.assertEqual(
-            hashlib.sha256(package.read_bytes()).hexdigest()[:12], "a45e0e49ed33"
+            hashlib.sha256(package.read_bytes()).hexdigest()[:12], self.ORIGINAL
         )
+
+    def test_known_catalog_pins_cover_both_original_and_registration_builds(self):
+        from script_editor.core.services.bundled_catalog import BUNDLED_CATALOGS
+
+        for digest in (
+            "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+            "a45e0e49ed336367a1bf00b5377229c5c48de2c30ac2b61f9bf7d67549a445b9",
+        ):
+            with self.subTest(digest=digest[:12]):
+                self.assertIn(digest, BUNDLED_CATALOGS)
 
 
 if __name__ == "__main__":

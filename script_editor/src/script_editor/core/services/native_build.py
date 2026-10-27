@@ -1,8 +1,12 @@
-"""Fail-closed native build API (not yet wired to the GUI).
+"""Fail-closed native build API.
 
 All replacements are explicit identities + freshly authored standard pycs. New
 file only, bounded decode, independent inverse, full CPython marshal read, then
 no-clobber atomic hard-link publication. Never executes original/authored code.
+
+``encode_replacement`` is the public single-entry encoder used by the M3
+workflow preview (``core/services/workflow.py``) and by the GUI's F6 action;
+``build_package`` is the only publication path.
 """
 
 from __future__ import annotations
@@ -53,7 +57,7 @@ def guard_new_package(path: Path, protected: tuple[Path, ...]) -> Path:
     return path
 
 
-def _native(archive, replacement, profile):
+def encode_replacement(archive, replacement, profile):
     require_module_allowed(archive.vm, replacement.index)
     expected = replacement.standard_pyc
     stored = archive.read_stored(replacement.index)
@@ -80,6 +84,11 @@ def _native(archive, replacement, profile):
         raise ValueError("original data payload CRC/size mismatch")
     py27.decode(original)  # Non-scripts/unknown formats stay read-only.
     return py27.encode(expected)
+
+
+#: Historical private name; kept so existing callers and evidence tests that
+#: import ``_native`` keep working. New code uses ``encode_replacement``.
+_native = encode_replacement
 
 
 def verify_output(source, result, replacements, profiles, compiler):
@@ -151,7 +160,7 @@ def build_package(
                 raise ValueError("duplicate/invalid replacement identity")
             selected[i] = replacement
             audit_standard(compiler, replacement.standard_pyc)
-            changed[i] = _native(source, replacement, profiles.get(i))
+            changed[i] = encode_replacement(source, replacement, profiles.get(i))
         fd, temporary = tempfile.mkstemp(
             prefix=".mxscript-build-", dir=destination.parent
         )

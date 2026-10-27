@@ -8,12 +8,16 @@ Names are navigation metadata only: never a binding or proof of source trust.
 from __future__ import annotations
 
 import hashlib
-import json
 import zlib
 
-from ..policy import require_module_allowed
+from ..policy import module_allowed, require_module_allowed
 from ..vm.marshal_tree import parse
-from ..vm.py25.keys import KeyProfile, inflate_script, read_catalog
+from ..vm.py25.keys import KeyProfile, catalog_snapshot, inflate_script
+
+_PROGRESS_STEP = 256
+
+# Bytes that may never appear in an embedded module path (C0 controls + DEL).
+_PATH_FORBIDDEN = bytes(range(32)) + b"\x7f"
 
 
 def display_module_path(raw: bytes) -> str:
@@ -21,7 +25,7 @@ def display_module_path(raw: bytes) -> str:
         not isinstance(raw, bytes)
         or not raw
         or len(raw) > 8192
-        or any(n < 32 or n == 127 for n in raw)
+        or len(raw.translate(None, _PATH_FORBIDDEN)) != len(raw)
     ):
         raise ValueError("内嵌路径为空、过长或含控制字符")
     # Normalize actual separators BEFORE escaping undecodable bytes. Never
@@ -33,27 +37,43 @@ def display_module_path(raw: bytes) -> str:
         return raw.decode("ascii", errors="backslashreplace")
 
 
-def scan_script_paths(archive, catalog):
+def scan_script_paths(archive, catalog, *, limit=None, progress=None):
     """Return (index -> display path, index -> failure reason), independently.
 
     Run in the opening/project worker, never the Qt thread. Corrupt entries do
     not hide good ones. Archive/catalog mutation invalidates the ENTIRE result.
     No decompiler, legacy interpreter, export, or game code is invoked.
+
+    ``limit`` stops after that many policy-allowed entries and is only used for
+    a *probe* that may reject parameters early; accepting parameters still
+    requires the complete pass. ``progress(done, total)`` is optional and is
+    called every :data:`_PROGRESS_STEP` entries so a long scan can show signs of
+    life without touching Qt from this thread.
     """
     if archive.kind != "0slf":
         return {}, {}
     if catalog is None:
         return {}, {e.index: "未关联已确认的XOR参数" for e in archive.entries}
     catalog.verify(archive)
-    raw = read_catalog(catalog.path)
-    if hashlib.sha256(raw).hexdigest() != catalog.sha256:
+    # Parsed once per catalog file per session, never per entry; the digest is
+    # still recomputed from the cached bytes and compared to the pin.
+    rows, digest = catalog_snapshot(catalog.path)
+    if digest != catalog.sha256:
         raise ValueError("路径索引的XOR参数摘要不符")
-    rows = json.loads(raw.decode("utf-8-sig"))
-    if not isinstance(rows, dict):
-        raise ValueError("路径索引的XOR目录不是对象")
     fingerprint = archive.fingerprint()
     paths, errors = {}, {}
+    allowed = sum(1 for e in archive.entries if module_allowed(archive.vm, e.index))
+    total = allowed if limit is None else min(allowed, limit)
+    scanned = 0
     for entry in archive.entries:
+        if module_allowed(archive.vm, entry.index):
+            if scanned >= total:
+                break
+            scanned += 1
+            if progress is not None and (
+                scanned % _PROGRESS_STEP == 0 or scanned == total
+            ):
+                progress(scanned, total)
         try:
             require_module_allowed(archive.vm, entry.index)
             info = rows[str(entry.index)]

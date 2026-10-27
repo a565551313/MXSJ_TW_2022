@@ -87,20 +87,22 @@ class ModulePathTests(unittest.TestCase):
 
     def test_catalog_read_count_is_constant_not_once_per_entry(self):
         archive, ref = self.archive()
-        from script_editor.core.vm.py25.keys import read_catalog
+        from script_editor.core.vm.py25.keys import clear_catalog_cache, read_catalog
 
+        clear_catalog_cache()
         with (
             patch(
                 "script_editor.core.project.storage.read_catalog", wraps=read_catalog
             ) as verify,
             patch(
-                "script_editor.core.services.module_paths.read_catalog",
-                wraps=read_catalog,
-            ) as scan,
+                "script_editor.core.vm.py25.keys.read_catalog", wraps=read_catalog
+            ) as snapshot,
         ):
             scan_script_paths(archive, ref)
         self.assertEqual(verify.call_count, 2)
-        self.assertEqual(scan.call_count, 1)
+        # One parsed snapshot serves the whole scan; the catalog is never read
+        # once per entry (the scan has more entries than this read count).
+        self.assertEqual(snapshot.call_count, 1)
 
     def test_raw_paths_are_not_repr_or_falsely_renamed_pyo(self):
         self.assertEqual(display_module_path(b"script\\x.py"), "script/x.py")
