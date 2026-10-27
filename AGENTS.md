@@ -38,7 +38,7 @@
 | `tools/decompiler/` | 双 VM 字节码反编译、5 段 XOR 重打包；`output/` 是反编译文本（**不准确、不可执行，只作线索**） | `notes/opcode_mapping_and_decompilation.md` |
 | `tools/data-parser/` | `universal_fls_tool.py`、`mx_path_hash.py`、`extract_dlg.py`、`i0_sprite.py`、`pe_resource_dump.py`（从 exe/dll 的 `.rsrc` 抽皮肤/光标/版式/字串）、`skin_label_patch.py` + `pe_resource_patch.py`（皮肤改字并原位写回）、精灵格式说明 | `I0_SPRITE_FORMAT.md` |
 | `tools/client_patches/` | 混合专题：注册 overlay v3/v3.2/v3.3 已停用；内置 UI 列表旧 v1/v2 暂停，v3 为未原生验收源码参考；不可整体判废 | [`分专题状态`](tools/client_patches/README.md) |
-| `tools/devkit/` | 开发自检工具箱：`check_windows_compat.py`（Windows 兼容静态检查，交付前必跑）、`vendor_core.py`（`mx_common/` → 编辑器 `core/` 的共享核心分发器） | [`README.md`](tools/devkit/README.md) |
+| `tools/devkit/` | 开发自检工具箱：`check_windows_compat.py`（Windows 兼容静态检查，交付前必跑）、`check_doc_versions.py`（顶层文档的版本号 vs 各组件 `pyproject.toml`，防版本漂移）、`vendor_core.py`（`mx_common/` → 编辑器 `core/` 的共享核心分发器） | [`README.md`](tools/devkit/README.md) |
 | `tools/data-export/`、`tools/data_browser/`、`tools/dis_v43/`、`tools/*.py` | 历史数据导出/浏览/反汇编工具，仍可用但不是现行复核入口 | — |
 | `script_editor/` | 双 VM 脚本恢复候选、编辑／编译／新包验证；Git 不含完整运行时发行材料 | [`README.md`](script_editor/README.md) |
 | `script_manual/` | 只读脚本目录、有限说明、专题和摘要绑定审核 | [`README.md`](script_manual/README.md) |
@@ -70,7 +70,7 @@
 | UI 编辑器 | PySide6（+Pillow 转精灵）；`.dlg` 语料库在 `MXSJ_DLG_CORPUS`（Drive 取用见 [`docs/EXTERNAL_CORPUS.md`](docs/EXTERNAL_CORPUS.md)） | `(cd ui_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`；运行 `python3 ui_editor/bootstrap.py` |
 | 脚本编辑器 | 本目录 requirements；旧 VM 编译器／恢复引擎材料另见运行时文档 | `(cd script_editor && PYTHONPATH=src python3 -m unittest discover -s tests)`（须在组件目录跑：`repair_runtimes.py` 在组件根，仓库根口径会少收集 9 项）；`python3 script_editor/bootstrap.py --check-only` |
 | 脚本手册 | 本目录 requirements；核心校验需 jsonschema，GUI 需 PySide6 | `PYTHONPATH=script_manual/src python3 -m mxsj_manual validate --verify-evidence --repository . --require-full-inventory`；`python3 script_manual/check_manual.py`（统一闸门还需开发依赖） |
-| 开发工具箱 / 风格检查 | 检查脚本为标准库；完整测试还需 Pillow；ruff 另装（`pip install ruff`，根 `ruff.toml` 为默认配置） | `python3 -m unittest discover -s tools/devkit/tests`；`python3 tools/devkit/check_windows_compat.py <dir>`；`ruff check <dir>` |
+| 开发工具箱 / 风格检查 | 检查脚本为标准库；完整测试还需 Pillow；ruff 另装（`pip install ruff`，根 `ruff.toml` 为默认配置） | `python3 -m unittest discover -s tools/devkit/tests`；`python3 tools/devkit/check_windows_compat.py <dir>`；`python3 tools/devkit/check_doc_versions.py`；`ruff check <dir>` |
 
 - 用仓库**外**的 venv（`python3 -m venv ../mxsj-venv`）；系统 pip 受 PEP 668 保护。
 - 每轮重新探测 Python、Qt 与系统库；缺依赖可能导致导入失败或跳过。**跳过／未执行不算通过**，历史沙箱库与离屏结果不证明当前环境或 Windows 可用。
@@ -120,7 +120,11 @@
 
 ## 7. 已知坑（详见 STATUS 与各子项目文档）
 
-- GIRB 在 1034/1035 固定样本中仍有 300/429 扇区解不出（不是全地图统计）；现在明确失败而非假成功。不要拿旧的成功率反驳字节级差异。
+- GIRB 动态光照编解码**已全量解决（2026-10-23，map_editor v1.0.0）**：在仓外取得的 101 张客户端
+  `.map` 语料（11,763 扇区）上，GIRB **11,763/11,763 零失败解出**；旧「1034/1035 固定样本中
+  300/429 扇区解不出」是 0.1.0 时代的**历史缺口**，已不再成立，不要再据此下结论。
+  但该 101 图语料**不随仓库分发**，复核需另行取得语料并重跑测试；「全量」只指该次语料，
+  不是对任意地图的普遍保证。旧结论见 `docs/archive/` 与 `map_editor/README.md` 的版本历史。
 - 0SLF 目录寻址**已判定（2026-10-16，反汇编）**：`.dlg` 走的 LoadFile 链在 `0x60DD00`
   用 **二分**（`0x60DD35` → `0x60E690` = `lower_bound`，16 字节记录、比 entry_id；返回后
   `0x60DD3D`/`0x60DD41` 判未命中）。所以**目录必须按 entry_id 升序**，新增/插入条目后
@@ -143,6 +147,12 @@
 - **别默认全量反编译语料存在**：生成物写在仓库外，环境变化后需重新确认。全档符号检索前先读 [`docs/DECOMPILE_CORPUS.md`](docs/DECOMPILE_CORPUS.md)，优先定点恢复；只有确需语义级全档检索才重建全量。
 - `tools/decompiler/batch_decompile.py` 整池并行可能被超大常量模块堵住（历史 entry 2371 `preload_mov`、2679 `wingtypeposdata`）；补跑采用逐条子进程与超时，生成物不入库。
 - `tools/decompiler/output/` 下的 `.py` 是反编译输出，有缺失和错误，不是源码。
+- **顶层文档的版本号不许手工维护**：README / AGENTS / STATUS 里各组件的版本号必须与
+  对应 `pyproject.toml` 的 `[project].version` 一致。改动组件版本后**同一轮**同步文档，
+  并跑 `python3 tools/devkit/check_doc_versions.py`（退出码 1 = 漂移，要改文档而不是放宽检查）。
+  这不是形式主义——`ui_editor` 从 0.8.4 涨到 0.21.0 期间 README 一次没跟上，读者据此
+  长期以为 UI 编辑器只支持「字段编码和布局导出」，能力边界完全描述错了。
+  该工具**只比对字符串**，不判断某段版本叙述是否过时；过时仍要人工看。
 
 ## 8. 术语
 

@@ -1,5 +1,36 @@
 # 项目当前状态（STATUS）
 
+> **2026-10-27：顶层文档漂移对齐 + 防复发闸门（分支 `arena/797802ec-mxsj-tw-2022`）**：用户指出「有些文档与项目实际进展已经脱节」。
+> 本轮**只动文档与新增一个只读检查工具**，不碰产品代码、不改任何测试期望、不动原包。
+> **问题是真的，且有一处最严重**：`AGENTS.md` §7「已知坑」写着「GIRB 在 1034/1035 固定样本中仍有 300/429 扇区解不出」——
+> 而 `map_editor` v1.0.0（2026-10-23）**已全量解决**：在 101 张客户端 `.map` 语料上 GIRB **11,763/11,763 零失败解出**。
+> 一份红线级「长期有效」的接手指南里，把**已解决的问题写成未解决**，任何人照它判断都会出错。
+> **已修的事实性错误（7 类）**：① `AGENTS.md` GIRB 条目（补历史／现状分界，并写明 101 图语料不随仓库分发、「全量」只指该次语料）；
+> ② `README.md` 地图编辑器行 GIRB 缺口；③ `README.md` §1.3 硬编码基线 `cb2409a`（PR #51）→ 改为「§1–§2 是那一轮的快照，判断当前集成状态用 `git log`／`gh pr list`」；
+> ④ `README.md` UI 编辑器 0.8.4 → **0.21.0**（3 处）；⑤ `README.md` 脚本编辑器 0.6.0.dev7 → **0.6.0.dev9**（3 处）；
+> ⑥ `README.md` §7.3「GIRB 覆盖率仍有缺口」整段 → 改为当前结论（保留当年去「假成功」的纪律与「语料不随仓库分发」边界）；
+> ⑦ `docs/ROADMAP.md` 阶段 E 验收条件里的 1034/1035 旧统计（改写为「历史缺口已取代，但仍不能推广为任意地图覆盖」）。
+> **`docs/STATUS.md` §1** 加「本表是 2026-10-26 UI 编辑器轮的快照，不是实时值」横幅与时效性说明，并把该表头改成「当时核实值」、
+> 「PR #90 已开、未合并」补注「后于 2026-10-26 11:27 UTC **已合并**」——**不伪造**该轮的分支／起点为「当前」。
+> **方案 C（能力描述对齐）**：`README.md` §8.2 UI 编辑器整节重写，补 0.12–0.21 的实际能力
+> （画布移动手柄、保存模式严格／宽松、打开／保存／另存为／导出副本重新划分、批量导入布局、
+> 资源浏览窗、`.igs`／`.spr` 导入、新建拼名族、图像批处理含 0.21.0 磁盘独立入口、原生 schema 警示）；
+> §8.4 脚本编辑器补 dev9 的「未登记包逐条严格解码自动判定」判定变化与实测数字。
+> **方案 B（防复发）**：新增只读工具 `tools/devkit/check_doc_versions.py` + 23 项回归 `tools/devkit/tests/test_doc_versions.py`——
+> 从各组件 `pyproject.toml` 的 `[project].version` 读真实版本，比对 README／AGENTS／STATUS 的**当前态**版本声明。
+> **关键设计**：`docs/STATUS.md` 按设计保留大量历史轮次记录（「UI 编辑器 0.19.0」是当时那版的标题，**是正确事实不是漂移**），
+> 所以工具按 ① 行内日期前缀 ② `### 3.xx` 编号历史章节整段 ③「以下保留历史内容」横幅段 三类规则跳过历史叙述，
+> 加 `--no-exclude-history` 可严格全量比对。首版曾把 35 条历史记录误判成漂移，逐条定位后收敛到 0——**回归测试钉住「能抓到漂移」也钉住「不误伤历史」**。
+> **AGENTS.md §7 新增长期规则**：顶层文档的版本号不许手工维护，改组件版本后同轮同步文档并跑该检查（退出码 1 = 漂移，要改文档不是放宽检查）。
+> **实测**：`tools/devkit/tests` **70 项全过**（含新增 25 项；用 Pillow 13.0.0 环境复跑，`test_sprite_parity` 需 Pillow 非本轮引入）；
+> `ruff check` 对本轮两个新文件 **0 报告**（ruff 0.17.3）；`check_windows_compat.py tools/devkit` **0/0/0**（文件名 14 项、扫描 13 个）；
+> `server/tests/architecture` **161/161 OK**、`local_server` **68/68 OK**（回归未受影响）；
+> `check_doc_versions.py` 对真实仓库 **OK 0 漂移**；另做**反向验证**——人为把 README 两处改回 0.8.4，检查器确实报 2 处 ERROR 且退出码 **1**，
+> 恢复后退出码 **0**（证明闸门不是「永远通过」）。**未验 / 边界**：该工具只做**静态字符串比对**，
+> 不判断某段版本叙述是否**过时**（过时仍需人工看）；GIRB「全量」只指 2026-10-23 那次 101 图语料，**本轮未重跑地图语料测试**（语料在仓外）；
+> Windows 实机未验（本轮无 GUI 改动）。锁定输入 `data/script.fls` / `tools/decompiler/script_fls_keys.json`
+> 以 `sha256sum` 核对与预期一致（`8b6e9266…c0d72` / `43bb090d…daceb`），本轮前后均未改动。
+
 > **2026-10-26：保护壳入口的 Unicorn 执行探针（分支 `arena/4d3d51ac-mxsj-tw-2022`）**：新增研究专用工具 [`tools/dyprot_unpack/`](../tools/dyprot_unpack/README.md)（`dyprot_emulate.py` + `fake_modules.py` + `win32_env.py` + 14 项回归）。做的事：把 `mxmain.dll` 整个映射进 Unicorn（i386），TEB/PEB 摆在地址 0（unicorn 32 位**忽略 FS 段基址**，`fs:[x]` 实际读 `[x]`），给 859 个导入槽接 Python 桩，并**合成 kernel32/ntdll/user32/advapi32 的假 PE 映像**（含可解析的导出表）——因为实测壳是走「解析导出表」拿 API 的。**已确认**：① 给对导出表后，壳会把 **859/896 个 IAT 槽**重写成假导出表的地址（IAT 有 3,430 字节被改写，映像其余部分零改动）；② **没有任何载荷解密**——`.data` 运行期尾部 `0x93C180`（27 个 `interface` 类型的 `tp_name` 就从这里 `strcpy` 出去）全程为 0，`_dyprot0/1` 一字节未改。**过程更正（同轮，AI 审查发现）**：早期报告的「停因 `eip=0xb40a2330`」其实是**工具自己的 bug**——假 kernel32 等映像的导出表 `AddressOfFunctions` 存了绝对地址（PE 要求 RVA），壳算 `ImageBase + RVA` 正好落到 `0x54080000 + 0x60022330 = 0xb40a2330`。改成写 `位址 - ImageBase` 后，壳的行为立刻变了：它正常解析到桩上、`LocalAlloc(0, 0xa8)`、`GetModuleHandleA("ntdll.dll")`、`GetModuleFileNameW`、`GetProcessWindowStation`/`GetUserObjectInformationW(UOI_NAME)`、`LoadLibraryA("wtsapi32.dll")`，然后**弹出一个消息框**：标题 `mxmain.dll`、正文 `Initialization error 3`（运行期才出现在栈上的字符串，静态映像里没有），关掉消息框后 `FreeLibrary("wtsapi32.dll")` → `ExitProcess(0xDEADBEEF)`，是壳自己的干净退出，不是失控跳飞。（同一轮又修了 `WTSSendMessageW` 的 arity：原型 10 个参数、原先写成 9，少一个 `Timeout` 会少弹 4 字节栈、`pResponse` 指错位置，收尾就表现成“跳进未映射地址 `0x9f594fe0`”——arity 写错的症状永远离原因很远；现在这条由回归测试钉住停因。）顺带把 DLL 入口按 `DllMain(hinst, DLL_PROCESS_ATTACH=1, 0)` 的样子调用（原先 `fdwReason` 读到 0），行为不变。`--trace-tail N` 可留下最后 N 条指令定位跳转来源；`UC_HOOK_CODE` 限定在桩区后同一流程 12.0 s → 0.8 s。仍未解出载荷：`.data` 运行期尾部 `0x93C180` 全程为 0、`_dyprot0/1` 一字节未改；已排除「缺 API 数量」与「异常未派发」，现在的说法是「壳判定初始化失败、走错误分支后跳飞」，失败代码 3 对应哪项检查尚未定位。**未验/边界**：只读原 DLL，不加载 Windows DLL、不联网、不写原档；模拟执行不是启动客户端；结论仍是「静态可得的 46% 已经挖完，剩下 54% 目前只有 Windows 上 `ReadProcessMemory` 转储一条稳路」。依赖 pefile 2024.8.26 + unicorn 2.1.4（缺依赖整档跳过，不影响普通测试）。锁定输入 `data/script.fls` / `tools/decompiler/script_fls_keys.json` 以及只读输入 `mxmain.dll` 以 `sha256sum` 逐项核对与预期一致（`8b6e9266…c0d72` / `43bb090d…daceb` / `637331b5…be424d`），本轮前后均未改动。不涉及原包、脚本或编辑器，无行为变更。
 
 > **2026-10-26：mxmain 给脚本的原生接口清账（类型 + 方法 + 使用率，分支 `arena/4d3d51ac-mxsj-tw-2022`）**：新增 [`notes/mxmain_python_types.md`](../notes/mxmain_python_types.md)，一次把「引擎把哪些类和方法交给脚本」问到边界。**三条通道**：① `Py_InitModule4` 函数模块（82 处，上一轮）；② `.rdata` 静态 `PyTypeObject`（本篇新解：**189 个骨架**，按 CPython 2.5 字段偏移 `+0x0c` tp_name / `+0x54` tp_flags / `+0x74` tp_methods 判定，其中 **9 个引擎类**：`CNetClient`(36 方法)、`CIMShare`(19)、`CServerCommand`(9)、`CShadowObject`(1)、`CObjectCommand`(1)、`CWwiseEngine`/`CCefObject`/`CPopen`/`CPreloadObject`(0)——全部有明文 `tp_name`，`dict`/`list`/`unicode`/`file`/`set` 等 56 个标准类型同时整齐命中，构成扫描器自证）；③ **运行期构造**：紧邻 `CShadowObject` 的 **27 个同形骨架**（`0x7df7a0`–`0x7e0b20`，步长 `0xc0`，共享 `tp_new 0x4659c0`、各自独立 `tp_init`）的 `tp_name`/`tp_methods` 指向 `.data` 未初始化尾部（`0x82b4e0` 起，`va_to_offset()` 返回 `None` 就是「文件里是 0、加载后写入」的硬证据）⇒ `interface.CMapWalkerObject` 这类名字**静态拿不到**；同理脚本里还 `import` 了 `C_slot`/`C_sharemem`/`C_math` 三个**明文 0 命中**的模块 ⇒ 「21 个原生模块 / 322 个方法」是**下界**。**使用率**：681 个已反编译脚本（13.6 MB）按 `C_<模块>.<方法>` 限定名统计，322 个方法里 **81 个被引用、共 283 次**，**241 个零引用**；`C_sys` 独占 200 次（71%，`GetTime`×53、`GetObjects`×21、`IsKeyDown`×21、`LoadFile`×19），`C_imshare`/`C_asyncloader`/`C_object` 等按限定名 0 次——`C_object` 是因为它的属性是**类**（`CTextObject`/`CBaseObject`/`CDisplayLinkDirector` 等，163 处使用点）。**勘误 2 条（本轮推翻上一轮）**：`Process`/`ProcessServerCmd`/`Replay` 是原生类型 **`CNetClient` 的方法**，不是 `C_net` 模块的函数；`CNetClient` 的 36 个方法里**没有 `OnServerCmd`** ⇒ 上一轮的「同名两层会不会重入」**不成立**，脚本 `net.CNet.OnServerCmd(self,icmd)` 是纯 Python 父类调用。**回调链至此闭环**：`CNetClient::ProcessServerCmd` → `0x4ab870` 读 `[cmd+4]` 命令号 → 桥 `0x4576b0` → 脚本 `OnServerCmd(byte)` → 脚本用 `CServerCommand.GetCmd/Unpack*` 读包体。**实测**：纯静态、只读（纯静态、只读；本 PR 新增只读工具与回归测试，但不改动既有工具行为，`ruff` 与 `check_windows_compat` 结论与上一轮相同）；`sha256sum` 逐项核对锁定输入，结果与预期一致：`mxmain.dll` `637331b54f7fa9fa6c236fa7f9ac8a8b27f228bd46d05046fdccddf52fbe424d`、`data/script.fls` `8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72`、`tools/decompiler/script_fls_keys.json` `43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb`。**未验 / 边界**：`tp_getset`/`tp_members` 未解；97 个无名骨架未逐个归类；语料只 681/5,135，「零引用」≠ 没人调；27 个 `interface` 名字「源自 RTTI」是**推断**（写入方应在 `_dyprot*` 内）。**下一步**：真要拿这部分只剩「运行期 dump `interface.__dict__`」一条路，静态再挖收益接近 0。
@@ -164,14 +195,23 @@
 > 快照：**2026-10-26，Asia/Shanghai**。§1–§2 是唯一当前概览；下方 §3 及后续编号记录是按日期保留的历史证据，不因其中写有“本轮／最新”就覆盖本表。
 > 规则见 [AGENTS](../AGENTS.md)，能力入口见 [README](../README.md)，建议阶段见 [ROADMAP](ROADMAP.md)。
 > 旧顶部摘要与组件表已[完整归档](archive/2026-10-18-status-prefix.md)；原 §3.1–§3.73 等章节不搬迁，保留既有引用。
+>
+> **§1–§2 的时效性说明（2026-10-27 补）**：§1 记录的会话分支／起点是**写它那一轮（2026-10-26 UI 编辑器轮）的快照**，
+> 不随 master 前进而自动更新——它不是「当前检出分支」的实时值。判断当前集成状态请用
+> `git log` / `git rev-parse HEAD` / `gh pr list` 的实际结果，不要把本表当实时真相。
+> 同理，§2 各组件的测试计数只属于**各自那一次实测**，别处的数字不因此失效，
+> 也不代表本仓库当前所有套件的统一复跑结果。版本号以各组件 `pyproject.toml` 为准
+> （由 `tools/devkit/check_doc_versions.py` 静态校验 README／AGENTS／STATUS 的声明）。
 
 ## 1. 分支与集成
 
-| 项 | 当前核实值 |
+> ⚠️ **本表是 2026-10-26 UI 编辑器轮的快照，不是实时值。** 见上方时效性说明。
+
+| 项 | 当时核实值 |
 |---|---|
-| 会话分支 | `arena/f980d0df-mxsj-tw-2022`（active，固定名称） |
+| 会话分支 | `arena/f980d0df-mxsj-tw-2022`（该轮 active，固定名称） |
 | 本轮起点 | `eac25d9`（本分支 0.20.0；master 停在 `330479d`＝PR #89 合并点） |
-| 集成边界 | ui_editor **0.19.0–0.21.0** 在本分支（**PR #90 已开、未合并**；审查复核修复已追加）；0.18.0 及以前已在 master |
+| 集成边界 | ui_editor **0.19.0–0.21.0** 在本分支（该轮 PR #90 **已开、未合并**；后于 2026-10-26 11:27 UTC **已合并**）；0.18.0 及以前已在 master |
 | 本轮授权 | 用户追问「要打开资源窗口才能打开图像编辑吗」，经 ask_user 确认加独立入口（磁盘批处理）：直接从磁盘选图/选文件夹处理、不挂包也能用（输出只能写磁盘），挂了包时浏览窗入口与挂账能力照旧保留；0.19.0/0.20.0 的授权详情见各自顶部条目 |
 | 本轮证据 | 沙箱 PySide6 **6.11.2** offscreen（带符号 stub GL 库 81 个/6312 哑符号——本轮沙箱被重置：PySide6 6.12.0 的 shiboken 在本沙箱 Python 3.11.2 上有信号实参转换 refcount bug（最小复现：**未连接**的 `Signal(int).emit`×2000 即 `bool_dealloc` 崩溃、零桩库加载，与产品/测试代码无关），测试环境换装 6.11.2、产品与测试代码零改动；新镜像缺 libdbus-1/libEGL/libGL/libxkbcommon 等 81 个真库且 Qt6 为 BIND_NOW 急切绑定，桩从空桩升级为带符号桩，见顶部条目；审查轮沙箱再重置后按存档设计重建生成器重生成 62 库/6529 哑符号，导入链全通）跑 UI 全套 **939 项**：**938 通过、1 跳过、0 错误**（连续两轮；原判 932 项，PR #90 审查复核 +7 回归后复跑）；`ruff check` 0、wincompat 0/0/0（166 文件名项、147 扫描）。**本轮未执行真 `interface.fls` 实测**：全量布局 / 729 个目录型基路径是 0.12.5–0.13.x 的历史结果，不随本轮重跑。Windows 实机未验：图标与按钮观感、批处理参数观感均未验 |
 
