@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import threading
 from pathlib import Path
@@ -66,17 +67,25 @@ class FileReader:
     有 ``os.pread`` 时用它做无状态定位读（天然线程安全）；没有
     （Windows）时用一把锁串行化 ``lseek + read``，读到的数据在
     锁外返回，多线程嗅探/解码不受这个锁影响正确性。
+
+    **不长期持有文件句柄**：每次读都在锁内 ``os.open`` → 读 → ``os.close``，
+    批量操作可以用 :meth:`open_handle` 临时借一个句柄少开几次。原因很实际——
+    Windows 上只要还有一个句柄开着，用户在资源管理器里就改不了这个包的名字，
+    也换不掉它（``_SH_DENYNO`` 允许读写共享，但不允许 rename/delete）。
+    编辑器空闲时不该占着客户端目录里的文件。
     """
 
     def __init__(self, path: str | Path):
-        self._fd = os.open(path, _OPEN_FLAGS)
+        self._path = Path(path)
+        self._fd = None
+        self._borrowers = 0
         self._closed = False
         self._lock = threading.Lock()
         try:
-            self._opened_revision = self._descriptor_revision(self._fd)
+            self._opened_revision = self.path_revision(self._path)
             self._size = self._opened_revision[2]
         except Exception:
-            self.close()
+            self._closed = True
             raise
 
     @property
@@ -104,7 +113,41 @@ class FileReader:
         with self._lock:
             if self._closed:
                 raise ValueError("资源包读取句柄已关闭")
-            return self._descriptor_revision(self._fd)
+            if self._fd is not None:
+                return self._descriptor_revision(self._fd)
+        # No handle held: the path is what we must compare, same fstat API.
+        return self.path_revision(self._path)
+
+    @property
+    def holding_handle(self) -> bool:
+        """Whether a descriptor is open right now (borrowed, or in a read)."""
+        with self._lock:
+            return self._fd is not None
+
+    @contextlib.contextmanager
+    def open_handle(self):
+        """Borrow one descriptor for a bulk operation, then release it.
+
+        Borrowers are reference counted: a nested (or concurrent) borrow reuses
+        the same descriptor, and only the last one to leave closes it. Closing
+        it on an inner exit would let an outer bulk read silently continue on a
+        *re-opened* descriptor — i.e. read bytes from a different file than the
+        one it validated.
+        """
+        with self._lock:
+            if self._closed:
+                raise ValueError("资源包读取句柄已关闭")
+            if self._borrowers == 0:
+                self._fd = os.open(self._path, _OPEN_FLAGS)
+            self._borrowers += 1
+        try:
+            yield self
+        finally:
+            with self._lock:
+                self._borrowers -= 1
+                if self._borrowers == 0 and self._fd is not None:
+                    os.close(self._fd)
+                    self._fd = None
 
     @staticmethod
     def path_revision(path: str | Path) -> tuple:
@@ -126,10 +169,19 @@ class FileReader:
         with self._lock:
             if self._closed:
                 raise ValueError("资源包读取句柄已关闭")
-            if _PREAD is not None:
-                return _PREAD(self._fd, size, offset)
-            os.lseek(self._fd, offset, os.SEEK_SET)
-            return os.read(self._fd, size)
+            borrowed = self._fd is not None
+            # Not ``self._fd or ...``: descriptor 0 is a valid descriptor and
+            # falsy, so a borrowed stdin-slot descriptor would be dropped, a
+            # second one opened and (``borrowed`` being true) leaked.
+            fd = self._fd if borrowed else os.open(self._path, _OPEN_FLAGS)
+            try:
+                if _PREAD is not None:
+                    return _PREAD(fd, size, offset)
+                os.lseek(fd, offset, os.SEEK_SET)
+                return os.read(fd, size)
+            finally:
+                if not borrowed:
+                    os.close(fd)  # never keep the package open between reads
 
     def read_at(self, offset: int, size: int) -> bytes:
         if size <= 0:
@@ -158,4 +210,7 @@ class FileReader:
         with self._lock:
             if not self._closed:
                 self._closed = True
-                os.close(self._fd)
+                self._borrowers = 0
+                if self._fd is not None:
+                    os.close(self._fd)
+                    self._fd = None

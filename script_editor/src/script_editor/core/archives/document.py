@@ -57,11 +57,17 @@ class ArchiveDocument:
             raise
 
     def _assert_unchanged(self):
-        if (
-            self.reader.revision != self._revision
-            or FileReader.path_revision(self.path) != self._revision
-            or self.reader.revision != self._revision
-        ):
+        try:
+            changed = (
+                self.reader.revision != self._revision
+                or FileReader.path_revision(self.path) != self._revision
+                or self.reader.revision != self._revision
+            )
+        except (OSError, ValueError) as exc:
+            raise ContainerError(
+                f"源包已不可读（{exc}）：可能被改名、移走或删除；请重新打开"
+            ) from exc
+        if changed:
             raise ContainerError(
                 "源包打开后发生变化或被替换，请重新打开；拒绝使用旧索引"
             )
@@ -70,24 +76,42 @@ class ArchiveDocument:
         self._assert_unchanged()
         if self._fingerprint is None:
             digest = hashlib.sha256()
-            for offset in range(0, self.reader.size, 1024 * 1024):
-                digest.update(
-                    self.reader.read_at(
-                        offset, min(1024 * 1024, self.reader.size - offset)
-                    )
-                )
-            self._assert_unchanged()
+            # One borrowed descriptor for the whole read, validated first: the
+            # bytes we hash must come from the file we checked.
+            try:
+                with self.reader.open_handle():
+                    self._assert_unchanged()
+                    for offset in range(0, self.reader.size, 1024 * 1024):
+                        digest.update(
+                            self.reader.read_at(
+                                offset, min(1024 * 1024, self.reader.size - offset)
+                            )
+                        )
+                    self._assert_unchanged()
+            except OSError as exc:
+                raise ContainerError(
+                    f"源包已不可读（{exc}）：可能被改名、移走或删除；请重新打开"
+                ) from exc
             self._fingerprint = digest.hexdigest()
         return self._fingerprint
 
     def read_stored(self, index: int) -> bytes:
-        self._assert_unchanged()
         if not 0 <= index < len(self.entries):
             raise IndexError(index)
         span = self.index.spans[index]
-        if self.kind == "0slf":
-            return self.reader.read_at(span.offset, span.length)
-        return self.reader.read_at(span.data_offset, span.csize)
+        # Validate the descriptor we are about to read from, not just the path:
+        # the handle is opened here and released before returning, so a package
+        # can be renamed or replaced while the editor sits idle.
+        try:
+            with self.reader.open_handle():
+                self._assert_unchanged()
+                if self.kind == "0slf":
+                    return self.reader.read_at(span.offset, span.length)
+                return self.reader.read_at(span.data_offset, span.csize)
+        except OSError as exc:
+            raise ContainerError(
+                f"源包已不可读（{exc}）：可能被改名、移走或删除；请重新打开"
+            ) from exc
 
     def entry_metadata(self, index: int) -> dict:
         self._assert_unchanged()
@@ -108,6 +132,11 @@ class ArchiveDocument:
             result["crc32"] = self.index.spans[index].crc
             result["directory"] = entry.directory
         return result
+
+    @property
+    def holding_handle(self) -> bool:
+        """True only while a read is actually in progress."""
+        return self.reader.holding_handle
 
     def close(self):
         self.reader.close()

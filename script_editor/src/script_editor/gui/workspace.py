@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -27,6 +27,76 @@ from .workspace_menus import WorkspaceMenus
 #: reference package only 4 of 5,002 entries qualify (0.08 %), yet they account
 #: for the whole long tail of recovery latency (up to ~25 s each).
 HEAVY_ENTRY_BYTES = 256 * 1024
+
+
+class SearchField(QComboBox):
+    """Editable combo that remembers previous searches.
+
+    It deliberately keeps the ``QLineEdit`` surface used everywhere else
+    (``text``/``setText``/``selectAll``/``setFocus``), so call sites and tests
+    read the same while the widget gains a drop-down history.
+    """
+
+    submitted = Signal()
+
+    def __init__(self, placeholder, limit=20):
+        super().__init__()
+        self.setEditable(True)
+        self.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self.setMaxVisibleItems(12)
+        edit = self.lineEdit()
+        edit.setPlaceholderText(placeholder)
+        edit.setClearButtonEnabled(True)
+        edit.returnPressed.connect(self.submitted)
+        self._limit = limit
+
+    # -- QLineEdit-ish surface -----------------------------------------
+    def text(self):
+        return self.currentText()
+
+    def setText(self, value):
+        self.setEditText(value or "")
+
+    def selectAll(self):
+        self.lineEdit().selectAll()
+
+    # -- history -------------------------------------------------------
+    def remember(self, value):
+        """Put ``value`` at the top of the drop-down, de-duplicated.
+
+        The exact query is kept: stripping it would silently change what the
+        next search (and 替换) uses — ``" foo "`` is a different query from
+        ``"foo"``, and a whitespace-only search must stay searchable.
+        """
+        value = value or ""
+        if not value:
+            return
+        self.blockSignals(True)
+        existing = self.findText(value)
+        if existing >= 0:
+            self.removeItem(existing)
+        self.insertItem(0, value)
+        while self.count() > self._limit:
+            self.removeItem(self.count() - 1)
+        if self.currentText() != value:
+            self.setEditText(value)
+        self.blockSignals(False)
+
+    def history(self):
+        return [self.itemText(index) for index in range(self.count())]
+
+    def set_history(self, values):
+        # QSettings hands back a bare string when the list had one element
+        # (INI backend); iterating that would turn "needle" into n,e,e,d,l,e.
+        if isinstance(values, str):
+            values = [values]
+        self.clear()
+        for value in values or ():
+            if value and self.findText(value) < 0:
+                self.addItem(value)
+        while self.count() > self._limit:
+            self.removeItem(self.count() - 1)
+        self.setEditText("")
 
 
 class Workspace(WorkspaceActions, WorkspaceMenus):
@@ -89,9 +159,10 @@ class Workspace(WorkspaceActions, WorkspaceMenus):
         self.search_bar = QWidget()
         search = QVBoxLayout(self.search_bar)
         find_row, replace_row = QHBoxLayout(), QHBoxLayout()
-        self.find = QLineEdit()
-        self.find.setPlaceholderText("查找文本")
-        self.find.returnPressed.connect(self.find_next)
+        # History drop-down instead of a bare box: repeating yesterday's
+        # search is one click, not retyping it.
+        self.find = SearchField("查找文本（下拉可选历史）")
+        self.find.submitted.connect(self.find_next)
         self.replacement = QLineEdit()
         self.replacement.setPlaceholderText("替换为")
         self.match_case = QCheckBox("区分大小写")
@@ -104,7 +175,7 @@ class Workspace(WorkspaceActions, WorkspaceMenus):
         for title, callback, row in [
             ("上一个", self.find_previous, find_row),
             ("下一个", self.find_next, find_row),
-            ("关闭", self.search_bar.hide, find_row),
+            ("关闭", self.close_search, find_row),
             ("替换", self.replace_current, replace_row),
             ("全部替换", self.replace_all, replace_row),
         ]:
@@ -114,7 +185,7 @@ class Workspace(WorkspaceActions, WorkspaceMenus):
         search.addLayout(find_row)
         search.addLayout(replace_row)
         box.addWidget(self.search_bar)
-        self.search_bar.hide()
+        self.search_bar.show()  # always available; closing it is a click away
         self.setCentralWidget(center)
 
         self.properties = QTreeWidget()

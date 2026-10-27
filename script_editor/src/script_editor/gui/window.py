@@ -87,6 +87,13 @@ class Window(
         )
         if settings is not None:
             try:
+                history = settings.value("find/history") or []
+                if isinstance(history, str):
+                    history = [history]  # one-entry lists come back as str
+                self.find.set_history(history)
+            except (TypeError, ValueError, AttributeError):
+                pass  # Damaged history is not a reason to fail startup.
+            try:
                 geometry, state = (
                     settings.value("geometry"),
                     settings.value("workspace"),
@@ -386,6 +393,80 @@ class Window(
                 + json.dumps(metadata, ensure_ascii=False, indent=2)
                 + "\n双击包内模块可恢复；草稿可编辑，自动校验通过后按 F5 写入原包。"
             )
+
+    def reload_archives(self):
+        """Re-read the open packages from disk after a rename/swap.
+
+        The editor keeps no handle on a package between reads, so the user can
+        rename or replace the files in Explorer/Finder while it is open. Their
+        bytes then no longer match this window: this re-reads every path and
+        says which ones disappeared.
+        """
+        if self.jobs:
+            return
+        if not self.archives:
+            self.statusBar().showMessage("还没有打开任何包", 6000)
+            return
+        reopened, gone = [], []
+        for old in list(self.archives):
+            try:
+                new = ArchiveDocument(old.path)
+            except Exception:  # noqa: BLE001 - reported, one bad file only
+                gone.append(str(old.path))
+                continue
+            same_entries = [e.identity for e in new.entries] == [
+                e.identity for e in old.entries
+            ]
+            if same_entries:
+                # Same directory: the cached names still describe these entries.
+                new.module_paths = dict(old.module_paths)
+                new.module_path_errors = dict(old.module_path_errors)
+            # otherwise leave them empty: "[路径未读取]" beats the old names.
+            try:
+                if same_entries:
+                    self.repoint_archive(old, new)
+                else:
+                    self.replace_archive(old, new)
+            except Exception:  # noqa: BLE001
+                new.close()
+                gone.append(str(old.path))
+                continue
+            reopened.append(new.path.name)
+        self.project_dirty = True
+        self.workspace_refresh()
+        lines = []
+        if reopened:
+            lines.append(f"已重新读取 {len(reopened)} 个包：{'、'.join(reopened)}")
+        if gone:
+            lines.append(
+                "以下路径已读不到（可能被改名/移走）：\n" + "\n".join(gone)
+                + "\n用「打开脚本文件/目录」重新打开它们。"
+            )
+        message = "\n".join(lines) or "没有可重新读取的包"
+        self.info.setPlainText(message)
+        self.output_tabs.setCurrentWidget(self.info)
+        self.output_dock.show()
+        self.statusBar().showMessage(
+            f"重新读取：{len(reopened)} 个成功、{len(gone)} 个路径已不存在", 9000
+        )
+
+    def replace_archive(self, old, new):
+        """Swap a package whose directory changed: rebuild the tree subtree.
+
+        ``repoint_archive`` assumes the entry list is identical (it only
+        re-points the children that exist and updates their sizes). That holds
+        for our own rewrites, not for a file the user dropped in at the same
+        path: extra children would keep pointing at the closed document and new
+        entries would never appear.
+        """
+        for i in range(self.tree.topLevelItemCount()):
+            item = self.tree.topLevelItem(i)
+            if item.data(0, Qt.ItemDataRole.UserRole + 1) is old:
+                self.tree.takeTopLevelItem(i)
+                break
+        old.close()
+        self.archives = [a for a in self.archives if a is not old]
+        self.add_archive(new)
 
     def open_archive_dir(self):
         """打开脚本目录：把该目录（含一层子目录）里的 .fls 全部打开。"""
@@ -791,21 +872,42 @@ class Window(
         except Exception as exc:
             self.fail(exc)
 
+    def mark_hit(self, editor, needle):
+        """Make the hit line unmistakable and remember the search term."""
+        cursor = editor.textCursor()
+        editor.mark_selection(
+            cursor.selectionStart() if cursor.hasSelection() else None,
+            cursor.selectionEnd() if cursor.hasSelection() else None,
+        )
+        editor.set_match_line(cursor.block())
+        self.find.remember(needle)
+
+    def clear_hits(self):
+        tab = self.tabs.currentWidget()
+        if tab:
+            tab.editor.set_match_line(None)
+
     def find_next(self, backwards=False):
         tab = self.tabs.currentWidget()
-        if tab and self.find.text():
-            editor = tab.editor
-            flags = self.search_flags(backwards)
-            if not editor.find(self.find.text(), flags):
-                cursor = editor.textCursor()
-                cursor.movePosition(
-                    QTextCursor.MoveOperation.End
-                    if backwards
-                    else QTextCursor.MoveOperation.Start
-                )
-                editor.setTextCursor(cursor)
-                if not editor.find(self.find.text(), flags):
-                    self.statusBar().showMessage("未找到匹配文本", 3500)
+        needle = self.find.text()
+        if not (tab and needle):
+            self.clear_hits()
+            return
+        editor = tab.editor
+        flags = self.search_flags(backwards)
+        if not editor.find(needle, flags):
+            cursor = editor.textCursor()
+            cursor.movePosition(
+                QTextCursor.MoveOperation.End
+                if backwards
+                else QTextCursor.MoveOperation.Start
+            )
+            editor.setTextCursor(cursor)
+            if not editor.find(needle, flags):
+                editor.set_match_line(None)
+                self.statusBar().showMessage("未找到匹配文本", 3500)
+                return
+        self.mark_hit(editor, needle)
 
     def replace_all(self):
         tab = self.tabs.currentWidget()
@@ -840,6 +942,7 @@ class Window(
         if self.settings is not None:
             self.settings.setValue("geometry", self.saveGeometry())
             self.settings.setValue("workspace", self.saveState(1))
+            self.settings.setValue("find/history", self.find.history())
         for archive in self.archives:
             archive.close()
         event.accept()

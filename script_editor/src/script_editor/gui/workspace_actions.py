@@ -279,6 +279,9 @@ class WorkspaceActions:
                 tab.editor.setTextCursor(QTextCursor(block))
                 tab.editor.centerCursor()
                 tab.editor.setFocus()
+                # Jumping from 大纲/查找结果也该让人一眼看到落在哪一行。
+                tab.editor.mark_selection(None, None)
+                tab.editor.set_match_line(block)
 
     def goto_line(self):
         tab = self.tabs.currentWidget()
@@ -308,6 +311,24 @@ class WorkspaceActions:
                 self.find.setText(text)
         self.find.setFocus()
         self.find.selectAll()
+        # Only a real match may be painted as a hit: the query may be left over
+        # from an earlier search while the caret sits on an unrelated line.
+        if tab is not None:
+            needle = self.find.text()
+            cursor = tab.editor.textCursor()
+            selected = cursor.selectedText().replace("\u2029", "\n")
+            if needle and selected == needle:
+                tab.editor.mark_selection(
+                    cursor.selectionStart(), cursor.selectionEnd()
+                )
+                tab.editor.set_match_line(cursor.block())
+            else:
+                tab.editor.set_match_line(None)
+
+    def close_search(self):
+        """Hide the bar and drop the hit band it put on the editor."""
+        self.clear_hits()
+        self.search_bar.hide()
 
     def show_replace(self):
         """Ctrl+H: same bar as find, with the replacement row already visible."""
@@ -462,6 +483,7 @@ class WorkspaceActions:
         ):
             match.insertText(self.replacement.text())
             tab.editor.setTextCursor(match)
+            self.mark_hit(tab.editor, self.find.text())
         self.find_next()
 
     def open_associated(self):
