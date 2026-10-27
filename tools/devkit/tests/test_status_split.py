@@ -68,16 +68,47 @@ class SplitStructureTests(unittest.TestCase):
 class NoContentLostTests(unittest.TestCase):
     """拆分不能丢内容。"""
 
+    # **拆分前的基线提交**（最后一次还含 4,334 行完整 STATUS.md 的提交）。
+    #
+    # ⚠️ 这里**不能**用 `HEAD`：拆分本身已被提交后，HEAD 里的
+    # `docs/STATUS.md` 就是拆分后的 381 行版本，测试会拿新文件跟它自己比，
+    # 永远通过、再也抓不到内容丢失（gitar-bot 在 PR #92 上指出的问题）。
+    # 基线必须钉死到**拆分前**那一个提交。
+    PRE_SPLIT_REV = "bc69491"
+
     def _original_status(self) -> str:
         proc = subprocess.run(
-            ["git", "show", "HEAD:docs/STATUS.md"],
+            ["git", "show", f"{self.PRE_SPLIT_REV}:docs/STATUS.md"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             cwd=ROOT,
         )
         if proc.returncode != 0:
-            self.skipTest("取不到拆分前的 docs/STATUS.md（git 历史不可用）")
+            self.skipTest(
+                f"取不到拆分前的 docs/STATUS.md（{self.PRE_SPLIT_REV} 不可达，"
+                "可能是浅克隆或历史被改写）"
+            )
         return proc.stdout
+
+    def test_baseline_is_actually_the_pre_split_file(self):
+        """**自证**：基线必须真的是拆分前那份 4,334 行的文件。
+
+        防止有人把 `PRE_SPLIT_REV` 改成一个拆分后的提交，测试又变成
+        「拿自己跟自己比」而静默通过。
+        """
+        original = self._original_status()
+        lines = original.splitlines()
+        self.assertGreater(
+            len(lines),
+            2000,
+            f"{self.PRE_SPLIT_REV}:docs/STATUS.md 只有 {len(lines)} 行，"
+            "不像拆分前的完整文件——基线可能指错了提交",
+        )
+        # 拆分前的文件应含已归档的 §3 小节标题
+        self.assertIn(
+            "## 3. 红灯与已知问题", original, "基线应含 §3 标题"
+        )
 
     @staticmethod
     def _normalize(text: str) -> str:

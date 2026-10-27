@@ -23,6 +23,7 @@ from check_doc_versions import (  # noqa: E402
     _in_ranges,
     _is_history_line,
     collect_real_versions,
+    find_skipped_components,
     read_version,
     scan_doc,
     scan_short_alias,
@@ -77,17 +78,27 @@ class RealRepoTests(unittest.TestCase):
 
         这是本工具的主闸门：README / AGENTS / STATUS 里声明的当前版本
         必须与各组件 pyproject.toml 一致。
+
+        **两个必须与 CLI 保持一致的点**（gitar-bot / CodeRabbit 在 PR #92 指出）：
+        ① CLI 跑 `scan_doc` **和** `scan_short_alias` 两个扫描器，测试也必须都跑
+           ——否则写成缩写形式（``当前资源 0.4.3 / UI 0.8.4``）的漂移会让
+           CLI 退出码 1 而 unittest 仍绿，两个闸门口径不一致；
+        ② 文档缺失必须**判失败**而不是跳过 ——否则 README 被改名后
+           闸门会因为「没东西可查」而静默放行。
         """
         versions = collect_real_versions(self.root)
         self.assertTrue(versions, "应能从真实 pyproject.toml 读到版本号")
         findings = []
         for doc in ("README.md", "AGENTS.md", "docs/STATUS.md"):
             path = self.root / doc
-            if not path.is_file():
-                continue
+            self.assertTrue(
+                path.is_file(),
+                f"{doc} 不存在——闸门不能因为「没东西可查」而静默放行",
+            )
             text = path.read_text(encoding="utf-8")
             for key, real in versions.items():
                 hits = scan_doc(text, key, real, exclude_history=True)
+                hits += scan_short_alias(text, key, real, exclude_history=True)
                 for hit in hits:
                     findings.append(f"{doc}:{hit['line']} {hit}")
         self.assertEqual(
@@ -95,6 +106,62 @@ class RealRepoTests(unittest.TestCase):
             [],
             "顶层文档的当前态版本声明与源码不一致：\n" + "\n".join(findings),
         )
+
+
+class SkippedComponentTests(unittest.TestCase):
+    """组件目录缺失必须**可见**，不能静默退出闸门。
+
+    （CodeRabbit 在 PR #92 指出：组件被改名／删除时会悄悄从检查里消失，
+    文档里残留的旧版本号就再也没人查了。）
+    """
+
+    def _make_tree(self, root: Path) -> None:
+        for rel in COMPONENTS.values():
+            directory = root / rel
+            directory.mkdir(parents=True, exist_ok=True)
+            (directory / "pyproject.toml").write_text(
+                '[project]\nname = "x"\nversion = "1.0.0"\n', encoding="utf-8"
+            )
+
+    def test_missing_component_is_reported(self):
+        import shutil
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._make_tree(root)
+            shutil.rmtree(root / COMPONENTS["map_editor"])
+
+            versions = collect_real_versions(root)
+            self.assertNotIn("map_editor", versions)
+
+            skipped = find_skipped_components(root)
+            self.assertTrue(skipped, "缺失组件必须被报告")
+            self.assertTrue(
+                any("map_editor" in item for item in skipped),
+                f"报告里应点名 map_editor，实际：{skipped}",
+            )
+
+    def test_unreadable_version_is_reported(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._make_tree(root)
+            # 写一个没有 [project].version 的 pyproject
+            (root / COMPONENTS["ui_editor"] / "pyproject.toml").write_text(
+                '[project]\nname = "x"\n', encoding="utf-8"
+            )
+            skipped = find_skipped_components(root)
+            self.assertTrue(
+                any("ui_editor" in item for item in skipped),
+                f"读不到版本的组件应被报告，实际：{skipped}",
+            )
+
+    def test_all_present_has_no_skips(self):
+        root = Path(__file__).resolve().parents[3]
+        skipped = find_skipped_components(root)
+        self.assertEqual(skipped, [], "真实仓库不应有组件被跳过")
 
 
 class DetectionTests(unittest.TestCase):

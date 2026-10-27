@@ -384,6 +384,23 @@ def collect_real_versions(root: Path) -> dict[str, str]:
     return out
 
 
+def find_skipped_components(root: Path) -> list[str]:
+    """返回**被跳过**的组件（目录或 pyproject.toml 缺失、或读不到版本号）。
+
+    组件被改名／删除时，它会**静默**退出闸门——文档里残留的旧版本号就再也
+    没人查了。所以 CLI 必须把跳过项打印出来，让这件事**可见**。
+    """
+    skipped: list[str] = []
+    for key, rel in COMPONENTS.items():
+        pyproject = root / rel / "pyproject.toml"
+        if not pyproject.is_file():
+            skipped.append(f"{key}（缺 {rel}/pyproject.toml）")
+            continue
+        if not read_version(pyproject):
+            skipped.append(f"{key}（{rel}/pyproject.toml 读不到 [project].version）")
+    return skipped
+
+
 def scan_doc(
     text: str,
     key: str,
@@ -461,11 +478,6 @@ def main(argv: list[str] | None = None) -> int:
         help="把结果写成 JSON 到该路径",
     )
     parser.add_argument(
-        "--allow-missing",
-        action="store_true",
-        help="组件目录或 pyproject.toml 缺失时不报错（只跳过）",
-    )
-    parser.add_argument(
         "--no-exclude-history",
         dest="exclude_history",
         action="store_false",
@@ -494,6 +506,9 @@ def main(argv: list[str] | None = None) -> int:
     if not real:
         print("[docver] 未能从任何 pyproject.toml 读到版本号", file=sys.stderr)
         return 2
+
+    # 组件被改名／删除会**静默**退出闸门——把跳过项打印出来让这件事可见。
+    skipped = find_skipped_components(root)
 
     # 按文档分组收集问题
     all_findings: list[dict[str, object]] = []
@@ -527,6 +542,13 @@ def main(argv: list[str] | None = None) -> int:
     version_list = ", ".join(f"{k} {v}" for k, v in sorted(real.items()))
     print(f"[docver] 真实版本：{version_list}")
     print(f"[docver] 已检查文档：{', '.join(p.name for p in doc_paths)}")
+    if skipped:
+        print(
+            f"[docver] 警告：{len(skipped)} 个组件被跳过（未纳入检查）——"
+            "若它们本该存在，请核对目录名："
+        )
+        for item in skipped:
+            print(f"[docver]   - {item}")
 
     if all_findings:
         print("")
@@ -547,6 +569,7 @@ def main(argv: list[str] | None = None) -> int:
         payload = {
             "root": str(root),
             "real_versions": real,
+            "skipped_components": skipped,
             "docs": [str(p) for p in doc_paths],
             "findings": all_findings,
         }
