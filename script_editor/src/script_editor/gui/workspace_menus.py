@@ -103,6 +103,15 @@ class WorkspaceMenus:
             encoding, "big5", "选中文案 → Big5 字节…", lambda: self.encode("big5")
         )
         self.action(encoding, "gbk", "选中路径 → GBK 字节…", lambda: self.encode("gbk"))
+        encoding.addSeparator()
+        self.action(
+            encoding,
+            "literals",
+            "字节字面量 → 可读对照（只读）…",
+            self.preview_byte_literals,
+            None,
+            sp.SP_FileDialogDetailedView,
+        )
         build = self.menuBar().addMenu("编译")
         self.action(
             build,

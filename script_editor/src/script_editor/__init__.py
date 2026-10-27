@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sys
 
-__version__ = "0.6.0.dev10"
+__version__ = "0.6.0.dev11"
 
 
 def gui_version(version):

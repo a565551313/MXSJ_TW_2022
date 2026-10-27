@@ -18,6 +18,8 @@ from PySide6.QtWidgets import (
 from .. import __version__
 from ..core.archives.document import ArchiveDocument
 from ..core.inspection.encoding import byte_literal
+from ..core.inspection.legacy_text import previews as literal_previews
+from ..core.inspection.legacy_text import summary as literal_summary
 from ..core.services.bundled_catalog import resolve_catalog
 from ..core.services.files import SourceRevision, read_source_snapshot, save_source
 from ..core.services.module_browser import RecoverySessionCache
@@ -27,6 +29,7 @@ from ..core.services.verdict_cache import VerdictCache, default_cache_root
 from .build_actions import BuildActions
 from .corpus_actions import CorpusActions
 from .jobs import Job, Progress
+from .literal_preview import LiteralReportDialog
 from .module_actions import ModuleActions
 from .project_actions import ProjectActions
 from .source_tab import SourceTab
@@ -54,6 +57,7 @@ class Window(
         # Session-scoped engine results and per-user package verdicts. A hit
         # only avoids recomputation; neither is ever a source-trust signal.
         self.recovery_cache = RecoverySessionCache()
+        self.literal_dialog = None
         self.verdict_cache = VerdictCache(default_cache_root(), __version__)
         self.progress = Progress()
         self.progress_timer = QTimer(self)
@@ -550,6 +554,34 @@ class Window(
                 == QMessageBox.StandardButton.Yes
             ):
                 cursor.insertText(literal)
+        except Exception as exc:
+            self.fail(exc)
+
+    def preview_byte_literals(self):
+        """Show a read-only comparison of readable MBCS byte literals.
+
+        Nothing is written: the decoded text is a display artefact only, since
+        the client compares the original bytes at run time.
+        """
+        try:
+            tab = self.current()
+            source = tab.editor.toPlainText()
+            records = literal_previews(source)
+            if not records:
+                self.statusBar().showMessage(
+                    "未发现可解码的 \\xNN 字节字面量；源码未改动", 6000
+                )
+                return
+            counts = literal_summary(records)
+            dialog = LiteralReportDialog(self, records, tab.path.name)
+            dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
+            dialog.show()
+            self.literal_dialog = dialog
+            self.statusBar().showMessage(
+                f"可读对照：{counts['literals']} 处字面量 / {counts['lines']} 行"
+                f"（{'/'.join(counts['codecs'])}）· 只读，源码未改动",
+                8000,
+            )
         except Exception as exc:
             self.fail(exc)
 
