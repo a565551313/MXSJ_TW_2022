@@ -4,8 +4,8 @@ import hashlib
 import json
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QThreadPool
-from PySide6.QtGui import QAction, QTextCursor
+from PySide6.QtCore import Qt, QThreadPool, QTimer
+from PySide6.QtGui import QAction, QBrush, QColor, QTextCursor
 from PySide6.QtWidgets import (
     QDockWidget,
     QFileDialog,
@@ -18,25 +18,41 @@ from PySide6.QtWidgets import (
 from .. import __version__
 from ..core.archives.document import ArchiveDocument
 from ..core.inspection.encoding import byte_literal
+from ..core.inspection.legacy_text import previews as literal_previews
+from ..core.inspection.legacy_text import summary as literal_summary
 from ..core.services.bundled_catalog import resolve_catalog
 from ..core.services.files import SourceRevision, read_source_snapshot, save_source
+from ..core.services.module_browser import RecoverySessionCache
 from ..core.services.module_paths import index_script_paths
+from ..core.services.package_selfcheck import index_with_cache
+from ..core.services.verdict_cache import VerdictCache, default_cache_root
 from .build_actions import BuildActions
 from .corpus_actions import CorpusActions
-from .jobs import Job
+from .jobs import Job, Progress
+from .literal_preview import LiteralReportDialog
+from .loose_save import LooseSaveMixin
 from .module_actions import ModuleActions
 from .project_actions import ProjectActions
+from .save_mode import LOOSE, SaveModeMixin
 from .source_tab import SourceTab
-from .workspace import Workspace
+from .workspace import HEAVY_ENTRY_BYTES, Workspace
 
 
 class Window(
-    Workspace, ModuleActions, ProjectActions, BuildActions, CorpusActions, QMainWindow
+    Workspace,
+    ModuleActions,
+    ProjectActions,
+    BuildActions,
+    CorpusActions,
+    SaveModeMixin,
+    LooseSaveMixin,
+    QMainWindow,
 ):
     def __init__(self, runtime_root: Path, settings=None):
         super().__init__()
         self.runtime_root = runtime_root
         self.settings = settings
+        self._init_save_mode()
         self.archives: list[ArchiveDocument] = []
         self.bindings = []
         self.catalogs = []
@@ -48,6 +64,15 @@ class Window(
         self.project_dirty = False
         self.compilers = {}
         self.jobs = set()
+        # Session-scoped engine results and per-user package verdicts. A hit
+        # only avoids recomputation; neither is ever a source-trust signal.
+        self.recovery_cache = RecoverySessionCache()
+        self.literal_dialog = None
+        self.verdict_cache = VerdictCache(default_cache_root(), __version__)
+        self.progress = Progress()
+        self.progress_timer = QTimer(self)
+        self.progress_timer.setInterval(200)
+        self.progress_timer.timeout.connect(self.refresh_progress)
         self.setWindowTitle(f"MXSJ 脚本工作台 {__version__} · 实验版")
         screen = self.screen().availableGeometry()
         self.resize(
@@ -59,7 +84,11 @@ class Window(
         self.tree.itemSelectionChanged.connect(self.show_entry)
         self.tabs.currentChanged.connect(self.refresh_native_action)
         self.refresh_native_action()
-        self.statusBar().showMessage("就绪 · 原包只读，所有写包生成新文件")
+        self.statusBar().showMessage(
+            "就绪 · 严格模式：F6 生成新包，原包只读"
+            if self.save_mode() != LOOSE
+            else "就绪 · 宽松模式：Ctrl+S 直接写回原包（覆盖前留 .fls.bak）"
+        )
         if settings is not None:
             try:
                 geometry, state = (
@@ -73,13 +102,30 @@ class Window(
             except (TypeError, ValueError):
                 pass  # Damaged local preferences cannot prevent opening source.
 
+    def refresh_progress(self):
+        done, total, phase = self.progress.snapshot()
+        if total <= 0:
+            self.progress_bar.hide()
+            return
+        self.progress_bar.setMaximum(total)
+        self.progress_bar.setValue(done)
+        if phase:
+            self.progress_bar.setFormat(phase + " %v/%m")
+        self.progress_bar.show()
+
     def fail(self, message):
         self.info.setPlainText(str(message))
         self.output_tabs.setCurrentWidget(self.info)
         self.output_dock.show()
         QMessageBox.warning(self, "操作未完成", str(message))
 
-    def task(self, function, complete, *, cancel=None):
+    def task(self, function, complete, *, cancel=None, on_error=None):
+        """Run ``function`` off-thread, then ``complete`` (or ``on_error``) here.
+
+        ``on_error`` gets the exception before :meth:`fail` shows it; callers
+        that dropped in-memory state for the duration of the job use it to
+        put that state back.
+        """
         if self.jobs:
             return
         job = Job(function)
@@ -97,6 +143,9 @@ class Window(
         for action, _ in actions:
             action.setEnabled(False)
         self.statusBar().showMessage("后台处理中…")
+        self.progress.finish()
+        self.progress_bar.hide()
+        self.progress_timer.start()
         cancel_button = None
         if cancel is not None:
             cancel_button = QPushButton("取消恢复（保留已有编辑）")
@@ -105,6 +154,9 @@ class Window(
 
         def finish(result, error=False):
             self.jobs.discard(job)
+            self.progress_timer.stop()
+            self.progress.finish()
+            self.progress_bar.hide()
             if cancel_button is not None:
                 self.statusBar().removeWidget(cancel_button)
                 cancel_button.deleteLater()
@@ -120,6 +172,11 @@ class Window(
                 self.statusBar().showMessage("恢复已取消；原包及已有编辑未修改")
                 return
             if error:
+                if on_error is not None:
+                    try:
+                        on_error(result)
+                    except Exception as exc:  # noqa: BLE001 - report the like
+                        result = f"{result}（并且：恢复界面状态失败：{exc}）"
                 self.fail(result)
             else:
                 try:
@@ -145,6 +202,16 @@ class Window(
         for entry in document.entries:
             child = QTreeWidgetItem([entry.identity, str(entry.size)])
             child.setData(0, Qt.ItemDataRole.UserRole, (document, entry.index))
+            if entry.size >= HEAVY_ENTRY_BYTES:
+                # Measured: only a handful of entries are this big, and they
+                # dominate recovery latency (up to ~25 s), so warn before the
+                # user waits instead of silently blocking the window.
+                child.setToolTip(
+                    0,
+                    f"大模块：存储 {entry.size:,} 字节。单次恢复可能耗时数十秒，"
+                    "任务栏可取消；反汇编与源码分开生成。",
+                )
+                child.setForeground(0, QBrush(QColor("#b35900")))
             root.addChild(child)
         self.tree.addTopLevelItem(root)
         self.archives.append(document)
@@ -178,14 +245,25 @@ class Window(
                     # Pins first (cheap). Unlisted packages are decoded entry by
                     # entry and adopted on that evidence; nothing is guessed.
                     catalog, warning, check = resolve_catalog(
-                        document, self.runtime_root
+                        document,
+                        self.runtime_root,
+                        self.verdict_cache,
+                        progress=self.progress.update,
                     )
                     if catalog is None:
                         # A broken/missing optional asset must not hide the
                         # package, and a refused catalog leaves names unknown.
                         index_script_paths(document, None)
-                    elif check is None:
-                        index_script_paths(document, catalog)
+                    elif not document.module_paths:
+                        self.progress.update(0, len(document.entries), "读取模块路径")
+                        index_with_cache(
+                            document,
+                            catalog,
+                            self.verdict_cache,
+                            tool_version=__version__,
+                            progress=self.progress.update,
+                        )
+                    self.progress.finish()
                 except Exception:
                     document.close()
                     raise
@@ -450,6 +528,20 @@ class Window(
 
     def save_current(self):
         try:
+            # Loose mode makes Ctrl+S one step: save the .py, compile, write back
+            # into the package. A tab that belongs to no bound module keeps the
+            # plain behaviour, but says so instead of looking like a no-op.
+            if self.save_mode() == LOOSE:
+                if self.can_loose_save():
+                    self.loose_save_checked()
+                    return
+                self.save_tab(self.current())
+                self.statusBar().showMessage(
+                    "宽松模式：这条源码尚未关联包内条目，只保存了 .py；"
+                    "要写回原包请先「关联源码到选中条目」",
+                    10000,
+                )
+                return
             self.save_tab(self.current())
         except Exception as exc:
             self.fail(exc)
@@ -501,6 +593,34 @@ class Window(
                 == QMessageBox.StandardButton.Yes
             ):
                 cursor.insertText(literal)
+        except Exception as exc:
+            self.fail(exc)
+
+    def preview_byte_literals(self):
+        """Show a read-only comparison of readable MBCS byte literals.
+
+        Nothing is written: the decoded text is a display artefact only, since
+        the client compares the original bytes at run time.
+        """
+        try:
+            tab = self.current()
+            source = tab.editor.toPlainText()
+            records = literal_previews(source)
+            if not records:
+                self.statusBar().showMessage(
+                    "未发现可解码的 \\xNN 字节字面量；源码未改动", 6000
+                )
+                return
+            counts = literal_summary(records)
+            dialog = LiteralReportDialog(self, records, tab.path.name)
+            dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
+            dialog.show()
+            self.literal_dialog = dialog
+            self.statusBar().showMessage(
+                f"可读对照：{counts['literals']} 处字面量 / {counts['lines']} 行"
+                f"（{'/'.join(counts['codecs'])}）· 只读，源码未改动",
+                8000,
+            )
         except Exception as exc:
             self.fail(exc)
 

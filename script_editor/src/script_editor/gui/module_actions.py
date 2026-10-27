@@ -107,12 +107,24 @@ class ModuleActions:
                         self.corpus_for(archive), archive, index, catalog
                     )
                 except (OSError, ValueError) as exc:
-                    result = read_module(archive, index, catalog, cancel=cancel)
+                    result = read_module(
+                        archive,
+                        index,
+                        catalog,
+                        cancel=cancel,
+                        cache=getattr(self, "recovery_cache", None),
+                    )
                     return replace(
                         result,
                         diagnostics=("语料不可用：" + str(exc), *result.diagnostics),
                     )
-            return read_module(archive, index, catalog, cancel=cancel)
+            return read_module(
+                archive,
+                index,
+                catalog,
+                cancel=cancel,
+                cache=self.recovery_cache,
+            )
 
         self.task(
             recover,

@@ -15,6 +15,12 @@ from ..vm.py25.keys import read_catalog
 from .document import Binding
 from .workspace import EditorState, pack_editor, unpack_editor
 
+#: One project snapshot holds every open tab's text *and* its recovery report
+#: (original source + disassembly), so a big module costs roughly 2x its
+#: source plus its disassembly.
+PROJECT_BUDGET = 48 * 1024 * 1024
+PROJECT_FILE_LIMIT = 64 * 1024 * 1024
+
 
 @dataclass(frozen=True)
 class CatalogRef:
@@ -72,8 +78,13 @@ def save_state(path: Path, bindings, catalogs=(), *, editors=(), corpora=()):
                         candidate.trace_stdout,
                     )
                 )
-    if estimated > 48 * 1024 * 1024:
-        raise ValueError("项目缓冲区过大，请拆分工作区；编辑仍保留")
+    if estimated > PROJECT_BUDGET:
+        raise ValueError(
+            f"项目缓冲区约 {estimated / 1048576:.1f} MiB，超过 "
+            f"{PROJECT_BUDGET // 1048576} MiB 上限：每条恢复稿会同时保存"
+            "「编辑文本 + 原恢复源码 + 反汇编」，请关闭部分大模块标签或拆分工作区；"
+            "未保存的编辑仍保留"
+        )
     if not path.name.endswith(".mxscript.json"):
         raise ValueError("项目文件必须为.mxscript.json")
 
@@ -125,16 +136,22 @@ def save_state(path: Path, bindings, catalogs=(), *, editors=(), corpora=()):
             editors=[pack_editor(e, portable) for e in editors], corpora=corpus_rows
         )
     raw = json.dumps(doc, ensure_ascii=False, indent=2).encode("utf-8")
-    if len(raw) > 64 * 1024 * 1024:
-        raise ValueError("项目超过64MiB，请拆分工作区；未保存的编辑仍保留")
+    if len(raw) > PROJECT_FILE_LIMIT:
+        raise ValueError(
+            f"项目文件约 {len(raw) / 1048576:.1f} MiB，超过 "
+            f"{PROJECT_FILE_LIMIT // 1048576} MiB 上限，请拆分工作区；"
+            "未保存的编辑仍保留"
+        )
     atomic_write(path, raw, protected)
 
 
 def load_state(path: Path) -> ProjectState:
     with path.open("rb") as stream:
-        raw = stream.read(64 * 1024 * 1024 + 1)
-    if len(raw) > 64 * 1024 * 1024:
-        raise ValueError("项目超过64MiB")
+        raw = stream.read(PROJECT_FILE_LIMIT + 1)
+    if len(raw) > PROJECT_FILE_LIMIT:
+        raise ValueError(
+            f"项目文件超过 {PROJECT_FILE_LIMIT // 1048576} MiB，未读取"
+        )
     try:
         doc = json.loads(raw.decode("utf-8-sig"))
     except RecursionError as exc:

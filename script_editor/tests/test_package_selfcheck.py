@@ -21,9 +21,14 @@ from script_editor.core.archives.document import ArchiveDocument
 from script_editor.core.services.bundled_catalog import resolve_catalog
 from script_editor.core.services.package_selfcheck import (
     MIN_ACCEPTED_RATIO,
+    PROBE_ENTRIES,
     PackageCheck,
+    _allowed_failures,
+    _probe_refuses,
+    verified_with_cache,
     verify_with_catalog,
 )
+from script_editor.core.services.verdict_cache import VerdictCache
 
 
 class PackageSelfCheckTests(unittest.TestCase):
@@ -130,6 +135,68 @@ class PackageSelfCheckTests(unittest.TestCase):
         self.assertFalse(check(0, 0).accepted)
 
 
+class ProbeBoundaryTests(unittest.TestCase):
+    """The bounded probe may only refuse; it must never be stricter than a scan."""
+
+    def test_probe_tolerance_tracks_the_acceptance_ratio(self):
+        # Large packages: the full pass tolerates more than the 96-entry window,
+        # so the probe keeps that (larger) tolerance.
+        for total in (5001, 20000):
+            tolerance = _allowed_failures(total)
+            self.assertGreater(tolerance, PROBE_ENTRIES * 0.5)
+            self.assertFalse(_probe_refuses(total, tolerance))
+            self.assertTrue(_probe_refuses(total, tolerance + 1))
+        # Small packages: tolerance is 0, so the sample window is the floor.
+        self.assertEqual(_allowed_failures(97), 0)
+        self.assertFalse(_probe_refuses(97, 48))
+        self.assertTrue(_probe_refuses(97, 49))
+
+    def test_probe_is_never_stricter_than_a_full_pass(self):
+        for total in (97, 500, 5001, 20000):
+            allowed = _allowed_failures(total)
+            # A full pass still accepts exactly ``allowed`` failures.
+            self.assertFalse(_probe_refuses(total, allowed))
+
+    def test_clustered_damage_within_tolerance_does_not_refuse(self):
+        # 96 sampled entries, 30 broken: the full pass would accept 5001-entry
+        # packages with that many failures, so the probe must not end the run.
+        self.assertFalse(_probe_refuses(5001, 30))
+        # Wrong catalog: nearly everything in the window fails.
+        self.assertTrue(_probe_refuses(5001, 90))
+
+
+class VerdictExclusionTests(unittest.TestCase):
+    """A cache hit must report the same exclusions a fresh scan reports."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        self.addCleanup(self.temp.cleanup)
+
+    def test_cached_verdict_keeps_the_policy_exclusion_count(self):
+        payload, rows = complete_script_fixture()
+        package = self.root / "script.fls"
+        package.write_bytes(payload)
+        params = self.root / "params.json"
+        params.write_text(json.dumps(rows), encoding="utf-8")
+        cache = VerdictCache(self.root / "verdicts", "test-tool")
+        with patch("script_editor.core.policy.POLICY_EXCLUDED", {("py25", 2)}):
+            with ArchiveDocument(package) as archive:
+                fresh = verified_with_cache(
+                    archive, params, cache, tool_version="test-tool", probe=False
+                )
+            with ArchiveDocument(package) as archive:
+                cached = verified_with_cache(
+                    archive, params, cache, tool_version="test-tool", probe=False
+                )
+        self.assertTrue(fresh.accepted)
+        self.assertEqual(fresh.excluded, 1)
+        self.assertTrue(cached.cached)
+        self.assertEqual(cached.excluded, fresh.excluded)
+        self.assertEqual(cached.passed, fresh.passed)
+        self.assertEqual(cached.failures, fresh.failures)
+
+
 class ResolveCatalogTests(unittest.TestCase):
     """The decision the open/project paths make, without any GUI."""
 
@@ -210,6 +277,12 @@ class ResolveCatalogTests(unittest.TestCase):
 class RepositoryPackageTests(unittest.TestCase):
     """The package committed in this repository must pass its own self-check."""
 
+    #: The original TW v2.27.2 package is the locked input; the 2026-10-23
+    #: registration build (`a45e0e49…`) is a *derived* test package and is not
+    #: committed here. Both decode with the same authorized catalog.
+    ORIGINAL = "8b6e9266bbe9"
+    DERIVED_REGISTRATION = "a45e0e49ed33"
+
     def test_committed_script_package_decodes_with_builtin_catalog(self):
         root = Path(__file__).resolve().parents[1]
         package = root.parent / "data" / "script.fls"
@@ -223,8 +296,18 @@ class RepositoryPackageTests(unittest.TestCase):
         self.assertIn(4007, check.paths)
         self.assertEqual(check.paths[4007], "script/login/register.py")
         self.assertEqual(
-            hashlib.sha256(package.read_bytes()).hexdigest()[:12], "a45e0e49ed33"
+            hashlib.sha256(package.read_bytes()).hexdigest()[:12], self.ORIGINAL
         )
+
+    def test_known_catalog_pins_cover_both_original_and_registration_builds(self):
+        from script_editor.core.services.bundled_catalog import BUNDLED_CATALOGS
+
+        for digest in (
+            "8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72",
+            "a45e0e49ed336367a1bf00b5377229c5c48de2c30ac2b61f9bf7d67549a445b9",
+        ):
+            with self.subTest(digest=digest[:12]):
+                self.assertIn(digest, BUNDLED_CATALOGS)
 
 
 if __name__ == "__main__":

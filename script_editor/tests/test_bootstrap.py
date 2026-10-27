@@ -45,6 +45,17 @@ class BootstrapVersionTests(unittest.TestCase):
                 main([])
 
 
+def fake_pyside():
+    """A stand-in that survives the real ``__import__("PySide6.QtWidgets")``.
+
+    Patching only the dotted child is not enough on a machine without PySide6:
+    the import machinery looks for the top-level package first and raises
+    ModuleNotFoundError, which the bootstrap correctly reports as "Qt missing".
+    """
+    package = SimpleNamespace(QtWidgets=SimpleNamespace())
+    return {"PySide6": package, "PySide6.QtWidgets": package.QtWidgets}
+
+
 class RecoveryBootstrapTests(unittest.TestCase):
     def test_same_version_wrong_source_is_not_accepted(self):
         from script_editor.recovery_dependencies import RECOVERY_VERSIONS
@@ -133,7 +144,7 @@ class RecoveryBootstrapTests(unittest.TestCase):
                 self.subTest(version=version),
                 patch.object(bootstrap.sys, "version_info", version),
                 patch.object(bootstrap, "ensure_dependencies", return_value=True),
-                patch.dict("sys.modules", {"PySide6.QtWidgets": SimpleNamespace()}),
+                patch.dict("sys.modules", fake_pyside()),
                 patch("script_editor.app.main", return_value=17) as app,
             ):
                 self.assertEqual(bootstrap.main([]), 17)
@@ -157,7 +168,7 @@ class RecoveryBootstrapTests(unittest.TestCase):
         with (
             patch.object(bootstrap.sys, "version_info", (3, 14, 7)),
             patch.object(bootstrap, "ensure_dependencies", return_value=True),
-            patch.dict("sys.modules", {"PySide6.QtWidgets": SimpleNamespace()}),
+            patch.dict("sys.modules", fake_pyside()),
             patch("script_editor.app.main", return_value=17) as app,
         ):
             self.assertEqual(bootstrap.main([]), 17)

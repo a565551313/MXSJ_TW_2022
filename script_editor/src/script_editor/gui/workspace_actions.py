@@ -47,7 +47,11 @@ class WorkspaceActions:
             if tab
             else "未打开源码"
         )
-        self.package_count.setText(f"{len(self.archives)} 个包 · 原包只读")
+        loose = getattr(self, "loose_mode", lambda: False)()
+        self.package_count.setText(
+            f"{len(self.archives)} 个包 · "
+            + ("宽松：Ctrl+S 写回原包" if loose else "原包只读")
+        )
         self.refresh_package_labels()
         self.update_cursor()
         self.analysis_timer.start()

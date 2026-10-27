@@ -103,6 +103,15 @@ class WorkspaceMenus:
             encoding, "big5", "选中文案 → Big5 字节…", lambda: self.encode("big5")
         )
         self.action(encoding, "gbk", "选中路径 → GBK 字节…", lambda: self.encode("gbk"))
+        encoding.addSeparator()
+        self.action(
+            encoding,
+            "literals",
+            "字节字面量 → 可读对照（只读）…",
+            self.preview_byte_literals,
+            None,
+            sp.SP_FileDialogDetailedView,
+        )
         build = self.menuBar().addMenu("编译")
         self.action(
             build,
@@ -147,6 +156,16 @@ class WorkspaceMenus:
             view.addAction(toggle)
         view.addSeparator()
         self.action(view, "reset", "恢复默认工作区", self.reset_workspace)
+        build.addSeparator()
+        self.action(
+            build,
+            "loose_save",
+            "写回原包（宽松模式，留 .bak）…",
+            # Checked wrapper: Qt drops exceptions raised inside a slot.
+            self.loose_save_checked,
+            "Ctrl+Alt+S",
+            sp.SP_DialogSaveButton,
+        )
         self.menu_handles = [file_menu, edit, encoding, build, view]
         # Keep menuAction wrappers alive during action enumeration (Qt ownership).
         self.menu_actions = [menu.menuAction() for menu in self.menu_handles]
@@ -174,3 +193,5 @@ class WorkspaceMenus:
             toolbar.addAction(action)
             if key in {"save_project", "find"}:
                 toolbar.addSeparator()
+        toolbar.addSeparator()
+        self._build_mode_control(toolbar)

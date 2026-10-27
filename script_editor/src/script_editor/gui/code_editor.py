@@ -4,7 +4,7 @@ import re
 from array import array
 from itertools import accumulate
 
-from PySide6.QtCore import QRect, QSize, Qt
+from PySide6.QtCore import QEvent, QRect, QSize, Qt
 from PySide6.QtGui import (
     QColor,
     QFontDatabase,
@@ -14,7 +14,9 @@ from PySide6.QtGui import (
     QTextCursor,
     QTextFormat,
 )
-from PySide6.QtWidgets import QPlainTextEdit, QTextEdit, QWidget
+from PySide6.QtWidgets import QPlainTextEdit, QTextEdit, QToolTip, QWidget
+
+from ..core.inspection.legacy_text import hint_for_position, readings
 
 
 class Highlight(QSyntaxHighlighter):
@@ -44,6 +46,22 @@ class Highlight(QSyntaxHighlighter):
         fmt.setForeground(QColor(self.colors[kind]))
         begin = self.units[start]
         length = self.units[end] - begin
+        self.setFormat(begin, length, fmt)
+        if kind in ("triple", "string") and "\\x" in text[start:end]:
+            self.mark_readable(begin, length, text[start:end])
+
+    def mark_readable(self, begin, length, literal):
+        """Dotted underline marks bytes with a readable MBCS reading.
+
+        This is a hint that a hover preview exists; the text itself is
+        untouched, and nothing here can modify or re-emit the literal.
+        """
+        if not readings(literal):
+            return
+        fmt = QTextCharFormat()
+        fmt.setForeground(QColor(self.colors["string"]))
+        fmt.setUnderlineStyle(QTextCharFormat.UnderlineStyle.DotLine)
+        fmt.setUnderlineColor(QColor("#2f6f4f"))
         self.setFormat(begin, length, fmt)
 
     @staticmethod
@@ -100,6 +118,7 @@ class Gutter(QWidget):
 class CodeEditor(QPlainTextEdit):
     def __init__(self):
         super().__init__()
+        self.setMouseTracking(True)
         font = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
         font.setPointSize(11)
         self.setFont(font)
@@ -113,6 +132,31 @@ class CodeEditor(QPlainTextEdit):
         self.blockCountChanged.connect(self.update_margin)
         self.updateRequest.connect(self.update_gutter)
         self.update_margin()
+
+    def hover_hint(self, position):
+        """Read-only MBCS reading of the byte literal under the cursor."""
+        cursor = self.cursorForPosition(position)
+        return hint_for_position(cursor.block().text(), cursor.positionInBlock())
+
+    def _show_hint(self, event):
+        hint = self.hover_hint(event.pos())
+        if not hint:
+            QToolTip.hideText()
+            return False
+        QToolTip.showText(event.globalPos(), hint, self)
+        return True
+
+    def viewportEvent(self, event):
+        # Tooltips are delivered to the scroll area's viewport, not to the
+        # editor itself, so both routes are handled.
+        if event.type() == QEvent.Type.ToolTip and self._show_hint(event):
+            return True
+        return super().viewportEvent(event)
+
+    def event(self, event):
+        if event.type() == QEvent.Type.ToolTip and self._show_hint(event):
+            return True
+        return super().event(event)
 
     def highlight_line(self):
         selection = QTextEdit.ExtraSelection()

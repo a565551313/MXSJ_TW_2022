@@ -47,14 +47,30 @@ def sequence(seed: int) -> tuple[int, ...]:
     return tuple(keys)
 
 
-@lru_cache(maxsize=8192)
+@lru_cache(maxsize=1)
+def _seed_by_sequence() -> dict[tuple[int, ...], int | None]:
+    """Precompute every seed's key sequence once (32768 x 5 steps).
+
+    The per-entry search used to retry the whole recurrence for each catalog
+    row (about 640 arithmetic steps per module, ~2 s of a whole-package scan).
+    The mapping is the same function of the same seeds; entries that collide
+    are stored as None so an ambiguous sequence is still refused instead of
+    silently resolved to the first candidate.
+    """
+    table: dict[tuple[int, ...], int | None] = {}
+    for seed in range(32768):
+        keys = sequence(seed)
+        table[keys] = None if keys in table else seed
+    return table
+
+
 def seed_from_keys(keys: tuple[int, ...]) -> int:
     if len(keys) != 5 or any(type(k) is not int or not 0 <= k <= 255 for k in keys):
         raise ValueError("invalid five-segment XOR keys")
-    candidates = [seed for seed in range(keys[0], 32768, 256) if sequence(seed) == keys]
-    if len(candidates) != 1:
+    seed = _seed_by_sequence().get(tuple(keys))
+    if seed is None:
         raise ValueError("XOR keys do not identify a unique native cipher seed")
-    return candidates[0]
+    return seed
 
 
 def bounds_from_seed(seed: int, size: int) -> tuple[int, ...]:

@@ -11,6 +11,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from native_fixtures import minimal_pyc
 from test_workflow import make_state
 
 from script_editor.core.archives.document import ArchiveDocument
@@ -23,7 +24,16 @@ from script_editor.core.project.storage import (
 )
 from script_editor.core.services.bundled_catalog import bundled_catalog
 from script_editor.core.services.files import save_new_source
-from script_editor.core.services.module_browser import read_module, recover_standard
+from script_editor.core.services.module_browser import (
+    MAX_SOURCE_CHARS,
+    MAX_TRACE_CHARS,
+    RecoveryCandidate,
+    RecoverySessionCache,
+    read_module,
+    recover_standard,
+    validate_result,
+)
+from script_editor.core.services.recovery_process import RecoveryProcessError
 from script_editor.core.services.workflow import Snapshot, prepare_build, publish_build
 from script_editor.core.vm.marshal_tree import Atom, Code, parse
 
@@ -272,6 +282,87 @@ class ModuleBrowserTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(ValueError, "时间限制"):
                 recover_standard(path.read_bytes(), "py25")
+
+    def test_source_budget_accepts_a_4_to_8_mib_module(self):
+        """The worker's own limit is 8 MiB; validating at 4 MiB contradicted it."""
+        text = "x" * (6 * 1024 * 1024)
+        result = {
+            "engine_protocol": "mxsj-recovery/3",
+            "source": text,
+            "disassembly": "",
+            "complete": True,
+            "diagnostics": [],
+            "raw_source": text,
+        }
+        self.assertIs(validate_result(result), result)
+
+    def test_source_budget_still_rejects_oversized_text(self):
+        over = "x" * (MAX_SOURCE_CHARS + 1)
+        for key in ("source", "raw_source"):
+            result = {
+                "engine_protocol": "mxsj-recovery/3",
+                "source": "",
+                "disassembly": "",
+                "complete": True,
+                "diagnostics": [],
+            }
+            self.assertEqual(len(over), MAX_SOURCE_CHARS + 1)
+            result[key] = over
+            with self.assertRaises(ValueError):
+                validate_result(result)
+
+    def test_worker_trace_keeps_the_smaller_budget(self):
+        result = {
+            "engine_protocol": "mxsj-recovery/3",
+            "source": "",
+            "disassembly": "",
+            "complete": True,
+            "diagnostics": [],
+            "worker_stderr": "e" * (MAX_TRACE_CHARS + 1),
+        }
+        with self.assertRaises(ValueError):
+            validate_result(result)
+
+    def test_timeout_is_not_cached_but_a_finished_run_is(self):
+        """One timeout must not poison the session for that module."""
+        payload = minimal_pyc("py25")
+        cache = RecoverySessionCache()
+        # A second engine is present, so the primary failure is turned into a
+        # candidate rather than raised: that is the path that could cache it.
+        second = SimpleNamespace(source_commit="deadbeef")
+        with (
+            patch(
+                "script_editor.core.services.module_browser._recover_primary",
+                side_effect=RecoveryProcessError("timeout"),
+            ),
+            patch(
+                "script_editor.core.services.module_browser.pycdc_candidate",
+                return_value=RecoveryCandidate("pycdc", "deadbeef", "failed", "", ()),
+            ),
+        ):
+            outcome = recover_standard(payload, "py25", pycdc=second, cache=cache)
+        self.assertEqual(len(cache), 0)
+        self.assertIn("timeout", [c.status for c in outcome["candidates"]])
+
+        finished = {
+            "engine_protocol": "mxsj-recovery/3",
+            "source": "x=1\n",
+            "disassembly": "",
+            "complete": True,
+            "diagnostics": [],
+        }
+        with (
+            patch(
+                "script_editor.core.services.module_browser._recover_primary",
+                return_value=finished,
+            ),
+            patch(
+                "script_editor.core.services.module_browser.pycdc_candidate",
+                return_value=RecoveryCandidate("pycdc", "deadbeef", "failed", "", ()),
+            ),
+        ):
+            recover_standard(payload, "py25", pycdc=second, cache=cache)
+        self.assertEqual(len(cache), 1)
 
     def test_invalid_vm_and_marshal_rejected_before_worker(self):
         with patch("script_editor.core.services.module_browser.subprocess.run") as run:
