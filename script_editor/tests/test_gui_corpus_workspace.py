@@ -220,13 +220,17 @@ class CorpusWorkspaceGuiTests(unittest.TestCase):
 
     def test_draft_save_as_cannot_write_into_corpus_directory(self):
         target = self.corpus.root / "new-draft.py"
+        before = self.tab.editor.toPlainText()
         with patch.object(
             QFileDialog, "getSaveFileName", return_value=(str(target), "")
         ):
             with self.assertRaisesRegex(ValueError, "语料目录只读"):
                 self.window.save_draft(self.tab)
         self.assertFalse(target.exists())
-        self.assertTrue(self.tab.editor.document().isModified())
+        # A refused save keeps the draft on screen, untouched. (The tab no
+        # longer starts out "modified": opening a draft is not an edit.)
+        self.assertEqual(self.tab.editor.toPlainText(), before)
+        self.assertFalse(self.tab.draft_saved)
 
     def test_authored_snapshot_can_reopen_with_source_file_missing(self):
         from script_editor.core.project.document import Binding

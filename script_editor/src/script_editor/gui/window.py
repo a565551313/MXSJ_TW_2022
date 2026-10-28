@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QDockWidget,
     QFileDialog,
     QMainWindow,
+    QMenu,
     QMessageBox,
     QPushButton,
     QTreeWidgetItem,
@@ -94,6 +95,13 @@ class Window(
             except (TypeError, ValueError, AttributeError):
                 pass  # Damaged history is not a reason to fail startup.
             try:
+                history = settings.value("filter/history") or []
+                if isinstance(history, str):
+                    history = [history]
+                self.filter.set_history(history)
+            except (TypeError, ValueError, AttributeError):
+                pass
+            try:
                 geometry, state = (
                     settings.value("geometry"),
                     settings.value("workspace"),
@@ -104,6 +112,72 @@ class Window(
                     self.restoreState(state, 1)
             except (TypeError, ValueError):
                 pass  # Damaged local preferences cannot prevent opening source.
+
+    # -- remembered dialog directories ---------------------------------
+    def recall_dir(self, slot):
+        """Starting directory for a file dialog, remembered per slot."""
+        if self.settings is None:
+            return ""
+        try:
+            value = self.settings.value(f"dir/{slot}") or ""
+        except (TypeError, ValueError, AttributeError):
+            return ""
+        return value if isinstance(value, str) else ""
+
+    def remember_dir(self, slot, path, *, is_dir=False):
+        """Remember the directory of a chosen file for next time.
+
+        ``is_dir`` is the caller's knowledge, not a suffix guess: a folder may
+        legitimately be called ``MX.2022``, and guessing from the name would
+        remember its *parent* instead.
+        """
+        if self.settings is None:
+            return
+        try:
+            directory = Path(path)
+            if not is_dir:
+                directory = directory.parent
+            self.settings.setValue(f"dir/{slot}", str(directory))
+        except (TypeError, ValueError, AttributeError, OSError):
+            pass  # A preference is never worth failing an open/save over.
+
+    def ask_open_file(self, slot, title, filters):
+        name, _ = QFileDialog.getOpenFileName(
+            self, title, self.recall_dir(slot), filters
+        )
+        if name:
+            self.remember_dir(slot, name)
+        return name
+
+    def ask_open_dir(self, slot, title):
+        name = QFileDialog.getExistingDirectory(
+            self, title, self.recall_dir(slot)
+        )
+        if name:
+            self.remember_dir(slot, name, is_dir=True)
+        return name
+
+    def ask_save_file(self, slot, title, suggestion, filters):
+        """Save dialog that starts in the remembered folder.
+
+        ``suggestion`` is often a bare file name (``untitled.py``, the current
+        tab's name). Passing that straight to Qt opens the dialog in the
+        process working directory and throws away everything learned last time,
+        so a relative suggestion is joined onto the remembered directory.
+        """
+        start = self.recall_dir(slot)
+        if suggestion:
+            candidate = Path(suggestion)
+            if candidate.is_absolute() or candidate.parent != Path("."):
+                start = str(candidate)
+            elif start:
+                start = str(Path(start) / candidate)
+            else:
+                start = suggestion
+        name, _ = QFileDialog.getSaveFileName(self, title, start, filters)
+        if name:
+            self.remember_dir(slot, name)
+        return name
 
     def refresh_progress(self):
         done, total, phase = self.progress.snapshot()
@@ -254,41 +328,48 @@ class Window(
             self.archives.remove(document)
             raise
 
+    def load_document(self, path):
+        """The whole open flow for one path: read, match a catalog, name entries.
+
+        Split out of :meth:`open_archive` so "re-read the open packages" can
+        walk the same steps for a path it could not read, instead of assuming
+        the file is gone for good.
+        """
+        document = ArchiveDocument(Path(path))
+        try:
+            # Pins first (cheap). Unlisted packages are decoded entry by
+            # entry and adopted on that evidence; nothing is guessed.
+            catalog, warning, check = resolve_catalog(
+                document,
+                self.runtime_root,
+                self.verdict_cache,
+                progress=self.progress.update,
+            )
+            if catalog is None:
+                # A broken/missing optional asset must not hide the
+                # package, and a refused catalog leaves names unknown.
+                index_script_paths(document, None)
+            elif not document.module_paths:
+                self.progress.update(0, len(document.entries), "读取模块路径")
+                index_with_cache(
+                    document,
+                    catalog,
+                    self.verdict_cache,
+                    tool_version=__version__,
+                    progress=self.progress.update,
+                )
+            self.progress.finish()
+        except Exception:
+            document.close()
+            raise
+        return document, catalog, warning, check
+
     def open_archive(self):
-        name, _ = QFileDialog.getOpenFileName(
-            self, "打开script.fls或data.fls", "", "FLS (*.fls)"
-        )
+        name = self.ask_open_file("pack", "打开script.fls或data.fls", "FLS (*.fls)")
         if name:
 
             def prepare():
-                document = ArchiveDocument(Path(name))
-                try:
-                    # Pins first (cheap). Unlisted packages are decoded entry by
-                    # entry and adopted on that evidence; nothing is guessed.
-                    catalog, warning, check = resolve_catalog(
-                        document,
-                        self.runtime_root,
-                        self.verdict_cache,
-                        progress=self.progress.update,
-                    )
-                    if catalog is None:
-                        # A broken/missing optional asset must not hide the
-                        # package, and a refused catalog leaves names unknown.
-                        index_script_paths(document, None)
-                    elif not document.module_paths:
-                        self.progress.update(0, len(document.entries), "读取模块路径")
-                        index_with_cache(
-                            document,
-                            catalog,
-                            self.verdict_cache,
-                            tool_version=__version__,
-                            progress=self.progress.update,
-                        )
-                    self.progress.finish()
-                except Exception:
-                    document.close()
-                    raise
-                return document, catalog, warning, check
+                return self.load_document(Path(name))
 
             def complete(result):
                 document, catalog, warning, check = result
@@ -411,9 +492,18 @@ class Window(
         for old in list(self.archives):
             try:
                 new = ArchiveDocument(old.path)
-            except Exception:  # noqa: BLE001 - reported, one bad file only
-                gone.append(str(old.path))
-                continue
+            except Exception:  # noqa: BLE001 - one bad file, reported below
+                # Not gone yet: run the whole open flow again on the same path
+                # (catalog lookup + path index included). A package that was
+                # renamed back, or one whose parameters moved, gets a second
+                # chance instead of being declared missing.
+                try:
+                    new, catalog, _warning, _check = self.load_document(old.path)
+                    if catalog is not None and catalog not in self.catalogs:
+                        self.catalogs.append(catalog)
+                except Exception:  # noqa: BLE001 - really unreadable
+                    gone.append(str(old.path))
+                    continue
             same_entries = [e.identity for e in new.entries] == [
                 e.identity for e in old.entries
             ]
@@ -470,7 +560,7 @@ class Window(
 
     def open_archive_dir(self):
         """打开脚本目录：把该目录（含一层子目录）里的 .fls 全部打开。"""
-        directory = QFileDialog.getExistingDirectory(self, "打开脚本目录")
+        directory = self.ask_open_dir("pack_dir", "打开脚本目录")
         if not directory:
             return
         root = Path(directory)
@@ -604,7 +694,8 @@ class Window(
             "module-unavailable": "[条目信息] ",
         }.get(tab.source_kind, "")
         label = (
-            prefix
+            ("🔒 " if self.tab_locked(tab) else "")
+            + prefix
             + tab.path.name
             + (" *" if tab.editor.document().isModified() else "")
         )
@@ -614,8 +705,11 @@ class Window(
     # -- local .py files ------------------------------------------------
     def new_source_file(self):
         """新建 .py：先问文件名，再打开一个空标签。"""
-        name, _ = QFileDialog.getSaveFileName(
-            self, "新建 .py（不得覆盖已有文件）", "untitled.py", "Python (*.py)"
+        name = self.ask_save_file(
+            "source_new",
+            "新建 .py（不得覆盖已有文件）",
+            "untitled.py",
+            "Python (*.py)",
         )
         if not name:
             return
@@ -638,7 +732,7 @@ class Window(
 
     def open_source_dir(self):
         """打开 .py 目录：把该目录下所有 .py 依次打开（只读的不会混进来）。"""
-        directory = QFileDialog.getExistingDirectory(self, "打开 .py 目录")
+        directory = self.ask_open_dir("source_dir", "打开 .py 目录")
         if not directory:
             return
         files = sorted(Path(directory).glob("*.py"))
@@ -661,8 +755,11 @@ class Window(
         """另存为：写到新路径，并把标签指向新文件。"""
         try:
             tab = self.editable()
-            name, _ = QFileDialog.getSaveFileName(
-                self, "另存为（不得覆盖已有文件）", tab.path.name, "Python (*.py)"
+            name = self.ask_save_file(
+                "source_save_as",
+                "另存为（不得覆盖已有文件）",
+                tab.path.name,
+                "Python (*.py)",
             )
             if not name:
                 return
@@ -700,8 +797,8 @@ class Window(
         return None
 
     def open_source(self):
-        name, _ = QFileDialog.getOpenFileName(
-            self, "打开UTF-8源码或已另存的恢复草稿", "", "Python (*.py)"
+        name = self.ask_open_file(
+            "source", "打开UTF-8源码或已另存的恢复草稿", "Python (*.py)"
         )
         if name:
             try:
@@ -741,8 +838,8 @@ class Window(
                 self.fail(exc)
 
     def open_reference(self):
-        name, _ = QFileDialog.getOpenFileName(
-            self, "只读查看参考文本", "", "Text (*.py *.txt)"
+        name = self.ask_open_file(
+            "reference", "只读查看参考文本", "Text (*.py *.txt)"
         )
         if name:
             try:
@@ -793,6 +890,123 @@ class Window(
             self.statusBar().showMessage(f"已保存 {self.current().path.name}", 5000)
         except Exception as exc:
             self.fail(exc)
+
+    def save_all_tabs(self):
+        """Save every editable tab that has unsaved text; locked tabs included.
+
+        锁定 only protects a tab from being *closed*; saving it is what the
+        user asked for by pressing 全部保存.
+        """
+        if self.jobs:
+            raise ValueError("后台任务期间不能保存源码")
+        saved, failed = [], []
+        for index in range(self.tabs.count()):
+            tab = self.tabs.widget(index)
+            if tab.reference or not tab.editor.document().isModified():
+                continue
+            try:
+                self.save_tab(tab)
+            except Exception as exc:  # noqa: BLE001 - one failure, rest saved
+                failed.append(f"{tab.path.name}：{exc}")
+            else:
+                saved.append(tab.path.name)
+        if saved:
+            self.statusBar().showMessage(
+                "已保存：" + "、".join(saved), 8000
+            )
+        elif not failed:
+            self.statusBar().showMessage("没有未保存的源码", 5000)
+        if failed:
+            raise ValueError("全部保存未完成：\n" + "\n".join(failed))
+
+    def save_all(self):
+        try:
+            self.save_all_tabs()
+        except Exception as exc:
+            self.fail(exc)
+
+    # -- tab context menu ----------------------------------------------
+    def tab_locked(self, tab):
+        return bool(getattr(tab, "locked", False))
+
+    def set_tab_locked(self, tab, locked):
+        tab.locked = locked
+        self.refresh_tab_title(tab)
+        self.statusBar().showMessage(
+            f"{'已锁定' if locked else '已解锁'} {tab.path.name}"
+            + ("（批量关闭会跳过它）" if locked else ""),
+            6000,
+        )
+
+    def tab_index_at(self, point):
+        """Which tab a click landed on, or -1.
+
+        ``QTabWidget`` has no ``tabAt`` (that is a ``QTabBar`` method) and the
+        context-menu point is in QTabWidget coordinates, so the lookup goes
+        through the tab bar. The bar is not a child of the widget (Qt reparents
+        it), hence the trip through global coordinates.
+        """
+        bar = self.tabs.tabBar()
+        return bar.tabAt(bar.mapFromGlobal(self.tabs.mapToGlobal(point)))
+
+    def tab_menu(self, point):
+        index = self.tab_index_at(point)
+        if index < 0:
+            return
+        self.tabs.setCurrentIndex(index)
+        self.tab_menu_for(self.tabs.widget(index)).exec(
+            self.tabs.mapToGlobal(point)
+        )
+
+    def tab_menu_for(self, tab):
+        """The tab context menu (separate, so it can be inspected in tests)."""
+        index = self.tabs.indexOf(tab)
+        menu = QMenu(self)
+        menu.addAction("关闭当前文件", lambda: self.close_tab(index))
+        menu.addAction("关闭左边文件", lambda: self.close_side(index, left=True))
+        menu.addAction("关闭右边文件", lambda: self.close_side(index, left=False))
+        menu.addAction("关闭全部文件", self.close_all_tabs)
+        menu.addSeparator()
+        if self.tab_locked(tab):
+            menu.addAction("解锁文件", lambda: self.set_tab_locked(tab, False))
+        else:
+            menu.addAction("锁定文件", lambda: self.set_tab_locked(tab, True))
+        menu.addSeparator()
+        menu.addAction("保存", self.save_current)
+        menu.addAction("另存为…", self.save_source_as)
+        menu.addAction("全部保存", self.save_all)
+        return menu
+
+    def close_side(self, index, left):
+        """Close every tab on one side of ``index``, skipping locked ones."""
+        indexes = range(index) if left else range(self.tabs.count() - 1, index, -1)
+        for i in sorted(indexes, reverse=True):
+            tab = self.tabs.widget(i)
+            if tab is None or self.tab_locked(tab):
+                continue
+            if not self.confirm_tab(tab):
+                continue
+            self.tabs.removeTab(i)
+            tab.deleteLater()
+            self.project_dirty = True
+
+    def close_all_tabs(self):
+        """关闭全部文件: locked tabs stay open until they are unlocked."""
+        kept = 0
+        for i in range(self.tabs.count() - 1, -1, -1):
+            tab = self.tabs.widget(i)
+            if tab is None:
+                continue
+            if self.tab_locked(tab):
+                kept += 1
+                continue
+            if not self.confirm_tab(tab):
+                continue
+            self.tabs.removeTab(i)
+            tab.deleteLater()
+            self.project_dirty = True
+        if kept:
+            self.statusBar().showMessage(f"{kept} 个锁定的文件保持打开", 8000)
 
     def confirm_tab(self, tab):
         if not tab.editor.document().isModified():
@@ -943,6 +1157,7 @@ class Window(
             self.settings.setValue("geometry", self.saveGeometry())
             self.settings.setValue("workspace", self.saveState(1))
             self.settings.setValue("find/history", self.find.history())
+            self.settings.setValue("filter/history", self.filter.history())
         for archive in self.archives:
             archive.close()
         event.accept()

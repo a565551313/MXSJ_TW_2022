@@ -54,6 +54,10 @@ class WorkspaceMenus:
             "Ctrl+S", sp.SP_DialogSaveButton,
         )
         self.action(
+            file_menu, "save_all", "全部保存", self.save_all,
+            "Ctrl+Alt+S", sp.SP_DialogSaveAllButton,
+        )
+        self.action(
             file_menu, "save_as", "另存为…", self.save_source_as,
             "Ctrl+Shift+S", sp.SP_DialogSaveButton,
         )
@@ -181,6 +185,7 @@ class WorkspaceMenus:
             "open_pack": "打开",
             "open_pack_dir": "目录",
             "save": "保存",
+            "save_all": "全部保存",
             "undo": "撤销",
             "redo": "恢复",
             "find": "查找",

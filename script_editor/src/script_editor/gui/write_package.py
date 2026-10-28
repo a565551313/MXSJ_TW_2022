@@ -19,17 +19,33 @@ been observed loading a resized entry.
 
 from __future__ import annotations
 
+import os
+from dataclasses import replace
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFileDialog
 
 from ..core.archives.document import ArchiveDocument
 from ..core.project.storage import ProjectState
 from ..core.services.files import read_source
 from ..core.services.loose_save import batch_summary, changed_bindings, rejection
-from ..core.services.native_build import BACKUP_SUFFIX
+from ..core.services.native_build import BACKUP_SUFFIX, install_over_source
 from ..core.services.workflow import Snapshot, prepare_package, publish_package
+
+
+def remap_state(state, old_path: Path, new_path: Path):
+    """Point a published project state at the package's final path."""
+    old, new = Path(old_path).resolve(), Path(new_path).resolve()
+    return ProjectState(
+        tuple(
+            replace(item, archive=new) if item.archive == old else item
+            for item in state.bindings
+        ),
+        tuple(
+            replace(item, archive=new) if item.archive == old else item
+            for item in state.catalogs
+        ),
+    )
 
 
 class WritePackageMixin:
@@ -161,10 +177,12 @@ class WritePackageMixin:
             return
 
         destination = None
+        same_name = False
         if not in_place:
-            destination = self._ask_destination(archive)
-            if destination is None:
+            asked = self._ask_destination(archive)
+            if asked is None:
                 return
+            destination, same_name = asked
 
         listed = batch_summary(
             candidates,
@@ -214,24 +232,65 @@ class WritePackageMixin:
                 snapshots, compiler, catalog, baselines, allow_resize=True
             )
             if not plan.entries:
-                return plan, None, None
+                return plan, None, None, None
+            # Saving under the original name keeps every check: the package is
+            # built and verified as a brand-new file under a temporary name,
+            # then the original is renamed to ``<name>_bak`` and the new bytes
+            # take its place. Only the last two renames differ.
+            staging = (
+                destination.with_name(
+                    f".{destination.name}.generating-{os.getpid()}.fls"
+                )
+                if same_name
+                else destination
+            )
             report, new_state = publish_package(
                 plan,
                 state,
-                destination=destination,
+                destination=staging,
                 in_place=in_place,
                 backup=in_place,
                 allow_resize=True,
                 protected=protected,
             )
-            return plan, report, new_state
+            backup = None
+            if same_name:
+                try:
+                    backup = install_over_source(
+                        archive.path,
+                        staging,
+                        expected_sha256=report.source_sha256,
+                    )
+                except Exception:
+                    # The verified package never reached its name; a hidden
+                    # full-size copy next to the client package is not a
+                    # leftover anybody wants to find later.
+                    staging.unlink(missing_ok=True)
+                    raise
+                # ``publish_package`` repointed bindings/catalogs at the
+                # *staging* path it was given. After the swap that file no
+                # longer exists: leaving the state alone would make every later
+                # F5/F6 find "没有可写源码" and save a project
+                # pointing at a deleted file.
+                report = replace(report, output=archive.path)
+                new_state = remap_state(new_state, staging, archive.path)
+            return plan, report, new_state, backup
 
         def complete(result):
-            plan, report, new_state = result
+            plan, report, new_state, backup = result
             if report is None:
                 self.finish_no_changes(archive, plan, listed)
                 return
-            self.adopt_write(archive, plan, report, new_state, unsaved, listed)
+            self.adopt_write(
+                archive,
+                plan,
+                report,
+                new_state,
+                unsaved,
+                listed,
+                generated=same_name,
+                backup=backup,
+            )
 
         def failed(_error):
             # Nothing on disk changed; put the reader back anyway.
@@ -240,22 +299,31 @@ class WritePackageMixin:
         self.task(prepare, complete, on_error=failed)
 
     def _ask_destination(self, archive):
-        """One file dialog for 生成新包, defaulting next to the original."""
-        suggestion = str(
-            archive.path.with_name(f"{archive.path.stem}_new{archive.path.suffix}")
-        )
-        name, _ = QFileDialog.getSaveFileName(
-            self, "生成新包（必须是尚不存在的新文件名）", suggestion, "FLS (*.fls)"
+        """One file dialog for 生成新包, prefilled with the original name.
+
+        Returns ``(target, same_name)``, or ``None`` when the dialog is
+        cancelled. Choosing the original name is allowed: the old package is
+        renamed to ``<name>_bak`` first, so nothing is lost. Any *other*
+        existing file is still refused — 生成新包 never overwrites a stranger's
+        file.
+        """
+        name = self.ask_save_file(
+            "generate_package",
+            "生成新包（默认与原包同名；同名保存会把原包改名成 <包名>_bak）",
+            str(archive.path),
+            "FLS (*.fls)",
         )
         if not name:
             return None
         target = Path(name if name.lower().endswith(".fls") else name + ".fls")
-        if target.exists():
+        same_name = target.resolve() == archive.path.resolve()
+        if target.exists() and not same_name:
             raise ValueError(
-                f"{target.name} 已经存在；生成新包不会覆盖文件，请换个名字"
+                f"{target.name} 已经存在；生成新包不会覆盖别的文件，请换个名字"
             )
-        self.assert_writable_target(target)
-        return target
+        if not same_name:
+            self.assert_writable_target(target)
+        return target, same_name
 
     # -- outcome -------------------------------------------------------
     def finish_no_changes(self, old_archive, plan, listed=""):
@@ -264,7 +332,10 @@ class WritePackageMixin:
             "没有写入：源码与包内字节完全等价（例如只改了注释）。" + listed, 12000
         )
 
-    def adopt_write(self, old_archive, plan, report, state, unsaved=(), listed=""):
+    def adopt_write(
+        self, old_archive, plan, report, state, unsaved=(), listed="",
+        *, generated=False, backup=None,
+    ):
         """Reopen the rewritten package and re-point the UI at it."""
         new = ArchiveDocument(report.output)
         moved = report.output.resolve() != old_archive.path.resolve()
@@ -309,8 +380,12 @@ class WritePackageMixin:
             for entry in plan.entries
             if entry.resized
         ]
-        backup = report.output.with_name(report.output.name + BACKUP_SUFFIX)
-        where = "已写入原包" if not moved else "已生成新包并切换来源"
+        if backup is None:
+            backup = report.output.with_name(report.output.name + BACKUP_SUFFIX)
+        if generated:
+            where = "已生成新包（同原包名，旧包已改名备份）"
+        else:
+            where = "已写入原包" if not moved else "已生成新包并切换来源"
         lines = [
             f"{where}：{report.output}",
             f"改动 {len(report.modified_indexes)} 条；"
