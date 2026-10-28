@@ -123,10 +123,11 @@ class Workspace(WorkspaceActions, WorkspaceMenus):
         self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tree.customContextMenuRequested.connect(self.package_menu)
         self.tree.itemDoubleClicked.connect(lambda *_: self.open_associated())
-        self.filter = QLineEdit()
-        self.filter.setPlaceholderText("搜索包内路径 / 模块名 / 条目 ID…")
-        self.filter.setClearButtonEnabled(True)
-        self.filter.textChanged.connect(self.filter_tree)
+        # Same widget as the find bar: the last searches stay one click away.
+        self.filter = SearchField("搜索包内路径 / 模块名 / 条目 ID…")
+        self.filter.setObjectName("treeFilter")
+        self.filter.lineEdit().textChanged.connect(self.filter_tree)
+        self.filter.submitted.connect(self.commit_filter_search)
         navigation = QWidget()
         nav_box = QVBoxLayout(navigation)
         nav_box.setContentsMargins(6, 6, 6, 6)
@@ -147,6 +148,8 @@ class Workspace(WorkspaceActions, WorkspaceMenus):
         self.tabs.setMovable(True)
         self.tabs.setTabsClosable(True)
         self.tabs.tabCloseRequested.connect(self.close_tab)
+        self.tabs.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tabs.customContextMenuRequested.connect(self.tab_menu)
         self.welcome = self.welcome_page()
         self.pages = QStackedWidget()
         self.pages.addWidget(self.welcome)
@@ -239,7 +242,9 @@ class Workspace(WorkspaceActions, WorkspaceMenus):
             [280, 290],
             Qt.Orientation.Horizontal,
         )
-        self.resizeDocks([self.output_dock], [190], Qt.Orientation.Vertical)
+        # Twice the old 190 px: the diagnostics pane is where the answer to
+        # "why did writing fail" lands, and 190 clipped it to two lines.
+        self.resizeDocks([self.output_dock], [380], Qt.Orientation.Vertical)
         self.cursor_status, self.file_status, self.compiler_status = (
             QLabel(),
             QLabel(),
@@ -310,4 +315,4 @@ class Workspace(WorkspaceActions, WorkspaceMenus):
             [280, 290],
             Qt.Orientation.Horizontal,
         )
-        self.resizeDocks([self.output_dock], [190], Qt.Orientation.Vertical)
+        self.resizeDocks([self.output_dock], [380], Qt.Orientation.Vertical)

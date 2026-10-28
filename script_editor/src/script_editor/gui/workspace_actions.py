@@ -23,7 +23,9 @@ class WorkspaceActions:
         tab = self.tabs.currentWidget()
         self.pages.setCurrentWidget(self.tabs if tab else self.welcome)
         editable = bool(tab and not tab.reference and not self.jobs)
-        for key in ("save", "save_as", "big5", "gbk", "cut", "copy", "paste"):
+        for key in (
+            "save", "save_all", "save_as", "big5", "gbk", "cut", "copy", "paste",
+        ):
             action = self.ui_actions.get(key)
             if action is not None:
                 action.setEnabled(editable)
@@ -509,6 +511,11 @@ class WorkspaceActions:
         else:
             self.open_package_module()
 
+    def commit_filter_search(self):
+        """Enter in the tree search box remembers the query for next time."""
+        self.filter.remember(self.filter.text())
+        self.filter_tree(self.filter.text())
+
     def package_menu(self, point):
         item = self.tree.itemAt(point)
         if not item:
@@ -519,4 +526,57 @@ class WorkspaceActions:
         menu.addAction(
             "重新读取未恢复条目", lambda: self.open_package_module(reload=True)
         )
+        # "Remove the file" = stop showing this package; nothing on disk is
+        # touched, which is why it needs no confirmation.
+        archive = self.archive_for_item(item)
+        if archive is not None:
+            menu.addSeparator()
+            menu.addAction(
+                f"移除文件（{archive.path.name}）",
+                lambda: self.remove_archive(archive),
+            )
         menu.exec(self.tree.viewport().mapToGlobal(point))
+
+    def archive_for_item(self, item):
+        """The package a tree row belongs to (root or entry row alike)."""
+        while item is not None:
+            archive = item.data(0, Qt.ItemDataRole.UserRole + 1)
+            if archive is not None:
+                return archive
+            item = item.parent()
+        return None
+
+    def remove_archive(self, archive):
+        """Drop one open package from the workspace; the file stays on disk."""
+        for i in range(self.tree.topLevelItemCount()):
+            root = self.tree.topLevelItem(i)
+            if root.data(0, Qt.ItemDataRole.UserRole + 1) is archive:
+                self.tree.takeTopLevelItem(i)
+                break
+        for index in range(self.tabs.count() - 1, -1, -1):
+            tab = self.tabs.widget(index)
+            origin = getattr(tab, "recovery", None)
+            if origin is not None and origin.current_archive == archive.path:
+                if not self.confirm_tab(tab):
+                    continue
+                self.tabs.removeTab(index)
+                tab.deleteLater()
+        try:
+            archive.close()
+        except (OSError, ValueError):
+            pass
+        self.archives = [a for a in self.archives if a is not archive]
+        self.bindings = [b for b in self.bindings if b.archive != archive.path]
+        self.catalogs = [c for c in self.catalogs if c.archive != archive.path]
+        self.module_names = {
+            key: name for key, name in self.module_names.items()
+            if key[0] != archive.path
+        }
+        self.project_dirty = True
+        self._navigation_revision = None
+        self.refresh_package_labels()
+        self.workspace_refresh()
+        self.statusBar().showMessage(
+            f"已从工作台移除 {archive.path.name}（文件未被修改；"
+            f"如需再编辑用「打开脚本文件」）", 9000
+        )

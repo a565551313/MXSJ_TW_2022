@@ -89,7 +89,10 @@ class ModuleActions:
                 except ValueError:
                     pass  # An invalid name must not discard a recovered draft.
             if report.source:
-                tab.editor.document().setModified(True)
+                # Opening a draft is not an edit: the working copy is written
+                # by ``auto_adopt`` below, so the tab starts clean. Marking it
+                # modified made every freshly opened module look unsaved and
+                # asked "保存？" on close without a single keystroke.
                 self.auto_adopt(tab, archive, index, report)
             self.info.setPlainText(
                 (
@@ -177,7 +180,6 @@ class ModuleActions:
         tab.draft_saved = False
         tab.attach_report(report)
         tab.candidate_requested.connect(self.open_recovery_candidate)
-        tab.editor.document().setModified(True)
         archive = next((a for a in self.archives if a.path == report.archive), None)
         if archive is not None:
             self.auto_adopt(tab, archive, report.index, report)

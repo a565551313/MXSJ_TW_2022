@@ -205,11 +205,12 @@ class GuiModuleTests(unittest.TestCase):
         self.window.open_associated()
         self.wait_jobs()
         tab = self.window.current()
-        self.assertTrue(tab.editor.document().isModified())
+        # Opening an entry is not an edit: the working copy is written by the
+        # automatic binding, so a freshly opened draft carries no "*".
+        self.assertFalse(tab.editor.document().isModified())
         with patch.object(QFileDialog, "getSaveFileName", return_value=("", "")):
             self.window.adopt_recovery()
         self.assertEqual(tab.source_kind, "recovered-draft")
-        self.assertTrue(tab.editor.document().isModified())
         self.assertFalse(self.window.bindings)
         self.assertFalse(tab.path.exists())
 
