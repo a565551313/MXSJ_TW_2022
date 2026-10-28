@@ -79,9 +79,17 @@ def install_over_source(source: Path, output: Path, *, expected_sha256=None) -> 
     # Rename is atomic, but a writer can still have changed the bytes between
     # the digest check above and this rename. Verify the copy we are about to
     # keep - the same rule loose mode already applies to ``<name>.fls.bak``.
-    if expected_sha256 is not None and _sha256_file(backup) != expected_sha256:
-        os.replace(backup, source)  # still exactly one package at the old name
-        raise ValueError("原包在备份期间被改动，已放弃覆盖；请重新打开后再保存")
+    if expected_sha256 is not None:
+        try:
+            changed = _sha256_file(backup) != expected_sha256
+        except OSError:
+            # An unreadable backup (antivirus/indexer lock on Windows) must not
+            # leave the package name empty: put it back before giving up.
+            os.replace(backup, source)
+            raise
+        if changed:
+            os.replace(backup, source)  # still exactly one package at the old name
+            raise ValueError("原包在备份期间被改动，已放弃覆盖；请重新打开后再保存")
     try:
         os.replace(output, source)
     except OSError:

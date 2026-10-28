@@ -795,6 +795,32 @@ class BackupDigestTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
 
+    def test_an_unreadable_backup_is_put_back_before_failing(self):
+        from script_editor.core.services import native_build
+
+        source = self.root / "a.fls"
+        source.write_bytes(b"old")
+        output = self.root / "new.fls"
+        output.write_bytes(b"new")
+        digest = hashlib.sha256(b"old").hexdigest()
+        calls = {"n": 0}
+
+        def flaky(path):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                return digest
+            raise PermissionError("被索引器锁住")
+
+        with patch.object(native_build, "_sha256_file", flaky):
+            with self.assertRaises(PermissionError):
+                native_build.install_over_source(source, output, expected_sha256=digest)
+        # The package name is never left empty: the bytes are back where they were.
+        self.assertEqual(source.read_bytes(), b"old")
+        self.assertFalse(
+            source.with_name(source.name + BACKUP_RENAME_SUFFIX).exists()
+        )
+        self.assertTrue(output.is_file())
+
     def test_a_copy_that_changed_during_the_rename_is_put_back(self):
         from script_editor.core.services import native_build
 
@@ -872,7 +898,7 @@ class UnsavedDraftTests(unittest.TestCase):
         tab, archive, report = self.draft()
         self.assertFalse(self.window.auto_adopt(tab, archive, 0, report))
         self.assertTrue(tab.editor.document().isModified())
-        self.assertTrue(tab.binding_state, "no-compiler")
+        self.assertEqual(tab.binding_state, "no-compiler")
 
     def test_an_incomplete_recovery_counts_as_unsaved(self):
         tab, archive, report = self.draft(complete=False)
