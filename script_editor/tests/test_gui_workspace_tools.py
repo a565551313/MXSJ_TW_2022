@@ -17,10 +17,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from native_fixtures import minimal_pyc, script_fixture
@@ -557,3 +559,340 @@ class ReloadRetryTests(unittest.TestCase):
         self.window.remove_archive(self.window.archives[0])
         self.assertEqual(self.window.archives, [])
         self.assertEqual(self.window.tree.topLevelItemCount(), 0)
+
+
+@unittest.skipIf(bool(QT_ERROR), "GUI未执行：" + QT_ERROR)
+class ReviewFixTests(unittest.TestCase):
+    """Regressions for the review of 0.6.0.dev16."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="mx-review-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.settings = FakeSettings()
+        self.window = Window(self.root, settings=self.settings)
+        self.addCleanup(self._close)
+
+    def _close(self):
+        for i in range(self.window.tabs.count()):
+            self.window.tabs.widget(i).editor.document().setModified(False)
+        self.window.project_dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self.app.processEvents()
+
+    def tab(self, name, text="X = 1\n"):
+        path = self.root / name
+        path.write_text(text, encoding="utf-8")
+        return self.window.add_source(path, text=text)
+
+    # -- 标签右键：QTabWidget 没有 tabAt -------------------------------
+    def test_a_click_on_a_tab_is_resolved_to_that_tab(self):
+        first, second = self.tab("a.py"), self.tab("b.py")
+        self.window.resize(900, 600)
+        self.window.show()
+        self.app.processEvents()
+        bar = self.window.tabs.tabBar()
+        point = self.window.tabs.mapFromGlobal(
+            bar.mapToGlobal(bar.tabRect(0).center())
+        )
+        # QTabWidget has no tabAt; this used to raise AttributeError.
+        self.assertEqual(self.window.tab_index_at(point), 0)
+        self.assertIs(self.window.tabs.widget(0), first)
+        self.assertIsNot(second, first)
+
+    def test_a_click_outside_the_tab_bar_finds_nothing(self):
+        self.tab("c.py")
+        self.window.resize(900, 600)
+        self.window.show()
+        self.app.processEvents()
+        self.assertEqual(
+            self.window.tab_index_at(self.window.tabs.rect().bottomRight()), -1
+        )
+
+    def menu_texts(self, tab):
+        return [a.text() for a in self.window.tab_menu_for(tab).actions() if a.text()]
+
+    def test_the_tab_menu_lists_the_promised_entries(self):
+        first = self.tab("d.py")
+        texts = self.menu_texts(first)
+        self.assertEqual(
+            texts,
+            [
+                "关闭当前文件",
+                "关闭左边文件",
+                "关闭右边文件",
+                "关闭全部文件",
+                "锁定文件",
+                "保存",
+                "另存为…",
+                "全部保存",
+            ],
+        )
+        self.window.set_tab_locked(first, True)
+        texts = self.menu_texts(first)
+        self.assertIn("解锁文件", texts)
+        self.assertNotIn("锁定文件", texts)
+
+    # -- 对话框目录 --------------------------------------------------
+    def test_a_bare_suggestion_is_joined_onto_the_remembered_directory(self):
+        target = self.root / "out"
+        target.mkdir()
+        self.settings.values["dir/source_save_as"] = str(target)
+        with patch.object(
+            QFileDialog, "getSaveFileName", return_value=("", "")
+        ) as dialog:
+            self.window.ask_save_file(
+                "source_save_as", "另存为", "draft.py", "Python (*.py)"
+            )
+        self.assertEqual(dialog.call_args.args[2], str(target / "draft.py"))
+
+    def test_an_absolute_suggestion_wins(self):
+        other = self.root / "elsewhere"
+        other.mkdir()
+        suggestion = self.root / "packages" / "a.fls"
+        with patch.object(
+            QFileDialog, "getSaveFileName", return_value=("", "")
+        ) as dialog:
+            self.window.ask_save_file("pack", "生成新包", str(suggestion), "*.fls")
+        self.assertEqual(dialog.call_args.args[2], str(suggestion))
+        self.assertEqual(other.name, "elsewhere")
+
+    def test_a_directory_with_a_dot_keeps_its_own_path(self):
+        dotted = self.root / "MX.2022"
+        dotted.mkdir()
+        with patch.object(
+            QFileDialog, "getExistingDirectory", return_value=str(dotted)
+        ):
+            self.window.ask_open_dir("pack_dir", "打开脚本目录")
+        self.assertEqual(self.settings.values["dir/pack_dir"], str(dotted))
+
+    # -- 移除文件 ----------------------------------------------------
+    def test_removal_is_refused_while_a_job_runs(self):
+        raw, _catalog = script_fixture()
+        package = self.root / "script.fls"
+        package.write_bytes(raw)
+        self.window.add_archive(ArchiveDocument(package))
+        self.window.jobs.add(object())
+        self.window.remove_archive(self.window.archives[0])
+        self.assertEqual(len(self.window.archives), 1)
+        self.assertEqual(self.window.tree.topLevelItemCount(), 1)
+        self.window.jobs.clear()
+
+    def test_cancelling_a_prompt_aborts_the_removal(self):
+        raw, _catalog = script_fixture()
+        package = self.root / "script.fls"
+        package.write_bytes(raw)
+        archive = ArchiveDocument(package)
+        self.window.add_archive(archive)
+        tab = self.tab("draft.py")
+        tab.recovery = SimpleNamespace(current_archive=package.resolve())
+        tab.editor.insertPlainText("# dirty\n")
+        with patch.object(self.window, "confirm_tab", return_value=False):
+            self.window.remove_archive(archive)
+        self.assertEqual(len(self.window.archives), 1)
+        self.assertEqual(self.window.tree.topLevelItemCount(), 1)
+        self.assertEqual(self.window.tabs.count(), 1)
+
+    # -- 全部保存的可用性 --------------------------------------------
+    def test_save_all_stays_enabled_behind_a_reference_tab(self):
+        self.tab("d.py").editor.insertPlainText("# dirty\n")
+        reference = self.tab("ref.py", "R = 1\n")
+        reference.reference = True
+        self.window.tabs.setCurrentWidget(reference)
+        self.window.workspace_refresh()
+        self.assertTrue(self.window.ui_actions["save_all"].isEnabled())
+        self.assertFalse(self.window.ui_actions["save"].isEnabled())
+
+    def test_save_all_is_disabled_when_nothing_is_dirty(self):
+        self.tab("e.py")
+        self.window.workspace_refresh()
+        self.assertFalse(self.window.ui_actions["save_all"].isEnabled())
+
+
+@unittest.skipIf(bool(QT_ERROR), "GUI未执行：" + QT_ERROR)
+class SameNameStateTests(unittest.TestCase):
+    """After a same-name 生成新包 the workspace must know the final path."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="mx-state-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.package = Package(self.root)
+        self.window = Window(self.root)
+        self.addCleanup(self._close)
+        self.errors = []
+        patch.object(self.window, "fail", self.errors.append).start()
+        self.addCleanup(patch.stopall)
+        self.window.add_archive(ArchiveDocument(self.package.path))
+        self.window.catalogs = [self.package.catalog]
+        self.window.bindings = self.package.bindings(self.root)
+        self.window.compilers["py25"] = Compiler(
+            Path(sys.executable), "py25", "unit-test", 64, "t"
+        )
+
+    def _close(self):
+        for i in range(self.window.tabs.count()):
+            self.window.tabs.widget(i).editor.document().setModified(False)
+        self.window.project_dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self.app.processEvents()
+
+    def run_same_name(self):
+        with (
+            patch(COMPILE, fake_compile()),
+            patch("script_editor.core.services.workflow.audit_standard"),
+            patch("script_editor.core.services.native_build.audit_standard"),
+            patch.object(
+                QFileDialog,
+                "getSaveFileName",
+                return_value=(str(self.package.path), ""),
+            ),
+            patch.object(self.window, "task", side_effect=sync),
+        ):
+            self.window.generate_new_package()
+
+    def test_bindings_follow_the_file_to_its_final_name(self):
+        self.run_same_name()
+        self.assertEqual(self.errors, [])
+        final = self.package.path.resolve()
+        self.assertEqual([b.archive for b in self.window.bindings], [final])
+        self.assertEqual([c.archive for c in self.window.catalogs], [final])
+        # The next write finds them: this is what used to fail with
+        # "这个包还没有可写源码".
+        archive = self.window.archives[0]
+        self.assertIsNotNone(self.window.catalog_for(archive))
+
+    def test_a_refused_swap_leaves_no_hidden_staging_package(self):
+        def refuse(*_args, **_kwargs):
+            raise ValueError("原包在保存期间被改动")
+
+        with patch("script_editor.gui.write_package.install_over_source", refuse):
+            self.run_same_name()
+        stale = [
+            path.name
+            for path in self.root.iterdir()
+            if ".generating-" in path.name
+        ]
+        self.assertEqual(stale, [])
+        self.assertEqual(self.package.path.read_bytes(), self.package.before)
+
+
+class BackupDigestTests(unittest.TestCase):
+    """install_over_source re-checks the bytes it is about to keep."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="mx-bakdigest-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+
+    def test_a_copy_that_changed_during_the_rename_is_put_back(self):
+        from script_editor.core.services import native_build
+
+        source = self.root / "a.fls"
+        source.write_bytes(b"old")
+        output = self.root / "new.fls"
+        output.write_bytes(b"new")
+        digest = hashlib.sha256(b"old").hexdigest()
+        real = native_build._sha256_file
+        calls = {"n": 0}
+
+        def flaky(path):
+            calls["n"] += 1
+            return digest if calls["n"] == 1 else hashlib.sha256(b"other").hexdigest()
+
+        with patch.object(native_build, "_sha256_file", flaky):
+            with self.assertRaisesRegex(ValueError, "备份期间被改动"):
+                native_build.install_over_source(source, output, expected_sha256=digest)
+        self.assertTrue(source.is_file())
+        self.assertEqual(source.read_bytes(), b"old")
+        self.assertTrue(output.is_file())
+        self.assertEqual(calls["n"], 2)
+        self.assertIs(real, native_build._sha256_file)
+
+
+@unittest.skipIf(bool(QT_ERROR), "GUI未执行：" + QT_ERROR)
+class UnsavedDraftTests(unittest.TestCase):
+    """A draft with no file behind it must still prompt before closing."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="mx-unsaved-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.home = self.root / "home"
+        self.home.mkdir()
+        patcher = patch.dict(os.environ, {"MXSCRIPT_HOME": str(self.home)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.window = Window(self.root)
+        self.addCleanup(self._close)
+
+    def _close(self):
+        for i in range(self.window.tabs.count()):
+            self.window.tabs.widget(i).editor.document().setModified(False)
+        self.window.project_dirty = False
+        self.window.close()
+        self.window.deleteLater()
+        self.app.processEvents()
+
+    def draft(self, *, complete=True):
+        raw, _catalog = script_fixture()
+        package = self.root / "script.fls"
+        package.write_bytes(raw)
+        archive = ArchiveDocument(package)
+        self.window.add_archive(archive)
+        text = "# coding: utf-8\nVALUE = 1\n"
+        tab = self.window.add_source(
+            self.root / "draft.py",
+            text=text,
+            source_kind="recovered-draft",
+            vm="py25",
+        )
+        tab.draft_saved = False
+        report = SimpleNamespace(
+            source=text, complete=complete, archive=package, index=0,
+            filename_hex=b"authored.py".hex(),
+        )
+        return tab, archive, report
+
+    def test_no_compiler_means_the_text_is_still_unsaved(self):
+        tab, archive, report = self.draft()
+        self.assertFalse(self.window.auto_adopt(tab, archive, 0, report))
+        self.assertTrue(tab.editor.document().isModified())
+        self.assertTrue(tab.binding_state, "no-compiler")
+
+    def test_an_incomplete_recovery_counts_as_unsaved(self):
+        tab, archive, report = self.draft(complete=False)
+        self.assertFalse(self.window.auto_adopt(tab, archive, 0, report))
+        self.assertTrue(tab.editor.document().isModified())
+
+    def test_a_failed_verification_counts_as_unsaved(self):
+        from script_editor.core.compiler.runner import Compiler
+
+        tab, archive, report = self.draft()
+        self.window.compilers["py25"] = Compiler(
+            Path(sys.executable), "py25", "unit-test", 64, "t"
+        )
+
+        def boom(*_args, **_kwargs):
+            raise ValueError("编译失败")
+
+        with patch(
+            "script_editor.gui.module_actions.inspect_module", boom
+        ), patch.object(self.window, "task", side_effect=sync):
+            self.window.auto_adopt(tab, archive, 0, report)
+        self.assertEqual(tab.binding_state, "failed")
+        self.assertTrue(tab.editor.document().isModified())

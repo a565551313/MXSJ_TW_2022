@@ -124,13 +124,18 @@ class Window(
             return ""
         return value if isinstance(value, str) else ""
 
-    def remember_dir(self, slot, path):
-        """Remember the directory of a chosen file for next time."""
+    def remember_dir(self, slot, path, *, is_dir=False):
+        """Remember the directory of a chosen file for next time.
+
+        ``is_dir`` is the caller's knowledge, not a suffix guess: a folder may
+        legitimately be called ``MX.2022``, and guessing from the name would
+        remember its *parent* instead.
+        """
         if self.settings is None:
             return
         try:
             directory = Path(path)
-            if directory.suffix or directory.is_file():
+            if not is_dir:
                 directory = directory.parent
             self.settings.setValue(f"dir/{slot}", str(directory))
         except (TypeError, ValueError, AttributeError, OSError):
@@ -149,13 +154,27 @@ class Window(
             self, title, self.recall_dir(slot)
         )
         if name:
-            self.remember_dir(slot, name)
+            self.remember_dir(slot, name, is_dir=True)
         return name
 
     def ask_save_file(self, slot, title, suggestion, filters):
-        name, _ = QFileDialog.getSaveFileName(
-            self, title, suggestion or self.recall_dir(slot), filters
-        )
+        """Save dialog that starts in the remembered folder.
+
+        ``suggestion`` is often a bare file name (``untitled.py``, the current
+        tab's name). Passing that straight to Qt opens the dialog in the
+        process working directory and throws away everything learned last time,
+        so a relative suggestion is joined onto the remembered directory.
+        """
+        start = self.recall_dir(slot)
+        if suggestion:
+            candidate = Path(suggestion)
+            if candidate.is_absolute() or candidate.parent != Path("."):
+                start = str(candidate)
+            elif start:
+                start = str(Path(start) / candidate)
+            else:
+                start = suggestion
+        name, _ = QFileDialog.getSaveFileName(self, title, start, filters)
         if name:
             self.remember_dir(slot, name)
         return name
@@ -919,12 +938,29 @@ class Window(
             6000,
         )
 
+    def tab_index_at(self, point):
+        """Which tab a click landed on, or -1.
+
+        ``QTabWidget`` has no ``tabAt`` (that is a ``QTabBar`` method) and the
+        context-menu point is in QTabWidget coordinates, so the lookup goes
+        through the tab bar. The bar is not a child of the widget (Qt reparents
+        it), hence the trip through global coordinates.
+        """
+        bar = self.tabs.tabBar()
+        return bar.tabAt(bar.mapFromGlobal(self.tabs.mapToGlobal(point)))
+
     def tab_menu(self, point):
-        index = self.tabs.tabAt(point)
+        index = self.tab_index_at(point)
         if index < 0:
             return
         self.tabs.setCurrentIndex(index)
-        tab = self.tabs.widget(index)
+        self.tab_menu_for(self.tabs.widget(index)).exec(
+            self.tabs.mapToGlobal(point)
+        )
+
+    def tab_menu_for(self, tab):
+        """The tab context menu (separate, so it can be inspected in tests)."""
+        index = self.tabs.indexOf(tab)
         menu = QMenu(self)
         menu.addAction("关闭当前文件", lambda: self.close_tab(index))
         menu.addAction("关闭左边文件", lambda: self.close_side(index, left=True))
@@ -939,7 +975,7 @@ class Window(
         menu.addAction("保存", self.save_current)
         menu.addAction("另存为…", self.save_source_as)
         menu.addAction("全部保存", self.save_all)
-        menu.exec(self.tabs.mapToGlobal(point))
+        return menu
 
     def close_side(self, index, left):
         """Close every tab on one side of ``index``, skipping locked ones."""

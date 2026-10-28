@@ -250,6 +250,9 @@ class ModuleActions:
             tab.set_binding_state(
                 "unverified", "恢复不完整；补齐后按 F5 会重新校验"
             )
+            # Nothing durable holds this text yet, so closing the tab would
+            # silently lose it - the tab has to count as unsaved.
+            self.mark_unsaved_draft(tab)
             return False
         compiler = self.compilers.get(archive.vm)
         if compiler is None:
@@ -257,6 +260,7 @@ class ModuleActions:
                 "no-compiler",
                 "工具栏「检查编译器」通过后，按 F5 会自动校验并绑定",
             )
+            self.mark_unsaved_draft(tab)
             return False
         catalog = self.catalog_for(archive)
         text = tab.editor.toPlainText()
@@ -340,12 +344,24 @@ class ModuleActions:
             # Expected for a draft that does not compile yet: mark the tab and
             # keep it editable. A modal on every double-click would be noise.
             tab.set_binding_state("failed", str(error))
+            self.mark_unsaved_draft(tab)
             self.statusBar().showMessage(
                 f"自动校验未通过（仍可编辑，F5 可重试）：{error}", 14000
             )
 
         self.task(work, complete, on_error=failed, quiet=True)
         return True
+
+    def mark_unsaved_draft(self, tab):
+        """A draft with no file behind it must not close without a prompt.
+
+        Successful adoption writes a working copy and leaves the tab clean;
+        every other outcome (incomplete recovery, no compiler, failed
+        verification, cancelled save) means the only copy is in memory.
+        """
+        tab.draft_saved = False
+        tab.editor.document().setModified(True)
+        self.refresh_tab_title(tab)
 
     def clear_other_bindings(self, archive, index, keep):
         """One binding per entry: the previous tab loses its green label."""

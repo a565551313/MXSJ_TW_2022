@@ -24,11 +24,23 @@ class WorkspaceActions:
         self.pages.setCurrentWidget(self.tabs if tab else self.welcome)
         editable = bool(tab and not tab.reference and not self.jobs)
         for key in (
-            "save", "save_all", "save_as", "big5", "gbk", "cut", "copy", "paste",
+            "save", "save_as", "big5", "gbk", "cut", "copy", "paste",
         ):
             action = self.ui_actions.get(key)
             if action is not None:
                 action.setEnabled(editable)
+        # 全部保存 looks at every tab: focusing a read-only reference tab must
+        # not take away the only way to save the dirty ones behind it.
+        save_all = self.ui_actions.get("save_all")
+        if save_all is not None:
+            save_all.setEnabled(
+                not self.jobs
+                and any(
+                    not self.tabs.widget(i).reference
+                    and self.tabs.widget(i).editor.document().isModified()
+                    for i in range(self.tabs.count())
+                )
+            )
         self.ui_actions["undo"].setEnabled(
             bool(editable and tab.editor.document().isUndoAvailable())
         )
@@ -548,6 +560,23 @@ class WorkspaceActions:
 
     def remove_archive(self, archive):
         """Drop one open package from the workspace; the file stays on disk."""
+        if self.jobs:
+            # A recovery or a write is reading this archive right now; pulling
+            # its document + bindings out from under the worker fails it in a
+            # way the user cannot connect to the click they made.
+            self.statusBar().showMessage("后台任务进行中；结束后再移除包", 6000)
+            return
+        owners = [
+            self.tabs.widget(i)
+            for i in range(self.tabs.count())
+            if getattr(getattr(self.tabs.widget(i), "recovery", None),
+                       "current_archive", None) == archive.path
+        ]
+        for tab in owners:
+            # Cancelling one prompt aborts the whole removal: half-removed
+            # packages are how a tab ends up pointing at nothing.
+            if not self.confirm_tab(tab):
+                return
         for i in range(self.tree.topLevelItemCount()):
             root = self.tree.topLevelItem(i)
             if root.data(0, Qt.ItemDataRole.UserRole + 1) is archive:
@@ -557,8 +586,6 @@ class WorkspaceActions:
             tab = self.tabs.widget(index)
             origin = getattr(tab, "recovery", None)
             if origin is not None and origin.current_archive == archive.path:
-                if not self.confirm_tab(tab):
-                    continue
                 self.tabs.removeTab(index)
                 tab.deleteLater()
         try:

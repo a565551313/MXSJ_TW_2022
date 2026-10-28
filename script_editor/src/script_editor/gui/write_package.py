@@ -33,6 +33,21 @@ from ..core.services.native_build import BACKUP_SUFFIX, install_over_source
 from ..core.services.workflow import Snapshot, prepare_package, publish_package
 
 
+def remap_state(state, old_path: Path, new_path: Path):
+    """Point a published project state at the package's final path."""
+    old, new = Path(old_path).resolve(), Path(new_path).resolve()
+    return ProjectState(
+        tuple(
+            replace(item, archive=new) if item.archive == old else item
+            for item in state.bindings
+        ),
+        tuple(
+            replace(item, archive=new) if item.archive == old else item
+            for item in state.catalogs
+        ),
+    )
+
+
 class WritePackageMixin:
     """``F5`` writes the package back, ``F6`` writes a new one."""
 
@@ -240,12 +255,25 @@ class WritePackageMixin:
             )
             backup = None
             if same_name:
-                backup = install_over_source(
-                    archive.path,
-                    staging,
-                    expected_sha256=report.source_sha256,
-                )
+                try:
+                    backup = install_over_source(
+                        archive.path,
+                        staging,
+                        expected_sha256=report.source_sha256,
+                    )
+                except Exception:
+                    # The verified package never reached its name; a hidden
+                    # full-size copy next to the client package is not a
+                    # leftover anybody wants to find later.
+                    staging.unlink(missing_ok=True)
+                    raise
+                # ``publish_package`` repointed bindings/catalogs at the
+                # *staging* path it was given. After the swap that file no
+                # longer exists: leaving the state alone would make every later
+                # F5/F6 find "没有可写源码" and save a project
+                # pointing at a deleted file.
                 report = replace(report, output=archive.path)
+                new_state = remap_state(new_state, staging, archive.path)
             return plan, report, new_state, backup
 
         def complete(result):
