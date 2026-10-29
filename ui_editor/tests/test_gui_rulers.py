@@ -11,8 +11,11 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 try:
+    from PySide6.QtCore import QPoint, QPointF, Qt
+    from PySide6.QtTest import QTest
     from PySide6.QtWidgets import QApplication, QToolBar
 
+    from ui_editor.core.model import LayoutDocument, Widget
     from ui_editor.ui.main_window import MainWindow
     from ui_editor.ui.rulers import RULER_THICKNESS, ruler_step
 
@@ -133,6 +136,152 @@ class ViewportRulerTests(unittest.TestCase):
         self.assertEqual(view.rulers.horizontal.geometry(), geometry)
         view.fit_content()
         self.assertGreater(view.rulers.horizontal._scale(), 0)
+
+    def _drag(self, widget, start: QPoint, end: QPoint) -> None:
+        QTest.mousePress(widget, Qt.MouseButton.LeftButton, pos=start)
+        QTest.mouseMove(widget, end)
+        QTest.mouseRelease(widget, Qt.MouseButton.LeftButton, pos=end)
+        self._app.processEvents()
+
+    def test_mouse_drags_horizontal_guide_out_of_top_ruler(self):
+        window = self.window
+        view = window.view
+        view.set_rulers_visible(True)
+        view.actual_size()
+        self._app.processEvents()
+        strip = view.rulers.horizontal
+        viewport = view.viewport()
+        target = viewport.rect().center()
+        end = strip.mapFromGlobal(viewport.mapToGlobal(target))
+        native_before = window.doc.to_native_dicts()
+        window.doc.dirty = False
+
+        self._drag(strip, QPoint(80, 12), end)
+
+        expected = view.mapToScene(target).y()
+        self.assertEqual(window.scene.manual_guides()[0], [])
+        self.assertEqual(len(window.scene.manual_guides()[1]), 1)
+        self.assertAlmostEqual(window.scene.manual_guides()[1][0], expected)
+        self.assertFalse(window.doc.dirty)
+        self.assertEqual(window.doc.to_native_dicts(), native_before)
+
+    def test_mouse_drags_vertical_guide_out_of_left_ruler(self):
+        view = self.window.view
+        view.set_rulers_visible(True)
+        view.actual_size()
+        self._app.processEvents()
+        strip = view.rulers.vertical
+        viewport = view.viewport()
+        target = viewport.rect().center()
+        end = strip.mapFromGlobal(viewport.mapToGlobal(target))
+
+        self._drag(strip, QPoint(12, 80), end)
+
+        expected = view.mapToScene(target).x()
+        self.assertEqual(self.window.scene.manual_guides()[1], [])
+        self.assertEqual(len(self.window.scene.manual_guides()[0]), 1)
+        self.assertAlmostEqual(self.window.scene.manual_guides()[0][0], expected)
+
+    def test_mouse_moves_existing_horizontal_guide_on_viewport(self):
+        view = self.window.view
+        view.set_rulers_visible(True)
+        view.actual_size()
+        self._app.processEvents()
+        viewport = view.viewport()
+        scene_x = view.mapToScene(viewport.rect().center()).x()
+        self.window.scene.set_ruler_guides([], [120])
+        start = view.mapFromScene(QPointF(scene_x, 120))
+        end = start + QPoint(40, 60)
+
+        self._drag(viewport, start, end)
+
+        expected = view.mapToScene(end).y()
+        self.assertEqual(len(self.window.scene.manual_guides()[1]), 1)
+        self.assertAlmostEqual(self.window.scene.manual_guides()[1][0], expected)
+
+    def test_mouse_drags_existing_vertical_guide_back_to_ruler_to_delete(self):
+        view = self.window.view
+        view.set_rulers_visible(True)
+        view.actual_size()
+        self._app.processEvents()
+        viewport = view.viewport()
+        scene_y = view.mapToScene(viewport.rect().center()).y()
+        self.window.scene.set_ruler_guides([120], [])
+        start = view.mapFromScene(QPointF(120, scene_y))
+        end = viewport.mapFromGlobal(
+            view.rulers.vertical.mapToGlobal(QPoint(12, 80)))
+
+        self._drag(viewport, start, end)
+
+        self.assertEqual(self.window.scene.manual_guides(), ([], []))
+
+    def test_guide_drag_uses_zoomed_and_scrolled_scene_coordinates(self):
+        view = self.window.view
+        view.set_rulers_visible(True)
+        view.actual_size()
+        view.scale(2.0, 2.0)
+        view.horizontalScrollBar().setValue(
+            view.horizontalScrollBar().maximum() // 2)
+        view.verticalScrollBar().setValue(
+            view.verticalScrollBar().maximum() // 2)
+        self._app.processEvents()
+        strip = view.rulers.vertical
+        viewport = view.viewport()
+        target = viewport.rect().center()
+        end = strip.mapFromGlobal(viewport.mapToGlobal(target))
+
+        self._drag(strip, QPoint(12, 80), end)
+
+        expected = view.mapToScene(target).x()
+        self.assertGreater(view.horizontalScrollBar().maximum(), 0)
+        self.assertEqual(len(self.window.scene.manual_guides()[0]), 1)
+        self.assertAlmostEqual(self.window.scene.manual_guides()[0][0], expected)
+
+    def test_manual_guides_are_isolated_per_document(self):
+        scene = self.window.scene
+        first = self.window.doc
+        second = LayoutDocument.from_dicts(first.to_dicts(), None)
+        first.dirty = False
+        scene.set_ruler_guides([123], [234])
+
+        scene.set_document(second)
+        self.assertEqual(scene.manual_guides(), ([], []))
+        scene.set_ruler_guides([50], [60])
+        scene.set_document(first)
+        self.assertEqual(scene.manual_guides(), ([123], [234]))
+        scene.set_document(second)
+        self.assertEqual(scene.manual_guides(), ([50], [60]))
+        self.assertFalse(first.dirty)
+        self.assertFalse(second.dirty)
+
+    def test_manual_guides_snap_items_but_not_transient_guide_state(self):
+        scene = self.window.scene
+        self.window.doc.dirty = False
+        scene.set_ruler_guides([100], [100])
+        item = scene.items()[0]
+
+        snapped = item._snapped_position(QPointF(98, 98))
+
+        self.assertEqual((snapped.x(), snapped.y()), (100, 100))
+        scene.set_guides([], [])
+        self.assertEqual(scene.manual_guides(), ([100], [100]))
+        self.assertFalse(self.window.doc.dirty)
+
+    def test_manual_guides_snap_nested_items_in_parent_coordinates(self):
+        scene = self.window.scene
+        root = self.window.doc.roots[0]
+        root.set_geometry(x=500, y=300)
+        child = Widget({"sWidgetType": "CButton", "sName": "child",
+                        "iX": 0, "iY": 0, "iWidth": 40, "iHeight": 20},
+                       parent=root)
+        root.children.append(child)
+        scene.set_document(self.window.doc)
+        scene.set_ruler_guides([510], [310])
+        item = scene.item_for(child)
+
+        snapped = item._snapped_position(QPointF(8, 8))
+
+        self.assertEqual((snapped.x(), snapped.y()), (10, 10))
 
 
 if __name__ == "__main__":

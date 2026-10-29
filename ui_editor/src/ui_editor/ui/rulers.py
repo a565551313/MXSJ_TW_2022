@@ -38,6 +38,10 @@ class RulerStrip(QWidget):
         self._orientation = orientation
         self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
         self.setMouseTracking(False)
+        self.setCursor(Qt.CursorShape.SizeVerCursor if self._horizontal()
+                       else Qt.CursorShape.SizeHorCursor)
+        self.setToolTip("向下拖出水平参考线" if self._horizontal()
+                        else "向右拖出垂直参考线；拖回标尺可删除")
 
     def _horizontal(self) -> bool:
         return self._orientation == Qt.Orientation.Horizontal
@@ -120,6 +124,29 @@ class RulerStrip(QWidget):
             painter.drawLine(self.width() - 1, 0,
                              self.width() - 1, self.height())
 
+    def mousePressEvent(self, event) -> None:  # noqa: N802
+        if (event.button() == Qt.MouseButton.LeftButton
+                and self._view.rulers.begin_ruler_drag(
+                    self._orientation, event.globalPosition().toPoint())):
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event) -> None:  # noqa: N802
+        if self._view.rulers.update_ruler_drag(
+                self._orientation, event.globalPosition().toPoint()):
+            event.accept()
+            return
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:  # noqa: N802
+        if (event.button() == Qt.MouseButton.LeftButton
+                and self._view.rulers.finish_ruler_drag(
+                    self._orientation, event.globalPosition().toPoint())):
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
 
 class RulerCorner(QWidget):
     """左上角原点格。"""
@@ -147,6 +174,10 @@ class RulerOverlay(QObject):
         super().__init__(view)
         self.view = view
         self.visible = False
+        self._drag_orientation = None
+        self._drag_index = None
+        self._drag_source = None
+        self._drag_document = None
         self.horizontal = RulerStrip(view, Qt.Orientation.Horizontal)
         self.vertical = RulerStrip(view, Qt.Orientation.Vertical)
         self.corner = RulerCorner(view)
@@ -163,6 +194,8 @@ class RulerOverlay(QObject):
         visible = bool(visible)
         if visible == self.visible:
             return
+        if not visible:
+            self.cancel_drag()
         self.visible = visible
         margin = RULER_THICKNESS if visible else 0
         self.view.setViewportMargins(margin, margin, 0, 0)
@@ -188,12 +221,154 @@ class RulerOverlay(QObject):
         self.vertical.update()
         self.corner.update()
 
+    @staticmethod
+    def _axis(orientation: Qt.Orientation) -> str:
+        return "y" if orientation == Qt.Orientation.Horizontal else "x"
+
+    def _reset_drag(self) -> None:
+        self._drag_orientation = None
+        self._drag_index = None
+        self._drag_source = None
+        self._drag_document = None
+
+    def cancel_drag(self) -> None:
+        self.view.scene().set_ruler_preview(None)
+        self._reset_drag()
+
+    def _begin_drag(self, orientation: Qt.Orientation, index: int | None,
+                    global_pos: QPoint, source: str) -> bool:
+        scene = self.view.scene()
+        if scene.document is None:
+            return False
+        self.cancel_drag()
+        self._drag_orientation = orientation
+        self._drag_index = index
+        self._drag_source = source
+        self._drag_document = scene.document
+        self._update_drag(global_pos)
+        return True
+
+    def begin_ruler_drag(self, orientation: Qt.Orientation,
+                         global_pos: QPoint) -> bool:
+        if not self.visible:
+            return False
+        return self._begin_drag(orientation, None, global_pos, "ruler")
+
+    def update_ruler_drag(self, orientation: Qt.Orientation,
+                          global_pos: QPoint) -> bool:
+        if (self._drag_source != "ruler"
+                or self._drag_orientation != orientation):
+            return False
+        self._update_drag(global_pos)
+        return True
+
+    def finish_ruler_drag(self, orientation: Qt.Orientation,
+                          global_pos: QPoint) -> bool:
+        if (self._drag_source != "ruler"
+                or self._drag_orientation != orientation):
+            return False
+        self._finish_drag(global_pos)
+        return True
+
+    def _drag_position(self, global_pos: QPoint) -> tuple[float, bool, bool]:
+        view_pos = self.view.mapFromGlobal(global_pos)
+        viewport = self.view.viewport()
+        viewport_pos = view_pos - viewport.geometry().topLeft()
+        scene_pos = self.view.mapToScene(viewport_pos)
+        horizontal = self._drag_orientation == Qt.Orientation.Horizontal
+        value = scene_pos.y() if horizontal else scene_pos.x()
+        inside = viewport.rect().contains(viewport_pos)
+        ruler = self.horizontal if horizontal else self.vertical
+        on_ruler = ruler.geometry().contains(view_pos)
+        return float(value), inside, on_ruler
+
+    def _update_drag(self, global_pos: QPoint) -> None:
+        scene = self.view.scene()
+        if self._drag_document is not scene.document:
+            self.cancel_drag()
+            return
+        value, inside, _on_ruler = self._drag_position(global_pos)
+        if inside:
+            scene.set_ruler_preview(
+                self._axis(self._drag_orientation), value, self._drag_index)
+        else:
+            scene.set_ruler_preview(None)
+
+    def _finish_drag(self, global_pos: QPoint) -> None:
+        scene = self.view.scene()
+        if self._drag_document is not scene.document:
+            self.cancel_drag()
+            return
+        value, inside, on_ruler = self._drag_position(global_pos)
+        axis = self._axis(self._drag_orientation)
+        index = self._drag_index
+        xs, ys = scene.manual_guides()
+        values = ys if axis == "y" else xs
+        if inside:
+            if index is None:
+                if all(abs(existing - value) > 1e-6 for existing in values):
+                    values.append(value)
+            elif 0 <= index < len(values):
+                values[index] = value
+            scene.set_ruler_guides(xs, ys)
+        elif on_ruler and index is not None and 0 <= index < len(values):
+            values.pop(index)
+            scene.set_ruler_guides(xs, ys)
+        scene.set_ruler_preview(None)
+        self._reset_drag()
+
+    def _guide_at(self, viewport_pos: QPoint):
+        scene = self.view.scene()
+        scene_pos = self.view.mapToScene(viewport_pos)
+        manual_x, manual_y = scene.manual_guides()
+        candidates = []
+        for index, gx in enumerate(manual_x):
+            screen_x = self.view.mapFromScene(QPointF(gx, scene_pos.y())).x()
+            distance = abs(screen_x - viewport_pos.x())
+            if distance <= 6:
+                candidates.append((distance, Qt.Orientation.Vertical, index))
+        for index, gy in enumerate(manual_y):
+            screen_y = self.view.mapFromScene(QPointF(scene_pos.x(), gy)).y()
+            distance = abs(screen_y - viewport_pos.y())
+            if distance <= 6:
+                candidates.append((distance, Qt.Orientation.Horizontal, index))
+        if not candidates:
+            return None
+        _distance, orientation, index = min(
+            candidates, key=lambda candidate: candidate[0])
+        return orientation, index
+
     def eventFilter(self, watched, event) -> bool:  # noqa: N802
         try:
             viewport = self.view.viewport()
         except RuntimeError:
             return False  # 视图销毁中的尾随事件，不再碰已删除的 C++ 对象
-        if (watched is viewport
-                and event.type() in (QEvent.Type.Resize, QEvent.Type.Show)):
+        if watched is not viewport:
+            return False
+        event_type = event.type()
+        if (event_type == QEvent.Type.MouseButtonPress
+                and event.button() == Qt.MouseButton.LeftButton
+                and self._drag_orientation is None):
+            hit = self._guide_at(event.position().toPoint())
+            if hit is not None:
+                orientation, index = hit
+                if self._begin_drag(orientation, index,
+                                    event.globalPosition().toPoint(),
+                                    "viewport"):
+                    event.accept()
+                    return True
+        if self._drag_source == "viewport":
+            if event_type == QEvent.Type.MouseMove:
+                self._update_drag(event.globalPosition().toPoint())
+                event.accept()
+                return True
+            if (event_type == QEvent.Type.MouseButtonRelease
+                    and event.button() == Qt.MouseButton.LeftButton):
+                self._finish_drag(event.globalPosition().toPoint())
+                event.accept()
+                return True
+        if event_type == QEvent.Type.Hide:
+            self.cancel_drag()
+        if event_type in (QEvent.Type.Resize, QEvent.Type.Show):
             self.update_geometry()
         return False

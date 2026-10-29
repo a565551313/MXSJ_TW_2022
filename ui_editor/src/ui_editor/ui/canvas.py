@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+import weakref
 from collections.abc import Callable
 
 from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, Qt, Signal
@@ -276,11 +277,19 @@ class WidgetItem(QGraphicsItem):
         views = scene.views()
         scale = views[0].transform().m11() if views else 1.0
         threshold = max(6.0 / scale, 1.0) if scale > 0 else 6.0
+        manual_x, manual_y = scene.manual_guides()
+        parent_item = self.parentItem()
+        if parent_item is not None:
+            manual_x = [parent_item.mapFromScene(QPointF(gx, 0)).x()
+                        for gx in manual_x]
+            manual_y = [parent_item.mapFromScene(QPointF(0, gy)).y()
+                        for gy in manual_y]
+        guide_kwargs = ({"guides_x": manual_x, "guides_y": manual_y}
+                        if manual_x or manual_y else {})
         new_x, new_y, guides_x, guides_y = snap.snap_position(
             (float(value.x()), float(value.y()),
              float(widget.width), float(widget.height)),
-            others, parent_size, threshold)
-        parent_item = self.parentItem()
+            others, parent_size, threshold, **guide_kwargs)
         if parent_item is not None:
             scene_x = [parent_item.mapToScene(
                 QPointF(gx, 0)).x() for gx in guides_x]
@@ -657,6 +666,11 @@ class LayoutScene(QGraphicsScene):
         self.keep_aspect = False  # 等比缩放（视图菜单/工具栏开关）
         self._guides_x: list[float] = []  # 场景坐标参考线（拖动吸附）
         self._guides_y: list[float] = []
+        # 标尺拉出的手动参考线：编辑器专用，不进 .dlg / dirty / undo。
+        self._manual_guides_x: list[float] = []
+        self._manual_guides_y: list[float] = []
+        self._manual_guide_sets = weakref.WeakKeyDictionary()
+        self._ruler_preview = None
         # 移动手柄（0.18.0）：每个「选中且未锁定」的控件图元一枚
         self._grips: dict[int, MoveGripItem] = {}
         self.selectionChanged.connect(self._sync_grips)
@@ -667,6 +681,26 @@ class LayoutScene(QGraphicsScene):
             return
         self._guides_x = list(xs)
         self._guides_y = list(ys)
+        self.update()
+
+    # -- 标尺拉出的固定参考线 -----------------------------------------
+    def manual_guides(self) -> tuple[list[float], list[float]]:
+        return list(self._manual_guides_x), list(self._manual_guides_y)
+
+    def set_ruler_guides(self, xs, ys) -> None:
+        self._manual_guides_x = [float(value) for value in xs]
+        self._manual_guides_y = [float(value) for value in ys]
+        if self.document is not None:
+            self._manual_guide_sets[self.document] = (
+                list(self._manual_guides_x), list(self._manual_guides_y))
+        self.update()
+
+    def set_ruler_preview(self, axis: str | None, value: float | None = None,
+                          hide_index: int | None = None) -> None:
+        if axis is None or value is None:
+            self._ruler_preview = None
+        else:
+            self._ruler_preview = (axis, float(value), hide_index)
         self.update()
 
     # -- 移动手柄（0.18.0） ---------------------------------------------
@@ -725,6 +759,34 @@ class LayoutScene(QGraphicsScene):
     def drawForeground(self, painter: QPainter, rect: QRectF) -> None:  # noqa: N802
         super().drawForeground(painter, rect)
         bounds = self.sceneRect()
+        if self._manual_guides_x or self._manual_guides_y or self._ruler_preview:
+            painter.save()
+            hidden_axis = hidden_index = None
+            if self._ruler_preview is not None:
+                hidden_axis, _value, hidden_index = self._ruler_preview
+            painter.setPen(QPen(QColor(65, 195, 245), 0))
+            for index, gx in enumerate(self._manual_guides_x):
+                if hidden_axis == "x" and hidden_index == index:
+                    continue
+                painter.drawLine(QPointF(gx, rect.top()),
+                                 QPointF(gx, rect.bottom()))
+            for index, gy in enumerate(self._manual_guides_y):
+                if hidden_axis == "y" and hidden_index == index:
+                    continue
+                painter.drawLine(QPointF(rect.left(), gy),
+                                 QPointF(rect.right(), gy))
+            if self._ruler_preview is not None:
+                axis, value, _hide = self._ruler_preview
+                pen = QPen(QColor(255, 205, 70), 0)
+                pen.setStyle(Qt.PenStyle.DashLine)
+                painter.setPen(pen)
+                if axis == "x":
+                    painter.drawLine(QPointF(value, rect.top()),
+                                     QPointF(value, rect.bottom()))
+                else:
+                    painter.drawLine(QPointF(rect.left(), value),
+                                     QPointF(rect.right(), value))
+            painter.restore()
         if self._guides_x or self._guides_y:
             painter.save()
             pen = QPen(QColor(235, 60, 170), 0)
@@ -738,10 +800,17 @@ class LayoutScene(QGraphicsScene):
             painter.restore()
 
     def set_document(self, doc: LayoutDocument | None) -> None:
+        if self.document is not None:
+            self._manual_guide_sets[self.document] = self.manual_guides()
         self._grips = {}   # clear() 会连手柄一起删；先清账本防悬空
         self.clear()
         self._items = {}
         self.document = doc
+        self._ruler_preview = None
+        saved_guides = (self._manual_guide_sets.get(doc, ([], []))
+                        if doc is not None else ([], []))
+        self._manual_guides_x = list(saved_guides[0])
+        self._manual_guides_y = list(saved_guides[1])
         if doc is None:
             return
         for root in doc.roots:

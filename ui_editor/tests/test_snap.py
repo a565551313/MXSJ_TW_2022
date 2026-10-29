@@ -28,6 +28,14 @@ class TestSnapPosition(unittest.TestCase):
         self.assertEqual(x, 90)
         self.assertEqual(gx, [])
 
+    def test_manual_ruler_guides_participate_on_both_axes(self):
+        x, y, gx, gy = snap.snap_position(
+            (98, 48, 40, 20), [], None, 6,
+            guides_x=[100], guides_y=[50])
+        self.assertEqual((x, y), (100, 50))
+        self.assertEqual(gx, [100])
+        self.assertEqual(gy, [50])
+
     def test_parent_edges_participate(self):
         x, y, gx, gy = snap.snap_position(
             (4, 186, 40, 20), [], (300, 200), 6)

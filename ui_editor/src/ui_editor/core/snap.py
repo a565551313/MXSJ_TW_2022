@@ -21,13 +21,13 @@ def _anchors_y(rect: Rect) -> tuple[float, float, float]:
 
 def snap_position(moving: Rect, others: list[Rect],
                   parent_size: tuple[float, float] | None,
-                  threshold: float,
+                  threshold: float, *, guides_x=(), guides_y=(),
                   ) -> tuple[float, float, list[float], list[float]]:
     """求拖动后坐标与命中的参考线。
 
     返回 (新x, 新y, 竖参考线xs, 横参考线ys)，参考线在同一父坐标
     系内。各方向独立取阈值内最近的一条；父容器边缘（0 与宽高）
-    也参与吸附。
+    也参与吸附。``guides_x/guides_y`` 是同坐标系的标尺手动参考线。
     """
     x, y, w, h = moving
 
@@ -63,8 +63,12 @@ def snap_position(moving: Rect, others: list[Rect],
         pw, ph = parent_size
         parent_x = [(x, 0.0), (x + w, float(pw))]
         parent_y = [(y, 0.0), (y + h, float(ph))]
-    new_x, line_x = snap_axis(x, w, axis_targets(others, True), parent_x)
-    new_y, line_y = snap_axis(y, h, axis_targets(others, False), parent_y)
+    targets_x = axis_targets(others, True) + [
+        (float(value), 0) for value in guides_x]
+    targets_y = axis_targets(others, False) + [
+        (float(value), 0) for value in guides_y]
+    new_x, line_x = snap_axis(x, w, targets_x, parent_x)
+    new_y, line_y = snap_axis(y, h, targets_y, parent_y)
     guides_x = [line_x] if line_x is not None else []
     guides_y = [line_y] if line_y is not None else []
     return new_x, new_y, guides_x, guides_y
