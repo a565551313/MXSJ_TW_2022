@@ -118,6 +118,8 @@ class MainWindow(
         self.script_panel = ScriptPanel()
         self.props_panel = PropertyPanel()
         self.props_panel.assets = self.resolver  # 文件字段从包里选
+        self.props_panel.text_encoding = (
+            lambda: self.doc.text_encoding if self.doc else "big5")
         self.props_panel.before_change = self._before_property_change
         self.diagnostics_panel = DiagnosticsPanel()
         self.diagnostics_panel.refresh_requested.connect(self.run_diagnostics)

@@ -25,6 +25,7 @@ MIN_PYTHON = (3, 10)
 # (导入名, pip 安装名)：缺哪个装哪个
 REQUIREMENTS = [
     ("PySide6", "PySide6>=6.4"),
+    ("opencc", "OpenCC-python-reimplemented>=0.1.7"),
 ]
 
 # 依次尝试的下载源：None=官方源，后面是国内镜像（官方慢/连不上时兜底）
@@ -77,7 +78,7 @@ def ensure_dependencies() -> bool:
     """检查并补齐运行依赖。"""
     missing = find_missing()
     if not missing:
-        _say("依赖检查通过：PySide6 已安装。")
+        _say("依赖检查通过：PySide6 与 OpenCC 已安装。")
         return True
     names = "、".join(import_name for import_name, _ in missing)
     _say(f"检测到缺少依赖：{names}，现在自动安装（只需这一次）…")

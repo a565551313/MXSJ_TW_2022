@@ -33,7 +33,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..core import colors, dir_base, prop_glossary
+from ..core import colors, dir_base, prop_glossary, text_transcode
 from ..core.defaults_data import DEFAULT_PROPS
 from ..core.model import Widget
 from ..core.painters import align_scheme
@@ -228,6 +228,8 @@ class PropertyPanel(QWidget):
         self.assets = None
         # 修改前同步护栏：返回 False 则不触碰 props、不发 changed。
         self.before_change = None
+        # 主窗口注入当前文档编码；独立使用面板时不擅自转换。
+        self.text_encoding = None
 
         root = QVBoxLayout(self)
         self._header = QLabel("未选中控件")
@@ -389,15 +391,39 @@ class PropertyPanel(QWidget):
         return (self.before_change is None
                 or self.before_change(self._widget, key, value))
 
+    def _normalize_input(self, key: str, value: object) -> object:
+        if self.text_encoding is None:
+            return value
+        return text_transcode.normalize_display_value(
+            value, key, self.text_encoding())
+
+    def _sync_normalized_editor(self, key: str, value: object,
+                                raw_value: object) -> None:
+        """让输入框显示实际入模型的字，而不是已失效的简体候选文本。"""
+        if value == raw_value:
+            return
+        getter = self._getters.get(key)
+        if getter is None:
+            return
+        self._building = True
+        try:
+            getter(value)
+        finally:
+            self._building = False
+
     def _commit(self, key: str, value: object) -> bool:
         if self._building or self._widget is None:
             return False
+        raw_value = value
+        value = self._normalize_input(key, value)
         if self._widget.props.get(key) == value and key in self._widget.props:
+            self._sync_normalized_editor(key, value, raw_value)
             return True
         if not self._allowed(key, value):
             self._rebuild()  # 撤回编辑器中的候选文本
             return False
         self._widget.props[key] = value
+        self._sync_normalized_editor(key, value, raw_value)
         self.changed.emit(self._widget, key)
         return True
 
@@ -521,6 +547,8 @@ class PropertyPanel(QWidget):
             edit.editingFinished.connect(
                 lambda k=key, e=edit, raw=value:
                 self._commit(k, _parse_sequence(e.text(), raw)))
+            self._getters[key] = lambda v: edit.setText(
+                ", ".join(str(item) for item in v))
             return edit
         return None
 
