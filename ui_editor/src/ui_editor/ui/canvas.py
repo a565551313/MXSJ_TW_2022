@@ -1,8 +1,8 @@
 """编辑画布：控件树映射为可选中/拖动/缩放的图元。
 
 每个 :class:`~ui_editor.core.model.Widget` 对应一个
-:class:`WidgetItem`，子控件作为子图元，坐标天然相对父级（与
-.dlg 的相对坐标一致）。绘制委托给
+:class:`WidgetItem`，子控件作为子图元，画布内坐标相对父级；
+原生 ``.dlg`` 的画布绝对坐标在模型读写边界转换。绘制委托给
 :mod:`ui_editor.core.painters`。拖动改 ``iX/iY``，拖选中框的
 把手改 ``iWidth/iHeight``，几何变更经回调同步属性面板。
 """
@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 from ..core import fidelity, painters, snap
 from ..core.model import LayoutDocument, Widget
 from ..core.painters import PaintContext
+from .rulers import RulerOverlay
 
 _HANDLE = 7.0  # 选中把手边长（图元本地坐标）
 _HANDLES = ("nw", "n", "ne", "e", "se", "s", "sw", "w")
@@ -120,8 +121,10 @@ class WidgetItem(QGraphicsItem):
         self._resize_handle: str | None = None
         self._resize_start: tuple[float, float, float, float, QPointF] \
             | None = None
-        # 手柄拖动（0.18.0）：绕过父矩形夹取与「祖先已选中」冻结
+        # 手柄拖动（0.18.0）：绕过父矩形夹取与「祖先已选中」冻结。
+        # 群组拖动只让主项吸附，其余项共享主项的最终位移。
         self._force_move = False
+        self._skip_snap = False
         self.setPos(widget.x, widget.y)
         self.apply_lock()
         self.fidelity: list = []
@@ -187,7 +190,8 @@ class WidgetItem(QGraphicsItem):
             # 普通拖动维持原规则（吸附照旧，Alt 临时禁用）。
             if self._has_selected_ancestor() and not self._force_move:
                 return self.pos()
-            value = self._snapped_position(value)
+            if not self._skip_snap:
+                value = self._snapped_position(value)
             if not self._force_move:
                 value = self._clamped_position(value)
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged \
@@ -248,16 +252,24 @@ class WidgetItem(QGraphicsItem):
         if QApplication.keyboardModifiers() & Qt.KeyboardModifier.AltModifier:
             scene.set_guides([], [])
             return value
+        # 群组手柄：其它选中项随后也共享同一位移，不能拿它们尚停在
+        # 上一步的位置当吸附墙，否则主项小步拖动会被拉回旧位置。
+        moving = set()
+        if self._force_move:
+            moving = {id(item.widget) for item in scene.selectedItems()
+                      if isinstance(item, WidgetItem)}
         widget = self.widget
         parent = widget.parent
         if parent is not None:
             siblings = [c for c in parent.children
-                        if c is not widget and not c.locked]
+                        if c is not widget and not c.locked
+                        and id(c) not in moving]
             parent_size = (float(parent.width), float(parent.height))
         else:
             doc = getattr(scene, "document", None)
             siblings = [r for r in (doc.roots if doc else [])
-                        if r is not widget and not r.locked]
+                        if r is not widget and not r.locked
+                        and id(r) not in moving]
             parent_size = None
         others = [(float(c.x), float(c.y), float(c.width),
                    float(c.height)) for c in siblings]
@@ -479,19 +491,20 @@ class MoveGripItem(QGraphicsItem):
     场景级顶层图元（不是控件图元的子级，zValue 置顶），控件互相
     重叠也压不住它；按住拖动 = **强制移动**：绕过「夹在父矩形内」
     （子控件大于等于父控件时原本被冻死）与「祖先已选中」冻结——
-    只要控件没锁定，就一定能被这个手柄搬走。吸附仍然生效
-    （Alt 临时禁用），松手记一步撤销。锁定控件不出现手柄。
+    只要控件没锁定，就一定能被这个手柄搬走。多选时整组一起搬，
+    已选祖先下的后代不重复位移；主项吸附仍然生效（Alt 临时禁用），
+    整次松手只记一步撤销。锁定控件不出现手柄。
     """
 
     def __init__(self, target: WidgetItem) -> None:
         super().__init__()
         self.target = target
         self._drag_start_scene: QPointF | None = None
-        self._target_start: QPointF | None = None
+        self._drag_starts: list[tuple[WidgetItem, QPointF, tuple]] = []
         self.setZValue(1e6)
         self.setCursor(Qt.CursorShape.SizeAllCursor)
         self.setAcceptedMouseButtons(Qt.MouseButton.LeftButton)
-        self.setToolTip("拖动移动控件（不受父级边界限制）")
+        self.setToolTip("拖动移动所有选中控件（保持相对位置）")
         self.sync()
 
     # -- 跟随与绘制 ---------------------------------------------------
@@ -530,41 +543,83 @@ class MoveGripItem(QGraphicsItem):
                 painter.drawLine(QPointF(tip_x, tip_y),
                                  QPointF(tip_x + barb, tip_y - sy * barb))
 
-    # -- 拖动：强制移动（绕过父矩形夹取与祖先冻结） -------------------
+    # -- 拖动：整组强制移动（绕过父矩形夹取与祖先冻结） ---------------
+    def _selected_drag_roots(self) -> list[WidgetItem]:
+        """选中集的最高层图元；目标所在子树排第一，作为吸附主项。"""
+        scene = self.target.scene()
+        selected = ([] if scene is None else [
+            item for item in scene.selectedItems()
+            if isinstance(item, WidgetItem) and not item.widget.locked
+        ])
+        if self.target not in selected:
+            selected.append(self.target)
+        chosen = {id(item) for item in selected}
+
+        def has_selected_ancestor(item: WidgetItem) -> bool:
+            parent = item.parentItem()
+            while parent is not None:
+                if id(parent) in chosen:
+                    return True
+                parent = parent.parentItem()
+            return False
+
+        roots = [item for item in selected if not has_selected_ancestor(item)]
+
+        def contains_target(item: WidgetItem) -> bool:
+            node = self.target
+            while node is not None:
+                if node is item:
+                    return True
+                node = node.parentItem()
+            return False
+
+        roots.sort(key=lambda item: not contains_target(item))
+        return roots
+
     def begin_drag(self, scene_pos: QPointF) -> None:
-        """记下拖动起点；到 :meth:`finish_drag` 之前目标控件自由移动。"""
+        """记下整组起点；拖动期间各顶层选中项都可强制移动。"""
         self._drag_start_scene = QPointF(scene_pos)
-        self._target_start = QPointF(self.target.pos())
-        widget = self.target.widget
-        self.target._press_geom = (widget.x, widget.y,
-                                  widget.width, widget.height)
-        self.target._force_move = True
+        self._drag_starts = []
+        for item in self._selected_drag_roots():
+            widget = item.widget
+            geom = (widget.x, widget.y, widget.width, widget.height)
+            self._drag_starts.append((item, QPointF(item.pos()), geom))
+        for index, (item, _start, _geom) in enumerate(self._drag_starts):
+            item._force_move = True
+            item._skip_snap = index > 0
 
     def drag_to(self, scene_pos: QPointF) -> None:
-        """按场景坐标位移搬目标控件（换算回父坐标）。"""
-        if self._drag_start_scene is None or self._target_start is None:
+        """主项可吸附；其余选中项共享吸附后的同一场景位移。"""
+        if self._drag_start_scene is None or not self._drag_starts:
             return
-        parent = self.target.parentItem()
-        if parent is not None:
-            delta = (parent.mapFromScene(QPointF(scene_pos))
-                     - parent.mapFromScene(self._drag_start_scene))
-        else:
-            delta = QPointF(scene_pos) - self._drag_start_scene
-        self.target.setPos(self._target_start.x() + delta.x(),
-                           self._target_start.y() + delta.y())
+        delta = QPointF(scene_pos) - self._drag_start_scene
+        primary, primary_start, _geom = self._drag_starts[0]
+        primary.setPos(primary_start + delta)
+        shared_delta = primary.pos() - primary_start
+        for item, start, _old_geom in self._drag_starts[1:]:
+            item.setPos(start + shared_delta)
         self.sync()
 
     def finish_drag(self) -> None:
-        """松手：恢复正常移动规则；真搬动过才记一步撤销。"""
+        """松手：恢复规则；整组无论多少控件都只记一步撤销。"""
         if self._drag_start_scene is None:
             return
-        self.target._force_move = False
-        self.target._commit_if_changed()
+        changed = False
+        for item, _start, old_geom in self._drag_starts:
+            item._force_move = False
+            item._skip_snap = False
+            widget = item.widget
+            geom = (widget.x, widget.y, widget.width, widget.height)
+            changed = changed or geom != old_geom
+        if changed and self._drag_starts:
+            primary = self._drag_starts[0][0]
+            if primary.on_commit is not None:
+                primary.on_commit(primary.widget)
         scene = self.target.scene()
         if scene is not None:
             scene.set_guides([], [])
         self._drag_start_scene = None
-        self._target_start = None
+        self._drag_starts = []
 
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:  # noqa: N802
         if event.button() == Qt.MouseButton.LeftButton:
@@ -598,7 +653,7 @@ class LayoutScene(QGraphicsScene):
         #: 缩放松手且宽/高真变了才回调 (widget, changed_dims)；主窗口
         #: 在这里挂「游戏不读这个维度」的直说警示（0.19.0）。
         self.on_resize_commit = None
-        self.show_grid = False  # 网格+标尺（视图菜单/工具栏开关）
+        self.show_grid = False  # 场景网格（标尺由 CanvasView 独立开关）
         self.keep_aspect = False  # 等比缩放（视图菜单/工具栏开关）
         self._guides_x: list[float] = []  # 场景坐标参考线（拖动吸附）
         self._guides_y: list[float] = []
@@ -670,21 +725,6 @@ class LayoutScene(QGraphicsScene):
     def drawForeground(self, painter: QPainter, rect: QRectF) -> None:  # noqa: N802
         super().drawForeground(painter, rect)
         bounds = self.sceneRect()
-        if self.show_grid:  # 简易标尺：沿场景左/上边界每 100 单位刻字
-            painter.save()
-            painter.setPen(QColor(200, 205, 215, 160))
-            font = painter.font()
-            font.setPixelSize(9)
-            painter.setFont(font)
-            x = int(bounds.left()) // 100 * 100
-            while x <= bounds.right():
-                painter.drawText(QPointF(x + 2, bounds.top() + 10), str(x))
-                x += 100
-            y = int(bounds.top()) // 100 * 100
-            while y <= bounds.bottom():
-                painter.drawText(QPointF(bounds.left() + 2, y + 10), str(y))
-                y += 100
-            painter.restore()
         if self._guides_x or self._guides_y:
             painter.save()
             pen = QPen(QColor(235, 60, 170), 0)
@@ -762,6 +802,20 @@ class CanvasView(QGraphicsView):
         self._band_widget: QRubberBand | None = None
         self._band_additive = False
         self._band_dragged = False
+        self.rulers = RulerOverlay(self)
+
+    def set_rulers_visible(self, visible: bool) -> None:
+        self.rulers.set_visible(visible)
+
+    def setTransform(self, transform, combine=False) -> None:  # noqa: N802
+        super().setTransform(transform, combine)
+        rulers = getattr(self, "rulers", None)
+        if rulers is not None:
+            rulers.update()
+
+    def resizeEvent(self, event) -> None:  # noqa: N802
+        super().resizeEvent(event)
+        self.rulers.update_geometry()
 
     def contextMenuEvent(self, event) -> None:  # noqa: N802
         if self.context_menu_handler is None:
@@ -785,6 +839,7 @@ class CanvasView(QGraphicsView):
         if (factor > 1 and current > 8) or (factor < 1 and current < 0.08):
             return
         self.scale(factor, factor)
+        self.rulers.update()
         self.zoom_changed.emit(self.transform().m11())
 
     # -- 空格拖动画布 / 中键平移 ---------------------------------------
@@ -908,10 +963,12 @@ class CanvasView(QGraphicsView):
         if not rect.isEmpty():
             self.fitInView(rect.adjusted(-16, -16, 16, 16),
                            Qt.AspectRatioMode.KeepAspectRatio)
+            self.rulers.update()
             self.zoom_changed.emit(self.transform().m11())
 
     def actual_size(self) -> None:
         self.resetTransform()
+        self.rulers.update()
         self.zoom_changed.emit(self.transform().m11())
 
     def export_image(self) -> QImage:

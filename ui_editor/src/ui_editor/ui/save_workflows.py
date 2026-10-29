@@ -100,7 +100,8 @@ class SaveWorkflowsMixin:
                         dicts, text_encoding=self.doc.text_encoding)
                     for path, dicts in extra_layouts.items()},
                 new_plain=dlg_codec.dump_bytes(
-                    self.doc.to_dicts(), text_encoding=self.doc.text_encoding))
+                    self.doc.to_native_dicts(),
+                    text_encoding=self.doc.text_encoding))
             # 「记住输出包」之后的日常保存不再每次拦一道清单：清单里的
             # 诊断警告（比如脚本索引里没找到的引用）是常驻信息，面板里随时
             # 能看，不该每次都拦一次保存。只有确实有新东西要用户确认
@@ -207,11 +208,11 @@ class SaveWorkflowsMixin:
         res_path = self.doc.source_pack[1]
         extras = self._referenced_staged_images()
         self._require_save_encoding(extras)
-        plain = dlg_codec.dump_bytes(
-            self.doc.to_dicts(), text_encoding=encoding)
+        native_dicts = self.doc.to_native_dicts()
+        plain = dlg_codec.dump_bytes(native_dicts, text_encoding=encoding)
         tmp_out = str(out_path)
         layouts = {res_path: plain}
-        expected = {res_path: self.doc.to_dicts()}
+        expected = {res_path: native_dicts}
         for path, dicts in (extra_layouts or {}).items():
             if path == res_path:
                 continue
@@ -530,8 +531,9 @@ class SaveWorkflowsMixin:
             if not self._confirm_save_review(path, to_pack=False):
                 return False
             self._require_save_encoding({})
+            native_dicts = self.doc.to_native_dicts()
             data = dlg_codec.dump_bytes(
-                self.doc.to_dicts(), text_encoding=self.doc.text_encoding)
+                native_dicts, text_encoding=self.doc.text_encoding)
             with tempfile.NamedTemporaryFile(
                     prefix=f".{target.name}.", suffix=".tmp",
                     dir=target.parent, delete=False) as handle:
@@ -541,8 +543,8 @@ class SaveWorkflowsMixin:
                 os.fsync(handle.fileno())
             parsed, _ = dlg_codec.parse_bytes(
                 temp_path.read_bytes(), text_encoding=self.doc.text_encoding)
-            if parsed != self.doc.to_dicts():
-                raise ValueError("临时布局回读与当前文档不一致")
+            if parsed != native_dicts:
+                raise ValueError("临时布局回读与当前文档的原生坐标不一致")
             os.replace(temp_path, target)
             temp_path = None
         except (OSError, ValueError, UnicodeError) as exc:

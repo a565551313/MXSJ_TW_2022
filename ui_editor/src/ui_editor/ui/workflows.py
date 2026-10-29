@@ -101,7 +101,7 @@ class FileWorkflowsMixin:
         except Exception as exc:
             QMessageBox.warning(self, "打开失败", str(exc))
             return
-        doc = LayoutDocument.from_dicts(dicts, md5)
+        doc = LayoutDocument.from_native_dicts(dicts, md5)
         doc.source_path = str(path)
         doc.source_bytes = data
         self.resolver.add_loose_dir(Path(path).parent)
@@ -222,7 +222,7 @@ class FileWorkflowsMixin:
             if result is None:
                 raise ValueError("该包中找不到可解析布局；"
                                  "请核对保存的新包和当时填写的路径。")
-            doc = LayoutDocument.from_dicts(*result)
+            doc = LayoutDocument.from_native_dicts(*result)
             doc.source_bytes = self.resolver.fetch_pack_dlg_bytes(pack_path, path)
         except Exception as exc:
             QMessageBox.warning(self, "按路径打开失败", str(exc))
@@ -273,7 +273,7 @@ class FileWorkflowsMixin:
                 "请确认路径写法（如 dialog/xxx.dlg）与包是否正确。")
             return
         dicts, md5 = result
-        doc = LayoutDocument.from_dicts(dicts, md5)
+        doc = LayoutDocument.from_native_dicts(dicts, md5)
         doc.source_pack = (pack_path, res_path)
         doc.source_bytes = self.resolver.fetch_pack_dlg_bytes(pack_path, res_path)
         self._try_load_styles()

@@ -48,7 +48,7 @@ class SourceActionsMixin:
             if data is None:
                 data = self._source_bytes(self.doc, self.resolver)
             dicts, md5 = dlg_codec.parse_bytes(data, text_encoding=encoding)
-            doc = LayoutDocument.from_dicts(dicts, md5)
+            doc = LayoutDocument.from_native_dicts(dicts, md5)
             doc.source_bytes = data
             doc.source_path = self.doc.source_path
             doc.source_pack = self.doc.source_pack
@@ -161,7 +161,7 @@ class SourceActionsMixin:
                 data = self._source_bytes(was, fresh)
                 dicts, md5 = dlg_codec.parse_bytes(
                     data, text_encoding=fresh.text_encoding)
-                nd = LayoutDocument.from_dicts(dicts, md5)
+                nd = LayoutDocument.from_native_dicts(dicts, md5)
                 nd.source_bytes = data
                 nd.source_path = was.source_path
                 nd.source_pack = was.source_pack

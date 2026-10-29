@@ -783,7 +783,7 @@ class AssetResolver:
         return None
 
     def fetch_image(self, name: str) -> list[QImage] | None:
-        """按路径取图片帧：PNG/JPG 单帧，精灵多帧；失败返回 None。"""
+        """按路径取图片帧；精灵帧已按原生锚点合成到整张画布。"""
         try:
             normalized = self._resource_name(name, allow_directory=True)
         except ValueError as exc:
@@ -818,22 +818,51 @@ class AssetResolver:
 
     @staticmethod
     def _decode_frames(data: bytes) -> list[QImage] | None:
+        """解码图片；精灵按原生中心点/关键点合成到整张画布。
+
+        不能只返回裁后的帧像素：``center-key`` 是原生帧落点，丢掉它会
+        同时造成视觉位置与自动尺寸偏差。零偏移且同尺寸的帧直接返回，
+        不为普通素材多做一次绘制。
+        """
         if data[:4] == b"\x89PNG" or data[:2] == b"\xff\xd8" \
                 or data[:3] == b"GIF" or data[:2] == b"BM":
             image = QImage.fromData(data)
             return [image] if not image.isNull() else None
         if sprite.is_sprite(data):
             try:
-                decoded = sprite.decode_sprite(data)
+                parser = sprite._SpriteParser(data)
+                sprite._validate_canvas_allocation(parser)
+                decoded = sprite._decode_sprite(parser)
             except Exception:
                 return None
             images = []
-            for frame in decoded.frames:
+            for index, frame in enumerate(decoded.frames):
                 if frame.width <= 0 or frame.height <= 0:
                     continue
-                image = QImage(frame.rgba, frame.width, frame.height,
-                               frame.width * 4, QImage.Format.Format_RGBA8888)
-                images.append(image.copy())
+                frame_image = QImage(
+                    frame.rgba, frame.width, frame.height, frame.width * 4,
+                    QImage.Format.Format_RGBA8888).copy()
+                dx, dy = decoded.frame_offset(index)
+                needs_canvas = (
+                    (dx, dy) != (0, 0)
+                    or (frame.width, frame.height)
+                    != (decoded.canvas_w, decoded.canvas_h)
+                )
+                if (not needs_canvas or decoded.canvas_w <= 0
+                        or decoded.canvas_h <= 0):
+                    images.append(frame_image)
+                    continue
+                canvas = QImage(decoded.canvas_w, decoded.canvas_h,
+                                QImage.Format.Format_RGBA8888)
+                if canvas.isNull():
+                    return None  # 不拿裁后帧冒充原生画布，避免静默挪帧
+                canvas.fill(0)
+                painter = QPainter(canvas)
+                try:
+                    painter.drawImage(dx, dy, frame_image)
+                finally:
+                    painter.end()
+                images.append(canvas)
             return images or None
         return None
 

@@ -58,7 +58,7 @@ class TestMainWindowFlow(unittest.TestCase):
             from ui_editor.core import dlg_codec
             from ui_editor.core.model import LayoutDocument
             dicts, _ = dlg_codec.parse_bytes(Path(target).read_bytes())
-            again = LayoutDocument.from_dicts(dicts, None)
+            again = LayoutDocument.from_native_dicts(dicts, None)
             self.assertEqual(again.to_dicts(), w.doc.to_dicts())
         w.doc.dirty = False
 

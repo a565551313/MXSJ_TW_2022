@@ -295,6 +295,21 @@ def icon_grid() -> QIcon:
     return _end(pixmap, p)
 
 
+def icon_ruler() -> QIcon:
+    """视口标尺：上边与左边带刻度的直角尺。"""
+    pixmap, p = _begin()
+    p.setPen(_pen("#8a94a6", 1.2))
+    p.setBrush(QColor("#2b3444"))
+    p.drawRect(QRectF(4.5, 4.5, 19, 5))
+    p.drawRect(QRectF(4.5, 4.5, 5, 19))
+    p.setPen(_pen("#b7c2d4", 1.1))
+    for x in (11, 15, 19):
+        p.drawLine(QPointF(x, 5), QPointF(x, 8))
+    for y in (11, 15, 19):
+        p.drawLine(QPointF(5, y), QPointF(8, y))
+    return _end(pixmap, p)
+
+
 def icon_align() -> QIcon:
     """对齐：长短条靠左排齐。"""
     pixmap, p = _begin()

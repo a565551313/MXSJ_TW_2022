@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -47,6 +48,14 @@ def make_sprite() -> bytes:
             + bytes(palette) + row1 + row2)
 
 
+def make_anchored_sprite() -> bytes:
+    """2×2 帧在 6×5 原生画布的 (2,1)：center-key=(3-1,2-1)。"""
+    data = bytearray(make_sprite())
+    struct.pack_into("<2sHHHHHH", data, 0, b"I0", 1, 1, 6, 5, 3, 2)
+    struct.pack_into("<HHHH", data, 14, 1, 1, 2, 2)
+    return bytes(data)
+
+
 def make_recorder(calls: list):
     """具名进度记录器（unittest 探针不用 lambda）。"""
 
@@ -74,6 +83,7 @@ class TestAssetResolver(unittest.TestCase):
         entries = [
             ("ui.lst", lst.read_bytes()),
             ("test/pic.igs", make_sprite()),
+            ("test/anchored.igs", make_anchored_sprite()),
             ("dialog/test.dlg", xor4(dlg_plain, b"\x5a\xa5\x11\x7e")),
         ]
         self._tmp = tempfile.TemporaryDirectory()
@@ -429,6 +439,68 @@ class TestAssetResolver(unittest.TestCase):
         green = image.pixelColor(1, 0)
         self.assertEqual((red.red(), red.green(), red.blue()), (255, 0, 0))
         self.assertEqual((green.red(), green.green()), (0, 255))
+
+    def test_sprite_frame_is_composited_at_native_canvas_offset(self):
+        from ui_editor.core import sprite
+
+        decoded = sprite.decode_sprite(make_anchored_sprite())
+        self.assertEqual((decoded.center_x, decoded.center_y), (3, 2))
+        self.assertEqual((decoded.frames[0].key_x,
+                          decoded.frames[0].key_y), (1, 1))
+        self.assertEqual(decoded.frame_offset(0), (2, 1))
+
+        frames = self.resolver.fetch_image("test/anchored.igs")
+        self.assertIsNotNone(frames)
+        image = frames[0]
+        self.assertEqual((image.width(), image.height()), (6, 5))
+        self.assertEqual(image.pixelColor(0, 0).alpha(), 0)
+        self.assertEqual(image.pixelColor(2, 1).red(), 255)
+        self.assertEqual(image.pixelColor(3, 1).green(), 255)
+        self.assertEqual(image.pixelColor(2, 2).green(), 255)
+        self.assertEqual(image.pixelColor(3, 3).alpha(), 0)
+
+    def test_sprite_raw_rgba_budget_is_checked_before_row_allocation(self):
+        from ui_editor.core import sprite
+        from ui_editor.core.errors import SpriteError
+
+        data = (struct.pack("<2sHHHHHH", b"I0", 1, 1, 2, 2, 0, 0)
+                + struct.pack("<HHHH", 0, 0, 16384, 16384)
+                + struct.pack("<I", 16384))
+        with self.assertRaisesRegex(SpriteError, "预算"):
+            sprite.decode_sprite(data)
+
+    def test_oversized_staged_canvas_is_rejected_before_qimage(self):
+        data = bytearray(make_sprite())
+        struct.pack_into("<HH", data, 6, 16384, 16384)
+        self.resolver.stage_image("test/oversized.igs", bytes(data))
+        with mock.patch("ui_editor.core.assets.QImage") as qimage:
+            self.assertIsNone(self.resolver.fetch_image("test/oversized.igs"))
+            qimage.assert_not_called()
+
+    def test_widget_size_and_paint_use_native_sprite_canvas(self):
+        from PySide6.QtGui import QImage, QPainter
+
+        from ui_editor.core import painters
+        from ui_editor.core.model import Widget
+        from ui_editor.core.painters import PaintContext
+
+        widget = Widget.from_dict({
+            "sWidgetType": "CBitmapFrame", "sName": "anchored",
+            "iX": 0, "iY": 0, "iWidth": 0, "iHeight": 0,
+            "sFileName": "test/anchored.igs", "lChildren": [],
+        })
+        ctx = PaintContext(self.resolver, show_names=False)
+        self.assertEqual(painters.effective_size(widget, ctx), (6, 5))
+        output = QImage(6, 5, QImage.Format.Format_RGBA8888)
+        output.fill(0)
+        painter = QPainter(output)
+        try:
+            painters.paint_widget(painter, widget, ctx)
+        finally:
+            painter.end()
+        self.assertEqual(output.pixelColor(0, 0).alpha(), 0)
+        self.assertEqual(output.pixelColor(2, 1).red(), 255)
+        self.assertEqual(output.pixelColor(3, 1).green(), 255)
 
 
 class TestUnpackText(unittest.TestCase):

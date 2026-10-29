@@ -89,9 +89,13 @@ class WindowSetupMixin:
         badges_action.toggled.connect(self._toggle_badges)
         view_menu.addAction(badges_action)
         self._badges_action = badges_action
-        self._act_grid = QAction("显示网格与标尺", self, checkable=True)
+        self._act_grid = QAction("显示网格", self, checkable=True)
         self._act_grid.toggled.connect(self._toggle_grid)
         view_menu.addAction(self._act_grid)
+        self._act_rulers = QAction("显示标尺", self, checkable=True)
+        self._act_rulers.setShortcut(QKeySequence("Ctrl+R"))
+        self._act_rulers.toggled.connect(self.view.set_rulers_visible)
+        view_menu.addAction(self._act_rulers)
         self._act_aspect = QAction("等比缩放", self, checkable=True)
         self._act_aspect.setToolTip(
             "打开后拖动把手缩放控件时保持宽高比，图片不变形；"
@@ -270,11 +274,15 @@ class WindowSetupMixin:
         self._badges_action.setToolTip(
             "显示/隐藏绘制保真度角标（近似=橙、模拟=红）")
         bar.addAction(self._badges_action)
-        # 网格/标尺开关与对齐下拉都进工具栏（常用手势不走菜单）
+        # 网格、标尺与对齐下拉都进工具栏（常用手势不走菜单）
         self._act_grid.setIcon(icons.icon_grid())
         self._act_grid.setIconText("网格")
-        self._act_grid.setToolTip("显示/隐藏网格与标尺")
+        self._act_grid.setToolTip("显示/隐藏网格")
         bar.addAction(self._act_grid)
+        self._act_rulers.setIcon(icons.icon_ruler())
+        self._act_rulers.setIconText("标尺")
+        self._act_rulers.setToolTip("显示/隐藏视口标尺（Ctrl+R）")
+        bar.addAction(self._act_rulers)
         self._act_aspect.setIcon(icons.icon_aspect())
         self._act_aspect.setIconText("等比")
         bar.addAction(self._act_aspect)

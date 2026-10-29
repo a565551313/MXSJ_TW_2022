@@ -13,10 +13,11 @@
   重编码固定 quality=90（JPEG 有损，重存必有一损，取高质量端如实告知）；
   GIF（多帧）与其余格式拒收，一句话原因进结果清单；
 * ``.igs`` 精灵容器：``decode_sprite`` 逐帧解 RGBA → 逐帧调整 →
-  ``encode_frames`` 重编码成**新** .igs（原容器字节不动）。两道保真
-  护栏：①任一帧锚点非 (0,0) 拒收——``encode_frames`` 只写 (0,0)，
-  硬转等于悄悄挪帧；②魔数不在 I0/T0/I1 拒收——真彩 T4/T5/I4 能解
-  不能编。重编码会按调整后像素重建 256 色调色板，颜色有轻微再量化
+  ``encode_frames`` 重编码成**新** .igs（原容器字节不动）。保真护栏：
+  帧锚点或画布中心非 (0,0) 拒收——编码器只写零锚点／零中心，硬转等于
+  悄悄挪帧；原生画布不等于最大帧尺寸也拒收，避免缩掉透明边界；魔数不在
+  I0/T0/I1 拒收——真彩 T4/T5/I4 能解不能编。
+  重编码会按调整后像素重建 256 色调色板，颜色有轻微再量化
   属预期（用户本来就在改像素），透明等级不受影响。
 """
 
@@ -157,12 +158,12 @@ def process_plain(data: bytes, params: AdjustParams) -> bytes:
 def process_sprite(data: bytes, params: AdjustParams) -> bytes:
     """.igs 字节 → 逐帧调整重编码的**新** .igs 字节（I0/T0/I1）。
 
-    保真护栏（模块 docstring）：帧锚点非 (0,0)、魔数不可重编码、空帧
-    都拒收；行长超上限等编码失败也转成一句话 ``AdjustError``。
+    保真护栏（模块 docstring）：帧锚点／画布中心非零、透明画布无法保持、
+    魔数不可重编码、空帧都拒收；行长超上限等编码失败也转成 ``AdjustError``。
     """
     try:
-        # 借 _SpriteParser 读帧锚点（Sprite 数据类不带 kx/ky）——格式
-        # 知识只在 sprite.py 一处维护，这里不手抄头部布局。
+        # 先用同一解析器检查帧关键点：重编码只支持左上锚点，提前拒收；
+        # 格式知识只在 sprite.py 一处维护，这里不手抄头部布局。
         parser = sprite._SpriteParser(data)
     except AdjustError:
         raise
@@ -171,6 +172,16 @@ def process_sprite(data: bytes, params: AdjustParams) -> bytes:
     if any((kx, ky) != (0, 0) for kx, ky, _fw, _fh in parser.frame_dims):
         raise AdjustError(
             "帧锚点不是 (0,0)：重编码会丢帧定位，拒收（忠实优先）")
+    if (parser.center_x, parser.center_y) != (0, 0):
+        raise AdjustError(
+            "原生画布中心不是 (0,0)：重编码会丢帧定位，拒收（忠实优先）")
+    max_frame_w = max((fw for _kx, _ky, fw, _fh in parser.frame_dims),
+                      default=0)
+    max_frame_h = max((fh for _kx, _ky, _fw, fh in parser.frame_dims),
+                      default=0)
+    if (parser.canvas_w, parser.canvas_h) != (max_frame_w, max_frame_h):
+        raise AdjustError(
+            "原生画布与最大帧尺寸不一致：重编码会改变透明画布，拒收（忠实优先）")
     try:
         spr = sprite.decode_sprite(data)
     except Exception as exc:

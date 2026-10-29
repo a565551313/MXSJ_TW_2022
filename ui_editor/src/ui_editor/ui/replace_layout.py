@@ -134,7 +134,7 @@ class ReplaceLayoutMixin:
                     self, "替换失败",
                     f"解析失败，{target.name} 未改动。\n{exc}")
                 return None
-            doc = LayoutDocument.from_dicts(dicts, md5)
+            doc = LayoutDocument.from_native_dicts(dicts, md5)
             doc.source_bytes = raw
             doc.text_encoding = self.resolver.text_encoding
             doc.source_path = str(target)
@@ -148,8 +148,9 @@ class ReplaceLayoutMixin:
         if not target.is_file():
             return []
         try:
-            return dlg_codec.parse_bytes(
+            dicts, md5 = dlg_codec.parse_bytes(
                 target.read_bytes(),
-                text_encoding=self.resolver.text_encoding)[0]
+                text_encoding=self.resolver.text_encoding)
+            return LayoutDocument.from_native_dicts(dicts, md5).to_dicts()
         except Exception:
             return []  # 原文件都读不出来就当空基线，仍然允许替换
