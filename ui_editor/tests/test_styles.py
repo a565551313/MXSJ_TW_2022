@@ -48,6 +48,18 @@ class TestStyleBook(unittest.TestCase):
         self.assertEqual((native.name, native.size, native.weight),
                          ("黑體", 13, 800))
 
+    def test_numeric_legacy_name_words_also_fall_through(self):
+        book = StyleBook.parse_text(
+            "[Font]\nFoo 1 Bar 2 Baz 12 400 0\n"
+            "黑體 0 13 72 800 3 1 0\n")
+        self.assertEqual(len(book.fonts), 2)
+        legacy = book.font(0)
+        self.assertEqual((legacy.name, legacy.size, legacy.weight),
+                         ("Foo 1 Bar 2 Baz", 12, 400))
+        native = book.font(1)
+        self.assertEqual((native.name, native.size, native.weight),
+                         ("黑體", 13, 800))
+
     def test_tbstyles(self):
         self.assertEqual(len(self.book.tbstyles), 2)
         self.assertEqual(self.book.tbstyle(0)["ButtonFont"], "1")

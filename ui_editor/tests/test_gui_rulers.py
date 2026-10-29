@@ -307,6 +307,7 @@ class ViewportRulerTests(unittest.TestCase):
         self.assertEqual(self.window.scene.manual_guides()[0], [center.x()])
 
     def test_ruler_callback_exception_is_reported(self):
+        self.window.scene.set_ruler_preview("x", 120, 0)
         event = mock.Mock()
         event.globalPosition.return_value = QPointF(20, 20)
         with (
@@ -319,6 +320,24 @@ class ViewportRulerTests(unittest.TestCase):
             self.window.view.rulers.horizontal.mouseMoveEvent(event)
         box.warning.assert_called_once()
         self.assertIn("ruler boom", str(box.warning.call_args))
+        self.assertIsNone(self.window.scene._ruler_preview)
+
+    def test_drag_error_cleanup_failure_is_contained(self):
+        rulers = self.window.view.rulers
+        rulers._drag_orientation = Qt.Orientation.Vertical
+        with (
+            mock.patch.object(
+                self.window.scene, "set_ruler_preview",
+                side_effect=RuntimeError("cleanup boom"),
+            ),
+            mock.patch("ui_editor.ui.rulers.QMessageBox") as box,
+        ):
+            rulers.report_drag_error(RuntimeError("drag boom"))
+        self.assertIsNone(rulers._drag_orientation)
+        box.warning.assert_called_once()
+        message = str(box.warning.call_args)
+        self.assertIn("drag boom", message)
+        self.assertIn("cleanup boom", message)
 
     def test_viewport_callback_exception_is_reported(self):
         self.window.view.set_rulers_visible(True)

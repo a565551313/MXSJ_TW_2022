@@ -247,9 +247,18 @@ class RulerOverlay(QObject):
         self._reset_drag()
 
     def report_drag_error(self, exc: Exception) -> None:
-        """Qt 回调边界的用户可见错误报告，并停止本次参考线拖动。"""
-        self._reset_drag()
-        QMessageBox.warning(self.view, "参考线操作失败", str(exc))
+        """清预览并复位拖动；清理失败也与原错误一起报告。"""
+        cleanup_error = None
+        try:
+            self.view.scene().set_ruler_preview(None)
+        except Exception as cleanup_exc:
+            cleanup_error = cleanup_exc
+        finally:
+            self._reset_drag()
+        message = str(exc)
+        if cleanup_error is not None:
+            message += f"\n清除参考线预览也失败：{cleanup_error}"
+        QMessageBox.warning(self.view, "参考线操作失败", message)
 
     def _begin_drag(self, orientation: Qt.Orientation, index: int | None,
                     global_pos: QPoint, source: str) -> bool:
