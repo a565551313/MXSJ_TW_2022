@@ -58,7 +58,7 @@ def prepare_layout_import(
     path = validate_layout_path(path)
     dicts, md5 = dlg_codec.parse_bytes(data, text_encoding=text_encoding)
     _check_import_encoding(dicts, text_encoding=text_encoding)
-    doc = LayoutDocument.from_dicts(dicts, md5)
+    doc = LayoutDocument.from_native_dicts(dicts, md5)
     doc.text_encoding = text_encoding
     doc.source_bytes = data
     errors = [issue for issue in diagnose(doc) if issue.code == "ENCODING"]
@@ -72,7 +72,8 @@ def prepare_layout_import(
                 unpack_packed_text(pack.read_named(path)),
                 text_encoding=text_encoding
             )
-            LayoutDocument.from_dicts(previous, old_md5)
+            previous_doc = LayoutDocument.from_native_dicts(previous, old_md5)
+            previous = previous_doc.to_dicts()  # 改动清单也使用编辑器坐标
         except Exception as exc:
             raise PackError("目标编号已有非布局资源，拒绝覆盖。") from exc
     doc.begin_pack_import(previous)

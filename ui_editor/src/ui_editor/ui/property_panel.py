@@ -474,8 +474,17 @@ class PropertyPanel(QWidget):
             spin = QSpinBox()
             spin.setRange(-2_000_000_000, 2_000_000_000)
             spin.setValue(value)
-            spin.editingFinished.connect(
-                lambda k=key, s=spin: self._commit(k, s.value()))
+            if key == "iFont":
+                spin.setToolTip(
+                    "客户端字体表序号（字号由 ui.lst 对应项决定）；"
+                    "调整时画布立即刷新")
+                # 其它整数仍在 editingFinished 提交；字体需要跟随每次
+                # 微调/输入，不等 Enter 或失焦才改变画布字号。
+                spin.valueChanged.connect(
+                    lambda v, k=key: self._commit(k, int(v)))
+            else:
+                spin.editingFinished.connect(
+                    lambda k=key, s=spin: self._commit(k, s.value()))
             self._getters[key] = lambda v: spin.setValue(int(v))
             return spin
         if isinstance(value, float):

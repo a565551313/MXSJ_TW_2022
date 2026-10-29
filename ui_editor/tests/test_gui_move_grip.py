@@ -5,7 +5,7 @@
   祖先同时被选中时被拒绝；手柄拖动（强制移动）全部绕过；
 * 手柄在控件右上角**外侧**、场景级顶层图元，重叠控件盖不住它；
 * 锁定控件没有手柄（锁定照旧不能动）；真搬动过松手记一步撤销，
-  没搬动不记；只搬被握的那一个控件；
+  没搬动不记；多选时所有最高层选中项一起搬，后代不重复位移；
 * 普通拖动的规则一字不改（吸附/夹取/祖先冻结照旧），手柄跟随
   控件移动与属性面板改几何。
 """
@@ -132,7 +132,7 @@ class MoveGripTests(unittest.TestCase):
         self.assertEqual((self.child.x, self.child.y), (60, 40))
         self.assertEqual(self.commits, [self.child])   # 松手记一步撤销
 
-    def test_grip_drag_bypasses_ancestor_selected(self):
+    def test_grip_drag_with_ancestor_selected_moves_subtree_once(self):
         self.parent_item.setSelected(True)
         self.child_item.setSelected(True)
         self.assertEqual(len(self.scene._grips), 2)
@@ -141,9 +141,56 @@ class MoveGripTests(unittest.TestCase):
         grip.begin_drag(start)
         grip.drag_to(QPointF(start.x() + 50, start.y() + 30))
         grip.finish_drag()
-        self.assertEqual((self.child.x, self.child.y), (50, 30))
-        self.assertEqual((self.parent.x, self.parent.y), (0, 0))  # 只搬这一个
-        self.assertEqual(self.commits, [self.child])
+        # 父子同选只搬最高层父项；子的局部坐标不变，场景位置跟随一次。
+        self.assertEqual((self.parent.x, self.parent.y), (50, 30))
+        self.assertEqual((self.child.x, self.child.y), (0, 0))
+        self.assertEqual(self.doc.abs_position(self.child), (50, 30))
+        self.assertEqual(self.commits, [self.parent])
+
+    def _add_selected_root(self):
+        other = self.doc.new_widget("CButton")
+        other.set_geometry(x=300, y=200, width=60, height=24)
+        self.scene.set_document(self.doc)
+        self.parent_item = self.scene.item_for(self.parent)
+        self.child_item = self.scene.item_for(self.child)
+        return other, self.scene.item_for(other)
+
+    def test_grip_drag_moves_every_selected_widget_together(self):
+        other, other_item = self._add_selected_root()
+        self.child_item.setSelected(True)
+        other_item.setSelected(True)
+        grip = self._grip_of(self.child_item)
+        start = QPointF(grip.pos())
+        grip.begin_drag(start)
+        grip.drag_to(QPointF(start.x() + 60, start.y() + 40))
+        grip.finish_drag()
+        self.assertEqual((self.child.x, self.child.y), (60, 40))
+        self.assertEqual((other.x, other.y), (360, 240))
+        self.assertEqual((self.parent.x, self.parent.y), (0, 0))
+        self.assertEqual(self.commits, [self.child])  # 整组只提交一次
+
+    def test_group_grip_is_one_undo_and_redo_step(self):
+        other, other_item = self._add_selected_root()
+        self.child_item.setSelected(True)
+        other_item.setSelected(True)
+        self.doc.reset_history()
+        for item in self.scene._items.values():
+            item.on_commit = lambda _widget: self.doc.checkpoint()
+        grip = self._grip_of(self.child_item)
+        start = QPointF(grip.pos())
+        grip.begin_drag(start)
+        grip.drag_to(QPointF(start.x() + 60, start.y() + 40))
+        grip.finish_drag()
+        self.assertTrue(self.doc.undo())  # 一步就回到整组拖动前
+        self.assertEqual((self.doc.roots[0].children[0].x,
+                          self.doc.roots[0].children[0].y), (0, 0))
+        self.assertEqual((self.doc.roots[1].x, self.doc.roots[1].y),
+                         (300, 200))
+        self.assertTrue(self.doc.redo())
+        self.assertEqual((self.doc.roots[0].children[0].x,
+                          self.doc.roots[0].children[0].y), (60, 40))
+        self.assertEqual((self.doc.roots[1].x, self.doc.roots[1].y),
+                         (360, 240))
 
     def test_grip_drag_zero_movement_commits_nothing(self):
         self.child_item.setSelected(True)

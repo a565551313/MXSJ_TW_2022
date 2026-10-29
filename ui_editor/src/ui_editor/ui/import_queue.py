@@ -120,10 +120,10 @@ class ImportQueueMixin:
         """
         out: dict[str, list[dict]] = {}
         for path, doc in self._pending_imports.get(pack_path, {}).items():
-            out[path] = doc.to_dicts()
+            out[path] = doc.to_native_dicts()
         for doc in self._docs_with_pending_pack(pack_path):
             if doc.source_pack is not None:
-                out[doc.source_pack[1]] = doc.to_dicts()
+                out[doc.source_pack[1]] = doc.to_native_dicts()
         return out
 
     def _docs_with_pending_pack(self, pack_path: str) -> list:
