@@ -34,7 +34,9 @@ class FontRefreshTests(unittest.TestCase):
         self.window = MainWindow()
         self.window.new_layout()
         book = StyleBook.parse_text(
-            "[Font]\n宋体 12 400 0\n宋体 24 700 0\n")
+            "[Font]\n宋体 12 400 0\n宋体 24 700 0\n"
+            "黑體 0 13 72 800 3 1 0\n"
+            "方正蘭亭 0 34 72 0 0 0 4\n")
         self.window._set_styles(book, "测试字体表")
         self.text = self.window.doc.new_widget(
             "CTextFrameEx", parent=self.window.doc.roots[0])
@@ -103,6 +105,14 @@ class FontRefreshTests(unittest.TestCase):
             self.assertEqual(sizes[-1], 12)
         finally:
             painters._draw_text = original
+
+    def test_extended_font_format_reaches_painter_with_native_size(self):
+        self.text.props["iFont"] = 2
+        font = painters._font(self.text, self.window.scene.ctx)
+        self.assertEqual((font.family(), font.pixelSize()), ("黑體", 13))
+        self.text.props["iFont"] = 3
+        font = painters._font(self.text, self.window.scene.ctx)
+        self.assertEqual((font.family(), font.pixelSize()), ("方正蘭亭", 34))
 
 
 if __name__ == "__main__":

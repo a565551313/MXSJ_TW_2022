@@ -25,6 +25,17 @@ class TestStyleBook(unittest.TestCase):
         only_new = StyleBook.parse_text("[NewFont]\n宋体 12 400 0\n")
         self.assertIsNotNone(only_new.font(0))
 
+    def test_extended_font_uses_native_field_positions(self):
+        book = StyleBook.parse_text(
+            "[Font]\n黑體 0 13 72 800 3 1 0\n"
+            "方正蘭亭 0 34 72 0 0 0 4\n")
+        first, second = book.fonts
+        self.assertEqual((first.name, first.size, first.weight),
+                         ("黑體", 13, 800))
+        self.assertEqual((second.name, second.size, second.weight),
+                         ("方正蘭亭", 34, 0))
+        self.assertEqual(book.font(1), second)
+
     def test_tbstyles(self):
         self.assertEqual(len(self.book.tbstyles), 2)
         self.assertEqual(self.book.tbstyle(0)["ButtonFont"], "1")
