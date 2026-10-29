@@ -36,6 +36,18 @@ class TestStyleBook(unittest.TestCase):
                          ("方正蘭亭", 34, 0))
         self.assertEqual(book.font(1), second)
 
+    def test_extended_records_do_not_hide_legacy_multiword_names(self):
+        book = StyleBook.parse_text(
+            "[Font]\nNoto Sans Mono CJK SC 12 400 0\n"
+            "黑體 0 13 72 800 3 1 0\n")
+        self.assertEqual(len(book.fonts), 2)
+        legacy = book.font(0)
+        self.assertEqual((legacy.name, legacy.size, legacy.weight),
+                         ("Noto Sans Mono CJK SC", 12, 400))
+        native = book.font(1)
+        self.assertEqual((native.name, native.size, native.weight),
+                         ("黑體", 13, 800))
+
     def test_tbstyles(self):
         self.assertEqual(len(self.book.tbstyles), 2)
         self.assertEqual(self.book.tbstyle(0)["ButtonFont"], "1")

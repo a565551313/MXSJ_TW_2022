@@ -6,7 +6,7 @@ import math
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QPainter, QPen
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QMessageBox, QWidget
 
 RULER_THICKNESS = 24
 MIN_MAJOR_PIXELS = 72
@@ -125,27 +125,36 @@ class RulerStrip(QWidget):
                              self.width() - 1, self.height())
 
     def mousePressEvent(self, event) -> None:  # noqa: N802
-        if (event.button() == Qt.MouseButton.LeftButton
-                and self._view.rulers.begin_ruler_drag(
-                    self._orientation, event.globalPosition().toPoint())):
-            event.accept()
-            return
-        super().mousePressEvent(event)
+        try:
+            if (event.button() == Qt.MouseButton.LeftButton
+                    and self._view.rulers.begin_ruler_drag(
+                        self._orientation, event.globalPosition().toPoint())):
+                event.accept()
+                return
+            super().mousePressEvent(event)
+        except Exception as exc:
+            self._view.rulers.report_drag_error(exc)
 
     def mouseMoveEvent(self, event) -> None:  # noqa: N802
-        if self._view.rulers.update_ruler_drag(
-                self._orientation, event.globalPosition().toPoint()):
-            event.accept()
-            return
-        super().mouseMoveEvent(event)
+        try:
+            if self._view.rulers.update_ruler_drag(
+                    self._orientation, event.globalPosition().toPoint()):
+                event.accept()
+                return
+            super().mouseMoveEvent(event)
+        except Exception as exc:
+            self._view.rulers.report_drag_error(exc)
 
     def mouseReleaseEvent(self, event) -> None:  # noqa: N802
-        if (event.button() == Qt.MouseButton.LeftButton
-                and self._view.rulers.finish_ruler_drag(
-                    self._orientation, event.globalPosition().toPoint())):
-            event.accept()
-            return
-        super().mouseReleaseEvent(event)
+        try:
+            if (event.button() == Qt.MouseButton.LeftButton
+                    and self._view.rulers.finish_ruler_drag(
+                        self._orientation, event.globalPosition().toPoint())):
+                event.accept()
+                return
+            super().mouseReleaseEvent(event)
+        except Exception as exc:
+            self._view.rulers.report_drag_error(exc)
 
 
 class RulerCorner(QWidget):
@@ -178,6 +187,7 @@ class RulerOverlay(QObject):
         self._drag_index = None
         self._drag_source = None
         self._drag_document = None
+        self._drag_offset = 0.0
         self.horizontal = RulerStrip(view, Qt.Orientation.Horizontal)
         self.vertical = RulerStrip(view, Qt.Orientation.Vertical)
         self.corner = RulerCorner(view)
@@ -230,10 +240,16 @@ class RulerOverlay(QObject):
         self._drag_index = None
         self._drag_source = None
         self._drag_document = None
+        self._drag_offset = 0.0
 
     def cancel_drag(self) -> None:
         self.view.scene().set_ruler_preview(None)
         self._reset_drag()
+
+    def report_drag_error(self, exc: Exception) -> None:
+        """Qt 回调边界的用户可见错误报告，并停止本次参考线拖动。"""
+        self._reset_drag()
+        QMessageBox.warning(self.view, "参考线操作失败", str(exc))
 
     def _begin_drag(self, orientation: Qt.Orientation, index: int | None,
                     global_pos: QPoint, source: str) -> bool:
@@ -245,6 +261,12 @@ class RulerOverlay(QObject):
         self._drag_index = index
         self._drag_source = source
         self._drag_document = scene.document
+        if index is not None:
+            xs, ys = scene.manual_guides()
+            values = (ys if orientation == Qt.Orientation.Horizontal else xs)
+            if 0 <= index < len(values):
+                value, _inside, _on_ruler = self._drag_position(global_pos)
+                self._drag_offset = values[index] - value
         self._update_drag(global_pos)
         return True
 
@@ -288,6 +310,7 @@ class RulerOverlay(QObject):
             self.cancel_drag()
             return
         value, inside, _on_ruler = self._drag_position(global_pos)
+        value += self._drag_offset
         if inside:
             scene.set_ruler_preview(
                 self._axis(self._drag_orientation), value, self._drag_index)
@@ -300,6 +323,7 @@ class RulerOverlay(QObject):
             self.cancel_drag()
             return
         value, inside, on_ruler = self._drag_position(global_pos)
+        value += self._drag_offset
         axis = self._axis(self._drag_orientation)
         index = self._drag_index
         xs, ys = scene.manual_guides()
@@ -340,6 +364,14 @@ class RulerOverlay(QObject):
 
     def eventFilter(self, watched, event) -> bool:  # noqa: N802
         try:
+            return self._event_filter(watched, event)
+        except Exception as exc:
+            handled = self._drag_orientation is not None
+            self.report_drag_error(exc)
+            return handled
+
+    def _event_filter(self, watched, event) -> bool:
+        try:
             viewport = self.view.viewport()
         except RuntimeError:
             return False  # 视图销毁中的尾随事件，不再碰已删除的 C++ 对象
@@ -348,9 +380,12 @@ class RulerOverlay(QObject):
         event_type = event.type()
         if (event_type == QEvent.Type.MouseButtonPress
                 and event.button() == Qt.MouseButton.LeftButton
+                and self.visible
                 and self._drag_orientation is None):
-            hit = self._guide_at(event.position().toPoint())
-            if hit is not None:
+            viewport_pos = event.position().toPoint()
+            hit = self._guide_at(viewport_pos)
+            # 图元与移动／缩放手柄优先；只有空白处才抓取参考线。
+            if hit is not None and self.view.itemAt(viewport_pos) is None:
                 orientation, index = hit
                 if self._begin_drag(orientation, index,
                                     event.globalPosition().toPoint(),

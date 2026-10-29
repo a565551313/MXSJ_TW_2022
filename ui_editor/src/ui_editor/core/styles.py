@@ -111,12 +111,19 @@ def _parse_font_line(line: str) -> FontDef | None:
     """
     tokens = line.split()
     if len(tokens) == 8:
+        # 旧式多单词字体名也可能恰好凑成 8 项。原生扩展项的第 1、3
+        # 个结构字段必为数字；不满足时继续走旧式末尾三字段解析。
         try:
-            size, weight = int(tokens[2]), int(tokens[4])
-            int(tokens[5]), int(tokens[6]), int(tokens[7])
+            int(tokens[1]), int(tokens[3])
         except ValueError:
-            return None
-        return FontDef(tokens[0], size, weight)
+            pass
+        else:
+            try:
+                size, weight = int(tokens[2]), int(tokens[4])
+                int(tokens[5]), int(tokens[6]), int(tokens[7])
+            except ValueError:
+                return None
+            return FontDef(tokens[0], size, weight)
     if len(tokens) >= 4:
         try:
             size, weight = int(tokens[-3]), int(tokens[-2])

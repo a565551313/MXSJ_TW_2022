@@ -106,12 +106,15 @@ class NativeCoordinateSaveTests(unittest.TestCase):
         self.assertTrue(report["ok"], report.get("error"))
         self.assertEqual(source.read_bytes(), original)
 
+        # 新包恰有两个条目：逐一回读，不能只依赖保存链自己的 ok 报告。
+        self.assertEqual(len(pack_build.parse_archive(output.read_bytes())), 2)
         resolver = AssetResolver()
         try:
             resolver.mount_pack(str(output))
             result = resolver.fetch_pack_dlg(str(output), resource_path)
             self.assertIsNotNone(result)
             self._assert_native_payload(result[0])
+            self.assertEqual(resolver.fetch_bytes("image/keep.bin"), b"KEEP")
         finally:
             resolver.close()
 

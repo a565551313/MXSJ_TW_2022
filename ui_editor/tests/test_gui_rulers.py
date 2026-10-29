@@ -6,12 +6,13 @@ import os
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 try:
-    from PySide6.QtCore import QPoint, QPointF, Qt
+    from PySide6.QtCore import QEvent, QPoint, QPointF, Qt
     from PySide6.QtTest import QTest
     from PySide6.QtWidgets import QApplication, QToolBar
 
@@ -143,6 +144,19 @@ class ViewportRulerTests(unittest.TestCase):
         QTest.mouseRelease(widget, Qt.MouseButton.LeftButton, pos=end)
         self._app.processEvents()
 
+    def _blank_scene_point(self) -> QPointF:
+        root = self.window.doc.roots[0]
+        self.window.view.actual_size()
+        # set_document 在控件外预留 40px；左边距是真实的空白画布。
+        point = QPointF(root.x - 20, root.y + root.height / 2)
+        self.window.view.centerOn(point)
+        self._app.processEvents()
+        self.assertTrue(self.window.view.viewport().rect().contains(
+            self.window.view.mapFromScene(point)))
+        self.assertIsNone(
+            self.window.view.itemAt(self.window.view.mapFromScene(point)))
+        return point
+
     def test_mouse_drags_horizontal_guide_out_of_top_ruler(self):
         window = self.window
         view = window.view
@@ -185,12 +199,10 @@ class ViewportRulerTests(unittest.TestCase):
     def test_mouse_moves_existing_horizontal_guide_on_viewport(self):
         view = self.window.view
         view.set_rulers_visible(True)
-        view.actual_size()
-        self._app.processEvents()
+        scene_point = self._blank_scene_point()
         viewport = view.viewport()
-        scene_x = view.mapToScene(viewport.rect().center()).x()
-        self.window.scene.set_ruler_guides([], [120])
-        start = view.mapFromScene(QPointF(scene_x, 120))
+        self.window.scene.set_ruler_guides([], [scene_point.y()])
+        start = view.mapFromScene(scene_point)
         end = start + QPoint(40, 60)
 
         self._drag(viewport, start, end)
@@ -202,18 +214,130 @@ class ViewportRulerTests(unittest.TestCase):
     def test_mouse_drags_existing_vertical_guide_back_to_ruler_to_delete(self):
         view = self.window.view
         view.set_rulers_visible(True)
-        view.actual_size()
-        self._app.processEvents()
+        scene_point = self._blank_scene_point()
         viewport = view.viewport()
-        scene_y = view.mapToScene(viewport.rect().center()).y()
-        self.window.scene.set_ruler_guides([120], [])
-        start = view.mapFromScene(QPointF(120, scene_y))
+        self.window.scene.set_ruler_guides([scene_point.x()], [])
+        start = view.mapFromScene(scene_point)
         end = viewport.mapFromGlobal(
             view.rulers.vertical.mapToGlobal(QPoint(12, 80)))
 
         self._drag(viewport, start, end)
 
         self.assertEqual(self.window.scene.manual_guides(), ([], []))
+
+    def test_scene_items_have_priority_over_shared_guide_edge(self):
+        view = self.window.view
+        root = self.window.doc.roots[0]
+        view.set_rulers_visible(True)
+        view.actual_size()
+        center = view.mapToScene(view.viewport().rect().center())
+        root.set_geometry(x=int(center.x()) - 40,
+                          y=int(center.y()) - 60, width=80, height=120)
+        self.window._refresh_structure()
+        item = self.window.scene.item_for(root)
+        view.centerOn(QPointF(root.x + root.width / 2,
+                              root.y + root.height / 2))
+        self.window.scene.set_ruler_guides([root.x], [])
+        item.setSelected(True)
+        self._app.processEvents()
+        start = view.mapFromScene(QPointF(root.x, root.y + 80))
+        self.assertTrue(view.viewport().rect().contains(start))
+        self.assertIsNotNone(view.itemAt(start))
+
+        QTest.mousePress(view.viewport(), Qt.MouseButton.LeftButton,
+                         pos=start)
+        orientation = view.rulers._drag_orientation
+        QTest.mouseRelease(view.viewport(), Qt.MouseButton.LeftButton,
+                           pos=start)
+
+        self.assertIsNone(orientation)
+        self.assertEqual(self.window.scene.manual_guides()[0], [root.x])
+
+        grip = self.window.scene._grips[id(item)]
+        grip_center = grip.mapToScene(grip.boundingRect().center())
+        self.window.scene.set_ruler_guides([grip_center.x()], [])
+        view.centerOn(grip_center)
+        self._app.processEvents()
+        grip_point = view.mapFromScene(grip_center)
+        self.assertIs(view.itemAt(grip_point), grip)
+        QTest.mousePress(view.viewport(), Qt.MouseButton.LeftButton,
+                         pos=grip_point)
+        orientation = view.rulers._drag_orientation
+        QTest.mouseRelease(view.viewport(), Qt.MouseButton.LeftButton,
+                           pos=grip_point)
+        self.assertIsNone(orientation)
+        self.assertEqual(self.window.scene.manual_guides()[0],
+                         [grip_center.x()])
+
+    def test_hidden_rulers_do_not_start_viewport_guide_drag(self):
+        view = self.window.view
+        view.set_rulers_visible(False)
+        center = self._blank_scene_point()
+        self.window.scene.set_ruler_guides([center.x()], [])
+        self._app.processEvents()
+        point = view.mapFromScene(center)
+        self.assertTrue(view.viewport().rect().contains(point))
+
+        QTest.mousePress(view.viewport(), Qt.MouseButton.LeftButton,
+                         pos=point)
+        orientation = view.rulers._drag_orientation
+        QTest.mouseRelease(view.viewport(), Qt.MouseButton.LeftButton,
+                           pos=point)
+
+        self.assertIsNone(orientation)
+        self.assertEqual(self.window.scene.manual_guides()[0], [center.x()])
+
+    def test_click_near_guide_preserves_exact_position(self):
+        view = self.window.view
+        view.set_rulers_visible(True)
+        center = self._blank_scene_point()
+        self.window.scene.set_ruler_guides([center.x()], [])
+        self._app.processEvents()
+        point = view.mapFromScene(center) + QPoint(3, 0)
+        self.assertTrue(view.viewport().rect().contains(point))
+        self.assertGreater(abs(view.mapToScene(point).x() - center.x()), 1)
+
+        QTest.mousePress(view.viewport(), Qt.MouseButton.LeftButton,
+                         pos=point)
+        orientation = view.rulers._drag_orientation
+        QTest.mouseRelease(view.viewport(), Qt.MouseButton.LeftButton,
+                           pos=point)
+
+        self.assertIsNotNone(orientation)
+        self.assertEqual(self.window.scene.manual_guides()[0], [center.x()])
+
+    def test_ruler_callback_exception_is_reported(self):
+        event = mock.Mock()
+        event.globalPosition.return_value = QPointF(20, 20)
+        with (
+            mock.patch.object(
+                self.window.view.rulers, "update_ruler_drag",
+                side_effect=RuntimeError("ruler boom"),
+            ),
+            mock.patch("ui_editor.ui.rulers.QMessageBox", create=True) as box,
+        ):
+            self.window.view.rulers.horizontal.mouseMoveEvent(event)
+        box.warning.assert_called_once()
+        self.assertIn("ruler boom", str(box.warning.call_args))
+
+    def test_viewport_callback_exception_is_reported(self):
+        self.window.view.set_rulers_visible(True)
+        event = mock.Mock()
+        event.type.return_value = QEvent.Type.MouseButtonPress
+        event.button.return_value = Qt.MouseButton.LeftButton
+        event.position.return_value = QPointF(4, 4)
+        with (
+            mock.patch.object(
+                self.window.view.rulers, "_guide_at",
+                side_effect=RuntimeError("viewport boom"),
+            ),
+            mock.patch("ui_editor.ui.rulers.QMessageBox", create=True) as box,
+        ):
+            accepted = self.window.view.rulers.eventFilter(
+                self.window.view.viewport(), event)
+        self.assertFalse(accepted)
+        box.warning.assert_called_once()
+        self.assertIn("viewport boom", str(box.warning.call_args))
 
     def test_guide_drag_uses_zoomed_and_scrolled_scene_coordinates(self):
         view = self.window.view
