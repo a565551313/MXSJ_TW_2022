@@ -161,8 +161,8 @@ def process_sprite(data: bytes, params: AdjustParams) -> bytes:
     都拒收；行长超上限等编码失败也转成一句话 ``AdjustError``。
     """
     try:
-        # 借 _SpriteParser 读帧锚点（Sprite 数据类不带 kx/ky）——格式
-        # 知识只在 sprite.py 一处维护，这里不手抄头部布局。
+        # 先用同一解析器检查帧关键点：重编码只支持左上锚点，提前拒收；
+        # 格式知识只在 sprite.py 一处维护，这里不手抄头部布局。
         parser = sprite._SpriteParser(data)
     except AdjustError:
         raise

@@ -1,5 +1,7 @@
-"""精灵解码：``I0/T0/I1/T1/I4/T4/T5`` → 逐帧 RGBA 字节。
+"""精灵解码：``I0/T0/I1/T1/I4/T4/T5`` → 逐帧 RGBA + 原生落点。
 
+除帧像素外保留画布中心点与逐帧关键点；``assets`` 再按
+``(centerX-keyX, centerY-keyY)`` 合成原生画布，不能在预览时丢掉。
 格式已经字节级验证（见仓库 ``tools/data-parser/i0_sprite.py``），
 此处移植为不依赖 Pillow 的实现，解码结果直接喂 ``QImage``。
 
@@ -44,22 +46,31 @@ __all__ = ["SpriteFrame", "Sprite", "is_sprite", "decode_sprite",
 
 @dataclass
 class SpriteFrame:
-    """一帧已解码图像：帧内尺寸 + 行主序 RGBA 字节。"""
+    """一帧已解码图像：帧内尺寸 + RGBA + 原生关键点（默认左上）。"""
 
     width: int
     height: int
     rgba: bytes
+    key_x: int = 0
+    key_y: int = 0
 
 
 @dataclass
 class Sprite:
-    """一个精灵：元信息 + 全部帧。"""
+    """一个精灵：原生画布、中心点 + 全部帧。"""
 
     magic: str
     frame_count: int
     canvas_w: int
     canvas_h: int
     frames: list[SpriteFrame]
+    center_x: int = 0
+    center_y: int = 0
+
+    def frame_offset(self, index: int) -> tuple[int, int]:
+        """帧左上角在原生画布的位置：``(centerX-keyX, centerY-keyY)``。"""
+        frame = self.frames[index]
+        return self.center_x - frame.key_x, self.center_y - frame.key_y
 
 
 class _SpriteParser:
@@ -71,7 +82,8 @@ class _SpriteParser:
         # 无调色板真彩每像素的颜色字节数：I4=2（RGB565）、T4/T5=3（RGB888）
         self.color_bytes = DIRECT_COLOR_BYTES.get(data[:2], 0)
         (self.magic, _ver, self.frame_count, self.canvas_w, self.canvas_h,
-         _cx, _cy) = struct.unpack_from("<2sHHHHHH", data, 0)
+         self.center_x, self.center_y) = struct.unpack_from(
+             "<2sHHHHHH", data, 0)
         off = 14
         self.frame_dims: list[tuple[int, int, int, int]] = []
         for _ in range(self.frame_count):
@@ -229,7 +241,7 @@ def decode_sprite(data: bytes) -> Sprite:
     parser = _SpriteParser(data)
     frames: list[SpriteFrame] = []
     all_rows = parser.frame_rows()
-    for fi, (_kx, _ky, fw, fh) in enumerate(parser.frame_dims):
+    for fi, (kx, ky, fw, fh) in enumerate(parser.frame_dims):
         buf = bytearray(fw * fh * 4)
         for y, line in enumerate(all_rows[fi]):
             base = y * fw * 4
@@ -245,6 +257,7 @@ def decode_sprite(data: bytes) -> Sprite:
                     buf[off + 1] = g
                     buf[off + 2] = b
                     buf[off + 3] = alpha
-        frames.append(SpriteFrame(fw, fh, bytes(buf)))
+        frames.append(SpriteFrame(fw, fh, bytes(buf), kx, ky))
     return Sprite(parser.magic.decode("ascii"), parser.frame_count,
-                  parser.canvas_w, parser.canvas_h, frames)
+                  parser.canvas_w, parser.canvas_h, frames,
+                  center_x=parser.center_x, center_y=parser.center_y)
