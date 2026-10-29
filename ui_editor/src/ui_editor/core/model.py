@@ -28,52 +28,6 @@ def _int_prop(props: dict, key: str) -> int:
     return value if isinstance(value, int) and not isinstance(value, bool) else 0
 
 
-def _native_to_editor(data: dict, parent_x: int = 0,
-                      parent_y: int = 0) -> dict:
-    """原生绝对坐标 → 编辑器的父相对坐标（只转换有效的整数坐标）。"""
-    result = dict(data)
-    x, y = (_int_prop(result, "iX"), _int_prop(result, "iY"))
-    valid_x = (isinstance(result.get("iX"), int)
-               and not isinstance(result.get("iX"), bool))
-    valid_y = (isinstance(result.get("iY"), int)
-               and not isinstance(result.get("iY"), bool))
-    # 缺栏/无效栏本身不补写；但原生语义上后代仍继承父绝对原点，
-    # 不能把这个节点的缺值当成画布 (0,0)，否则重存会累加祖先坐标。
-    absolute_x, absolute_y = (x if valid_x else parent_x,
-                              y if valid_y else parent_y)
-    for key, value, parent, valid in (("iX", x, parent_x, valid_x),
-                                      ("iY", y, parent_y, valid_y)):
-        if valid:
-            result[key] = value - parent
-    children = result.get("lChildren")
-    if isinstance(children, list):
-        result["lChildren"] = [
-            _native_to_editor(child, absolute_x, absolute_y)
-            if isinstance(child, dict) else child
-            for child in children
-        ]
-    return result
-
-
-def _editor_to_native(data: dict, parent_x: int = 0,
-                      parent_y: int = 0) -> dict:
-    """编辑器的父相对坐标 → 游戏读取的画布绝对坐标。"""
-    result = dict(data)
-    x = parent_x + _int_prop(result, "iX")
-    y = parent_y + _int_prop(result, "iY")
-    for key, value in (("iX", x), ("iY", y)):
-        if (isinstance(result.get(key), int)
-                and not isinstance(result.get(key), bool)):
-            result[key] = value
-    children = result.get("lChildren")
-    if isinstance(children, list):
-        result["lChildren"] = [
-            _editor_to_native(child, x, y) if isinstance(child, dict) else child
-            for child in children
-        ]
-    return result
-
-
 class Widget:
     """一个控件：属性字典 + 子控件列表 + 父指针。
 
@@ -298,20 +252,20 @@ class LayoutDocument:
     @classmethod
     def from_native_dicts(cls, dicts: list[dict],
                           md5: str | None) -> LayoutDocument:
-        """从游戏 ``.dlg`` 建文档：原生 iX/iY 是画布绝对坐标。
+        """从游戏 ``.dlg`` 建文档；原生与编辑器坐标都是父相对值。
 
-        画布、属性面板与撤销快照仍使用父相对坐标；只在原生读写边界
-        转换，避免保存后游戏把父内偏移误当成屏幕绝对位置。
+        原生 ``combdialog.LoadUIWidget`` 以父控件构造子控件后直接
+        ``SetPos(iX, iY)``，因此读写边界不能再累加或减去祖先坐标。
         """
-        return cls.from_dicts([_native_to_editor(d) for d in dicts], md5)
+        return cls.from_dicts(dicts, md5)
 
     def to_dicts(self) -> list[dict]:
         """编辑器快照（父相对坐标），用于历史、诊断与剪贴板。"""
         return [widget.to_dict() for widget in self.roots]
 
     def to_native_dicts(self) -> list[dict]:
-        """写给游戏的字典：逐层把父相对坐标换算回画布绝对坐标。"""
-        return [_editor_to_native(widget.to_dict()) for widget in self.roots]
+        """写给游戏的字典：子控件保持其父内偏移，不累加祖先坐标。"""
+        return self.to_dicts()
 
     def all_widgets(self) -> list[Widget]:
         result: list[Widget] = []

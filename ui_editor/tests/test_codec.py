@@ -8,6 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from ui_editor.core import dlg_codec  # noqa: E402
+from ui_editor.core.model import LayoutDocument  # noqa: E402
 
 FIXTURE = Path(__file__).parent / "fixtures" / "original_style.dlg"
 
@@ -22,6 +23,19 @@ def structures_equal(a, b):
         return len(a) == len(b) and all(
             structures_equal(x, y) for x, y in zip(a, b, strict=True))
     return a == b
+
+
+_MISSING = object()
+
+
+def coordinate_tree(dicts):
+    """逐层提取坐标；保留缺栏／无效值，不管无关字段正规化。"""
+    def node(data):
+        children = data.get("lChildren", [])
+        return ((data.get("iX", _MISSING), data.get("iY", _MISSING)),
+                [node(child) for child in children
+                 if isinstance(child, dict)])
+    return [node(data) for data in dicts]
 
 
 class TestParseFixture(unittest.TestCase):
@@ -109,12 +123,18 @@ def _corpus_roots() -> list[Path]:
 
 
 def _roundtrip_failures(files: list[Path]) -> list[str]:
-    """解析→序列化→再解析，结构不一致的文件（最多记 5 个）。"""
+    """编解码与原生模型边界都必须保真（最多记 5 个失败）。"""
     failures: list[str] = []
     for path in files:
         dicts, _ = dlg_codec.parse_bytes(path.read_bytes())
         again, _ = dlg_codec.parse_text(dlg_codec.dump_text(dicts))
-        if not structures_equal(dicts, again):
+        document = LayoutDocument.from_native_dicts(dicts, None)
+        coordinates = coordinate_tree(dicts)
+        if (not structures_equal(dicts, again)
+                or not structures_equal(
+                    coordinates, coordinate_tree(document.to_dicts()))
+                or not structures_equal(
+                    coordinates, coordinate_tree(document.to_native_dicts()))):
             failures.append(str(path))
             if len(failures) >= 5:
                 break

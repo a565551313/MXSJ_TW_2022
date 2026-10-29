@@ -1,7 +1,8 @@
 """``ui.lst`` 样式注册表解析（字体表、按钮样式等）。
 
 ui.lst 是 interface.fls 内的明文 INI 风格文件：``[Font]`` /
-``[NewFont]`` 两节是字体表（每行 ``字体名 字号 字重 标记``），
+``[NewFont]`` 两节是字体表（四字段为 ``字体名 字号 字重 标记``；
+八字段的字号／字重分别在第 2／4 个数位，另含效果与 Y 偏移），
 ``[TBStyle_000]`` 起是文字按钮样式（``键=值``，颜色为以空格分
 隔的 RGB 三元组，6 个数表示上下渐变），其余节（List/Table/
 Frame/Border…）是各控件类的样式参数。控件上的 ``iFont`` 是
@@ -102,12 +103,24 @@ class StyleBook:
 
 
 def _parse_font_line(line: str) -> FontDef | None:
-    """解析 ``字体名 字号 字重 [标记]``（字体名可含空格）。
+    """解析原生四／八字段字体项，普通三项格式继续兼容。
 
-    从右往左找数值：末尾三个整数是（字号, 字重, 标记），两个则
-    是（字号, 字重）。数值异常则返回 None，容错跳过。
+    八字段不是「字体名 … 字号 字重 标记」：原生 ``ParseFont`` 取
+    ``0=字体名、2=字号、4=字重、5=标记、6=描边半径、7=Y 偏移``，
+    并忽略第 1、3 项。不能从末尾倒推，否则会把标记当成字号。
     """
     tokens = line.split()
+    if len(tokens) == 8:
+        # 完整扩展字段都可解析才采用原生位置；否则继续旧式回退，
+        # 多单词名称中即使含数字也不能因此丢项或移动后续索引。
+        try:
+            int(tokens[1]), int(tokens[3])
+            size, weight = int(tokens[2]), int(tokens[4])
+            int(tokens[5]), int(tokens[6]), int(tokens[7])
+        except ValueError:
+            pass
+        else:
+            return FontDef(tokens[0], size, weight)
     if len(tokens) >= 4:
         try:
             size, weight = int(tokens[-3]), int(tokens[-2])
