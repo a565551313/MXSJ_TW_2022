@@ -2,7 +2,7 @@
 
 每个 :class:`~ui_editor.core.model.Widget` 对应一个
 :class:`WidgetItem`，子控件作为子图元，画布内坐标相对父级；
-原生 ``.dlg`` 的画布绝对坐标在模型读写边界转换。绘制委托给
+原生 ``.dlg`` 同样保存父相对坐标，不做读写边界转换。绘制委托给
 :mod:`ui_editor.core.painters`。拖动改 ``iX/iY``，拖选中框的
 把手改 ``iWidth/iHeight``，几何变更经回调同步属性面板。
 """

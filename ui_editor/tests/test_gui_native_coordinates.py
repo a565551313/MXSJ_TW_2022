@@ -1,4 +1,4 @@
-"""置父坐标经真实散装/资源包保存链写出绝对值，并可正确重开。"""
+"""置父坐标经真实散装/资源包保存链保留父相对值，并可正确重开。"""
 
 from __future__ import annotations
 
@@ -57,13 +57,13 @@ class NativeCoordinateSaveTests(unittest.TestCase):
 
     def _assert_native_payload(self, raw):
         child = raw[0]["lChildren"][0]
-        self.assertEqual((child["iX"], child["iY"]), (510, 310))
+        self.assertEqual((child["iX"], child["iY"]), (10, 10))
         doc = LayoutDocument.from_native_dicts(raw, None)
         reopened = doc.roots[0].children[0]
         self.assertEqual((reopened.x, reopened.y), (10, 10))
         self.assertEqual(doc.abs_position(reopened), (510, 310))
 
-    def test_loose_save_writes_absolute_and_fresh_open_restores_local(self):
+    def test_loose_save_preserves_local_and_fresh_open_restores_it(self):
         target = self.root / "out.dlg"
         with mock.patch(
                 "ui_editor.ui.save_workflows.SaveReviewDialog.exec",
