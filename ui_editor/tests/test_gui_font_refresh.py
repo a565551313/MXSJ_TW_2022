@@ -6,6 +6,7 @@ import os
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -87,8 +88,11 @@ class FontRefreshTests(unittest.TestCase):
             paint()
             self.assertEqual(sizes[-1], 12)
             spin = self._font_spin()
-            spin.setValue(1)  # 只发 valueChanged；不发 editingFinished
-            self._app.processEvents()
+            item = self.window.scene.item_for(self.text)
+            with mock.patch.object(item, "update", wraps=item.update) as redraw:
+                spin.setValue(1)  # 只发 valueChanged；不发 editingFinished
+                self._app.processEvents()
+                redraw.assert_called()
             self.assertEqual(self.text.props["iFont"], 1)
             paint()
             self.assertEqual(sizes[-1], 24)

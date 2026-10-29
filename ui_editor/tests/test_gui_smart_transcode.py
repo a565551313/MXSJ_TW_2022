@@ -64,6 +64,18 @@ class TestGuiSmartTranscode(unittest.TestCase):
         self.assertEqual(self.text.props["sText"], "註冊")
         self.assertEqual(edit.toPlainText(), "註冊")
 
+    def test_focus_out_without_edit_preserves_traditional_and_history(self):
+        self.text.props["sText"] = "平台"
+        self.panel._rebuild()
+        self.doc.dirty = False
+        could_undo = self.doc.can_undo
+        edit = self._editor("平台")
+        edit.editingFinished.emit()
+        self.assertEqual(self.text.props["sText"], "平台")
+        self.assertEqual(edit.toPlainText(), "平台")
+        self.assertFalse(self.doc.dirty)
+        self.assertEqual(self.doc.can_undo, could_undo)
+
     def test_gbk_keeps_user_simplified_and_saves_gbk(self):
         self.doc.text_encoding = "gbk"
         edit = self._editor("原始文字")

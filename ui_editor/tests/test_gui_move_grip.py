@@ -169,28 +169,58 @@ class MoveGripTests(unittest.TestCase):
         self.assertEqual((self.parent.x, self.parent.y), (0, 0))
         self.assertEqual(self.commits, [self.child])  # 整组只提交一次
 
+    def test_group_drag_excludes_selected_roots_from_snap_candidates(self):
+        other, other_item = self._add_selected_root()
+        self.parent_item.setSelected(True)
+        other_item.setSelected(True)
+        other_rect = (300.0, 200.0, 60.0, 24.0)
+        candidates = []
+
+        def spy(rect, others, parent_size, threshold):
+            candidates.append(others)
+            return rect[0], rect[1], [], []
+
+        with mock.patch.object(canvas.snap, "snap_position", side_effect=spy):
+            # 普通拖动保持旧行为：另一个根仍可作为吸附参考。
+            self.parent_item._snapped_position(QPointF(2, 2))
+            self.assertEqual(candidates[-1], [other_rect])
+            grip = self._grip_of(self.parent_item)
+            start = QPointF(grip.pos())
+            grip.begin_drag(start)
+            grip.drag_to(QPointF(start.x() + 2, start.y() + 2))
+            grip.finish_drag()
+        self.assertGreater(len(candidates), 1)
+        self.assertTrue(all(other_rect not in others
+                            for others in candidates[1:]), candidates)
+
     def test_group_grip_is_one_undo_and_redo_step(self):
         other, other_item = self._add_selected_root()
         self.child_item.setSelected(True)
         other_item.setSelected(True)
         self.doc.reset_history()
-        for item in self.scene._items.values():
-            item.on_commit = lambda _widget: self.doc.checkpoint()
-        grip = self._grip_of(self.child_item)
-        start = QPointF(grip.pos())
-        grip.begin_drag(start)
-        grip.drag_to(QPointF(start.x() + 60, start.y() + 40))
-        grip.finish_drag()
-        self.assertTrue(self.doc.undo())  # 一步就回到整组拖动前
-        self.assertEqual((self.doc.roots[0].children[0].x,
-                          self.doc.roots[0].children[0].y), (0, 0))
-        self.assertEqual((self.doc.roots[1].x, self.doc.roots[1].y),
-                         (300, 200))
-        self.assertTrue(self.doc.redo())
-        self.assertEqual((self.doc.roots[0].children[0].x,
-                          self.doc.roots[0].children[0].y), (60, 40))
-        self.assertEqual((self.doc.roots[1].x, self.doc.roots[1].y),
-                         (360, 240))
+        original_callbacks = {
+            item: item.on_commit for item in self.scene._items.values()}
+        try:
+            for item in original_callbacks:
+                item.on_commit = lambda _widget: self.doc.checkpoint()
+            grip = self._grip_of(self.child_item)
+            start = QPointF(grip.pos())
+            grip.begin_drag(start)
+            grip.drag_to(QPointF(start.x() + 60, start.y() + 40))
+            grip.finish_drag()
+            self.assertTrue(self.doc.undo())  # 一步回到整组拖动前
+            self.assertEqual((self.doc.roots[0].children[0].x,
+                              self.doc.roots[0].children[0].y), (0, 0))
+            self.assertEqual((self.doc.roots[1].x, self.doc.roots[1].y),
+                             (300, 200))
+            self.assertTrue(self.doc.redo())
+            self.assertEqual((self.doc.roots[0].children[0].x,
+                              self.doc.roots[0].children[0].y), (60, 40))
+            self.assertEqual((self.doc.roots[1].x, self.doc.roots[1].y),
+                             (360, 240))
+        finally:
+            for item, original in original_callbacks.items():
+                item.on_commit = original
 
     def test_grip_drag_zero_movement_commits_nothing(self):
         self.child_item.setSelected(True)

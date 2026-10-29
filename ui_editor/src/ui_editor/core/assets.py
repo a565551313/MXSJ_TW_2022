@@ -830,7 +830,9 @@ class AssetResolver:
             return [image] if not image.isNull() else None
         if sprite.is_sprite(data):
             try:
-                decoded = sprite.decode_sprite(data)
+                parser = sprite._SpriteParser(data)
+                sprite._validate_canvas_allocation(parser)
+                decoded = sprite._decode_sprite(parser)
             except Exception:
                 return None
             images = []
@@ -853,8 +855,7 @@ class AssetResolver:
                 canvas = QImage(decoded.canvas_w, decoded.canvas_h,
                                 QImage.Format.Format_RGBA8888)
                 if canvas.isNull():
-                    images.append(frame_image)
-                    continue
+                    return None  # 不拿裁后帧冒充原生画布，避免静默挪帧
                 canvas.fill(0)
                 painter = QPainter(canvas)
                 try:

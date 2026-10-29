@@ -67,8 +67,10 @@ class NativeCoordinateSaveTests(unittest.TestCase):
         target = self.root / "out.dlg"
         with mock.patch(
                 "ui_editor.ui.save_workflows.SaveReviewDialog.exec",
-                return_value=1):
+                return_value=1), mock.patch(
+                "ui_editor.ui.save_workflows.QMessageBox.warning") as warning:
             self.assertTrue(self.window.save_as(str(target)))
+            warning.assert_not_called()
         raw, _ = dlg_codec.parse_bytes(target.read_bytes())
         self._assert_native_payload(raw)
 

@@ -4,6 +4,8 @@
 ``(centerX-keyX, centerY-keyY)`` 合成原生画布，不能在预览时丢掉。
 格式已经字节级验证（见仓库 ``tools/data-parser/i0_sprite.py``），
 此处移植为不依赖 Pillow 的实现，解码结果直接喂 ``QImage``。
+头部尺寸来自资源包而非可信 UI：解析器在行长表和 RGBA 分配前执行输入、
+帧数、边长、行数与字节预算检查；``assets`` 另把原生画布计入峰值。
 
 布局：14 字节头 ``<2sHHHHHH``（魔数、版本、帧数、画布宽高、中心
 点）；帧目录每帧 ``<HHHH``（关键点 x/y、帧宽高）；u32 总行数；
@@ -43,6 +45,14 @@ from .sprite_format import (
 __all__ = ["SpriteFrame", "Sprite", "is_sprite", "decode_sprite",
            "MAGICS", "DIRECT_MAGICS"]
 
+# 本地编辑器也要把资源包当作不可信输入：16 位头字段不代表可以安全
+# 分配。256 MiB 是单份素材的峰值估算上限，不是所有缓存的总限额。
+MAX_SPRITE_INPUT_BYTES = 256 * 1024 * 1024
+MAX_SPRITE_FRAMES = 4096
+MAX_SPRITE_DIMENSION = 16384
+MAX_SPRITE_TOTAL_LINES = 1_000_000
+MAX_SPRITE_RGBA_BYTES = 256 * 1024 * 1024
+
 
 @dataclass
 class SpriteFrame:
@@ -73,8 +83,35 @@ class Sprite:
         return self.center_x - frame.key_x, self.center_y - frame.key_y
 
 
+def _raw_rgba_bytes(parser) -> int:
+    return sum(fw * fh * 4 for _kx, _ky, fw, fh in parser.frame_dims)
+
+
+def _check_rgba_budget(estimated_bytes: int) -> None:
+    if estimated_bytes > MAX_SPRITE_RGBA_BYTES:
+        raise SpriteError(
+            f"精灵解码 RGBA 预算 {estimated_bytes} 字节超过 "
+            f"{MAX_SPRITE_RGBA_BYTES} 字节安全上限")
+
+
+def _validate_canvas_allocation(parser) -> None:
+    """预览峰值＝原始 RGBA＋QImage 副本＋所有原生画布。"""
+    canvas_bytes = 0
+    for kx, ky, fw, fh in parser.frame_dims:
+        if fw <= 0 or fh <= 0:
+            continue
+        dx, dy = parser.center_x - kx, parser.center_y - ky
+        needs_canvas = ((dx, dy) != (0, 0)
+                        or (fw, fh) != (parser.canvas_w, parser.canvas_h))
+        if needs_canvas and parser.canvas_w > 0 and parser.canvas_h > 0:
+            canvas_bytes += parser.canvas_w * parser.canvas_h * 4
+    _check_rgba_budget(_raw_rgba_bytes(parser) * 2 + canvas_bytes)
+
+
 class _SpriteParser:
     def __init__(self, data: bytes) -> None:
+        if len(data) > MAX_SPRITE_INPUT_BYTES:
+            raise SpriteError("精灵输入字节超过单份素材安全上限")
         if not is_sprite(data):
             raise SpriteError("不是 I0/T0/I1/I4/T4/T5 精灵")
         self.data = data
@@ -84,26 +121,38 @@ class _SpriteParser:
         (self.magic, _ver, self.frame_count, self.canvas_w, self.canvas_h,
          self.center_x, self.center_y) = struct.unpack_from(
              "<2sHHHHHH", data, 0)
+        if self.frame_count > MAX_SPRITE_FRAMES:
+            raise SpriteError("精灵帧数超过安全上限")
+        if max(self.canvas_w, self.canvas_h) > MAX_SPRITE_DIMENSION:
+            raise SpriteError("精灵画布边长超过安全上限")
         off = 14
+        if off + self.frame_count * 8 + 4 > len(data):
+            raise SpriteError("精灵帧目录越界")
         self.frame_dims: list[tuple[int, int, int, int]] = []
         for _ in range(self.frame_count):
-            self.frame_dims.append(struct.unpack_from("<HHHH", data, off))
+            dims = struct.unpack_from("<HHHH", data, off)
+            if max(dims[2], dims[3]) > MAX_SPRITE_DIMENSION:
+                raise SpriteError("精灵帧边长超过安全上限")
+            self.frame_dims.append(dims)
             off += 8
         total_lines = struct.unpack_from("<I", data, off)[0]
         off += 4
         if total_lines != sum(f[3] for f in self.frame_dims):
             raise SpriteError("总行数与帧高之和不一致")
+        if total_lines > MAX_SPRITE_TOTAL_LINES:
+            raise SpriteError("精灵总行数超过安全上限")
+        _check_rgba_budget(_raw_rgba_bytes(self))
         len_size = 2 if self.magic in U16_LEN_MAGICS else 1
+        pal_size = (0 if self.direct
+                    else (768 if self.magic in (b"T0", b"T1") else 512))
+        if off + total_lines * len_size + pal_size > len(data):
+            raise SpriteError("精灵行长表或调色板越界")
         fmt = "<H" if len_size == 2 else "<B"
         self.lens = [
             struct.unpack_from(fmt, data, off + i * len_size)[0]
             for i in range(total_lines)
         ]
         off += total_lines * len_size
-        pal_size = (0 if self.direct
-                    else (768 if self.magic in (b"T0", b"T1") else 512))
-        if off + pal_size > len(data):
-            raise SpriteError("调色板越界")
         self.palette = ([] if self.direct
                         else self._decode_palette(data[off:off + pal_size]))
         off += pal_size
@@ -131,6 +180,8 @@ class _SpriteParser:
             rows = []
             for _ in range(fh):
                 n = self.lens[line_no]
+                if pos + n > len(data):
+                    raise SpriteError("精灵像素行超过输入末尾")
                 rows.append(data[pos:pos + n])
                 pos += n
                 line_no += 1
@@ -236,9 +287,7 @@ def _decode_row_direct(
     return px
 
 
-def decode_sprite(data: bytes) -> Sprite:
-    """把精灵字节解码为逐帧 RGBA，失败抛 :class:`SpriteError`。"""
-    parser = _SpriteParser(data)
+def _decode_sprite(parser: _SpriteParser) -> Sprite:
     frames: list[SpriteFrame] = []
     all_rows = parser.frame_rows()
     for fi, (kx, ky, fw, fh) in enumerate(parser.frame_dims):
@@ -261,3 +310,8 @@ def decode_sprite(data: bytes) -> Sprite:
     return Sprite(parser.magic.decode("ascii"), parser.frame_count,
                   parser.canvas_w, parser.canvas_h, frames,
                   center_x=parser.center_x, center_y=parser.center_y)
+
+
+def decode_sprite(data: bytes) -> Sprite:
+    """把精灵字节解码为逐帧 RGBA，失败抛 :class:`SpriteError`。"""
+    return _decode_sprite(_SpriteParser(data))

@@ -252,16 +252,24 @@ class WidgetItem(QGraphicsItem):
         if QApplication.keyboardModifiers() & Qt.KeyboardModifier.AltModifier:
             scene.set_guides([], [])
             return value
+        # 群组手柄：其它选中项随后也共享同一位移，不能拿它们尚停在
+        # 上一步的位置当吸附墙，否则主项小步拖动会被拉回旧位置。
+        moving = set()
+        if self._force_move:
+            moving = {id(item.widget) for item in scene.selectedItems()
+                      if isinstance(item, WidgetItem)}
         widget = self.widget
         parent = widget.parent
         if parent is not None:
             siblings = [c for c in parent.children
-                        if c is not widget and not c.locked]
+                        if c is not widget and not c.locked
+                        and id(c) not in moving]
             parent_size = (float(parent.width), float(parent.height))
         else:
             doc = getattr(scene, "document", None)
             siblings = [r for r in (doc.roots if doc else [])
-                        if r is not widget and not r.locked]
+                        if r is not widget and not r.locked
+                        and id(r) not in moving]
             parent_size = None
         others = [(float(c.x), float(c.y), float(c.width),
                    float(c.height)) for c in siblings]

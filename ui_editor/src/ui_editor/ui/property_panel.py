@@ -415,6 +415,9 @@ class PropertyPanel(QWidget):
         if self._building or self._widget is None:
             return False
         raw_value = value
+        if (key in self._widget.props
+                and self._widget.props.get(key) == raw_value):
+            return True  # 单纯失焦不把未编辑的繁体（如 台）改成另一字形
         value = self._normalize_input(key, value)
         if self._widget.props.get(key) == value and key in self._widget.props:
             self._sync_normalized_editor(key, value, raw_value)

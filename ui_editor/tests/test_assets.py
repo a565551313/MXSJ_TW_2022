@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -457,6 +458,24 @@ class TestAssetResolver(unittest.TestCase):
         self.assertEqual(image.pixelColor(3, 1).green(), 255)
         self.assertEqual(image.pixelColor(2, 2).green(), 255)
         self.assertEqual(image.pixelColor(3, 3).alpha(), 0)
+
+    def test_sprite_raw_rgba_budget_is_checked_before_row_allocation(self):
+        from ui_editor.core import sprite
+        from ui_editor.core.errors import SpriteError
+
+        data = (struct.pack("<2sHHHHHH", b"I0", 1, 1, 2, 2, 0, 0)
+                + struct.pack("<HHHH", 0, 0, 16384, 16384)
+                + struct.pack("<I", 16384))
+        with self.assertRaisesRegex(SpriteError, "预算"):
+            sprite.decode_sprite(data)
+
+    def test_oversized_staged_canvas_is_rejected_before_qimage(self):
+        data = bytearray(make_sprite())
+        struct.pack_into("<HH", data, 6, 16384, 16384)
+        self.resolver.stage_image("test/oversized.igs", bytes(data))
+        with mock.patch("ui_editor.core.assets.QImage") as qimage:
+            self.assertIsNone(self.resolver.fetch_image("test/oversized.igs"))
+            qimage.assert_not_called()
 
     def test_widget_size_and_paint_use_native_sprite_canvas(self):
         from PySide6.QtGui import QImage, QPainter

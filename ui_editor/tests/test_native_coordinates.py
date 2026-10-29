@@ -81,6 +81,21 @@ class TestNativeCoordinates(unittest.TestCase):
         self.assertEqual((reopened_child.x, reopened_child.y), (10, 10))
         self.assertEqual(reopened.abs_position(reopened_child), (510, 310))
 
+    def test_missing_intermediate_coordinates_inherit_parent_for_descendants(self):
+        raw = [{"sWidgetType": "CMainFrame", "iX": 500, "iY": 300,
+                "lChildren": [{"sWidgetType": "CBox", "iY": "bad",
+                               "lChildren": [{"sWidgetType": "CBox",
+                                              "iX": 520, "iY": 320,
+                                              "lChildren": []}]}]}]
+        doc = LayoutDocument.from_native_dicts(raw, None)
+        child = doc.roots[0].children[0]
+        grandchild = child.children[0]
+        self.assertNotIn("iX", child.props)
+        self.assertEqual(child.props["iY"], "bad")
+        self.assertEqual((grandchild.x, grandchild.y), (20, 20))
+        self.assertEqual(doc.abs_position(grandchild), (520, 320))
+        self.assertEqual(doc.to_native_dicts(), raw)
+
     def test_invalid_or_missing_coordinates_are_not_invented(self):
         raw = [{"sWidgetType": "CBox", "iX": "bad", "lChildren": [
             {"sWidgetType": "CBox", "iY": 20, "lChildren": []}

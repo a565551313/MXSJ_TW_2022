@@ -47,6 +47,12 @@ class TextTranscodeTests(unittest.TestCase):
         once = normalize_display_value("臺服与台服，里面", "sTips", "big5")
         self.assertEqual(normalize_display_value(once, "sTips", "big5"), once)
 
+    def test_surrogateescaped_source_bytes_are_not_masked(self):
+        actual = normalize_display_value("\udcff注册", "sText", "big5")
+        self.assertEqual(actual, "\udcff註冊")
+        self.assertEqual(actual.encode("big5", "surrogateescape"),
+                         b"\xff" + "註冊".encode("big5"))
+
     def test_unencodable_unicode_is_never_replaced(self):
         actual = normalize_display_value("注册😀", "sText", "big5")
         self.assertEqual(actual, "註冊😀")

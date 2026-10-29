@@ -33,15 +33,23 @@ def _native_to_editor(data: dict, parent_x: int = 0,
     """原生绝对坐标 → 编辑器的父相对坐标（只转换有效的整数坐标）。"""
     result = dict(data)
     x, y = (_int_prop(result, "iX"), _int_prop(result, "iY"))
-    for key, value, parent in (("iX", x, parent_x),
-                               ("iY", y, parent_y)):
-        if (isinstance(result.get(key), int)
-                and not isinstance(result.get(key), bool)):
+    valid_x = (isinstance(result.get("iX"), int)
+               and not isinstance(result.get("iX"), bool))
+    valid_y = (isinstance(result.get("iY"), int)
+               and not isinstance(result.get("iY"), bool))
+    # 缺栏/无效栏本身不补写；但原生语义上后代仍继承父绝对原点，
+    # 不能把这个节点的缺值当成画布 (0,0)，否则重存会累加祖先坐标。
+    absolute_x, absolute_y = (x if valid_x else parent_x,
+                              y if valid_y else parent_y)
+    for key, value, parent, valid in (("iX", x, parent_x, valid_x),
+                                      ("iY", y, parent_y, valid_y)):
+        if valid:
             result[key] = value - parent
     children = result.get("lChildren")
     if isinstance(children, list):
         result["lChildren"] = [
-            _native_to_editor(child, x, y) if isinstance(child, dict) else child
+            _native_to_editor(child, absolute_x, absolute_y)
+            if isinstance(child, dict) else child
             for child in children
         ]
     return result

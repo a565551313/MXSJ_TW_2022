@@ -9,8 +9,8 @@
 * 普通图片按原格式重编码（PNG/JPEG），GIF 与垃圾字节拒收；
 * .igs 往返：恒等参数下形状/透明等级全保（I0 的 RGB565 调色板必有
   轻微再量化、按容差断言；T0 是 RGB888、精确色钉死），百分比缩放
-  逐帧生效；帧锚点非 (0,0)、魔数不可重编码（T4 等）、非精灵字节
-  一律拒收——忠实优先，绝不悄悄挪帧或降级格式。
+  逐帧生效；帧锚点／画布中心非零、透明画布不能保持、魔数不可重编码、
+  非精灵字节一律拒收——忠实优先，绝不悄悄挪帧或降级格式。
 """
 import io
 import struct
@@ -216,6 +216,22 @@ class ProcessSpriteTests(unittest.TestCase):
             image_adjust.process_sprite(bytes(data),
                                         image_adjust.AdjustParams())
         self.assertIn("锚点", str(ctx.exception))
+
+    def test_nonzero_canvas_center_rejected(self):
+        data = bytearray(igs_bytes())
+        struct.pack_into("<H", data, 10, 2)  # 画布中心 cx：0 → 2
+        with self.assertRaises(image_adjust.AdjustError) as ctx:
+            image_adjust.process_sprite(bytes(data),
+                                        image_adjust.AdjustParams())
+        self.assertIn("中心", str(ctx.exception))
+
+    def test_larger_native_canvas_rejected_instead_of_shrinking_it(self):
+        data = bytearray(igs_bytes())
+        struct.pack_into("<H", data, 6, 16)  # 原生画布宽 8 → 16
+        with self.assertRaises(image_adjust.AdjustError) as ctx:
+            image_adjust.process_sprite(bytes(data),
+                                        image_adjust.AdjustParams())
+        self.assertIn("画布", str(ctx.exception))
 
     def test_unencodable_magic_rejected(self):
         fake = sprite.Sprite(
