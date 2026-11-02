@@ -68,6 +68,13 @@ git grep -n -E 'shared_decoder|tool_and_evidence_sha256' -- server/docs/csv_chec
 - E：假 DLL 映像只用于让壳能解析导出表，**不是** Windows 系统 DLL 的真实行为；
   模拟结果不能替代 Windows 实机或 `ReadProcessMemory` 转储。
 
+## 客户端原生 MCP 接入骨架（2026-11-02）
+
+- D：`client_mcp/` 当前只有 README、文档和占位目录；没有可运行 Python 包、探针或构建器，因此暂无已核实运行依赖。
+- D：文档草案引用原始 `data/script.fls` 与 `tools/decompiler/script_fls_keys.json` 的锁定 SHA-256，仅作为输入边界说明；当前没有代码读取或修改它们。
+- 未来 M1 需要用户提供的修改版 `script.fls`；在输入登记和只读差异核对前，不得假设探针挂点、条目编号或 key DB 适用性。
+- 未来如复用 decompiler / script_editor / registration 管线，必须重新核实运行依赖与证据依赖，不能因文档提到就视为已接入。
+
 ## 原生 TCP 候选模块（2026-10-20）
 
 - R：`native_channel/src` 与普通单元测试只依赖 Python ≥3.10 标准库。
