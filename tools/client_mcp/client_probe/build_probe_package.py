@@ -2,8 +2,11 @@
 
 The builder accepts only a caller-supplied file named ``script.fls``.  It validates
 its digest and 0SLF directory, copies bytes without decoding them, and creates a
-new package directory outside the repository.  No existing path is ever opened
-for writing.
+new package directory.  No existing path is ever opened for writing.
+
+Output stays inside the repository (``tools/client_mcp/runtime`` or
+``tools/client_mcp/dist``); the 2026-11-03 user instruction retired the
+out-of-repo delivery model.
 """
 
 from __future__ import annotations
@@ -123,10 +126,6 @@ def build_package(
     if any(char not in "0123456789abcdef" for char in expected_sha256):
         raise ValueError("expected_sha256 is not hexadecimal")
     source = source.resolve(strict=True)
-    repo_root = Path(__file__).resolve().parents[3]
-    resolved_destination = destination.resolve()
-    if resolved_destination == repo_root or repo_root in resolved_destination.parents:
-        raise ValueError("output directory must be outside the repository")
     if destination.exists() or destination.is_symlink():
         raise FileExistsError(f"output directory already exists: {destination}")
     actual_sha256 = _sha256(source)
@@ -197,10 +196,17 @@ def build_package(
     return manifest
 
 
+def default_output_dir(tool_root: Path | None = None) -> Path:
+    """Return the in-repository default package directory for this run."""
+    root = Path(tool_root) if tool_root is not None else Path(__file__).parents[2]
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return root / "runtime" / "packages" / stamp
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--script-fls", required=True, type=Path)
-    parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--expected-sha256", required=True)
     parser.add_argument("--probe-source", type=Path)
     parser.add_argument("--include-probe-source", action="store_true")
@@ -208,7 +214,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         build_package(
             args.script_fls,
-            args.output_dir,
+            args.output_dir if args.output_dir is not None else default_output_dir(),
             expected_sha256=args.expected_sha256,
             probe_source=args.probe_source,
             include_probe_source=args.include_probe_source,

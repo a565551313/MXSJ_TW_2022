@@ -78,12 +78,10 @@ def test_rejects_aliases_existing_targets_and_repository_paths(tmp_path):
     existing.mkdir()
     with pytest.raises(FileExistsError):
         mod.build_package(source, existing, expected_sha256=expected)
-    with pytest.raises(ValueError, match="outside the repository"):
-        mod.build_package(
-            source,
-            Path(__file__).resolve().parents[3] / "new-package",
-            expected_sha256=expected,
-        )
+    tool_root = Path(__file__).resolve().parents[1]
+    default_output = mod.default_output_dir(tool_root).resolve()
+    assert tool_root.resolve() in default_output.parents
+    assert default_output.parent.name == "packages"
 
 
 def test_rejects_unsorted_directory_and_invalid_probe(tmp_path):

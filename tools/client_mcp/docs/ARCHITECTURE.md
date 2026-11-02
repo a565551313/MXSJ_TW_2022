@@ -93,26 +93,25 @@ MCP Server <-> fake probe
 
 ## 5. script.fls 输入基线
 
-仓库原始 `data/script.fls` 是锁定基线，不直接覆盖。用户将提供已修改版 `script.fls`，处理流程：
+`data/script.fls` **在仓库内就地修改**（用户 2026-11-03 授权并自行备份）。不再有仓库外输入目录与修复包：
 
 ```text
 用户修改版 script.fls
-  -> 隔离输入目录
-  -> SHA-256 / 大小 / 来源登记
+  -> 记录修改前 SHA-256 / 大小
+  -> 就地修改并逐条校验
   -> 只读解析条目清单
   -> 与原始基线差异报告
   -> 确认探针挂点
   -> 生成新的测试副本 script.fls
 ```
 
-所有输出写到仓库外，例如：
+工具、报告与运行期文件都留在仓库内：
 
 ```text
-../mxsj-client-mcp-out/
-├─ inputs/
-├─ builds/
-├─ reports/
-└─ windows/
+tools/client_mcp/
+├─ runtime/     # 令牌、端口、MCP 配置、临时包（gitignore）
+├─ dist/        # 可选构建产物（gitignore）
+└─ reports/     # 本地报告（gitignore）
 ```
 
 ## 6. 第一阶段数据流

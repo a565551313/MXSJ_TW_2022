@@ -1,13 +1,25 @@
-# Windows 实机验收草案
+# Windows 实机验收（双击流程）
 
-> 状态：部分执行。日期：2026-11-02。
-> 已完成 Windows 探针报告与 stdio MCP 客户端读取；HTTP、实时 IPC、控制操作仍未验收。
+> 状态：部分执行。日期：2026-11-03。
+> 已完成：Windows 探针报告 + stdio MCP 客户端读取。
+> 未完成：HTTP 第二客户端实机、实时 IPC、控制操作、场景测试。
+
+## 0. 用户验收只看这一节（不需要命令行）
+
+1. 双击 `tools/client_mcp/启动客户端MCP.bat`，等窗口出现“MXSJ 客户端 MCP 已启动”。
+2. 自己启动游戏（测试副本）。
+3. 打开编程工具的 MCP 设置，导入 `tools/client_mcp/runtime/mcp_client_config.json`。
+4. 依次调用 `client_ping`、`client_get_probe_report`。
+5. 如果失败：截图窗口 + 发 `tools/client_mcp/启动日志.txt`，**不用敲任何命令**。
+
+第二客户端（HTTP）同样只看这一节：再打开一个编程工具，导入同一个配置文件即可。
+
+> 以下 §1 起是开发者视角的完整验收记录与判据，普通使用不需要阅读。
 
 ## 1. 验收前提
 
-- 用户已提供修改版 `script.fls`。
-- 已完成输入登记和只读差异核对。
-- 已生成探针测试包，并确认未覆盖原始包。
+- `data/script.fls` 已是仓库内就地修改后的版本（用户自行备份原始包）。
+- 修改工具、修改前后 SHA-256 与条目清单已记录。
 - Windows 测试副本与日常客户端隔离。
 - 使用假账号 / 测试账号，不使用真实凭据。
 - 不接正式服。
@@ -188,55 +200,15 @@ client_get_probe_report: ok=true，返回上述报告
 - `--report-file` 是快照桥，`client_ping` 不代表实时进程存活；
 - HTTP 第二客户端、实时 IPC、控制锁、场景测试仍未验收。
 
-## 10. HTTP 第二客户端验收步骤（报告快照桥）
+## 10. HTTP 第二客户端验收（一键启动器，报告快照桥）
 
-前提：stdio 报告桥已成功，且 `mxsj_probe_report.txt` 路径已知。HTTP 版复用同一报告文件，不需要替换游戏包。
+前提：stdio 报告桥已成功。HTTP 复用同一报告文件，不替换游戏包。
 
-1. 解压新的宿主包到独立目录，不要覆盖正在运行的 stdio 宿主目录。
-2. 安装/检查依赖：
+1. 双击 `启动客户端MCP.bat`。启动器会自动完成依赖安装、令牌生成、端口选择、
+   报告文件查找，并写出 `runtime/mcp_client_config.json`。
+2. 在第二个 MCP 编程工具里导入该配置文件（类型选 HTTP / Streamable HTTP，不要选 SSE）。
+3. 依次调用 `client_ping`、`client_get_probe_report`，结果应与 stdio 客户端一致。
+4. 排错只看窗口提示：401 = 导入的配置与当前令牌不一致（重新导入即可）；421/403 = 客户端用了非本机地址；
+   连接被拒绝 = 启动器窗口已关闭。
 
-   ```powershell
-   cd C:/path/to/client_mcp
-   python -m pip install -e .
-   python run.py --help
-   ```
-
-3. 生成随机 token：
-
-   ```powershell
-   python -c "import secrets; print(secrets.token_urlsafe(32))"
-   ```
-
-4. 在 PowerShell 中启动 HTTP Server，保持窗口运行：
-
-   ```powershell
-   $env:MXSJ_MCP_HTTP_TOKEN="<上一步生成的token>"
-   python run.py --transport http --host 127.0.0.1 --port 8765 --report-file "C:/path/to/test-client/mxsj_probe_report.txt"
-   ```
-
-5. 在第二个 MCP 编程工具中配置 Streamable HTTP：
-
-   ```json
-   {
-     "mcpServers": {
-       "mxsj-client-http": {
-         "url": "http://127.0.0.1:8765/mcp",
-         "headers": {
-           "Authorization": "Bearer <同一个token>"
-         }
-       }
-     }
-   }
-   ```
-
-   不同工具的字段名可能不同；选择 HTTP / Streamable HTTP 类型，不要选 SSE。
-
-6. 调用 `client_ping` 和 `client_get_probe_report`。预期 `ok=true`，报告内容与 stdio 客户端一致。
-7. 记录第二个工具名称、两个调用结果、错误信息（如有）。不要回传 token。
-
-排错：
-
-- `401 unauthorized`：客户端与服务端 token 不一致，或 Authorization 头未发送。
-- `421` / `403`：Host/Origin 不在白名单；使用 `http://127.0.0.1:8765/mcp`，不要用局域网 IP 或自定义域名。
-- 连接被拒绝：HTTP Server 未运行、端口不一致或被本机防火墙拦截。
-- `client_ping ok=true` 仍只表示报告文件可读，不表示游戏进程实时在线。
+禁止把令牌发到聊天或提交 Git。
