@@ -1,19 +1,22 @@
 # 用户修改版 script.fls 交付与核对流程
 
-> 状态：流程草案。日期：2026-11-02。  
-> 背景：用户说明其客户端 `script.fls` 已做过很多修改，后续会提供修改版。仓库原始 `data/script.fls` 不能直接覆盖。
+> 状态：现行口径。日期：2026-11-03。
+> 背景：用户明确 `data/script.fls` **就地改原文件**（自己备份），不再有“仓库原始包不许覆盖”的老规矩，也不再走仓外交付。
 
-## 1. 当前锁定基线
+## 1. 当前包身份
 
 ```text
-data/script.fls
-SHA-256: 8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72
+data/script.fls（用户 Windows 正在使用）
+SHA-256: 1d6b21529e8fc651f5a1af18788090f7e61955914f2a1d00cd8c655b3ea3074a
+大小:    24,273,207 B
+0SLF:    count=5003，directory=24193159，目录 0 违规，5003 个 zlib 流全部可解、首尾相接
+说明:    无探针钩子版（目录已按原生 0xDF25E 公式修正；含 mxsj_probe 模块条目但无 import，故不会写报告）
 
-tools/decompiler/script_fls_keys.json
+tools/decompiler/script_fls_keys.json（未改动）
 SHA-256: 43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb
 ```
 
-在用户提供修改版之前，所有文档和骨架都基于原始锁定基线描述，不假设修改版内容。
+历史基线 `8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72`（5002 条原始包）只作对照，不再要求工作区匹配。
 
 ## 2. 用户需要提供的最小材料
 

@@ -15,12 +15,13 @@
 
 1. 读本文 → 读 [`docs/STATUS.md`](docs/STATUS.md)（当前状态、红灯、待办）→ 读你要碰的子目录自己的 `README.md` / `DESIGN.md`。
 2. `git status --short && git branch --show-current && git log -5 --oneline`。看到 untracked 目录**不要删**，看到旧 HEAD **不要覆盖**：先对比远程再决定（历史上发生过快照回退）。
-3. 核对锁定输入未被改动：
+3. 核对当前包身份（`data/script.fls` 自 2026-11-03 起是**就地修改的在用包**，不再是原始基线）：
    ```bash
    sha256sum data/script.fls tools/decompiler/script_fls_keys.json
-   # 8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72  data/script.fls
-   # 43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb  tools/decompiler/script_fls_keys.json
+   # 1d6b21529e8fc651f5a1af18788090f7e61955914f2a1d00cd8c655b3ea3074a  data/script.fls  （无钩子包，用户 Windows 在用）
+   # 43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb  tools/decompiler/script_fls_keys.json  （未变）
    ```
+   原始锁定基线 `8b6e9266…c0d72` 只作为历史对照，不再要求工作区匹配它。
 4. 本地克隆可能是 shallow（深度 2）；需要历史时用 `gh api repos/a565551313/MXSJ_TW_2022/commits?sha=<branch>` 或 `gh pr list --state all`。
 
 ## 2. 目录地图
