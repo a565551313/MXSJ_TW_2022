@@ -99,3 +99,22 @@ Windows 侧 ad-hoc 重打包脚本未入库，是本次目录损坏来源。后�
 2. 构建后强制跑 `script_fls_compare.inventory()` 与全量 zlib 解压校验；
 3. 钩子字节码必须由 CPython 2.5.6 编译或经严格反汇编复核，不得手写错误 opcode；
 4. 任何校验失败即拒绝出货，不允许“先替换再试”。
+
+## 6. 用户回传探针报告（2026-11-02）
+
+用户在 Windows 测试后回传：
+
+```python
+{'runtime': {'thread_count': None, 'main_loop_ticks': None, 'pid': None, 'python_version': [2, 5, 0]}, 'modules': {'modules': [{'loaded': True, 'name': 'sys'}, {'loaded': True, 'name': 'time'}, {'loaded': True, 'name': 'os'}]}, 'native_api': {'status': 'unknown', 'apis': []}, 'probe_version': '0.1.0'}
+```
+
+结论：
+
+- 探针已在客户端定制 Python 2.5 VM 内执行，并写出 `mxsj_probe_report.txt`；
+- `sys/time/os` 模块状态可读；
+- `native_api` 仍为 `unknown`，符合当前只读内核边界；
+- `pid/thread_count/main_loop_ticks` 为 `None`，因为当前探针未采集这些值；
+- 报告未包含 `script_fls_sha256`，因此还不能把该报告强绑定到某个测试包；
+- 这证明启动钩子路径已跑通，但**不等于 MCP 编程工具接入验收完成**。
+
+宿主侧已修复 `FileProbeBackend`：客户端 Python 2.5 报告是 `repr(dict)`（含 `None/True` 与单引号），不是 JSON。现在 `--report-file` 会先尝试 JSON，失败后仅用 `ast.literal_eval` 解析受限字面量，不执行代码，并限制 256 KiB。新增回归测试覆盖用户回传格式、恶意表达式拒绝、非对象拒绝、超限拒绝，以及真实 MCP stdio 会话读取该格式报告。

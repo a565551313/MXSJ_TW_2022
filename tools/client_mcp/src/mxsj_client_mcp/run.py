@@ -1,4 +1,4 @@
-"""Run the M3 fake-probe MCP server over stdio."""
+"""Run the read-only MCP server over stdio (fake, IPC, or report file)."""
 
 import argparse
 

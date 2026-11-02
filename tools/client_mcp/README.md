@@ -3,7 +3,7 @@
 > 状态：**M3 开发骨架**：stdio MCP Server 使用进程内 fake probe，数据均为合成数据。  
 > 日期：2026-11-02。真实客户端探针和原生验收尚未完成。
 
-运行：`python tools/client_mcp/run.py --transport stdio`，依赖 `pip install -e tools/client_mcp`。Windows 也可使用 `start_client_mcp.bat` 启动，`--check-only` 仅检查环境；`build_exe.bat` 可构建 EXE。客户端配置见 [configs/README.md](configs/README.md)。当前仅实现 stdio；HTTP、真实 IPC 和控制操作尚未实现。
+运行：`python tools/client_mcp/run.py --transport stdio`，依赖 `pip install -e tools/client_mcp`。Windows 也可使用 `start_client_mcp.bat` 启动，`--check-only` 仅检查环境；`build_exe.bat` 可构建 EXE。客户端配置见 [configs/README.md](configs/README.md)。当前仅实现 stdio；支持 fake probe、本机 IPC 参数和 `--report-file` 报告快照桥。HTTP 和控制操作尚未实现。
 
 ## 1. 目标
 
