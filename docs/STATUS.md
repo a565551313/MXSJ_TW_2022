@@ -1,5 +1,17 @@
 # 项目当前状态（STATUS）
 
+> **2026-11-02：client_mcp M0 目录与文档骨架（本地 UTC+8；分支 `arena/6a13368c-mxsj-tw-2022`）**：
+> 用户确认目标为“客户端原生 MCP 接入”，并要求做成标准 MCP Server，供多种支持 MCP 的编程工具接入；本轮只创建
+> `tools/client_mcp/` 目录骨架与文档，不实现 MCP Server、不写客户端探针、不修改原始 `data/script.fls`。
+> 用户说明其客户端 `script.fls` 已做过很多修改，后续会提供修改版；收到前不假设探针挂点、条目编号或 key DB 适用性。
+> **新增**：`tools/client_mcp/README.md`、`docs/ARCHITECTURE.md`、`PROTOCOL.md`、`MCP_CLIENTS.md`、`SECURITY.md`、
+> `SCRIPT_FLS_HANDOFF.md`、`WINDOWS_ACCEPTANCE.md`、`IMPLEMENTATION_PLAN.md`，以及 `src/`、`client_probe/`、
+> `configs/`、`tests/`、`inputs/` 占位说明；`tools/README.md` 与 `tools/DEPENDENCIES.md` 已登记为 M0 文档骨架。
+> **实测**：`python3 tools/devkit/check_windows_compat.py tools/client_mcp --strict` 为 ERROR 0 / WARNING 0 / INFO 0
+> （19 个文件名项、0 个源码/脚本扫描）；`python3 tools/devkit/check_doc_versions.py` OK；锁定输入 SHA-256 复核未变。
+> **未执行**：MCP Server、fake probe、客户端探针、Windows 实机、Mock 启动、任何 FLS 构建；不得把本轮文档写成可连接或原生接入完成。
+> **下一步**：等待用户提供修改版 `script.fls`，先做输入登记、只读条目清点和与锁定基线的差异报告，再确定探针挂点。
+
 > **2026-10-29：UI 编辑器 0.24.2（本地 UTC+8；分支 `arena/7942c942-mxsj-tw-2022`，接续 `25e86af`）**：
 > 跟进用户「坐标还是有偏差，字体大小也不正确显示在画布」。字体部分已由原生 `ParseFont` 证实：旧解析器把
 > 八字段项末尾的效果／描边字段误作字号，并把数字拼进字体名；如画布 8px 的 `黑體 0 13 72 800 3 1 0`

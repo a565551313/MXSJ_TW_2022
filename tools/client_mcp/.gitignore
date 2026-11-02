@@ -1,0 +1,12 @@
+# Local runtime / build artifacts (never commit)
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+启动日志.txt
+
+# Local reports if someone accidentally runs inside the tool directory
+out/
+reports/

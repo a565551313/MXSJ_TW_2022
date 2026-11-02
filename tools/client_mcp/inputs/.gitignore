@@ -1,0 +1,4 @@
+# Ignore all user-provided packages / reports in this directory.
+*
+!.gitignore
+!README.md

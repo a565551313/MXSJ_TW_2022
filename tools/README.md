@@ -15,6 +15,7 @@
 | 静态数据异常复核 | [只读复核系统](../server/README.md) | 与旧 SQLite 数据集不完全等价 |
 | 脚本说明与来源 | [脚本手册](../script_manual/README.md) | 完整登记不等于完整讲解 |
 | 原生游戏 TCP 算法／离线复现 | [native_channel](native_channel/README.md) | 候选兼容层；目标保护包装器与真实客户端联网待验 |
+| 客户端原生 MCP 接入设计 | [client_mcp](client_mcp/README.md) | **M0 文档骨架**；未实现、未改原包，等待用户修改版 `script.fls` |
 | Windows 检查／共享核心同步 | [devkit](devkit/README.md) | 静态检查不替代实机 |
 | 看保护壳要什么／卡在哪 | [dyprot_unpack](dyprot_unpack/README.md) | 实验性；**尚未解出载荷**，跑不通不等于壳不可解 |
 | PE 资源／专项逆向／历史复现 | 下表对应工具 | 先确认样本、输出和副作用 |
@@ -33,6 +34,7 @@
 | 路径 | 状态／适用材料 | 输出与副作用 | 替代入口／保留理由 |
 |---|---|---|---|
 | [devkit/](devkit/README.md) | 现役；工具源码／共享核心 | check 只检查；`vendor_core --write` 会重写生成副本 | 当前无替代；改真源再分发 |
+| [client_mcp/](client_mcp/README.md) | **规划／M0 文档骨架**；客户端原生 MCP 接入 | 当前无运行输出；未来输入为用户修改版 `script.fls`，输出应写仓库外 | 不替代 native_channel / registration；未实现前不得称可连接 |
 | [registration/](registration/README.md) | 现役原生注册专项，混有历史诊断；固定客户端与旧 VM | 构建／交付脚本产生布局、FLS 或 ZIP，逐命令检查 | 尚无真实注册服务；构建依赖旧 decompiler，不能删依赖 |
 | [script_link/](script_link/README.md) | 现役索引职责，旧解码生成链待评估 | 默认可重写 UI 的静态索引 JSON | UI 运行读产物而非现场解码；不等于索引已自动升级到 dev7 |
 | [decompiler/](decompiler/README.md) | 研究专用＋历史复现；双 VM／固定包参数 | 恢复文本、pyc、报告、新包；不执行候选源码 | 日常编辑走脚本编辑器；来源核验／构建仍有依赖 |
