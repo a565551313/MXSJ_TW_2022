@@ -2,12 +2,37 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import socket
 import struct
 
 from ..core.protocol import PROTOCOL_VERSION, ErrorCode, Message, new_session_id
 from .backend import BackendResult, ProbeBackend
+
+MAX_REPORT_BYTES = 256 * 1024
+
+
+def _parse_report(raw: bytes) -> dict:
+    """Parse a bounded probe report without executing code.
+
+    The modern host prefers JSON.  The CPython 2.5 client probe writes
+    ``repr(report)`` because the old VM has no stdlib ``json``; accept that
+    Python-literal form via ``ast.literal_eval`` only after JSON fails.
+    """
+    if len(raw) > MAX_REPORT_BYTES:
+        raise ValueError("probe report exceeds size limit")
+    text = raw.decode("utf-8")
+    try:
+        value = json.loads(text)
+    except ValueError:
+        try:
+            value = ast.literal_eval(text)
+        except (ValueError, SyntaxError, TypeError, MemoryError, RecursionError) as exc:
+            raise ValueError("probe report is not JSON or a Python literal") from exc
+    if not isinstance(value, dict):
+        raise ValueError("probe report must be an object")
+    return value
 
 _METHODS = {
     "probe.heartbeat": "heartbeat",
@@ -37,8 +62,8 @@ class FileProbeBackend(ProbeBackend):
             return BackendResult(False, error_code=ErrorCode.SESSION)
         try:
             with open(self._path, "rb") as stream:
-                raw = stream.read(256 * 1024)
-            value = json.loads(raw.decode("utf-8"))
+                raw = stream.read(MAX_REPORT_BYTES + 1)
+            value = _parse_report(raw)
         except (OSError, ValueError, TypeError):
             return BackendResult(False, error_code=ErrorCode.INTERNAL)
         if req.method == "probe.get_report":
@@ -141,4 +166,4 @@ class IpcProbeBackend(ProbeBackend):
         return BackendResult(True, result=response.get("result"))
 
 
-__all__ = ["IpcProbeBackend"]
+__all__ = ["FileProbeBackend", "IpcProbeBackend"]

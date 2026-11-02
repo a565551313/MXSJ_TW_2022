@@ -46,3 +46,34 @@ def test_stdio_tools_and_log_pagination():
                 assert page["entries"] == []
 
     asyncio.run(exercise())
+
+
+def test_stdio_reads_cpython25_report_file(tmp_path):
+    async def exercise():
+        root = Path(__file__).resolve().parents[1]
+        report = tmp_path / "mxsj_probe_report.txt"
+        report.write_text(
+            "{'runtime': {'python_version': [2, 5, 0], 'pid': None}, "
+            "'modules': {'modules': []}, 'native_api': {'status': 'unknown', "
+            "'apis': []}, 'probe_version': '0.1.0'}",
+            encoding="utf-8",
+        )
+        env = os.environ.copy()
+        env["PYTHONPATH"] = str(root / "src")
+        params = StdioServerParameters(
+            command=sys.executable,
+            args=["-m", "mxsj_client_mcp.run", "--report-file", str(report)],
+            env=env,
+        )
+        async with stdio_client(params) as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                ping = await session.call_tool("client_ping", {})
+                assert json.loads(ping.content[0].text)["result"]["alive"] is True
+                response = await session.call_tool("client_get_probe_report", {})
+                payload = json.loads(response.content[0].text)
+                assert payload["ok"] is True
+                assert payload["result"]["runtime"]["python_version"] == [2, 5, 0]
+                assert payload["result"]["probe_version"] == "0.1.0"
+
+    asyncio.run(exercise())

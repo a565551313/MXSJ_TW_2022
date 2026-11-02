@@ -1,9 +1,9 @@
 # client_mcp — 客户端原生 MCP 接入工具
 
-> 状态：**M3 开发骨架**：stdio MCP Server 使用进程内 fake probe，数据均为合成数据。  
-> 日期：2026-11-02。真实客户端探针和原生验收尚未完成。
+> 状态：**M3 只读接入**：stdio 与本机 Streamable HTTP 已实现；支持 fake probe、本机 IPC 参数和报告文件快照桥。
+> 日期：2026-11-02。Windows 客户端探针报告已通过 stdio 被 MCP 编程工具读取；HTTP 实机与实时 IPC 尚未验收。
 
-运行：`python tools/client_mcp/run.py --transport stdio`，依赖 `pip install -e tools/client_mcp`。Windows 也可使用 `start_client_mcp.bat` 启动，`--check-only` 仅检查环境；`build_exe.bat` 可构建 EXE。客户端配置见 [configs/README.md](configs/README.md)。当前仅实现 stdio；HTTP、真实 IPC 和控制操作尚未实现。
+运行：`python tools/client_mcp/run.py --transport stdio`，依赖 `pip install -e tools/client_mcp`。Windows 也可使用 `start_client_mcp.bat` 启动，`--check-only` 仅检查环境；`build_exe.bat` 可构建 EXE。客户端配置见 [configs/README.md](configs/README.md)。当前支持 stdio 与本机 Streamable HTTP；后端可选 fake probe、本机 IPC 参数和 `--report-file` 报告快照桥。控制操作尚未实现。
 
 ## 1. 目标
 
@@ -27,11 +27,12 @@ MXSJ Client MCP Server
 ## 2. 当前边界
 
 - 不默认启动根目录 Mock；Mock 有写 `nocheck`、监听地址等副作用。
-- 文档中的协议、工具名、配置均为**草案**，不代表已经实现。
+- 已实现六个只读 MCP 工具；控制类工具、实时 IPC 实机验收和场景测试仍未完成。
+- `--report-file` 是报告快照桥，`client_ping` 仅表示报告文件当前可读，不代表游戏进程实时存活。
 
-## 3. 等待用户输入
+## 3. 输入包与基线
 
-用户将提供已经做过多次修改的 `script.fls`。收到后不能直接覆盖仓库原包，必须先做输入登记和只读差异核对。流程见：
+用户修改版 `script.fls` 已收到并做只读登记/差异核对；不得覆盖仓库原包或用户包。流程见：
 
 - [SCRIPT_FLS_HANDOFF.md](docs/SCRIPT_FLS_HANDOFF.md)
 
@@ -68,7 +69,7 @@ tools/client_mcp/
 └─ tests/               # 协议、fake bridge、传输、并发锁测试
 ```
 
-现有 Python 包提供六个只读工具和 fake probe；客户端探针及其余集成目录仍为规划。
+现有 Python 包提供六个只读工具、fake probe、报告文件桥和本机 IPC 后端；客户端探针已能在 Windows 测试副本 VM 内写报告。控制类工具仍未实现。
 
 ## 5. 文档入口
 

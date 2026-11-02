@@ -1,6 +1,6 @@
 # 实施计划草案
 
-> 状态：M3 已完成 Windows fake-probe 交付，M2 客户端探针内核已实现但未挂载。日期：2026-11-02。
+> 状态：M2 探针已在 Windows 客户端执行并写报告；M3 stdio 报告文件桥已被 MCP 客户端读取；本机 HTTP 已实现待实机验收。日期：2026-11-02。
 
 ## M0：目录与文档
 
@@ -138,3 +138,11 @@
 本地 `data/script.fls` 已作为当前输入基准。只读目录/存储载荷报告确认：5002 条、无增删或索引变化、4 条载荷变化。当前 `337` 可严格解析并确认 `script\\login\\mainpage.py`；`1145` 可由历史自动解码器识别为 `script\\gamectrl.py`，但严格 VM25 原生身份校验未能独立绑定；`4007`、`4806` 的原生身份解析仍为 ambiguous/unknown。
 
 独立探针核心、localhost IPC 和仓外包构建器已实现并验证。当前尚未将探针替换进任何游戏模块：没有一个安全、独立、可回滚的当前载荷挂点已满足身份和原生密钥校验，因此继续写入会破坏客户端或制造不可验收包。下一步是获得当前载荷的独立身份/seed 证据，再做仅仓外副本的代码对象级插入。
+
+## 当前状态（2026-11-02 晚）
+
+- Windows guarded-hook 包已生成 `mxsj_probe_report.txt`，用户回传报告内容。
+- 用户 MCP 客户端 `mxsj-client-report` 通过 stdio `--report-file` 成功调用 `client_ping` 与 `client_get_probe_report`。
+- 宿主新增本机 Streamable HTTP：`--transport http --host 127.0.0.1 --port 8765 --http-token <token>`，强制 Bearer token，拒绝非本机监听。
+- Linux 回归：55 项测试通过，覆盖 stdio、HTTP 鉴权、HTTP 双客户端并发、报告文件解析。
+- 仍未完成：HTTP 在 Windows 编程工具实机验收；实时探针 IPC；报告绑定 `script_fls_sha256`；控制类工具与独占锁。

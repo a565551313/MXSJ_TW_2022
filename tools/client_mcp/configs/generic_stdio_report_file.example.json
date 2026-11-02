@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "mxsj-client-report": {
+      "command": "C:/path/to/python.exe",
+      "args": [
+        "C:/path/to/MXSJ_TW_2022/tools/client_mcp/run.py",
+        "--transport",
+        "stdio",
+        "--report-file",
+        "C:/path/to/test-client/mxsj_probe_report.txt"
+      ]
+    }
+  }
+}

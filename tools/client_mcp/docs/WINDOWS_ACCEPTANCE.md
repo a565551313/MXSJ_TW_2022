@@ -1,7 +1,7 @@
 # Windows 实机验收草案
 
-> 状态：草案，未执行。日期：2026-11-02。  
-> 本文件描述未来验收步骤；当前没有可运行探针、MCP Server 或测试包。
+> 状态：部分执行。日期：2026-11-02。
+> 已完成 Windows 探针报告与 stdio MCP 客户端读取；HTTP、实时 IPC、控制操作仍未验收。
 
 ## 1. 验收前提
 
@@ -161,3 +161,82 @@ NPC 对话
 - 跳过 Windows 实测；
 - 使用真实账号；
 - 覆盖原始包。
+
+## 9. 已记录的部分验收（2026-11-02）
+
+用户回传 Windows 探针报告：
+
+```text
+python_version: 2.5.0
+modules: sys / time / os loaded
+native_api: unknown
+probe_version: 0.1.0
+```
+
+用户 MCP 客户端 `mxsj-client-report` 调用结果：
+
+```text
+client_ping: ok=true, alive=true
+client_get_probe_report: ok=true，返回上述报告
+```
+
+结论：
+
+- M2 探针在客户端 VM 内执行并写报告：已由用户报告证明；
+- M3 stdio 报告文件桥：已由用户 MCP 客户端调用证明；
+- 报告未绑定包 SHA，不能强绑定到某个 `script.fls`；
+- `--report-file` 是快照桥，`client_ping` 不代表实时进程存活；
+- HTTP 第二客户端、实时 IPC、控制锁、场景测试仍未验收。
+
+## 10. HTTP 第二客户端验收步骤（报告快照桥）
+
+前提：stdio 报告桥已成功，且 `mxsj_probe_report.txt` 路径已知。HTTP 版复用同一报告文件，不需要替换游戏包。
+
+1. 解压新的宿主包到独立目录，不要覆盖正在运行的 stdio 宿主目录。
+2. 安装/检查依赖：
+
+   ```powershell
+   cd C:/path/to/client_mcp
+   python -m pip install -e .
+   python run.py --help
+   ```
+
+3. 生成随机 token：
+
+   ```powershell
+   python -c "import secrets; print(secrets.token_urlsafe(32))"
+   ```
+
+4. 在 PowerShell 中启动 HTTP Server，保持窗口运行：
+
+   ```powershell
+   $env:MXSJ_MCP_HTTP_TOKEN="<上一步生成的token>"
+   python run.py --transport http --host 127.0.0.1 --port 8765 --report-file "C:/path/to/test-client/mxsj_probe_report.txt"
+   ```
+
+5. 在第二个 MCP 编程工具中配置 Streamable HTTP：
+
+   ```json
+   {
+     "mcpServers": {
+       "mxsj-client-http": {
+         "url": "http://127.0.0.1:8765/mcp",
+         "headers": {
+           "Authorization": "Bearer <同一个token>"
+         }
+       }
+     }
+   }
+   ```
+
+   不同工具的字段名可能不同；选择 HTTP / Streamable HTTP 类型，不要选 SSE。
+
+6. 调用 `client_ping` 和 `client_get_probe_report`。预期 `ok=true`，报告内容与 stdio 客户端一致。
+7. 记录第二个工具名称、两个调用结果、错误信息（如有）。不要回传 token。
+
+排错：
+
+- `401 unauthorized`：客户端与服务端 token 不一致，或 Authorization 头未发送。
+- `421` / `403`：Host/Origin 不在白名单；使用 `http://127.0.0.1:8765/mcp`，不要用局域网 IP 或自定义域名。
+- 连接被拒绝：HTTP Server 未运行、端口不一致或被本机防火墙拦截。
+- `client_ping ok=true` 仍只表示报告文件可读，不表示游戏进程实时在线。

@@ -1,4 +1,4 @@
-"""Bootstrap installation and stdio contract tests."""
+"""Bootstrap installation and stdio/HTTP dependency contract tests."""
 
 import importlib.util
 from pathlib import Path
@@ -12,6 +12,12 @@ spec.loader.exec_module(bootstrap)
 
 
 class BootstrapTests(TestCase):
+    def test_requirements_cover_http_dependencies(self):
+        packages = {package for _, package in bootstrap.REQUIREMENTS}
+        self.assertIn("mcp>=1.30.0,<2", packages)
+        self.assertIn("uvicorn>=0.31.1", packages)
+        self.assertIn("starlette>=0.27", packages)
+
     def test_check_only_never_installs(self):
         with mock.patch.object(bootstrap, "find_missing", return_value=["mcp"]):
             with mock.patch.object(bootstrap, "install_packages") as install:
@@ -22,7 +28,7 @@ class BootstrapTests(TestCase):
         results = [SimpleNamespace(returncode=1), SimpleNamespace(returncode=0)]
         with mock.patch.object(bootstrap.subprocess, "run", side_effect=results) as run:
             with mock.patch.object(bootstrap, "find_missing", return_value=[]):
-                self.assertTrue(bootstrap.install_packages(["mcp>=1.2.0,<2"]))
+                self.assertTrue(bootstrap.install_packages(["mcp>=1.30.0,<2"]))
         self.assertEqual(run.call_count, 2)
         self.assertIn(bootstrap.MIRRORS[1], run.call_args.args[0])
         self.assertIs(run.call_args.kwargs["stdout"], bootstrap.sys.stderr)

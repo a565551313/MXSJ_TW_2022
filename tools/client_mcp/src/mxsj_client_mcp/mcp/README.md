@@ -1,17 +1,13 @@
-# mcp — 标准 MCP Server 占位
+# mcp — 标准 MCP Server
 
-> 状态：占位，未实现。
-
-未来模块候选：
+> 状态：已实现六个只读工具。日期：2026-11-02。
 
 | 模块 | 职责 |
 |---|---|
-| `server.py` | MCP Server 生命周期 |
-| `tools.py` | 工具 schema、调用分发、结果封装 |
-| `resources.py` | 报告 / 日志资源暴露 |
-| `errors.py` | MCP 错误到探针错误码映射 |
+| `server.py` | MCP Server 生命周期、工具注册与分发 |
+| `tools.py` | 工具 schema、参数校验、结果封装 |
 
-第一阶段只读工具草案：
+当前只读工具：
 
 ```text
 client_ping
@@ -22,4 +18,4 @@ client_get_native_api_status
 client_read_probe_log
 ```
 
-控制类工具默认不注册或返回未授权，直到 M4 白名单和 Windows 验收完成。
+控制类工具默认不注册，直到 M4 白名单和 Windows 验收完成。资源暴露、错误码映射等后续再补。
