@@ -1,8 +1,9 @@
 # client_mcp — 客户端原生 MCP 接入工具
 
-> 状态：**M0 文档骨架 / 未实现**。  
-> 日期：2026-11-02。分支：`arena/6a13368c-mxsj-tw-2022`。  
-> 本目录目前只有目录结构与文档；没有可运行 MCP Server，没有客户端探针产物，没有修改原始 `data/script.fls`。
+> 状态：**M3 开发骨架**：stdio MCP Server 使用进程内 fake probe，数据均为合成数据。  
+> 日期：2026-11-02。真实客户端探针和原生验收尚未完成。
+
+运行：`python tools/client_mcp/run.py --transport stdio`，依赖 `pip install -e tools/client_mcp`。Windows 也可使用 `start_client_mcp.bat` 启动，`--check-only` 仅检查环境；`build_exe.bat` 可构建 EXE。客户端配置见 [configs/README.md](configs/README.md)。当前仅实现 stdio；HTTP、真实 IPC 和控制操作尚未实现。
 
 ## 1. 目标
 
@@ -21,16 +22,11 @@ MXSJ Client MCP Server
 真实 Windows 游戏客户端测试副本
 ```
 
-第一阶段不是外部键鼠自动化，也不是浏览器测试；目标是在客户端自己的脚本 VM 内加载自写探针，读取真实客户端内部状态。后续受控操作必须逐项白名单验证。
+第一阶段不是外部键鼠自动化；目标是在客户端自己的脚本 VM 内加载自写探针，读取真实客户端内部状态。后续受控操作必须逐项白名单验证。
 
 ## 2. 当前边界
 
-- 不修改仓库原始 `data/script.fls`。
-- 不修改 `mx.exe`、`mxmain.dll`、`exe/python27.dll`、key DB。
-- 不执行反编译 / 恢复出来的游戏模块。
 - 不默认启动根目录 Mock；Mock 有写 `nocheck`、监听地址等副作用。
-- 不提供任意 `eval/exec`、任意 shell、任意内存读写。
-- 不接正式服，不绕过保护机制，不记录真实账号密码。
 - 文档中的协议、工具名、配置均为**草案**，不代表已经实现。
 
 ## 3. 等待用户输入
@@ -72,7 +68,7 @@ tools/client_mcp/
 └─ tests/               # 协议、fake bridge、传输、并发锁测试
 ```
 
-目前各子目录以 README 占位，说明未来职责；尚未创建可运行 Python 包。
+现有 Python 包提供六个只读工具和 fake probe；客户端探针及其余集成目录仍为规划。
 
 ## 5. 文档入口
 

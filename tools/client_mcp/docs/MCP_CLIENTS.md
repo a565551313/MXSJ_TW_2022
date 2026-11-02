@@ -1,6 +1,6 @@
 # MCP 编程工具接入草案
 
-> 状态：草案，未实现。日期：2026-11-02。  
+> 状态：stdio fake probe 已实现；HTTP 和真实客户端接入仍是草案。日期：2026-11-02。  
 > 目标：让各种支持 MCP 的编程工具接入同一套客户端原生测试能力，而不是绑定某一个 IDE。
 
 ## 1. 接入方式
@@ -36,7 +36,7 @@ python tools/client_mcp/run.py --transport stdio
 
 适合多工具接入、本机多客户端、未来 CI 或受控远程验收。
 
-未来命令形态：
+以下是未来的命令形态，当前版本尚未实现 HTTP：
 
 ```bash
 python tools/client_mcp/run.py --transport http --host 127.0.0.1 --port 8765

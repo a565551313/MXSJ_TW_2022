@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "mxsj-client": {
+      "command": "C:/path/to/python.exe",
+      "args": [
+        "C:/path/to/MXSJ_TW_2022/tools/client_mcp/run.py",
+        "--transport",
+        "stdio",
+        "--probe",
+        "ipc",
+        "--ipc-host",
+        "127.0.0.1",
+        "--ipc-port",
+        "[PROBE_PORT]",
+        "--ipc-token",
+        "[PROBE_TOKEN]"
+      ]
+    }
+  }
+}

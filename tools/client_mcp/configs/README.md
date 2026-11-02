@@ -1,24 +1,7 @@
-# configs — MCP 编程工具接入示例占位
+# MCP 客户端配置示例
 
-> 状态：占位，未实现。当前没有可运行 MCP Server，因此这里暂不放可被误认为可用的正式配置。
+[generic_stdio.example.json](generic_stdio.example.json) 展示常见 `mcpServers` 格式。
+将 Python 和仓库路径换成本机绝对路径，Python 环境需安装本项目依赖。各客户端的配置入口与字段以各自文档为准。
 
-未来文件候选：
-
-```text
-generic_stdio.example.json
-generic_http.example.json
-cursor.example.json
-claude_code.example.json
-cline.example.json
-continue.example.json
-```
-
-## 示例规则
-
-- 文件名必须带 `.example.json`。
-- 路径使用占位符，例如 `C:/path/to/MXSJ_TW_2022`。
-- token 使用占位符，不得写入真实 token。
-- 每个示例顶部或旁边说明适用工具和字段差异。
-- 示例不代表当前已经可运行。
-
-通用草案见 [MCP_CLIENTS.md](../docs/MCP_CLIENTS.md)。
+当前 Server 连接的是进程内 fake probe，输出为合成数据，尚未读取游戏客户端。HTTP 和真实探针接入仍未实现。
+stdio 的标准输出由 MCP 协议使用，不应插入普通日志。

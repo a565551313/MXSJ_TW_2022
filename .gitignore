@@ -30,3 +30,15 @@ mock_accounts.json
 
 # Agent 工作记忆（本地保留，不入库）
 .workbuddy/
+
+# 运行日志目录（忽略全部内容，但保留目录树）
+log/**
+!log/
+!log/**/
+!log/**/.gitkeep
+
+# 音频日志目录（忽略全部内容，但保留目录）
+AudioLog/**
+!AudioLog/
+!AudioLog/**/
+!AudioLog/**/.gitkeep
