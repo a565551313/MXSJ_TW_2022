@@ -1,4 +1,4 @@
-"""Check dependencies and launch the stdio MCP server."""
+"""Check dependencies and launch the stdio or loopback HTTP MCP server."""
 
 from __future__ import annotations
 
@@ -11,9 +11,17 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 LOG_PATH = HERE / "启动日志.txt"
-REQUIREMENTS = [("mcp.server.stdio", "mcp>=1.2.0,<2")]
-MIRRORS = [None, "https://pypi.tuna.tsinghua.edu.cn/simple",
-           "https://mirrors.aliyun.com/pypi/simple"]
+REQUIREMENTS = [
+    ("mcp.server.stdio", "mcp>=1.30.0,<2"),
+    ("mcp.server.streamable_http_manager", "mcp>=1.30.0,<2"),
+    ("uvicorn", "uvicorn>=0.31.1"),
+    ("starlette", "starlette>=0.27"),
+]
+MIRRORS = [
+    None,
+    "https://pypi.tuna.tsinghua.edu.cn/simple",
+    "https://mirrors.aliyun.com/pypi/simple",
+]
 
 
 def find_missing() -> list[str]:
@@ -22,7 +30,8 @@ def find_missing() -> list[str]:
         try:
             importlib.import_module(module)
         except ImportError:
-            missing.append(package)
+            if package not in missing:
+                missing.append(package)
     return missing
 
 
@@ -31,8 +40,9 @@ def install_packages(packages: list[str]) -> bool:
         cmd = [sys.executable, "-m", "pip", "install", *packages]
         if mirror:
             cmd.extend(["-i", mirror])
-        print(f"Installing dependencies from {mirror or 'default index'}",
-              file=sys.stderr)
+        print(
+            f"Installing dependencies from {mirror or 'default index'}", file=sys.stderr
+        )
         try:
             result = subprocess.run(
                 cmd, stdout=sys.stderr, stderr=sys.stderr, check=False
@@ -51,8 +61,11 @@ def main(argv: list[str] | None = None) -> int:
     check_only = "--check-only" in args
     args = [arg for arg in args if arg != "--check-only"]
     if sys.version_info < (3, 10):  # noqa: UP036
-        print("Python 3.10+ required: https://www.python.org/downloads/ "
-              "(select Add python.exe to PATH)", file=sys.stderr)
+        print(
+            "Python 3.10+ required: https://www.python.org/downloads/ "
+            "(select Add python.exe to PATH)",
+            file=sys.stderr,
+        )
         return 2
     missing = find_missing()
     if missing and (check_only or not install_packages(missing)):

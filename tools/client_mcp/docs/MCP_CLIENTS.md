@@ -1,6 +1,6 @@
-# MCP 编程工具接入草案
+# MCP 编程工具接入
 
-> 状态：stdio fake probe 已实现；HTTP 和真实客户端接入仍是草案。日期：2026-11-02。  
+> 状态：stdio 与本机 Streamable HTTP 已实现；Windows 真实探针报告已通过 stdio 报告文件桥被 MCP 客户端读取。日期：2026-11-02。
 > 目标：让各种支持 MCP 的编程工具接入同一套客户端原生测试能力，而不是绑定某一个 IDE。
 
 ## 1. 接入方式
@@ -9,7 +9,7 @@
 
 适合 MCP Server 与编程工具在同一台 Windows 机器上。
 
-未来命令形态：
+当前命令形态：
 
 ```bash
 python tools/client_mcp/run.py --transport stdio
@@ -36,10 +36,10 @@ python tools/client_mcp/run.py --transport stdio
 
 适合多工具接入、本机多客户端、未来 CI 或受控远程验收。
 
-以下是未来的命令形态，当前版本尚未实现 HTTP：
+当前版本已实现本机 HTTP，命令形态：
 
 ```bash
-python tools/client_mcp/run.py --transport http --host 127.0.0.1 --port 8765
+python tools/client_mcp/run.py --transport http --host 127.0.0.1 --port 8765 --http-token <token>
 ```
 
 通用配置示例：
@@ -57,7 +57,7 @@ python tools/client_mcp/run.py --transport http --host 127.0.0.1 --port 8765
 }
 ```
 
-默认只监听 `127.0.0.1`。局域网或远程访问必须显式开启，并启用鉴权、审计和只读默认策略。
+当前版本只允许监听 `127.0.0.1` / `localhost` / `::1`，并强制 Bearer token；非本机监听会被拒绝。token 可用 `--http-token` 或环境变量 `MXSJ_MCP_HTTP_TOKEN` 提供，不得提交 Git。局域网/远程访问不在当前版本范围内。
 
 ## 2. 第一阶段 MCP 工具面
 
@@ -115,11 +115,13 @@ MCP Server 需要维护：
 
 ## 4. 配置示例目录
 
-未来在 `configs/` 提供：
+当前在 `configs/` 提供：
 
 ```text
 configs/generic_stdio.example.json
 configs/generic_http.example.json
+configs/generic_stdio_report_file.example.json
+# 后续候选：
 configs/cursor.example.json
 configs/claude_code.example.json
 configs/cline.example.json
@@ -131,7 +133,7 @@ configs/continue.example.json
 - 路径需要替换；
 - token 不得提交到 Git；
 - 不同工具字段可能不同；
-- 示例不代表当前已经可运行。
+- 示例不代表所有工具字段完全一致。
 
 ## 5. Arena / 远程 Agent 连接边界
 
