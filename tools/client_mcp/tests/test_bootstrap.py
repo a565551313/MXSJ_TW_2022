@@ -96,3 +96,46 @@ class LauncherHelperTests(TestCase):
         self.assertIn("--report-file", args)
         self.assertEqual(args[args.index("--report-file") + 1], str(report))
         self.assertEqual(args[args.index("--port") + 1], "8766")
+
+
+class ReportWatcherTests(TestCase):
+    def _watcher(self, tmp_path, age, stale=15.0):
+        report = tmp_path / bootstrap.REPORT_NAME
+        report.write_text("{}", encoding="utf-8")
+        return bootstrap.ReportWatcher(
+            finder=lambda: report,
+            clock=lambda: 10_000.0,
+            stale_seconds=stale,
+        ), report
+
+    def test_fresh_report_announced_once(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            watcher, report = self._watcher(Path(tmp), age=0)
+            os.utime(report, (9_999.0, 9_999.0))
+            first = watcher.poll()
+            assert any("正在运行" in line for line in first)
+            assert watcher.poll() == []  # no repeat while steady
+            assert watcher.poll() == []  # even as mtime would change
+
+    def test_stale_then_fresh_prints_again(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            watcher, report = self._watcher(Path(tmp), age=0)
+            os.utime(report, (1_000.0, 1_000.0))  # 2.5 hours old
+            stale = watcher.poll()
+            assert any("没更新" in line for line in stale)
+            assert any("小时" in line for line in stale)
+            os.utime(report, (9_998.0, 9_998.0))  # client came back
+            fresh = watcher.poll()
+            assert any("正在运行" in line for line in fresh)
+            assert watcher.poll() == []
+
+    def test_missing_report_is_silent(self):
+        watcher = bootstrap.ReportWatcher(finder=lambda: None)
+        assert watcher.poll() == []
+
+    def test_default_stale_window_tolerates_load_pauses(self):
+        assert bootstrap.STALE_SECONDS >= 10

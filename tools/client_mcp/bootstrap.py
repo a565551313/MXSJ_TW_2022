@@ -37,6 +37,10 @@ CONFIG_PATH = RUNTIME_DIR / "mcp_client_config.json"
 REPORT_NAME = "mxsj_probe_report.txt"
 DEFAULT_PORT = 8765
 PORT_SCAN = 20
+# The resident probe rewrites its report every second, so a gap this long means
+# the client closed (or never started the timer).  Generous on purpose: loading
+# a map or a long GC pause must not be mistaken for "closed".
+STALE_SECONDS = 15.0
 MIN_PYTHON = (3, 10)
 LOW_LEVEL_MODULES = ("mcp.server.stdio", "mcp.server.streamable_http_manager")
 
@@ -201,33 +205,52 @@ def server_args(port: int, token: str, report: Path | None) -> list[str]:
     return args
 
 
-def _watch_report(
-    stop: threading.Event, interval: float = 2.0, stale_seconds: float = 5.0
-) -> None:
-    """Report the probe heartbeat: fresh reports mean the client is running."""
-    seen: tuple[str, float] | None = None
-    stale_reported = False
-    while not stop.wait(interval):
-        report = find_report_file()
+class ReportWatcher:
+    """Turn report-file observations into one message per state change.
+
+    A per-second heartbeat changes the file's mtime constantly, so keying on
+    the mtime printed the banner on every poll (the Windows run showed it
+    repeating).  This keys on (path, fresh/stale) instead.
+    """
+
+    def __init__(self, finder=None, clock=None, stale_seconds=STALE_SECONDS):
+        self._find = finder or find_report_file
+        self._clock = clock or time.time
+        self._stale = float(stale_seconds)
+        self._path = None
+        self._state = None
+
+    def poll(self) -> list[str]:
+        report = self._find()
         if report is None:
-            continue
+            return []
         try:
-            stamp = report.stat().st_mtime
+            age = self._clock() - report.stat().st_mtime
         except OSError:
-            continue
-        age = time.time() - stamp
-        if (str(report), stamp) != seen:
-            seen = (str(report), stamp)
-            stale_reported = False
-            if age <= stale_seconds:
-                _say(f"[状态] 客户端正在运行，报告每秒更新：{report}")
-                _say(
-                    "[状态] 编程工具里 client_ping 应返回 alive=true，"
-                    "client_get_probe_report 可读快照"
-                )
-        elif age > stale_seconds and not stale_reported:
-            stale_reported = True
-            _say(f"[状态] 报告已 {int(age)} 秒没更新：客户端可能已关闭")
+            return []
+        state = "fresh" if age <= self._stale else "stale"
+        if state == self._state and report == self._path:
+            return []
+        self._path, self._state = report, state
+        if state == "fresh":
+            return [
+                f"[状态] 客户端正在运行，报告每秒更新：{report}",
+                "[状态] 编程工具里 client_ping 应返回 alive=true，"
+                "client_get_probe_report 可读最新快照",
+            ]
+        if age >= 3600:
+            age_text = f"{age / 3600:.1f} 小时"
+        else:
+            age_text = f"{int(age)} 秒"
+        return [f"[状态] 这个报告已有 {age_text} 没更新（客户端可能没开）：{report}"]
+
+
+def _watch_report(stop: threading.Event, interval: float = 2.0, watcher=None) -> None:
+    """Print heartbeat transitions until ``stop`` is set."""
+    watcher = watcher or ReportWatcher()
+    while not stop.wait(interval):
+        for line in watcher.poll():
+            _say(line)
 
 
 def _log_failure(text: str) -> None:
