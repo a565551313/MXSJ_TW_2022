@@ -10,3 +10,4 @@ dist/
 # Local reports if someone accidentally runs inside the tool directory
 out/
 reports/
+runtime/

@@ -1,19 +1,24 @@
 # 用户修改版 script.fls 交付与核对流程
 
-> 状态：流程草案。日期：2026-11-02。  
-> 背景：用户说明其客户端 `script.fls` 已做过很多修改，后续会提供修改版。仓库原始 `data/script.fls` 不能直接覆盖。
+> 状态：现行口径。日期：2026-11-03。
+> 背景：用户明确 `data/script.fls` **就地改原文件**（自己备份），不再有“仓库原始包不许覆盖”的老规矩，也不再走仓外交付。
 
-## 1. 当前锁定基线
+## 1. 当前包身份
 
 ```text
-data/script.fls
-SHA-256: 8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72
+data/script.fls（仓库内就地修改，2026-11-03）
+SHA-256: e25f2bae01e94f2c48c4bf06bf5161a982ed5bcb36a15d5a9508c838a6076ecb
+大小:    24,273,338 B
+0SLF:    count=5003，目录 0 违规，5003 个 zlib 流全部可解、首尾相接
+说明:    1) mainpage 加受保护钩子：启动时 import mxsj_probe 并写一次报告；
+         2) mxsj_probe 加常驻定时器：timer.Timer(1, _tick, -1) 每秒重写报告；
+         除 mainpage 与 mxsj_probe 两条外，其余 5001 条载荷逐字节未变
 
-tools/decompiler/script_fls_keys.json
+tools/decompiler/script_fls_keys.json（未改动）
 SHA-256: 43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb
 ```
 
-在用户提供修改版之前，所有文档和骨架都基于原始锁定基线描述，不假设修改版内容。
+历史基线 `8b6e9266bbe91fa77763df7bb2890d55c968c558b8d4b5e415f27febaf6c0d72`（5002 条原始包）只作对照，不再要求工作区匹配。
 
 ## 2. 用户需要提供的最小材料
 
@@ -116,29 +121,29 @@ tools/client_mcp/inputs/<timestamp>/script.fls
 
 ## 7. 测试包生成原则
 
-未来构建探针测试包时：
+**2026-11-03 用户指令（取代此前“仓库外新包”口径）**：直接在仓库内修改 `data/script.fls` 本身，用户自己备份；不再生成仓外修复包，也不再要求用户解压 / 替换文件。
+
+修改流程：
 
 ```text
-用户修改版 script.fls
-  -> 只读输入
-  -> 新增 / 替换最小白名单条目
-  -> 生成新 script.fls
-  -> 写到仓库外 builds/<timestamp>/
-  -> 逐条校验未涉及条目不变
-  -> 输出 build_report.json
+data/script.fls（仓库内唯一真身）
+  -> 先在仓库内写可复现的修改工具与测试
+  -> 只改必要条目（目录长度字 / 探针钩子）
+  -> 原子写回 data/script.fls
+  -> 逐条校验：目录结构、全部 zlib 流、未涉及条目逐字节不变
+  -> 记录修改前后 SHA-256 与修改条目清单（提交信息 + build_report.json）
 ```
 
 禁止：
 
-- 覆盖用户输入包；
-- 覆盖仓库原始包；
 - 放宽 key DB / 基线校验；
 - 静默修复未知条目；
-- 把生成包提交 Git。
+- 在没有逐条校验的情况下写回；
+- 把修改工具之外的生成物（日志、临时包）提交 Git。
 
 ## 8. 回退
 
-每次生成测试包必须记录：
+每次修改必须记录：
 
 ```text
 输入包 SHA-256
@@ -147,7 +152,7 @@ tools/client_mcp/inputs/<timestamp>/script.fls
 未修改条目校验结果
 构建工具版本
 构建时间
-回退方法：恢复用户原始修改版或原始锁定基线
+回退方法：用户自己的备份，或 git 历史里的上一个版本（`git show <commit>:data/script.fls`）
 ```
 
-Windows 测试副本应保留用户原始修改版备份，避免探针测试包影响用户日常客户端。
+用户自行保留原始包备份；仓库内改动可通过 git 回退，不再需要仓外副本。

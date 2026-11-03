@@ -1,5 +1,10 @@
 # MCP 编程工具接入
 
+> **用户接入请走一键启动**：双击 `tools/client_mcp/启动客户端MCP.bat`，再导入
+> `tools/client_mcp/runtime/mcp_client_config.json`。本文下面的命令行只作开发者参考，
+> 不要求用户执行（2026-11-03 用户要求）。
+
+
 > 状态：stdio 与本机 Streamable HTTP 已实现；Windows 真实探针报告已通过 stdio 报告文件桥被 MCP 客户端读取。日期：2026-11-02。
 > 目标：让各种支持 MCP 的编程工具接入同一套客户端原生测试能力，而不是绑定某一个 IDE。
 

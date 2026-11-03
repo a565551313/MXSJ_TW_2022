@@ -4,13 +4,18 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 import socket
 import struct
+import time
 
 from ..core.protocol import PROTOCOL_VERSION, ErrorCode, Message, new_session_id
 from .backend import BackendResult, ProbeBackend
 
 MAX_REPORT_BYTES = 256 * 1024
+# The resident probe rewrites its report once per second, so a report older
+# than this means the client stopped (or never started the timer).
+DEFAULT_FRESH_SECONDS = 5.0
 
 
 def _parse_report(raw: bytes) -> dict:
@@ -34,6 +39,7 @@ def _parse_report(raw: bytes) -> dict:
         raise ValueError("probe report must be an object")
     return value
 
+
 _METHODS = {
     "probe.heartbeat": "heartbeat",
     "probe.get_runtime": "runtime",
@@ -45,10 +51,25 @@ _METHODS = {
 
 
 class FileProbeBackend(ProbeBackend):
-    """Read a bounded report file emitted by a client-side probe."""
+    """Read a bounded report file emitted by a client-side probe.
 
-    def __init__(self, report_path: str):
+    The resident probe rewrites the file every second while the client runs,
+    so the report's age is a real liveness signal: a stale file means the
+    client stopped, or never installed the timer.
+    """
+
+    def __init__(
+        self,
+        report_path: str,
+        *,
+        fresh_seconds: float = DEFAULT_FRESH_SECONDS,
+        clock=time.time,
+    ):
+        if not isinstance(fresh_seconds, (int, float)) or fresh_seconds <= 0:
+            raise ValueError("fresh_seconds must be positive")
         self._path = report_path
+        self._fresh_seconds = float(fresh_seconds)
+        self._clock = clock
         self._session = new_session_id()
 
     def latest_session(self) -> str | None:
@@ -57,9 +78,29 @@ class FileProbeBackend(ProbeBackend):
     def handle_event(self, evt: Message) -> None:
         return None
 
+    def _age(self) -> float | None:
+        try:
+            return self._clock() - os.stat(self._path).st_mtime
+        except OSError:
+            return None
+
+    def heartbeat(self) -> dict:
+        age = self._age()
+        fresh = age is not None and age <= self._fresh_seconds
+        return {
+            "alive": fresh,
+            "mode": "report-file",
+            "report_path": self._path,
+            "report_age_seconds": None if age is None else round(age, 3),
+            "fresh_within_seconds": self._fresh_seconds,
+            "heartbeat": "resident-timer" if fresh else "stale",
+        }
+
     def handle_request(self, req: Message) -> BackendResult:
         if req.session != self._session:
             return BackendResult(False, error_code=ErrorCode.SESSION)
+        if req.method == "probe.heartbeat":
+            return BackendResult(True, result=self.heartbeat())
         try:
             with open(self._path, "rb") as stream:
                 raw = stream.read(MAX_REPORT_BYTES + 1)
@@ -74,8 +115,6 @@ class FileProbeBackend(ProbeBackend):
             return BackendResult(True, result=value.get("modules", {}))
         if req.method == "probe.get_native_api":
             return BackendResult(True, result=value.get("native_api", {}))
-        if req.method == "probe.heartbeat":
-            return BackendResult(True, result={"alive": True})
         return BackendResult(False, error_code=ErrorCode.NOT_ALLOWED)
 
 
@@ -103,8 +142,12 @@ class IpcProbeBackend(ProbeBackend):
 
     def _request(self, method: str, params: dict) -> dict:
         payload = {"type": "hello", "token": self._token, "v": 1}
-        request = {"type": "request", "id": "request", "method": method,
-                   "params": params}
+        request = {
+            "type": "request",
+            "id": "request",
+            "method": method,
+            "params": params,
+        }
         family = socket.AF_INET6 if self._host == "::1" else socket.AF_INET
         with socket.socket(family, socket.SOCK_STREAM) as sock:
             sock.settimeout(self._timeout)
