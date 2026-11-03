@@ -1,0 +1,21 @@
+{
+  "format": "mxsj-client-mcp-probe-hook-v1",
+  "created_at": "2026-11-03T00:22:02.490500+00:00",
+  "package": "data/script.fls",
+  "entry_count": 5003,
+  "entry_id": 276057508,
+  "entry_index": 337,
+  "before": {
+    "sha256": "1d6b21529e8fc651f5a1af18788090f7e61955914f2a1d00cd8c655b3ea3074a",
+    "size": 24273207,
+    "stored_bytes": 5568
+  },
+  "after": {
+    "sha256": "7ebcbac7a0fe5e0f7fa0a444e6069158df33dff045e4f876d2f76a4d767622dd",
+    "size": 24273265,
+    "stored_bytes": 5626
+  },
+  "probe_entry_present": true,
+  "tool": "tools/client_mcp/client_probe/patch_package.py",
+  "hook": "try:\\n    import mxsj_probe\\n    mxsj_probe.write_report()\\nexcept:\\n    pass"
+}

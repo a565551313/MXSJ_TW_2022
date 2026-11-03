@@ -116,14 +116,18 @@ tools/client_mcp/
 
 `data/script.fls` 直接在仓库内就地修改（用户明确授权并自行备份），不再生成仓外修复包，也不再要求用户解压 / 覆盖任何外部文件。
 
-当前包（用户 Windows 在用，2026-11-03 由 Drive 取回并替换入库）：
+当前包（2026-11-03 在仓库内就地加好受保护钩子）：
 
 ```text
-SHA-256: 1d6b21529e8fc651f5a1af18788090f7e61955914f2a1d00cd8c655b3ea3074a
-大小:    24,273,207 B
+SHA-256: 7ebcbac7a0fe5e0f7fa0a444e6069158df33dff045e4f876d2f76a4d767622dd
+大小:    24,273,265 B
 0SLF:    count=5003，目录 0 违规，5003 个 zlib 流全部可解
-说明:    无探针钩子 —— 客户端可启动，但不会写 mxsj_probe_report.txt
+说明:    mainpage 多了受保护钩子 —— 启动时写 mxsj_probe_report.txt；
+         钩子整体包在 try/except 里，探针失败也不会影响启动
+前身:    1d6b2152…3074a（无钩子版，用户在 Windows 上验证过能启动）
 ```
+
+钩子的字节码与复核方式见 [docs/PROBE_HOOK.md](docs/PROBE_HOOK.md)。
 
 ## 4. 文档入口
 

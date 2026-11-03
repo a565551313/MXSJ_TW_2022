@@ -6,11 +6,12 @@
 ## 1. 当前包身份
 
 ```text
-data/script.fls（用户 Windows 正在使用）
-SHA-256: 1d6b21529e8fc651f5a1af18788090f7e61955914f2a1d00cd8c655b3ea3074a
-大小:    24,273,207 B
-0SLF:    count=5003，directory=24193159，目录 0 违规，5003 个 zlib 流全部可解、首尾相接
-说明:    无探针钩子版（目录已按原生 0xDF25E 公式修正；含 mxsj_probe 模块条目但无 import，故不会写报告）
+data/script.fls（仓库内就地修改，2026-11-03）
+SHA-256: 7ebcbac7a0fe5e0f7fa0a444e6069158df33dff045e4f876d2f76a4d767622dd
+大小:    24,273,265 B
+0SLF:    count=5003，目录 0 违规，5003 个 zlib 流全部可解、首尾相接
+说明:    在无钩子版 1d6b2152…3074a 上给 mainpage 加了受保护钩子（try/except 包裹）；
+         除 mainpage 外 5002 条载荷逐字节未变
 
 tools/decompiler/script_fls_keys.json（未改动）
 SHA-256: 43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb
