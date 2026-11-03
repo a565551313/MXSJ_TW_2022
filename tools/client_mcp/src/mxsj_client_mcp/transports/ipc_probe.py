@@ -14,8 +14,9 @@ from .backend import BackendResult, ProbeBackend
 
 MAX_REPORT_BYTES = 256 * 1024
 # The resident probe rewrites its report once per second, so a report older
-# than this means the client stopped (or never started the timer).
-DEFAULT_FRESH_SECONDS = 5.0
+# than this means the client stopped (or never started the timer).  Kept well
+# above one tick so map loading or a long pause is not read as "client gone".
+DEFAULT_FRESH_SECONDS = 15.0
 
 
 def _parse_report(raw: bytes) -> dict:
