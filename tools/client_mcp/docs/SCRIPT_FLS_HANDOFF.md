@@ -7,11 +7,12 @@
 
 ```text
 data/script.fls（仓库内就地修改，2026-11-03）
-SHA-256: 7ebcbac7a0fe5e0f7fa0a444e6069158df33dff045e4f876d2f76a4d767622dd
-大小:    24,273,265 B
+SHA-256: e25f2bae01e94f2c48c4bf06bf5161a982ed5bcb36a15d5a9508c838a6076ecb
+大小:    24,273,338 B
 0SLF:    count=5003，目录 0 违规，5003 个 zlib 流全部可解、首尾相接
-说明:    在无钩子版 1d6b2152…3074a 上给 mainpage 加了受保护钩子（try/except 包裹）；
-         除 mainpage 外 5002 条载荷逐字节未变
+说明:    1) mainpage 加受保护钩子：启动时 import mxsj_probe 并写一次报告；
+         2) mxsj_probe 加常驻定时器：timer.Timer(1, _tick, -1) 每秒重写报告；
+         除 mainpage 与 mxsj_probe 两条外，其余 5001 条载荷逐字节未变
 
 tools/decompiler/script_fls_keys.json（未改动）
 SHA-256: 43bb090d09b95e234292829e7d5ce1495d53c0ec2ee4e9727d09aac3d97daceb

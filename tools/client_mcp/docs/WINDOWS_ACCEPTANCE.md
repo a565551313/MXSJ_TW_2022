@@ -19,7 +19,7 @@
 ## 1. 验收前提
 
 - `data/script.fls` 已是仓库内就地修改后的版本（用户自行备份原始包）；
-  当前 SHA-256 `7ebcbac7…622dd`（受保护钩子版，启动时写 `mxsj_probe_report.txt`）。
+  当前 SHA-256 `e25f2bae…76ecb`（常驻探针版，运行时每秒刷新 `mxsj_probe_report.txt`）。
 - 修改工具、修改前后 SHA-256 与条目清单已记录。
 - Windows 测试副本与日常客户端隔离。
 - 使用假账号 / 测试账号，不使用真实凭据。

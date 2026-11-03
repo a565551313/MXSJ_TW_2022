@@ -73,3 +73,54 @@ def test_file_probe_rejects_oversized_report(tmp_path):
     backend = FileProbeBackend(str(path))
     result = backend.handle_request(_request(backend))
     assert result.ok is False
+
+
+def test_heartbeat_tracks_report_freshness(tmp_path):
+    import os
+
+    path = tmp_path / "mxsj_probe_report.txt"
+    path.write_text(
+        repr({"runtime": {}, "modules": {}, "native_api": {}}), encoding="utf-8"
+    )
+    os.utime(path, (1_000.0, 1_000.0))
+    fresh = FileProbeBackend(
+        str(path), fresh_seconds=5.0, clock=lambda: 1_002.0
+    ).heartbeat()
+    assert fresh["alive"] is True
+    assert fresh["mode"] == "report-file"
+    assert fresh["heartbeat"] == "resident-timer"
+    assert fresh["report_age_seconds"] == 2.0
+
+    stale = FileProbeBackend(
+        str(path), fresh_seconds=5.0, clock=lambda: 1_100.0
+    ).heartbeat()
+    assert stale["alive"] is False
+    assert stale["heartbeat"] == "stale"
+    assert stale["report_age_seconds"] >= 5.0
+
+
+def test_heartbeat_reports_missing_file_as_dead(tmp_path):
+    backend = FileProbeBackend(str(tmp_path / "missing.txt"))
+    beat = backend.heartbeat()
+    assert beat["alive"] is False
+    assert beat["report_age_seconds"] is None
+
+
+def test_ping_tool_returns_heartbeat_through_the_protocol(tmp_path):
+    import time
+
+    path = tmp_path / "report.txt"
+    path.write_text(
+        repr({"runtime": {}, "modules": {}, "native_api": {}}), encoding="utf-8"
+    )
+    backend = FileProbeBackend(str(path), fresh_seconds=30.0, clock=time.time)
+    result = backend.handle_request(_request(backend, "probe.heartbeat"))
+    assert result.ok is True
+    assert result.result["alive"] is True
+
+
+def test_fresh_seconds_must_be_positive(tmp_path):
+    import pytest
+
+    with pytest.raises(ValueError):
+        FileProbeBackend(str(tmp_path / "x.txt"), fresh_seconds=0)

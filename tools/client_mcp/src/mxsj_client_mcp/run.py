@@ -18,7 +18,9 @@ def build_backend(args):
     if args.report_file:
         from .transports.ipc_probe import FileProbeBackend
 
-        return FileProbeBackend(args.report_file)
+        return FileProbeBackend(
+            args.report_file, fresh_seconds=args.report_fresh_seconds
+        )
     if args.probe == "ipc":
         if args.ipc_port is None or not args.ipc_token:
             raise ValueError("--probe ipc requires --ipc-port and --ipc-token")
@@ -67,6 +69,7 @@ def main(argv=None):
     parser.add_argument("--ipc-port", type=int)
     parser.add_argument("--ipc-token")
     parser.add_argument("--report-file")
+    parser.add_argument("--report-fresh-seconds", type=float, default=5.0)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--http-token", default=os.environ.get("MXSJ_MCP_HTTP_TOKEN"))

@@ -22,6 +22,7 @@ import socket
 import subprocess
 import sys
 import threading
+import time
 import traceback
 from datetime import datetime
 from pathlib import Path
@@ -200,9 +201,12 @@ def server_args(port: int, token: str, report: Path | None) -> list[str]:
     return args
 
 
-def _watch_report(stop: threading.Event, interval: float = 2.0) -> None:
-    """Print a line whenever the discovered report file changes."""
+def _watch_report(
+    stop: threading.Event, interval: float = 2.0, stale_seconds: float = 5.0
+) -> None:
+    """Report the probe heartbeat: fresh reports mean the client is running."""
     seen: tuple[str, float] | None = None
+    stale_reported = False
     while not stop.wait(interval):
         report = find_report_file()
         if report is None:
@@ -211,13 +215,19 @@ def _watch_report(stop: threading.Event, interval: float = 2.0) -> None:
             stamp = report.stat().st_mtime
         except OSError:
             continue
-        current = (str(report), stamp)
-        if current != seen:
-            seen = current
-            _say(f"[状态] 已找到客户端探针报告：{report}")
-            _say(
-                "[状态] 现在可以在编程工具里调用 client_ping / client_get_probe_report"
-            )
+        age = time.time() - stamp
+        if (str(report), stamp) != seen:
+            seen = (str(report), stamp)
+            stale_reported = False
+            if age <= stale_seconds:
+                _say(f"[状态] 客户端正在运行，报告每秒更新：{report}")
+                _say(
+                    "[状态] 编程工具里 client_ping 应返回 alive=true，"
+                    "client_get_probe_report 可读快照"
+                )
+        elif age > stale_seconds and not stale_reported:
+            stale_reported = True
+            _say(f"[状态] 报告已 {int(age)} 秒没更新：客户端可能已关闭")
 
 
 def _log_failure(text: str) -> None:

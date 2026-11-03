@@ -1,0 +1,42 @@
+{
+  "format": "mxsj-client-mcp-resident-probe-v1",
+  "created_at": "2026-11-03T00:32:23.655864+00:00",
+  "package": "data/script.fls",
+  "entry_count": 5003,
+  "entry_index": 2996,
+  "entry_id": 2537560296,
+  "timer_seconds": 1,
+  "before": {
+    "sha256": "7ebcbac7a0fe5e0f7fa0a444e6069158df33dff045e4f876d2f76a4d767622dd",
+    "size": 24273265,
+    "stored_bytes": 2009
+  },
+  "after": {
+    "sha256": "e25f2bae01e94f2c48c4bf06bf5161a982ed5bcb36a15d5a9508c838a6076ecb",
+    "size": 24273338,
+    "stored_bytes": 2082
+  },
+  "details": {
+    "module_names": [
+      "__doc__",
+      "sys",
+      "PROBE_VERSION",
+      "None",
+      "write_report",
+      "_MODULE_NAMES",
+      "_nonnegative_integer",
+      "get_runtime",
+      "get_modules",
+      "get_native_api",
+      "get_report",
+      "_tick",
+      "timer",
+      "Timer",
+      "_TIMER"
+    ],
+    "tick_instructions": 21,
+    "module_stacksize": 6
+  },
+  "tool": "tools/client_mcp/client_probe/build_resident.py",
+  "timer": "timer.Timer(1, _tick, -1)"
+}

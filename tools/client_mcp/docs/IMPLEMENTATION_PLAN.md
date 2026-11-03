@@ -153,7 +153,7 @@
 
 | 项目 | 状态 | 代码里实际是什么 |
 |---|---|---|
-| 实时探针 IPC | **未完成** | `client_probe/ipc.py`、`serve.py` 有协议与服务端骨架，但**包内没有任何代码启动监听**；钩子只在 `mainpage` 导入时调用一次 `mxsj_probe.write_report()`。当前是启动快照，不是实时通道。 |
+| 实时探针 IPC | **部分完成（2026-11-03）** | 已做：探针用原生 `timer.Timer(1, _tick, -1)` 每秒重写报告，报告 mtime 成为真实存活信号，`client_ping` 按 5 秒新鲜度返回 `alive`。未做：socket 双向通道、按请求读取任意状态的命令通道。 |
 | 控制类工具 | **未完成** | `mcp/tools.py` 只注册 6 个只读工具（`client_ping` / `client_get_runtime_info` / `client_get_module_status` / `client_get_native_api_status` / `client_get_probe_report` / `client_read_probe_log`）。没有任何写入或操作类工具。 |
 | 多客户端控制独占锁 | **只有骨架** | `core/session.py` 有 `ControlLock` 类（holder id + 超时），但 M3 阶段**从不获取**，也没有任何工具调用它；等于没打开。 |
 | 登录 → 选角 → 进图 → NPC → 传送 场景 | **未开始** | 仓库里没有场景定义、断言或报告代码。M5 只在计划里。 |
@@ -163,13 +163,14 @@
 ```text
 客户端启动
   -> mainpage 的受保护钩子 import mxsj_probe
-  -> write_report() 写一次 mxsj_probe_report.txt
+  -> 写一次报告
+  -> 探针注册 timer.Timer(1, _tick, -1)，此后每秒重写报告
 MCP Server（stdio 或本机 HTTP）
-  -> 读取这个报告文件
-  -> 6 个只读工具返回快照内容
+  -> client_ping        : 报告 5 秒内更新 = alive=true；关游戏后变 false
+  -> client_get_*       : 读取最新一份快照
 ```
 
-也就是说：**能看一次启动时的状态，不能实时问、不能操作、不能跑场景。**
+也就是说：**能判断客户端是否在跑、能读到每秒刷新的快照；还不能按需询问、不能操作、不能跑场景。**
 
 ### 四项各自的前置条件
 
